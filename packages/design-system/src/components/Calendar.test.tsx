@@ -443,6 +443,32 @@ describe('Calendar', () => {
     expect(focusedDay().closest('td')!.hasAttribute('aria-selected')).toBe(false);
   });
 
+  it('follows a value set from outside after a pick a controlling parent turned down, even to that pick', () => {
+    function Rejecting() {
+      const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
+      return (
+        <>
+          <button type="button" onClick={() => setValue(date('2026-11-04'))}>
+            set
+          </button>
+          <Calendar.Root aria-label="Start" locale="en-US" value={value} onValueChange={() => {}}>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Rejecting />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    for (let month = 0; month < 4; month++) fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    expect(screen.getByText('March 2027')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(focusedDay().closest('td')!.getAttribute('aria-selected')).toBe('true');
+  });
+
   it('keeps its own value when uncontrolled', () => {
     const onValueChange = vi.fn();
     render(
