@@ -168,4 +168,45 @@ describe('default initial focus on a radio group', () => {
       outside.remove();
     }
   });
+
+  it.each([
+    ['an unchecked radio before the root', '<input type="radio" name="g" aria-label="Outside">', 'One'],
+    ['a checked radio under aria-hidden', '<div aria-hidden="true"><input type="radio" name="g" aria-label="Outside" checked></div>', 'After'],
+  ])('matches forward Tab with %s', async (_case, page, name) => {
+    const outside = document.createElement('div');
+    outside.innerHTML = page;
+    const root = document.createElement('div');
+    root.innerHTML = '<button type="button">Before</button><input type="radio" name="g" aria-label="One"><button type="button">After</button>';
+    document.body.append(outside, root);
+    try {
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      const nameOf = (el: Element | null) => el?.getAttribute('aria-label') ?? el?.textContent;
+      expect(nameOf(document.activeElement)).toBe(name);
+      expect(getTabbables(root).map(nameOf)).toEqual(name === 'One' ? ['Before', 'One', 'After'] : ['Before', 'After']);
+    } finally {
+      root.remove();
+      outside.remove();
+    }
+  });
+
+  it('counts a modal dialog\'s own radios when the root is in a non-modal dialog inside it', async () => {
+    const outside = document.createElement('div');
+    outside.innerHTML = '<input type="radio" name="g" aria-label="Outside" checked>';
+    const modal = document.createElement('dialog');
+    modal.innerHTML = '<dialog open><div><button type="button">Before</button><input type="radio" name="g" aria-label="One"></div></dialog>';
+    document.body.append(outside, modal);
+    try {
+      modal.showModal();
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      const one = screen.getByRole('radio', { name: 'One' });
+      expect(document.activeElement).toBe(one);
+      expect(getTabbables(modal.querySelector('div')!)).toContain(one);
+    } finally {
+      modal.close();
+      modal.remove();
+      outside.remove();
+    }
+  });
 });

@@ -66,4 +66,16 @@ describe('getTabbables', () => {
     outside.remove();
     root.remove();
   });
+
+  it('keeps the root\'s first radio as the stop when an unchecked one of its group comes before the root', () => {
+    const outside = document.createElement('input');
+    outside.type = 'radio';
+    outside.name = 'size';
+    const root = document.createElement('div');
+    root.innerHTML = '<input type="radio" name="size" id="small">';
+    document.body.append(outside, root);
+    expect(firstTabbable(root)?.id).toBe('small');
+    outside.remove();
+    root.remove();
+  });
 });

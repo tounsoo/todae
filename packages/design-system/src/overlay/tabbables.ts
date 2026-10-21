@@ -62,36 +62,46 @@ function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
 }
 
 // Each named radio group's one Tab stop, going forward: its checked radio, or
-// with none checked that can take focus, the first that can. A group is the
-// radios of one name and one form owner in root's tree, radios outside root
-// too, as the browser counts them; but inside an open modal dialog, only the
-// dialog's own, since the page behind it is inert.
-type RadioStops = Map<HTMLFormElement | null, Map<string, { radio: HTMLInputElement; checked: boolean }>>;
+// with none checked that can take focus, the first of root's that can. A group
+// is the radios of one name and one form owner. Its checked radio may sit
+// outside root, and then takes the whole group out of root, as the browser's
+// Tab does. It counts there when enabled and shown, whatever `aria-hidden` or
+// tabindex say, unless root is in an open modal dialog it is not in, since the
+// page behind that dialog is inert.
+type RadioStops = Map<HTMLFormElement | null, Map<string, HTMLInputElement>>;
 
 function radioStopsIn(root: HTMLElement): RadioStops {
-  const modal = root.closest('dialog');
-  const scope = modal && isModalDialog(modal) ? modal : (root.getRootNode() as unknown as ParentNode);
-  const page = root.ownerDocument.documentElement;
   const stops: RadioStops = new Map();
-  for (const el of scope.querySelectorAll('input')) {
-    if (!isNamedRadio(el)) continue;
-    const inRoot = root.contains(el);
-    if ((inRoot && inToastHostWithin(el, root)) || !canTakeFocus(el, inRoot ? root : page)) continue;
+  const groupOf = (el: HTMLInputElement) => {
     let byName = stops.get(el.form);
     if (!byName) stops.set(el.form, (byName = new Map()));
-    const stop = byName.get(el.name);
-    if (!stop || (el.checked && !stop.checked)) byName.set(el.name, { radio: el, checked: el.checked });
+    return byName;
+  };
+  for (const el of candidatesIn(root)) {
+    if (!isNamedRadio(el) || !canTakeFocus(el, root)) continue;
+    const group = groupOf(el);
+    const stop = group.get(el.name);
+    if (!stop || (el.checked && !stop.checked)) group.set(el.name, el);
+  }
+  const scope = modalAround(root) ?? (root.getRootNode() as Document | ShadowRoot);
+  for (const el of scope.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')) {
+    if (!isNamedRadio(el) || root.contains(el) || el.matches(':disabled') || !isReachable(el)) continue;
+    groupOf(el).set(el.name, el);
   }
   return stops;
 }
 
-// Whether `dialog` was opened with showModal(). Engines without `:modal`, such as jsdom, say no.
-function isModalDialog(dialog: Element): boolean {
-  try {
-    return dialog.matches(':modal');
-  } catch {
-    return false;
+// The open modal dialog root is in, at any depth: everything outside it is
+// inert. Engines without `:modal`, such as jsdom, find none.
+function modalAround(root: HTMLElement): HTMLDialogElement | null {
+  for (let dialog = root.closest('dialog'); dialog; dialog = dialog.parentElement?.closest('dialog') ?? null) {
+    try {
+      if (dialog.matches(':modal')) return dialog;
+    } catch {
+      return null;
+    }
   }
+  return null;
 }
 
 function isNamedRadio(el: HTMLElement): el is HTMLInputElement {
@@ -108,7 +118,7 @@ function tabStopTest(root: HTMLElement): (el: HTMLElement) => boolean {
     if (!canTakeFocus(el, root)) return false;
     if (!isNamedRadio(el)) return true;
     stops ??= radioStopsIn(root);
-    return stops.get(el.form)?.get(el.name)?.radio === el;
+    return stops.get(el.form)?.get(el.name) === el;
   };
 }
 
