@@ -21,7 +21,7 @@ export type FormFieldError = { kind: ValidityKind; message: string };
 export type ValidityCarrier = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
 /** Matches what the browser lets take part in constraint validation; `willValidate` says whether this one does now. */
-export function isValidityCarrier(node: Element): node is ValidityCarrier {
+export function isValidityCarrier(node: EventTarget | null): node is ValidityCarrier {
   return node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement;
 }
 

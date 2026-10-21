@@ -3,19 +3,21 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'ErrorMessage.Root',
   description:
-    'Validation text below a control. Required id. No alert role. invalid lives on the control.',
+    "Validation text below a control. With an id it renders as given, with no alert role. Without one, inside a Field.Group or Fieldset.Root in a Form.Root, it shows the scope's error and wires the controls' aria-describedby to itself. invalid lives on the control.",
   props: [
     {
       name: 'id',
       type: 'string',
-      required: true,
-      description: 'Id the author lists in aria-describedby on the control or Field.Root.',
+      required: false,
+      description:
+        "Id the author lists in aria-describedby on the control or Field.Root. Required outside a validation scope; inside one, leave it out to take the scope's error.",
     },
     {
       name: 'children',
-      type: 'React.ReactNode',
+      type: 'React.ReactNode | ((error: FormFieldError) => React.ReactNode)',
       required: false,
-      description: 'Error text.',
+      description:
+        "Error text. In a validation scope, a function of the scope's error, and without children, the error's message.",
     },
     {
       name: 'className',

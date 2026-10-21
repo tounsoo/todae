@@ -1,0 +1,41 @@
+@layer todae.components {
+  .summary {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-form-summary-gap);
+    padding: var(--todae-form-summary-padding-y) var(--todae-form-summary-padding-x);
+    border: var(--todae-form-summary-border-width) solid var(--todae-form-summary-border);
+    border-radius: var(--todae-form-summary-radius);
+    background: var(--todae-form-summary-bg);
+    color: var(--todae-form-summary-fg);
+    font-size: var(--todae-form-summary-font-size);
+    line-height: var(--todae-form-summary-leading);
+  }
+
+  /* Focus lands here after a failed submit. */
+  .summary:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-form-summary-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .title {
+    margin: 0;
+    font-weight: var(--todae-form-summary-title-font-weight);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-form-summary-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .item {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--todae-form-summary-gap);
+  }
+}

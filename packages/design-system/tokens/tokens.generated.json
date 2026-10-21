@@ -9620,6 +9620,174 @@
       "description": "Fieldset.Root: a group of related controls under a legend."
     },
     {
+      "path": "form.summary.bg",
+      "type": "color",
+      "cssVar": "--todae-form-summary-bg",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.border",
+      "type": "color",
+      "cssVar": "--todae-form-summary-border",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.fg",
+      "type": "color",
+      "cssVar": "--todae-form-summary-fg",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.gap",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.leading",
+      "type": "number",
+      "cssVar": "--todae-form-summary-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-padding-y",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.radius",
+      "type": "dimension",
+      "cssVar": "--todae-form-summary-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-form-summary-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
+      "path": "form.summary.title.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-form-summary-title-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors."
+    },
+    {
       "path": "link.decoration.current",
       "type": "color",
       "cssVar": "--todae-link-decoration-current",

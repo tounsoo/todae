@@ -54,6 +54,13 @@ export const meta = {
       description: 'Marks every radio invalid.',
     },
     {
+      name: 'customValidity',
+      type: 'string',
+      required: false,
+      description:
+        "A message for a rule the browser cannot check, set with setCustomValidity on the first radio. An empty string or undefined means the rule holds.",
+    },
+    {
       name: 'orientation',
       type: '"vertical" | "horizontal"',
       required: false,

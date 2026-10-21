@@ -19,6 +19,13 @@ export const meta = {
       description: 'Marks the shell invalid and sets aria-invalid on the input.',
     },
     {
+      name: 'customValidity',
+      type: 'string',
+      required: false,
+      description:
+        "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds.",
+    },
+    {
       name: 'id',
       type: 'string',
       required: false,

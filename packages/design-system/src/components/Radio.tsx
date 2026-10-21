@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useRef,
   type HTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -8,7 +9,11 @@ import {
 } from 'react';
 import { useDomId } from './domId.js';
 import { useControlledState } from '../hooks/useControlledState.js';
+import { useCustomValidity } from './customValidity.js';
+import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
+import { useRevalidate } from './Form.context.js';
+import { useComposedRefs } from './props.js';
 import { SelectionControl } from './SelectionControl.js';
 import { cx } from './cx.js';
 import styles from './selection.module.css';
@@ -27,6 +32,11 @@ export type RadioGroupRootProps = {
   name?: string;
   disabled?: boolean;
   invalid?: boolean;
+  /**
+   * A message for a rule the browser can't check, set with
+   * `setCustomValidity` on the group's first radio. Empty or undefined means the rule holds.
+   */
+  customValidity?: string;
   orientation?: RadioGroupOrientation;
   id?: string;
   className?: string;
@@ -69,12 +79,14 @@ function RadioGroupRoot({
   name: nameProp,
   disabled,
   invalid,
+  customValidity,
   orientation = 'vertical',
   className,
   id,
   ref,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': describedBy,
   ...props
 }: RadioGroupRootProps) {
   if (process.env.NODE_ENV !== 'production' && valueProp !== undefined && defaultValue !== undefined) {
@@ -82,7 +94,11 @@ function RadioGroupRoot({
   }
   const autoName = useDomId();
   const name = nameProp ?? autoName;
-  const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
+  const { disabled: isDisabled, invalid: isInvalid, errorId } = useFieldsetState({ disabled, invalid });
+  const groupRef = useRef<HTMLDivElement>(null);
+  const refs = useComposedRefs(groupRef, ref);
+  useCustomValidity(() => groupRef.current?.querySelector<HTMLInputElement>('input[type="radio"]'), customValidity);
+  useRevalidate();
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
   return (
     <RadioGroupContext.Provider
@@ -99,7 +115,7 @@ function RadioGroupRoot({
     >
       <div
         {...props}
-        ref={ref}
+        ref={refs}
         id={id}
         role="radiogroup"
         className={cx(styles.group, className)}
@@ -107,6 +123,7 @@ function RadioGroupRoot({
         aria-orientation={orientation}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
+        aria-describedby={mergeDescribedBy(describedBy, errorId)}
         aria-disabled={isDisabled || undefined}
         aria-invalid={isInvalid || undefined}
       >

@@ -1,6 +1,10 @@
-import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
+import { useRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useCustomValidity } from './customValidity.js';
+import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
+import { useRevalidate } from './Form.context.js';
+import { useComposedRefs } from './props.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import styles from './selection.module.css';
 import { cx } from './cx.js';
@@ -20,6 +24,8 @@ export type SelectionControlProps = {
   children: ReactNode;
   disabled?: boolean;
   invalid?: boolean;
+  /** A message for a rule the browser can't check, set with `setCustomValidity`. Empty or undefined means the rule holds. */
+  customValidity?: string;
   name?: string;
   value?: string;
   className?: string;
@@ -46,16 +52,22 @@ export function SelectionControl({
   children,
   disabled: disabledProp,
   invalid: invalidProp,
+  customValidity,
   name,
   value,
   className,
   onChange,
   ref,
+  'aria-describedby': describedBy,
   ...props
 }: SelectionControlProps) {
   const dom = SELECTION_DOM[kind];
   // A Fieldset.Root disables the input natively; the label follows it.
-  const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
+  const { disabled, invalid, errorId } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const refs = useComposedRefs(inputRef, ref);
+  useCustomValidity(() => inputRef.current, customValidity);
+  useRevalidate();
   const { check } = useGlyphs();
   return (
     <label
@@ -67,7 +79,7 @@ export function SelectionControl({
     >
       <input
         {...props}
-        ref={ref}
+        ref={refs}
         type={dom.type}
         role={'role' in dom ? dom.role : undefined}
         className={styles.input}
@@ -76,6 +88,8 @@ export function SelectionControl({
         name={name}
         value={value}
         aria-invalid={invalid || undefined}
+        // A radio's group holds the error, so the group is described once, not each radio.
+        aria-describedby={mergeDescribedBy(describedBy, kind === 'radio' ? undefined : errorId)}
         onChange={(event) => {
           onChange?.(event);
           if (kind === 'radio') {

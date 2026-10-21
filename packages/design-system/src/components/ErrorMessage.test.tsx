@@ -17,7 +17,7 @@ describe('ErrorMessage exports', () => {
   it('is a top-level primitive', () => {
     expect(api.ErrorMessage).toBe(ErrorMessage);
     expectTypeOf<ErrorMessageRootProps>().toHaveProperty('id');
-    expectTypeOf<ErrorMessageRootProps['id']>().toEqualTypeOf<string>();
+    expectTypeOf<ErrorMessageRootProps['id']>().toEqualTypeOf<string | undefined>();
   });
 });
 
