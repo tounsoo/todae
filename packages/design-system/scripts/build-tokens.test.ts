@@ -1561,6 +1561,12 @@ describe('company token build', () => {
       ],
       [
         (r) => {
+          r.modifiers.buttonVariant.contexts.outline = [{ button: { primary: { bg: { default: { $type: 'color', $value: { $ref: '#/color/accent/hover/$value' } } } } } }];
+        },
+        /token "button\.primary\.bg\.default" belongs to Todae's modifier "buttonVariant", so override it in context "primary" of the modifier named "buttonVariant"/,
+      ],
+      [
+        (r) => {
           r.modifiers.contrast = {
             default: 'more',
             contexts: { more: [{ space: { hairline: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } }] },

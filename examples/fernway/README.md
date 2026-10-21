@@ -11,7 +11,7 @@ Fernway is a made-up cabin-booking company. This app themes Todae for it with to
 - `tokens/fernway.json` is a set of Fernway's own tokens, which `src/app.css` reads.
 - `src/App.tsx` sets a partner lodge's colors at runtime with `ThemeProvider` `overrides` and the generated `THEME_OVERRIDE_TYPES`.
 
-To change one of Todae's tokens, put it in a set or modifier with the same name as the Todae one that declares it. The token catalog, `@tounsoo/todae/tokens.json`, lists each token's layer, and the build names the right set when a token is in the wrong one.
+To change one of Todae's tokens, put it in a set or modifier with the same name as the Todae one that declares it. [Build on Todae](https://todae.omsoo.design/guides/build-on-todae) lists which entry declares which tokens, and the build names the right one when a token is in the wrong place.
 
 ## Run it
 
@@ -20,7 +20,10 @@ From the repository root:
 ```sh
 pnpm install
 pnpm build:ds
+pnpm install --offline
 pnpm --filter fernway-example dev
 ```
+
+The second install links the `todae-tokens` command, which only exists once the package is built. An app that installs `@tounsoo/todae` from npm gets it on the first install.
 
 `pnpm tokens` runs `todae-tokens build`, which writes `src/theme/todae-theme.css`, `src/theme/tokens.catalog.json` and `src/theme/todae-theme.types.ts`. They are generated on every `dev` and `build`, so they are not committed.

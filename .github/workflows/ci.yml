@@ -89,4 +89,6 @@ jobs:
       - uses: ./.github/actions/setup
       # Builds the example's tokens with todae-tokens, typechecks it and bundles it, against the package's dist.
       - run: pnpm build:ds
+      # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
+      - run: pnpm install --frozen-lockfile --offline
       - run: pnpm --filter fernway-example build

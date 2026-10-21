@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
 import { useComposedRefs } from '../components/props.js';
 import { failureKey, overrideContrastFailures, overrideContrastMessage } from './overrideContrast.js';
 import {
@@ -23,8 +23,11 @@ export type ThemeProviderProps<Extra extends string = never> = {
 
 const QUERY = '(prefers-color-scheme: dark)';
 const DEV = process.env.NODE_ENV !== 'production';
-const AppearanceContext = /* @__PURE__ */ createContext<ResolvedAppearance>('light');
-const DeclaredAppearanceContext = /* @__PURE__ */ createContext<Appearance | null>(null);
+// `declared` is null with no provider above, so the outermost one defaults to system.
+const AppearanceContext = /* @__PURE__ */ createContext<{ declared: Appearance | null; resolved: ResolvedAppearance }>({
+  declared: null,
+  resolved: 'light',
+});
 const ThemeVarsContext = /* @__PURE__ */ createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
@@ -64,10 +67,11 @@ export function ThemeProvider<Extra extends string = never>({
   ...props
 }: ThemeProviderProps<Extra>) {
   // A nested provider that only sets overrides keeps the appearance around it.
-  const enclosing = useContext(DeclaredAppearanceContext);
+  const enclosing = useContext(AppearanceContext).declared;
   const appearance = ownAppearance ?? enclosing ?? 'system';
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
+  const context = useMemo(() => ({ declared: appearance, resolved }), [appearance, resolved]);
   const vars = themeOverrideStyle(overrides, overrideTypes);
   // Each override also sets its private --_todae-* input. Component tokens,
   // re-declared on every provider, read it first, so their overrides survive
@@ -95,25 +99,23 @@ export function ThemeProvider<Extra extends string = never>({
     warned.current = key;
   }, [contrastKey, appearance, resolved]);
   return (
-    <DeclaredAppearanceContext.Provider value={appearance}>
-      <AppearanceContext.Provider value={resolved}>
-        <ThemeVarsContext.Provider value={vars}>
-          <div
-            {...props}
-            ref={composedRef}
-            style={{ ...style, ...vars, ...inputs } as CSSProperties}
-            // "system" resolves in CSS through prefers-color-scheme, so a
-            // server-rendered page is dark from the first paint.
-            data-appearance={appearance}
-          />
-        </ThemeVarsContext.Provider>
-      </AppearanceContext.Provider>
-    </DeclaredAppearanceContext.Provider>
+    <AppearanceContext.Provider value={context}>
+      <ThemeVarsContext.Provider value={vars}>
+        <div
+          {...props}
+          ref={composedRef}
+          style={{ ...style, ...vars, ...inputs } as CSSProperties}
+          // "system" resolves in CSS through prefers-color-scheme, so a
+          // server-rendered page is dark from the first paint.
+          data-appearance={appearance}
+        />
+      </ThemeVarsContext.Provider>
+    </AppearanceContext.Provider>
   );
 }
 
 export function useAppearance(): ResolvedAppearance {
-  return useContext(AppearanceContext);
+  return useContext(AppearanceContext).resolved;
 }
 
 export function useThemeVars(): Record<string, string> {

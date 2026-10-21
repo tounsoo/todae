@@ -1,12 +1,7 @@
 {
   "button": {
     "base": {
-      "radius": {
-        "$type": "dimension",
-        "$value": {
-          "$ref": "#/radius/full/$value"
-        }
-      }
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } }
     }
   }
 }

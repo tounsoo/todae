@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ButtonVariant, ButtonVariants } from '../components/Button.js';
 import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider.js';
 import { ThemeProvider, useAppearance } from './ThemeProvider.js';
-import { THEME_OVERRIDE_KEYS, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
+import { THEME_OVERRIDE_KEYS, type ThemeColorValue, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -87,6 +87,20 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId('const').style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.45 0.1 155)');
+    expectTypeOf(accent).toExtend<ThemeColorValue>();
+  });
+
+  it('lets a nested provider set system inside a dark one', () => {
+    mockMatchMedia(false);
+    render(
+      <ThemeProvider appearance="dark">
+        <ThemeProvider data-testid="system" appearance="system">
+          <AppearanceLabel />
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('system').getAttribute('data-appearance')).toBe('system');
+    expect(screen.getByTestId('system').textContent).toBe('light');
   });
 
   it('defaults to system with no provider around it', () => {

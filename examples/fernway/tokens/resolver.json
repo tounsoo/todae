@@ -5,115 +5,47 @@
   "description": "Fernway, a fictional cabin-booking company: warm stone grays, a forest green accent, rounder corners and a soft button.",
   "sets": {
     "core": {
-      "sources": [
-        {
-          "$ref": "./core.json"
-        }
-      ],
-      "$extensions": {
-        "dev.todae": {
-          "layer": "core"
-        }
-      }
-    },
-    "contract": {
-      "sources": [
-        {
-          "$ref": "./contract.json"
-        }
-      ],
-      "$extensions": {
-        "dev.todae": {
-          "layer": "contract"
-        }
-      }
-    },
-    "fernway": {
-      "sources": [
-        {
-          "$ref": "./fernway.json"
-        }
-      ],
-      "$extensions": {
-        "dev.todae": {
-          "layer": "contract"
-        }
-      }
+      "sources": [{ "$ref": "./core.json" }],
+      "$extensions": { "dev.todae": { "layer": "core" } }
     },
     "button": {
-      "sources": [
-        {
-          "$ref": "./button.json"
-        }
-      ],
-      "$extensions": {
-        "dev.todae": {
-          "layer": "contract"
-        }
-      }
+      "sources": [{ "$ref": "./button.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    },
+    "contract": {
+      "sources": [{ "$ref": "./contract.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    },
+    "fernway": {
+      "sources": [{ "$ref": "./fernway.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
     }
   },
   "modifiers": {
     "appearance": {
       "contexts": {
-        "light": [
-          {
-            "$ref": "./appearance/light.json"
-          }
-        ],
-        "dark": [
-          {
-            "$ref": "./appearance/dark.json"
-          }
-        ]
+        "light": [{ "$ref": "./appearance/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }]
       },
       "$extensions": {
-        "dev.todae": {
-          "layer": "appearance",
-          "attribute": "data-appearance",
-          "root": true,
-          "colorScheme": true
-        }
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
       }
     },
     "buttonVariant": {
       "contexts": {
-        "soft": [
-          {
-            "$ref": "./button.soft.json"
-          }
-        ]
+        "soft": [{ "$ref": "./button.soft.json" }]
       },
       "$extensions": {
-        "dev.todae": {
-          "layer": "contract",
-          "rules": [
-            "button"
-          ],
-          "attribute": "data-button-variant",
-          "alias": true
-        }
+        "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
       }
     }
   },
   "resolutionOrder": [
-    {
-      "$ref": "#/sets/core"
-    },
-    {
-      "$ref": "#/modifiers/appearance"
-    },
-    {
-      "$ref": "#/sets/button"
-    },
-    {
-      "$ref": "#/modifiers/buttonVariant"
-    },
-    {
-      "$ref": "#/sets/contract"
-    },
-    {
-      "$ref": "#/sets/fernway"
-    }
+    { "$ref": "#/sets/core" },
+    { "$ref": "#/modifiers/appearance" },
+    { "$ref": "#/sets/button" },
+    { "$ref": "#/modifiers/buttonVariant" },
+    { "$ref": "#/sets/contract" },
+    { "$ref": "#/sets/fernway" }
   ]
 }

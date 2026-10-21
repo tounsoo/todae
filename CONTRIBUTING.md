@@ -10,6 +10,7 @@ Todae is a pnpm workspace:
 
 - `packages/design-system` is `@tounsoo/todae`, the Vite library released to npm. Its [README](packages/design-system/README.md) is the package's npm page.
 - `apps/docs` is the Next.js 15 docs site. It renders live MDX examples from the library and serves the docs MCP server.
+- `examples/fernway` is a small Vite app that themes Todae for a made-up company with tokens only. Its [README](examples/fernway/README.md) says how to run it.
 
 ## Set up
 
