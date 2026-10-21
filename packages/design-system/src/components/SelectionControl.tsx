@@ -1,7 +1,8 @@
-import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
+import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFieldsetState } from './Fieldset.context.js';
-import { CheckGlyph, glyphOr } from './glyphs.js';
+import { useComposedRefs } from './props.js';
+import { CheckGlyph, DashGlyph, glyphOr } from './glyphs.js';
 import styles from './selection.module.css';
 import { cx } from './cx.js';
 
@@ -23,6 +24,8 @@ export type SelectionControlProps = {
   name?: string;
   value?: string;
   className?: string;
+  /** Checkboxes only: the mixed state, drawn with the `indeterminate` glyph. */
+  indeterminate?: boolean;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   ref?: Ref<HTMLInputElement>;
 } & Omit<
@@ -49,6 +52,7 @@ export function SelectionControl({
   name,
   value,
   className,
+  indeterminate: indeterminateProp,
   onChange,
   ref,
   ...props
@@ -56,18 +60,26 @@ export function SelectionControl({
   const dom = SELECTION_DOM[kind];
   // A Fieldset.Root disables the input natively; the label follows it.
   const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
-  const { check } = useGlyphs();
+  const { check, indeterminate: indeterminateGlyph } = useGlyphs();
+  const indeterminate = kind === 'checkbox' && !!indeterminateProp;
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const composedRef = useComposedRefs(ref, inputRef);
+  // The DOM property has no attribute, and a click clears it, so it is set again after every render.
+  useLayoutEffect(() => {
+    if (inputRef.current) inputRef.current.indeterminate = indeterminate;
+  });
   return (
     <label
       className={cx(styles.root, className)}
       data-control={kind}
       data-checked={checked ? '' : undefined}
+      data-indeterminate={indeterminate ? '' : undefined}
       data-disabled={disabled ? '' : undefined}
       data-invalid={invalid ? '' : undefined}
     >
       <input
         {...props}
-        ref={ref}
+        ref={composedRef}
         type={dom.type}
         role={'role' in dom ? dom.role : undefined}
         className={styles.input}
@@ -78,6 +90,8 @@ export function SelectionControl({
         aria-invalid={invalid || undefined}
         onChange={(event) => {
           onChange?.(event);
+          // A click clears the mixed state; if nothing renders again, put it back.
+          event.target.indeterminate = indeterminate;
           if (kind === 'radio') {
             if (event.target.checked) onChecked(true);
             return;
@@ -88,7 +102,7 @@ export function SelectionControl({
       <span className={styles.indicator} aria-hidden="true" data-todae-focus-ring="">
         {kind === 'checkbox' ? (
           <span className={styles.glyph} data-todae-glyph="">
-            {glyphOr(check, <CheckGlyph />)}
+            {indeterminate ? glyphOr(indeterminateGlyph, <DashGlyph />) : glyphOr(check, <CheckGlyph />)}
           </span>
         ) : null}
       </span>

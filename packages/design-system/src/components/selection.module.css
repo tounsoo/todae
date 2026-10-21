@@ -42,6 +42,11 @@
     border-color: var(--todae-selection-border-checked);
   }
 
+  .root[data-indeterminate] .indicator {
+    background: var(--todae-selection-bg-checked);
+    border-color: var(--todae-selection-border-checked);
+  }
+
   .input:focus-visible + .indicator {
     outline: var(--todae-focus-ring-width) solid var(--todae-selection-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -69,7 +74,7 @@
     border-color: var(--todae-selection-border-disabled);
   }
 
-  /* The check glyph fills the box and shows while the input is checked. A
+  /* The check glyph fills the box and shows while the input is checked or mixed. A
      text or icon-font glyph takes the box's size as its font size. */
   .glyph {
     display: flex;
@@ -88,7 +93,8 @@
     block-size: 100%;
   }
 
-  .input:checked + .indicator > .glyph {
+  .input:checked + .indicator > .glyph,
+  .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
   }
 

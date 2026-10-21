@@ -9,6 +9,8 @@ export type CheckboxRootProps = {
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   invalid?: boolean;
+  /** The mixed state, such as a select-all box over a partly selected list. Sets the input's `indeterminate` and shows the `indeterminate` glyph in place of the check. A click still toggles `checked`. */
+  indeterminate?: boolean;
   name?: string;
   value?: string;
   className?: string;

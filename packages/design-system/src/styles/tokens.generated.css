@@ -875,7 +875,13 @@
   --todae-table-header-font-letter-spacing: var(--_todae-table-header-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-table-header-font-text-transform: var(--_todae-table-header-font-text-transform, var(--todae-font-text-transform-default));
   --todae-table-header-font-weight: var(--_todae-table-header-font-weight, var(--todae-font-weight-medium));
+  --todae-table-row-bg-selected: var(--_todae-table-row-bg-selected, var(--todae-color-bg-selected));
   --todae-table-rule-thickness: var(--_todae-table-rule-thickness, 1px);
+  --todae-table-sort-gap: var(--_todae-table-sort-gap, var(--todae-space-inline-gap));
+  --todae-table-sort-icon-fg-default: var(--_todae-table-sort-icon-fg-default, var(--todae-color-fg-muted));
+  --todae-table-sort-icon-fg-selected: var(--_todae-table-sort-icon-fg-selected, var(--todae-color-fg-default));
+  --todae-table-sort-icon-size: var(--_todae-table-sort-icon-size, 1rem);
+  --todae-table-sort-ring-focus: var(--_todae-table-sort-ring-focus, var(--todae-focus-ring-color));
   --todae-meter-fill-critical: var(--_todae-meter-fill-critical, var(--todae-color-status-critical-fg));
   --todae-meter-fill-optimum: var(--_todae-meter-fill-optimum, var(--todae-color-status-success-fg));
   --todae-meter-fill-suboptimum: var(--_todae-meter-fill-suboptimum, var(--todae-color-status-warning-fg));
