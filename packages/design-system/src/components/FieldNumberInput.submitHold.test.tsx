@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Activity, Suspense, startTransition, use, useRef, useState } from 'react';
+import { Activity, Suspense, startTransition, use, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../index.js';
 import { button, input, key, type } from '../test/number.js';
@@ -77,70 +78,70 @@ function Auto({
 const form = () => screen.getByTestId('form') as HTMLFormElement;
 
 describe('a submit and a commit that has no draft', () => {
-  it('sends the new number when onValueChange submits after ArrowUp', () => {
+  it('sends the new number when onValueChange submits after ArrowUp', async () => {
     const log = newLog();
     render(<Auto log={log} />);
-    act(() => key('ArrowUp'));
+    await act(async () => key('ArrowUp'));
     expect(log.told).toEqual([6]);
     expect(log.sent).toEqual(['6']);
     expect(input().value).toBe('6');
   });
 
-  it('sends the new number when onValueChange submits after PageUp', () => {
+  it('sends the new number when onValueChange submits after PageUp', async () => {
     const log = newLog();
     render(<Auto log={log} largeStep={10} />);
-    act(() => key('PageUp'));
+    await act(async () => key('PageUp'));
     expect(log.told).toEqual([15]);
     expect(log.sent).toEqual(['15']);
   });
 
-  it('sends the new number when onValueChange submits after an Increment click', () => {
+  it('sends the new number when onValueChange submits after an Increment click', async () => {
     const log = newLog();
     render(<Auto log={log} />);
-    act(() => {
+    await act(async () => {
       fireEvent.click(button('Increase'), { detail: 0 });
     });
     expect(log.told).toEqual([6]);
     expect(log.sent).toEqual(['6']);
   });
 
-  it('sends each number once for each tick of a held button', () => {
+  it('sends each number once for each tick of a held button', async () => {
     vi.useFakeTimers();
     const log = newLog();
     render(<Auto log={log} start={0} />);
-    act(() => {
+    await act(async () => {
       fireEvent.pointerDown(button('Increase'), { button: 0 });
     });
     for (const ms of [400, 60, 60]) {
-      act(() => {
+      await act(async () => {
         vi.advanceTimersByTime(ms);
       });
     }
-    act(() => {
+    await act(async () => {
       fireEvent.pointerUp(button('Increase'));
     });
     expect(log.told).toEqual([1, 2, 3]);
     expect(log.sent).toEqual(['1', '2', '3']);
   });
 
-  it('does not hold the next submit after a step the product refused', () => {
+  it('does not hold the next submit after a step the product refused', async () => {
     const log = newLog();
     render(<Auto log={log} accept={false} autoSubmit={false} />);
-    act(() => key('ArrowUp'));
+    await act(async () => key('ArrowUp'));
     expect(log.told).toEqual([6]);
     expect(input().value).toBe('5');
-    act(() => form().requestSubmit());
+    await act(async () => form().requestSubmit());
     expect(log.sent).toEqual(['5']);
-    act(() => form().requestSubmit());
+    await act(async () => form().requestSubmit());
     expect(log.sent).toEqual(['5', '5']);
   });
 
-  it('does not hold a refused step that auto-submits, and does not swallow the next submit', () => {
+  it('does not hold a refused step that auto-submits, and does not swallow the next submit', async () => {
     const log = newLog();
     render(<Auto log={log} accept={false} />);
-    act(() => key('ArrowUp'));
+    await act(async () => key('ArrowUp'));
     expect(log.sent).toEqual(['5']);
-    act(() => form().requestSubmit());
+    await act(async () => form().requestSubmit());
     expect(log.sent).toEqual(['5', '5']);
   });
 });
@@ -170,7 +171,7 @@ describe('a held submit and a commit that takes the input out of the page', () =
 });
 
 describe('a form in a shadow root', () => {
-  it('commits the typed text on a submit, and sends it once', () => {
+  it('commits the typed text on a submit, and sends it once', async () => {
     const host = document.createElement('div');
     document.body.appendChild(host);
     const container = document.createElement('div');
@@ -179,7 +180,7 @@ describe('a form in a shadow root', () => {
     const { unmount } = render(<Auto log={log} autoSubmit={false} />, { container });
     const field = container.querySelector<HTMLInputElement>('[role=spinbutton]')!;
     fireEvent.change(field, { target: { value: '9' } });
-    act(() => container.querySelector('form')!.requestSubmit());
+    await act(async () => container.querySelector('form')!.requestSubmit());
     expect(log.told).toEqual([9]);
     expect(log.sent).toEqual(['9']);
     unmount();
@@ -384,7 +385,7 @@ describe('a Suspense boundary that hides the input, and a submit that comes mean
     expect(sent).toEqual([null]);
   });
 
-  it('drops the held submit when another submit of the form comes first, so nothing is sent twice', async () => {
+  it('folds another submit of the form into the held one, so the form sends the committed number once', async () => {
     const sent: (string | null)[] = [];
     render(<Hidden sent={sent} />);
     type('7');
@@ -392,16 +393,181 @@ describe('a Suspense boundary that hides the input, and a submit that comes mean
       fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     });
     expect(sent).toEqual([]);
-    // The page still shows the old render, which another submit sends.
+    // The page still shows the old render, and this submit joins the held one instead of sending it.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     });
-    expect(sent).toEqual(['5']);
+    expect(sent).toEqual([]);
     await act(async () => {
       release();
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
-    expect(sent).toEqual(['5']);
+    expect(sent).toEqual(['7']);
     expect(input().value).toBe('7');
+  });
+});
+
+describe('a held submit is sent after the commit, from one watcher', () => {
+  it('lets a product read the refs and layout effects of the whole commit in its onSubmit', async () => {
+    const seen: { value: string | null; note: string | null; mirrored: number | null }[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      const form = useRef<HTMLFormElement>(null);
+      const note = useRef<HTMLInputElement>(null);
+      const mirrored = useRef(value);
+      useLayoutEffect(() => {
+        mirrored.current = value;
+      });
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            seen.push({ value: new FormData(event.currentTarget).get('q') as string | null, note: note.current?.name ?? null, mirrored: mirrored.current });
+          }}
+        >
+          <Field.Root aria-label="Q" name="q">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                setValue(next);
+                form.current?.requestSubmit();
+              }}
+            />
+          </Field.Root>
+          {value !== null && value > 5 ? <input ref={note} name="note" defaultValue="x" /> : null}
+        </form>
+      );
+    }
+    render(<Page />);
+    await act(async () => key('ArrowUp'));
+    expect(seen).toEqual([{ value: '6', note: 'note', mirrored: 6 }]);
+  });
+
+  it('lets a product call flushSync in its onSubmit', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let banner: string | null = null;
+    const sent: (string | null)[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      const [pending, setPending] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            flushSync(() => setPending(true));
+            banner = document.querySelector('[data-banner]')?.textContent ?? null;
+            sent.push(new FormData(event.currentTarget).get('q') as string | null);
+          }}
+        >
+          {pending ? <p data-banner>sending</p> : null}
+          <Field.Root aria-label="Q" name="q">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                setValue(next);
+                form.current?.requestSubmit();
+              }}
+            />
+          </Field.Root>
+        </form>
+      );
+    }
+    render(<Page />);
+    await act(async () => key('ArrowUp'));
+    expect(error).not.toHaveBeenCalled();
+    expect(banner).toBe('sending');
+    expect(sent).toEqual(['6']);
+  });
+
+  it('folds a second submit in the same task into the held one, so the form sends once', async () => {
+    const log = newLog();
+    render(<Auto log={log} autoSubmit={false} />);
+    type('7');
+    await act(async () => {
+      form().requestSubmit();
+      form().requestSubmit();
+    });
+    expect(log.told).toEqual([7]);
+    expect(log.sent).toEqual(['7']);
+  });
+
+  it('keeps the newest submitter of the folded submits', async () => {
+    const submitters: (string | null)[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      return (
+        <form
+          data-testid="form"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitters.push((event.nativeEvent as SubmitEvent).submitter?.textContent ?? null);
+          }}
+        >
+          <Field.Root aria-label="Q" name="q">
+            <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+          </Field.Root>
+          <button type="submit">First</button>
+          <button type="submit">Second</button>
+        </form>
+      );
+    }
+    render(<Page />);
+    type('7');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'First' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Second' }));
+    });
+    expect(submitters).toEqual(['Second']);
+  });
+
+  it('sends once when an Activity hides the input on the step that submits and another submit lands in the same task', async () => {
+    const sent: (string | null)[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      const [hidden, setHidden] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('q') as string | null);
+          }}
+        >
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <Field.Root aria-label="Q" name="q">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  setHidden(true);
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+          </Activity>
+          <button type="submit">Go</button>
+        </form>
+      );
+    }
+    render(<Page />);
+    // Synchronous acts: the hide and the second submit land before any microtask.
+    act(() => key('ArrowUp'));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    });
+    await act(async () => {});
+    await act(async () => {});
+    expect(sent).toEqual(['6']);
   });
 });

@@ -208,18 +208,24 @@ export function decimalsOf(value: number): number {
 
 const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.min(100, decimals)));
 
-// How far the operands' own rounding can move a quotient `(value - base) / step`, in steps: each is off by up to an ulp, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps).
-const noise = (value: number, base: number, step: number) => (Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step;
+// The spacing of doubles at `value`, which a number read from text can be off by half of.
+const ulp = (value: number) => (value === 0 || !Number.isFinite(value) ? 0 : 2 ** (Math.floor(Math.log2(Math.abs(value))) - 52));
 
-// The grid index of a value. An index within 8 times that noise of a whole number (the subtraction adds some of its own), and at most a quarter step, is that number, so a value on the grid reads as on it at any operand and a bound this loose can only ever pick the nearer point. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5); the window is that tight because a wider one would take a value a third of the way up to a half. Any other index gets the 15-digit guard of the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
+// How far the operands' own rounding can move a quotient `(value - base) / step`, in steps: each operand is off by up to half its ulp, and the subtraction and the division by up to an ulp of the quotient. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps).
+const noise = (value: number, base: number, step: number, raw: number) =>
+  (ulp(value) / 2 + ulp(base) / 2) / step + Number.EPSILON * Math.abs(raw);
+
+// The grid index of a value. An index within twice that noise of a whole number, and at most a quarter step, is that number, so a value on the grid reads as on it at any operand, and one a fifth of a step off it never does. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5), and one a few doubles below a half stays below it. Any other index gets the 15-digit guard of the max line, where that moves it by no more than the noise (past 1e14 it would drop the fraction): 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
 function indexOf(value: number, base: number, step: number): number {
   const raw = (value - base) / step;
   if (Number.isInteger(raw) || Math.abs(raw) >= 1e15) return raw;
-  const error = noise(value, base, step);
+  const error = noise(value, base, step, raw);
   const whole = Math.round(raw);
-  if (Math.abs(raw - whole) <= Math.min(0.25, 8 * error)) return whole;
+  if (Math.abs(raw - whole) <= Math.min(0.25, 2 * error)) return whole;
   const half = Math.round(raw * 2) / 2;
-  return Math.abs(raw - half) <= Math.min(0.25, error) ? half : Number(raw.toPrecision(15));
+  if (Math.abs(raw - half) <= Math.min(0.25, error)) return half;
+  const guarded = Number(raw.toPrecision(15));
+  return Math.abs(guarded - raw) <= 2 * error ? guarded : raw;
 }
 
 /** Whether a value sits on the `step` grid, counted from `min`, or from 0 without one. True with no `step`. */
@@ -294,7 +300,7 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
     high = pointAt(index, range);
     if (high > max) {
       // A `max` on the grid within the error bound of a point (0.3 - 0.1 on a 0.1 grid) has that clean point as its answer, so no commit carries the noise. A point further past `max` comes from a grid too fine for a double: where `max` is on the grid it is the answer, and above 1e15 the grid is only as exact as a double, so a whole quotient counts as on it. Otherwise step back, and where a double holds no lower point, take `max` itself.
-      if (onGrid(max, range)) high = high - max <= Math.min(0.25, 8 * noise(max, base, step)) * step ? high : max;
+      if (onGrid(max, range)) high = high - max <= Math.min(0.25, 2 * noise(max, base, step, (max - base) / step)) * step ? high : max;
       else {
         while (high > max) {
           const lower = pointAt(index - 1, range);

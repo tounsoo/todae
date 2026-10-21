@@ -620,3 +620,13 @@ describe('Field.NumberInput at a 16-digit value', () => {
     expect(onCommit).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Field.NumberInput render reads state only', () => {
+  it('does not read the page in render, only in a handler', () => {
+    const read = vi.spyOn(Element.prototype, 'getAttribute');
+    render(<Quantity initial={5} locale="en" />);
+    type('9');
+    const during = read.mock.calls.filter(([name]) => name === 'data-todae-commits').length;
+    expect(during).toBe(0);
+  });
+});

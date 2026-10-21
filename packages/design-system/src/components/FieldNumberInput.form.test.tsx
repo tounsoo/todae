@@ -279,7 +279,7 @@ describe('Field.NumberInput on the server', () => {
 });
 
 describe('Field.NumberInput and a submit from inside a commit phase', () => {
-  it('sends the number the product accepted when an effect submits the form, with no React warning', () => {
+  it('sends the number the product accepted when an effect submits the form, with no React warning', async () => {
     const error = vi.spyOn(console, 'error');
     const sent: (string | null)[] = [];
     const told: (number | null)[] = [];
@@ -312,7 +312,7 @@ describe('Field.NumberInput and a submit from inside a commit phase', () => {
     }
     const { rerender } = render(<Page go={false} />);
     type('7');
-    act(() => rerender(<Page go />));
+    await act(async () => rerender(<Page go />));
     expect(sent).toEqual(['7']);
     expect(told).toEqual([7]);
     expect(error).not.toHaveBeenCalled();
@@ -349,35 +349,35 @@ describe('Field.NumberInput and a submit that a commit starts', () => {
     );
   }
 
-  it('commits once and sends once when onValueChange submits, after a step from a draft', () => {
+  it('commits once and sends once when onValueChange submits, after a step from a draft', async () => {
     const log: (number | null)[] = [];
     const sent: (string | null)[] = [];
     render(<Auto log={log} sent={sent} />);
     type('7');
-    act(() => key('ArrowUp'));
+    await act(async () => key('ArrowUp'));
     expect(log).toEqual([8]);
     expect(input().value).toBe('8');
     expect(sent).toEqual(['8']);
   });
 
-  it('commits once and sends once when onValueChange submits on blur', () => {
+  it('commits once and sends once when onValueChange submits on blur', async () => {
     const log: (number | null)[] = [];
     const sent: (string | null)[] = [];
     render(<Auto log={log} sent={sent} />);
     input().focus();
     type('7');
-    act(() => input().blur());
+    await act(async () => input().blur());
     expect(log).toEqual([7]);
     expect(sent).toEqual(['7']);
   });
 
-  it('commits once and sends once when an onBlur prop submits', () => {
+  it('commits once and sends once when an onBlur prop submits', async () => {
     const log: (number | null)[] = [];
     const sent: (string | null)[] = [];
     render(<Auto log={log} sent={sent} onBlur />);
     input().focus();
     type('7');
-    act(() => input().blur());
+    await act(async () => input().blur());
     expect(log).toEqual([7]);
     expect(sent).toEqual(['7']);
   });
@@ -420,14 +420,14 @@ describe('Field.NumberInput and a form that is not there at mount', () => {
     render(<Page />);
     await act(async () => show());
     type('70');
-    act(() => (document.getElementById('late') as HTMLFormElement).requestSubmit());
+    await act(async () => (document.getElementById('late') as HTMLFormElement).requestSubmit());
     expect(sent).toEqual(['70']);
     expect(told).toEqual([70]);
   });
 });
 
 describe('Field.NumberInput with two drafts in one form', () => {
-  it('commits both before the one send', () => {
+  it('commits both before the one send', async () => {
     const sent: Record<string, FormDataEntryValue>[] = [];
     const told: string[] = [];
     function Page() {
@@ -454,7 +454,7 @@ describe('Field.NumberInput with two drafts in one form', () => {
     const [first, second] = screen.getAllByRole('spinbutton') as HTMLInputElement[];
     fireEvent.change(first!, { target: { value: '8' } });
     fireEvent.change(second!, { target: { value: '9' } });
-    act(() => (screen.getByTestId('form') as HTMLFormElement).requestSubmit());
+    await act(async () => (screen.getByTestId('form') as HTMLFormElement).requestSubmit());
     expect(sent).toEqual([{ a: '8', b: '9' }]);
     expect(told.sort()).toEqual(['a8', 'b9']);
   });
@@ -503,45 +503,45 @@ describe('Field.NumberInput in a form that validates natively', () => {
     );
   }
   const form = () => screen.getByTestId('form') as HTMLFormElement;
-  const requestSubmit = (submitter?: HTMLElement) => act(() => form().requestSubmit(submitter));
+  const requestSubmit = (submitter?: HTMLElement) => act(async () => form().requestSubmit(submitter));
 
-  it('sends the number the product accepted, not the one it refused', () => {
+  it('sends the number the product accepted, not the one it refused', async () => {
     const onSubmit = vi.fn();
     render(<Page initial={50} max={100} adopt={false} onSubmit={onSubmit} />);
     type('70');
-    requestSubmit();
+    await requestSubmit();
     expect(onSubmit).toHaveBeenCalledWith('50');
     expect(input().value).toBe('50');
   });
 
-  it('sends the typed number from a submit with no blur, committing it once', () => {
+  it('sends the typed number from a submit with no blur, committing it once', async () => {
     const onSubmit = vi.fn();
     const onCommit = vi.fn();
     render(<Page initial={3} onSubmit={onSubmit} onCommit={onCommit} />);
     type('7');
-    requestSubmit();
+    await requestSubmit();
     expect(onSubmit).toHaveBeenCalledWith('7');
     expect(onCommit.mock.calls).toEqual([[7]]);
   });
 
-  it('does not send a cleared required text as empty, and reports it', () => {
+  it('does not send a cleared required text as empty, and reports it', async () => {
     const onSubmit = vi.fn();
     render(<Page initial={7} onSubmit={onSubmit} />);
     const invalid = vi.fn();
     valueInput().addEventListener('invalid', invalid);
     type('');
-    requestSubmit();
+    await requestSubmit();
     expect(onSubmit).not.toHaveBeenCalled();
     expect(invalid).toHaveBeenCalled();
     expect(input().value).toBe('');
   });
 
-  it('documented limit: a requestSubmit with focus in the text is blocked on the last committed number when that is invalid, and nothing is committed', () => {
+  it('documented limit: a requestSubmit with focus in the text is blocked on the last committed number when that is invalid, and nothing is committed', async () => {
     const onSubmit = vi.fn();
     const onCommit = vi.fn();
     render(<Page initial={null} onSubmit={onSubmit} onCommit={onCommit} />);
     type('7');
-    requestSubmit();
+    await requestSubmit();
     expect(onSubmit).not.toHaveBeenCalled();
     expect(onCommit).not.toHaveBeenCalled();
     expect(input().value).toBe('7');
@@ -558,10 +558,10 @@ describe('Field.NumberInput in a form that validates natively', () => {
     expect(input().value).toBe('5');
   });
 
-  it('leaves a text that is no number as it is', () => {
+  it('leaves a text that is no number as it is', async () => {
     render(<Page initial={null} onSubmit={() => undefined} />);
     type('abc');
-    requestSubmit();
+    await requestSubmit();
     expect(input().value).toBe('abc');
     expect(valueInput().value).toBe('');
   });

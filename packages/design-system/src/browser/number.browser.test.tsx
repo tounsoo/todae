@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 
@@ -800,7 +801,7 @@ describe('a held submit when the input is hidden, in a browser', () => {
     expect(sent).toEqual([null]);
   });
 
-  it('a Suspense boundary: another submit of the form drops the held one', async () => {
+  it('a Suspense boundary: another submit of the form joins the held one, and the committed number is sent once', async () => {
     const sent: (string | null)[] = [];
     render(<Hidden sent={sent} />);
     await userEvent.click(input());
@@ -808,11 +809,117 @@ describe('a held submit when the input is hidden, in a browser', () => {
     await settle();
     expect(sent).toEqual([]);
     await userEvent.click(screen.getByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(sent).toEqual(['5']));
-    open();
-    await waitFor(() => expect(input().value).toBe('6'));
     await settle();
-    expect(sent).toEqual(['5']);
+    expect(sent).toEqual([]);
+    open();
+    await waitFor(() => expect(sent).toEqual(['6']));
+    await settle();
+    expect(sent).toEqual(['6']);
+    expect(input().value).toBe('6');
+  });
+
+  it('an Activity that hides the input on the step that submits: a submit in the same task is folded, and the form sends once', async () => {
+    const sent: (string | null)[] = [];
+    function Filter() {
+      const [value, setValue] = useState<number | null>(5);
+      const [hidden, setHidden] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+          }}
+        >
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <Field.Root aria-label="Quantity" name="quantity">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  setHidden(true);
+                  form.current?.requestSubmit();
+                  // Another submit before any microtask.
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+          </Activity>
+        </form>
+      );
+    }
+    render(<Filter />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(sent).toEqual(['6']));
+    await settle();
+    expect(sent).toEqual(['6']);
+  });
+});
+
+describe('a held submit is sent after the commit, in a browser', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
+
+  it('a product onSubmit sees the refs of the whole commit and may call flushSync', async () => {
+    const error = vi.spyOn(console, 'error');
+    const seen: { value: string | null; note: string | null; banner: string | null }[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      const [pending, setPending] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      const note = useRef<HTMLInputElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            flushSync(() => setPending(true));
+            seen.push({
+              value: new FormData(event.currentTarget).get('quantity') as string | null,
+              note: note.current?.name ?? null,
+              banner: document.querySelector('[data-banner]')?.textContent ?? null,
+            });
+          }}
+        >
+          {pending ? <p data-banner>sending</p> : null}
+          <Field.Root aria-label="Quantity" name="quantity">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                setValue(next);
+                form.current?.requestSubmit();
+              }}
+            />
+          </Field.Root>
+          {value !== null && value > 5 ? <input ref={note} name="note" defaultValue="x" /> : null}
+        </form>
+      );
+    }
+    render(<Page />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(seen).toHaveLength(1));
+    await settle();
+    expect(seen).toEqual([{ value: '6', note: 'note', banner: 'sending' }]);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('two submits in the same task send the committed number once', async () => {
+    const sent: (string | null)[] = [];
+    render(<Quantity initial={3} onSubmit={(data) => sent.push(data.get('quantity') as string | null)} withForm={false} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}7');
+    const form = input().form!;
+    form.requestSubmit();
+    form.requestSubmit();
+    await settle();
+    expect(sent).toEqual(['7']);
   });
 });
 

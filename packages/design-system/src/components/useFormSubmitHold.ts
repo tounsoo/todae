@@ -13,26 +13,29 @@ function send({ form, submitter }: Held) {
 // The attribute the input carries its commit count in, so the page itself says which commit it shows.
 const COUNT = 'data-todae-commits';
 
-// Watches a submit held for an input whose effects are off, from the page and not from the input's own effects: the input leaving the page, or the page showing its commit (`waiting` ends), ends the hold with the send, and a submit of the same form ends it without one (that one goes out, so this would be its twin). Returns its stop.
-function watchHidden(node: HTMLElement, { form }: Held, waiting: () => boolean, end: (sendIt: boolean) => void): () => void {
+// The one watcher of a held submit, started when the submit is held and standing on the input's root node, not on the input: a capture listener folds every later submit of the form into the held one (the newest submitter is kept), and a MutationObserver sends it once, when the input is gone from the page or the page shows its commit. Both run outside React's commit, so a product's `onSubmit` sees the whole commit and may call `flushSync`.
+function watch(node: HTMLElement, held: Held, behind: (node: HTMLElement) => boolean, end: () => void) {
   const root = node.getRootNode();
   const onSubmit = (event: Event) => {
-    if (event.target !== form) return;
-    stop();
-    end(false);
+    if (event.target !== held.form) return;
+    fold(held, event);
   };
   const observer = new MutationObserver(() => {
-    if (node.isConnected && waiting()) return;
-    stop();
-    end(true);
-  });
-  function stop() {
+    if (node.isConnected && behind(node)) return;
     root.removeEventListener('submit', onSubmit, true);
     observer.disconnect();
-  }
+    end();
+    if (held.form.isConnected) send(held);
+  });
   root.addEventListener('submit', onSubmit, true);
   observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: [COUNT] });
-  return stop;
+}
+
+// A later submit of the form joins the held one: cancelled, and the newest submitter is the one that is sent.
+function fold(held: Held, event: Event) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  held.submitter = (event as SubmitEvent).submitter;
 }
 
 /**
@@ -49,9 +52,8 @@ function watchHidden(node: HTMLElement, { form }: Held, waiting: () => boolean, 
  * - `committed()` counts the commit (`asked`) and renders that count, so a
  *   render always follows, even when the product refuses the number and
  *   changes nothing. The input is waiting while the count in the page (`mark`)
- *   is behind `asked`, and the layout effect of the render that brings it
- *   level sends a held submit. The page is the one place that knows what
- *   has been shown, whether or not the input's effects ran.
+ *   is behind `asked`. The page is the one place that knows what has been
+ *   shown, whether or not the input's effects ran.
  * - Text that is no number is not a value, so no submit sends the old number
  *   in its place. The unreadable text makes the value input invalid, so a
  *   form that checks (the browser's check, or Form.Root's, which words it)
@@ -61,22 +63,18 @@ function watchHidden(node: HTMLElement, { form }: Held, waiting: () => boolean, 
  * - A submit of the input's form that finds a draft that reads (`read`), or
  *   the input waiting (a product's auto-submit in `onValueChange`, a step with
  *   no draft), is cancelled and held: `preventDefault` and
- *   `stopImmediatePropagation`. The draft commits as blur does. The effect
- *   that brings the count level sends the held submit again, once, with the
- *   submitter, so a number the product refuses is never sent and the product
- *   is never told a number other than the one sent.
- * - When the input's effects are cleaned up (a Suspense boundary or an
- *   Activity hides it, or it is removed), a microtask later, when the commit
- *   is done, the held submit is settled by what the page shows. An input that
- *   is gone means the product moved on, and the form still goes, if it is
- *   still in the page. An input in the page with the count level shows the
- *   commit already, so it goes at once. Otherwise the render has not reached
- *   the page: a Suspense boundary keeps the old page until it shows the new
- *   render, and an Activity renders its hidden content a moment after. The
- *   submit stays held, and `watchHidden` sends it when the page shows the
- *   commit (an Activity) or the input is removed, and drops it if another
- *   submit of the form comes first, so it is never sent twice. The layout
- *   effect sends it when the input shows again with the committed render.
+ *   `stopImmediatePropagation`. The draft commits as blur does.
+ * - One watcher holds it from then on, on the input's root node, so it does
+ *   not depend on the input's effects, which a Suspense boundary or an
+ *   Activity turns off. Every later submit of the form is folded into the
+ *   held one (cancelled, the newest submitter kept), and a MutationObserver
+ *   sends the form once, from the observer's callback after React's commit,
+ *   when the input is gone from the page (the product moved on, and the form
+ *   still goes if it is in the page) or the page shows the commit (the count
+ *   level). So a number the product refuses is never sent, the product is
+ *   never told a number other than the one sent, and the form never sends
+ *   twice. A hidden input, a Suspense boundary that keeps the old page and
+ *   a removed one all settle by that one rule.
  * - The listeners sit in the capture phase on the input's root node, a
  *   document or a shadow root (`submit` is not composed, so a form in a shadow
  *   tree is heard there only), and test the target at event time, so a `form`
@@ -97,25 +95,14 @@ export function useFormSubmitHold(
   const [count, setCount] = useState(0);
   const asked = useRef(0);
   const held = useRef<Held | null>(null);
-  const unwatch = useRef<(() => void) | null>(null);
   const latest = useRef(read);
-  // A hidden input's ref is cleared, so the element the effect saw is asked, not `input.current`.
+  // A hidden input's ref is cleared, so the element the watcher saw is asked, not `input.current`.
   const behind = useCallback((node: HTMLElement | null) => asked.current !== Number(node?.getAttribute(COUNT) ?? 0), []);
+  // For event handlers: render does not read it.
   const waiting = useCallback(() => behind(input.current), [behind, input]);
-
-  // Ends the hold, sending the submit or not.
-  const release = useCallback((sendIt: boolean) => {
-    const sent = held.current;
-    held.current = null;
-    unwatch.current?.();
-    unwatch.current = null;
-    if (sendIt && sent?.form.isConnected) send(sent);
-  }, []);
 
   useLayoutEffect(() => {
     latest.current = read;
-    // Not the render of a commit that has not come: one started inside another's effect is shown by the next render.
-    if (!waiting()) release(true);
   });
 
   useLayoutEffect(() => {
@@ -124,6 +111,8 @@ export function useFormSubmitHold(
     const root = node.getRootNode();
     const onSubmit = (event: Event) => {
       if (event.target !== node.form) return;
+      // A submit while one is held joins it.
+      if (held.current) return fold(held.current, event);
       const draft = latest.current();
       const submitter = (event as SubmitEvent).submitter;
       if (draft?.unreadable) {
@@ -138,21 +127,16 @@ export function useFormSubmitHold(
       if (!draft && !waiting()) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      held.current = { form: event.target as HTMLFormElement, submitter };
+      const hold: Held = { form: event.target as HTMLFormElement, submitter };
+      held.current = hold;
+      watch(node, hold, behind, () => {
+        if (held.current === hold) held.current = null;
+      });
       draft?.commit();
     };
     root.addEventListener('submit', onSubmit, true);
-    return () => {
-      root.removeEventListener('submit', onSubmit, true);
-      if (!held.current) return;
-      queueMicrotask(() => {
-        const sent = held.current;
-        if (!sent) return;
-        if (!node.isConnected || !behind(node)) release(true);
-        else unwatch.current = watchHidden(node, sent, () => behind(node), release);
-      });
-    };
-  }, [input, waiting, behind, release]);
+    return () => root.removeEventListener('submit', onSubmit, true);
+  }, [input, waiting, behind]);
 
   return {
     committed: () => {

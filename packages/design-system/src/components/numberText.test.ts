@@ -608,3 +608,25 @@ describe('isPartialNumber with accounting signs', () => {
     expect(isPartialNumber('((5', accounting)).toBe(false);
   });
 });
+
+describe('the grid windows follow the operands rounding', () => {
+  const range = { step: 0.01 };
+  const en = { locale: 'en', formatOptions: { maximumFractionDigits: 2 } };
+
+  it('does not read a value a fifth of a step off the grid as on it, at a large operand', () => {
+    expect(onGrid(2e12 + 0.002, range)).toBe(false);
+    expect(onGrid(2e12 + 0.01, range)).toBe(true);
+  });
+
+  it('steps to the grid point between a value and the next, not past it', () => {
+    expect(stepNumber(2e12 + 0.002, -0.01, range, en)).toBe(2e12);
+    expect(stepNumber(2e12 - 0.002, 0.01, range, en)).toBe(2e12);
+  });
+
+  it('keeps a text a few doubles below a half below it', () => {
+    const text = (digits: string, options: { min?: number; step: number }) => commitNumber(parseNumber(digits, { locale: 'en' })!, options);
+    expect(text('1000000000000.0046', { min: 1e12, step: 0.01 })).toBe(1e12);
+    expect(text('1000000000000.0047', { min: 1e12, step: 0.01 })).toBe(1e12);
+    expect(text('1000000000000.0051', { min: 1e12, step: 0.01 })).toBe(1e12 + 0.01);
+  });
+});

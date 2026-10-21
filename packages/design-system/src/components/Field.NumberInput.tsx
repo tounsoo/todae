@@ -173,12 +173,12 @@ export function NumberInput({
     const number = parseNumber(source, text);
     return number === null ? { read: false } : { read: true, number };
   }
-  // The draft's reading while it is live, else the number the product holds.
+  // The draft's reading while it is live, else the number the product holds. Handlers only: it asks the page whether a commit waits.
   function typed(): Typed {
     return live() && drafted ? drafted : { read: true, number: current };
   }
-  // Where a step starts, from what the text says, as a native input steps from its value. The keys, the buttons and their disabled state all judge this one.
-  const from = typed();
+  // Where a step starts, from what the text says, as a native input steps from its value. Render reads state only: a commit clears the draft in its own batch, so no render shows a draft a commit has answered.
+  const from: Typed = drafted ?? { read: true, number: current };
   const bounds = boundsOf(range);
 
   // A commit that could not read the text flags it.
@@ -217,9 +217,10 @@ export function NumberInput({
   // From text that is no number, nothing: it stays, and stays invalid.
   function stepBy(size: number) {
     if (fixed) return;
-    if (!from.read) return fail();
-    if (!canStep(from.number, size, range, text)) return;
-    commit(stepNumber(from.number, size, range, text));
+    const start = typed();
+    if (!start.read) return fail();
+    if (!canStep(start.number, size, range, text)) return;
+    commit(stepNumber(start.number, size, range, text));
   }
 
   // A button is disabled where a key would do nothing: from text that is no number, at the bound it steps toward, or outside the range, stepping away.
