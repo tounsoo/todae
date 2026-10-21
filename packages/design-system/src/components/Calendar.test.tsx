@@ -733,7 +733,7 @@ describe('Calendar range mode', () => {
     expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('9999-10-05') });
   });
 
-  it('checks each day with isDateDisabled once as the grid moves away from the first pick', () => {
+  it("scans each day once for a range's limits as the grid moves away from the first pick", () => {
     const isDateDisabled = vi.fn(() => false);
     render(<RangeControlled isDateDisabled={isDateDisabled} />);
     fireEvent.click(october(5));

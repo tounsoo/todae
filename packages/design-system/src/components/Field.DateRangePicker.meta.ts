@@ -33,8 +33,7 @@ export const meta = {
       name: 'isDateDisabled',
       type: '(date: Temporal.PlainDate) => boolean',
       required: false,
-      description:
-        "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one, so after the first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes.",
+      description: "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one.",
     },
     {
       name: 'firstDayOfWeek',

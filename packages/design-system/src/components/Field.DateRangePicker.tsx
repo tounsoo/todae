@@ -31,7 +31,7 @@ export type FieldDateRangePickerProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. A range can't hold one, so after the first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes. */
+  /** Returns true for a date that cannot be picked, such as a holiday. A range can't hold one. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
   firstDayOfWeek?: CalendarFirstDayOfWeek;
