@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 
@@ -347,5 +347,185 @@ describe('Field.NumberInput in a browser', () => {
     render(<Quantity required />);
     const result = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
     expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+  });
+});
+
+// A submit waits for the commit and is sent again after the render that shows it, so each of these is one commit and one send, whatever phase the submit started in. A browser differs from jsdom here: it ignores a requestSubmit made while a submit event is being fired.
+describe('Field.NumberInput and a submit that waits for the commit, in a browser', () => {
+  type Sent = (string | null)[];
+  function Page({
+    sent,
+    told,
+    mode = 'plain',
+    initial = 3,
+    required,
+    validate = false,
+  }: {
+    sent: Sent;
+    told: (number | null)[];
+    mode?: 'plain' | 'auto' | 'effect' | 'formRoot';
+    initial?: number | null;
+    required?: boolean;
+    validate?: boolean;
+  }) {
+    const [value, setValue] = useState<number | null>(initial);
+    const [go, setGo] = useState(0);
+    const form = useRef<HTMLFormElement>(null);
+    useEffect(() => {
+      if (go) form.current?.requestSubmit();
+    }, [go]);
+    const field = (
+      <Field.Group>
+        <Label.Root htmlFor="qty">Quantity</Label.Root>
+        <Field.Root id="qty" name="quantity">
+          <Field.NumberInput
+            value={value}
+            required={required}
+            locale="en"
+            onKeyUp={mode === 'effect' ? (event) => event.key === 'F2' && setGo((n) => n + 1) : undefined}
+            onValueChange={(next) => {
+              told.push(next);
+              setValue(next);
+              if (mode === 'auto') form.current?.requestSubmit();
+            }}
+          />
+        </Field.Root>
+        {mode === 'formRoot' ? <ErrorMessage.Root /> : null}
+      </Field.Group>
+    );
+    const onSubmit = (event: { preventDefault: () => void; currentTarget: HTMLFormElement }) => {
+      event.preventDefault();
+      sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+    };
+    return mode === 'formRoot' ? (
+      <Form.Root ref={form} onSubmit={onSubmit}>
+        {field}
+        <Button.Root type="submit">Send</Button.Root>
+      </Form.Root>
+    ) : (
+      <form ref={form} noValidate={!validate} onSubmit={onSubmit}>
+        {field}
+        <button type="submit">Send</button>
+        <button type="submit" formNoValidate>
+          Send anyway
+        </button>
+      </form>
+    );
+  }
+  const replace = (text: string) => userEvent.keyboard(`{Control>}a{/Control}${text}`);
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
+
+  it('Enter: one commit, one send', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} />);
+    await userEvent.click(input());
+    await replace('7');
+    await userEvent.keyboard('{Enter}');
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+  });
+
+  it('a press on the submit button: one commit, one send', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} />);
+    await userEvent.click(input());
+    await replace('7');
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+  });
+
+  it('requestSubmit with focus in the text: one commit, one send', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} />);
+    await userEvent.click(input());
+    await replace('7');
+    input().form!.requestSubmit();
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+    expect(input().value).toBe('7');
+  });
+
+  it('a requestSubmit from an effect sends the accepted number, with no React warning', async () => {
+    const error = vi.spyOn(console, 'error');
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} mode="effect" />);
+    await userEvent.click(input());
+    await replace('7');
+    await userEvent.keyboard('{F2}');
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('a product that submits from onValueChange: one commit, one send, with the new number', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} mode="auto" />);
+    await userEvent.click(input());
+    await replace('7');
+    await userEvent.keyboard('{ArrowUp}');
+    await settle();
+    expect(told).toEqual([8]);
+    expect(sent).toEqual(['8']);
+  });
+
+  it('a native validating form: a cleared required text is not sent, and a submitter that turns validation off sends it', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} initial={7} required validate />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    input().form!.requestSubmit();
+    await settle();
+    expect(sent).toEqual([]);
+    expect(told).toEqual([null]);
+    // The same cleared text, with the submitter that turns validation off.
+    input().form!.requestSubmit(screen.getByRole('button', { name: 'Send anyway' }));
+    await settle();
+    expect(sent).toEqual(['']);
+  });
+
+  it('documented limit: a native check runs before submit fires, so a requestSubmit with a stale invalid number is blocked, and what moved focus committed the text', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} initial={null} required validate />);
+    await userEvent.click(input());
+    await replace('7');
+    input().form!.requestSubmit();
+    await settle();
+    expect(sent).toEqual([]);
+    // The browser focused the invalid value input, which gives focus back to the text and so blurred it: that commit is the only one.
+    expect(told).toEqual([7]);
+    // Commit first, by blur or Enter, before a programmatic submit.
+    await userEvent.keyboard('{Enter}');
+    await settle();
+    expect(sent).toEqual(['7']);
+  });
+
+  it('Form.Root: a typed number is sent once, and a cleared required one is not', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} mode="formRoot" required />);
+    await userEvent.click(input());
+    await replace('7');
+    input().form!.requestSubmit();
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    input().form!.requestSubmit();
+    await settle();
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7, null]);
   });
 });

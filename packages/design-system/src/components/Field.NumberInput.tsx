@@ -9,7 +9,6 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { flushSync } from 'react-dom';
 import { useFieldContext, usePublishStepper, type StepperEntry } from './Field.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { FieldValueInput } from './Field.ValueInput.js';
@@ -17,6 +16,7 @@ import { valueBounds } from './Field.shared.js';
 import { watchLabel } from './buttonName.js';
 import { isImeKeyEvent } from './ime.js';
 import {
+  boundsOf,
   canStep,
   commitNumber,
   decimalsOf,
@@ -143,10 +143,18 @@ export function NumberInput({
   }
   const [draft, setDraft] = useState<Draft | null>(null);
   // The draft is the person's until they commit, or the product sets another value.
-  const fixed = readOnly ?? !onValueChange;
+  const fixed = readOnly || !onValueChange;
   // A field that can't be edited has no draft: what was typed can't be committed, and would block its form.
   const typing = draft !== null && !fixed && !field.disabled && Object.is(draft.base, current);
   if (draft !== null && !typing) setDraft(null);
+  // The draft a commit consumed, set at once, since `setDraft(null)` shows only in the next render and anything a commit calls back into, such as a product's auto-submit, still reads this render's draft. A consumed draft is no draft: it commits at most once.
+  const consumed = useRef<Draft | null>(null);
+  // From a commit that cleared a draft until the render that shows it: a submit in between waits for it.
+  const settling = useRef(false);
+  // The submit that waits for a commit, sent again after the render that shows it.
+  const held = useRef<{ form: HTMLFormElement; submitter: HTMLElement | null } | null>(null);
+  // The draft a commit has not consumed, read when called, since a callback from a commit runs before the next render.
+  const live = () => (typing && draft !== consumed.current ? draft : null);
   const own = current === null ? '' : formatNumber(current, text);
   const shown = typing ? draft.text : own;
   // A text that is no number blocks a submit as it is typed, whether or not a commit has read it, and stays so until it is one or the product sets a value. The Form decides when that shows.
@@ -156,22 +164,30 @@ export function NumberInput({
   const valueNode = useRef<HTMLInputElement | null>(null);
 
   function typed(): Typed {
-    if (!typing) return { read: true, number: current };
-    if (draft.text.trim() === '') return { read: true, number: null };
-    const number = parseNumber(draft.text, text);
+    const open = live();
+    if (!open) return { read: true, number: current };
+    if (open.text.trim() === '') return { read: true, number: null };
+    const number = parseNumber(open.text, text);
     return number === null ? { read: false } : { read: true, number };
   }
   // Where a step starts, from what the text says, as a native input steps from its value. The keys, the buttons and their disabled state all judge this one.
   const from = typed();
+  const bounds = boundsOf(range);
 
   // A commit that could not read the text flags it.
   function fail() {
-    if (typing && !draft.failed) setDraft({ ...draft, failed: true });
+    const open = live();
+    if (open && !open.failed) setDraft({ ...open, failed: true });
   }
 
   // Returns what it committed, the number the product is told.
   function commit(next: number | null): number | null {
     const result = next === null ? null : commitNumber(next, range, text);
+    const open = live();
+    if (open) {
+      consumed.current = open;
+      settling.current = true;
+    }
     setDraft(null);
     if (!Object.is(result, current)) {
       field.notifyValueChange();
@@ -181,27 +197,27 @@ export function NumberInput({
   }
 
   function commitDraft() {
-    if (!typing || fixed) return;
+    if (!live() || fixed) return;
     const next = typed();
     // Text that is no number stays, invalid.
     if (next.read) commit(next.number);
     else fail();
   }
 
-  // A submit of the form commits as blur and Enter do: the product's answer renders before the form reads its entries, so the form only ever reads a number the product accepted. Text that is no number is flagged, and the form's own check blocks the submit on the value input's custom validity. In a form that validates natively, a commit that leaves the value input invalid, such as a cleared required text, is not sent, as the browser's own check would have it. Called inside a React commit phase, such as from an effect's `requestSubmit`, React cannot flush, so the submit carries the last rendered value.
-  function submitForm(event: Event) {
-    if (!typing || fixed) return;
-    const next = typed();
-    if (!next.read) return fail();
-    flushSync(() => commit(next.number));
-    const form = event.currentTarget as HTMLFormElement;
-    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | HTMLInputElement | null;
-    const input = valueNode.current;
-    if (!form.noValidate && !submitter?.formNoValidate && input && !input.validity.valid) {
-      // As a browser's own check would have: no `submit` event, so no handler of the product's reads the entries either.
+  // A submit of the input's form waits for the commit instead of forcing it. It is cancelled and held, the draft commits as blur and Enter do, and the layout effect after the render that clears the draft sends it again, so the form reads what the product rendered, whatever phase the submit started in: a number the product refuses is never sent, and the product is never told a number other than the one sent. A submit that arrives while a commit waits for its render, such as a product's auto-submit in `onValueChange`, waits too. Text that is no number is flagged, and the form's own check blocks the submit on the value input's custom validity. A form that validates natively checks before it fires `submit`, so a submit with no blur (`requestSubmit()` with focus in the text) is blocked on the last committed number when that is invalid: commit first, by blur or Enter.
+  function submitForm(event: SubmitEvent) {
+    const form = event.target as HTMLFormElement;
+    if (live() && !fixed) {
+      const next = typed();
+      if (!next.read) return fail();
       event.preventDefault();
       event.stopImmediatePropagation();
-      input.reportValidity();
+      held.current = { form, submitter: event.submitter };
+      commit(next.number);
+    } else if (settling.current) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      held.current = { form, submitter: event.submitter };
     }
   }
 
@@ -219,7 +235,7 @@ export function NumberInput({
   // The step buttons are named from it, so several fields' are told apart.
   const [label, setLabel] = useState('');
   // The native listeners and the stepper entry outlive a render, so they call the latest of these.
-  const latest = useRef({ step: (_direction: 1 | -1) => {}, refuse: (_event: InputEvent) => {}, submit: (_event: Event) => {} });
+  const latest = useRef({ step: (_direction: 1 | -1) => {}, refuse: (_event: InputEvent) => {}, submit: (_event: SubmitEvent) => {} });
   const stepper = useMemo<StepperEntry>(
     () => ({
       step: (direction) => latest.current.step(direction),
@@ -244,30 +260,41 @@ export function NumberInput({
   }
   useLayoutEffect(() => {
     latest.current = { step: (direction) => stepBy(direction * by), refuse, submit: submitForm };
+    // The render that shows a commit, not one that began before it (an effect of this same pass, when a commit started inside another's effect): a submit that waited for it goes now, with what the product rendered.
+    if (draft !== null && draft === consumed.current) return;
+    settling.current = false;
+    const waiting = held.current;
+    held.current = null;
+    if (!waiting?.form.isConnected) return;
+    const { form, submitter } = waiting;
+    form.requestSubmit(submitter?.isConnected && (submitter as HTMLButtonElement).form === form ? submitter : undefined);
   });
   useLayoutEffect(() => {
     const input = node.current;
     if (!input) return;
     const listener = (event: Event) => latest.current.refuse(event as InputEvent);
+    input.addEventListener('beforeinput', listener);
+    // One listener on the document, in the capture phase, for the form the input has when the event comes, so a `form` attribute that names a form mounted later works. It runs before React's handlers on the root, such as Form.Root's `onSubmit`, and before a handler on the form.
+    const doc = input.ownerDocument;
+    const onSubmit = (event: Event) => {
+      if (event.target === input.form) latest.current.submit(event as SubmitEvent);
+    };
     // A reset puts back what the form had, which is not what was typed, unless a handler cancels it. Those run after this listener, and after a microtask too, so it waits a task.
-    const reset = (event: Event) => {
+    const onReset = (event: Event) => {
+      if (event.target !== input.form) return;
       window.setTimeout(() => {
         if (!event.defaultPrevented) setDraft(null);
       });
     };
-    // A submit with no blur, such as a requestSubmit's, takes what was typed. This runs before React's bubble handlers, which are on the root, such as Form.Root's `onSubmit`, so before it reads the form's validity; a capture handler on the form runs before it. A form that validates natively checks before it fires `submit`, so it checks the last committed number; Enter and a press on a submit button commit first.
-    const submit = (event: Event) => latest.current.submit(event);
-    const form = input.form;
-    input.addEventListener('beforeinput', listener);
-    form?.addEventListener('reset', reset);
-    form?.addEventListener('submit', submit);
+    doc.addEventListener('submit', onSubmit, true);
+    doc.addEventListener('reset', onReset, true);
     return () => {
       input.removeEventListener('beforeinput', listener);
-      form?.removeEventListener('reset', reset);
-      form?.removeEventListener('submit', submit);
+      doc.removeEventListener('submit', onSubmit, true);
+      doc.removeEventListener('reset', onReset, true);
     };
-  }, [props.form]);
-  // The label's own text can change, such as a translation that loads later, and a label can mount, be replaced or go from anywhere, so the label elements and where they would be inserted are watched.
+  }, []);
+  // The label's own text can change, such as a translation that loads later, and a label can mount, be replaced or go from anywhere in the page, so the page's one shared observer follows them.
   useLayoutEffect(() => watchLabel(node.current, setLabel).stop, []);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -324,9 +351,10 @@ export function NumberInput({
         inputMode={inputMode ?? keypadFor({ min, step, shown: digits })}
         spellCheck={false}
         aria-required={required || undefined}
-        aria-valuenow={current ?? undefined}
-        aria-valuemin={min}
-        aria-valuemax={max}
+        // The number the text says while it reads, and the range a commit can give, where `max` is not on the step's grid.
+        aria-valuenow={(from.read ? from.number : current) ?? undefined}
+        aria-valuemin={bounds.low}
+        aria-valuemax={bounds.high}
         // Exactly what is on screen, typed or not.
         aria-valuetext={shown || undefined}
         value={shown}

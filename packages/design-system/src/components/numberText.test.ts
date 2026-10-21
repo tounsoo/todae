@@ -332,6 +332,14 @@ describe('keypadFor', () => {
 });
 
 describe('boundsOf and canStep', () => {
+  it('takes the clean grid point for a max that carries float noise', () => {
+    const range = { min: 0, max: 0.1 + 0.2, step: 0.1 };
+    expect(boundsOf(range).high).toBe(0.3);
+    expect(commitNumber(5, range)).toBe(0.3);
+    expect(canStep(0.3, 0.1, range)).toBe(false);
+    expect(boundsOf({ max: 1.1 * 3, step: 0.1 }).high).toBe(3.3);
+  });
+
   it('finds the highest and lowest value a commit can give', () => {
     expect(boundsOf({})).toEqual({ low: undefined });
     expect(boundsOf({ min: 0, max: 10, step: 3 })).toEqual({ low: 0, high: 9 });

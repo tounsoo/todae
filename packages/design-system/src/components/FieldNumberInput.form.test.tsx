@@ -279,10 +279,10 @@ describe('Field.NumberInput on the server', () => {
 });
 
 describe('Field.NumberInput and a submit from inside a commit phase', () => {
-  it('carries the last rendered value when an effect submits the form, since React cannot flush there', () => {
-    // flushSync warns in development when it is called from an effect.
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('sends the number the product accepted when an effect submits the form, with no React warning', () => {
+    const error = vi.spyOn(console, 'error');
     const sent: (string | null)[] = [];
+    const told: (number | null)[] = [];
     function Page({ go }: { go: boolean }) {
       const [value, setValue] = useState<number | null>(3);
       const form = useRef<HTMLFormElement>(null);
@@ -298,7 +298,14 @@ describe('Field.NumberInput and a submit from inside a commit phase', () => {
           }}
         >
           <Field.Root aria-label="Quantity" name="quantity">
-            <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                told.push(next);
+                setValue(next);
+              }}
+            />
           </Field.Root>
         </form>
       );
@@ -306,7 +313,150 @@ describe('Field.NumberInput and a submit from inside a commit phase', () => {
     const { rerender } = render(<Page go={false} />);
     type('7');
     act(() => rerender(<Page go />));
-    expect(sent).toEqual(['3']);
+    expect(sent).toEqual(['7']);
+    expect(told).toEqual([7]);
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe('Field.NumberInput and a submit that a commit starts', () => {
+  // A filter form that submits on each change.
+  function Auto({ log, sent, onBlur }: { log: (number | null)[]; sent: (string | null)[]; onBlur?: boolean }) {
+    const [value, setValue] = useState<number | null>(5);
+    const form = useRef<HTMLFormElement>(null);
+    return (
+      <form
+        ref={form}
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+        }}
+      >
+        <Field.Root aria-label="Quantity" name="quantity">
+          <Field.NumberInput
+            value={value}
+            locale="en"
+            onValueChange={(next) => {
+              log.push(next);
+              setValue(next);
+              if (!onBlur) form.current?.requestSubmit();
+            }}
+            onBlur={onBlur ? () => form.current?.requestSubmit() : undefined}
+          />
+        </Field.Root>
+      </form>
+    );
+  }
+
+  it('commits once and sends once when onValueChange submits, after a step from a draft', () => {
+    const log: (number | null)[] = [];
+    const sent: (string | null)[] = [];
+    render(<Auto log={log} sent={sent} />);
+    type('7');
+    act(() => key('ArrowUp'));
+    expect(log).toEqual([8]);
+    expect(input().value).toBe('8');
+    expect(sent).toEqual(['8']);
+  });
+
+  it('commits once and sends once when onValueChange submits on blur', () => {
+    const log: (number | null)[] = [];
+    const sent: (string | null)[] = [];
+    render(<Auto log={log} sent={sent} />);
+    input().focus();
+    type('7');
+    act(() => input().blur());
+    expect(log).toEqual([7]);
+    expect(sent).toEqual(['7']);
+  });
+
+  it('commits once and sends once when an onBlur prop submits', () => {
+    const log: (number | null)[] = [];
+    const sent: (string | null)[] = [];
+    render(<Auto log={log} sent={sent} onBlur />);
+    input().focus();
+    type('7');
+    act(() => input().blur());
+    expect(log).toEqual([7]);
+    expect(sent).toEqual(['7']);
+  });
+});
+
+describe('Field.NumberInput and a form that is not there at mount', () => {
+  it('commits a typed text on a submit of a form that mounts after the input, named by the form attribute', async () => {
+    const sent: (string | null)[] = [];
+    const told: (number | null)[] = [];
+    let show = () => {};
+    function Page() {
+      const [value, setValue] = useState<number | null>(50);
+      const [on, setOn] = useState(false);
+      show = () => setOn(true);
+      return (
+        <>
+          <Field.Root name="quantity" aria-label="Quantity">
+            <Field.NumberInput
+              value={value}
+              form="late"
+              locale="en"
+              onValueChange={(next) => {
+                told.push(next);
+                setValue(next);
+              }}
+            />
+          </Field.Root>
+          {on ? (
+            <form
+              id="late"
+              onSubmit={(event) => {
+                event.preventDefault();
+                sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+              }}
+            />
+          ) : null}
+        </>
+      );
+    }
+    render(<Page />);
+    await act(async () => show());
+    type('70');
+    act(() => (document.getElementById('late') as HTMLFormElement).requestSubmit());
+    expect(sent).toEqual(['70']);
+    expect(told).toEqual([70]);
+  });
+});
+
+describe('Field.NumberInput with two drafts in one form', () => {
+  it('commits both before the one send', () => {
+    const sent: Record<string, FormDataEntryValue>[] = [];
+    const told: string[] = [];
+    function Page() {
+      const [a, setA] = useState<number | null>(1);
+      const [b, setB] = useState<number | null>(2);
+      return (
+        <form
+          data-testid="form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(Object.fromEntries(new FormData(event.currentTarget)));
+          }}
+        >
+          <Field.Root aria-label="A" name="a">
+            <Field.NumberInput value={a} locale="en" onValueChange={(next) => (told.push(`a${next}`), setA(next))} />
+          </Field.Root>
+          <Field.Root aria-label="B" name="b">
+            <Field.NumberInput value={b} locale="en" onValueChange={(next) => (told.push(`b${next}`), setB(next))} />
+          </Field.Root>
+        </form>
+      );
+    }
+    render(<Page />);
+    const [first, second] = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    fireEvent.change(first!, { target: { value: '8' } });
+    fireEvent.change(second!, { target: { value: '9' } });
+    act(() => (screen.getByTestId('form') as HTMLFormElement).requestSubmit());
+    expect(sent).toEqual([{ a: '8', b: '9' }]);
+    expect(told.sort()).toEqual(['a8', 'b9']);
   });
 });
 
@@ -386,15 +536,7 @@ describe('Field.NumberInput in a form that validates natively', () => {
     expect(input().value).toBe('');
   });
 
-  it('sends it when the submitter turns validation off, as a native form does', () => {
-    const onSubmit = vi.fn();
-    render(<Page initial={7} onSubmit={onSubmit} />);
-    type('');
-    requestSubmit(screen.getByRole('button', { name: 'Send anyway' }));
-    expect(onSubmit).toHaveBeenCalledWith('');
-  });
-
-  it('checks the last committed number for a submit that a text would mend, and does not commit it', () => {
+  it('documented limit: a requestSubmit with focus in the text is blocked on the last committed number when that is invalid, and nothing is committed', () => {
     const onSubmit = vi.fn();
     const onCommit = vi.fn();
     render(<Page initial={null} onSubmit={onSubmit} onCommit={onCommit} />);

@@ -482,3 +482,108 @@ describe('Field.Increment names follow a label that comes and goes', () => {
     expect(await screen.findByRole('button', { name: 'Increase Plums' })).toBeTruthy();
   });
 });
+
+describe('Field.Increment names follow a label from anywhere in the page', () => {
+  const name = () => screen.getByRole('button').getAttribute('aria-label');
+  function Toggler({ id, attach }: { id: string; attach: (show: (on: boolean) => void) => void }) {
+    const [on, setOn] = useState(false);
+    attach(setOn);
+    return on ? <Label.Root htmlFor={id}>Apples</Label.Root> : null;
+  }
+
+  it('reads a label that mounts outside the form of the input', async () => {
+    let show = (_on: boolean) => {};
+    render(
+      <>
+        <Toggler id="in-form" attach={(set) => (show = set)} />
+        <form>
+          <Field.Root id="in-form" name="q">
+            <Field.NumberInput value={1} onValueChange={() => undefined} />
+            <Field.Increment />
+          </Field.Root>
+        </form>
+      </>,
+    );
+    expect(name()).toBe('Increase');
+    await act(async () => show(true));
+    expect(name()).toBe('Increase Apples');
+    await act(async () => show(false));
+    expect(name()).toBe('Increase');
+  });
+
+  it('reads a label that mounts outside the form an input joins by the form attribute', async () => {
+    let show = (_on: boolean) => {};
+    render(
+      <div>
+        <form id="elsewhere" />
+        <Toggler id="joined" attach={(set) => (show = set)} />
+        <Field.Root id="joined" name="q">
+          <Field.NumberInput value={1} onValueChange={() => undefined} form="elsewhere" />
+          <Field.Increment />
+        </Field.Root>
+      </div>,
+    );
+    await act(async () => show(true));
+    expect(name()).toBe('Increase Apples');
+  });
+
+  it('reads an aria-labelledby target that mounts later, outside the form', async () => {
+    let show = (_on: boolean) => {};
+    function Late() {
+      const [on, setOn] = useState(false);
+      show = setOn;
+      return on ? <span id="late-label">Pears</span> : null;
+    }
+    render(
+      <>
+        <Late />
+        <form>
+          <Field.Root aria-labelledby="late-label" name="q">
+            <Field.NumberInput value={1} onValueChange={() => undefined} />
+            <Field.Increment />
+          </Field.Root>
+        </form>
+      </>,
+    );
+    expect(name()).toBe('Increase');
+    await act(async () => show(true));
+    expect(name()).toBe('Increase Pears');
+  });
+
+  it('reads no label for 100 changes of a list that has none, with 50 fields on the page', async () => {
+    let tick = () => {};
+    function List() {
+      const [count, setCount] = useState(0);
+      tick = () => setCount((n) => n + 1);
+      return (
+        <ul>
+          {Array.from({ length: count % 2 ? 1 : 2 }, (_, index) => (
+            <li key={index}>
+              <span>{count}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    render(
+      <div>
+        <List />
+        {Array.from({ length: 50 }, (_, index) => (
+          <Field.Root key={index} aria-label={`Row ${index}`} name={`r${index}`}>
+            <Field.NumberInput value={index} onValueChange={() => undefined} />
+            <Field.Increment />
+          </Field.Root>
+        ))}
+      </div>,
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+    const labels = vi.spyOn(HTMLInputElement.prototype, 'labels', 'get');
+    for (let n = 0; n < 100; n++) await act(async () => tick());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+    expect(labels).not.toHaveBeenCalled();
+  });
+});

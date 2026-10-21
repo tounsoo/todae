@@ -1,5 +1,5 @@
 // Server-safe number text for Field.NumberInput and a text input beside any number: no hooks or context.
-import { fold } from './dateText.js';
+import { fold } from './foldText.js';
 
 /** The options a commit can't follow: compact and scientific notation, which `parseNumber` can't read back, and significant digits and rounding options, which round the text differently from a commit. */
 export const UNSUPPORTED_FORMAT_OPTIONS = [
@@ -262,18 +262,22 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
   const base = min ?? 0;
   let high = max;
   if (step !== undefined) {
-    if (!onGrid(max, range)) {
-      let index = Math.floor(indexOf(max, base, step));
-      high = pointAt(index, range);
-      // A point past `max`, from a grid too fine for a double, gives way to the one before it, and where a double holds no lower point, to `max` itself.
-      while (high > max) {
-        const lower = pointAt(index - 1, range);
-        if (lower >= high) {
-          high = max;
-          break;
+    // The clean grid point first, so a `max` carrying float noise (0.1 + 0.2) gives 0.3, not 0.30000000000000004.
+    let index = Math.floor(indexOf(max, base, step));
+    high = pointAt(index, range);
+    if (high > max) {
+      // A point past `max` comes from a grid too fine for a double. Where `max` is on the grid it is the answer; above 1e15 the grid is only as exact as a double, so a whole quotient counts as on it. Otherwise step back, and where a double holds no lower point, take `max` itself.
+      if (onGrid(max, range)) high = max;
+      else {
+        while (high > max) {
+          const lower = pointAt(index - 1, range);
+          if (lower >= high) {
+            high = max;
+            break;
+          }
+          index -= 1;
+          high = lower;
         }
-        index -= 1;
-        high = lower;
       }
     }
   }
@@ -292,6 +296,7 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
 export function commitNumber(value: number, range: NumberRange, text: NumberTextOptions = {}): number {
   const { step } = range;
   const { low, high } = boundsOf(range);
+  // Without a step the text's digits round, by Intl as the text is, not by the grid path: the grid's 15-digit guard rounds some values differently (17040975.57257498 shown to 5 decimals is .57257 by Intl, .57258 by the guard), and the text is what the person sees.
   let result = step === undefined ? roundToShown(value, text) : pointAt(nearest(indexOf(value, range.min ?? 0, step)), range);
   if (high !== undefined && result > high) result = high;
   if (low !== undefined && result < low) result = low;

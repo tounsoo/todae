@@ -393,6 +393,29 @@ describe('Field.NumberInput', () => {
     expect(button('Decrease').disabled).toBe(true);
   });
 
+  it('stays read-only for readOnly={false} without onValueChange', () => {
+    render(
+      <Field.Root aria-label="Quantity">
+        <Field.NumberInput value={4} readOnly={false} />
+      </Field.Root>,
+    );
+    expect(input().readOnly).toBe(true);
+  });
+
+  it('gives aria-valuenow the typed number while it reads, and the range a commit can give as min and max', () => {
+    render(<Quantity initial={50} min={0} max={10} step={3} locale="en" />);
+    // A max of 10 on a grid of 3 from 0: the highest number a commit gives is 9.
+    expect(input().getAttribute('aria-valuemin')).toBe('0');
+    expect(input().getAttribute('aria-valuemax')).toBe('9');
+    type('7');
+    expect(input().getAttribute('aria-valuenow')).toBe('7');
+    expect(input().getAttribute('aria-valuetext')).toBe('7');
+    type('');
+    expect(input().hasAttribute('aria-valuenow')).toBe(false);
+    type('abc');
+    expect(input().getAttribute('aria-valuenow')).toBe('50');
+  });
+
   it('is disabled with its field, and takes readOnly from the product', () => {
     const { rerender } = render(
       <Field.Root aria-label="Quantity" disabled>
