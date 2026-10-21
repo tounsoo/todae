@@ -1,0 +1,31 @@
+{
+  "emptystate": {
+    "$description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions.",
+    "padding": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+    "measure": { "$type": "dimension", "$value": { "value": 28, "unit": "rem" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 2.5, "unit": "rem" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+    },
+    "title": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/bold/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
+    },
+    "description": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+    },
+    "actions": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } }
+    }
+  }
+}

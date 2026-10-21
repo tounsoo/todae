@@ -1,0 +1,53 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--todae-emptystate-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding: var(--todae-emptystate-padding);
+    color: var(--todae-emptystate-fg);
+    text-align: center;
+  }
+
+  .icon {
+    display: inline-flex;
+    flex: none;
+    color: var(--todae-emptystate-icon-fg);
+  }
+
+  /* An icon from a library renders an svg: it takes the empty state's icon size. */
+  .icon > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-emptystate-icon-size);
+    block-size: var(--todae-emptystate-icon-size);
+  }
+
+  .title {
+    margin: 0;
+    max-inline-size: var(--todae-emptystate-measure);
+    font-size: var(--todae-emptystate-title-font-size);
+    font-weight: var(--todae-emptystate-title-font-weight);
+    line-height: var(--todae-emptystate-title-leading);
+    color: var(--todae-emptystate-title-fg);
+    text-wrap: balance;
+  }
+
+  .description {
+    margin: 0;
+    max-inline-size: var(--todae-emptystate-measure);
+    font-size: var(--todae-emptystate-font-size);
+    line-height: var(--todae-emptystate-leading);
+    color: var(--todae-emptystate-description-fg);
+    text-wrap: pretty;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--todae-emptystate-actions-gap);
+  }
+}

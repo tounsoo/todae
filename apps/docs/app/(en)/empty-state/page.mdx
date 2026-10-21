@@ -1,0 +1,137 @@
+import { EmptyStateLevels, EmptyStateProjects, EmptyStateSearch } from '../../../components/demos/EmptyStateDemo';
+
+# EmptyState
+
+What a list, table or search shows when it has nothing: an icon, a title, a sentence of explanation and the next step. It centers its parts in a column and takes its padding, gap, type and colors from the `emptystate` contract tokens. The padding and gap follow density. It draws no border or background, so it sits in a page, a card or a table cell as it is.
+
+```tsx
+import { FolderPlus } from 'lucide-react';
+
+<EmptyState.Root>
+  <EmptyState.Icon>
+    <FolderPlus />
+  </EmptyState.Icon>
+  <EmptyState.Title>No projects yet</EmptyState.Title>
+  <EmptyState.Description>
+    Projects group your files and teammates. Create one to get started.
+  </EmptyState.Description>
+  <EmptyState.Actions>
+    <Button.Root>New project</Button.Root>
+    <Button.Root variant="secondary">Import a project</Button.Root>
+  </EmptyState.Actions>
+</EmptyState.Root>
+```
+
+<Example block>
+  <EmptyStateProjects />
+</Example>
+
+Todae ships no icons. `EmptyState.Icon` is a slot: put any icon from your own set in it. An `svg` or `img` directly inside takes the `emptystate.icon.size` token, and the icon is hidden from assistive technology. There is no illustration part; an icon slot is all it has. `EmptyState.Title` and `EmptyState.Description` stay within the `emptystate.measure` width, so a long description keeps a readable line length. `EmptyState.Actions` is a centered row that wraps.
+
+Server Components can import it from `@tounsoo/todae/empty-state`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
+## No results
+
+When a search or filter finds nothing, show the empty state in place of the results and say what was searched. The example below also announces the result with [`useAnnouncer`](/utilities/use-announcer): the empty state is a `div` with no role, so Todae does not announce it when it appears.
+
+```tsx
+import { useId, useState } from 'react';
+import { SearchX } from 'lucide-react';
+import { Button, EmptyState, Field, Label, useAnnouncer } from '@tounsoo/todae';
+
+export function ProjectSearch() {
+  const id = useId();
+  const announce = useAnnouncer();
+  const [query, setQuery] = useState('');
+  const matches = search(query);
+
+  return (
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={id}>Search projects</Label.Root>
+        <Field.Root id={id}>
+          <Field.TextInput
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              announce(resultsMessage(search(event.target.value).length));
+            }}
+          />
+        </Field.Root>
+      </Field.Group>
+      {matches.length > 0 ? (
+        <ProjectList projects={matches} />
+      ) : (
+        <EmptyState.Root>
+          <EmptyState.Icon>
+            <SearchX />
+          </EmptyState.Icon>
+          <EmptyState.Title as="h3">No projects found</EmptyState.Title>
+          <EmptyState.Description>
+            Nothing matches “{query}”. Check the spelling or try a shorter search.
+          </EmptyState.Description>
+          <EmptyState.Actions>
+            <Button.Root variant="secondary" onClick={() => setQuery('')}>
+              Clear search
+            </Button.Root>
+          </EmptyState.Actions>
+        </EmptyState.Root>
+      )}
+    </>
+  );
+}
+```
+
+<Example block>
+  <EmptyStateSearch />
+</Example>
+
+## Heading level
+
+`EmptyState.Title` renders an `h2` by default. Its `as` prop takes `h2` to `h6`, or `p` when the title should not appear in the page outline. Pick the level that fits where the empty state sits, one below the heading of the section that holds it. A component that shows an empty state in many places should take the level as a prop, as the [Card](/card) page shows, rather than fix it.
+
+```tsx
+import type { ReactNode } from 'react';
+import { EmptyState, type EmptyStateTitleElement } from '@tounsoo/todae';
+
+type EmptyListProps = { title: string; level: EmptyStateTitleElement; children: ReactNode };
+
+export function EmptyList({ title, level, children }: EmptyListProps) {
+  return (
+    <EmptyState.Root>
+      <EmptyState.Title as={level}>{title}</EmptyState.Title>
+      <EmptyState.Description>{children}</EmptyState.Description>
+    </EmptyState.Root>
+  );
+}
+```
+
+<Example block>
+  <EmptyStateLevels />
+</Example>
+
+## Accessible composition
+
+**Todae handles:** Layout and paint only. Every part is a plain element: `EmptyState.Root` is a `div` with no role, and `EmptyState.Title` is a real heading, an `h2` unless `as` says otherwise. `EmptyState.Icon` is `aria-hidden`; pass `aria-hidden={false}` to expose it.
+
+**You supply:** The heading level, through `as`. An icon only as decoration, or with a name: an icon that carries meaning on its own needs `aria-hidden={false}`, `role="img"` and an `aria-label`. When the empty state appears after a user action, such as a search or a filter, announce it with [`useAnnouncer`](/utilities/use-announcer) or a live region your product owns, since Todae does not announce it.
+
+**Watch for:** An empty state inside a `table`: put it in a cell that spans all the columns, such as `<td colSpan={4}>`, or outside the table. As a direct child of `table` or `tbody`, a `div` is invalid. Putting `role="status"` on the root and mounting it together with its message, which screen readers may not announce. Skipping heading levels, such as an `h2` empty state under an `h4`.
+
+## When to use
+
+**When:** A list, table, search or whole page that has nothing to show, where you can say why and what to do next: a first-run screen, no search results, a cleared inbox.
+
+**When not:** An error or warning about the page → Alert. Content that is still loading → Loader or Skeleton. A field's own error → ErrorMessage.
+
+## Props
+
+<PropsTable name="EmptyState.Root" />
+
+<PropsTable name="EmptyState.Icon" />
+
+<PropsTable name="EmptyState.Title" />
+
+<PropsTable name="EmptyState.Description" />
+
+<PropsTable name="EmptyState.Actions" />

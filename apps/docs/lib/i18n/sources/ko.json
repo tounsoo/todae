@@ -205,6 +205,16 @@
     "## Props": "0d9ea25d5717",
     "(section order)": "d183e3412ad2"
   },
+  "empty-state": {
+    "(top)": "c1f6dbabd661",
+    "# EmptyState": "13e36f86a9c7",
+    "## No results": "67194035aeb1",
+    "## Heading level": "83ec92b06a64",
+    "## Accessible composition": "fdd780dcac13",
+    "## When to use": "c2ba37f18926",
+    "## Props": "80752af87dcf",
+    "(section order)": "f355a0522991"
+  },
   "errormessage": {
     "(top)": "15d7e1436ec8",
     "# ErrorMessage": "5ac4b307c45e",

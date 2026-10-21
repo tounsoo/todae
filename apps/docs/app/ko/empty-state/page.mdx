@@ -1,0 +1,137 @@
+import { EmptyStateLevels, EmptyStateProjects, EmptyStateSearch } from '../../../components/demos/EmptyStateDemo';
+
+# EmptyState
+
+목록, 표, 검색에 보여 줄 것이 없을 때 나타나는 화면입니다. 아이콘, 제목, 한 문장의 설명, 다음 단계를 보여 줍니다. 파트를 세로 한 줄로 가운데 정렬하며, 패딩, 간격, 글자, 색은 `emptystate` contract 토큰에서 가져옵니다. 패딩과 간격은 밀도를 따릅니다. 테두리나 배경은 그리지 않으므로 페이지, 카드, 표 셀 어디에든 그대로 놓입니다.
+
+```tsx
+import { FolderPlus } from 'lucide-react';
+
+<EmptyState.Root>
+  <EmptyState.Icon>
+    <FolderPlus />
+  </EmptyState.Icon>
+  <EmptyState.Title>No projects yet</EmptyState.Title>
+  <EmptyState.Description>
+    Projects group your files and teammates. Create one to get started.
+  </EmptyState.Description>
+  <EmptyState.Actions>
+    <Button.Root>New project</Button.Root>
+    <Button.Root variant="secondary">Import a project</Button.Root>
+  </EmptyState.Actions>
+</EmptyState.Root>
+```
+
+<Example block>
+  <EmptyStateProjects />
+</Example>
+
+Todae는 아이콘을 제공하지 않습니다. `EmptyState.Icon`은 슬롯입니다. 직접 쓰는 아이콘 세트의 아이콘을 넣으세요. 바로 안의 `svg`나 `img`는 `emptystate.icon.size` 토큰을 따르며, 아이콘은 보조 기술에서 숨겨집니다. 일러스트레이션 파트는 없고 아이콘 슬롯만 있습니다. `EmptyState.Title`과 `EmptyState.Description`은 `emptystate.measure` 너비 안에 머물러서, 긴 설명도 읽기 좋은 줄 길이를 유지합니다. `EmptyState.Actions`는 줄바꿈되는 가운데 정렬 행입니다.
+
+Server Components는 `@tounsoo/todae/empty-state`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
+
+## 결과 없음
+
+검색이나 필터에서 결과가 없으면 결과 대신 빈 상태를 보여 주고, 무엇을 검색했는지 알려 주세요. 아래 예시는 결과를 [`useAnnouncer`](/utilities/use-announcer)로도 알립니다. 빈 상태는 role이 없는 `div`이므로 Todae는 나타날 때 알리지 않습니다.
+
+```tsx
+import { useId, useState } from 'react';
+import { SearchX } from 'lucide-react';
+import { Button, EmptyState, Field, Label, useAnnouncer } from '@tounsoo/todae';
+
+export function ProjectSearch() {
+  const id = useId();
+  const announce = useAnnouncer();
+  const [query, setQuery] = useState('');
+  const matches = search(query);
+
+  return (
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={id}>Search projects</Label.Root>
+        <Field.Root id={id}>
+          <Field.TextInput
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              announce(resultsMessage(search(event.target.value).length));
+            }}
+          />
+        </Field.Root>
+      </Field.Group>
+      {matches.length > 0 ? (
+        <ProjectList projects={matches} />
+      ) : (
+        <EmptyState.Root>
+          <EmptyState.Icon>
+            <SearchX />
+          </EmptyState.Icon>
+          <EmptyState.Title as="h3">No projects found</EmptyState.Title>
+          <EmptyState.Description>
+            Nothing matches “{query}”. Check the spelling or try a shorter search.
+          </EmptyState.Description>
+          <EmptyState.Actions>
+            <Button.Root variant="secondary" onClick={() => setQuery('')}>
+              Clear search
+            </Button.Root>
+          </EmptyState.Actions>
+        </EmptyState.Root>
+      )}
+    </>
+  );
+}
+```
+
+<Example block>
+  <EmptyStateSearch />
+</Example>
+
+## 제목 수준
+
+`EmptyState.Title`은 기본으로 `h2`를 렌더링합니다. `as` prop에는 `h2`부터 `h6`까지, 또는 제목이 페이지 개요에 나타나지 않아야 할 때 `p`를 줄 수 있습니다. 빈 상태가 놓인 자리에 맞는 수준, 곧 그 빈 상태를 담은 섹션의 제목보다 한 단계 아래를 고르세요. 여러 곳에서 빈 상태를 보여 주는 컴포넌트는 수준을 고정하지 말고 [Card](/card) 페이지처럼 prop으로 받으세요.
+
+```tsx
+import type { ReactNode } from 'react';
+import { EmptyState, type EmptyStateTitleElement } from '@tounsoo/todae';
+
+type EmptyListProps = { title: string; level: EmptyStateTitleElement; children: ReactNode };
+
+export function EmptyList({ title, level, children }: EmptyListProps) {
+  return (
+    <EmptyState.Root>
+      <EmptyState.Title as={level}>{title}</EmptyState.Title>
+      <EmptyState.Description>{children}</EmptyState.Description>
+    </EmptyState.Root>
+  );
+}
+```
+
+<Example block>
+  <EmptyStateLevels />
+</Example>
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 레이아웃과 페인트만 맡습니다. 모든 파트는 평범한 요소입니다. `EmptyState.Root`는 role이 없는 `div`이고, `EmptyState.Title`은 진짜 제목이며 `as`를 주지 않으면 `h2`입니다. `EmptyState.Icon`은 `aria-hidden`이고, 노출하려면 `aria-hidden={false}`를 주세요.
+
+**직접 제공할 것:** `as`로 정하는 제목 수준. 아이콘은 장식으로만 쓰거나 이름과 함께 쓰세요. 아이콘 자체가 의미를 전한다면 `aria-hidden={false}`, `role="img"`, `aria-label`이 필요합니다. 검색이나 필터 같은 사용자 동작 뒤에 빈 상태가 나타나면 [`useAnnouncer`](/utilities/use-announcer)나 제품이 가진 라이브 영역으로 알리세요. Todae는 알리지 않습니다.
+
+**주의할 점:** `table` 안의 빈 상태. 모든 열에 걸치는 셀, 예를 들어 `<td colSpan={4}>` 안에 넣거나 표 밖에 두세요. `table`이나 `tbody`의 직접 자식으로 둔 `div`는 올바르지 않습니다. 루트에 `role="status"`를 주고 메시지와 함께 마운트하면 스크린 리더가 알리지 않을 수 있습니다. `h4` 아래에 `h2` 빈 상태를 두는 것처럼 제목 수준을 건너뛰는 일.
+
+## 언제 쓰나요
+
+**언제:** 보여 줄 것이 없는 목록, 표, 검색, 페이지 전체에서 이유와 다음 할 일을 말해 줄 수 있을 때. 처음 쓰는 화면, 검색 결과 없음, 비워진 받은편지함 등.
+
+**쓰지 않을 때:** 페이지에 대한 오류나 경고 → Alert. 아직 불러오는 중인 콘텐츠 → Loader 또는 Skeleton. 필드 자체의 오류 → ErrorMessage.
+
+## Props
+
+<PropsTable name="EmptyState.Root" />
+
+<PropsTable name="EmptyState.Icon" />
+
+<PropsTable name="EmptyState.Title" />
+
+<PropsTable name="EmptyState.Description" />
+
+<PropsTable name="EmptyState.Actions" />
