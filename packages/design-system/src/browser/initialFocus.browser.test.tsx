@@ -131,4 +131,41 @@ describe('default initial focus on a radio group', () => {
       root.remove();
     }
   });
+
+  it('leaves out a group whose checked radio is outside the root, as Tab does', async () => {
+    const outside = document.createElement('div');
+    outside.innerHTML = '<input type="radio" name="g" aria-label="Outside" checked>';
+    const root = document.createElement('div');
+    root.innerHTML = '<button type="button">Before</button><input type="radio" name="g" aria-label="One"><button type="button">After</button>';
+    document.body.append(root, outside);
+    try {
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'After' }));
+      expect(getTabbables(root).map((el) => el.textContent)).toEqual(['Before', 'After']);
+    } finally {
+      root.remove();
+      outside.remove();
+    }
+  });
+
+  it('counts only a modal dialog\'s own radios, since the page behind it is inert', async () => {
+    const outside = document.createElement('div');
+    outside.innerHTML = '<input type="radio" name="g" aria-label="Outside" checked>';
+    const dialog = document.createElement('dialog');
+    dialog.innerHTML = '<div><button type="button">Before</button><input type="radio" name="g" aria-label="One"></div>';
+    document.body.append(outside, dialog);
+    try {
+      dialog.showModal();
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      const one = screen.getByRole('radio', { name: 'One' });
+      expect(document.activeElement).toBe(one);
+      expect(getTabbables(dialog.firstElementChild as HTMLElement)).toContain(one);
+    } finally {
+      dialog.close();
+      dialog.remove();
+      outside.remove();
+    }
+  });
 });

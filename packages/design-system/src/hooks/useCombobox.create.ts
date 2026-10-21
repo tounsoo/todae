@@ -65,10 +65,10 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
   }, []);
 
   /**
-   * Runs `start`, and hands its result to `commit`. While a create for `label` is
-   * pending it runs nothing, and takes that create back if it was dropped. A throw from `start`, or
-   * its rejection, is the create's failure; a throw from `commit` is the caller's,
-   * and after an await it goes to `reportError`.
+   * Runs `start`, and hands its result to `commit`. While a create for `label`
+   * is pending it runs nothing, and takes that create back if it was dropped.
+   * A throw from `start`, or its rejection, is the create's failure; a throw
+   * from `commit` is the caller's, and after an await it goes to `reportError`.
    */
   const run = useCallback(
     (

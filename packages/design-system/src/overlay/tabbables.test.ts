@@ -53,16 +53,16 @@ describe('getTabbables', () => {
     root.remove();
   });
 
-  it('counts a group within the root only, so a checked radio outside leaves the root its own stop', () => {
+  it('counts a checked radio outside the root in its group, as the browser does', () => {
     const outside = document.createElement('input');
     outside.type = 'radio';
     outside.name = 'size';
     outside.checked = true;
     const root = document.createElement('div');
-    root.innerHTML = '<input type="radio" name="size" id="small"><input type="radio" name="size" id="large">';
+    root.innerHTML = '<button id="before"></button><input type="radio" name="size" id="small"><input type="radio" name="size" id="large">';
     document.body.append(outside, root);
-    expect(getTabbables(root).map((el) => el.id)).toEqual(['small']);
-    expect(firstTabbable(root)?.id).toBe('small');
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['before']);
+    expect(firstTabbable(root, (el) => el.localName === 'input')).toBeNull();
     outside.remove();
     root.remove();
   });

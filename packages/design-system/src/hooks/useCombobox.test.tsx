@@ -1903,6 +1903,9 @@ describe('useCombobox keys', () => {
     const input = screen.getByRole('combobox');
     expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 229, isComposing: true })).toBe(true);
     expect(onChange).not.toHaveBeenCalled();
+    // Its other keys come as 'Unidentified' with keyCode 229, which pick nothing and stay the input's.
+    expect(fireEvent.keyDown(input, { key: 'Unidentified', keyCode: 229 })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
     expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 })).toBe(false);
     expect(onChange).toHaveBeenCalledWith('react');
   });

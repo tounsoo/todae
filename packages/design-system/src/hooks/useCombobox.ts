@@ -542,7 +542,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           return;
         }
         // With nothing to clear, Escape on a closed list goes on, so a dialog around it closes.
-        const clearsText = selectionMode === 'single' && !singleValue && state.current.inputValue !== '';
+        const now = state.current;
+        const clearsText = selectionMode === 'single' && !now.single && now.inputValue !== '';
         if (clearsText) {
           event.preventDefault();
           setInputValue('');
@@ -553,7 +554,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (open) setOpen(false, 'blur');
       }
     },
-    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, singleValue, state],
+    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, state],
   );
 
   const changeInput = useCallback(
