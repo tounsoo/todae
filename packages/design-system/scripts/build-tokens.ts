@@ -128,8 +128,6 @@ export type FlatToken = {
   cssValue: string;
   layer: Layer;
   context?: string;
-  /** The set or modifier that declares it, named in the catalog so a company knows where to override it. */
-  entry?: TokenEntry;
   /**
    * The token's `$description`, or the nearest enclosing group's in the same
    * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
@@ -138,8 +136,11 @@ export type FlatToken = {
   description?: string;
 };
 
-/** A token as a resolver loads it, stamped with the entry that declares it. */
-export type EntryToken = FlatToken & { entry: TokenEntry };
+/** A token as a resolver loads it. */
+export type EntryToken = FlatToken & {
+  /** The set or modifier that declares it, named in the catalog so a company knows where to override it. */
+  entry: TokenEntry;
+};
 
 export function fail(message: string): never {
   throw new Error(message);
@@ -821,8 +822,10 @@ export function settleDescriptions<T extends FlatToken>(tokens: T[], sources: Fl
   return tokens.map((token) => {
     const description = described.get(token.path);
     if (description === token.description) return token;
-    const { description: _, ...rest } = token;
-    return (description === undefined ? rest : { ...rest, description }) as T;
+    const settled = { ...token };
+    if (description === undefined) delete settled.description;
+    else settled.description = description;
+    return settled;
   });
 }
 
@@ -924,7 +927,7 @@ export type BuildTokensResult = {
   css: string;
   json: string;
   overrideKeys: string;
-  tokens: FlatToken[];
+  tokens: EntryToken[];
 };
 
 const OVERRIDE_GROUPS = [
@@ -1181,7 +1184,11 @@ async function loadTokens({
   }));
 }
 
-/** Fails when one of Todae's tokens is declared outside the entry that owns it, naming that entry. */
+/**
+ * Fails when one of Todae's tokens is declared outside the entry that owns it, naming that entry.
+ * Comparing `context` whole relies on a company entry matching its Todae entry's `alias`
+ * (MATCHED_EXTENSION_KEYS), so both entries carry a context or neither does.
+ */
 function checkPlacement(owner: TokenEntry | undefined, entry: TokenEntry, path: string, loc: string): void {
   if (!owner || (owner.kind === entry.kind && owner.name === entry.name && owner.context === entry.context)) return;
   const where =
@@ -1851,7 +1858,7 @@ export type CompanyTokensResult = {
   json: string;
   /** `THEME_OVERRIDE_TYPES` for the company's tokens, for ThemeProvider `overrideTypes`. */
   overrideTypes: string;
-  tokens: FlatToken[];
+  tokens: EntryToken[];
 };
 
 /**

@@ -78,7 +78,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'get_token',
-      'Get one token: what it is for, the set or modifier that declares it, with the context for a button variant (where a company overrides it), its value in each context (such as light and dark) and the tokens whose values read it.',
+      'Get one token: what it is for, the set or modifier that declares it (where a company overrides it) with the context for a button variant, its value in each context (such as light and dark) and the tokens whose values read it.',
       { path: tokenPath },
       async ({ path }) => {
         try {
