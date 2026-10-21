@@ -42,7 +42,10 @@ function notifyPresence(store: CountStore) {
  * element after each commit, so a control that is not rendered, or a component
  * that only reads useField, does not count.
  */
-export function useControlPresence(store: CountStore, counted: boolean): (node: HTMLElement | null) => void {
+export function useControlPresence(
+  store: CountStore,
+  counted: boolean,
+): { setPresence: (node: HTMLElement | null) => void; ownNamed: () => number } {
   const node = useRef<HTMLElement | null>(null);
   const own = useRef({ control: false, named: false });
   const sync = useCallback(() => {
@@ -60,13 +63,15 @@ export function useControlPresence(store: CountStore, counted: boolean): (node: 
   }, [store, counted]);
   // After each commit: whether the element took the field's name can change.
   useLayoutEffect(() => sync());
-  return useCallback(
+  const setPresence = useCallback(
     (el: HTMLElement | null) => {
       node.current = el;
       sync();
     },
     [sync],
   );
+  const ownNamed = useCallback(() => Number(own.current.named), []);
+  return { setPresence, ownNamed };
 }
 
 /**
@@ -93,13 +98,17 @@ function useStoreFlag(store: CountStore, read: (store: CountStore) => boolean): 
 }
 
 const hasControl = (store: CountStore) => store.controls > 0;
-const hasNamed = (store: CountStore) => store.named > 0;
 
 /** Whether any control wired with useField is in the field, for a part that leaves the field's id and description to it. */
 export const useBesideControl = (store: CountStore) => useStoreFlag(store, hasControl);
 
-/** Whether useField gave a control the field's name, for a part that leaves the name to it. */
-export const useBesideNamed = (store: CountStore) => useStoreFlag(store, hasNamed);
+/**
+ * Whether useField gave another control the field's name, for a part that leaves the name to it.
+ * `own` is what this part's own control adds to that count: a control that took
+ * the name itself reads false, so its own mount flips nothing and costs no second commit.
+ */
+export const useBesideNamed = (store: CountStore, own: () => number) =>
+  useStoreFlag(store, (current) => current.named - own() > 0);
 
 export const FieldContext = /* @__PURE__ */ createContext<FieldContextValue | null>(null);
 
@@ -121,7 +130,9 @@ export const FOCUSABLE_FIELD_CONTROL_SELECTOR =
  * uncounted control, such as a picker's button, takes it only while no counted
  * control is in the field, so one beside it keeps it whichever mounts first.
  * On detach it clears the Root's ref only if it still points at this control,
- * so another control under the same Root keeps it.
+ * so another control under the same Root keeps it. When the last counted
+ * control unmounts, the field has no focus target until a control mounts or
+ * renders again: a picker left alone still opens from its own button.
  */
 export function useControlSetter(
   inputRef: RefObject<HTMLElement | null>,

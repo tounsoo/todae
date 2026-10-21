@@ -16,7 +16,8 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDateTime } from './Field.shared.js';
+import { useFieldPicker, htmlDateTime, valueBounds } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
@@ -254,16 +255,15 @@ export function DateTimePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {picker.valueInput({
-        type: 'datetime-local',
-        value: value ? htmlDateTime(value) : '',
-        required,
-        min: min && htmlDateTime(min),
-        max: max && htmlDateTime(max),
-        // The list picks any time, so no step is off.
-        step: 'any',
-        bound: { min: min && dateTimeLabel(min, locale), max: max && dateTimeLabel(max, locale) },
-      })}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'datetime-local',
+          value: value ? htmlDateTime(value) : '',
+          // The list picks any time, so no step is off.
+          step: 'any',
+          ...valueBounds(min, max, htmlDateTime, (at) => dateTimeLabel(at, locale)),
+        })}
+      />
       {/* Mounted while open only: a form can hold many date and time pickers. */}
       {picker.shown ? (
         <Popover.Root

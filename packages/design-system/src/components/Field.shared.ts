@@ -10,12 +10,9 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { createElement, Fragment, type ReactNode } from 'react';
 import { mergeDescribedBy, useBesideControl, useFieldContext, type CountStore } from './Field.context.js';
 import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
-import { useStrings } from '../providers/StringsProvider.js';
-import type { ValueInputOptions } from './valueInput.js';
-import { VisuallyHidden } from './VisuallyHidden.js';
+import type { ControlBrand, ValueInputOptions } from './valueInput.js';
 import { useDomId } from './domId.js';
 import { warnOnce } from './warnOnce.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
@@ -83,7 +80,7 @@ function pickerControl<P extends PickerOwnProps>(
     disabled: control.disabled,
     'aria-invalid': control['aria-invalid'],
     'aria-label': props['aria-label'] ?? label,
-  };
+  } as typeof own & Pick<typeof control, 'ref' | 'disabled' | 'aria-invalid'> & ControlBrand;
 }
 
 /**
@@ -170,7 +167,7 @@ export function useFieldPicker<Reason extends string>({
 }: {
   props: PickerOwnProps & Record<string, unknown>;
   label: string;
-  /** Describes the button as required, with the `required` string that `valueInput` renders. */
+  /** The picker is required: its value input says so, and the button is described as required. */
   required?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -180,7 +177,6 @@ export function useFieldPicker<Reason extends string>({
   /** What the popover holds, for the button's aria-haspopup: a dialog by default. */
   haspopup?: PopoverHaspopup;
 }) {
-  const strings = useStrings();
   // The button does not count itself as a control another picker should leave the field to.
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
@@ -239,13 +235,10 @@ export function useFieldPicker<Reason extends string>({
     };
   }, [popover.triggerRef]);
   // A button sends nothing and the browser can't validate it, so the value goes in a value input, which follows the button; and a required picker says so.
-  const valueInput = (options: ValueInputOptions): ReactNode =>
-    createElement(
-      Fragment,
-      null,
-      createElement('input', field.getValueInputProps({ name: props.name, ...options }, control)),
-      options.required ? createElement(VisuallyHidden.Root, { id: requiredId }, strings.required) : null,
-    );
+  const valueInput = (options: Omit<ValueInputOptions, 'name' | 'required'>) => ({
+    input: field.getValueInputProps({ name: props.name, required, ...options }, control),
+    requiredId: required ? requiredId : undefined,
+  });
   return {
     valueInput,
     notifyValueChange: field.notifyValueChange,
@@ -254,6 +247,23 @@ export function useFieldPicker<Reason extends string>({
     popover,
     // The popover exists only while open, so only then does the button control it.
     triggerProps: { ...(trigger as ComponentPropsWithRef<'button'>), 'aria-controls': shown ? trigger['aria-controls'] : undefined },
+  };
+}
+
+/** The `min`, `max` and `bound` options of a value input, from a picker's bounds: each in the type's format, and as the picker shows it. */
+export function valueBounds<T>(
+  min: T | undefined,
+  max: T | undefined,
+  html: (value: T) => string,
+  label: (value: T) => string,
+) {
+  return {
+    min: min === undefined ? undefined : html(min),
+    max: max === undefined ? undefined : html(max),
+    bound: {
+      min: min === undefined ? undefined : label(min),
+      max: max === undefined ? undefined : label(max),
+    },
   };
 }
 

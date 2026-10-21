@@ -23,8 +23,13 @@ export type ValueInputOptions = {
   bound?: ValueInputBound;
 };
 
+declare const fromGetControlProps: unique symbol;
+
+/** What only `getControlProps` produces, so a value input can't be handed props that never went through it. Type only: it adds nothing at run time. */
+export type ControlBrand = { readonly [fromGetControlProps]: true };
+
 /** The props of the control the value input speaks for, as `getControlProps` returned them. */
-export type ValueInputControl = {
+export type ValueInputControl = ControlBrand & {
   /** A control with a name sends its own value, so the value input goes without one. */
   name?: string;
   disabled?: boolean;
@@ -45,9 +50,9 @@ const noop = () => {};
  * Everything the getter decides, it decides here, from the control's props and
  * what the field holds: the name, `disabled` and `form`.
  */
-export function useValueInput(ctx: FieldContextValue) {
-  // The one fact the name decision needs: a control re-renders when it flips, not each time another control mounts.
-  const named = useBesideNamed(ctx.store);
+export function useValueInput(ctx: FieldContextValue, ownNamed: () => number) {
+  // The one fact the name decision needs: a control re-renders when it flips, not each time another control mounts, and not for the name its own control took.
+  const named = useBesideNamed(ctx.store, ownNamed);
   const form = useContext(FormContext);
   const scope = useContext(ValidationScopeContext);
   const own = useRef<HTMLElement | null>(null);
@@ -57,12 +62,27 @@ export function useValueInput(ctx: FieldContextValue) {
   }, []);
   const owner = useCallback(() => own.current, []);
   const { disabled, name: fieldName, store } = ctx;
+  // The ref changes only when a bound does, so React does not detach and attach it on every render. A memo of the last one, not state.
+  const lastRef = useRef<{ key: string; ref: RefCallback<HTMLInputElement> } | null>(null);
+  const refFor = useCallback(
+    (bound: ValueInputBound) => {
+      const key = JSON.stringify([bound.min, bound.max]);
+      if (lastRef.current?.key !== key) {
+        lastRef.current = {
+          key,
+          ref: (node) => {
+            input.current = node;
+            if (node) registerValueInput(node, { field: store, owner, bound });
+          },
+        };
+      }
+      return lastRef.current.ref;
+    },
+    [owner, store],
+  );
   const getValueInputProps = useCallback(
     (options: ValueInputOptions, control: ValueInputControl): ValueInputProps => ({
-      ref: (node) => {
-        input.current = node;
-        if (node) registerValueInput(node, { field: store, owner, bound: options.bound ?? {} });
-      },
+      ref: refFor(options.bound ?? {}),
       type: options.type,
       // The field's name unless a control already took it.
       name: control.name !== undefined ? undefined : (options.name ?? (named ? undefined : fieldName)),
@@ -84,14 +104,15 @@ export function useValueInput(ctx: FieldContextValue) {
       // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs, and a field with none keeps no focus here.
       onFocus: (event) => (own.current ? own.current.focus() : event.currentTarget.blur()),
     }),
-    [disabled, fieldName, named, owner, store],
+    [disabled, fieldName, named, refFor],
   );
   const formEdited = form?.edited;
   const touch = scope?.touch;
   const notifyValueChange = useCallback(() => {
-    const names = [(own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name];
+    // The names a server error may be filed under: the field's, and what the control and the value input send.
+    const names = [fieldName, (own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name];
     formEdited?.([...new Set(names.filter((name): name is string => Boolean(name)))]);
     touch?.();
-  }, [formEdited, touch]);
+  }, [fieldName, formEdited, touch]);
   return useMemo(() => ({ track, getValueInputProps, notifyValueChange }), [track, getValueInputProps, notifyValueChange]);
 }

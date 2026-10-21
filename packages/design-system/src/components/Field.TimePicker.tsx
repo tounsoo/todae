@@ -11,7 +11,8 @@ import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
-import { useFieldPicker, htmlTime } from './Field.shared.js';
+import { useFieldPicker, htmlTime, valueBounds } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -50,13 +51,20 @@ const MINUTES_PER_DAY = 24 * 60;
 
 /**
  * The times every `step` minutes from midnight between `min` and `max`, with
- * `value` among them when it is in range. A `min` later than `max` is an
- * overnight range, from `min` through midnight to `max`, as a native time
- * input reads it, so the list offers what the browser accepts.
+ * `value` among them when it is in range. With `overnight`, a `min` later
+ * than `max` is a range from `min` through midnight to `max`, as a native time
+ * input reads it, so the list offers what the browser accepts. Without it, such
+ * a range lists nothing, as for the times of one day in a Field.DateTimePicker.
  */
-export function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainTime, value?: Temporal.PlainTime | null) {
+export function timeSlots(
+  step: number,
+  min?: Temporal.PlainTime,
+  max?: Temporal.PlainTime,
+  value?: Temporal.PlainTime | null,
+  allowOvernight = false,
+) {
   const every = Number.isFinite(step) && step >= 1 ? Math.round(step) : 30;
-  const overnight = min && max && Temporal.PlainTime.compare(min, max) > 0;
+  const overnight = allowOvernight && min && max && Temporal.PlainTime.compare(min, max) > 0;
   const inRange = (time: Temporal.PlainTime) => {
     const afterMin = !min || Temporal.PlainTime.compare(time, min) >= 0;
     const beforeMax = !max || Temporal.PlainTime.compare(time, max) <= 0;
@@ -89,6 +97,7 @@ export function TimeList({
   max,
   locale,
   label,
+  overnight,
   onPick,
 }: {
   value: Temporal.PlainTime | null;
@@ -97,9 +106,11 @@ export function TimeList({
   max?: Temporal.PlainTime;
   locale?: string;
   label: string;
+  /** A `min` later than `max` is an overnight range. */
+  overnight?: boolean;
   onPick: (time: Temporal.PlainTime) => void;
 }) {
-  const slots = useMemo(() => timeSlots(step, min, max, value), [step, min, max, value]);
+  const slots = useMemo(() => timeSlots(step, min, max, value, overnight), [step, min, max, value, overnight]);
   // Formatted once per list, which can hold 1,440 times. Keyed to the
   // nanosecond, so a value between the steps stays as it is when picked.
   const options = useMemo(
@@ -200,16 +211,15 @@ export function TimePicker({
           {glyphOr(clock, <ClockGlyph />)}
         </span>
       </button>
-      {picker.valueInput({
-        type: 'time',
-        value: value ? htmlTime(value) : '',
-        required,
-        min: min && htmlTime(min),
-        max: max && htmlTime(max),
-        // The list picks any time, so no step is off.
-        step: 'any',
-        bound: { min: min && formatTime(min, { locale }), max: max && formatTime(max, { locale }) },
-      })}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'time',
+          value: value ? htmlTime(value) : '',
+          // The list picks any time, so no step is off.
+          step: 'any',
+          ...valueBounds(min, max, htmlTime, (time) => formatTime(time, { locale })),
+        })}
+      />
       {/* Mounted while open only: a form can hold many time pickers. */}
       {picker.shown ? (
         <Popover.Root {...picker.popover.getPopoverProps()}>
@@ -220,6 +230,7 @@ export function TimePicker({
             max={max}
             locale={locale}
             label={strings.timePicker}
+            overnight
             onPick={(next) => {
               picker.notifyValueChange();
               onValueChange?.(next);

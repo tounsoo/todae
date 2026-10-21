@@ -15,6 +15,9 @@ import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
 import { useChipList } from '../hooks/useChipList.js';
 import { useField } from '../hooks/useField.js';
+import { useDomId } from './domId.js';
+import { mergeDescribedBy } from './Field.context.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 export type FieldChipInputProps = {
   chips: readonly string[];
@@ -64,7 +67,13 @@ export function ChipInput({
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
   const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
-  const control = field.getControlProps({ ...props, ref: controlRef });
+  // A text box can't be required of its chips, so `aria-required` would be wrong; it is described as required instead.
+  const requiredId = useDomId();
+  const control = field.getControlProps({
+    ...props,
+    ref: controlRef,
+    'aria-describedby': mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined),
+  });
   // The Root's disabled or the input's own: the chips follow the input.
   const disabled = Boolean(control.disabled);
   // The commit key whose press committed, while it may still be held.
@@ -127,14 +136,18 @@ export function ChipInput({
       {...control}
       value={inputValue}
       type="text"
-      aria-required={required ? true : props['aria-required']}
       className={cx(styles.input, className)}
       onChange={(event) => onInputValueChange(event.target.value)}
       onKeyDown={onKeyDown}
     />
   );
   // A form has only ever sent the text being typed, not the chips, so the input above sends it and this sends nothing. It is empty exactly when there are no chips, which `required` checks.
-  const carrier = <input {...field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required }, control)} />;
+  const carrier = (
+    <FieldValueInput
+      input={field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required }, control)}
+      requiredId={required ? requiredId : undefined}
+    />
+  );
   const measure =
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>

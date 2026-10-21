@@ -52,7 +52,7 @@ describe('Field.DateTimePicker', () => {
       ['start', '2026-10-13T09:30'],
       ['end', '2026-10-13T17:45'],
     ]);
-    // jsdom writes a value with seconds as 17:45:15.000; a browser keeps what HTML writes (temporal-inputs.browser.test.tsx).
+    // jsdom writes a value with seconds as 17:45:15.000; a browser keeps what HTML writes (form.browser.test.tsx).
     expect(htmlDateTime(at('2026-10-13T17:45:15').withCalendar('japanese'))).toBe('2026-10-13T17:45:15');
   });
 
@@ -242,6 +242,15 @@ describe('Field.DateTimePicker', () => {
     render(
       <Field.Root aria-label="Start">
         <Field.DateTimePicker value={null} min={at('2026-10-13T09:10')} max={at('2026-10-13T09:20')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('keeps the overnight list to Field.TimePicker: a min later than max on one day offers no date', () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={null} min={at('2026-10-13T22:00')} max={at('2026-10-13T01:00')} locale="en-US" defaultOpen />
       </Field.Root>,
     );
     expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);

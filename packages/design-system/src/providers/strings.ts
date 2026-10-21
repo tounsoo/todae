@@ -88,7 +88,7 @@ export interface Strings {
   stepPending: string;
   /** Steps.Item's hidden status word for a step with an `error`. */
   stepError: string;
-  /** What a required Field.DatePicker, Field.TimePicker or Field.DateTimePicker button is described by, since a button cannot say `aria-required`. */
+  /** What a required Field.DatePicker, Field.TimePicker or Field.DateTimePicker button, and a required Field.ChipInput's text box, is described by: a button cannot say `aria-required`, and the text box is not what must be filled. */
   required: string;
   /** Text of a control the browser reports empty though it is required. */
   valueMissing: string;

@@ -6,6 +6,7 @@ import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
 import { ColorPicker as ColorPickerParts } from './ColorPicker.js';
 import { useFieldPicker } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
 export type FieldColorPickerCloseReason = PopoverCloseReason | 'disabled';
@@ -61,7 +62,7 @@ export function ColorPicker({
         style={{ ...picker.triggerProps.style, '--_swatch': value } as CSSProperties}
       />
       {/* A button sends nothing, so the color goes in a value input. Text, not color: that type would lowercase the value and turn one that is not #rrggbb into black. */}
-      {picker.valueInput({ type: 'text', value })}
+      <FieldValueInput {...picker.valueInput({ type: 'text', value })} />
       {/* Mounted while open only: a form can hold many swatches. */}
       {picker.shown ? (
         <Popover.Root {...picker.popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>

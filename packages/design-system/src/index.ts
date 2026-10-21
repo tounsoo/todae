@@ -203,6 +203,7 @@ export {
   type FieldControlUserProps,
   type FieldControlWire,
   type UseFieldResult,
+  type ValueInputControl,
   type ValueInputOptions,
   type ValueInputProps,
 } from './hooks/useField.js';

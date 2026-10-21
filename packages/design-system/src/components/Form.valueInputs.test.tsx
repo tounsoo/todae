@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { useState } from 'react';
+import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getCandidates, getTabbables } from '../overlay/tabbables.js';
-import { ErrorMessage, Field, Form, Label, useField } from '../index.js';
+import { ErrorMessage, Field, Form, Label, useField, type FieldControlUserProps } from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
 import { resetWarnOnce } from './warnOnce.js';
@@ -212,7 +212,9 @@ describe('a required ChipInput in Form.Root', () => {
     await submit(screen.getByTestId('form'));
     expect(screen.getByText('This field is required')).toBeTruthy();
     expect(document.activeElement).toBe(input);
-    expect(input.getAttribute('aria-required')).toBe('true');
+    // A text box is not required of its chips: the string says so through aria-describedby.
+    expect(input.hasAttribute('aria-required')).toBe(false);
+    expect(input.getAttribute('aria-describedby')?.split(' ').map((id) => document.getElementById(id)?.textContent)).toContain('Required');
   });
 
   it('is valid with a chip, and invalid again when the last one is removed', async () => {
@@ -741,7 +743,7 @@ describe('a value input with no control to speak for', () => {
   it('gives focus up rather than keep it', async () => {
     function Bare() {
       const field = useField();
-      return <input {...field.getValueInputProps({ type: 'text', value: '' }, {})} />;
+      return <input {...field.getValueInputProps({ type: 'text', value: '' }, field.getControlProps())} />;
     }
     await mount(
       <Field.Root name="bare" aria-label="Bare">
@@ -756,18 +758,19 @@ describe('a value input with no control to speak for', () => {
 });
 
 describe('the control\'s props a value input is given', () => {
-  function Custom({ control }: { control: Record<string, unknown> }) {
+  type Own = FieldControlUserProps & { form?: string };
+  function Custom({ control }: { control: Own }) {
     const field = useField();
-    return <input {...field.getValueInputProps({ type: 'text', value: 'x' }, control)} />;
+    return <input {...field.getValueInputProps({ type: 'text', value: 'x' }, field.getControlProps(control))} />;
   }
-  const mountCustom = (control: Record<string, unknown>) =>
+  const mountCustom = (control: Own) =>
     mount(
       <Field.Root name="custom" aria-label="Custom">
         <Custom control={control} />
       </Field.Root>,
     );
 
-  it.each([
+  it.each<[string, Own]>([
     ['disabled', { disabled: true }],
     ['aria-disabled', { 'aria-disabled': 'true' }],
   ])('disable it by %s', async (_, control) => {
@@ -845,5 +848,95 @@ describe('what a control re-renders for', () => {
     rerender(tree(true));
     await settle();
     expect(renders).toBe(2);
+  });
+});
+
+describe('a pick beside a named control', () => {
+  function Beside({ picker }: { picker: React.ReactNode }) {
+    const [text, setText] = useState('');
+    return (
+      <Form.Root data-testid="form" errors={{ when: 'Booked out.' }}>
+        <Field.Group>
+          <Field.Root name="when" aria-label="When">
+            <Field.TextInput value={text} onValueChange={setText} />
+            {picker}
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>
+    );
+  }
+
+  it('dismisses the field\'s server error when a date is picked', async () => {
+    await mount(<Beside picker={<Field.DatePicker value={day('2026-10-13')} locale="en-US" />} />);
+    expect(screen.getByText('Booked out.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
+    });
+    await settle();
+    expect(screen.queryByText('Booked out.')).toBeNull();
+  });
+
+  it('dismisses the field\'s server error when a color is picked', async () => {
+    await mount(<Beside picker={<Field.ColorPicker value="#ff0000" />} />);
+    expect(screen.getByText('Booked out.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Color picker' }));
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByRole('slider', { name: 'Hue' }), { target: { value: '120' } });
+    });
+    await settle();
+    expect(screen.queryByText('Booked out.')).toBeNull();
+  });
+});
+
+describe('what a control pays on mount', () => {
+  it('is one commit for a named control, with no second one for the name it took', async () => {
+    let commits = 0;
+    await mount(
+      <Profiler id="field" onRender={() => (commits += 1)}>
+        <Field.Root name="f" aria-label="F">
+          <Field.TextInput value="" onValueChange={() => undefined} />
+        </Field.Root>
+      </Profiler>,
+    );
+    expect(commits).toBe(1);
+  });
+});
+
+describe('the control a value input is given', () => {
+  it('has to come from getControlProps', () => {
+    function Custom() {
+      const field = useField();
+      // @ts-expect-error a value input follows the props getControlProps returned, which {} is not
+      return <input {...field.getValueInputProps({ type: 'text', value: '' }, {})} />;
+    }
+    expect(Custom).toBeTypeOf('function');
+  });
+});
+
+describe('a value input\'s ref', () => {
+  it('stays the same across renders while its bounds do', async () => {
+    const seen: unknown[] = [];
+    function Probe({ n }: { n: number }) {
+      const field = useField();
+      const control = field.getControlProps({}, { native: false });
+      const props = field.getValueInputProps({ type: 'text', value: String(n) }, control);
+      seen.push(props.ref);
+      return <input {...props} />;
+    }
+    const tree = (n: number) => (
+      <Field.Root name="p" aria-label="P">
+        <Probe n={n} />
+      </Field.Root>
+    );
+    const { rerender } = await mount(tree(1));
+    rerender(tree(2));
+    expect(seen.length).toBeGreaterThan(1);
+    expect(new Set(seen).size).toBe(1);
   });
 });

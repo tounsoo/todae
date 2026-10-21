@@ -10,6 +10,7 @@ import { useRevalidate } from '../components/Form.context.js';
 import { useStableComposedRef } from '../components/props.js';
 import {
   useValueInput,
+  type ControlBrand,
   type ValueInputControl,
   type ValueInputOptions,
   type ValueInputProps,
@@ -72,7 +73,7 @@ export type UseFieldResult = {
   getControlProps: <P extends FieldControlUserProps>(
     props?: P,
     options?: FieldControlOptions,
-  ) => Omit<P, keyof FieldControlWire> & FieldControlWire;
+  ) => Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand;
   /**
    * Props for a native `<input>` that carries a non-native control's value: it
    * submits under the field's name, and the browser validates it, so
@@ -111,8 +112,8 @@ export function useField(): UseFieldResult {
 export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
   const setFocusTarget = useControlSetter(ctx.inputRef, ctx.store, counted);
-  const setPresence = useControlPresence(ctx.store, counted);
-  const valueInput = useValueInput(ctx);
+  const { setPresence, ownNamed } = useControlPresence(ctx.store, counted);
+  const valueInput = useValueInput(ctx, ownNamed);
   const { track } = valueInput;
   useRevalidate();
   const setControl = useCallback(
@@ -128,7 +129,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
     <P extends FieldControlUserProps>(
       props?: P,
       { native = true }: FieldControlOptions = {},
-    ): Omit<P, keyof FieldControlWire> & FieldControlWire => {
+    ): Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand => {
       const user = (props ?? {}) as P;
       const disabled = ctx.disabled || Boolean(user.disabled);
       const name = native ? (user.name ?? ctx.name) : undefined;
@@ -145,7 +146,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),
         'data-todae-field-control': name !== undefined && name === ctx.name ? 'name' : '',
-      } as Omit<P, keyof FieldControlWire> & FieldControlWire;
+      } as unknown as Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand;
     },
     [composedRef, ctx],
   );

@@ -16,7 +16,8 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDate } from './Field.shared.js';
+import { useFieldPicker, htmlDate, valueBounds } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -120,14 +121,13 @@ export function DatePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {picker.valueInput({
-        type: 'date',
-        value: value ? htmlDate(isoDate(value)) : '',
-        required,
-        min: min && htmlDate(isoDate(min)),
-        max: max && htmlDate(isoDate(max)),
-        bound: { min: min && dateLabel(min, locale), max: max && dateLabel(max, locale) },
-      })}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'date',
+          value: value ? htmlDate(isoDate(value)) : '',
+          ...valueBounds(min, max, (date) => htmlDate(isoDate(date)), (date) => dateLabel(date, locale)),
+        })}
+      />
       {/* Mounted while open only: a form can hold many date pickers. */}
       {picker.shown ? (
         <Popover.Root
