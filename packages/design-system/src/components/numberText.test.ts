@@ -30,11 +30,14 @@ describe('formatNumber', () => {
     ['de-DE', '1.234,5'],
     ['fr-FR', '1 234,5'],
     ['ko-KR', '1,234.5'],
-    ['de-CH', '1’234.5'],
+    // Newer CLDR groups de-CH with ' instead of ’, so the mark follows the runtime's ICU.
+    ['de-CH', /^1[’']234\.5$/],
     ['hi-IN', '1,234.5'],
     ['ar-EG', '١٬٢٣٤٫٥'],
   ])('writes 1234.5 in %s', (locale, text) => {
-    expect(formatNumber(1234.5, { locale })).toBe(text);
+    const written = formatNumber(1234.5, { locale });
+    if (typeof text === 'string') expect(written).toBe(text);
+    else expect(written).toMatch(text);
   });
 
   it('keeps every digit a number has, where Intl alone keeps three', () => {
