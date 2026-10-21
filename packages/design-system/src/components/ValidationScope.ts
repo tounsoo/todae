@@ -13,9 +13,9 @@ import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDomId } from './domId.js';
 import { FormContext, type Reading, type ValidationScopeValue } from './Form.context.js';
-import { pickShown, readScope, sameReadings, SCOPE_ATTRIBUTE } from './Form.model.js';
+import { pickShown, readScope, sameReadings, SCOPE_ATTRIBUTE, SCOPE_SELECTOR } from './Form.model.js';
 import type { FieldsetContextValue } from './Fieldset.context.js';
-import { isValidityCarrier, type FormFieldError } from './validity.js';
+import type { FormFieldError } from './validity.js';
 
 /** When a scope started to show what its controls say: after a change and the focus leaving, per reset. */
 type Reveal = { epoch: number; touched: boolean; revealed: boolean };
@@ -73,7 +73,6 @@ export function useValidationScope<E extends HTMLElement>(
       if (sameReadings(read.current, next)) return;
       read.current = next;
       setReadings(next);
-      form.recheck();
     };
   });
 
@@ -104,6 +103,11 @@ export function useValidationScope<E extends HTMLElement>(
   const message = shown?.error.message;
   const error = useMemo<FormFieldError | null>(() => (kind !== undefined && message !== undefined ? { kind, message } : null), [kind, message]);
 
+  // The summary reads the page itself, so it only needs telling that what this scope shows changed, or that it is gone.
+  const bump = form?.bump;
+  useLayoutEffect(() => bump?.(), [bump, kind, message]);
+  useLayoutEffect(() => bump, [bump]);
+
   // After each commit of the scope: a value set with no event still changes validity.
   const on = form !== null;
   useLayoutEffect(() => {
@@ -131,8 +135,9 @@ export function useValidationScope<E extends HTMLElement>(
     [SCOPE_ATTRIBUTE]: id,
     onChangeCapture(event) {
       handlers.onChangeCapture?.(event);
+      // Only a change of this scope's own control touches it: a nested scope's is that scope's, and a portaled one is not inside.
       const target = event.target;
-      if (isValidityCarrier(target)) form.dismiss(target.name);
+      if (!(target instanceof Element) || target.closest(SCOPE_SELECTOR) !== event.currentTarget) return;
       setReveal((prev) => (prev.epoch === form.epoch && prev.touched ? prev : { epoch: form.epoch, touched: true, revealed: false }));
       revalidate();
     },

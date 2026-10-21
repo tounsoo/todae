@@ -37,8 +37,9 @@ export function sameReadings(a: readonly Reading[], b: readonly Reading[]): bool
   return (
     a.length === b.length &&
     a.every((reading, i) => {
-      const other = b[i]!;
+      const other = b[i];
       return (
+        other !== undefined &&
         reading.carrier === other.carrier &&
         reading.name === other.name &&
         reading.label === other.label &&
@@ -49,13 +50,40 @@ export function sameReadings(a: readonly Reading[], b: readonly Reading[]): bool
   );
 }
 
-/** The controls a scope answers for: its own, not those of a scope inside it, and only those that take part in validation. */
-export function scopeCarriers(scope: Element): ValidityCarrier[] {
+/** The controls whose nearest scope is `scope`: not those of a scope inside it. */
+function ownControls(scope: Element): ValidityCarrier[] {
   return [...scope.querySelectorAll('input, select, textarea')].filter(
-    (node): node is ValidityCarrier =>
-      isValidityCarrier(node) && node.willValidate && node.closest(SCOPE_SELECTOR) === scope,
+    (node): node is ValidityCarrier => isValidityCarrier(node) && node.closest(SCOPE_SELECTOR) === scope,
   );
 }
+
+/** The controls that take part in validation, whose native problems the scope shows. */
+export function scopeCarriers(scope: Element): ValidityCarrier[] {
+  return ownControls(scope).filter((node) => node.willValidate);
+}
+
+/** Every named control, validating or not, since a server error is for a name. */
+export function scopeControls(scope: Element): ValidityCarrier[] {
+  return ownControls(scope).filter((node) => node.willValidate || node.name);
+}
+
+/** The first control at any depth inside `root` that takes part in validation. */
+export function firstCarrier(root: Element): ValidityCarrier | undefined {
+  return [...root.querySelectorAll('input, select, textarea')].find(
+    (node): node is ValidityCarrier => isValidityCarrier(node) && node.willValidate,
+  );
+}
+
+const EMPTY_KEY = '[]';
+
+/** What `errors` says, apart from which object says it: its non-empty entries by name. */
+export function errorsKey(errors: FormErrors | undefined): string {
+  const entries = Object.entries(errors ?? {}).filter(([, text]) => text);
+  if (entries.length === 0) return EMPTY_KEY;
+  return JSON.stringify(entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+export const hasEntries = (key: string) => key !== EMPTY_KEY;
 
 function textOf(ids: string | null, from: Element): string {
   return (ids ?? '')
@@ -79,7 +107,7 @@ export function labelOf(carrier: ValidityCarrier, scope: Element): string {
 
 /** What a scope's controls say now. */
 export function readScope(scope: Element, strings: Strings): Reading[] {
-  return scopeCarriers(scope).map((carrier) => ({
+  return scopeControls(scope).map((carrier) => ({
     carrier,
     name: carrier.name,
     native: describeValidity(carrier, strings),
@@ -107,20 +135,4 @@ export function failingEntries(
     if (shown) entries.push({ scopeId, error: shown.error, label: shown.reading.label, carrier: shown.reading.carrier });
   }
   return entries.sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
-}
-
-export function sameEntries(a: readonly SummaryEntry[], b: readonly SummaryEntry[]): boolean {
-  return (
-    a.length === b.length &&
-    a.every((entry, i) => {
-      const other = b[i]!;
-      return (
-        entry.scopeId === other.scopeId &&
-        entry.carrier === other.carrier &&
-        entry.label === other.label &&
-        entry.error.kind === other.error.kind &&
-        entry.error.message === other.error.message
-      );
-    })
-  );
 }

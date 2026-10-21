@@ -973,8 +973,8 @@
       "ko": "안의 Todae 컨트롤을 invalid로 표시합니다(aria-invalid와 invalid 스타일). invalid={false}를 준 컨트롤은 제외됩니다. fieldset에는 자체 aria-invalid가 없으므로 aria-describedby로 ErrorMessage를 가리킵니다."
     },
     "customValidity": {
-      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the first control inside that takes part in validation. An empty string or undefined means the rule holds.",
-      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 안에서 검증에 참여하는 첫 컨트롤에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
+      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control.",
+      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. fieldset 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, 컨트롤이 모두 중첩된 그룹 안에 있으면 어느 깊이든 첫 컨트롤(오류가 보이는 곳)에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다. 그런 컨트롤이 없으면 개발 중에 경고합니다."
     },
     "aria-describedby": {
       "en": "Ids of a Description or ErrorMessage for the whole group.",
@@ -991,8 +991,8 @@
       "ko": "서버 응답처럼 직접 찾은 문제를 컨트롤의 name을 키로 넣습니다. 컨트롤의 네이티브 문제 대신 즉시 표시되고 제출을 막지 않습니다. 컨트롤을 편집하면 다음 제출까지, 또는 그 name의 텍스트가 바뀔 때까지 그 항목이 숨겨집니다."
     },
     "onSubmit": {
-      "en": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate. Form.Root checks first, and a submit with a problem does not reach it.",
-      "ko": "모든 컨트롤이 유효한 제출, 또는 formNoValidate가 있는 제출 버튼이 보낸 제출에서 실행됩니다. Form.Root가 먼저 검사하며, 문제가 있는 제출은 여기에 닿지 않습니다."
+      "en": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it.",
+      "ko": "모든 컨트롤이 유효한 제출, 또는 formNoValidate가 있는 제출 버튼이 보낸 제출(검사 없이 보내는 것이며 새로 드러나는 것은 없음)에서 실행됩니다. Form.Root가 먼저 검사하며, 문제가 있는 제출은 여기에 닿지 않습니다."
     },
     "onReset": {
       "en": "Runs on reset. A reset hides every shown problem again.",

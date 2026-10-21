@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
@@ -117,7 +118,48 @@ describe('Form.Summary', () => {
       </SignUp>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByRole('link').textContent).toBe('Plan');
+    // The radio group has no id to link to, so the row is a button.
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Plan' })).toBeTruthy();
+  });
+
+  it('moves focus to a control with no id from its button', async () => {
+    await mount(
+      <SignUp>
+        <Form.Summary data-testid="summary" />
+        <Field.Group>
+          <input aria-label="Plain" required />
+          <ErrorMessage.Root />
+        </Field.Group>
+      </SignUp>,
+    );
+    await submit(screen.getByTestId('form'));
+    await act(async () => {
+      screen.getByRole('button', { name: 'Plain' }).click();
+    });
+    expect(document.activeElement).toBe(screen.getByLabelText('Plain'));
+  });
+
+  it('drops a scope that unmounts after a failed submit', async () => {
+    function Removable() {
+      const [shown, setShown] = useState(true);
+      return (
+        <SignUp>
+          <Form.Summary data-testid="summary" />
+          {shown ? <EmailField /> : null}
+          <button type="button" onClick={() => setShown(false)}>
+            Remove
+          </button>
+        </SignUp>
+      );
+    }
+    await mount(<Removable />);
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByTestId('summary')).toBeTruthy();
+    await act(async () => {
+      screen.getByRole('button', { name: 'Remove' }).click();
+    });
+    expect(screen.queryByTestId('summary')).toBeNull();
   });
 
   it('is titled by the formErrors string', async () => {
@@ -258,6 +300,44 @@ describe('a reply that follows an empty one', () => {
     await settle();
     expect(document.activeElement).toBe(screen.getByTestId('summary'));
     expect(screen.getByTestId('summary').textContent).toContain('Taken.');
+  });
+});
+
+describe('a reply is a change of content', () => {
+  function Draft({ errors }: { errors: FormErrors }) {
+    return (
+      <SignUp errors={errors}>
+        <EmailField required={false} />
+        <input aria-label="Other" />
+      </SignUp>
+    );
+  }
+
+  async function submitted(errors: FormErrors) {
+    const view = await mount(<Draft errors={errors} />);
+    await submit(screen.getByTestId('form'));
+    screen.getByLabelText('Other').focus();
+    return view;
+  }
+
+  it('is not the same errors rebuilt by an unrelated render, and is the changed ones', async () => {
+    const { rerender } = await submitted({ email: 'Taken.' });
+    // Something else changed, such as a submitting flag, and an inline `errors` is a new object.
+    rerender(<Draft errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(screen.getByLabelText('Other'));
+    rerender(<Draft errors={{ email: 'Blocked.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('still counts the same text as a reply when it was cleared in between', async () => {
+    const { rerender } = await submitted({ email: 'Taken.' });
+    rerender(<Draft errors={{}} />);
+    await settle();
+    rerender(<Draft errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(input());
   });
 });
 

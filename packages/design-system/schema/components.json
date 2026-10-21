@@ -2062,7 +2062,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first control inside that takes part in validation. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control."
         },
         {
           "name": "aria-describedby",
@@ -2092,7 +2092,7 @@
           "name": "onSubmit",
           "type": "React.FormEventHandler<HTMLFormElement>",
           "required": false,
-          "description": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate. Form.Root checks first, and a submit with a problem does not reach it."
+          "description": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it."
         },
         {
           "name": "onReset",
@@ -2110,7 +2110,7 @@
     },
     {
       "name": "Form.Summary",
-      "description": "The problems a failed submit left, as links to their controls. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.",
+      "description": "The problems a failed submit left, as links to their controls, or buttons for a control with no id. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.",
       "props": [
         {
           "name": "title",

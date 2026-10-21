@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Form.Summary',
   description:
-    'The problems a failed submit left, as links to their controls. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.',
+    'The problems a failed submit left, as links to their controls, or buttons for a control with no id. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.',
   props: [
     {
       name: 'title',

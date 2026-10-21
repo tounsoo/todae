@@ -27,14 +27,17 @@ export type FormContextValue = {
   epoch: number;
   errors: FormErrors | undefined;
   dismissal: Dismissal;
-  /** Hides the server error a name has now, until the next submit or until its text changes. */
-  dismiss: (name: string) => void;
-  /** The scopes that were failing at the last attempt and still are; Form.Summary lists them. */
-  summary: readonly SummaryEntry[];
+  /** The ids of the scopes that were failing at the last attempt or reply; Form.Summary lists those that still are. */
+  failed: readonly string[];
+  /** Changes whenever Form.Summary has to read the page again. */
+  version: number;
+  formRef: RefObject<HTMLFormElement | null>;
   /** Form.Summary's element while it renders one. */
   summaryRef: RefObject<HTMLElement | null>;
-  /** Drops from the summary what is no longer failing. */
-  recheck: () => void;
+  /** A scope's shown error changed or the scope left: the summary may list something else now. */
+  bump: () => void;
+  /** Every scope reads its controls again, for a change the page made with no event. */
+  rescan: () => void;
 };
 
 export const FormContext = /* @__PURE__ */ createContext<FormContextValue | null>(null);

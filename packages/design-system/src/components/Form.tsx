@@ -20,10 +20,11 @@ import {
   type FormErrors,
   type SummaryEntry,
 } from './Form.context.js';
-import { failingEntries, sameEntries, SCOPE_SELECTOR, serverErrorFor } from './Form.model.js';
+import { errorsKey, failingEntries, hasEntries, SCOPE_SELECTOR, scopeControls, serverErrorFor } from './Form.model.js';
+import { Button } from './Button.js';
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { isValidityCarrier, type FormFieldError } from './validity.js';
+import { isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 
 export type { FormErrors } from './Form.context.js';
@@ -70,18 +71,24 @@ type FormState = {
   attempt: number;
   epoch: number;
   dismissal: Dismissal;
-  summary: readonly SummaryEntry[];
+  failed: readonly string[];
+  version: number;
   /** Counts the moments focus goes to the summary or the first problem. */
   focus: number;
 };
 type FormAction =
-  | { type: 'submit'; summary: readonly SummaryEntry[]; focus: boolean }
+  | { type: 'submit'; failed: readonly string[]; focus: boolean }
+  | { type: 'draft' }
+  | { type: 'reply'; failed: readonly string[] }
   | { type: 'reset'; errors: FormErrors | undefined }
   | { type: 'dismiss'; name: string; text: string }
-  | { type: 'summary'; summary: readonly SummaryEntry[]; focus: boolean };
+  | { type: 'bump' }
+  | { type: 'rescan' };
 
 const NO_DISMISSAL: Dismissal = /* @__PURE__ */ new Map();
-const INITIAL: FormState = { attempt: 0, epoch: 0, dismissal: NO_DISMISSAL, summary: [], focus: 0 };
+const NONE: readonly string[] = [];
+const NO_ENTRIES: readonly SummaryEntry[] = [];
+const INITIAL: FormState = { attempt: 0, epoch: 0, dismissal: NO_DISMISSAL, failed: NONE, version: 0, focus: 0 };
 
 function reduce(state: FormState, action: FormAction): FormState {
   switch (action.type) {
@@ -90,52 +97,54 @@ function reduce(state: FormState, action: FormAction): FormState {
         ...state,
         attempt: state.attempt + 1,
         dismissal: NO_DISMISSAL,
-        summary: action.summary,
+        failed: action.failed,
         focus: state.focus + (action.focus ? 1 : 0),
       };
+    case 'draft':
+      return state.dismissal.size === 0 ? state : { ...state, dismissal: NO_DISMISSAL };
+    case 'reply':
+      return { ...state, failed: action.failed, focus: state.focus + 1 };
     case 'reset':
       // A reset form shows nothing of the reply it had.
       return {
         ...INITIAL,
         epoch: state.epoch + 1,
+        version: state.version,
         focus: state.focus,
         dismissal: new Map(Object.entries(action.errors ?? {}).filter(([, text]) => text)),
       };
-    case 'dismiss': {
+    case 'dismiss':
       if (state.dismissal.get(action.name) === action.text) return state;
       return { ...state, dismissal: new Map(state.dismissal).set(action.name, action.text) };
-    }
-    case 'summary':
-      return { ...state, summary: action.summary, focus: state.focus + (action.focus ? 1 : 0) };
+    case 'bump':
+      return state.failed.length === 0 ? state : { ...state, version: state.version + 1 };
+    case 'rescan':
+      return { ...state, version: state.version + 1 };
   }
 }
-
-const hasEntries = (errors: FormErrors | undefined) => errors !== undefined && Object.values(errors).some(Boolean);
 
 /** The first control, in document order, that has a problem to fix: a native one, or a server error nothing has hidden. */
 function firstProblem(form: HTMLFormElement, errors: FormErrors | undefined, dismissal: Dismissal): HTMLElement | undefined {
   return [...form.elements].find(
-    (el): el is HTMLElement =>
+    (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
-      el.willValidate &&
-      (!el.validity.valid || serverErrorFor(el.name, errors, dismissal) !== undefined),
+      ((el.willValidate && !el.validity.valid) || serverErrorFor(el.name, errors, dismissal) !== undefined),
   );
 }
 
 /** Development only: an entry of `errors` that no scope can show says so, once. */
 function warnUnscoped(form: HTMLFormElement, errors: FormErrors, warned: Set<string>) {
+  const shown = new Set<string>();
+  for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) for (const control of scopeControls(scope)) shown.add(control.name);
   for (const [name, text] of Object.entries(errors)) {
-    if (!text || warned.has(name)) continue;
-    const controls = [...form.elements].filter((el) => isValidityCarrier(el) && el.name === name);
-    const reason =
-      controls.length === 0
-        ? 'no control in the form has that name'
-        : controls.some((el) => el.closest(SCOPE_SELECTOR))
-          ? undefined
-          : 'its control is not inside a Field.Group or Fieldset.Root, so nothing shows it';
-    if (!reason) continue;
+    if (!text || warned.has(name) || shown.has(name)) continue;
+    const named = [...form.elements].some((el) => isValidityCarrier(el) && el.name === name);
     warned.add(name);
-    console.warn(`Form.Root: errors["${name}"] shows nowhere: ${reason}.`);
+    console.warn(
+      `Form.Root: errors["${name}"] shows nowhere: ${
+        named ? 'its control is not inside a Field.Group or Fieldset.Root, so nothing shows it' : 'no control in the form has that name'
+      }.`,
+    );
   }
 }
 
@@ -145,30 +154,14 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
   const formRef = useRef<HTMLFormElement>(null);
   const refs = useComposedRefs(formRef, ref);
   const summaryRef = useRef<HTMLElement | null>(null);
-  // From a valid submit until the person edits, the form resets, or a reply with entries arrives.
-  const awaiting = useRef(false);
+  // The content of `errors` at the last valid submit, until the person edits, the form resets, or a reply arrives.
+  const awaiting = useRef<string | null>(null);
+  const resetTimer = useRef<number | undefined>(undefined);
   const warned = useRef(new Set<string>());
-  const latest = useRef({ errors, dismissal: state.dismissal, summary: state.summary, strings });
-  useLayoutEffect(() => {
-    latest.current = { errors, dismissal: state.dismissal, summary: state.summary, strings };
-  });
+  const key = errorsKey(errors);
 
-  const dismiss = useCallback(
-    (name: string) => {
-      const text = errors?.[name];
-      if (!text || state.dismissal.get(name) === text) return;
-      dispatch({ type: 'dismiss', name, text });
-    },
-    [errors, state.dismissal],
-  );
-
-  const recheck = useCallback(() => {
-    const form = formRef.current;
-    const { errors, dismissal, summary, strings } = latest.current;
-    if (!form || summary.length === 0) return;
-    const next = failingEntries(form, errors, dismissal, strings, new Set(summary.map((entry) => entry.scopeId)));
-    if (!sameEntries(summary, next)) dispatch({ type: 'summary', summary: next, focus: false });
-  }, []);
+  const bump = useCallback(() => dispatch({ type: 'bump' }), []);
+  const rescan = useCallback(() => dispatch({ type: 'rescan' }), []);
 
   const ctx = useMemo<FormContextValue>(
     () => ({
@@ -176,16 +169,15 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
       epoch: state.epoch,
       errors,
       dismissal: state.dismissal,
-      dismiss,
-      summary: state.summary,
+      failed: state.failed,
+      version: state.version,
+      formRef,
       summaryRef,
-      recheck,
+      bump,
+      rescan,
     }),
-    [state.attempt, state.epoch, state.dismissal, state.summary, errors, dismiss, recheck],
+    [state.attempt, state.epoch, state.dismissal, state.failed, state.version, errors, bump, rescan],
   );
-
-  // The summary lists what is failing, and drops what an edit or a new reply has settled.
-  useLayoutEffect(() => recheck(), [errors, state.dismissal, recheck]);
 
   // The summary if one is showing, else the control.
   useLayoutEffect(() => {
@@ -196,35 +188,47 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.focus]);
 
-  // A reply with errors to a valid submit: they take focus, as a failed submit's do.
+  // A reply is errors whose content differs from what they were at the submit; the same content in a new object, or none, is not.
   useLayoutEffect(() => {
     const form = formRef.current;
-    if (!form || !awaiting.current || !hasEntries(errors)) return;
-    awaiting.current = false;
-    dispatch({ type: 'summary', summary: failingEntries(form, errors, state.dismissal, strings), focus: true });
-    // Only a new `errors` is a reply.
+    if (!form || awaiting.current === null) return;
+    // Cleared errors are what the next reply is measured against.
+    if (!hasEntries(key)) {
+      awaiting.current = key;
+      return;
+    }
+    if (key === awaiting.current) return;
+    awaiting.current = null;
+    dispatch({ type: 'reply', failed: failingEntries(form, errors, state.dismissal, strings).map((entry) => entry.scopeId) });
+    // Only a change of content is a reply.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [errors]);
+  }, [key]);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && errors && formRef.current) warnUnscoped(formRef.current, errors, warned.current);
   }, [errors]);
 
+  useEffect(() => () => window.clearTimeout(resetTimer.current), []);
+
   function submit(event: SubmitEvent<HTMLFormElement>) {
     // A portaled form inside this one bubbles its submit through it; that one is not ours to check or to hand on.
     if (event.target !== event.currentTarget) return;
     const submitter = event.nativeEvent.submitter;
-    // As natively, a button with formNoValidate sends the form without the check.
-    if (submitter && 'formNoValidate' in submitter && submitter.formNoValidate) return onSubmit?.(event);
+    // As natively, a button with formNoValidate sends the form without the check: a send, not an attempt.
+    if (submitter && 'formNoValidate' in submitter && submitter.formNoValidate) {
+      awaiting.current = key;
+      dispatch({ type: 'draft' });
+      return onSubmit?.(event);
+    }
     const form = event.currentTarget;
     if (!form.checkValidity()) {
       event.preventDefault();
-      awaiting.current = false;
-      dispatch({ type: 'submit', summary: failingEntries(form, errors, NO_DISMISSAL, strings), focus: true });
+      awaiting.current = null;
+      dispatch({ type: 'submit', failed: failingEntries(form, errors, NO_DISMISSAL, strings).map((entry) => entry.scopeId), focus: true });
       return;
     }
-    awaiting.current = true;
-    dispatch({ type: 'submit', summary: [], focus: false });
+    awaiting.current = key;
+    dispatch({ type: 'submit', failed: NONE, focus: false });
     onSubmit?.(event);
   }
 
@@ -237,12 +241,23 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
         onSubmit={submit}
         onChangeCapture={(event) => {
           onChangeCapture?.(event);
+          // A portaled control's change is not an edit of this form.
+          const target = event.target;
+          if (!(target instanceof Node) || !event.currentTarget.contains(target)) return;
           // An edit is the answer to a reply that hasn't come yet.
-          awaiting.current = false;
+          awaiting.current = null;
+          if (!isValidityCarrier(target)) return;
+          const text = errors?.[target.name];
+          if (text) dispatch({ type: 'dismiss', name: target.name, text });
         }}
-        onReset={composeHandlers(onReset, () => {
+        onReset={composeHandlers(onReset, (event) => {
+          // A portaled form's reset bubbles through this one.
+          if (event.target !== event.currentTarget) return;
           dispatch({ type: 'reset', errors });
-          awaiting.current = false;
+          awaiting.current = null;
+          // The browser applies the reset after this event, so what the scopes read now is stale.
+          window.clearTimeout(resetTimer.current);
+          resetTimer.current = window.setTimeout(() => dispatch({ type: 'rescan' }));
         })}
       />
     </FormContext.Provider>
@@ -261,17 +276,19 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
   const strings = useStrings();
   const titleId = useDomId();
   const refs = useComposedRefs(form.summaryRef, ref);
-  const { summary } = form;
-  if (summary.length === 0) return null;
-  const rows = summary.map((entry) => ({
-    entry,
-    field: {
+  const root = form.formRef.current;
+  // Read from the page as it is: what failed at the last attempt, less what is fixed or gone since. `version` says when to read again.
+  const entries =
+    root && form.failed.length > 0 ? failingEntries(root, form.errors, form.dismissal, strings, new Set(form.failed)) : NO_ENTRIES;
+  if (entries.length === 0) return null;
+  const fields = entries.map(
+    (entry): FormInvalidField => ({
       name: entry.carrier.name || undefined,
       label: entry.label,
       error: entry.error,
       focus: () => entry.carrier.focus(),
-    } satisfies FormInvalidField,
-  }));
+    }),
+  );
   return (
     <div
       {...props}
@@ -282,26 +299,36 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
       className={cx(styles.summary, className)}
     >
       <p id={titleId} className={styles.title}>
-        {title ?? strings.formErrors(summary.length)}
+        {title ?? strings.formErrors(entries.length)}
       </p>
       {children ? (
-        children(rows.map((row) => row.field))
+        children(fields)
       ) : (
         <ul className={styles.list}>
-          {rows.map(({ entry, field }) => (
-            <li key={entry.scopeId} className={styles.item}>
-              <Link.Root
-                href={`#${entry.carrier.id}`}
-                onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-                  event.preventDefault();
-                  field.focus();
-                }}
-              >
-                {field.label}
-              </Link.Root>
-              <span>{field.error.message}</span>
-            </li>
-          ))}
+          {entries.map((entry, i) => {
+            const field = fields[i];
+            return (
+              <li key={entry.scopeId} className={styles.item}>
+                {entry.carrier.id ? (
+                  <Link.Root
+                    href={`#${entry.carrier.id}`}
+                    onClick={(event: MouseEvent<HTMLAnchorElement>) => {
+                      event.preventDefault();
+                      field?.focus();
+                    }}
+                  >
+                    {entry.label}
+                  </Link.Root>
+                ) : (
+                  // An `a` with no href is not a link and can't be focused, so a control with no id gets a button.
+                  <Button.Root variant="ghost" onClick={() => field?.focus()}>
+                    {entry.label}
+                  </Button.Root>
+                )}
+                <span>{entry.error.message}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

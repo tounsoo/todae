@@ -17,7 +17,7 @@ export const meta = {
       type: 'React.FormEventHandler<HTMLFormElement>',
       required: false,
       description:
-        'Runs for a submit with every control valid, or one sent by a submit button with formNoValidate. Form.Root checks first, and a submit with a problem does not reach it.',
+        'Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it.',
     },
     {
       name: 'onReset',

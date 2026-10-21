@@ -34,7 +34,7 @@ const none = topics.length === 0;
 
 The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack.Root direction="row"`.
 
-Inside a [`Form.Root`](/form), a `Fieldset.Root` is a validation scope that shows its controls' problems in an `ErrorMessage.Root` with no `id`. Its `customValidity` prop sets a message with the browser's `setCustomValidity` on the first control inside that takes part in validation, for a rule the browser can't check.
+Inside a [`Form.Root`](/form), a `Fieldset.Root` is a validation scope that shows its controls' problems in an `ErrorMessage.Root` with no `id`. Its `customValidity` prop sets a message with the browser's `setCustomValidity` on its own first control that takes part in validation, or, when all its controls sit in nested groups, on the first one at any depth, for a rule the browser can't check. It warns in development when there is no such control.
 
 ## Accessible composition
 

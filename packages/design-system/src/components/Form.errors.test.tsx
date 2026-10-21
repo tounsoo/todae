@@ -120,6 +120,7 @@ describe('server errors', () => {
   });
 
   it('changes nothing for an edit to a control with no server error', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     let renders = 0;
     function Probe() {
       useContext(FormContext);
@@ -136,6 +137,7 @@ describe('server errors', () => {
     await type(input(), 'a');
     await type(input(), 'ab');
     expect(renders).toBe(before);
+    warn.mockRestore();
   });
 
   it('is shown again by the next submit', async () => {
