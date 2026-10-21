@@ -427,6 +427,22 @@ describe('Calendar', () => {
     expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, March 2, 2027');
   });
 
+  it('stays on a picked date that a controlling parent turns down', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={onValueChange}>
+        <Calendar.Header />
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    expect(onValueChange).toHaveBeenCalledWith(date('2026-11-04'));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(focusedDay().closest('td')!.hasAttribute('aria-selected')).toBe(false);
+  });
+
   it('keeps its own value when uncontrolled', () => {
     const onValueChange = vi.fn();
     render(
@@ -769,6 +785,29 @@ describe('Calendar range mode', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04');
     expect(screen.getByText('November 2026')).toBeTruthy();
     expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+  });
+
+  it('stays where a range ends when a controlling parent turns it down', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar.Root
+        aria-label="Stay"
+        locale="en-US"
+        mode="range"
+        value={{ start: date('2026-10-03'), end: date('2026-10-04') }}
+        onValueChange={onValueChange}
+      >
+        <Calendar.Header />
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(october(28));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-28'), end: date('2026-11-04') });
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(selectedCells()).toEqual([]);
   });
 
   it('selects every year a range touches in the page of years', () => {

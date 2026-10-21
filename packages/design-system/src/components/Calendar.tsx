@@ -263,13 +263,16 @@ function Root(rootProps: CalendarRootProps) {
   const [anchor, setAnchor] = useState<Temporal.PlainDate | null>(null);
   const [hovered, setHovered] = useState<Temporal.PlainDate | null>(null);
   // A value from outside, such as one typed in a text input beside Field.DatePicker, moves the
-  // grid to its start and drops a range in progress.
+  // grid to its start and drops a range in progress. The calendar's own pick leaves the grid
+  // where it was picked, whether the value takes it or a controlling parent turns it down.
   const [lastValue, setLastValue] = useState(value);
+  const [ownPick, setOwnPick] = useState<DateRange | null>(null);
   if (!sameRange(value, lastValue)) {
     setLastValue(value);
+    setOwnPick(null);
     setAnchor(null);
     setHovered(null);
-    if (value) setFocused(value.start);
+    if (value && !sameRange(value, ownPick)) setFocused(value.start);
   }
   const focusRequest = useRef(false);
   const headingId = useDomId();
@@ -379,12 +382,11 @@ function Root(rootProps: CalendarRootProps) {
         announce(strings.pickEndDate);
         return;
       }
-      // A new object, so a pick is reported even when it is the value already selected.
+      // Reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
       setAnchor(null);
       setHovered(null);
-      // The grid stays where the range ended, not on its start as for a value from outside.
-      setLastValue(next);
+      setOwnPick(next);
       setValue(next);
       onValueChange?.(next);
     },
