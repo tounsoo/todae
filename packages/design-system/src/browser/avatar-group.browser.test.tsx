@@ -164,7 +164,7 @@ describe('Avatar.Group in a browser', () => {
     expect(getComputedStyle(panel).position).toBe('fixed');
   });
 
-  it('leaves a focused dialog in the group at its own position', () => {
+  it('leaves a focused modal dialog in the group fixed and centered', () => {
     render(
       <Themed>
         <Avatar.Group aria-label="Assignees" size="lg">
@@ -179,15 +179,36 @@ describe('Avatar.Group in a browser', () => {
     );
     const dialog = screen.getByTestId('dialog') as HTMLDialogElement;
     dialog.showModal();
-    screen.getByRole('button', { name: 'Close' }).focus({ focusVisible: true } as FocusOptions);
-    expect(dialog.matches(':has(:focus-visible)')).toBe(true);
-    expect(getComputedStyle(dialog).position).toBe('fixed');
-    dialog.close();
+    try {
+      screen.getByRole('button', { name: 'Close' }).focus({ focusVisible: true } as FocusOptions);
+      expect(dialog.matches(':has(:focus-visible)')).toBe(true);
+      expect(getComputedStyle(dialog).position).toBe('fixed');
+      const { marginInlineStart, marginInlineEnd } = getComputedStyle(dialog);
+      expect(Number.parseFloat(marginInlineStart)).toBeCloseTo(Number.parseFloat(marginInlineEnd), 0);
+    } finally {
+      dialog.close();
+    }
   });
 
-  it('isolates the group so a lifted wrapper stays inside it', () => {
-    render(<Three />);
-    expect(getComputedStyle(screen.getByRole('group')).isolation).toBe('isolate');
+  it('keeps a lifted wrapper under page content stacked above the group', async () => {
+    render(
+      <Themed>
+        <Avatar.Group aria-label="Assignees" size="lg">
+          <button type="button" data-testid="first" aria-label="Ada">
+            <Avatar.Root>
+              <Avatar.Fallback>AL</Avatar.Fallback>
+            </Avatar.Root>
+          </button>
+        </Avatar.Group>
+        <div data-testid="cover" style={{ position: 'relative', zIndex: 0, marginBlockStart: '-2.5rem', blockSize: '2.5rem', background: 'white' }} />
+      </Themed>,
+    );
+    const first = screen.getByTestId('first');
+    const box = first.getBoundingClientRect();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(first);
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    expect(screen.getByTestId('cover').contains(hit)).toBe(true);
   });
 
   it('lifts a wrapper whose descendant has focus', async () => {

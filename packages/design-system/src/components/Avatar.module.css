@@ -123,12 +123,12 @@
   }
 
   /* Tooltip and Popover content is a sibling of its trigger and carries
-     [popover]: it takes no part in the stack. */
-  .group > :not([popover]) {
+     [popover], and a dialog places itself: they take no part in the stack. */
+  .group > :not([popover], dialog) {
     flex: none;
   }
 
-  .group > :not([popover]) ~ :not([popover]) {
+  .group > :not([popover], dialog) ~ :not([popover], dialog) {
     margin-inline-start: calc(-1 * var(--_group-size) * var(--todae-avatar-group-overlap));
   }
 
@@ -139,10 +139,9 @@
   }
 
   /* A focused wrapper rises above its neighbors' rings, so its focus ring
-     shows whole. The group isolates that z-index from the page. Popover and
-     dialog content keep their own positioning. */
-  .group > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
-    position: relative;
+     shows whole. A flex item takes z-index without a position, so a child
+     keeps its own positioning. The group isolates that z-index from the page. */
+  .group > :is(:focus-visible, :has(:focus-visible)) {
     z-index: 1;
   }
 
