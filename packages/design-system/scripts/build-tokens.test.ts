@@ -13,7 +13,6 @@ import {
   cli,
   todaeTokensRoot,
   catalogSelectors,
-  emitCatalog,
   flattenTokens,
   pathToPointer,
   parseComponentPointer,
@@ -611,11 +610,9 @@ describe('resolver-driven build', () => {
     expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant', context: 'primary' });
     expect(entryOf('card.shadow')).toEqual({ kind: 'set', name: 'contract' });
     expect(rows.every((row) => row.entry !== null)).toBe(true);
-  });
-
-  it('refuses to write a catalog row with no set or modifier', () => {
-    const token: FlatToken = { path: 'space.1', type: 'dimension', value: null, ref: null, refs: [], cssVar: '--todae-space-1', cssValue: '4px', layer: 'core' };
-    expect(() => emitCatalog([token])).toThrow('token "space.1" has no set or modifier for the catalog');
+    const variantRows = rows.filter((row) => (row.entry as { context?: string }).context !== undefined);
+    expect(variantRows.length).toBeGreaterThan(0);
+    expect(variantRows.every((row) => (row.entry as { context?: string }).context === row.context)).toBe(true);
   });
 
   it('merges sources in order, accepting inline token trees', async () => {

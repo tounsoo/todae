@@ -138,6 +138,9 @@ export type FlatToken = {
   description?: string;
 };
 
+/** A token as a resolver loads it, stamped with the entry that declares it. */
+export type EntryToken = FlatToken & { entry: TokenEntry };
+
 export function fail(message: string): never {
   throw new Error(message);
 }
@@ -810,7 +813,7 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
  * carries it in every context. A company build passes its own tokens before
  * Todae's, so its description wins in any context and Todae's is the fallback.
  */
-export function settleDescriptions(tokens: FlatToken[], sources: FlatToken[][] = [tokens]): FlatToken[] {
+export function settleDescriptions<T extends FlatToken>(tokens: T[], sources: FlatToken[][] = [tokens]): T[] {
   const described = new Map<string, string>();
   for (const source of sources) {
     for (const token of source) if (token.description && !described.has(token.path)) described.set(token.path, token.description);
@@ -819,11 +822,11 @@ export function settleDescriptions(tokens: FlatToken[], sources: FlatToken[][] =
     const description = described.get(token.path);
     if (description === token.description) return token;
     const { description: _, ...rest } = token;
-    return description === undefined ? rest : { ...rest, description };
+    return (description === undefined ? rest : { ...rest, description }) as T;
   });
 }
 
-export function emitCatalog(tokens: FlatToken[]): string {
+export function emitCatalog(tokens: EntryToken[]): string {
   const described = new Map(settleDescriptions(tokens).map((token) => [token.path, token.description]));
   const rows = tokens.map(({ path, type, cssVar, cssValue, ref, layer, context, entry }) => ({
     path,
@@ -833,7 +836,7 @@ export function emitCatalog(tokens: FlatToken[]): string {
     ref,
     layer,
     context: context ?? null,
-    entry: entry ?? fail(`token "${path}" has no set or modifier for the catalog`),
+    entry,
     description: described.get(path) ?? null,
   }));
   return `${JSON.stringify({ version: 1, tokens: rows }, null, 2)}\n`;
@@ -982,13 +985,13 @@ export type TodaeExtension = {
 };
 
 export type ResolvedEntry =
-  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: FlatToken[] }
+  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: EntryToken[] }
   | {
       kind: 'modifier';
       name: string;
       extension: TodaeExtension;
       defaultContext: string;
-      contexts: Map<string, FlatToken[]>;
+      contexts: Map<string, EntryToken[]>;
     };
 
 const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -1136,9 +1139,10 @@ type LoadTokensOptions = {
   sources: unknown;
   loc: string;
   tokensRoot: string;
-  kind: TokenEntry['kind'];
-  name: string;
+  /** Stamped on every token loaded. */
+  entry: TokenEntry;
   extension: TodaeExtension;
+  /** The modifier context being loaded, which places the tokens. */
   context?: string;
   paints: readonly string[];
   /** Todae's tokens for the same entry and context, which an extension's shape rules see. */
@@ -1152,15 +1156,13 @@ async function loadTokens({
   sources,
   loc,
   tokensRoot,
-  kind,
-  name,
+  entry,
   extension,
   context,
   paints,
   inherited,
   todaeOwners,
-}: LoadTokensOptions): Promise<FlatToken[]> {
-  const entry: TokenEntry = { kind, name, ...(extension.alias && context !== undefined ? { context } : {}) };
+}: LoadTokensOptions): Promise<EntryToken[]> {
   const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
     // A later source's description wins; one with none (its own or a group's) keeps the
@@ -1181,9 +1183,7 @@ async function loadTokens({
 
 /** Fails when one of Todae's tokens is declared outside the entry that owns it, naming that entry. */
 function checkPlacement(owner: TokenEntry | undefined, entry: TokenEntry, path: string, loc: string): void {
-  if (!owner || (owner.kind === entry.kind && owner.name === entry.name && (owner.context === undefined || owner.context === entry.context))) {
-    return;
-  }
+  if (!owner || (owner.kind === entry.kind && owner.name === entry.name && owner.context === entry.context)) return;
   const where =
     owner.kind === 'set'
       ? `a set named "${owner.name}"`
@@ -1224,9 +1224,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
     upstream.find((entry) => entry.kind === kind && entry.name === name);
   const todaeOwners = new Map<string, TokenEntry>();
   for (const entry of upstream) {
-    for (const token of entryTokens(entry)) {
-      todaeOwners.set(token.path, token.entry ?? fail(`Todae's token "${token.path}" has no set or modifier`));
-    }
+    for (const token of entryTokens(entry)) todaeOwners.set(token.path, token.entry);
   }
 
   const order: { kind: 'set' | 'modifier'; name: string; def: Record<string, unknown>; extension: TodaeExtension }[] = [];
@@ -1298,8 +1296,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           sources: def.sources,
           loc: `${loc} sources`,
           tokensRoot,
-          kind,
-          name,
+          entry: { kind, name },
           extension,
           paints: [...paints],
           inherited: upstreamSet?.kind === 'set' ? upstreamSet.tokens : [],
@@ -1321,7 +1318,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
     ) {
       fail(`${loc} default must name one of its contexts`);
     }
-    const contexts = new Map<string, FlatToken[]>();
+    const contexts = new Map<string, EntryToken[]>();
     for (const [context, sources] of Object.entries(def.contexts)) {
       if (!CONTEXT_RE.test(context)) fail(`${loc} context "${context}" must be lowercase`);
       if (extension.colorScheme && context !== 'light' && context !== 'dark') {
@@ -1334,8 +1331,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           sources,
           loc: `${loc} context "${context}"`,
           tokensRoot,
-          kind,
-          name,
+          entry: { kind, name, ...(extension.alias ? { context } : {}) },
           extension,
           context,
           paints: [...paints],
@@ -1384,7 +1380,7 @@ export function validateEntries(entries: ResolvedEntry[]): void {
   }
 }
 
-function mergeTokens(base: FlatToken[], extra: FlatToken[], loc: string): FlatToken[] {
+function mergeTokens(base: EntryToken[], extra: EntryToken[], loc: string): EntryToken[] {
   const merged = new Map(base.map((token) => [token.path, token]));
   for (const token of extra) {
     const previous = merged.get(token.path);
@@ -1484,16 +1480,16 @@ function retuneAcrossEntries(base: ResolvedEntry[], extra: ResolvedEntry[], merg
   }
 }
 
-function entryTokens(entry: ResolvedEntry): FlatToken[] {
+function entryTokens(entry: ResolvedEntry): EntryToken[] {
   return entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
 }
 
 /** Graph-level checks: one owner per token, refs, layer and resolution order. Returns every token. */
-export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
+export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
   const known = new Map<string, Layer>();
   const owner = new Map<string, string>();
   const position = new Map<string, number>();
-  const all: FlatToken[] = [];
+  const all: EntryToken[] = [];
   const rootOnly: FlatToken[] = [];
   let rootSet = true;
   for (const [index, entry] of entries.entries()) {
