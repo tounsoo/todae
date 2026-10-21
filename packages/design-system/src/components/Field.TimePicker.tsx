@@ -1,18 +1,17 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-import { useMemo, useState, useSyncExternalStore, type ComponentPropsWithRef } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ClockGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
 import { htmlTime, valueBounds } from './Field.shared.js';
-import { PickerShell } from './Field.PickerShell.js';
+import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
-export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+export type FieldTimePickerCloseReason = PickerCloseReason;
 
-export type FieldTimePickerProps = {
+export type FieldTimePickerProps = PickerBaseProps & {
   /** The time, or null for none. */
   value: Temporal.PlainTime | null;
   /** Fires with the time picked in the list. */
@@ -21,26 +20,9 @@ export type FieldTimePickerProps = {
   min?: Temporal.PlainTime;
   /** The latest time the list offers. A form with a later time is invalid. */
   max?: Temporal.PlainTime;
-  /** A form with no time is invalid. */
-  required?: boolean;
   /** Minutes between the times in the list, from midnight. Defaults to 30. */
   step?: number;
-  /** The locale for the times' text, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
-  locale?: string;
-  /** Shown on the button while there is no time, when showValue is true. */
-  placeholder?: string;
-  /** Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time. Defaults to true. */
-  showValue?: boolean;
-  /** Controlled open state of the list. Pass with onOpenChange. */
-  open?: boolean;
-  /** Initial open state when uncontrolled. */
-  defaultOpen?: boolean;
-  /** Fires when the list opens or closes, with why it closed. */
-  onOpenChange?: (open: boolean, reason: FieldTimePickerCloseReason) => void;
-} & Omit<
-  ComponentPropsWithRef<'button'>,
-  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
->;
+};
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -144,25 +126,16 @@ export function TimeList({
 
 /**
  * A button that opens a list of times in a popover and closes it on a picked
- * time. On its own it is the field's control and shows the time, and a press
- * elsewhere in the field opens the list. Beside any other control but a Field
- * picker (a part that opens its own popover, as this one does), such as a
- * Field.TextInput to type the time in, that control is the field's control
- * instead, and the button is named from the timePicker string. The time goes
- * in a native input the browser validates, so `required`, `min` and `max`
- * block a submit and Form.Root shows them. With `showValue={false}` the button
- * shows only a clock glyph.
+ * time. On its own it is the field's control, shows the time, and a press
+ * elsewhere in the field opens the list. Beside any other control but a
+ * Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker
+ * or Field.DateTimePicker, such as a Field.TextInput to type the time in, that
+ * control is the field's control instead, and the button is named from the
+ * timePicker string. The time goes in a native input the browser validates, so
+ * `required`, `min` and `max` block a submit and Form.Root shows them. With
+ * `showValue` set to false, the button shows only a clock glyph.
  */
-export function TimePicker({
-  value,
-  onValueChange,
-  min,
-  max,
-  step = 30,
-  locale,
-  placeholder,
-  ...props
-}: FieldTimePickerProps) {
+export function TimePicker({ value, min, max, step = 30, locale, ...props }: FieldTimePickerProps) {
   const strings = useStrings();
   const { clock } = useGlyphs();
   return (
@@ -170,12 +143,12 @@ export function TimePicker({
       {...props}
       label={strings.timePicker}
       glyph={glyphOr(clock, <ClockGlyph />)}
-      text={value ? formatTime(value, { locale }) : placeholder}
-      empty={!value}
+      shown={value ? formatTime(value, { locale }) : null}
       // The list, which shows its active time.
       focusSelector='[role="listbox"]'
       // A role-less popover around a named list of times.
       haspopup="listbox"
+      popoverProps={{}}
       valueInput={{
         type: 'time',
         value: value ? htmlTime(value) : '',
@@ -184,7 +157,7 @@ export function TimePicker({
         ...valueBounds(min, max, htmlTime, (time) => formatTime(time, { locale })),
       }}
     >
-      {({ notifyValueChange, close }) => (
+      {({ pick }) => (
         <TimeList
           value={value}
           step={step}
@@ -193,11 +166,7 @@ export function TimePicker({
           locale={locale}
           label={strings.timePicker}
           overnight
-          onPick={(next) => {
-            notifyValueChange();
-            onValueChange?.(next);
-            close();
-          }}
+          onPick={pick}
         />
       )}
     </PickerShell>

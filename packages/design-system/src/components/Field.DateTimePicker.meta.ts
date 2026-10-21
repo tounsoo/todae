@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.DateTimePicker',
   description:
-    "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control instead, and the button is named from the dateTimePicker string. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -33,7 +33,7 @@ export const meta = {
       name: 'required',
       type: 'boolean',
       required: false,
-      description: 'A form with no date and time is invalid.',
+      description: 'A form with no value is invalid.',
     },
     {
       name: 'isDateDisabled',
@@ -58,20 +58,20 @@ export const meta = {
       name: 'locale',
       type: 'string',
       required: false,
-      description: 'The locale for the button\'s text, the calendar\'s names and the times, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
+      description: 'The locale for the button\'s text and the picker\'s names, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
     },
     {
       name: 'placeholder',
       type: 'string',
       required: false,
-      description: 'Shown on the button while there is no date and time, when showValue is true.',
+      description: 'Shown on the button while there is no value, when showValue is true.',
     },
     {
       name: 'showValue',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them.',
+      description: 'Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.',
     },
     {
       name: 'open',

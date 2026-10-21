@@ -1,10 +1,9 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsWithRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './Field.module.css';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CalendarGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
@@ -13,13 +12,13 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { htmlDateTime, valueBounds } from './Field.shared.js';
-import { PickerShell } from './Field.PickerShell.js';
+import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
-export type FieldDateTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+export type FieldDateTimePickerCloseReason = PickerCloseReason;
 
-export type FieldDateTimePickerProps = {
+export type FieldDateTimePickerProps = PickerBaseProps & {
   /** The date and time, or null for none. */
   value: Temporal.PlainDateTime | null;
   /** Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it. */
@@ -28,30 +27,13 @@ export type FieldDateTimePickerProps = {
   min?: Temporal.PlainDateTime;
   /** The latest date and time that can be picked. A form with a later one is invalid. */
   max?: Temporal.PlainDateTime;
-  /** A form with no date and time is invalid. */
-  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
   firstDayOfWeek?: CalendarFirstDayOfWeek;
   /** Minutes between the times in the list, from midnight. Defaults to 30. */
   step?: number;
-  /** The locale for the button's text, the calendar's names and the times, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
-  locale?: string;
-  /** Shown on the button while there is no date and time, when showValue is true. */
-  placeholder?: string;
-  /** Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them. Defaults to true. */
-  showValue?: boolean;
-  /** Controlled open state of the popover. Pass with onOpenChange. */
-  open?: boolean;
-  /** Initial open state when uncontrolled. */
-  defaultOpen?: boolean;
-  /** Fires when the popover opens or closes, with why it closed. */
-  onOpenChange?: (open: boolean, reason: FieldDateTimePickerCloseReason) => void;
-} & Omit<
-  ComponentPropsWithRef<'button'>,
-  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
->;
+};
 
 const LIST = '[role="listbox"]';
 
@@ -188,26 +170,24 @@ function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined
  * A button that opens a Calendar and a list of times in a popover, side by
  * side, or the list under the calendar on a narrow screen. A picked date and a
  * picked time make the value, and picking a time while the calendar holds a
- * date it offers closes the popover. On its own it is the field's control and
+ * date it offers closes the popover. On its own it is the field's control,
  * shows the date and time, and a press elsewhere in the field opens the
- * popover. Beside any other control but a Field picker (a part that opens its
- * own popover, as this one does), such as a Field.TextInput to type the date
- * and time in, that control is the field's control instead, and the button is
- * named from the dateTimePicker string. The date and time go in a native input
- * the browser validates, so `required`, `min` and `max` block a submit and
- * Form.Root shows them. With `showValue={false}` the button shows only a
- * calendar glyph.
+ * popover. Beside any other control but a Field.ColorPicker, Field.DatePicker,
+ * Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a
+ * Field.TextInput to type the date and time in, that control is the field's
+ * control instead, and the button is named from the dateTimePicker string. The
+ * date and time go in a native input the browser validates, so `required`,
+ * `min` and `max` block a submit and Form.Root shows them. With `showValue`
+ * set to false, the button shows only a calendar glyph.
  */
 export function DateTimePicker({
   value,
-  onValueChange,
   min,
   max,
   isDateDisabled,
   firstDayOfWeek,
   step = 30,
   locale,
-  placeholder,
   ...props
 }: FieldDateTimePickerProps) {
   const strings = useStrings();
@@ -217,8 +197,7 @@ export function DateTimePicker({
       {...props}
       label={strings.dateTimePicker}
       glyph={glyphOr(calendar, <CalendarGlyph />)}
-      text={value ? dateTimeLabel(value, locale) : placeholder}
-      empty={!value}
+      shown={value ? dateTimeLabel(value, locale) : null}
       // The calendar's Tab stop: the date, or else today or the nearest date in range.
       focusSelector={CALENDAR_TAB_STOP}
       valueInput={{
@@ -228,9 +207,8 @@ export function DateTimePicker({
         step: 'any',
         ...valueBounds(min, max, htmlDateTime, (at) => dateTimeLabel(at, locale)),
       }}
-      popoverProps={{ role: 'dialog', 'aria-label': strings.dateTimePicker, className: styles.datePickerPopover }}
     >
-      {({ notifyValueChange, close }) => (
+      {({ pick, close }) => (
         <DateTimePanel
           value={value}
           min={min}
@@ -240,10 +218,8 @@ export function DateTimePicker({
           step={step}
           locale={locale}
           label={strings.timePicker}
-          onValueChange={(next) => {
-            notifyValueChange();
-            onValueChange?.(next);
-          }}
+          // The popover closes once a time completes the pick, not on the pick itself.
+          onValueChange={(next) => pick(next, { close: false })}
           onDone={close}
         />
       )}

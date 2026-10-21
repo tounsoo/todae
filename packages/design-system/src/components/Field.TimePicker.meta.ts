@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.TimePicker',
   description:
-    "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control instead, and the button is named from the timePicker string. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -33,7 +33,7 @@ export const meta = {
       name: 'required',
       type: 'boolean',
       required: false,
-      description: 'A form with no time is invalid.',
+      description: 'A form with no value is invalid.',
     },
     {
       name: 'step',
@@ -46,26 +46,26 @@ export const meta = {
       name: 'locale',
       type: 'string',
       required: false,
-      description: 'The locale for the times\' text, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
+      description: 'The locale for the button\'s text and the picker\'s names, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
     },
     {
       name: 'placeholder',
       type: 'string',
       required: false,
-      description: 'Shown on the button while there is no time, when showValue is true.',
+      description: 'Shown on the button while there is no value, when showValue is true.',
     },
     {
       name: 'showValue',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.',
+      description: 'Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.',
     },
     {
       name: 'open',
       type: 'boolean',
       required: false,
-      description: 'Controlled open state of the list. Pass with onOpenChange.',
+      description: 'Controlled open state of the popover. Pass with onOpenChange.',
     },
     {
       name: 'defaultOpen',
@@ -77,7 +77,7 @@ export const meta = {
       name: 'onOpenChange',
       type: "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
       required: false,
-      description: 'Fires when the list opens or closes, with why it closed.',
+      description: 'Fires when the popover opens or closes, with why it closed.',
     },
   ],
 } as const satisfies ComponentMeta;
