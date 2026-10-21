@@ -29,6 +29,7 @@ import {
   validateAliasParity,
   validatePaintPacks,
   type FlatToken,
+  type TokenEntry,
   type TokenNode,
   type TokenTree,
 } from './build-tokens';
@@ -600,16 +601,20 @@ describe('resolver-driven build', () => {
   });
 
   it('names the set or modifier that declares each token in the catalog', async () => {
-    const rows = JSON.parse((await buildTokensGraph(tokensDir)).json).tokens as { path: string; context: string | null; entry: unknown }[];
+    const rows = JSON.parse((await buildTokensGraph(tokensDir)).json).tokens as { path: string; context: string | null; entry: TokenEntry }[];
     const entryOf = (path: string, context: string | null = null) =>
       rows.find((row) => row.path === path && row.context === context)?.entry;
     expect(entryOf('radius.md')).toEqual({ kind: 'set', name: 'core' });
     expect(entryOf('color.accent.default', 'light')).toEqual({ kind: 'modifier', name: 'appearance' });
     expect(entryOf('focus.ring.color')).toEqual({ kind: 'set', name: 'focus' });
     expect(entryOf('button.base.radius')).toEqual({ kind: 'set', name: 'button' });
-    expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant', context: 'primary' });
     expect(entryOf('card.shadow')).toEqual({ kind: 'set', name: 'contract' });
-    expect(rows.every((row) => row.entry !== null)).toBe(true);
+    expect(rows.every((row) => row.entry !== undefined)).toBe(true);
+    const variantRows = rows.filter((row) => row.entry.name === 'buttonVariant');
+    expect(variantRows.length).toBeGreaterThan(0);
+    expect(variantRows.every((row) => row.entry.context === row.context)).toBe(true);
+    expect(rows.filter((row) => row.entry.name !== 'buttonVariant').every((row) => row.entry.context === undefined)).toBe(true);
   });
 
   it('merges sources in order, accepting inline token trees', async () => {
@@ -1557,7 +1562,11 @@ describe('company token build', () => {
     const rows = JSON.parse((await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir })).json)
       .tokens as { path: string; context: string | null; entry: unknown }[];
     expect(rows.find((row) => row.path === 'brand.logo.size')?.entry).toEqual({ kind: 'set', name: 'brand' });
-    expect(rows.find((row) => row.path === 'button.outline.bg.default')?.entry).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(rows.find((row) => row.path === 'button.outline.bg.default')?.entry).toEqual({
+      kind: 'modifier',
+      name: 'buttonVariant',
+      context: 'outline',
+    });
   });
 
   it('rejects extensions that change Todae\'s placement or redeclare its tokens', async () => {
