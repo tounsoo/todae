@@ -1,0 +1,23 @@
+{
+  "name": "fernway-example",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "tokens": "todae-tokens build --resolver tokens/resolver.json --css src/theme/todae-theme.css --catalog src/theme/tokens.catalog.json --types src/theme/todae-theme.types.ts",
+    "dev": "pnpm tokens && vite",
+    "build": "pnpm tokens && tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@tounsoo/todae": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^6.0.2",
+    "vite": "^6.2.2"
+  }
+}

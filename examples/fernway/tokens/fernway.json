@@ -1,0 +1,9 @@
+{
+  "fernway": {
+    "$description": "Fernway's own tokens, read by the app's CSS.",
+    "hero": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/8/$value" } }
+    }
+  }
+}
