@@ -17,7 +17,7 @@ export const meta = {
       type: 'React.ReactNode | ((error: FormFieldError) => React.ReactNode)',
       required: false,
       description:
-        "Error text. In a validation scope, a function of the scope's error, and without children, the error's message.",
+        "Error text. Without an id, in a validation scope, a function of the scope's error is allowed too, and no children shows the error's message.",
     },
     {
       name: 'className',

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useLayoutEffect, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cx } from './cx.js';
 import { ValidationScopeContext } from './Form.context.js';
+import { warnOnce } from './warnOnce.js';
 import type { FormFieldError } from './validity.js';
 import styles from './ErrorMessage.module.css';
 
@@ -24,14 +25,6 @@ export type ErrorMessageRootProps = (
 ) &
   Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
 
-// A misuse is logged once per message for the page's life, however many messages or renders hit it.
-const logged = new Set<string>();
-
-/** Lets a test see a message again. */
-export function resetMisuseLog(): void {
-  logged.clear();
-}
-
 function Root({ id, className, children, ...props }: ErrorMessageRootProps) {
   const scope = useContext(ValidationScopeContext);
   const auto = id === undefined;
@@ -47,10 +40,7 @@ function Root({ id, className, children, ...props }: ErrorMessageRootProps) {
           ? 'ErrorMessage.Root takes a function child only without an id, inside a validation scope'
           : undefined;
   useEffect(() => {
-    if (misuse && !logged.has(misuse)) {
-      logged.add(misuse);
-      console.error(misuse);
-    }
+    if (misuse) warnOnce(misuse, misuse, 'error');
   }, [misuse]);
   if (auto && scope) {
     if (!scope.error) return null;

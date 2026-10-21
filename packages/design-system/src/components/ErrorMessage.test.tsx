@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { ErrorMessage, resetMisuseLog, type ErrorMessageRootProps } from './ErrorMessage.js';
+import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage.js';
+import { resetWarnOnce } from './warnOnce.js';
 import * as api from '../index.js';
 
 const css = readFileSync(
@@ -12,7 +13,7 @@ const css = readFileSync(
 );
 
 afterEach(cleanup);
-beforeEach(resetMisuseLog);
+beforeEach(resetWarnOnce);
 
 describe('ErrorMessage exports', () => {
   it('is a top-level primitive', () => {
