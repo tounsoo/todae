@@ -234,6 +234,9 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   );
 
   const registerView = useCallback((view: string, label: string, record: ViewRecord) => {
+    if (process.env.NODE_ENV !== 'production' && views.current.has(view)) {
+      console.error(`Drilldown: two Drilldown.Views have the value "${view}". Give each view its own value.`);
+    }
     views.current.set(view, record);
     setLabels((prev) => (prev.get(view) === label ? prev : new Map(prev).set(view, label)));
     return () => {
@@ -275,6 +278,19 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     const timer = window.setTimeout(settle, duration);
     return () => window.clearTimeout(timer);
   }, [motion, shown]);
+
+  // After the views' own layout effects, so every view in the stack has registered.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    if (shown.length === 0) {
+      console.error('Drilldown: the stack is empty, so no view shows. Pass Drilldown.Root a value or defaultValue that starts with the first view.');
+    } else if (new Set(shown).size < shown.length) {
+      console.error(`Drilldown: the stack [${shown.join(', ')}] holds a value twice. Each view can be in the stack once.`);
+    }
+    for (const view of shown) {
+      if (!views.current.has(view)) console.error(`Drilldown: no Drilldown.View has the value "${view}", so nothing shows for it.`);
+    }
+  }, [shown]);
 
   // An uncontrolled stack starts over each time its modal opens. Dialog and
   // Drawer keep their content mounted while closed.

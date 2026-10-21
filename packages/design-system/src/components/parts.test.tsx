@@ -472,7 +472,9 @@ const cases: Case[] = [
     'Drilldown.Viewport',
     (p) => (
       <Drilldown.Root defaultValue={['a']}>
-        <Drilldown.Viewport {...p} />
+        <Drilldown.Viewport {...p}>
+          <Drilldown.View value="a" label="A" />
+        </Drilldown.Viewport>
       </Drilldown.Root>
     ),
   ],
@@ -488,6 +490,7 @@ const cases: Case[] = [
     'Drilldown.Trigger',
     (p) => (
       <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.View value="a" label="A" />
         <Drilldown.Trigger {...p} value="b">
           B
         </Drilldown.Trigger>
@@ -498,6 +501,8 @@ const cases: Case[] = [
     'Drilldown.Back',
     (p) => (
       <Drilldown.Root defaultValue={['a', 'b']}>
+        <Drilldown.View value="a" label="A" />
+        <Drilldown.View value="b" label="B" />
         <Drilldown.Back {...p} />
       </Drilldown.Root>
     ),
@@ -506,6 +511,7 @@ const cases: Case[] = [
     'Drilldown.Label',
     (p) => (
       <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.View value="a" label="A" />
         <Drilldown.Label {...p} />
       </Drilldown.Root>
     ),

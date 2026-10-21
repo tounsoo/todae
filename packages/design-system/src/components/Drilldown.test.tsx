@@ -125,6 +125,7 @@ describe('Drilldown', () => {
       <Drilldown.Root defaultValue={['a', 'b']}>
         <Drilldown.Back />
         <Drilldown.Viewport>
+          <Drilldown.View value="a" label="" />
           <Drilldown.View value="b" label="B" />
         </Drilldown.Viewport>
       </Drilldown.Root>,
@@ -135,6 +136,8 @@ describe('Drilldown', () => {
       <Drilldown.Root defaultValue={['a', 'b']}>
         <Drilldown.Back>Done</Drilldown.Back>
         <Drilldown.Back aria-label="Up one level" />
+        <Drilldown.View value="a" label="A" />
+        <Drilldown.View value="b" label="B" />
       </Drilldown.Root>,
     );
     expect(screen.getByRole('button', { name: 'Done' }).hasAttribute('aria-label')).toBe(false);
@@ -216,6 +219,35 @@ describe('Drilldown', () => {
     vi.useRealTimers();
     rerender(<InDialog open value={['settings', 'notifications']} />);
     expect(screen.getByTestId('title').textContent).toBe('Notifications');
+  });
+
+  it('logs an error for an empty stack, a value with no view, a value twice in the stack, and two views with one value', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const logged = () => error.mock.calls.map(([message]) => String(message));
+    render(<Drilldown.Root defaultValue={[]} />);
+    expect(logged()).toEqual([expect.stringContaining('the stack is empty')]);
+    cleanup();
+    error.mockClear();
+    render(<Settings defaultValue={['settings', 'missing']} />);
+    expect(logged()).toEqual([expect.stringContaining('no Drilldown.View has the value "missing"')]);
+    cleanup();
+    error.mockClear();
+    render(<Settings value={['settings', 'account', 'settings']} />);
+    expect(logged()).toEqual([expect.stringContaining('holds a value twice')]);
+    cleanup();
+    error.mockClear();
+    render(
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.View value="a" label="A" />
+        <Drilldown.View value="a" label="Also A" />
+      </Drilldown.Root>,
+    );
+    expect(logged()).toEqual([expect.stringContaining('two Drilldown.Views have the value "a"')]);
+    cleanup();
+    error.mockClear();
+    render(<Settings />);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it('throws when a part renders outside Drilldown.Root', () => {
