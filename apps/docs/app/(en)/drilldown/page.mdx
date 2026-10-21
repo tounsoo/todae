@@ -2,7 +2,7 @@ import { DrilldownFilterDrawer, DrilldownOrderSheet, DrilldownSettingsDialog } f
 
 # Drilldown
 
-A stack of views inside one surface, such as Settings → Account → Email in a dialog. A `Drilldown.Trigger` pushes a view in place, `Drilldown.Back` pops it, and the overlay around it stays open. Drilldown goes inside a [Dialog](/dialog), [Drawer](/drawer) or [BottomSheet](/bottomsheet), or inline on a page.
+A stack of views inside one surface, such as Settings → Account → Email in a dialog. A `Drilldown.Trigger` pushes a view in place, `Drilldown.Back` pops it, and the overlay around it stays open. Drilldown goes inside a [Dialog](/dialog), [Drawer](/drawer), [BottomSheet](/bottomsheet) or [Popover](/popover), or inline on a page.
 
 `Drilldown.Root` renders no element, so it can wrap both the overlay's header and its body. `Drilldown.Back` goes before the title and renders nothing at the first view. `Drilldown.Label` prints the shown view's `label`, so the title, and the dialog's name with it, follows the view. `Drilldown.Viewport` holds the views, and each `Drilldown.View` is a group named by its `label`.
 
@@ -38,11 +38,13 @@ A stack of views inside one surface, such as Settings → Account → Email in a
 
 The value is the stack of view values, the first view first and the shown view last. `Drilldown.Root` takes `value` with `onValueChange`, or `defaultValue`. `onValueChange` gets the next stack and a reason: `push` from a trigger, `back` from `Drilldown.Back`, and `escape` from Escape or the Android back gesture. A stack rather than a fixed tree lets one view be reached from two places, and lets a controlled `value` jump several views at once, such as `['settings', 'account', 'email']` for a deep link.
 
-A view is mounted while its value is in the stack. Views lower in the stack stay mounted and hidden, so going back keeps their form input. A view that leaves the stack unmounts once its slide ends. An uncontrolled stack goes back to `defaultValue` each time the Dialog, Drawer or BottomSheet around it closes.
+A view is mounted while its value is in the stack. Views lower in the stack stay mounted and hidden, so going back keeps their form input. A view that leaves the stack unmounts once its slide ends. An uncontrolled stack goes back to `defaultValue` each time the Dialog, Drawer or BottomSheet around it closes, without calling `onValueChange`.
 
 `Drilldown.Trigger` is a [Button](/button) and takes Button's props, so it can be a primary Next button, a ghost row with a chevron, or a link through `render`. To push after async work, such as validating a step first, control `value` and set the stack when the work is done.
 
 ```tsx
+import { ChevronRight } from 'lucide-react';
+
 <Drilldown.Trigger value="brand" variant="ghost">
   Brand
   <Button.Icon>
@@ -57,7 +59,7 @@ A view is mounted while its value is in the stack. Views lower in the stack stay
 
 ## Escape and the back gesture
 
-With `escape="back"`, the default, Escape goes back one view and closes the overlay only at the first view, the way Escape closes the innermost layer first. The Android back gesture and button reach a modal `<dialog>` as a close request with no key, and Drilldown answers it the same way, so a deep stack isn't thrown away. In a dialog with `dismissOnEscape={false}`, Escape still goes back while there is a view to go back to. `escape="close"` leaves Escape to the overlay. Escape that a menu, popover or combobox inside the view already took, and keys that belong to an IME composition, don't go back.
+With `escape="back"`, the default, Escape goes back one view and closes the overlay only at the first view, the way Escape closes the innermost layer first. In a Popover, Escape goes back before the popover closes; in a Drilldown inside another one's view, the inner one goes back first. The Android back gesture and button reach a modal `<dialog>` as a close request with no key, and Drilldown answers it the same way, so a deep stack isn't thrown away. Chrome lets a page hold only some close requests in a row, so a later back gesture can close the overlay from a view deep in the stack. In a dialog with `dismissOnEscape={false}`, Escape still goes back while there is a view to go back to. `escape="close"` leaves Escape to the overlay. Escape that a menu, popover or combobox inside the view already took, keys that belong to an IME composition, and a Drilldown that isn't on screen, such as one in a closed popover or a hidden tab panel, don't go back.
 
 In a BottomSheet, the sheet keeps its snap point and the grabber still drags the sheet. There is no edge swipe to go back.
 
@@ -67,15 +69,15 @@ In a BottomSheet, the sheet keeps its snap point and the grabber still drags the
 
 ## Motion
 
-A pushed view slides in from the inline end while the one below shifts toward the inline start and fades; going back runs the reverse. Start and end follow text direction, so in right-to-left text a pushed view comes in from the left. The viewport animates its height between views, so a dialog that sizes to its content doesn't jump. The slide reads `drilldown.motion.duration` and `drilldown.motion.easing.enter` and `exit`, and `data-direction` on the viewport is `forward` or `back` while it runs. With reduced motion there is no slide.
+A pushed view slides in from the inline end while the one below shifts toward the inline start and fades; going back runs the reverse. Start and end follow text direction, so in right-to-left text a pushed view comes in from the left. The viewport animates its height between views, so a dialog that sizes to its content doesn't jump. A pop that brings back a scroll offset changes the height at once instead, so the offset fits. The slide reads `drilldown.motion.duration` and `drilldown.motion.easing.enter` and `exit`, and `data-direction` on the viewport is `forward` or `back` while it runs. The leaving view stays `inert` until the slide's animations finish, so CSS that changes their length keeps it in step. With reduced motion there is no slide.
 
 ## Accessible composition
 
-**Todae handles:** Each `Drilldown.View` is a `role="group"` named by its `label`, and `Drilldown.Label` puts that label in the overlay's title, so the dialog's name follows the view. On a push, focus goes to the view's `initialFocusRef`, else its first tab stop, else the view itself. On a pop, focus goes back to the trigger that pushed the view, or to the first tab stop of the view below when that trigger is gone. Focus moves without scrolling, the overlay's scroll container goes to the top on a push, and its offset comes back on a pop. Views lower in the stack are `hidden`, and a view sliding out is `inert` and `aria-hidden`, so neither Tab nor a screen reader lands on it. `Drilldown.Back` is named "Back to" and the label of the view below, from the `backTo` string of [StringsProvider](/utilities/strings-provider), and its glyph is the `back` glyph of [GlyphsProvider](/utilities/glyphs-provider), mirrored in right-to-left text.
+**Todae handles:** Each `Drilldown.View` is a `role="group"` named by its `label`, and `Drilldown.Label` puts that label in the overlay's title, so the dialog's name follows the view. On a push, focus goes to the view's `initialFocusRef`, else its first tab stop, else the view itself. On a pop, focus goes back to the trigger that pushed the view, or to the first tab stop of the view below when that trigger is gone. Focus moves only when it was in the views, on Back or nowhere, so a Next button of your own outside the views that sets a controlled `value` keeps it. Focus moves without scrolling, the overlay's scroll container goes to the top on a push, and its offset comes back on a pop. Views lower in the stack are `hidden`, and a view sliding out is `inert` and `aria-hidden`, so neither Tab nor a screen reader lands on it. `Drilldown.Back` is named "Back to" and the label of the view below, from the `backTo` string of [StringsProvider](/utilities/strings-provider), and its glyph is the `back` glyph of [GlyphsProvider](/utilities/glyphs-provider), mirrored in right-to-left text.
 
 **You supply:** A `label` for every view, short enough for a title. A `Drilldown.Label` inside the overlay's title, or a title of your own that changes with the view. A trigger whose text says where it goes; a row with only an icon needs `aria-label`.
 
-**Watch for:** Two views with the same `value`, or a stack that holds a value twice: a trigger won't push a value already in the stack. A view whose content changes while it is lower in the stack: it stays mounted, so effects in it keep running. Long work started from a trigger: the view slides in at once, so show progress in the new view, or control `value` and push when the work is done.
+**Watch for:** Two views with the same `value`, or a stack that holds a value twice: a trigger won't push a value already in the stack. A view whose content changes while it is lower in the stack: it stays mounted, so effects in it keep running. Long work started from a trigger: the view slides in at once, so show progress in the new view, or control `value` and push when the work is done. Inline on a server-rendered page: `Drilldown.Label` and Back's name come from the views once they mount, so they are empty in the server's HTML and until the first layout effect.
 
 ## When to use
 
