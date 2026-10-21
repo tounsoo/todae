@@ -30,6 +30,36 @@ export function spokenText(node: Node): string {
   return [...node.childNodes].map(spokenText).join('');
 }
 
+type Watched = [Element, MutationObserverInit][];
+
+/**
+ * Calls `onChange` when any of the elements `find` returns changes as its
+ * options say. The elements are found again after each change, so a replaced
+ * one is followed; `refresh` finds them again on demand. Returns both, and
+ * the cleanup. Without MutationObserver it does nothing.
+ */
+function watchElements(find: () => Watched, onChange: () => void) {
+  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
+    onChange();
+    refresh();
+  });
+  function refresh() {
+    if (!observer) return;
+    observer.disconnect();
+    for (const [element, options] of find()) observer.observe(element, options);
+  }
+  refresh();
+  return { refresh, stop: () => observer?.disconnect() };
+}
+
+const BUTTON_CHANGES: MutationObserverInit = {
+  childList: true,
+  subtree: true,
+  characterData: true,
+  attributes: true,
+  attributeFilter: ['aria-hidden'],
+};
+
 /**
  * The accessible name for a button that Todae names, such as a dismiss or step
  * button: `ariaLabel` when not empty, none when the button's own rendered text
@@ -57,16 +87,8 @@ export function useButtonName(
   // that loads later, without this component rendering again.
   useLayoutEffect(() => {
     const button = buttonRef.current;
-    if (!button || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(read);
-    observer.observe(button, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['aria-hidden'],
-    });
-    return () => observer.disconnect();
+    if (!button) return;
+    return watchElements(() => [[button, BUTTON_CHANGES]], read).stop;
   }, [read]);
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }
@@ -86,23 +108,25 @@ export function labelOf(input: HTMLInputElement | null): string {
  * Calls `onChange` with the input's label text now and whenever it changes: its
  * `<label>`s or the elements its `aria-labelledby` names, as their text or
  * attributes change, and the input's own `aria-label` and `aria-labelledby`.
- * Returns the cleanup.
+ * `read` reads it again and follows the elements it now has, for a label that
+ * mounted, was replaced or went since the last change: call it after each
+ * commit. `stop` ends the watch.
  */
-export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): () => void {
-  if (!input) return () => {};
-  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => watch());
-  function watch() {
-    onChange(labelOf(input));
-    if (!observer || !input) return;
-    // The elements can change, so they are found again each time.
-    observer.disconnect();
-    observer.observe(input, { attributes: true, attributeFilter: ['aria-label', 'aria-labelledby'] });
+export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): { read: () => void; stop: () => void } {
+  if (!input) return { read: () => {}, stop: () => {} };
+  const find = (): Watched => {
     const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
-    const named = ids.map((id) => input.ownerDocument.getElementById(id));
-    for (const element of ids.length ? named : [...(input.labels ?? [])]) {
-      if (element) observer.observe(element, { childList: true, subtree: true, characterData: true, attributes: true });
-    }
-  }
-  watch();
-  return () => observer?.disconnect();
+    const named = ids.length ? ids.map((id) => input.ownerDocument.getElementById(id)) : [...(input.labels ?? [])];
+    return [
+      [input, { attributes: true, attributeFilter: ['aria-label', 'aria-labelledby'] }],
+      ...named.flatMap((element): Watched => (element ? [[element, { childList: true, subtree: true, characterData: true, attributes: true }]] : [])),
+    ];
+  };
+  const watch = watchElements(find, () => onChange(labelOf(input)));
+  const read = () => {
+    onChange(labelOf(input));
+    watch.refresh();
+  };
+  onChange(labelOf(input));
+  return { read, stop: watch.stop };
 }

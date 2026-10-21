@@ -941,8 +941,8 @@
       "ko": "가장 높은 숫자. 이보다 높게 확정하면 step에 맞는 가장 높은 숫자가 됩니다."
     },
     "step": {
-      "en": "The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.",
-      "ko": "min이나 0부터 센, 확정한 값이 맞춰지는 간격이자 화살표 키와 스텝 버튼이 움직이는 크기. 텍스트가 보여 주는 자릿수보다 우선하므로 그보다 촘촘하지 않게 주세요. 없으면 확정한 값은 텍스트가 보여 주는 모든 자릿수를 유지하고, 키는 1씩, 퍼센트는 0.01씩 움직입니다."
+      "en": "The grid a commit snaps to, counted from min, or from 0 without one (a value you set that is off it is shown as given, and Todae warns once in development), and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.",
+      "ko": "min부터(min이 없으면 0부터) 센, 확정한 값이 맞춰지는 간격이자(설정한 value가 이를 벗어나면 준 그대로 보이고 Todae가 개발 중에 한 번 경고합니다) 화살표 키와 스텝 버튼이 움직이는 크기. 텍스트가 보여 주는 자릿수보다 우선하므로 그보다 촘촘하지 않게 주세요. 없으면 확정한 값은 텍스트가 보여 주는 모든 자릿수를 유지하고, 키는 1씩, 퍼센트는 0.01씩 움직입니다."
     },
     "largeStep": {
       "en": "What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of step.",

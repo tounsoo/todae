@@ -397,3 +397,65 @@ describe('Field.Increment and Field.Decrement names and the stepper channel', ()
     expect(button('Increase').disabled).toBe(true);
   });
 });
+
+describe('Field.Increment names follow a label that comes and goes', () => {
+  function Page({ label }: { label: 'none' | 'Apples' | 'Pears' }) {
+    return (
+      <>
+        {label === 'none' ? null : <Label.Root key={label} htmlFor="fruit">{label}</Label.Root>}
+        <Field.Root id="fruit" name="fruit">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+      </>
+    );
+  }
+  const name = () => screen.getByRole('button').getAttribute('aria-label');
+
+  it('reads a label that mounts after the input', () => {
+    const { rerender } = render(<Page label="none" />);
+    expect(name()).toBe('Increase');
+    rerender(<Page label="Apples" />);
+    expect(name()).toBe('Increase Apples');
+  });
+
+  it('reads a label that is replaced by another element, and then follows the new one', async () => {
+    const { rerender } = render(<Page label="Apples" />);
+    rerender(<Page label="Pears" />);
+    expect(name()).toBe('Increase Pears');
+  });
+
+  it('drops the field name when the label is removed', () => {
+    const { rerender } = render(<Page label="Apples" />);
+    expect(name()).toBe('Increase Apples');
+    rerender(<Page label="none" />);
+    expect(name()).toBe('Increase');
+  });
+
+  it('follows text that changes inside a label that replaced the first', async () => {
+    let rename = (_name: string) => {};
+    function Name() {
+      const [text, setText] = useState('Pears');
+      rename = setText;
+      return <>{text}</>;
+    }
+    function Swap({ swapped }: { swapped: boolean }) {
+      return (
+        <>
+          <Label.Root key={swapped ? 'b' : 'a'} htmlFor="fruit2">
+            {swapped ? <Name /> : 'Apples'}
+          </Label.Root>
+          <Field.Root id="fruit2" name="fruit2">
+            <Field.NumberInput value={1} onValueChange={() => undefined} />
+            <Field.Increment />
+          </Field.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Swap swapped={false} />);
+    rerender(<Swap swapped />);
+    expect(name()).toBe('Increase Pears');
+    act(() => rename('Plums'));
+    expect(await screen.findByRole('button', { name: 'Increase Plums' })).toBeTruthy();
+  });
+});

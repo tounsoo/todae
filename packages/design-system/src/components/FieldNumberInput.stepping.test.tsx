@@ -297,3 +297,14 @@ describe('Field.NumberInput typing', () => {
     expect(input().hasAttribute('data-todae-number-input')).toBe(true);
   });
 });
+
+describe('Field.NumberInput stepping a percent draft', () => {
+  it('steps 7.5% up to 8%, the next shown percent, not 9%', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={0.05} locale="en" formatOptions={{ style: 'percent' }} onCommit={onCommit} />);
+    type('7.5');
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.08);
+    expect(input().value).toBe('8%');
+  });
+});

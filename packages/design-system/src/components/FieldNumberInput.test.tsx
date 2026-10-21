@@ -182,17 +182,18 @@ describe('Field.NumberInput', () => {
     const onCommit = vi.fn();
     render(<Quantity initial={3} locale={locale} onCommit={onCommit} />);
     expect(input().getAttribute('aria-invalid')).toBeNull();
-    // The text is flagged as it is typed, before any commit reads it.
+    // The text blocks a submit as it is typed, but is no announced error while more typing could mend it.
     type(text);
-    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.valid).toBe(false);
+    expect(input().getAttribute('aria-invalid')).toBeNull();
     fireEvent.blur(input());
     expect(input().value).toBe(text);
     expect(input().getAttribute('aria-invalid')).toBe('true');
     expect(valueInput().validity.valid).toBe(false);
     expect(onCommit).not.toHaveBeenCalled();
-    // Still unreadable after more typing; a number clears it.
+    // Typing on is no longer a failed read; a number clears it.
     type(`${text}1`);
-    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.valid).toBe(false);
     type(locale === 'de' ? '1.234,5' : '1,234.5');
     expect(input().getAttribute('aria-invalid')).toBeNull();
     expect(valueInput().validity.valid).toBe(true);
@@ -298,6 +299,7 @@ describe('Field.NumberInput', () => {
       </form>,
     );
     type('1,5');
+    fireEvent.blur(input());
     await act(async () => {
       input().form!.reset();
       await new Promise((resolve) => setTimeout(resolve));
@@ -526,5 +528,72 @@ describe('Field.NumberInput keys', () => {
     fireEvent.blur(input());
     expect(onCommit).toHaveBeenLastCalledWith(7.5);
     expect(valueInput().value).toBe('7.5');
+  });
+});
+
+describe('Field.NumberInput announces only a text no more typing could mend', () => {
+  it('never flags a lone minus on the way to -5, yet blocks a submit meanwhile', () => {
+    render(<Quantity initial={3} locale="en" />);
+    const flagged: (string | null)[] = [];
+    for (const text of ['-', '-5']) {
+      type(text);
+      flagged.push(input().getAttribute('aria-invalid'));
+    }
+    expect(flagged).toEqual([null, null]);
+    type('-');
+    expect(valueInput().validity.valid).toBe(false);
+  });
+
+  it('flags a half-typed text once a commit could not read it, and unflags it when typing goes on', () => {
+    render(<Quantity initial={3} locale="en" />);
+    type('-');
+    fireEvent.blur(input());
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    type('-5');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('flags it once a step key could not read it', () => {
+    render(<Quantity initial={3} locale="en" />);
+    type('-');
+    key('ArrowUp');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('keeps the step buttons enabled while the text is half typed, as in de on the way to 1.000', () => {
+    render(<Quantity initial={3} locale="de" buttons />);
+    for (const text of ['1.', '1.0', '1.00']) {
+      type(text);
+      expect(input().getAttribute('aria-invalid'), text).toBeNull();
+      expect(button('Increase').disabled, text).toBe(false);
+      expect(button('Decrease').disabled, text).toBe(false);
+    }
+  });
+});
+
+describe('Field.NumberInput warns about a value off its grid', () => {
+  it('warns once when a value is off the grid counted from 0, and not on it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { rerender } = render(<Quantity initial={10} step={5} />);
+    expect(warn).not.toHaveBeenCalled();
+    rerender(<Field.Root aria-label="Other"><Field.NumberInput value={7} step={5} onValueChange={() => undefined} /></Field.Root>);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toContain('off its step grid');
+    expect(String(warn.mock.calls[0]?.[0])).toContain('from 0');
+  });
+});
+
+describe('Field.NumberInput at a 16-digit value', () => {
+  it('commits a typed 16-digit number unchanged, and disables Increment where a double cannot step', () => {
+    const onCommit = vi.fn();
+    render(<Quantity locale="en" step={1} buttons onCommit={onCommit} />);
+    type('1234567890123456');
+    fireEvent.blur(input());
+    expect(onCommit).toHaveBeenLastCalledWith(1234567890123456);
+    expect(button('Increase').disabled).toBe(false);
+    type('9007199254740992');
+    expect(button('Increase').disabled).toBe(true);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenCalledTimes(1);
   });
 });

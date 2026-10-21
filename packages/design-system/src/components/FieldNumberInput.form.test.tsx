@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
@@ -275,5 +275,98 @@ describe('Field.NumberInput on the server', () => {
     expect(html).toContain('role="spinbutton"');
     expect(html).toContain('aria-valuenow="1234.5"');
     expect(html).toContain('value="1234.5"');
+  });
+});
+
+describe('Field.NumberInput and a submit from inside a commit phase', () => {
+  it('sends the typed number when an effect submits the form, with no flushSync warning', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const sent: (string | null)[] = [];
+    const changed = vi.fn();
+    function Page({ go }: { go: boolean }) {
+      const [value, setValue] = useState<number | null>(3);
+      const form = useRef<HTMLFormElement>(null);
+      useEffect(() => {
+        if (go) form.current?.requestSubmit();
+      }, [go]);
+      return (
+        <form
+          ref={form}
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+          }}
+        >
+          <Field.Root aria-label="Quantity" name="quantity">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                changed(next);
+                setValue(next);
+              }}
+            />
+          </Field.Root>
+        </form>
+      );
+    }
+    const { rerender } = render(<Page go={false} />);
+    type('7');
+    act(() => rerender(<Page go />));
+    expect(sent).toEqual(['7']);
+    expect(changed).toHaveBeenCalledWith(7);
+    expect(input().value).toBe('7');
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe('Field.NumberInput in a form that validates natively', () => {
+  function Page({ initial, max, onSubmit }: { initial: number | null; max?: number; onSubmit: (value: string | null) => void }) {
+    const [value, setValue] = useState<number | null>(initial);
+    return (
+      <form
+        data-testid="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit(new FormData(event.currentTarget).get('quantity') as string | null);
+        }}
+      >
+        <Field.Root aria-label="Quantity" name="quantity">
+          <Field.NumberInput value={value} max={max} required locale="en" onValueChange={setValue} />
+        </Field.Root>
+      </form>
+    );
+  }
+  const requestSubmit = () => act(() => (screen.getByTestId('form') as HTMLFormElement).requestSubmit());
+
+  it('commits a readable text when the check finds the stale empty value invalid, and the next submit carries it', () => {
+    const onSubmit = vi.fn();
+    render(<Page initial={null} onSubmit={onSubmit} />);
+    type('7');
+    requestSubmit();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(input().value).toBe('7');
+    expect(valueInput().value).toBe('7');
+    requestSubmit();
+    expect(onSubmit).toHaveBeenCalledWith('7');
+  });
+
+  it('commits a readable text when the stale value is out of range', () => {
+    const onSubmit = vi.fn();
+    render(<Page initial={500} max={100} onSubmit={onSubmit} />);
+    type('50');
+    requestSubmit();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(valueInput().value).toBe('50');
+    requestSubmit();
+    expect(onSubmit).toHaveBeenCalledWith('50');
+  });
+
+  it('leaves a text that is no number as it is', () => {
+    render(<Page initial={null} onSubmit={() => undefined} />);
+    type('abc');
+    requestSubmit();
+    expect(input().value).toBe('abc');
+    expect(valueInput().value).toBe('');
   });
 });

@@ -201,8 +201,16 @@ const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.m
 // Half away from zero, as Intl rounds the text, where Math.round takes a tie toward +Infinity.
 const nearest = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
 
-// The grid index of a value, with the same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5. Fifteen digits are what a double holds, so the guard holds for an index of 13 digits, such as 12345678901.23 on a 0.01 grid, and no further.
-const indexOf = (value: number, base: number, step: number) => Number(((value - base) / step).toPrecision(15));
+// The grid index of a value, with the same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5. Fifteen digits are what a double holds, so the guard only rounds an index that is not whole and has fewer than 16 digits, such as 12345678901.23 on a 0.01 grid; a whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
+function indexOf(value: number, base: number, step: number): number {
+  const raw = (value - base) / step;
+  return Number.isInteger(raw) || Math.abs(raw) >= 1e15 ? raw : Number(raw.toPrecision(15));
+}
+
+/** Whether a value sits on the `step` grid, counted from `min`, or from 0 without one. True with no `step`. */
+export function onGrid(value: number, { min, step }: NumberRange): boolean {
+  return step === undefined || Number.isInteger(indexOf(value, min ?? 0, step));
+}
 
 const roundersByDigits = /* @__PURE__ */ new Map<number, Intl.NumberFormat>();
 
@@ -252,7 +260,13 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
   const { min, max, step } = range;
   if (max === undefined) return { low: min };
   const base = min ?? 0;
-  const high = step === undefined ? max : pointAt(Math.floor(indexOf(max, base, step)), range);
+  let high = max;
+  if (step !== undefined) {
+    const index = Math.floor(indexOf(max, base, step));
+    high = pointAt(index, range);
+    // A point past `max`, from a grid too fine for a double, gives way to the one before it.
+    if (high > max) high = pointAt(index - 1, range);
+  }
   return { low: min, high: min !== undefined && high < min ? min : high };
 }
 
@@ -277,19 +291,23 @@ export function commitNumber(value: number, range: NumberRange, text: NumberText
 /**
  * Whether a step of `by` from `from` changes anything, as a native input's
  * `stepUp` and `stepDown` find it: not from the bound it moves toward, nor
- * from a value outside the range, away from it. From no value, always.
+ * from a value outside the range, away from it, nor where a double has no
+ * next grid point. From no value, always.
  */
-export function canStep(from: number | null, by: number, range: NumberRange): boolean {
+export function canStep(from: number | null, by: number, range: NumberRange, text: NumberTextOptions = {}): boolean {
   if (from === null) return true;
   const { low, high } = boundsOf(range);
-  return by > 0 ? high === undefined || from < high : low === undefined || from > low;
+  if (by > 0 ? high !== undefined && from >= high : low !== undefined && from <= low) return false;
+  return stepNumber(from, by, range, text) !== from;
 }
 
 /**
  * The value a step of `by` from `from` gives, committed. With a `step`, the
  * next point of the grid strictly beyond `from` in the direction of `by` (one
  * more per further step of `by`), so 2.5 up is 3 and 7 down by 5 is 5. Without
- * one, `from + by`, rounded to the decimals of the two so that 1.1 - 1 is 0.1.
+ * one, the same on the unit the text shows (a percent: 0.01), or, where it
+ * keeps every digit, `from + by` rounded to the decimals of the two so that
+ * 1.1 - 1 is 0.1.
  * From a value outside `min` and `max`, a step toward the range lands on the
  * bound. From no value, an increase starts at `min`, or at `by` without one,
  * and a decrease starts at `by`.
@@ -300,8 +318,14 @@ export function stepNumber(from: number | null, by: number, range: NumberRange, 
   if (by > 0 && low !== undefined && from < low) return low;
   if (by < 0 && high !== undefined && from > high) return high;
   const { step } = range;
-  if (step === undefined) return commitNumber(roundTo(from + by, Math.max(decimalsOf(from), decimalsOf(by))), range, text);
-  const index = indexOf(from, range.min ?? 0, step);
-  const count = Math.max(1, Math.round(Math.abs(by) / step));
-  return commitNumber(pointAt(by > 0 ? Math.floor(index) + count : Math.ceil(index) - count, range), range, text);
+  const shown = step === undefined ? shownDecimals(text) : undefined;
+  if (step === undefined && shown === undefined) {
+    return commitNumber(roundTo(from + by, Math.max(decimalsOf(from), decimalsOf(by))), range, text);
+  }
+  // With no step, the grid is the unit the text shows, so a draft of 7.5% goes to 8%, not past it.
+  const unit = step ?? 10 ** -shown!;
+  const index = indexOf(from, step === undefined ? 0 : (range.min ?? 0), unit);
+  const count = Math.max(1, Math.round(Math.abs(by) / unit));
+  const point = pointAt(by > 0 ? Math.floor(index) + count : Math.ceil(index) - count, step === undefined ? { step: unit } : range);
+  return commitNumber(point, range, text);
 }

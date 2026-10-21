@@ -264,6 +264,38 @@ describe('the step grid of a large number', () => {
   });
 });
 
+describe('the step grid beyond 15 digits', () => {
+  it('commits an exact 16-digit value unchanged, as it does with no step', () => {
+    expect(commitNumber(1234567890123456, { step: 1 })).toBe(1234567890123456);
+    expect(commitNumber(Number.MAX_SAFE_INTEGER, { step: 1 })).toBe(Number.MAX_SAFE_INTEGER);
+    expect(commitNumber(12345678901234.56, { step: 0.01 })).toBe(12345678901234.56);
+  });
+
+  it('never lands above max', () => {
+    expect(commitNumber(5e15, { max: 1234567890123456, step: 1 })).toBe(1234567890123456);
+    expect(boundsOf({ max: 1234567890123456, step: 1 })).toEqual({ low: undefined, high: 1234567890123456 });
+  });
+
+  it('steps from a 16-digit value, and finds no step where a double has no next point', () => {
+    expect(stepNumber(1234567890123456, 1, { step: 1 })).toBe(1234567890123457);
+    expect(canStep(1234567890123456, 1, { step: 1 })).toBe(true);
+    expect(canStep(2 ** 53, 1, { step: 1 })).toBe(false);
+    expect(stepNumber(2 ** 53, 1, { step: 1 })).toBe(2 ** 53);
+  });
+});
+
+describe('stepNumber with no step and a format that shows digits', () => {
+  it('goes to the next shown unit beyond the draft, not past it', () => {
+    const percent = { formatOptions: { style: 'percent' as const } };
+    expect(stepNumber(0.075, 0.01, {}, percent)).toBe(0.08);
+    expect(stepNumber(0.075, -0.01, {}, percent)).toBe(0.07);
+    expect(stepNumber(0.07, 0.01, {}, percent)).toBe(0.08);
+    const usd = { locale: 'en', formatOptions: { style: 'currency' as const, currency: 'USD' } };
+    expect(stepNumber(2.505, 1, {}, usd)).toBe(3.5);
+    expect(stepNumber(1.1, 1, {}, usd)).toBe(2.1);
+  });
+});
+
 describe('keypadFor', () => {
   it('is numeric for a whole grid from 0 or more, in a format that shows no fraction digits or keeps every digit', () => {
     expect(keypadFor({ min: 0, step: 1 })).toBe('numeric');

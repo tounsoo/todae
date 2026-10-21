@@ -1881,7 +1881,7 @@
           "name": "step",
           "type": "number",
           "required": false,
-          "description": "The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent."
+          "description": "The grid a commit snaps to, counted from min, or from 0 without one (a value you set that is off it is shown as given, and Todae warns once in development), and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent."
         },
         {
           "name": "largeStep",
