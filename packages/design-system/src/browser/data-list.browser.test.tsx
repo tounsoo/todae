@@ -92,7 +92,47 @@ describe('DataList in a browser', () => {
     const term = screen.getByText('Status');
     const line = parseFloat(getComputedStyle(term).lineHeight);
     expect(term.getBoundingClientRect().height).toBeLessThan(line * 1.5);
-    expect(term.getBoundingClientRect().height).toBeLessThan(parseFloat(getComputedStyle(document.documentElement).fontSize) * 5);
+  });
+
+  it('keeps a nested list on its own orientation', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '40rem' }}>
+        <DataList.Root aria-label="Order">
+          <DataList.Item>
+            <DataList.Term>Shipping</DataList.Term>
+            <DataList.Details>
+              <DataList.Root orientation="vertical" aria-label="Address">
+                <DataList.Item>
+                  <DataList.Term>Street</DataList.Term>
+                  <DataList.Details>1 Main St</DataList.Details>
+                </DataList.Item>
+              </DataList.Root>
+            </DataList.Details>
+          </DataList.Item>
+        </DataList.Root>
+      </div>,
+    );
+    const term = screen.getByText('Street');
+    const line = parseFloat(getComputedStyle(term).lineHeight);
+    expect(term.getBoundingClientRect().height).toBeLessThan(line * 1.5);
+    expect(screen.getByText('1 Main St').getBoundingClientRect().top).toBeGreaterThanOrEqual(term.getBoundingClientRect().bottom);
+  });
+
+  it('wraps a long unbroken term inside its column', () => {
+    const long = 'Averylongunbrokentermthatcannotfititscolumn';
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '40rem' }}>
+        <DataList.Root aria-label="Terms">
+          <DataList.Item>
+            <DataList.Term>{long}</DataList.Term>
+            <DataList.Details>Value</DataList.Details>
+          </DataList.Item>
+        </DataList.Root>
+      </div>,
+    );
+    const term = screen.getByText(long);
+    expect(term.scrollWidth).toBeLessThanOrEqual(term.clientWidth);
+    expect(screen.getByText('Value').getBoundingClientRect().left).toBeGreaterThanOrEqual(term.getBoundingClientRect().right);
   });
 
   describe('at the stacking threshold', () => {

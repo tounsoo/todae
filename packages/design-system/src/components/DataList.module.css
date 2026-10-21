@@ -10,10 +10,6 @@
     line-height: var(--todae-datalist-leading);
   }
 
-  /* The term takes a fixed column and the details the rest. When a row
-     cannot fit the term and the details' minimum, the details wrap below
-     it, so a narrow list stacks without a container query (which cannot
-     read a token). */
   .item {
     display: flex;
     flex-wrap: wrap;
@@ -37,15 +33,20 @@
     color: var(--todae-datalist-details-fg);
   }
 
-  .root[data-orientation='horizontal'] .term {
+  /* Horizontal: the term takes a column up to its token width and the details
+     the rest. When a row cannot fit the term and the details' minimum, the
+     details wrap below it, so a narrow list stacks without a container query
+     (which cannot read a token). Child combinators keep a list nested in a
+     Details on its own orientation. */
+  .root[data-orientation='horizontal'] > .item > .term {
     flex: 0 0 min(var(--todae-datalist-term-width), 100%);
   }
 
-  .root[data-orientation='horizontal'] .details {
+  .root[data-orientation='horizontal'] > .item > .details {
     flex: 1 1 var(--todae-datalist-details-min-width);
   }
 
-  .root[data-orientation='vertical'] .item {
+  .root[data-orientation='vertical'] > .item {
     flex-direction: column;
     flex-wrap: nowrap;
   }
