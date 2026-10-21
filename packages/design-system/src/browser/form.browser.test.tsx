@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
+import axe from 'axe-core';
 import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Fieldset, Form, Label, RadioGroup } from '../index.js';
@@ -21,7 +22,7 @@ function Text({ id, label, ...rest }: { id: string; label: string; required?: bo
 
 function Page({ summary, children }: { summary?: boolean; children?: ReactNode }) {
   return (
-    <div data-appearance="light" data-density="comfortable">
+    <main data-appearance="light" data-density="comfortable">
       <Form.Root onSubmit={(event) => event.preventDefault()}>
         {summary ? <Form.Summary /> : null}
         <Text id="name" label="Name" />
@@ -30,7 +31,7 @@ function Page({ summary, children }: { summary?: boolean; children?: ReactNode }
         {children}
         <Button.Root type="submit">Create account</Button.Root>
       </Form.Root>
-    </div>
+    </main>
   );
 }
 
@@ -54,6 +55,27 @@ describe('Form in a browser', () => {
     render(<Page />);
     await submit();
     await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Work email')));
+  });
+
+  it('passes axe with the summary and every problem showing', async () => {
+    render(
+      <Page summary>
+        <Fieldset.Root>
+          <Fieldset.Legend>Plan</Fieldset.Legend>
+          <RadioGroup.Root aria-label="Plan" name="plan">
+            <RadioGroup.Item value="team" required>
+              Team
+            </RadioGroup.Item>
+          </RadioGroup.Root>
+          <ErrorMessage.Root />
+        </Fieldset.Root>
+      </Page>,
+    );
+    await submit();
+    await screen.findByRole('group', { name: '3 problems to fix' });
+    // Its color-contrast rule is WCAG 2; Todae checks contrast with APCA when tokens build.
+    const result = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
+    expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
   });
 
   it('moves focus to the summary on a failed submit, which lists the problems in order', async () => {

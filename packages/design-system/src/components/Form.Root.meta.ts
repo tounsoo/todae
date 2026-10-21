@@ -10,7 +10,7 @@ export const meta = {
       type: 'Readonly<Record<string, string>>',
       required: false,
       description:
-        'Problems you found, such as a server reply, keyed by a control name. They show at once in place of the control\'s native problem and never block a submit. An edit to a control hides its entry until the next submit or until errors is a new object.',
+        'Problems you found, such as a server reply, keyed by a control name. They show at once in place of the control\'s native problem and do not block a submit. An edit to a control hides its entry until the next submit or until errors is a new object.',
     },
     {
       name: 'onSubmit',

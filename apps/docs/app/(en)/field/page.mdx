@@ -89,6 +89,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
+That is the wiring by hand. Inside a [Form](/form), a `Field.Group` reads the browser's own validation, and an `ErrorMessage.Root` with no `id` shows the problem and does this wiring for you.
+
 ## Counter
 
 `Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
@@ -200,7 +202,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Group
 
-**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption.
+**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption. Inside a [Form](/form) it is also a validation scope for the controls in it.
 
 **When not:** To space separate fields from each other, use `Stack.Root`. To group related controls under one legend, use [Fieldset](/fieldset).
 
