@@ -119,7 +119,7 @@ useEffect(() => {
   const timer = setTimeout(() => {
     if (searched.current === needle) return;
     searched.current = needle;
-    announce(matches.length === 0 ? 'No invoices found' : `${invoices(matches.length)} found`);
+    announce(matches.length === 0 ? (needle ? 'No invoices found' : 'No invoices left') : `${invoices(matches.length)} found`);
   }, 500);
   return () => clearTimeout(timer);
 }, [needle, matches.length, announce]);
