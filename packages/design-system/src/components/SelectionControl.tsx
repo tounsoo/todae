@@ -73,10 +73,10 @@ export function SelectionControl({
   useRevalidate();
   const { check, indeterminate: indeterminateGlyph } = useGlyphs();
   const indeterminate = kind === 'checkbox' && !!indeterminateProp;
-  // The DOM property has no attribute, and a click clears it, so it is set again after every render.
+  // The DOM property has no attribute; onChange puts it back after a click clears it.
   useLayoutEffect(() => {
     if (inputRef.current) inputRef.current.indeterminate = indeterminate;
-  });
+  }, [indeterminate]);
   return (
     <label
       className={cx(styles.root, className)}

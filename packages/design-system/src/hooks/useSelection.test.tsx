@@ -137,6 +137,24 @@ describe('useSelection', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it('counts every call in one event', () => {
+    const onValueChange = vi.fn();
+    const { result } = setup({ onValueChange });
+    act(() => {
+      result.current.toggle('a');
+      result.current.toggle('b');
+    });
+    expect(result.current.value).toEqual(['a', 'b']);
+    expect(onValueChange).toHaveBeenLastCalledWith(['a', 'b']);
+  });
+
+  it('adds a key listed twice in keys once', () => {
+    const { result } = setup({ keys: ['a', 'a', 'b'] });
+    act(() => result.current.toggleAll());
+    expect(result.current.value).toEqual(['a', 'b']);
+    expect(result.current.state).toBe('all');
+  });
+
   it('works with numeric keys', () => {
     const { result } = renderHook(() => useSelection({ keys: [1, 2, 3] }));
     act(() => result.current.toggle(2));

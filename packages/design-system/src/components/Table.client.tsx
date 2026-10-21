@@ -4,7 +4,6 @@ import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { cx } from './cx.js';
 import { glyphOr, SortGlyph } from './glyphs.js';
-import { composeHandlers } from './props.js';
 import { Body, Caption, Cell, Foot, HeaderCell, Head, Root, Row } from './Table.js';
 import styles from './Table.module.css';
 
@@ -14,9 +13,10 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
  * A native `button` for a sortable column: put it inside a `Table.HeaderCell`
  * that takes `sort`, with the column's label as its children. It draws the
  * `sort` glyph after the label, from the header cell's `data-sort`: shown on a
- * sorted column, turned when it is descending, and shown dimmed on hover and
- * focus otherwise. It does not sort; set the cell's `sort` from `onClick`.
- * After a click it announces the column's next `aria-sort` or `data-sort` change.
+ * sorted column, turned when it is descending, and shown dimmed otherwise,
+ * where a pointer can hover only on hover and focus. It does not sort; set
+ * the cell's `sort` from `onClick`. After a click it announces the column's
+ * next `aria-sort` or `data-sort` change.
  */
 export type TableSortButtonProps = ComponentPropsWithRef<'button'>;
 
@@ -35,6 +35,10 @@ function columnName(button: HTMLElement): string {
   return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+// One sort announcement waits per table, so a click on another column's
+// button drops the wait of the last one.
+const waiting = /* @__PURE__ */ new WeakMap<Element, MutationObserver>();
+
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
   const { sort } = useGlyphs();
   const strings = useStrings();
@@ -42,24 +46,30 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
   const watcher = useRef<MutationObserver | null>(null);
   useEffect(() => () => watcher.current?.disconnect(), []);
 
-  const watch = (event: MouseEvent<HTMLButtonElement>) => {
+  // Armed before the product's handler runs, so a sort committed inside it,
+  // such as with flushSync, is still seen.
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     const button = event.currentTarget;
     const cell = button.closest('th');
-    if (!cell) return;
-    watcher.current?.disconnect();
-    const observer = new MutationObserver(() => {
-      observer.disconnect();
-      const { sortedAscending, sortedDescending, sortCleared } = strings;
-      const column = columnName(button);
-      const say = { ascending: sortedAscending, descending: sortedDescending, none: sortCleared }[sortOf(cell)];
-      announce(say(column));
-    });
-    observer.observe(cell, { attributes: true, attributeFilter: ['aria-sort', 'data-sort'] });
-    watcher.current = observer;
+    const table = cell?.closest('table') ?? cell;
+    if (cell && table) {
+      waiting.get(table)?.disconnect();
+      const observer = new MutationObserver(() => {
+        observer.disconnect();
+        const { sortedAscending, sortedDescending, sortCleared } = strings;
+        const say = { ascending: sortedAscending, descending: sortedDescending, none: sortCleared }[sortOf(cell)];
+        announce(say(columnName(button)));
+      });
+      observer.observe(cell, { attributes: true, attributeFilter: ['aria-sort', 'data-sort'] });
+      waiting.set(table, observer);
+      watcher.current = observer;
+    }
+    onClick?.(event);
+    if (event.defaultPrevented) watcher.current?.disconnect();
   };
 
   return (
-    <button type="button" {...props} className={cx(styles.sortButton, className)} onClick={composeHandlers(onClick, watch)}>
+    <button type="button" {...props} className={cx(styles.sortButton, className)} onClick={handleClick}>
       {children}
       <span className={styles.sortGlyph} data-todae-glyph="" aria-hidden="true">
         {glyphOr(sort, <SortGlyph />)}

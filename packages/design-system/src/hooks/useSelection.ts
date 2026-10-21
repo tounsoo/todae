@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, type ChangeEvent } from 'react';
+import { useMemo, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
 import { composeHandlers } from '../components/props.js';
-import { useControlledValue } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 
 export type SelectionState = 'none' | 'some' | 'all';
 
@@ -49,14 +49,13 @@ function keysBetween<K>(keys: readonly K[], from: K, to: K): K[] | null {
   return keys.slice(Math.min(start, end), Math.max(start, end) + 1);
 }
 
-/** `value` after setting `targets` to `selected`, new keys added in the order given. The same array when nothing changes. */
-function withSelected<K>(value: K[], targets: readonly K[], selected: boolean): K[] {
+/** `value` after setting `targets` to `selected`, new keys added once each in the order given. The same array when nothing changes. */
+function withSelected<K>(value: readonly K[], targets: readonly K[], selected: boolean): readonly K[] {
   const present = new Set(value);
-  const changed = targets.filter((key) => present.has(key) !== selected);
-  if (changed.length === 0) return value;
+  const changed = new Set(targets.filter((key) => present.has(key) !== selected));
+  if (changed.size === 0) return value;
   if (selected) return [...value, ...changed];
-  const removed = new Set(changed);
-  return value.filter((key) => !removed.has(key));
+  return value.filter((key) => !changed.has(key));
 }
 
 /**
@@ -67,34 +66,44 @@ function withSelected<K>(value: K[], targets: readonly K[], selected: boolean): 
  */
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
-  const [value, setValue] = useControlledValue<K[]>(valueProp as K[] | undefined, (defaultValue as K[] | undefined) ?? [], onValueChange);
+  const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
+  // Each write builds on the last one, so two calls in one event both count.
+  const latest = useRef(value);
+  latest.current = value;
+  const write = (next: readonly K[]) => {
+    if (next === latest.current) return;
+    latest.current = next;
+    setValue(next);
+    onValueChange?.([...next]);
+  };
   const selected = useMemo(() => new Set<K>(value), [value]);
   const disabled = useMemo(() => new Set<K>(disabledKeys), [disabledKeys]);
-  const enabledKeys = useMemo(() => keys.filter((key) => !disabled.has(key)), [keys, disabled]);
+  const enabledKeys = useMemo(() => [...new Set(keys)].filter((key) => !disabled.has(key)), [keys, disabled]);
   const anchor = useRef<K | null>(null);
 
   const selectedCount = enabledKeys.filter((key) => selected.has(key)).length;
   const state: SelectionState =
     selectedCount === 0 ? 'none' : selectedCount === enabledKeys.length ? 'all' : 'some';
 
-  const isSelected = useCallback((key: K) => selected.has(key), [selected]);
+  const isSelected = (key: K) => selected.has(key);
 
   const toggle = (key: K, { range = false }: { range?: boolean } = {}) => {
     if (disabled.has(key)) return;
-    const next = !selected.has(key);
+    const next = !latest.current.includes(key);
     const span = range && anchor.current !== null ? keysBetween(keys, anchor.current, key) : null;
     anchor.current = key;
-    setValue(withSelected(value, span ? span.filter((k) => !disabled.has(k)) : [key], next));
+    write(withSelected(latest.current, span ? span.filter((k) => !disabled.has(k)) : [key], next));
   };
 
   const toggleAll = () => {
     anchor.current = null;
-    setValue(withSelected(value, enabledKeys, state !== 'all'));
+    const current = new Set(latest.current);
+    write(withSelected(latest.current, enabledKeys, !enabledKeys.every((key) => current.has(key))));
   };
 
   const clear = () => {
     anchor.current = null;
-    if (value.length > 0) setValue([]);
+    if (latest.current.length > 0) write(NO_KEYS);
   };
 
   const getCheckboxProps: UseSelectionResult<K>['getCheckboxProps'] = (key, props = {}) => ({
@@ -102,8 +111,9 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
     checked: selected.has(key),
     disabled: !!props.disabled || disabled.has(key),
     onChange: composeHandlers(props.onChange, (event: ChangeEvent<HTMLInputElement>) => {
-      const click = event.nativeEvent as Partial<MouseEvent>;
-      toggle(key, { range: !!click.shiftKey });
+      // React fires a checkbox's change from its click, which carries the modifier keys.
+      const click = event.nativeEvent;
+      toggle(key, { range: 'shiftKey' in click && click.shiftKey === true });
     }),
   });
 

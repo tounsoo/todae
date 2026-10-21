@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Table as ServerTable } from '../server/table.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
@@ -226,6 +227,58 @@ describe('Table.SortButton', () => {
     fireEvent.click(screen.getByRole('button', { name: 'apply' }));
     await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(live()).toBe('');
+  });
+
+  it('announces a sort the click handler commits at once', async () => {
+    function Sync() {
+      const [sort, setSort] = useState<TableSort>('none');
+      return (
+        <Headers sort={sort}>
+          <Table.SortButton onClick={() => flushSync(() => setSort('ascending'))}>Name</Table.SortButton>
+        </Headers>
+      );
+    }
+    render(<Sync />);
+    fireEvent.click(screen.getByRole('button'));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('Sorted by Name, ascending');
+  });
+
+  it('stops waiting on a column when another column of its table is clicked', async () => {
+    function Two() {
+      const [sorts, setSorts] = useState<Record<string, TableSort>>({ Name: 'none', Amount: 'none' });
+      return (
+        <>
+          <button type="button" onClick={() => setSorts({ Name: 'none', Amount: 'ascending' })}>
+            reset
+          </button>
+          <table>
+            <thead>
+              <tr>
+                <Table.HeaderCell scope="col" sort={sorts.Name}>
+                  <Table.SortButton onClick={() => setSorts({ Name: 'ascending', Amount: 'none' })}>Name</Table.SortButton>
+                </Table.HeaderCell>
+                <Table.HeaderCell scope="col" sort={sorts.Amount}>
+                  <Table.SortButton>Amount</Table.SortButton>
+                </Table.HeaderCell>
+              </tr>
+            </thead>
+          </table>
+        </>
+      );
+    }
+    render(<Two />);
+    fireEvent.click(screen.getByRole('button', { name: 'Amount' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Name' }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('Sorted by Name, ascending');
+    fireEvent.click(screen.getByRole('button', { name: 'reset' }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('Sorted by Name, ascending');
+  });
+
+  it('is in the main entry\'s Table with every server part', () => {
+    expect(Object.keys(Table)).toEqual([...Object.keys(ServerTable), 'SortButton']);
   });
 
   it('stops watching when it unmounts', async () => {
