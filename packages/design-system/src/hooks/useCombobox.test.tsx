@@ -93,6 +93,18 @@ async function captureUnhandled(run: () => Promise<unknown>): Promise<unknown[]>
   return reasons;
 }
 
+/** Runs `run` with a `reportError` the page would have, and returns what it reported and what it left unhandled. */
+async function captureReported(run: () => Promise<unknown>): Promise<{ reported: unknown[]; unhandled: unknown[] }> {
+  const reportError = vi.fn();
+  vi.stubGlobal('reportError', reportError);
+  try {
+    const unhandled = await captureUnhandled(run);
+    return { reported: reportError.mock.calls.map(([thrown]) => thrown), unhandled };
+  } finally {
+    vi.unstubAllGlobals();
+  }
+}
+
 function pointerSelect(option: HTMLElement) {
   const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
   option.dispatchEvent(down);
@@ -223,6 +235,60 @@ describe('useCombobox', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Tab' });
     expect(onOpenChange).toHaveBeenCalledWith(false, 'blur');
+  });
+
+  it('leaves Escape on a closed list with no text to clear to the page, so a dialog around it closes', () => {
+    render(<SingleBox open={false} />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
+  });
+
+  it('takes Escape on a closed list when it clears the typed text', () => {
+    render(<SingleBox open={false} defaultInputValue="Re" />);
+    const input = screen.getByRole<HTMLInputElement>('combobox');
+    expect(fireEvent.keyDown(input, { key: 'Escape' })).toBe(false);
+    expect(input.value).toBe('');
+  });
+
+  it('leaves Escape on a closed list to the page with a value, or in multiple mode with text', () => {
+    const { unmount } = render(<SingleBox open={false} defaultValue="react" />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
+    unmount();
+    function MultiClosed() {
+      const cb = useCombobox({ selectionMode: 'multiple', options: OPTIONS, presentation: 'popover', open: false, defaultInputValue: 'Re' });
+      return (
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.ChipInput {...cb.getChipInputProps()} />
+        </Field.Root>
+      );
+    }
+    render(<MultiClosed />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
+  });
+
+  it('reads a load that throws before returning a promise as a failure, and stops loading', async () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: () => {
+          throw null;
+        },
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('reads a load rejected with no reason as a failure', async () => {
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions: () => Promise.reject(undefined), presentation: 'popover' }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.error).toBeInstanceOf(Error);
   });
 
   it('closes the sheet once on Escape from the input', () => {
@@ -444,7 +510,7 @@ describe('useCombobox', () => {
       result.current.create();
       await Promise.resolve();
     });
-    expect(onCreate).toHaveBeenCalledWith('Todae');
+    expect(onCreate).toHaveBeenCalledWith('Todae', expect.any(AbortSignal));
     expect(onChange).toHaveBeenCalledWith('todae');
     const hidden = renderHook(() =>
       useCombobox({
@@ -766,7 +832,7 @@ describe('useCombobox dialog presentation', () => {
     expect(result.current.items.map((item) => item.kind)).toEqual(['create']);
     const enter = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
     act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
-    expect(onCreate).toHaveBeenCalledWith('NewTag');
+    expect(onCreate).toHaveBeenCalledWith('NewTag', expect.any(AbortSignal));
   });
 
   // A loader whose calls settle when the test says, newest last.
@@ -918,7 +984,7 @@ describe('useCombobox dialog presentation', () => {
     await settle('bi');
     expect(result.current.showCreate).toBe(true);
     act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
-    expect(onCreate).toHaveBeenCalledWith('bi');
+    expect(onCreate).toHaveBeenCalledWith('bi', expect.any(AbortSignal));
   });
 
   it('treats a list loaded for a NaN loadKey as current', async () => {
@@ -1296,8 +1362,9 @@ describe('useCombobox async create', () => {
     );
     act(() => result.current.setInputValue('new'));
     act(() => result.current.create());
-    const unhandled = await captureUnhandled(() => act(async () => calls[0]?.resolve('new')));
-    expect(unhandled).toEqual([failure]);
+    const { reported, unhandled } = await captureReported(() => act(async () => calls[0]?.resolve('new')));
+    expect(reported).toEqual([failure]);
+    expect(unhandled).toEqual([]);
     expect(result.current.createError).toBeNull();
     expect(result.current.value).toEqual(['new']);
     expect(onInputValueChange).toHaveBeenLastCalledWith('');
@@ -1389,8 +1456,9 @@ describe('useCombobox async create', () => {
     });
     type(result, 'new');
     act(() => result.current.create());
-    const unhandled = await captureUnhandled(() => act(async () => calls[0]?.resolve('new')));
-    expect(unhandled).toEqual([failure]);
+    const { reported, unhandled } = await captureReported(() => act(async () => calls[0]?.resolve('new')));
+    expect(reported).toEqual([failure]);
+    expect(unhandled).toEqual([]);
     expect(result.current.createError).toBeNull();
     expect(onInputValueChange).toHaveBeenLastCalledWith('new');
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'select');
@@ -1665,7 +1733,7 @@ describe('useCombobox async create', () => {
     expect(result.current.createError).toBeNull();
   });
 
-  it('runs onCreate once across an Activity hiding and showing the combobox', async () => {
+  it('aborts a create when an Activity hides the combobox, and runs its label again once shown', async () => {
     const { onCreate, calls } = deferredCreate();
     let cb!: UseComboboxResult;
     function Probe() {
@@ -1691,12 +1759,57 @@ describe('useCombobox async create', () => {
       </Activity>,
     );
     expect(cb.creating).toBe(false);
+    const [, firstSignal] = onCreate.mock.calls[0] as unknown as [string, AbortSignal];
+    expect(firstSignal.aborted).toBe(true);
     act(() => cb.create());
-    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledTimes(2);
     expect(cb.creating).toBe(true);
-    await act(async () => calls[0]?.resolve('new'));
+    // The aborted create settles too late to count.
+    await act(async () => calls[0]?.resolve('old'));
+    expect(cb.value).toBeNull();
+    await act(async () => calls[1]?.resolve('new'));
     expect(cb.value).toBe('new');
     expect(cb.creating).toBe(false);
+  });
+
+  it('aborts a pending create on unmount, but not on a pick, which can take it back', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result, unmount } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    const [, signal] = onCreate.mock.calls[0] as unknown as [string, AbortSignal];
+    act(() => result.current.select('react'));
+    expect(signal.aborted).toBe(false);
+    unmount();
+    expect(signal.aborted).toBe(true);
+    await act(async () => calls[0]?.resolve('new'));
+  });
+
+  it.each([undefined, ''])('reads a create rejected with %j as a failure that holds it', async (reason) => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(reason));
+    expect(result.current.createError).toBeInstanceOf(Error);
+    expect((result.current.createError as Error).cause).toBe(reason);
+  });
+
+  it('reads a synchronous throw of null from onCreate as a failure', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        onCreate: () => {
+          throw null;
+        },
+      }),
+    );
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(result.current.createError).toBeInstanceOf(Error);
   });
 
   it('leaves a load error showing while a create runs', async () => {
@@ -1780,6 +1893,21 @@ describe('useCombobox keys', () => {
     expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'react'));
     expect(fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 229 })).toBe(false);
     expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
+  });
+
+  it('picks with an Enter that carries keyCode 13 and no composition, as Android keyboards are taken to send', () => {
+    // Unverified on a device: Gboard is taken to send Enter as keyCode 13 once a composition ends,
+    // and keyCode 229 only while one is open, when isComposing is true.
+    const onChange = vi.fn();
+    render(<SingleBox defaultOpen onValueChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 229, isComposing: true })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+    // Its other keys are taken to come as 'Unidentified' with keyCode 229 (also unverified); they pick nothing.
+    expect(fireEvent.keyDown(input, { key: 'Unidentified', keyCode: 229 })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 })).toBe(false);
+    expect(onChange).toHaveBeenCalledWith('react');
   });
 
   it('leaves the Enter that ends an IME composition in Safari to the input', () => {

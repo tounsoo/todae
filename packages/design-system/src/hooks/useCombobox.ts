@@ -62,7 +62,11 @@ type BaseOptions = {
   defaultInputValue?: string;
   onInputValueChange?: (value: string) => void;
   allowCreate?: boolean;
-  onCreate?: (label: string) => string | void | Promise<string | void>;
+  /**
+   * Creates `label`'s option, and may return its value or a promise of it. `signal` aborts when
+   * the field unmounts or an `Activity` hides it; a pick, `clear()` or `reset()` leaves it running.
+   */
+  onCreate?: (label: string, signal: AbortSignal) => string | void | Promise<string | void>;
   createLabel?: (query: string) => string;
   disabled?: boolean;
   id?: string;
@@ -99,13 +103,18 @@ export type UseComboboxResult = {
   activeId: string | null;
   activeValue: string | null;
   loading: boolean;
-  /** The last load's failure, which `retry` loads again. A create's failure is in `createError`. */
+  /**
+   * The last load's failure, which `retry` loads again; an Error, with the reason as its `cause`,
+   * when the reason was falsy.
+   * A create's failure is in `createError`.
+   */
   error: unknown | null;
   retry: () => void;
   /** True while an async `onCreate` is pending, until a pick, `clear()` or `reset()` drops it. */
   creating: boolean;
   /**
-   * What `onCreate` last threw or rejected with, kept only while the text still asks for that label.
+   * What `onCreate` last threw or rejected with, or an Error with it as `cause` when it was falsy,
+   * kept only while the text still asks for that label.
    * Cleared by the next text change, pick, removal, clear, create or opening of the list. A throw
    * from a change callback is the caller's, not a create failure.
    */
@@ -323,7 +332,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     const label = trimmed;
     runCreate(
       label,
-      () => latest.current.onCreate?.(label),
+      (signal) => latest.current.onCreate?.(label, signal),
       (canonical) => {
         const next = canonical ?? label;
         const now = state.current;
@@ -527,19 +536,25 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       if (event.key === 'Escape') {
-        event.preventDefault();
         if (open) {
+          event.preventDefault();
           if (isModal) setOpen(false, 'escape');
           return;
         }
-        if (selectionMode === 'single' && !singleValue) setInputValue('');
+        // With nothing to clear, Escape on a closed list goes on, so a dialog around it closes.
+        const now = state.current;
+        const clearsText = selectionMode === 'single' && !now.single && now.inputValue !== '';
+        if (clearsText) {
+          event.preventDefault();
+          setInputValue('');
+        }
         return;
       }
       if (event.key === 'Tab') {
         if (open) setOpen(false, 'blur');
       }
     },
-    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, singleValue],
+    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, state],
   );
 
   const changeInput = useCallback(

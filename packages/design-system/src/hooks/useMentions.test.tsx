@@ -285,6 +285,24 @@ describe('useMentions', () => {
     expect(result.items.map((item) => item.option.value)).toEqual(['general']);
   });
 
+  it.each([
+    ['rejected with no reason', () => Promise.reject(undefined)],
+    [
+      'thrown before returning a promise',
+      () => {
+        throw null;
+      },
+    ],
+  ])('reads a load %s as a failure', async (_case, loadOptions) => {
+    let result!: UseMentionsResult;
+    render(<Harness triggers={[{ char: '@', loadOptions }]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    await act(async () => {});
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
   it('builds the popover anchor from a CSS-safe id even when the id option is not one', () => {
     let result!: UseMentionsResult;
     function Named() {
