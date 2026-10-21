@@ -156,7 +156,7 @@ Code on a docs page is copied into products, so write it in the package's own st
 - **Show real wiring.** A `Label.Root` sits with its control in a `Field.Group` and points at it with an id from `useId()` or a hook's `ids`, not a literal. Every control has an accessible name. Links are `Link.Root`, and a router's link goes in through its `render` prop.
 - **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Inside a slot such as `Button.Icon`, put the icon element on its own line.
 - **Imports.** A block with an `export function` imports everything it uses: Todae from `'@tounsoo/todae'`, or from a server entry such as `'@tounsoo/todae/code'` when a Server Component should render it.
-- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Root as="pre"` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The site doesn't override the code block's tokens, padding, type or colors.
+- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `CodeBlock.Root` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The site doesn't override the code block's tokens, padding, type or colors.
 - **The site shows Todae as it ships.** `apps/docs` sets no Todae token, and its pages load no font of their own (the link-preview images draw with their own fonts); the site's own chrome reads Todae's tokens as they are. Themes appear only inside the Playground, through `ThemeProvider` overrides. *Why:* people judge Todae's base theme by the site itself.
 
 ## Releases
