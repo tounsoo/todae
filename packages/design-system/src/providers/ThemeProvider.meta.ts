@@ -8,8 +8,9 @@ export const meta = {
       name: 'appearance',
       type: '"system" | "light" | "dark"',
       required: false,
-      default: '"system"',
-      description: 'Written to data-appearance as is. system follows prefers-color-scheme in CSS.',
+      default: 'the enclosing ThemeProvider\'s, or "system"',
+      description:
+        'Written to data-appearance as is. system follows prefers-color-scheme in CSS. Leave it out on a nested provider that only sets overrides.',
     },
     {
       name: 'overrides',

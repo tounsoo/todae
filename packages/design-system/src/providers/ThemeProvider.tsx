@@ -14,6 +14,7 @@ export type Appearance = 'system' | 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';
 
 export type ThemeProviderProps<Extra extends string = never> = {
+  /** Defaults to the enclosing ThemeProvider's appearance, or `system` with none. */
   appearance?: Appearance;
   overrides?: ThemeOverride & { [K in NoInfer<Extra>]?: ThemeOverrideValue };
   /** Types for extra override keys, such as a company's generated `THEME_OVERRIDE_TYPES`. */
@@ -23,6 +24,7 @@ export type ThemeProviderProps<Extra extends string = never> = {
 const QUERY = '(prefers-color-scheme: dark)';
 const DEV = process.env.NODE_ENV !== 'production';
 const AppearanceContext = /* @__PURE__ */ createContext<ResolvedAppearance>('light');
+const DeclaredAppearanceContext = /* @__PURE__ */ createContext<Appearance | null>(null);
 const ThemeVarsContext = /* @__PURE__ */ createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
@@ -54,13 +56,16 @@ function contrastInputs(vars: Record<string, string>, inputs: Record<string, str
 }
 
 export function ThemeProvider<Extra extends string = never>({
-  appearance = 'system',
+  appearance: ownAppearance,
   overrides,
   overrideTypes,
   style,
   ref,
   ...props
 }: ThemeProviderProps<Extra>) {
+  // A nested provider that only sets overrides keeps the appearance around it.
+  const enclosing = useContext(DeclaredAppearanceContext);
+  const appearance = ownAppearance ?? enclosing ?? 'system';
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
   const vars = themeOverrideStyle(overrides, overrideTypes);
@@ -90,18 +95,20 @@ export function ThemeProvider<Extra extends string = never>({
     warned.current = key;
   }, [contrastKey, appearance, resolved]);
   return (
-    <AppearanceContext.Provider value={resolved}>
-      <ThemeVarsContext.Provider value={vars}>
-        <div
-          {...props}
-          ref={composedRef}
-          style={{ ...style, ...vars, ...inputs } as CSSProperties}
-          // "system" resolves in CSS through prefers-color-scheme, so a
-          // server-rendered page is dark from the first paint.
-          data-appearance={appearance}
-        />
-      </ThemeVarsContext.Provider>
-    </AppearanceContext.Provider>
+    <DeclaredAppearanceContext.Provider value={appearance}>
+      <AppearanceContext.Provider value={resolved}>
+        <ThemeVarsContext.Provider value={vars}>
+          <div
+            {...props}
+            ref={composedRef}
+            style={{ ...style, ...vars, ...inputs } as CSSProperties}
+            // "system" resolves in CSS through prefers-color-scheme, so a
+            // server-rendered page is dark from the first paint.
+            data-appearance={appearance}
+          />
+        </ThemeVarsContext.Provider>
+      </AppearanceContext.Provider>
+    </DeclaredAppearanceContext.Provider>
   );
 }
 

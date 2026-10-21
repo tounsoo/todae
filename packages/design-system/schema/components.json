@@ -3852,8 +3852,8 @@
           "name": "appearance",
           "type": "\"system\" | \"light\" | \"dark\"",
           "required": false,
-          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS.",
-          "default": "\"system\""
+          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS. Leave it out on a nested provider that only sets overrides.",
+          "default": "the enclosing ThemeProvider's, or \"system\""
         },
         {
           "name": "overrides",

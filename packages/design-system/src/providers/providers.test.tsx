@@ -65,6 +65,41 @@ describe('ThemeProvider', () => {
     );
   });
 
+  it('keeps the enclosing appearance on a nested provider that only sets overrides', () => {
+    mockMatchMedia(false);
+    render(
+      <ThemeProvider appearance="dark">
+        <ThemeProvider data-testid="inner" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.45, 0.1, 155] } }}>
+          <AppearanceLabel />
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+    const inner = screen.getByTestId('inner');
+    expect(inner.getAttribute('data-appearance')).toBe('dark');
+    expect(inner.textContent).toBe('dark');
+  });
+
+  it('takes a color held in an as-const constant', () => {
+    const accent = { colorSpace: 'oklch', components: [0.45, 0.1, 155] } as const;
+    render(
+      <ThemeProvider data-testid="const" overrides={{ 'color.accent.default': accent }}>
+        x
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('const').style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.45 0.1 155)');
+  });
+
+  it('defaults to system with no provider around it', () => {
+    mockMatchMedia(true);
+    render(
+      <ThemeProvider data-testid="only">
+        <AppearanceLabel />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('only').getAttribute('data-appearance')).toBe('system');
+    expect(screen.getByTestId('only').textContent).toBe('dark');
+  });
+
   it('server-renders system as system, so CSS picks the scheme before hydration', () => {
     const html = renderToString(
       <ThemeProvider appearance="system">

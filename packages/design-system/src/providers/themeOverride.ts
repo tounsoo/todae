@@ -39,7 +39,7 @@ void generatedTypesAreKnown;
 
 export type ThemeColorValue = {
   colorSpace: 'oklch';
-  components: [number, number, number];
+  components: readonly [number, number, number];
   alpha?: number;
 };
 
