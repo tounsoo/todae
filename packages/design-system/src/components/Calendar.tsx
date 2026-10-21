@@ -22,7 +22,7 @@ import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
-import type { DateRange } from './dateRangeText.js';
+import { spanOf, type DateRange } from './dateRangeText.js';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
@@ -210,15 +210,10 @@ const compare = (a: Temporal.PlainDate, b: Temporal.PlainDate) => Temporal.Plain
 /** The range in the ISO calendar, its ends in order. */
 function isoRange(range: DateRange | null | undefined): DateRange | null | undefined {
   if (!range) return range;
-  const start = isoDate(range.start);
-  const end = isoDate(range.end);
-  if (compare(start, end) > 0) return { start: end, end: start };
+  const { start, end } = spanOf(isoDate(range.start), isoDate(range.end));
   // The same object when nothing changes, so a controlled value keeps its identity.
   return start === range.start && end === range.end ? range : { start, end };
 }
-
-const spanOf = (a: Temporal.PlainDate, b: Temporal.PlainDate): DateRange =>
-  compare(a, b) <= 0 ? { start: a, end: b } : { start: b, end: a };
 
 const oneDay = (date: Temporal.PlainDate | null | undefined) => date && { start: date, end: date };
 

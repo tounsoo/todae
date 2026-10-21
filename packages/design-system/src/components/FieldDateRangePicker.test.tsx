@@ -92,6 +92,20 @@ describe('Field.DateRangePicker', () => {
     expect(entries()).toEqual([['stay', '2026-10-03/2026-10-10']]);
   });
 
+  it('shows, sends and selects a range given end first from its earlier date', () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Stay" name="stay">
+          <Field.DateRangePicker value={range('2026-10-10', '2026-10-03')} locale="en-US" defaultOpen />
+        </Field.Root>
+      </form>,
+    );
+    expect(screen.getByRole('button', { name: 'Stay' }).textContent).toBe('Oct 3\u2009–\u200910, 2026');
+    expect(entries()).toEqual([['stay', '2026-10-03/2026-10-10']]);
+    const selected = [...screen.getByRole('grid').querySelectorAll('td[aria-selected="true"]')];
+    expect(selected.map((cell) => cell.textContent)).toEqual(['3', '4', '5', '6', '7', '8', '9', '10']);
+  });
+
   it('beside a Field.TextInput gives it the field, and is a glyph button named from the strings', () => {
     render(
       <form data-testid="form">

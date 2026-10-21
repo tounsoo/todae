@@ -2,8 +2,15 @@
 // Server-safe range text for a text input beside Field.DateRangePicker: no hooks or context.
 import { formatDate, parseDate, type DateTextOptions } from './dateText.js';
 
-/** A span of days, start and end included. start is never after end. */
+/**
+ * A span of days, start and end included. Given in either order, it is read
+ * with the earlier date as its start.
+ */
 export type DateRange = { start: Temporal.PlainDate; end: Temporal.PlainDate };
+
+/** The range from a to b, the earlier date as its start. */
+export const spanOf = (a: Temporal.PlainDate, b: Temporal.PlainDate): DateRange =>
+  Temporal.PlainDate.compare(a, b) <= 0 ? { start: a, end: b } : { start: b, end: a };
 
 export type DateRangeTextOptions = DateTextOptions;
 
@@ -48,9 +55,8 @@ function separatorFor(locale: string | undefined): string {
  * first, even when it is the range's end.
  */
 export function formatDateRange(range: DateRange, options: DateRangeTextOptions = {}): string {
-  const [first, last] =
-    Temporal.PlainDate.compare(range.start, range.end) <= 0 ? [range.start, range.end] : [range.end, range.start];
-  return `${formatDate(first, options)}${separatorFor(options.locale)}${formatDate(last, options)}`;
+  const { start, end } = spanOf(range.start, range.end);
+  return `${formatDate(start, options)}${separatorFor(options.locale)}${formatDate(end, options)}`;
 }
 
 /**

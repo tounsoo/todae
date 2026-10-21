@@ -16,7 +16,7 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import type { DateRange } from './dateRangeText.js';
+import { spanOf, type DateRange } from './dateRangeText.js';
 import { useFieldPicker, htmlDate } from './Field.shared.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
@@ -103,6 +103,7 @@ export function DateRangePicker({
   const strings = useStrings();
   const { calendar } = useGlyphs();
   const textId = useDomId();
+  const range = value && spanOf(value.start, value.end);
   // The button's name is not the range, so the range it shows is its description.
   const picker = useFieldPicker<'select'>({
     props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
@@ -124,8 +125,8 @@ export function DateRangePicker({
         className={cx(styles.picker, className)}
       >
         {showValue ? (
-          <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value ? buttonFormat(locale).formatRange(toDate(value.start), toDate(value.end)) : placeholder}
+          <span id={textId} className={styles.pickerText} data-placeholder={range ? undefined : ''}>
+            {range ? buttonFormat(locale).formatRange(toDate(range.start), toDate(range.end)) : placeholder}
           </span>
         ) : null}
         <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
@@ -137,7 +138,7 @@ export function DateRangePicker({
         <input
           type="hidden"
           name={picker.name}
-          value={value ? `${htmlDate(isoDate(value.start))}/${htmlDate(isoDate(value.end))}` : ''}
+          value={range ? `${htmlDate(isoDate(range.start))}/${htmlDate(isoDate(range.end))}` : ''}
           disabled={picker.disabled}
           form={picker.form}
         />
