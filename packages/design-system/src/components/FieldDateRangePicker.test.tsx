@@ -44,6 +44,15 @@ describe('Field.DateRangePicker', () => {
     expect(screen.getByText('Pick dates').hasAttribute('data-placeholder')).toBe(true);
   });
 
+  it('shows a range in the years 0 to 99 in those years', () => {
+    render(
+      <Field.Root aria-label="Stay">
+        <Field.DateRangePicker value={range('0050-10-03', '0050-10-10')} locale="en-US" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button').textContent).toBe('Oct 3\u2009–\u200910, 50');
+  });
+
   it('shows the range in the locale it is given', () => {
     const { rerender } = render(
       <Field.Root aria-label="Stay">

@@ -65,7 +65,10 @@ function buttonFormat(locale: string | undefined) {
 
 const toDate = (date: Temporal.PlainDate) => {
   const iso = isoDate(date);
-  return new Date(Date.UTC(iso.year, iso.month - 1, iso.day, 12));
+  const at = new Date(Date.UTC(2000, 0, 1, 12));
+  // Date.UTC would read years 0 to 99 as 1900 to 1999.
+  at.setUTCFullYear(iso.year, iso.month - 1, iso.day);
+  return at;
 };
 
 /**
