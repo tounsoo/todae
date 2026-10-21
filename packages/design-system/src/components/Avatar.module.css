@@ -140,8 +140,9 @@
 
   /* A focused wrapper rises above its neighbors' rings, so its focus ring
      shows whole. A flex item takes z-index without a position, so a child
-     keeps its own positioning. The group isolates that z-index from the page. */
-  .group > :is(:focus-visible, :has(:focus-visible)) {
+     keeps its own positioning. A popover or dialog child keeps its own
+     stacking. The group isolates that z-index from the page. */
+  .group > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
     z-index: 1;
   }
 

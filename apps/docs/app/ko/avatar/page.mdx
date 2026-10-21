@@ -88,7 +88,7 @@ import { AvatarBesideName, AvatarGroupExample, AvatarGroupSizes, AvatarSizes, Av
   <AvatarGroupSizes />
 </Example>
 
-겹치는 정도는 `avatar.group.overlap`에 그룹의 크기를 곱한 값이며, 음수 inline-start 마진이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 각 Avatar가 아니라 그룹의 크기에서 가져오고, 그룹의 직계 자식에 적용됩니다. 그래서 Avatar를 툴팁 트리거나 링크로 감싸도 동작합니다. 자체 `size`를 준 Avatar도 그룹의 크기만큼 당겨집니다. 테두리는 `avatar.group.ring.color`(표면 색)의 `avatar.group.ring.width`이며, 그룹이 놓인 배경에 맞춰 바꾸세요. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 안쪽 테두리가 생깁니다. 그룹 전체 목록을 호버로 보여 주는 일은 그룹을 감싸는 [Tooltip](/tooltip)이나 [Popover](/popover)로, 직접 만듭니다.
+겹치는 정도는 `avatar.group.overlap`에 그룹의 크기를 곱한 값이며, 음수 inline-start 마진이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 각 Avatar가 아니라 그룹의 크기에서 가져오고, `[popover]`나 `dialog`를 뺀 그룹의 직계 자식에 적용됩니다. 그래서 Avatar를 툴팁 트리거나 링크로 감싸도 동작합니다. 자체 `size`를 준 Avatar도 그룹의 크기만큼 당겨집니다. 테두리는 `avatar.group.ring.color`(표면 색)의 `avatar.group.ring.width`이며, 그룹이 놓인 배경에 맞춰 바꾸세요. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 안쪽 테두리가 생깁니다. 그룹 전체 목록을 호버로 보여 주는 일은 그룹을 감싸는 [Tooltip](/tooltip)이나 [Popover](/popover)로, 직접 만듭니다.
 
 ## 접근성을 지키는 조합
 

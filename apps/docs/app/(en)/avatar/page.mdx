@@ -88,7 +88,7 @@ A "+3" is an avatar too, the last one, with a fallback of its own. The group has
   <AvatarGroupSizes />
 </Example>
 
-The overlap is `avatar.group.overlap` times the group's size, as a negative inline-start margin, so it flips in right-to-left text. It is taken from the group, not from each avatar, and applies to the group's direct children. That keeps it working when a product wraps an avatar in a tooltip trigger or a link. An avatar given its own `size` is still pulled back by the group's size. The ring is `avatar.group.ring.width` in `avatar.group.ring.color`, which is the surface color; set it to the background the group sits on. In forced colors the ring is dropped and each avatar gets an inset border in the system text color instead. A hover list of everyone in the group is a [Tooltip](/tooltip) or [Popover](/popover) around the group, which you write.
+The overlap is `avatar.group.overlap` times the group's size, as a negative inline-start margin, so it flips in right-to-left text. It is taken from the group, not from each avatar, and applies to the group's direct children, except a `[popover]` or `dialog` child. That keeps it working when a product wraps an avatar in a tooltip trigger or a link. An avatar given its own `size` is still pulled back by the group's size. The ring is `avatar.group.ring.width` in `avatar.group.ring.color`, which is the surface color; set it to the background the group sits on. In forced colors the ring is dropped and each avatar gets an inset border in the system text color instead. A hover list of everyone in the group is a [Tooltip](/tooltip) or [Popover](/popover) around the group, which you write.
 
 ## Accessible composition
 

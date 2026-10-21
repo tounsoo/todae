@@ -190,7 +190,7 @@ describe('Avatar.Group in a browser', () => {
     }
   });
 
-  it('keeps a lifted wrapper under page content stacked above the group', async () => {
+  it('keeps page content above a focused wrapper', async () => {
     render(
       <Themed>
         <Avatar.Group aria-label="Assignees" size="lg">
