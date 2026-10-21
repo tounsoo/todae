@@ -21,6 +21,12 @@ describe('formatDateRange', () => {
     expect(formatDateRange(stay, { locale: 'fr' })).toBe('03/10/2026\u2009–\u200910/10/2026');
   });
 
+  it('writes the date-ending period of ko and hu once, before the separator', () => {
+    const stay = range('2026-10-03', '2026-10-10');
+    expect(formatDateRange(stay, { locale: 'ko' })).toBe('2026. 10. 3. ~ 2026. 10. 10.');
+    expect(formatDateRange(stay, { locale: 'hu' })).toBe('2026. 10. 03.\u2009–\u20092026. 10. 10.');
+  });
+
   it('writes both dates of a one-day range', () => {
     expect(formatDateRange(range('2026-10-03', '2026-10-03'), { locale: 'en-US' })).toBe('10/3/2026\u2009–\u200910/3/2026');
   });
