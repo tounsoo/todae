@@ -115,10 +115,12 @@ describe('DataList in a browser', () => {
     const term = screen.getByText('Street');
     const line = parseFloat(getComputedStyle(term).lineHeight);
     expect(term.getBoundingClientRect().height).toBeLessThan(line * 1.5);
-    expect(screen.getByText('1 Main St').getBoundingClientRect().top).toBeGreaterThanOrEqual(term.getBoundingClientRect().bottom);
+    const details = screen.getByText('1 Main St').getBoundingClientRect();
+    expect(details.top).toBeGreaterThanOrEqual(term.getBoundingClientRect().bottom);
+    expect(details.height).toBeLessThan(line * 1.5);
   });
 
-  it('wraps a long unbroken term inside its column', () => {
+  it('keeps a long unbroken term inside its column', () => {
     const long = 'Averylongunbrokentermthatcannotfititscolumn';
     render(
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '40rem' }}>
