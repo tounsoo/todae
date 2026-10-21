@@ -541,6 +541,44 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['5', '6', '7', '8']);
   });
 
+  it.each([
+    [8, 'November 2026'],
+    [9, 'October 2026'],
+  ])('remembers only the last eight picks no value has answered: after %i, the first one answered shows %s', (picks, month) => {
+    function Late() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      const [asked, setAsked] = useState<DateRange[]>([]);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked[0]!)}>
+            answer first
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={(next) => setAsked((current) => [...current, next])}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    // One-day picks from October 1.
+    for (let n = 1; n <= picks; n++) {
+      fireEvent.click(october(n));
+      fireEvent.click(october(n));
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    // A remembered pick's answer moves nothing; a forgotten one's comes from outside.
+    fireEvent.click(screen.getByRole('button', { name: 'answer first' }));
+    expect(screen.getByText(month)).toBeTruthy();
+  });
+
   it('forgets the picks no value has answered once another value arrives', () => {
     function Late() {
       const [value, setValue] = useState<DateRange | null>(null);

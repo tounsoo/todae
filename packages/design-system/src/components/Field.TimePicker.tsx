@@ -161,8 +161,7 @@ export function TimePicker({ value, min, max, step = 30, locale, ...props }: Fie
       // The list, which shows its active time.
       focusSelector='[role="listbox"]'
       // A role-less popover around a named list of times.
-      haspopup="listbox"
-      popoverProps={{}}
+      popup="listbox"
       valueInput={{
         type: 'time',
         value: value ? htmlTime(value) : '',

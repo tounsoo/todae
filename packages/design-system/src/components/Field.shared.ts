@@ -154,9 +154,9 @@ export const htmlDateTime = (value: Temporal.PlainDateTime) => {
 /**
  * What the Field pickers share: Field.ColorPicker, Field.DatePicker,
  * Field.DateRangePicker, Field.TimePicker and Field.DateTimePicker. It gives
- * the button's control props, the open state, which closes when the field is disabled, and the popover,
- * which focuses the element `focusSelector` finds when it opens, or without
- * one its first tabbable.
+ * the button's control props, the open state, which closes when the field is
+ * disabled, and the popover, which focuses the element `focusSelector` finds
+ * when it opens, or without one its first tabbable.
  */
 export function useFieldPicker<Reason extends string>({
   props,

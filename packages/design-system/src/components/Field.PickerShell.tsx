@@ -48,11 +48,10 @@ export type PickerShellProps<Value> = {
   onValueChange?: (value: Value) => void;
   /** What takes focus when the popover opens. */
   focusSelector: string;
-  haspopup?: PopoverHaspopup;
+  /** What the popover holds: a dialog named `label`, the default, or a named list that needs no role around it. */
+  popup?: Extract<PopoverHaspopup, 'dialog' | 'listbox'>;
   /** The value input's type, value and bounds. */
   valueInput: Omit<ValueInputOptions, 'name' | 'required'>;
-  /** The popover's role, name and class. A dialog named `label` unless set. */
-  popoverProps?: PopoverChrome;
   /** The popover's content. */
   children: (controls: PickerShellControls<Value>) => ReactNode;
 } & PickerButtonProps;
@@ -75,9 +74,8 @@ export function PickerShell<Value>({
   defaultOpen,
   onOpenChange,
   focusSelector,
-  haspopup,
+  popup = 'dialog',
   valueInput,
-  popoverProps = { role: 'dialog', 'aria-label': label, className: styles.datePickerPopover },
   children,
   className,
   style,
@@ -95,8 +93,10 @@ export function PickerShell<Value>({
     style,
     required,
     focusSelector,
-    haspopup,
+    haspopup: popup,
   });
+  const chrome: PopoverChrome =
+    popup === 'dialog' ? { role: 'dialog', 'aria-label': label, className: styles.datePickerPopover } : {};
   return (
     <>
       <button
@@ -118,7 +118,7 @@ export function PickerShell<Value>({
       <FieldValueInput {...picker.valueInput(valueInput)} />
       {/* Mounted while open only: a form can hold many pickers, and closing drops what a pick left pending. */}
       {picker.shown ? (
-        <Popover.Root {...picker.popover.getPopoverProps()} {...popoverProps}>
+        <Popover.Root {...picker.popover.getPopoverProps()} {...chrome}>
           {children({
             pick: (next, { close = true } = {}) => {
               picker.notifyValueChange();

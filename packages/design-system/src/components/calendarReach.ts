@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 /** How far from the anchor isDateDisabled has been checked, and the nearest days it ruled out. */
-export type ReachScan = {
+type ReachScan = {
   anchor: Temporal.PlainDate;
   isDateDisabled: (date: Temporal.PlainDate) => boolean;
   min: Temporal.PlainDate | undefined;
@@ -17,9 +17,9 @@ export type ReachScan = {
 };
 
 /** The scan a calendar keeps between renders, such as in a ref. */
-export type ReachCache = { current: ReachScan | null };
+type ReachCache = { current: ReachScan | null };
 
-export type ReachLimits = {
+type ReachLimits = {
   min: Temporal.PlainDate | undefined;
   max: Temporal.PlainDate | undefined;
   isDateDisabled: ((date: Temporal.PlainDate) => boolean) | undefined;
@@ -29,7 +29,7 @@ export type ReachLimits = {
  * The first and last days a range can reach, null where nothing stops it. Until
  * the scan is done, they stop at the days checked so far.
  */
-export type Reach = { first: Temporal.PlainDate | null; last: Temporal.PlainDate | null; done: boolean };
+type Reach = { first: Temporal.PlainDate | null; last: Temporal.PlainDate | null; done: boolean };
 
 const compare = (a: Temporal.PlainDate, b: Temporal.PlainDate) => Temporal.PlainDate.compare(a, b);
 
@@ -44,7 +44,7 @@ const sameDate = (a: Temporal.PlainDate | undefined, b: Temporal.PlainDate | und
  * same, which the cache remembers. A call checks at most `budget` days; the
  * next call with the same cache goes on from there.
  */
-export function reachFrom(
+function reachFrom(
   cache: ReachCache,
   anchor: Temporal.PlainDate,
   month: Temporal.PlainYearMonth,
@@ -85,19 +85,19 @@ export function reachFrom(
 }
 
 /** About two years of days: the most a render checks for a range's reach. */
-export const SCAN_DAYS = 732;
+const SCAN_DAYS = 732;
 /** Days checked between two looks at the clock while a frame goes on with a scan. */
-export const SCAN_CHUNK_DAYS = 32;
+const SCAN_CHUNK_DAYS = 32;
 /** How long a frame may go on checking after a render, in milliseconds. */
-export const SCAN_SLICE_MS = 8;
+const SCAN_SLICE_MS = 8;
 
 /**
  * The reach of a range started on `anchor` over the shown month, null with no first
  * pick. A render checks at most SCAN_DAYS days. A far jump with an isDateDisabled that
  * rules out little would check millions in one render, so the rest of the scan runs in
  * slices between frames, and until it reaches a day, that day can't end the range. A
- * scan that hasn't finished starts over when the anchor, the month or a limit changes,
- * and stops on unmount.
+ * scan that hasn't finished starts over when the anchor or a limit changes, goes on
+ * toward the new month when the month changes, and stops on unmount.
  */
 export function useReach(
   anchor: Temporal.PlainDate | null,

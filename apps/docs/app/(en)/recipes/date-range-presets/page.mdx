@@ -94,7 +94,7 @@ With a `name` on the `Field.Root`, the form sends the range as the picker sends 
 
 **You supply:** A name for the toggle group, and labels that name each range. Presets that keep to the picker's `min`, `max` and `isDateDisabled`: a preset sets `value` directly, so the calendar's checks don't apply to it.
 
-**Watch for:** Reading today once when the page loads: on a page left open past midnight, the presets would then set and press yesterday's ranges. Keeping the pressed preset in its own state: it drifts from the range when someone picks in the calendar or types a range. Showing the first preset whose range matches: on the 7th "This month" is also "Last 7 days", so pressing one would light the other.
+**Watch for:** Reading today once when the page loads: on a page left open past midnight, the presets would then set and press yesterday's ranges. Taking the toggle's value from the last press alone: it drifts from the range when someone picks in the calendar or types a range, so the last press only breaks a tie while the range still matches it. Showing the first preset whose range matches: on the 7th "This month" is also "Last 7 days", so pressing one would light the other.
 
 ## When to use
 

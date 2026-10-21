@@ -89,7 +89,7 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select or a Field picker (see useFieldPicker).
+// A control whose picker a press beside it opens: a select or a picker that useFieldPicker drives.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
   return (
     control instanceof HTMLSelectElement ||
