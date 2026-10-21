@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { useState } from 'react';
+import { startTransition, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Calendar, Fieldset, StringsProvider, type CalendarRootProps, type DateRange } from '../index.js';
@@ -831,6 +831,39 @@ describe('Calendar range mode', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04');
     expect(screen.getByText('November 2026')).toBeTruthy();
     expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+  });
+
+  it.each([
+    ['in a transition', (answer: () => void) => startTransition(answer)],
+    ['after a timeout', (answer: () => void) => setTimeout(answer, 0)],
+  ])('stays on the month a range ends in when a controlling parent answers %s', async (_, later) => {
+    function Late() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      return (
+        <>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={(next) => later(() => setValue(next))}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+          <output data-testid="value">{value ? `${value.start}/${value.end}` : ''}</output>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(october(28));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04'));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(selectedCells()).toEqual(['1', '2', '3', '4']);
   });
 
   it('stays where a range ends when a controlling parent turns it down', () => {

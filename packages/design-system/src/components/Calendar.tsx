@@ -139,17 +139,13 @@ type ReachScan = {
   last: Temporal.PlainDate | null;
 };
 
-/**
- * What waits on a person: a range's first pick and the day hovered from it,
- * and the calendar's own pick, kept only for the render that answers it.
- */
+/** What waits on a person: a range's first pick and the day hovered from it. */
 type Pending = {
   anchor: Temporal.PlainDate | null;
   hovered: Temporal.PlainDate | null;
-  pick: DateRange | null;
 };
 
-const IDLE: Pending = { anchor: null, hovered: null, pick: null };
+const IDLE: Pending = { anchor: null, hovered: null };
 
 const CalendarContext = /* @__PURE__ */ createContext<CalendarContextValue | null>(null);
 
@@ -293,17 +289,19 @@ function Root(rootProps: CalendarRootProps) {
   const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
   const [pending, setPending] = useState<Pending>(IDLE);
   const { anchor, hovered } = pending;
-  // A mode change, a value from outside, such as one typed in a text input beside
-  // Field.DatePicker, or the render that answers the calendar's own pick drops what is
-  // pending. A value from outside also moves the grid to its start; the calendar's own pick
-  // leaves the grid where it was picked, whether the value takes it or a controlling parent
-  // turns it down.
+  // A mode change or a new value drops what is pending, and a new value moves the grid to
+  // its start unless the Tab stop is on one of its ends. A pick leaves the Tab stop on the
+  // day picked, which is an end of what it reports, so however late a controlling parent
+  // answers, the grid stays where the pick was made; a value typed beside Field.DatePicker,
+  // or a parent's own value after it turned a pick down and the grid moved on, moves it.
   const [seen, setSeen] = useState({ mode, value });
   const valueChanged = !sameRange(value, seen.value);
-  if (mode !== seen.mode || valueChanged || pending.pick) {
+  if (mode !== seen.mode || valueChanged) {
     setSeen({ mode, value });
     setPending(IDLE);
-    if (valueChanged && value && !sameRange(value, pending.pick)) setFocused(value.start);
+    if (valueChanged && value && !(focused && (focused.equals(value.start) || focused.equals(value.end)))) {
+      setFocused(value.start);
+    }
   }
   const setHovered = useCallback(
     (date: Temporal.PlainDate | null) =>
@@ -411,13 +409,13 @@ function Root(rootProps: CalendarRootProps) {
       setFocused(date);
       // In single mode a pick is a whole range of one day.
       if (mode === 'range' && !anchor) {
-        setPending({ anchor: date, hovered: null, pick: null });
+        setPending({ anchor: date, hovered: null });
         announce(strings.pickEndDate);
         return;
       }
       // Reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
-      setPending({ anchor: null, hovered: null, pick: next });
+      setPending(IDLE);
       setValue(next);
       onValueChange?.(next);
     },
