@@ -222,7 +222,7 @@ describe('an error nothing can show', () => {
     warn.mockRestore();
   });
 
-  it('does not warn for a control that mounts in a scope just after the reply, ', async () => {
+  it('does not warn for a control that mounts in a scope just after the reply', async () => {
     const warn = warnings();
     function Late({ errors }: { errors: Record<string, string> }) {
       const [on, setOn] = useState(false);

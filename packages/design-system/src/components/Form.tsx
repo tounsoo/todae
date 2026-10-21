@@ -238,7 +238,13 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
 
   // The summary if one is showing, else the control picked where the problems were read.
   useLayoutEffect(() => {
-    if (state.focus !== 0) (summaryRef.current ?? focusTarget.current)?.focus();
+    if (state.focus === 0) return;
+    const form = formRef.current;
+    // A product that swapped the control in this commit leaves the chosen one detached: choose again from the same list.
+    const target = focusTarget.current?.isConnected || !form ? focusTarget.current : firstProblem(form, state.failed, state.native);
+    (summaryRef.current ?? target)?.focus();
+    // Only a new request moves focus; the list is the one it came with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.focus]);
 
   // A reply is a commit whose `errors` differ in content from the commit before and have entries; the same content in a new object does not run this.
