@@ -56,6 +56,7 @@ function compare(a: Invoice, b: Invoice, column: Column) {
   return a[column].localeCompare(b[column]);
 }
 
+const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
 const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
 
 export function DataTableInvoices() {
@@ -78,7 +79,7 @@ export function DataTableInvoices() {
   const matches = rows
     .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
     .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
-  const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+  const pageCount = pagesOf(matches.length);
   const current = Math.min(page, pageCount);
   const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
@@ -132,12 +133,12 @@ export function DataTableInvoices() {
     const shown = matches.filter((row) => !ids.has(row.id)).length;
     restoreFocus.current = shown > 0 ? selectAll.current : search.current;
     setRows(rows.filter((row) => !ids.has(row.id)));
-    const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+    const pages = pagesOf(shown);
     const to = Math.min(current, pages);
     setPage(to);
     selection.clear();
     setConfirming(false);
-    const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+    const after = shown === 0 ? (needle ? 'No invoices found' : 'No invoices left') : to !== current ? `Page ${to} of ${pages}` : '';
     announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
   };
 
@@ -238,11 +239,11 @@ export function DataTableInvoices() {
                     <EmptyState.Icon>
                       <SearchX />
                     </EmptyState.Icon>
-                    <EmptyState.Title as="h3">{query ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
+                    <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
                     <EmptyState.Description>
-                      {query ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}
+                      {needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}
                     </EmptyState.Description>
-                    {query && (
+                    {needle && (
                       <EmptyState.Actions>
                         <Button.Root
                           variant="secondary"

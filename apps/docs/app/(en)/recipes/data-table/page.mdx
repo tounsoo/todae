@@ -50,10 +50,11 @@ const selection = useSelection({ keys: pageRows.map((row) => row.id) });
 
 ## Bulk actions
 
-Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Opening the dialog points `restoreFocusRef` at Delete, so Cancel returns there even in a browser that doesn't focus a clicked button. Keep the count the dialog asks about in its own state, apart from whether it is open, so its title doesn't change while it fades out. When a delete empties the page or the search, say so in the same announcement.
+Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Opening the dialog points `restoreFocusRef` at Delete, so Cancel returns there even in a browser that doesn't focus a clicked button. Keep the count the dialog asks about in its own state, apart from whether it is open, so its title doesn't change while it fades out. When a delete moves the table to an earlier page or leaves no rows, say so in the same announcement. `search` is the ref on the search field's `Field.TextInput`.
 
 ```tsx
 const announce = useAnnouncer();
+const search = useRef<HTMLInputElement>(null);
 const selectAll = useRef<HTMLInputElement>(null);
 const restoreFocus = useRef<HTMLElement>(null);
 const deleteButton = useRef<HTMLButtonElement>(null);
@@ -78,7 +79,7 @@ const remove = () => {
   setPage(to);
   selection.clear();
   setConfirming(false);
-  const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+  const after = shown === 0 ? (needle ? 'No invoices found' : 'No invoices left') : to !== current ? `Page ${to} of ${pages}` : '';
   announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
 };
 
@@ -123,19 +124,26 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [needle, matches.length, announce]);
 
+const clearSearch = () => {
+  changeQuery('');
+  search.current?.focus();
+};
+
 <Table.Row>
   <Table.Cell colSpan={5}>
     <EmptyState.Root>
       <EmptyState.Icon>
         <SearchX />
       </EmptyState.Icon>
-      <EmptyState.Title as="h3">No invoices found</EmptyState.Title>
-      <EmptyState.Description>Nothing matches “{query}”.</EmptyState.Description>
-      <EmptyState.Actions>
-        <Button.Root variant="secondary" onClick={clearSearch}>
-          Clear search
-        </Button.Root>
-      </EmptyState.Actions>
+      <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”.` : 'There are no invoices left.'}</EmptyState.Description>
+      {needle && (
+        <EmptyState.Actions>
+          <Button.Root variant="secondary" onClick={clearSearch}>
+            Clear search
+          </Button.Root>
+        </EmptyState.Actions>
+      )}
     </EmptyState.Root>
   </Table.Cell>
 </Table.Row>
@@ -190,7 +198,7 @@ const step = (to: number, label: string) => (
 
 **Todae handles:** The native table, its caption and its row and column headers. `aria-sort` on the sorted column, and an announcement after a `Table.SortButton` click. Each row checkbox's checked state, the header checkbox's mixed state, and Shift ranges, through `useSelection`. One tab stop and arrow keys for the bulk actions in `Toolbar.Root`. The confirmation's role, its first focus on Cancel, and focus sent to `restoreFocusRef` after it closes, in `Dialog.Root`. The `nav` landmark of `Pagination.Root`, and the look of a current page and of a step with nowhere to go. Sideways scrolling by keyboard in `ScrollArea.Root`.
 
-**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. `aria-current="page"` and `aria-disabled="true"` on the page buttons. Announcements for the number of matches, the new page and what an action did. A place for focus when an action disables the button that had it, and before "Clear search" goes away.
+**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. `aria-current="page"` on the current page's button and `aria-disabled="true"` on a step with nowhere to go. Announcements for the number of matches, the new page and what an action did. A place for focus when an action disables the button that had it, and before "Clear search" goes away.
 
 **Watch for:** Disabling a focused button by clearing the selection without moving focus first. A focus target that a search can empty, such as a header checkbox with no matching rows, which turns disabled too. A selection that reaches rows the person can't see, on another page or hidden by a search, without a count that says so. A destructive action with no confirmation or undo. A row made clickable with `onClick` on `Table.Row`, which takes no focus: put a link or button in a cell.
 

@@ -50,10 +50,11 @@ const selection = useSelection({ keys: pageRows.map((row) => row.id) });
 
 ## 일괄 작업
 
-작업은 그 대상의 이름을 붙인 `Toolbar.Root`에 넣고, 아무것도 선택되지 않았을 때도 버튼을 비활성화한 채 자리에 두세요. 그래야 행을 체크할 때 표가 움직이지 않습니다. 작업이 한 일은 [useAnnouncer](/utilities/use-announcer)로 알리세요. 삭제는 `Dialog.Root role="alertdialog"`로 확인을 받으세요. 삭제하면 선택이 비워지고, 그러면 대화 상자가 포커스를 돌려줄 Delete 버튼이 비활성화됩니다. 그래서 `restoreFocusRef`로 다른 곳을 지정합니다. 검색에 맞는 행이 남아 있으면 헤더의 체크박스, 아니면 검색 입력입니다. 대화 상자를 열 때 `restoreFocusRef`가 Delete를 가리키게 하므로, 클릭한 버튼에 포커스를 주지 않는 브라우저에서도 Cancel을 누르면 포커스가 그리로 돌아갑니다. 대화 상자가 묻는 개수는 열림 여부와 따로 상태에 담아 두세요. 그래야 사라지는 동안 제목이 바뀌지 않습니다. 삭제로 페이지나 검색 결과가 비면 같은 알림에서 함께 알리세요.
+작업은 그 대상의 이름을 붙인 `Toolbar.Root`에 넣고, 아무것도 선택되지 않았을 때도 버튼을 비활성화한 채 자리에 두세요. 그래야 행을 체크할 때 표가 움직이지 않습니다. 작업이 한 일은 [useAnnouncer](/utilities/use-announcer)로 알리세요. 삭제는 `Dialog.Root role="alertdialog"`로 확인을 받으세요. 삭제하면 선택이 비워지고, 그러면 대화 상자가 포커스를 돌려줄 Delete 버튼이 비활성화됩니다. 그래서 `restoreFocusRef`로 다른 곳을 지정합니다. 검색에 맞는 행이 남아 있으면 헤더의 체크박스, 아니면 검색 입력입니다. 대화 상자를 열 때 `restoreFocusRef`가 Delete를 가리키게 하므로, 클릭한 버튼에 포커스를 주지 않는 브라우저에서도 Cancel을 누르면 포커스가 그리로 돌아갑니다. 대화 상자가 묻는 개수는 열림 여부와 따로 상태에 담아 두세요. 그래야 사라지는 동안 제목이 바뀌지 않습니다. 삭제로 표가 앞 페이지로 옮겨 가거나 남은 행이 없으면 같은 알림에서 함께 알리세요. `search`는 검색 입력의 `Field.TextInput`에 건 ref입니다.
 
 ```tsx
 const announce = useAnnouncer();
+const search = useRef<HTMLInputElement>(null);
 const selectAll = useRef<HTMLInputElement>(null);
 const restoreFocus = useRef<HTMLElement>(null);
 const deleteButton = useRef<HTMLButtonElement>(null);
@@ -78,7 +79,7 @@ const remove = () => {
   setPage(to);
   selection.clear();
   setConfirming(false);
-  const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+  const after = shown === 0 ? (needle ? 'No invoices found' : 'No invoices left') : to !== current ? `Page ${to} of ${pages}` : '';
   announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
 };
 
@@ -123,19 +124,26 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [needle, matches.length, announce]);
 
+const clearSearch = () => {
+  changeQuery('');
+  search.current?.focus();
+};
+
 <Table.Row>
   <Table.Cell colSpan={5}>
     <EmptyState.Root>
       <EmptyState.Icon>
         <SearchX />
       </EmptyState.Icon>
-      <EmptyState.Title as="h3">No invoices found</EmptyState.Title>
-      <EmptyState.Description>Nothing matches “{query}”.</EmptyState.Description>
-      <EmptyState.Actions>
-        <Button.Root variant="secondary" onClick={clearSearch}>
-          Clear search
-        </Button.Root>
-      </EmptyState.Actions>
+      <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”.` : 'There are no invoices left.'}</EmptyState.Description>
+      {needle && (
+        <EmptyState.Actions>
+          <Button.Root variant="secondary" onClick={clearSearch}>
+            Clear search
+          </Button.Root>
+        </EmptyState.Actions>
+      )}
     </EmptyState.Root>
   </Table.Cell>
 </Table.Row>
@@ -190,7 +198,7 @@ const step = (to: number, label: string) => (
 
 **Todae가 맡는 것:** 네이티브 표, 캡션, 행과 열의 머리글. 정렬된 열의 `aria-sort`, 그리고 `Table.SortButton`을 클릭한 뒤의 알림. `useSelection`을 통한 각 행 체크박스의 선택 상태, 헤더 체크박스의 혼합 상태, Shift 범위 선택. `Toolbar.Root`에 넣은 일괄 작업의 탭 정지 하나와 화살표 키. `Dialog.Root`가 주는 확인 대화 상자의 역할, Cancel로 가는 첫 포커스, 닫힌 뒤 `restoreFocusRef`로 보내는 포커스. `Pagination.Root`의 `nav` 랜드마크, 그리고 현재 페이지와 갈 곳이 없는 단계의 모양. `ScrollArea.Root`의 키보드 가로 스크롤.
 
-**직접 제공할 것:** 거르기, 정렬, 페이지 나누기, 작업. 표, 툴바, 페이지 나누기, 스크롤 영역의 이름, 그리고 각 체크박스에 어떤 행을 선택하는지 말하는 이름. 페이지 버튼의 `aria-current="page"`와 `aria-disabled="true"`. 일치하는 개수, 새 페이지, 작업이 한 일의 알림. 작업이 포커스를 가진 버튼을 비활성화할 때, 그리고 "Clear search"가 사라지기 전에 포커스가 갈 곳.
+**직접 제공할 것:** 거르기, 정렬, 페이지 나누기, 작업. 표, 툴바, 페이지 나누기, 스크롤 영역의 이름, 그리고 각 체크박스에 어떤 행을 선택하는지 말하는 이름. 현재 페이지 버튼의 `aria-current="page"`와 갈 곳이 없는 단계의 `aria-disabled="true"`. 일치하는 개수, 새 페이지, 작업이 한 일의 알림. 작업이 포커스를 가진 버튼을 비활성화할 때, 그리고 "Clear search"가 사라지기 전에 포커스가 갈 곳.
 
 **주의할 점:** 포커스를 먼저 옮기지 않고 선택을 비워서 포커스를 가진 버튼을 비활성화하는 것. 검색이 비울 수 있는 포커스 대상. 예를 들어 일치하는 행이 없는 헤더 체크박스는 함께 비활성화됩니다. 다른 페이지에 있거나 검색에 가려져 보이지 않는 행에 선택이 닿는데, 그 사실을 알려 주는 개수가 없는 것. 확인도 실행 취소도 없는 파괴적인 작업. `Table.Row`에 `onClick`을 걸어 누를 수 있게 만든 행. 포커스를 받지 않으니 셀 안에 링크나 버튼을 넣으세요.
 
