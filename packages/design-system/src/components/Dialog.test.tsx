@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ComboboxCloseReason } from '../hooks/useCombobox.types.js';
 import type { SheetCloseReason } from './BottomSheet.js';
-import { Dialog, type DialogCloseReason } from './Dialog.js';
+import { Dialog, type DialogCloseReason, type DialogRootProps } from './Dialog.js';
+import type { DrawerRootProps } from './Drawer.js';
 
 afterEach(cleanup);
 
@@ -382,3 +383,118 @@ describe('Dialog uncontrolled and close vetoes', () => {
   });
 });
 
+describe('Dialog role="alertdialog"', () => {
+  function Confirm(props: Partial<DialogRootProps>) {
+    return (
+      <Dialog.Root open onOpenChange={() => undefined} role="alertdialog" {...props}>
+        <Dialog.Title>Delete file?</Dialog.Title>
+        <Dialog.Description>This cannot be undone.</Dialog.Description>
+        <Dialog.Footer>
+          <button type="button">Delete</button>
+          <Dialog.Close>Cancel</Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Root>
+    );
+  }
+
+  it('takes the alertdialog role, named by its title and described by its description', () => {
+    render(<Confirm />);
+    const dialog = screen.getByRole('alertdialog', { hidden: true });
+    expect(dialog.getAttribute('aria-labelledby')).toBe(screen.getByText('Delete file?').id);
+    expect(dialog.getAttribute('aria-describedby')).toBe(screen.getByText('This cannot be undone.').id);
+  });
+
+  it('focuses its first close part on open, not the first tabbable', () => {
+    render(<Confirm />);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel', hidden: true }));
+  });
+
+  it('lets initialFocusRef win over the close part', () => {
+    function WithRef() {
+      const ref = useRef<HTMLButtonElement>(null);
+      return (
+        <Dialog.Root open onOpenChange={() => undefined} role="alertdialog" initialFocusRef={ref}>
+          <Dialog.Title>Delete file?</Dialog.Title>
+          <Dialog.Description>This cannot be undone.</Dialog.Description>
+          <button type="button" ref={ref}>
+            Keep
+          </button>
+          <Dialog.Close>Cancel</Dialog.Close>
+        </Dialog.Root>
+      );
+    }
+    render(<WithRef />);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep', hidden: true }));
+  });
+
+  it('ignores a backdrop click unless dismissOnBackdrop is set', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Confirm onOpenChange={onOpenChange} />);
+    const dialog = screen.getByRole('alertdialog', { hidden: true });
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    rerender(<Confirm onOpenChange={onOpenChange} dismissOnBackdrop />);
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'backdrop');
+  });
+
+  it('still closes on Escape', () => {
+    const onOpenChange = vi.fn();
+    render(<Confirm onOpenChange={onOpenChange} />);
+    const dialog = screen.getByRole('alertdialog', { hidden: true });
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
+  it('focuses the close part when opened after mount', async () => {
+    const { rerender } = render(<Confirm open={false} />);
+    rerender(<Confirm open />);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel', hidden: true })),
+    );
+  });
+
+  it('logs one error in development when it has no description', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <StrictMode>
+        <Dialog.Root open onOpenChange={() => undefined} role="alertdialog">
+          <Dialog.Title>Delete file?</Dialog.Title>
+          <Dialog.Close>Cancel</Dialog.Close>
+        </Dialog.Root>
+      </StrictMode>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('role="alertdialog" requires')));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+
+  it.each([
+    ['Dialog.Description', () => <Confirm />],
+    [
+      'aria-describedby',
+      () => (
+        <>
+          <p id="message">Gone for good.</p>
+          <Dialog.Root defaultOpen role="alertdialog" aria-label="Delete" aria-describedby="message">
+            <Dialog.Close>Cancel</Dialog.Close>
+          </Dialog.Root>
+        </>
+      ),
+    ],
+  ])('logs nothing with %s', async (_, ui) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<StrictMode>{ui()}</StrictMode>);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('is a Dialog prop only', () => {
+    expectTypeOf<DialogRootProps['role']>().toEqualTypeOf<'dialog' | 'alertdialog' | undefined>();
+    expectTypeOf<DrawerRootProps>().not.toHaveProperty('role');
+  });
+});
