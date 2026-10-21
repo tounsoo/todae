@@ -522,6 +522,23 @@ describe('Drilldown in a browser', () => {
     expect(onValueChange).toHaveBeenLastCalledWith(['filters'], 'reset');
   });
 
+  it('lets each view finish its own slide when a second push comes during the first', async () => {
+    await openDialog(<SettingsDialog />);
+    screen.getByRole('button', { name: 'Account' }).click();
+    const email = await screen.findByRole('button', { name: 'Email' });
+    email.click();
+    await waitFor(() => expect(view('Email')).not.toBeNull());
+    for (const label of ['Settings', 'Account']) {
+      expect(view(label).checkVisibility()).toBe(true);
+      expect(view(label).inert).toBe(true);
+      expect(view(label).getAnimations().length).toBeGreaterThan(0);
+    }
+    await settled();
+    expect(view('Settings').hidden).toBe(true);
+    expect(view('Account').hidden).toBe(true);
+    expect(view('Email').inert).toBe(false);
+  });
+
   it('returns focus to the first tab stop of the view below when the trigger is gone', async () => {
     function Gone() {
       const [shown, setShown] = useState(true);

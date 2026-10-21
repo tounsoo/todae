@@ -33,24 +33,24 @@
   }
 
   /* Forward: the new view comes in from the inline end over the old one,
-     which shifts toward the inline start and fades. Back runs the reverse. */
-  .viewport[data-direction] > .view[data-entering] {
+     which shifts toward the inline start and fades. Back runs the reverse.
+     Each view keeps the direction it started moving in, so one still
+     sliding out when the next change comes finishes its own slide. */
+  .view[data-entering] {
     animation: todae-drilldown-in var(--todae-drilldown-motion-duration) var(--todae-drilldown-motion-easing-enter) both;
   }
 
-  .viewport[data-direction] > .view[data-leaving] {
+  .view[data-leaving] {
     animation: todae-drilldown-out var(--todae-drilldown-motion-duration) var(--todae-drilldown-motion-easing-exit) both;
   }
 
-  .viewport[data-direction='forward'] > .view[data-entering],
-  .viewport[data-direction='back'] > .view[data-leaving] {
+  .view:is([data-entering='forward'], [data-leaving='back']) {
     --_shift: 100%;
     --_fade: 1;
     z-index: 1;
   }
 
-  .viewport[data-direction='forward'] > .view[data-leaving],
-  .viewport[data-direction='back'] > .view[data-entering] {
+  .view:is([data-leaving='forward'], [data-entering='back']) {
     --_shift: -30%;
     --_fade: 0;
   }
@@ -86,7 +86,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .viewport[data-direction] > .view:is([data-entering], [data-leaving]) {
+    .view:is([data-entering], [data-leaving]) {
       animation: none;
     }
   }

@@ -267,7 +267,8 @@ function MountedView({
     if (!element) return;
     return registerView(value, label, { element, initialFocusRef });
   }, [initialFocusRef, label, registerView, value]);
-  const leaving = status === 'leaving';
+  const leaving = status.kind === 'leaving';
+  const moving = status.kind === 'entering' || status.kind === 'leaving' ? status.direction : undefined;
   return (
     <div
       tabIndex={-1}
@@ -276,11 +277,11 @@ function MountedView({
       role="group"
       aria-label={label}
       className={cx(styles.view, className)}
-      hidden={status === 'below'}
+      hidden={status.kind === 'below'}
       inert={leaving || undefined}
       aria-hidden={leaving ? true : props['aria-hidden']}
-      data-entering={status === 'entering' ? '' : undefined}
-      data-leaving={leaving ? '' : undefined}
+      data-entering={status.kind === 'entering' ? moving : undefined}
+      data-leaving={leaving ? moving : undefined}
     />
   );
 }
