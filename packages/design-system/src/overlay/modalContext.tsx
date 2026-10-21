@@ -1,16 +1,25 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { ToolbarContext } from '../components/toolbarContext.js';
 
+/** A part that answers its modal's close requests before the modal does. */
+export type CloseRequestHolder = {
+  /** The part's element. A holder inside another's element is asked first. */
+  element: () => Element | null;
+  /** Answers the request and returns true, or returns false to pass it on. */
+  take: () => boolean;
+};
+
 /** What a modal surface (Dialog, Drawer, BottomSheet) shares with the parts inside it. */
 export type ModalContextValue = {
   /** Mounted, including the exit motion. */
   present: boolean;
   /**
-   * Takes the surface's close requests (Escape, and the Android back gesture
-   * and button) ahead of it until the returned function runs. The handler
-   * registered last gets them, and the surface stays open.
+   * Offers the surface's close requests (the Android back gesture and button,
+   * and `requestClose()`) to `holder` until the returned function runs. The
+   * innermost holder is asked first, then the next one out; the surface
+   * closes only when every holder passes.
    */
-  holdCloseRequests: (handler: () => void) => () => void;
+  holdCloseRequests: (holder: CloseRequestHolder) => () => void;
 };
 
 export const ModalContext = /* @__PURE__ */ createContext<ModalContextValue | null>(null);

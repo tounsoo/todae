@@ -16,6 +16,7 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
 import { useModalContext } from '../overlay/modalContext.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
@@ -118,6 +119,11 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
     if (/auto|scroll/.test(getComputedStyle(node).overflowY)) return node;
   }
   return null;
+}
+
+// Not in a closed popover, a hidden tab panel or a lower view of another Drilldown.
+function shows(viewport: HTMLElement | null): boolean {
+  return viewport?.checkVisibility?.() !== false;
 }
 
 function motionToken(el: HTMLElement, name: string): string {
@@ -280,27 +286,32 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     dispatch({ type: 'reset', stack: defaultValue });
   }, [present, controlled, defaultValue, setStack]);
 
+  // Escape joins the overlays' Escape stack, which also stops the key's
+  // close request in a modal, and the modal's close requests without a key,
+  // such as the Android back gesture, come through holdCloseRequests.
   const holds = escape === 'back' && stack.length > 1;
+  const goBack = useCallback(() => pop('escape'), [pop]);
+  const takesEscape = useCallback((event: KeyboardEvent) => {
+    const viewport = viewportRef.current;
+    if (event.defaultPrevented || isImeKeyEvent(event) || !shows(viewport)) return false;
+    const target = event.target instanceof Node ? event.target : null;
+    const layer = viewport?.closest('dialog, [popover]');
+    if (layer) return layer.contains(target);
+    return Boolean(viewport?.contains(target) || backRef.current?.contains(target));
+  }, []);
+  useEscapeKey(holds, takesEscape, goBack, viewportRef);
   const holdCloseRequests = modal?.holdCloseRequests;
   useLayoutEffect(() => {
     if (!holds || !holdCloseRequests) return;
-    return holdCloseRequests(() => pop('escape'));
-  }, [holds, holdCloseRequests, pop]);
-  // Outside a modal, Escape on the views or Back goes back. On the window, so
-  // a popover or menu inside the view that takes Escape has prevented it by then.
-  const inModal = modal !== null;
-  useEffect(() => {
-    if (!holds || inModal) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape' || event.defaultPrevented || isImeKeyEvent(event)) return;
-      const target = event.target instanceof Node ? event.target : null;
-      if (!target || !(viewportRef.current?.contains(target) || backRef.current?.contains(target))) return;
-      event.preventDefault();
-      pop('escape');
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [holds, inModal, pop]);
+    return holdCloseRequests({
+      element: () => viewportRef.current,
+      take: () => {
+        if (!shows(viewportRef.current)) return false;
+        goBack();
+        return true;
+      },
+    });
+  }, [holds, holdCloseRequests, goBack]);
 
   const statusOf = useCallback(
     (view: string): ViewStatus | null => {

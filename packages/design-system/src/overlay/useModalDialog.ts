@@ -9,7 +9,8 @@ import {
   type FormEvent,
   type RefObject,
 } from 'react';
-import type { ModalContextValue } from './modalContext.js';
+import { innermost } from './layerOrder.js';
+import type { CloseRequestHolder, ModalContextValue } from './modalContext.js';
 import { dropModal } from './modalStack.js';
 import { inToastHostWithin } from './tabbables.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
@@ -22,6 +23,16 @@ export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
 // Chrome may close on Escape even though cancel was prevented. Its close
 // event comes a task later, so a close shortly after a cancel is an Escape.
 const CANCEL_CLOSE_WINDOW_MS = 500;
+
+/** Asks the holders, innermost first, until one takes the request. */
+function offerCloseRequest(holders: readonly CloseRequestHolder[]): boolean {
+  const left = [...holders];
+  for (let next = innermost(left, (h) => h.element()); next; next = innermost(left, (h) => h.element())) {
+    if (next.take()) return true;
+    left.splice(left.indexOf(next), 1);
+  }
+  return false;
+}
 
 type Options = {
   dialogRef: RefObject<HTMLDialogElement | null>;
@@ -133,13 +144,13 @@ export function useModalDialog({
   // as their own top layer boxes they don't fade with the element.
   useModalLayerElement(node, present, true);
 
-  const holders = useRef<(() => void)[]>([]);
+  const holders = useRef<CloseRequestHolder[]>([]);
   const [holdingCloseRequests, setHolding] = useState(false);
-  const holdCloseRequests = useCallback((handler: () => void) => {
-    holders.current.push(handler);
+  const holdCloseRequests = useCallback((holder: CloseRequestHolder) => {
+    holders.current.push(holder);
     setHolding(true);
     return () => {
-      holders.current = holders.current.filter((held) => held !== handler);
+      holders.current = holders.current.filter((held) => held !== holder);
       setHolding(holders.current.length > 0);
     };
   }, []);
@@ -151,12 +162,14 @@ export function useModalDialog({
     const el: HTMLDialogElement = node;
     // Escape is a close request. Hold it so the owner closes the element, or
     // a part inside that holds close requests, such as a Drilldown, goes back.
+    // Chromium makes a second close request with no user activation since
+    // the last one uncancelable and closes the element anyway, so that one
+    // closes the surface rather than reaching a holder.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();
-      const holder = holders.current.at(-1);
-      if (holder) holder();
-      else if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
+      if (event.cancelable && offerCloseRequest(holders.current)) return;
+      if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
       // Something closed the element while the owner still has it open. A
