@@ -11,7 +11,8 @@ import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
-import { useFieldPicker, htmlTime } from './Field.shared.js';
+import { useFieldPicker, htmlTime, valueBounds } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -21,10 +22,12 @@ export type FieldTimePickerProps = {
   value: Temporal.PlainTime | null;
   /** Fires with the time picked in the list. */
   onValueChange?: (value: Temporal.PlainTime) => void;
-  /** The earliest time the list offers. */
+  /** The earliest time the list offers. A form with an earlier time is invalid. Later than `max`, it makes an overnight range, from `min` through midnight to `max`. */
   min?: Temporal.PlainTime;
-  /** The latest time the list offers. */
+  /** The latest time the list offers. A form with a later time is invalid. */
   max?: Temporal.PlainTime;
+  /** A form with no time is invalid. */
+  required?: boolean;
   /** Minutes between the times in the list, from midnight. Defaults to 30. */
   step?: number;
   /** The locale for the times' text, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
@@ -46,11 +49,27 @@ export type FieldTimePickerProps = {
 
 const MINUTES_PER_DAY = 24 * 60;
 
-/** The times every `step` minutes from midnight between `min` and `max`, with `value` among them when it is in range. */
-export function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainTime, value?: Temporal.PlainTime | null) {
+/**
+ * The times every `step` minutes from midnight between `min` and `max`, with
+ * `value` among them when it is in range. With `overnight`, a `min` later
+ * than `max` is a range from `min` through midnight to `max`, as a native time
+ * input reads it, so the list offers what the browser accepts. Without it, such
+ * a range lists nothing, as for the times of one day in a Field.DateTimePicker.
+ */
+export function timeSlots(
+  step: number,
+  min?: Temporal.PlainTime,
+  max?: Temporal.PlainTime,
+  value?: Temporal.PlainTime | null,
+  allowOvernight = false,
+) {
   const every = Number.isFinite(step) && step >= 1 ? Math.round(step) : 30;
-  const inRange = (time: Temporal.PlainTime) =>
-    (!min || Temporal.PlainTime.compare(time, min) >= 0) && (!max || Temporal.PlainTime.compare(time, max) <= 0);
+  const overnight = allowOvernight && min && max && Temporal.PlainTime.compare(min, max) > 0;
+  const inRange = (time: Temporal.PlainTime) => {
+    const afterMin = !min || Temporal.PlainTime.compare(time, min) >= 0;
+    const beforeMax = !max || Temporal.PlainTime.compare(time, max) <= 0;
+    return overnight ? afterMin || beforeMax : afterMin && beforeMax;
+  };
   const slots: Temporal.PlainTime[] = [];
   for (let minutes = 0; minutes < MINUTES_PER_DAY; minutes += every) {
     const time = new Temporal.PlainTime(Math.floor(minutes / 60), minutes % 60);
@@ -78,6 +97,7 @@ export function TimeList({
   max,
   locale,
   label,
+  overnight,
   onPick,
 }: {
   value: Temporal.PlainTime | null;
@@ -86,9 +106,11 @@ export function TimeList({
   max?: Temporal.PlainTime;
   locale?: string;
   label: string;
+  /** A `min` later than `max` is an overnight range. */
+  overnight?: boolean;
   onPick: (time: Temporal.PlainTime) => void;
 }) {
-  const slots = useMemo(() => timeSlots(step, min, max, value), [step, min, max, value]);
+  const slots = useMemo(() => timeSlots(step, min, max, value, overnight), [step, min, max, value, overnight]);
   // Formatted once per list, which can hold 1,440 times. Keyed to the
   // nanosecond, so a value between the steps stays as it is when picked.
   const options = useMemo(
@@ -131,7 +153,9 @@ export function TimeList({
  * elsewhere in the field opens the list. Beside any other control but a
  * Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a
  * Field.TextInput to type the time in, that control is the field's control
- * instead, and the button is named from the timePicker string. With
+ * instead, and the button is named from the timePicker string. The time
+ * goes in a native input the browser validates, so `required`, `min` and
+ * `max` block a submit and Form.Root shows them. With
  * `showValue={false}` the button shows only a clock glyph.
  */
 export function TimePicker({
@@ -139,6 +163,7 @@ export function TimePicker({
   onValueChange,
   min,
   max,
+  required,
   step = 30,
   locale,
   placeholder,
@@ -162,6 +187,7 @@ export function TimePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The list, which shows its active time.
     focusSelector: '[role="listbox"]',
     // A role-less popover around a named list of times.
@@ -185,16 +211,15 @@ export function TimePicker({
           {glyphOr(clock, <ClockGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
-      {picker.name ? (
-        <input
-          type="hidden"
-          name={picker.name}
-          value={value ? htmlTime(value) : ''}
-          disabled={picker.disabled}
-          form={picker.form}
-        />
-      ) : null}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'time',
+          value: value ? htmlTime(value) : '',
+          // The list picks any time, so no step is off.
+          step: 'any',
+          ...valueBounds(min, max, htmlTime, (time) => formatTime(time, { locale })),
+        })}
+      />
       {/* Mounted while open only: a form can hold many time pickers. */}
       {picker.shown ? (
         <Popover.Root {...picker.popover.getPopoverProps()}>
@@ -205,7 +230,9 @@ export function TimePicker({
             max={max}
             locale={locale}
             label={strings.timePicker}
+            overnight
             onPick={(next) => {
+              picker.notifyValueChange();
               onValueChange?.(next);
               picker.setOpen(false, 'select');
             }}

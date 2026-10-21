@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -69,9 +69,63 @@
     color: var(--todae-field-fg-disabled);
   }
 
-  /* A number input keeps its native spinner, and its figures line up. */
+  /* Field.NumberInput's figures line up, and so do those of a legacy type="number" TextInput. */
+  .input[data-todae-number-input],
   .input[type='number'] {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Field.Increment and Field.Decrement: a press steps the number and leaves
+     focus in the input. They are no taller than a line of field text, so they
+     leave the field's height alone. */
+  .stepButton {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--todae-field-stepper-size);
+    block-size: var(--todae-field-stepper-size);
+    margin-block: calc((1lh - var(--todae-field-stepper-size)) / 2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--todae-field-stepper-radius);
+    background: transparent;
+    color: var(--todae-field-stepper-fg);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .stepButton:hover:not(:disabled) {
+    background: var(--todae-field-stepper-bg-hover);
+  }
+
+  .stepButton:active:not(:disabled) {
+    background: var(--todae-field-stepper-bg-active);
+  }
+
+  .stepButton:disabled {
+    color: var(--todae-field-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .stepGlyph {
+    display: inline-flex;
+  }
+
+  .stepGlyph > :is(svg, img) {
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
+  /* The hover and pressed fill is all that shows them. */
+  @media (forced-colors: active) {
+    .stepButton:is(:hover, :active):not(:disabled) {
+      background: Highlight;
+      color: HighlightText;
+    }
   }
 
   .textarea {
@@ -473,7 +527,7 @@
   }
 
   /* With nothing beside it but its popover, the field is as wide as the swatch. */
-  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[data-todae-value-input]))) {
     inline-size: fit-content;
   }
 

@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.DateRangePicker',
   description:
-    "A button that opens a Calendar in range mode in a popover, which closes once the range's second date is picked. On its own it is the field's control, shows the range, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the range in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. With a name, a hidden input sends the range as an ISO 8601 interval, such as 2026-10-03/2026-10-10. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a Calendar in range mode in a popover, which closes once the range's second date is picked. On its own it is the field's control, shows the range, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the range in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. The range goes in a native text input under the field's name unless another control took it, as an ISO 8601 interval such as 2026-10-03/2026-10-10, so required blocks a submit and Form.Root shows it. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -28,6 +28,12 @@ export const meta = {
       type: 'Temporal.PlainDate',
       required: false,
       description: 'The latest date that can be picked.',
+    },
+    {
+      name: 'required',
+      type: 'boolean',
+      required: false,
+      description: 'A form with no range is invalid.',
     },
     {
       name: 'isDateDisabled',

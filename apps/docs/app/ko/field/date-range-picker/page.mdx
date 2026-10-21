@@ -54,7 +54,7 @@ const [invalid, setInvalid] = useState(false);
 
 ## 단독으로
 
-단독으로 쓰면 `Field.DateRangePicker`가 필드의 컨트롤입니다. 범위를 `Intl.DateTimeFormat`의 `formatRange`로 `locale`의 medium 스타일에 맞춰 보여 줍니다. 예: `Oct 3 – 10, 2026`. 하루짜리 범위는 날짜 하나로, 범위가 없으면 `placeholder`를 보여 줍니다. 필드의 다른 곳을 누르면 달력이 열립니다. Root에 `name`이 있으면 숨은 입력이 범위를 ISO 8601 구간으로 보냅니다. 예: `2026-10-03/2026-10-10`.
+단독으로 쓰면 `Field.DateRangePicker`가 필드의 컨트롤입니다. 범위를 `Intl.DateTimeFormat`의 `formatRange`로 `locale`의 medium 스타일에 맞춰 보여 줍니다. 예: `Oct 3 – 10, 2026`. 하루짜리 범위는 날짜 하나로, 범위가 없으면 `placeholder`를 보여 줍니다. 필드의 다른 곳을 누르면 달력이 열립니다. Root에 `name`이 있으면 폼은 범위를 ISO 8601 구간으로 보냅니다. 예: `2026-10-03/2026-10-10`.
 
 <Example block>
   <FieldDateRangePickerAlone />
@@ -62,9 +62,11 @@ const [invalid, setInvalid] = useState(false);
 
 달력은 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유를 받습니다. 범위의 두 번째 날짜를 고르면 `'select'`, 그 밖에는 `'escape'`, `'outside'`, `'trigger'`, 필드가 비활성화되면 `'disabled'`입니다. 열리면 달력은 범위의 시작일에, 없으면 오늘이나 범위 안의 가장 가까운 날짜에 포커스를 둡니다. 첫 번째 날짜를 고른 뒤에 Escape를 누르면 그 선택이 취소되고 달력은 열린 채로 남습니다. 고른 날짜가 없을 때 Escape를 누르면 달력이 닫히고, 포커스는 열리기 전에 있던 곳으로 돌아갑니다. 달력이 닫히면 첫 번째로 고른 날짜는 사라집니다.
 
+`required`는 범위가 없는 폼을 유효하지 않게 합니다. 브라우저는 선택기가 버튼 옆에 렌더링하는 네이티브 텍스트 입력에서 이를 검사합니다. 이 입력은 화면과 보조 기술에서 숨겨지고 탭 정지점이 아니며, 폼이 필드의 `name`으로 보내는 값입니다. [Form.Root](/form) 안에서는 범위가 없다는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고, 포커스는 숨은 입력이 아니라 버튼으로 갑니다. 요약의 해당 필드 행도 버튼으로 연결됩니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 버튼에 놓입니다. 범위를 담는 네이티브 입력은 없으므로 브라우저는 `min`, `max`, `isDateDisabled`를 검사하지 않으며, 고른 범위는 달력이 이 안에 둡니다.
+
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 범위는 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`, 다른 `Field.DateRangePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `dateRangePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `dateRangePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 범위 모드의 [Calendar](/calendar)와 같은 키로 움직이고 같은 안내를 읽어 줍니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다.
+**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 범위는 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`, 다른 `Field.DateRangePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `dateRangePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `dateRangePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 범위 모드의 [Calendar](/calendar)와 같은 키로 움직이고 같은 안내를 읽어 줍니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다. 필수 선택기의 버튼은 버튼에 `aria-required`를 쓸 수 없으므로, StringsProvider의 `required` 문자열로 설명됩니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 텍스트 입력과 그 옆의 선택기에는 같은 범위를 주고, `formatDateRange`로 쓰고 `parseDateRange`로 읽으세요.
 

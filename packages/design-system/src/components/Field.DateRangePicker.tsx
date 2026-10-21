@@ -17,7 +17,8 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { spanOf, type DateRange } from './dateRange.js';
-import { useFieldPicker, htmlDate } from './Field.shared.js';
+import { useFieldPicker, htmlDateText } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
 export type FieldDateRangePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -31,6 +32,8 @@ export type FieldDateRangePickerProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
+  /** A form with no range is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. A range can't hold one. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
@@ -79,14 +82,17 @@ const toDate = (date: Temporal.PlainDate) => {
  * Field.DatePicker, Field.DateRangePicker, Field.TimePicker or
  * Field.DateTimePicker, such as a Field.TextInput to type the range in, that
  * control is the field's control instead, and the button is named from the
- * dateRangePicker string. With `showValue={false}` the button shows only a
- * calendar glyph.
+ * dateRangePicker string. The range goes in a native text input under the
+ * field's name unless another control took it, as an ISO 8601 interval, so
+ * `required` blocks a submit and Form.Root shows it. With
+ * `showValue={false}` the button shows only a calendar glyph.
  */
 export function DateRangePicker({
   value,
   onValueChange,
   min,
   max,
+  required,
   isDateDisabled,
   firstDayOfWeek,
   locale,
@@ -112,6 +118,7 @@ export function DateRangePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The calendar's Tab stop: the range's start, or else today or the nearest date in range.
     focusSelector: CALENDAR_TAB_STOP,
   });
@@ -133,16 +140,12 @@ export function DateRangePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing with a form, so the range goes in a hidden input, as an ISO 8601 interval. */}
-      {picker.name ? (
-        <input
-          type="hidden"
-          name={picker.name}
-          value={range ? `${htmlDate(isoDate(range.start))}/${htmlDate(isoDate(range.end))}` : ''}
-          disabled={picker.disabled}
-          form={picker.form}
-        />
-      ) : null}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'text',
+          value: range ? `${htmlDateText(isoDate(range.start))}/${htmlDateText(isoDate(range.end))}` : '',
+        })}
+      />
       {/* Mounted while open only, so closing drops a range's first pick. */}
       {picker.shown ? (
         <Popover.Root
@@ -155,6 +158,7 @@ export function DateRangePicker({
             mode="range"
             value={value}
             onValueChange={(next) => {
+              picker.notifyValueChange();
               onValueChange?.(next);
               picker.setOpen(false, 'select');
             }}

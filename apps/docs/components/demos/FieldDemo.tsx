@@ -563,14 +563,60 @@ export function FieldColorAccent() {
   );
 }
 
-export function FieldNumber() {
+export function FieldNumberStepper() {
   const id = useId();
-  const [quantity, setQuantity] = useState('2');
+  const locale = useLocale();
+  const [quantity, setQuantity] = useState<number | null>(2);
   return (
     <Field.Group>
-      <Label.Root htmlFor={id}>Seats</Label.Root>
-      <Field.Root id={id}>
-        <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+      <Label.Root htmlFor={id}>Quantity</Label.Root>
+      <Field.Root id={id} name="quantity">
+        <Field.Decrement />
+        <Field.NumberInput value={quantity} onValueChange={setQuantity} min={1} max={99} locale={locale} />
+        <Field.Increment />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldNumberPrice() {
+  const id = useId();
+  const [price, setPrice] = useState<number | null>(12000);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Price</Label.Root>
+      <Field.Root id={id} name="price">
+        <Field.Affix>₩</Field.Affix>
+        <Field.NumberInput
+          value={price}
+          onValueChange={setPrice}
+          min={0}
+          step={100}
+          locale="ko"
+          formatOptions={{ maximumFractionDigits: 0 }}
+        />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldNumberPercent() {
+  const id = useId();
+  const locale = useLocale();
+  const [rate, setRate] = useState<number | null>(0.125);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Discount</Label.Root>
+      <Field.Root id={id} name="discount">
+        <Field.NumberInput
+          value={rate}
+          onValueChange={setRate}
+          min={0}
+          max={1}
+          step={0.005}
+          locale={locale}
+          formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
+        />
       </Field.Root>
     </Field.Group>
   );

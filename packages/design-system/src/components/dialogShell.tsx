@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -14,7 +15,7 @@ import { useDomId } from './domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen.js';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
@@ -41,7 +42,16 @@ export type DialogRootProps = {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: DialogCloseReason) => void;
+  /**
+   * `alertdialog` marks a dialog that interrupts to ask for a response, such as
+   * confirming a destructive action. It changes the defaults: a backdrop click
+   * no longer closes it, and on open focus goes to its first close part, such as
+   * a `Dialog.Close` that says Cancel. It needs a `Dialog.Description` or an
+   * `aria-describedby` for the message.
+   */
+  role?: 'dialog' | 'alertdialog';
   dismissOnEscape?: boolean;
+  /** Defaults to `true`, or `false` when `role` is `alertdialog`. */
   dismissOnBackdrop?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
   restoreFocusRef?: RefObject<HTMLElement | null>;
@@ -49,7 +59,7 @@ export type DialogRootProps = {
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
-} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'children'>;
+} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'role' | 'children'>;
 
 type ShellContextValue = {
   requestClose: (reason: DialogCloseReason) => void;
@@ -98,7 +108,7 @@ export function ShellDescription({ children, id: idProp, ...props }: ComponentPr
 export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useShell();
   // Text a screen reader reads, such as "Cancel", names the button; the close string names one without, such as an icon.
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
+  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().close);
   const glyph = useCloseGlyph();
   return (
     <Button.Root
@@ -109,7 +119,8 @@ export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ..
       aria-label={label}
       {...props}
       ref={refs}
-      // Marks it for the header rule, which puts it at the end of the row.
+      // Marks it for the header rule, which puts it at the end of the row, and
+      // for an alert dialog's initial focus, which takes it as the safe choice.
       data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
@@ -133,8 +144,9 @@ export function DialogShellRoot({
   open: openProp,
   defaultOpen = false,
   onOpenChange: onOpenChangeProp,
+  role,
   dismissOnEscape = true,
-  dismissOnBackdrop = true,
+  dismissOnBackdrop = role !== 'alertdialog',
   initialFocusRef,
   restoreFocusRef,
   className,
@@ -187,10 +199,24 @@ export function DialogShellRoot({
   // the <dialog> can't take focus until showModal runs.
   useInitialFocus(dialogRef, present && open, initialFocusRef);
 
+  const alertShown = role === 'alertdialog' && present && open;
+  const describedByProp = props['aria-describedby'];
+  const described = Boolean(describedByProp ?? describedBy);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !alertShown || described) return;
+    // A Description registers in a layout effect whose update renders after
+    // this effect, and that render clears the timer.
+    const timer = setTimeout(() =>
+      console.error('Dialog.Root role="alertdialog" requires Dialog.Description or aria-describedby'),
+    );
+    return () => clearTimeout(timer);
+  }, [alertShown, described]);
+
   return (
     <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
         {...props}
+        role={role}
         {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}

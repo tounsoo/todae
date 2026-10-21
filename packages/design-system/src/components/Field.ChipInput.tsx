@@ -15,6 +15,9 @@ import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
 import { useChipList } from '../hooks/useChipList.js';
 import { useField } from '../hooks/useField.js';
+import { useDomId } from './domId.js';
+import { mergeDescribedBy } from './Field.context.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 
 export type FieldChipInputProps = {
   chips: readonly string[];
@@ -31,6 +34,8 @@ export type FieldChipInputProps = {
   /** Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
   chipRemoveIcon?: ReactNode;
   overflowLabel?: (n: number) => string;
+  /** A form with no chips is invalid, whatever the input holds. */
+  required?: boolean;
   ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
 
@@ -47,6 +52,7 @@ export function ChipInput({
   chipRemoveLabel,
   chipRemoveIcon,
   overflowLabel,
+  required,
   className,
   onKeyDown: onKeyDownProp,
   ref,
@@ -61,7 +67,13 @@ export function ChipInput({
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
   const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
-  const control = field.getControlProps({ ...props, ref: controlRef });
+  // A text box can't be required of its chips, so `aria-required` would be wrong; it is described as required instead.
+  const requiredId = useDomId();
+  const control = field.getControlProps({
+    ...props,
+    ref: controlRef,
+    'aria-describedby': mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined),
+  });
   // The Root's disabled or the input's own: the chips follow the input.
   const disabled = Boolean(control.disabled);
   // The commit key whose press committed, while it may still be held.
@@ -78,6 +90,7 @@ export function ChipInput({
       const value = chips[index];
       if (value === undefined) return;
       event.preventDefault();
+      field.notifyValueChange();
       onChipRemove(index, value);
       return;
     }
@@ -92,7 +105,10 @@ export function ChipInput({
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
     const committed = onCommit(trimmed) !== false;
-    if (committed) held.current = event.key;
+    if (committed) {
+      field.notifyValueChange();
+      held.current = event.key;
+    }
     // With nothing committed, only a key that would type its character is held back.
     if (committed || event.key.length === 1) event.preventDefault();
   }
@@ -106,6 +122,7 @@ export function ChipInput({
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onRemove={() => {
+        field.notifyValueChange();
         onChipRemove(index, chip.value);
         ownInput.current?.focus();
       }}
@@ -122,6 +139,13 @@ export function ChipInput({
       className={cx(styles.input, className)}
       onChange={(event) => onInputValueChange(event.target.value)}
       onKeyDown={onKeyDown}
+    />
+  );
+  // A form has only ever sent the text being typed, not the chips, so the input above sends it and this sends nothing. It is empty exactly when there are no chips, which `required` checks.
+  const carrier = (
+    <FieldValueInput
+      input={field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required }, control)}
+      requiredId={required ? requiredId : undefined}
     />
   );
   const measure =
@@ -154,6 +178,7 @@ export function ChipInput({
           </div>
         ) : null}
         {input}
+        {carrier}
         {measure}
       </div>
     );
@@ -170,6 +195,7 @@ export function ChipInput({
       {chipNodes}
       {overflow}
       {input}
+      {carrier}
       {measure}
     </div>
   );

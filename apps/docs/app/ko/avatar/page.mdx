@@ -1,4 +1,4 @@
-import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
+import { AvatarBesideName, AvatarGroupExample, AvatarGroupSizes, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
 
 # Avatar
 
@@ -57,17 +57,50 @@ import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../
   <AvatarTones />
 </Example>
 
+## 그룹
+
+`Avatar.Group`은 담당자나 스레드 참여자처럼 여러 Avatar를 쌓아 서로 앞의 것 위에 겹쳐 보여 줍니다. [Button](/button)의 `Button.Group`이 버튼을 배치하듯, `Avatar.Root`를 배치합니다. 각 Avatar에는 표면 색의 테두리가 생겨 겹치는 곳에서도 가장자리가 구분되고, 뒤에 오는 Avatar가 위에 놓입니다.
+
+"+3"도 Avatar이며 마지막에 놓이고, 자기만의 대체 표시를 갖습니다. 그룹에는 `max`나 개수 prop이 없습니다. 배열은 직접 잘라 쓰고, 나머지는 평범한 `Avatar.Root`로 보여 주세요.
+
+```tsx
+<Avatar.Group aria-label="Assignees">
+  {assignees.slice(0, 4).map((person) => (
+    <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
+      <Avatar.Fallback>{person.initials}</Avatar.Fallback>
+    </Avatar.Root>
+  ))}
+  {assignees.length > 4 && (
+    <Avatar.Root label={`${assignees.length - 4} more`}>
+      <Avatar.Fallback>+{assignees.length - 4}</Avatar.Fallback>
+    </Avatar.Root>
+  )}
+</Avatar.Group>
+```
+
+<Example>
+  <AvatarGroupExample />
+</Example>
+
+그룹의 `size`는 자체 `size`를 정하지 않은 안쪽 모든 Avatar의 크기입니다. Avatar에 준 `size`가 여전히 우선합니다.
+
+<Example>
+  <AvatarGroupSizes />
+</Example>
+
+겹치는 정도는 `avatar.group.overlap`에 그룹의 크기를 곱한 값이며, 음수 inline-start 마진이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 각 Avatar가 아니라 그룹의 크기에서 가져오고, `[popover]`나 `dialog`를 뺀 그룹의 직계 자식에 적용됩니다. 그래서 Avatar를 툴팁 트리거나 링크로 감싸도 동작합니다. 자체 `size`를 준 Avatar도 그룹의 크기만큼 당겨집니다. 테두리는 `avatar.group.ring.color`(표면 색)의 `avatar.group.ring.width`이며, 그룹이 놓인 배경에 맞춰 바꾸세요. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 안쪽 테두리가 생깁니다. 그룹 전체 목록을 호버로 보여 주는 일은 그룹을 감싸는 [Tooltip](/tooltip)이나 [Popover](/popover)로, 직접 만듭니다.
+
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `label`이 있으면 `Avatar.Root`는 `aria-label`로 이름 붙은 `role="img"`이고, `Avatar.Image`는 `alt=""`를 렌더링합니다. 그래서 이미지와 이니셜이 이름 하나를 함께 씁니다. `label`이 없으면 루트는 `aria-hidden`입니다. 타입에서 루트의 `role`, `aria-label`, `aria-labelledby`와 이미지의 `alt`를 뺐으므로, 래퍼가 실수로 이름을 하나 더 붙일 수 없습니다.
+**Todae가 맡는 것:** `label`이 있으면 `Avatar.Root`는 `aria-label`로 이름 붙은 `role="img"`이고, `Avatar.Image`는 `alt=""`를 렌더링합니다. 그래서 이미지와 이니셜이 이름 하나를 함께 씁니다. `label`이 없으면 루트는 `aria-hidden`입니다. 타입에서 루트의 `role`, `aria-label`, `aria-labelledby`와 이미지의 `alt`를 뺐으므로, 래퍼가 실수로 이름을 하나 더 붙일 수 없습니다. `Avatar.Group`은 항상 `role="group"`이고, 안쪽의 `label`이 있는 Avatar는 그 그룹 안의 이미지로 하나씩 읽힙니다.
 
-**직접 제공할 것:** 둘 중 어느 쪽인지 정하는 일. 사람을 보여 주는 래퍼는 참여자 목록처럼 Avatar만 따로 있을 때 `label`을 전달하고, 이름이 옆에 적혀 있을 때는 빼야 합니다. 이름은 데이터에서 가져옵니다. Todae는 대체 표시에서 이름을 읽지 않습니다.
+**직접 제공할 것:** 둘 중 어느 쪽인지 정하는 일. 사람을 보여 주는 래퍼는 참여자 목록처럼 Avatar만 따로 있을 때 `label`을 전달하고, 이름이 옆에 적혀 있을 때는 빼야 합니다. 이름은 데이터에서 가져옵니다. Todae는 대체 표시에서 이름을 읽지 않습니다. `Avatar.Group`에는 "담당자"처럼 `aria-label`로 이름을 주고, "+3" Avatar에는 개수도 읽히도록 "3 more" 같은 `label`을 주세요. 이름이 그룹 옆에 적혀 있으면 Avatar에는 이름을 주지 마세요.
 
 **주의할 점:** `label` 없는 Avatar를 버튼, 링크, [Menu](/menu) 트리거의 유일한 내용으로 넣는 것. Avatar가 숨겨지므로 컨트롤에 이름이 없습니다. 컨트롤에 `aria-label`을 주거나 Avatar에 `label`을 주세요. 래퍼가 더한 접속 상태 점이나 테두리는 색만으로 상태를 보여 줍니다. 상태를 텍스트로도 적으세요.
 
 ## 언제 쓰나요
 
-**쓸 때:** 목록이나 머리글, 메시지 옆에 보이는 사람, 팀, 워크스페이스.
+**쓸 때:** 목록이나 머리글, 메시지 옆에 보이는 사람, 팀, 워크스페이스, 또는 담당자나 참여자처럼 여럿을 쌓아 보여 줄 때.
 
 **쓰지 않을 때:** 그 자체로 내용이 있는 사진 → 실제 `alt` 텍스트가 있는 `<img>`. 상태나 개수 → [Badge](/badge). 프로필 메뉴를 여는 컨트롤 → 이름을 지닌 [Menu](/menu) 트리거 안에 Avatar를 넣으세요.
 
@@ -78,3 +111,5 @@ import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../
 <PropsTable name="Avatar.Image" />
 
 <PropsTable name="Avatar.Fallback" />
+
+<PropsTable name="Avatar.Group" />

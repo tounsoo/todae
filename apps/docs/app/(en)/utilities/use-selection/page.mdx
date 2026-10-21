@@ -1,0 +1,48 @@
+import { SelectFiles } from '../../../../components/demos/SelectionDemo';
+
+# useSelection
+
+`useSelection(options)` keeps a selection of keys, such as the rows of a table or the items of a list, and returns prop getters that wire it to `Checkbox.Root`. `getCheckboxProps(key)` gives one item's checkbox its `checked`, `disabled` and `onChange`, and `getSelectAllProps()` gives a select-all checkbox the same, with `indeterminate` while some items are selected.
+
+```tsx
+const selection = useSelection({ keys: files });
+
+<Checkbox.Root {...selection.getSelectAllProps()}>Select all files</Checkbox.Root>
+{files.map((file) => (
+  <Checkbox.Root key={file} {...selection.getCheckboxProps(file)}>
+    {file}
+  </Checkbox.Root>
+))}
+```
+
+<Example block>
+  <SelectFiles />
+</Example>
+
+`keys` lists the keys that can be selected now, in display order, and `disabledKeys` the ones among them that cannot. `value` is the selected keys in the order they were selected, and `state` is `'none'`, `'some'` or `'all'` over the enabled keys in `keys`. `toggle(key)` flips one key, `toggleAll()` selects every enabled key or, when all are selected, clears them, and `clear()` empties the selection. A key is a string or a number. Pass `value` and `onValueChange` to control the selection, or `defaultValue` to start it somewhere; `onValueChange` gets the new array of keys, as in [ToggleGroup](/toggle-group).
+
+## Ranges
+
+Holding Shift while clicking a checkbox from `getCheckboxProps`, or while pressing Space on it, sets every enabled key between the last key toggled and this one, in `keys` order, to the state this one is now in. Shift-clicking down a list selects the rows in between; Shift-clicking a selected row after that clears them. `toggle(key, { range: true })` does the same from your own code. The last key toggled is the range's start: with none yet, or when it is no longer in `keys`, the toggle is for one key. `toggleAll()` and `clear()` forget it. Disabled keys are skipped in a range, and `toggle` ignores one.
+
+## Selection across pages
+
+Only the keys in `keys` are shown, so selected keys outside it, such as those of another page, stay selected. `state`, `toggleAll()` and ranges look only at the enabled keys in `keys`; `clear()` empties the whole `value`. Keep `value` in your own state, with `value` and `onValueChange`, when it must outlive the page of keys on screen.
+
+## Accessible composition
+
+**Todae handles:** The checkbox state: `checked`, `disabled`, and `indeterminate` on the select-all box, which `Checkbox.Root` sets as the native input's `indeterminate` property. Your `onChange` in a getter's props runs first, and calling `preventDefault()` in it skips the selection. A getter keeps the other props you pass, `name` and `aria-*` included.
+
+**You supply:** A name for every checkbox that says what it selects, such as "Select Ada Lovelace" and "Select all rows", as visible text or a [VisuallyHidden](/visually-hidden) child. Somewhere a screen reader can find the result of a selection, such as a count or the actions that act on it.
+
+**Watch for:** Selection shown only by a fill or a color. In a [Table](/table), `Table.Row selected` draws the fill and sets no ARIA; the row's checkbox is what a screen reader reads. Keys that are row positions: sorting moves the selection to other rows, so use an id.
+
+## When to use
+
+**When:** Checkboxes that select several items of a list or table, with a select-all box and Shift ranges.
+
+**When not:** A single choice → [Radio](/radio). A selection inside an overlay list → [OptionList](/optionlist) with `selectionMode="multiple"`. A set of toggle buttons → [ToggleGroup](/toggle-group).
+
+## Props
+
+<PropsTable name="useSelection" />

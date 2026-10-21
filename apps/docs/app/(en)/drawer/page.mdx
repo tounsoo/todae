@@ -2,7 +2,7 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 # Drawer
 
-A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.Root` takes the same props as `Dialog.Root` plus `side`, and the inside is built from Drawer's own parts: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer` and `Drawer.Close`.
+A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.Root` takes the same props as `Dialog.Root`, except `role`, plus `side`, and the inside is built from Drawer's own parts: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer` and `Drawer.Close`.
 
 `Drawer.Header` lays its children out in one row. A `Drawer.Close` placed directly in the header sits at the end with anything after it, and what comes before it, such as the title, stays at the start. `Drawer.Body` takes the height the header and footer leave and scrolls on its own, so the header stays at the top and the footer at the bottom.
 

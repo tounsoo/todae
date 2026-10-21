@@ -48,9 +48,17 @@
       "types": "./dist/server/badge.d.ts",
       "import": "./dist/badge.js"
     },
+    "./empty-state": {
+      "types": "./dist/server/empty-state.d.ts",
+      "import": "./dist/empty-state.js"
+    },
     "./card": {
       "types": "./dist/server/card.d.ts",
       "import": "./dist/card.js"
+    },
+    "./data-list": {
+      "types": "./dist/server/data-list.d.ts",
+      "import": "./dist/data-list.js"
     },
     "./message": {
       "types": "./dist/server/message.d.ts",

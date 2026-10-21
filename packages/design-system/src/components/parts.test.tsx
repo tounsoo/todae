@@ -11,12 +11,15 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  DataList,
+  EmptyState,
   Message,
   Attachment,
   Steps,
   Composer,
   Conversation,
   Checkbox,
+  Form,
   Calendar,
   Chip,
   ChipList,
@@ -118,6 +121,7 @@ const cases: Case[] = [
   ['Table.Row', (p) => <table><tbody><Table.Row {...p} /></tbody></table>],
   ['Table.HeaderCell', (p) => <table><tbody><tr><Table.HeaderCell {...p} scope="row">h</Table.HeaderCell></tr></tbody></table>],
   ['Table.Cell', (p) => <table><tbody><tr><Table.Cell {...p}>c</Table.Cell></tr></tbody></table>],
+  ['Table.SortButton', (p) => <table><thead><tr><Table.HeaderCell scope="col"><Table.SortButton {...p}>Name</Table.SortButton></Table.HeaderCell></tr></thead></table>],
   ['Progress.Root', (p) => <Progress.Root {...p} aria-label="p" />],
   ['Meter.Root', (p) => <Meter.Root {...p} value={0.5} aria-label="m" />],
   ['Loader.Root', (p) => <Loader.Root {...p} aria-label="s" />],
@@ -175,6 +179,7 @@ const cases: Case[] = [
       </Button.Root>
     ),
   ],
+  ['Avatar.Group', (p) => <Avatar.Group {...p} aria-label="g" />],
   ['Button.Group', (p) => <Button.Group {...p} aria-label="g" />],
   ['Field.Root', (p) => <Field.Root {...p} />],
   ...(['Icon', 'Affix', 'Row'] as const).map(
@@ -198,6 +203,28 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
+  [
+    'Field.NumberInput',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.NumberInput {...p} value={null} onValueChange={noop} />
+      </Field.Root>
+    ),
+  ],
+  ...(['Increment', 'Decrement'] as const).map(
+    (part): Case => [
+      `Field.${part}`,
+      (p) => {
+        const Part = Field[part];
+        return (
+          <Field.Root aria-label="t">
+            <Field.NumberInput value={1} onValueChange={noop} />
+            <Part {...p} />
+          </Field.Root>
+        );
+      },
+    ],
+  ),
   [
     'Field.Textarea',
     (p) => (
@@ -521,6 +548,7 @@ const cases: Case[] = [
   ],
   ['Tooltip.Root', (p) => <TooltipCase p={p} />],
   ['Fieldset.Root', (p) => <Fieldset.Root {...p} />],
+  ['Form.Root', (p) => <Form.Root {...p} />],
   [
     'Fieldset.Legend',
     (p) => (
@@ -554,6 +582,34 @@ const cases: Case[] = [
           <Card.Root>
             <Part {...p} />
           </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['DataList.Root', (p) => <DataList.Root {...p} />],
+  ...(['Item', 'Term', 'Details'] as const).map(
+    (part): Case => [
+      `DataList.${part}`,
+      (p) => {
+        const Part = DataList[part] as (props: Native) => ReactNode;
+        return (
+          <DataList.Root>
+            <Part {...p} />
+          </DataList.Root>
+        );
+      },
+    ],
+  ),
+  ['EmptyState.Root', (p) => <EmptyState.Root {...p} />],
+  ...(['Icon', 'Title', 'Description', 'Actions'] as const).map(
+    (part): Case => [
+      `EmptyState.${part}`,
+      (p) => {
+        const Part = EmptyState[part] as (props: Native) => ReactNode;
+        return (
+          <EmptyState.Root>
+            <Part {...p} />
+          </EmptyState.Root>
         );
       },
     ],
@@ -693,6 +749,27 @@ describe('every exported part', () => {
     render(<>{part({ 'data-testid': name, ref })}</>);
     const el = screen.getByTestId(name);
     expect(ref.current).toBe(el);
+  });
+});
+
+describe('Form.Summary', () => {
+  it('forwards native attributes and a ref once a failed submit gives it something to list', async () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Form.Root data-testid="form">
+        <Form.Summary data-testid="summary" ref={ref} />
+        <Field.Group>
+          <Field.Root id="a" name="a">
+            <Field.TextInput aria-label="A" required value="" onChange={noop} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    await act(async () => {
+      fireEvent.submit(screen.getByTestId('form'));
+    });
+    expect(ref.current).toBe(screen.getByTestId('summary'));
   });
 });
 

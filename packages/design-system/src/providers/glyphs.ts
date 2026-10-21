@@ -13,12 +13,20 @@ export interface Glyphs {
   check?: ReactNode;
   /** Field.Select, Disclosure.Summary, Tree.Label, Nav.Branch, Calendar.Header's month buttons and Conversation.ScrollButton. Point it down: a closed disclosure, tree item or nav branch turns it, and a month button turns it toward its month. The browser's own marker by default; Todae draws one for Tree.Label, Nav.Branch, Calendar.Header and Conversation.ScrollButton. */
   chevron?: ReactNode;
+  /** Checkbox.Root while `indeterminate`, in place of the check. Todae draws a horizontal bar. */
+  indeterminate?: ReactNode;
+  /** Table.SortButton. Point it up: a descending column turns it. Todae draws an arrow pointing up. */
+  sort?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;
   /** Field.DatePicker's, Field.DateRangePicker's and Field.DateTimePicker's button. Todae draws a calendar. */
   calendar?: ReactNode;
   /** Field.TimePicker's button. Todae draws a clock. */
   clock?: ReactNode;
+  /** Field.Increment with no content. Todae draws a plus sign. */
+  plus?: ReactNode;
+  /** Field.Decrement with no content. Todae draws a minus sign. */
+  minus?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
   /** Composer.Submit with no content. Todae draws an arrow pointing up. */

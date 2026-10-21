@@ -4,19 +4,16 @@ import { cx } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
+import { warnOnce } from './warnOnce.js';
 
 /**
- * Input types that take a string value. The number type keeps its native
- * spinner; `value` is the input's string, such as `"42"`. A time is
- * `Field.TimePicker`, a date `Field.DatePicker`, a range of dates
+ * Input types that take a string value. A number is `Field.NumberInput`, a
+ * time `Field.TimePicker`, a date `Field.DatePicker`, a range of dates
  * `Field.DateRangePicker` and both `Field.DateTimePicker`, with a text input
- * beside any of them read by `parseTime`, `parseDate`, `parseDateRange` or
- * `parseDateTime` for a typed value.
+ * beside any of the pickers read by `parseTime`, `parseDate`,
+ * `parseDateRange` or `parseDateTime` for a typed value.
  */
-export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
-
-// Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set(['number']);
+export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
 
 export type FieldTextInputProps = {
   value: string;
@@ -41,7 +38,13 @@ export function TextInput({
 }: FieldTextInputProps) {
   const field = useField();
   const ctx = useFieldContext();
-  const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
+  // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
+  const legacyNumber = (type as string) === 'number';
+  if (legacyNumber) {
+    warnOnce('text-input-number', 'Field.TextInput no longer supports type="number"; use Field.NumberInput, which reads and writes a number in the locale\'s format.');
+  }
+  // Browsers ignore maxLength on a native number input, so that path shows and announces no limit, as it always did.
+  const limit = typeof maxLength === 'number' && !legacyNumber ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (

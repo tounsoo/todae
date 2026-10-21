@@ -173,6 +173,16 @@ const korean: Partial<Strings> = {
       <Table.Cell>`Choose dates`</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Increment`. 자체 텍스트가 이름을 주지 않을 때, `Field.NumberInput`의 레이블 텍스트를, 없으면 빈 문자열을 받습니다</Table.Cell>
+      <Table.Cell>`Increase {field}`, 레이블이 없으면 `Increase`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`decrement(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Decrement`. 자체 텍스트가 이름을 주지 않을 때, `Field.NumberInput`의 레이블 텍스트를, 없으면 빈 문자열을 받습니다</Table.Cell>
+      <Table.Cell>`Decrease {field}`, 레이블이 없으면 `Decrease`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`previousMonth`</Table.HeaderCell>
       <Table.Cell>`Calendar.Header`의 이전 달 버튼</Table.Cell>
       <Table.Cell>`Previous month`</Table.Cell>
@@ -206,6 +216,21 @@ const korean: Partial<Strings> = {
       <Table.HeaderCell scope="row">`copyFailed`</Table.HeaderCell>
       <Table.Cell>복사에 실패했을 때의 `useClipboard`</Table.Cell>
       <Table.Cell>`Could not copy`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortedAscending(column)`</Table.HeaderCell>
+      <Table.Cell>열이 오름차순으로 정렬된 뒤의 `Table.SortButton`</Table.Cell>
+      <Table.Cell>`Sorted by {column}, ascending`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortedDescending(column)`</Table.HeaderCell>
+      <Table.Cell>열이 내림차순으로 정렬된 뒤의 `Table.SortButton`</Table.Cell>
+      <Table.Cell>`Sorted by {column}, descending`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortCleared(column)`</Table.HeaderCell>
+      <Table.Cell>열의 정렬이 해제된 뒤의 `Table.SortButton`</Table.Cell>
+      <Table.Cell>`{column}, not sorted`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`conversation`</Table.HeaderCell>
@@ -257,6 +282,81 @@ const korean: Partial<Strings> = {
       <Table.Cell>`error`가 있는 단계에 붙는 `Steps.Item`의 숨은 상태 단어</Table.Cell>
       <Table.Cell>`Failed`</Table.Cell>
     </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`required`</Table.HeaderCell>
+      <Table.Cell>필수 선택기의 버튼과 필수 ChipInput의 텍스트 입력을 설명하는 문구. 둘 다 `aria-required`가 말하는 필수 대상이 아니기 때문</Table.Cell>
+      <Table.Cell>`Required`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`valueMissing`</Table.HeaderCell>
+      <Table.Cell>필수인데 비어 있다고 브라우저가 알리는 컨트롤. `ErrorMessage.Root`와 `Form.Summary`에 표시</Table.Cell>
+      <Table.Cell>`This field is required`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatchEmail`</Table.HeaderCell>
+      <Table.Cell>값이 이메일 주소가 아닌 `email` 입력</Table.Cell>
+      <Table.Cell>`Enter an email address`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatchUrl`</Table.HeaderCell>
+      <Table.Cell>값이 URL이 아닌 `url` 입력</Table.Cell>
+      <Table.Cell>`Enter a URL`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatch`</Table.HeaderCell>
+      <Table.Cell>`email`과 `url` 외에, 값이 자기 type에 맞지 않는 입력</Table.Cell>
+      <Table.Cell>`Enter a value in the right format`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`badInput`</Table.HeaderCell>
+      <Table.Cell>브라우저가 값으로 바꿀 수 없는 입력</Table.Cell>
+      <Table.Cell>`Enter a valid value`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`patternMismatch`</Table.HeaderCell>
+      <Table.Cell>값이 `pattern`과 맞지 않는 입력</Table.Cell>
+      <Table.Cell>`Match the requested format`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`tooShort(min)`</Table.HeaderCell>
+      <Table.Cell>`minLength`보다 짧은 값</Table.Cell>
+      <Table.Cell>`Use at least {min} characters`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`tooLong(max)`</Table.HeaderCell>
+      <Table.Cell>`maxLength`보다 긴 값</Table.Cell>
+      <Table.Cell>`Use at most {max} characters`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`rangeUnderflow(min)`</Table.HeaderCell>
+      <Table.Cell>`min`보다 작은 값. `min`은 속성의 텍스트</Table.Cell>
+      <Table.Cell>`Enter {min} or more`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`rangeOverflow(max)`</Table.HeaderCell>
+      <Table.Cell>`max`보다 큰 값. `max`는 속성의 텍스트</Table.Cell>
+      <Table.Cell>`Enter {max} or less`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`dateRangeUnderflow(min)`</Table.HeaderCell>
+      <Table.Cell>`min`보다 이른 날짜, 시각, 날짜와 시각. `min`은 필드 고유의 형식</Table.Cell>
+      <Table.Cell>`Enter {min} or later`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`dateRangeOverflow(max)`</Table.HeaderCell>
+      <Table.Cell>`max`보다 늦은 날짜, 시각, 날짜와 시각. `max`는 필드 고유의 형식</Table.Cell>
+      <Table.Cell>`Enter {max} or earlier`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`stepMismatch`</Table.HeaderCell>
+      <Table.Cell>`step`에 맞지 않는 값</Table.Cell>
+      <Table.Cell>`Enter a value that fits the allowed steps`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`formErrors(count)`</Table.HeaderCell>
+      <Table.Cell>`Form.Summary`의 제목</Table.Cell>
+      <Table.Cell>`{count} problems to fix`</Table.Cell>
+    </Table.Row>
   </Table.Body>
 </Table.Root>
 </ScrollRegion>
@@ -265,7 +365,7 @@ const korean: Partial<Strings> = {
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** Todae가 스스로 쓰는 텍스트를 맡습니다. 닫기 버튼, 랜드마크, 칩과 첨부의 삭제 버튼, `+N` 칩, `Conversation.ScrollButton`의 기본 이름, `useCombobox`가 주는 시트 이름, `Field.Counter`의 설명, `Field.Counter`, `useClipboard`, `Conversation`의 라이브 메시지, 그리고 `Steps.Item`의 상태 단어입니다. 위에 나열한 대로 부분 자체의 prop이 우선합니다.
+**Todae가 맡는 것:** Todae가 스스로 쓰는 텍스트를 맡습니다. 닫기 버튼, 랜드마크, 칩과 첨부의 삭제 버튼, `+N` 칩, `Conversation.ScrollButton`의 기본 이름, `useCombobox`가 주는 시트 이름, `Field.Counter`의 설명, `Field.Counter`, `useClipboard`, `Table.SortButton`, `Conversation`의 라이브 메시지, `Steps.Item`의 상태 단어, 그리고 `ErrorMessage.Root`와 `Form.Summary`의 검증 텍스트입니다. 위에 나열한 대로 부분 자체의 prop이 우선합니다.
 
 **직접 제공할 것:** 앱에서 보이는 모든 키를 읽는 사람의 언어로 제공하세요. 함수인 키는 레이블이나 숫자를 받으므로, 언어에 맞는 자리에 넣고 복수형도 거기서 고르세요. `StringsProvider`는 요소를 렌더링하지 않고 `lang`도 설정하지 않습니다. 스크린 리더가 단어를 바르게 발음하도록 `<html>`에, 또는 다른 언어로 된 부분을 감싸는 요소에 `lang`을 설정하세요. 서버 엔트리의 `Breadcrumbs`와 `Pagination`에는 위에서 설명한 대로 `aria-label`을 직접 넘기세요.
 

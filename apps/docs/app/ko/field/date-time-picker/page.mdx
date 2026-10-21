@@ -49,11 +49,11 @@ const [invalid, setInvalid] = useState(false);
 
 `formatDateTime(value, { locale })`은 날짜를 `formatDate`처럼 숫자로, 시각을 시와 분으로, 초가 있으면 초까지 씁니다. 예: `en-US`에서는 `10/13/2026, 9:30 PM`, `de`에서는 `13.10.2026, 21:30`, `ko`에서는 `2026. 10. 13. 오후 9:30`. `parseDateTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainDateTime`으로 읽고, 날짜와 시각이 아니면 `null`을 돌려줍니다. 날짜는 [`parseDate`](/field/date-picker#typed-dates)처럼 읽되 연도는 전부 쓰거나 끝의 두 자리로 쓰고, 이어서 시각은 [`parseTime`](/field/time-picker#typed-times)처럼 로캘이 쓰는 순서로 읽고, 로캘이 둘 사이에 쓰는 단어는 있어도 없어도 됩니다. 예: `en-US`에서는 `Oct 13, 2026 at 9:30 PM`이나 `10/13/2026 9:30 pm`. 시각에는 `21:30`이나 `2130`처럼 분이 있거나 `9 pm`처럼 단어가 있어야 하므로, `13.10.2026 21`처럼 시만 있는 텍스트는 읽지 않고, 시각이 없는 날짜도 읽지 않습니다. `en-US`의 `10/13 12 05 pm`처럼 연도 없는 월과 일, 그리고 시각으로도 읽히는 텍스트는 읽지 않습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
 
-예시에서는 날짜와 시각이 아닌 텍스트가 값을 비우므로 폼은 값을 보내지 않고, 필드는 포커스를 잃을 때 유효하지 않음으로 표시됩니다. `parseDateTime`은 선택기의 `min`, `max`, `isDateDisabled`를 확인하지 않으므로, 입력한 값은 직접 확인하세요.
+예시에서는 날짜와 시각이 아닌 텍스트가 값을 비우므로 폼은 값을 보내지 않고, 필드는 포커스를 잃을 때 유효하지 않음으로 표시됩니다. `parseDateTime`은 선택기의 `min`, `max`, `isDateDisabled`를 확인하지 않습니다. `min`과 `max`를 벗어난 입력 값은 폼을 유효하지 않게 하지만, `isDateDisabled`는 직접 확인하세요.
 
 ## 단독으로
 
-단독으로 쓰면 `Field.DateTimePicker`가 필드의 컨트롤입니다. 날짜는 로캘의 medium 날짜 스타일로, 시각은 short 시각 스타일로, 초가 있으면 medium 스타일로 보여 주고, 값이 없으면 `placeholder`를 보여 주며, 필드의 다른 곳을 누르면 팝오버가 열립니다. Root에 `name`이 있으면 숨은 입력이 HTML이 쓰는 형식으로 값을 보냅니다. 예: `2026-10-13T09:30`.
+단독으로 쓰면 `Field.DateTimePicker`가 필드의 컨트롤입니다. 날짜는 로캘의 medium 날짜 스타일로, 시각은 short 시각 스타일로, 초가 있으면 medium 스타일로 보여 주고, 값이 없으면 `placeholder`를 보여 주며, 필드의 다른 곳을 누르면 팝오버가 열립니다. Root에 `name`이 있으면 폼이 HTML이 쓰는 형식으로 값을 보냅니다. 예: `2026-10-13T09:30`.
 
 <Example block>
   <FieldDateTimePickerAlone />
@@ -63,13 +63,15 @@ const [invalid, setInvalid] = useState(false);
 
 `min`과 `max`는 두 쪽을 다 제한합니다. 달력은 그 사이의 날짜만 내놓고, 그중 첫 날짜와 마지막 날짜에는 목록이 범위 안의 시각만 내놓습니다. 고른 날짜에 대해 시각이 범위 밖이면, 범위 안의 시각을 고를 때까지 값을 알리지 않습니다. 선택기 옆에 입력한 날짜처럼 달력이 내놓지 않는 날짜는 날짜가 없는 것으로 보므로, 그때 시각을 고르면 포커스가 달력으로 갑니다. `isDateDisabled`와 `firstDayOfWeek`는 [Field.DatePicker](/field/date-picker)에서처럼, `step`은 [Field.TimePicker](/field/time-picker)에서처럼 동작합니다.
 
+`required`는 날짜와 시각이 없는 폼을, `min`과 `max`는 그보다 이르거나 늦은 값이 있는 폼을 유효하지 않게 하며, 달력과 목록의 범위도 제한합니다. 브라우저는 선택기가 버튼 옆에 렌더링하는 네이티브 `<input type="datetime-local">`에서 세 가지를 모두 검사합니다. 이 입력은 화면과 보조 기술에서 숨겨지고 탭 정지점이 아니며, 폼이 필드의 `name`으로 보내는 값입니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고 `min`이나 `max`는 버튼이 날짜와 시각을 쓰는 방식으로 표기되며, 포커스는 숨은 입력이 아니라 버튼으로 갑니다. 요약의 해당 필드 행도 버튼으로 연결됩니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 버튼에 놓입니다. 네이티브 날짜 입력은 1년부터 275760년까지만 담을 수 있으므로, 그 밖의 값이나 범위는 날짜 없음으로 읽힙니다. 빈 값으로 전송되고 `required`, `min`, `max`는 이를 무시하며, 개발 빌드는 한 번 경고합니다. `isDateDisabled`는 검사에 포함되지 않습니다.
+
 ## Temporal
 
 Todae는 Temporal 폴리필을 포함하지 않습니다. 선택기의 값과 `formatDateTime`, `parseDateTime`은 `Temporal.PlainDateTime`이므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜와 시각은 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, 다른 `Field.DateTimePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `dateTimePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 팝오버가 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `dateTimePicker` 문자열로 이름이 붙는 `role="dialog"`입니다. 안에는 키보드 조작이 해당 페이지에 설명된 Calendar와, `timePicker` 문자열로 이름이 붙는 시각의 [OptionList](/optionlist)가 있으며, 목록에서는 화살표 키, Home, End로 옮기고 Enter나 Space로 고릅니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다.
+**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜와 시각은 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, 다른 `Field.DateTimePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `dateTimePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 팝오버가 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `dateTimePicker` 문자열로 이름이 붙는 `role="dialog"`입니다. 안에는 키보드 조작이 해당 페이지에 설명된 Calendar와, `timePicker` 문자열로 이름이 붙는 시각의 [OptionList](/optionlist)가 있으며, 목록에서는 화살표 키, Home, End로 옮기고 Enter나 Space로 고릅니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다. 필수 선택기의 버튼은 버튼에 `aria-required`를 쓸 수 없으므로, StringsProvider의 `required` 문자열로 설명됩니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 텍스트 입력과 그 옆의 선택기에는 같은 값을 주고, `formatDateTime`으로 쓰고 `parseDateTime`으로 읽으세요.
 

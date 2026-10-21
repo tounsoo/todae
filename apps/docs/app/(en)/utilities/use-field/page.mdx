@@ -2,7 +2,7 @@ import { FieldUseField } from '../../../../components/demos/FieldDemo';
 
 # useField
 
-`useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. Read `disabled` from `useField()`, the Root's, to skip the tab stop and ignore keys; a `disabled` or `aria-invalid` you pass in adds to the Root's and never clears it, so combine your own with it in the same checks. `Label.Root htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
+`useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. A control whose value a value input (below) sends instead takes `{ sendsName: false }`, which leaves out `name` the same way and leaves the field's name to the value input. Read `disabled` from `useField()`, the Root's, to skip the tab stop and ignore keys; a `disabled` or `aria-invalid` you pass in adds to the Root's and never clears it, so combine your own with it in the same checks. `Label.Root htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
 
 ```tsx
 function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
@@ -46,6 +46,29 @@ const captionId = useId();
 <Example block>
   <FieldUseField />
 </Example>
+
+## Value inputs
+
+A control that is not a native form element sends nothing with a form and is not validated. `getValueInputProps` gives the props for a native `<input>` that carries its value, so the browser checks `required`, `min` and `max`, and `Form.Root` shows the problem and moves focus to the control.
+
+```tsx
+function Stars({ value, onChange, required }: StarsProps) {
+  const field = useField();
+  const control = field.getControlProps({}, { native: false });
+  return (
+    <>
+      <span {...control} role="slider" tabIndex={0} aria-valuenow={value} />
+      <input
+        {...field.getValueInputProps({ type: 'number', value: value ? String(value) : '', required, min: '1', max: '5' }, control)}
+      />
+    </>
+  );
+}
+```
+
+`type` is `text`, `number`, `date`, `time` or `datetime-local`, and `value` is in that type's format, such as `2026-10-07` for `date`, or `''` for none. `step` is the type's own. `bound` is `{ min, max }` as the field shows them, such as "Oct 7, 2026", for the message that names a bound: a date, time or date and time reads "Enter Oct 7, 2026 or later", and without `bound` the message names the raw value. Pass the props `getControlProps` returned as the second argument, which the type requires, since the input follows them: it is disabled with the field or with a control that is `disabled` or `aria-disabled`, joins the control's `form`, and sends its value under the field's `name`, or under the `name` option when you pass one, which a control that is not a native element needs for a name of its own. It goes without a name when the control has one, or when another control in the field took the field's `name`. A custom control has no `aria-required` unless its role allows it, so set it yourself or describe the control as required. It is not read-only or `type="hidden"`, which the browser leaves out of validation. It is hidden from sight and from assistive technology, is not a tab stop, and a press on the field's shell never focuses it. Render it beside the control, inside the same `Field.Root`. A problem on it moves focus to the control `getControlProps` wired, from `Form.Root`, from a `Form.Summary` link and from the browser's own check outside a `Form.Root`; with no such control, it keeps no focus.
+
+The input is controlled, so a value your code sets changes it and fires nothing: no change event, and no edit. Call `notifyValueChange()` in the handler where a person changes the value, such as a pick or a removed chip, so that `Form.Root` hides the field's server error under its `name` and ends the wait for a reply, and the surrounding `Field.Group` counts the field as edited, as typing in a text input does. A control that is a native element needs no call, since its own change event does that.
 
 ## Accessible composition
 

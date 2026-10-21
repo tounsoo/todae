@@ -16,10 +16,19 @@ export type TableHeadProps = ComponentPropsWithRef<'thead'>;
 export type TableBodyProps = ComponentPropsWithRef<'tbody'>;
 /** A native `tfoot`. */
 export type TableFootProps = ComponentPropsWithRef<'tfoot'>;
+/** The sort state of a column: `ascending`, `descending`, or `none` for a column that can be sorted but is not. */
+export type TableSort = 'ascending' | 'descending' | 'none';
+
 /** A native `tr`. */
-export type TableRowProps = ComponentPropsWithRef<'tr'>;
+export type TableRowProps = {
+  /** Marks the row selected: sets `data-selected` and a fill from the `table.row.bg.selected` token. It sets no ARIA; the row's checkbox carries the state. */
+  selected?: boolean;
+} & ComponentPropsWithRef<'tr'>;
 /** A native `th`, a column or row header. Give it `scope`. */
-export type TableHeaderCellProps = ComponentPropsWithRef<'th'>;
+export type TableHeaderCellProps = {
+  /** The column's sort state. Sets `data-sort`, and `aria-sort` for `ascending` and `descending`; `none` leaves `aria-sort` off. */
+  sort?: TableSort;
+} & ComponentPropsWithRef<'th'>;
 /** A native `td`. */
 export type TableCellProps = ComponentPropsWithRef<'td'>;
 
@@ -43,16 +52,25 @@ function Foot(props: TableFootProps) {
   return <tfoot {...props} />;
 }
 
-function Row(props: TableRowProps) {
-  return <tr {...props} />;
+function Row({ selected, className, ...props }: TableRowProps) {
+  return <tr data-selected={selected ? '' : undefined} {...props} className={cx(styles.row, className)} />;
 }
 
-function HeaderCell({ className, ...props }: TableHeaderCellProps) {
-  return <th {...props} className={cx(styles.headerCell, className)} />;
+function HeaderCell({ sort, className, ...props }: TableHeaderCellProps) {
+  return (
+    <th
+      data-sort={sort}
+      aria-sort={sort === 'ascending' || sort === 'descending' ? sort : undefined}
+      {...props}
+      className={cx(styles.headerCell, className)}
+    />
+  );
 }
 
 function Cell({ className, ...props }: TableCellProps) {
   return <td {...props} className={cx(styles.cell, className)} />;
 }
+
+export { Root, Caption, Head, Body, Foot, Row, HeaderCell, Cell };
 
 export const Table = { Root, Caption, Head, Body, Foot, Row, HeaderCell, Cell } as const;

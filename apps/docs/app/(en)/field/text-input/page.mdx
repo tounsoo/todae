@@ -1,8 +1,8 @@
-import { FieldLabelStates, FieldNumber } from '../../../../components/demos/FieldDemo';
+import { FieldLabelStates } from '../../../../components/demos/FieldDemo';
 
 # Field.TextInput
 
-`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the input is read-only. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. For a typed date, range of dates, time, or date and time, read the text with `parseDate`, `parseDateRange`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the input is read-only. `type` takes `text`, `search`, `email`, `url`, `tel` or `password`. A number is [Field.NumberInput](/field/number-input). For a typed date, range of dates, time, or date and time, read the text with `parseDate`, `parseDateRange`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
 
 ```tsx
 const id = useId();
@@ -19,42 +19,21 @@ const id = useId();
   <FieldLabelStates />
 </Example>
 
-## Number
-
-`Field.TextInput` with `type="number"` stays a native input, with the browser's own spinner, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, or an empty string while the input is incomplete. Constrain it with the native `min`, `max` and `step`.
-
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Seats</Label.Root>
-  <Field.Root id={id}>
-    <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldNumber />
-</Example>
-
-Stepper buttons are an app composition; build them around this input when the native spinner is not enough.
-
 ## Accessible composition
 
 **Todae handles:** The input takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset).
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root.
 
-**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A number input whose value is incomplete reports an empty string, so don't treat an empty `value` as a cleared field while the user is still typing.
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root.
 
 ## When to use
 
 ### Field.TextInput
 
-**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number.
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password).
 
-**When not:** A time → `Field.TimePicker`. A range of dates → `Field.DateRangePicker`. A date and time → `Field.DateTimePicker`. Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+**When not:** A number → `Field.NumberInput`. A time → `Field.TimePicker`. A range of dates → `Field.DateRangePicker`. A date and time → `Field.DateTimePicker`. Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
 
 ## Props
 

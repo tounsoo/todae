@@ -18,7 +18,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.NumberInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -28,7 +28,8 @@ import {
 
 입력 파트마다 자체 페이지가 있습니다.
 
-- [Field.TextInput](/field/text-input): 한 줄 텍스트, 또는 네이티브 숫자.
+- [Field.TextInput](/field/text-input): 한 줄 텍스트.
+- [Field.NumberInput](/field/number-input): 로캘 형식으로 입력하거나 단계로 바꾸는 숫자. 옆에 `Field.Increment`와 `Field.Decrement` 버튼을 둘 수 있습니다.
 - [Field.Textarea](/field/textarea): 여러 줄 텍스트.
 - [Field.ChipInput](/field/chip-input): 칩과 입력.
 - [Field.Select](/field/select): 네이티브 `<select>`.
@@ -90,6 +91,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
+이것은 직접 하는 연결입니다. [Form](/form) 안에서는 `Field.Group`이 브라우저 자체의 검증을 읽고, `id` 없는 `ErrorMessage.Root`가 문제를 보여 주면서 이 연결을 대신 해 줍니다.
+
 ## Counter
 
 `Field.Counter`는 `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줍니다. 자체 줄을 차지합니다. 서버 HTML에 글자 수가 포함되도록 입력 뒤에 쓰세요. `Field.Root`마다 Counter는 하나입니다. 입력은 계속 제어 상태이며, `defaultValue`는 읽지 않습니다.
@@ -132,7 +135,7 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <CounterPlain />
 </Example>
 
-숫자 입력이 아닌 곳에 `maxLength`가 있으면 Counter는 스크린 리더에 한도를 알리고, 남은 글자가 20자 이하가 되면 몇 자 남았는지도 알립니다. 이 텍스트는 [StringsProvider](/utilities/strings-provider)의 `characterLimit`, `charactersLeft`, `characterLimitReached` 문자열에서 오며, 설정하지 않으면 영어입니다.
+`maxLength`가 있으면 Counter는 스크린 리더에 한도를 알리고, 남은 글자가 20자 이하가 되면 몇 자 남았는지도 알립니다. 이 텍스트는 [StringsProvider](/utilities/strings-provider)의 `characterLimit`, `charactersLeft`, `characterLimitReached` 문자열에서 오며, 설정하지 않으면 영어입니다.
 
 ## Row
 
@@ -173,7 +176,7 @@ import { Search } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. 다른 ARIA props는 셸 `div`에 남습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. 숫자 입력이 아닌 곳에 `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다.
+**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. 다른 ARIA props는 셸 `div`에 남습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 Root의 `aria-describedby`에 넣고, 오류가 보이는 동안 `invalid`를 켜세요. 상호작용하는 `Field.Icon` 안의 버튼마다 이름을 주세요. 글자 수 문구는 [StringsProvider](/utilities/strings-provider)로 제품의 언어에 맞추세요.
 
@@ -201,7 +204,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Group
 
-**언제:** 레이블이나 캡션을 컨트롤 위 `field.label.gap` 간격에 두고, Description이나 ErrorMessage를 그 아래에 쌓을 때. `Field.Root` 바깥에 두며, `Text.Root` 캡션 아래의 RadioGroup처럼 어떤 컨트롤에도 씁니다.
+**언제:** 레이블이나 캡션을 컨트롤 위 `field.label.gap` 간격에 두고, Description이나 ErrorMessage를 그 아래에 쌓을 때. `Field.Root` 바깥에 두며, `Text.Root` 캡션 아래의 RadioGroup처럼 어떤 컨트롤에도 씁니다. [Form](/form) 안에서는 그 안의 컨트롤에 대한 검증 범위이기도 합니다.
 
 **쓰지 않을 때:** 서로 다른 필드 사이 간격은 `Stack.Root`를 쓰세요. 관련 컨트롤을 범례 하나로 묶을 때는 [Fieldset](/fieldset)을 쓰세요.
 
@@ -213,7 +216,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Counter
 
-**언제:** `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줄 때. `maxLength`가 설정되면 `n / max`로, 그렇지 않거나 숫자 입력이면 `n`으로 표시합니다.
+**언제:** `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줄 때. `maxLength`가 설정되면 `n / max`로, 그렇지 않으면 `n`으로 표시합니다.
 **쓰지 않을 때:** 글자 수를 보이지 않는 엄격한 제한에는 `maxLength`만 설정하고, 코드나 PIN 같은 짧은 고정 길이 값에는 쓰지 마세요.
 
 ## Props

@@ -16,7 +16,8 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDateTime } from './Field.shared.js';
+import { useFieldPicker, htmlDateTime, valueBounds } from './Field.shared.js';
+import { FieldValueInput } from './Field.ValueInput.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
@@ -27,10 +28,12 @@ export type FieldDateTimePickerProps = {
   value: Temporal.PlainDateTime | null;
   /** Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it. */
   onValueChange?: (value: Temporal.PlainDateTime) => void;
-  /** The earliest date and time that can be picked. */
+  /** The earliest date and time that can be picked. A form with an earlier one is invalid. */
   min?: Temporal.PlainDateTime;
-  /** The latest date and time that can be picked. */
+  /** The latest date and time that can be picked. A form with a later one is invalid. */
   max?: Temporal.PlainDateTime;
+  /** A form with no date and time is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
@@ -194,14 +197,17 @@ function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined
  * Beside any other control but a Field.ColorPicker, Field.DatePicker,
  * Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type
  * the date and time in, that control is the field's control instead, and the
- * button is named from the dateTimePicker string. With `showValue={false}`
- * the button shows only a calendar glyph.
+ * button is named from the dateTimePicker string. The date and time go in a
+ * native input the browser validates, so `required`, `min` and `max` block a
+ * submit and Form.Root shows them. With `showValue={false}` the button shows
+ * only a calendar glyph.
  */
 export function DateTimePicker({
   value,
   onValueChange,
   min,
   max,
+  required,
   isDateDisabled,
   firstDayOfWeek,
   step = 30,
@@ -227,6 +233,7 @@ export function DateTimePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The calendar's Tab stop: the date, or else today or the nearest date in range.
     focusSelector: CALENDAR_TAB_STOP,
   });
@@ -248,16 +255,15 @@ export function DateTimePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
-      {picker.name ? (
-        <input
-          type="hidden"
-          name={picker.name}
-          value={value ? htmlDateTime(value) : ''}
-          disabled={picker.disabled}
-          form={picker.form}
-        />
-      ) : null}
+      <FieldValueInput
+        {...picker.valueInput({
+          type: 'datetime-local',
+          value: value ? htmlDateTime(value) : '',
+          // The list picks any time, so no step is off.
+          step: 'any',
+          ...valueBounds(min, max, htmlDateTime, (at) => dateTimeLabel(at, locale)),
+        })}
+      />
       {/* Mounted while open only: a form can hold many date and time pickers. */}
       {picker.shown ? (
         <Popover.Root
@@ -275,7 +281,10 @@ export function DateTimePicker({
             step={step}
             locale={locale}
             label={strings.timePicker}
-            onValueChange={onValueChange}
+            onValueChange={(next) => {
+              picker.notifyValueChange();
+              onValueChange?.(next);
+            }}
             onDone={() => picker.setOpen(false, 'select')}
           />
         </Popover.Root>

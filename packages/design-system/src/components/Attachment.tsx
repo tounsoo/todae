@@ -13,7 +13,7 @@ import { isReachable } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useCloseGlyph } from './closeGlyph.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { useDomId } from './domId.js';
 import { Progress, type ProgressRootProps } from './Progress.js';
 import { cx, useComposedRefs } from './props.js';
@@ -189,7 +189,7 @@ function AttachmentProgress({ className, ...props }: AttachmentProgressProps) {
 function Remove({ 'aria-label': ariaLabel, className, children, ref, onClick, ...props }: AttachmentRemoveProps) {
   const { named } = useAttachment('Remove');
   const { removeAttachment } = useStrings();
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, removeAttachment(named?.text ?? ''));
+  const [label, refs] = useButtonName(children, ariaLabel, ref, removeAttachment(named?.text ?? ''));
   const glyph = useCloseGlyph();
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     // A click does not focus a button in every browser (Safari). Focus the

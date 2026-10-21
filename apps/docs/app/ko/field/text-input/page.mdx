@@ -1,8 +1,8 @@
-import { FieldLabelStates, FieldNumber } from '../../../../components/demos/FieldDemo';
+import { FieldLabelStates } from '../../../../components/demos/FieldDemo';
 
 # Field.TextInput
 
-`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 입력한 날짜, 날짜 범위, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
+`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`를 받습니다. 숫자는 [Field.NumberInput](/field/number-input)입니다. 입력한 날짜, 날짜 범위, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
 
 ```tsx
 const id = useId();
@@ -19,42 +19,21 @@ const id = useId();
   <FieldLabelStates />
 </Example>
 
-## 숫자
-
-`type="number"`인 `Field.TextInput`은 브라우저 자체의 스피너를 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요.
-
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Seats</Label.Root>
-  <Field.Root id={id}>
-    <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldNumber />
-</Example>
-
-스테퍼 버튼은 앱에서 조합할 부분입니다. 네이티브 스피너로 부족할 때 이 입력을 중심으로 만드세요.
-
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 입력은 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다.
 
-**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요. 숫자 입력은 값이 덜 끝났을 때 빈 문자열을 알리므로, 사용자가 아직 입력하는 동안 빈 `value`를 지운 필드로 다루지 마세요.
+**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요.
 
 ## 언제 쓰나요
 
 ### Field.TextInput
 
-**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자.
+**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password).
 
-**쓰지 않을 때:** 시각 → `Field.TimePicker`. 날짜 범위 → `Field.DateRangePicker`. 날짜와 시각 → `Field.DateTimePicker`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
+**쓰지 않을 때:** 숫자 → `Field.NumberInput`. 시각 → `Field.TimePicker`. 날짜 범위 → `Field.DateRangePicker`. 날짜와 시각 → `Field.DateTimePicker`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
 
 ## Props
 

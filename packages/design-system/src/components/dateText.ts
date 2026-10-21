@@ -1,5 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date text for a text input beside Field.DatePicker: no hooks or context.
+import { fold } from './foldText.js';
 
 export type DateTextOptions = {
   /** The locale, such as "ko". The runtime's own when not set. */
@@ -22,13 +23,6 @@ export function formatDate(date: Temporal.PlainDate, options: DateTextOptions = 
   return date.withCalendar('iso8601').toLocaleString(options.locale, NUMERIC);
 }
 
-/** The digit a decimal digit of any script stands for. Each script's digits run 0 to 9 in a row. */
-function digitValue(char: string) {
-  let first = char.codePointAt(0)!;
-  while (/\p{Nd}/u.test(String.fromCodePoint(first - 1))) first--;
-  return (char.codePointAt(0)! - first) % 10;
-}
-
 /**
  * Text as dates are compared: compatibility forms folded (full-width digits
  * become ASCII), case folded, accents that Greek capitals drop removed, every
@@ -39,23 +33,6 @@ export function normalize(text: string) {
   return fold(text)
     .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
     .trim();
-}
-
-/** Text as `normalize` folds it, with its punctuation, symbols and spaces as they are. */
-export function fold(text: string) {
-  return (
-    text
-      .normalize('NFKC')
-      // Upper then lower case, so ı and İ, or ß and SS, fold the same.
-      .toUpperCase()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/i\u0307/g, 'i')
-      .replace(/(\p{Script=Greek})\p{M}+/gu, '$1')
-      .normalize('NFC')
-      .replace(/\p{Nd}/gu, (char) => String(digitValue(char)))
-      .replace(/\p{Cf}/gu, '')
-  );
 }
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
