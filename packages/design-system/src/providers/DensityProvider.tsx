@@ -16,12 +16,16 @@ export interface Densities {
 export type Density = keyof Densities;
 
 export type DensityProviderProps = {
+  /** Defaults to the enclosing DensityProvider's density, or `comfortable` with none. */
   density?: Density;
 } & ComponentProps<'div'>;
 
-const DensityContext = /* @__PURE__ */ createContext<Density>('comfortable');
+// null with no provider above, so the outermost one defaults to comfortable.
+const DensityContext = /* @__PURE__ */ createContext<Density | null>(null);
 
-export function DensityProvider({ density = 'comfortable', ...props }: DensityProviderProps) {
+export function DensityProvider({ density: ownDensity, ...props }: DensityProviderProps) {
+  const enclosing = useContext(DensityContext);
+  const density = ownDensity ?? enclosing ?? 'comfortable';
   return (
     <DensityContext.Provider value={density}>
       <div {...props} data-density={density} />
@@ -30,5 +34,5 @@ export function DensityProvider({ density = 'comfortable', ...props }: DensityPr
 }
 
 export function useDensity(): Density {
-  return useContext(DensityContext);
+  return useContext(DensityContext) ?? 'comfortable';
 }

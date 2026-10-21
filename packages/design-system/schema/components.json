@@ -1077,7 +1077,7 @@
           "type": "\"compact\" | \"comfortable\" | \"spacious\"",
           "required": false,
           "description": "Spacing density written to data-density.",
-          "default": "\"comfortable\""
+          "default": "the enclosing DensityProvider's, or \"comfortable\""
         },
         {
           "name": "children",
@@ -1862,8 +1862,8 @@
         {
           "name": "onChange",
           "type": "(event: ChangeEvent<HTMLTextAreaElement>) => void",
-          "required": true,
-          "description": "Native change handler."
+          "required": false,
+          "description": "Native change handler. Optional when onValueChange is enough."
         },
         {
           "name": "onValueChange",
@@ -1918,8 +1918,8 @@
         {
           "name": "onChange",
           "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-          "required": true,
-          "description": "Native change handler."
+          "required": false,
+          "description": "Native change handler. Optional when onValueChange is enough."
         },
         {
           "name": "onValueChange",
@@ -3852,8 +3852,8 @@
           "name": "appearance",
           "type": "\"system\" | \"light\" | \"dark\"",
           "required": false,
-          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS.",
-          "default": "\"system\""
+          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS. Leave it out on a nested provider that only sets overrides.",
+          "default": "the enclosing ThemeProvider's, or \"system\""
         },
         {
           "name": "overrides",

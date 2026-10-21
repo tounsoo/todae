@@ -12,6 +12,8 @@ export type CatalogToken = {
   ref: string | null;
   layer: TokenLayer;
   context: string | null;
+  /** The set or modifier that declares the token, where a company overrides it. */
+  entry: { kind: 'set' | 'modifier'; name: string };
   /** The token's `$description`, or its nearest group's in the same file; a company's wins over Todae's. */
   description: string | null;
 };
@@ -30,8 +32,15 @@ function isCatalogToken(value: unknown): value is CatalogToken {
     (row.ref === null || typeof row.ref === 'string') &&
     LAYERS.includes(row.layer as TokenLayer) &&
     (row.context === null || typeof row.context === 'string') &&
+    isEntry(row.entry) &&
     (row.description === null || typeof row.description === 'string')
   );
+}
+
+function isEntry(value: unknown): value is CatalogToken['entry'] {
+  if (typeof value !== 'object' || value === null) return false;
+  const entry = value as Record<string, unknown>;
+  return (entry.kind === 'set' || entry.kind === 'modifier') && typeof entry.name === 'string';
 }
 
 let cached: CatalogToken[] | null = null;
@@ -85,6 +94,7 @@ export function getToken(path: string) {
     path,
     type: first.type,
     layer: first.layer,
+    entry: first.entry,
     cssVar: first.cssVar,
     description: first.description,
     values: rows.map(({ context, cssValue, ref }) => ({ context, cssValue, ref })),

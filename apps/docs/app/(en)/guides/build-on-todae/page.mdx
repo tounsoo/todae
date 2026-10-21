@@ -55,6 +55,30 @@ References are JSON Pointers into the merged token tree:
 }
 ```
 
+To change one of Todae's own tokens, declare it again in a set or modifier with the same name as the Todae one that declares it, and repeat that entry's `layer` and placement in `$extensions`. The company's value wins, and the rest of the entry stays Todae's.
+
+- `core`: raw scales, such as `color.gray.*`, `radius.*`, `font.family.sans` and `font.weight.*`.
+- `appearance`, `density`: semantic colors and spacing, in a context named `light`, `dark` or a density.
+- `focus`: `focus.ring.*`.
+- `button`: `button.base.*`, the geometry every button variant shares.
+- `buttonVariant`: `button.<variant>.*`, in a context named after the variant.
+- `contract`: every other component token, such as `card.shadow` and `field.radius`.
+
+```json
+"sets": {
+  "core": {
+    "sources": [{ "$ref": "./core.json" }],
+    "$extensions": { "dev.todae": { "layer": "core" } }
+  },
+  "button": {
+    "sources": [{ "$ref": "./button.json" }],
+    "$extensions": { "dev.todae": { "layer": "contract" } }
+  }
+}
+```
+
+Each row of the token catalog, `@tounsoo/todae/tokens.json`, names its entry in `entry`, and a token in the wrong entry fails the build with a message naming the entry it belongs in. Change a core token only with a literal value, since core tokens are declared once on `:root` and reference nothing.
+
 Build it with the `todae-tokens` CLI:
 
 ```sh
@@ -111,6 +135,19 @@ Set it on an element that carries `data-appearance` or `data-density`. Contract 
 </ThemeProvider>
 ```
 
+A `ThemeProvider` with no `appearance` takes the enclosing provider's, and the outermost defaults to `system`, so a nested provider that only sets overrides keeps the page light or dark. Each provider declares the appearance tokens again, so an outer provider's override of one, such as `color.accent.default`, doesn't reach inside a nested provider: repeat it there. Component token overrides, such as `card.shadow`, do carry through. An override holds in every appearance of the provider that sets it. To give one a light and a dark value, pick it with `useAppearance()` in a component inside a provider. Under `system` the server renders the light value until the page hydrates, so a value known in advance belongs in a company token package, with a light and a dark context.
+
+```tsx
+const PARTNER_ACCENT = {
+  light: { colorSpace: 'oklch', components: [0.45, 0.12, 50] },
+  dark: { colorSpace: 'oklch', components: [0.8, 0.1, 50] },
+} as const;
+
+function PartnerTheme({ children }: { children: React.ReactNode }) {
+  return <ThemeProvider overrides={{ 'color.accent.default': PARTNER_ACCENT[useAppearance()] }}>{children}</ThemeProvider>;
+}
+```
+
 Company tokens are unknown to Todae, so pass their generated types to allow them:
 
 ```tsx
@@ -125,6 +162,10 @@ import { THEME_OVERRIDE_TYPES } from './todae-theme.types';
 ```
 
 TypeScript then accepts `brand.*` keys and still rejects misspelled ones.
+
+## A worked example
+
+[`examples/fernway`](https://github.com/tounsoo/todae/tree/main/examples/fernway) in Todae's repository themes Todae for a made-up company with tokens only. It changes Todae's grays, radii, font and accent, adds a button variant and tokens of its own, and sets a partner's colors at runtime.
 
 ## Adding a variant or a density
 

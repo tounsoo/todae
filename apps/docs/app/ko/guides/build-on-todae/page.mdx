@@ -55,6 +55,30 @@ CSS에서 모든 토큰은 경로를 이름으로 하는 커스텀 프로퍼티�
 }
 ```
 
+Todae 자체 토큰을 바꾸려면, 그 토큰을 선언한 Todae의 세트나 모디파이어와 같은 이름의 세트나 모디파이어에 다시 선언하고, `$extensions`에 그 항목의 `layer`와 배치 설정을 그대로 적습니다. 회사의 값이 이기고, 나머지는 Todae의 것으로 남습니다.
+
+- `core`: `color.gray.*`, `radius.*`, `font.family.sans`, `font.weight.*` 같은 원시 스케일.
+- `appearance`, `density`: 시맨틱 색상과 간격. `light`, `dark` 또는 밀도 이름의 컨텍스트에 둡니다.
+- `focus`: `focus.ring.*`.
+- `button`: `button.base.*`. 모든 버튼 변형이 공유하는 형태입니다.
+- `buttonVariant`: `button.<variant>.*`. 변형 이름의 컨텍스트에 둡니다.
+- `contract`: `card.shadow`, `field.radius` 같은 나머지 컴포넌트 토큰.
+
+```json
+"sets": {
+  "core": {
+    "sources": [{ "$ref": "./core.json" }],
+    "$extensions": { "dev.todae": { "layer": "core" } }
+  },
+  "button": {
+    "sources": [{ "$ref": "./button.json" }],
+    "$extensions": { "dev.todae": { "layer": "contract" } }
+  }
+}
+```
+
+토큰 카탈로그 `@tounsoo/todae/tokens.json`의 각 행은 `entry`에 그 항목을 적고, 잘못된 항목에 둔 토큰은 빌드를 실패시키며 메시지가 그 토큰이 속한 항목을 알려 줍니다. core 토큰은 `:root`에 한 번만 선언되고 아무것도 참조하지 않으므로, 리터럴 값으로만 바꾸세요.
+
 `todae-tokens` CLI로 빌드합니다.
 
 ```sh
@@ -111,6 +135,19 @@ import './todae-theme.css';
 </ThemeProvider>
 ```
 
+`appearance`가 없는 `ThemeProvider`는 바깥 프로바이더의 appearance를 따르고, 가장 바깥 프로바이더의 기본값은 `system`입니다. 그래서 오버라이드만 설정하는 중첩 프로바이더는 페이지의 라이트나 다크를 그대로 유지합니다. 프로바이더마다 appearance 토큰을 다시 선언하므로, 바깥 프로바이더가 `color.accent.default` 같은 appearance 토큰을 오버라이드해도 중첩 프로바이더 안에는 닿지 않습니다. 그 프로바이더에서 다시 설정하세요. `card.shadow` 같은 컴포넌트 토큰의 오버라이드는 그대로 이어집니다. 오버라이드는 그것을 설정한 프로바이더의 모든 appearance에 적용됩니다. 라이트와 다크에 다른 값을 주려면, 프로바이더 안의 컴포넌트에서 `useAppearance()`로 고르세요. `system`에서는 페이지가 하이드레이션될 때까지 서버가 라이트 값을 렌더링하므로, 미리 알 수 있는 값은 라이트와 다크 컨텍스트를 둔 회사 토큰 패키지에 넣으세요.
+
+```tsx
+const PARTNER_ACCENT = {
+  light: { colorSpace: 'oklch', components: [0.45, 0.12, 50] },
+  dark: { colorSpace: 'oklch', components: [0.8, 0.1, 50] },
+} as const;
+
+function PartnerTheme({ children }: { children: React.ReactNode }) {
+  return <ThemeProvider overrides={{ 'color.accent.default': PARTNER_ACCENT[useAppearance()] }}>{children}</ThemeProvider>;
+}
+```
+
 회사 토큰은 Todae가 알지 못하므로, 생성된 타입을 넘겨 허용합니다.
 
 ```tsx
@@ -125,6 +162,10 @@ import { THEME_OVERRIDE_TYPES } from './todae-theme.types';
 ```
 
 그러면 TypeScript가 `brand.*` 키를 받아들이면서도 철자가 틀린 키는 여전히 거부합니다.
+
+## 실제 예제
+
+Todae 저장소의 [`examples/fernway`](https://github.com/tounsoo/todae/tree/main/examples/fernway)는 가상의 회사를 위해 토큰만으로 Todae의 테마를 만듭니다. Todae의 회색, 모서리 반경, 글꼴과 액센트를 바꾸고, 버튼 변형과 자체 토큰을 추가하고, 파트너의 색상을 런타임에 설정합니다.
 
 ## 변형이나 밀도 추가하기
 

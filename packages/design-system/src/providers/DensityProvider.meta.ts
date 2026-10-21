@@ -8,7 +8,7 @@ export const meta = {
       name: 'density',
       type: '"compact" | "comfortable" | "spacious"',
       required: false,
-      default: '"comfortable"',
+      default: 'the enclosing DensityProvider\'s, or "comfortable"',
       description: 'Spacing density written to data-density.',
     },
     {

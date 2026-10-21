@@ -1,0 +1,26 @@
+@import '@tounsoo/todae/todae.css';
+@import './theme/todae-theme.css';
+
+body {
+  margin: 0;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--todae-color-bg-canvas);
+  color: var(--todae-color-fg-default);
+  font-family: var(--todae-text-font-family);
+}
+
+.shell {
+  max-width: 60rem;
+  margin-inline: auto;
+  padding: var(--todae-space-6) var(--todae-space-4);
+}
+
+.hero {
+  background: var(--todae-fernway-hero-bg);
+  color: var(--todae-fernway-hero-fg);
+  border-radius: var(--todae-fernway-hero-radius);
+  padding: var(--todae-fernway-hero-padding);
+}

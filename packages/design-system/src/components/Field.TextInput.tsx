@@ -3,7 +3,7 @@ import { mergeDescribedBy, useFieldContext } from './Field.context.js';
 import { cx } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
-import { useTextEntry } from './Field.shared.js';
+import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 /**
  * Input types that take a string value. The number type keeps its native
@@ -19,7 +19,8 @@ const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set
 
 export type FieldTextInputProps = {
   value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   onValueChange?: (value: string) => void;
   placeholder?: string;
   type?: FieldTextInputType;
@@ -33,6 +34,7 @@ export function TextInput({
   type = 'text',
   className,
   maxLength,
+  readOnly,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
@@ -48,10 +50,8 @@ export function TextInput({
       value={value}
       type={type}
       className={cx(styles.input, className)}
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
+      onChange={valueChangeHandler(onChange, onValueChange)}
+      readOnly={readOnly ?? (!onChange && !onValueChange)}
     />
   );
 }

@@ -13,8 +13,8 @@ export const meta = {
     {
       name: 'onChange',
       type: '(event: ChangeEvent<HTMLInputElement>) => void',
-      required: true,
-      description: 'Native change handler.',
+      required: false,
+      description: 'Native change handler. Optional when onValueChange is enough.',
     },
     {
       name: 'onValueChange',

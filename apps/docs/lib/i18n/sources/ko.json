@@ -295,7 +295,7 @@
   },
   "field/text-input": {
     "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "711b078390af",
+    "# Field.TextInput": "c0c06c3b28e6",
     "## Number": "1a051e370546",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
@@ -305,7 +305,7 @@
   },
   "field/textarea": {
     "(top)": "4d3ac00b8ea3",
-    "# Field.Textarea": "14c1c3cd31ad",
+    "# Field.Textarea": "ea1cc4b98813",
     "## Height": "c62990618acf",
     "## Density and states": "bdbe9831349f",
     "## Highlights": "e18e517ab4bb",
@@ -350,11 +350,12 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "176b63cd9839",
-    "## Overrides: CSS or ThemeProvider": "212a915c83e6",
+    "## A company resolver": "0c0a2beee925",
+    "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
+    "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
     "## Wrapping a component": "60f88028be57",
-    "(section order)": "280102156fc8"
+    "(section order)": "e61ac1427c00"
   },
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
@@ -404,7 +405,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "0c6ef21bb310",
+    "## Tools": "8445ce3fd244",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",
@@ -648,10 +649,10 @@
   },
   "tokens": {
     "(top)": "9f7f155f1290",
-    "# Tokens": "5797b1d8fe42",
+    "# Tokens": "411f78a001fd",
     "## When to use": "d57fe8233a0b",
-    "### ThemeProvider": "fb9c7530fef5",
-    "### DensityProvider": "b60121bd3031",
+    "### ThemeProvider": "e2d8c7ea0e56",
+    "### DensityProvider": "5365ed3cf367",
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
