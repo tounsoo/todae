@@ -91,6 +91,13 @@ export function useValidationScope<E extends HTMLElement>(
     setReveal((prev) => (prev.epoch === epoch && prev.touched && !prev.revealed ? { ...prev, revealed: true } : prev)),
   );
 
+  // A person's edit of a control inside: the change event's way in, and useField's notifyValueChange's.
+  const touch = useCallback(() => {
+    if (epoch === undefined) return;
+    setReveal((prev) => (prev.epoch === epoch && prev.touched ? prev : { epoch, touched: true, revealed: false }));
+    revalidate();
+  }, [epoch, revalidate]);
+
   const registerMessage = useCallback(() => {
     setMessages((count) => count + 1);
     return () => setMessages((count) => count - 1);
@@ -115,8 +122,8 @@ export function useValidationScope<E extends HTMLElement>(
   });
 
   const value = useMemo<ValidationScopeValue | null>(
-    () => (on ? { id, error, revalidate, registerMessage } : null),
-    [on, id, error, revalidate, registerMessage],
+    () => (on ? { id, error, revalidate, touch, registerMessage } : null),
+    [on, id, error, revalidate, touch, registerMessage],
   );
 
   const errorId = error && messages > 0 ? id : undefined;
@@ -139,8 +146,7 @@ export function useValidationScope<E extends HTMLElement>(
       // Only a change of this scope's own control touches it: a nested scope's is that scope's, and a portaled one is not inside.
       const target = event.target;
       if (!(target instanceof Element) || target.closest(SCOPE_SELECTOR) !== event.currentTarget) return;
-      setReveal((prev) => (prev.epoch === form.epoch && prev.touched ? prev : { epoch: form.epoch, touched: true, revealed: false }));
-      revalidate();
+      touch();
     },
     onFocus(event) {
       handlers.onFocus?.(event);

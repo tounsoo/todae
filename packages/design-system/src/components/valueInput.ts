@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useRef, type InputHTMLAttributes, type RefCallback } from 'react';
-import { BESIDE_NAMED, useFieldPresence, type FieldContextValue } from './Field.context.js';
+import { useCallback, useContext, useMemo, useRef, type InputHTMLAttributes, type RefCallback } from 'react';
+import { useBesideNamed, type FieldContextValue } from './Field.context.js';
+import { FormContext, ValidationScopeContext } from './Form.context.js';
 import { registerValueInput, type ValueInputBound } from './validity.js';
 import { visuallyHiddenClass } from './VisuallyHidden.js';
 
@@ -8,6 +9,8 @@ export type ValueInputOptions = {
   type: 'text' | 'number' | 'date' | 'time' | 'datetime-local';
   /** The value in that type's format, such as `2026-10-07` for `date`. `''` for none. */
   value: string;
+  /** The name the value is sent under, instead of the field's. */
+  name?: string;
   /** The value may not be `''`. */
   required?: boolean;
   /** The lowest value, in the type's format. */
@@ -20,93 +23,75 @@ export type ValueInputOptions = {
   bound?: ValueInputBound;
 };
 
+/** The props of the control the value input speaks for, as `getControlProps` returned them. */
+export type ValueInputControl = {
+  /** A control with a name sends its own value, so the value input goes without one. */
+  name?: string;
+  disabled?: boolean;
+  'aria-disabled'?: boolean | 'true' | 'false';
+  form?: string;
+};
+
 export type ValueInputProps = InputHTMLAttributes<HTMLInputElement> & {
   ref: RefCallback<HTMLInputElement>;
   'data-todae-value-input': '';
 };
 
-/** What a control wired with `getControlProps` decided, which its value input follows. */
-export type WiredControl = {
-  /** The Root's or the control's own `disabled`, or an `aria-disabled` control. */
-  disabled: boolean;
-  /** The control's `form`. */
-  form: string | undefined;
-  /** The control's own `name` prop, which the value input takes when the control does not send. */
-  name: string | undefined;
-  /** The control is a named element that sends its own value, so the value input goes without a name. */
-  sends: boolean;
-};
-
-// What each value input held at its last commit, so a change can be announced.
-const committed = /* @__PURE__ */ new WeakMap<HTMLInputElement, string>();
+const noop = () => {};
 
 /**
- * Sets the input's value as a person's edit would, and says so with an `input`
- * event that bubbles, once the commit is over: React cannot take an event
- * during one. The first commit announces nothing.
- */
-function commitValue(node: HTMLInputElement, value: string) {
-  const prev = committed.get(node);
-  committed.set(node, value);
-  // The prototype's setter, not the element's: React's value tracking would take the write for its own and report no change.
-  if (node.value !== value) Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(node, value);
-  if (prev === undefined || prev === value) return;
-  queueMicrotask(() => {
-    if (node.isConnected) node.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-}
-
-/**
- * The value input half of useField. `wire` is called by getControlProps with
- * what it resolved; `track` by its ref with the control's node. Everything the
- * getter decides, it decides here: the name, `disabled`, `form` and the control
- * a problem on the input sends focus to.
+ * The value input half of useField. `track` is called by the control's ref with
+ * its node: the control the input speaks for, which the input sends focus to.
+ * Everything the getter decides, it decides here, from the control's props and
+ * what the field holds: the name, `disabled` and `form`.
  */
 export function useValueInput(ctx: FieldContextValue) {
-  const presence = useFieldPresence(ctx.store);
-  // The control this instance wired, if any. A value input speaks for that one, else for the field's last.
+  // The one fact the name decision needs: a control re-renders when it flips, not each time another control mounts.
+  const named = useBesideNamed(ctx.store);
+  const form = useContext(FormContext);
+  const scope = useContext(ValidationScopeContext);
   const own = useRef<HTMLElement | null>(null);
-  // What that wiring resolved. Written by getControlProps in a render and read by the getter in the same one.
-  const wired = useRef<WiredControl | null>(null);
-  const wire = useCallback((control: WiredControl) => {
-    wired.current = control;
-  }, []);
+  const input = useRef<HTMLInputElement | null>(null);
   const track = useCallback((node: HTMLElement | null) => {
     own.current = node;
   }, []);
-  const { inputRef, store } = ctx;
+  const owner = useCallback(() => own.current, []);
+  const { disabled, name: fieldName, store } = ctx;
   const getValueInputProps = useCallback(
-    (options: ValueInputOptions): ValueInputProps => {
-      const control = wired.current;
-      const owner = () => own.current ?? inputRef.current;
-      const bound: ValueInputBound = options.bound ?? {};
-      return {
-        ref: (node) => {
-          if (!node) return;
-          registerValueInput(node, store, { owner, bound });
-          commitValue(node, options.value);
-        },
-        type: options.type,
-        // The field's name unless a control already took it.
-        name: control?.sends ? undefined : (control?.name ?? (presence & BESIDE_NAMED ? undefined : ctx.name)),
-        defaultValue: options.value,
-        required: options.required,
-        min: options.min,
-        max: options.max,
-        step: options.step,
-        disabled: control ? control.disabled : ctx.disabled,
-        form: control?.form,
-        // Not readOnly or hidden: the browser leaves both out of validation.
-        autoComplete: 'off',
-        tabIndex: -1,
-        'aria-hidden': true,
-        'data-todae-value-input': '',
-        className: visuallyHiddenClass(),
-        // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs.
-        onFocus: () => owner()?.focus(),
-      };
-    },
-    [ctx.disabled, ctx.name, inputRef, presence, store],
+    (options: ValueInputOptions, control: ValueInputControl): ValueInputProps => ({
+      ref: (node) => {
+        input.current = node;
+        if (node) registerValueInput(node, { field: store, owner, bound: options.bound ?? {} });
+      },
+      type: options.type,
+      // The field's name unless a control already took it.
+      name: control.name !== undefined ? undefined : (options.name ?? (named ? undefined : fieldName)),
+      // Controlled, so a value the product sets fires no event: only a person's edit does, through notifyValueChange.
+      value: options.value,
+      onChange: noop,
+      required: options.required,
+      min: options.min,
+      max: options.max,
+      step: options.step,
+      disabled: disabled || Boolean(control.disabled) || control['aria-disabled'] === true || control['aria-disabled'] === 'true',
+      form: control.form,
+      // Not readOnly or hidden: the browser leaves both out of validation.
+      autoComplete: 'off',
+      tabIndex: -1,
+      'aria-hidden': true,
+      'data-todae-value-input': '',
+      className: visuallyHiddenClass(),
+      // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs, and a field with none keeps no focus here.
+      onFocus: (event) => (own.current ? own.current.focus() : event.currentTarget.blur()),
+    }),
+    [disabled, fieldName, named, owner, store],
   );
-  return useMemo(() => ({ wire, track, presence, getValueInputProps }), [wire, track, presence, getValueInputProps]);
+  const formEdited = form?.edited;
+  const touch = scope?.touch;
+  const notifyValueChange = useCallback(() => {
+    const names = [(own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name];
+    formEdited?.([...new Set(names.filter((name): name is string => Boolean(name)))]);
+    touch?.();
+  }, [formEdited, touch]);
+  return useMemo(() => ({ track, getValueInputProps, notifyValueChange }), [track, getValueInputProps, notifyValueChange]);
 }

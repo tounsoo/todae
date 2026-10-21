@@ -17,7 +17,6 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { useFieldPicker, htmlDateTime } from './Field.shared.js';
-import { VisuallyHidden } from './VisuallyHidden.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
@@ -255,20 +254,16 @@ export function DateTimePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing and the browser can't validate it, so the date and time go in a value input. */}
-      <input
-        {...picker.getValueInputProps({
-          type: 'datetime-local',
-          value: value ? htmlDateTime(value) : '',
-          required,
-          min: min && htmlDateTime(min),
-          max: max && htmlDateTime(max),
-          // The list picks any time, so no step is off.
-          step: 'any',
-          bound: { min: min && dateTimeLabel(min, locale), max: max && dateTimeLabel(max, locale) },
-        })}
-      />
-      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
+      {picker.valueInput({
+        type: 'datetime-local',
+        value: value ? htmlDateTime(value) : '',
+        required,
+        min: min && htmlDateTime(min),
+        max: max && htmlDateTime(max),
+        // The list picks any time, so no step is off.
+        step: 'any',
+        bound: { min: min && dateTimeLabel(min, locale), max: max && dateTimeLabel(max, locale) },
+      })}
       {/* Mounted while open only: a form can hold many date and time pickers. */}
       {picker.shown ? (
         <Popover.Root
@@ -286,7 +281,10 @@ export function DateTimePicker({
             step={step}
             locale={locale}
             label={strings.timePicker}
-            onValueChange={onValueChange}
+            onValueChange={(next) => {
+              picker.notifyValueChange();
+              onValueChange?.(next);
+            }}
             onDone={() => picker.setOpen(false, 'select')}
           />
         </Popover.Root>

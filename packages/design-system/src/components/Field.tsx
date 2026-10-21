@@ -152,10 +152,10 @@ function Root({
   const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
-  // The control the shell focuses is the field's one native control, when it has one, else the input that carries the field's value.
+  // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
   useCustomValidity(shellRef, () => {
     const control = inputRef.current;
-    return control && isValidityCarrier(control) ? control : valueInputOf(store);
+    return control && isValidityCarrier(control) ? control : shellRef.current && valueInputOf(store, shellRef.current);
   }, customValidity);
   const describedByWithError = mergeDescribedBy(describedBy, errorId);
 

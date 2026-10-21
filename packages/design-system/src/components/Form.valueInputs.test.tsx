@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getCandidates, getTabbables } from '../overlay/tabbables.js';
@@ -305,10 +305,11 @@ describe('value inputs', () => {
 describe('useField().getValueInputProps', () => {
   function Stars({ value, required }: { value: number; required?: boolean }) {
     const field = useField();
+    const control = field.getControlProps({}, { native: false });
     return (
       <>
-        <span role="slider" tabIndex={0} aria-valuenow={value} {...field.getControlProps({}, { native: false })} />
-        <input {...field.getValueInputProps({ type: 'number', value: value ? String(value) : '', required, min: '1', max: '5' })} />
+        <span role="slider" tabIndex={0} aria-valuenow={value} {...control} />
+        <input {...field.getValueInputProps({ type: 'number', value: value ? String(value) : '', required, min: '1', max: '5' }, control)} />
       </>
     );
   }
@@ -366,10 +367,11 @@ describe('useField().getValueInputProps', () => {
 describe('a value input speaks for its own control', () => {
   function Rating({ required }: { required?: boolean }) {
     const field = useField();
+    const control = field.getControlProps({ 'aria-label': 'Rating' }, { native: false });
     return (
       <>
-        <span role="slider" tabIndex={0} aria-valuenow={0} {...field.getControlProps({ 'aria-label': 'Rating' }, { native: false })} />
-        <input {...field.getValueInputProps({ type: 'number', value: '', required })} />
+        <span role="slider" tabIndex={0} aria-valuenow={0} {...control} />
+        <input {...field.getValueInputProps({ type: 'number', value: '', required }, control)} />
       </>
     );
   }
@@ -409,10 +411,11 @@ describe('one decision for disabled, form and name', () => {
   it('does not block a submit when the control it speaks for is disabled', async () => {
     function Gauge({ ariaOnly }: { ariaOnly?: boolean }) {
       const field = useField();
+      const control = field.getControlProps(ariaOnly ? { 'aria-disabled': true } : { disabled: true }, { native: false });
       return (
         <>
-          <span role="slider" tabIndex={0} {...field.getControlProps(ariaOnly ? { 'aria-disabled': true } : { disabled: true }, { native: false })} />
-          <input {...field.getValueInputProps({ type: 'number', value: '', required: true })} />
+          <span role="slider" tabIndex={0} {...control} />
+          <input {...field.getValueInputProps({ type: 'number', value: '', required: true }, control)} />
         </>
       );
     }
@@ -510,9 +513,9 @@ describe('a required picker', () => {
   });
 });
 
-describe('a change of a value input', () => {
-  function Pick({ errors }: { errors: Record<string, string> }) {
-    const [value, setValue] = useState<Temporal.PlainDate | null>(null);
+describe('a person\'s change of a value input', () => {
+  function Pick({ errors, children }: { errors?: Record<string, string>; children?: React.ReactNode }) {
+    const [value, setValue] = useState<Temporal.PlainDate | null>(day('2026-10-13'));
     return (
       <Form.Root data-testid="form" errors={errors}>
         <Field.Group>
@@ -522,26 +525,128 @@ describe('a change of a value input', () => {
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>
-        <button type="button" onClick={() => setValue(day('2026-10-13'))}>
-          Pick
-        </button>
+        {children}
       </Form.Root>
     );
   }
 
-  it('dismisses a server error on the name it carries, and announces nothing on mount', async () => {
-    const onInput = vi.fn();
-    document.addEventListener('input', onInput);
+  it('dismisses a server error on the name it carries when a date is picked', async () => {
     await mount(<Pick errors={{ start: 'Booked out.' }} />);
-    expect(onInput).not.toHaveBeenCalled();
     expect(screen.getByText('Booked out.')).toBeTruthy();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start date' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
     });
     await settle();
-    expect(onInput).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('Booked out.')).toBeNull();
-    document.removeEventListener('input', onInput);
+  });
+
+  it('dismisses a server error on the name of a ChipInput when a chip is added or removed', async () => {
+    function Chips({ errors }: { errors: Record<string, string> }) {
+      const [chips, setChips] = useState(['a']);
+      return (
+        <Form.Root data-testid="form" errors={errors}>
+          <Field.Group>
+            <Label.Root htmlFor="tags">Tags</Label.Root>
+            <Field.Root id="tags" name="tags">
+              <Field.ChipInput
+                chips={chips}
+                inputValue="b"
+                onInputValueChange={() => undefined}
+                onCommit={(value) => setChips([...chips, value])}
+                onChipRemove={(index) => setChips(chips.filter((_, i) => i !== index))}
+              />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    const { rerender } = await mount(<Chips errors={{ tags: 'Too many.' }} />);
+    expect(screen.getByText('Too many.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole('textbox', { name: 'Tags' }), { key: 'Enter' });
+    });
+    expect(screen.queryByText('Too many.')).toBeNull();
+    rerender(<Chips key="again" errors={{ tags: 'Too many.' }} />);
+    await settle();
+    expect(screen.getByText('Too many.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Remove a/ }));
+    });
+    expect(screen.queryByText('Too many.')).toBeNull();
+  });
+
+  it('is not what a value the product sets is: the server error stays, and nothing fires on the form', async () => {
+    const onChange = vi.fn();
+    function Reply() {
+      const [errors, setErrors] = useState<Record<string, string> | undefined>();
+      const [value, setValue] = useState<Temporal.PlainDate | null>(day('2026-10-13'));
+      return (
+        <Form.Root data-testid="form" errors={errors} onChange={onChange}>
+          <Field.Group>
+            <Label.Root htmlFor="start">Start date</Label.Root>
+            <Field.Root id="start" name="start">
+              <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <button
+            type="button"
+            onClick={() => {
+              setErrors({ start: 'Fully booked, pick another' });
+              setValue(null);
+            }}
+          >
+            Reply
+          </button>
+        </Form.Root>
+      );
+    }
+    await mount(<Reply />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+    });
+    await settle();
+    expect(screen.getByText('Fully booked, pick another')).toBeTruthy();
+    expect(valueInput().value).toBe('');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('is not what an onSubmit that sets a picker value is: the reply still gets focus', async () => {
+    function Booking() {
+      const [errors, setErrors] = useState<Record<string, string> | undefined>();
+      const [value, setValue] = useState<Temporal.PlainDate | null>(day('2026-10-13'));
+      return (
+        <Form.Root
+          data-testid="form"
+          errors={errors}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setErrors({});
+            setValue(day('2026-10-20'));
+            setTimeout(() => setErrors({ start: 'Fully booked, pick another' }));
+          }}
+        >
+          <Field.Group>
+            <Label.Root htmlFor="start">Start date</Label.Root>
+            <Field.Root id="start" name="start">
+              <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Booking />);
+    await submit(screen.getByTestId('form'));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+    expect(screen.getByText('Fully booked, pick another')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
   });
 });
 
@@ -571,5 +676,174 @@ describe('a year a date input cannot hold', () => {
     const messages = warn.mock.calls.map((call) => String(call[0])).filter((text) => text.includes('275760'));
     expect(messages).toHaveLength(1);
     warn.mockRestore();
+  });
+});
+
+describe('a picker beside another control', () => {
+  const note = <Field.TextInput key="note" aria-label="Note" value="x" onValueChange={() => undefined} />;
+  const picker = <Field.DatePicker key="day" aria-label="Day" value={null} onValueChange={() => undefined} required locale="en-US" />;
+
+  it.each([
+    ['the text input first', [note, picker]],
+    ['the picker first', [picker, note]],
+  ])('owns its value input with %s: focus and the summary row go to its button', async (_, children) => {
+    await mount(
+      <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
+        <Field.Group>
+          <Field.Root name="when" aria-label="When">
+            {children}
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    await submit(screen.getByTestId('form'));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Day' }));
+  });
+
+  it.each([
+    ['the text input first', [note, picker]],
+    ['the picker first', [picker, note]],
+  ])('has a summary row named by its button, with %s, that focuses it', async (_, children) => {
+    await mount(
+      <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary />
+        <Field.Group>
+          <Field.Root name="when" aria-label="When">
+            {children}
+          </Field.Root>
+        </Field.Group>
+      </Form.Root>,
+    );
+    await submit(screen.getByTestId('form'));
+    const button = document.querySelector('[data-todae-field-picker]');
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole('list')).getByRole('button', { name: 'Day' }));
+    });
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('leaves the field\'s customValidity on the text input', async () => {
+    await mount(
+      <Form.Root>
+        <Field.Root name="when" aria-label="When" customValidity="Not now">
+          {note}
+          {picker}
+        </Field.Root>
+      </Form.Root>,
+    );
+    expect(screen.getByRole('textbox', { name: 'Note' }).matches(':invalid')).toBe(true);
+    expect(valueInput().validationMessage).not.toBe('Not now');
+  });
+});
+
+describe('a value input with no control to speak for', () => {
+  it('gives focus up rather than keep it', async () => {
+    function Bare() {
+      const field = useField();
+      return <input {...field.getValueInputProps({ type: 'text', value: '' }, {})} />;
+    }
+    await mount(
+      <Field.Root name="bare" aria-label="Bare">
+        <Bare />
+      </Field.Root>,
+    );
+    await act(async () => {
+      valueInput().focus();
+    });
+    expect(document.activeElement).not.toBe(valueInput());
+  });
+});
+
+describe('the control\'s props a value input is given', () => {
+  function Custom({ control }: { control: Record<string, unknown> }) {
+    const field = useField();
+    return <input {...field.getValueInputProps({ type: 'text', value: 'x' }, control)} />;
+  }
+  const mountCustom = (control: Record<string, unknown>) =>
+    mount(
+      <Field.Root name="custom" aria-label="Custom">
+        <Custom control={control} />
+      </Field.Root>,
+    );
+
+  it.each([
+    ['disabled', { disabled: true }],
+    ['aria-disabled', { 'aria-disabled': 'true' }],
+  ])('disable it by %s', async (_, control) => {
+    await mountCustom(control);
+    expect(valueInput().disabled).toBe(true);
+  });
+
+  it('joins the form it names, and goes without a name when the control has one', async () => {
+    await mountCustom({ form: 'other', name: 'own' });
+    expect(valueInput().getAttribute('form')).toBe('other');
+    expect(valueInput().hasAttribute('name')).toBe(false);
+  });
+
+  it('follows a control whose disabled changes, however its parts render', async () => {
+    function Gauge({ off }: { off: boolean }) {
+      const field = useField();
+      const control = field.getControlProps({ disabled: off }, { native: false });
+      return (
+        <>
+          <span role="slider" {...control} />
+          <input {...field.getValueInputProps({ type: 'number', value: '' }, control)} />
+        </>
+      );
+    }
+    const tree = (off: boolean) => (
+      <Field.Root name="gauge" aria-label="Gauge">
+        <Gauge off={off} />
+      </Field.Root>
+    );
+    const { rerender } = await mount(tree(false));
+    expect(valueInput().disabled).toBe(false);
+    rerender(tree(true));
+    expect(valueInput().disabled).toBe(true);
+    rerender(tree(false));
+    expect(valueInput().disabled).toBe(false);
+  });
+});
+
+describe('customValidity on a field with two value inputs', () => {
+  it.each([
+    ['date first', [<Field.DatePicker key="d" value={null} />, <Field.TimePicker key="t" value={null} />], 'date'],
+    ['time first', [<Field.TimePicker key="t" value={null} />, <Field.DatePicker key="d" value={null} />], 'time'],
+  ])('goes on the first in document order, %s', async (_, children, type) => {
+    await mount(
+      <Form.Root>
+        <Field.Root name="when" aria-label="When" customValidity="Not now">
+          {children}
+        </Field.Root>
+      </Form.Root>,
+    );
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('[data-todae-value-input]')];
+    expect(inputs.map((el) => el.type)[0]).toBe(type);
+    expect(inputs.map((el) => el.validationMessage)).toEqual(['Not now', '']);
+  });
+});
+
+describe('what a control re-renders for', () => {
+  it('is only the field\'s name being taken, not another control mounting', async () => {
+    let renders = 0;
+    function Counted() {
+      const field = useField();
+      renders += 1;
+      const control = field.getControlProps({ name: 'counted' });
+      return <input {...control} defaultValue="" aria-label="Counted" />;
+    }
+    const tree = (withOther: boolean) => (
+      <Field.Root name="f" aria-label="F">
+        <Counted />
+        {withOther ? <Field.TextInput name="other" aria-label="Other" value="" onValueChange={() => undefined} /> : null}
+      </Field.Root>
+    );
+    const { rerender } = await mount(tree(false));
+    // Neither its own mount nor a control that does not take the field's name flips what it reads.
+    expect(renders).toBe(1);
+    rerender(tree(true));
+    await settle();
+    expect(renders).toBe(2);
   });
 });

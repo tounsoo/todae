@@ -929,8 +929,8 @@
       "ko": "목록에서 고른 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest time the list offers. A form with an earlier time is invalid.",
-      "ko": "목록이 보여 주는 가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다."
+      "en": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max.",
+      "ko": "목록이 보여 주는 가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다. max보다 늦으면 min부터 자정을 지나 max까지의 밤을 넘기는 범위가 됩니다."
     },
     "max": {
       "en": "The latest time the list offers. A form with a later time is invalid.",

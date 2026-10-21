@@ -12,7 +12,6 @@ import { Popover } from './Popover.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
 import { useFieldPicker, htmlTime } from './Field.shared.js';
-import { VisuallyHidden } from './VisuallyHidden.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -22,7 +21,7 @@ export type FieldTimePickerProps = {
   value: Temporal.PlainTime | null;
   /** Fires with the time picked in the list. */
   onValueChange?: (value: Temporal.PlainTime) => void;
-  /** The earliest time the list offers. A form with an earlier time is invalid. */
+  /** The earliest time the list offers. A form with an earlier time is invalid. Later than `max`, it makes an overnight range, from `min` through midnight to `max`. */
   min?: Temporal.PlainTime;
   /** The latest time the list offers. A form with a later time is invalid. */
   max?: Temporal.PlainTime;
@@ -49,11 +48,20 @@ export type FieldTimePickerProps = {
 
 const MINUTES_PER_DAY = 24 * 60;
 
-/** The times every `step` minutes from midnight between `min` and `max`, with `value` among them when it is in range. */
+/**
+ * The times every `step` minutes from midnight between `min` and `max`, with
+ * `value` among them when it is in range. A `min` later than `max` is an
+ * overnight range, from `min` through midnight to `max`, as a native time
+ * input reads it, so the list offers what the browser accepts.
+ */
 export function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainTime, value?: Temporal.PlainTime | null) {
   const every = Number.isFinite(step) && step >= 1 ? Math.round(step) : 30;
-  const inRange = (time: Temporal.PlainTime) =>
-    (!min || Temporal.PlainTime.compare(time, min) >= 0) && (!max || Temporal.PlainTime.compare(time, max) <= 0);
+  const overnight = min && max && Temporal.PlainTime.compare(min, max) > 0;
+  const inRange = (time: Temporal.PlainTime) => {
+    const afterMin = !min || Temporal.PlainTime.compare(time, min) >= 0;
+    const beforeMax = !max || Temporal.PlainTime.compare(time, max) <= 0;
+    return overnight ? afterMin || beforeMax : afterMin && beforeMax;
+  };
   const slots: Temporal.PlainTime[] = [];
   for (let minutes = 0; minutes < MINUTES_PER_DAY; minutes += every) {
     const time = new Temporal.PlainTime(Math.floor(minutes / 60), minutes % 60);
@@ -192,20 +200,16 @@ export function TimePicker({
           {glyphOr(clock, <ClockGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing and the browser can't validate it, so the time goes in a value input. */}
-      <input
-        {...picker.getValueInputProps({
-          type: 'time',
-          value: value ? htmlTime(value) : '',
-          required,
-          min: min && htmlTime(min),
-          max: max && htmlTime(max),
-          // The list picks any time, so no step is off.
-          step: 'any',
-          bound: { min: min && formatTime(min, { locale }), max: max && formatTime(max, { locale }) },
-        })}
-      />
-      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
+      {picker.valueInput({
+        type: 'time',
+        value: value ? htmlTime(value) : '',
+        required,
+        min: min && htmlTime(min),
+        max: max && htmlTime(max),
+        // The list picks any time, so no step is off.
+        step: 'any',
+        bound: { min: min && formatTime(min, { locale }), max: max && formatTime(max, { locale }) },
+      })}
       {/* Mounted while open only: a form can hold many time pickers. */}
       {picker.shown ? (
         <Popover.Root {...picker.popover.getPopoverProps()}>
@@ -217,6 +221,7 @@ export function TimePicker({
             locale={locale}
             label={strings.timePicker}
             onPick={(next) => {
+              picker.notifyValueChange();
               onValueChange?.(next);
               picker.setOpen(false, 'select');
             }}

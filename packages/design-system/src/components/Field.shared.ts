@@ -10,8 +10,12 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { BESIDE_CONTROL, mergeDescribedBy, useFieldContext, type CountStore } from './Field.context.js';
+import { createElement, Fragment, type ReactNode } from 'react';
+import { mergeDescribedBy, useBesideControl, useFieldContext, type CountStore } from './Field.context.js';
 import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import type { ValueInputOptions } from './valueInput.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 import { useDomId } from './domId.js';
 import { warnOnce } from './warnOnce.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
@@ -60,25 +64,24 @@ type PickerOwnProps = {
 
 /**
  * A picker's control props. Alone, it is the field's control. Beside another
- * control, that control takes the field's id and description. Either way the
- * button has no name: the picker's value input takes it. The picker keeps
- * `disabled` and `aria-invalid`, and is named `label`.
+ * control, that control takes the field's id and description, and the button
+ * keeps the ref that tracks it, `disabled` and `aria-invalid`, and is named
+ * `label`. Either way the button has no name: the picker's value input takes it.
  */
 function pickerControl<P extends PickerOwnProps>(
-  presence: number,
+  beside: boolean,
   field: UseFieldResult,
   props: P,
   label: string,
 ) {
-  if (!(presence & BESIDE_CONTROL)) {
-    const { name: _name, ...control } = field.getControlProps(props);
-    return control;
-  }
-  const { name: _name, ...own } = props;
+  const { name: _name, ...control } = field.getControlProps(props);
+  if (!beside) return control;
+  const { name: _own, ...own } = props;
   return {
     ...own,
-    disabled: field.disabled || Boolean(props.disabled),
-    'aria-invalid': field.invalid ? true : props['aria-invalid'],
+    ref: control.ref,
+    disabled: control.disabled,
+    'aria-invalid': control['aria-invalid'],
     'aria-label': props['aria-label'] ?? label,
   };
 }
@@ -167,7 +170,7 @@ export function useFieldPicker<Reason extends string>({
 }: {
   props: PickerOwnProps & Record<string, unknown>;
   label: string;
-  /** Describes the button as required, with the `required` string in an element the picker renders at `requiredId`. */
+  /** Describes the button as required, with the `required` string that `valueInput` renders. */
   required?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -177,18 +180,16 @@ export function useFieldPicker<Reason extends string>({
   /** What the popover holds, for the button's aria-haspopup: a dialog by default. */
   haspopup?: PopoverHaspopup;
 }) {
+  const strings = useStrings();
   // The button does not count itself as a control another picker should leave the field to.
-  const { field, wire, presence } = useFieldControl(false);
-  const { shellRef } = useFieldContext();
+  const field = useFieldControl(false);
+  const { shellRef, store } = useFieldContext();
+  const beside = useBesideControl(store);
   // A button cannot say `aria-required`, so a required picker is described as required.
   const requiredId = useDomId();
   const describedBy = mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined);
   // Another control in the field takes its id and description.
-  const control = pickerControl(presence, field, { ...props, 'aria-describedby': describedBy }, label);
-  // Alone, getControlProps said what the value input needs; beside another control, this does.
-  if (presence & BESIDE_CONTROL) {
-    wire({ disabled: Boolean(control.disabled), form: props.form as string | undefined, name: props.name, sends: false });
-  }
+  const control = pickerControl(beside, field, { ...props, 'aria-describedby': describedBy }, label);
   const [open, setOpen] = useControlledValue<boolean, [Reason | PopoverCloseReason | 'disabled']>(
     openProp,
     defaultOpen ?? false,
@@ -237,9 +238,17 @@ export function useFieldPicker<Reason extends string>({
       pickerToggles.delete(button);
     };
   }, [popover.triggerRef]);
+  // A button sends nothing and the browser can't validate it, so the value goes in a value input, which follows the button; and a required picker says so.
+  const valueInput = (options: ValueInputOptions): ReactNode =>
+    createElement(
+      Fragment,
+      null,
+      createElement('input', field.getValueInputProps({ name: props.name, ...options }, control)),
+      options.required ? createElement(VisuallyHidden.Root, { id: requiredId }, strings.required) : null,
+    );
   return {
-    requiredId,
-    getValueInputProps: field.getValueInputProps,
+    valueInput,
+    notifyValueChange: field.notifyValueChange,
     shown,
     setOpen,
     popover,

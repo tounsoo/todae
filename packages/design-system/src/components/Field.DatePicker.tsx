@@ -17,7 +17,6 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { useFieldPicker, htmlDate } from './Field.shared.js';
-import { VisuallyHidden } from './VisuallyHidden.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -121,18 +120,14 @@ export function DatePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing and the browser can't validate it, so the date goes in a value input. */}
-      <input
-        {...picker.getValueInputProps({
-          type: 'date',
-          value: value ? htmlDate(isoDate(value)) : '',
-          required,
-          min: min && htmlDate(isoDate(min)),
-          max: max && htmlDate(isoDate(max)),
-          bound: { min: min && dateLabel(min, locale), max: max && dateLabel(max, locale) },
-        })}
-      />
-      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
+      {picker.valueInput({
+        type: 'date',
+        value: value ? htmlDate(isoDate(value)) : '',
+        required,
+        min: min && htmlDate(isoDate(min)),
+        max: max && htmlDate(isoDate(max)),
+        bound: { min: min && dateLabel(min, locale), max: max && dateLabel(max, locale) },
+      })}
       {/* Mounted while open only: a form can hold many date pickers. */}
       {picker.shown ? (
         <Popover.Root
@@ -144,6 +139,7 @@ export function DatePicker({
           <CalendarParts.Root
             value={value}
             onValueChange={(next) => {
+              picker.notifyValueChange();
               onValueChange?.(next);
               picker.setOpen(false, 'select');
             }}

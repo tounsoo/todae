@@ -21,7 +21,7 @@ export const meta = {
       name: 'min',
       type: 'Temporal.PlainTime',
       required: false,
-      description: 'The earliest time the list offers. A form with an earlier time is invalid.',
+      description: 'The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max.',
     },
     {
       name: 'max',

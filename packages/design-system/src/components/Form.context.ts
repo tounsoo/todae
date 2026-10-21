@@ -43,6 +43,8 @@ export type FormContextValue = {
   summaryRef: RefObject<HTMLElement | null>;
   /** Reads the page again for `failed`: a scope's readings changed or it left. Call it from an effect or an event, never in render. */
   refresh: () => void;
+  /** A person edited the controls with these names with no change event, as a pick in a picker does: ends the wait for a reply and hides the entries of `errors` under those names. */
+  edited: (names: readonly string[]) => void;
 };
 
 export const FormContext = /* @__PURE__ */ createContext<FormContextValue | null>(null);
@@ -55,6 +57,8 @@ export type ValidationScopeValue = {
   error: FormFieldError | null;
   /** Re-reads the scope's controls after this commit, once however often it is called. */
   revalidate: () => void;
+  /** A person edited a control of the scope with no change event: it counts as touched, as a change event inside it does. */
+  touch: () => void;
   /** An auto ErrorMessage.Root mounted in the scope; returns its cleanup. */
   registerMessage: () => () => void;
 };

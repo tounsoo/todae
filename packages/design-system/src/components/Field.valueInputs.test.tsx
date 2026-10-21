@@ -57,10 +57,11 @@ describe('what a form submits', () => {
 describe('on the server', () => {
   function Stars() {
     const field = useField();
+    const control = field.getControlProps({ 'aria-label': 'Stars' });
     return (
       <>
-        <input {...field.getControlProps({ 'aria-label': 'Stars' })} defaultValue="typed" />
-        <input {...field.getValueInputProps({ type: 'text', value: '3' })} />
+        <input {...control} defaultValue="typed" />
+        <input {...field.getValueInputProps({ type: 'text', value: '3' }, control)} />
       </>
     );
   }

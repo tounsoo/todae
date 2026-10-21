@@ -223,6 +223,15 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     dispatch({ type: 'refresh', entries: failingEntries(form, errors, state.dismissal, strings, state.native) });
   }, []);
 
+  const edited = useCallback((names: readonly string[]) => {
+    // An edit is the answer to a reply that hasn't come yet.
+    awaiting.current = false;
+    for (const name of names) {
+      const text = latest.current.errors?.[name];
+      if (text) dispatch({ type: 'dismiss', name, text });
+    }
+  }, []);
+
   const ctx = useMemo<FormContextValue>(
     () => ({
       attempt: state.attempt,
@@ -233,8 +242,9 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
       formRef,
       summaryRef,
       refresh,
+      edited,
     }),
-    [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh],
+    [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh, edited],
   );
 
   // The summary if one is showing, else the control picked where the problems were read.
@@ -309,11 +319,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
           // A portaled control's change is not an edit of this form.
           const target = event.target;
           if (!(target instanceof Node) || !event.currentTarget.contains(target)) return;
-          // An edit is the answer to a reply that hasn't come yet.
-          awaiting.current = false;
-          if (!isValidityCarrier(target)) return;
-          const text = errors?.[target.name];
-          if (text) dispatch({ type: 'dismiss', name: target.name, text });
+          edited(isValidityCarrier(target) ? [target.name] : []);
         }}
         onReset={(event) => {
           // A portaled form's reset bubbles through this one, and is not this form's to hear.

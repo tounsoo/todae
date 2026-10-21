@@ -5,7 +5,7 @@ type CountEntry = { value: string; maxLength?: number };
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Elements wired with useField's getControlProps, other than a Field.ColorPicker's or Field.DatePicker's, mounted in the field. */
+  /** Elements wired with useField's getControlProps, other than a Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's, mounted in the field. */
   controls: number;
   /** Of those, the ones getControlProps gave the field's name. */
   named: number;
@@ -36,7 +36,7 @@ function notifyPresence(store: CountStore) {
 /**
  * A stable ref callback that counts the element it is attached to as a
  * control in the field, and as named when getControlProps gave it the field's
- * name. A Field.ColorPicker or Field.DatePicker beside a control gives up the
+ * name. A Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker beside a control gives up the
  * field's id and description, and beside a named one the field's name, so only
  * one element takes each. The count follows the
  * element after each commit, so a control that is not rendered, or a component
@@ -69,17 +69,13 @@ export function useControlPresence(store: CountStore, counted: boolean): (node: 
   );
 }
 
-/** Bits of `useFieldPresence`: any control wired with useField is in the field. */
-export const BESIDE_CONTROL = 1;
-/** Bits of `useFieldPresence`: useField gave one the field's name. */
-export const BESIDE_NAMED = 2;
-
 /**
- * Which controls the field holds, as `BESIDE_CONTROL` and `BESIDE_NAMED` bits,
- * for a part that leaves the field's id or name to another control. The
- * server cannot know of one yet, so it reads 0 until hydration.
+ * One yes-or-no fact about the controls the field holds. It is the snapshot
+ * itself, a boolean, so a part re-renders only when the fact flips, not each
+ * time another control mounts. The server cannot know of a control yet, so it
+ * reads false until hydration.
  */
-export function useFieldPresence(store: CountStore): number {
+function useStoreFlag(store: CountStore, read: (store: CountStore) => boolean): boolean {
   const subscribe = useCallback(
     (listener: () => void) => {
       store.presence.add(listener);
@@ -91,10 +87,19 @@ export function useFieldPresence(store: CountStore): number {
   );
   return useSyncExternalStore(
     subscribe,
-    () => (store.controls > 0 ? BESIDE_CONTROL : 0) | (store.named > 0 ? BESIDE_NAMED : 0),
-    () => 0,
+    () => read(store),
+    () => false,
   );
 }
+
+const hasControl = (store: CountStore) => store.controls > 0;
+const hasNamed = (store: CountStore) => store.named > 0;
+
+/** Whether any control wired with useField is in the field, for a part that leaves the field's id and description to it. */
+export const useBesideControl = (store: CountStore) => useStoreFlag(store, hasControl);
+
+/** Whether useField gave a control the field's name, for a part that leaves the name to it. */
+export const useBesideNamed = (store: CountStore) => useStoreFlag(store, hasNamed);
 
 export const FieldContext = /* @__PURE__ */ createContext<FieldContextValue | null>(null);
 
@@ -112,19 +117,26 @@ export const FOCUSABLE_FIELD_CONTROL_SELECTOR =
   "input:not([type='hidden']):not([data-todae-value-input]):not(:disabled), textarea:not(:disabled), select:not(:disabled), [data-todae-field-control]:not(:disabled):not([aria-disabled='true'])";
 
 /**
- * A stable ref callback that makes a control the one the shell focuses. On
- * detach it clears the Root's ref only if it still points at this control, so
- * another control under the same Root keeps it.
+ * A stable ref callback that makes a control the one the shell focuses. An
+ * uncounted control, such as a picker's button, takes it only while no counted
+ * control is in the field, so one beside it keeps it whichever mounts first.
+ * On detach it clears the Root's ref only if it still points at this control,
+ * so another control under the same Root keeps it.
  */
-export function useControlSetter(inputRef: RefObject<HTMLElement | null>): (node: HTMLElement | null) => void {
+export function useControlSetter(
+  inputRef: RefObject<HTMLElement | null>,
+  store: CountStore,
+  counted: boolean,
+): (node: HTMLElement | null) => void {
   const own = useRef<HTMLElement | null>(null);
   return useCallback(
     (node: HTMLElement | null) => {
-      if (node) inputRef.current = node;
-      else if (inputRef.current === own.current) inputRef.current = null;
+      if (node) {
+        if (counted || store.controls === 0) inputRef.current = node;
+      } else if (inputRef.current === own.current) inputRef.current = null;
       own.current = node;
     },
-    [inputRef],
+    [counted, inputRef, store],
   );
 }
 

@@ -81,6 +81,7 @@ export function ChipInput({
       const value = chips[index];
       if (value === undefined) return;
       event.preventDefault();
+      field.notifyValueChange();
       onChipRemove(index, value);
       return;
     }
@@ -95,7 +96,10 @@ export function ChipInput({
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
     const committed = onCommit(trimmed) !== false;
-    if (committed) held.current = event.key;
+    if (committed) {
+      field.notifyValueChange();
+      held.current = event.key;
+    }
     // With nothing committed, only a key that would type its character is held back.
     if (committed || event.key.length === 1) event.preventDefault();
   }
@@ -109,6 +113,7 @@ export function ChipInput({
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onRemove={() => {
+        field.notifyValueChange();
         onChipRemove(index, chip.value);
         ownInput.current?.focus();
       }}
@@ -129,7 +134,7 @@ export function ChipInput({
     />
   );
   // A form has only ever sent the text being typed, not the chips, so the input above sends it and this sends nothing. It is empty exactly when there are no chips, which `required` checks.
-  const carrier = <input {...field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required })} />;
+  const carrier = <input {...field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required }, control)} />;
   const measure =
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
