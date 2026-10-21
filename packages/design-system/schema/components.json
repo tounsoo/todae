@@ -2068,6 +2068,24 @@
       ]
     },
     {
+      "name": "formatDateRange",
+      "description": "formatDateRange(range, options) returns the range as the locale writes it, both dates as formatDate writes them with the locale's range separator between, such as 10/3/2026 – 10/10/2026 in en-US and 2026. 10. 3. ~ 2026. 10. 10. in ko.",
+      "props": [
+        {
+          "name": "range",
+          "type": "DateRange",
+          "required": true,
+          "description": "The range to write, as { start, end }."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
       "name": "formatDateTime",
       "description": "formatDateTime(value, options) returns the date and time as the locale writes them, the date in numbers as formatDate does and the time in hours and minutes, or with seconds when it has seconds, such as 10/13/2026, 9:30 PM in en-US.",
       "props": [
@@ -3005,6 +3023,24 @@
     {
       "name": "parseDate",
       "description": "parseDate(text, options) returns the Temporal.PlainDate in typed text, or null when the text is not a date. It reads a date in numbers in the order formatDate writes them, or in the locale's medium, long or full Intl date style. It does not check a picker's min, max or isDateDisabled.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "parseDateRange",
+      "description": "parseDateRange(text, options) returns the DateRange in typed text, two dates that parseDate reads with a separator between them, such as 10/3/2026 – 10/10/2026 in en-US, or null when the text is not one or the end is before the start. It does not check a picker's min, max or isDateDisabled.",
       "props": [
         {
           "name": "text",

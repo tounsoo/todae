@@ -2768,5 +2768,25 @@
       "en": "A dotted token path. It is not checked against the token list.",
       "ko": "점으로 구분한 토큰 경로. 토큰 목록과 대조하지 않습니다."
     }
+  },
+  "formatDateRange": {
+    "range": {
+      "en": "The range to write, as { start, end }.",
+      "ko": "쓸 범위, { start, end } 형태."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "parseDateRange": {
+    "text": {
+      "en": "The typed text.",
+      "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
   }
 }
