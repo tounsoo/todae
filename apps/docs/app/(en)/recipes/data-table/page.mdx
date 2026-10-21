@@ -97,6 +97,8 @@ const remove = () => {
 When nothing matches, render one row whose cell spans every column and holds an `EmptyState.Root`, so the table keeps its caption and headers. The empty state has no role, so announce the number of matches once typing settles, as the [EmptyState](/empty-state) page does. Announce on a new search only, so a delete's own message isn't followed by a count. "Clear search" moves focus back to the search before its own button goes away.
 
 ```tsx
+import { SearchX } from 'lucide-react';
+
 const announce = useAnnouncer();
 const searched = useRef(query);
 

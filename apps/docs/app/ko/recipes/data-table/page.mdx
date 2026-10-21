@@ -97,6 +97,8 @@ const remove = () => {
 일치하는 행이 없으면, 모든 열에 걸친 셀 하나에 `EmptyState.Root`를 담은 행 하나를 렌더링하세요. 그러면 표가 캡션과 머리글을 유지합니다. 빈 상태에는 역할이 없으므로, [EmptyState](/empty-state) 페이지처럼 입력이 멈춘 뒤 일치하는 개수를 알리세요. 새로 검색했을 때만 알려야 삭제 알림 뒤에 개수가 따라오지 않습니다. "Clear search"는 자신의 버튼이 사라지기 전에 포커스를 검색 입력으로 돌려놓습니다.
 
 ```tsx
+import { SearchX } from 'lucide-react';
+
 const announce = useAnnouncer();
 const searched = useRef(query);
 
