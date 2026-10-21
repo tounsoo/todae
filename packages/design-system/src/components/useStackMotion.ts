@@ -55,7 +55,6 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
   }
 }
 
-// The views share the overlay body's scroll container, or the page's.
 function scrollContainer(el: HTMLElement): Element {
   for (let node = el.parentElement; node && node !== el.ownerDocument.body; node = node.parentElement) {
     if (/auto|scroll/.test(getComputedStyle(node).overflowY)) return node;
@@ -83,7 +82,6 @@ function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]):
   return elements.flatMap((el) => el?.getAnimations() ?? []).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
 }
 
-/** The views a change moves, as it starts. */
 export type StackViews = { entering: HTMLElement | undefined; leaving: HTMLElement | undefined };
 
 type UseStackMotionOptions = {

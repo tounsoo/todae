@@ -143,10 +143,10 @@ function push(entry: Entry): () => void {
  * element with focus, the key's target or, for a close request, the
  * document's active element, so both reach the same layer. `passesKey` lets a
  * layer pass on what only a key carries, such as a key a field inside already
- * handled or one that ends an IME composition. Pass `elementRef` so a layer left behind a modal
- * `<dialog>` opened later skips the key, and the dialog gets it. A layer with
- * `popup: false` yields to every open popup whose element doesn't contain its
- * own.
+ * handled or one that ends an IME composition. Pass `elementRef` so a layer
+ * left behind a modal `<dialog>` opened later skips the key, and the dialog
+ * gets it. A layer with `popup: false` yields to every open popup whose
+ * element doesn't contain its own.
  */
 export function useEscapeKey(
   active: boolean,
