@@ -72,7 +72,8 @@ export function parseDateRange(text: string, options: DateRangeTextOptions = {})
     const start = parseDate(text.slice(0, from), options);
     const end = start && parseDate(text.slice(to), options);
     if (!start || !end) continue;
-    found.set(`${start}/${end}`, spanOf(start, end));
+    const range = spanOf(start, end);
+    found.set(`${range.start}/${range.end}`, range);
     if (found.size > 1) return null;
   }
   return found.size === 1 ? found.values().next().value! : null;
