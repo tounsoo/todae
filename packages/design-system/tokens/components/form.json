@@ -23,6 +23,23 @@
       },
       "ring": {
         "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      },
+      "link": {
+        "$description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same.",
+        "fg": {
+          "default": { "$type": "color", "$value": { "$ref": "#/link/fg/default/$value" } },
+          "hover": { "$type": "color", "$value": { "$ref": "#/link/fg/hover/$value" } }
+        },
+        "decoration": {
+          "default": { "$type": "color", "$value": { "$ref": "#/link/decoration/default/$value" } },
+          "hover": { "$type": "color", "$value": { "$ref": "#/link/decoration/hover/$value" } },
+          "thickness": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/thickness/$value" } },
+          "offset": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/offset/$value" } }
+        },
+        "ring": {
+          "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
+          "radius": { "$type": "dimension", "$value": { "$ref": "#/link/ring/radius/$value" } }
+        }
       }
     }
   }

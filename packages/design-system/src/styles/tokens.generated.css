@@ -844,6 +844,14 @@
   --todae-form-summary-font-size: var(--_todae-form-summary-font-size, var(--todae-font-size-2));
   --todae-form-summary-gap: var(--_todae-form-summary-gap, var(--todae-space-inline-gap));
   --todae-form-summary-leading: var(--_todae-form-summary-leading, var(--todae-font-leading-default));
+  --todae-form-summary-link-decoration-default: var(--_todae-form-summary-link-decoration-default, var(--todae-link-decoration-default));
+  --todae-form-summary-link-decoration-hover: var(--_todae-form-summary-link-decoration-hover, var(--todae-link-decoration-hover));
+  --todae-form-summary-link-decoration-offset: var(--_todae-form-summary-link-decoration-offset, var(--todae-link-decoration-offset));
+  --todae-form-summary-link-decoration-thickness: var(--_todae-form-summary-link-decoration-thickness, var(--todae-link-decoration-thickness));
+  --todae-form-summary-link-fg-default: var(--_todae-form-summary-link-fg-default, var(--todae-link-fg-default));
+  --todae-form-summary-link-fg-hover: var(--_todae-form-summary-link-fg-hover, var(--todae-link-fg-hover));
+  --todae-form-summary-link-ring-focus: var(--_todae-form-summary-link-ring-focus, var(--todae-focus-ring-color));
+  --todae-form-summary-link-ring-radius: var(--_todae-form-summary-link-ring-radius, var(--todae-link-ring-radius));
   --todae-form-summary-padding-x: var(--_todae-form-summary-padding-x, var(--todae-space-control-x));
   --todae-form-summary-padding-y: var(--_todae-form-summary-padding-y, var(--todae-space-control-x));
   --todae-form-summary-radius: var(--_todae-form-summary-radius, var(--todae-radius-md));

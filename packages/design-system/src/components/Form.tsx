@@ -21,7 +21,6 @@ import {
   type SummaryEntry,
 } from './Form.context.js';
 import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
-import { Button } from './Button.js';
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
@@ -383,10 +382,11 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
                   {entry.reading.label}
                 </Link.Root>
               ) : (
-                // An `a` with no href is not a link and can't be focused, so a control with no id gets a button.
-                <Button.Root variant="ghost" onClick={fieldOf(entry).focus}>
+                // An `a` with no href is not a link and can't be focused, so a control with no id gets a button
+                // drawn like the link rows.
+                <button type="button" className={styles.action} onClick={fieldOf(entry).focus}>
                   {entry.reading.label}
-                </Button.Root>
+                </button>
               )}
               <span>{entry.error.message}</span>
             </li>
