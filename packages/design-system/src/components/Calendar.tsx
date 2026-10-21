@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -253,9 +254,12 @@ function Root(rootProps: CalendarRootProps) {
   const strings = useStrings();
   const announce = useAnnouncer();
   const [firstMode] = useState(mode);
-  if (process.env.NODE_ENV !== 'production' && mode !== firstMode) {
+  const modeReported = useRef(false);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || mode === firstMode || modeReported.current) return;
+    modeReported.current = true;
     console.error('Calendar.Root cannot change mode after it mounts; give it a new key instead');
-  }
+  }, [firstMode, mode]);
   // Kept by value, so a min or max made anew each render recomputes nothing.
   const minText = isoDate(minProp)?.toString();
   const maxText = isoDate(maxProp)?.toString();
@@ -279,6 +283,13 @@ function Root(rootProps: CalendarRootProps) {
   const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
   const [anchor, setAnchor] = useState<Temporal.PlainDate | null>(null);
   const [hovered, setHovered] = useState<Temporal.PlainDate | null>(null);
+  // A range's first pick would end single mode's next pick.
+  const [lastMode, setLastMode] = useState(mode);
+  if (mode !== lastMode) {
+    setLastMode(mode);
+    setAnchor(null);
+    setHovered(null);
+  }
   // A value from outside, such as one typed in a text input beside Field.DatePicker, moves the
   // grid to its start and drops a range in progress. The calendar's own pick leaves the grid
   // where it was picked, whether the value takes it or a controlling parent turns it down.

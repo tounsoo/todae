@@ -836,33 +836,44 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['2025', '2026', '2027']);
   });
 
-  it('reports a mode changed after mounting, and still hands each mode its own value', () => {
+  it('reports a mode changed after mounting once, drops a first pick, and hands each mode its own value', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const onDate = vi.fn();
     const onRange = vi.fn();
+    const props = { 'aria-label': 'Stay', locale: 'en-US', defaultMonth: Temporal.PlainYearMonth.from('2026-10') };
     const { rerender } = render(
-      <Calendar.Root
-        aria-label="Stay"
-        locale="en-US"
-        defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
-        onValueChange={onDate}
-      >
+      <Calendar.Root {...props} mode="range" onValueChange={onRange}>
         <Calendar.Grid />
       </Calendar.Root>,
     );
-    fireEvent.click(october(3));
-    expect(onDate).toHaveBeenCalledWith(date('2026-10-03'));
+    fireEvent.click(october(5));
     expect(error).not.toHaveBeenCalled();
     rerender(
-      <Calendar.Root aria-label="Stay" locale="en-US" mode="range" onValueChange={onRange}>
+      <Calendar.Root {...props} onValueChange={onDate}>
         <Calendar.Grid />
       </Calendar.Root>,
     );
+    rerender(
+      <Calendar.Root {...props} onValueChange={onDate}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    expect(error).toHaveBeenCalledTimes(1);
     expect(error).toHaveBeenCalledWith(expect.stringContaining('cannot change mode'));
-    fireEvent.click(october(5));
+    expect(selectedCells()).toEqual([]);
     fireEvent.click(october(8));
-    expect(onRange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('2026-10-08') });
-    expect(selectedCells()).toEqual(['5', '6', '7', '8']);
+    expect(onDate).toHaveBeenCalledWith(date('2026-10-08'));
+    expect(selectedCells()).toEqual(['8']);
+    rerender(
+      <Calendar.Root {...props} mode="range" onValueChange={onRange}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(october(10));
+    fireEvent.click(october(12));
+    expect(onRange).toHaveBeenCalledWith({ start: date('2026-10-10'), end: date('2026-10-12') });
+    expect(selectedCells()).toEqual(['10', '11', '12']);
+    expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();
   });
 
