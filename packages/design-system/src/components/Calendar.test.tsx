@@ -758,6 +758,22 @@ describe('Calendar range mode', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-05/2026-10-18');
   });
 
+  it.each([
+    ['min rises past it', { min: date('2026-10-08') }],
+    ['isDateDisabled rules it out', { isDateDisabled: (d: Temporal.PlainDate) => d.day === 5 }],
+  ])('drops a first pick when %s', (_, limits) => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(<RangeControlled onValueChange={onValueChange} />);
+    fireEvent.click(october(5));
+    rerender(<RangeControlled onValueChange={onValueChange} {...limits} />);
+    expect(selectedCells()).toEqual([]);
+    fireEvent.click(october(10));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(selectedCells()).toEqual(['10']);
+    fireEvent.click(october(12));
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-10'), end: date('2026-10-12') });
+  });
+
   it('drops the first pick on Escape, keeping the key from what holds the calendar', () => {
     const outside = vi.fn();
     document.addEventListener('keydown', outside);

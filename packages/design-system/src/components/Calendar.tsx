@@ -322,6 +322,9 @@ function Root(rootProps: CalendarRootProps) {
     (date: Temporal.PlainDate) => outOfRange(date) || Boolean(isDateDisabled?.(date)),
     [isDateDisabled, outOfRange],
   );
+  // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
+  const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
+  if (anchorRuledOut) setPending(IDLE);
   // The first and last days a range from the anchor can reach: min and max,
   // or nearer, the days beside the nearest ones isDateDisabled rules out. Only
   // the shown month's days are drawn, so days are checked only as far as it
