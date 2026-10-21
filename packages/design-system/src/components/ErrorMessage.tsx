@@ -12,18 +12,25 @@ import styles from './ErrorMessage.module.css';
  */
 export type ErrorMessageRootProps = (
   | {
-      /** Required outside a validation scope. Inside one, leave it out to take the scope's error. */
-      id: string;
+      /** Required outside a validation scope. Inside one, leave it out, or pass undefined, to take the scope's error. */
+      id?: string;
       children?: ReactNode;
     }
   | {
       id?: undefined;
-      /** Text. In a validation scope, a function of the scope's error, and without children, the error's message. */
-      children?: ReactNode | ((error: FormFieldError) => ReactNode);
+      /** A function of the scope's error, for a validation scope; so it takes no id. */
+      children: (error: FormFieldError) => ReactNode;
     }
-) & {
-  className?: string;
-} & Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
+) &
+  Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
+
+// A misuse is logged once per message for the page's life, however many messages or renders hit it.
+const logged = new Set<string>();
+
+/** Lets a test see a message again. */
+export function resetMisuseLog(): void {
+  logged.clear();
+}
 
 function Root({ id, className, children, ...props }: ErrorMessageRootProps) {
   const scope = useContext(ValidationScopeContext);
@@ -40,7 +47,10 @@ function Root({ id, className, children, ...props }: ErrorMessageRootProps) {
           ? 'ErrorMessage.Root takes a function child only without an id, inside a validation scope'
           : undefined;
   useEffect(() => {
-    if (misuse) console.error(misuse);
+    if (misuse && !logged.has(misuse)) {
+      logged.add(misuse);
+      console.error(misuse);
+    }
   }, [misuse]);
   if (auto && scope) {
     if (!scope.error) return null;

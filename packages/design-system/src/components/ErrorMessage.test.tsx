@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage.js';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { ErrorMessage, resetMisuseLog, type ErrorMessageRootProps } from './ErrorMessage.js';
 import * as api from '../index.js';
 
 const css = readFileSync(
@@ -12,6 +12,7 @@ const css = readFileSync(
 );
 
 afterEach(cleanup);
+beforeEach(resetMisuseLog);
 
 describe('ErrorMessage exports', () => {
   it('is a top-level primitive', () => {
@@ -82,5 +83,25 @@ describe('ErrorMessage misuse', () => {
     expectTypeOf<{ id: string; children: () => string }>().not.toExtend<ErrorMessageRootProps>();
     expectTypeOf<{ children: () => string }>().toExtend<ErrorMessageRootProps>();
     expectTypeOf<{ id: string; children: string }>().toExtend<ErrorMessageRootProps>();
+  });
+
+  it('logs a message once for the page, however many messages hit it', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { unmount } = render(<ErrorMessage.Root />);
+    unmount();
+    render(
+      <>
+        <ErrorMessage.Root />
+        <ErrorMessage.Root />
+      </>,
+    );
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+
+  it('types an id that may be undefined with plain children, and a function child only without one', () => {
+    expectTypeOf<{ id: string | undefined; children: string }>().toExtend<ErrorMessageRootProps>();
+    expectTypeOf<{ id: string | undefined; children: () => string }>().not.toExtend<ErrorMessageRootProps>();
+    expectTypeOf<{ className: string }>().toExtend<ErrorMessageRootProps>();
   });
 });
