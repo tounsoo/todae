@@ -108,25 +108,23 @@ export function labelOf(input: HTMLInputElement | null): string {
  * Calls `onChange` with the input's label text now and whenever it changes: its
  * `<label>`s or the elements its `aria-labelledby` names, as their text or
  * attributes change, and the input's own `aria-label` and `aria-labelledby`.
- * `read` reads it again and follows the elements it now has, for a label that
- * mounted, was replaced or went since the last change: call it after each
- * commit. `stop` ends the watch.
+ * Elements inserted or removed in the input's form, or the page without one,
+ * find the labels again, so a label that mounts, is replaced or goes is
+ * followed with no render of the input. `stop` ends the watch.
  */
-export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): { read: () => void; stop: () => void } {
-  if (!input) return { read: () => {}, stop: () => {} };
+export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): { stop: () => void } {
+  if (!input) return { stop: () => {} };
   const find = (): Watched => {
     const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
     const named = ids.length ? ids.map((id) => input.ownerDocument.getElementById(id)) : [...(input.labels ?? [])];
     return [
       [input, { attributes: true, attributeFilter: ['aria-label', 'aria-labelledby'] }],
+      // A label can mount, or be replaced, anywhere in the form or the page, without the input rendering.
+      [input.form ?? input.ownerDocument.body, { childList: true, subtree: true }],
       ...named.flatMap((element): Watched => (element ? [[element, { childList: true, subtree: true, characterData: true, attributes: true }]] : [])),
     ];
   };
   const watch = watchElements(find, () => onChange(labelOf(input)));
-  const read = () => {
-    onChange(labelOf(input));
-    watch.refresh();
-  };
   onChange(labelOf(input));
-  return { read, stop: watch.stop };
+  return { stop: watch.stop };
 }

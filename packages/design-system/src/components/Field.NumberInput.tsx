@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { useFieldContext, usePublishStepper, type StepperEntry } from './Field.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { FieldValueInput } from './Field.ValueInput.js';
@@ -168,12 +169,15 @@ export function NumberInput({
     if (typing && !draft.failed) setDraft({ ...draft, failed: true });
   }
 
-  function commit(next: number | null) {
+  // Returns what it committed, the number the product is told.
+  function commit(next: number | null): number | null {
     const result = next === null ? null : commitNumber(next, range, text);
     setDraft(null);
-    if (Object.is(result, current)) return;
-    field.notifyValueChange();
-    onValueChange?.(result);
+    if (!Object.is(result, current)) {
+      field.notifyValueChange();
+      onValueChange?.(result);
+    }
+    return result;
   }
 
   function commitDraft() {
@@ -184,14 +188,21 @@ export function NumberInput({
     else fail();
   }
 
-  // The form is about to read the value input, from a submit or from a native check that found the stale value invalid: a readable text is committed first, written to the value input directly so that it is what the entry list holds, whatever the phase React is in.
-  function commitForForm() {
+  // A submit of the form commits as blur and Enter do: the product's answer renders before the form reads its entries, so the form only ever reads a number the product accepted. Text that is no number is flagged, and the form's own check blocks the submit on the value input's custom validity. In a form that validates natively, a commit that leaves the value input invalid, such as a cleared required text, is not sent, as the browser's own check would have it. Called inside a React commit phase, such as from an effect's `requestSubmit`, React cannot flush, so the submit carries the last rendered value.
+  function submitForm(event: Event) {
     if (!typing || fixed) return;
     const next = typed();
-    if (!next.read) return;
-    const result = next.number === null ? null : commitNumber(next.number, range, text);
-    if (valueNode.current) valueNode.current.value = result === null ? '' : String(result);
-    commit(next.number);
+    if (!next.read) return fail();
+    flushSync(() => commit(next.number));
+    const form = event.currentTarget as HTMLFormElement;
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | HTMLInputElement | null;
+    const input = valueNode.current;
+    if (!form.noValidate && !submitter?.formNoValidate && input && !input.validity.valid) {
+      // As a browser's own check would have: no `submit` event, so no handler of the product's reads the entries either.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      input.reportValidity();
+    }
   }
 
   // From text that is no number, nothing: it stays, and stays invalid.
@@ -208,7 +219,7 @@ export function NumberInput({
   // The step buttons are named from it, so several fields' are told apart.
   const [label, setLabel] = useState('');
   // The native listeners and the stepper entry outlive a render, so they call the latest of these.
-  const latest = useRef({ step: (_direction: 1 | -1) => {}, refuse: (_event: InputEvent) => {}, submit: () => {} });
+  const latest = useRef({ step: (_direction: 1 | -1) => {}, refuse: (_event: InputEvent) => {}, submit: (_event: Event) => {} });
   const stepper = useMemo<StepperEntry>(
     () => ({
       step: (direction) => latest.current.step(direction),
@@ -232,7 +243,7 @@ export function NumberInput({
     if (!isPartialNumber(target.value.slice(0, from) + event.data + target.value.slice(to), text)) event.preventDefault();
   }
   useLayoutEffect(() => {
-    latest.current = { step: (direction) => stepBy(direction * by), refuse, submit: commitForForm };
+    latest.current = { step: (direction) => stepBy(direction * by), refuse, submit: submitForm };
   });
   useLayoutEffect(() => {
     const input = node.current;
@@ -244,32 +255,20 @@ export function NumberInput({
         if (!event.defaultPrevented) setDraft(null);
       });
     };
-    // A submit with no blur, such as a key's, takes what was typed. This runs before React's bubble handlers, which are on the root, such as Form.Root's `onSubmit`, so before it reads the form's validity; a capture handler on the form runs before it. A form that validates natively checks before it fires `submit`, so the stale value input's `invalid` event takes the text too, and the next submit carries it.
-    const submit = () => latest.current.submit();
+    // A submit with no blur, such as a requestSubmit's, takes what was typed. This runs before React's bubble handlers, which are on the root, such as Form.Root's `onSubmit`, so before it reads the form's validity; a capture handler on the form runs before it. A form that validates natively checks before it fires `submit`, so it checks the last committed number; Enter and a press on a submit button commit first.
+    const submit = (event: Event) => latest.current.submit(event);
     const form = input.form;
-    const valueInput = valueNode.current;
     input.addEventListener('beforeinput', listener);
     form?.addEventListener('reset', reset);
     form?.addEventListener('submit', submit);
-    valueInput?.addEventListener('invalid', submit);
     return () => {
       input.removeEventListener('beforeinput', listener);
       form?.removeEventListener('reset', reset);
       form?.removeEventListener('submit', submit);
-      valueInput?.removeEventListener('invalid', submit);
     };
   }, [props.form]);
-  // The label's own text can change, such as a translation that loads later, so it is watched; a label that mounts, is replaced or goes is read again on each commit, which finds the elements to watch.
-  const watcher = useRef<ReturnType<typeof watchLabel> | null>(null);
-  useLayoutEffect(() => {
-    const watch = watchLabel(node.current, setLabel);
-    watcher.current = watch;
-    return () => {
-      watch.stop();
-      watcher.current = null;
-    };
-  }, []);
-  useLayoutEffect(() => watcher.current?.read());
+  // The label's own text can change, such as a translation that loads later, and a label can mount, be replaced or go from anywhere, so the label elements and where they would be inserted are watched.
+  useLayoutEffect(() => watchLabel(node.current, setLabel).stop, []);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (isImeKeyEvent(event) || fixed) return;

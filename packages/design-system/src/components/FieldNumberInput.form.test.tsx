@@ -279,10 +279,10 @@ describe('Field.NumberInput on the server', () => {
 });
 
 describe('Field.NumberInput and a submit from inside a commit phase', () => {
-  it('sends the typed number when an effect submits the form, with no flushSync warning', () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('carries the last rendered value when an effect submits the form, since React cannot flush there', () => {
+    // flushSync warns in development when it is called from an effect.
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const sent: (string | null)[] = [];
-    const changed = vi.fn();
     function Page({ go }: { go: boolean }) {
       const [value, setValue] = useState<number | null>(3);
       const form = useRef<HTMLFormElement>(null);
@@ -298,14 +298,7 @@ describe('Field.NumberInput and a submit from inside a commit phase', () => {
           }}
         >
           <Field.Root aria-label="Quantity" name="quantity">
-            <Field.NumberInput
-              value={value}
-              locale="en"
-              onValueChange={(next) => {
-                changed(next);
-                setValue(next);
-              }}
-            />
+            <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
           </Field.Root>
         </form>
       );
@@ -313,15 +306,24 @@ describe('Field.NumberInput and a submit from inside a commit phase', () => {
     const { rerender } = render(<Page go={false} />);
     type('7');
     act(() => rerender(<Page go />));
-    expect(sent).toEqual(['7']);
-    expect(changed).toHaveBeenCalledWith(7);
-    expect(input().value).toBe('7');
-    expect(error).not.toHaveBeenCalled();
+    expect(sent).toEqual(['3']);
   });
 });
 
 describe('Field.NumberInput in a form that validates natively', () => {
-  function Page({ initial, max, onSubmit }: { initial: number | null; max?: number; onSubmit: (value: string | null) => void }) {
+  function Page({
+    initial,
+    max,
+    adopt = true,
+    onSubmit,
+    onCommit,
+  }: {
+    initial: number | null;
+    max?: number;
+    adopt?: boolean;
+    onSubmit: (value: string | null) => void;
+    onCommit?: (value: number | null) => void;
+  }) {
     const [value, setValue] = useState<number | null>(initial);
     return (
       <form
@@ -332,34 +334,86 @@ describe('Field.NumberInput in a form that validates natively', () => {
         }}
       >
         <Field.Root aria-label="Quantity" name="quantity">
-          <Field.NumberInput value={value} max={max} required locale="en" onValueChange={setValue} />
+          <Field.NumberInput
+            value={value}
+            max={max}
+            required
+            locale="en"
+            onValueChange={(next) => {
+              onCommit?.(next);
+              if (adopt) setValue(next);
+            }}
+          />
         </Field.Root>
+        <button type="submit">Send</button>
+        <button type="submit" formNoValidate>
+          Send anyway
+        </button>
       </form>
     );
   }
-  const requestSubmit = () => act(() => (screen.getByTestId('form') as HTMLFormElement).requestSubmit());
+  const form = () => screen.getByTestId('form') as HTMLFormElement;
+  const requestSubmit = (submitter?: HTMLElement) => act(() => form().requestSubmit(submitter));
 
-  it('commits a readable text when the check finds the stale empty value invalid, and the next submit carries it', () => {
+  it('sends the number the product accepted, not the one it refused', () => {
     const onSubmit = vi.fn();
-    render(<Page initial={null} onSubmit={onSubmit} />);
+    render(<Page initial={50} max={100} adopt={false} onSubmit={onSubmit} />);
+    type('70');
+    requestSubmit();
+    expect(onSubmit).toHaveBeenCalledWith('50');
+    expect(input().value).toBe('50');
+  });
+
+  it('sends the typed number from a submit with no blur, committing it once', () => {
+    const onSubmit = vi.fn();
+    const onCommit = vi.fn();
+    render(<Page initial={3} onSubmit={onSubmit} onCommit={onCommit} />);
+    type('7');
+    requestSubmit();
+    expect(onSubmit).toHaveBeenCalledWith('7');
+    expect(onCommit.mock.calls).toEqual([[7]]);
+  });
+
+  it('does not send a cleared required text as empty, and reports it', () => {
+    const onSubmit = vi.fn();
+    render(<Page initial={7} onSubmit={onSubmit} />);
+    const invalid = vi.fn();
+    valueInput().addEventListener('invalid', invalid);
+    type('');
+    requestSubmit();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(invalid).toHaveBeenCalled();
+    expect(input().value).toBe('');
+  });
+
+  it('sends it when the submitter turns validation off, as a native form does', () => {
+    const onSubmit = vi.fn();
+    render(<Page initial={7} onSubmit={onSubmit} />);
+    type('');
+    requestSubmit(screen.getByRole('button', { name: 'Send anyway' }));
+    expect(onSubmit).toHaveBeenCalledWith('');
+  });
+
+  it('checks the last committed number for a submit that a text would mend, and does not commit it', () => {
+    const onSubmit = vi.fn();
+    const onCommit = vi.fn();
+    render(<Page initial={null} onSubmit={onSubmit} onCommit={onCommit} />);
     type('7');
     requestSubmit();
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
     expect(input().value).toBe('7');
-    expect(valueInput().value).toBe('7');
-    requestSubmit();
-    expect(onSubmit).toHaveBeenCalledWith('7');
   });
 
-  it('commits a readable text when the stale value is out of range', () => {
-    const onSubmit = vi.fn();
-    render(<Page initial={500} max={100} onSubmit={onSubmit} />);
-    type('50');
-    requestSubmit();
-    expect(onSubmit).not.toHaveBeenCalled();
-    expect(valueInput().value).toBe('50');
-    requestSubmit();
-    expect(onSubmit).toHaveBeenCalledWith('50');
+  it('is not committed by a validity check from product code', () => {
+    const onCommit = vi.fn();
+    render(<Page initial={null} onSubmit={() => undefined} onCommit={onCommit} />);
+    input().focus();
+    type('5');
+    form().checkValidity();
+    form().reportValidity();
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(input().value).toBe('5');
   });
 
   it('leaves a text that is no number as it is', () => {
@@ -368,5 +422,61 @@ describe('Field.NumberInput in a form that validates natively', () => {
     requestSubmit();
     expect(input().value).toBe('abc');
     expect(valueInput().value).toBe('');
+  });
+});
+
+describe('Field.NumberInput in Form.Root and a submit', () => {
+  it('commits a cleared required text once, and the form blocks it', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    const onCommit = vi.fn();
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      return (
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Group>
+            <Field.Root name="quantity" aria-label="Quantity">
+              <Field.NumberInput
+                value={value}
+                required
+                onValueChange={(next) => {
+                  onCommit(next);
+                  setValue(next);
+                }}
+              />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Page />);
+    await act(async () => type(''));
+    await act(async () => {
+      (screen.getByTestId('form') as HTMLFormElement).requestSubmit();
+    });
+    expect(onCommit.mock.calls).toEqual([[null]]);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('flags a half-typed text the submit could not read, and blocks the submit', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    function Page() {
+      const [value, setValue] = useState<number | null>(null);
+      return (
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Root name="quantity" aria-label="Amount">
+            <Field.NumberInput value={value} locale="de" onValueChange={setValue} />
+          </Field.Root>
+        </Form.Root>
+      );
+    }
+    await mount(<Page />);
+    await act(async () => type('1.'));
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    await act(async () => {
+      (screen.getByTestId('form') as HTMLFormElement).requestSubmit();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(input().getAttribute('aria-invalid')).toBe('true');
   });
 });

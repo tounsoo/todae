@@ -412,23 +412,46 @@ describe('Field.Increment names follow a label that comes and goes', () => {
   }
   const name = () => screen.getByRole('button').getAttribute('aria-label');
 
-  it('reads a label that mounts after the input', () => {
+  it('reads a label that mounts after the input', async () => {
     const { rerender } = render(<Page label="none" />);
     expect(name()).toBe('Increase');
-    rerender(<Page label="Apples" />);
+    await act(async () => rerender(<Page label="Apples" />));
     expect(name()).toBe('Increase Apples');
+  });
+
+  it('reads a label that mounts from a sibling\'s own state, with no render of the input', async () => {
+    let show = (_on: boolean) => {};
+    function Toggler() {
+      const [on, setOn] = useState(false);
+      show = setOn;
+      return on ? <Label.Root htmlFor="fruit3">Apples</Label.Root> : null;
+    }
+    render(
+      <>
+        <Toggler />
+        <Field.Root id="fruit3" name="fruit3">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+      </>,
+    );
+    expect(name()).toBe('Increase');
+    await act(async () => show(true));
+    expect(name()).toBe('Increase Apples');
+    await act(async () => show(false));
+    expect(name()).toBe('Increase');
   });
 
   it('reads a label that is replaced by another element, and then follows the new one', async () => {
     const { rerender } = render(<Page label="Apples" />);
-    rerender(<Page label="Pears" />);
+    await act(async () => rerender(<Page label="Pears" />));
     expect(name()).toBe('Increase Pears');
   });
 
-  it('drops the field name when the label is removed', () => {
+  it('drops the field name when the label is removed', async () => {
     const { rerender } = render(<Page label="Apples" />);
     expect(name()).toBe('Increase Apples');
-    rerender(<Page label="none" />);
+    await act(async () => rerender(<Page label="none" />));
     expect(name()).toBe('Increase');
   });
 
@@ -453,7 +476,7 @@ describe('Field.Increment names follow a label that comes and goes', () => {
       );
     }
     const { rerender } = render(<Swap swapped={false} />);
-    rerender(<Swap swapped />);
+    await act(async () => rerender(<Swap swapped />));
     expect(name()).toBe('Increase Pears');
     act(() => rename('Plums'));
     expect(await screen.findByRole('button', { name: 'Increase Plums' })).toBeTruthy();

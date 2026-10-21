@@ -262,10 +262,20 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
   const base = min ?? 0;
   let high = max;
   if (step !== undefined) {
-    const index = Math.floor(indexOf(max, base, step));
-    high = pointAt(index, range);
-    // A point past `max`, from a grid too fine for a double, gives way to the one before it.
-    if (high > max) high = pointAt(index - 1, range);
+    if (!onGrid(max, range)) {
+      let index = Math.floor(indexOf(max, base, step));
+      high = pointAt(index, range);
+      // A point past `max`, from a grid too fine for a double, gives way to the one before it, and where a double holds no lower point, to `max` itself.
+      while (high > max) {
+        const lower = pointAt(index - 1, range);
+        if (lower >= high) {
+          high = max;
+          break;
+        }
+        index -= 1;
+        high = lower;
+      }
+    }
   }
   return { low: min, high: min !== undefined && high < min ? min : high };
 }
@@ -323,7 +333,7 @@ export function stepNumber(from: number | null, by: number, range: NumberRange, 
     return commitNumber(roundTo(from + by, Math.max(decimalsOf(from), decimalsOf(by))), range, text);
   }
   // With no step, the grid is the unit the text shows, so a draft of 7.5% goes to 8%, not past it.
-  const unit = step ?? 10 ** -shown!;
+  const unit = step ?? Number('1e-' + shown!);
   const index = indexOf(from, step === undefined ? 0 : (range.min ?? 0), unit);
   const count = Math.max(1, Math.round(Math.abs(by) / unit));
   const point = pointAt(by > 0 ? Math.floor(index) + count : Math.ceil(index) - count, step === undefined ? { step: unit } : range);

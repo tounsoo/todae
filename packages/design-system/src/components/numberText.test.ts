@@ -274,6 +274,13 @@ describe('the step grid beyond 15 digits', () => {
   it('never lands above max', () => {
     expect(commitNumber(5e15, { max: 1234567890123456, step: 1 })).toBe(1234567890123456);
     expect(boundsOf({ max: 1234567890123456, step: 1 })).toEqual({ low: undefined, high: 1234567890123456 });
+    // Above 2^53 a double holds no point between, so a point past `max` is never handed back.
+    for (const max of [32506050087487, 660362327190000, 7620026433952.68]) {
+      expect(boundsOf({ max, step: 0.0001 }).high, String(max)).toBe(max);
+      expect(commitNumber(max, { max, step: 0.0001 }), String(max)).toBe(max);
+    }
+    const off = Number('32506050087487.00005');
+    expect(boundsOf({ max: off, step: 0.0001 }).high).toBeLessThanOrEqual(off);
   });
 
   it('steps from a 16-digit value, and finds no step where a double has no next point', () => {

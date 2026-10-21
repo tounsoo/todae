@@ -105,6 +105,66 @@ describe('Field.NumberInput in a browser', () => {
     expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '9']]);
   });
 
+  it('does not send a cleared required text from a native form, and sends the number the product accepted', async () => {
+    const onSubmit = vi.fn();
+    const { unmount } = render(<Quantity onSubmit={onSubmit} withForm={false} initial={7} required />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    input().form!.requestSubmit();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(onSubmit).not.toHaveBeenCalled();
+    unmount();
+
+    // A product that refuses the number: the form reads what is shown.
+    const sent = vi.fn();
+    render(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent(new FormData(event.currentTarget).get('quantity'));
+        }}
+      >
+        <Field.Root aria-label="Quantity" name="quantity">
+          <Field.NumberInput value={50} max={100} locale="en" onValueChange={() => undefined} />
+        </Field.Root>
+      </form>,
+    );
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}70');
+    input().form!.requestSubmit();
+    await waitFor(() => expect(sent).toHaveBeenCalledWith('50'));
+    expect(input().value).toBe('50');
+  });
+
+  it('does not commit the text when product code checks the form while the person types', async () => {
+    const onChange = vi.fn();
+    function Checked() {
+      const [value, setValue] = useState<number | null>(null);
+      return (
+        <form onKeyUp={(event) => event.currentTarget.checkValidity()}>
+          <Field.Root aria-label="Quantity" name="quantity">
+            <Field.NumberInput
+              value={value}
+              required
+              min={10}
+              locale="en"
+              onValueChange={(next) => {
+                onChange(next);
+                setValue(next);
+              }}
+            />
+          </Field.Root>
+        </form>
+      );
+    }
+    render(<Checked />);
+    await userEvent.click(input());
+    await userEvent.keyboard('5');
+    expect(onChange).not.toHaveBeenCalled();
+    await userEvent.keyboard('0');
+    expect(input().value).toBe('50');
+  });
+
   it('drops an unreadable text on a form reset, but keeps it when a handler cancels the reset', async () => {
     function Resettable({ cancel }: { cancel: boolean }) {
       const [value, setValue] = useState<number | null>(3);
