@@ -1,15 +1,16 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
-  useSyncExternalStore,
+  useState,
   type ComponentPropsWithRef,
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { useFieldContext, type CountStore } from './Field.context.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useFieldContext, useStepper } from './Field.context.js';
+import { spokenText, useButtonName } from './buttonName.js';
 import { MinusGlyph, PlusGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
@@ -26,11 +27,15 @@ export type FieldDecrementProps = FieldStepButtonProps;
 const REPEAT_DELAY_MS = 400;
 const REPEAT_INTERVAL_MS = 60;
 
-function subscribeStepper(store: CountStore, listener: () => void) {
-  store.steppers.add(listener);
-  return () => {
-    store.steppers.delete(listener);
-  };
+// What names the field's input, from its own attributes: the elements its `aria-labelledby` points at, else its `aria-label`, else its `<label>`s.
+function nameOf(input: HTMLElement | null): string {
+  if (!input) return '';
+  const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+  const own = input.getAttribute('aria-label');
+  const spoken = ids.length
+    ? ids.map((id) => spokenText(input.ownerDocument.getElementById(id) ?? input.ownerDocument.createTextNode(''))).join(' ')
+    : own || [...((input as HTMLInputElement).labels ?? [])].map(spokenText).join(' ');
+  return spoken.replace(/\s+/g, ' ').trim();
 }
 
 function StepButton({
@@ -52,14 +57,18 @@ function StepButton({
   ...props
 }: FieldStepButtonProps & { direction: 1 | -1; label: string; glyph: ReactNode }) {
   const { store } = useFieldContext();
-  const stepper = useSyncExternalStore(
-    (listener) => subscribeStepper(store, listener),
-    () => store.stepper,
-    () => null,
-  );
-  const [name, labelRefs] = useDismissLabel(children, ariaLabel, ref, label);
+  const stepper = useStepper(store);
+  const [name, labelRefs] = useButtonName(children, ariaLabel, ref, label);
   const node = useRef<HTMLButtonElement>(null);
   const refs = useComposedRefs(node, labelRefs);
+  // Several number fields have the same two buttons, so a name Todae gives them says whose.
+  const [field, setField] = useState('');
+  const inputId = stepper?.inputId;
+  const readField = useCallback(() => {
+    setField(nameOf(inputId ? (node.current?.ownerDocument.getElementById(inputId) ?? null) : null));
+  }, [inputId]);
+  // Every commit, as the label can change; the same text bails out.
+  useLayoutEffect(readField);
   const timers = useRef<{ delay?: number; repeat?: number }>({});
   const stop = useCallback(() => {
     window.clearTimeout(timers.current.delay);
@@ -98,7 +107,7 @@ function StepButton({
       type="button"
       tabIndex={-1}
       disabled={disabled}
-      aria-label={name}
+      aria-label={name !== undefined && !ariaLabel && field ? `${name} ${field}` : name}
       aria-controls={stepper?.inputId}
       className={cx(styles.stepButton, className)}
       onPointerDown={composeHandlers(onPointerDown, press)}

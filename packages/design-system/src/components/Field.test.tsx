@@ -21,6 +21,7 @@ import { useChipField } from '../hooks/useChipField.js';
 import { useField } from '../hooks/useField.js';
 import * as api from '../index.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
+import { resetWarnOnce } from './warnOnce.js';
 import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
@@ -182,6 +183,25 @@ describe('Field.TextInput', () => {
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().extract<'number'>().toBeNever();
   });
 
+  it('warns once in development when TextInput is given type number at run time', () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const props = { value: '', onValueChange: () => undefined, type: 'number' } as unknown as FieldTextInputProps;
+    const { rerender } = render(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+      </Field.Root>,
+    );
+    rerender(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+      </Field.Root>,
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Field.NumberInput'));
+    warn.mockRestore();
+  });
+
   it('takes onValueChange alone on TextInput and Textarea', () => {
     const onText = vi.fn();
     const onArea = vi.fn();
@@ -292,6 +312,26 @@ describe('Field.ColorPicker beside another control part', () => {
     const field = useField();
     return <div role="slider" aria-valuenow={3} tabIndex={0} {...field.getControlProps({}, { native: false })} />;
   }
+
+  function Silent({ name }: { name?: string }) {
+    const field = useField();
+    return <input {...field.getControlProps({ name }, { sendsName: false })} />;
+  }
+
+  it('gives a control that sends nothing no name, its own or the Root, and leaves the name to one beside it', () => {
+    const { container, getByTestId } = render(
+      <form data-testid="form">
+        <Field.Root name="accent" aria-label="Accent">
+          <Silent name="mine" />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const silent = container.querySelector('input')!;
+    expect(silent.hasAttribute('name')).toBe(false);
+    expect(silent.getAttribute('data-todae-field-control')).toBe('');
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+  });
 
   it('keeps the name, and gives up the id, beside a control that is not a form element', () => {
     const { container, getByTestId } = render(

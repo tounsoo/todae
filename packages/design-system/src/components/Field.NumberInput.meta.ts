@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.NumberInput',
   description:
-    "A text input for a number, in the locale's own format, that the person types into freely. It parses on blur, Enter and each step, rewrites the text and calls onValueChange. The number goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them in the field's format. Arrow Up and Down step, Page Up and Page Down step by largeStep, and Home and End go to min and max when set. Field.Increment and Field.Decrement beside it are step buttons. It is a native input with the spinbutton role, and takes native input attributes except type, role, value, defaultValue, onChange, min, max, step, disabled and required.",
+    "A text input for a number, in the locale's own format, that the person types into freely. It parses on blur, Enter and each step, rewrites the text and calls onValueChange. The number goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them in the field's format. Arrow Up and Down step, Page Up and Page Down step by largeStep. Field.Increment and Field.Decrement beside it are step buttons. It is a native input with the spinbutton role, and takes native input attributes except type, role, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
   props: [
     {
       name: 'value',
@@ -16,7 +16,7 @@ export const meta = {
       type: '(value: number | null) => void',
       required: false,
       description:
-        "Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within min and max and on step, or null for an empty text. Typing alone fires nothing. Without it the input is read-only.",
+        "Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within min and max, on step and rounded to the digits the text shows, or null for an empty text. Typing alone fires nothing. Without it the input is read-only.",
     },
     {
       name: 'min',
@@ -35,7 +35,7 @@ export const meta = {
       type: 'number',
       required: false,
       description:
-        'The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. Without it a commit keeps every digit and a key moves by 1.',
+        'The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.',
     },
     {
       name: 'largeStep',
@@ -55,7 +55,7 @@ export const meta = {
       type: 'Intl.NumberFormatOptions',
       required: false,
       description:
-        'How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits. Put a unit or a currency sign in a Field.Affix instead when you can.',
+        "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
     },
     {
       name: 'required',
@@ -73,7 +73,7 @@ export const meta = {
       name: 'inputMode',
       type: '"numeric" | "decimal" | "text" | …',
       required: false,
-      default: '"numeric" for a whole step and min, else "decimal"',
+      default: '"numeric" for a whole step and min of 0 or more, "decimal" for a min of 0 or more, else "text"',
       description: 'Which keyboard a phone shows.',
     },
   ],

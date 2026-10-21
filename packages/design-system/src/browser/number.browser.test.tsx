@@ -1,5 +1,6 @@
+/// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -66,6 +67,7 @@ function Quantity({
 }
 
 const input = () => screen.getByRole('spinbutton') as HTMLInputElement;
+const valueOf = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!.value;
 
 describe('Field.NumberInput in a browser', () => {
   it.each([true, false])('commits on Enter before the form submits and reads its value (Form.Root: %s)', async (withForm) => {
@@ -98,7 +100,7 @@ describe('Field.NumberInput in a browser', () => {
     await waitFor(() => expect(document.activeElement).toBe(input()));
   });
 
-  it('steps with the arrows, the page keys, Home and End, and snaps and clamps a typed number', async () => {
+  it('steps with the arrows and the page keys, and snaps and clamps a typed number', async () => {
     render(<Quantity min={0} max={100} step={5} />);
     await userEvent.click(input());
     await userEvent.keyboard('{ArrowUp}');
@@ -109,10 +111,6 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().value).toBe('5');
     await userEvent.keyboard('{PageUp}');
     expect(input().value).toBe('55');
-    await userEvent.keyboard('{End}');
-    expect(input().value).toBe('100');
-    await userEvent.keyboard('{Home}');
-    expect(input().value).toBe('0');
     await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
     expect(input().value).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
@@ -125,6 +123,52 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().value).toBe('12,3.5');
   });
 
+  it('keeps the caret where it was when a keystroke is refused, and Home and End move it', async () => {
+    render(<Quantity locale="en" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('123{Home}a');
+    expect(input().value).toBe('123');
+    expect(input().selectionStart).toBe(0);
+    await userEvent.keyboard('9{End}4');
+    expect(input().value).toBe('91234');
+    await userEvent.keyboard('{ArrowLeft}{ArrowLeft}b');
+    expect(input().selectionStart).toBe(3);
+  });
+
+  it('keeps a text the locale does not read, invalid, and blocks Enter instead of submitting the old number', async () => {
+    for (const withForm of [true, false]) {
+      cleanup();
+      const onSubmit = vi.fn();
+      render(<Quantity onSubmit={onSubmit} withForm={withForm} locale="de" />);
+      await userEvent.click(input());
+      await userEvent.keyboard('5{Tab}{Shift>}{Tab}{/Shift}');
+      await userEvent.keyboard('{Control>}a{/Control}1.5{Enter}');
+      expect(onSubmit, `Form.Root: ${withForm}`).not.toHaveBeenCalled();
+      expect(input().value).toBe('1.5');
+      expect(input().getAttribute('aria-invalid')).toBe('true');
+      if (withForm) await screen.findByText('Enter a valid value');
+      await userEvent.keyboard('{Control>}a{/Control}1,5{Enter}');
+      expect(onSubmit).toHaveBeenCalledOnce();
+      expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '1.5']]);
+    }
+  });
+
+  it('checks an IME composition at its end, not as it goes', async () => {
+    render(<Quantity locale="en" />);
+    await userEvent.click(input());
+    const session = cdp();
+    await session.send('Input.imeSetComposition', { text: 'ㅎ', selectionStart: 1, selectionEnd: 1 });
+    expect(input().value).toBe('ㅎ');
+    await session.send('Input.insertText', { text: 'ㅎ' });
+    expect(input().value).toBe('');
+    await session.send('Input.imeSetComposition', { text: '5', selectionStart: 1, selectionEnd: 1 });
+    expect(input().value).toBe('5');
+    await session.send('Input.insertText', { text: '5' });
+    expect(input().value).toBe('5');
+    await userEvent.keyboard('{Tab}');
+    expect(valueOf()).toBe('5');
+  });
+
   it('does not step on the wheel', async () => {
     render(<Quantity />);
     await userEvent.click(input());
@@ -134,8 +178,8 @@ describe('Field.NumberInput in a browser', () => {
 
   it('steps from a button press while focus stays in the input, and the buttons are not tab stops', async () => {
     render(<Quantity min={1} max={3} />);
-    const more = screen.getByRole('button', { name: 'Increase' });
-    const less = screen.getByRole('button', { name: 'Decrease' });
+    const more = screen.getByRole('button', { name: /^Increase/ });
+    const less = screen.getByRole('button', { name: /^Decrease/ });
     await userEvent.click(input());
     await userEvent.click(more);
     expect(input().value).toBe('1');
@@ -157,14 +201,14 @@ describe('Field.NumberInput in a browser', () => {
 
   it('does not take focus from a press on a step button when the input has none', async () => {
     render(<Quantity min={1} max={3} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Increase' }));
+    await userEvent.click(screen.getByRole('button', { name: /^Increase/ }));
     expect(input().value).toBe('1');
-    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Increase' }));
+    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: /^Increase/ }));
   });
 
   it('repeats while a button is held, and stops when it is let go', async () => {
     render(<Quantity min={0} max={1000} />);
-    const more = screen.getByRole('button', { name: 'Increase' });
+    const more = screen.getByRole('button', { name: /^Increase/ });
     const box = more.getBoundingClientRect();
     const point = { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2, button: 0, pointerId: 1, bubbles: true };
     more.dispatchEvent(new PointerEvent('pointerdown', point));

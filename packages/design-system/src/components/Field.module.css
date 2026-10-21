@@ -70,7 +70,7 @@
   }
 
   /* Field.NumberInput's figures line up. */
-  .input[role='spinbutton'] {
+  .input[data-todae-number-input] {
     font-variant-numeric: tabular-nums;
   }
 

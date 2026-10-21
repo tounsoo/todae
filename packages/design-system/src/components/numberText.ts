@@ -1,18 +1,21 @@
 // Server-safe number text for Field.NumberInput and a text input beside any number: no hooks or context.
 import { fold } from './dateText.js';
 
+/** What `Intl.NumberFormat` takes, less the options `parseNumber` can't read back: compact and scientific notation. Significant-digit options are not supported either. */
+export type NumberFormatOptions = Omit<Intl.NumberFormatOptions, 'notation' | 'compactDisplay'>;
+
 export type NumberTextOptions = {
   /** The locale, such as "de". The runtime's own when not set. */
   locale?: string;
   /** How the number is written, as `Intl.NumberFormat` takes it: style percent, currency or unit, and fraction digits. */
-  formatOptions?: Intl.NumberFormatOptions;
+  formatOptions?: NumberFormatOptions;
 };
 
 const cache = /* @__PURE__ */ new Map<string, Intl.NumberFormat>();
 
 // A decimal number keeps the digits it has, where Intl would round to three.
-function withDigits(options: Intl.NumberFormatOptions = {}): Intl.NumberFormatOptions {
-  const plain = (options.style ?? 'decimal') === 'decimal' && (options.notation ?? 'standard') === 'standard';
+function withDigits(options: NumberFormatOptions = {}): NumberFormatOptions {
+  const plain = (options.style ?? 'decimal') === 'decimal';
   const set = [
     options.maximumFractionDigits,
     options.maximumSignificantDigits,
@@ -184,33 +187,65 @@ function decimalsOf(value: number): number {
   return Math.max(0, (mantissa.split('.')[1]?.length ?? 0) - Number(exponent));
 }
 
+const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.min(100, decimals)));
+
+const roundersByDigits = /* @__PURE__ */ new Map<number, Intl.NumberFormat>();
+
+// The decimals the text shows, as the value's own: a percent shows two fewer than the fraction has. Undefined where the text keeps every digit.
+function shownDecimals(options: NumberTextOptions): number | undefined {
+  const resolved = formatterFor(options).resolvedOptions();
+  // Significant digits round by magnitude, not by decimals, and are not supported.
+  const digits = resolved.maximumFractionDigits;
+  if (resolved.maximumSignificantDigits !== undefined || digits === undefined || digits >= 20) return undefined;
+  return Math.min(100, digits + (options.formatOptions?.style === 'percent' ? 2 : 0));
+}
+
+// Rounded by Intl, as the text is, so 1.005 is 1.01 in both: `toFixed` reads the binary value and would say 1.00.
+function roundToShown(value: number, options: NumberTextOptions): number {
+  const decimals = shownDecimals(options);
+  if (decimals === undefined) return value;
+  let rounder = roundersByDigits.get(decimals);
+  if (!rounder) {
+    rounder = new Intl.NumberFormat('en', { useGrouping: false, maximumFractionDigits: decimals });
+    roundersByDigits.set(decimals, rounder);
+  }
+  return Number(rounder.format(value));
+}
+
 /**
- * A value as the field holds it: on the `step` grid, then within `min` and
- * `max`, with the decimals of the step and of `min` so that 0.1 + 0.2 is 0.3.
- * Where `max` is off the grid, the highest point on it. Without a `step`, a
- * value keeps all its digits.
+ * A value as the field holds it: rounded to the decimals the text shows, so a
+ * currency or a percent holds what it says, then on the `step` grid, then
+ * within `min` and `max`, with the decimals of the step and of `min` so that
+ * 0.1 + 0.2 is 0.3. Where `max` is off the grid, the highest point on it; a
+ * `max` below `min` gives way to `min`. Without a `step`, and with no digit
+ * options, a value keeps all its digits.
  */
-export function commitNumber(value: number, { min, max, step }: NumberRange): number {
-  const grid = step !== undefined && step > 0 ? step : undefined;
-  const base = min ?? 0;
-  let result = value;
-  if (grid !== undefined) {
-    result = base + Math.round((value - base) / grid) * grid;
-    if (max !== undefined && result > max) result = base + Math.floor(Number(((max - base) / grid).toPrecision(12))) * grid;
+export function commitNumber(value: number, { min, max, step }: NumberRange, text: NumberTextOptions = {}): number {
+  let result = roundToShown(value, text);
+  if (step !== undefined) {
+    const base = min ?? 0;
+    // The same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5.
+    result = base + Math.round(Number(((result - base) / step).toPrecision(12))) * step;
+    if (max !== undefined && result > max) result = base + Math.floor(Number(((max - base) / step).toPrecision(12))) * step;
     if (min !== undefined && result < min) result = min;
-    result = Number(result.toFixed(Math.min(100, Math.max(decimalsOf(grid), decimalsOf(base)))));
+    result = roundTo(result, Math.max(decimalsOf(step), decimalsOf(base)));
   } else {
-    if (min !== undefined && result < min) result = min;
     if (max !== undefined && result > max) result = max;
+    if (min !== undefined && result < min) result = min;
   }
   return result + 0;
 }
 
 /**
- * The value `by` above or below `from`, committed. From no value, an increase
- * starts at `min`, or at `by` without one, and a decrease starts at `by`.
+ * The value `by` above or below `from`, committed, with the sum rounded to the
+ * decimals of the two so that 1.1 - 1 is 0.1. From a value outside `min` and
+ * `max`, a step lands on the bound first. From no value, an increase starts at
+ * `min`, or at `by` without one, and a decrease starts at `by`.
  */
-export function stepNumber(from: number | null, by: number, range: NumberRange): number {
-  if (from === null) return commitNumber(by > 0 && range.min !== undefined ? range.min : by, range);
-  return commitNumber(commitNumber(from, range) + by, range);
+export function stepNumber(from: number | null, by: number, range: NumberRange, text: NumberTextOptions = {}): number {
+  if (from === null) return commitNumber(by > 0 && range.min !== undefined ? range.min : by, range, text);
+  const start = commitNumber(from, range, text);
+  const outside = (range.max !== undefined && from > range.max) || (range.min !== undefined && from < range.min);
+  if (outside) return start;
+  return commitNumber(roundTo(start + by, Math.max(decimalsOf(start), decimalsOf(by))), range, text);
 }

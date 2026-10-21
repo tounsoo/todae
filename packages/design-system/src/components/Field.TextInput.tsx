@@ -4,6 +4,7 @@ import { cx } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
+import { warnOnce } from './warnOnce.js';
 
 /**
  * Input types that take a string value. A number is `Field.NumberInput`, a
@@ -36,6 +37,10 @@ export function TextInput({
 }: FieldTextInputProps) {
   const field = useField();
   const ctx = useFieldContext();
+  // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
+  if ((type as string) === 'number') {
+    warnOnce('text-input-number', 'Field.TextInput has no type="number"; use Field.NumberInput, which reads and writes a number in the locale\'s format.');
+  }
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;

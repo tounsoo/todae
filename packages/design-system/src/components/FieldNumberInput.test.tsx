@@ -50,6 +50,8 @@ const input = () => screen.getByRole('spinbutton') as HTMLInputElement;
 const valueInput = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!;
 const type = (text: string) => fireEvent.change(input(), { target: { value: text } });
 const key = (name: string, init: KeyboardEventInit = {}) => fireEvent.keyDown(input(), { key: name, ...init });
+// A step button's name starts with the string, and goes on with the field's label.
+const button = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) }) as HTMLButtonElement;
 
 describe('Field.NumberInput', () => {
   it('is a text input with the spinbutton role and its value in the aria attributes', () => {
@@ -73,13 +75,21 @@ describe('Field.NumberInput', () => {
     expect(input().required).toBe(false);
   });
 
-  it('shows a numeric keypad for whole numbers, and any inputMode the product sets', () => {
+  it('asks for a keypad with a minus key unless the number cannot be negative, and takes any inputMode the product sets', () => {
     const { rerender } = render(<Quantity step={1} min={0} />);
     expect(input().getAttribute('inputmode')).toBe('numeric');
-    rerender(<Quantity step={1} min={0} inputMode="text" />);
-    expect(input().getAttribute('inputmode')).toBe('text');
+    rerender(<Quantity step={1} min={0} inputMode="search" />);
+    expect(input().getAttribute('inputmode')).toBe('search');
     rerender(<Quantity step={1} min={0.5} />);
     expect(input().getAttribute('inputmode')).toBe('decimal');
+    rerender(<Quantity min={0} />);
+    expect(input().getAttribute('inputmode')).toBe('decimal');
+    rerender(<Quantity step={1} min={-5} />);
+    expect(input().getAttribute('inputmode')).toBe('text');
+    rerender(<Quantity step={1} />);
+    expect(input().getAttribute('inputmode')).toBe('text');
+    rerender(<Quantity />);
+    expect(input().getAttribute('inputmode')).toBe('text');
   });
 
   it('writes the number in the locale and the format options', () => {
@@ -152,17 +162,71 @@ describe('Field.NumberInput', () => {
     expect(input().hasAttribute('aria-valuenow')).toBe(false);
   });
 
-  it('goes back to the value when the text means no number, and reports nothing', () => {
+  it('keeps a text that means no number, invalid, and reports nothing', () => {
     const onCommit = vi.fn();
     render(<Quantity initial={3} locale="en" onCommit={onCommit} />);
     type('-');
     fireEvent.blur(input());
     expect(onCommit).not.toHaveBeenCalled();
-    expect(input().value).toBe('3');
-    type('1,2');
+    expect(input().value).toBe('-');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.customError).toBe(true);
+    expect(valueInput().validationMessage).toBe('Enter a valid value');
+    expect(valueInput().value).toBe('3');
+  });
+
+  it.each([
+    ['1.5', 'de'],
+    ['1,5', 'en'],
+    ['1234.56', 'de'],
+  ])('keeps %s typed in %s, which the locale does not read, and is invalid until it does', (text, locale) => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={3} locale={locale} onCommit={onCommit} />);
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    type(text);
+    // Typing alone flags nothing.
+    expect(input().getAttribute('aria-invalid')).toBeNull();
     fireEvent.blur(input());
+    expect(input().value).toBe(text);
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.valid).toBe(false);
     expect(onCommit).not.toHaveBeenCalled();
-    expect(input().value).toBe('3');
+    // Still unreadable after more typing; a number clears it.
+    type(`${text}1`);
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    type(locale === 'de' ? '1.234,5' : '1,234.5');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    expect(valueInput().validity.valid).toBe(true);
+    fireEvent.blur(input());
+    expect(onCommit).toHaveBeenLastCalledWith(1234.5);
+  });
+
+  it('ends an unreadable text when the product sets a value, or a step commits', () => {
+    const { rerender } = render(
+      <Field.Root aria-label="Quantity">
+        <Field.NumberInput value={3} onValueChange={() => undefined} locale="en" />
+      </Field.Root>,
+    );
+    type('1,5');
+    fireEvent.blur(input());
+    expect(valueInput().validity.valid).toBe(false);
+    rerender(
+      <Field.Root aria-label="Quantity">
+        <Field.NumberInput value={4} onValueChange={() => undefined} locale="en" />
+      </Field.Root>,
+    );
+    expect(input().value).toBe('4');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    expect(valueInput().validity.valid).toBe(true);
+    cleanup();
+    const onCommit = vi.fn();
+    render(<Quantity initial={3} locale="en" onCommit={onCommit} />);
+    type('1,5');
+    fireEvent.blur(input());
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(4);
+    expect(input().value).toBe('4');
+    expect(valueInput().validity.valid).toBe(true);
   });
 
   it('commits on Enter, and leaves the event alone so the form goes on to submit', () => {
@@ -240,8 +304,8 @@ describe('Field.NumberInput', () => {
     expect(input().readOnly).toBe(true);
     key('ArrowUp');
     expect(input().value).toBe('4');
-    expect((screen.getByRole('button', { name: 'Increase' }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole('button', { name: 'Decrease' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(button('Increase').disabled).toBe(true);
+    expect(button('Decrease').disabled).toBe(true);
   });
 
   it('is disabled with its field, and takes readOnly from the product', () => {
@@ -253,7 +317,7 @@ describe('Field.NumberInput', () => {
     );
     expect(input().disabled).toBe(true);
     expect(valueInput().disabled).toBe(true);
-    expect((screen.getByRole('button', { name: 'Increase' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(button('Increase').disabled).toBe(true);
     rerender(
       <Field.Root aria-label="Quantity">
         <Field.Increment />
@@ -328,28 +392,21 @@ describe('Field.NumberInput keys', () => {
     expect(onCommit).toHaveBeenLastCalledWith(5);
   });
 
-  it('goes to min and max with Home and End when set, and leaves the caret keys otherwise', () => {
+  it('leaves Home and End to the caret, as a native number input does', () => {
     const onCommit = vi.fn();
-    const { unmount } = render(<Quantity initial={5} min={1} max={9} onCommit={onCommit} />);
-    const home = new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true });
-    fireEvent(input(), home);
-    expect(home.defaultPrevented).toBe(true);
-    expect(onCommit).toHaveBeenLastCalledWith(1);
-    key('End');
-    expect(onCommit).toHaveBeenLastCalledWith(9);
-    unmount();
-    onCommit.mockClear();
-    render(<Quantity initial={5} onCommit={onCommit} />);
-    const open = new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true });
-    fireEvent(input(), open);
-    expect(open.defaultPrevented).toBe(false);
+    render(<Quantity initial={5} min={1} max={9} onCommit={onCommit} />);
+    for (const name of ['Home', 'End']) {
+      const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
+      fireEvent(input(), event);
+      expect(event.defaultPrevented, name).toBe(false);
+    }
     expect(onCommit).not.toHaveBeenCalled();
   });
 
   it('ends at the highest number on the step when max is off it', () => {
     const onCommit = vi.fn();
     render(<Quantity initial={3} min={0} max={10} step={3} onCommit={onCommit} />);
-    key('End');
+    key('PageUp');
     expect(onCommit).toHaveBeenLastCalledWith(9);
   });
 
@@ -358,7 +415,7 @@ describe('Field.NumberInput keys', () => {
     render(<Quantity initial={5} min={1} max={9} onCommit={onCommit} />);
     for (const init of [{ shiftKey: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }]) {
       key('ArrowUp', init);
-      key('Home', init);
+      key('PageUp', init);
     }
     expect(onCommit).not.toHaveBeenCalled();
   });
@@ -390,8 +447,6 @@ describe('Field.NumberInput keys', () => {
 });
 
 describe('Field.Increment and Field.Decrement', () => {
-  const button = (name: string) => screen.getByRole('button', { name }) as HTMLButtonElement;
-
   it('are named from the strings, drawn with the glyphs, and not tab stops', () => {
     render(<Quantity initial={5} buttons />);
     for (const name of ['Increase', 'Decrease']) {
@@ -729,7 +784,7 @@ describe('Field.NumberInput in a form', () => {
     expect(screen.queryByText('Only 2 left')).toBeNull();
   });
 
-  it('commits on Enter before the form reads its value', async () => {
+  it('holds the number Enter committed in the value input when the form is read', async () => {
     const seen: (string | null)[] = [];
     await mount(
       <Form.Root
@@ -749,6 +804,292 @@ describe('Field.NumberInput in a form', () => {
     });
     await submit(screen.getByTestId('form'));
     expect(seen).toEqual(['42']);
+  });
+});
+
+describe('Field.NumberInput commits what the text shows', () => {
+  const commitTyped = (typed: string, props: NumberProps) => {
+    const onCommit = vi.fn();
+    render(<Quantity onCommit={onCommit} {...props} />);
+    type(typed);
+    fireEvent.blur(input());
+    return onCommit;
+  };
+
+  it('rounds a currency to its digits, so the text, aria-valuenow, the value input and onValueChange agree', () => {
+    const onCommit = commitTyped('19.999', { locale: 'en', formatOptions: { style: 'currency', currency: 'USD' } });
+    expect(onCommit).toHaveBeenCalledWith(20);
+    expect(input().value).toBe('$20.00');
+    expect(input().getAttribute('aria-valuenow')).toBe('20');
+    expect(input().getAttribute('aria-valuetext')).toBe('$20.00');
+    expect(valueInput().value).toBe('20');
+  });
+
+  it('rounds a percent to the percent it shows, two digits below the fraction', () => {
+    const onCommit = commitTyped('7.5', { locale: 'en', formatOptions: { style: 'percent' } });
+    expect(onCommit).toHaveBeenCalledWith(0.08);
+    expect(input().value).toBe('8%');
+    expect(valueInput().value).toBe('0.08');
+  });
+
+  it('rounds a yen to whole yen, and an explicit digit option to its digits', () => {
+    expect(commitTyped('1234.4', { locale: 'ja', formatOptions: { style: 'currency', currency: 'JPY' } })).toHaveBeenCalledWith(1234);
+    cleanup();
+    const onCommit = commitTyped('1.26', { locale: 'en', formatOptions: { maximumFractionDigits: 1 } });
+    expect(onCommit).toHaveBeenCalledWith(1.3);
+    expect(input().value).toBe('1.3');
+    expect(valueInput().value).toBe('1.3');
+  });
+
+  it('keeps every digit of a plain number, and rounds as the text does', () => {
+    expect(commitTyped('1.23456789', { locale: 'en' })).toHaveBeenCalledWith(1.23456789);
+    cleanup();
+    expect(commitTyped('1.005', { locale: 'en', formatOptions: { maximumFractionDigits: 2 } })).toHaveBeenCalledWith(1.01);
+  });
+
+  it('steps from a rounded value to a rounded value', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={19.99} locale="en" formatOptions={{ style: 'currency', currency: 'USD' }} onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(20.99);
+    expect(valueInput().value).toBe('20.99');
+  });
+});
+
+describe('Field.NumberInput stepping', () => {
+  it('does not pile up float error with no step: 1.1 down is 0.1, and 0.3 down and up is 0.3', () => {
+    const onCommit = vi.fn();
+    const { unmount } = render(<Quantity initial={1.1} onCommit={onCommit} />);
+    key('ArrowDown');
+    expect(onCommit).toHaveBeenLastCalledWith(0.1);
+    expect(valueInput().value).toBe('0.1');
+    unmount();
+    render(<Quantity initial={0.3} onCommit={onCommit} />);
+    key('ArrowDown');
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.3);
+    expect(valueInput().value).toBe('0.3');
+  });
+
+  it('steps a percent by one shown percent, and the page keys by ten', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={0.5} locale="en" formatOptions={{ style: 'percent' }} buttons onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.51);
+    expect(input().value).toBe('51%');
+    fireEvent.click(button('Decrease'), { detail: 0 });
+    fireEvent.click(button('Decrease'), { detail: 0 });
+    expect(onCommit).toHaveBeenLastCalledWith(0.49);
+    key('PageUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.59);
+  });
+
+  it('is on the step it is given, and treats a step that is no length as none', () => {
+    const onCommit = vi.fn();
+    for (const step of [0, -5, Number.NaN]) {
+      cleanup();
+      onCommit.mockClear();
+      render(<Quantity initial={2} step={step} onCommit={onCommit} />);
+      expect(valueInput().step).toBe('any');
+      key('ArrowUp');
+      expect(onCommit).toHaveBeenLastCalledWith(3);
+      type('1.25');
+      fireEvent.blur(input());
+      expect(onCommit).toHaveBeenLastCalledWith(1.25);
+    }
+  });
+
+  it('lets the buttons and the keys agree at a bound that is off the step', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={9} min={0} max={10} step={3} buttons onCommit={onCommit} />);
+    expect(button('Increase').disabled).toBe(true);
+    expect(button('Decrease').disabled).toBe(false);
+    key('ArrowUp');
+    expect(onCommit).not.toHaveBeenCalled();
+    fireEvent.click(button('Decrease'), { detail: 0 });
+    expect(onCommit).toHaveBeenLastCalledWith(6);
+    expect(button('Increase').disabled).toBe(false);
+  });
+
+  it('lands on the bound first from a value outside the range', () => {
+    const onCommit = vi.fn();
+    const { unmount } = render(<Quantity initial={150} max={100} onCommit={onCommit} />);
+    key('ArrowDown');
+    expect(onCommit).toHaveBeenLastCalledWith(100);
+    unmount();
+    render(<Quantity initial={-4} min={0} step={5} onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0);
+  });
+
+  it('lets a min above the max win', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const onCommit = vi.fn();
+    render(<Quantity min={10} max={5} step={1} onCommit={onCommit} />);
+    type('7');
+    fireEvent.blur(input());
+    expect(onCommit).toHaveBeenLastCalledWith(10);
+    type('2');
+    fireEvent.blur(input());
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('max below its min'));
+    cleanup();
+    render(<Quantity min={10} max={5} onCommit={onCommit} />);
+    type('7');
+    fireEvent.blur(input());
+    expect(onCommit).toHaveBeenLastCalledWith(10);
+  });
+
+  it('warns once in development for significant-digit options', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(<Quantity initial={1234} locale="en" formatOptions={{ maximumSignificantDigits: 2 }} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('significant'));
+  });
+});
+
+describe('Field.NumberInput typing', () => {
+  const beforeInput = (inputType: string, data: string | null, caret: [number, number]) => {
+    input().setSelectionRange(...caret);
+    const event = new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
+    fireEvent(input(), event);
+    return event;
+  };
+
+  it('refuses a keystroke or a paste that could not become a number before it lands, so the caret stays', () => {
+    render(<Quantity initial={123} locale="en" />);
+    expect(beforeInput('insertText', 'a', [1, 1]).defaultPrevented).toBe(true);
+    expect(beforeInput('insertText', '5', [1, 1]).defaultPrevented).toBe(false);
+    expect(beforeInput('insertText', '.', [3, 3]).defaultPrevented).toBe(false);
+    expect(beforeInput('insertFromPaste', '4.5.6', [0, 3]).defaultPrevented).toBe(true);
+    expect(beforeInput('insertFromPaste', '7', [0, 3]).defaultPrevented).toBe(false);
+    // What it can't see, it leaves to onChange.
+    expect(beforeInput('insertText', null, [0, 0]).defaultPrevented).toBe(false);
+    expect(beforeInput('deleteContentBackward', null, [0, 0]).defaultPrevented).toBe(false);
+    expect(beforeInput('insertCompositionText', 'ㅎ', [0, 0]).defaultPrevented).toBe(false);
+  });
+
+  it('leaves aria-valuetext off while typing, since it would say a number that is not on screen', () => {
+    render(<Quantity initial={5} locale="en" />);
+    expect(input().getAttribute('aria-valuetext')).toBe('5');
+    type('12');
+    expect(input().hasAttribute('aria-valuetext')).toBe(false);
+    fireEvent.blur(input());
+    expect(input().getAttribute('aria-valuetext')).toBe('12');
+  });
+
+  it('is styled by an attribute of its own, not by its role', () => {
+    render(<Quantity initial={5} />);
+    expect(input().hasAttribute('data-todae-number-input')).toBe(true);
+  });
+});
+
+describe('Field.Increment and Field.Decrement names and the stepper channel', () => {
+  it('say whose number they step, from the Root label, a Label, or aria-labelledby', () => {
+    render(
+      <>
+        <Field.Root aria-label="Adults" name="adults">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+        <Label.Root htmlFor="kids">Children</Label.Root>
+        <Field.Root id="kids" name="kids">
+          <Field.Decrement />
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+        </Field.Root>
+        <span id="rooms-label">Rooms</span>
+        <Field.Root aria-labelledby="rooms-label" name="rooms">
+          <Field.Decrement />
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+        </Field.Root>
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'Increase Adults' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Decrease Children' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Decrease Rooms' })).toBeTruthy();
+  });
+
+  it('keep the name a product gives them', () => {
+    render(
+      <Field.Root aria-label="Adults">
+        <Field.NumberInput value={1} onValueChange={() => undefined} />
+        <Field.Increment aria-label="One more" />
+        <Field.Decrement>Fewer</Field.Decrement>
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button', { name: 'One more' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fewer' })).toBeTruthy();
+  });
+
+  it('warn when a second number input registers in one Field.Root, and leave the later one its buttons when the earlier goes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const first = vi.fn();
+    const second = vi.fn();
+    function Both({ showFirst }: { showFirst: boolean }) {
+      return (
+        <Field.Root aria-label="Quantity">
+          {showFirst ? <Field.NumberInput value={1} onValueChange={first} /> : null}
+          <Field.NumberInput value={5} onValueChange={second} />
+          <Field.Increment />
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Both showFirst />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('more than one Field.NumberInput'));
+    rerender(<Both showFirst={false} />);
+    expect(button('Increase').disabled).toBe(false);
+    fireEvent.click(button('Increase'), { detail: 0 });
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledWith(6);
+  });
+
+  it('go disabled when the only number input unmounts', () => {
+    function One({ show }: { show: boolean }) {
+      return (
+        <Field.Root aria-label="Quantity">
+          {show ? <Field.NumberInput value={1} onValueChange={() => undefined} /> : null}
+          <Field.Increment />
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<One show />);
+    expect(button('Increase').disabled).toBe(false);
+    rerender(<One show={false} />);
+    expect(button('Increase').disabled).toBe(true);
+  });
+});
+
+describe('Field.NumberInput with a text that is no number, in a form', () => {
+  it('blocks a submit, shows the message and marks the input, until the text is a number', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    function Page() {
+      const [value, setValue] = useState<number | null>(3);
+      return (
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Group>
+            <Field.Root name="quantity" aria-label="Quantity">
+              <Field.NumberInput value={value} onValueChange={setValue} locale="en" />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Page />);
+    await act(async () => type('1,5'));
+    await act(async () => {
+      fireEvent.blur(input());
+    });
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter a valid value')).toBeTruthy();
+    expect(input().value).toBe('1,5');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    await act(async () => type('15'));
+    await act(async () => {
+      key('Enter');
+    });
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Enter a valid value')).toBeNull();
   });
 });
 

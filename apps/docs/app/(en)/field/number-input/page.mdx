@@ -28,11 +28,11 @@ The visible element is a native `<input type="text">` with `role="spinbutton"`, 
 
 Typing changes only the text. `onValueChange` fires when the person commits: on blur, on Enter, on a step key and on a step button. So a value that reaches your state is `null` or a number within `min` and `max` and on `step`, and your code needs no clamping of its own.
 
-- A commit is snapped to `step`, counted from `min`, or from 0 without one, then clamped, and rounded to the decimals of `step` and `min`, so `0.1 + 0.2` commits `0.3`. Where `max` is not on the step, a number above it becomes the highest number on the step, so the form never sees a number that is off the step. Without `step`, a commit keeps every digit that was typed.
+- A commit is rounded to the digits the text shows, then snapped to `step`, counted from `min`, or from 0 without one, then clamped, and rounded to the decimals of `step` and `min`, so `0.1 + 0.2` commits `0.3`. Where `max` is not on the step, a number above it becomes the highest number on the step, so the form never sees a number that is off the step. A `max` below `min` gives way to `min`, and warns in development. Without `step` and without digit options, a commit keeps every digit that was typed.
 - An empty text commits `null`.
-- A text that means no number, such as a lone `-`, goes back to the number the product holds, and `onValueChange` is not called.
+- A text that means no number, such as a lone `-`, `1,5` in `en` or `1.5` in `de`, stays as it was typed, and `onValueChange` is not called. The field is invalid with "Enter a valid value": the text input is `aria-invalid`, and the number input that the form reads is invalid, so a submit, Enter's included, is blocked. Typing a number, or your code setting one, ends it.
 - A keystroke that could not become a number in the locale, such as a letter, a second decimal separator or `1e`, is refused, and the text keeps its last value. A paste is checked the same way, as a whole. During an IME composition nothing is refused until the composition ends.
-- A number your code sets replaces the text, even while the person is typing. A number outside `min` and `max` that your code sets is shown as it is, and is not committed by a blur with no edit.
+- A number your code sets replaces the text, even while the person is typing, unless it is the number the text started from, which leaves the text as it is. A number outside `min` and `max` that your code sets is shown as it is, and is not committed by a blur with no edit.
 
 `parseNumber` learns the locale's separators, minus sign and digits from `Intl.NumberFormat`, so `1.234,5` in `de`, `1 234,5` with a narrow no-break space in `fr` and `١٬٢٣٤٫٥` in `ar-EG` all read as 1234.5, and full-width digits fold to ASCII. It accepts the text with or without grouping, but a group separator only where the locale puts one, so `1.234` in `de` is 1234, and `1,5` in `en` is no number. A period is a decimal point in a locale that doesn't group with one, such as `fr`.
 
@@ -40,17 +40,16 @@ Typing changes only the text. `onValueChange` fires when the person commits: on 
 
 The keys follow the ARIA spinbutton pattern. Each one reads the text first and steps from it.
 
-- Arrow Up and Arrow Down move by `step`, or by 1 without one.
+- Arrow Up and Arrow Down move by `step`, or by 1 without one, and by 0.01 for a percent, which is one percent as the text shows it.
 - Page Up and Page Down move by `largeStep`, or by ten steps without one.
-- Home and End go to `min` and `max` when they are set, and otherwise leave the caret keys to the browser.
 
-A key with a modifier is left to the browser, and so are the keys of an IME composition. Arrow Up and Arrow Down mean the same in a right-to-left page. There is no mouse wheel stepping, which changes a number as a page scrolls past it. From no number, an increase goes to `min`, or to one step without a `min`.
+Home and End move the caret, as they do in a native number input. A key with a modifier is left to the browser, and so are the keys of an IME composition. Arrow Up and Arrow Down mean the same in a right-to-left page. There is no mouse wheel stepping, which changes a number as a page scrolls past it. A step rounds the sum to the decimals of the number and the step, so `1.1` stepped down by 1 is `0.1`. From no number, an increase goes to `min`, or to one step without a `min`, and from a number outside `min` and `max`, a step lands on the bound first.
 
 ## Step buttons
 
-`Field.Increment` and `Field.Decrement` are buttons you place yourself, on either side of the input or stacked in an `Affix`, so there is no `stepper` prop. They find the number input through the field. They are not tab stops, and pressing one keeps focus where it was, so a press commits nothing early and a phone keeps its keyboard down. Holding one steps again after a delay, then at an interval, which come from the `field.stepper.repeat-delay` and `field.stepper.repeat-interval` tokens. A button is disabled at `min` or `max`, and while the field is disabled or the input is read-only. The keys are the keyboard's way to step.
+`Field.Increment` and `Field.Decrement` are buttons you place yourself, on either side of the input or stacked in an `Affix`, so there is no `stepper` prop. They find the number input through the field. They are not tab stops, and pressing one keeps focus where it was, so a press commits nothing early and a phone keeps its keyboard down. Holding one steps again after a delay, then at an interval, which come from the `field.stepper.repeat-delay` and `field.stepper.repeat-interval` tokens. A button is disabled where a step would not change the number, which is at `min` or `max`, or at the highest or lowest number on the `step` when the bound is off it, and while the field is disabled or the input is read-only. The keys are the keyboard's way to step. A field holds one number input for these buttons: a second one in the same `Field.Root` warns in development.
 
-Each is named from the `increment` or `decrement` string of [StringsProvider](/utilities/strings-provider), and draws the `plus` or `minus` glyph of [GlyphsProvider](/utilities/glyphs-provider). Content replaces the glyph, and text in it names the button.
+Each is named from the `increment` or `decrement` string of [StringsProvider](/utilities/strings-provider) followed by the field's label, such as "Increase Quantity", so that several number fields are told apart, and draws the `plus` or `minus` glyph of [GlyphsProvider](/utilities/glyphs-provider). Content replaces the glyph, and text in it, or an `aria-label` of your own, names the button as it is.
 
 ## Format
 
@@ -98,21 +97,21 @@ formatNumber(0.125, { locale: 'de', formatOptions: { style: 'percent', maximumFr
 parseNumber('12,5 %', { locale: 'de', formatOptions: { style: 'percent' } }); // 0.125
 ```
 
-Without any digit option, a plain number shows all the digits it has, where `Intl.NumberFormat` alone stops at three, so the text and the number agree. `parseNumber` reads the percent sign, the currency sign or the unit that `formatOptions` writes, or its absence. It doesn't read compact or scientific notation. With a currency, the sign is part of the text that people edit, which is one more reason to prefer an `Affix`.
+Without any digit option, a plain number shows all the digits it has, where `Intl.NumberFormat` alone stops at three, so the text and the number agree. With a style or a digit option, a commit rounds to the digits the text shows, so the text, `aria-valuenow`, the number the form reads and `onValueChange` agree: `19.999` in USD commits `20`, and `7.5` in a percent commits `0.08`, which shows `8%`. `parseNumber` reads the percent sign, the currency sign or the unit that `formatOptions` writes, or its absence. It doesn't read compact or scientific notation, so `formatOptions` leaves `notation` and `compactDisplay` out, and significant-digit options are not supported and warn in development: use fraction digits. With a currency, the sign is part of the text that people edit, which is one more reason to prefer an `Affix`.
 
-The input asks the phone for a numeric keypad when `step` and `min` are whole numbers, and a decimal keypad otherwise; `inputMode` overrides it. The iOS keypads have no minus sign, so a number that can be negative needs the step buttons there.
+The input asks the phone for a numeric keypad when `step` and `min` are whole numbers and `min` is 0 or more, a decimal keypad when only `min` is 0 or more, and the full keyboard otherwise, since the number keypads of iOS have no minus sign. `inputMode` overrides it.
 
 ## In a form
 
 The number goes in a native `<input type="number">` that the input renders beside the text input, as the pickers do. It is hidden from sight and from assistive technology, is not a tab stop, and is what the form sends under the field's `name`, so the form gets `1234.5` in every locale, and an empty string for no number. The text input sends nothing. `step` goes to it, or `any` without one, so a form accepts `0.5` unless you set a step.
 
-`required` makes a form with no number invalid, and `min` and `max` make a form with a lower or higher number invalid, which happens when your code sets a number outside them, since a commit is clamped. The browser checks all of them. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` and `max` written in the field's format, such as "Enter ₩1,000 or more" for a currency in `ko`, and focus goes to the text input. A commit counts as an edit, so it hides a server error filed under the field's `name`; typing alone doesn't.
+`required` makes a form with no number invalid, and `min` and `max` make a form with a lower or higher number invalid, which happens when your code sets a number outside them, since a commit is clamped. A text that reads as no number makes it invalid too, with "Enter a valid value". The browser checks all of them. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` and `max` written in the field's format, such as "Enter ₩1,000 or more" for a currency in `ko`, and focus goes to the text input. A commit counts as an edit, so it hides a server error filed under the field's `name`; typing alone doesn't.
 
 Enter commits first, and then the browser submits the form: the commit reaches your state before the form reads the number. A press on a submit button blurs the input first, so it commits too.
 
 ## Accessible composition
 
-**Todae handles:** The text input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It has `role="spinbutton"` with `aria-valuenow` while there is a number, `aria-valuemin` and `aria-valuemax` when set, and `aria-valuetext` with the text as the locale writes it, such as `₩12,000`. `required` sets `aria-required`. The step buttons are named by `increment` and `decrement` strings, are not tab stops, and take `aria-controls` from the input.
+**Todae handles:** The text input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It has `role="spinbutton"` with `aria-valuenow` while there is a number, `aria-valuemin` and `aria-valuemax` when set, and `aria-valuetext` with the text as the locale writes it, such as `₩12,000`, except while the person is typing, so it never says a number that is not on screen. `required` sets `aria-required`, and a text that reads as no number sets `aria-invalid`. The step buttons are named by `increment` and `decrement` strings and the field's label, are not tab stops, and take `aria-controls` from the input.
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. A `locale` that matches the page's. The unit, in an `Affix` or in the label, when the number has one.
 

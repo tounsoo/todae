@@ -22,7 +22,7 @@ function hasWords(children: ReactNode): boolean {
 }
 
 /** The text a screen reader reads from the button's content: not aria-hidden parts or SVG titles. */
-function spokenText(node: Node): string {
+export function spokenText(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true' || node.namespaceURI === 'http://www.w3.org/2000/svg') {
     return '';
@@ -31,11 +31,12 @@ function spokenText(node: Node): string {
 }
 
 /**
- * The accessible name for a dismiss button: `ariaLabel` when not empty, none when
- * the button's own rendered text names it, and `fallback`, a string from
- * StringsProvider, otherwise. Put the returned ref on the button.
+ * The accessible name for a button that Todae names, such as a dismiss or step
+ * button: `ariaLabel` when not empty, none when the button's own rendered text
+ * names it, and `fallback`, a string from StringsProvider, otherwise. Put the
+ * returned ref on the button.
  */
-export function useDismissLabel(
+export function useButtonName(
   children: ReactNode,
   ariaLabel: string | undefined,
   ref: Ref<HTMLButtonElement> | undefined,
