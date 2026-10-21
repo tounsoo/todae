@@ -836,6 +836,14 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['2025', '2026', '2027']);
   });
 
+  it('selects the year of a first pick in the page of years, not the range it replaces', () => {
+    render(<RangeControlled initial={{ start: date('2025-12-20'), end: date('2027-01-05') }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Monday, January 5, 2026'));
+    fireEvent.click(screen.getByRole('button', { name: 'January 2026' }));
+    expect(selectedCells()).toEqual(['2026']);
+  });
+
   it('reports a mode changed after mounting once, drops a first pick, and hands each mode its own value', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const onDate = vi.fn();

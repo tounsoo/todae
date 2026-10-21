@@ -893,8 +893,9 @@ function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGrid
 
 function Year({ year }: { year: number }) {
   const cal = useCalendar('Grid');
-  // In range mode, every year the range touches.
-  const selected = cal.value !== null && cal.value.start.year <= year && year <= cal.value.end.year;
+  // In range mode, every year the range the days show touches, so a first pick's too.
+  const { shown } = cal;
+  const selected = shown !== null && shown.start.year <= year && year <= shown.end.year;
   const inRange = cal.yearInRange(year);
   return (
     <td aria-selected={selected ? true : undefined}>
