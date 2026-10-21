@@ -126,10 +126,15 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     const viewport = viewportRef.current;
     const scroller = viewport && scrollParent(viewport);
     const active = viewport?.ownerDocument.activeElement;
-    // Focus moves with the views when it was on them, on Back, or lost; not
-    // from another control, such as the product's own that set a controlled
-    // stack.
-    const ownsFocus = !active || active === active.ownerDocument.body || leaving?.contains(active) || backRef.current === active;
+    // Focus moves with the views when it was on them, on Back, on the
+    // overlay's own element, or lost; not from another control, such as the
+    // product's own that set a controlled stack.
+    const ownsFocus =
+      !active ||
+      active === active.ownerDocument.body ||
+      active === viewport?.closest('dialog, [popover]') ||
+      leaving?.contains(active) ||
+      backRef.current === active;
     const top = next.to.at(-1);
     const below = next.from.at(-1);
     for (const view of covered.current.keys()) {
@@ -200,7 +205,9 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
       console.error(`Drilldown: the stack [${shown.join(', ')}] holds a value twice. Each view can be in the stack once.`);
     }
     for (const view of shown) {
-      if (!views.current.has(view)) console.error(`Drilldown: no Drilldown.View has the value "${view}", so nothing shows for it.`);
+      if (!views.current.has(view)) {
+        console.error(`Drilldown: no Drilldown.View with the value "${view}" rendered with the stack that holds it, so nothing shows for it. A view must render in the same commit as the stack that shows it.`);
+      }
     }
   }, [shown]);
 
@@ -303,6 +310,8 @@ function Trigger(props: TriggerAction): ReactElement;
 function Trigger(props: DrilldownTriggerProps): ReactElement;
 function Trigger(props: DrilldownTriggerProps) {
   const { push } = useDrilldown('Drilldown.Trigger');
+  // The same body twice: Button.Root's overloads take one shape at a time, so
+  // only a narrowed `props` reaches them without a cast.
   if (props.render) {
     const { value, onClick, ...rest } = props;
     return <Button.Root {...rest} onClick={composeHandlers(onClick, (event) => push(value, event.currentTarget))} />;

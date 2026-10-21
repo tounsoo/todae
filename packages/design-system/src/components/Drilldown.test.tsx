@@ -241,7 +241,7 @@ describe('Drilldown', () => {
     cleanup();
     error.mockClear();
     render(<Settings defaultValue={['settings', 'missing']} />);
-    expect(logged()).toEqual([expect.stringContaining('no Drilldown.View has the value "missing"')]);
+    expect(logged()).toEqual([expect.stringContaining('no Drilldown.View with the value "missing"')]);
     cleanup();
     error.mockClear();
     render(<Settings value={['settings', 'account', 'settings']} />);

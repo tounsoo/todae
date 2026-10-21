@@ -510,6 +510,17 @@ describe('Drilldown in a browser', () => {
     expect(view('Email').inert).toBe(false);
   });
 
+  it('returns focus to the trigger when Escape goes back from focus on the dialog itself', async () => {
+    await openDialog(<SettingsDialog />);
+    const account = screen.getByRole('button', { name: 'Account' });
+    await userEvent.click(account);
+    await settled();
+    dialog().focus();
+    expect(document.activeElement).toBe(dialog());
+    await userEvent.keyboard('{Escape}');
+    expect(document.activeElement).toBe(account);
+  });
+
   it('returns focus to the first tab stop of the view below when the trigger is gone', async () => {
     function Gone() {
       const [shown, setShown] = useState(true);
