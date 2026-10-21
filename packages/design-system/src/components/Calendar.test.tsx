@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { startTransition, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -779,6 +779,67 @@ describe('Calendar range mode', () => {
     isDateDisabled.mockClear();
     fireEvent.pointerEnter(day('Monday, November 10, 2031'));
     expect(isDateDisabled.mock.calls.length).toBeLessThanOrEqual(30);
+  });
+
+  it('carries a far scan on after the render, the far day ending a range once the scan reaches it', { timeout: 60000 }, () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    try {
+      let calls = 0;
+      const isDateDisabled = () => {
+        calls++;
+        return false;
+      };
+      const onValueChange = vi.fn();
+      render(<RangeControlled isDateDisabled={isDateDisabled} onValueChange={onValueChange} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      const nextYears = screen.getByRole('button', { name: 'Next years' });
+      for (let year = 2026; year < 9999; year += 12) fireEvent.click(nextYears);
+      fireEvent.click(screen.getByRole('button', { name: '9998' }));
+      calls = 0;
+      fireEvent.keyDown(focusedDay(), { key: 'PageDown', shiftKey: true });
+      // About two years of days for the range, and the month's days to draw them.
+      expect(calls).toBeLessThanOrEqual(732 + 31);
+      const far = day('Tuesday, October 5, 9999');
+      expect(far.getAttribute('aria-disabled')).toBe('true');
+      expect(far.hasAttribute('data-unavailable')).toBe(false);
+      fireEvent.click(far);
+      expect(onValueChange).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersToNextFrame());
+      expect(far.hasAttribute('aria-disabled')).toBe(false);
+      fireEvent.click(far);
+      expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('9999-10-05') });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops a scan carried on after the render when the first pick goes', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    try {
+      render(<RangeControlled isDateDisabled={() => false} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.keyDown(focusedDay(), { key: 'ArrowDown' });
+      fireEvent.click(screen.getByRole('button', { expanded: true }));
+      expect(focusedDay().getAttribute('aria-disabled')).toBe('true');
+      expect(vi.getTimerCount()).toBe(1);
+      fireEvent.keyDown(focusedDay(), { key: 'Escape' });
+      expect(vi.getTimerCount()).toBe(0);
+      fireEvent.click(focusedDay());
+      expect(vi.getTimerCount()).toBe(0);
+      cleanup();
+      render(<RangeControlled isDateDisabled={() => false} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.keyDown(focusedDay(), { key: 'ArrowDown' });
+      fireEvent.click(screen.getByRole('button', { expanded: true }));
+      expect(vi.getTimerCount()).toBe(1);
+      cleanup();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('stops a range at min and max', () => {
