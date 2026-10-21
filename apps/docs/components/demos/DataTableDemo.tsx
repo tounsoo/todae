@@ -68,8 +68,10 @@ export function DataTableInvoices() {
   const [query, setQuery] = useState('');
   const [sorted, setSorted] = useState<Sorted>({ column: 'id', direction: 'ascending' });
   const [page, setPage] = useState(1);
-  // The number of invoices the open confirmation asks about, or null while it is closed.
-  const [confirming, setConfirming] = useState<number | null>(null);
+  const deleteButton = useRef<HTMLButtonElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  // Kept after the dialog closes, so its title doesn't change while it fades out.
+  const [asked, setAsked] = useState(0);
 
   // Filter, then sort, then cut out the page. All three are your product's.
   const needle = query.trim().toLowerCase();
@@ -124,6 +126,7 @@ export function DataTableInvoices() {
 
   const remove = () => {
     const ids = new Set(selection.value);
+    if (ids.size === 0) return;
     // Delete is disabled once nothing is selected, so the dialog hands focus
     // to the table when rows still match the search, else to the search.
     const shown = matches.filter((row) => !ids.has(row.id)).length;
@@ -133,14 +136,15 @@ export function DataTableInvoices() {
     const to = Math.min(current, pages);
     setPage(to);
     selection.clear();
-    setConfirming(null);
+    setConfirming(false);
     const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
     announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
   };
 
   const confirmDelete = () => {
-    restoreFocus.current = null;
-    setConfirming(selected);
+    restoreFocus.current = deleteButton.current;
+    setAsked(selected);
+    setConfirming(true);
   };
 
   const step = (to: number, label: string) => (
@@ -171,18 +175,18 @@ export function DataTableInvoices() {
           <Button.Root variant="secondary" disabled={selected === 0} onClick={markPaid}>
             Mark paid
           </Button.Root>
-          <Button.Root variant="secondary" disabled={selected === 0} onClick={confirmDelete}>
+          <Button.Root ref={deleteButton} variant="secondary" disabled={selected === 0} onClick={confirmDelete}>
             Delete
           </Button.Root>
         </Toolbar.Root>
       </Stack.Root>
       <Dialog.Root
         role="alertdialog"
-        open={confirming !== null}
-        onOpenChange={(open) => !open && setConfirming(null)}
+        open={confirming}
+        onOpenChange={setConfirming}
         restoreFocusRef={restoreFocus}
       >
-        <Dialog.Title>{`Delete ${invoices(confirming ?? 0)}?`}</Dialog.Title>
+        <Dialog.Title>{`Delete ${invoices(asked)}?`}</Dialog.Title>
         <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
         <Dialog.Footer>
           <Dialog.Close>Cancel</Dialog.Close>
@@ -234,7 +238,7 @@ export function DataTableInvoices() {
                     <EmptyState.Icon>
                       <SearchX />
                     </EmptyState.Icon>
-                    <EmptyState.Title as="h3">No invoices found</EmptyState.Title>
+                    <EmptyState.Title as="h3">{query ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
                     <EmptyState.Description>
                       {query ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}
                     </EmptyState.Description>
