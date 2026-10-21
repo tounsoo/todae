@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
   type ComponentPropsWithRef,
-  type MouseEvent,
+  type ReactElement,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -55,7 +55,11 @@ export type DrilldownViewProps = {
   initialFocusRef?: RefObject<HTMLElement | null>;
 } & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
-export type DrilldownTriggerProps = (ButtonActionProps | ButtonRenderedProps) & { value: string };
+// `value` names the view to push, in place of a button's own value attribute.
+type TriggerAction = Omit<ButtonActionProps, 'value'> & { value: string };
+type TriggerRendered = Omit<ButtonRenderedProps, 'value'> & { value: string };
+
+export type DrilldownTriggerProps = TriggerAction | TriggerRendered;
 
 export type DrilldownBackProps = ButtonActionProps;
 
@@ -385,12 +389,18 @@ function View(props: DrilldownViewProps) {
   return status === null ? null : <MountedView {...props} status={status} />;
 }
 
-function Trigger({ value, onClick, ...props }: DrilldownTriggerProps) {
+function Trigger(props: TriggerRendered): ReactElement;
+function Trigger(props: TriggerAction): ReactElement;
+// Last, so ComponentProps reads DrilldownTriggerProps and a wrapper typed with it can pass it on.
+function Trigger(props: DrilldownTriggerProps): ReactElement;
+function Trigger(props: DrilldownTriggerProps) {
   const { push } = useDrilldown('Drilldown.Trigger');
-  const handleClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, (event) =>
-    push(value, event.currentTarget),
-  );
-  return <Button.Root {...(props as ButtonActionProps)} onClick={handleClick} />;
+  if (props.render) {
+    const { value, onClick, ...rest } = props;
+    return <Button.Root {...rest} onClick={composeHandlers(onClick, (event) => push(value, event.currentTarget))} />;
+  }
+  const { value, onClick, ...rest } = props;
+  return <Button.Root {...rest} onClick={composeHandlers(onClick, (event) => push(value, event.currentTarget))} />;
 }
 
 function Back({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: DrilldownBackProps) {

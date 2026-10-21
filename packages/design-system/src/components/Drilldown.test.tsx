@@ -89,6 +89,30 @@ describe('Drilldown', () => {
     expect(screen.getByTestId('title').textContent).toBe('Account');
   });
 
+  it('pushes from a trigger drawn on another element, after its own click handler, which can keep the view', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Drilldown.Root defaultValue={['list']} onValueChange={onValueChange}>
+        <Drilldown.Viewport>
+          <Drilldown.View value="list" label="List">
+            <Drilldown.Trigger value="item" render={(props) => <a {...props} href="#item" />}>
+              Item
+            </Drilldown.Trigger>
+            <Drilldown.Trigger value="locked" onClick={(event) => event.preventDefault()}>
+              Locked
+            </Drilldown.Trigger>
+          </Drilldown.View>
+          <Drilldown.View value="item" label="Item" />
+          <Drilldown.View value="locked" label="Locked" />
+        </Drilldown.Viewport>
+      </Drilldown.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Locked' }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('link', { name: 'Item' }));
+    expect(onValueChange).toHaveBeenCalledWith(['list', 'item'], 'push');
+  });
+
   it("names Back from its own text, aria-label, or the strings for the view below", () => {
     render(
       <StringsProvider strings={{ backTo: (label) => `${label}(으)로 돌아가기` }}>
