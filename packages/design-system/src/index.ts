@@ -169,7 +169,7 @@ export {
   type UseTooltipResult,
 } from './hooks/useTooltip.js';
 export { Checkbox, type CheckboxRootProps } from './components/Checkbox.js';
-export { Chip, type ChipOverflowProps, type ChipRootProps, type ChipTone } from './components/Chip.js';
+export { Chip, type ChipRootProps, type ChipTone } from './components/Chip.js';
 export { ChipList, type ChipListRootProps } from './components/ChipList.js';
 export { Description, type DescriptionRootProps } from './components/Description.js';
 export { ErrorMessage, type ErrorMessageRootProps } from './components/ErrorMessage.js';

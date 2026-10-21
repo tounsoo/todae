@@ -8,6 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { Chip } from './Chip.js';
+import { ChipCount, ChipCountChip } from './chipCount.js';
 import { isImeKeyEvent } from './ime.js';
 import { cx, useComposedRefs } from './props.js';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
@@ -112,7 +113,7 @@ export function ChipInput({
       {chip.value}
     </Chip.Root>
   ));
-  const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
+  const overflow = list.hidden > 0 ? <ChipCount count={list.hidden} label={overflowLabel} /> : null;
   const input = (
     <input
       {...control}
@@ -134,7 +135,7 @@ export function ChipInput({
         <Chip.Root onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
           …
         </Chip.Root>
-        <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
+        <ChipCountChip count={chips.length || 1} />
       </div>
     ) : null;
 

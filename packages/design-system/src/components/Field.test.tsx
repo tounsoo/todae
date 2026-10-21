@@ -1205,7 +1205,7 @@ describe('Field.ChipInput overflow', () => {
     expect(container.querySelector('[data-ellipsis]')).toBeNull();
     expect(live.some((el) => el.textContent?.includes('Alpha'))).toBe(true);
     expect(live.some((el) => el.textContent?.includes('Beta'))).toBe(false);
-    expect(overflow?.textContent).toContain('2 more');
+    expect(overflow?.nextElementSibling?.textContent).toContain('2 more');
     expect((overflow as HTMLElement | undefined)?.style.maxWidth).toBe('');
     expect(live.map((el) => el.outerHTML).join('')).not.toContain('Remove Gamma');
   });

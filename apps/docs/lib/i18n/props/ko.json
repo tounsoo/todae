@@ -2629,16 +2629,6 @@
       "ko": "단계 앞에서 읽히는 숨은 상태 단어. 비어 있지 않으면 stepDone, stepCurrent, stepPending, stepError 문자열 대신 쓰입니다."
     }
   },
-  "Chip.Overflow": {
-    "overflowCount": {
-      "en": "The N in +N.",
-      "ko": "+N의 N."
-    },
-    "overflowLabel": {
-      "en": "Name read for +N. Default is the moreChips string from StringsProvider, {n} more in English.",
-      "ko": "+N에 읽히는 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
-    }
-  },
   "formatDate": {
     "date": {
       "en": "The date to write.",

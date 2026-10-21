@@ -101,10 +101,10 @@
   },
   "chip": {
     "(top)": "d56bfe4010f4",
-    "# Chip": "c81bd71e02d3",
-    "## Accessible composition": "4aa0768730ca",
-    "## When to use": "633dd339b67b",
-    "## Props": "cb85f32ce9f9",
+    "# Chip": "8a5d97a42186",
+    "## Accessible composition": "a51db2bc281a",
+    "## When to use": "f1fc71923110",
+    "## Props": "96a28a5c8dc6",
     "(section order)": "fb0efba9a567"
   },
   "chip-list": {
@@ -756,8 +756,8 @@
   },
   "utilities/use-chip-list": {
     "(top)": "c9de0d3dd8c7",
-    "# useChipList": "f4b348a373cd",
-    "## Accessible composition": "f945fb414bcc",
+    "# useChipList": "70c79e6b0268",
+    "## Accessible composition": "b4dfd443a9c5",
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
     "(section order)": "118b817169c6"
@@ -863,7 +863,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "06367727b548",
+    "# useTooltip": "01b4c07ef8fa",
     "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",

@@ -4,7 +4,6 @@ import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CrossGlyph, glyphOr } from './glyphs.js';
 import type { BadgeTone } from './Badge.js';
 import { cx } from './cx.js';
-import { VisuallyHidden } from './VisuallyHidden.js';
 import styles from './Chip.module.css';
 
 /** The same tones as Badge. */
@@ -26,16 +25,6 @@ export type ChipRootProps = {
   disabled?: boolean;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
-export type ChipOverflowProps = {
-  overflowCount: number;
-  /** Name read for +N. Default is the `moreChips` string, "{n} more" in English. */
-  overflowLabel?: (n: number) => string;
-} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
-
-function chipClass(className?: string): string {
-  return cx(styles.root, className);
-}
-
 function ChipRoot({
   children,
   onRemove,
@@ -53,7 +42,7 @@ function ChipRoot({
   }
   const label = typeof children === 'string' ? children : String(children);
   return (
-    <span {...props} className={chipClass(className)} data-tone={tone} data-disabled={disabled ? '' : undefined}>
+    <span {...props} className={cx(styles.root, className)} data-tone={tone} data-disabled={disabled ? '' : undefined}>
       <span className={styles.label}>{label}</span>
       {onRemove ? (
         <button
@@ -70,22 +59,4 @@ function ChipRoot({
   );
 }
 
-function ChipOverflow({
-  overflowCount,
-  overflowLabel,
-  className,
-  ...props
-}: ChipOverflowProps) {
-  const { moreChips } = useStrings();
-  const name = overflowLabel?.(overflowCount) ?? moreChips(overflowCount);
-  return (
-    <span {...props} className={chipClass(className)} data-overflow="">
-      <span className={styles.label} aria-hidden>
-        +{overflowCount}
-      </span>
-      <VisuallyHidden.Root>{name}</VisuallyHidden.Root>
-    </span>
-  );
-}
-
-export const Chip = { Root: ChipRoot, Overflow: ChipOverflow } as const;
+export const Chip = { Root: ChipRoot } as const;

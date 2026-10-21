@@ -53,7 +53,7 @@ describe('docs mcp tools', () => {
       expect(whenToUse(`${name}.Root`)).not.toHaveProperty('scope');
     }
     expect(getComponent('Button').parts.map((part) => part.name)).toContain('Button.Group');
-    for (const old of ['Option', 'Radio', 'ButtonGroup', 'ChipOverflow', 'Code.Block']) {
+    for (const old of ['Option', 'Radio', 'ButtonGroup', 'ChipOverflow', 'Chip.Overflow', 'Code.Block']) {
       expect(jsonNames).not.toContain(old);
     }
   });

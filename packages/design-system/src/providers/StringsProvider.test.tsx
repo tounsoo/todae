@@ -19,6 +19,7 @@ import {
 import { Breadcrumbs as ServerBreadcrumbs } from '../server/breadcrumbs.js';
 import { Pagination as ServerPagination } from '../server/pagination.js';
 import { DEFAULT_STRINGS } from './strings.js';
+import { ChipCount } from '../components/chipCount.js';
 
 afterEach(() => {
   cleanup();
@@ -150,7 +151,7 @@ describe('StringsProvider', () => {
           <Alert.Close>×</Alert.Close>
         </Alert.Root>
         <Chip.Root onRemove={() => undefined}>Alpha</Chip.Root>
-        <Chip.Overflow overflowCount={3} />
+        <ChipCount count={3} />
         <Toast.Region toaster={toaster}>
           {(toast) => (
             <Toast.Root>
@@ -202,7 +203,7 @@ describe('StringsProvider', () => {
         <Chip.Root onRemove={() => undefined} removeLabel="Drop Alpha">
           Alpha
         </Chip.Root>
-        <Chip.Overflow overflowCount={3} overflowLabel={(n) => `+${n} hidden`} />
+        <ChipCount count={3} label={(n) => `+${n} hidden`} />
       </StringsProvider>,
     );
     expect(screen.getByRole('navigation', { name: 'Trail' })).toBeTruthy();

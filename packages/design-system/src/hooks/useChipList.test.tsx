@@ -130,7 +130,7 @@ describe('useChipList', () => {
       const live = [...container.querySelectorAll('button, [data-overflow]')].filter((el) => !el.closest('[inert]'));
       const names = live.filter((el) => el.tagName === 'BUTTON').map((el) => el.getAttribute('aria-label'));
       expect(names).toEqual(EIGHT.slice(0, visible).map((label) => `Remove ${label}`));
-      expect(live.some((el) => el.getAttribute('data-overflow') != null && el.textContent?.includes(more))).toBe(true);
+      expect(live.some((el) => el.getAttribute('data-overflow') != null && el.nextElementSibling?.textContent?.includes(more))).toBe(true);
       unmount();
     }
   });

@@ -733,26 +733,8 @@
       ]
     },
     {
-      "name": "Chip.Overflow",
-      "description": "A display-only +N chip: a span with the visible +N hidden from assistive technology and a visually hidden name. It takes no focus; put it in a button to make it a control.",
-      "props": [
-        {
-          "name": "overflowCount",
-          "type": "number",
-          "required": true,
-          "description": "The N in +N."
-        },
-        {
-          "name": "overflowLabel",
-          "type": "(n: number) => string",
-          "required": false,
-          "description": "Name read for +N. Default is the moreChips string from StringsProvider, {n} more in English."
-        }
-      ]
-    },
-    {
       "name": "Chip.Root",
-      "description": "Text-only label with optional named remove button. Overflow +N is Chip.Overflow.",
+      "description": "Text-only label with optional named remove button. A +N count is a plain chip with aria-hidden and a VisuallyHidden.Root name beside it.",
       "props": [
         {
           "name": "children",
@@ -4415,7 +4397,7 @@
     },
     {
       "name": "useChipList",
-      "description": "Returns { listRef, measureRef, visible, hidden, measured }. visible is a prefix of chips. hidden is the +N count, capped at chips.length; 0 when maxRows is unset. measured is false on the server and before the first layout pass. Put listRef on the wrapping list (its width and gap drive the fold). The measure row on measureRef must be inert and aria-hidden and contain every chip, then a \"…\" probe chip, then Chip.Overflow with overflowCount={chips.length || 1}.",
+      "description": "Returns { listRef, measureRef, visible, hidden, measured }. visible is a prefix of chips. hidden is the +N count, capped at chips.length; 0 when maxRows is unset. measured is false on the server and before the first layout pass. Put listRef on the wrapping list (its width and gap drive the fold). The measure row on measureRef must be inert and aria-hidden and contain every chip, then a \"…\" probe chip, then a Chip.Root holding +{chips.length || 1}.",
       "props": [
         {
           "name": "chips",

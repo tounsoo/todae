@@ -48,6 +48,7 @@ export function useChipMeasure({
     const gap = style.columnGap || style.gap;
     const g = Number.parseFloat(gap) || 0;
     const kids = [...layer.children] as HTMLElement[];
+    // The row ends with the … probe, then the +N chip (ChipCountChip).
     const overflowEl = kids.at(-1);
     const probeEl = kids.at(-2);
     if (!overflowEl || !probeEl) return;

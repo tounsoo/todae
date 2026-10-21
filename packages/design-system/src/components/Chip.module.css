@@ -20,6 +20,8 @@
     line-height: var(--todae-chip-leading);
   }
 
+  /* The +N of ChipList and Field.ChipInput (data-overflow) is no control by
+     itself; ChipList's button gives it the hover colors. */
   .root:hover:not([data-disabled]):not([data-overflow]) {
     background: var(--_tone-bg, var(--todae-chip-bg-hover));
     color: var(--_tone-fg, var(--todae-chip-fg-hover));
@@ -118,10 +120,6 @@
     --_tone-fg: initial;
     --_tone-bg: initial;
     --_tone-border: initial;
-  }
-
-  .root[data-overflow] {
-    border-style: dashed;
   }
 
   .label {

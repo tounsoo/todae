@@ -1,9 +1,10 @@
 'use client';
 
-import { Chip, Stack } from '@tounsoo/todae';
+import { Chip, Stack, useStrings, VisuallyHidden } from '@tounsoo/todae';
 import { X } from 'lucide-react';
 
 export function ChipExamples() {
+  const { moreChips } = useStrings();
   return (
     <Stack.Root as="ul" direction="row" wrap align="center" aria-label="Chip examples">
       <li>
@@ -31,7 +32,8 @@ export function ChipExamples() {
         </Chip.Root>
       </li>
       <li>
-        <Chip.Overflow overflowCount={4} />
+        <Chip.Root aria-hidden>+4</Chip.Root>
+        <VisuallyHidden.Root>{moreChips(4)}</VisuallyHidden.Root>
       </li>
     </Stack.Root>
   );
