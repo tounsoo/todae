@@ -644,6 +644,22 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     expect(input().getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('an unreadable text in a plain noValidate form is never sent as the old number', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} initial={5} />);
+    await userEvent.click(input());
+    await replace('7,,');
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await settle();
+    document.querySelector('form')!.requestSubmit();
+    await settle();
+    expect(sent).toEqual([]);
+    expect(told).toEqual([]);
+    expect(input().value).toBe('7,,');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('a Suspense boundary that hides the input: the held submit sends the committed number once it shows', async () => {
     const sent: Sent = [];
     let release!: () => void;

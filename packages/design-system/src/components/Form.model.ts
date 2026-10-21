@@ -139,3 +139,6 @@ export function failingEntries(
   }
   return entries.sort((a, b) => (a.reading.carrier.compareDocumentPosition(b.reading.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 }
+
+// The attribute Form.Root marks its `<form>` with, so a plain `noValidate` form (no check of its own) can be told from it (which checks and words the error).
+export const FORM_ROOT = 'data-todae-form';

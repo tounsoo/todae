@@ -407,8 +407,53 @@ describe('a Suspense boundary that hides the input, and a submit that comes mean
   });
 });
 
+describe('a held submit while the render of its commit is pending', () => {
+  // The render that answers the commit suspends and never resolves, so the boundary keeps the old page.
+  const never = new Promise<void>(() => {});
+  function Gate({ on }: { on: boolean }) {
+    if (on) use(never);
+    return null;
+  }
+
+  it('waits: every later submit of the form is folded and nothing is sent until the render arrives', async () => {
+    const sent: (string | null)[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      return (
+        <form
+          noValidate
+          data-testid="form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('q') as string | null);
+          }}
+        >
+          <Suspense fallback={<p>loading</p>}>
+            <Gate on={value === 6} />
+            <Field.Root aria-label="Q" name="q">
+              <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+            </Field.Root>
+          </Suspense>
+          <button type="submit">Go</button>
+        </form>
+      );
+    }
+    render(<Page />);
+    type('6');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+      (screen.getByTestId('form') as HTMLFormElement).requestSubmit();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(sent).toEqual([]);
+  });
+});
+
 describe('a held submit is sent after the commit, from one watcher', () => {
-  it('lets a product read the refs and layout effects of the whole commit in its onSubmit', async () => {
+  it('lets a product read the DOM, refs and layout effects of the whole layout commit in its onSubmit', async () => {
     const seen: { value: string | null; note: string | null; mirrored: number | null }[] = [];
     function Page() {
       const [value, setValue] = useState<number | null>(5);

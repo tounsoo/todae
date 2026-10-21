@@ -140,7 +140,7 @@ export function NumberInput({
   const current = value !== null && Number.isFinite(value) ? value : null;
   // Todae's own commits and steps sit on the grid, counted from `min`, or from 0. The browser's own check counts from the value attribute without a `min`, so it can't see this.
   if (current !== null && !onGrid(current, range)) {
-    warnOnce('number-input-grid', `Field.NumberInput has a value off its step grid, which counts from ${min === undefined ? '0, as there is no min' : 'its min'}. It is shown as given, and a commit or step moves it onto the grid.`);
+    warnOnce('number-input-grid', `Field.NumberInput has a value off its step grid, which counts from ${min === undefined ? '0, as there is no min' : 'its min'}. It is shown as given, and a commit or step moves it onto the grid, where a double can hold the grid point.`);
   }
   const [draft, setDraft] = useState<Draft | null>(null);
   // The draft is the person's until they commit, or the product sets another value.
@@ -160,7 +160,7 @@ export function NumberInput({
   const flagged = unreadable && typing && (draft.failed === true || !isPartialNumber(draft.text, text));
   const valueNode = useRef<HTMLInputElement | null>(null);
   const node = useRef<HTMLInputElement | null>(null);
-  // A submit of the input's form waits for the commit instead of forcing it; the hook holds it and sends it again after the render that shows the commit. Text that is no number is flagged, and the submit is cancelled.
+  // A submit of the input's form waits for the commit instead of forcing it; the hook holds it and sends it again after the render that shows the commit. Text that is no number is flagged, and a submit that no check will stop (a plain `noValidate` form, or a submitter with `formNoValidate`) is cancelled.
   const { committed, waiting, mark } = useFormSubmitHold(node, () => {
     const outcome = draftOutcome();
     if (outcome.kind === 'none') return null;

@@ -215,10 +215,10 @@ const ulp = (value: number) => (value === 0 || !Number.isFinite(value) ? 0 : 2 *
 const noise = (value: number, base: number, step: number, raw: number) =>
   (ulp(value) / 2 + ulp(base) / 2) / step + Number.EPSILON * Math.abs(raw);
 
-// The grid index of a value. An index within twice that noise of a whole number, and at most a quarter step, is that number, so a value on the grid reads as on it at any operand, and one a fifth of a step off it never does. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5), and one a few doubles below a half stays below it. Any other index gets the 15-digit guard of the max line, where that moves it by no more than the noise (past 1e14 it would drop the fraction): 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
+// The grid index of a value. An index within twice that noise of a whole number, and at most a quarter step, is that number, so a value on the grid reads as on it at any operand. Up to about 4e14 steps from the base a value a fifth of a step off the grid never does; past that the noise term reaches the quarter-step cap, and a value up to a quarter step off reads as on it. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5), and one a few doubles below a half stays below it. Any other index gets the 15-digit guard of the max line, where that moves it by no more than twice the noise (past 1e14 it would drop the fraction): 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index is exact as it is. Past 1e15 steps the window still applies, since a double's error there is larger than the decimal grid point it should match (100000000000000.1 on a 0.1 grid). Where one ulp is more than half a step (about 3e14 steps on a 0.1 grid) no double is a grid point, so a value there reads as off the grid whatever it is.
 function indexOf(value: number, base: number, step: number): number {
   const raw = (value - base) / step;
-  if (Number.isInteger(raw) || Math.abs(raw) >= 1e15) return raw;
+  if (Number.isInteger(raw)) return raw;
   const error = noise(value, base, step, raw);
   const whole = Math.round(raw);
   if (Math.abs(raw - whole) <= Math.min(0.25, 2 * error)) return whole;
@@ -378,6 +378,13 @@ export function stepNumber(from: number | null, by: number, range: NumberRange, 
   const unit = step ?? Number('1e-' + shown!);
   const index = indexOf(from, step === undefined ? 0 : (range.min ?? 0), unit);
   const count = Math.max(1, Math.round(Math.abs(by) / unit));
-  const point = pointAt(by > 0 ? Math.floor(index) + count : Math.ceil(index) - count, step === undefined ? { step: unit } : range);
+  const grid = step === undefined ? { step: unit } : range;
+  let target = by > 0 ? Math.floor(index) + count : Math.ceil(index) - count;
+  let point = pointAt(target, grid);
+  // Where a double is coarser than the grid the index can be a point short; the point must still lie strictly beyond `from`, so a step never sticks. A few tries, since where no double holds the next point there is none to find.
+  for (let tries = 0; tries < 4 && (by > 0 ? point <= from : point >= from); tries++) {
+    target += by > 0 ? 1 : -1;
+    point = pointAt(target, grid);
+  }
   return finite(point);
 }

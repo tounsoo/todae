@@ -20,7 +20,7 @@ import {
   type FormErrors,
   type SummaryEntry,
 } from './Form.context.js';
-import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
+import { errorsKey, FORM_ROOT, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
@@ -313,6 +313,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
         {...props}
         ref={refs}
         noValidate
+        {...{ [FORM_ROOT]: '' }}
         onSubmit={submit}
         onChangeCapture={(event) => {
           onChangeCapture?.(event);

@@ -664,3 +664,63 @@ describe('an unreadable draft and a submitter that turns validation off', () => 
     expect(input().getAttribute('aria-invalid')).toBe('true');
   });
 });
+
+describe('an unreadable draft in a plain noValidate form', () => {
+  function Plain({ sent }: { sent: (string | null)[] }) {
+    const [value, setValue] = useState<number | null>(5);
+    return (
+      <form
+        noValidate
+        data-testid="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('a') as string | null);
+        }}
+      >
+        <Field.Root aria-label="A" name="a">
+          <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+        </Field.Root>
+        <button type="submit">Send</button>
+      </form>
+    );
+  }
+
+  it('is never sent as the old number, from requestSubmit or a button: the text is kept and flagged', async () => {
+    const sent: (string | null)[] = [];
+    render(<Plain sent={sent} />);
+    input().focus();
+    type('7..');
+    await submit(screen.getByTestId('form'));
+    expect(sent).toEqual([]);
+    expect(input().value).toBe('7..');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    });
+    expect(sent).toEqual([]);
+    expect(input().value).toBe('7..');
+    type('8');
+    await submit(screen.getByTestId('form'));
+    expect(sent).toEqual(['8']);
+  });
+
+  it('leaves Form.Root, which checks and words the error, to hear the submit', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <Form.Root data-testid="form" onSubmit={onSubmit}>
+        <Field.Group>
+          <Field.Root aria-label="A" name="a">
+            <Field.NumberInput value={5} locale="en" onValueChange={() => {}} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    input().focus();
+    type('7..');
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter a valid value')).toBeTruthy();
+    expect(screen.getByTestId('form').hasAttribute('data-todae-form')).toBe(true);
+  });
+});

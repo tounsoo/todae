@@ -630,3 +630,43 @@ describe('the grid windows follow the operands rounding', () => {
     expect(text('1000000000000.0051', { min: 1e12, step: 0.01 })).toBe(1e12 + 0.01);
   });
 });
+
+describe('the grid past 1e15 steps', () => {
+  const en = { locale: 'en', formatOptions: { maximumFractionDigits: 3 } };
+
+  it.each([
+    [100000000000000.1, 0.1],
+    [100000000000000.3, 0.1],
+    [10000000000000.02, 0.01],
+    [10000000000000.07, 0.01],
+    [1000000000000.003, 0.001],
+    [1000000000000.007, 0.001],
+  ])('reads %s on a %s grid as on it, and steps up and down from it', (value, step) => {
+    expect(onGrid(value, { step })).toBe(true);
+    expect(commitNumber(value, { step })).toBe(value);
+    expect(canStep(value, step, { step }, en)).toBe(true);
+    expect(stepNumber(value, step, { step }, en)).toBeGreaterThan(value);
+    expect(stepNumber(value, -step, { step }, en)).toBeLessThan(value);
+  });
+
+  it('never leaves a step stuck on a typed value near 1e14', () => {
+    const range = { step: 0.1 };
+    for (let k = 0; k < 400; k++) {
+      const value = Number((1e14 + k * 0.1).toFixed(1));
+      expect(stepNumber(value, 0.1, range, en)).toBeGreaterThan(value);
+      expect(stepNumber(value, -0.1, range, en)).toBeLessThan(value);
+    }
+  });
+
+  it('still holds no grid where one ulp is more than half a step, and does not stick there either', () => {
+    // 3e14 on a 0.1 grid: a double is 0.0625 apart, so no double is a point of the grid.
+    const value = 300000000000000.1;
+    expect(stepNumber(value, 0.1, { step: 0.1 }, en)).toBeGreaterThan(value);
+  });
+
+  it('holds a fifth of a step off the grid only up to about 4e14 steps', () => {
+    expect(onGrid(1e14 + 0.2, { step: 1 })).toBe(false);
+    // Past that the noise term meets the quarter-step cap, and a value 0.1875 off reads as on the grid.
+    expect(onGrid(5e14 + 0.1875, { step: 1 })).toBe(true);
+  });
+});

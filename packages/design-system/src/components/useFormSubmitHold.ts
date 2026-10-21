@@ -1,6 +1,7 @@
+import { FORM_ROOT } from './Form.model.js';
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
-/** What a submit finds in the input: text no number (`flag` marks it; the form's own check blocks the submit, and where a submitter turns that check off, the submit is cancelled here), or a draft the submit commits. */
+/** What a submit finds in the input: text no number (`flag` marks it; a check that runs blocks the submit, and where none will run, a `noValidate` form that is not Form.Root or a submitter with `formNoValidate`, the submit is cancelled here), or a draft the submit commits. */
 export type SubmitDraft = { unreadable: true; flag: () => void } | { unreadable?: false; commit: () => void };
 
 type Held = { form: HTMLFormElement; submitter: HTMLElement | null };
@@ -13,9 +14,10 @@ function send({ form, submitter }: Held) {
 // The attribute the input carries its commit count in, so the page itself says which commit it shows.
 const COUNT = 'data-todae-commits';
 
-// The one watcher of a held submit, started when the submit is held and standing on the input's root node, not on the input: a capture listener folds every later submit of the form into the held one (the newest submitter is kept), and a MutationObserver sends it once, when the input is gone from the page or the page shows its commit. Both run outside React's commit, so a product's `onSubmit` sees the whole commit and may call `flushSync`.
+// The one watcher of a held submit, started when the submit is held and standing on the input's root node, not on the input: a capture listener folds every later submit of the form into the held one (the newest submitter is kept), and a MutationObserver sends it once, when the input is gone from the page or the page shows its commit. Both run outside React's commit, so a product's `onSubmit` sees the whole layout commit (the DOM, refs and layout effects, not passive effects, which a commit outside a discrete event runs later) and may call `flushSync`.
 function watch(node: HTMLElement, held: Held, behind: (node: HTMLElement) => boolean, end: () => void) {
   const root = node.getRootNode();
+  // Not a copy of the input's listener: that one is removed when the input's effects turn off (an Activity or a Suspense boundary hides it), and the watcher still has to fold then.
   const onSubmit = (event: Event) => {
     if (event.target !== held.form) return;
     fold(held, event);
@@ -57,9 +59,11 @@ function fold(held: Held, event: Event) {
  * - Text that is no number is not a value, so no submit sends the old number
  *   in its place. The unreadable text makes the value input invalid, so a
  *   form that checks (the browser's check, or Form.Root's, which words it)
- *   blocks the submit and this only flags the text. A submit whose submitter
- *   has `formNoValidate` skips every check, so it is cancelled here, with
- *   `preventDefault` and `stopImmediatePropagation`, and flagged.
+ *   blocks the submit and this only flags the text. Where no check will run,
+ *   a `noValidate` form that is not Form.Root (which marks its `<form>` with
+ *   `FORM_ROOT`) or a submitter with `formNoValidate`, the submit is
+ *   cancelled here, with `preventDefault` and `stopImmediatePropagation`, and
+ *   flagged.
  * - A submit of the input's form that finds a draft that reads (`read`), or
  *   the input waiting (a product's auto-submit in `onValueChange`, a step with
  *   no draft), is cancelled and held: `preventDefault` and
@@ -117,8 +121,9 @@ export function useFormSubmitHold(
       const submitter = (event as SubmitEvent).submitter;
       if (draft?.unreadable) {
         draft.flag();
-        // The form's own check blocks it, unless the submitter turns the check off.
-        if ((submitter as HTMLButtonElement | null)?.formNoValidate) {
+        // A check that runs blocks it: the browser's before `submit` fires, or Form.Root's, which words the error and so has to hear the event. Where none will run, a plain `noValidate` form or a submitter with `formNoValidate`, nothing else stops the old number going out.
+        const form = event.target as HTMLFormElement;
+        if ((form.noValidate && !form.hasAttribute(FORM_ROOT)) || (submitter as HTMLButtonElement | null)?.formNoValidate) {
           event.preventDefault();
           event.stopImmediatePropagation();
         }

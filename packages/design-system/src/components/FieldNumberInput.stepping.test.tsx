@@ -370,3 +370,17 @@ describe('Field.NumberInput on a grid read at large operands', () => {
     expect(input().getAttribute('aria-valuemax')).toBe('0.2');
   });
 });
+
+describe('Field.NumberInput stepping past 1e15 steps of the grid', () => {
+  it.each([
+    [100000000000000.1, 0.1, 100000000000000.2],
+    [10000000000000.02, 0.01, 10000000000000.03],
+    [1000000000000.003, 0.001, 1000000000000.004],
+  ])('steps up from %s on a %s grid, with the button enabled', (initial, step, next) => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={initial} step={step} locale="en" formatOptions={{ maximumFractionDigits: 3 }} buttons onCommit={onCommit} />);
+    expect(button('Increase').disabled).toBe(false);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenCalledWith(next);
+  });
+});
