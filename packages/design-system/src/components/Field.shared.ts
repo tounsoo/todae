@@ -1,6 +1,5 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -11,14 +10,10 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { useFieldContext, type CountStore } from './Field.context.js';
-import {
-  useFieldControl,
-  type FieldControlUserProps,
-  type UseFieldResult,
-  type ValueInputOptions,
-  type ValueInputProps,
-} from '../hooks/useField.js';
+import { BESIDE_CONTROL, mergeDescribedBy, useFieldContext, type CountStore } from './Field.context.js';
+import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import { useDomId } from './domId.js';
+import { warnOnce } from './warnOnce.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import {
   usePopover,
@@ -63,30 +58,11 @@ type PickerOwnProps = {
   'aria-invalid'?: FieldControlUserProps['aria-invalid'];
 };
 
-const BESIDE_CONTROL = 1;
-const BESIDE_NAMED = 2;
-
-/**
- * Which controls a picker shares its field with, as bits: BESIDE_CONTROL for
- * any control wired with useField, BESIDE_NAMED when useField gave one the
- * field's name. The server cannot know of one yet, so it reads 0 until
- * hydration.
- */
-function usePickerPresence(store: CountStore) {
-  const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
-  return useSyncExternalStore(
-    subscribe,
-    () => (store.controls > 0 ? BESIDE_CONTROL : 0) | (store.named > 0 ? BESIDE_NAMED : 0),
-    () => 0,
-  );
-}
-
 /**
  * A picker's control props. Alone, it is the field's control. Beside another
- * control, that control takes the field's id and description, and the field's
- * name too when useField gave it that name. The picker keeps its own
- * `name`, else the field's name when no other control has it, and `disabled`
- * and `aria-invalid`, and is named `label`.
+ * control, that control takes the field's id and description. Either way the
+ * button has no name: the picker's value input takes it. The picker keeps
+ * `disabled` and `aria-invalid`, and is named `label`.
  */
 function pickerControl<P extends PickerOwnProps>(
   presence: number,
@@ -94,10 +70,13 @@ function pickerControl<P extends PickerOwnProps>(
   props: P,
   label: string,
 ) {
-  if (!(presence & BESIDE_CONTROL)) return field.getControlProps(props);
+  if (!(presence & BESIDE_CONTROL)) {
+    const { name: _name, ...control } = field.getControlProps(props);
+    return control;
+  }
+  const { name: _name, ...own } = props;
   return {
-    ...props,
-    name: props.name ?? (presence & BESIDE_NAMED ? undefined : field.name),
+    ...own,
     disabled: field.disabled || Boolean(props.disabled),
     'aria-invalid': field.invalid ? true : props['aria-invalid'],
     'aria-label': props['aria-label'] ?? label,
@@ -146,12 +125,28 @@ function toHtmlYear(text: string) {
   return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
 }
 
+// A native date input holds the years 1 to 275760; a value or bound outside them reads as none.
+function checkHtmlYear(year: number) {
+  if (year < 1 || year > 275760) {
+    warnOnce(
+      'value-input-year',
+      `Field.DatePicker and Field.DateTimePicker carry their value in a native date input, which holds only the years 1 to 275760. The year ${year} reads as no date, so it is submitted as empty and a required, min or max check ignores it.`,
+    );
+  }
+}
+
 /** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's value input. */
-export const htmlDate = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
+export const htmlDate = (value: Temporal.PlainDate) => {
+  checkHtmlYear(value.year);
+  return toHtmlYear(value.toString({ calendarName: 'never' }));
+};
 
 /** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's value input. */
-export const htmlDateTime = (value: Temporal.PlainDateTime) =>
-  toHtmlYear(value.withCalendar('iso8601').toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
+export const htmlDateTime = (value: Temporal.PlainDateTime) => {
+  const iso = value.withCalendar('iso8601');
+  checkHtmlYear(iso.year);
+  return toHtmlYear(iso.toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
+};
 
 /**
  * What Field.ColorPicker, Field.DatePicker, Field.TimePicker and Field.DateTimePicker share: the
@@ -168,9 +163,12 @@ export function useFieldPicker<Reason extends string>({
   style,
   focusSelector,
   haspopup,
+  required,
 }: {
   props: PickerOwnProps & Record<string, unknown>;
   label: string;
+  /** Describes the button as required, with the `required` string in an element the picker renders at `requiredId`. */
+  required?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: Reason | PopoverCloseReason | 'disabled') => void;
@@ -180,11 +178,17 @@ export function useFieldPicker<Reason extends string>({
   haspopup?: PopoverHaspopup;
 }) {
   // The button does not count itself as a control another picker should leave the field to.
-  const field = useFieldControl(false);
-  const { shellRef, store } = useFieldContext();
+  const { field, wire, presence } = useFieldControl(false);
+  const { shellRef } = useFieldContext();
+  // A button cannot say `aria-required`, so a required picker is described as required.
+  const requiredId = useDomId();
+  const describedBy = mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined);
   // Another control in the field takes its id and description.
-  const presence = usePickerPresence(store);
-  const { name, ...control } = pickerControl(presence, field, props, label);
+  const control = pickerControl(presence, field, { ...props, 'aria-describedby': describedBy }, label);
+  // Alone, getControlProps said what the value input needs; beside another control, this does.
+  if (presence & BESIDE_CONTROL) {
+    wire({ disabled: Boolean(control.disabled), form: props.form as string | undefined, name: props.name, sends: false });
+  }
   const [open, setOpen] = useControlledValue<boolean, [Reason | PopoverCloseReason | 'disabled']>(
     openProp,
     defaultOpen ?? false,
@@ -233,34 +237,14 @@ export function useFieldPicker<Reason extends string>({
       pickerToggles.delete(button);
     };
   }, [popover.triggerRef]);
-  const form = control.form as string | undefined;
   return {
-    name,
-    disabled: control.disabled,
-    form,
-    /** The picker's value input: under the picker's own name, which is none beside a control that took the field's. */
-    getValueInputProps: (options: ValueInputOptions): ValueInputProps => ({
-      ...field.getValueInputProps(options),
-      name,
-      disabled: control.disabled,
-      form,
-    }),
+    requiredId,
+    getValueInputProps: field.getValueInputProps,
     shown,
     setOpen,
     popover,
     // The popover exists only while open, so only then does the button control it.
     triggerProps: { ...(trigger as ComponentPropsWithRef<'button'>), 'aria-controls': shown ? trigger['aria-controls'] : undefined },
-  };
-}
-
-/** A bound as the button writes its value, for the message that names it. The raw text when it is not a value `format` reads. */
-export function boundFormat(format: (raw: string) => string): (raw: string) => string {
-  return (raw) => {
-    try {
-      return format(raw);
-    } catch {
-      return raw;
-    }
   };
 }
 

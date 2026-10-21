@@ -11,7 +11,8 @@ import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
-import { useFieldPicker, htmlTime, boundFormat } from './Field.shared.js';
+import { useFieldPicker, htmlTime } from './Field.shared.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -167,6 +168,7 @@ export function TimePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The list, which shows its active time.
     focusSelector: '[role="listbox"]',
     // A role-less popover around a named list of times.
@@ -200,9 +202,10 @@ export function TimePicker({
           max: max && htmlTime(max),
           // The list picks any time, so no step is off.
           step: 'any',
-          bound: boundFormat((raw) => formatTime(Temporal.PlainTime.from(raw), { locale })),
+          bound: { min: min && formatTime(min, { locale }), max: max && formatTime(max, { locale }) },
         })}
       />
+      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
       {/* Mounted while open only: a form can hold many time pickers. */}
       {picker.shown ? (
         <Popover.Root {...picker.popover.getPopoverProps()}>

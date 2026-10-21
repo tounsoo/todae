@@ -214,7 +214,7 @@ describe('value inputs in a browser', () => {
     render(<Booking summary initial={Temporal.PlainDate.from('2026-10-01')} />);
     await book();
     const summary = await screen.findByRole('group', { name: '1 problem to fix' });
-    expect(summary.textContent).toContain('Enter Oct 13, 2026 or more');
+    expect(summary.textContent).toContain('Enter Oct 13, 2026 or later');
     await userEvent.click(screen.getByRole('link', { name: 'Start date' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
   });
@@ -238,6 +238,19 @@ describe('value inputs in a browser', () => {
       ['at', '2026-10-13T17:45:15'],
       ['accent', '#3366FF'],
     ]);
+  });
+
+  it('leave focus on the picker button when a plain form fails its native check', async () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Day" name="day">
+          <Field.DatePicker value={null} required />
+        </Field.Root>
+        <button type="submit">Send</button>
+      </form>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Day' })));
   });
 
   it('are skipped by Tab, which goes from the picker button to the next control', async () => {

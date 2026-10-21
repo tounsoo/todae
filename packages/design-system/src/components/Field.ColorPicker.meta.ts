@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.ColorPicker',
   description:
-    "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. The color goes in a native text input under the field's name, so a custom validity or a Form.Root scope sees it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+    "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. The color goes in a native text input under the field's name, so Field.Root's customValidity and a Form.Root scope see it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
   props: [
     {
       name: 'value',

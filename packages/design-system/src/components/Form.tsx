@@ -24,7 +24,7 @@ import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } fr
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
-import { focusTargetFor, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import { isValidityCarrier, reachTarget, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 
 export type { FormErrors } from './Form.context.js';
@@ -161,12 +161,11 @@ function firstProblem(form: HTMLFormElement, failed: readonly SummaryEntry[], na
   const problem = [...form.elements].find(
     (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
-      !el.matches(':disabled') &&
-      !focusTargetFor(el).matches(':disabled') &&
+      !reachTarget(el).disabled &&
       (read.has(el) ? shown.has(el) : native && el.willValidate && !el.validity.valid),
   );
   // A value input is hidden, so focus goes to its field's control.
-  return problem && focusTargetFor(problem);
+  return problem && reachTarget(problem).target;
 }
 
 /**
@@ -351,7 +350,7 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
     label: entry.reading.label,
     error: entry.error,
     disabled: entry.reading.disabled,
-    focus: () => focusTargetFor(entry.reading.carrier).focus(),
+    focus: () => reachTarget(entry.reading.carrier).target.focus(),
   });
   return (
     <div

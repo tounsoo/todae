@@ -77,7 +77,7 @@ Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as 
 
 ## Required
 
-`required` makes a form with no chips invalid, whatever the input holds, since the input is emptied on every commit. The browser checks the chips on a native text input that the ChipInput renders beside its own. It is hidden from sight and from assistive technology, is not a tab stop, and is empty exactly when there are no chips. It has no `name`, so it sends nothing: a form sends the text in the input under the field's `name`, as before, and sending the chips is up to you. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` and focus goes to the text input, which gets `aria-required`.
+`required` makes a form with no chips invalid, whatever the input holds, since the input is emptied on every commit. The browser checks the chips on a native text input that the ChipInput renders beside its own. It is hidden from sight and from assistive technology, is not a tab stop, and is empty exactly when there are no chips. It has no `name`, so it sends nothing: a form sends the text in the input under the field's `name`, as before, and sending the chips is up to you. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` and focus goes to the text input, which gets `aria-required`. A `required` on a ChipInput used to need text in the input itself; it now needs at least one chip.
 
 ## Accessible composition
 

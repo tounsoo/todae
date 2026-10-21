@@ -5,6 +5,7 @@ import { getCandidates, getTabbables } from '../overlay/tabbables.js';
 import { ErrorMessage, Field, Form, Label, useField } from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
+import { resetWarnOnce } from './warnOnce.js';
 
 afterEach(cleanup);
 
@@ -115,7 +116,7 @@ describe('a required date picker in Form.Root', () => {
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter Oct 13, 2026 or more')).toBeTruthy();
+    expect(screen.getByText('Enter Oct 13, 2026 or later')).toBeTruthy();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
   });
 
@@ -126,7 +127,7 @@ describe('a required date picker in Form.Root', () => {
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter Oct 31, 2026 or less')).toBeTruthy();
+    expect(screen.getByText('Enter Oct 31, 2026 or earlier')).toBeTruthy();
   });
 });
 
@@ -169,7 +170,7 @@ describe('required on the other pickers', () => {
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter 9:30 AM or more')).toBeTruthy();
+    expect(screen.getByText('Enter 9:30 AM or later')).toBeTruthy();
   });
 });
 
@@ -359,5 +360,216 @@ describe('useField().getValueInputProps', () => {
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['rating', 'x']]);
     rerender(tree(false));
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['rating', '3']]);
+  });
+});
+
+describe('a value input speaks for its own control', () => {
+  function Rating({ required }: { required?: boolean }) {
+    const field = useField();
+    return (
+      <>
+        <span role="slider" tabIndex={0} aria-valuenow={0} {...field.getControlProps({ 'aria-label': 'Rating' }, { native: false })} />
+        <input {...field.getValueInputProps({ type: 'number', value: '', required })} />
+      </>
+    );
+  }
+
+  it('focuses a custom control beside a text input, not the control that mounted last, and names it in the summary', async () => {
+    await mount(
+      <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary />
+        <Field.Group>
+          <Field.Root name="review" aria-label="Review">
+            <Rating required />
+            <Field.TextInput aria-label="Note" value="" onValueChange={() => undefined} />
+          </Field.Root>
+        </Field.Group>
+        <button type="submit">Send</button>
+      </Form.Root>,
+    );
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByRole('link', { name: 'Rating' })).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Rating' }));
+    });
+    expect(document.activeElement).toBe(screen.getByRole('slider'));
+  });
+
+  it('focuses a ChipInput\'s own text input', async () => {
+    await mount(
+      <Page>
+        <Tags required />
+      </Page>,
+    );
+    expect(focusTargetFor(valueInput())).toBe(screen.getByRole('textbox', { name: 'Tags' }));
+  });
+});
+
+describe('one decision for disabled, form and name', () => {
+  it('does not block a submit when the control it speaks for is disabled', async () => {
+    function Gauge({ ariaOnly }: { ariaOnly?: boolean }) {
+      const field = useField();
+      return (
+        <>
+          <span role="slider" tabIndex={0} {...field.getControlProps(ariaOnly ? { 'aria-disabled': true } : { disabled: true }, { native: false })} />
+          <input {...field.getValueInputProps({ type: 'number', value: '', required: true })} />
+        </>
+      );
+    }
+    for (const ariaOnly of [false, true]) {
+      const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+      const { unmount } = await mount(
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Root name="gauge" aria-label="Gauge">
+            <Gauge ariaOnly={ariaOnly} />
+          </Field.Root>
+        </Form.Root>,
+      );
+      expect(valueInput().disabled).toBe(true);
+      await submit(screen.getByTestId('form'));
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      unmount();
+    }
+  });
+
+  it('belongs to the form a ChipInput names, not its ancestor, so that form is the one it blocks', async () => {
+    await mount(
+      <>
+        <form id="other" data-testid="other" />
+        <Form.Root data-testid="form">
+          <Field.Root name="tags" aria-label="Tags">
+            <Field.ChipInput form="other" required chips={[]} inputValue="" onInputValueChange={() => undefined} onCommit={() => undefined} onChipRemove={() => undefined} />
+          </Field.Root>
+        </Form.Root>
+      </>,
+    );
+    expect(valueInput().form).toBe(screen.getByTestId('other'));
+    expect((screen.getByTestId('other') as HTMLFormElement).checkValidity()).toBe(false);
+    expect((screen.getByTestId('form') as HTMLFormElement).checkValidity()).toBe(true);
+  });
+
+  it('carries a ChipInput as one when there are chips and none otherwise', async () => {
+    const { rerender } = await mount(<Form.Root><Tags initial={['a', 'b']} /></Form.Root>);
+    expect(valueInput().value).toBe('1');
+    expect(valueInput().autocomplete).toBe('off');
+    rerender(<Form.Root><Tags key="empty" /></Form.Root>);
+    expect(valueInput().value).toBe('');
+  });
+});
+
+describe('customValidity on a Field.Root with a value input', () => {
+  it('blocks a submit and shows the message', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    await mount(
+      <Form.Root data-testid="form" onSubmit={onSubmit}>
+        <Field.Group>
+          <Label.Root htmlFor="start">Start date</Label.Root>
+          <Field.Root id="start" name="start" customValidity="Pick a weekday">
+            <Field.DatePicker value={day('2026-10-10')} locale="en-US" />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    expect(valueInput().validationMessage).toBe('Pick a weekday');
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Pick a weekday')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+  });
+});
+
+describe('a bound beyond year 9999', () => {
+  it('is named as the picker shows it, not as the browser text', async () => {
+    await mount(
+      <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
+        <DateField initial={day('+020261-10-01')} min={day('+020261-10-07')} />
+      </Form.Root>,
+    );
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('Enter Oct 7, 20261 or later')).toBeTruthy();
+  });
+});
+
+describe('a required picker', () => {
+  it.each([
+    ['date', <Field.DatePicker key="d" value={null} required />],
+    ['time', <Field.TimePicker key="t" value={null} required />],
+    ['date and time', <Field.DateTimePicker key="dt" value={null} required />],
+  ])('describes its %s button as required, since a button cannot say aria-required', async (_, picker) => {
+    await mount(<Field.Root aria-label="When" name="when">{picker}</Field.Root>);
+    const button = screen.getByRole('button');
+    const ids = button.getAttribute('aria-describedby')!.split(' ');
+    expect(ids.map((id) => document.getElementById(id)?.textContent)).toContain('Required');
+    expect(button.hasAttribute('aria-required')).toBe(false);
+  });
+
+  it('is not described as required when it is not', async () => {
+    await mount(<Field.Root aria-label="When" name="when"><Field.DatePicker value={null} showValue={false} /></Field.Root>);
+    expect(screen.queryByText('Required')).toBeNull();
+  });
+});
+
+describe('a change of a value input', () => {
+  function Pick({ errors }: { errors: Record<string, string> }) {
+    const [value, setValue] = useState<Temporal.PlainDate | null>(null);
+    return (
+      <Form.Root data-testid="form" errors={errors}>
+        <Field.Group>
+          <Label.Root htmlFor="start">Start date</Label.Root>
+          <Field.Root id="start" name="start">
+            <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="button" onClick={() => setValue(day('2026-10-13'))}>
+          Pick
+        </button>
+      </Form.Root>
+    );
+  }
+
+  it('dismisses a server error on the name it carries, and announces nothing on mount', async () => {
+    const onInput = vi.fn();
+    document.addEventListener('input', onInput);
+    await mount(<Pick errors={{ start: 'Booked out.' }} />);
+    expect(onInput).not.toHaveBeenCalled();
+    expect(screen.getByText('Booked out.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
+    });
+    await settle();
+    expect(onInput).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Booked out.')).toBeNull();
+    document.removeEventListener('input', onInput);
+  });
+});
+
+describe('a focus on a value input', () => {
+  it('goes on to the control it speaks for', async () => {
+    await mount(
+      <Form.Root>
+        <DateField />
+      </Form.Root>,
+    );
+    await act(async () => {
+      valueInput().focus();
+    });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+  });
+});
+
+describe('a year a date input cannot hold', () => {
+  it('warns once in development, for a value or a bound', async () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await mount(
+      <Form.Root>
+        <DateField initial={day('0000-06-01')} min={day('-000010-01-01')} max={day('+275000-01-01')} />
+      </Form.Root>,
+    );
+    const messages = warn.mock.calls.map((call) => String(call[0])).filter((text) => text.includes('275760'));
+    expect(messages).toHaveLength(1);
+    warn.mockRestore();
   });
 });

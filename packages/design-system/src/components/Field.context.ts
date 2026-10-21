@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useRef, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
 
 type CountEntry = { value: string; maxLength?: number };
 
@@ -66,6 +66,33 @@ export function useControlPresence(store: CountStore, counted: boolean): (node: 
       sync();
     },
     [sync],
+  );
+}
+
+/** Bits of `useFieldPresence`: any control wired with useField is in the field. */
+export const BESIDE_CONTROL = 1;
+/** Bits of `useFieldPresence`: useField gave one the field's name. */
+export const BESIDE_NAMED = 2;
+
+/**
+ * Which controls the field holds, as `BESIDE_CONTROL` and `BESIDE_NAMED` bits,
+ * for a part that leaves the field's id or name to another control. The
+ * server cannot know of one yet, so it reads 0 until hydration.
+ */
+export function useFieldPresence(store: CountStore): number {
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      store.presence.add(listener);
+      return () => {
+        store.presence.delete(listener);
+      };
+    },
+    [store],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => (store.controls > 0 ? BESIDE_CONTROL : 0) | (store.named > 0 ? BESIDE_NAMED : 0),
+    () => 0,
   );
 }
 

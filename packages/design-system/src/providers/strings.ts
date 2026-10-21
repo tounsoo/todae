@@ -88,6 +88,8 @@ export interface Strings {
   stepPending: string;
   /** Steps.Item's hidden status word for a step with an `error`. */
   stepError: string;
+  /** What a required Field.DatePicker, Field.TimePicker or Field.DateTimePicker button is described by, since a button cannot say `aria-required`. */
+  required: string;
   /** Text of a control the browser reports empty though it is required. */
   valueMissing: string;
   /** Text of an `email` input whose value is not an email address. */
@@ -108,6 +110,10 @@ export interface Strings {
   rangeUnderflow: (min: string) => string;
   /** Text of a value above the control's `max`. `max` is the attribute's text. */
   rangeOverflow: (max: string) => string;
+  /** Text of a date, time, or date and time before the control's `min`. `min` is in the field's own format. */
+  dateRangeUnderflow: (min: string) => string;
+  /** Text of a date, time, or date and time after the control's `max`. `max` is in the field's own format. */
+  dateRangeOverflow: (max: string) => string;
   /** Text of a value that does not fit the control's `step`. */
   stepMismatch: string;
   /** Form.Summary's title, with the number of problems it lists. */
@@ -157,6 +163,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   stepCurrent: 'In progress',
   stepPending: 'Not started',
   stepError: 'Failed',
+  required: 'Required',
   valueMissing: 'This field is required',
   typeMismatchEmail: 'Enter an email address',
   typeMismatchUrl: 'Enter a URL',
@@ -167,6 +174,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   tooLong: (max) => `Use at most ${max} ${max === 1 ? 'character' : 'characters'}`,
   rangeUnderflow: (min) => `Enter ${min} or more`,
   rangeOverflow: (max) => `Enter ${max} or less`,
+  dateRangeUnderflow: (min) => `Enter ${min} or later`,
+  dateRangeOverflow: (max) => `Enter ${max} or earlier`,
   stepMismatch: 'Enter a value that fits the allowed steps',
   formErrors: (count) => `${count} ${count === 1 ? 'problem' : 'problems'} to fix`,
 });

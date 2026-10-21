@@ -1,7 +1,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Field } from '../index.js';
+import { Field, useField } from '../index.js';
 
 afterEach(cleanup);
 
@@ -49,5 +50,36 @@ describe('what a form submits', () => {
         </Field.Root>,
       ),
     ).toEqual([['tags', 'dr']]);
+  });
+});
+
+// The server cannot know which control took the field's name, so the control itself says.
+describe('on the server', () => {
+  function Stars() {
+    const field = useField();
+    return (
+      <>
+        <input {...field.getControlProps({ 'aria-label': 'Stars' })} defaultValue="typed" />
+        <input {...field.getValueInputProps({ type: 'text', value: '3' })} />
+      </>
+    );
+  }
+
+  it('names the field once when a control that sends is beside its value input', () => {
+    const html = renderToString(
+      <Field.Root name="stars" aria-label="Stars">
+        <Stars />
+      </Field.Root>,
+    );
+    expect(html.match(/name="stars"/g)).toHaveLength(1);
+  });
+
+  it('names a ChipInput\'s text and no more, whatever its value input holds', () => {
+    const html = renderToString(
+      <Field.Root name="tags" aria-label="Tags">
+        <Field.ChipInput chips={['a']} inputValue="" onInputValueChange={noop} onCommit={noop} onChipRemove={noop} />
+      </Field.Root>,
+    );
+    expect(html.match(/name="tags"/g)).toHaveLength(1);
   });
 });

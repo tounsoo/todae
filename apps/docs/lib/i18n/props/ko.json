@@ -717,8 +717,8 @@
       "ko": "셸을 유효하지 않음으로 표시하고 입력에 aria-invalid를 설정합니다."
     },
     "customValidity": {
-      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds.",
-      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
+      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds.",
+      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 Field.DatePicker처럼 값 입력(value input)에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
     },
     "id": {
       "en": "Input id. Auto-generated when omitted.",

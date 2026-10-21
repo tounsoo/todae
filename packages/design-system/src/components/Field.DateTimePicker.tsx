@@ -16,7 +16,8 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDateTime, boundFormat } from './Field.shared.js';
+import { useFieldPicker, htmlDateTime } from './Field.shared.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
@@ -232,6 +233,7 @@ export function DateTimePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The calendar's Tab stop: the date, or else today or the nearest date in range.
     focusSelector: CALENDAR_TAB_STOP,
   });
@@ -263,9 +265,10 @@ export function DateTimePicker({
           max: max && htmlDateTime(max),
           // The list picks any time, so no step is off.
           step: 'any',
-          bound: boundFormat((raw) => dateTimeLabel(Temporal.PlainDateTime.from(raw), locale)),
+          bound: { min: min && dateTimeLabel(min, locale), max: max && dateTimeLabel(max, locale) },
         })}
       />
+      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
       {/* Mounted while open only: a form can hold many date and time pickers. */}
       {picker.shown ? (
         <Popover.Root

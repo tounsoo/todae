@@ -1,6 +1,6 @@
 import type { Strings } from '../providers/strings.js';
 import type { Dismissal, FormErrors, Reading, SummaryEntry } from './Form.context.js';
-import { describeValidity, focusTargetFor, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import { describeValidity, focusTargetFor, isValidityCarrier, reachTarget, type FormFieldError, type ValidityCarrier } from './validity.js';
 
 export const SCOPE_ATTRIBUTE = 'data-todae-validation-scope';
 export const SCOPE_SELECTOR = '[data-todae-validation-scope]';
@@ -111,15 +111,11 @@ export function labelOf(carrier: ValidityCarrier, scope: Element): string {
 
 /** What a scope's controls say now. */
 export function readScope(scope: Element, strings: Strings): Reading[] {
-  return carriersIn(scope, { own: true, named: true }).map((carrier) => ({
-    carrier,
-    name: carrier.name,
-    native: describeValidity(carrier, strings),
-    label: labelOf(carrier, scope),
+  return carriersIn(scope, { own: true, named: true }).map((carrier) => {
     // A value input is not what a person reaches: its field's control is.
-    id: focusTargetFor(carrier).id,
-    disabled: carrier.matches(':disabled') || focusTargetFor(carrier).matches(':disabled'),
-  }));
+    const { target, disabled } = reachTarget(carrier);
+    return { carrier, name: carrier.name, native: describeValidity(carrier, strings), label: labelOf(carrier, scope), id: target.id, disabled };
+  });
 }
 
 /**

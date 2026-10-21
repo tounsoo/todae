@@ -128,14 +128,8 @@ export function ChipInput({
       onKeyDown={onKeyDown}
     />
   );
-  // A form has only ever sent the text being typed, not the chips, so this has no name and sends nothing. It is empty exactly when there are no chips, which `required` checks.
-  const carrier = (
-    <input
-      {...field.getValueInputProps({ type: 'text', value: chips.join(','), required })}
-      name={undefined}
-      disabled={disabled}
-    />
-  );
+  // A form has only ever sent the text being typed, not the chips, so the input above sends it and this sends nothing. It is empty exactly when there are no chips, which `required` checks.
+  const carrier = <input {...field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required })} />;
   const measure =
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>

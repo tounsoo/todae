@@ -16,7 +16,8 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDate, boundFormat } from './Field.shared.js';
+import { useFieldPicker, htmlDate } from './Field.shared.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -52,6 +53,11 @@ export type FieldDatePickerProps = {
   ComponentPropsWithRef<'button'>,
   'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
 >;
+
+/** A date as the button shows it, such as "Oct 7, 2026", and as a message names it. */
+export function dateLabel(value: Temporal.PlainDate, locale: string | undefined) {
+  return isoDate(value).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY });
+}
 
 /**
  * A button that opens a Calendar in a popover. On its own it is the field's
@@ -93,6 +99,7 @@ export function DatePicker({
     defaultOpen,
     onOpenChange,
     style,
+    required,
     // The calendar's Tab stop: the date, or else today or the nearest date in range.
     focusSelector: CALENDAR_TAB_STOP,
   });
@@ -107,7 +114,7 @@ export function DatePicker({
       >
         {showValue ? (
           <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value ? isoDate(value).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
+            {value ? dateLabel(value, locale) : placeholder}
           </span>
         ) : null}
         <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
@@ -122,9 +129,10 @@ export function DatePicker({
           required,
           min: min && htmlDate(isoDate(min)),
           max: max && htmlDate(isoDate(max)),
-          bound: boundFormat((raw) => isoDate(Temporal.PlainDate.from(raw)).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY })),
+          bound: { min: min && dateLabel(min, locale), max: max && dateLabel(max, locale) },
         })}
       />
+      {required ? <VisuallyHidden.Root id={picker.requiredId}>{strings.required}</VisuallyHidden.Root> : null}
       {/* Mounted while open only: a form can hold many date pickers. */}
       {picker.shown ? (
         <Popover.Root
