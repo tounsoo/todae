@@ -99,13 +99,12 @@ function shows(viewport: HTMLElement | null): boolean {
   return viewport?.checkVisibility() === true;
 }
 
-// What the views below the shown one get back on a pop, recorded as a
-// Drilldown.Trigger pushes: the trigger that pushed each view, and the scroll
-// offset of each view a push covered.
-type Memory = { triggers: Map<string, HTMLElement>; offsets: Map<string, number> };
+// What a view a forward change covered gets back on a pop: its scroll offset
+// and the Drilldown.Trigger in it that pushed the view above, if one did.
+type Covered = { offset: number; trigger: HTMLElement | null };
 
 // A trigger that pushed a view takes focus back while it is still in the view below and can take it.
-function canTakeFocusBack(trigger: HTMLElement | undefined, view: HTMLElement): trigger is HTMLElement {
+function canTakeFocusBack(trigger: HTMLElement | null | undefined, view: HTMLElement): trigger is HTMLElement {
   return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
 }
 
@@ -113,7 +112,9 @@ const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
   const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
-  const memory = useRef<Memory>({ triggers: new Map(), offsets: new Map() });
+  const covered = useRef(new Map<string, Covered>());
+  // The trigger of the last push, until the change it asked for starts.
+  const opener = useRef<{ view: string; trigger: HTMLElement } | null>(null);
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -130,14 +131,22 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     // stack.
     const ownsFocus = !active || active === active.ownerDocument.body || leaving?.contains(active) || backRef.current === active;
     const top = next.to.at(-1);
-    const scrollTop = next.direction === 'back' && top !== undefined ? (memory.current.offsets.get(top) ?? 0) : 0;
+    const below = next.from.at(-1);
+    for (const view of covered.current.keys()) {
+      if (!next.to.includes(view)) covered.current.delete(view);
+    }
+    // Before the scroll goes back to the top, for a push and a controlled jump alike.
+    if (next.direction === 'forward' && below !== undefined && below !== top && next.to.includes(below)) {
+      const pushed = opener.current;
+      covered.current.set(below, { offset: scroller?.scrollTop ?? 0, trigger: pushed && pushed.view === top ? pushed.trigger : null });
+    }
+    opener.current = null;
+    const back = next.direction === 'back' && top !== undefined ? covered.current.get(top) : undefined;
+    const scrollTop = back?.offset ?? 0;
     if (scroller) scroller.scrollTop = scrollTop;
     if (entering && ownsFocus) {
-      // The view just above the new top: a jump back several views returns
-      // to the trigger in the view it lands on.
-      const child = next.from[next.to.length];
-      const trigger = child === undefined ? undefined : memory.current.triggers.get(child);
-      const returnTo = next.direction === 'back' && canTakeFocusBack(trigger, entering) ? trigger : null;
+      const trigger = back?.trigger;
+      const returnTo = canTakeFocusBack(trigger, entering) ? trigger : null;
       const initialFocus = next.direction === 'forward' && top !== undefined ? views.current.get(top)?.initialFocusRef?.current : null;
       focusWithoutScroll(returnTo ?? initialFocus ?? firstTabbable(entering) ?? entering);
     }
@@ -153,10 +162,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
         }
         return;
       }
-      const top = stack.at(-1);
-      const scroller = viewportRef.current && scrollParent(viewportRef.current);
-      if (top !== undefined) memory.current.offsets.set(top, scroller?.scrollTop ?? 0);
-      memory.current.triggers.set(next, trigger);
+      opener.current = { view: next, trigger };
       change([...stack, next], 'push');
     },
     [change, stack],
@@ -204,8 +210,8 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const controlled = value !== undefined;
   useLayoutEffect(() => {
     if (present !== false || controlled || sameStack(stack, defaultValue)) return;
-    memory.current.triggers.clear();
-    memory.current.offsets.clear();
+    covered.current.clear();
+    opener.current = null;
     change(defaultValue, 'reset');
     reset(defaultValue);
   }, [present, controlled, defaultValue, change, reset, stack]);

@@ -160,53 +160,24 @@ describe('Drilldown in a browser', () => {
     expect(onValueChange).toHaveBeenCalledTimes(4);
   });
 
-  it('scrolls to the top on push and brings back the offset on pop', async () => {
-    const rows = Array.from({ length: 40 }, (_, i) => `Item ${i + 1}`);
-    await openDialog(
-      <Themed>
-        <Drawer.Root open onOpenChange={() => undefined}>
-          <Drilldown.Root defaultValue={['list']}>
-            <Drawer.Header>
-              <Drilldown.Back />
-              <Drawer.Title>
-                <Drilldown.Label />
-              </Drawer.Title>
-            </Drawer.Header>
-            <Drawer.Body data-testid="body">
-              <Drilldown.Viewport data-testid="viewport">
-                <Drilldown.View value="list" label="Items">
-                  {rows.map((row) => (
-                    <div key={row}>
-                      <Drilldown.Trigger value={row} variant="ghost">
-                        {row}
-                      </Drilldown.Trigger>
-                    </div>
-                  ))}
-                </Drilldown.View>
-                {rows.map((row) => (
-                  <Drilldown.View key={row} value={row} label={row}>
-                    <p>{row} details</p>
-                  </Drilldown.View>
-                ))}
-              </Drilldown.Viewport>
-            </Drawer.Body>
-          </Drilldown.Root>
-        </Drawer.Root>
-      </Themed>,
-    );
-    const body = screen.getByTestId('body');
-    await waitFor(() => expect(body.scrollHeight).toBeGreaterThan(body.clientHeight + 400));
-    const trigger = screen.getByRole('button', { name: 'Item 30' });
-    trigger.scrollIntoView({ block: 'center' });
-    const offset = body.scrollTop;
-    expect(offset).toBeGreaterThan(300);
-    trigger.focus();
-    await userEvent.keyboard('{Enter}');
-    expect(body.scrollTop).toBe(0);
-    await settled();
-    await userEvent.click(screen.getByRole('button', { name: 'Back to Items' }));
-    expect(body.scrollTop).toBe(offset);
-    expect(document.activeElement).toBe(trigger);
+  it('scrolls to the top on push and brings back the offset on pop, after a trigger or a controlled change', async () => {
+    for (const controlled of [false, true]) {
+      await openDialog(<ScrollList controlled={controlled} />);
+      const body = screen.getByTestId('body');
+      await waitFor(() => expect(body.scrollHeight).toBeGreaterThan(body.clientHeight + 400));
+      const row = screen.getByRole('button', { name: 'Item 30' });
+      row.scrollIntoView({ block: 'center' });
+      const offset = body.scrollTop;
+      expect(offset).toBeGreaterThan(300);
+      row.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(body.scrollTop).toBe(0);
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Items' }));
+      expect(body.scrollTop).toBe(offset);
+      if (!controlled) expect(document.activeElement).toBe(row);
+      cleanupAll();
+    }
   });
 
   it('slides the new view in from the inline end, from the left in right-to-left text', async () => {
@@ -669,6 +640,52 @@ function InPopover({
           </Drilldown.Viewport>
         </Drilldown.Root>
       </Popover.Root>
+    </Themed>
+  );
+}
+
+function ScrollList({ controlled = false }: { controlled?: boolean }) {
+  const rows = Array.from({ length: 40 }, (_, i) => `Item ${i + 1}`);
+  const [stack, setStack] = useState<readonly string[]>(['list']);
+  const value = controlled ? { value: stack, onValueChange: setStack } : { defaultValue: ['list'] };
+  return (
+    <Themed>
+      <Drawer.Root open onOpenChange={() => undefined}>
+        <Drilldown.Root {...value}>
+          <Drawer.Header>
+            <Drilldown.Back />
+            <Drawer.Title>
+              <Drilldown.Label />
+            </Drawer.Title>
+          </Drawer.Header>
+          <Drawer.Body data-testid="body">
+            <Drilldown.Viewport data-testid="viewport">
+              <Drilldown.View value="list" label="Items">
+                {rows.map((row) =>
+                  controlled ? (
+                    <div key={row}>
+                      <Button.Root variant="ghost" onClick={() => setStack(['list', row])}>
+                        {row}
+                      </Button.Root>
+                    </div>
+                  ) : (
+                    <div key={row}>
+                      <Drilldown.Trigger value={row} variant="ghost">
+                        {row}
+                      </Drilldown.Trigger>
+                    </div>
+                  ),
+                )}
+              </Drilldown.View>
+              {rows.map((row) => (
+                <Drilldown.View key={row} value={row} label={row}>
+                  <p>{row} details</p>
+                </Drilldown.View>
+              ))}
+            </Drilldown.Viewport>
+          </Drawer.Body>
+        </Drilldown.Root>
+      </Drawer.Root>
     </Themed>
   );
 }
