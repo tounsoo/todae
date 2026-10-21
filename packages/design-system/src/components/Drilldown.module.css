@@ -12,9 +12,11 @@
   }
 
   /* Slid by a logical offset, not a transform, so it flips with the text and
-     a tooltip anchored inside stays on its trigger. */
+     a tooltip anchored inside stays on its trigger. The offset at rest is a
+     length, so the slide interpolates instead of jumping from or to auto. */
   .view {
     position: relative;
+    inset-inline-start: 0;
     grid-area: 1 / 1;
     min-inline-size: 0;
   }

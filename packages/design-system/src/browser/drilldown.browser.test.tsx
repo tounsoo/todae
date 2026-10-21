@@ -516,6 +516,29 @@ describe('Drilldown in a browser', () => {
     expect(document.activeElement).toBe(next);
   });
 
+  it('moves the views part of the way at the middle of the slide, in both text directions', async () => {
+    for (const dir of [undefined, 'rtl'] as const) {
+      await openDialog(<SettingsDialog dir={dir} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Account' }));
+      const port = screen.getByTestId('viewport').getBoundingClientRect();
+      for (const label of ['Account', 'Settings']) {
+        for (const animation of view(label).getAnimations()) {
+          animation.pause();
+          animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 2;
+        }
+      }
+      const offset = (label: string) => {
+        const box = view(label).getBoundingClientRect();
+        return dir === 'rtl' ? port.right - box.right : box.left - port.left;
+      };
+      // Coming in from the inline end, and the view below shifting toward the inline start.
+      expect(offset('Account')).toBeGreaterThan(1);
+      expect(offset('Account')).toBeLessThan(port.width - 1);
+      expect(offset('Settings')).toBeLessThan(-1);
+      expect(offset('Settings')).toBeGreaterThan(-0.3 * port.width + 1);
+      cleanupAll();
+    }
+  });
 });
 
 function cleanupAll() {
