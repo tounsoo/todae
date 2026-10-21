@@ -61,6 +61,7 @@ export const RESERVED_ROOTS = [
   'nav',
   'picker',
   'calendar',
+  'drilldown',
   'opacity',
   'shadow',
 ] as const;

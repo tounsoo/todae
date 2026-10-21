@@ -950,6 +950,11 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'calendar.nav.icon.size',
   'calendar.weekday.fg',
   'calendar.weekday.font.weight',
+  'drilldown.back.icon.size',
+  'drilldown.motion.duration',
+  'drilldown.motion.easing.enter',
+  'drilldown.motion.easing.exit',
+  'drilldown.ring.focus',
 ] as const;
 
 export const THEME_OVERRIDE_TYPES = {
@@ -1896,6 +1901,11 @@ export const THEME_OVERRIDE_TYPES = {
   'calendar.nav.icon.size': 'dimension',
   'calendar.weekday.fg': 'color',
   'calendar.weekday.font.weight': 'fontWeight',
+  'drilldown.back.icon.size': 'dimension',
+  'drilldown.motion.duration': 'duration',
+  'drilldown.motion.easing.enter': 'cubicBezier',
+  'drilldown.motion.easing.exit': 'cubicBezier',
+  'drilldown.ring.focus': 'color',
 } as const;
 
 export const CONTRAST_PAIRS: readonly { fg: string; bg: string; min: number; over?: readonly string[] }[] = [

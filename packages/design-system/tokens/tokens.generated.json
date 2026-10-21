@@ -14527,6 +14527,76 @@
         "name": "contract"
       },
       "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
+    },
+    {
+      "path": "drilldown.back.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-drilldown-back-icon-size",
+      "cssValue": "var(--todae-button-base-icon-size)",
+      "ref": "button.base.icon.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph."
+    },
+    {
+      "path": "drilldown.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-drilldown-motion-duration",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph."
+    },
+    {
+      "path": "drilldown.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-drilldown-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph."
+    },
+    {
+      "path": "drilldown.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-drilldown-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph."
+    },
+    {
+      "path": "drilldown.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-drilldown-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph."
     }
   ]
 }

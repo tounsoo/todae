@@ -1,0 +1,20 @@
+{
+  "drilldown": {
+    "$description": "Drilldown.Viewport and Drilldown.Back: the slide and height change between views, a focused view's ring, and the back glyph.",
+    "back": {
+      "icon": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/button/base/icon/size/$value" } }
+      }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      }
+    }
+  }
+}
