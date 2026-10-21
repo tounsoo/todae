@@ -13,6 +13,7 @@ const entries = {
   label: src('server/label.ts'),
   badge: src('server/badge.ts'),
   card: src('server/card.ts'),
+  'data-list': src('server/data-list.ts'),
   message: src('server/message.ts'),
   breadcrumbs: src('server/breadcrumbs.ts'),
   grid: src('server/grid.ts'),

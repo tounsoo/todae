@@ -11,6 +11,7 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  DataList,
   Message,
   Attachment,
   Steps,
@@ -546,6 +547,20 @@ const cases: Case[] = [
           <Card.Root>
             <Part {...p} />
           </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['DataList.Root', (p) => <DataList.Root {...p} />],
+  ...(['Item', 'Term', 'Details'] as const).map(
+    (part): Case => [
+      `DataList.${part}`,
+      (p) => {
+        const Part = DataList[part] as (props: Native) => ReactNode;
+        return (
+          <DataList.Root>
+            <Part {...p} />
+          </DataList.Root>
         );
       },
     ],

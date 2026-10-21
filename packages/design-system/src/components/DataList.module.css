@@ -1,0 +1,48 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-datalist-gap-row);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    margin: 0;
+    font-size: var(--todae-datalist-font-size);
+    line-height: var(--todae-datalist-leading);
+  }
+
+  /* The term takes a fixed column and the details the rest. When a row
+     cannot fit the term and the details' minimum, the details wrap below
+     it, so a narrow list stacks without a container query (which cannot
+     read a token). */
+  .item {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--todae-datalist-gap-column);
+    row-gap: var(--todae-datalist-gap-stacked);
+    min-inline-size: 0;
+  }
+
+  .term {
+    flex: 0 0 min(var(--todae-datalist-term-width), 100%);
+    min-inline-size: 0;
+    margin: 0;
+    color: var(--todae-datalist-term-fg);
+    font-weight: var(--todae-datalist-term-font-weight);
+  }
+
+  .details {
+    flex: 1 1 var(--todae-datalist-details-min-width);
+    min-inline-size: 0;
+    margin: 0;
+    color: var(--todae-datalist-details-fg);
+  }
+
+  .root[data-orientation='vertical'] > .item {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .root[data-orientation='vertical'] > .item > :where(.term, .details) {
+    flex: none;
+  }
+}
