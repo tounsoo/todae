@@ -13,7 +13,7 @@ import {
   type MouseEvent,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -176,9 +176,6 @@ export function isoDate<T extends Temporal.PlainDate | null | undefined>(date: T
   return (date && date.calendarId !== 'iso8601' ? date.withCalendar('iso8601') : date) as T;
 }
 
-const same = (a: Temporal.PlainDate | null, b: Temporal.PlainDate | null) =>
-  a === b || (a !== null && b !== null && a.equals(b));
-
 const sameRange = (a: DateRange | null, b: DateRange | null) =>
   a === b || (a !== null && b !== null && a.start.equals(b.start) && a.end.equals(b.end));
 
@@ -197,38 +194,58 @@ function isoRange(range: DateRange | null | undefined): DateRange | null | undef
 const spanOf = (a: Temporal.PlainDate, b: Temporal.PlainDate): DateRange =>
   compare(a, b) <= 0 ? { start: a, end: b } : { start: b, end: a };
 
-function Root({
-  mode = 'single',
-  value: valueProp,
-  defaultValue,
-  onValueChange,
-  min: minProp,
-  max: maxProp,
-  isDateDisabled,
-  defaultMonth,
-  firstDayOfWeek,
-  locale: localeProp,
-  disabled: disabledProp,
-  className,
-  children,
-  ...props
-}: CalendarRootProps) {
+// One range per date, so a controlled date keeps one value across renders.
+const oneDayRanges = /* @__PURE__ */ new WeakMap<Temporal.PlainDate, DateRange>();
+function oneDay(date: Temporal.PlainDate | null | undefined) {
+  if (!date) return date;
+  let range = oneDayRanges.get(date);
+  if (!range) {
+    range = { start: date, end: date };
+    oneDayRanges.set(date, range);
+  }
+  return range;
+}
+
+/** Either mode's value props as a range: single mode holds its date as a one-day range. */
+function rangeProps({ mode, value, defaultValue, onValueChange }: CalendarRootProps) {
+  if (mode === 'range') {
+    return { value: isoRange(value), defaultValue: isoRange(defaultValue) ?? null, onValueChange };
+  }
+  return {
+    value: oneDay(isoDate(value)),
+    defaultValue: oneDay(isoDate(defaultValue)) ?? null,
+    onValueChange: onValueChange && ((next: DateRange) => onValueChange(next.start)),
+  };
+}
+
+function Root(rootProps: CalendarRootProps) {
+  const {
+    mode = 'single',
+    value: _value,
+    defaultValue: _defaultValue,
+    onValueChange: _onValueChange,
+    min: minProp,
+    max: maxProp,
+    isDateDisabled,
+    defaultMonth,
+    firstDayOfWeek,
+    locale: localeProp,
+    disabled: disabledProp,
+    className,
+    children,
+    ...props
+  } = rootProps;
   const { disabled } = useFieldsetState({ disabled: disabledProp });
   const strings = useStrings();
   const announce = useAnnouncer();
-  const range = mode === 'range';
+  const [firstMode] = useState(mode);
+  if (process.env.NODE_ENV !== 'production' && mode !== firstMode) {
+    console.error('Calendar.Root cannot change mode after it mounts; give it a new key instead');
+  }
   const min = isoDate(minProp);
   const max = isoDate(maxProp);
-  // One store for either mode; a date in single mode, a range in range mode.
-  const [stored, setValue] = useControlledValue<Temporal.PlainDate | DateRange | null>(
-    range ? isoRange(valueProp as DateRange | null | undefined) : isoDate(valueProp as Temporal.PlainDate | null | undefined),
-    (range ? isoRange(defaultValue as DateRange | null | undefined) : isoDate(defaultValue as Temporal.PlainDate | null | undefined)) ??
-      null,
-    onValueChange as ((next: Temporal.PlainDate | DateRange | null) => void) | undefined,
-  );
-  const date = range ? null : (stored as Temporal.PlainDate | null);
-  const rangeValue = range ? (stored as DateRange | null) : null;
-  const start = range ? (rangeValue?.start ?? null) : date;
+  const { onValueChange, ...ends } = rangeProps(rootProps);
+  const [value, setValue] = useControlledState<DateRange | null>(ends.value, ends.defaultValue);
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
   const today = useMemo(() => (todayText === null ? null : Temporal.PlainDate.from(todayText)), [todayText]);
   const locale = useMemo(
@@ -239,24 +256,19 @@ function Root({
   // Null until something sets it: then the grid starts on today, which a
   // server render and hydration do not know.
   const [focusedState, setFocused] = useState<Temporal.PlainDate | null>(
-    () => start ?? isoDate(defaultMonth?.toPlainDate({ day: 1 })) ?? null,
+    () => value?.start ?? isoDate(defaultMonth?.toPlainDate({ day: 1 })) ?? null,
   );
   const startOrToday = focusedState ?? today;
   const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
   const [anchor, setAnchor] = useState<Temporal.PlainDate | null>(null);
   const [hovered, setHovered] = useState<Temporal.PlainDate | null>(null);
   // A value from outside, such as one typed in a text input beside Field.DatePicker, moves the
-  // grid to it, and in range mode drops a range in progress.
-  const [lastDate, setLastDate] = useState(date);
-  const [lastRange, setLastRange] = useState(rangeValue);
-  if (!same(date, lastDate)) {
-    setLastDate(date);
-    if (date) setFocused(date);
-  }
-  if (!sameRange(rangeValue, lastRange)) {
-    setLastRange(rangeValue);
+  // grid to its start and drops a range in progress.
+  const [lastValue, setLastValue] = useState(value);
+  if (!sameRange(value, lastValue)) {
+    setLastValue(value);
     setAnchor(null);
-    if (rangeValue) setFocused(rangeValue.start);
+    if (value) setFocused(value.start);
   }
   const focusRequest = useRef(false);
   const headingId = useDomId();
@@ -353,32 +365,26 @@ function Root({
   );
   const select = useCallback(
     (date: Temporal.PlainDate) => {
-      if (disabled || unavailable(date)) return;
-      if (!range) {
-        setFocused(date);
-        // A pick is reported even when it is the date already selected.
-        setValue(date);
-        return;
-      }
-      if (!anchor) {
-        setFocused(date);
+      if (disabled || unavailable(date) || (anchor && !reachable(date))) return;
+      setFocused(date);
+      // In single mode a pick is a whole range of one day.
+      if (mode === 'range' && !anchor) {
         setAnchor(date);
         setHovered(null);
         announce(strings.pickEndDate);
         return;
       }
-      if (!reachable(date)) return;
-      const next = spanOf(anchor, date);
-      setFocused(date);
+      // A new object, so a pick is reported even when it is the value already selected.
+      const next = spanOf(anchor ?? date, date);
       setAnchor(null);
       // The grid stays where the range ended, not on its start as for a value from outside.
-      setLastRange(next);
+      setLastValue(next);
       setValue(next);
+      onValueChange?.(next);
     },
-    [anchor, announce, disabled, range, reachable, setValue, strings.pickEndDate, unavailable],
+    [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable],
   );
   const clearAnchor = useCallback(() => setAnchor(null), []);
-  const value = useMemo(() => (range ? rangeValue : date && { start: date, end: date }), [date, range, rangeValue]);
   const shown = useMemo(() => {
     if (!anchor) return value;
     const end = hovered ?? focused;

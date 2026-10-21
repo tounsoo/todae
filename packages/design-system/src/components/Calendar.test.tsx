@@ -704,6 +704,36 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['2025', '2026', '2027']);
   });
 
+  it('reports a mode changed after mounting, and still hands each mode its own value', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onDate = vi.fn();
+    const onRange = vi.fn();
+    const { rerender } = render(
+      <Calendar.Root
+        aria-label="Stay"
+        locale="en-US"
+        defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+        onValueChange={onDate}
+      >
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(october(3));
+    expect(onDate).toHaveBeenCalledWith(date('2026-10-03'));
+    expect(error).not.toHaveBeenCalled();
+    rerender(
+      <Calendar.Root aria-label="Stay" locale="en-US" mode="range" onValueChange={onRange}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('cannot change mode'));
+    fireEvent.click(october(5));
+    fireEvent.click(october(8));
+    expect(onRange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('2026-10-08') });
+    expect(selectedCells()).toEqual(['5', '6', '7', '8']);
+    error.mockRestore();
+  });
+
   it('keeps its own range when uncontrolled', () => {
     const onValueChange = vi.fn();
     render(
