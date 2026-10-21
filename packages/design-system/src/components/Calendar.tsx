@@ -268,6 +268,7 @@ function Root(rootProps: CalendarRootProps) {
   if (!sameRange(value, lastValue)) {
     setLastValue(value);
     setAnchor(null);
+    setHovered(null);
     if (value) setFocused(value.start);
   }
   const focusRequest = useRef(false);
@@ -375,13 +376,13 @@ function Root(rootProps: CalendarRootProps) {
       // In single mode a pick is a whole range of one day.
       if (mode === 'range' && !anchor) {
         setAnchor(date);
-        setHovered(null);
         announce(strings.pickEndDate);
         return;
       }
       // A new object, so a pick is reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
       setAnchor(null);
+      setHovered(null);
       // The grid stays where the range ended, not on its start as for a value from outside.
       setLastValue(next);
       setValue(next);
@@ -461,6 +462,7 @@ function Root(rootProps: CalendarRootProps) {
           event.preventDefault();
           event.stopPropagation();
           setAnchor(null);
+          setHovered(null);
         })}
       >
         {children}

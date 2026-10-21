@@ -601,6 +601,46 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['5']);
   });
 
+  it('previews a new first pick to the focused day, not a day hovered before', () => {
+    function Outside() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue({ start: date('2026-10-01'), end: date('2026-10-02') })}>
+            set
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={setValue}
+          >
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Outside />);
+    const inRange = () => [...grid().querySelectorAll('[data-in-range]')].map((cell) => cell.textContent);
+    // Escape, a completed range and a value from outside each drop the first pick.
+    const drops = [
+      () => fireEvent.keyDown(october(5), { key: 'Escape' }),
+      () => fireEvent.click(october(8)),
+      () => fireEvent.click(screen.getByRole('button', { name: 'set' })),
+    ];
+    for (const drop of drops) {
+      fireEvent.click(october(5));
+      fireEvent.pointerEnter(october(8));
+      expect(inRange()).toEqual(['6', '7']);
+      drop();
+      fireEvent.click(october(12));
+      expect(inRange()).toEqual([]);
+      fireEvent.keyDown(october(12), { key: 'Escape' });
+    }
+  });
+
   it('announces that the end date is next after the first pick', async () => {
     render(<RangeControlled />);
     fireEvent.click(october(5));
