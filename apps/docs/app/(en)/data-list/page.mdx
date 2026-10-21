@@ -1,0 +1,79 @@
+import { DataListOrder, DataListVertical } from '../../../components/demos/DataListDemo';
+
+# DataList
+
+A list of key and value pairs: an order summary, a profile, a settings pane, the input of a tool call. It is a native `dl`, so each term and its details are a `dt` and a `dd`. The gaps follow density, and the term and details colors, the term weight and the term column width come from the `datalist` contract tokens.
+
+```tsx
+<DataList.Root aria-label="Order summary">
+  <DataList.Item>
+    <DataList.Term>Order</DataList.Term>
+    <DataList.Details>#10482</DataList.Details>
+  </DataList.Item>
+  <DataList.Item>
+    <DataList.Term>Status</DataList.Term>
+    <DataList.Details>Shipped on 2027-01-04</DataList.Details>
+  </DataList.Item>
+  <DataList.Item>
+    <DataList.Term>Total</DataList.Term>
+    <DataList.Details>$42.00</DataList.Details>
+  </DataList.Item>
+</DataList.Root>
+```
+
+<Example>
+  <DataListOrder />
+</Example>
+
+Server Components can import it from `@tounsoo/todae/data-list`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module. The parts use no context, so they don't throw outside `DataList.Root`.
+
+`DataList.Item` is a `div` that holds one term and its details. A `div` is valid inside a `dl` for this, and it is the one row you can style, move or key. Give each item one `DataList.Term` and one `DataList.Details`. HTML allows more than one `dd` for a term, and they do not break the layout, but a list of values reads better inside one `DataList.Details`.
+
+## Orientation
+
+`orientation="vertical"` always puts the term above its details. The default, `"horizontal"`, puts the term in a column beside the details. The value reaches CSS as `data-orientation`.
+
+```tsx
+<DataList.Root orientation="vertical" aria-label="Profile">
+  <DataList.Item>
+    <DataList.Term>Name</DataList.Term>
+    <DataList.Details>Mina Park</DataList.Details>
+  </DataList.Item>
+  <DataList.Item>
+    <DataList.Term>Email</DataList.Term>
+    <DataList.Details>mina@example.com</DataList.Details>
+  </DataList.Item>
+</DataList.Root>
+```
+
+<Example>
+  <DataListVertical />
+</Example>
+
+## Narrow widths
+
+A horizontal list stacks by itself when it is too narrow for the term column and a readable details column. The term keeps `datalist.term.width`, and the details wrap below it once they would be narrower than `datalist.details.min-width`. No container query is involved, so a company can change both tokens. The gap between a stacked term and its details is `datalist.gap.stacked`.
+
+## Accessible composition
+
+**Todae handles:** The `dl`, `dt` and `dd` elements, which a screen reader announces as a description list with its terms and details. Nothing is added with ARIA, and the `div` around each pair is invisible to the accessibility tree.
+
+**You supply:** A name for the list when it needs one, with `aria-label` or `aria-labelledby`. Term text that names its value on its own, such as "Total" or "Ship to".
+
+**Watch for:** Content that is not a term inside `DataList.Term`, such as a button or a form control; the `dt` is the name of the details. A `DataList` that holds data with several columns per row; that is a table, which gives each cell its column header.
+
+## When to use
+
+**When:** A set of named values for one thing, such as an order, a person, a plan or a tool call's input.
+
+**When not:** Rows of the same fields for many things → Table. Values the user edits → Field.
+
+## Props
+
+<PropsTable name="DataList.Root" />
+
+<PropsTable name="DataList.Item" />
+
+<PropsTable name="DataList.Term" />
+
+<PropsTable name="DataList.Details" />
