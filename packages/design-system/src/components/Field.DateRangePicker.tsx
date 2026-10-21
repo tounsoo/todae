@@ -1,14 +1,10 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import type { ComponentPropsWithRef } from 'react';
-import { useDomId } from './domId.js';
-import { mergeDescribedBy } from './Field.context.js';
-import { cx } from './props.js';
 import styles from './Field.module.css';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CalendarGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import type { PopoverCloseReason } from '../hooks/usePopover.js';
-import { Popover } from './Popover.js';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
@@ -17,8 +13,8 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { spanOf, type DateRange } from './dateRange.js';
-import { useFieldPicker, htmlDateText } from './Field.shared.js';
-import { FieldValueInput } from './Field.ValueInput.js';
+import { htmlDateText } from './Field.shared.js';
+import { PickerShell } from './Field.PickerShell.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
 export type FieldDateRangePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -75,104 +71,65 @@ const toDate = (date: Temporal.PlainDate) => {
 };
 
 /**
- * A button that opens a Calendar in range mode in a popover, which closes
- * once the range's second date is picked. On its own it is the field's
- * control and shows the range, and a press elsewhere in the field opens the
- * calendar. Beside any other control but a Field.ColorPicker,
- * Field.DatePicker, Field.DateRangePicker, Field.TimePicker or
- * Field.DateTimePicker, such as a Field.TextInput to type the range in, that
- * control is the field's control instead, and the button is named from the
- * dateRangePicker string. The range goes in a native text input under the
+ * A button that opens a Calendar in range mode in a popover, which closes once
+ * the range's second date is picked. On its own it is the field's control and
+ * shows the range, and a press elsewhere in the field opens the calendar.
+ * Beside any other control but a Field picker (a part that opens its own
+ * popover, as this one does), such as a Field.TextInput to type the range in,
+ * that control is the field's control instead, and the button is named from
+ * the dateRangePicker string. The range goes in a native text input under the
  * field's name unless another control took it, as an ISO 8601 interval, so
- * `required` blocks a submit and Form.Root shows it. With
- * `showValue={false}` the button shows only a calendar glyph.
+ * `required` blocks a submit and Form.Root shows it. With `showValue={false}`
+ * the button shows only a calendar glyph.
  */
 export function DateRangePicker({
   value,
   onValueChange,
   min,
   max,
-  required,
   isDateDisabled,
   firstDayOfWeek,
   locale,
   placeholder,
-  showValue = true,
-  open,
-  defaultOpen,
-  onOpenChange,
-  className,
-  style,
-  'aria-describedby': describedBy,
   ...props
 }: FieldDateRangePickerProps) {
   const strings = useStrings();
   const { calendar } = useGlyphs();
-  const textId = useDomId();
   const range = value && spanOf(value.start, value.end);
-  // The button's name is not the range, so the range it shows is its description.
-  const picker = useFieldPicker<'select'>({
-    props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
-    label: strings.dateRangePicker,
-    open,
-    defaultOpen,
-    onOpenChange,
-    style,
-    required,
-    // The calendar's Tab stop: the range's start, or else today or the nearest date in range.
-    focusSelector: CALENDAR_TAB_STOP,
-  });
   return (
-    <>
-      <button
-        {...picker.triggerProps}
-        type="button"
-        data-todae-field-picker=""
-        data-glyph-only={showValue ? undefined : ''}
-        className={cx(styles.picker, className)}
-      >
-        {showValue ? (
-          <span id={textId} className={styles.pickerText} data-placeholder={range ? undefined : ''}>
-            {range ? buttonFormat(locale).formatRange(toDate(range.start), toDate(range.end)) : placeholder}
-          </span>
-        ) : null}
-        <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
-          {glyphOr(calendar, <CalendarGlyph />)}
-        </span>
-      </button>
-      <FieldValueInput
-        {...picker.valueInput({
-          type: 'text',
-          value: range ? `${htmlDateText(isoDate(range.start))}/${htmlDateText(isoDate(range.end))}` : '',
-        })}
-      />
-      {/* Mounted while open only, so closing drops a range's first pick. */}
-      {picker.shown ? (
-        <Popover.Root
-          {...picker.popover.getPopoverProps()}
-          role="dialog"
-          aria-label={strings.dateRangePicker}
-          className={styles.datePickerPopover}
+    <PickerShell
+      {...props}
+      label={strings.dateRangePicker}
+      glyph={glyphOr(calendar, <CalendarGlyph />)}
+      text={range ? buttonFormat(locale).formatRange(toDate(range.start), toDate(range.end)) : placeholder}
+      empty={!range}
+      // The calendar's Tab stop: the range's start, or else today or the nearest date in range.
+      focusSelector={CALENDAR_TAB_STOP}
+      valueInput={{
+        type: 'text',
+        value: range ? `${htmlDateText(isoDate(range.start))}/${htmlDateText(isoDate(range.end))}` : '',
+      }}
+      popoverProps={{ role: 'dialog', 'aria-label': strings.dateRangePicker, className: styles.datePickerPopover }}
+    >
+      {({ notifyValueChange, close }) => (
+        <CalendarParts.Root
+          mode="range"
+          value={value}
+          onValueChange={(next) => {
+            notifyValueChange();
+            onValueChange?.(next);
+            close();
+          }}
+          min={min}
+          max={max}
+          isDateDisabled={isDateDisabled}
+          firstDayOfWeek={firstDayOfWeek}
+          locale={locale}
         >
-          <CalendarParts.Root
-            mode="range"
-            value={value}
-            onValueChange={(next) => {
-              picker.notifyValueChange();
-              onValueChange?.(next);
-              picker.setOpen(false, 'select');
-            }}
-            min={min}
-            max={max}
-            isDateDisabled={isDateDisabled}
-            firstDayOfWeek={firstDayOfWeek}
-            locale={locale}
-          >
-            <CalendarParts.Header />
-            <CalendarParts.Grid />
-          </CalendarParts.Root>
-        </Popover.Root>
-      ) : null}
-    </>
+          <CalendarParts.Header />
+          <CalendarParts.Grid />
+        </CalendarParts.Root>
+      )}
+    </PickerShell>
   );
 }

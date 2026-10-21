@@ -65,7 +65,7 @@ const subscribeTo = (listeners: Set<() => void>) => (listener: () => void) => {
 /**
  * A stable ref callback that counts the element it is attached to as a
  * control in the field, and as named when getControlProps gave it the field's
- * name. A Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker beside a control gives up the
+ * name. A Field picker (see useFieldPicker) beside a control gives up the
  * field's id and description, and beside a named one the field's name, so only
  * one element takes each. The count follows the
  * element after each commit, so a control that is not rendered, or a component
