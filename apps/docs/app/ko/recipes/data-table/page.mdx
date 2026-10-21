@@ -50,40 +50,49 @@ const selection = useSelection({ keys: pageRows.map((row) => row.id) });
 
 ## 일괄 작업
 
-작업은 그 대상의 이름을 붙인 `Toolbar.Root`에 넣고, 아무것도 선택되지 않았을 때도 버튼을 비활성화한 채 자리에 두세요. 그래야 행을 체크할 때 표가 움직이지 않습니다. 작업이 한 일은 [useAnnouncer](/utilities/use-announcer)로 알리세요. 삭제는 `Dialog.Root role="alertdialog"`로 확인을 받으세요. 삭제하면 선택이 비워지고, 그러면 대화 상자가 포커스를 돌려줄 Delete 버튼이 비활성화됩니다. 그래서 `restoreFocusRef`로 다른 곳을 지정합니다. 검색에 맞는 행이 남아 있으면 헤더의 체크박스, 아니면 검색 입력입니다. Cancel은 `restoreFocusRef`를 비워 두므로 포커스가 Delete로 돌아갑니다.
+작업은 그 대상의 이름을 붙인 `Toolbar.Root`에 넣고, 아무것도 선택되지 않았을 때도 버튼을 비활성화한 채 자리에 두세요. 그래야 행을 체크할 때 표가 움직이지 않습니다. 작업이 한 일은 [useAnnouncer](/utilities/use-announcer)로 알리세요. 삭제는 `Dialog.Root role="alertdialog"`로 확인을 받으세요. 삭제하면 선택이 비워지고, 그러면 대화 상자가 포커스를 돌려줄 Delete 버튼이 비활성화됩니다. 그래서 `restoreFocusRef`로 다른 곳을 지정합니다. 검색에 맞는 행이 남아 있으면 헤더의 체크박스, 아니면 검색 입력입니다. Cancel은 `restoreFocusRef`를 비워 두므로 포커스가 Delete로 돌아갑니다. 대화 상자가 묻는 개수는 따로 상태에 담아 두세요. 그래야 닫히는 동안 제목이 바뀌지 않습니다. 삭제로 페이지나 검색 결과가 비면 같은 알림에서 함께 알리세요.
 
 ```tsx
+const announce = useAnnouncer();
 const selectAll = useRef<HTMLInputElement>(null);
 const restoreFocus = useRef<HTMLElement>(null);
+const [confirming, setConfirming] = useState<number | null>(null);
+const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
+
+const confirmDelete = () => {
+  restoreFocus.current = null;
+  setConfirming(selection.value.length);
+};
 
 const remove = () => {
   const ids = new Set(selection.value);
   const shown = matches.filter((row) => !ids.has(row.id)).length;
+  const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+  const to = Math.min(current, pages);
   restoreFocus.current = shown > 0 ? selectAll.current : search.current;
   setRows(rows.filter((row) => !ids.has(row.id)));
-  setPage(Math.min(current, Math.max(1, Math.ceil(shown / PAGE_SIZE))));
+  setPage(to);
   selection.clear();
-  setConfirming(false);
-  announce(`${ids.size} deleted`);
+  setConfirming(null);
+  const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+  announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
 };
 
 <Toolbar.Root aria-label="Selected invoices">
   <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
     Mark paid
   </Button.Root>
-  <Button.Root
-    variant="secondary"
-    disabled={selection.value.length === 0}
-    onClick={() => {
-      restoreFocus.current = null;
-      setConfirming(true);
-    }}
-  >
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={confirmDelete}>
     Delete
   </Button.Root>
 </Toolbar.Root>
-<Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
-  <Dialog.Title>{`Delete ${selection.value.length} invoices?`}</Dialog.Title>
+<Dialog.Root
+  role="alertdialog"
+  open={confirming !== null}
+  onOpenChange={(open) => !open && setConfirming(null)}
+  restoreFocusRef={restoreFocus}
+>
+  <Dialog.Title>{`Delete ${invoices(confirming ?? 0)}?`}</Dialog.Title>
   <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
   <Dialog.Footer>
     <Dialog.Close>Cancel</Dialog.Close>
@@ -99,17 +108,16 @@ const remove = () => {
 ```tsx
 import { SearchX } from 'lucide-react';
 
-const announce = useAnnouncer();
-const searched = useRef(query);
+const searched = useRef(needle);
 
 useEffect(() => {
   const timer = setTimeout(() => {
-    if (searched.current === query) return;
-    searched.current = query;
-    announce(matches.length === 0 ? 'No invoices found' : `${matches.length} found`);
+    if (searched.current === needle) return;
+    searched.current = needle;
+    announce(matches.length === 0 ? 'No invoices found' : `${invoices(matches.length)} found`);
   }, 500);
   return () => clearTimeout(timer);
-}, [query, matches.length, announce]);
+}, [needle, matches.length, announce]);
 
 <Table.Row>
   <Table.Cell colSpan={5}>
@@ -135,6 +143,7 @@ useEffect(() => {
 
 ```tsx
 const goTo = (to: number) => {
+  if (to === current) return;
   setPage(to);
   announce(`Page ${to} of ${pageCount}`);
 };

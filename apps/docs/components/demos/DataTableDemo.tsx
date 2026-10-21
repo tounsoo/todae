@@ -68,7 +68,8 @@ export function DataTableInvoices() {
   const [query, setQuery] = useState('');
   const [sorted, setSorted] = useState<Sorted>({ column: 'id', direction: 'ascending' });
   const [page, setPage] = useState(1);
-  const [confirming, setConfirming] = useState(false);
+  // The number of invoices the open confirmation asks about, or null while it is closed.
+  const [confirming, setConfirming] = useState<number | null>(null);
 
   // Filter, then sort, then cut out the page. All three are your product's.
   const needle = query.trim().toLowerCase();
@@ -84,15 +85,15 @@ export function DataTableInvoices() {
 
   // Announce the number of matches once typing settles. Only a new search
   // announces, so a delete's own message isn't followed by a count.
-  const searched = useRef(query);
+  const searched = useRef(needle);
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searched.current === query) return;
-      searched.current = query;
+      if (searched.current === needle) return;
+      searched.current = needle;
       announce(matches.length === 0 ? 'No invoices found' : `${invoices(matches.length)} found`);
     }, 500);
     return () => clearTimeout(timer);
-  }, [query, matches.length, announce]);
+  }, [needle, matches.length, announce]);
 
   const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted.direction : 'none');
   const sortBy = (column: Column) => {
@@ -116,6 +117,7 @@ export function DataTableInvoices() {
   };
 
   const goTo = (to: number) => {
+    if (to === current) return;
     setPage(to);
     announce(`Page ${to} of ${pageCount}`);
   };
@@ -127,10 +129,18 @@ export function DataTableInvoices() {
     const shown = matches.filter((row) => !ids.has(row.id)).length;
     restoreFocus.current = shown > 0 ? selectAll.current : search.current;
     setRows(rows.filter((row) => !ids.has(row.id)));
-    setPage(Math.min(current, Math.max(1, Math.ceil(shown / PAGE_SIZE))));
+    const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+    const to = Math.min(current, pages);
+    setPage(to);
     selection.clear();
-    setConfirming(false);
-    announce(`${invoices(ids.size)} deleted`);
+    setConfirming(null);
+    const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+    announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
+  };
+
+  const confirmDelete = () => {
+    restoreFocus.current = null;
+    setConfirming(selected);
   };
 
   const step = (to: number, label: string) => (
@@ -161,16 +171,18 @@ export function DataTableInvoices() {
           <Button.Root variant="secondary" disabled={selected === 0} onClick={markPaid}>
             Mark paid
           </Button.Root>
-          <Button.Root variant="secondary" disabled={selected === 0} onClick={() => {
-              restoreFocus.current = null;
-              setConfirming(true);
-            }}>
+          <Button.Root variant="secondary" disabled={selected === 0} onClick={confirmDelete}>
             Delete
           </Button.Root>
         </Toolbar.Root>
       </Stack.Root>
-      <Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
-        <Dialog.Title>{`Delete ${invoices(selected)}?`}</Dialog.Title>
+      <Dialog.Root
+        role="alertdialog"
+        open={confirming !== null}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        restoreFocusRef={restoreFocus}
+      >
+        <Dialog.Title>{`Delete ${invoices(confirming ?? 0)}?`}</Dialog.Title>
         <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
         <Dialog.Footer>
           <Dialog.Close>Cancel</Dialog.Close>

@@ -50,40 +50,49 @@ const selection = useSelection({ keys: pageRows.map((row) => row.id) });
 
 ## Bulk actions
 
-Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Cancel leaves `restoreFocusRef` empty, and focus goes back to Delete.
+Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Cancel leaves `restoreFocusRef` empty, and focus goes back to Delete. Keep the count the dialog asks about in its own state, so its title doesn't change while it closes. When a delete empties the page or the search, say so in the same announcement.
 
 ```tsx
+const announce = useAnnouncer();
 const selectAll = useRef<HTMLInputElement>(null);
 const restoreFocus = useRef<HTMLElement>(null);
+const [confirming, setConfirming] = useState<number | null>(null);
+const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
+
+const confirmDelete = () => {
+  restoreFocus.current = null;
+  setConfirming(selection.value.length);
+};
 
 const remove = () => {
   const ids = new Set(selection.value);
   const shown = matches.filter((row) => !ids.has(row.id)).length;
+  const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+  const to = Math.min(current, pages);
   restoreFocus.current = shown > 0 ? selectAll.current : search.current;
   setRows(rows.filter((row) => !ids.has(row.id)));
-  setPage(Math.min(current, Math.max(1, Math.ceil(shown / PAGE_SIZE))));
+  setPage(to);
   selection.clear();
-  setConfirming(false);
-  announce(`${ids.size} deleted`);
+  setConfirming(null);
+  const after = shown === 0 ? 'No invoices found' : to !== current ? `Page ${to} of ${pages}` : '';
+  announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
 };
 
 <Toolbar.Root aria-label="Selected invoices">
   <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
     Mark paid
   </Button.Root>
-  <Button.Root
-    variant="secondary"
-    disabled={selection.value.length === 0}
-    onClick={() => {
-      restoreFocus.current = null;
-      setConfirming(true);
-    }}
-  >
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={confirmDelete}>
     Delete
   </Button.Root>
 </Toolbar.Root>
-<Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
-  <Dialog.Title>{`Delete ${selection.value.length} invoices?`}</Dialog.Title>
+<Dialog.Root
+  role="alertdialog"
+  open={confirming !== null}
+  onOpenChange={(open) => !open && setConfirming(null)}
+  restoreFocusRef={restoreFocus}
+>
+  <Dialog.Title>{`Delete ${invoices(confirming ?? 0)}?`}</Dialog.Title>
   <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
   <Dialog.Footer>
     <Dialog.Close>Cancel</Dialog.Close>
@@ -99,17 +108,16 @@ When nothing matches, render one row whose cell spans every column and holds an 
 ```tsx
 import { SearchX } from 'lucide-react';
 
-const announce = useAnnouncer();
-const searched = useRef(query);
+const searched = useRef(needle);
 
 useEffect(() => {
   const timer = setTimeout(() => {
-    if (searched.current === query) return;
-    searched.current = query;
-    announce(matches.length === 0 ? 'No invoices found' : `${matches.length} found`);
+    if (searched.current === needle) return;
+    searched.current = needle;
+    announce(matches.length === 0 ? 'No invoices found' : `${invoices(matches.length)} found`);
   }, 500);
   return () => clearTimeout(timer);
-}, [query, matches.length, announce]);
+}, [needle, matches.length, announce]);
 
 <Table.Row>
   <Table.Cell colSpan={5}>
@@ -135,6 +143,7 @@ Page with `Pagination.Root` and buttons, and render it only when there is more t
 
 ```tsx
 const goTo = (to: number) => {
+  if (to === current) return;
   setPage(to);
   announce(`Page ${to} of ${pageCount}`);
 };
