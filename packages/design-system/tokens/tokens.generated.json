@@ -9181,6 +9181,202 @@
       "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
     },
     {
+      "path": "emptystate.actions.gap",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-actions-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.description.fg",
+      "type": "color",
+      "cssVar": "--todae-emptystate-description-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.fg",
+      "type": "color",
+      "cssVar": "--todae-emptystate-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.gap",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.icon.fg",
+      "type": "color",
+      "cssVar": "--todae-emptystate-icon-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-icon-size",
+      "cssValue": "2.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.leading",
+      "type": "number",
+      "cssVar": "--todae-emptystate-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-max-width",
+      "cssValue": "28rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.padding",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-padding",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.title.fg",
+      "type": "color",
+      "cssVar": "--todae-emptystate-title-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.title.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-emptystate-title-font-size",
+      "cssValue": "var(--todae-font-size-4)",
+      "ref": "font.size.4",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.title.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-emptystate-title-font-weight",
+      "cssValue": "var(--todae-font-weight-bold)",
+      "ref": "font.weight.bold",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
+      "path": "emptystate.title.leading",
+      "type": "number",
+      "cssVar": "--todae-emptystate-title-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
+    },
+    {
       "path": "toast.border-width",
       "type": "dimension",
       "cssVar": "--todae-toast-border-width",

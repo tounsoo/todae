@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   DataList,
+  EmptyState,
   Message,
   Attachment,
   Steps,
@@ -563,6 +564,20 @@ const cases: Case[] = [
           <DataList.Root>
             <Part {...p} />
           </DataList.Root>
+        );
+      },
+    ],
+  ),
+  ['EmptyState.Root', (p) => <EmptyState.Root {...p} />],
+  ...(['Icon', 'Title', 'Description', 'Actions'] as const).map(
+    (part): Case => [
+      `EmptyState.${part}`,
+      (p) => {
+        const Part = EmptyState[part] as (props: Native) => ReactNode;
+        return (
+          <EmptyState.Root>
+            <Part {...p} />
+          </EmptyState.Root>
         );
       },
     ],

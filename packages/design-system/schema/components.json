@@ -1417,6 +1417,73 @@
       ]
     },
     {
+      "name": "EmptyState.Actions",
+      "description": "A centered row of buttons or links that wraps. A `div` with no role.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons or links."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Description",
+      "description": "Muted text under the title, kept to a readable width. A `div`, so it can hold more than one paragraph or a link.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text, or any content."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Icon",
+      "description": "A slot for any icon, centered above the title. Hidden from assistive technology unless it says otherwise.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic from your own icon set."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Root",
+      "description": "What a list, table or search shows when it has nothing. A `div` with no role, so it is not announced when it appears; takes native `div` attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "EmptyState parts, or any content."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Title",
+      "description": "The empty state's heading, at the level `as` names. An `h2` by default.",
+      "props": [
+        {
+          "name": "as",
+          "type": "\"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\" | \"p\"",
+          "required": false,
+          "description": "The rendered element. Pick the heading level that fits the page, or p to keep the title out of the outline.",
+          "default": "\"h2\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ]
+    },
+    {
       "name": "ErrorMessage.Root",
       "description": "Validation text below a control. With an id it renders as given, with no alert role. Without one, inside a Field.Group or Fieldset.Root in a Form.Root, it shows the scope's error and wires the controls' aria-describedby to itself. invalid lives on the control.",
       "props": [
