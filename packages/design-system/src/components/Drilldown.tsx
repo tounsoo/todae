@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState.js';
+import { useControlledValue } from '../hooks/useControlledState.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
 import { useModalContext } from '../overlay/modalContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -87,9 +87,6 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
   }
 }
 
-// What a stack entry remembers while views above it show.
-type Entry = { trigger: HTMLElement | null; scrollTop: number };
-
 type ViewRecord = { element: HTMLElement; initialFocusRef?: RefObject<HTMLElement | null> };
 
 type ViewStatus = 'current' | 'entering' | 'leaving' | 'below';
@@ -130,44 +127,52 @@ function motionToken(el: HTMLElement, name: string): string {
   return getComputedStyle(el).getPropertyValue(`--todae-drilldown-motion-${name}`).trim();
 }
 
+// What the views below the shown one get back on a pop, recorded as a
+// Drilldown.Trigger pushes: the trigger that pushed each view, and the scroll
+// offset of each view a push covered.
+type Memory = { triggers: Map<string, HTMLElement>; offsets: Map<string, number> };
+
+/**
+ * Where focus goes as a slide shows `entering`: back to the trigger that
+ * pushed the view just above it, while that trigger can take focus, else
+ * the pushed view's `initialFocusRef`, else the view's first tab stop, else
+ * the view itself.
+ */
+function focusTarget(motion: Motion, shown: Stack, entering: HTMLElement, views: ReadonlyMap<string, ViewRecord>, memory: Memory) {
+  if (motion.direction === 'back') {
+    // The view just above the new top: a jump back several views returns to
+    // the trigger in the view it lands on.
+    const child = motion.from[shown.length];
+    const trigger = child === undefined ? undefined : memory.triggers.get(child);
+    if (trigger?.isConnected && entering.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled')) return trigger;
+    return firstTabbable(entering) ?? entering;
+  }
+  const top = shown.at(-1);
+  return (top === undefined ? null : views.get(top)?.initialFocusRef?.current) ?? firstTabbable(entering) ?? entering;
+}
+
 type MotionStart = {
   motion: Motion;
   shown: Stack;
-  /** The Drilldown.Trigger that pushed the new top, if one did. */
-  trigger: HTMLElement | null;
+  entering: HTMLElement | undefined;
+  leaving: HTMLElement | undefined;
   duration: number;
   viewport: HTMLElement | null;
   back: HTMLElement | null;
   views: ReadonlyMap<string, ViewRecord>;
-  memory: Map<string, Entry>;
+  memory: Memory;
 };
 
-// Runs once as a slide starts: notes what the covered view must get back,
-// then moves the height, scroll and focus to the new view.
-function startMotion({ motion, shown, trigger, duration, viewport, back, views, memory }: MotionStart) {
-  const top = shown.at(-1);
-  const left = motion.from.at(-1);
-  const entering = top === undefined ? undefined : views.get(top)?.element;
-  const leaving = left === undefined || left === top ? undefined : views.get(left)?.element;
+// Moves the height, scroll and focus to the new view as a slide starts.
+function startMotion({ motion, shown, entering, leaving, duration, viewport, back, views, memory }: MotionStart) {
   const scroller = viewport && scrollParent(viewport);
   const active = viewport?.ownerDocument.activeElement;
-  // Focus moves with the views when it was on them, on Back, lost, or
-  // anywhere in the modal around them; not from the product's own control
-  // elsewhere on the page that set a controlled stack.
-  const ownsFocus =
-    !active ||
-    active === active.ownerDocument.body ||
-    leaving?.contains(active) ||
-    back === active ||
-    Boolean(viewport?.closest('dialog')?.contains(active));
-
-  let scrollTop = 0;
-  if (motion.direction === 'forward') {
-    if (left !== undefined) memory.set(left, { trigger: memory.get(left)?.trigger ?? null, scrollTop: scroller?.scrollTop ?? 0 });
-    if (top !== undefined) memory.set(top, { trigger, scrollTop: 0 });
-  } else if (top !== undefined) {
-    scrollTop = memory.get(top)?.scrollTop ?? 0;
-  }
+  // Focus moves with the views when it was on them, on Back, or lost; not
+  // from another control, such as the product's own that set a controlled
+  // stack.
+  const ownsFocus = !active || active === active.ownerDocument.body || leaving?.contains(active) || back === active;
+  const top = shown.at(-1);
+  const scrollTop = motion.direction === 'back' && top !== undefined ? (memory.offsets.get(top) ?? 0) : 0;
 
   // A restored offset needs the parent's full height at once, or the scroll
   // container clamps it.
@@ -178,67 +183,50 @@ function startMotion({ motion, shown, trigger, duration, viewport, back, views, 
     });
   }
   if (scroller) scroller.scrollTop = scrollTop;
+  if (entering && ownsFocus) focusWithoutScroll(focusTarget(motion, shown, entering, views, memory));
+}
 
-  if (!entering || !ownsFocus) return;
-  // The entry just above the new top: a jump back several views returns to
-  // the trigger in the view it lands on.
-  const child = motion.from[shown.length];
-  const returnTo = motion.direction === 'back' && child !== undefined ? memory.get(child)?.trigger : null;
-  const initial = motion.direction === 'forward' && top !== undefined ? views.get(top)?.initialFocusRef?.current : null;
-  focusWithoutScroll(
-    returnTo && returnTo.isConnected && entering.contains(returnTo) && isReachable(returnTo) && !returnTo.matches(':disabled')
-      ? returnTo
-      : (initial ?? firstTabbable(entering) ?? entering),
-  );
+// The animations a slide runs, without endless ones inside a view's content.
+function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]): Animation[] {
+  return elements.flatMap((el) => el?.getAnimations() ?? []).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
 }
 
 const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
-  const [stack, setStack] = useControlledState<Stack>(value, defaultValue);
+  const [stack, change, setStack] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
   const [{ shown, motion }, dispatch] = useReducer(motionReducer, { shown: stack, motion: null });
   if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
 
-  const memory = useRef(new Map<string, Entry>());
-  const pushed = useRef<{ value: string; trigger: HTMLElement | null } | null>(null);
-  // The slide whose memory, scroll and focus are done, so StrictMode's second
-  // run of the effect doesn't record the offset it just reset.
-  const started = useRef<Motion | null>(null);
+  const memory = useRef<Memory>({ triggers: new Map(), offsets: new Map() });
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const backRef = useRef<HTMLButtonElement | null>(null);
   const modal = useModalContext();
 
-  const latest = useRef({ stack, onValueChange });
-  latest.current = { stack, onValueChange };
-  const change = useCallback(
-    (next: Stack, reason: DrilldownChangeReason) => {
-      setStack(next);
-      latest.current.onValueChange?.(next, reason);
-    },
-    [setStack],
-  );
   const push = useCallback(
     (next: string, trigger: HTMLElement | null) => {
-      const current = latest.current.stack;
-      if (current.includes(next)) {
+      if (stack.includes(next)) {
         if (process.env.NODE_ENV !== 'production') {
           console.error(`Drilldown: "${next}" is already in the stack, so Drilldown.Trigger can't push it again.`);
         }
         return;
       }
-      pushed.current = { value: next, trigger };
-      change([...current, next], 'push');
+      const top = stack.at(-1);
+      const scroller = viewportRef.current && scrollParent(viewportRef.current);
+      if (top !== undefined) memory.current.offsets.set(top, scroller?.scrollTop ?? 0);
+      if (trigger) memory.current.triggers.set(next, trigger);
+      else memory.current.triggers.delete(next);
+      change([...stack, next], 'push');
     },
-    [change],
+    [change, stack],
   );
   const pop = useCallback(
     (reason: DrilldownChangeReason) => {
-      const current = latest.current.stack;
-      if (current.length > 1) change(current.slice(0, -1), reason);
+      if (stack.length > 1) change(stack.slice(0, -1), reason);
     },
-    [change],
+    [change, stack],
   );
 
   const registerView = useCallback((view: string, label: string, record: ViewRecord) => {
@@ -259,17 +247,26 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     if (!motion) return;
     const settle = () => dispatch({ type: 'settle' });
     const viewport = viewportRef.current;
+    const top = shown.at(-1);
+    const left = motion.from.at(-1);
+    const entering = top === undefined ? undefined : views.current.get(top)?.element;
+    const leaving = left === undefined || left === top ? undefined : views.current.get(left)?.element;
     const duration = viewport && !reducedMotion() ? (cssTimeMs(motionToken(viewport, 'duration')) ?? 0) : 0;
-    if (started.current !== motion) {
-      started.current = motion;
-      const push = pushed.current;
-      pushed.current = null;
-      const trigger = push && push.value === shown.at(-1) ? push.trigger : null;
-      startMotion({ motion, shown, trigger, duration, viewport, back: backRef.current, views: views.current, memory: memory.current });
-    }
+    startMotion({ motion, shown, entering, leaving, duration, viewport, back: backRef.current, views: views.current, memory: memory.current });
     if (duration <= 0) {
       settle();
       return;
+    }
+    // Settles when the slide's animations finish, so CSS that changes them
+    // keeps the leaving view on screen as long as it moves.
+    if (viewport?.getAnimations) {
+      let current = true;
+      void Promise.allSettled(slideAnimations([viewport, entering, leaving]).map((a) => a.finished)).then(() => {
+        if (current) settle();
+      });
+      return () => {
+        current = false;
+      };
     }
     const timer = window.setTimeout(settle, duration);
     return () => window.clearTimeout(timer);
@@ -280,11 +277,12 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const present = modal?.present;
   const controlled = value !== undefined;
   useLayoutEffect(() => {
-    if (present !== false || controlled || sameStack(latest.current.stack, defaultValue)) return;
-    memory.current.clear();
+    if (present !== false || controlled || sameStack(stack, defaultValue)) return;
+    memory.current.triggers.clear();
+    memory.current.offsets.clear();
     setStack(defaultValue);
     dispatch({ type: 'reset', stack: defaultValue });
-  }, [present, controlled, defaultValue, setStack]);
+  }, [present, controlled, defaultValue, setStack, stack]);
 
   // Escape joins the overlays' Escape stack, which also stops the key's
   // close request in a modal, and the modal's close requests without a key,

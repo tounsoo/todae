@@ -139,11 +139,12 @@ describe('Drilldown', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('starts over at defaultValue when the Dialog around it closes, but keeps a controlled stack', () => {
+  it('starts over at defaultValue when the Dialog around it closes, without a change, but keeps a controlled stack', () => {
+    const onValueChange = vi.fn();
     function InDialog({ open, value }: { open: boolean; value?: readonly string[] }) {
       return (
         <Dialog.Root open={open} onOpenChange={() => undefined} aria-label="Settings dialog">
-          <Settings value={value} />
+          <Settings value={value} onValueChange={onValueChange} />
         </Dialog.Root>
       );
     }
@@ -157,6 +158,7 @@ describe('Drilldown', () => {
     vi.useRealTimers();
     rerender(<InDialog open />);
     expect(screen.getByTestId('title').textContent).toBe('Settings');
+    expect(onValueChange).toHaveBeenCalledTimes(1);
     rerender(<InDialog open value={['settings', 'notifications']} />);
     vi.useFakeTimers();
     rerender(<InDialog open={false} value={['settings', 'notifications']} />);

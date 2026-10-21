@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button.js';
@@ -8,6 +8,14 @@ import { Drawer } from '../components/Drawer.js';
 import { Drilldown, type DrilldownChangeReason } from '../components/Drilldown.js';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
+import { cssTimeMs } from '../overlay/cssTime.js';
+
+/** vitest types the session without its methods; Playwright's session has `send`. */
+function emulateMedia(features: { name: string; value: string }[]) {
+  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
+    features,
+  });
+}
 
 function Themed({ dir, children }: { dir?: 'rtl'; children: ReactNode }) {
   return (
@@ -413,6 +421,101 @@ describe('Drilldown in a browser', () => {
       onValueChange.mockClear();
     }
   });
+  it('settles at once under reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      await openDialog(<SettingsDialog />);
+      await userEvent.click(screen.getByRole('button', { name: 'Account' }));
+      expect(screen.getByTestId('viewport').hasAttribute('data-direction')).toBe(false);
+      expect(view('Settings').hidden).toBe(true);
+      expect(view('Account').getAnimations()).toEqual([]);
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' }));
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('returns focus to the first tab stop of the view below when the trigger is gone', async () => {
+    function Gone() {
+      const [shown, setShown] = useState(true);
+      return (
+        <Themed>
+          <Dialog.Root open aria-label="Items" onOpenChange={() => undefined}>
+            <Drilldown.Root defaultValue={['list']}>
+              <Drilldown.Back />
+              <Drilldown.Viewport data-testid="viewport">
+                <Drilldown.View value="list" label="List">
+                  <button type="button">Sort</button>
+                  {shown ? <Drilldown.Trigger value="item">Item</Drilldown.Trigger> : null}
+                </Drilldown.View>
+                <Drilldown.View value="item" label="Item">
+                  <button type="button" onClick={() => setShown(false)}>
+                    Delete
+                  </button>
+                </Drilldown.View>
+              </Drilldown.Viewport>
+            </Drilldown.Root>
+          </Dialog.Root>
+        </Themed>
+      );
+    }
+    await openDialog(<Gone />);
+    await userEvent.click(screen.getByRole('button', { name: 'Item' }));
+    await settled();
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Back to List' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Sort' }));
+  });
+
+  it('keeps the leaving view on screen until its slide ends, when CSS makes the slide longer', async () => {
+    await openDialog(<SettingsDialog />);
+    const style = document.createElement('style');
+    style.textContent = '[data-entering], [data-leaving] { animation-duration: 700ms; }';
+    document.head.append(style);
+    try {
+      const token = cssTimeMs(getComputedStyle(screen.getByTestId('viewport')).getPropertyValue('--todae-drilldown-motion-duration'))!;
+      expect(token).toBeLessThan(500);
+      await userEvent.click(screen.getByRole('button', { name: 'Account' }));
+      await new Promise((resolve) => setTimeout(resolve, token + 100));
+      expect(view('Settings').checkVisibility()).toBe(true);
+      expect(view('Settings').inert).toBe(true);
+      await settled();
+      expect(view('Settings').hidden).toBe(true);
+    } finally {
+      style.remove();
+    }
+  });
+
+  it('leaves focus on a control outside the views that set a controlled stack', async () => {
+    function Wizard() {
+      const [stack, setStack] = useState<readonly string[]>(['details']);
+      return (
+        <Themed>
+          <Dialog.Root open aria-label="Wizard" onOpenChange={() => undefined}>
+            <Drilldown.Root value={stack} onValueChange={setStack}>
+              <Drilldown.Viewport data-testid="viewport">
+                <Drilldown.View value="details" label="Details">
+                  <input aria-label="Name" />
+                </Drilldown.View>
+                <Drilldown.View value="review" label="Review">
+                  <input aria-label="Notes" />
+                </Drilldown.View>
+              </Drilldown.Viewport>
+            </Drilldown.Root>
+            <button type="button" onClick={() => setStack(['details', 'review'])}>
+              Next
+            </button>
+          </Dialog.Root>
+        </Themed>
+      );
+    }
+    await openDialog(<Wizard />);
+    const next = screen.getByRole('button', { name: 'Next' });
+    await userEvent.click(next);
+    expect(view('Review').hidden).toBe(false);
+    expect(document.activeElement).toBe(next);
+  });
+
 });
 
 function cleanupAll() {
