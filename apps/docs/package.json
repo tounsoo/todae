@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:visual": "playwright test",
+    "test:visual:docker": "sh scripts/visual.sh",
     "i18n:stamp": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/stamp-translations.ts",
     "clean": "rm -rf .next"
   },
@@ -30,6 +32,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@testing-library/react": "^16.3.3",
     "@types/mdast": "4.0.4",
     "@types/mdx": "^2.0.13",

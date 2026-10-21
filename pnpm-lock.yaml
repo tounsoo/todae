@@ -58,10 +58,10 @@ importers:
         version: 0.544.0(react@19.3.0)
       mcp-handler:
         specifier: 1.1.0
-        version: 1.1.0(@modelcontextprotocol/sdk@1.26.0(zod@3.25.76))(next@15.5.25(@babel/core@7.29.7)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
+        version: 1.1.0(@modelcontextprotocol/sdk@1.26.0(zod@3.25.76))(next@15.5.25(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
       next:
         specifier: ^15.5.0
-        version: 15.5.25(@babel/core@7.29.7)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        version: 15.5.25(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
         specifier: ^19.0.0
         version: 19.3.0
@@ -75,6 +75,9 @@ importers:
         specifier: 3.25.76
         version: 3.25.76
     devDependencies:
+      '@playwright/test':
+        specifier: 1.56.1
+        version: 1.56.1
       '@testing-library/react':
         specifier: ^16.3.3
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -932,6 +935,11 @@ packages:
     peerDependencies:
       react: '>= 16.8'
       react-dom: '>= 16.8'
+
+  '@playwright/test@1.56.1':
+    resolution: {integrity: sha512-vSMYtL/zOcFpvJCW71Q/OEGQb7KYBPAdKh35WNSkaZA75JlAO8ED8UN6GUNTm3drWomcbcqRPFqQbLae8yBTdg==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   '@pnpm/deps.graph-sequencer@1100.0.1':
     resolution: {integrity: sha512-pOr5+q1fLYKwFN3LAJuGZEnfXDcQ73zqgDHMtGy+K+uIoUqyY+6MeDCWFwfu+4EFuq76I5EPFofoNAI+Bmmq4A==}
@@ -3498,6 +3506,10 @@ snapshots:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
+  '@playwright/test@1.56.1':
+    dependencies:
+      playwright: 1.56.1
+
   '@pnpm/deps.graph-sequencer@1100.0.1': {}
 
   '@polka/url@1.0.0-next.29': {}
@@ -4639,14 +4651,14 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mcp-handler@1.1.0(@modelcontextprotocol/sdk@1.26.0(zod@3.25.76))(next@15.5.25(@babel/core@7.29.7)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)):
+  mcp-handler@1.1.0(@modelcontextprotocol/sdk@1.26.0(zod@3.25.76))(next@15.5.25(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)):
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@3.25.76)
       chalk: 5.6.2
       commander: 11.1.0
       redis: 4.7.1
     optionalDependencies:
-      next: 15.5.25(@babel/core@7.29.7)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      next: 15.5.25(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
 
   mdast-util-from-markdown@2.0.3:
     dependencies:
@@ -4979,7 +4991,7 @@ snapshots:
     dependencies:
       content-type: 2.1.0
 
-  next@15.5.25(@babel/core@7.29.7)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  next@15.5.25(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       '@next/env': 15.5.25
       '@swc/helpers': 0.5.15
@@ -4997,6 +5009,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 15.5.25
       '@next/swc-win32-arm64-msvc': 15.5.25
       '@next/swc-win32-x64-msvc': 15.5.25
+      '@playwright/test': 1.56.1
       sharp: 0.35.4(@types/node@22.20.3)
     transitivePeerDependencies:
       - '@babel/core'

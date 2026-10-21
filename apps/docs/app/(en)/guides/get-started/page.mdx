@@ -1,0 +1,95 @@
+# Get started
+
+Install Todae, load its stylesheet once, and wrap the app in its providers. A Next.js app also keeps Todae's parts in client components.
+
+## Install
+
+```sh
+npm install @tounsoo/todae
+```
+
+Todae needs React 19, and its types need TypeScript 6 or later. An app made with create-next-app 16 starts on TypeScript 5, and npm then stops with a peer dependency error (`ERESOLVE`). Install TypeScript 6.0 with Todae, since typescript-eslint, which Next.js's ESLint config uses, accepts TypeScript below 6.1:
+
+```sh
+npm install @tounsoo/todae typescript@~6.0
+```
+
+## Load the stylesheet
+
+Import Todae's stylesheet once, from your CSS entry:
+
+```css
+@import '@tounsoo/todae/todae.css';
+```
+
+Todae's CSS sits in the `todae` cascade layer, and CSS outside any layer beats Todae's normal declarations. So a reset of your own, such as `* { padding: 0; }` or `a { text-decoration: none; }`, takes the padding from Todae's buttons and the underline from its links. A Next.js app made without Tailwind CSS has both in its `globals.css`. Put a reset in a layer named before `todae`, and with Tailwind CSS, put Todae between Tailwind's reset and its utilities, as [CSS layers](/guides/css-layers) shows. `postcss-import` doesn't read the package's `exports`, so with it, import `@tounsoo/todae/dist/todae.css` instead. In Next.js without Tailwind CSS 4 or `postcss-import`, import the stylesheet as the Next.js section below shows instead.
+
+## Wrap the app
+
+```tsx
+import { Button, DensityProvider, ThemeProvider } from '@tounsoo/todae';
+
+export function App() {
+  return (
+    <ThemeProvider appearance="system">
+      <DensityProvider density="comfortable">
+        <Button.Root>Save</Button.Root>
+      </DensityProvider>
+    </ThemeProvider>
+  );
+}
+```
+
+`appearance="system"` follows the user's light or dark setting. Both providers are optional: without them, the page is light and comfortable. In Next.js, this goes in a client component, as the next section shows.
+
+## Next.js
+
+The main entry, `@tounsoo/todae`, is a client module. A Server Component, such as the root layout, can render its providers, but not a part such as `Button.Root`, which arrives there as undefined, so rendering fails with "Element type is invalid". Use parts in a file that starts with `'use client'`:
+
+```tsx
+'use client';
+
+import { Button } from '@tounsoo/todae';
+
+export function SaveButton() {
+  return <Button.Root>Save</Button.Root>;
+}
+```
+
+Some components, such as [Stack](/stack) and [Text](/text), also have an entry a Server Component can render, such as `@tounsoo/todae/stack`. Their pages name it.
+
+Next.js loads a stylesheet that a CSS file imports ahead of that file, unless Tailwind CSS 4 or `postcss-import` puts it inline. So without them, write your `@layer` statement in a file of its own, such as `layers.css`, and move a reset in `globals.css` into the `reset` layer, as [CSS layers](/guides/css-layers) shows:
+
+```css
+@layer reset, todae;
+```
+
+Then import the files in that order from the root layout, and drop any `@import` of Todae's CSS from `globals.css`:
+
+```tsx
+import type { ReactNode } from 'react';
+import { ThemeProvider } from '@tounsoo/todae';
+import './layers.css';
+import '@tounsoo/todae/todae.css';
+import './globals.css';
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <ThemeProvider appearance="system">{children}</ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+## Dates and times
+
+`Calendar`, the date and time pickers and their text helpers use the global `Temporal` object, and Todae ships no polyfill for it. Where a browser lacks it, load one globally, such as `temporal-polyfill/global`. [Native platform](/platform) says which parts need it and what happens without it.
+
+## Next
+
+- [Build on Todae](/guides/build-on-todae) layers a company's tokens on Todae's and wraps its parts.
+- [Tokens](/tokens) lists every token Todae ships.
+- [MCP server](/mcp) gives AI agents Todae's components, tokens and token build.
