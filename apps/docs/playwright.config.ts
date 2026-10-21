@@ -2,6 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3100;
 
+// At the phone's pixel ratio Chromium positions glyphs at subpixels, but a new page sometimes lays
+// out before that setting reaches it, so a line with inline code comes out a pixel taller in some
+// runs and the shot differs. With subpixel positioning off, every run lays out alike.
+const phone = { ...devices['Pixel 7'], launchOptions: { args: ['--disable-font-subpixel-positioning'] } };
+
 // Screenshot diffs of the built docs site. Pixels depend on fonts and the Chromium build, so the
 // baselines come from Playwright's Docker image, which CI runs in too: `pnpm --filter docs test:visual:docker`.
 export default defineConfig({
@@ -22,8 +27,8 @@ export default defineConfig({
     { name: 'light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' } },
     { name: 'dark', use: { ...devices['Desktop Chrome'], colorScheme: 'dark' } },
     // Only the site pages run at phone width; ARCHITECTURE.md says why examples don't.
-    { name: 'phone-light', testMatch: 'pages.visual.ts', use: { ...devices['Pixel 7'], colorScheme: 'light' } },
-    { name: 'phone-dark', testMatch: 'pages.visual.ts', use: { ...devices['Pixel 7'], colorScheme: 'dark' } },
+    { name: 'phone-light', testMatch: 'pages.visual.ts', use: { ...phone, colorScheme: 'light' } },
+    { name: 'phone-dark', testMatch: 'pages.visual.ts', use: { ...phone, colorScheme: 'dark' } },
   ],
   webServer: {
     command: `npx next start --port ${PORT}`,
