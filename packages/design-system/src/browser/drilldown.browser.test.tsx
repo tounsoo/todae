@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
 import { Dialog, type DialogCloseReason } from '../components/Dialog.js';
 import { Drawer } from '../components/Drawer.js';
@@ -723,6 +724,47 @@ describe('Drilldown in a browser', () => {
       after.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
       cleanupAll();
     }
+  });
+
+  it('starts an uncontrolled stack over with reason reset when the BottomSheet around it closes', async () => {
+    const onValueChange = vi.fn();
+    function Sheet() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Themed>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open
+          </button>
+          <BottomSheet.Root open={open} onOpenChange={setOpen}>
+            <Drilldown.Root defaultValue={['filters']} onValueChange={onValueChange}>
+              <BottomSheet.Header>
+                <BottomSheet.Title>
+                  <Drilldown.Label />
+                </BottomSheet.Title>
+                <BottomSheet.Close>Done</BottomSheet.Close>
+              </BottomSheet.Header>
+              <BottomSheet.Body>
+                <Drilldown.Viewport data-testid="viewport">
+                  <Drilldown.View value="filters" label="Filters">
+                    <Drilldown.Trigger value="brand">Brand</Drilldown.Trigger>
+                  </Drilldown.View>
+                  <Drilldown.View value="brand" label="Brand" />
+                </Drilldown.Viewport>
+              </BottomSheet.Body>
+            </Drilldown.Root>
+          </BottomSheet.Root>
+        </Themed>
+      );
+    }
+    await openDialog(<Sheet />);
+    await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+    await settled();
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(document.querySelector('dialog')).toBeNull());
+    expect(onValueChange.mock.calls).toEqual([
+      [['filters', 'brand'], 'push'],
+      [['filters'], 'reset'],
+    ]);
   });
 
   it('scrolls a page that scrolls itself to the top of an inline Drilldown on push, and back on pop', async () => {

@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
-import { useSurfacePresent } from '../overlay/surfaceContext.js';
+import { useSurface } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
@@ -191,16 +191,28 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     }
   }, [shown]);
 
-  // An uncontrolled stack starts over each time its overlay closes. Dialog,
-  // Drawer and Popover keep their content mounted while closed.
-  const present = useSurfacePresent();
-  const controlled = value !== undefined;
+  // An uncontrolled stack starts over each time the surface around it
+  // closes: as Dialog, Drawer and Popover, which keep their content mounted,
+  // stop being present, and as BottomSheet, which doesn't, unmounts it.
+  const surface = useSurface();
+  const present = surface?.present;
+  const startsOver = value === undefined && !sameStack(stack, defaultValue);
+  const wasPresent = useRef(present);
   useLayoutEffect(() => {
-    if (present !== false || controlled || sameStack(stack, defaultValue)) return;
+    const was = wasPresent.current;
+    wasPresent.current = present;
+    if (!was || present !== false || !startsOver) return;
     memory.clear();
     change(defaultValue, 'reset');
     reset(defaultValue);
-  }, [present, controlled, defaultValue, change, memory, reset, stack]);
+  }, [present, startsOver, defaultValue, change, memory, reset]);
+  const reportOnUnmount = useRef<() => void>(undefined);
+  useLayoutEffect(() => {
+    reportOnUnmount.current = () => {
+      if (surface?.open === false && startsOver) onValueChange?.(defaultValue, 'reset');
+    };
+  });
+  useLayoutEffect(() => () => reportOnUnmount.current?.(), []);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, which also stops the key's close

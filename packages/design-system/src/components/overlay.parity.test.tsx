@@ -203,6 +203,37 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       expect(onOpenChange).not.toHaveBeenCalled();
     });
 
+    it('starts an uncontrolled Drilldown over with reason reset when it closes', () => {
+      const onValueChange = vi.fn();
+      const h = harness();
+      const surface = (open: boolean) => (
+        <h.Root open={open} onOpenChange={() => undefined}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings']} onValueChange={onValueChange}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings">
+                <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+              </Drilldown.View>
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>
+      );
+      const { rerender } = render(surface(true));
+      fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+      vi.useFakeTimers();
+      try {
+        rerender(surface(false));
+        act(() => vi.runAllTimers());
+      } finally {
+        vi.useRealTimers();
+      }
+      expect(onValueChange.mock.calls).toEqual([
+        [['settings', 'account'], 'push'],
+        [['settings'], 'reset'],
+      ]);
+    });
+
     it('dismisses on scrim and ignores panel clicks', async () => {
       const onOpenChange = vi.fn();
       const h = harness();

@@ -1,22 +1,26 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { ToolbarContext } from '../components/toolbarContext.js';
 
-const SurfacePresentContext = /* @__PURE__ */ createContext<boolean | undefined>(undefined);
-
 /**
- * Whether the overlay surface around this part (Dialog, Drawer, BottomSheet
- * or Popover) is present: open, or for a modal, mounted through its exit
- * motion. Undefined outside a surface.
+ * An overlay surface (Dialog, Drawer, BottomSheet or Popover): whether its
+ * owner has it open, and whether it is present, open or, for a modal,
+ * mounted through its exit motion.
  */
-export function useSurfacePresent(): boolean | undefined {
-  return useContext(SurfacePresentContext);
+export type Surface = { open: boolean; present: boolean };
+
+const SurfaceContext = /* @__PURE__ */ createContext<Surface | undefined>(undefined);
+
+/** The overlay surface around this part, or undefined outside one. */
+export function useSurface(): Surface | undefined {
+  return useContext(SurfaceContext);
 }
 
-/** Wraps an overlay surface's children: shares its presence with them, and keeps a Toolbar around the surface from reaching in. */
-export function SurfaceChildren({ present, children }: { present: boolean; children: ReactNode }) {
+/** Wraps an overlay surface's children: shares its state with them, and keeps a Toolbar around the surface from reaching in. */
+export function SurfaceChildren({ open, present, children }: Surface & { children: ReactNode }) {
+  const surface = useMemo(() => ({ open, present }), [open, present]);
   return (
-    <SurfacePresentContext.Provider value={present}>
+    <SurfaceContext.Provider value={surface}>
       <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
-    </SurfacePresentContext.Provider>
+    </SurfaceContext.Provider>
   );
 }

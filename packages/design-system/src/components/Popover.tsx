@@ -81,7 +81,7 @@ function PopoverRoot({
       aria-label={role ? ariaLabel : undefined}
       aria-labelledby={role ? ariaLabelledby : undefined}
     >
-      <SurfaceChildren present={open}>{children}</SurfaceChildren>
+      <SurfaceChildren open={open} present={open}>{children}</SurfaceChildren>
     </div>
   );
 }

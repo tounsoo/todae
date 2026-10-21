@@ -230,7 +230,7 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <SurfaceChildren present={present}>{children}</SurfaceChildren>
+          <SurfaceChildren open={open} present={present}>{children}</SurfaceChildren>
         </div>
       </dialog>
     </ShellContext.Provider>

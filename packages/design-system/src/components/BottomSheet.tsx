@@ -365,7 +365,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        <SurfaceChildren present={present}>{children}</SurfaceChildren>
+        <SurfaceChildren open={open} present={present}>{children}</SurfaceChildren>
       </dialog>
     </SheetContext.Provider>
   );

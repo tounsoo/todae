@@ -233,6 +233,18 @@ describe('Drilldown', () => {
     expect(screen.getByTestId('title').textContent).toBe('Notifications');
   });
 
+  it('reports a reset only as the surface closes, not when defaultValue changes while it is closed', () => {
+    const onValueChange = vi.fn();
+    const closed = (defaultValue: readonly string[]) => (
+      <Dialog.Root open={false} onOpenChange={() => undefined} aria-label="Settings dialog">
+        <Settings defaultValue={defaultValue} onValueChange={onValueChange} />
+      </Dialog.Root>
+    );
+    const { rerender } = render(closed(['settings']));
+    rerender(closed(['settings', 'account']));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('logs an error for an empty stack, a value with no view, a value twice in the stack, and two views with one value', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const logged = () => error.mock.calls.map(([message]) => String(message));
