@@ -1,0 +1,163 @@
+import { FieldNumberPercent, FieldNumberPrice, FieldNumberStepper } from '../../../../components/demos/FieldDemo';
+
+# Field.NumberInput
+
+`Field.NumberInput` is a text input for a number inside a [Field](/field). Its `value` is a `number` or `null`, never `NaN`. It shows the number in the locale's own format, such as `1,234.5` in `en` and `1.234,5` in `de`, and lets people type freely. On blur or Enter it reads the text with `parseNumber`, snaps the number to `step`, clamps it to `min` and `max`, writes the text back as the locale writes it, and calls `onValueChange`. Without `onValueChange` the input is read-only. `Field.Increment` and `Field.Decrement` in the same field are buttons that step the number.
+
+```tsx
+const id = useId();
+const [quantity, setQuantity] = useState<number | null>(2);
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Quantity</Label.Root>
+  <Field.Root id={id} name="quantity">
+    <Field.Decrement />
+    <Field.NumberInput value={quantity} onValueChange={setQuantity} min={1} max={99} />
+    <Field.Increment />
+  </Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldNumberStepper />
+</Example>
+
+The visible element is a native `<input type="text">` with `role="spinbutton"`, so the browser keeps its text editing, undo, selection and IME. A native `<input type="number">` takes no locale format, steps on the mouse wheel, draws a spinner that tokens can't reach, and accepts letters such as `e`, so `Field.TextInput` has no `type="number"`: a number is `Field.NumberInput`, as a date is a picker.
+
+## Typing and committing
+
+Typing changes only the text. `onValueChange` fires when the person commits: on blur, on Enter, on a step key and on a step button. So a value that reaches your state is `null` or a number within `min` and `max` and on `step`, and your code needs no clamping of its own.
+
+- A commit is snapped to `step`, counted from `min`, or from 0 without one, then clamped, and rounded to the decimals of `step` and `min`, so `0.1 + 0.2` commits `0.3`. Where `max` is not on the step, a number above it becomes the highest number on the step, so the form never sees a number that is off the step. Without `step`, a commit keeps every digit that was typed.
+- An empty text commits `null`.
+- A text that means no number, such as a lone `-`, goes back to the number the product holds, and `onValueChange` is not called.
+- A keystroke that could not become a number in the locale, such as a letter, a second decimal separator or `1e`, is refused, and the text keeps its last value. A paste is checked the same way, as a whole. During an IME composition nothing is refused until the composition ends.
+- A number your code sets replaces the text, even while the person is typing. A number outside `min` and `max` that your code sets is shown as it is, and is not committed by a blur with no edit.
+
+`parseNumber` learns the locale's separators, minus sign and digits from `Intl.NumberFormat`, so `1.234,5` in `de`, `1 234,5` with a narrow no-break space in `fr` and `١٬٢٣٤٫٥` in `ar-EG` all read as 1234.5, and full-width digits fold to ASCII. It accepts the text with or without grouping, but a group separator only where the locale puts one, so `1.234` in `de` is 1234, and `1,5` in `en` is no number. A period is a decimal point in a locale that doesn't group with one, such as `fr`.
+
+## Keys
+
+The keys follow the ARIA spinbutton pattern. Each one reads the text first and steps from it.
+
+- Arrow Up and Arrow Down move by `step`, or by 1 without one.
+- Page Up and Page Down move by `largeStep`, or by ten steps without one.
+- Home and End go to `min` and `max` when they are set, and otherwise leave the caret keys to the browser.
+
+A key with a modifier is left to the browser, and so are the keys of an IME composition. Arrow Up and Arrow Down mean the same in a right-to-left page. There is no mouse wheel stepping, which changes a number as a page scrolls past it. From no number, an increase goes to `min`, or to one step without a `min`.
+
+## Step buttons
+
+`Field.Increment` and `Field.Decrement` are buttons you place yourself, on either side of the input or stacked in an `Affix`, so there is no `stepper` prop. They find the number input through the field. They are not tab stops, and pressing one keeps focus where it was, so a press commits nothing early and a phone keeps its keyboard down. Holding one steps again after a delay, then at an interval, which come from the `field.stepper.repeat-delay` and `field.stepper.repeat-interval` tokens. A button is disabled at `min` or `max`, and while the field is disabled or the input is read-only. The keys are the keyboard's way to step.
+
+Each is named from the `increment` or `decrement` string of [StringsProvider](/utilities/strings-provider), and draws the `plus` or `minus` glyph of [GlyphsProvider](/utilities/glyphs-provider). Content replaces the glyph, and text in it names the button.
+
+## Format
+
+`formatOptions` takes what `Intl.NumberFormat` takes, so a percent, a currency or a unit is a style away. `locale` picks the locale, and without it the browser's own, so pass it when the input renders on a server. Put a unit or a currency sign in a [`Field.Affix`](/field) when you can: it stays out of the text that people edit.
+
+```tsx
+<Field.Root id={id} name="price">
+  <Field.Affix>₩</Field.Affix>
+  <Field.NumberInput
+    value={price}
+    onValueChange={setPrice}
+    min={0}
+    step={100}
+    locale="ko"
+    formatOptions={{ maximumFractionDigits: 0 }}
+  />
+</Field.Root>
+```
+
+<Example block>
+  <FieldNumberPrice />
+</Example>
+
+A percent style takes the number as a fraction: 0.125 shows `12.5%`, and typing `13` commits 0.13.
+
+```tsx
+<Field.NumberInput
+  value={rate}
+  onValueChange={setRate}
+  min={0}
+  max={1}
+  step={0.005}
+  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
+/>
+```
+
+<Example block>
+  <FieldNumberPercent />
+</Example>
+
+`formatNumber(value, { locale, formatOptions })` writes a number as the input does, and `parseNumber(text, { locale, formatOptions })` reads a text back into a number, or returns `null` when the text is not one. Use them to show or read the same number outside the input.
+
+```tsx
+formatNumber(0.125, { locale: 'de', formatOptions: { style: 'percent', maximumFractionDigits: 1 } }); // "12,5 %"
+parseNumber('12,5 %', { locale: 'de', formatOptions: { style: 'percent' } }); // 0.125
+```
+
+Without any digit option, a plain number shows all the digits it has, where `Intl.NumberFormat` alone stops at three, so the text and the number agree. `parseNumber` reads the percent sign, the currency sign or the unit that `formatOptions` writes, or its absence. It doesn't read compact or scientific notation. With a currency, the sign is part of the text that people edit, which is one more reason to prefer an `Affix`.
+
+The input asks the phone for a numeric keypad when `step` and `min` are whole numbers, and a decimal keypad otherwise; `inputMode` overrides it. The iOS keypads have no minus sign, so a number that can be negative needs the step buttons there.
+
+## In a form
+
+The number goes in a native `<input type="number">` that the input renders beside the text input, as the pickers do. It is hidden from sight and from assistive technology, is not a tab stop, and is what the form sends under the field's `name`, so the form gets `1234.5` in every locale, and an empty string for no number. The text input sends nothing. `step` goes to it, or `any` without one, so a form accepts `0.5` unless you set a step.
+
+`required` makes a form with no number invalid, and `min` and `max` make a form with a lower or higher number invalid, which happens when your code sets a number outside them, since a commit is clamped. The browser checks all of them. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` and `max` written in the field's format, such as "Enter ₩1,000 or more" for a currency in `ko`, and focus goes to the text input. A commit counts as an edit, so it hides a server error filed under the field's `name`; typing alone doesn't.
+
+Enter commits first, and then the browser submits the form: the commit reaches your state before the form reads the number. A press on a submit button blurs the input first, so it commits too.
+
+## Accessible composition
+
+**Todae handles:** The text input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It has `role="spinbutton"` with `aria-valuenow` while there is a number, `aria-valuemin` and `aria-valuemax` when set, and `aria-valuetext` with the text as the locale writes it, such as `₩12,000`. `required` sets `aria-required`. The step buttons are named by `increment` and `decrement` strings, are not tab stops, and take `aria-controls` from the input.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. A `locale` that matches the page's. The unit, in an `Affix` or in the label, when the number has one.
+
+**Watch for:** `onValueChange` doesn't fire as the person types, so a live total that follows each keystroke needs the commit, or a text input of your own. `step` snaps every commit: a `step` of 5 turns a typed `7` into `5`. A server render writes the number in its own locale unless you pass `locale`, so a mismatch can make hydration warn.
+
+## When to use
+
+### Field.NumberInput
+
+**When:** A number the person types or steps, such as a quantity, a price, a percentage or a count.
+
+**When not:** A number picked from a range by dragging → [Slider](/slider). A few named choices → [Radio](/radio) or [Field.Select](/field/select). A code or an ID made of digits, such as a postal code → [Field.TextInput](/field/text-input), since leading zeros and the format are not a number's.
+
+### Field.Increment
+
+**When:** A button that raises the number of a `Field.NumberInput` in the same field by its step.
+
+**When not:** A control that raises something else → [Button](/button).
+
+### Field.Decrement
+
+**When:** A button that lowers the number of a `Field.NumberInput` in the same field by its step.
+
+**When not:** A control that lowers something else → [Button](/button).
+
+### formatNumber
+
+**When:** Writing a number as text for a locale, such as in a table cell next to a number input.
+
+**When not:** A number in a style `formatOptions` can't write, such as compact notation → `Intl.NumberFormat`.
+
+### parseNumber
+
+**When:** Reading a number someone typed, in the locale and format the input uses.
+
+**When not:** Text in a fixed format such as `1234.5` → `Number`.
+
+## Props
+
+<PropsTable name="Field.NumberInput" />
+
+<PropsTable name="Field.Increment" />
+
+<PropsTable name="Field.Decrement" />
+
+<PropsTable name="formatNumber" />
+
+<PropsTable name="parseNumber" />

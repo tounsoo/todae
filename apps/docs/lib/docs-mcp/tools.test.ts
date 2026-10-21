@@ -267,7 +267,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Field.Counter')).toMatchObject({
       status: 'present',
       whenToUse:
-        'Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise or on a number input.',
+        'Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.',
       whenNotToUse:
         'For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.',
     });

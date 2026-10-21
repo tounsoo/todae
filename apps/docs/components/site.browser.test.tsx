@@ -433,7 +433,7 @@ describe('props table', () => {
       required: false,
       default: '"text"',
       descriptions: describe_(
-        'Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.',
+        'Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.',
       ),
     },
   ];

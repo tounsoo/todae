@@ -50,6 +50,7 @@ export const SITE_GROUPS = [
           ['/field/color-picker', 'ColorPicker'],
           ['/field/date-picker', 'DatePicker'],
           ['/field/date-time-picker', 'DateTimePicker'],
+          ['/field/number-input', 'NumberInput'],
           ['/field/select', 'Select'],
           ['/field/textarea', 'Textarea'],
           ['/field/text-input', 'TextInput'],

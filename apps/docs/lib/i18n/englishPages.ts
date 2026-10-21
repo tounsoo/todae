@@ -35,6 +35,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'field/color-picker': () => import('../../app/(en)/field/color-picker/page.mdx'),
   'field/date-picker': () => import('../../app/(en)/field/date-picker/page.mdx'),
   'field/date-time-picker': () => import('../../app/(en)/field/date-time-picker/page.mdx'),
+  'field/number-input': () => import('../../app/(en)/field/number-input/page.mdx'),
   'field/select': () => import('../../app/(en)/field/select/page.mdx'),
   'field/text-input': () => import('../../app/(en)/field/text-input/page.mdx'),
   'field/textarea': () => import('../../app/(en)/field/textarea/page.mdx'),
