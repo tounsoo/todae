@@ -44,6 +44,21 @@ describe('Field.DateRangePicker', () => {
     expect(screen.getByText('Pick dates').hasAttribute('data-placeholder')).toBe(true);
   });
 
+  it('shows the range in the locale it is given', () => {
+    const { rerender } = render(
+      <Field.Root aria-label="Stay">
+        <Field.DateRangePicker value={range('2026-10-03', '2026-10-10')} locale="en-US" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button').textContent).toBe('Oct 3\u2009–\u200910, 2026');
+    rerender(
+      <Field.Root aria-label="Stay">
+        <Field.DateRangePicker value={range('2026-10-03', '2026-10-10')} locale="ko" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button').textContent).toBe('2026. 10. 3. ~ 2026. 10. 10.');
+  });
+
   it('sends the range under the field name as an ISO 8601 interval', () => {
     render(
       <form data-testid="form">

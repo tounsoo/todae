@@ -52,6 +52,17 @@ export type FieldDateRangePickerProps = {
   'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
 >;
 
+const buttonFormats = /* @__PURE__ */ new Map<string, Intl.DateTimeFormat>();
+function buttonFormat(locale: string | undefined) {
+  const key = locale ?? '';
+  let format = buttonFormats.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', calendar: GREGORY, timeZone: 'UTC' });
+    buttonFormats.set(key, format);
+  }
+  return format;
+}
+
 const toDate = (date: Temporal.PlainDate) => {
   const iso = isoDate(date);
   return new Date(Date.UTC(iso.year, iso.month - 1, iso.day, 12));
@@ -111,12 +122,7 @@ export function DateRangePicker({
       >
         {showValue ? (
           <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value
-              ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', calendar: GREGORY, timeZone: 'UTC' }).formatRange(
-                  toDate(value.start),
-                  toDate(value.end),
-                )
-              : placeholder}
+            {value ? buttonFormat(locale).formatRange(toDate(value.start), toDate(value.end)) : placeholder}
           </span>
         ) : null}
         <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
