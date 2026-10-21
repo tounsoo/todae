@@ -92,13 +92,14 @@
     "(section order)": "ac06e0ab5697"
   },
   "checkbox": {
-    "(top)": "c5fb16238b3e",
-    "# Checkbox": "488c523ce88e",
-    "## Icons": "23b9bd93a117",
-    "## Accessible composition": "4e682c9e7ff7",
-    "## When to use": "063ad2a22656",
+    "(top)": "e5a2fc1bff4e",
+    "# Checkbox": "5706f3abfbcb",
+    "## Indeterminate": "d66ff7d725f8",
+    "## Icons": "9f7656d75359",
+    "## Accessible composition": "14beee0d3dac",
+    "## When to use": "77ccd83ac37c",
     "## Props": "c454f74315b1",
-    "(section order)": "abc6b1d2e623"
+    "(section order)": "cb91590a4833"
   },
   "chip": {
     "(top)": "d56bfe4010f4",
@@ -170,6 +171,16 @@
     "## Props": "6485f00fb242",
     "(section order)": "ff11ef39ec84"
   },
+  "data-list": {
+    "(top)": "8f15ed09a6e9",
+    "# DataList": "6d082816b5c1",
+    "## Orientation": "88681956a8af",
+    "## Narrow widths": "aa96b583c5fc",
+    "## Accessible composition": "561db38a366f",
+    "## When to use": "12375f0bfe8a",
+    "## Props": "eba21bde9683",
+    "(section order)": "6e8610a8c3fd"
+  },
   "description": {
     "(top)": "33dbf419d7e5",
     "# Description": "f869c1805fd8",
@@ -228,22 +239,22 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "cb681b9174b9",
-    "## Inputs": "73b0acb6d511",
+    "# Field": "e9665d9d7ec9",
+    "## Inputs": "e5136edbacd2",
     "## Label": "7d0c50d3c651",
     "## Messages": "34bda9e4b60a",
-    "## Counter": "3c5316a2038b",
+    "## Counter": "ca3bd330d359",
     "## Row": "c753eb292752",
     "## Custom controls": "edafb0ec7ed8",
     "## Icons": "4a52c267d4a7",
-    "## Accessible composition": "a2047885e806",
+    "## Accessible composition": "421616bf383e",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
     "### Field.Icon": "d229fcf9502c",
     "### Field.Row": "93ba826baf7c",
     "### Field.Group": "d0a3a0abb2d5",
     "### Field.Affix": "c7c545a7e130",
-    "### Field.Counter": "1a4c28d839e8",
+    "### Field.Counter": "c7b2d96cc1b4",
     "## Props": "4cbed1bf162f",
     "(section order)": "aeb03827a487"
   },
@@ -297,6 +308,24 @@
     "## Props": "af663e140f04",
     "(section order)": "4ad73b6239c4"
   },
+  "field/number-input": {
+    "(top)": "843d01be2de7",
+    "# Field.NumberInput": "764c575ba9a5",
+    "## Typing and committing": "077b10a5f6c4",
+    "## Keys": "c5c32418f906",
+    "## Step buttons": "707442fce962",
+    "## Format": "4cf77b9d2a09",
+    "## In a form": "db72067fad82",
+    "## Accessible composition": "76353fe25891",
+    "## When to use": "d57fe8233a0b",
+    "### Field.NumberInput": "5596a681fe44",
+    "### Field.Increment": "aa69821814a7",
+    "### Field.Decrement": "3cf3db5c5a5c",
+    "### formatNumber": "c5b4db8217f8",
+    "### parseNumber": "a01d7f412350",
+    "## Props": "6823ff252694",
+    "(section order)": "d093f4e544ae"
+  },
   "field/select": {
     "(top)": "9ef76a8a6752",
     "# Field.Select": "6f1a75574122",
@@ -308,14 +337,13 @@
     "(section order)": "6db778bd3da0"
   },
   "field/text-input": {
-    "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "c0c06c3b28e6",
-    "## Number": "1a051e370546",
-    "## Accessible composition": "7608bd1c3eb6",
+    "(top)": "8ae5e158e6c5",
+    "# Field.TextInput": "03561621fe1b",
+    "## Accessible composition": "8aa58c41f117",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "42c2fe701512",
+    "### Field.TextInput": "099ae196b945",
     "## Props": "286d56b43a7f",
-    "(section order)": "8530bb19e469"
+    "(section order)": "7de09df07162"
   },
   "field/textarea": {
     "(top)": "4d3ac00b8ea3",
@@ -337,7 +365,7 @@
     "## Temporal": "d7c947f6ad86",
     "## Accessible composition": "075374016b83",
     "## When to use": "d57fe8233a0b",
-    "### Field.TimePicker": "4ccdb4124cea",
+    "### Field.TimePicker": "23d7d67f1ee4",
     "### formatTime": "fd8940b1ed01",
     "### parseTime": "68e25c09dd81",
     "## Props": "6af2d44fb439",
@@ -360,7 +388,7 @@
     "## Summary": "3da0810ca127",
     "## Server errors": "9f77304c6cfb",
     "## Rules the browser can't check": "99253d6a0c4e",
-    "## Scopes": "dfb8bdcc234b",
+    "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
     "## When to use": "d57fe8233a0b",
     "### Form.Root": "40c89002b3da",
@@ -611,7 +639,7 @@
     "(top)": "42cde11261eb",
     "# Slider": "b79fc04f1f20",
     "## Accessible composition": "85a57c99624e",
-    "## When to use": "8d3da407f5e1",
+    "## When to use": "ad0bb8c22aff",
     "## Props": "a289d00d67fe",
     "(section order)": "87884b291211"
   },
@@ -644,12 +672,14 @@
     "(section order)": "692e72360183"
   },
   "table": {
-    "(top)": "831eacdf5e42",
+    "(top)": "8f56214c032a",
     "# Table": "7d5b9037d40f",
-    "## Accessible composition": "eb73911057a1",
-    "## When to use": "246cc8d19142",
-    "## Props": "5c602fcf9b31",
-    "(section order)": "47a493b24d96"
+    "## Sorting": "04ab4b644bf5",
+    "## Selecting rows": "d3a9fdd66cf5",
+    "## Accessible composition": "934a12e27009",
+    "## When to use": "051cd0dc3752",
+    "## Props": "66fd0e7af4f8",
+    "(section order)": "b9352e4b95f2"
   },
   "tabs": {
     "(top)": "f1bc4dbe0d3d",
@@ -744,7 +774,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "e9852fc62f38",
+    "## Glyphs": "0d611a0c79d0",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -755,8 +785,8 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "48f0481343bf",
-    "## Accessible composition": "62161ca48643",
+    "## Strings": "b811e51980f9",
+    "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",
     "### useStrings": "7ec0a6c8f32e",
@@ -830,7 +860,7 @@
   },
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
-    "# useField": "9707f4664ce2",
+    "# useField": "c0332a651b55",
     "## Value inputs": "d14f8cff63e9",
     "## Accessible composition": "2747e1de0671",
     "## When to use": "e08f8ff9959e",
@@ -885,6 +915,16 @@
     "## When to use": "5513b39d7e62",
     "## Props": "56a67702b8d8",
     "(section order)": "880d50d096f3"
+  },
+  "utilities/use-selection": {
+    "(top)": "25d6adea091e",
+    "# useSelection": "a19cd91c74bf",
+    "## Ranges": "5c62deb5b106",
+    "## Selection across pages": "4e4884f9c326",
+    "## Accessible composition": "81695c7c5dd9",
+    "## When to use": "4653a1307902",
+    "## Props": "3e0b5915a64b",
+    "(section order)": "3de86623438d"
   },
   "utilities/use-sheet-presentation": {
     "(top)": "3a8163d5375e",

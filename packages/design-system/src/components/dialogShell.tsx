@@ -15,7 +15,7 @@ import { useDomId } from './domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen.js';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
@@ -108,7 +108,7 @@ export function ShellDescription({ children, id: idProp, ...props }: ComponentPr
 export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useShell();
   // Text a screen reader reads, such as "Cancel", names the button; the close string names one without, such as an icon.
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
+  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().close);
   const glyph = useCloseGlyph();
   return (
     <Button.Root

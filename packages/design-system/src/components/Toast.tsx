@@ -26,7 +26,7 @@ import { eventInside } from '../overlay/eventInside.js';
 import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import type { Toaster, ToastRecord, ToastTone } from './toaster.js';
@@ -751,7 +751,7 @@ function Action({ variant = 'secondary', onClick, className, ...props }: ToastAc
 /** A ghost Button.Root that dismisses the toast. Named by the `dismiss` string unless its own text names it. */
 function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...props }: ToastCloseProps) {
   const item = useContext(ItemContext);
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
+  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().dismiss);
   const glyph = useCloseGlyph();
   return (
     <Button.Root

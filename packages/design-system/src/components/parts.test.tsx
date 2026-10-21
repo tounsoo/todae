@@ -11,6 +11,7 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  DataList,
   EmptyState,
   Message,
   Attachment,
@@ -120,6 +121,7 @@ const cases: Case[] = [
   ['Table.Row', (p) => <table><tbody><Table.Row {...p} /></tbody></table>],
   ['Table.HeaderCell', (p) => <table><tbody><tr><Table.HeaderCell {...p} scope="row">h</Table.HeaderCell></tr></tbody></table>],
   ['Table.Cell', (p) => <table><tbody><tr><Table.Cell {...p}>c</Table.Cell></tr></tbody></table>],
+  ['Table.SortButton', (p) => <table><thead><tr><Table.HeaderCell scope="col"><Table.SortButton {...p}>Name</Table.SortButton></Table.HeaderCell></tr></thead></table>],
   ['Progress.Root', (p) => <Progress.Root {...p} aria-label="p" />],
   ['Meter.Root', (p) => <Meter.Root {...p} value={0.5} aria-label="m" />],
   ['Loader.Root', (p) => <Loader.Root {...p} aria-label="s" />],
@@ -201,6 +203,28 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
+  [
+    'Field.NumberInput',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.NumberInput {...p} value={null} onValueChange={noop} />
+      </Field.Root>
+    ),
+  ],
+  ...(['Increment', 'Decrement'] as const).map(
+    (part): Case => [
+      `Field.${part}`,
+      (p) => {
+        const Part = Field[part];
+        return (
+          <Field.Root aria-label="t">
+            <Field.NumberInput value={1} onValueChange={noop} />
+            <Part {...p} />
+          </Field.Root>
+        );
+      },
+    ],
+  ),
   [
     'Field.Textarea',
     (p) => (
@@ -550,6 +574,20 @@ const cases: Case[] = [
           <Card.Root>
             <Part {...p} />
           </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['DataList.Root', (p) => <DataList.Root {...p} />],
+  ...(['Item', 'Term', 'Details'] as const).map(
+    (part): Case => [
+      `DataList.${part}`,
+      (p) => {
+        const Part = DataList[part] as (props: Native) => ReactNode;
+        return (
+          <DataList.Root>
+            <Part {...p} />
+          </DataList.Root>
         );
       },
     ],

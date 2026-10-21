@@ -20,7 +20,7 @@ import {
   type FormErrors,
   type SummaryEntry,
 } from './Form.context.js';
-import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
+import { errorsKey, FORM_ROOTS, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
@@ -246,6 +246,16 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     }),
     [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh, edited],
   );
+
+  // The input's submit hook asks whether a form is a Form.Root, which checks and words the error.
+  useLayoutEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    FORM_ROOTS.add(form);
+    return () => {
+      FORM_ROOTS.delete(form);
+    };
+  }, []);
 
   // The summary if one is showing, else the control picked where the problems were read.
   useLayoutEffect(() => {

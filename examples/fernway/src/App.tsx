@@ -27,7 +27,7 @@ type Appearance = 'light' | 'dark';
 export function App() {
   const [appearance, setAppearance] = useState<Appearance>('light');
   const [region, setRegion] = useState('all');
-  const [guests, setGuests] = useState('2');
+  const [guests, setGuests] = useState<number | null>(2);
   const regionId = useId();
   const guestsId = useId();
   const cabins = CABINS.filter((cabin) => region === 'all' || cabin.region === region);
@@ -76,7 +76,9 @@ export function App() {
             <Field.Group>
               <Label.Root htmlFor={guestsId}>Guests</Label.Root>
               <Field.Root id={guestsId}>
-                <Field.TextInput type="number" value={guests} onValueChange={setGuests} />
+                <Field.Decrement />
+                <Field.NumberInput value={guests} onValueChange={setGuests} min={1} max={12} />
+                <Field.Increment />
               </Field.Root>
             </Field.Group>
           </Stack.Root>

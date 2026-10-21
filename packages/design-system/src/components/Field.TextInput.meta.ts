@@ -30,11 +30,11 @@ export const meta = {
     },
     {
       name: 'type',
-      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number"',
+      type: '"text" | "search" | "email" | "url" | "tel" | "password"',
       required: false,
       default: '"text"',
       description:
-        'Native input type. Number keeps the native spinner, and value stays the input string, such as "42". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.',
+        'Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.',
     },
   ],
 } as const satisfies ComponentMeta;

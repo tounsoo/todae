@@ -1,6 +1,25 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { warnOnce } from './warnOnce.js';
 
 type CountEntry = { value: string; maxLength?: number };
+
+/**
+ * What a Field.NumberInput tells Field.Increment and Field.Decrement, which
+ * find it through the field rather than by its type. A new object only when
+ * something they show changes.
+ */
+export type StepperEntry = {
+  /** Steps the number by one step up or down, as the arrow keys do. */
+  step: (direction: 1 | -1) => void;
+  /** The id of the input, for `aria-controls`. */
+  inputId: string;
+  /** What names the input, such as its label's text, for a button's name. Empty without one. */
+  label: string;
+  /** The field is disabled or read-only. */
+  disabled: boolean;
+  atMin: boolean;
+  atMax: boolean;
+};
 
 export type CountStore = {
   entry: CountEntry | null;
@@ -11,6 +30,8 @@ export type CountStore = {
   named: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
+  stepper: StepperEntry | null;
+  steppers: Set<() => void>;
 };
 
 export type FieldContextValue = {
@@ -29,9 +50,17 @@ export type FieldContextValue = {
   store: CountStore;
 };
 
-function notifyPresence(store: CountStore) {
-  for (const listener of store.presence) listener();
+function notify(listeners: Set<() => void>) {
+  for (const listener of listeners) listener();
 }
+
+/** A `subscribe` for `useSyncExternalStore` over one of the store's listener sets. */
+const subscribeTo = (listeners: Set<() => void>) => (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
 
 /**
  * A stable ref callback that counts the element it is attached to as a
@@ -59,7 +88,7 @@ export function useControlPresence(
     store.controls += Number(next.control) - Number(prev.control);
     store.named += Number(next.named) - Number(prev.named);
     own.current = next;
-    notifyPresence(store);
+    notify(store.presence);
   }, [store, counted]);
   // After each commit: whether the element took the field's name can change.
   useLayoutEffect(() => sync());
@@ -81,15 +110,7 @@ export function useControlPresence(
  * reads false until hydration.
  */
 function useStoreFlag(store: CountStore, read: (store: CountStore) => boolean): boolean {
-  const subscribe = useCallback(
-    (listener: () => void) => {
-      store.presence.add(listener);
-      return () => {
-        store.presence.delete(listener);
-      };
-    },
-    [store],
-  );
+  const subscribe = useMemo(() => subscribeTo(store.presence), [store]);
   return useSyncExternalStore(
     subscribe,
     () => read(store),
@@ -109,6 +130,42 @@ export const useBesideControl = (store: CountStore) => useStoreFlag(store, hasCo
  */
 export const useBesideNamed = (store: CountStore, own: () => number) =>
   useStoreFlag(store, (current) => current.named - own() > 0);
+
+/**
+ * Publishes a Field.NumberInput's entry to the field's store, for
+ * Field.Increment and Field.Decrement. One input's entry replaces another's,
+ * with a warning in development, and an input that goes away takes down only
+ * its own entry, so the one that replaced it is left.
+ */
+export function usePublishStepper(store: CountStore, entry: StepperEntry): void {
+  const published = useRef<StepperEntry | null>(null);
+  useLayoutEffect(() => {
+    if (store.stepper && store.stepper !== published.current) {
+      warnOnce('number-input-twice', 'Field.Root holds more than one Field.NumberInput, so Field.Increment and Field.Decrement step only the last one. Give each its own Field.Root.');
+    }
+    published.current = entry;
+    store.stepper = entry;
+    notify(store.steppers);
+  }, [store, entry]);
+  useLayoutEffect(
+    () => () => {
+      if (store.stepper !== published.current) return;
+      store.stepper = null;
+      notify(store.steppers);
+    },
+    [store],
+  );
+}
+
+/** The entry of the field's Field.NumberInput, or null while it has none. */
+export function useStepper(store: CountStore): StepperEntry | null {
+  const subscribe = useMemo(() => subscribeTo(store.steppers), [store]);
+  return useSyncExternalStore(
+    subscribe,
+    () => store.stepper,
+    () => null,
+  );
+}
 
 export const FieldContext = /* @__PURE__ */ createContext<FieldContextValue | null>(null);
 

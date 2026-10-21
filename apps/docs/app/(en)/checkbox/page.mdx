@@ -1,8 +1,8 @@
-import { CheckboxStates } from '../../../components/demos/CheckboxDemo';
+import { CheckboxIndeterminate, CheckboxStates } from '../../../components/demos/CheckboxDemo';
 
 # Checkbox
 
-Native checkbox. Children are the visible label. There is no indeterminate state.
+Native checkbox. Children are the visible label.
 
 Controlled when `checked` is defined. Uncontrolled when you pass `defaultChecked` or omit both. `useControlledState` does not fire `onCheckedChange`. The component does.
 
@@ -32,9 +32,32 @@ Do not put Checkbox inside `Field.Root`. The shell is for text and chip inputs. 
 
 For a permanent exclusive choice, use [Radio](/radio). For an overlay list, use [OptionList](/optionlist).
 
+## Indeterminate
+
+`indeterminate` shows the mixed state, such as a select-all box over a list where only some items are checked. It sets the input's `indeterminate` property and draws the `indeterminate` glyph in place of the check. It does not change `checked`: a click toggles `checked` as usual, and you decide what the box shows next. Todae sets the property again after every render, so a click does not leave it cleared while your state says mixed.
+
+```tsx
+<Checkbox.Root
+  checked={email && push}
+  indeterminate={(email || push) && !(email && push)}
+  onCheckedChange={(checked) => {
+    setEmail(checked);
+    setPush(checked);
+  }}
+>
+  All notifications
+</Checkbox.Root>
+```
+
+<Example block>
+  <CheckboxIndeterminate />
+</Example>
+
+[useSelection](/utilities/use-selection) wires a select-all checkbox this way, from its `getSelectAllProps()`.
+
 ## Icons
 
-The check is the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. It fills the box and shows while the checkbox is checked.
+The check is the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. It fills the box and shows while the checkbox is checked. While `indeterminate` is set, the box is filled the same way and shows the `indeterminate` glyph instead, a horizontal bar by default.
 
 ```tsx
 import { Check } from 'lucide-react';
@@ -46,7 +69,7 @@ import { Check } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** Checkbox is a native `<input type="checkbox">` inside a `<label>` with your children, so the children are its name and a click on the text toggles it. Space toggles it, as natively. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The drawn box is `aria-hidden` and shows the focus ring while the input is focus-visible. Other props, `aria-*`, `id` and `ref` included, go to the input; `className` goes to the label.
+**Todae handles:** Checkbox is a native `<input type="checkbox">` inside a `<label>` with your children, so the children are its name and a click on the text toggles it. Space toggles it, as natively. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The drawn box is `aria-hidden` and shows the focus ring while the input is focus-visible. `indeterminate` sets the input's `indeterminate` property, which a screen reader reads as a mixed state. Other props, `aria-*`, `id` and `ref` included, go to the input; `className` goes to the label.
 
 **You supply:** Visible text as `children`, which the type requires. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in `aria-describedby`. A [Fieldset](/fieldset) with a legend when several checkboxes answer one question.
 
@@ -54,7 +77,7 @@ import { Check } from 'lucide-react';
 
 ## When to use
 
-**When:** Independent on/off that stays on the page. Children = visible label.
+**When:** Independent on/off that stays on the page. Children = visible label. A parent box over a partly checked group → `indeterminate`.
 
 **When not:** Exclusive one-of → Radio. Instant setting toggle look → Switch. Overlay multi-select → OptionList `selectionMode="multiple"`. Inside Field.Root.
 

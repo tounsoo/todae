@@ -56,6 +56,10 @@
       "types": "./dist/server/card.d.ts",
       "import": "./dist/card.js"
     },
+    "./data-list": {
+      "types": "./dist/server/data-list.d.ts",
+      "import": "./dist/data-list.js"
+    },
     "./message": {
       "types": "./dist/server/message.d.ts",
       "import": "./dist/message.js"

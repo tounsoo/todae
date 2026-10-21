@@ -22,7 +22,7 @@ function hasWords(children: ReactNode): boolean {
 }
 
 /** The text a screen reader reads from the button's content: not aria-hidden parts or SVG titles. */
-function spokenText(node: Node): string {
+export function spokenText(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true' || node.namespaceURI === 'http://www.w3.org/2000/svg') {
     return '';
@@ -30,12 +30,43 @@ function spokenText(node: Node): string {
   return [...node.childNodes].map(spokenText).join('');
 }
 
+type Watched = [Element, MutationObserverInit][];
+
 /**
- * The accessible name for a dismiss button: `ariaLabel` when not empty, none when
- * the button's own rendered text names it, and `fallback`, a string from
- * StringsProvider, otherwise. Put the returned ref on the button.
+ * Calls `onChange` when any of the elements `find` returns changes as its
+ * options say. The elements are found again after each change, so a replaced
+ * one is followed; `refresh` finds them again on demand. Returns both, and
+ * the cleanup. Without MutationObserver it does nothing.
  */
-export function useDismissLabel(
+function watchElements(find: () => Watched, onChange: () => void) {
+  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
+    onChange();
+    refresh();
+  });
+  function refresh() {
+    if (!observer) return;
+    observer.disconnect();
+    for (const [element, options] of find()) observer.observe(element, options);
+  }
+  refresh();
+  return { refresh, stop: () => observer?.disconnect() };
+}
+
+const BUTTON_CHANGES: MutationObserverInit = {
+  childList: true,
+  subtree: true,
+  characterData: true,
+  attributes: true,
+  attributeFilter: ['aria-hidden'],
+};
+
+/**
+ * The accessible name for a button that Todae names, such as a dismiss or step
+ * button: `ariaLabel` when not empty, none when the button's own rendered text
+ * names it, and `fallback`, a string from StringsProvider, otherwise. Put the
+ * returned ref on the button.
+ */
+export function useButtonName(
   children: ReactNode,
   ariaLabel: string | undefined,
   ref: Ref<HTMLButtonElement> | undefined,
@@ -56,16 +87,8 @@ export function useDismissLabel(
   // that loads later, without this component rendering again.
   useLayoutEffect(() => {
     const button = buttonRef.current;
-    if (!button || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(read);
-    observer.observe(button, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['aria-hidden'],
-    });
-    return () => observer.disconnect();
+    if (!button) return;
+    return watchElements(() => [[button, BUTTON_CHANGES]], read).stop;
   }, [read]);
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }

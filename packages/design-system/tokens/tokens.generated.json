@@ -5300,7 +5300,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.bg.disabled",
@@ -5314,7 +5314,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border.default",
@@ -5328,7 +5328,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border.disabled",
@@ -5342,7 +5342,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border.focus",
@@ -5356,7 +5356,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border.hover",
@@ -5370,7 +5370,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border.invalid",
@@ -5384,7 +5384,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.border-width",
@@ -5398,7 +5398,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.counter.emphasis.weight",
@@ -5412,7 +5412,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.date-time.gap",
@@ -5426,7 +5426,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.date-time.list.max-height",
@@ -5440,7 +5440,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.description.fg",
@@ -5454,7 +5454,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.description.font.size",
@@ -5468,7 +5468,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.description.font.weight",
@@ -5482,7 +5482,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.description.leading",
@@ -5496,7 +5496,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.error.fg",
@@ -5510,7 +5510,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.error.font.size",
@@ -5524,7 +5524,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.error.font.weight",
@@ -5538,7 +5538,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.error.leading",
@@ -5552,7 +5552,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.fg.adornment",
@@ -5566,7 +5566,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.fg.default",
@@ -5580,7 +5580,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.fg.disabled",
@@ -5594,7 +5594,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.fg.placeholder",
@@ -5608,7 +5608,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.font.size",
@@ -5622,7 +5622,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.gap",
@@ -5636,7 +5636,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.icon.size",
@@ -5650,7 +5650,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.fg",
@@ -5664,7 +5664,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.font.letter-spacing",
@@ -5678,7 +5678,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.font.size",
@@ -5692,7 +5692,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.font.text-transform",
@@ -5706,7 +5706,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.font.weight",
@@ -5720,7 +5720,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.label.gap",
@@ -5734,7 +5734,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.leading",
@@ -5748,7 +5748,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.messages.gap",
@@ -5762,7 +5762,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.min-width",
@@ -5776,7 +5776,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.padding.x",
@@ -5790,7 +5790,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.padding.y",
@@ -5804,7 +5804,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.bg",
@@ -5818,7 +5818,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.border",
@@ -5832,7 +5832,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.fg",
@@ -5846,7 +5846,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.max-height",
@@ -5860,7 +5860,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.padding.x",
@@ -5874,7 +5874,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.padding.y",
@@ -5888,7 +5888,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.radius",
@@ -5902,7 +5902,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.picker.shadow",
@@ -5916,7 +5916,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.radius",
@@ -5930,7 +5930,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.ring.focus",
@@ -5944,7 +5944,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.ring.invalid",
@@ -5958,7 +5958,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.row.control.size",
@@ -5972,7 +5972,105 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.bg.active",
+      "type": "color",
+      "cssVar": "--todae-field-stepper-bg-active",
+      "cssValue": "var(--todae-color-bg-pressed)",
+      "ref": "color.bg.pressed",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-field-stepper-bg-hover",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.fg",
+      "type": "color",
+      "cssVar": "--todae-field-stepper-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.radius",
+      "type": "dimension",
+      "cssVar": "--todae-field-stepper-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.repeat-delay",
+      "type": "duration",
+      "cssVar": "--todae-field-stepper-repeat-delay",
+      "cssValue": "400ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.repeat-interval",
+      "type": "duration",
+      "cssVar": "--todae-field-stepper-repeat-interval",
+      "cssValue": "60ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.stepper.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-stepper-size",
+      "cssValue": "1.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.swatch.border",
@@ -5986,7 +6084,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.swatch.radius",
@@ -6000,7 +6098,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.token.bg",
@@ -6014,7 +6112,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "field.token.radius",
@@ -6028,7 +6126,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+      "description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
       "path": "chip.bg.default",
@@ -10550,7 +10648,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.caption.fg",
@@ -10564,7 +10662,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.cell.padding.x",
@@ -10578,7 +10676,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.cell.padding.y",
@@ -10592,7 +10690,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.fg",
@@ -10606,7 +10704,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.border",
@@ -10620,7 +10718,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.fg",
@@ -10634,7 +10732,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.letter-spacing",
@@ -10648,7 +10746,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.text-transform",
@@ -10662,7 +10760,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.weight",
@@ -10676,7 +10774,21 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.row.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-table-row-bg-selected",
+      "cssValue": "var(--todae-color-bg-selected)",
+      "ref": "color.bg.selected",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.rule.thickness",
@@ -10690,7 +10802,77 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.gap",
+      "type": "dimension",
+      "cssVar": "--todae-table-sort-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.fg.default",
+      "type": "color",
+      "cssVar": "--todae-table-sort-icon-fg-default",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.fg.selected",
+      "type": "color",
+      "cssVar": "--todae-table-sort-icon-fg-selected",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-table-sort-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-table-sort-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "meter.fill.critical",
@@ -11587,6 +11769,146 @@
         "name": "contract"
       },
       "description": "Card.Root: a bordered surface that groups related content."
+    },
+    {
+      "path": "datalist.details.fg",
+      "type": "color",
+      "cssVar": "--todae-datalist-details-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.details.min-width",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-details-min-width",
+      "cssValue": "12rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.column",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-column",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.row",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-row",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.stacked",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-stacked",
+      "cssValue": "var(--todae-space-stack-gap-condensed)",
+      "ref": "space.stack.gap-condensed",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.leading",
+      "type": "number",
+      "cssVar": "--todae-datalist-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.fg",
+      "type": "color",
+      "cssVar": "--todae-datalist-term-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-datalist-term-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.width",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-term-width",
+      "cssValue": "10rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
     },
     {
       "path": "message.actions.motion.duration",

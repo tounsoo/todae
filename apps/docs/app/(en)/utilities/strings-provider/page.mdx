@@ -168,6 +168,16 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`Choose date and time`</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Increment`, unless its own text names it, given the text of its `Field.NumberInput`'s label, or an empty string without one</Table.Cell>
+      <Table.Cell>`Increase {field}`, or `Increase` with no label</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`decrement(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Decrement`, unless its own text names it, given the text of its `Field.NumberInput`'s label, or an empty string without one</Table.Cell>
+      <Table.Cell>`Decrease {field}`, or `Decrease` with no label</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`previousMonth`</Table.HeaderCell>
       <Table.Cell>`Calendar.Header`'s previous-month button</Table.Cell>
       <Table.Cell>`Previous month`</Table.Cell>
@@ -196,6 +206,21 @@ A string that depends on a number or a label is a function.
       <Table.HeaderCell scope="row">`copyFailed`</Table.HeaderCell>
       <Table.Cell>`useClipboard`, when a copy fails</Table.Cell>
       <Table.Cell>`Could not copy`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortedAscending(column)`</Table.HeaderCell>
+      <Table.Cell>`Table.SortButton`, after its column becomes sorted in ascending order</Table.Cell>
+      <Table.Cell>`Sorted by {column}, ascending`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortedDescending(column)`</Table.HeaderCell>
+      <Table.Cell>`Table.SortButton`, after its column becomes sorted in descending order</Table.Cell>
+      <Table.Cell>`Sorted by {column}, descending`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`sortCleared(column)`</Table.HeaderCell>
+      <Table.Cell>`Table.SortButton`, after its column is no longer sorted</Table.Cell>
+      <Table.Cell>`{column}, not sorted`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`conversation`</Table.HeaderCell>
@@ -330,7 +355,7 @@ A string that depends on a number or a label is a function.
 
 ## Accessible composition
 
-**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip and attachment remove buttons, the `+N` chip and `Conversation.ScrollButton`, the sheet name from `useCombobox`, and the live messages of `Field.Counter`, `useClipboard` and `Conversation`, with the counter's description, and the status words of `Steps.Item`, and the validation text of `ErrorMessage.Root` and `Form.Summary`. A part's own prop wins, as listed above.
+**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip and attachment remove buttons, the `+N` chip and `Conversation.ScrollButton`, the sheet name from `useCombobox`, and the live messages of `Field.Counter`, `useClipboard`, `Table.SortButton` and `Conversation`, with the counter's description, and the status words of `Steps.Item`, and the validation text of `ErrorMessage.Root` and `Form.Summary`. A part's own prop wins, as listed above.
 
 **You supply:** Every key your app shows, in the reader's language. The function keys get the label or the number, so place it where your language needs it and pick the plural form there. `StringsProvider` renders no element and sets no `lang`, so set `lang` on `<html>`, or on an element around a part in another language, so screen readers pronounce the words right. For `Breadcrumbs` and `Pagination` from the server entries, pass `aria-label` yourself, as above.
 

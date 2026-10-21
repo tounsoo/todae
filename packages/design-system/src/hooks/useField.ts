@@ -41,6 +41,13 @@ export type FieldControlOptions = {
    * no `name`, which only a form element submits. Default true.
    */
   native?: boolean;
+  /**
+   * False for a control whose value a value input sends instead, such as
+   * `Field.NumberInput`'s text: it gets no `name`, the Root's or its own, and
+   * is not marked as having taken the field's name, so a control beside it
+   * still can. Default true.
+   */
+  sendsName?: boolean;
 };
 
 export type FieldControlWire = {
@@ -68,7 +75,8 @@ export type UseFieldResult = {
    * Props for the one control inside `Field.Root`: id, name, disabled,
    * aria-invalid, merged aria-describedby, the Root's name unless the control
    * names itself, and a ref so a press on the shell focuses it. Pass
-   * `{ native: false }` for a control that is not a native form element.
+   * `{ native: false }` for a control that is not a native form element, and
+   * `{ sendsName: false }` for one that sends nothing itself.
    */
   getControlProps: <P extends FieldControlUserProps>(
     props?: P,
@@ -128,11 +136,11 @@ export function useFieldControl(counted: boolean): UseFieldResult {
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(
       props?: P,
-      { native = true }: FieldControlOptions = {},
+      { native = true, sendsName = true }: FieldControlOptions = {},
     ): Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand => {
       const user = (props ?? {}) as P;
       const disabled = ctx.disabled || Boolean(user.disabled);
-      const name = native ? (user.name ?? ctx.name) : undefined;
+      const name = native && sendsName ? (user.name ?? ctx.name) : undefined;
       return {
         ...user,
         ref: composedRef(user.ref),
