@@ -25,7 +25,7 @@
     overflow-x: auto;
   }
 
-  /* Code inside a block drops its own box, whether it is a Code.Root or a plain code. */
+  /* Code inside a block (as="pre") drops its own box, whether it is a Code.Root or a plain code. */
   .block code {
     padding: 0;
     border-radius: 0;

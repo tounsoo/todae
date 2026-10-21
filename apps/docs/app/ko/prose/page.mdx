@@ -42,7 +42,7 @@ const components = {
   wrapper: ({ children }) => <Prose.Root>{children}</Prose.Root>,
   a: Link.Root,
   code: Code.Root,
-  pre: (props) => <Code.Root as="pre" {...props} />,
+  pre: (props: ComponentProps<'pre'>) => <Code.Root as="pre" {...props} />,
   hr: Separator.Root,
   kbd: Kbd.Root,
   table: Table.Root,
