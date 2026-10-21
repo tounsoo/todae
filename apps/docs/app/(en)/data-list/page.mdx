@@ -21,7 +21,7 @@ A list of key and value pairs: an order summary, a profile, a settings pane, the
 </DataList.Root>
 ```
 
-<Example>
+<Example block>
   <DataListOrder />
 </Example>
 
@@ -46,13 +46,15 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
 </DataList.Root>
 ```
 
-<Example>
+<Example block>
   <DataListVertical />
 </Example>
 
 ## Narrow widths
 
 A horizontal list stacks by itself when it is too narrow for the term column and a readable details column. The term takes up to `datalist.term.width`, and shrinks in a list narrower than that column. The details wrap below it once they would be narrower than `datalist.details.min-width`. No container query is involved, so a company can change both tokens. The gap between a stacked term and its details is `datalist.gap.stacked`.
+
+The list takes the width its parent gives it. A parent that sizes the list to its content, such as a flex row or an inline-block, gives it only the width of its text, so its rows stack. Give the list a width there, for example `flex: 1` in a flex row.
 
 ## Accessible composition
 

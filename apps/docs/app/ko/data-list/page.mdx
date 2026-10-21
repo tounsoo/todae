@@ -21,7 +21,7 @@ import { DataListOrder, DataListVertical } from '../../../components/demos/DataL
 </DataList.Root>
 ```
 
-<Example>
+<Example block>
   <DataListOrder />
 </Example>
 
@@ -46,13 +46,15 @@ Server Components는 `@tounsoo/todae/data-list`에서 가져올 수 있습니다
 </DataList.Root>
 ```
 
-<Example>
+<Example block>
   <DataListVertical />
 </Example>
 
 ## 좁은 너비
 
 가로 목록은 용어 열과 읽기 좋은 너비의 상세 내용 열이 들어갈 만큼 넓지 않으면 스스로 쌓입니다. 용어는 최대 `datalist.term.width`까지 차지하며, 그보다 좁은 목록에서는 줄어듭니다. 상세 내용이 `datalist.details.min-width`보다 좁아지게 되면 용어 아래로 내려갑니다. 컨테이너 쿼리를 쓰지 않으므로 회사는 두 토큰을 모두 바꿀 수 있습니다. 쌓인 용어와 상세 내용 사이의 간격은 `datalist.gap.stacked`입니다.
+
+목록은 부모가 주는 너비를 차지합니다. 플렉스 행이나 inline-block처럼 내용에 맞춰 목록의 크기를 정하는 부모는 텍스트 너비만큼만 주므로 행이 쌓입니다. 그런 곳에서는 목록에 너비를 주세요. 예를 들어 플렉스 행에서는 `flex: 1`을 줍니다.
 
 ## 접근성을 지키는 조합
 

@@ -23,25 +23,44 @@ function list(width: string, orientation?: 'horizontal' | 'vertical') {
 }
 
 describe('DataList in a browser', () => {
-  it.each([
-    ['a flex row beside a button', { display: 'flex', gap: '1rem', inlineSize: '40rem' }],
-    ['an inline-block', { display: 'inline-block' }],
-  ] as const)('sizes to its columns in %s, so the details stay beside the term', (_, style) => {
+  it('fills a flex row that gives it room, beside its sibling', () => {
     render(
-      <div data-appearance="light" data-density="comfortable" style={style}>
-        <DataList.Root aria-label="Order">
+      <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', gap: '1rem', inlineSize: '40rem' }}>
+        <DataList.Root aria-label="Order" style={{ flex: 1 }}>
           <DataList.Item>
             <DataList.Term>Status</DataList.Term>
             <DataList.Details>Shipped</DataList.Details>
           </DataList.Item>
         </DataList.Root>
-        {style.display === 'flex' && <button type="button">Edit</button>}
+        <button type="button">Edit</button>
       </div>,
     );
     const term = screen.getByText('Status').getBoundingClientRect();
     const details = screen.getByText('Shipped').getBoundingClientRect();
+    const button = screen.getByRole('button').getBoundingClientRect();
     expect(details.left).toBeGreaterThanOrEqual(term.right);
     expect(Math.abs(details.top - term.top)).toBeLessThan(1);
+    expect(button.left).toBeGreaterThanOrEqual(details.right);
+  });
+
+  it('stays inside a narrow parent that sizes it to its content', () => {
+    render(
+      <div data-testid="parent" data-appearance="light" data-density="comfortable" style={{ inlineSize: '8rem' }}>
+        <div data-testid="box" style={{ display: 'inline-block' }}>
+          <DataList.Root aria-label="Order">
+            <DataList.Item>
+              <DataList.Term>Status</DataList.Term>
+              <DataList.Details>Shipped by ground freight from the Oakland warehouse</DataList.Details>
+            </DataList.Item>
+          </DataList.Root>
+        </div>
+      </div>,
+    );
+    const parent = screen.getByTestId('parent').getBoundingClientRect();
+    const box = screen.getByTestId('box').getBoundingClientRect();
+    const details = screen.getByText(/Shipped by/).getBoundingClientRect();
+    expect(box.right).toBeLessThanOrEqual(parent.right + 0.5);
+    expect(details.right).toBeLessThanOrEqual(box.right + 0.5);
   });
 
   it('puts the details beside the term in a wide list', () => {

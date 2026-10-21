@@ -36,17 +36,14 @@
   /* Horizontal: the term takes a column up to its token width and the details
      the rest. When a row cannot fit the term and the details' minimum, the
      details wrap below it, so a narrow list stacks without a container query
-     (which cannot read a token). The widths are inline sizes, not flex bases,
-     so a parent that sizes the list to its content counts them too. Child
-     combinators keep a list nested in a Details on its own orientation. */
+     (which cannot read a token). Child combinators keep a list nested in a
+     Details on its own orientation. */
   .root[data-orientation='horizontal'] > .item > .term {
-    flex: 0 1 auto;
-    inline-size: var(--todae-datalist-term-width);
+    flex: 0 0 min(var(--todae-datalist-term-width), 100%);
   }
 
   .root[data-orientation='horizontal'] > .item > .details {
-    flex: 1 1 auto;
-    inline-size: var(--todae-datalist-details-min-width);
+    flex: 1 1 var(--todae-datalist-details-min-width);
   }
 
   .root[data-orientation='vertical'] > .item {
