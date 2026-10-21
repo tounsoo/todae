@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage.js';
 import * as api from '../index.js';
 
@@ -48,5 +48,39 @@ describe('ErrorMessage', () => {
   it('marks itself for the sibling rule', () => {
     const { container } = render(<ErrorMessage.Root id="email-error">Enter an email.</ErrorMessage.Root>);
     expect(container.querySelector('#email-error')?.getAttribute('data-todae-error')).toBe('');
+  });
+});
+
+describe('ErrorMessage misuse', () => {
+  it('logs once, however often it renders, for no id outside a scope', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { rerender } = render(<ErrorMessage.Root />);
+    rerender(<ErrorMessage.Root />);
+    rerender(<ErrorMessage.Root className="again" />);
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+
+  it('logs the function-child message alone for an id with a function child', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // @ts-expect-error a function child needs a validation scope, so no id
+    render(<ErrorMessage.Root id="x">{() => 'nope'}</ErrorMessage.Root>);
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(String(error.mock.calls[0]![0])).toContain('function child');
+    error.mockRestore();
+  });
+
+  it('logs only the missing-scope message for no id and a function child outside a scope', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<ErrorMessage.Root>{() => 'nope'}</ErrorMessage.Root>);
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(String(error.mock.calls[0]![0])).toContain('must render inside');
+    error.mockRestore();
+  });
+
+  it('types a function child only without an id', () => {
+    expectTypeOf<{ id: string; children: () => string }>().not.toExtend<ErrorMessageRootProps>();
+    expectTypeOf<{ children: () => string }>().toExtend<ErrorMessageRootProps>();
+    expectTypeOf<{ id: string; children: string }>().toExtend<ErrorMessageRootProps>();
   });
 });
