@@ -2,7 +2,7 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 # Chip
 
-Text-only label. Optional remove is a named button. `Chip.Overflow` is display-only `+N`.
+Text-only label. Optional remove is a named button. A `+N` count is a plain chip.
 
 ```tsx
 <Stack.Root as="ul" direction="row" wrap aria-label="Tags">
@@ -13,7 +13,8 @@ Text-only label. Optional remove is a named button. `Chip.Overflow` is display-o
     <Chip.Root onRemove={remove}>Tokens</Chip.Root>
   </li>
   <li>
-    <Chip.Overflow overflowCount={4} />
+    <Chip.Root aria-hidden>+4</Chip.Root>
+    <VisuallyHidden.Root>4 more</VisuallyHidden.Root>
   </li>
 </Stack.Root>
 ```
@@ -22,11 +23,11 @@ Text-only label. Optional remove is a named button. `Chip.Overflow` is display-o
   <ChipExamples />
 </Example>
 
-`+N` is not a button and is not in the tab order.
+The `+N` chip is hidden from assistive technology, and the visually hidden text beside it is read in its place. It is not a button and is not in the tab order.
 
 `tone` takes the same tones as Badge: `neutral`, the default, the status tones `info`, `success`, `warning` and `critical`, and the category tones `category-1` to `category-8`. `neutral` reads the `chip.bg`, `chip.fg` and `chip.border` state tokens; the other tones read the `chip.<tone>` contract tokens and keep their colors on hover. A disabled chip takes the disabled colors whatever its tone.
 
-Without content, the remove button shows the `close` glyph: a cross, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. Pass `removeIcon` to show a different icon for one chip; an `svg` or `img` takes the `chip.icon.size` token. The button's name still comes from `removeLabel` or its default. That default, `Remove {label}`, and the `{n} more` read for `+N` come from [StringsProvider](/utilities/strings-provider).
+Without content, the remove button shows the `close` glyph: a cross, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. Pass `removeIcon` to show a different icon for one chip; an `svg` or `img` takes the `chip.icon.size` token. The button's name still comes from `removeLabel` or its default. That default, `Remove {label}`, comes from [StringsProvider](/utilities/strings-provider).
 
 ```tsx
 import { X } from 'lucide-react';
@@ -38,20 +39,18 @@ import { X } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `Chip.Root` renders its label as plain text in a `<span>` with no role. With `onRemove`, it adds a native `<button type="button">` named by `aria-label`: `removeLabel`, or the `removeChip` string, `Remove {label}` in English. `disabled` disables that button and sets `data-disabled` on the chip. `Chip.Overflow` hides the visible `+N` with `aria-hidden` and gives its name, the `moreChips` string by default, as visually hidden text.
+**Todae handles:** `Chip.Root` renders its label as plain text in a `<span>` with no role. With `onRemove`, it adds a native `<button type="button">` named by `aria-label`: `removeLabel`, or the `removeChip` string, `Remove {label}` in English. `disabled` disables that button and sets `data-disabled` on the chip.
 
 **You supply:** List semantics when you show several chips: a `<ul>` with `<li>` items, or `role="list"` on the container and `role="listitem"` on each `Chip.Root`, which passes native props to its `<span>`. A name for that list. A `removeLabel` that says what is removed when the label alone is not enough, such as "Remove filter Design". Somewhere for focus to go after a removal: the remove button leaves the DOM with its chip, so move focus to a neighbouring chip or to the control that added it. [ChipList](/chip-list) does this for you.
 
-**Watch for:** A chip inside a `<button>` or link: its remove button is then nested interactive content. `Chip.Overflow` used as a control: it is a `<span>` that takes no focus. To make `+N` open the rest, put it inside a `<button>`, as ChipList does, so the button takes the hidden name. Applied state shown only by chip color.
+**Watch for:** A chip inside a `<button>` or link: its remove button is then nested interactive content. A `+N` chip with no name: give it `aria-hidden` and put its name in a `VisuallyHidden.Root` beside it. A `+N` chip used as a control: it is a `<span>` that takes no focus. To make it open the rest, put it and its name inside a `<button>`, as ChipList does. Applied state shown only by chip color.
 
 ## When to use
 
-**When:** Text-only token for a value. Optional remove button via `onRemove` (named button). +N overflow is display-only.
+**When:** Text-only token for a value. Optional remove button via `onRemove` (named button). A display-only +N count.
 
 **When not:** Typed tokens in an input → `Field.ChipInput`. Clickable or selectable chip → Button.Root / Checkbox (Chip has no select). Icons or rich content in the label (text only).
 
 ## Props
 
 <PropsTable name="Chip.Root" />
-
-<PropsTable name="Chip.Overflow" />

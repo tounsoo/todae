@@ -11,7 +11,8 @@ const tooltip = useTooltip();
 
 <>
   <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
-    <Chip.Overflow overflowCount={2} />
+    <Chip.Root aria-hidden>+2</Chip.Root>
+    <VisuallyHidden.Root>2 more</VisuallyHidden.Root>
   </span>
   <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
 </>

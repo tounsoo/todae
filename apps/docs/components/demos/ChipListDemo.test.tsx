@@ -123,7 +123,7 @@ describe('chip list recipe', () => {
       const recipe = render(<ChipListDemo maxRows={maxRows} initialChips={EIGHT} />);
       const list = recipe.getByRole('list', { name: 'Tags' });
       const recipeNames = removes(list).map((el) => el.getAttribute('aria-label'));
-      const recipeMore = live(recipe.container, '[data-overflow]')[0]?.textContent ?? '';
+      const recipeMore = live(recipe.container, '[data-overflow]')[0]?.nextElementSibling?.textContent ?? '';
       recipe.unmount();
       const row = render(
         <Field.Root>
@@ -141,7 +141,7 @@ describe('chip list recipe', () => {
       expect(recipeNames).toEqual(labels.map((label) => `Remove ${label}`));
       expect(live(row.container, 'button').map((el) => el.getAttribute('aria-label'))).toEqual(recipeNames);
       expect(recipeMore).toContain(more);
-      expect(live(row.container, '[data-overflow]')[0]?.textContent).toContain(more.replace('+', ''));
+      expect(live(row.container, '[data-overflow]')[0]?.nextElementSibling?.textContent).toContain(more.replace('+', ''));
       row.unmount();
     }
   });
@@ -180,7 +180,7 @@ describe('chip list recipe', () => {
       expect(list.style.overflow).toBe('');
       expect(list.style.maxHeight).toBe('');
       expect(removes(list)).toHaveLength(visibleCount);
-      expect(live(view.container, '[data-overflow]')[0]?.textContent).toContain(more);
+      expect(live(view.container, '[data-overflow]')[0]?.nextElementSibling?.textContent).toContain(more);
       const truncated = [...list.children].filter((el) => (el as HTMLElement).style.maxWidth !== '');
       expect(truncated).toEqual([]);
       view.unmount();

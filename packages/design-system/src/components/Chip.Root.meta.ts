@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Chip.Root',
-  description: 'Text-only label with optional named remove button. Overflow +N is Chip.Overflow.',
+  description: 'Text-only label with optional named remove button. A +N count is a plain chip with aria-hidden and a VisuallyHidden.Root name beside it.',
   props: [
     {
       name: 'children',

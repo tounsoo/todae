@@ -13,6 +13,7 @@ import { usePopover } from '../hooks/usePopover.js';
 import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
+import { ChipCount } from './chipCount.js';
 import { useChipKeys } from './chipKeys.js';
 import { Popover } from './Popover.js';
 import { cx } from './cx.js';
@@ -309,7 +310,7 @@ function Root({
           {hidden > 0 ? (
             <span role="listitem">
               <button type="button" className={styles.more} {...popover.getTriggerProps({ ref: moreRef })}>
-                <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} data-todae-focus-ring="" />
+                <ChipCount count={hidden} label={overflowLabel} data-todae-focus-ring="" />
               </button>
             </span>
           ) : null}
@@ -326,7 +327,7 @@ function Root({
           <Chip.Root onRemove={onRemove ? () => undefined : undefined} removeIcon={removeIcon}>
             …
           </Chip.Root>
-          <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
+          <Chip.Root data-overflow="">{`+${chips.length || 1}`}</Chip.Root>
         </div>
       ) : null}
       {hidden > 0 ? (

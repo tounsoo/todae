@@ -220,20 +220,20 @@ describe('Tooltip', () => {
     expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
-  it('describes a Chip.Overflow wrap the author marks tabbable', () => {
+  it('describes a +N chip wrap the author marks tabbable', () => {
     function OverflowTip() {
       const tooltip = useTooltip({ defaultOpen: true });
       return (
         <>
           <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
-            <Chip.Overflow overflowCount={2} />
+            <Chip.Root aria-hidden>+2</Chip.Root>
           </span>
           <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
         </>
       );
     }
     render(<OverflowTip />);
-    const wrap = document.querySelector('[data-overflow]')?.parentElement;
+    const wrap = screen.getByText('+2').closest<HTMLElement>('[tabindex]');
     const tip = screen.getByRole('tooltip');
     expect(wrap?.tabIndex).toBe(0);
     expect(wrap?.getAttribute('aria-describedby')).toBe(tip.id);

@@ -25,6 +25,7 @@ import {
   useTooltip,
   type ComboboxOption,
 } from '../index.js';
+import { ChipCount } from '../components/chipCount.js';
 
 /**
  * axe in a real browser, so roles, names and the top layer are what a screen
@@ -113,7 +114,7 @@ function Gallery() {
         </RadioGroup.Root>
         <Stack.Root direction="row">
           <Chip.Root onRemove={() => undefined}>Design</Chip.Root>
-          <Chip.Overflow overflowCount={3} />
+          <ChipCount count={3} />
         </Stack.Root>
         <OptionList.Root value={fruit} onValueChange={setFruit} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>

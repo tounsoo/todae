@@ -151,7 +151,6 @@ const cases: Case[] = [
   ['Description.Root', (p) => <Description.Root {...p} id="d" />],
   ['ErrorMessage.Root', (p) => <ErrorMessage.Root {...p} id="e" />],
   ['Chip.Root', (p) => <Chip.Root {...p}>a</Chip.Root>],
-  ['Chip.Overflow', (p) => <Chip.Overflow {...p} overflowCount={2} />],
   ['ChipList.Root', (p) => <ChipList.Root {...p} aria-label="Tags" chips={['a', 'b']} />],
   ['Checkbox.Root', (p) => <Checkbox.Root {...p}>c</Checkbox.Root>],
   ['Switch.Root', (p) => <Switch.Root {...p}>s</Switch.Root>],

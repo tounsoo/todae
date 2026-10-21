@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chip } from './Chip.js';
-import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
 
@@ -69,15 +68,5 @@ describe('Chip', () => {
     rerender(<Chip.Root removeIcon={<svg data-testid="icon" />}>Alpha</Chip.Root>);
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.queryByTestId('icon')).toBeNull();
-  });
-
-  it('renders display-only overflow', () => {
-    const { container } = render(<Chip.Overflow overflowCount={4} />);
-    expect(container.querySelector('button')).toBeNull();
-    expect(container.querySelector('[tabindex]')).toBeNull();
-    expect(container.querySelector('[data-overflow]')).not.toBeNull();
-    // VisuallyHidden.Root's rules, which hold over a class a product adds.
-    expect(screen.getByText('4 more').className).toBe(vhStyles.root);
-    expect(screen.getByText('+4').getAttribute('aria-hidden')).not.toBeNull();
   });
 });

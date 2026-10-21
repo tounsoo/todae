@@ -30,16 +30,19 @@ function ChipField({ width }: { width: number }) {
   );
 }
 
-/** The chips, overflow chip and input that are laid out (not the inert measure copy). */
+/** The chips, overflow chip and input that are laid out (not the inert measure copy, nor the +N name, which is out of the flow). */
 function liveNodes(): HTMLElement[] {
   const flow = screen.getByRole('textbox').parentElement!;
-  return [...flow.children].filter((el): el is HTMLElement => el instanceof HTMLElement && !el.hasAttribute('inert'));
+  return [...flow.children].filter(
+    (el): el is HTMLElement =>
+      el instanceof HTMLElement && !el.hasAttribute('inert') && getComputedStyle(el).position !== 'absolute',
+  );
 }
 
 function hiddenCount(): number {
   const overflow = liveNodes().find((el) => el.hasAttribute('data-overflow'));
-  // The visible part reads "+N"; the hidden label beside it says "N more".
-  return overflow ? Number(overflow.querySelector('[aria-hidden]')?.textContent?.slice(1) ?? 0) : 0;
+  // The chip reads "+N"; the hidden label beside it says "N more".
+  return overflow ? Number(overflow.textContent?.slice(1) ?? 0) : 0;
 }
 
 describe('Field.ChipInput overflow in a browser', () => {
