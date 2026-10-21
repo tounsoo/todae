@@ -1789,6 +1789,18 @@
       ]
     },
     {
+      "name": "Field.Decrement",
+      "description": "A button that lowers the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled at min. It is named from the decrement string of StringsProvider unless its own text names it, and draws the minus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Content that replaces the minus sign. Text in it names the button."
+        }
+      ]
+    },
+    {
       "name": "Field.Group",
       "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
@@ -1822,6 +1834,92 @@
           "required": false,
           "description": "When false, the wrapper is aria-hidden.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Field.Increment",
+      "description": "A button that raises the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled at max. It is named from the increment string of StringsProvider unless its own text names it, and draws the plus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Content that replaces the plus sign. Text in it names the button."
+        }
+      ]
+    },
+    {
+      "name": "Field.NumberInput",
+      "description": "A text input for a number, in the locale's own format, that the person types into freely. It parses on blur, Enter and each step, rewrites the text and calls onValueChange. The number goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them in the field's format. Arrow Up and Down step, Page Up and Page Down step by largeStep, and Home and End go to min and max when set. Field.Increment and Field.Decrement beside it are step buttons. It is a native input with the spinbutton role, and takes native input attributes except type, role, value, defaultValue, onChange, min, max, step, disabled and required.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number | null",
+          "required": true,
+          "description": "The number, or null for none. Never NaN."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: number | null) => void",
+          "required": false,
+          "description": "Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within min and max and on step, or null for an empty text. Typing alone fires nothing. Without it the input is read-only."
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "required": false,
+          "description": "The lowest number. A commit below it becomes it, and a form with a lower value is invalid."
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The highest number. A commit above it becomes the highest number on the step that fits."
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. Without it a commit keeps every digit and a key moves by 1."
+        },
+        {
+          "name": "largeStep",
+          "type": "number",
+          "required": false,
+          "description": "What Page Up and Page Down move by.",
+          "default": "step × 10"
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale for the number's text, such as \"de\". The browser's own when not set, so pass it when the input renders on a server."
+        },
+        {
+          "name": "formatOptions",
+          "type": "Intl.NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits. Put a unit or a currency sign in a Field.Affix instead when you can."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no number is invalid."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        },
+        {
+          "name": "inputMode",
+          "type": "\"numeric\" | \"decimal\" | \"text\" | …",
+          "required": false,
+          "description": "Which keyboard a phone shows.",
+          "default": "\"numeric\" for a whole step and min, else \"decimal\""
         }
       ]
     },
@@ -2021,9 +2119,9 @@
         },
         {
           "name": "type",
-          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
           "required": false,
-          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.",
+          "description": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.",
           "default": "\"text\""
         }
       ]
@@ -2239,6 +2337,30 @@
           "type": "string",
           "required": false,
           "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "formatNumber",
+      "description": "formatNumber(value, options) returns the number as the locale writes it, such as 1,234.5 in en-US and 1.234,5 in de. formatOptions sets the style, such as percent or currency, and the digits; a plain number shows all the digits it has.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": true,
+          "description": "The number to write."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as de. The runtime's own when not set."
+        },
+        {
+          "name": "options.formatOptions",
+          "type": "Intl.NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits."
         }
       ]
     },
@@ -3192,6 +3314,30 @@
           "type": "string",
           "required": false,
           "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "parseNumber",
+      "description": "parseNumber(text, options) returns the number in typed text, or null when the text is not a number in the locale, such as 1.234,5 in de for 1234.5. It reads the text with or without grouping, and with or without the percent sign, currency sign or unit that formatOptions writes.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as de. The runtime's own when not set."
+        },
+        {
+          "name": "options.formatOptions",
+          "type": "Intl.NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it. A percent style reads 13 as 0.13."
         }
       ]
     },

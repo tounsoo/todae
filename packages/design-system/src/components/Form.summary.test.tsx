@@ -69,7 +69,7 @@ describe('Form.Summary', () => {
         <EmailField />
         <Field.Group>
           <Field.Root id="age" name="age">
-            <Field.TextInput aria-label="Age" type="number" min="18" value="20" onValueChange={() => undefined} />
+            <Field.NumberInput aria-label="Age" min={18} value={20} onValueChange={() => undefined} />
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>

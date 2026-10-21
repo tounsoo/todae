@@ -2,6 +2,22 @@ import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSyn
 
 type CountEntry = { value: string; maxLength?: number };
 
+/**
+ * What a Field.NumberInput tells Field.Increment and Field.Decrement, which
+ * find it through the field rather than by its type. A new object only when
+ * something they show changes.
+ */
+export type StepperEntry = {
+  /** Steps the number by one step up or down, as the arrow keys do. */
+  step: (direction: 1 | -1) => void;
+  /** The id of the input, for `aria-controls`. */
+  inputId: string;
+  /** The field is disabled or read-only. */
+  disabled: boolean;
+  atMin: boolean;
+  atMax: boolean;
+};
+
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
@@ -11,6 +27,8 @@ export type CountStore = {
   named: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
+  stepper: StepperEntry | null;
+  steppers: Set<() => void>;
 };
 
 export type FieldContextValue = {

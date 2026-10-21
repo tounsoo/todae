@@ -69,6 +69,22 @@ export function ClockGlyph() {
   );
 }
 
+export function PlusGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 3.5v9M3.5 8h9" />
+    </svg>
+  );
+}
+
+export function MinusGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M3.5 8h9" />
+    </svg>
+  );
+}
+
 /** Points up, toward the conversation the message goes to. */
 export function SendGlyph() {
   return (

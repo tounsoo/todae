@@ -19,6 +19,10 @@ export interface Glyphs {
   calendar?: ReactNode;
   /** Field.TimePicker's button. Todae draws a clock. */
   clock?: ReactNode;
+  /** Field.Increment with no content. Todae draws a plus sign. */
+  plus?: ReactNode;
+  /** Field.Decrement with no content. Todae draws a minus sign. */
+  minus?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
   /** Composer.Submit with no content. Todae draws an arrow pointing up. */

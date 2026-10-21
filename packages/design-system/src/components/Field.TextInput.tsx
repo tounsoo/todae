@@ -6,16 +6,12 @@ import { useField } from '../hooks/useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 /**
- * Input types that take a string value. The number type keeps its native
- * spinner; `value` is the input's string, such as `"42"`. A time is
- * `Field.TimePicker`, a date `Field.DatePicker` and both
- * `Field.DateTimePicker`, with a text input beside any of them read by
+ * Input types that take a string value. A number is `Field.NumberInput`, a
+ * time `Field.TimePicker`, a date `Field.DatePicker` and both
+ * `Field.DateTimePicker`, with a text input beside any of the pickers read by
  * `parseTime`, `parseDate` or `parseDateTime` for a typed value.
  */
-export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
-
-// Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set(['number']);
+export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
 
 export type FieldTextInputProps = {
   value: string;
@@ -40,7 +36,7 @@ export function TextInput({
 }: FieldTextInputProps) {
   const field = useField();
   const ctx = useFieldContext();
-  const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
+  const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (
