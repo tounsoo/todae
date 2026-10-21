@@ -109,9 +109,9 @@ type UseStackMotionResult = {
 
 /**
  * The stack on screen as it follows `stack`: which view enters, which leave
- * and which wait below, and the viewport's height. Each moving view settles
- * when its own animations finish, so a change during a slide lets the views
- * already moving finish theirs.
+ * and which wait below, the scroll, and the viewport's height. Each moving
+ * view settles when its own transitions and animations finish, so a change
+ * during a slide lets the views already moving finish theirs.
  */
 export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseStackMotionOptions): UseStackMotionResult {
   const [{ shown, change, entering, leaving }, dispatch] = useReducer(motionReducer, {
@@ -149,7 +149,7 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     }
   }, [change, viewportRef]);
 
-  // Settles each moving view when its slide's animations finish, so CSS that
+  // Settles each moving view when its slide's transitions finish, so CSS that
   // changes them keeps it on screen as long as it moves. The entering view
   // waits for the viewport's height too.
   useLayoutEffect(() => {
