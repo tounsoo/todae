@@ -57,6 +57,7 @@ export const SITE_GROUPS = [
         ],
       ],
       ['/fieldset', 'Fieldset'],
+      ['/form', 'Form'],
       ['/grid', 'Grid'],
       ['/label', 'Label'],
       ['/link', 'Link'],

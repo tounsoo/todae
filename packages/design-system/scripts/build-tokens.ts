@@ -33,6 +33,7 @@ export const RESERVED_ROOTS = [
   'alert',
   'toast',
   'fieldset',
+  'form',
   'link',
   'disclosure',
   'separator',

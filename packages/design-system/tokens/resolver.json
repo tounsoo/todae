@@ -37,6 +37,7 @@
         { "$ref": "./components/alert.json" },
         { "$ref": "./components/toast.json" },
         { "$ref": "./components/fieldset.json" },
+        { "$ref": "./components/form.json" },
         { "$ref": "./components/link.json" },
         { "$ref": "./components/disclosure.json" },
         { "$ref": "./components/separator.json" },

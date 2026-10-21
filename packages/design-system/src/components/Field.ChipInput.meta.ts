@@ -47,6 +47,12 @@ export const meta = {
       description: "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
     },
     {
+      name: 'required',
+      type: 'boolean',
+      required: false,
+      description: 'A form with no chips is invalid, whatever the input holds.',
+    },
+    {
       name: 'overflowLabel',
       type: '(n: number) => string',
       required: false,

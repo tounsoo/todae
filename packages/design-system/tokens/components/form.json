@@ -1,0 +1,46 @@
+{
+  "form": {
+    "$description": "Form.Summary: the list of problems a failed submit leaves, in the critical status colors.",
+    "summary": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } }
+      },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+      "title": {
+        "font": {
+          "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      },
+      "link": {
+        "$description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same.",
+        "fg": {
+          "default": { "$type": "color", "$value": { "$ref": "#/link/fg/default/$value" } },
+          "hover": { "$type": "color", "$value": { "$ref": "#/link/fg/hover/$value" } }
+        },
+        "decoration": {
+          "default": { "$type": "color", "$value": { "$ref": "#/link/decoration/default/$value" } },
+          "hover": { "$type": "color", "$value": { "$ref": "#/link/decoration/hover/$value" } },
+          "thickness": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/thickness/$value" } },
+          "offset": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/offset/$value" } }
+        },
+        "ring": {
+          "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
+          "radius": { "$type": "dimension", "$value": { "$ref": "#/link/ring/radius/$value" } }
+        }
+      }
+    }
+  }
+}

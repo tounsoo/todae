@@ -41,6 +41,13 @@ export const meta = {
       description: 'Marks the control invalid and sets aria-invalid.',
     },
     {
+      name: 'customValidity',
+      type: 'string',
+      required: false,
+      description:
+        "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds.",
+    },
+    {
       name: 'name',
       type: 'string',
       required: false,
