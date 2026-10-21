@@ -181,6 +181,8 @@ export {
   type FieldCounterProps,
   type FieldDateTimePickerCloseReason,
   type FieldDateTimePickerProps,
+  type FieldDateRangePickerCloseReason,
+  type FieldDateRangePickerProps,
   type FieldGroupProps,
   type FieldIconProps,
   type FieldRootProps,

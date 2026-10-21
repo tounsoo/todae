@@ -56,6 +56,8 @@ export interface Strings {
   timePicker: string;
   /** Name of Field.DateTimePicker's popover, and of its button beside another control but a picker. */
   dateTimePicker: string;
+  /** Name of Field.DateRangePicker's popover, and of its button beside another control but a picker. */
+  dateRangePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
@@ -119,6 +121,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   datePicker: 'Choose date',
   timePicker: 'Choose time',
   dateTimePicker: 'Choose date and time',
+  dateRangePicker: 'Choose dates',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   previousYears: 'Previous years',

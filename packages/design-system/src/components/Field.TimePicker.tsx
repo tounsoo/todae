@@ -129,7 +129,7 @@ export function TimeList({
  * A button that opens a list of times in a popover and closes it on a picked
  * time. On its own it is the field's control and shows the time, and a press
  * elsewhere in the field opens the list. Beside any other control but a
- * Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a
+ * Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a
  * Field.TextInput to type the time in, that control is the field's control
  * instead, and the button is named from the timePicker string. With
  * `showValue={false}` the button shows only a clock glyph.

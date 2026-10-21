@@ -27,7 +27,7 @@ export type FieldColorPickerProps = {
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
  * elsewhere in the field. Beside any other control in the field but a
- * Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that
+ * Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that
  * control is the field's control instead, and the button is named from the colorPicker string.
  */
 export function ColorPicker({

@@ -192,7 +192,7 @@ function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined
  * date it offers closes the popover. On its own it is the field's control and shows
  * the date and time, and a press elsewhere in the field opens the popover.
  * Beside any other control but a Field.ColorPicker, Field.DatePicker,
- * Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type
+ * Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type
  * the date and time in, that control is the field's control instead, and the
  * button is named from the dateTimePicker string. With `showValue={false}`
  * the button shows only a calendar glyph.

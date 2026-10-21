@@ -1480,7 +1480,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1534,7 +1534,7 @@
     },
     {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1612,8 +1612,87 @@
       ]
     },
     {
+      "name": "Field.DateRangePicker",
+      "description": "A button that opens a Calendar in range mode in a popover, which closes once the range's second date is picked. On its own it is the field's control, shows the range, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the range in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. With a name, a hidden input sends the range as an ISO 8601 interval, such as 2026-10-03/2026-10-10. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "props": [
+        {
+          "name": "value",
+          "type": "DateRange | null",
+          "required": true,
+          "description": "The range, or null for none."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: DateRange) => void",
+          "required": false,
+          "description": "Fires with the range picked in the calendar, once its second date is picked."
+        },
+        {
+          "name": "min",
+          "type": "Temporal.PlainDate",
+          "required": false,
+          "description": "The earliest date that can be picked."
+        },
+        {
+          "name": "max",
+          "type": "Temporal.PlainDate",
+          "required": false,
+          "description": "The latest date that can be picked."
+        },
+        {
+          "name": "isDateDisabled",
+          "type": "(date: Temporal.PlainDate) => boolean",
+          "required": false,
+          "description": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one."
+        },
+        {
+          "name": "firstDayOfWeek",
+          "type": "1 | 2 | 3 | 4 | 5 | 6 | 7",
+          "required": false,
+          "description": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7."
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale for the button's dates and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Shown on the button while there is no range, when showValue is true."
+        },
+        {
+          "name": "showValue",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range.",
+          "default": "true"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state of the calendar. Pass with onOpenChange."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
+          "required": false,
+          "description": "Fires when the calendar opens or closes, with why it closed."
+        }
+      ]
+    },
+    {
       "name": "Field.DateTimePicker",
-      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1926,14 +2005,14 @@
           "name": "type",
           "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
           "required": false,
-          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.",
+          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker, a range of dates Field.DateRangePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate, parseDateRange or parseDateTime.",
           "default": "\"text\""
         }
       ]
     },
     {
       "name": "Field.TimePicker",
-      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",

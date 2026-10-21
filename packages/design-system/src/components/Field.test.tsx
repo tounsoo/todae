@@ -63,6 +63,7 @@ describe('Field exports', () => {
       DatePicker: Field.DatePicker,
       TimePicker: Field.TimePicker,
       DateTimePicker: Field.DateTimePicker,
+      DateRangePicker: Field.DateRangePicker,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,

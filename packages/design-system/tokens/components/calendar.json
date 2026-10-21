@@ -1,6 +1,6 @@
 {
   "calendar": {
-    "$description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state.",
+    "$description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }

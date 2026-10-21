@@ -8,9 +8,10 @@ import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 /**
  * Input types that take a string value. The number type keeps its native
  * spinner; `value` is the input's string, such as `"42"`. A time is
- * `Field.TimePicker`, a date `Field.DatePicker` and both
- * `Field.DateTimePicker`, with a text input beside any of them read by
- * `parseTime`, `parseDate` or `parseDateTime` for a typed value.
+ * `Field.TimePicker`, a date `Field.DatePicker`, a range of dates
+ * `Field.DateRangePicker` and both `Field.DateTimePicker`, with a text input
+ * beside any of them read by `parseTime`, `parseDate`, `parseDateRange` or
+ * `parseDateTime` for a typed value.
  */
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 

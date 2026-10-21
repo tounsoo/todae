@@ -15,7 +15,7 @@ export interface Glyphs {
   chevron?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;
-  /** Field.DatePicker's and Field.DateTimePicker's button. Todae draws a calendar. */
+  /** Field.DatePicker's, Field.DateRangePicker's and Field.DateTimePicker's button. Todae draws a calendar. */
   calendar?: ReactNode;
   /** Field.TimePicker's button. Todae draws a clock. */
   clock?: ReactNode;
