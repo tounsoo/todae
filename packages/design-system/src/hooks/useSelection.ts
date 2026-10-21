@@ -10,7 +10,7 @@ export type UseSelectionOptions<K extends string | number> = {
   keys: readonly K[];
   /** Keys that cannot be selected: ranges and select all skip them, and their checkbox is disabled. */
   disabledKeys?: readonly K[];
-  /** Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you set in a transition or a timer, is forgotten, and the next change builds on the value you passed. */
+  /** Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you pass back after a fetch or in a transition that commits later, is forgotten, and the next change builds on the value you passed. */
   value?: readonly K[];
   /** Initial selection when uncontrolled. */
   defaultValue?: readonly K[];
@@ -67,15 +67,14 @@ function withSelected<K>(value: readonly K[], targets: readonly K[], selected: b
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
   const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
-  // Writes build on each other until the next render, so two calls both
-  // count. Each commit makes the rendered value the base again, and a
-  // controlled write forces a render, so a change the parent turned down is
-  // dropped.
+  // Writes build on each other until the value changes, so two calls both
+  // count. A controlled write also forces a render that makes the rendered
+  // value the base again, so a change the parent turned down is dropped.
   const latest = useRef(value);
-  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  const [renders, rerender] = useReducer((count: number) => count + 1, 0);
   useLayoutEffect(() => {
     latest.current = value;
-  });
+  }, [value, renders]);
   const write = (next: readonly K[]) => {
     if (next === latest.current) return;
     latest.current = next;

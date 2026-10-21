@@ -22,7 +22,7 @@ export const meta = {
       type: 'readonly K[]',
       required: false,
       description:
-        "Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you set in a transition or a timer, is forgotten, and the next change builds on the value you passed.",
+        "Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you pass back after a fetch or in a transition that commits later, is forgotten, and the next change builds on the value you passed.",
     },
     {
       name: 'defaultValue',

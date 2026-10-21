@@ -64,7 +64,10 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
     };
     // A lone modifier, such as Control to quiet a screen reader, is not a new action.
     const onAction = (event: Event) => {
-      if ('key' in event && ((event as KeyboardEvent).repeat || MODIFIER_KEYS.has((event as KeyboardEvent).key))) return;
+      if (event.type === 'keydown') {
+        const { key, repeat } = event as KeyboardEvent;
+        if (repeat || MODIFIER_KEYS.has(key)) return;
+      }
       stop();
     };
     const observer = new MutationObserver(() => {
