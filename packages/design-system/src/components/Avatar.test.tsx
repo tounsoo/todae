@@ -228,4 +228,38 @@ describe('Avatar', () => {
   it('throws outside Avatar.Root', () => {
     expect(() => render(<Avatar.Fallback>AL</Avatar.Fallback>)).toThrow(/inside Avatar.Root/);
   });
+
+  describe('Group', () => {
+    it('is a group named by aria-label and renders data-size', () => {
+      render(
+        <Avatar.Group aria-label="Assignees" size="lg">
+          <Avatar.Root label="Ada Lovelace" />
+        </Avatar.Group>,
+      );
+      const group = screen.getByRole('group', { name: 'Assignees' });
+      expect(group.getAttribute('data-size')).toBe('lg');
+      expect(screen.getByRole('img', { name: 'Ada Lovelace' }).parentElement).toBe(group);
+    });
+
+    it('is md by default', () => {
+      render(<Avatar.Group aria-label="Assignees" />);
+      expect(screen.getByRole('group').getAttribute('data-size')).toBe('md');
+    });
+
+    it('gives its size to avatars with none of their own, and yields to their own', () => {
+      render(
+        <Avatar.Group aria-label="Assignees" size="sm">
+          <Avatar.Root data-testid="a" />
+          <Avatar.Root data-testid="b" size="lg" />
+        </Avatar.Group>,
+      );
+      expect(screen.getByTestId('a').getAttribute('data-size')).toBe('sm');
+      expect(screen.getByTestId('b').getAttribute('data-size')).toBe('lg');
+    });
+
+    it('leaves an avatar outside a group at md', () => {
+      render(<Avatar.Root data-testid="a" />);
+      expect(screen.getByTestId('a').getAttribute('data-size')).toBe('md');
+    });
+  });
 });

@@ -1,0 +1,53 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-datalist-gap-row);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    margin: 0;
+    font-size: var(--todae-datalist-font-size);
+    line-height: var(--todae-datalist-leading);
+  }
+
+  .item {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--todae-datalist-gap-column);
+    row-gap: var(--todae-datalist-gap-stacked);
+    min-inline-size: 0;
+  }
+
+  .term {
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--todae-datalist-term-fg);
+    font-weight: var(--todae-datalist-term-font-weight);
+  }
+
+  .details {
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--todae-datalist-details-fg);
+  }
+
+  /* Horizontal: the term takes a column up to its token width and the details
+     the rest. When a row cannot fit the term and the details' minimum, the
+     details wrap below it, so a narrow list stacks without a container query
+     (which cannot read a token). Child combinators keep a list nested in a
+     Details on its own orientation. */
+  .root[data-orientation='horizontal'] > .item > .term {
+    flex: 0 0 min(var(--todae-datalist-term-width), 100%);
+  }
+
+  .root[data-orientation='horizontal'] > .item > .details {
+    flex: 1 1 var(--todae-datalist-details-min-width);
+  }
+
+  .root[data-orientation='vertical'] > .item {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+}

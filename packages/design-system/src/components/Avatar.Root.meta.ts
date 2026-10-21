@@ -15,8 +15,7 @@ export const meta = {
       name: 'size',
       type: '"sm" | "md" | "lg"',
       required: false,
-      default: '"md"',
-      description: 'Size from the avatar.size contract tokens.',
+      description: 'Size from the avatar.size contract tokens. Left out, it is the size of the Avatar.Group around it, or "md".',
     },
     {
       name: 'tone',
