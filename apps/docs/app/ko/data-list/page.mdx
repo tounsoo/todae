@@ -25,13 +25,13 @@ import { DataListOrder, DataListVertical } from '../../../components/demos/DataL
   <DataListOrder />
 </Example>
 
-Server Components는 `@tounsoo/todae/data-list`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다. 파트는 context를 쓰지 않으므로 `DataList.Root` 밖에서도 오류를 내지 않습니다.
+Server Components는 `@tounsoo/todae/data-list`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
 
-`DataList.Item`은 용어 하나와 그 상세 내용을 담는 `div`입니다. `dl` 안에서 이런 `div`는 유효하며, 스타일을 주거나 옮기거나 key를 줄 수 있는 한 행입니다. 항목마다 `DataList.Term` 하나와 `DataList.Details` 하나를 주세요. HTML은 용어 하나에 `dd`를 여러 개 허용하고 레이아웃도 깨지지 않지만, 값의 목록은 `DataList.Details` 하나 안에 넣는 편이 읽기 좋습니다.
+`DataList.Item`은 용어 하나와 그 상세 내용을 담는 `div`입니다. `dl` 안에서 이런 `div`는 유효하며, 스타일을 주거나 옮기거나 key를 줄 수 있는 한 행입니다. 항목마다 `DataList.Term` 하나와 `DataList.Details` 하나를 주세요. 용어 하나에 값이 여럿이면 그 `DataList.Details` 하나 안에, 예를 들어 목록으로 넣으세요.
 
 ## 방향
 
-`orientation="vertical"`은 항상 용어를 상세 내용 위에 둡니다. 기본값인 `"horizontal"`은 용어를 상세 내용 옆의 열에 둡니다. 이 값은 CSS에서 `data-orientation`으로 보입니다.
+`orientation="vertical"`은 용어를 상세 내용 위에 둡니다. 기본값인 `"horizontal"`은 용어를 상세 내용 옆의 열에 둡니다. 이 값은 CSS에서 `data-orientation`으로 보입니다.
 
 ```tsx
 <DataList.Root orientation="vertical" aria-label="Profile">
@@ -52,15 +52,15 @@ Server Components는 `@tounsoo/todae/data-list`에서 가져올 수 있습니다
 
 ## 좁은 너비
 
-가로 목록은 용어 열과 읽기 좋은 너비의 상세 내용 열이 들어갈 만큼 넓지 않으면 스스로 쌓입니다. 용어는 `datalist.term.width`를 유지하고, 상세 내용이 `datalist.details.min-width`보다 좁아지게 되면 용어 아래로 내려갑니다. 컨테이너 쿼리를 쓰지 않으므로 회사는 두 토큰을 모두 바꿀 수 있습니다. 쌓인 용어와 상세 내용 사이의 간격은 `datalist.gap.stacked`입니다.
+가로 목록은 용어 열과 읽기 좋은 너비의 상세 내용 열이 들어갈 만큼 넓지 않으면 스스로 쌓입니다. 용어는 최대 `datalist.term.width`까지 차지하며, 그보다 좁은 목록에서는 줄어듭니다. 상세 내용이 `datalist.details.min-width`보다 좁아지게 되면 용어 아래로 내려갑니다. 컨테이너 쿼리를 쓰지 않으므로 회사는 두 토큰을 모두 바꿀 수 있습니다. 쌓인 용어와 상세 내용 사이의 간격은 `datalist.gap.stacked`입니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `dl`, `dt`, `dd` 요소. 스크린 리더는 이를 용어와 상세 내용이 있는 설명 목록으로 읽습니다. ARIA는 추가하지 않으며, 각 쌍을 감싸는 `div`는 접근성 트리에 나타나지 않습니다.
+**Todae가 맡는 것:** `dl`, `dt`, `dd` 요소. 각 `dt`는 용어로, 각 `dd`는 그 정의나 상세 내용으로 노출되며, 보조 기술은 이를 설명 목록으로 알릴 수 있습니다. ARIA는 추가하지 않으며, 각 쌍을 감싸는 `div`는 접근성 트리에 나타나지 않습니다.
 
-**직접 제공할 것:** 이름이 필요한 목록에는 `aria-label`이나 `aria-labelledby`로 준 이름. 그 자체로 값의 이름이 되는 용어 텍스트. 예를 들어 "Total"이나 "Ship to"입니다.
+**직접 제공할 것:** 이름이 필요한 목록에는 `aria-label`이나 `aria-labelledby`로 준 이름. 그 자체로 의미가 통하는 용어 텍스트. 예를 들어 "Total"이나 "Ship to"입니다.
 
-**주의할 점:** 용어가 아닌 내용, 예를 들어 버튼이나 폼 컨트롤을 `DataList.Term` 안에 넣는 것. `dt`는 상세 내용의 이름입니다. 행마다 열이 여러 개인 데이터를 `DataList`에 담는 것. 그것은 표이며, 표는 각 셀에 열 머리글을 연결해 줍니다.
+**주의할 점:** 용어가 아닌 내용, 예를 들어 버튼이나 폼 컨트롤을 `DataList.Term` 안에 넣는 것. 행마다 열이 여러 개인 데이터를 `DataList`에 담는 것. 그것은 표이며, 표는 각 셀에 열 머리글을 연결해 줍니다.
 
 ## 언제 쓰나
 

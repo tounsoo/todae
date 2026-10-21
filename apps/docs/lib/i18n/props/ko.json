@@ -485,14 +485,14 @@
       "ko": "DataList.Item 파트."
     },
     "orientation": {
-      "en": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical always puts the term above its details.",
-      "ko": "data-orientation을 설정합니다. horizontal은 각 용어를 상세 내용 옆의 열에 두고, 둘이 들어가기에 목록이 너무 좁으면 쌓습니다. vertical은 항상 용어를 상세 내용 위에 둡니다."
+      "en": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
+      "ko": "data-orientation을 설정합니다. horizontal은 각 용어를 상세 내용 옆의 열에 두고, 둘이 들어가기에 목록이 너무 좁으면 쌓습니다. vertical은 용어를 상세 내용 위에 둡니다."
     }
   },
   "DataList.Term": {
     "children": {
-      "en": "The name of the value, as text.",
-      "ko": "값의 이름. 텍스트로 넣으세요."
+      "en": "The term, as text.",
+      "ko": "용어. 텍스트로 넣으세요."
     }
   },
   "Description.Root": {

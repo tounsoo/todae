@@ -23,26 +23,30 @@
   }
 
   .term {
-    flex: 0 0 min(var(--todae-datalist-term-width), 100%);
     min-inline-size: 0;
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--todae-datalist-term-fg);
     font-weight: var(--todae-datalist-term-font-weight);
   }
 
   .details {
-    flex: 1 1 var(--todae-datalist-details-min-width);
     min-inline-size: 0;
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--todae-datalist-details-fg);
   }
 
-  .root[data-orientation='vertical'] > .item {
-    flex-direction: column;
-    flex-wrap: nowrap;
+  .root[data-orientation='horizontal'] .term {
+    flex: 0 0 min(var(--todae-datalist-term-width), 100%);
   }
 
-  .root[data-orientation='vertical'] > .item > :where(.term, .details) {
-    flex: none;
+  .root[data-orientation='horizontal'] .details {
+    flex: 1 1 var(--todae-datalist-details-min-width);
+  }
+
+  .root[data-orientation='vertical'] .item {
+    flex-direction: column;
+    flex-wrap: nowrap;
   }
 }

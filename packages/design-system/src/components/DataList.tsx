@@ -11,7 +11,7 @@ export type DataListOrientation = 'horizontal' | 'vertical';
 export type DataListRootProps = { orientation?: DataListOrientation } & ComponentPropsWithRef<'dl'>;
 /** A `div` that groups one term with its details, valid inside a `dl`. */
 export type DataListItemProps = ComponentPropsWithRef<'div'>;
-/** A native `dt`, the name of the value beside or below it. */
+/** A native `dt`, the term for the details beside or below it. */
 export type DataListTermProps = ComponentPropsWithRef<'dt'>;
 /** A native `dd`, the value for the term in the same item. */
 export type DataListDetailsProps = ComponentPropsWithRef<'dd'>;

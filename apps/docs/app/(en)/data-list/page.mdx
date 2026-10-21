@@ -25,13 +25,13 @@ A list of key and value pairs: an order summary, a profile, a settings pane, the
   <DataListOrder />
 </Example>
 
-Server Components can import it from `@tounsoo/todae/data-list`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module. The parts use no context, so they don't throw outside `DataList.Root`.
+Server Components can import it from `@tounsoo/todae/data-list`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
-`DataList.Item` is a `div` that holds one term and its details. A `div` is valid inside a `dl` for this, and it is the one row you can style, move or key. Give each item one `DataList.Term` and one `DataList.Details`. HTML allows more than one `dd` for a term, and they do not break the layout, but a list of values reads better inside one `DataList.Details`.
+`DataList.Item` is a `div` that holds one term and its details. A `div` is valid inside a `dl` for this, and it is the one row you can style, move or key. Give each item one `DataList.Term` and one `DataList.Details`. Several values for one term go inside that one `DataList.Details`, for example as a list.
 
 ## Orientation
 
-`orientation="vertical"` always puts the term above its details. The default, `"horizontal"`, puts the term in a column beside the details. The value reaches CSS as `data-orientation`.
+`orientation="vertical"` puts the term above its details. The default, `"horizontal"`, puts the term in a column beside the details. The value reaches CSS as `data-orientation`.
 
 ```tsx
 <DataList.Root orientation="vertical" aria-label="Profile">
@@ -52,15 +52,15 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
 
 ## Narrow widths
 
-A horizontal list stacks by itself when it is too narrow for the term column and a readable details column. The term keeps `datalist.term.width`, and the details wrap below it once they would be narrower than `datalist.details.min-width`. No container query is involved, so a company can change both tokens. The gap between a stacked term and its details is `datalist.gap.stacked`.
+A horizontal list stacks by itself when it is too narrow for the term column and a readable details column. The term takes up to `datalist.term.width`, and shrinks in a list narrower than that column. The details wrap below it once they would be narrower than `datalist.details.min-width`. No container query is involved, so a company can change both tokens. The gap between a stacked term and its details is `datalist.gap.stacked`.
 
 ## Accessible composition
 
-**Todae handles:** The `dl`, `dt` and `dd` elements, which a screen reader announces as a description list with its terms and details. Nothing is added with ARIA, and the `div` around each pair is invisible to the accessibility tree.
+**Todae handles:** The `dl`, `dt` and `dd` elements, which expose each `dt` as a term and each `dd` as its definition or details, and assistive technology can report the list as a description list. Nothing is added with ARIA, and the `div` around each pair is invisible to the accessibility tree.
 
-**You supply:** A name for the list when it needs one, with `aria-label` or `aria-labelledby`. Term text that names its value on its own, such as "Total" or "Ship to".
+**You supply:** A name for the list when it needs one, with `aria-label` or `aria-labelledby`. Term text that makes sense on its own, such as "Total" or "Ship to".
 
-**Watch for:** Content that is not a term inside `DataList.Term`, such as a button or a form control; the `dt` is the name of the details. A `DataList` that holds data with several columns per row; that is a table, which gives each cell its column header.
+**Watch for:** Content that is not a term inside `DataList.Term`, such as a button or a form control. A `DataList` that holds data with several columns per row; that is a table, which gives each cell its column header.
 
 ## When to use
 

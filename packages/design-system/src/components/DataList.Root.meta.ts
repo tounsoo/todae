@@ -11,7 +11,7 @@ export const meta = {
       required: false,
       default: '"horizontal"',
       description:
-        'Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical always puts the term above its details.',
+        'Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.',
     },
     {
       name: 'children',

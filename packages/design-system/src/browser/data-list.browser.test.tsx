@@ -69,6 +69,60 @@ describe('DataList in a browser', () => {
     expect(getComputedStyle(screen.getByText('Status')).color).not.toBe(getComputedStyle(screen.getByText('Shipped')).color);
   });
 
+  it('keeps a long unbroken value inside the list', () => {
+    const long = 'a-very-long-unbroken-address@example-company-domain-with-no-spaces.example.com';
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '16rem' }}>
+        <DataList.Root aria-label="Contact">
+          <DataList.Item>
+            <DataList.Term>Email</DataList.Term>
+            <DataList.Details>{long}</DataList.Details>
+          </DataList.Item>
+        </DataList.Root>
+      </div>,
+    );
+    const root = screen.getByLabelText('Contact').getBoundingClientRect();
+    const details = screen.getByText(long);
+    expect(details.getBoundingClientRect().right).toBeLessThanOrEqual(root.right + 1);
+    expect(details.scrollWidth).toBeLessThanOrEqual(details.clientWidth);
+  });
+
+  it('sizes a vertical term to its text, not the term column', () => {
+    render(list('40rem', 'vertical'));
+    const term = screen.getByText('Status');
+    const line = parseFloat(getComputedStyle(term).lineHeight);
+    expect(term.getBoundingClientRect().height).toBeLessThan(line * 1.5);
+    expect(term.getBoundingClientRect().height).toBeLessThan(parseFloat(getComputedStyle(document.documentElement).fontSize) * 5);
+  });
+
+  describe('at the stacking threshold', () => {
+    function threshold() {
+      const { container } = render(list('40rem'));
+      const probe = document.createElement('div');
+      probe.style.inlineSize =
+        'calc(var(--todae-datalist-term-width) + var(--todae-datalist-gap-column) + var(--todae-datalist-details-min-width))';
+      container.firstElementChild!.append(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      cleanup();
+      return width;
+    }
+
+    it('stays beside the term when one pixel wider than term, gap and details minimum', () => {
+      render(list(`${threshold() + 1}px`));
+      const term = screen.getByText('Status').getBoundingClientRect();
+      const details = screen.getByText('Shipped').getBoundingClientRect();
+      expect(Math.abs(details.top - term.top)).toBeLessThan(1);
+    });
+
+    it('stacks when one pixel narrower than term, gap and details minimum', () => {
+      render(list(`${threshold() - 1}px`));
+      const term = screen.getByText('Status').getBoundingClientRect();
+      const details = screen.getByText('Shipped').getBoundingClientRect();
+      expect(details.top).toBeGreaterThanOrEqual(term.bottom);
+    });
+  });
+
   it('has no axe violations', async () => {
     const { container } = render(list('40rem'));
     const results = await axe.run(container);
