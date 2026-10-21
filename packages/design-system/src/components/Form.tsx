@@ -75,7 +75,7 @@ type FormAction =
   | { type: 'reset' }
   | { type: 'dismiss'; name: string; errors: FormErrors | undefined };
 
-const NO_DISMISSAL: Dismissal = { errors: undefined, names: new Set() };
+const NO_DISMISSAL: Dismissal = { errors: undefined, names: /* @__PURE__ */ new Set() };
 
 function reduce(state: FormState, action: FormAction): FormState {
   switch (action.type) {
