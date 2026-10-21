@@ -39,6 +39,15 @@ export { VisuallyHidden, type VisuallyHiddenRootProps } from './components/Visua
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge.js';
 export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs.client.js';
 export {
+  EmptyState,
+  type EmptyStateActionsProps,
+  type EmptyStateDescriptionProps,
+  type EmptyStateIconProps,
+  type EmptyStateRootProps,
+  type EmptyStateTitleAs,
+  type EmptyStateTitleProps,
+} from './components/EmptyState.js';
+export {
   Card,
   type CardBodyProps,
   type CardFooterProps,
