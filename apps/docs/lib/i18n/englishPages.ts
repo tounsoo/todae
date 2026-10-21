@@ -28,6 +28,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'dialog': () => import('../../app/(en)/dialog/page.mdx'),
   'disclosure': () => import('../../app/(en)/disclosure/page.mdx'),
   'drawer': () => import('../../app/(en)/drawer/page.mdx'),
+  'empty-state': () => import('../../app/(en)/empty-state/page.mdx'),
   'errormessage': () => import('../../app/(en)/errormessage/page.mdx'),
   'field': () => import('../../app/(en)/field/page.mdx'),
   'field/chip-input': () => import('../../app/(en)/field/chip-input/page.mdx'),

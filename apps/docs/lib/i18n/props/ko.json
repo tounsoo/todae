@@ -2828,5 +2828,39 @@
       "en": "A dotted token path. It is not checked against the token list.",
       "ko": "점으로 구분한 토큰 경로. 토큰 목록과 대조하지 않습니다."
     }
+  },
+  "EmptyState.Root": {
+    "children": {
+      "en": "EmptyState parts, or any content.",
+      "ko": "EmptyState 파트 또는 아무 콘텐츠."
+    }
+  },
+  "EmptyState.Icon": {
+    "children": {
+      "en": "Icon graphic from your own icon set.",
+      "ko": "직접 쓰는 아이콘 세트의 아이콘 그래픽."
+    }
+  },
+  "EmptyState.Title": {
+    "as": {
+      "en": "The rendered element. Pick the heading level that fits the page, or p to keep the title out of the outline.",
+      "ko": "렌더링되는 요소. 페이지에 맞는 제목 수준을 고르거나, 제목을 문서 개요에서 빼려면 p를 고르세요."
+    },
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
+  "EmptyState.Description": {
+    "children": {
+      "en": "Description text, or any content.",
+      "ko": "설명 텍스트 또는 아무 콘텐츠."
+    }
+  },
+  "EmptyState.Actions": {
+    "children": {
+      "en": "Buttons or links.",
+      "ko": "버튼 또는 링크."
+    }
   }
 }
