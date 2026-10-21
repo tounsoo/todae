@@ -162,9 +162,9 @@ export function useModalDialog({
     const el: HTMLDialogElement = node;
     // Escape is a close request. Hold it so the owner closes the element, or
     // a part inside that holds close requests, such as a Drilldown, goes back.
-    // Chromium makes a second close request with no user activation since
-    // the last one uncancelable and closes the element anyway, so that one
-    // closes the surface rather than reaching a holder.
+    // Chromium sends some close requests, depending on the page's user
+    // activation, as an uncancelable cancel and closes the element anyway,
+    // so such a request closes the surface rather than reaching a holder.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();

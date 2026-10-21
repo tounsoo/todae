@@ -100,7 +100,7 @@ type DrilldownContextValue = {
   direction: DrilldownDirection | undefined;
   statusOf: (value: string) => ViewStatus | null;
   labels: ReadonlyMap<string, string>;
-  push: (value: string, trigger: HTMLElement | null) => void;
+  push: (value: string, trigger: HTMLElement) => void;
   pop: (reason: DrilldownChangeReason) => void;
   registerView: (value: string, label: string, record: ViewRecord) => () => void;
   viewportRef: RefObject<HTMLDivElement | null>;
@@ -210,7 +210,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const modal = useModalContext();
 
   const push = useCallback(
-    (next: string, trigger: HTMLElement | null) => {
+    (next: string, trigger: HTMLElement) => {
       if (stack.includes(next)) {
         if (process.env.NODE_ENV !== 'production') {
           console.error(`Drilldown: "${next}" is already in the stack, so Drilldown.Trigger can't push it again.`);
@@ -220,8 +220,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
       const top = stack.at(-1);
       const scroller = viewportRef.current && scrollParent(viewportRef.current);
       if (top !== undefined) memory.current.offsets.set(top, scroller?.scrollTop ?? 0);
-      if (trigger) memory.current.triggers.set(next, trigger);
-      else memory.current.triggers.delete(next);
+      memory.current.triggers.set(next, trigger);
       change([...stack, next], 'push');
     },
     [change, stack],
