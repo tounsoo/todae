@@ -1,11 +1,11 @@
 import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
+import { SurfaceChildren } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
 import { composeHandlers, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
 import type { PopoverWire } from './Popover.wire.js';
 import { cx } from './cx.js';
 import styles from './Popover.module.css';
-import { ToolbarContext } from './toolbarContext.js';
 
 type PopoverBase = {
   children?: ReactNode;
@@ -81,7 +81,7 @@ function PopoverRoot({
       aria-label={role ? ariaLabel : undefined}
       aria-labelledby={role ? ariaLabelledby : undefined}
     >
-      <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+      <SurfaceChildren present={open}>{children}</SurfaceChildren>
     </div>
   );
 }

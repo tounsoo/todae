@@ -504,6 +504,24 @@ describe('Drilldown in a browser', () => {
     }
   });
 
+  it('starts an uncontrolled stack over when the Popover around it closes', async () => {
+    const onValueChange = vi.fn();
+    render(<InPopover defaultValue={['filters']} onValueChange={onValueChange} />);
+    const panel = document.querySelector<HTMLElement>('[popover]')!;
+    const trigger = screen.getByRole('button', { name: 'Filters' });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+    await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+    await settled();
+    await userEvent.click(trigger);
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(false));
+    await userEvent.click(trigger);
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+    expect(view('Filters').hidden).toBe(false);
+    expect(view('Brand')).toBeNull();
+    expect(onValueChange).toHaveBeenLastCalledWith(['filters'], 'reset');
+  });
+
   it('returns focus to the first tab stop of the view below when the trigger is gone', async () => {
     function Gone() {
       const [shown, setShown] = useState(true);

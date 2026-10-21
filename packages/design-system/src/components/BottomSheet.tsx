@@ -23,7 +23,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus.js';
-import { ModalChildren } from '../overlay/modalContext.js';
+import { SurfaceChildren } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -365,7 +365,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        <ModalChildren present={present}>{children}</ModalChildren>
+        <SurfaceChildren present={present}>{children}</SurfaceChildren>
       </dialog>
     </SheetContext.Provider>
   );

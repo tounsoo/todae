@@ -15,7 +15,7 @@ export const meta = {
       name: 'defaultValue',
       type: 'readonly string[]',
       required: false,
-      description: 'Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer or BottomSheet closes, and onValueChange fires with reason reset.',
+      description: 'Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer, BottomSheet or Popover closes, and onValueChange fires with reason reset.',
     },
     {
       name: 'onValueChange',

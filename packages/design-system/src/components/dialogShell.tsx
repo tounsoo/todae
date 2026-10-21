@@ -20,7 +20,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
-import { ModalChildren } from '../overlay/modalContext.js';
+import { SurfaceChildren } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
@@ -230,7 +230,7 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <ModalChildren present={present}>{children}</ModalChildren>
+          <SurfaceChildren present={present}>{children}</SurfaceChildren>
         </div>
       </dialog>
     </ShellContext.Provider>

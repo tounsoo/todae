@@ -15,7 +15,7 @@ import {
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
-import { useModalPresent } from '../overlay/modalContext.js';
+import { useSurfacePresent } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
@@ -294,9 +294,9 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     }
   }, [shown]);
 
-  // An uncontrolled stack starts over each time its modal opens. Dialog and
-  // Drawer keep their content mounted while closed.
-  const present = useModalPresent();
+  // An uncontrolled stack starts over each time its overlay closes. Dialog,
+  // Drawer and Popover keep their content mounted while closed.
+  const present = useSurfacePresent();
   const controlled = value !== undefined;
   useLayoutEffect(() => {
     if (present !== false || controlled || sameStack(stack, defaultValue)) return;
