@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.DateTimePicker',
   description:
-    "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -21,13 +21,19 @@ export const meta = {
       name: 'min',
       type: 'Temporal.PlainDateTime',
       required: false,
-      description: 'The earliest date and time that can be picked.',
+      description: 'The earliest date and time that can be picked. A form with an earlier one is invalid.',
     },
     {
       name: 'max',
       type: 'Temporal.PlainDateTime',
       required: false,
-      description: 'The latest date and time that can be picked.',
+      description: 'The latest date and time that can be picked. A form with a later one is invalid.',
+    },
+    {
+      name: 'required',
+      type: 'boolean',
+      required: false,
+      description: 'A form with no date and time is invalid.',
     },
     {
       name: 'isDateDisabled',

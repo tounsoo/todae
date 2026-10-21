@@ -35,4 +35,75 @@
   .head > * > .headerCell {
     border-block-end-color: var(--todae-table-header-border);
   }
+
+  .row[data-selected] {
+    background: var(--todae-table-row-bg-selected);
+  }
+
+  /* A button inside a header cell that carries data-sort. The glyph keeps its
+     width while hidden, so a column does not change width when it is sorted. */
+  .sortButton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--todae-table-sort-gap);
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: start;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .sortButton:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-table-sort-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .sortGlyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--todae-table-sort-icon-size);
+    block-size: var(--todae-table-sort-icon-size);
+    color: var(--todae-table-sort-icon-fg-default);
+    font-size: var(--todae-table-sort-icon-size);
+    line-height: 1;
+  }
+
+  .sortGlyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Where a pointer can hover, a glyph with no sorted header cell above it,
+     such as in a column whose sort is none or unset, hides until hover or
+     focus; on touch it stays, dimmed, so the column reads as sortable. */
+  @media (hover: hover) {
+    .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :hover, :focus-visible) > .sortGlyph {
+      visibility: hidden;
+    }
+  }
+
+  :is([data-sort='ascending'], [data-sort='descending']) .sortGlyph {
+    color: var(--todae-table-sort-icon-fg-selected);
+  }
+
+  [data-sort='descending'] .sortButton > [data-todae-glyph] {
+    rotate: 180deg;
+  }
+
+  /* The selected fill is a background, which forced colors drop, so the row
+     gets an outline in the system highlight color. */
+  @media (forced-colors: active) {
+    .row[data-selected] {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+  }
 }

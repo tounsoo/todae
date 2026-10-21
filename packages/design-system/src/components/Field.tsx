@@ -1,5 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import {
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -10,12 +11,23 @@ import {
   type Ref,
 } from 'react';
 import { useDomId } from './domId.js';
-import { FIELD_CONTROL_SELECTOR, FOCUSABLE_FIELD_CONTROL_SELECTOR, FieldContext } from './Field.context.js';
-import { useFieldsetState } from './Fieldset.context.js';
+import {
+  FIELD_CONTROL_SELECTOR,
+  FOCUSABLE_FIELD_CONTROL_SELECTOR,
+  FieldContext,
+  mergeDescribedBy,
+} from './Field.context.js';
+import { FieldsetContext, useFieldsetState } from './Fieldset.context.js';
+import { ValidationScopeContext } from './Form.context.js';
+import { useCustomValidity } from './customValidity.js';
+import { useValidationScope } from './ValidationScope.js';
+import { isValidityCarrier, valueInputOf } from './validity.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { createCountStore, pickerToggles } from './Field.shared.js';
 import { TextInput } from './Field.TextInput.js';
+import { NumberInput } from './Field.NumberInput.js';
+import { Decrement, Increment } from './Field.StepButton.js';
 import { Textarea } from './Field.Textarea.js';
 import { ChipInput } from './Field.ChipInput.js';
 import { Select } from './Field.Select.js';
@@ -32,6 +44,12 @@ import { Counter } from './Field.Counter.js';
 export type FieldRootProps = {
   disabled?: boolean;
   invalid?: boolean;
+  /**
+   * A message for a rule the browser can't check, set with
+   * `setCustomValidity` on the field's control when that is a native
+   * input, select or textarea. An empty string or undefined means the rule holds.
+   */
+  customValidity?: string;
   id?: string;
   name?: string;
   'aria-describedby'?: string;
@@ -114,6 +132,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 function Root({
   disabled: disabledProp,
   invalid: invalidProp,
+  customValidity,
   id,
   name,
   className,
@@ -126,7 +145,7 @@ function Root({
   ...props
 }: FieldRootProps) {
   // Inside a Fieldset.Root, its disabled and invalid apply here too.
-  const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
+  const { disabled, invalid, errorId } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   const autoId = useDomId();
   const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
@@ -135,6 +154,12 @@ function Root({
   const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
+  // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
+  useCustomValidity(shellRef, () => {
+    const control = inputRef.current;
+    return control && isValidityCarrier(control) ? control : shellRef.current && valueInputOf(store, shellRef.current);
+  }, customValidity);
+  const describedByWithError = mergeDescribedBy(describedBy, errorId);
 
   // Stable while these inputs are, so parts and useField callbacks keep their identity.
   const ctx = useMemo(
@@ -144,14 +169,14 @@ function Root({
       disabled: Boolean(disabled),
       invalid: Boolean(invalid),
       name,
-      describedBy,
+      describedBy: describedByWithError,
       labelledBy,
       ariaLabel,
       inputRef,
       shellRef,
       store,
     }),
-    [ariaLabel, describedBy, disabled, hintId, inputId, invalid, labelledBy, name, store],
+    [ariaLabel, describedByWithError, disabled, hintId, inputId, invalid, labelledBy, name, store],
   );
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -220,6 +245,8 @@ function Root({
 }
 
 export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput.js';
+export type { FieldNumberInputProps } from './Field.NumberInput.js';
+export type { FieldDecrementProps, FieldIncrementProps } from './Field.StepButton.js';
 export type { FieldTextareaHighlight } from './TextareaHighlights.js';
 export type { FieldTextareaProps } from './Field.Textarea.js';
 export type { FieldChipInputProps } from './Field.ChipInput.js';
@@ -244,14 +271,32 @@ export type FieldGroupProps = {
   className?: string;
 } & ComponentPropsWithRef<'div'>;
 
-/** Puts a label or caption field.label.gap above the control; Description and ErrorMessage keep the distances they have outside a group. */
-function Group({ className, ...props }: FieldGroupProps) {
-  return <div {...props} className={cx(styles.group, className)} />;
+/**
+ * Puts a label or caption field.label.gap above the control; Description and
+ * ErrorMessage keep the distances they have outside a group. Inside a
+ * Form.Root it is a validation scope: its controls' native problems show in an
+ * `ErrorMessage.Root` with no `id`.
+ */
+function Group({ className, ref, onChangeCapture, onFocus, onBlur, ...props }: FieldGroupProps) {
+  const outer = useContext(FieldsetContext);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const refs = useComposedRefs(groupRef, ref);
+  const scope = useValidationScope(groupRef, { onChangeCapture, onFocus, onBlur });
+  const { extend } = scope;
+  const ctx = useMemo(() => extend(outer), [extend, outer]);
+  return (
+    <ValidationScopeContext.Provider value={scope.value}>
+      <FieldsetContext.Provider value={ctx}>
+        <div {...props} {...scope.props} ref={refs} className={cx(styles.group, className)} />
+      </FieldsetContext.Provider>
+    </ValidationScopeContext.Provider>
+  );
 }
 
 export const Field = {
   Root,
   TextInput,
+  NumberInput,
   Textarea,
   ChipInput,
   Select,
@@ -261,6 +306,8 @@ export const Field = {
   DateTimePicker,
   Icon,
   Affix,
+  Increment,
+  Decrement,
   Counter,
   Row,
   Group,

@@ -30,6 +30,7 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
+  /** Size from the avatar.size contract tokens. Left out, it is the size of the `Avatar.Group` around it, or "md". */
   size?: AvatarSize;
   /**
    * Colors behind the fallback. `neutral` reads avatar.bg and avatar.fg; other
@@ -37,6 +38,17 @@ export type AvatarRootProps = {
    */
   tone?: AvatarTone;
 } & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
+
+/**
+ * A `div` with `role="group"` that stacks several `Avatar.Root`s, each over the
+ * one before. Name it with `aria-label` or `aria-labelledby`.
+ */
+export type AvatarGroupProps = {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** Size for the avatars inside that set no `size` of their own. */
+  size?: AvatarSize;
+} & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
 /**
  * An `img` drawn over the fallback, which goes once it loads. It takes no `alt`: the avatar's
@@ -54,15 +66,19 @@ type AvatarContextValue = {
 
 const AvatarContext = /* @__PURE__ */ createContext<AvatarContextValue | null>(null);
 
+const AvatarGroupContext = /* @__PURE__ */ createContext<AvatarSize | null>(null);
+
 function useAvatar(part: string): AvatarContextValue {
   const ctx = useContext(AvatarContext);
   if (!ctx) throw new Error(`Avatar.${part} must render inside Avatar.Root`);
   return ctx;
 }
 
-function Root({ label, size = 'md', tone = 'neutral', className, 'aria-hidden': ariaHidden, ...props }: AvatarRootProps) {
+function Root({ label, size: ownSize, tone = 'neutral', className, 'aria-hidden': ariaHidden, ...props }: AvatarRootProps) {
   const [status, setStatus] = useState<AvatarImageStatus>('idle');
   const value = useMemo(() => ({ status, setStatus }), [status]);
+  const groupSize = useContext(AvatarGroupContext);
+  const size = ownSize ?? groupSize ?? 'md';
   const named = Boolean(label);
   return (
     <AvatarContext.Provider value={value}>
@@ -139,4 +155,12 @@ function Fallback({ className, ...props }: AvatarFallbackProps) {
   return <span {...props} className={cx(styles.fallback, className)} />;
 }
 
-export const Avatar = { Root, Image, Fallback } as const;
+function Group({ size = 'md', className, ...props }: AvatarGroupProps) {
+  return (
+    <AvatarGroupContext.Provider value={size}>
+      <div {...props} role="group" data-size={size} className={cx(styles.group, className)} />
+    </AvatarGroupContext.Provider>
+  );
+}
+
+export const Avatar = { Root, Image, Fallback, Group } as const;

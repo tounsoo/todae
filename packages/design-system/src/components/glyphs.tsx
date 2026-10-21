@@ -42,6 +42,24 @@ export function CheckGlyph() {
   );
 }
 
+/** A horizontal bar, drawn where the check goes while a checkbox is mixed. */
+export function DashGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M4 8h8" />
+    </svg>
+  );
+}
+
+/** Points up, as an ascending column reads. */
+export function SortGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 13V3M4 7l4-4 4 4" />
+    </svg>
+  );
+}
+
 /** Points down, as a chevron from GlyphsProvider should. */
 export function ChevronGlyph() {
   return (
@@ -65,6 +83,22 @@ export function ClockGlyph() {
     <svg {...svgProps}>
       <circle cx="8" cy="8" r="5.5" />
       <path d="M8 5v3l2 1.5" />
+    </svg>
+  );
+}
+
+export function PlusGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 3.5v9M3.5 8h9" />
+    </svg>
+  );
+}
+
+export function MinusGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M3.5 8h9" />
     </svg>
   );
 }

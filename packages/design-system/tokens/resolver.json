@@ -35,8 +35,10 @@
         { "$ref": "./components/tabs.json" },
         { "$ref": "./components/selection.json" },
         { "$ref": "./components/alert.json" },
+        { "$ref": "./components/empty-state.json" },
         { "$ref": "./components/toast.json" },
         { "$ref": "./components/fieldset.json" },
+        { "$ref": "./components/form.json" },
         { "$ref": "./components/link.json" },
         { "$ref": "./components/disclosure.json" },
         { "$ref": "./components/separator.json" },
@@ -45,6 +47,7 @@
         { "$ref": "./components/slider.json" },
         { "$ref": "./components/badge.json" },
         { "$ref": "./components/card.json" },
+        { "$ref": "./components/datalist.json" },
         { "$ref": "./components/message.json" },
         { "$ref": "./components/conversation.json" },
         { "$ref": "./components/attachment.json" },
@@ -88,7 +91,9 @@
             { "fg": "nav.item.fg.current", "bg": "nav.item.bg.current", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
             { "fg": "option.fg.selected", "bg": "option.bg.selected", "min": 60, "over": ["popover.bg", "color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
             { "fg": "option.fg.selected", "bg": "option.bg.selected-highlighted", "min": 60, "over": ["popover.bg", "color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
-            { "fg": "tree.item.fg.selected", "bg": "tree.item.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] }
+            { "fg": "tree.item.fg.selected", "bg": "tree.item.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
+            { "fg": "table.fg", "bg": "table.row.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
+            { "fg": "table.header.fg", "bg": "table.row.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] }
           ]
         }
       }

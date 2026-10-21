@@ -18,7 +18,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker` or `Field.DateTimePicker`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.NumberInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker` or `Field.DateTimePicker`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
 
 <Example block>
   <FieldStates />
@@ -28,7 +28,8 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. V
 
 Each input part has its own page:
 
-- [Field.TextInput](/field/text-input): a single line of text, or a native number.
+- [Field.TextInput](/field/text-input): a single line of text.
+- [Field.NumberInput](/field/number-input): a number typed in the locale's format or stepped, with `Field.Increment` and `Field.Decrement` buttons beside it.
 - [Field.Textarea](/field/textarea): multi-line text.
 - [Field.ChipInput](/field/chip-input): chips plus an input.
 - [Field.Select](/field/select): a native `<select>`.
@@ -89,6 +90,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
+That is the wiring by hand. Inside a [Form](/form), a `Field.Group` reads the browser's own validation, and an `ErrorMessage.Root` with no `id` shows the problem and does this wiring for you.
+
 ## Counter
 
 `Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
@@ -131,7 +134,7 @@ Without `maxLength` the count is just the number.
   <CounterPlain />
 </Example>
 
-With `maxLength`, except on a number input, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
+With `maxLength`, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
 
 ## Row
 
@@ -172,7 +175,7 @@ import { Search } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, except on a number input, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains.
+**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains.
 
 **You supply:** A name: a [Label](/label) whose `htmlFor` is the Root `id`, or `aria-label` / `aria-labelledby` on the Root. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in the Root's `aria-describedby`, and `invalid` while the error shows. A name for every button inside an interactive `Field.Icon`. Counter strings in the product's language, through [StringsProvider](/utilities/strings-provider).
 
@@ -200,7 +203,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Group
 
-**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption.
+**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption. Inside a [Form](/form) it is also a validation scope for the controls in it.
 
 **When not:** To space separate fields from each other, use `Stack.Root`. To group related controls under one legend, use [Fieldset](/fieldset).
 
@@ -212,7 +215,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Counter
 
-**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise or on a number input.
+**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
 **When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
 
 ## Props

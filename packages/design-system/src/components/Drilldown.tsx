@@ -20,7 +20,7 @@ import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { BackGlyph, glyphOr } from './glyphs.js';
 import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -314,7 +314,7 @@ function Back({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: Dri
   const strings = useStrings();
   const parent = stack.at(-2);
   const parentLabel = parent === undefined ? undefined : labels.get(parent);
-  const [label, labelRef] = useDismissLabel(children, ariaLabel, ref, parentLabel ? strings.backTo(parentLabel) : strings.back);
+  const [label, labelRef] = useButtonName(children, ariaLabel, ref, parentLabel ? strings.backTo(parentLabel) : strings.back);
   const refs = useComposedRefs(backRef, labelRef);
   const glyph = useGlyphs().back;
   if (stack.length < 2) return null;

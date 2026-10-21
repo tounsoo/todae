@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { createRef, useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Checkbox, type CheckboxRootProps } from './Checkbox.js';
 import * as api from '../index.js';
@@ -94,5 +94,56 @@ describe('Checkbox', () => {
     expect(css).toMatch(/\.glyph \{[^}]*visibility: hidden/);
     expect(css).toMatch(/\.input:checked \+ \.indicator > \.glyph \{[^}]*visibility: visible/);
     expect(css).toMatch(/data-control='switch'[\s\S]*translateX/);
+  });
+});
+
+describe('Checkbox indeterminate', () => {
+  it('sets the input property and data-indeterminate, and shows the dash glyph in place of the check', () => {
+    const { container } = render(<Checkbox.Root indeterminate>Select all</Checkbox.Root>);
+    const input = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(input.indeterminate).toBe(true);
+    expect(container.querySelector('label')?.hasAttribute('data-indeterminate')).toBe(true);
+    expect(container.querySelectorAll('[data-todae-glyph] path')).toHaveLength(1);
+    expect(container.querySelector('[data-todae-glyph] path')?.getAttribute('d')).toBe('M4 8h8');
+  });
+
+  it('puts the property back when a click clears it under control', () => {
+    function Harness() {
+      const [checked, setChecked] = useState(false);
+      return (
+        <Checkbox.Root checked={checked} onCheckedChange={setChecked} indeterminate>
+          Select all
+        </Checkbox.Root>
+      );
+    }
+    render(<Harness />);
+    const input = screen.getByRole('checkbox') as HTMLInputElement;
+    fireEvent.click(input);
+    expect(input.checked).toBe(true);
+    expect(input.indeterminate).toBe(true);
+  });
+
+  it('puts the property back when the change is not accepted', () => {
+    render(
+      <Checkbox.Root checked={false} indeterminate>
+        Select all
+      </Checkbox.Root>,
+    );
+    const input = screen.getByRole('checkbox') as HTMLInputElement;
+    fireEvent.click(input);
+    expect(input.indeterminate).toBe(true);
+  });
+
+  it('clears the property when indeterminate goes away, and leaves a plain checkbox alone', () => {
+    const { rerender } = render(<Checkbox.Root indeterminate>Select all</Checkbox.Root>);
+    rerender(<Checkbox.Root>Select all</Checkbox.Root>);
+    expect((screen.getByRole('checkbox') as HTMLInputElement).indeterminate).toBe(false);
+    expect(document.querySelector('[data-indeterminate]')).toBeNull();
+  });
+
+  it('keeps a consumer ref on the input', () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<Checkbox.Root ref={ref} indeterminate>Select all</Checkbox.Root>);
+    expect(ref.current).toBe(screen.getByRole('checkbox'));
   });
 });

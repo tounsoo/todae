@@ -1,0 +1,25 @@
+{
+  "datalist": {
+    "$description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked.",
+    "gap": {
+      "row": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+      "column": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "stacked": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-condensed/$value" } }
+    },
+    "term": {
+      "width": { "$type": "dimension", "$value": { "value": 10, "unit": "rem" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "details": {
+      "min-width": { "$type": "dimension", "$value": { "value": 12, "unit": "rem" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }
+  }
+}

@@ -180,6 +180,37 @@
       ]
     },
     {
+      "name": "Avatar.Group",
+      "description": "A div with role=\"group\" that stacks several Avatar.Root, each over the one before, with a ring in the surface color. Name it with aria-label or aria-labelledby. Takes native div attributes except role.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the group, such as \"Assignees\"."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the element that names the group, in place of aria-label."
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\"",
+          "required": false,
+          "description": "Size for the avatars inside that set no size of their own. The overlap is a fraction of it, from avatar.group.overlap.",
+          "default": "\"md\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Avatar.Root elements. The last one can be a +N count."
+        }
+      ]
+    },
+    {
       "name": "Avatar.Image",
       "description": "An img drawn over the fallback, which is removed once the image loads and stays when it fails. Its alt is always empty, because Avatar.Root carries the name. Takes native img attributes except alt.",
       "props": [
@@ -205,8 +236,7 @@
           "name": "size",
           "type": "\"sm\" | \"md\" | \"lg\"",
           "required": false,
-          "description": "Size from the avatar.size contract tokens.",
-          "default": "\"md\""
+          "description": "Size from the avatar.size contract tokens. Left out, it is the size of the Avatar.Group around it, or \"md\"."
         },
         {
           "name": "tone",
@@ -674,7 +704,7 @@
     },
     {
       "name": "Checkbox.Root",
-      "description": "Native checkbox. Children are the visible label. Never indeterminate.",
+      "description": "Native checkbox. Children are the visible label.",
       "props": [
         {
           "name": "children",
@@ -711,6 +741,18 @@
           "type": "boolean",
           "required": false,
           "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "indeterminate",
+          "type": "boolean",
+          "required": false,
+          "description": "The mixed state, such as a select-all box over a partly selected list. Sets the input's indeterminate and shows the indeterminate glyph in place of the check. A click still toggles checked."
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds."
         },
         {
           "name": "name",
@@ -1051,6 +1093,61 @@
       ]
     },
     {
+      "name": "DataList.Details",
+      "description": "A native dd, the value for the term in the same item. Takes native dd attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The value. Put a list of values in one DataList.Details."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Item",
+      "description": "A div that groups one term with its details, valid inside a dl. Takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "One DataList.Term, then one DataList.Details."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Root",
+      "description": "A native dl for key and value pairs, such as a settings pane, an order summary or a profile. Takes native dl attributes; orientation sets whether each term sits beside its details or above them.",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "DataList.Item parts."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Term",
+      "description": "A native dt, the term for the details beside or below it. Takes native dt attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The term, as text."
+        }
+      ]
+    },
+    {
       "name": "DensityProvider",
       "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
       "props": [
@@ -1163,6 +1260,13 @@
           "description": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
         },
         {
+          "name": "role",
+          "type": "'dialog' | 'alertdialog'",
+          "required": false,
+          "description": "alertdialog marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click then no longer closes it, and on open focus goes to its first close part, such as a Dialog.Close that says Cancel. It needs a Dialog.Description or an aria-describedby for the message.",
+          "default": "'dialog'"
+        },
+        {
           "name": "dismissOnEscape",
           "type": "boolean",
           "required": false,
@@ -1174,7 +1278,7 @@
           "type": "boolean",
           "required": false,
           "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
-          "default": "true"
+          "default": "true, or false when role is alertdialog"
         },
         {
           "name": "aria-label",
@@ -1495,20 +1599,87 @@
       ]
     },
     {
-      "name": "ErrorMessage.Root",
-      "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
+      "name": "EmptyState.Actions",
+      "description": "A centered row of buttons or links that wraps. A `div` with no role.",
       "props": [
         {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons or links."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Description",
+      "description": "Muted text under the title, kept to a readable width. A `div`, so it can hold more than one paragraph or a link.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text, or any content."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Icon",
+      "description": "A slot for any icon, centered above the title. Hidden from assistive technology unless it says otherwise.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic from your own icon set."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Root",
+      "description": "What a list, table or search shows when it has nothing. A `div` with no role, so it is not announced when it appears; takes native `div` attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "EmptyState parts, or any content."
+        }
+      ]
+    },
+    {
+      "name": "EmptyState.Title",
+      "description": "The empty state's heading, at the level `as` names. An `h2` by default.",
+      "props": [
+        {
+          "name": "as",
+          "type": "\"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\" | \"p\"",
+          "required": false,
+          "description": "The rendered element. Pick the heading level that fits the page, or p to keep the title out of the outline.",
+          "default": "\"h2\""
         },
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Error text."
+          "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "ErrorMessage.Root",
+      "description": "Validation text below a control. With an id it renders as given, with no alert role. Without one, inside a Field.Group or Fieldset.Root in a Form.Root, it shows the scope's error and wires the controls' aria-describedby to itself. invalid lives on the control.",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root. Required outside a validation scope; inside one, leave it out to take the scope's error."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode | ((error: FormFieldError) => React.ReactNode)",
+          "required": false,
+          "description": "Error text. Without an id, in a validation scope, a function of the scope's error is allowed too, and no children shows the error's message."
         },
         {
           "name": "className",
@@ -1577,6 +1748,12 @@
           "description": "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no chips is invalid, whatever the input holds."
+        },
+        {
           "name": "overflowLabel",
           "type": "(n: number) => string",
           "required": false,
@@ -1619,7 +1796,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. The color goes in a native text input under the field's name unless another control took it, so Field.Root's customValidity and a Form.Root scope see it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1673,7 +1850,7 @@
     },
     {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. The date goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1691,13 +1868,19 @@
           "name": "min",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The earliest date that can be picked."
+          "description": "The earliest date that can be picked. A form with an earlier date is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The latest date that can be picked."
+          "description": "The latest date that can be picked. A form with a later date is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1752,7 +1935,7 @@
     },
     {
       "name": "Field.DateTimePicker",
-      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1770,13 +1953,19 @@
           "name": "min",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The earliest date and time that can be picked."
+          "description": "The earliest date and time that can be picked. A form with an earlier one is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The latest date and time that can be picked."
+          "description": "The latest date and time that can be picked. A form with a later one is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date and time is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1837,8 +2026,20 @@
       ]
     },
     {
+      "name": "Field.Decrement",
+      "description": "A button that lowers the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled where a step would do nothing, such as at min or while the text is no number. It is named from the decrement string of StringsProvider unless its own text names it, and draws the minus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Content that replaces the minus sign. Text in it names the button."
+        }
+      ]
+    },
+    {
       "name": "Field.Group",
-      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.",
+      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "children",
@@ -1874,6 +2075,92 @@
       ]
     },
     {
+      "name": "Field.Increment",
+      "description": "A button that raises the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled where a step would do nothing, such as at max or while the text is no number. It is named from the increment string of StringsProvider unless its own text names it, and draws the plus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Content that replaces the plus sign. Text in it names the button."
+        }
+      ]
+    },
+    {
+      "name": "Field.NumberInput",
+      "description": "A text input for a number, in the locale's own format, that the person types into freely. It parses on blur, Enter and each step, rewrites the text and calls onValueChange. The number goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them in the field's format. Arrow Up and Down step, Page Up and Page Down step by largeStep. Field.Increment and Field.Decrement beside it are step buttons. It is a native input with the spinbutton role, and takes native input attributes except type, role, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number | null",
+          "required": true,
+          "description": "The number, or null for none. Never NaN."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: number | null) => void",
+          "required": false,
+          "description": "Fires on a person's commit, on blur, Enter, a step key, a step button or a submit of the form, with a number within min and max and, where there is a step, on it, which wins over the digits the text shows; without one, rounded to them. Null for an empty text. Typing alone fires nothing. Without it the input is read-only."
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "required": false,
+          "description": "The lowest number. A commit below it becomes it, and a form with a lower value is invalid."
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The highest number. A commit above it becomes the highest number on the step that fits."
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "The grid a commit snaps to, counted from min, or from 0 without one (a value you set that is off it is shown as given, and Todae warns once in development), and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent."
+        },
+        {
+          "name": "largeStep",
+          "type": "number",
+          "required": false,
+          "description": "What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of step.",
+          "default": "ten steps"
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale for the number's text, such as \"de\". The browser's own when not set, so pass it when the input renders on a server."
+        },
+        {
+          "name": "formatOptions",
+          "type": "NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits and rounding options are not supported. Put a unit or a currency sign in a Field.Affix instead when you can."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no number is invalid."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        },
+        {
+          "name": "inputMode",
+          "type": "\"numeric\" | \"decimal\" | \"text\" | …",
+          "required": false,
+          "description": "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
+          "default": "\"numeric\" for a whole grid (step and min whole numbers) with a min of 0 or more in a format that shows no fraction digits, \"decimal\" for any other min of 0 or more, else \"text\""
+        }
+      ]
+    },
+    {
       "name": "Field.Root",
       "description": "Field chrome only. No value. Children render in source order.",
       "props": [
@@ -1890,6 +2177,12 @@
           "required": false,
           "description": "Marks the shell invalid and sets aria-invalid on the input.",
           "default": "false"
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",
@@ -2063,16 +2356,16 @@
         },
         {
           "name": "type",
-          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
           "required": false,
-          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.",
+          "description": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.",
           "default": "\"text\""
         }
       ]
     },
     {
       "name": "Field.TimePicker",
-      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -2090,13 +2383,19 @@
           "name": "min",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The earliest time the list offers."
+          "description": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max."
         },
         {
           "name": "max",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The latest time the list offers."
+          "description": "The latest time the list offers. A form with a later time is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no time is invalid."
         },
         {
           "name": "step",
@@ -2158,7 +2457,7 @@
     },
     {
       "name": "Fieldset.Root",
-      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes.",
+      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "disabled",
@@ -2175,6 +2474,12 @@
           "default": "false"
         },
         {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control."
+        },
+        {
           "name": "aria-describedby",
           "type": "string",
           "required": false,
@@ -2185,6 +2490,54 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "A Fieldset.Legend first, then the controls."
+        }
+      ]
+    },
+    {
+      "name": "Form.Root",
+      "description": "A native form that checks its controls before it submits and shows each problem in a Field.Group or Fieldset.Root. Sets noValidate. Takes native form attributes.",
+      "props": [
+        {
+          "name": "errors",
+          "type": "Readonly<Record<string, string>>",
+          "required": false,
+          "description": "Problems you found, such as a server reply, keyed by a control name. Todae never writes it: clear it when you send, in onSubmit, and set it when the reply comes. Entries show at once in place of the control's native problem and do not block a submit. An edit to a control hides its entry until the next submit, or until errors drops that name or changes its text. After a send, a reply is a commit whose content differs from the commit before and has entries (clear-then-set counts, a rebuild of the same content does not); it moves focus to the summary or the first enabled control with a server error and lists only server errors."
+        },
+        {
+          "name": "onSubmit",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it."
+        },
+        {
+          "name": "onReset",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs on this form's reset, not a portaled form's, as onSubmit does. A reset hides every shown problem again."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The controls, usually in Field.Group and Fieldset.Root, and an optional Form.Summary."
+        }
+      ]
+    },
+    {
+      "name": "Form.Summary",
+      "description": "The problems a failed submit left, as links to their controls, or buttons for a control with no id. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.",
+      "props": [
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the title, which is the formErrors string with the number of problems."
+        },
+        {
+          "name": "children",
+          "type": "(fields: readonly FormInvalidField[]) => React.ReactNode",
+          "required": false,
+          "description": "Replaces the list of links. Each field has its name, label, error, whether it is disabled and a focus() that moves focus to its control."
         }
       ]
     },
@@ -2221,6 +2574,30 @@
           "type": "string",
           "required": false,
           "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "formatNumber",
+      "description": "formatNumber(value, options) returns the number as the locale writes it, such as 1,234.5 in en-US and 1.234,5 in de. formatOptions sets the style, such as percent or currency, and the digits; a plain number shows all the digits it has.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": true,
+          "description": "The number to write."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as de. The runtime's own when not set."
+        },
+        {
+          "name": "options.formatOptions",
+          "type": "NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits."
         }
       ]
     },
@@ -3178,6 +3555,30 @@
       ]
     },
     {
+      "name": "parseNumber",
+      "description": "parseNumber(text, options) returns the number in typed text, or null when the text is not a number in the locale, such as 1.234,5 in de for 1234.5. It reads the text with or without grouping, and with or without the percent sign, currency sign or unit that formatOptions writes.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as de. The runtime's own when not set."
+        },
+        {
+          "name": "options.formatOptions",
+          "type": "NumberFormatOptions",
+          "required": false,
+          "description": "How the number is written, as Intl.NumberFormat takes it. A percent style reads 13 as 0.13."
+        }
+      ]
+    },
+    {
       "name": "parseThemeColor",
       "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a color such as #3366cc, converted to oklch, or oklch(0.5 0.1 30 / 0.8). It returns null for text it does not read, such as oklch(50% 0.1 30), and for a color out of range, such as a lightness above 1.",
       "props": [
@@ -3384,6 +3785,12 @@
           "type": "boolean",
           "required": false,
           "description": "Marks every radio invalid."
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first radio that takes part in validation. An empty string or undefined means the rule holds."
         },
         {
           "name": "orientation",
@@ -3718,6 +4125,12 @@
           "description": "Which cells it heads: col, row, colgroup or rowgroup. Use col in Table.Head and row for the first cell of a body row."
         },
         {
+          "name": "sort",
+          "type": "\"ascending\" | \"descending\" | \"none\"",
+          "required": false,
+          "description": "The column's sort state. Sets data-sort, and aria-sort for ascending and descending; none leaves aria-sort off."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -3742,10 +4155,34 @@
       "description": "A native tr. Takes native tr attributes.",
       "props": [
         {
+          "name": "selected",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the row selected: sets data-selected and a fill from the table.row.bg.selected token. It sets no ARIA; the row's checkbox carries the state."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
           "description": "Table.HeaderCell and Table.Cell parts."
+        }
+      ]
+    },
+    {
+      "name": "Table.SortButton",
+      "description": "A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell's data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell's sort from onClick. After a click it announces the column's next aria-sort or data-sort change through useAnnouncer, if it comes before the user's next press or key; a lone modifier key does not count. Takes native button attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The column label. It names the button, and the announcement uses its text, or aria-label when set."
+        },
+        {
+          "name": "onClick",
+          "type": "(event: React.MouseEvent<HTMLButtonElement>) => void",
+          "required": false,
+          "description": "Where the product sorts. It runs first; calling preventDefault() skips the announcement."
         }
       ]
     },
@@ -4759,7 +5196,7 @@
     },
     {
       "name": "useField",
-      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. Takes no options.",
+      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. For a control that is not a native form element, render an input with getValueInputProps({ type, value, name, required, min, max, step, bound }, control) beside it, passing the props getControlProps returned: a hidden native input that submits the value under the field's name and that the browser validates, so required, min and max block a submit and Form.Root shows them and moves focus to the control. It follows the control's disabled and form, and takes no name when that control has one. getValueInputProps takes a type of text, number, date, time or datetime-local, the value in that type's format, and a bound that gives a min or max as the field shows it. Call notifyValueChange when a person changes the value in a way that fires no change event, such as a pick: it hides the field's server error and counts the field as edited. useField() takes no arguments.",
       "props": []
     },
     {
@@ -5034,6 +5471,42 @@
           "type": "(value: string, expanded: boolean) => void",
           "required": false,
           "description": "In tree mode, fires when Right asks to open a closed item or Left asks to close an open one."
+        }
+      ]
+    },
+    {
+      "name": "useSelection",
+      "description": "useSelection(options) returns { value, isSelected, state, toggle, toggleAll, clear, getCheckboxProps, getSelectAllProps }. value is the selected keys in the order they were selected. state is \"none\", \"some\" or \"all\" over the enabled keys in keys, and \"none\" when there are none. getCheckboxProps(key, props?) returns { checked, disabled, onChange } and getSelectAllProps(props?) returns { checked, indeterminate, disabled, onChange }, to spread on Checkbox.Root. Shift held on a checkbox sets every enabled key between the last toggled key and it to its new state.",
+      "props": [
+        {
+          "name": "keys",
+          "type": "readonly K[]",
+          "required": true,
+          "description": "The keys that can be selected now, in display order, such as the rows on the current page. Selected keys outside this list, such as those on other pages, are kept. K is a string or a number."
+        },
+        {
+          "name": "disabledKeys",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Keys that cannot be selected: ranges and select all skip them, and their checkbox is disabled."
+        },
+        {
+          "name": "value",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you pass back after a fetch or in a transition that commits later, is forgotten, and the next change builds on the value you passed."
+        },
+        {
+          "name": "defaultValue",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Initial selection when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: K[]) => void",
+          "required": false,
+          "description": "Fires with the new selection after it changes."
         }
       ]
     },

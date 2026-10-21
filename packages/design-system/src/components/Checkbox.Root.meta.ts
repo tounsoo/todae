@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Checkbox.Root',
-  description: 'Native checkbox. Children are the visible label. Never indeterminate.',
+  description: 'Native checkbox. Children are the visible label.',
   props: [
     {
       name: 'children',
@@ -39,6 +39,19 @@ export const meta = {
       type: 'boolean',
       required: false,
       description: 'Marks the control invalid and sets aria-invalid.',
+    },
+    {
+      name: 'indeterminate',
+      type: 'boolean',
+      required: false,
+      description: 'The mixed state, such as a select-all box over a partly selected list. Sets the input\'s indeterminate and shows the indeterminate glyph in place of the check. A click still toggles checked.',
+    },
+    {
+      name: 'customValidity',
+      type: 'string',
+      required: false,
+      description:
+        "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds.",
     },
     {
       name: 'name',

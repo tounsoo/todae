@@ -1,0 +1,151 @@
+import { FormRule, FormSignUp } from '../../../components/demos/FormDemo';
+
+# Form
+
+A native `<form>` that checks its controls before it submits and shows each problem in the page's language. Put native rules on the controls (`required`, `type="email"`, `minLength`, `min`, `pattern`). Todae reads the browser's own verdict and does the rest: when to show it, the words, `aria-invalid`, `aria-describedby` and where focus goes.
+
+Each [`Field.Group`](/field) or [`Fieldset.Root`](/fieldset) inside a `Form.Root` is a validation scope. An `ErrorMessage.Root` with no `id` inside it shows the scope's first problem and wires the controls to it.
+
+```tsx
+const nameId = useId();
+const emailId = useId();
+
+<Form.Root errors={errors} onSubmit={onSubmit}>
+  <Form.Summary />
+  <Field.Group>
+    <Label.Root htmlFor={nameId}>Name</Label.Root>
+    <Field.Root id={nameId} name="name">
+      <Field.TextInput required minLength={2} value={name} onValueChange={setName} />
+    </Field.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  <Field.Group>
+    <Label.Root htmlFor={emailId}>Work email</Label.Root>
+    <Field.Root id={emailId} name="email">
+      <Field.TextInput type="email" required value={email} onValueChange={setEmail} />
+    </Field.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  <Button.Root type="submit">Create account</Button.Root>
+</Form.Root>
+```
+
+Submit the empty form below, or enter `ben@example.com`, an address the stand-in server knows.
+
+<Example block>
+  <FormSignUp />
+</Example>
+
+## When a problem shows
+
+A scope shows its problem after a change inside it followed by focus leaving it, or after any submit attempt, valid or not. Nothing shows before the person has touched the field. Once shown, the problem is live both ways: it clears as the value becomes valid and returns if it stops being valid. A reset hides every scope again, which is the timing of `:user-invalid`.
+
+There is one timing and no `mode` prop. A control that is not in a scope, such as a plain `<input>` in the form, still blocks the submit and takes focus, but shows no message.
+
+## What a problem says
+
+The words come from [StringsProvider](/utilities/strings-provider), picked by the first failed flag of the control's `ValidityState`: `valueMissing`, `typeMismatch`, `badInput`, `patternMismatch`, `tooShort`, `tooLong`, `rangeUnderflow`, `rangeOverflow`, `stepMismatch` or `customError`. The bounds read from the control's own attributes, so `minLength={2}` says "Use at least 2 characters". The browser's own `validationMessage` is in the browser's language, so Todae uses it only for a `customError`, which is your text and is not translated.
+
+To word one field differently, give `ErrorMessage.Root` a function. It gets the error's `kind` and `message`.
+
+```tsx
+<ErrorMessage.Root>
+  {(error) => (error.kind === 'valueMissing' ? 'Add at least one tag.' : error.message)}
+</ErrorMessage.Root>
+```
+
+## Submit
+
+`Form.Root` sets `noValidate`, so the browser draws no bubbles, and runs its own check before your `onSubmit`. A submit with an invalid control calls `preventDefault()`, skips your `onSubmit` and moves focus. Your `onSubmit` runs when every control is valid. A submit from a button with `formNoValidate`, such as "Save draft", skips the check as it does natively. It is a send to the server, not an attempt: it reveals nothing the person has not reached and leaves the summary's list alone, but it shows hidden server errors again and waits for a reply as a valid submit does. `requestSubmit()` goes through the same check. Your `onReset` hears only this form's reset, as `onSubmit` hears only its submit; a form portaled inside it is its own.
+
+Focus goes to `Form.Summary` if one is showing, else to the first problem in the page, scrolled into view. In a scope that is the control the scope shows, so a server error on a later control of the group takes focus ahead of an earlier native problem; a control outside every scope takes focus for its native problem.
+
+## Summary
+
+`Form.Summary` lists what failed at the last submit, one link per scope with its label and message, a button for a control with no `id` to link to, or plain text for a disabled control, which can't take focus. It takes focus on a failed submit, so a screen reader hears the count and the list, and a link moves focus to its control. A fixed control drops off the list, and the summary renders nothing before a failed submit or when none is left. A function child replaces the list.
+
+```tsx
+<Form.Summary title="Check these fields">
+  {(fields) => (
+    <ul>
+      {fields.map((field) => (
+        <li key={field.label}>
+          <Button.Root variant="ghost" onClick={field.focus}>
+            {field.label}
+          </Button.Root>
+          {field.error.message}
+        </li>
+      ))}
+    </ul>
+  )}
+</Form.Summary>
+```
+
+## Server errors
+
+Errors you find yourself, such as a server's reply, go in `errors`, keyed by a control's `name`. Todae never writes to it: clear `errors` when you send, in `onSubmit`, and set it when the reply comes.
+
+```tsx
+const [errors, setErrors] = useState<FormErrors>({});
+
+<Form.Root
+  errors={errors}
+  onSubmit={async (event) => {
+    event.preventDefault();
+    setErrors({});
+    setErrors(await createAccount(new FormData(event.currentTarget)));
+  }}
+>
+  …
+</Form.Root>
+```
+
+A server error shows at once and wins over a native problem in what is shown, since the server knows what the browser can't. It does not block a submit. An edit to a control hides its entry until the next submit, or until `errors` drops that name or changes its text. Todae forgets a hidden entry as soon as it leaves `errors`, so a check that clears `errors` and then sets "Taken." again shows it again. A reset hides every current entry. A server error shows for a disabled or read-only control too, but its row in the summary is plain text, with nothing to press, and focus skips the control. A scope speaks for all its controls through the one it shows, so when that one is disabled, focus does not go on to another control of the same scope.
+
+After a send, a reply is a commit whose `errors` content differs from the commit before it and has entries. Clearing and then setting the same text counts, since the clear is a commit of its own; the same content rebuilt in a new object does not. A reply moves focus to the summary or the first enabled control with a server error, and the summary lists only server errors, never a native problem the person has not reached. An edit, a reset or a failed submit ends the wait.
+
+## Rules the browser can't check
+
+`customValidity` on `Field.Root`, `Fieldset.Root`, `Checkbox.Root` and `RadioGroup.Root` sets a message with the browser's `setCustomValidity`, so it blocks a submit and follows the timing above. An empty string means the rule holds. If your code changes the message with `setCustomValidity`, Todae sets its own again at the next commit while the rule holds, and when the rule goes it clears the message only if it is still the one Todae set. On a `Field.Root` it goes to the field's control, on a `Fieldset.Root` to the first control of its own that takes part in validation, or, when all its controls sit in nested groups, to the first one at any depth, whose message then shows where that control's error shows, and on a `RadioGroup.Root` to its first radio that does. Controls that share one element do not clobber each other: the element gets the first non-empty message, from its own part, then each fieldset outward, so a `Fieldset.Root` with an empty `customValidity` leaves a nested field's message alone. It works without a `Form.Root` too, as the native API, and picks the same control.
+
+<Example block>
+  <FormRule />
+</Example>
+
+## Scopes
+
+A scope answers for its own controls: the `input`, `select` and `textarea` elements inside it that take part in validation, and not those of a scope nested in it. Its problem is the first server error among its named controls, disabled and read-only ones too, else the first native problem, each in page order. Where the scope shows a problem, every Todae control in it is marked invalid, and the control's own `invalid` still wins: `invalid={false}` opts a control out. A `Fieldset.Root` with `invalid` stays invalid whatever its scope shows.
+
+The scope adds the `ErrorMessage.Root`'s id to the controls' `aria-describedby` while it renders: on the group of a `RadioGroup.Root` rather than on each radio, and on the `<fieldset>` of a `Fieldset.Root` scope, whose controls are marked invalid but not described a second time. A scope with no `ErrorMessage.Root` still marks its controls invalid but adds no id, so no description points at a missing element. Use one `ErrorMessage.Root` per scope.
+
+Outside a `Form.Root`, `Field.Group` and `Fieldset.Root` are as they were, and an `ErrorMessage.Root` with no `id` logs a development error. An `ErrorMessage.Root` with an `id` works everywhere as before, with the wiring by hand.
+
+`Field.TextInput`, `Field.Textarea`, `Field.Select`, `Checkbox.Root`, `Switch.Root` and `RadioGroup.Root` are native controls, so they take part. The pickers, `Field.NumberInput`, `Field.ColorPicker` and `Field.ChipInput` render a native value input beside their button or text input, so `required` on a picker, a `Field.NumberInput` or a `Field.ChipInput`, and `min` and `max` on a picker or a `Field.NumberInput`, take part too. The value input is hidden, so its problem shows at the field and focus goes to the field's control: the button of a picker, or the text input of a `Field.NumberInput` or a `Field.ChipInput`. A `Field.NumberInput` words `min` and `max` in its own format, such as "Enter 1,000 or more". A control of your own can render one with [`useField`](/utilities/use-field)'s `getValueInputProps`.
+
+## Accessible composition
+
+**Todae handles:** `noValidate` and the submit check, so a form that fails does not reach your `onSubmit`. The words, from the browser's `ValidityState` in the page's language. `aria-invalid` on the controls of a scope that shows a problem, and its `ErrorMessage.Root`'s id in their `aria-describedby`, only while it renders. Focus on a failed submit, on `Form.Summary` or the first invalid control, and from a summary link to its control.
+
+**You supply:** Native rules on the controls, an `ErrorMessage.Root` with no `id` in each `Field.Group` or `Fieldset.Root` that should show a message, and a label for every control, which the summary reads. A `name` on each control that takes a server error. Translated strings through StringsProvider. Your own text for `customValidity`.
+
+**Watch for:** A control with no label reads its `name` in the summary. A control outside every scope blocks the submit but shows nothing. `readOnly` and `disabled` controls are not validated, though a server error for them shows, and `Field.TextInput` is read-only when it has no `onChange` or `onValueChange`. A server error for a name that no control in a scope carries shows nowhere: when a reply to a send names such a control, `Form.Root` warns in development, after one more task for a control that is not mounted yet. Its checks run at the reply, not at render. After a successful send the form keeps waiting, so an `errors` change that the person didn't cause, such as a poll, is taken as the reply and moves focus: set `errors` only in answer to a send. A message is not announced when it appears; the summary is what moves focus and speaks.
+
+## When to use
+
+### Form.Root
+
+**When:** A form with native rules where each field should show its problem in the page's language, with focus and ARIA wired. It owns no values; they stay in the controls.
+
+**When not:** A form with no rules to check → a plain `<form>`. A composer that sends on Enter → [Composer](/composer), which is its own form. Rules a schema or a server decides → run them in `onSubmit` and pass the result as `errors`.
+
+### Form.Summary
+
+**When:** A long form, or one where the person needs one place to see everything to fix, as a screen reader hears it first.
+
+**When not:** A short form where focus on the first invalid control is enough: leave it out, and focus goes there.
+
+## Props
+
+<PropsTable name="Form.Root" />
+
+<PropsTable name="Form.Summary" />

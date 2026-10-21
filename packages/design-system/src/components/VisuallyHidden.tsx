@@ -2,6 +2,9 @@ import type { ComponentPropsWithRef } from 'react';
 import { cx } from './cx.js';
 import styles from './VisuallyHidden.module.css';
 
+/** The class that hides an element the way `VisuallyHidden.Root` does, for an element that is not a span, such as a value input. */
+export const visuallyHiddenClass = () => styles.root;
+
 /**
  * Hides its content on screen and keeps it for assistive technology. A `span`,
  * so it fits inside a button or a line of text.

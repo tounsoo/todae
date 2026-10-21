@@ -24,7 +24,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { useDomId } from '../components/domId.js';
 import { anchorTriggerStyle } from '../overlay/anchorName.js';
-import { cssTimeMs } from '../overlay/cssTime.js';
+import { tokenMs } from '../overlay/cssTime.js';
 import { useControlledState } from './useControlledState.js';
 
 export type { TooltipOpenReason, TooltipWire };
@@ -67,13 +67,6 @@ export type UseTooltipResult<I extends boolean = false> = {
 // For when the delay tokens can't be read, such as without Todae's stylesheet.
 const SHOW_DELAY_MS = 300;
 const HIDE_DELAY_MS = 100;
-
-/** A duration token's milliseconds as `node` computes it, or null when it has none. */
-function tokenMs(node: Element | null, name: string): number | null {
-  if (!node) return null;
-  const ms = cssTimeMs(getComputedStyle(node).getPropertyValue(name));
-  return ms === null ? null : Math.max(0, ms);
-}
 
 /** `ids` with `id` added at the end, unless it already lists it. */
 function joinId(ids: string | undefined, id: string): string {

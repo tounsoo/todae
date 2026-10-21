@@ -56,6 +56,10 @@ export interface Strings {
   timePicker: string;
   /** Name of Field.DateTimePicker's popover, and of its button beside another control but a picker. */
   dateTimePicker: string;
+  /** Name of Field.Increment when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
+  increment: (field: string) => string;
+  /** Name of Field.Decrement when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
+  decrement: (field: string) => string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
@@ -68,6 +72,12 @@ export interface Strings {
   copied: string;
   /** useClipboard's message when a copy fails. */
   copyFailed: string;
+  /** Table.SortButton's message after its column becomes sorted in ascending order. `column` is the button's label. */
+  sortedAscending: (column: string) => string;
+  /** Table.SortButton's message after its column becomes sorted in descending order. `column` is the button's label. */
+  sortedDescending: (column: string) => string;
+  /** Table.SortButton's message after its column is no longer sorted. `column` is the button's label. */
+  sortCleared: (column: string) => string;
   /** Name of the Conversation.Viewport region when it has no aria-label. */
   conversation: string;
   /** Name of Conversation.ScrollButton when its own text does not name it. */
@@ -92,6 +102,36 @@ export interface Strings {
   back: string;
   /** Name of Drilldown.Back when its own text does not name it. `label` is the label of the view it goes back to. */
   backTo: (label: string) => string;
+  /** What a required Field.DatePicker, Field.TimePicker or Field.DateTimePicker button, and a required Field.ChipInput's text box, is described by: a button cannot say `aria-required`, and the text box is not what must be filled. */
+  required: string;
+  /** Text of a control the browser reports empty though it is required. */
+  valueMissing: string;
+  /** Text of an `email` input whose value is not an email address. */
+  typeMismatchEmail: string;
+  /** Text of a `url` input whose value is not a URL. */
+  typeMismatchUrl: string;
+  /** Text of an input whose value does not fit its type, other than `email` and `url`. */
+  typeMismatch: string;
+  /** Text of an input whose entry the browser cannot turn into a value, such as a number that is only a sign. */
+  badInput: string;
+  /** Text of an input whose value does not match its `pattern`. */
+  patternMismatch: string;
+  /** Text of a value shorter than the control's `minLength`. */
+  tooShort: (min: number) => string;
+  /** Text of a value longer than the control's `maxLength`. */
+  tooLong: (max: number) => string;
+  /** Text of a value below the control's `min`. `min` is the attribute's text. */
+  rangeUnderflow: (min: string) => string;
+  /** Text of a value above the control's `max`. `max` is the attribute's text. */
+  rangeOverflow: (max: string) => string;
+  /** Text of a date, time, or date and time before the control's `min`. `min` is in the field's own format. */
+  dateRangeUnderflow: (min: string) => string;
+  /** Text of a date, time, or date and time after the control's `max`. `max` is in the field's own format. */
+  dateRangeOverflow: (max: string) => string;
+  /** Text of a value that does not fit the control's `step`. */
+  stepMismatch: string;
+  /** Form.Summary's title, with the number of problems it lists. */
+  formErrors: (count: number) => string;
 }
 
 /** The English Todae ships with. */
@@ -121,12 +161,17 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   datePicker: 'Choose date',
   timePicker: 'Choose time',
   dateTimePicker: 'Choose date and time',
+  increment: (field) => (field ? `Increase ${field}` : 'Increase'),
+  decrement: (field) => (field ? `Decrease ${field}` : 'Decrease'),
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   previousYears: 'Previous years',
   nextYears: 'Next years',
   copied: 'Copied',
   copyFailed: 'Could not copy',
+  sortedAscending: (column) => `Sorted by ${column}, ascending`,
+  sortedDescending: (column) => `Sorted by ${column}, descending`,
+  sortCleared: (column) => `${column}, not sorted`,
   conversation: 'Conversation',
   scrollToLatest: 'Scroll to latest message',
   messageStarted: 'New message',
@@ -139,4 +184,19 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   stepError: 'Failed',
   back: 'Back',
   backTo: (label) => `Back to ${label}`,
+  required: 'Required',
+  valueMissing: 'This field is required',
+  typeMismatchEmail: 'Enter an email address',
+  typeMismatchUrl: 'Enter a URL',
+  typeMismatch: 'Enter a value in the right format',
+  badInput: 'Enter a valid value',
+  patternMismatch: 'Match the requested format',
+  tooShort: (min) => `Use at least ${min} ${min === 1 ? 'character' : 'characters'}`,
+  tooLong: (max) => `Use at most ${max} ${max === 1 ? 'character' : 'characters'}`,
+  rangeUnderflow: (min) => `Enter ${min} or more`,
+  rangeOverflow: (max) => `Enter ${max} or less`,
+  dateRangeUnderflow: (min) => `Enter ${min} or later`,
+  dateRangeOverflow: (max) => `Enter ${max} or earlier`,
+  stepMismatch: 'Enter a value that fits the allowed steps',
+  formErrors: (count) => `${count} ${count === 1 ? 'problem' : 'problems'} to fix`,
 });
