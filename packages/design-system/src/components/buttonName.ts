@@ -70,3 +70,14 @@ export function useButtonName(
   }, [read]);
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }
+
+/** What names an input, from its own attributes: the elements its `aria-labelledby` points at, else its `aria-label`, else its `<label>`s. Empty without one. */
+export function labelOf(input: HTMLInputElement | null): string {
+  if (!input) return '';
+  const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+  const own = input.getAttribute('aria-label');
+  const spoken = ids.length
+    ? ids.map((id) => spokenText(input.ownerDocument.getElementById(id) ?? input.ownerDocument.createTextNode(''))).join(' ')
+    : own || [...(input.labels ?? [])].map(spokenText).join(' ');
+  return spoken.replace(/\s+/g, ' ').trim();
+}

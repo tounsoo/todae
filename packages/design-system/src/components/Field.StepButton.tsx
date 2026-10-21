@@ -1,16 +1,14 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
-  useState,
   type ComponentPropsWithRef,
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react';
 import { useFieldContext, useStepper } from './Field.context.js';
-import { spokenText, useButtonName } from './buttonName.js';
+import { useButtonName } from './buttonName.js';
 import { MinusGlyph, PlusGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
@@ -26,17 +24,6 @@ export type FieldDecrementProps = FieldStepButtonProps;
 // For when the repeat tokens can't be read, such as without Todae's stylesheet.
 const REPEAT_DELAY_MS = 400;
 const REPEAT_INTERVAL_MS = 60;
-
-// What names the field's input, from its own attributes: the elements its `aria-labelledby` points at, else its `aria-label`, else its `<label>`s.
-function nameOf(input: HTMLElement | null): string {
-  if (!input) return '';
-  const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
-  const own = input.getAttribute('aria-label');
-  const spoken = ids.length
-    ? ids.map((id) => spokenText(input.ownerDocument.getElementById(id) ?? input.ownerDocument.createTextNode(''))).join(' ')
-    : own || [...((input as HTMLInputElement).labels ?? [])].map(spokenText).join(' ');
-  return spoken.replace(/\s+/g, ' ').trim();
-}
 
 function StepButton({
   direction,
@@ -55,20 +42,13 @@ function StepButton({
   disabled: disabledProp,
   ref,
   ...props
-}: FieldStepButtonProps & { direction: 1 | -1; label: string; glyph: ReactNode }) {
+}: FieldStepButtonProps & { direction: 1 | -1; label: (field: string) => string; glyph: ReactNode }) {
   const { store } = useFieldContext();
   const stepper = useStepper(store);
-  const [name, labelRefs] = useButtonName(children, ariaLabel, ref, label);
+  // Several number fields have the same two buttons, so the name Todae gives them says whose.
+  const [name, labelRefs] = useButtonName(children, ariaLabel, ref, label(stepper?.label ?? ''));
   const node = useRef<HTMLButtonElement>(null);
   const refs = useComposedRefs(node, labelRefs);
-  // Several number fields have the same two buttons, so a name Todae gives them says whose.
-  const [field, setField] = useState('');
-  const inputId = stepper?.inputId;
-  const readField = useCallback(() => {
-    setField(nameOf(inputId ? (node.current?.ownerDocument.getElementById(inputId) ?? null) : null));
-  }, [inputId]);
-  // Every commit, as the label can change; the same text bails out.
-  useLayoutEffect(readField);
   const timers = useRef<{ delay?: number; repeat?: number }>({});
   const stop = useCallback(() => {
     window.clearTimeout(timers.current.delay);
@@ -107,7 +87,7 @@ function StepButton({
       type="button"
       tabIndex={-1}
       disabled={disabled}
-      aria-label={name !== undefined && !ariaLabel && field ? `${name} ${field}` : name}
+      aria-label={name}
       aria-controls={stepper?.inputId}
       className={cx(styles.stepButton, className)}
       onPointerDown={composeHandlers(onPointerDown, press)}

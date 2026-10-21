@@ -941,8 +941,8 @@
       "ko": "가장 높은 숫자. 이보다 높게 확정하면 step에 맞는 가장 높은 숫자가 됩니다."
     },
     "step": {
-      "en": "The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.",
-      "ko": "min이나 0부터 센, 확정한 값이 맞춰지는 간격이자 화살표 키와 스텝 버튼이 움직이는 크기. 없으면 확정한 값은 텍스트가 보여 주는 모든 자릿수를 유지하고, 키는 1씩, 퍼센트는 0.01씩 움직입니다."
+      "en": "The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.",
+      "ko": "min이나 0부터 센, 확정한 값이 맞춰지는 간격이자 화살표 키와 스텝 버튼이 움직이는 크기. 텍스트가 보여 주는 자릿수보다 우선하므로 그보다 촘촘하지 않게 주세요. 없으면 확정한 값은 텍스트가 보여 주는 모든 자릿수를 유지하고, 키는 1씩, 퍼센트는 0.01씩 움직입니다."
     },
     "largeStep": {
       "en": "What Page Up and Page Down move by.",
@@ -953,8 +953,8 @@
       "ko": "숫자 텍스트의 로캘(예: \"de\"). 지정하지 않으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "formatOptions": {
-      "en": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
-      "ko": "Intl.NumberFormat이 받는 숫자 표기 방식. percent나 currency 같은 style과 소수 자릿수이며, 확정은 이 자릿수로 반올림됩니다. compact 표기와 과학 표기는 다시 읽을 수 없고 유효 숫자(significant digits)는 지원하지 않습니다. 가능하면 단위나 통화 기호는 Field.Affix에 넣으세요."
+      "en": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits and rounding options are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
+      "ko": "Intl.NumberFormat이 받는 숫자 표기 방식. percent나 currency 같은 style과 소수 자릿수이며, 확정은 이 자릿수로 반올림됩니다. compact 표기와 과학 표기는 다시 읽을 수 없고 유효 숫자(significant digits)와 반올림 옵션은 지원하지 않습니다. 가능하면 단위나 통화 기호는 Field.Affix에 넣으세요."
     },
     "required": {
       "en": "A form with no number is invalid.",
@@ -965,8 +965,8 @@
       "ko": "네이티브 placeholder."
     },
     "inputMode": {
-      "en": "Which keyboard a phone shows.",
-      "ko": "휴대전화가 보여 줄 키보드."
+      "en": "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
+      "ko": "휴대전화가 보여 줄 키보드. 소수점 키패드의 구분 기호는 locale이 아니라 기기를 따릅니다."
     }
   },
   "Field.Increment": {

@@ -4,6 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, GlyphsProvider, Label, StringsProvider } from '../index.js';
 import { mount, submit } from '../test/form.js';
+import type { NumberFormatOptions } from './numberText.js';
 import { resetWarnOnce } from './warnOnce.js';
 
 // Each tick of a held press is its own task, as in a browser, so each renders before the next.
@@ -92,6 +93,19 @@ describe('Field.NumberInput', () => {
     expect(input().getAttribute('inputmode')).toBe('text');
   });
 
+  it('keeps the digit keypad for a format with no fraction, since it has no separator', () => {
+    const { rerender } = render(<Quantity step={1} min={0} locale="en" formatOptions={{ style: 'currency', currency: 'USD' }} />);
+    expect(input().getAttribute('inputmode')).toBe('decimal');
+    rerender(<Quantity step={1} min={0} locale="en" formatOptions={{ style: 'percent' }} />);
+    expect(input().getAttribute('inputmode')).toBe('decimal');
+    rerender(<Quantity step={1} min={0} locale="ja" formatOptions={{ style: 'currency', currency: 'JPY' }} />);
+    expect(input().getAttribute('inputmode')).toBe('numeric');
+    rerender(<Quantity step={1} min={0} locale="en" formatOptions={{ maximumFractionDigits: 1 }} />);
+    expect(input().getAttribute('inputmode')).toBe('decimal');
+    rerender(<Quantity step={1} min={0} locale="en" formatOptions={{ maximumFractionDigits: 0 }} />);
+    expect(input().getAttribute('inputmode')).toBe('numeric');
+  });
+
   it('writes the number in the locale and the format options', () => {
     render(
       <Quantity initial={0.125} locale="de" formatOptions={{ style: 'percent', maximumFractionDigits: 1 }} />,
@@ -140,16 +154,44 @@ describe('Field.NumberInput', () => {
     expect(input().value).toBe('1,234.5');
   });
 
-  it('refuses a keystroke that could not become a number, and keeps the last text', () => {
-    render(<Quantity locale="en" initial={12} />);
+  it('takes any text on change, and reads or flags it on commit', () => {
+    const onCommit = vi.fn();
+    render(<Quantity locale="en" initial={12} onCommit={onCommit} />);
     type('12e');
-    expect(input().value).toBe('12');
-    type('12.');
-    expect(input().value).toBe('12.');
+    expect(input().value).toBe('12e');
     type('12.5.');
-    expect(input().value).toBe('12.');
-    type('-');
-    expect(input().value).toBe('-');
+    expect(input().value).toBe('12.5.');
+    fireEvent.blur(input());
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['5 kilometers', { style: 'unit', unit: 'kilometer', unitDisplay: 'long' }],
+    ['5.00 US dollars', { style: 'currency', currency: 'USD', currencyDisplay: 'name' }],
+  ] as const)('lets a person delete through %s one character at a time', (full, formatOptions) => {
+    render(<Quantity locale="en" initial={5} formatOptions={formatOptions} />);
+    expect(input().value).toBe(full);
+    for (let at = full.length - 1; at >= 0; at--) {
+      type(full.slice(0, at));
+      expect(input().value).toBe(full.slice(0, at));
+    }
+  });
+
+  it('lands a paste the field does not read, and flags it on commit', () => {
+    const onCommit = vi.fn();
+    render(<Quantity locale="en" initial={3} onCommit={onCommit} />);
+    input().setSelectionRange(0, 1);
+    const paste = new InputEvent('beforeinput', { inputType: 'insertFromPaste', data: '$1,234.56', bubbles: true, cancelable: true });
+    fireEvent(input(), paste);
+    expect(paste.defaultPrevented).toBe(false);
+    type('$1,234.56');
+    expect(input().value).toBe('$1,234.56');
+    fireEvent.blur(input());
+    expect(input().value).toBe('$1,234.56');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validationMessage).toBe('Enter a valid value');
+    expect(onCommit).not.toHaveBeenCalled();
   });
 
   it('commits an empty text as null', () => {
@@ -201,7 +243,7 @@ describe('Field.NumberInput', () => {
     expect(onCommit).toHaveBeenLastCalledWith(1234.5);
   });
 
-  it('ends an unreadable text when the product sets a value, or a step commits', () => {
+  it('ends an unreadable text when the product sets a value', () => {
     const { rerender } = render(
       <Field.Root aria-label="Quantity">
         <Field.NumberInput value={3} onValueChange={() => undefined} locale="en" />
@@ -218,14 +260,37 @@ describe('Field.NumberInput', () => {
     expect(input().value).toBe('4');
     expect(input().getAttribute('aria-invalid')).toBeNull();
     expect(valueInput().validity.valid).toBe(true);
-    cleanup();
+  });
+
+  it('does not step from an unreadable text: it stays, and stays invalid', () => {
     const onCommit = vi.fn();
-    render(<Quantity initial={3} locale="en" onCommit={onCommit} />);
+    render(<Quantity initial={3} locale="en" buttons onCommit={onCommit} />);
     type('1,5');
     fireEvent.blur(input());
-    key('ArrowUp');
-    expect(onCommit).toHaveBeenLastCalledWith(4);
-    expect(input().value).toBe('4');
+    expect(button('Increase').disabled).toBe(false);
+    for (const name of ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown']) key(name);
+    fireEvent.click(button('Increase'), { detail: 0 });
+    fireEvent.click(button('Decrease'), { detail: 0 });
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(input().value).toBe('1,5');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.valid).toBe(false);
+  });
+
+  it('clears an unreadable text when its form resets', () => {
+    render(
+      <form>
+        <Quantity initial={3} locale="en" />
+      </form>,
+    );
+    type('1,5');
+    fireEvent.blur(input());
+    expect(valueInput().validity.valid).toBe(false);
+    act(() => {
+      input().form!.reset();
+    });
+    expect(input().value).toBe('3');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
     expect(valueInput().validity.valid).toBe(true);
   });
 
@@ -250,17 +315,22 @@ describe('Field.NumberInput', () => {
     expect(onCommit).toHaveBeenCalledWith(7);
   });
 
-  it('waits for the end of a composition to refuse its text', () => {
-    render(<Quantity locale="en" initial={5} />);
+  it('lets a composition land whatever it makes, and reads or flags the text on commit', () => {
+    const onCommit = vi.fn();
+    render(<Quantity locale="en" initial={5} onCommit={onCommit} />);
     fireEvent.compositionStart(input());
     type('5ㅎ');
     expect(input().value).toBe('5ㅎ');
     fireEvent.compositionEnd(input());
-    expect(input().value).toBe('5');
+    expect(input().value).toBe('5ㅎ');
+    fireEvent.blur(input());
+    expect(input().getAttribute('aria-invalid')).toBe('true');
     fireEvent.compositionStart(input());
     type('52');
     fireEvent.compositionEnd(input());
-    expect(input().value).toBe('52');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    fireEvent.blur(input());
+    expect(onCommit).toHaveBeenLastCalledWith(52);
   });
 
   it('does not report a blur with no edit, and does not clamp a value the product set', () => {
@@ -459,7 +529,7 @@ describe('Field.Increment and Field.Decrement', () => {
 
   it('follow StringsProvider and GlyphsProvider, and content replaces the glyph', () => {
     render(
-      <StringsProvider strings={{ increment: 'Augmenter', decrement: 'Diminuer' }}>
+      <StringsProvider strings={{ increment: () => 'Augmenter', decrement: () => 'Diminuer' }}>
         <GlyphsProvider glyphs={{ plus: <svg data-testid="plus" />, minus: <svg data-testid="minus" /> }}>
           <Quantity initial={5} buttons />
         </GlyphsProvider>
@@ -520,6 +590,17 @@ describe('Field.Increment and Field.Decrement', () => {
     expect(button('Decrease').disabled).toBe(true);
     expect(button('Increase').disabled).toBe(false);
     fireEvent.click(button('Increase'), { detail: 0 });
+    expect(button('Decrease').disabled).toBe(false);
+    expect(button('Increase').disabled).toBe(true);
+  });
+
+  it('are disabled from a number outside the range only for the step away from it', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={150} max={100} buttons onCommit={onCommit} />);
+    expect(button('Increase').disabled).toBe(true);
+    expect(button('Decrease').disabled).toBe(false);
+    fireEvent.click(button('Decrease'), { detail: 0 });
+    expect(onCommit).toHaveBeenLastCalledWith(100);
     expect(button('Decrease').disabled).toBe(false);
     expect(button('Increase').disabled).toBe(true);
   });
@@ -911,15 +992,89 @@ describe('Field.NumberInput stepping', () => {
     expect(button('Increase').disabled).toBe(false);
   });
 
-  it('lands on the bound first from a value outside the range', () => {
+  it('lands on the bound from a value outside the range when stepping toward it, and does nothing stepping away', () => {
     const onCommit = vi.fn();
     const { unmount } = render(<Quantity initial={150} max={100} onCommit={onCommit} />);
+    key('ArrowUp');
+    key('PageUp');
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(input().value).toBe('150');
     key('ArrowDown');
     expect(onCommit).toHaveBeenLastCalledWith(100);
     unmount();
+    onCommit.mockClear();
     render(<Quantity initial={-4} min={0} step={5} onCommit={onCommit} />);
+    key('ArrowDown');
+    expect(onCommit).not.toHaveBeenCalled();
     key('ArrowUp');
     expect(onCommit).toHaveBeenLastCalledWith(0);
+  });
+
+  it('steps to the next point of the step grid from a value off it', () => {
+    const onCommit = vi.fn();
+    const { unmount } = render(<Quantity initial={13} step={5} onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(15);
+    unmount();
+    render(<Quantity initial={7} step={5} onCommit={onCommit} />);
+    key('ArrowDown');
+    expect(onCommit).toHaveBeenLastCalledWith(5);
+    cleanup();
+    render(<Quantity initial={0.15} step={0.1} onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.2);
+    cleanup();
+    render(<Quantity initial={2.5} step={1} onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(3);
+  });
+
+  it('steps a percent down from 8% with a step finer than a shown percent, as the grid says', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={0.08} step={0.005} locale="en" formatOptions={{ style: 'percent' }} buttons onCommit={onCommit} />);
+    expect(button('Decrease').disabled).toBe(false);
+    key('ArrowDown');
+    expect(onCommit).toHaveBeenLastCalledWith(0.075);
+    expect(valueInput().value).toBe('0.075');
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(0.08);
+  });
+
+  it('leaves Decrement enabled at 8% with no min, and steps a yen by a half', () => {
+    const onCommit = vi.fn();
+    const { unmount } = render(<Quantity initial={0.08} locale="en" formatOptions={{ style: 'percent' }} buttons onCommit={onCommit} />);
+    expect(button('Decrease').disabled).toBe(false);
+    expect(button('Increase').disabled).toBe(false);
+    unmount();
+    render(<Quantity initial={1} step={0.5} locale="ja" formatOptions={{ style: 'currency', currency: 'JPY' }} buttons onCommit={onCommit} />);
+    key('ArrowUp');
+    expect(onCommit).toHaveBeenLastCalledWith(1.5);
+    key('ArrowDown');
+    expect(onCommit).toHaveBeenLastCalledWith(1);
+  });
+
+  it('warns once in development for a step, min or max finer than the text shows', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(<Quantity initial={1} step={0.5} locale="ja" formatOptions={{ style: 'currency', currency: 'JPY' }} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('more decimals than its format shows'));
+    cleanup();
+    warn.mockClear();
+    resetWarnOnce();
+    render(<Quantity initial={1} min={0.005} locale="en" formatOptions={{ style: 'currency', currency: 'USD' }} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('more decimals than its format shows'));
+    cleanup();
+    warn.mockClear();
+    resetWarnOnce();
+    render(<Quantity initial={1} step={0.01} locale="en" formatOptions={{ style: 'currency', currency: 'USD' }} />);
+    render(<Quantity initial={1} step={0.1} locale="en" />);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('takes a largeStep that is no length as none', () => {
+    const onCommit = vi.fn();
+    render(<Quantity initial={50} step={2} largeStep={0} onCommit={onCommit} />);
+    key('PageUp');
+    expect(onCommit).toHaveBeenLastCalledWith(70);
   });
 
   it('lets a min above the max win', () => {
@@ -939,11 +1094,15 @@ describe('Field.NumberInput stepping', () => {
     expect(onCommit).toHaveBeenLastCalledWith(10);
   });
 
-  it('warns once in development for significant-digit options', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    render(<Quantity initial={1234} locale="en" formatOptions={{ maximumSignificantDigits: 2 }} />);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('significant'));
-  });
+  it.each([['maximumSignificantDigits', 2], ['roundingMode', 'floor'], ['roundingPriority', 'lessPrecision']])(
+    'warns once in development for the %s option, which TypeScript rejects',
+    (option, value) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      // A JavaScript caller, or a cast, can still pass it.
+      render(<Quantity initial={1234} locale="en" formatOptions={{ [option]: value } as NumberFormatOptions} />);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('does not support'));
+    },
+  );
 });
 
 describe('Field.NumberInput typing', () => {
@@ -954,24 +1113,29 @@ describe('Field.NumberInput typing', () => {
     return event;
   };
 
-  it('refuses a keystroke or a paste that could not become a number before it lands, so the caret stays', () => {
+  it('refuses a typed character that could not become a number before it lands, so the caret stays', () => {
     render(<Quantity initial={123} locale="en" />);
     expect(beforeInput('insertText', 'a', [1, 1]).defaultPrevented).toBe(true);
     expect(beforeInput('insertText', '5', [1, 1]).defaultPrevented).toBe(false);
     expect(beforeInput('insertText', '.', [3, 3]).defaultPrevented).toBe(false);
-    expect(beforeInput('insertFromPaste', '4.5.6', [0, 3]).defaultPrevented).toBe(true);
-    expect(beforeInput('insertFromPaste', '7', [0, 3]).defaultPrevented).toBe(false);
-    // What it can't see, it leaves to onChange.
+    // A paste lands, and is read or flagged on commit.
+    expect(beforeInput('insertFromPaste', '4.5.6', [0, 3]).defaultPrevented).toBe(false);
+    expect(beforeInput('insertFromPaste', '$1,234.56', [0, 3]).defaultPrevented).toBe(false);
     expect(beforeInput('insertText', null, [0, 0]).defaultPrevented).toBe(false);
     expect(beforeInput('deleteContentBackward', null, [0, 0]).defaultPrevented).toBe(false);
     expect(beforeInput('insertCompositionText', 'ㅎ', [0, 0]).defaultPrevented).toBe(false);
   });
 
-  it('leaves aria-valuetext off while typing, since it would say a number that is not on screen', () => {
+  it('says exactly what is on screen as aria-valuetext, typed or not', () => {
     render(<Quantity initial={5} locale="en" />);
     expect(input().getAttribute('aria-valuetext')).toBe('5');
     type('12');
+    expect(input().getAttribute('aria-valuetext')).toBe('12');
+    type('1,2');
+    expect(input().getAttribute('aria-valuetext')).toBe('1,2');
+    type('');
     expect(input().hasAttribute('aria-valuetext')).toBe(false);
+    type('12');
     fireEvent.blur(input());
     expect(input().getAttribute('aria-valuetext')).toBe('12');
   });
@@ -1005,6 +1169,40 @@ describe('Field.Increment and Field.Decrement names and the stepper channel', ()
     expect(screen.getByRole('button', { name: 'Increase Adults' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Decrease Children' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Decrease Rooms' })).toBeTruthy();
+  });
+
+  it('take the word order from the strings, which are given the label', () => {
+    render(
+      <StringsProvider strings={{ increment: (field) => `${field} 증가`, decrement: (field) => (field ? `${field} 감소` : '감소') }}>
+        <Field.Root aria-label="수량" name="quantity">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+          <Field.Decrement />
+        </Field.Root>
+        <Field.Root name="unnamed">
+          <Field.NumberInput value={1} onValueChange={() => undefined} aria-label="" />
+          <Field.Decrement />
+        </Field.Root>
+      </StringsProvider>,
+    );
+    expect(screen.getByRole('button', { name: '수량 증가' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '수량 감소' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '감소' })).toBeTruthy();
+  });
+
+  it('follow a label that changes', () => {
+    function Labelled({ label }: { label: string }) {
+      return (
+        <Field.Root aria-label={label}>
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Labelled label="Adults" />);
+    expect(screen.getByRole('button', { name: 'Increase Adults' })).toBeTruthy();
+    rerender(<Labelled label="Guests" />);
+    expect(screen.getByRole('button', { name: 'Increase Guests' })).toBeTruthy();
   });
 
   it('keep the name a product gives them', () => {

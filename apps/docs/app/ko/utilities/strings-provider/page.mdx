@@ -168,14 +168,14 @@ const korean: Partial<Strings> = {
       <Table.Cell>`Choose date and time`</Table.Cell>
     </Table.Row>
     <Table.Row>
-      <Table.HeaderCell scope="row">`increment`</Table.HeaderCell>
-      <Table.Cell>`Field.Increment`. 자체 텍스트가 이름을 주지 않을 때</Table.Cell>
-      <Table.Cell>`Increase`</Table.Cell>
+      <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Increment`. 자체 텍스트가 이름을 주지 않을 때, `Field.NumberInput`의 레이블 텍스트를, 없으면 빈 문자열을 받습니다</Table.Cell>
+      <Table.Cell>`Increase {field}`, 레이블이 없으면 `Increase`</Table.Cell>
     </Table.Row>
     <Table.Row>
-      <Table.HeaderCell scope="row">`decrement`</Table.HeaderCell>
-      <Table.Cell>`Field.Decrement`. 자체 텍스트가 이름을 주지 않을 때</Table.Cell>
-      <Table.Cell>`Decrease`</Table.Cell>
+      <Table.HeaderCell scope="row">`decrement(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Decrement`. 자체 텍스트가 이름을 주지 않을 때, `Field.NumberInput`의 레이블 텍스트를, 없으면 빈 문자열을 받습니다</Table.Cell>
+      <Table.Cell>`Decrease {field}`, 레이블이 없으면 `Decrease`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`previousMonth`</Table.HeaderCell>

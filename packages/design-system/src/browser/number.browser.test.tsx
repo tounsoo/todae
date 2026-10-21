@@ -4,7 +4,7 @@ import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, ErrorMessage, Field, Form, Label } from '../index.js';
+import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 
 afterEach(cleanup);
 
@@ -16,6 +16,8 @@ function Quantity({
   step,
   locale = 'en',
   required,
+  initial = null,
+  formatOptions,
 }: {
   onSubmit?: (data: FormData) => void;
   withForm?: boolean;
@@ -24,8 +26,10 @@ function Quantity({
   step?: number;
   locale?: string;
   required?: boolean;
+  initial?: number | null;
+  formatOptions?: NumberFormatOptions;
 }) {
-  const [value, setValue] = useState<number | null>(null);
+  const [value, setValue] = useState<number | null>(initial);
   const field = (
     <Field.Group>
       <Label.Root htmlFor="qty">Quantity</Label.Root>
@@ -39,6 +43,7 @@ function Quantity({
           step={step}
           locale={locale}
           required={required}
+          formatOptions={formatOptions}
         />
         <Field.Increment />
       </Field.Root>
@@ -153,20 +158,44 @@ describe('Field.NumberInput in a browser', () => {
     }
   });
 
-  it('checks an IME composition at its end, not as it goes', async () => {
+  it('lets an IME composition land, and flags the text on commit when it is no number', async () => {
     render(<Quantity locale="en" />);
     await userEvent.click(input());
     const session = cdp();
     await session.send('Input.imeSetComposition', { text: 'ㅎ', selectionStart: 1, selectionEnd: 1 });
     expect(input().value).toBe('ㅎ');
     await session.send('Input.insertText', { text: 'ㅎ' });
-    expect(input().value).toBe('');
+    expect(input().value).toBe('ㅎ');
+    await userEvent.keyboard('{Tab}');
+    expect(input().value).toBe('ㅎ');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}');
     await session.send('Input.imeSetComposition', { text: '5', selectionStart: 1, selectionEnd: 1 });
     expect(input().value).toBe('5');
     await session.send('Input.insertText', { text: '5' });
     expect(input().value).toBe('5');
     await userEvent.keyboard('{Tab}');
     expect(valueOf()).toBe('5');
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('lets a person delete through a unit or a currency name, one key at a time', async () => {
+    const formats = [
+      { text: '5 kilometers', formatOptions: { style: 'unit', unit: 'kilometer', unitDisplay: 'long' } },
+      { text: '5.00 US dollars', formatOptions: { style: 'currency', currency: 'USD', currencyDisplay: 'name' } },
+    ] as const;
+    for (const { text, formatOptions } of formats) {
+      cleanup();
+      render(<Quantity locale="en" initial={5} formatOptions={formatOptions} />);
+      expect(input().value).toBe(text);
+      await userEvent.click(input());
+      await userEvent.keyboard('{End}');
+      for (let at = text.length - 1; at >= 0; at--) {
+        await userEvent.keyboard('{Backspace}');
+        expect(input().value).toBe(text.slice(0, at));
+      }
+    }
   });
 
   it('does not step on the wheel', async () => {

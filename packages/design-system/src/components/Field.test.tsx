@@ -198,7 +198,7 @@ describe('Field.TextInput', () => {
       </Field.Root>,
     );
     expect(warn).toHaveBeenCalledOnce();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Field.NumberInput'));
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/no longer supports type="number".*Field.NumberInput/));
     warn.mockRestore();
   });
 

@@ -19,7 +19,7 @@ export const meta = {
     },
     {
       name: 'options.formatOptions',
-      type: 'Intl.NumberFormatOptions',
+      type: 'NumberFormatOptions',
       required: false,
       description: 'How the number is written, as Intl.NumberFormat takes it. A percent style reads 13 as 0.13.',
     },

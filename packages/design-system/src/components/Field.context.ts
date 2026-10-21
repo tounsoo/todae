@@ -13,6 +13,8 @@ export type StepperEntry = {
   step: (direction: 1 | -1) => void;
   /** The id of the input, for `aria-controls`. */
   inputId: string;
+  /** What names the input, such as its label's text, for a button's name. Empty without one. */
+  label: string;
   /** The field is disabled or read-only. */
   disabled: boolean;
   atMin: boolean;

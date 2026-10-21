@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { commitNumber, formatNumber, isPartialNumber, parseNumber, stepNumber } from './numberText.js';
+import type { NumberFormatOptions } from './numberText.js';
+import { boundsOf, canStep, commitNumber, formatNumber, isPartialNumber, parseNumber, shownDecimals, stepNumber } from './numberText.js';
 
 const read = (text: string, locale?: string, formatOptions?: Intl.NumberFormatOptions) =>
   parseNumber(text, { locale, formatOptions });
@@ -206,6 +207,61 @@ describe('commitNumber', () => {
   });
 });
 
+describe('commitNumber on a grid the text does not show', () => {
+  const percent = { locale: 'en', formatOptions: { style: 'percent' } } as const;
+  const yen = { locale: 'ja', formatOptions: { style: 'currency', currency: 'JPY' } } as const;
+
+  it('lets the step win over the digits the text shows', () => {
+    expect(commitNumber(0.075, { step: 0.005 }, percent)).toBe(0.075);
+    expect(commitNumber(0.0775, { step: 0.005 }, percent)).toBe(0.08);
+    expect(commitNumber(1.5, { step: 0.5 }, yen)).toBe(1.5);
+    // The grid is nearest the typed value, not the value after the text's rounding: 2.46 is nearer 0 than 5.
+    expect(commitNumber(2.46, { step: 5 }, { formatOptions: { maximumFractionDigits: 1 } })).toBe(0);
+  });
+
+  it('shows how many decimals a text shows, in the value\'s own terms', () => {
+    expect(shownDecimals(percent)).toBe(2);
+    expect(shownDecimals(yen)).toBe(0);
+    expect(shownDecimals({ locale: 'en' })).toBeUndefined();
+  });
+
+  it('rounds a tie away from zero, for both signs, as the text does', () => {
+    expect(commitNumber(2.5, { step: 1 })).toBe(3);
+    expect(commitNumber(-2.5, { step: 1 })).toBe(-3);
+    expect(commitNumber(7.5, { step: 5 })).toBe(10);
+    expect(commitNumber(-7.5, { step: 5 })).toBe(-10);
+    expect(commitNumber(-0.15, { step: 0.1 })).toBe(-0.2);
+    expect(commitNumber(0.5, {}, { formatOptions: { maximumFractionDigits: 0 } })).toBe(1);
+    expect(commitNumber(-0.5, {}, { formatOptions: { maximumFractionDigits: 0 } })).toBe(-1);
+  });
+});
+
+describe('boundsOf and canStep', () => {
+  it('finds the highest and lowest value a commit can give', () => {
+    expect(boundsOf({})).toEqual({ low: undefined });
+    expect(boundsOf({ min: 0, max: 10, step: 3 })).toEqual({ low: 0, high: 9 });
+    expect(boundsOf({ min: 1, max: 10 })).toEqual({ low: 1, high: 10 });
+    expect(boundsOf({ min: 10, max: 5, step: 1 })).toEqual({ low: 10, high: 10 });
+    expect(boundsOf({ max: 0.35, step: 0.1 })).toEqual({ low: undefined, high: 0.3 });
+  });
+
+  it('finds no step at the bound it moves toward, and none away from outside the range', () => {
+    const range = { min: 0, max: 10, step: 3 };
+    expect(canStep(9, 1, range)).toBe(false);
+    expect(canStep(9, -1, range)).toBe(true);
+    expect(canStep(0, -1, range)).toBe(false);
+    expect(canStep(0, 1, range)).toBe(true);
+    // Off the grid, above the highest point.
+    expect(canStep(9.5, 1, range)).toBe(false);
+    expect(canStep(150, 1, { max: 100 })).toBe(false);
+    expect(canStep(150, -1, { max: 100 })).toBe(true);
+    expect(canStep(-4, -1, { min: 0 })).toBe(false);
+    expect(canStep(-4, 1, { min: 0 })).toBe(true);
+    expect(canStep(null, 1, range)).toBe(true);
+    expect(canStep(5, 1, {})).toBe(true);
+  });
+});
+
 describe('stepNumber', () => {
   it('steps from a value, snapping first', () => {
     expect(stepNumber(5, 1, { max: 99 })).toBe(6);
@@ -224,9 +280,34 @@ describe('stepNumber', () => {
 
   it('lands on the bound first from outside the range', () => {
     expect(stepNumber(150, -1, { max: 100 })).toBe(100);
-    expect(stepNumber(150, 1, { max: 100 })).toBe(100);
+    expect(stepNumber(150, -1, { max: 100, step: 7 })).toBe(98);
     expect(stepNumber(-3, 1, { min: 0 })).toBe(0);
+    expect(stepNumber(-3, 1, { min: 0, step: 5 })).toBe(0);
     expect(stepNumber(9, 3, { min: 0, max: 10, step: 3 })).toBe(9);
+  });
+
+  it('goes to the next point of the grid beyond an off-grid value, in the direction of the step', () => {
+    expect(stepNumber(2.5, 1, { step: 1 })).toBe(3);
+    expect(stepNumber(2.5, -1, { step: 1 })).toBe(2);
+    expect(stepNumber(7, -5, { step: 5 })).toBe(5);
+    expect(stepNumber(7, 5, { step: 5 })).toBe(10);
+    expect(stepNumber(13, 5, { step: 5 })).toBe(15);
+    expect(stepNumber(13, -5, { step: 5 })).toBe(10);
+    expect(stepNumber(15, 5, { step: 5 })).toBe(20);
+    expect(stepNumber(0.15, 0.1, { step: 0.1 })).toBe(0.2);
+    expect(stepNumber(-2.5, 1, { step: 1 })).toBe(-2);
+    expect(stepNumber(-2.5, -1, { step: 1 })).toBe(-3);
+    expect(stepNumber(3, 1, { min: 2, step: 5 })).toBe(7);
+    // A page step moves more of them: the first is the next point, as for a single step.
+    expect(stepNumber(13, 50, { step: 5 })).toBe(60);
+    expect(stepNumber(15, -50, { step: 5 })).toBe(-35);
+  });
+
+  it('steps a percent down from 8% on a finer grid than the text shows', () => {
+    const percent = { locale: 'en', formatOptions: { style: 'percent' } } as const;
+    expect(stepNumber(0.08, -0.005, { step: 0.005 }, percent)).toBe(0.075);
+    expect(stepNumber(0.08, -0.01, {}, percent)).toBe(0.07);
+    expect(stepNumber(1, 0.5, { step: 0.5 }, { locale: 'ja', formatOptions: { style: 'currency', currency: 'JPY' } })).toBe(1.5);
   });
 
   it('starts an increase from no value at min, or at the step', () => {
@@ -266,5 +347,26 @@ describe('format and parse', () => {
         }
       }
     }
+  });
+});
+
+describe('NumberFormatOptions', () => {
+  it('rejects the options a commit does not round by, and the notations parseNumber cannot read', () => {
+    const options: NumberFormatOptions[] = [
+      // @ts-expect-error significant digits round by magnitude
+      { maximumSignificantDigits: 2 },
+      // @ts-expect-error significant digits round by magnitude
+      { minimumSignificantDigits: 2 },
+      // @ts-expect-error a rounding mode is not the commit's
+      { roundingMode: 'floor' },
+      // @ts-expect-error a rounding increment is not the commit's
+      { roundingIncrement: 5 },
+      // @ts-expect-error a rounding priority is not the commit's
+      { roundingPriority: 'morePrecision' },
+      // @ts-expect-error compact notation can't be read back
+      { notation: 'compact' },
+      { maximumFractionDigits: 1 },
+    ];
+    expect(options).toHaveLength(7);
   });
 });

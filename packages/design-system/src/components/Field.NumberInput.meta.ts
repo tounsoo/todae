@@ -35,7 +35,7 @@ export const meta = {
       type: 'number',
       required: false,
       description:
-        'The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.',
+        'The grid a commit snaps to, counted from min or from 0, and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.',
     },
     {
       name: 'largeStep',
@@ -52,10 +52,10 @@ export const meta = {
     },
     {
       name: 'formatOptions',
-      type: 'Intl.NumberFormatOptions',
+      type: 'NumberFormatOptions',
       required: false,
       description:
-        "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
+        "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits and rounding options are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
     },
     {
       name: 'required',
@@ -73,8 +73,8 @@ export const meta = {
       name: 'inputMode',
       type: '"numeric" | "decimal" | "text" | …',
       required: false,
-      default: '"numeric" for a whole step and min of 0 or more, "decimal" for a min of 0 or more, else "text"',
-      description: 'Which keyboard a phone shows.',
+      default: '"numeric" for a whole step and min of 0 or more in a format with no fraction digits, "decimal" for a min of 0 or more, else "text"',
+      description: "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
     },
   ],
 } as const satisfies ComponentMeta;

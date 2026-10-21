@@ -429,7 +429,7 @@ describe('props table', () => {
     },
     {
       name: 'type',
-      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
+      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "date" | "time" | "datetime-local"',
       required: false,
       default: '"text"',
       descriptions: describe_(

@@ -19,7 +19,7 @@ export const meta = {
     },
     {
       name: 'options.formatOptions',
-      type: 'Intl.NumberFormatOptions',
+      type: 'NumberFormatOptions',
       required: false,
       description: 'How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits.',
     },
