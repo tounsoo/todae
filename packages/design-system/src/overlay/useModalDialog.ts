@@ -43,8 +43,8 @@ type Options = {
  *
  * Call it where `showModal()` should run relative to the focus hooks. Pass
  * `closeOnFormSubmit` to the element's `onSubmit` after the consumer's own,
- * provide `modal` to the children through `ModalContext`, and keep close
- * requests on (`closedby="closerequest"`) while `holdingCloseRequests`.
+ * put `closedby` on the element, and wrap the children in `ModalChildren`
+ * with `modal`.
  */
 export function useModalDialog({
   dialogRef,
@@ -57,7 +57,7 @@ export function useModalDialog({
 }: Options): {
   closeOnFormSubmit: (event: FormEvent<HTMLDialogElement>) => void;
   modal: ModalContextValue;
-  holdingCloseRequests: boolean;
+  closedby: 'closerequest' | 'none';
 } {
   const openRef = useRef(open);
   openRef.current = open;
@@ -209,5 +209,7 @@ export function useModalDialog({
     },
     [dialogRef],
   );
-  return { closeOnFormSubmit, modal, holdingCloseRequests };
+  // A part holding close requests needs them even with dismissOnEscape off.
+  const closedby = dismissOnEscape || holdingCloseRequests ? 'closerequest' : 'none';
+  return { closeOnFormSubmit, modal, closedby };
 }
