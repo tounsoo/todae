@@ -11589,6 +11589,146 @@
       "description": "Card.Root: a bordered surface that groups related content."
     },
     {
+      "path": "datalist.details.fg",
+      "type": "color",
+      "cssVar": "--todae-datalist-details-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.details.min-width",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-details-min-width",
+      "cssValue": "12rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.column",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-column",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.row",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-row",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.stacked",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-stacked",
+      "cssValue": "var(--todae-space-stack-gap-condensed)",
+      "ref": "space.stack.gap-condensed",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.leading",
+      "type": "number",
+      "cssVar": "--todae-datalist-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.fg",
+      "type": "color",
+      "cssVar": "--todae-datalist-term-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-datalist-term-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.term.width",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-term-width",
+      "cssValue": "10rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
       "path": "message.actions.motion.duration",
       "type": "duration",
       "cssVar": "--todae-message-actions-motion-duration",

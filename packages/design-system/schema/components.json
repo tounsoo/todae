@@ -1087,6 +1087,61 @@
       ]
     },
     {
+      "name": "DataList.Details",
+      "description": "A native dd, the value for the term in the same item. Takes native dd attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The value. Put a list of values in one DataList.Details."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Item",
+      "description": "A div that groups one term with its details, valid inside a dl. Takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "One DataList.Term, then one DataList.Details."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Root",
+      "description": "A native dl for key and value pairs, such as a settings pane, an order summary or a profile. Takes native dl attributes; orientation sets whether each term sits beside its details or above them.",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "DataList.Item parts."
+        }
+      ]
+    },
+    {
+      "name": "DataList.Term",
+      "description": "A native dt, the term for the details beside or below it. Takes native dt attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The term, as text."
+        }
+      ]
+    },
+    {
       "name": "DensityProvider",
       "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
       "props": [

@@ -36,6 +36,7 @@ export const SITE_GROUPS = [
       ['/color-picker', 'ColorPicker'],
       ['/composer', 'Composer'],
       ['/conversation', 'Conversation'],
+      ['/data-list', 'DataList'],
       ['/description', 'Description'],
       ['/dialog', 'Dialog'],
       ['/disclosure', 'Disclosure'],

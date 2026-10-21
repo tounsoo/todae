@@ -55,6 +55,14 @@ export {
   type CardRootProps,
 } from './components/Card.js';
 export {
+  DataList,
+  type DataListDetailsProps,
+  type DataListItemProps,
+  type DataListOrientation,
+  type DataListRootProps,
+  type DataListTermProps,
+} from './components/DataList.js';
+export {
   Message,
   type MessageActionsProps,
   type MessageActionsReveal,

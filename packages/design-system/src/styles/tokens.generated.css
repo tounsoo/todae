@@ -974,6 +974,16 @@
   --todae-card-padding: var(--_todae-card-padding, var(--todae-space-overlay-padding));
   --todae-card-radius: var(--_todae-card-radius, var(--todae-radius-lg));
   --todae-card-shadow: var(--_todae-card-shadow, var(--todae-shadow-none));
+  --todae-datalist-details-fg: var(--_todae-datalist-details-fg, var(--todae-color-fg-default));
+  --todae-datalist-details-min-width: var(--_todae-datalist-details-min-width, 12rem);
+  --todae-datalist-font-size: var(--_todae-datalist-font-size, var(--todae-font-size-3));
+  --todae-datalist-gap-column: var(--_todae-datalist-gap-column, var(--todae-space-inline-gap));
+  --todae-datalist-gap-row: var(--_todae-datalist-gap-row, var(--todae-space-stack-gap));
+  --todae-datalist-gap-stacked: var(--_todae-datalist-gap-stacked, var(--todae-space-stack-gap-condensed));
+  --todae-datalist-leading: var(--_todae-datalist-leading, var(--todae-font-leading-default));
+  --todae-datalist-term-fg: var(--_todae-datalist-term-fg, var(--todae-color-fg-muted));
+  --todae-datalist-term-font-weight: var(--_todae-datalist-term-font-weight, var(--todae-font-weight-medium));
+  --todae-datalist-term-width: var(--_todae-datalist-term-width, 10rem);
   --todae-message-actions-motion-duration: var(--_todae-message-actions-motion-duration, var(--todae-motion-duration-normal));
   --todae-message-actions-motion-easing-enter: var(--_todae-message-actions-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-message-actions-motion-easing-exit: var(--_todae-message-actions-motion-easing-exit, var(--todae-motion-easing-exit));

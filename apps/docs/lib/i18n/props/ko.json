@@ -489,6 +489,34 @@
       "ko": "Conversation.Content."
     }
   },
+  "DataList.Details": {
+    "children": {
+      "en": "The value. Put a list of values in one DataList.Details.",
+      "ko": "값. 값의 목록은 DataList.Details 하나 안에 넣으세요."
+    }
+  },
+  "DataList.Item": {
+    "children": {
+      "en": "One DataList.Term, then one DataList.Details.",
+      "ko": "DataList.Term 하나와 그 뒤의 DataList.Details 하나."
+    }
+  },
+  "DataList.Root": {
+    "children": {
+      "en": "DataList.Item parts.",
+      "ko": "DataList.Item 파트."
+    },
+    "orientation": {
+      "en": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
+      "ko": "data-orientation을 설정합니다. horizontal은 각 용어를 상세 내용 옆의 열에 두고, 둘이 들어가기에 목록이 너무 좁으면 쌓습니다. vertical은 용어를 상세 내용 위에 둡니다."
+    }
+  },
+  "DataList.Term": {
+    "children": {
+      "en": "The term, as text.",
+      "ko": "용어. 텍스트로 넣으세요."
+    }
+  },
   "Description.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",

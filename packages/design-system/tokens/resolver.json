@@ -47,6 +47,7 @@
         { "$ref": "./components/slider.json" },
         { "$ref": "./components/badge.json" },
         { "$ref": "./components/card.json" },
+        { "$ref": "./components/datalist.json" },
         { "$ref": "./components/message.json" },
         { "$ref": "./components/conversation.json" },
         { "$ref": "./components/attachment.json" },
