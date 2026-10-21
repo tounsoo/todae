@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Checkbox } from '../components/Checkbox.js';
 import { useSelection, type UseSelectionOptions } from './useSelection.js';
@@ -164,6 +165,21 @@ describe('useSelection', () => {
     await Promise.resolve();
     await act(async () => toggle('b'));
     expect(result.current.value).toEqual(['a', 'b']);
+  });
+
+  it('builds on a change a controlled parent took', () => {
+    function Parent() {
+      const [value, setValue] = useState<string[]>([]);
+      const selection = useSelection({ keys: KEYS, value, onValueChange: setValue });
+      return (
+        <button type="button" onClick={() => { selection.toggle('a'); selection.toggle('b'); }}>
+          {selection.value.join(',')}
+        </button>
+      );
+    }
+    render(<Parent />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('button').textContent).toBe('a,b');
   });
 
   it('adds a key listed twice in keys once', () => {

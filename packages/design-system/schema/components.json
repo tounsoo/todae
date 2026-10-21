@@ -3695,7 +3695,7 @@
     },
     {
       "name": "Table.SortButton",
-      "description": "A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell's data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell's sort from onClick. After a click it announces the column's next aria-sort or data-sort change through useAnnouncer, if it comes before the user's next press or key. Takes native button attributes.",
+      "description": "A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell's data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell's sort from onClick. After a click it announces the column's next aria-sort or data-sort change through useAnnouncer, if it comes before the user's next press or key; a lone modifier key does not count. Takes native button attributes.",
       "props": [
         {
           "name": "children",
@@ -5019,7 +5019,7 @@
           "name": "value",
           "type": "readonly K[]",
           "required": false,
-          "description": "Controlled selection, in the order keys were selected. Defined means controlled. A change you don't take by the end of the task that made it, such as one you set in a transition, is dropped from the next change."
+          "description": "Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you set in a transition or a timer, is forgotten, and the next change builds on the value you passed."
         },
         {
           "name": "defaultValue",

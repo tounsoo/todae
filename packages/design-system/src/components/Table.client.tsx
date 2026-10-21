@@ -17,7 +17,7 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
  * a device with a hovering pointer it shows only on hover or focus. It does
  * not sort; set the cell's `sort` from `onClick`. After a click it announces
  * the column's next `aria-sort` or `data-sort` change, if it comes before the
- * user's next press or key.
+ * user's next press or key; a lone modifier key doesn't count.
  */
 export type TableSortButtonProps = ComponentPropsWithRef<'button'>;
 
@@ -43,7 +43,8 @@ type Stop = () => void;
 const waiting = /* @__PURE__ */ new WeakMap<Element, Stop>();
 
 const USER_ACTIONS = ['pointerdown', 'keydown'] as const;
-const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'CapsLock', 'Insert', 'OS']);
+// Insert and CapsLock are the NVDA and JAWS keys.
+const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'OS', 'Super', 'Hyper', 'Fn', 'FnLock', 'Symbol', 'SymbolLock', 'CapsLock', 'NumLock', 'ScrollLock', 'Insert']);
 
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
   const { sort } = useGlyphs();
@@ -63,7 +64,7 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
     };
     // A lone modifier, such as Control to quiet a screen reader, is not a new action.
     const onAction = (event: Event) => {
-      if (event instanceof KeyboardEvent && (event.repeat || MODIFIER_KEYS.has(event.key))) return;
+      if ('key' in event && ((event as KeyboardEvent).repeat || MODIFIER_KEYS.has((event as KeyboardEvent).key))) return;
       stop();
     };
     const observer = new MutationObserver(() => {

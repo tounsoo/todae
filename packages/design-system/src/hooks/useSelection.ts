@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, type ChangeEvent } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
 import { composeHandlers } from '../components/props.js';
 import { useControlledState } from './useControlledState.js';
@@ -10,7 +10,7 @@ export type UseSelectionOptions<K extends string | number> = {
   keys: readonly K[];
   /** Keys that cannot be selected: ranges and select all skip them, and their checkbox is disabled. */
   disabledKeys?: readonly K[];
-  /** Controlled selection, in the order keys were selected. Defined means controlled. A change you don't take by the end of the task that made it, such as one you set in a transition, is dropped from the next change. */
+  /** Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you set in a transition or a timer, is forgotten, and the next change builds on the value you passed. */
   value?: readonly K[];
   /** Initial selection when uncontrolled. */
   defaultValue?: readonly K[];
@@ -67,27 +67,23 @@ function withSelected<K>(value: readonly K[], targets: readonly K[], selected: b
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
   const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
-  // Writes build on each other until the next commit, so two calls both
-  // count. When controlled, the committed value is the base again after the
-  // calling task's microtasks, so a change the parent turned down is dropped;
-  // the reset is queued after the parent's update, so React's flush of an
-  // event's updates, also a microtask, commits first.
-  const committed = useRef(value);
+  // Writes build on each other until the next render, so two calls both
+  // count. Each commit makes the rendered value the base again, and a
+  // controlled write forces a render, so a change the parent turned down is
+  // dropped.
   const latest = useRef(value);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
   useLayoutEffect(() => {
-    committed.current = value;
     latest.current = value;
-  }, [value]);
+  });
   const write = (next: readonly K[]) => {
     if (next === latest.current) return;
     latest.current = next;
     setValue(next);
+    if (valueProp !== undefined) rerender();
     onValueChange?.([...next]);
-    if (valueProp === undefined) return;
-    queueMicrotask(() => {
-      latest.current = committed.current;
-    });
   };
+
   const selected = useMemo(() => new Set<K>(value), [value]);
   const disabled = useMemo(() => new Set<K>(disabledKeys), [disabledKeys]);
   const uniqueKeys = useMemo(() => [...new Set(keys)], [keys]);

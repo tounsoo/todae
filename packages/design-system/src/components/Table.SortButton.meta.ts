@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Table.SortButton',
   description:
-    'A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell\'s data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell\'s sort from onClick. After a click it announces the column\'s next aria-sort or data-sort change through useAnnouncer, if it comes before the user\'s next press or key. Takes native button attributes.',
+    'A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell\'s data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell\'s sort from onClick. After a click it announces the column\'s next aria-sort or data-sort change through useAnnouncer, if it comes before the user\'s next press or key; a lone modifier key does not count. Takes native button attributes.',
   props: [
     {
       name: 'children',
