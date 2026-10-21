@@ -1,0 +1,91 @@
+@layer todae.components {
+  /* The views share one grid cell, so the leaving and entering views overlap
+     while they slide. Each keeps its own height; the root animates the
+     viewport's. */
+  .viewport {
+    display: grid;
+    align-items: start;
+  }
+
+  .viewport[data-direction] {
+    overflow: clip;
+  }
+
+  /* Slid by a logical offset, not a transform, so it flips with the text and
+     a tooltip anchored inside stays on its trigger. */
+  .view {
+    position: relative;
+    grid-area: 1 / 1;
+    min-inline-size: 0;
+  }
+
+  /* `display` on a consumer class must not reveal a view lower in the stack.
+     A layered rule loses to any unlayered one, so only !important holds here. */
+  .view[hidden] {
+    display: none !important;
+  }
+
+  .view:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-drilldown-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  /* Forward: the new view comes in from the inline end over the old one,
+     which shifts toward the inline start and fades. Back runs the reverse. */
+  .viewport[data-direction] > .view[data-entering] {
+    animation: todae-drilldown-in var(--todae-drilldown-motion-duration) var(--todae-drilldown-motion-easing-enter) both;
+  }
+
+  .viewport[data-direction] > .view[data-leaving] {
+    animation: todae-drilldown-out var(--todae-drilldown-motion-duration) var(--todae-drilldown-motion-easing-exit) both;
+  }
+
+  .viewport[data-direction='forward'] > .view[data-entering],
+  .viewport[data-direction='back'] > .view[data-leaving] {
+    --_shift: 100%;
+    --_fade: 1;
+    z-index: 1;
+  }
+
+  .viewport[data-direction='forward'] > .view[data-leaving],
+  .viewport[data-direction='back'] > .view[data-entering] {
+    --_shift: -30%;
+    --_fade: 0;
+  }
+
+  @keyframes todae-drilldown-in {
+    from {
+      inset-inline-start: var(--_shift);
+      opacity: var(--_fade);
+    }
+  }
+
+  @keyframes todae-drilldown-out {
+    to {
+      inset-inline-start: var(--_shift);
+      opacity: var(--_fade);
+    }
+  }
+
+  .glyph {
+    display: inline-flex;
+    inline-size: var(--todae-drilldown-back-icon-size);
+    block-size: var(--todae-drilldown-back-icon-size);
+  }
+
+  .glyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Points toward the start of the line, so it flips with the text. */
+  .backIcon > [data-todae-glyph]:dir(rtl) {
+    scale: -1 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .viewport[data-direction] > .view:is([data-entering], [data-leaving]) {
+      animation: none;
+    }
+  }
+}

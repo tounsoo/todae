@@ -27,6 +27,7 @@ import {
   Disclosure,
   Dialog,
   Drawer,
+  Drilldown,
   ErrorMessage,
   Field,
   Grid,
@@ -465,6 +466,48 @@ const cases: Case[] = [
       <Tabs.Root defaultValue="a">
         <Tabs.Panel {...p} value="a" />
       </Tabs.Root>
+    ),
+  ],
+  [
+    'Drilldown.Viewport',
+    (p) => (
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.Viewport {...p} />
+      </Drilldown.Root>
+    ),
+  ],
+  [
+    'Drilldown.View',
+    (p) => (
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.View {...p} value="a" label="A" />
+      </Drilldown.Root>
+    ),
+  ],
+  [
+    'Drilldown.Trigger',
+    (p) => (
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.Trigger {...p} value="b">
+          B
+        </Drilldown.Trigger>
+      </Drilldown.Root>
+    ),
+  ],
+  [
+    'Drilldown.Back',
+    (p) => (
+      <Drilldown.Root defaultValue={['a', 'b']}>
+        <Drilldown.Back {...p} />
+      </Drilldown.Root>
+    ),
+  ],
+  [
+    'Drilldown.Label',
+    (p) => (
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.Label {...p} />
+      </Drilldown.Root>
     ),
   ],
   ['Tree.Root', (p) => <Tree.Root {...p} aria-label="t" />],

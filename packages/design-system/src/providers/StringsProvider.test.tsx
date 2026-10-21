@@ -67,6 +67,8 @@ const FRENCH: Strings = {
   stepCurrent: 'En cours',
   stepPending: 'À faire',
   stepError: 'Échec',
+  back: 'Retour',
+  backTo: (label) => `Retour à ${label}`,
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

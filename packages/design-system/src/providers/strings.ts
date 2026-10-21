@@ -88,6 +88,10 @@ export interface Strings {
   stepPending: string;
   /** Steps.Item's hidden status word for a step with an `error`. */
   stepError: string;
+  /** Name of Drilldown.Back when its own text does not name it and the view below has no label. */
+  back: string;
+  /** Name of Drilldown.Back when its own text does not name it. `label` is the label of the view it goes back to. */
+  backTo: (label: string) => string;
 }
 
 /** The English Todae ships with. */
@@ -133,4 +137,6 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   stepCurrent: 'In progress',
   stepPending: 'Not started',
   stepError: 'Failed',
+  back: 'Back',
+  backTo: (label) => `Back to ${label}`,
 });

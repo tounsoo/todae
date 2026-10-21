@@ -96,6 +96,17 @@ export {
 } from './components/ToggleGroup.js';
 export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog.js';
 export { Drawer, type DrawerRootProps, type DrawerSide } from './components/Drawer.js';
+export {
+  Drilldown,
+  type DrilldownBackProps,
+  type DrilldownChangeReason,
+  type DrilldownEscape,
+  type DrilldownLabelProps,
+  type DrilldownRootProps,
+  type DrilldownTriggerProps,
+  type DrilldownViewportProps,
+  type DrilldownViewProps,
+} from './components/Drilldown.js';
 export { composeRefs } from './components/props.js';
 export {
   OptionList,

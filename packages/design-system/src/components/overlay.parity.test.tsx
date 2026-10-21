@@ -1,9 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRef, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from './BottomSheet.js';
 import { Dialog } from './Dialog.js';
 import { Drawer } from './Drawer.js';
+import { Drilldown } from './Drilldown.js';
 
 afterEach(cleanup);
 
@@ -135,6 +136,51 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(blocked).not.toHaveBeenCalled();
       expect(getSurface()).not.toBeNull();
+    });
+
+    it('goes back in a Drilldown on Escape before it closes', () => {
+      const onOpenChange = vi.fn();
+      const onValueChange = vi.fn();
+      const h = harness();
+      const cancel = () => act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      render(
+        <h.Root open onOpenChange={onOpenChange}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings', 'account']} onValueChange={onValueChange}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>,
+      );
+      cancel();
+      expect(onValueChange).toHaveBeenCalledWith(['settings'], 'escape');
+      expect(onOpenChange).not.toHaveBeenCalled();
+      cancel();
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    });
+
+    it('takes close requests for a Drilldown that can go back even with dismissOnEscape off', () => {
+      const onOpenChange = vi.fn();
+      const h = harness();
+      render(
+        <h.Root open onOpenChange={onOpenChange} dismissOnEscape={false}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings', 'account']}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>,
+      );
+      expect(getSurface().getAttribute('closedby')).toBe('closerequest');
+      act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      expect(screen.getByRole('group', { name: 'Settings' })).toBeTruthy();
+      expect(getSurface().getAttribute('closedby')).toBe('none');
+      expect(onOpenChange).not.toHaveBeenCalled();
     });
 
     it('dismisses on scrim and ignores panel clicks', async () => {
