@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_STRINGS } from '../providers/strings.js';
-import { describeValidity, type ValidityCarrier } from './validity.js';
+import { describeValidity, focusTargetFor, reachTarget, registerValueInput, valueInputOf, type ValidityCarrier } from './validity.js';
 
 type Flags = Partial<Record<keyof ValidityState, boolean>>;
 
@@ -82,5 +82,68 @@ describe('describeValidity', () => {
     expect(describeValidity(input, DEFAULT_STRINGS)).toBeNull();
     input.type = 'email';
     expect(describeValidity(input, DEFAULT_STRINGS)?.kind).toBe('typeMismatch');
+  });
+});
+
+describe('a bound', () => {
+  it('is worded in the field\'s format when a value input registered one, and the raw bound otherwise', () => {
+    const el = control({ rangeUnderflow: true }, { type: 'number', min: '3' });
+    expect(describeValidity(el, DEFAULT_STRINGS)?.message).toBe('Enter 3 or more');
+    registerValueInput(el, { field: {}, owner: () => null, bound: { min: 'three' } });
+    expect(describeValidity(el, DEFAULT_STRINGS)?.message).toBe('Enter three or more');
+  });
+
+  it.each(['date', 'time', 'datetime-local'])('reads "or later" and "or earlier" for a %s', (type) => {
+    expect(describeValidity(control({ rangeUnderflow: true }, { type, min: 'A' }), DEFAULT_STRINGS)?.message).toBe('Enter A or later');
+    expect(describeValidity(control({ rangeOverflow: true }, { type, max: 'B' }), DEFAULT_STRINGS)?.message).toBe('Enter B or earlier');
+  });
+
+  it('reads "or more" and "or less" for a number', () => {
+    expect(describeValidity(control({ rangeUnderflow: true }, { type: 'number', min: '1' }), DEFAULT_STRINGS)?.message).toBe('Enter 1 or more');
+    expect(describeValidity(control({ rangeOverflow: true }, { type: 'number', max: '9' }), DEFAULT_STRINGS)?.message).toBe('Enter 9 or less');
+  });
+});
+
+describe('focusTargetFor', () => {
+  it('is the control itself, or for a value input its field\'s control as it is now', () => {
+    const el = document.createElement('input');
+    expect(focusTargetFor(el)).toBe(el);
+    let owner: HTMLElement | null = null;
+    registerValueInput(el, { field: {}, owner: () => owner, bound: {} });
+    expect(focusTargetFor(el)).toBe(el);
+    owner = document.createElement('button');
+    expect(focusTargetFor(el)).toBe(owner);
+  });
+});
+
+describe('reachTarget', () => {
+  it('is disabled when the value input or the control it speaks for is', () => {
+    const el = document.createElement('input');
+    const button = document.createElement('button');
+    registerValueInput(el, { field: {}, owner: () => button, bound: {} });
+    expect(reachTarget(el)).toEqual({ target: button, disabled: false });
+    button.disabled = true;
+    expect(reachTarget(el).disabled).toBe(true);
+  });
+});
+
+describe('valueInputOf', () => {
+  it('is the first value input of the field in document order, and none of another field\'s', () => {
+    const shell = document.createElement('div');
+    const field = {};
+    const make = (owner: object) => {
+      const el = document.createElement('input');
+      el.setAttribute('data-todae-value-input', '');
+      registerValueInput(el, { field: owner, owner: () => null, bound: {} });
+      shell.append(el);
+      return el;
+    };
+    make({});
+    const first = make(field);
+    make(field);
+    expect(valueInputOf(field, shell)).toBe(first);
+    expect(valueInputOf({}, shell)).toBeNull();
+    first.remove();
+    expect(valueInputOf(field, shell)).not.toBe(first);
   });
 });

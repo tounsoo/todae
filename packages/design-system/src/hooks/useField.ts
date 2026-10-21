@@ -8,6 +8,15 @@ import {
 } from '../components/Field.context.js';
 import { useRevalidate } from '../components/Form.context.js';
 import { useStableComposedRef } from '../components/props.js';
+import {
+  useValueInput,
+  type ControlBrand,
+  type ValueInputControl,
+  type ValueInputOptions,
+  type ValueInputProps,
+} from '../components/valueInput.js';
+
+export type { ValueInputControl, ValueInputOptions, ValueInputProps };
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {
@@ -64,7 +73,27 @@ export type UseFieldResult = {
   getControlProps: <P extends FieldControlUserProps>(
     props?: P,
     options?: FieldControlOptions,
-  ) => Omit<P, keyof FieldControlWire> & FieldControlWire;
+  ) => Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand;
+  /**
+   * Props for a native `<input>` that carries a non-native control's value: it
+   * submits under the field's name, and the browser validates it, so
+   * `required`, `min` and `max` work and `Form.Root` shows and focuses the
+   * control. Render it beside the control, and pass the props
+   * `getControlProps` returned for it as the second argument: the input
+   * follows its `disabled` and `form`, and takes no name when that control
+   * sent one. It is hidden from sight and from assistive technology, is not a
+   * tab stop and never takes a press. A problem on it moves focus to the
+   * control that `getControlProps` wired.
+   */
+  getValueInputProps: (options: ValueInputOptions, control: ValueInputControl) => ValueInputProps;
+  /**
+   * Call it when a person changes the control's value in a way that fires no
+   * change event on a native element, such as a pick or a removed chip. It
+   * hides the field's server error in `Form.Root`, ends the wait for a reply
+   * and counts the field as edited, as typing in a text input does. A value
+   * your code sets is no edit, so don't call it for one.
+   */
+  notifyValueChange: () => void;
 };
 
 /**
@@ -77,28 +106,30 @@ export function useField(): UseFieldResult {
 
 /**
  * useField, with `counted` false for a control that leaves the field to any
- * other control beside it, as Field.ColorPicker, Field.DatePicker, Field.TimePicker and Field.DateTimePicker do. Not exported from the
- * package.
+ * other control beside it, as Field.ColorPicker, Field.DatePicker,
+ * Field.TimePicker and Field.DateTimePicker do. Not exported from the package.
  */
 export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
-  const { inputRef } = ctx;
-  const setFocusTarget = useControlSetter(inputRef);
-  const setPresence = useControlPresence(ctx.store, counted);
+  const setFocusTarget = useControlSetter(ctx.inputRef, ctx.store, counted);
+  const { setPresence, ownNamed } = useControlPresence(ctx.store, counted);
+  const valueInput = useValueInput(ctx, ownNamed);
+  const { track } = valueInput;
   useRevalidate();
   const setControl = useCallback(
     (node: HTMLElement | null) => {
       setFocusTarget(node);
       setPresence(node);
+      track(node);
     },
-    [setFocusTarget, setPresence],
+    [setFocusTarget, setPresence, track],
   );
   const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(
       props?: P,
       { native = true }: FieldControlOptions = {},
-    ): Omit<P, keyof FieldControlWire> & FieldControlWire => {
+    ): Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand => {
       const user = (props ?? {}) as P;
       const disabled = ctx.disabled || Boolean(user.disabled);
       const name = native ? (user.name ?? ctx.name) : undefined;
@@ -115,12 +146,20 @@ export function useFieldControl(counted: boolean): UseFieldResult {
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),
         'data-todae-field-control': name !== undefined && name === ctx.name ? 'name' : '',
-      } as Omit<P, keyof FieldControlWire> & FieldControlWire;
+      } as unknown as Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand;
     },
     [composedRef, ctx],
   );
-  return useMemo(
-    () => ({ id: ctx.inputId, name: ctx.name, disabled: ctx.disabled, invalid: ctx.invalid, getControlProps }),
-    [ctx.disabled, ctx.inputId, ctx.invalid, ctx.name, getControlProps],
+  return useMemo<UseFieldResult>(
+    () => ({
+      id: ctx.inputId,
+      name: ctx.name,
+      disabled: ctx.disabled,
+      invalid: ctx.invalid,
+      getControlProps,
+      getValueInputProps: valueInput.getValueInputProps,
+      notifyValueChange: valueInput.notifyValueChange,
+    }),
+    [ctx.disabled, ctx.inputId, ctx.invalid, ctx.name, getControlProps, valueInput.getValueInputProps, valueInput.notifyValueChange],
   );
 }

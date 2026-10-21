@@ -2,7 +2,8 @@
 const CANDIDATES = /* @__PURE__ */ [
   'a[href]',
   'button',
-  'input:not([type="hidden"])',
+  // A value input carries a custom control's value and is not a control itself.
+  'input:not([type="hidden"]):not([data-todae-value-input])',
   'select',
   'textarea',
   'summary',
@@ -10,7 +11,7 @@ const CANDIDATES = /* @__PURE__ */ [
   'audio[controls]',
   'video[controls]',
   '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not(input[type="hidden"])',
+  '[tabindex]:not(input[type="hidden"]):not([data-todae-value-input])',
 ].join(', ');
 
 /**
