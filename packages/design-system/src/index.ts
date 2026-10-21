@@ -204,8 +204,19 @@ export {
   type FieldControlUserProps,
   type FieldControlWire,
   type UseFieldResult,
+  type ValueInputControl,
+  type ValueInputOptions,
+  type ValueInputProps,
 } from './hooks/useField.js';
 export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset.js';
+export {
+  Form,
+  type FormErrors,
+  type FormInvalidField,
+  type FormRootProps,
+  type FormSummaryProps,
+} from './components/Form.js';
+export type { FormFieldError, ValidityKind } from './components/validity.js';
 export { Label, type LabelRootProps } from './components/Label.js';
 export {
   RadioGroup,

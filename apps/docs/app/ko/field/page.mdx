@@ -89,6 +89,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
+이것은 직접 하는 연결입니다. [Form](/form) 안에서는 `Field.Group`이 브라우저 자체의 검증을 읽고, `id` 없는 `ErrorMessage.Root`가 문제를 보여 주면서 이 연결을 대신 해 줍니다.
+
 ## Counter
 
 `Field.Counter`는 `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줍니다. 자체 줄을 차지합니다. 서버 HTML에 글자 수가 포함되도록 입력 뒤에 쓰세요. `Field.Root`마다 Counter는 하나입니다. 입력은 계속 제어 상태이며, `defaultValue`는 읽지 않습니다.
@@ -200,7 +202,7 @@ import { Search } from 'lucide-react';
 
 ### Field.Group
 
-**언제:** 레이블이나 캡션을 컨트롤 위 `field.label.gap` 간격에 두고, Description이나 ErrorMessage를 그 아래에 쌓을 때. `Field.Root` 바깥에 두며, `Text.Root` 캡션 아래의 RadioGroup처럼 어떤 컨트롤에도 씁니다.
+**언제:** 레이블이나 캡션을 컨트롤 위 `field.label.gap` 간격에 두고, Description이나 ErrorMessage를 그 아래에 쌓을 때. `Field.Root` 바깥에 두며, `Text.Root` 캡션 아래의 RadioGroup처럼 어떤 컨트롤에도 씁니다. [Form](/form) 안에서는 그 안의 컨트롤에 대한 검증 범위이기도 합니다.
 
 **쓰지 않을 때:** 서로 다른 필드 사이 간격은 `Stack.Root`를 쓰세요. 관련 컨트롤을 범례 하나로 묶을 때는 [Fieldset](/fieldset)을 쓰세요.
 

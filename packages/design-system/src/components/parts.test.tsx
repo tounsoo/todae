@@ -17,6 +17,7 @@ import {
   Composer,
   Conversation,
   Checkbox,
+  Form,
   Calendar,
   Chip,
   ChipList,
@@ -514,6 +515,7 @@ const cases: Case[] = [
   ],
   ['Tooltip.Root', (p) => <TooltipCase p={p} />],
   ['Fieldset.Root', (p) => <Fieldset.Root {...p} />],
+  ['Form.Root', (p) => <Form.Root {...p} />],
   [
     'Fieldset.Legend',
     (p) => (
@@ -686,6 +688,27 @@ describe('every exported part', () => {
     render(<>{part({ 'data-testid': name, ref })}</>);
     const el = screen.getByTestId(name);
     expect(ref.current).toBe(el);
+  });
+});
+
+describe('Form.Summary', () => {
+  it('forwards native attributes and a ref once a failed submit gives it something to list', async () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Form.Root data-testid="form">
+        <Form.Summary data-testid="summary" ref={ref} />
+        <Field.Group>
+          <Field.Root id="a" name="a">
+            <Field.TextInput aria-label="A" required value="" onChange={noop} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    await act(async () => {
+      fireEvent.submit(screen.getByTestId('form'));
+    });
+    expect(ref.current).toBe(screen.getByTestId('summary'));
   });
 });
 

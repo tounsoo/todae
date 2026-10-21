@@ -743,6 +743,12 @@
           "description": "Marks the control invalid and sets aria-invalid."
         },
         {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds."
+        },
+        {
           "name": "name",
           "type": "string",
           "required": false,
@@ -1193,6 +1199,13 @@
           "description": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
         },
         {
+          "name": "role",
+          "type": "'dialog' | 'alertdialog'",
+          "required": false,
+          "description": "alertdialog marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click then no longer closes it, and on open focus goes to its first close part, such as a Dialog.Close that says Cancel. It needs a Dialog.Description or an aria-describedby for the message.",
+          "default": "'dialog'"
+        },
+        {
           "name": "dismissOnEscape",
           "type": "boolean",
           "required": false,
@@ -1204,7 +1217,7 @@
           "type": "boolean",
           "required": false,
           "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
-          "default": "true"
+          "default": "true, or false when role is alertdialog"
         },
         {
           "name": "aria-label",
@@ -1380,19 +1393,19 @@
     },
     {
       "name": "ErrorMessage.Root",
-      "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
+      "description": "Validation text below a control. With an id it renders as given, with no alert role. Without one, inside a Field.Group or Fieldset.Root in a Form.Root, it shows the scope's error and wires the controls' aria-describedby to itself. invalid lives on the control.",
       "props": [
         {
           "name": "id",
           "type": "string",
-          "required": true,
-          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+          "required": false,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root. Required outside a validation scope; inside one, leave it out to take the scope's error."
         },
         {
           "name": "children",
-          "type": "React.ReactNode",
+          "type": "React.ReactNode | ((error: FormFieldError) => React.ReactNode)",
           "required": false,
-          "description": "Error text."
+          "description": "Error text. Without an id, in a validation scope, a function of the scope's error is allowed too, and no children shows the error's message."
         },
         {
           "name": "className",
@@ -1461,6 +1474,12 @@
           "description": "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no chips is invalid, whatever the input holds."
+        },
+        {
           "name": "overflowLabel",
           "type": "(n: number) => string",
           "required": false,
@@ -1503,7 +1522,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. The color goes in a native text input under the field's name unless another control took it, so Field.Root's customValidity and a Form.Root scope see it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1557,7 +1576,7 @@
     },
     {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. The date goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1575,13 +1594,19 @@
           "name": "min",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The earliest date that can be picked."
+          "description": "The earliest date that can be picked. A form with an earlier date is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The latest date that can be picked."
+          "description": "The latest date that can be picked. A form with a later date is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1636,7 +1661,7 @@
     },
     {
       "name": "Field.DateTimePicker",
-      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1654,13 +1679,19 @@
           "name": "min",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The earliest date and time that can be picked."
+          "description": "The earliest date and time that can be picked. A form with an earlier one is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The latest date and time that can be picked."
+          "description": "The latest date and time that can be picked. A form with a later one is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date and time is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1722,7 +1753,7 @@
     },
     {
       "name": "Field.Group",
-      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.",
+      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "children",
@@ -1774,6 +1805,12 @@
           "required": false,
           "description": "Marks the shell invalid and sets aria-invalid on the input.",
           "default": "false"
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",
@@ -1956,7 +1993,7 @@
     },
     {
       "name": "Field.TimePicker",
-      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1974,13 +2011,19 @@
           "name": "min",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The earliest time the list offers."
+          "description": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max."
         },
         {
           "name": "max",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The latest time the list offers."
+          "description": "The latest time the list offers. A form with a later time is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no time is invalid."
         },
         {
           "name": "step",
@@ -2042,7 +2085,7 @@
     },
     {
       "name": "Fieldset.Root",
-      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes.",
+      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "disabled",
@@ -2059,6 +2102,12 @@
           "default": "false"
         },
         {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control."
+        },
+        {
           "name": "aria-describedby",
           "type": "string",
           "required": false,
@@ -2069,6 +2118,54 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "A Fieldset.Legend first, then the controls."
+        }
+      ]
+    },
+    {
+      "name": "Form.Root",
+      "description": "A native form that checks its controls before it submits and shows each problem in a Field.Group or Fieldset.Root. Sets noValidate. Takes native form attributes.",
+      "props": [
+        {
+          "name": "errors",
+          "type": "Readonly<Record<string, string>>",
+          "required": false,
+          "description": "Problems you found, such as a server reply, keyed by a control name. Todae never writes it: clear it when you send, in onSubmit, and set it when the reply comes. Entries show at once in place of the control's native problem and do not block a submit. An edit to a control hides its entry until the next submit, or until errors drops that name or changes its text. After a send, a reply is a commit whose content differs from the commit before and has entries (clear-then-set counts, a rebuild of the same content does not); it moves focus to the summary or the first enabled control with a server error and lists only server errors."
+        },
+        {
+          "name": "onSubmit",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it."
+        },
+        {
+          "name": "onReset",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs on this form's reset, not a portaled form's, as onSubmit does. A reset hides every shown problem again."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The controls, usually in Field.Group and Fieldset.Root, and an optional Form.Summary."
+        }
+      ]
+    },
+    {
+      "name": "Form.Summary",
+      "description": "The problems a failed submit left, as links to their controls, or buttons for a control with no id. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.",
+      "props": [
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the title, which is the formErrors string with the number of problems."
+        },
+        {
+          "name": "children",
+          "type": "(fields: readonly FormInvalidField[]) => React.ReactNode",
+          "required": false,
+          "description": "Replaces the list of links. Each field has its name, label, error, whether it is disabled and a focus() that moves focus to its control."
         }
       ]
     },
@@ -3268,6 +3365,12 @@
           "type": "boolean",
           "required": false,
           "description": "Marks every radio invalid."
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first radio that takes part in validation. An empty string or undefined means the rule holds."
         },
         {
           "name": "orientation",
@@ -4643,7 +4746,7 @@
     },
     {
       "name": "useField",
-      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. Takes no options.",
+      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. For a control that is not a native form element, render an input with getValueInputProps({ type, value, name, required, min, max, step, bound }, control) beside it, passing the props getControlProps returned: a hidden native input that submits the value under the field's name and that the browser validates, so required, min and max block a submit and Form.Root shows them and moves focus to the control. It follows the control's disabled and form, and takes no name when that control has one. getValueInputProps takes a type of text, number, date, time or datetime-local, the value in that type's format, and a bound that gives a min or max as the field shows it. Call notifyValueChange when a person changes the value in a way that fires no change event, such as a pick: it hides the field's server error and counts the field as edited. useField() takes no arguments.",
       "props": []
     },
     {
