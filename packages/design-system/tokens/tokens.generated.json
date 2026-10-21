@@ -4001,7 +4001,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4015,7 +4016,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4029,7 +4031,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4043,7 +4046,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4057,7 +4061,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4071,7 +4076,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4085,7 +4091,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4099,7 +4106,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4113,7 +4121,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4127,7 +4136,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4141,7 +4151,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4155,7 +4166,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4169,7 +4181,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4183,7 +4196,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4197,7 +4211,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4211,7 +4226,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4225,7 +4241,8 @@
       "context": "primary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "primary"
       },
       "description": "The primary Button.Root variant: the strongest action on a screen. Colors per state."
     },
@@ -4239,7 +4256,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4253,7 +4271,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4267,7 +4286,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4281,7 +4301,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4295,7 +4316,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4309,7 +4331,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4323,7 +4346,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4337,7 +4361,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4351,7 +4376,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4365,7 +4391,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4379,7 +4406,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4393,7 +4421,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4407,7 +4436,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4421,7 +4451,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4435,7 +4466,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4449,7 +4481,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4463,7 +4496,8 @@
       "context": "secondary",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "secondary"
       },
       "description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state."
     },
@@ -4477,7 +4511,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4491,7 +4526,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4505,7 +4541,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4519,7 +4556,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4533,7 +4571,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4547,7 +4586,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4561,7 +4601,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4575,7 +4616,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4589,7 +4631,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4603,7 +4646,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4617,7 +4661,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4631,7 +4676,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4645,7 +4691,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4659,7 +4706,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4673,7 +4721,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4687,7 +4736,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
@@ -4701,7 +4751,8 @@
       "context": "ghost",
       "entry": {
         "kind": "modifier",
-        "name": "buttonVariant"
+        "name": "buttonVariant",
+        "context": "ghost"
       },
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },

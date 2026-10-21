@@ -45,7 +45,7 @@ describe('token tools', () => {
     expect(accent).toMatchObject({ type: 'color', layer: 'appearance', cssVar: '--todae-color-accent-default' });
     expect(accent.entry).toEqual({ kind: 'modifier', name: 'appearance' });
     expect(getToken('space.1').entry).toEqual({ kind: 'set', name: 'core' });
-    expect(getToken('button.primary.bg.default').entry).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(getToken('button.primary.bg.default').entry).toEqual({ kind: 'modifier', name: 'buttonVariant', context: 'primary' });
     expect(accent.values.map((row) => row.context)).toEqual(['light', 'dark']);
     expect(accent.description).toMatch(/brand accent/);
     // A component token without its own description takes its group's.
