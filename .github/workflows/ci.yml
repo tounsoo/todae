@@ -84,10 +84,12 @@ jobs:
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       - run: pnpm --filter docs test:visual
-      # Expected, actual and diff images for each shot that changed.
+      # The report shows each changed shot; test-results holds its new image as `<name>-actual.png`.
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: apps/docs/playwright-report
+          path: |
+            apps/docs/playwright-report
+            apps/docs/test-results
           retention-days: 7

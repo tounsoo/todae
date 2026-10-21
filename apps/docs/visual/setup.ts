@@ -1,6 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 
-export const START = new Date('2026-03-12T09:30:00Z');
+const START = new Date('2026-03-12T09:30:00Z');
 
 // Every page starts at the same moment on a fake clock, so Calendar and time demos read the same
 // day, and `settle` can run demo timers to their end.
@@ -23,16 +23,18 @@ const frames = (page: Page) =>
  */
 export async function settle(page: Page) {
   // Demos start their timers in effects, which run only once React has hydrated the page.
-  await page.waitForLoadState('networkidle');
+  await page.waitForFunction(() => Object.keys(document.body).some((key) => key.startsWith('__reactFiber')));
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await frames(page);
   // A demo that sets its next timer after React renders, as Steps does, advances one step a round.
   let before = '';
-  for (let round = 0; round < 20; round++) {
+  for (let round = 0; ; round++) {
     const html = await page.evaluate(() => document.body.innerHTML);
     if (html === before) break;
+    // A demo that never stops, such as a live clock, would be shot at whatever moment the run reached.
+    if (round === 20) throw new Error(`${page.url()} still changes after 20 minutes of timers`);
     before = html;
     await page.clock.runFor(60_000);
     await frames(page);
   }
-  await page.evaluate(() => document.fonts.ready);
 }

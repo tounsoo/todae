@@ -9,6 +9,6 @@ if [ "$(uname -s)-$(uname -m)" != Linux-x86_64 ]; then
   echo "visual.sh needs a Linux x64 host. Elsewhere, push and take the images from CI's screenshots artifact." >&2
   exit 1
 fi
-version=$(node -p "require('$root/apps/docs/node_modules/@playwright/test/package.json').version")
+version=$(cd "$root/apps/docs" && node -p "require('@playwright/test/package.json').version")
 exec docker run --rm --ipc=host --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$root:$root" -w "$root/apps/docs" \
   "mcr.microsoft.com/playwright:v$version-noble" npx playwright test "$@"
