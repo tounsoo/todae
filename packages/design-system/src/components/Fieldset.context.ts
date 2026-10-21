@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 export type FieldsetContextValue = {
   disabled: boolean;
   invalid: boolean;
-  /** The error a validation scope around the control shows, for its `aria-describedby`. */
+  /** The error a validation scope around the control shows, for its `aria-describedby`; set only where `invalid` is. */
   errorId?: string;
 };
 
@@ -27,9 +27,11 @@ export const FieldsetLegendContext = /* @__PURE__ */ createContext<FieldsetConte
  */
 export function useFieldsetState(own: { disabled?: boolean; invalid?: boolean }): FieldsetContextValue {
   const fieldset = useContext(FieldsetContext);
+  const invalid = own.invalid ?? fieldset.invalid;
   return {
     disabled: Boolean(own.disabled) || fieldset.disabled,
-    invalid: own.invalid ?? fieldset.invalid,
-    errorId: fieldset.errorId,
+    invalid,
+    // A control that opted out of invalid is not described by the error either.
+    errorId: invalid ? fieldset.errorId : undefined,
   };
 }

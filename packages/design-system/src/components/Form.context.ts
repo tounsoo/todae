@@ -1,11 +1,11 @@
-import { createContext, useContext, useLayoutEffect } from 'react';
+import { createContext, useContext, useLayoutEffect, type RefObject } from 'react';
 import type { FormFieldError, ValidityCarrier } from './validity.js';
 
 /** Errors you found, keyed by a control's `name`, such as a server's reply. */
 export type FormErrors = Readonly<Record<string, string>>;
 
-/** The server errors an edit has hidden: `names` only count while `errors` is the object they were hidden in. */
-export type Dismissal = { errors: FormErrors | undefined; names: ReadonlySet<string> };
+/** The server text an edit has hidden, per control name: an entry shows again as soon as its text is not the hidden one. */
+export type Dismissal = ReadonlyMap<string, string>;
 
 /** One control of a scope as the scope last read it. */
 export type Reading = {
@@ -20,60 +20,6 @@ export type Reading = {
 /** A scope that shows an error, as Form.Summary lists it. */
 export type SummaryEntry = { scopeId: string; error: FormFieldError; label: string; carrier: ValidityCarrier };
 
-/**
- * The scopes' errors, for Form.Summary and Root's focus. A scope reports what
- * it shows after each commit; the summary lists the ones that were failing at
- * the last attempt, so a field edited into a new problem later doesn't join it.
- */
-export type FormStore = {
-  report: (scopeId: string, entry: SummaryEntry | null) => void;
-  /** Lists the scopes failing now (`failing`), or none, until the next call. */
-  freeze: (listed: 'failing' | 'none') => void;
-  subscribe: (listener: () => void) => () => void;
-  /** The listed entries still failing, in document order. */
-  getSnapshot: () => readonly SummaryEntry[];
-  /** Form.Summary's element while it renders one. */
-  setSummary: (node: HTMLElement | null) => void;
-  summary: () => HTMLElement | null;
-};
-
-export function createFormStore(): FormStore {
-  const entries = new Map<string, SummaryEntry>();
-  const listeners = new Set<() => void>();
-  let listed: ReadonlySet<string> = new Set();
-  let summary: HTMLElement | null = null;
-  let snapshot: readonly SummaryEntry[] = [];
-  const update = () => {
-    const next = [...entries.values()]
-      .filter((entry) => listed.has(entry.scopeId))
-      .sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
-    const same = next.length === snapshot.length && next.every((entry, i) => entry === snapshot[i]);
-    if (same) return;
-    snapshot = next;
-    for (const listener of listeners) listener();
-  };
-  return {
-    report(scopeId, entry) {
-      if (entry) entries.set(scopeId, entry);
-      else if (!entries.delete(scopeId)) return;
-      update();
-    },
-    freeze(mode) {
-      listed = new Set(mode === 'failing' ? entries.keys() : []);
-      update();
-    },
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    getSnapshot: () => snapshot,
-    setSummary(node) {
-      summary = node;
-    },
-    summary: () => summary,
-  };
-}
-
 export type FormContextValue = {
   /** Submit attempts since the last reset. */
   attempt: number;
@@ -81,9 +27,14 @@ export type FormContextValue = {
   epoch: number;
   errors: FormErrors | undefined;
   dismissal: Dismissal;
-  /** Hides the server error of a name until the next submit, or until `errors` is a new object. */
+  /** Hides the server error a name has now, until the next submit or until its text changes. */
   dismiss: (name: string) => void;
-  store: FormStore;
+  /** The scopes that were failing at the last attempt and still are; Form.Summary lists them. */
+  summary: readonly SummaryEntry[];
+  /** Form.Summary's element while it renders one. */
+  summaryRef: RefObject<HTMLElement | null>;
+  /** Drops from the summary what is no longer failing. */
+  recheck: () => void;
 };
 
 export const FormContext = /* @__PURE__ */ createContext<FormContextValue | null>(null);

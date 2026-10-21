@@ -99,11 +99,11 @@ const [errors, setErrors] = useState<FormErrors>({});
 </Form.Root>
 ```
 
-서버 오류는 즉시 표시되고, 브라우저는 모르는 것을 서버는 알기에 표시되는 내용에서 네이티브 문제보다 우선합니다. 제출을 막지는 않습니다. 컨트롤을 편집하면 다음 제출까지, 또는 `errors`가 새 객체가 될 때까지 그 항목이 숨겨지므로, 같은 텍스트의 응답도 다시 표시됩니다. 유효한 제출 뒤 편집 전에 `errors`가 도착하면 포커스는 요약이나 서버 오류가 있는 첫 컨트롤로 갑니다.
+서버 오류는 즉시 표시되고, 브라우저는 모르는 것을 서버는 알기에 표시되는 내용에서 네이티브 문제보다 우선합니다. 제출을 막지는 않습니다. 컨트롤을 편집하면 다음 제출까지, 또는 그 `name`의 텍스트가 바뀔 때까지 그 항목이 숨겨지므로, 다시 실패한 제출 뒤에는 같은 텍스트도 다시 표시됩니다. 리셋하면 현재 항목이 모두 숨겨집니다. 유효한 제출 뒤 편집 전에 `errors`가 도착하면 포커스는 요약이나 서버 오류가 있는 첫 컨트롤로 갑니다.
 
 ## 브라우저가 검사할 수 없는 규칙
 
-`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. `Field.Root`에서는 필드의 컨트롤에, `Fieldset.Root`에서는 안의 첫 컨트롤에, `RadioGroup.Root`에서는 첫 라디오에 적용됩니다. `Form.Root` 없이도 네이티브 API로 동작합니다.
+`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. `Field.Root`에서는 필드의 컨트롤에, `Fieldset.Root`에서는 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, `RadioGroup.Root`에서는 검증에 참여하는 첫 라디오에 적용됩니다. `Form.Root` 없이도 네이티브 API로 동작합니다.
 
 <Example block>
   <FormRule />
@@ -113,7 +113,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 범위는 자기 컨트롤만 책임집니다. 안에 있는 `input`, `select`, `textarea` 중 검증에 참여하는 것이며, 안에 중첩된 범위의 컨트롤은 제외됩니다. 범위의 문제는 그 컨트롤 중 문제가 있는 첫 번째(페이지 순서)의 것입니다. 범위가 문제를 보여 주면 안의 모든 Todae 컨트롤이 invalid로 표시되고, 컨트롤 자신의 `invalid`가 여전히 우선합니다. `invalid={false}`로 컨트롤을 뺄 수 있습니다. `invalid`가 있는 `Fieldset.Root`는 범위가 무엇을 보여 주든 invalid로 남습니다.
 
-범위는 `ErrorMessage.Root`가 렌더링되는 동안 그 id를 컨트롤의 `aria-describedby`에 더합니다. `RadioGroup.Root`는 각 라디오가 아니라 그룹에, `Fieldset.Root` 범위는 `<fieldset>`에 더합니다. `ErrorMessage.Root`가 없는 범위도 컨트롤을 invalid로 표시하지만 id는 더하지 않으므로, 없는 요소를 가리키는 설명이 생기지 않습니다. 범위마다 `ErrorMessage.Root`는 하나만 쓰세요.
+범위는 `ErrorMessage.Root`가 렌더링되는 동안 그 id를 컨트롤의 `aria-describedby`에 더합니다. `RadioGroup.Root`는 각 라디오가 아니라 그룹에, `Fieldset.Root` 범위는 `<fieldset>`에 더하며, 그 안의 컨트롤은 invalid로 표시되지만 같은 설명이 한 번 더 붙지는 않습니다. `ErrorMessage.Root`가 없는 범위도 컨트롤을 invalid로 표시하지만 id는 더하지 않으므로, 없는 요소를 가리키는 설명이 생기지 않습니다. 범위마다 `ErrorMessage.Root`는 하나만 쓰세요.
 
 `Form.Root` 밖에서는 `Field.Group`과 `Fieldset.Root`가 이전과 같고, `id` 없는 `ErrorMessage.Root`는 개발 중에 오류를 기록합니다. `id`가 있는 `ErrorMessage.Root`는 이전처럼 어디서나 동작하며 연결은 직접 합니다.
 
@@ -125,7 +125,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 **직접 제공할 것:** 컨트롤의 네이티브 규칙, 메시지를 보여 줄 각 `Field.Group`이나 `Fieldset.Root` 안의 `id` 없는 `ErrorMessage.Root`, 요약이 읽는 모든 컨트롤의 레이블. 서버 오류를 받을 컨트롤마다 `name`. StringsProvider로 번역한 문자열. `customValidity`에 쓸 직접 쓴 텍스트.
 
-**주의할 점:** 레이블이 없는 컨트롤은 요약에서 `name`으로 읽힙니다. 모든 범위 밖의 컨트롤은 제출을 막지만 아무것도 보여 주지 않습니다. `readOnly`와 `disabled` 컨트롤은 검증되지 않으며, `Field.TextInput`은 `onChange`나 `onValueChange`가 없으면 읽기 전용입니다. 범위 안의 어떤 컨트롤도 갖고 있지 않은 `name`의 서버 오류는 어디에도 표시되지 않습니다. 메시지는 나타날 때 낭독되지 않습니다. 포커스를 옮기고 말하는 것은 요약입니다.
+**주의할 점:** 레이블이 없는 컨트롤은 요약에서 `name`으로 읽힙니다. 모든 범위 밖의 컨트롤은 제출을 막지만 아무것도 보여 주지 않습니다. `readOnly`와 `disabled` 컨트롤은 검증되지 않으며, `Field.TextInput`은 `onChange`나 `onValueChange`가 없으면 읽기 전용입니다. 범위 안의 어떤 컨트롤도 갖고 있지 않은 `name`의 서버 오류는 어디에도 표시되지 않으며, `Form.Root`가 개발 중에 경고합니다. 메시지는 나타날 때 낭독되지 않습니다. 포커스를 옮기고 말하는 것은 요약입니다.
 
 ## 언제 쓰나요
 

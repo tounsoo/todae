@@ -34,7 +34,7 @@ export type RadioGroupRootProps = {
   invalid?: boolean;
   /**
    * A message for a rule the browser can't check, set with
-   * `setCustomValidity` on the group's first radio. Empty or undefined means the rule holds.
+   * `setCustomValidity` on the group's first radio that takes part in validation. Empty or undefined means the rule holds.
    */
   customValidity?: string;
   orientation?: RadioGroupOrientation;
@@ -97,7 +97,10 @@ function RadioGroupRoot({
   const { disabled: isDisabled, invalid: isInvalid, errorId } = useFieldsetState({ disabled, invalid });
   const groupRef = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(groupRef, ref);
-  useCustomValidity(() => groupRef.current?.querySelector<HTMLInputElement>('input[type="radio"]'), customValidity);
+  useCustomValidity(
+    () => [...(groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [])].find((radio) => radio.willValidate),
+    customValidity,
+  );
   useRevalidate();
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
   return (

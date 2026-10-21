@@ -4,8 +4,9 @@ import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fiel
 import { ValidationScopeContext } from './Form.context.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { cx, useComposedRefs } from './props.js';
+import { scopeCarriers } from './Form.model.js';
 import { useValidationScope } from './ValidationScope.js';
-import { isValidityCarrier } from './validity.js';
+import { isValidityCarrier, type ValidityCarrier } from './validity.js';
 import styles from './Fieldset.module.css';
 
 /**
@@ -20,7 +21,7 @@ export type FieldsetRootProps = {
   invalid?: boolean;
   /**
    * A message for a rule the browser can't check, set with
-   * `setCustomValidity` on the first control inside. An empty string or
+   * `setCustomValidity` on the first control inside that takes part in validation. An empty string or
    * undefined means the rule holds.
    */
   customValidity?: string;
@@ -37,6 +38,7 @@ function Root({
   ref,
   'aria-describedby': describedBy,
   onChangeCapture,
+  onFocus,
   onBlur,
   ...props
 }: FieldsetRootProps) {
@@ -46,8 +48,14 @@ function Root({
   const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const fieldsetRef = useRef<HTMLFieldSetElement>(null);
   const refs = useComposedRefs(fieldsetRef, ref);
-  const scope = useValidationScope(fieldsetRef, { onChangeCapture, onBlur });
-  useCustomValidity(() => [...(fieldsetRef.current?.elements ?? [])].find(isValidityCarrier), customValidity);
+  const scope = useValidationScope(fieldsetRef, { onChangeCapture, onFocus, onBlur }, { describesElement: true });
+  const inForm = scope.value !== null;
+  useCustomValidity(() => {
+    const node = fieldsetRef.current;
+    if (!node) return null;
+    // In a form, the scope's own controls; a control of a nested scope answers to that one.
+    return inForm ? scopeCarriers(node)[0] : [...node.elements].find((el): el is ValidityCarrier => isValidityCarrier(el) && el.willValidate);
+  }, customValidity);
   const inner = useMemo(
     () => ({ disabled: isDisabled, invalid: isInvalid, errorId: outer.errorId }),
     [isDisabled, isInvalid, outer.errorId],

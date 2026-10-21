@@ -58,7 +58,7 @@ export const meta = {
       type: 'string',
       required: false,
       description:
-        "A message for a rule the browser cannot check, set with setCustomValidity on the first radio. An empty string or undefined means the rule holds.",
+        "A message for a rule the browser cannot check, set with setCustomValidity on the first radio that takes part in validation. An empty string or undefined means the rule holds.",
     },
     {
       name: 'orientation',

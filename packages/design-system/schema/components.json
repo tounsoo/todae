@@ -2062,7 +2062,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first control inside. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first control inside that takes part in validation. An empty string or undefined means the rule holds."
         },
         {
           "name": "aria-describedby",
@@ -2086,7 +2086,7 @@
           "name": "errors",
           "type": "Readonly<Record<string, string>>",
           "required": false,
-          "description": "Problems you found, such as a server reply, keyed by a control name. They show at once in place of the control's native problem and do not block a submit. An edit to a control hides its entry until the next submit or until errors is a new object."
+          "description": "Problems you found, such as a server reply, keyed by a control name. They show at once in place of the control's native problem and do not block a submit. An edit to a control hides its entry until the next submit or until its text for that name changes."
         },
         {
           "name": "onSubmit",
@@ -3327,7 +3327,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first radio. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first radio that takes part in validation. An empty string or undefined means the rule holds."
         },
         {
           "name": "orientation",

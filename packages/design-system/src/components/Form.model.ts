@@ -1,19 +1,21 @@
-import type { Dismissal, FormErrors, Reading } from './Form.context.js';
-import { isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import type { Strings } from '../providers/strings.js';
+import type { Dismissal, FormErrors, Reading, SummaryEntry } from './Form.context.js';
+import { describeValidity, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
 
+export const SCOPE_ATTRIBUTE = 'data-todae-validation-scope';
 export const SCOPE_SELECTOR = '[data-todae-validation-scope]';
 
-/** The server error for a name that an edit hasn't hidden. An empty text is none. */
+/** The server error for a name, unless the person has edited since that very text arrived. An empty text is none. */
 export function serverErrorFor(name: string, errors: FormErrors | undefined, dismissal: Dismissal): string | undefined {
   const text = name ? errors?.[name] : undefined;
   if (!text) return undefined;
-  return dismissal.errors === errors && dismissal.names.has(name) ? undefined : text;
+  return dismissal.get(name) === text ? undefined : text;
 }
 
 /**
- * What a scope shows: the first control, in document order, with a server
- * error that no edit has hidden, or, once the scope is revealed, a native one.
- * A server error needs no reveal: it only arrives after a submit.
+ * What a scope shows: the first server error, in document order, that no edit
+ * has hidden, since the server knows what the browser can't and needs no
+ * reveal; else, once the scope is revealed, the first native problem.
  */
 export function pickShown(
   readings: readonly Reading[],
@@ -24,7 +26,9 @@ export function pickShown(
   for (const reading of readings) {
     const server = serverErrorFor(reading.name, errors, dismissal);
     if (server !== undefined) return { reading, error: { kind: 'server', message: server } };
-    if (revealed && reading.native) return { reading, error: reading.native };
+  }
+  if (revealed) {
+    for (const reading of readings) if (reading.native) return { reading, error: reading.native };
   }
   return null;
 }
@@ -71,4 +75,52 @@ export function labelOf(carrier: ValidityCarrier, scope: Element): string {
   const from = group ?? carrier;
   const label = group ? '' : carrier.labels?.[0]?.textContent?.trim();
   return label || textOf(from.getAttribute('aria-labelledby'), from) || from.getAttribute('aria-label') || carrier.name;
+}
+
+/** What a scope's controls say now. */
+export function readScope(scope: Element, strings: Strings): Reading[] {
+  return scopeCarriers(scope).map((carrier) => ({
+    carrier,
+    name: carrier.name,
+    native: describeValidity(carrier, strings),
+    label: labelOf(carrier, scope),
+  }));
+}
+
+/**
+ * The scopes of a form that show an error with every scope revealed, read
+ * from the page itself, in document order of their controls. With `only`, just
+ * those scopes.
+ */
+export function failingEntries(
+  form: Element,
+  errors: FormErrors | undefined,
+  dismissal: Dismissal,
+  strings: Strings,
+  only?: ReadonlySet<string>,
+): SummaryEntry[] {
+  const entries: SummaryEntry[] = [];
+  for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) {
+    const scopeId = scope.getAttribute(SCOPE_ATTRIBUTE) ?? '';
+    if (only && !only.has(scopeId)) continue;
+    const shown = pickShown(readScope(scope, strings), errors, dismissal, true);
+    if (shown) entries.push({ scopeId, error: shown.error, label: shown.reading.label, carrier: shown.reading.carrier });
+  }
+  return entries.sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+}
+
+export function sameEntries(a: readonly SummaryEntry[], b: readonly SummaryEntry[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((entry, i) => {
+      const other = b[i]!;
+      return (
+        entry.scopeId === other.scopeId &&
+        entry.carrier === other.carrier &&
+        entry.label === other.label &&
+        entry.error.kind === other.error.kind &&
+        entry.error.message === other.error.message
+      );
+    })
+  );
 }

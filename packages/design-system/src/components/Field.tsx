@@ -273,11 +273,11 @@ export type FieldGroupProps = {
  * Form.Root it is a validation scope: its controls' native problems show in an
  * `ErrorMessage.Root` with no `id`.
  */
-function Group({ className, ref, onChangeCapture, onBlur, ...props }: FieldGroupProps) {
+function Group({ className, ref, onChangeCapture, onFocus, onBlur, ...props }: FieldGroupProps) {
   const outer = useContext(FieldsetContext);
   const groupRef = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(groupRef, ref);
-  const scope = useValidationScope(groupRef, { onChangeCapture, onBlur });
+  const scope = useValidationScope(groupRef, { onChangeCapture, onFocus, onBlur });
   const { extend } = scope;
   const ctx = useMemo(() => extend(outer), [extend, outer]);
   return (

@@ -34,6 +34,8 @@ const none = topics.length === 0;
 
 The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack.Root direction="row"`.
 
+Inside a [`Form.Root`](/form), a `Fieldset.Root` is a validation scope that shows its controls' problems in an `ErrorMessage.Root` with no `id`. Its `customValidity` prop sets a message with the browser's `setCustomValidity` on the first control inside that takes part in validation, for a rule the browser can't check.
+
 ## Accessible composition
 
 **Todae handles:** `Fieldset.Root` is a native `<fieldset>`, so it has the `group` role and its first `Fieldset.Legend` is the group's name. `disabled` is the native attribute: every form control inside is disabled and leaves the tab order, except those in that first legend. `invalid` sets `aria-invalid` on each Todae control inside: Checkbox, Switch, `RadioGroup.Root` and its radios, and the control of a `Field.Root`. Controls in that first legend are left out of `invalid` too. Nested fieldsets inherit both.
