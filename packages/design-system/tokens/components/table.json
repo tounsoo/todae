@@ -1,6 +1,6 @@
 {
   "table": {
-    "$description": "Table.Root and its parts: caption, header, body, footer, rows and cells.",
+    "$description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "header": {
@@ -19,6 +19,24 @@
       "padding": {
         "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
         "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+      }
+    },
+    "row": {
+      "bg": {
+        "selected": { "$type": "color", "$value": { "$ref": "#/color/bg/selected/$value" } }
+      }
+    },
+    "sort": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "icon": {
+        "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
+        "fg": {
+          "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+          "selected": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+        }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
       }
     },
     "rule": {

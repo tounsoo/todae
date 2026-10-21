@@ -704,7 +704,7 @@
     },
     {
       "name": "Checkbox.Root",
-      "description": "Native checkbox. Children are the visible label. Never indeterminate.",
+      "description": "Native checkbox. Children are the visible label.",
       "props": [
         {
           "name": "children",
@@ -741,6 +741,12 @@
           "type": "boolean",
           "required": false,
           "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "indeterminate",
+          "type": "boolean",
+          "required": false,
+          "description": "The mixed state, such as a select-all box over a partly selected list. Sets the input's indeterminate and shows the indeterminate glyph in place of the check. A click still toggles checked."
         },
         {
           "name": "customValidity",
@@ -3827,6 +3833,12 @@
           "description": "Which cells it heads: col, row, colgroup or rowgroup. Use col in Table.Head and row for the first cell of a body row."
         },
         {
+          "name": "sort",
+          "type": "\"ascending\" | \"descending\" | \"none\"",
+          "required": false,
+          "description": "The column's sort state. Sets data-sort, and aria-sort for ascending and descending; none leaves aria-sort off."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -3851,10 +3863,34 @@
       "description": "A native tr. Takes native tr attributes.",
       "props": [
         {
+          "name": "selected",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the row selected: sets data-selected and a fill from the table.row.bg.selected token. It sets no ARIA; the row's checkbox carries the state."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
           "description": "Table.HeaderCell and Table.Cell parts."
+        }
+      ]
+    },
+    {
+      "name": "Table.SortButton",
+      "description": "A native button for a sortable column, inside a Table.HeaderCell that takes sort. It draws the sort glyph after its children, from the header cell's data-sort: shown on a sorted column, turned when it is descending, and dimmed when unsorted; on a device with a hovering pointer it shows only on hover or focus. It does not sort; set the cell's sort from onClick. After a click it announces the column's next aria-sort or data-sort change through useAnnouncer, if it comes before the user's next press or key; a lone modifier key does not count. Takes native button attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The column label. It names the button, and the announcement uses its text, or aria-label when set."
+        },
+        {
+          "name": "onClick",
+          "type": "(event: React.MouseEvent<HTMLButtonElement>) => void",
+          "required": false,
+          "description": "Where the product sorts. It runs first; calling preventDefault() skips the announcement."
         }
       ]
     },
@@ -5143,6 +5179,42 @@
           "type": "(value: string, expanded: boolean) => void",
           "required": false,
           "description": "In tree mode, fires when Right asks to open a closed item or Left asks to close an open one."
+        }
+      ]
+    },
+    {
+      "name": "useSelection",
+      "description": "useSelection(options) returns { value, isSelected, state, toggle, toggleAll, clear, getCheckboxProps, getSelectAllProps }. value is the selected keys in the order they were selected. state is \"none\", \"some\" or \"all\" over the enabled keys in keys, and \"none\" when there are none. getCheckboxProps(key, props?) returns { checked, disabled, onChange } and getSelectAllProps(props?) returns { checked, indeterminate, disabled, onChange }, to spread on Checkbox.Root. Shift held on a checkbox sets every enabled key between the last toggled key and it to its new state.",
+      "props": [
+        {
+          "name": "keys",
+          "type": "readonly K[]",
+          "required": true,
+          "description": "The keys that can be selected now, in display order, such as the rows on the current page. Selected keys outside this list, such as those on other pages, are kept. K is a string or a number."
+        },
+        {
+          "name": "disabledKeys",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Keys that cannot be selected: ranges and select all skip them, and their checkbox is disabled."
+        },
+        {
+          "name": "value",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Controlled selection, in the order keys were selected. Defined means controlled. A change you haven't passed back by the render that follows it, such as one you pass back after a fetch or in a transition that commits later, is forgotten, and the next change builds on the value you passed."
+        },
+        {
+          "name": "defaultValue",
+          "type": "readonly K[]",
+          "required": false,
+          "description": "Initial selection when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: K[]) => void",
+          "required": false,
+          "description": "Fires with the new selection after it changes."
         }
       ]
     },

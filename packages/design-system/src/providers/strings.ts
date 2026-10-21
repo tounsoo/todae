@@ -68,6 +68,12 @@ export interface Strings {
   copied: string;
   /** useClipboard's message when a copy fails. */
   copyFailed: string;
+  /** Table.SortButton's message after its column becomes sorted in ascending order. `column` is the button's label. */
+  sortedAscending: (column: string) => string;
+  /** Table.SortButton's message after its column becomes sorted in descending order. `column` is the button's label. */
+  sortedDescending: (column: string) => string;
+  /** Table.SortButton's message after its column is no longer sorted. `column` is the button's label. */
+  sortCleared: (column: string) => string;
   /** Name of the Conversation.Viewport region when it has no aria-label. */
   conversation: string;
   /** Name of Conversation.ScrollButton when its own text does not name it. */
@@ -153,6 +159,9 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   nextYears: 'Next years',
   copied: 'Copied',
   copyFailed: 'Could not copy',
+  sortedAscending: (column) => `Sorted by ${column}, ascending`,
+  sortedDescending: (column) => `Sorted by ${column}, descending`,
+  sortCleared: (column) => `${column}, not sorted`,
   conversation: 'Conversation',
   scrollToLatest: 'Scroll to latest message',
   messageStarted: 'New message',

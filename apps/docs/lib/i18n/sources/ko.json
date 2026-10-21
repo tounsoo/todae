@@ -92,13 +92,14 @@
     "(section order)": "ac06e0ab5697"
   },
   "checkbox": {
-    "(top)": "c5fb16238b3e",
-    "# Checkbox": "488c523ce88e",
-    "## Icons": "23b9bd93a117",
-    "## Accessible composition": "4e682c9e7ff7",
-    "## When to use": "063ad2a22656",
+    "(top)": "e5a2fc1bff4e",
+    "# Checkbox": "5706f3abfbcb",
+    "## Indeterminate": "d66ff7d725f8",
+    "## Icons": "9f7656d75359",
+    "## Accessible composition": "14beee0d3dac",
+    "## When to use": "77ccd83ac37c",
     "## Props": "c454f74315b1",
-    "(section order)": "abc6b1d2e623"
+    "(section order)": "cb91590a4833"
   },
   "chip": {
     "(top)": "d56bfe4010f4",
@@ -654,12 +655,14 @@
     "(section order)": "692e72360183"
   },
   "table": {
-    "(top)": "831eacdf5e42",
+    "(top)": "8f56214c032a",
     "# Table": "7d5b9037d40f",
-    "## Accessible composition": "eb73911057a1",
-    "## When to use": "246cc8d19142",
-    "## Props": "5c602fcf9b31",
-    "(section order)": "47a493b24d96"
+    "## Sorting": "04ab4b644bf5",
+    "## Selecting rows": "d3a9fdd66cf5",
+    "## Accessible composition": "934a12e27009",
+    "## When to use": "051cd0dc3752",
+    "## Props": "66fd0e7af4f8",
+    "(section order)": "b9352e4b95f2"
   },
   "tabs": {
     "(top)": "f1bc4dbe0d3d",
@@ -754,7 +757,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "e9852fc62f38",
+    "## Glyphs": "dd3d312b0411",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -765,8 +768,8 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "48f0481343bf",
-    "## Accessible composition": "62161ca48643",
+    "## Strings": "37b6eb86abf2",
+    "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",
     "### useStrings": "7ec0a6c8f32e",
@@ -895,6 +898,16 @@
     "## When to use": "5513b39d7e62",
     "## Props": "56a67702b8d8",
     "(section order)": "880d50d096f3"
+  },
+  "utilities/use-selection": {
+    "(top)": "25d6adea091e",
+    "# useSelection": "a19cd91c74bf",
+    "## Ranges": "5c62deb5b106",
+    "## Selection across pages": "4e4884f9c326",
+    "## Accessible composition": "81695c7c5dd9",
+    "## When to use": "4653a1307902",
+    "## Props": "3e0b5915a64b",
+    "(section order)": "3de86623438d"
   },
   "utilities/use-sheet-presentation": {
     "(top)": "3a8163d5375e",
