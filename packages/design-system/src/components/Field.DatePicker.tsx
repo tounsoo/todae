@@ -55,7 +55,8 @@ export type FieldDatePickerProps = {
  * A button that opens a Calendar in a popover. On its own it is the field's
  * control and shows the date, and a press elsewhere in the field opens the
  * calendar. Beside any other control but a Field.ColorPicker,
- * Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that
+ * Field.DatePicker, Field.DateRangePicker, Field.TimePicker or
+ * Field.DateTimePicker, such as a Field.TextInput to type the date in, that
  * control is the field's control instead, and the button is named from the
  * datePicker string. With `showValue={false}` the button shows only a
  * calendar glyph.
