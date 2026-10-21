@@ -175,6 +175,7 @@ const cases: Case[] = [
       </Button.Root>
     ),
   ],
+  ['Avatar.Group', (p) => <Avatar.Group {...p} aria-label="g" />],
   ['Button.Group', (p) => <Button.Group {...p} aria-label="g" />],
   ['Field.Root', (p) => <Field.Root {...p} />],
   ...(['Icon', 'Affix', 'Row'] as const).map(

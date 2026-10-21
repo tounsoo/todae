@@ -12790,7 +12790,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-1.bg",
@@ -12804,7 +12804,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-1.fg",
@@ -12818,7 +12818,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-2.bg",
@@ -12832,7 +12832,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-2.fg",
@@ -12846,7 +12846,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-3.bg",
@@ -12860,7 +12860,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-3.fg",
@@ -12874,7 +12874,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-4.bg",
@@ -12888,7 +12888,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-4.fg",
@@ -12902,7 +12902,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-5.bg",
@@ -12916,7 +12916,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-5.fg",
@@ -12930,7 +12930,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-6.bg",
@@ -12944,7 +12944,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-6.fg",
@@ -12958,7 +12958,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-7.bg",
@@ -12972,7 +12972,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-7.fg",
@@ -12986,7 +12986,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-8.bg",
@@ -13000,7 +13000,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.category-8.fg",
@@ -13014,7 +13014,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.fg",
@@ -13028,7 +13028,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.font.scale",
@@ -13042,7 +13042,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.font.weight",
@@ -13056,7 +13056,49 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+    },
+    {
+      "path": "avatar.group.overlap",
+      "type": "number",
+      "cssVar": "--todae-avatar-group-overlap",
+      "cssValue": "0.25",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+    },
+    {
+      "path": "avatar.group.ring.color",
+      "type": "color",
+      "cssVar": "--todae-avatar-group-ring-color",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+    },
+    {
+      "path": "avatar.group.ring.width",
+      "type": "dimension",
+      "cssVar": "--todae-avatar-group-ring-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.radius",
@@ -13070,7 +13112,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.size.lg",
@@ -13084,7 +13126,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.size.md",
@@ -13098,7 +13140,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "avatar.size.sm",
@@ -13112,7 +13154,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
     },
     {
       "path": "grid.gap",

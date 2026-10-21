@@ -20,15 +20,16 @@
     "(section order)": "a6f04dcc4c06"
   },
   "avatar": {
-    "(top)": "d01aa6771c0c",
+    "(top)": "fd4be7123726",
     "# Avatar": "24e9d98ee594",
     "## Naming": "29a0e2eb6064",
     "## Sizes": "166b7c6e1c4a",
     "## Colors": "b87102ab0c53",
-    "## Accessible composition": "a4759450c7bd",
-    "## When to use": "3adea664305f",
-    "## Props": "1ae5e2219004",
-    "(section order)": "a0d8de1c05f5"
+    "## Group": "c5111b46294a",
+    "## Accessible composition": "595f53f0bd70",
+    "## When to use": "d94591d45063",
+    "## Props": "96b5e4f1ba91",
+    "(section order)": "8db0fc9166d7"
   },
   "badge": {
     "(top)": "dcf90380de7b",

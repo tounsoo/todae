@@ -74,3 +74,34 @@ export function AvatarTones() {
     </Stack.Root>
   );
 }
+
+export function AvatarGroupExample() {
+  return (
+    <Avatar.Group aria-label="Assignees">
+      {PEOPLE.slice(0, 4).map((person) => (
+        <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
+          <Avatar.Fallback>{person.initials}</Avatar.Fallback>
+        </Avatar.Root>
+      ))}
+      <Avatar.Root label="3 more">
+        <Avatar.Fallback>+3</Avatar.Fallback>
+      </Avatar.Root>
+    </Avatar.Group>
+  );
+}
+
+export function AvatarGroupSizes() {
+  return (
+    <Stack.Root direction="row" style={{ alignItems: 'center' }}>
+      {(['sm', 'md', 'lg'] as const).map((size) => (
+        <Avatar.Group key={size} size={size} aria-label={`Assignees, ${size}`}>
+          {PEOPLE.slice(0, 3).map((person) => (
+            <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
+              <Avatar.Fallback>{person.initials}</Avatar.Fallback>
+            </Avatar.Root>
+          ))}
+        </Avatar.Group>
+      ))}
+    </Stack.Root>
+  );
+}

@@ -96,4 +96,57 @@
     overflow: hidden;
     white-space: nowrap;
   }
+
+  /* The overlap reads the group's size, not each avatar's, so it works on the
+     group's direct children whatever they are: an avatar, or one wrapped in a
+     tooltip trigger or a link. An avatar with its own size still overlaps by
+     the group's size. */
+  .group {
+    --_group-size: var(--todae-avatar-size-md);
+
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+  }
+
+  .group[data-size='sm'] {
+    --_group-size: var(--todae-avatar-size-sm);
+  }
+
+  .group[data-size='md'] {
+    --_group-size: var(--todae-avatar-size-md);
+  }
+
+  .group[data-size='lg'] {
+    --_group-size: var(--todae-avatar-size-lg);
+  }
+
+  .group > * {
+    flex: none;
+  }
+
+  .group > * + * {
+    margin-inline-start: calc(-1 * var(--_group-size) * var(--todae-avatar-group-overlap));
+  }
+
+  /* A box-shadow is not clipped by the root's overflow: hidden. Later avatars
+     paint over earlier ones in DOM order. */
+  .group .root {
+    box-shadow: 0 0 0 var(--todae-avatar-group-ring-width) var(--todae-avatar-group-ring-color);
+  }
+
+  /* A focused wrapper rises above its neighbors' rings, so its focus ring
+     shows whole. */
+  .group > :is(:focus-visible, :has(:focus-visible)) {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Forced colors drop box-shadow, so the ring becomes an inset border in the
+     system canvas color: it sits inside the avatar, over the one beneath. */
+  @media (forced-colors: active) {
+    .group .root {
+      border: var(--todae-avatar-group-ring-width) solid Canvas;
+    }
+  }
 }
