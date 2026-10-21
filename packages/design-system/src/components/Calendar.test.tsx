@@ -443,13 +443,16 @@ describe('Calendar', () => {
     expect(focusedDay().closest('td')!.hasAttribute('aria-selected')).toBe(false);
   });
 
-  it('follows a value set from outside after a pick a controlling parent turned down, even to that pick', () => {
+  it('takes a value equal to a pick a controlling parent turned down as its answer, moving nothing', () => {
     function Rejecting() {
       const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
       return (
         <>
           <button type="button" onClick={() => setValue(date('2026-11-04'))}>
             set
+          </button>
+          <button type="button" onClick={() => setValue(date('2026-12-08'))}>
+            other
           </button>
           <Calendar.Root aria-label="Start" locale="en-US" value={value} onValueChange={() => {}}>
             <Calendar.Header />
@@ -464,9 +467,38 @@ describe('Calendar', () => {
     for (let month = 0; month < 4; month++) fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     expect(screen.getByText('March 2027')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('March 2027')).toBeTruthy();
+    // Another value forgets the pick, so the same value set again moves the grid.
+    fireEvent.click(screen.getByRole('button', { name: 'other' }));
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
     expect(screen.getByText('November 2026')).toBeTruthy();
     expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
     expect(focusedDay().closest('td')!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('keeps the month shown when a controlling parent answers a pick after focus moved on', () => {
+    function Late() {
+      const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
+      const [asked, setAsked] = useState<Temporal.PlainDate | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked)}>
+            answer
+          </button>
+          <Calendar.Root aria-label="Start" locale="en-US" value={value} onValueChange={setAsked}>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(day('Tuesday, October 20, 2026'));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'answer' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Friday, November 20, 2026');
   });
 
   it('keeps its own value when uncontrolled', () => {
@@ -880,6 +912,82 @@ describe('Calendar range mode', () => {
     expect(screen.getByText('November 2026')).toBeTruthy();
     expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
     expect(selectedCells()).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('keeps the month and a new first pick when a controlling parent answers a range late', () => {
+    function Late() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      const [asked, setAsked] = useState<DateRange | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked)}>
+            answer
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={setAsked}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(october(5));
+    fireEvent.click(october(8));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    const tenth = day('Tuesday, November 10, 2026');
+    fireEvent.click(tenth);
+    fireEvent.click(screen.getByRole('button', { name: 'answer' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, November 10, 2026');
+    expect(selectedCells()).toEqual(['10']);
+    fireEvent.click(day('Thursday, November 12, 2026'));
+    fireEvent.click(screen.getByRole('button', { name: 'answer' }));
+    expect(selectedCells()).toEqual(['10', '11', '12']);
+  });
+
+  it('takes a range equal to one a controlling parent turned down as its answer, moving nothing', () => {
+    function Rejecting() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue({ start: date('2026-10-05'), end: date('2026-10-08') })}>
+            set
+          </button>
+          <button type="button" onClick={() => setValue({ start: date('2027-01-05'), end: date('2027-01-08') })}>
+            other
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={() => {}}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Rejecting />);
+    fireEvent.click(october(5));
+    fireEvent.click(october(8));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'other' }));
+    expect(screen.getByText('January 2027')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('October 2026')).toBeTruthy();
+    expect(selectedCells()).toEqual(['5', '6', '7', '8']);
   });
 
   it('stays where a range ends when a controlling parent turns it down', () => {

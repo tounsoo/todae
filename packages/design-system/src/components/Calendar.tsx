@@ -190,6 +190,8 @@ const sameRange = (a: DateRange | null, b: DateRange | null) =>
 
 const compare = (a: Temporal.PlainDate, b: Temporal.PlainDate) => Temporal.PlainDate.compare(a, b);
 
+const rangeText = (range: DateRange) => `${range.start}/${range.end}`;
+
 /** The range in the ISO calendar, its ends in order. */
 function isoRange(range: DateRange | null | undefined): DateRange | null | undefined {
   return range && spanOf(isoDate(range.start), isoDate(range.end));
@@ -204,12 +206,12 @@ const oneDay = (date: Temporal.PlainDate | null | undefined) => date && { start:
  */
 function useRangeProps(props: CalendarRootProps) {
   const range = props.mode === 'range' ? isoRange(props.value) : oneDay(isoDate(props.value));
-  const rangeText = range ? `${range.start}/${range.end}` : range;
+  const text = range ? rangeText(range) : range;
   const value = useMemo(() => {
-    if (rangeText === null || rangeText === undefined) return rangeText;
-    const [start, end] = rangeText.split('/');
+    if (text === null || text === undefined) return text;
+    const [start, end] = text.split('/');
     return { start: Temporal.PlainDate.from(start!), end: Temporal.PlainDate.from(end!) };
-  }, [rangeText]);
+  }, [text]);
   const onDateChange = props.mode !== 'range' ? props.onValueChange : undefined;
   const onDayChange = useMemo(
     () => onDateChange && ((next: DateRange) => onDateChange(next.start)),
@@ -272,18 +274,24 @@ function Root(rootProps: CalendarRootProps) {
   const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
   const [pending, setPending] = useState<Pending>(IDLE);
   const { anchor, hovered } = pending;
-  // A mode change or a new value drops what is pending, and a new value moves the grid to
-  // its start unless the Tab stop is on one of its ends. A pick leaves the Tab stop on the
-  // day picked, which is an end of what it reports, so however late a controlling parent
-  // answers, the grid stays where the pick was made; a value typed beside Field.DatePicker,
-  // or a parent's own value after it turned a pick down and the grid moved on, moves it.
+  // The last range a pick reported, as ISO text, until another value arrives. A new value
+  // equal to it is the parent's answer to that pick, however late it comes: the grid stays
+  // where the person has since moved it, and a range started meanwhile stays pending.
+  const [reported, setReported] = useState<string | null>(null);
+  // Any other new value, or a mode change, drops what is pending, and a new value moves the
+  // grid to its start unless the Tab stop is on one of its ends, as a value typed beside
+  // Field.DatePicker does.
   const [seen, setSeen] = useState({ mode, value });
   const valueChanged = !sameRange(value, seen.value);
   if (mode !== seen.mode || valueChanged) {
     setSeen({ mode, value });
-    setPending(IDLE);
-    if (valueChanged && value && !(focused && (focused.equals(value.start) || focused.equals(value.end)))) {
-      setFocused(value.start);
+    const answer = mode === seen.mode && value !== null && rangeText(value) === reported;
+    if (!answer) {
+      if (reported !== null) setReported(null);
+      setPending(IDLE);
+      if (valueChanged && value && !(focused && (focused.equals(value.start) || focused.equals(value.end)))) {
+        setFocused(value.start);
+      }
     }
   }
   const setHovered = useCallback(
@@ -382,6 +390,7 @@ function Root(rootProps: CalendarRootProps) {
       // Reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
       setPending(IDLE);
+      setReported(rangeText(next));
       setValue(next);
       onValueChange?.(next);
     },
