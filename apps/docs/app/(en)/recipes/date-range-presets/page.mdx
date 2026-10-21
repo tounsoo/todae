@@ -23,43 +23,56 @@ const PRESETS: { id: string; label: string; range: (today: Temporal.PlainDate) =
   { id: 'this-month', label: 'This month', range: (today) => ({ start: today.with({ day: 1 }), end: today }) },
 ];
 
-// The preset whose range is the value today, or null for a custom range.
-function presetOf(range: DateRange | null) {
+function isRangeOf(preset: (typeof PRESETS)[number], range: DateRange, today: Temporal.PlainDate) {
+  const { start, end } = preset.range(today);
+  return start.equals(range.start) && end.equals(range.end);
+}
+
+// The preset whose range is the value today, or null for a custom range. Two presets can give the
+// same range on some days, such as "This month" and "Last 7 days" on the 7th, so the last one
+// pressed wins while the value is still its range.
+function presetOf(range: DateRange | null, pressed: string | null) {
   if (!range) return null;
   const today = Temporal.Now.plainDateISO();
-  const preset = PRESETS.find((each) => {
-    const { start, end } = each.range(today);
-    return start.equals(range.start) && end.equals(range.end);
-  });
-  return preset?.id ?? null;
+  const last = PRESETS.find((each) => each.id === pressed);
+  if (last && isRangeOf(last, range, today)) return last.id;
+  return PRESETS.find((each) => isRangeOf(each, range, today))?.id ?? null;
 }
 ```
 
 ## The field
 
-The range is the one piece of state. The toggle's `value` is worked out from it, so it shows the preset whose range the value is, including one picked day by day in the calendar, and none for any other range. Pressing the pressed preset again gives `null`, which the handler ignores, so the range stays.
+The range is the source of truth. The toggle's `value` is worked out from it, so it shows the preset whose range the value is, including one picked day by day in the calendar, and none for any other range. The id of the last preset pressed is kept beside the range only to break a tie, and counts only while the range is still that preset's. Pressing the pressed preset again gives `null`, which the handler ignores, so the range stays.
 
 ```tsx
 import { Field, Label, Stack, ToggleGroup, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
+// Your app's hook for the page's language; the docs site's own is useLocale.
+import { useLocale } from './useLocale';
 
-export function ReportDates() {
+// PRESETS and presetOf are the ones above.
+export function DateRangePresets() {
   const id = useId();
+  const locale = useLocale();
   const [range, setRange] = useState<DateRange | null>(null);
+  const [pressed, setPressed] = useState<string | null>(null);
   return (
     <Stack.Root gap="condensed">
       <Field.Group>
         <Label.Root htmlFor={id}>Report dates</Label.Root>
-        <Field.Root id={id} name="dates">
-          <Field.DateRangePicker value={range} onValueChange={setRange} placeholder="Pick dates" />
+        <Field.Root id={id}>
+          <Field.DateRangePicker value={range} onValueChange={setRange} locale={locale} placeholder="Pick dates" />
         </Field.Root>
       </Field.Group>
       <ToggleGroup.Root
         aria-label="Preset ranges"
-        value={presetOf(range)}
+        value={presetOf(range, pressed)}
         onValueChange={(next) => {
+          // Pressing the pressed preset again gives null, which keeps its range.
           const preset = PRESETS.find((each) => each.id === next);
-          if (preset) setRange(preset.range(Temporal.Now.plainDateISO()));
+          if (!preset) return;
+          setRange(preset.range(Temporal.Now.plainDateISO()));
+          setPressed(preset.id);
         }}
       >
         {PRESETS.map((preset) => (
@@ -73,7 +86,7 @@ export function ReportDates() {
 }
 ```
 
-The form sends the range as the picker sends any range, an ISO 8601 interval such as `2026-03-06/2026-03-12`, so a preset adds nothing to what the server reads.
+With a `name` on the `Field.Root`, the form sends the range as the picker sends any range, an ISO 8601 interval such as `2026-03-06/2026-03-12`, so a preset adds nothing to what the server reads.
 
 ## Accessible composition
 
@@ -81,7 +94,7 @@ The form sends the range as the picker sends any range, an ISO 8601 interval suc
 
 **You supply:** A name for the toggle group, and labels that name each range. Presets that keep to the picker's `min`, `max` and `isDateDisabled`: a preset sets `value` directly, so the calendar's checks don't apply to it.
 
-**Watch for:** Reading today once when the page loads: on a page left open past midnight, the presets would then set and press yesterday's ranges. Keeping the pressed preset in its own state: it drifts from the range when someone picks in the calendar or types a range.
+**Watch for:** Reading today once when the page loads: on a page left open past midnight, the presets would then set and press yesterday's ranges. Keeping the pressed preset in its own state: it drifts from the range when someone picks in the calendar or types a range. Showing the first preset whose range matches: on the 7th "This month" is also "Last 7 days", so pressing one would light the other.
 
 ## When to use
 

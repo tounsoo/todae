@@ -1,11 +1,14 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
 import { DateRangePresets } from './DateRangePresetsDemo';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const sent = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!.value;
 const pressed = () => screen.queryAllByRole('button', { pressed: true }).map((button) => button.textContent);
@@ -55,4 +58,22 @@ it('sets the range from a preset, and presses the preset that matches the range,
   await pick(today);
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
   expect(pressed()).toEqual(['Last 7 days']);
+});
+
+it('presses the preset that was pressed when two presets give the same range', async () => {
+  // On the 7th, "This month" (1st to 7th) and "Last 7 days" (1st to 7th) are the same range.
+  vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(Temporal.PlainDate.from('2026-03-07'));
+  render(
+    <Providers>
+      <DateRangePresets />
+    </Providers>,
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'This month' }));
+  expect(sent()).toBe('2026-03-01/2026-03-07');
+  expect(pressed()).toEqual(['This month']);
+  await userEvent.click(screen.getByRole('button', { name: 'Last 7 days' }));
+  expect(sent()).toBe('2026-03-01/2026-03-07');
+  expect(pressed()).toEqual(['Last 7 days']);
+  await userEvent.click(screen.getByRole('button', { name: 'This month' }));
+  expect(pressed()).toEqual(['This month']);
 });

@@ -10,21 +10,27 @@ const PRESETS: { id: string; label: string; range: (today: Temporal.PlainDate) =
   { id: 'this-month', label: 'This month', range: (today) => ({ start: today.with({ day: 1 }), end: today }) },
 ];
 
-// The preset whose range is the value today, or null for a custom range.
-function presetOf(range: DateRange | null) {
+function isRangeOf(preset: (typeof PRESETS)[number], range: DateRange, today: Temporal.PlainDate) {
+  const { start, end } = preset.range(today);
+  return start.equals(range.start) && end.equals(range.end);
+}
+
+// The preset whose range is the value today, or null for a custom range. Two presets can give the
+// same range on some days, such as "This month" and "Last 7 days" on the 7th, so the last one
+// pressed wins while the value is still its range.
+function presetOf(range: DateRange | null, pressed: string | null) {
   if (!range) return null;
   const today = Temporal.Now.plainDateISO();
-  const preset = PRESETS.find((each) => {
-    const { start, end } = each.range(today);
-    return start.equals(range.start) && end.equals(range.end);
-  });
-  return preset?.id ?? null;
+  const last = PRESETS.find((each) => each.id === pressed);
+  if (last && isRangeOf(last, range, today)) return last.id;
+  return PRESETS.find((each) => isRangeOf(each, range, today))?.id ?? null;
 }
 
 export function DateRangePresets() {
   const id = useId();
   const locale = useLocale();
   const [range, setRange] = useState<DateRange | null>(null);
+  const [pressed, setPressed] = useState<string | null>(null);
   return (
     <Stack.Root gap="condensed">
       <Field.Group>
@@ -35,11 +41,13 @@ export function DateRangePresets() {
       </Field.Group>
       <ToggleGroup.Root
         aria-label="Preset ranges"
-        value={presetOf(range)}
+        value={presetOf(range, pressed)}
         onValueChange={(next) => {
           // Pressing the pressed preset again gives null, which keeps its range.
           const preset = PRESETS.find((each) => each.id === next);
-          if (preset) setRange(preset.range(Temporal.Now.plainDateISO()));
+          if (!preset) return;
+          setRange(preset.range(Temporal.Now.plainDateISO()));
+          setPressed(preset.id);
         }}
       >
         {PRESETS.map((preset) => (
