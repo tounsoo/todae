@@ -605,6 +605,88 @@
       "ko": "제목 텍스트."
     }
   },
+  "Drilldown.Back": {
+    "aria-label": {
+      "en": "Accessible name. Text of two or more letters or digits names the button by itself. Otherwise the backTo string from StringsProvider names it with the label of the view below, or the back string when that view has no label.",
+      "ko": "접근 가능한 이름. 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 backTo 문자열이 아래 뷰의 label과 함께 이름이 되고, 그 뷰에 label이 없으면 back 문자열이 이름이 됩니다."
+    },
+    "onClick": {
+      "en": "Runs before going back. Call event.preventDefault() to stay.",
+      "ko": "뒤로 가기 전에 실행됩니다. 머물려면 event.preventDefault()를 호출하세요."
+    },
+    "children": {
+      "en": "Button content. Without it, the back glyph from GlyphsProvider, or Todae's chevron pointing to the start of the line.",
+      "ko": "버튼 내용. 없으면 GlyphsProvider의 back 글리프, 또는 줄의 시작 쪽을 가리키는 Todae의 chevron을 보여 줍니다."
+    }
+  },
+  "Drilldown.Root": {
+    "value": {
+      "en": "Controlled stack of view values, the first view first and the shown view last. Pass with onValueChange.",
+      "ko": "제어하는 뷰 값 스택. 첫 뷰가 맨 앞, 보이는 뷰가 맨 뒤입니다. onValueChange와 함께 전달합니다."
+    },
+    "defaultValue": {
+      "en": "Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer or BottomSheet closes.",
+      "ko": "비제어일 때의 초기 스택. 바깥의 Dialog, Drawer, BottomSheet가 닫힐 때마다 이 스택으로 돌아갑니다."
+    },
+    "onValueChange": {
+      "en": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back) or escape (Escape, or the Android back gesture in a modal).",
+      "ko": "다음 스택과 함께 호출됩니다. reason은 push(Drilldown.Trigger), back(Drilldown.Back), escape(Escape, 또는 모달 안에서 Android 뒤로 제스처)입니다."
+    },
+    "escape": {
+      "en": "back: Escape goes back one view, and closes an enclosing overlay only at the first view. close: Escape is left to the overlay.",
+      "ko": "back: Escape가 뷰를 하나 뒤로 가고, 첫 뷰에서만 바깥 오버레이를 닫습니다. close: Escape를 오버레이에 맡깁니다."
+    },
+    "children": {
+      "en": "Drilldown.Viewport, Drilldown.Back and Drilldown.Label, anywhere inside.",
+      "ko": "Drilldown.Viewport, Drilldown.Back, Drilldown.Label. 안쪽 어디에 두어도 됩니다."
+    }
+  },
+  "Drilldown.Trigger": {
+    "value": {
+      "en": "The Drilldown.View to push. Focus returns to this trigger when that view is popped.",
+      "ko": "push할 Drilldown.View. 그 뷰가 pop되면 포커스가 이 트리거로 돌아옵니다."
+    },
+    "variant": {
+      "en": "Button variant.",
+      "ko": "버튼 변형."
+    },
+    "render": {
+      "en": "Draws the trigger on another element, such as a row or a link, as Button.Root does.",
+      "ko": "Button.Root처럼 트리거를 행이나 링크 같은 다른 요소로 그립니다."
+    },
+    "onClick": {
+      "en": "Runs before the push. Call event.preventDefault() to stay on this view.",
+      "ko": "push 전에 실행됩니다. 이 뷰에 머물려면 event.preventDefault()를 호출하세요."
+    },
+    "children": {
+      "en": "Trigger content.",
+      "ko": "트리거 내용."
+    }
+  },
+  "Drilldown.View": {
+    "value": {
+      "en": "The value Drilldown.Trigger pushes and the stack holds.",
+      "ko": "Drilldown.Trigger가 push하고 스택이 담는 값."
+    },
+    "label": {
+      "en": "Names the view's group, Drilldown.Label while it shows, and Drilldown.Back from the view above it.",
+      "ko": "뷰 그룹의 이름이자, 뷰가 보이는 동안의 Drilldown.Label, 위 뷰에서의 Drilldown.Back 이름에 쓰입니다."
+    },
+    "initialFocusRef": {
+      "en": "Where focus goes when the view is pushed. Without it, the first tab stop in the view, or the view itself.",
+      "ko": "뷰가 push될 때 포커스가 갈 곳. 없으면 뷰의 첫 탭 정지점, 그것도 없으면 뷰 자체입니다."
+    },
+    "children": {
+      "en": "The view's content.",
+      "ko": "뷰의 내용."
+    }
+  },
+  "Drilldown.Viewport": {
+    "children": {
+      "en": "Drilldown.View elements.",
+      "ko": "Drilldown.View 요소."
+    }
+  },
   "ErrorMessage.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",

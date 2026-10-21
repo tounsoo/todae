@@ -40,6 +40,7 @@ export const SITE_GROUPS = [
       ['/dialog', 'Dialog'],
       ['/disclosure', 'Disclosure'],
       ['/drawer', 'Drawer'],
+      ['/drilldown', 'Drilldown'],
       ['/errormessage', 'ErrorMessage'],
       [
         '/field',
