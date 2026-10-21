@@ -1134,6 +1134,7 @@ async function loadTokens(
   context: string | undefined,
   paints: readonly string[],
   inherited: FlatToken[] = [],
+  owners: { todae: ReadonlyMap<string, string>; self: string } = { todae: new Map(), self: '' },
 ): Promise<FlatToken[]> {
   const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
@@ -1143,6 +1144,13 @@ async function loadTokens(
       const description = node.$description ?? merged.get(path)?.$description;
       merged.set(path, description === undefined ? node : { ...node, $description: description });
     }
+  }
+  // Checked before the shape rules, whose messages would otherwise describe the wrong entry.
+  for (const path of merged.keys()) {
+    const owner = owners.todae.get(path);
+    if (owner === undefined || owner === owners.self) continue;
+    const where = owner.startsWith('set ') ? `a set named ${owner.slice(4)}` : `a context of the modifier named ${owner.slice(9)}`;
+    fail(`${loc}: token "${path}" belongs to Todae's ${owner}, so override it in ${where}`);
   }
   const { layer, rules, slots } = extension;
   return layerTokens(merged, layer, context, { rules, slots, paints, inherited: tokenMapOf(inherited) });
@@ -1177,6 +1185,10 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
   const modifiers = isRecord(resolver.modifiers) ? resolver.modifiers : {};
   const upstreamOf = (kind: 'set' | 'modifier', name: string) =>
     upstream.find((entry) => entry.kind === kind && entry.name === name);
+  const todaeOwners = new Map<string, string>();
+  for (const entry of upstream) {
+    for (const token of entryTokens(entry)) todaeOwners.set(token.path, `${entry.kind} "${entry.name}"`);
+  }
 
   const order: { kind: 'set' | 'modifier'; name: string; def: Record<string, unknown>; extension: TodaeExtension }[] = [];
   const seen = new Set<string>();
@@ -1251,6 +1263,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           undefined,
           [...paints],
           upstreamSet?.kind === 'set' ? upstreamSet.tokens : [],
+          { todae: todaeOwners, self: loc },
         ),
       });
       continue;
@@ -1285,6 +1298,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           context,
           [...paints],
           base?.kind === 'modifier' ? (base.contexts.get(context) ?? []) : [],
+          { todae: todaeOwners, self: loc },
         ),
       );
     }

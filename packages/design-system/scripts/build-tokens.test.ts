@@ -1549,7 +1549,15 @@ describe('company token build', () => {
       [(r) => (r.modifiers.density.default = 'roomy'), /so its default must stay "comfortable"/],
       [
         (r) => (r.sets.brand.sources = [{ color: { gray: { 50: { $type: 'color', $value: { $ref: '#/brand/ink/$value' } } } } }]),
-        /token "color\.gray\.50" is declared by both set "core" and set "brand"/,
+        /set "brand" sources: token "color\.gray\.50" belongs to Todae's set "core", so override it in a set named "core"/,
+      ],
+      [
+        (r) => (r.sets.brand.sources = [{ button: { base: { radius: { $type: 'dimension', $value: { value: 0, unit: 'px' } } } } }]),
+        /token "button\.base\.radius" belongs to Todae's set "button", so override it in a set named "button"/,
+      ],
+      [
+        (r) => (r.modifiers.density.contexts.roomy = [{ color: { accent: { default: { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } } } } }]),
+        /token "color\.accent\.default" belongs to Todae's modifier "appearance", so override it in a context of the modifier named "appearance"/,
       ],
       [
         (r) => {
