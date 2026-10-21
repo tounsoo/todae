@@ -100,6 +100,7 @@ pnpm test:browser
 
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
+- `pnpm --filter docs test:visual:docker` compares screenshots of the built docs site with the baselines in `apps/docs/visual/baselines`: every example in light and dark, and the home, Button and playground pages in English and Korean on desktop and phone. It runs in Playwright's Docker image, the one CI uses, since fonts and rendering differ between machines, so build the package and the docs first and have Docker running. It needs a Linux x64 host. When a change is meant to look different, add `--update-snapshots` and commit the new images; when you rename a heading or remove an example, delete its old images too. A failing CI run uploads a `screenshots` artifact: open `playwright-report/index.html` to see each change, and copy a shot's `test-results/**/<name>-actual.png` over its baseline to accept it, which is the way to update baselines without a Linux x64 host.
 
 ## Changesets
 

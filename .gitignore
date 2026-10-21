@@ -14,3 +14,5 @@ packages/*/.graft/
 apps/*/.next
 apps/*/.vercel
 __screenshots__/
+apps/docs/test-results
+apps/docs/playwright-report
