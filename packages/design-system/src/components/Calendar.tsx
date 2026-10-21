@@ -192,37 +192,33 @@ const compare = (a: Temporal.PlainDate, b: Temporal.PlainDate) => Temporal.Plain
 
 /** The range in the ISO calendar, its ends in order. */
 function isoRange(range: DateRange | null | undefined): DateRange | null | undefined {
-  if (!range) return range;
-  const { start, end } = spanOf(isoDate(range.start), isoDate(range.end));
-  // The same object when nothing changes, so a controlled value keeps its identity.
-  return start === range.start && end === range.end ? range : { start, end };
+  return range && spanOf(isoDate(range.start), isoDate(range.end));
 }
 
 const oneDay = (date: Temporal.PlainDate | null | undefined) => date && { start: date, end: date };
 
 /**
  * Either mode's value props as a range: single mode holds its date as a
- * one-day range, made once for each date so a controlled date keeps one value
- * across renders.
+ * one-day range. The value is made once for each pair of dates, so a
+ * controlled value keeps one object across renders.
  */
 function useRangeProps(props: CalendarRootProps) {
-  const single = props.mode !== 'range' ? props : null;
-  const date = isoDate(single?.value);
-  const dateText = date === undefined ? undefined : date === null ? null : date.toString();
-  const dayValue = useMemo(
-    () => (dateText === undefined || dateText === null ? dateText : oneDay(Temporal.PlainDate.from(dateText))),
-    [dateText],
-  );
-  const onDateChange = single?.onValueChange;
+  const range = props.mode === 'range' ? isoRange(props.value) : oneDay(isoDate(props.value));
+  const rangeText = range ? `${range.start}/${range.end}` : range;
+  const value = useMemo(() => {
+    if (rangeText === null || rangeText === undefined) return rangeText;
+    const [start, end] = rangeText.split('/');
+    return { start: Temporal.PlainDate.from(start!), end: Temporal.PlainDate.from(end!) };
+  }, [rangeText]);
+  const onDateChange = props.mode !== 'range' ? props.onValueChange : undefined;
   const onDayChange = useMemo(
     () => onDateChange && ((next: DateRange) => onDateChange(next.start)),
     [onDateChange],
   );
   if (props.mode === 'range') {
-    const { value, defaultValue, onValueChange } = props;
-    return { value: isoRange(value), defaultValue: isoRange(defaultValue) ?? null, onValueChange };
+    return { value, defaultValue: isoRange(props.defaultValue) ?? null, onValueChange: props.onValueChange };
   }
-  return { value: dayValue, defaultValue: oneDay(isoDate(props.defaultValue)) ?? null, onValueChange: onDayChange };
+  return { value, defaultValue: oneDay(isoDate(props.defaultValue)) ?? null, onValueChange: onDayChange };
 }
 
 function Root(rootProps: CalendarRootProps) {
