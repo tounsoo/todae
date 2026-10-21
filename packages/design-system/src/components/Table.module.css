@@ -85,7 +85,7 @@
      hover or focus; on touch it stays, dimmed, so the column reads as
      sortable. */
   @media (hover: hover) {
-    [data-sort='none'] .sortButton:not(:hover, :focus-visible) > .sortGlyph {
+    .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :hover, :focus-visible) > .sortGlyph {
       visibility: hidden;
     }
   }

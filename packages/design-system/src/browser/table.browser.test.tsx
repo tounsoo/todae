@@ -137,6 +137,25 @@ describe('Table.SortButton in a browser', () => {
     expect(getComputedStyle(button).outlineStyle).toBe('solid');
   });
 
+  it('hides the glyph in a header cell without sort until hover', async () => {
+    render(
+      <Themed>
+        <Table.Root>
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope="col">
+                <Table.SortButton>Name</Table.SortButton>
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+        </Table.Root>
+      </Themed>,
+    );
+    expect(getComputedStyle(glyph('Name')).visibility).toBe('hidden');
+    await userEvent.hover(screen.getByRole('button', { name: 'Name' }));
+    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
+  });
+
   it('shows the glyph on a sorted column and turns it when descending', async () => {
     render(
       <Themed>

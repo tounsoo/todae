@@ -73,8 +73,11 @@ export function SelectionControl({
   useRevalidate();
   const { check, indeterminate: indeterminateGlyph } = useGlyphs();
   const indeterminate = kind === 'checkbox' && !!indeterminateProp;
-  // The DOM property has no attribute; onChange puts it back after a click clears it.
+  // The DOM property has no attribute; onChange puts back the latest prop
+  // after a click clears it.
+  const indeterminateRef = useRef(indeterminate);
   useLayoutEffect(() => {
+    indeterminateRef.current = indeterminate;
     if (inputRef.current) inputRef.current.indeterminate = indeterminate;
   }, [indeterminate]);
   return (
@@ -102,7 +105,7 @@ export function SelectionControl({
         onChange={(event) => {
           onChange?.(event);
           // A click clears the mixed state; if nothing renders again, put it back.
-          event.target.indeterminate = indeterminate;
+          event.target.indeterminate = indeterminateRef.current;
           if (kind === 'radio') {
             if (event.target.checked) onChecked(true);
             return;

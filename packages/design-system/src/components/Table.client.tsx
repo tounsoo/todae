@@ -13,10 +13,11 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
  * A native `button` for a sortable column: put it inside a `Table.HeaderCell`
  * that takes `sort`, with the column's label as its children. It draws the
  * `sort` glyph after the label, from the header cell's `data-sort`: shown on a
- * sorted column, turned when it is descending, and shown dimmed otherwise,
- * where a pointer can hover only on hover and focus. It does not sort; set
+ * sorted column, turned when it is descending, and dimmed when unsorted; on
+ * a device with a hovering pointer it shows only on hover or focus. It does not sort; set
  * the cell's `sort` from `onClick`. After a click it announces the column's
- * next `aria-sort` or `data-sort` change.
+ * next `aria-sort` or `data-sort` change, if it comes before the user's next
+ * press or key.
  */
 export type TableSortButtonProps = ComponentPropsWithRef<'button'>;
 
@@ -35,37 +36,58 @@ function columnName(button: HTMLElement): string {
   return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+type Stop = () => void;
+
 // One sort announcement waits per table, so a click on another column's
 // button drops the wait of the last one.
-const waiting = /* @__PURE__ */ new WeakMap<Element, MutationObserver>();
+const waiting = /* @__PURE__ */ new WeakMap<Element, Stop>();
+
+const USER_ACTIONS = ['pointerdown', 'keydown'] as const;
 
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
   const { sort } = useGlyphs();
   const strings = useStrings();
   const announce = useAnnouncer();
-  const watcher = useRef<MutationObserver | null>(null);
-  useEffect(() => () => watcher.current?.disconnect(), []);
+  const stopRef = useRef<Stop | null>(null);
+  useEffect(() => () => stopRef.current?.(), []);
 
-  // Armed before the product's handler runs, so a sort committed inside it,
-  // such as with flushSync, is still seen.
+  // Waits for the cell's next sort change and announces it, until the user
+  // presses or types anything else, so a click that sorted nothing can't
+  // claim a change made later by other means.
+  const wait = (cell: HTMLTableCellElement, button: HTMLButtonElement): Stop => {
+    const doc = cell.ownerDocument;
+    const stop = () => {
+      observer.disconnect();
+      for (const type of USER_ACTIONS) doc.removeEventListener(type, stop, true);
+    };
+    const observer = new MutationObserver(() => {
+      stop();
+      const { sortedAscending, sortedDescending, sortCleared } = strings;
+      const say = { ascending: sortedAscending, descending: sortedDescending, none: sortCleared }[sortOf(cell)];
+      announce(say(columnName(button)));
+    });
+    observer.observe(cell, { attributes: true, attributeFilter: ['aria-sort', 'data-sort'] });
+    for (const type of USER_ACTIONS) doc.addEventListener(type, stop, true);
+    return stop;
+  };
+
+  // Starts waiting before the product's handler runs, so a sort committed
+  // inside it, such as with flushSync, is still seen; replaces the table's
+  // earlier wait only when the product did not prevent the click.
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const button = event.currentTarget;
-    const cell = button.closest('th');
-    const table = cell?.closest('table') ?? cell;
-    if (cell && table) {
-      waiting.get(table)?.disconnect();
-      const observer = new MutationObserver(() => {
-        observer.disconnect();
-        const { sortedAscending, sortedDescending, sortCleared } = strings;
-        const say = { ascending: sortedAscending, descending: sortedDescending, none: sortCleared }[sortOf(cell)];
-        announce(say(columnName(button)));
-      });
-      observer.observe(cell, { attributes: true, attributeFilter: ['aria-sort', 'data-sort'] });
-      waiting.set(table, observer);
-      watcher.current = observer;
-    }
+    const preventedBefore = event.defaultPrevented;
+    const cell = event.currentTarget.closest('th');
+    const stop = cell ? wait(cell, event.currentTarget) : null;
     onClick?.(event);
-    if (event.defaultPrevented) watcher.current?.disconnect();
+    if (!cell || !stop) return;
+    if (!preventedBefore && event.defaultPrevented) {
+      stop();
+      return;
+    }
+    const table = cell.closest('table') ?? cell;
+    waiting.get(table)?.();
+    waiting.set(table, stop);
+    stopRef.current = stop;
   };
 
   return (

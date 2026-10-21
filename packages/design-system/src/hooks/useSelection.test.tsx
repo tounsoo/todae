@@ -148,6 +148,15 @@ describe('useSelection', () => {
     expect(onValueChange).toHaveBeenLastCalledWith(['a', 'b']);
   });
 
+  it('drops a change a controlled parent turned down', async () => {
+    const onValueChange = vi.fn();
+    const { result } = setup({ value: ['a'], onValueChange });
+    act(() => result.current.toggle('b'));
+    await act(() => Promise.resolve());
+    act(() => result.current.toggle('c'));
+    expect(onValueChange).toHaveBeenLastCalledWith(['a', 'c']);
+  });
+
   it('adds a key listed twice in keys once', () => {
     const { result } = setup({ keys: ['a', 'a', 'b'] });
     act(() => result.current.toggleAll());

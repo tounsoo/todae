@@ -64,7 +64,7 @@ export function Invoices() {
   <SortableTable />
 </Example>
 
-`Table.SortButton`은 네이티브 `<button>`입니다. 레이블 뒤에 [GlyphsProvider](/utilities/glyphs-provider)의 `sort` 글리프를 그리며, 기본은 위를 가리키는 화살표입니다. 정렬된 열에서는 보이고, 내림차순 열에서는 돌아가며, 정렬되지 않은 열에서는 흐리게 보이되, 포인터로 hover할 수 있는 기기에서는 hover와 포커스 때만 보입니다. 모양은 헤더 셀의 `data-sort`를 따르므로 `Table.HeaderCell`을 감싼 래퍼도 계속 동작합니다. 클릭하면 코드가 언제 어떻게 바꾸든 셀의 `aria-sort`나 `data-sort`가 바뀔 때까지 기다렸다가, 결과를 [useAnnouncer](/utilities/use-announcer)로 한 번 알립니다. 열 이름은 버튼의 `aria-label`이나 텍스트이고, 문장은 [StringsProvider](/utilities/strings-provider)의 `sortedAscending`, `sortedDescending`, `sortCleared` 문자열입니다. `Table.SortButton`은 훅이 필요하므로 `@tounsoo/todae/table`이 아니라 `@tounsoo/todae`에서 가져오며, 클라이언트 컴포넌트 안에 둡니다.
+`Table.SortButton`은 네이티브 `<button>`입니다. 레이블 뒤에 [GlyphsProvider](/utilities/glyphs-provider)의 `sort` 글리프를 그리며, 기본은 위를 가리키는 화살표입니다. 정렬된 열에서는 보이고, 내림차순 열에서는 돌아가며, 정렬되지 않은 열에서는 흐리게 보입니다. hover할 수 있는 포인터가 있는 기기에서는 정렬되지 않은 열의 글리프가 hover나 포커스 때만 보입니다. 모양은 헤더 셀의 `data-sort`를 따르므로 `Table.HeaderCell`을 감싼 래퍼도 계속 동작합니다. 클릭하면 사용자가 다음에 무언가를 누르거나 키를 입력하기 전까지, 코드가 어떻게 바꾸든 셀의 `aria-sort`나 `data-sort`가 바뀌기를 기다렸다가, 결과를 [useAnnouncer](/utilities/use-announcer)로 한 번 알립니다. 열 이름은 버튼의 `aria-label`이나 텍스트이고, 문장은 [StringsProvider](/utilities/strings-provider)의 `sortedAscending`, `sortedDescending`, `sortCleared` 문자열입니다. `Table.SortButton`은 훅이 필요하므로 `@tounsoo/todae/table`이 아니라 `@tounsoo/todae`에서 가져오며, 클라이언트 컴포넌트 안에 둡니다.
 
 ## 행 선택
 

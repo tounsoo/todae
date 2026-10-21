@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ChangeEvent } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
 import { composeHandlers } from '../components/props.js';
 import { useControlledState } from './useControlledState.js';
@@ -67,30 +67,40 @@ function withSelected<K>(value: readonly K[], targets: readonly K[], selected: b
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
   const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
-  // Each write builds on the last one, so two calls in one event both count.
+  // Writes in one event build on each other, so two calls both count. After
+  // the event the committed value is the base again, so a change a
+  // controlled parent turned down is dropped.
+  const committed = useRef(value);
   const latest = useRef(value);
-  latest.current = value;
+  useLayoutEffect(() => {
+    committed.current = value;
+    latest.current = value;
+  }, [value]);
   const write = (next: readonly K[]) => {
     if (next === latest.current) return;
     latest.current = next;
+    queueMicrotask(() => {
+      latest.current = committed.current;
+    });
     setValue(next);
     onValueChange?.([...next]);
   };
   const selected = useMemo(() => new Set<K>(value), [value]);
   const disabled = useMemo(() => new Set<K>(disabledKeys), [disabledKeys]);
-  const enabledKeys = useMemo(() => [...new Set(keys)].filter((key) => !disabled.has(key)), [keys, disabled]);
+  const uniqueKeys = useMemo(() => [...new Set(keys)], [keys]);
+  const enabledKeys = useMemo(() => uniqueKeys.filter((key) => !disabled.has(key)), [uniqueKeys, disabled]);
   const anchor = useRef<K | null>(null);
 
   const selectedCount = enabledKeys.filter((key) => selected.has(key)).length;
   const state: SelectionState =
     selectedCount === 0 ? 'none' : selectedCount === enabledKeys.length ? 'all' : 'some';
 
-  const isSelected = (key: K) => selected.has(key);
+  const isSelected = useCallback((key: K) => selected.has(key), [selected]);
 
   const toggle = (key: K, { range = false }: { range?: boolean } = {}) => {
     if (disabled.has(key)) return;
     const next = !latest.current.includes(key);
-    const span = range && anchor.current !== null ? keysBetween(keys, anchor.current, key) : null;
+    const span = range && anchor.current !== null ? keysBetween(uniqueKeys, anchor.current, key) : null;
     anchor.current = key;
     write(withSelected(latest.current, span ? span.filter((k) => !disabled.has(k)) : [key], next));
   };

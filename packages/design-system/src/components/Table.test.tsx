@@ -277,6 +277,29 @@ describe('Table.SortButton', () => {
     expect(live()).toBe('Sorted by Name, ascending');
   });
 
+  it('stops waiting at the user\'s next press or key', async () => {
+    function Idle() {
+      const [sort, setSort] = useState<TableSort>('none');
+      return (
+        <>
+          <button type="button" onClick={() => setSort('ascending')}>
+            reset
+          </button>
+          <Headers sort={sort}>
+            <Table.SortButton>Name</Table.SortButton>
+          </Headers>
+        </>
+      );
+    }
+    render(<Idle />);
+    fireEvent.click(screen.getByRole('button', { name: 'Name' }));
+    const reset = screen.getByRole('button', { name: 'reset' });
+    fireEvent.pointerDown(reset);
+    fireEvent.click(reset);
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('');
+  });
+
   it('is in the main entry\'s Table with every server part', () => {
     expect(Object.keys(Table)).toEqual([...Object.keys(ServerTable), 'SortButton']);
   });
