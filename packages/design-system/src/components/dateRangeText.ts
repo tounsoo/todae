@@ -56,7 +56,8 @@ export function formatDateRange(range: DateRange, options: DateRangeTextOptions 
  * locale's range separator and each of its words, and reads a date on both
  * sides with `parseDate`. It returns the range when exactly one split reads
  * as two dates, and `null` when none or more than one does, or when the end
- * is before the start.
+ * is before the start. Each date needs its year, as `formatDateRange` writes
+ * them, so `Oct 3 – Oct 10, 2026` returns `null`.
  */
 export function parseDateRange(text: string, options: DateRangeTextOptions = {}): DateRange | null {
   const cuts: [number, number][] = [];

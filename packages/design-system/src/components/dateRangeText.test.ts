@@ -77,4 +77,9 @@ describe('parseDateRange', () => {
     expect(read('10/3/2026 – soon', 'en-US')).toBeNull();
     expect(read('10/3 – 10/10/2026', 'en-US')).toBeNull();
   });
+
+  it('returns null for a range that writes its year once', () => {
+    expect(read('Oct 3 – Oct 10, 2026', 'en-US')).toBeNull();
+    expect(read('Oct 3, 2026 – Oct 10, 2026', 'en-US')).toBe('2026-10-03/2026-10-10');
+  });
 });

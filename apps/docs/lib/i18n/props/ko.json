@@ -2735,8 +2735,8 @@
   },
   "parseDateRange": {
     "text": {
-      "en": "The typed text.",
-      "ko": "입력된 텍스트."
+      "en": "The typed text, with a year on each date.",
+      "ko": "입력된 텍스트. 날짜마다 연도가 있어야 합니다."
     },
     "options.locale": {
       "en": "The locale, such as ko. The runtime's own when not set.",
