@@ -67,15 +67,26 @@ jobs:
 
   docs:
     if: ${{ !github.event.pull_request.draft }}
-    name: Docs build
+    name: Docs build and screenshots
     runs-on: ubuntu-latest
+    # Screenshot baselines are taken in this image, so fonts and Chromium match. Its version is
+    # @playwright/test's in apps/docs; apps/docs/scripts/visual.sh reads it from here.
+    container: mcr.microsoft.com/playwright:v1.56.1-noble
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - uses: actions/cache@v4
         with:
           path: apps/docs/.next/cache
-          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**') }}
+          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**', '!apps/docs/visual/**') }}
           restore-keys: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm build:ds
       - run: pnpm --filter docs build
+      - run: pnpm --filter docs test:visual
+      # Expected, actual and diff images for each shot that changed.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: apps/docs/playwright-report
+          retention-days: 7
