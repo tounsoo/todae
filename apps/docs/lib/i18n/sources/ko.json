@@ -350,7 +350,7 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "56356abf15d5",
+    "## A company resolver": "a9cd1c801ab7",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
@@ -360,8 +360,8 @@
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
     "## Unlayered CSS needs no setup": "89929d797794",
-    "## Declare the order once, first": "f547b8e44e94",
-    "## A reset of your own": "2dfb211f2468",
+    "## Declare the order once, first": "9f1af807ebfe",
+    "## A reset of your own": "71e7109c2972",
     "## Tailwind CSS 4": "4a93aa05800f",
     "## Tailwind CSS 3": "7be255398eb7",
     "## `!important`": "48f04fecaf9b",
@@ -369,11 +369,11 @@
   },
   "guides/get-started": {
     "# Get started": "792a2cea3e85",
-    "## Install": "3cffd0590d1e",
-    "## Load the stylesheet": "8a8efee63bca",
-    "## Wrap the app": "1b1314bfe1ac",
-    "## Next.js": "e4b46fe5d929",
-    "## Dates and times": "ce6959e8f43e",
+    "## Install": "d61c75211f93",
+    "## Load the stylesheet": "339c1f5ef52c",
+    "## Wrap the app": "11a9eefa9e4b",
+    "## Next.js": "c2557edf9f0e",
+    "## Dates and times": "216315f2af85",
     "## Next": "c2fb4b48c394",
     "(section order)": "cbf8b3d9a243"
   },

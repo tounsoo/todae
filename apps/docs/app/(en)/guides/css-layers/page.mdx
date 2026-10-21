@@ -25,9 +25,9 @@ Put `todae` after any reset and before your components and utilities:
 
 A company design system on Todae puts its own component CSS in its layer (`acme` here), so product code in a later layer or unlayered still wins over it.
 
-Import Todae's CSS from the same CSS file, after the statement. Importing it from JavaScript before that file loads names `todae` first, and every other layer then beats it.
+Import Todae's CSS from the same CSS file, after the statement. Importing it from JavaScript before the file that holds the statement loads names `todae` first, and every other layer then beats it.
 
-Next.js loads a stylesheet that a CSS file imports ahead of that file, unless Tailwind CSS or `postcss-import` puts it inline. There, put the statement in a file of its own, such as `layers.css`, and import the files in order from the root layout:
+Next.js loads a stylesheet that a CSS file imports ahead of that file, unless Tailwind CSS 4 or `postcss-import` puts it inline. Without them, put the statement in a file of its own, such as `layers.css`, and import the files in order from the root layout:
 
 ```ts
 import './layers.css';
@@ -37,7 +37,7 @@ import './globals.css';
 
 ## A reset of your own
 
-A reset outside any layer beats Todae too. `* { padding: 0; }` takes the padding from Todae's buttons, and `a { text-decoration: none; }` the underline from its links. A new Next.js app's `globals.css` has both. Put the reset in a layer named before `todae` in your statement, here `reset`:
+A reset outside any layer beats Todae too. `* { padding: 0; }` takes the padding from Todae's buttons, and `a { text-decoration: none; }` the underline from its links. A Next.js app made without Tailwind CSS has both in its `globals.css`. Put the reset in a layer named before `todae` in your statement, here `reset`:
 
 ```css
 @layer reset {

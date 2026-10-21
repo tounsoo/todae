@@ -12,10 +12,10 @@ Todae is published on npm as [`@tounsoo/todae`](https://www.npmjs.com/package/@t
 npm install @tounsoo/todae
 ```
 
-Todae needs React 19, and its types need TypeScript 6 or later. A new Next.js app starts on TypeScript 5, and npm then stops with a peer dependency error, so install TypeScript 6 with Todae:
+Todae needs React 19, and its types need TypeScript 6 or later. An app made with create-next-app 16 starts on TypeScript 5, and npm then stops with a peer dependency error. Install TypeScript 6.0 with Todae, since Next.js's ESLint config accepts TypeScript below 6.1 only:
 
 ```sh
-npm install @tounsoo/todae typescript@6
+npm install @tounsoo/todae typescript@~6.0
 ```
 
 ## Quick start
