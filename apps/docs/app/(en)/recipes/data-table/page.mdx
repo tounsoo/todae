@@ -1,0 +1,214 @@
+import { DataTableInvoices } from '../../../../components/demos/DataTableDemo';
+
+# Data table
+
+A recipe, not a package namespace. A data table is a [Table](/table) with sortable columns, a checkbox on each row from [useSelection](/utilities/use-selection), bulk actions in a [Toolbar](/toolbar), [Pagination](/pagination) and an [EmptyState](/empty-state) for no results. Which rows load, how they filter and sort, and what the actions do are your product's. There is no `DataTable.*` export.
+
+Search, sort by a column, page through, select rows on more than one page, then mark them paid or delete them.
+
+<Example block>
+  <DataTableInvoices />
+</Example>
+
+## Rows
+
+Work out the rows in one place: filter, then sort, then cut out the page. With data on a server, send the query, sort and page in a request and render the rows it returns. The snippets on this page keep every row in memory. With paging on the server, `matches` holds one page: take every count (pages, matches, what a delete leaves) from the total the server returns, and send `selection.value` to the server for a bulk action, since it can name rows on other pages, then fetch the page again. Go back to the first page when the search or sort changes, and keep the page in range when rows go away.
+
+```ts
+const needle = query.trim().toLowerCase();
+const matches = rows
+  .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
+  .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
+const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
+const pageCount = pagesOf(matches.length);
+const current = Math.min(page, pageCount);
+const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+```
+
+## Sorting
+
+Keep one sorted column and its direction. Each sortable `Table.HeaderCell` takes `'ascending'` or `'descending'` when it is that column and `'none'` when it is not, and its `Table.SortButton` sets the column. The button announces the new order, as the [Table](/table) page says.
+
+```tsx
+const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted.direction : 'none');
+
+<Table.HeaderCell scope="col" sort={sortOf('customer')}>
+  <Table.SortButton onClick={() => sortBy('customer')}>Customer</Table.SortButton>
+</Table.HeaderCell>
+```
+
+## Selecting across pages
+
+Pass the keys of the rows on the current page to `useSelection`. Selected keys on other pages stay selected, so the header checkbox selects or clears only this page, and `selection.value` holds every selected key. Show that count beside the actions, so people know an action reaches rows they can't see. Clear the selection when the search changes, as `changeQuery` does in the example, so an action doesn't reach rows the search hides. Shift ranges cover the current page, since that is the list of keys the hook gets.
+
+```tsx
+const selection = useSelection({ keys: pageRows.map((row) => row.id) });
+
+<Checkbox.Root ref={selectAll} {...selection.getSelectAllProps()}>
+  <VisuallyHidden.Root>Select all invoices on this page</VisuallyHidden.Root>
+</Checkbox.Root>
+```
+
+## Bulk actions
+
+Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Opening the dialog points `restoreFocusRef` at Delete, so Cancel returns there even in a browser that doesn't focus a clicked button. Keep the count the dialog asks about in its own state, apart from whether it is open, so its title doesn't change while it fades out. When a delete moves the table to an earlier page or leaves no rows, say so in the same announcement. `search` is the ref on the search field's `Field.TextInput`.
+
+```tsx
+const announce = useAnnouncer();
+const search = useRef<HTMLInputElement>(null);
+const selectAll = useRef<HTMLInputElement>(null);
+const restoreFocus = useRef<HTMLElement>(null);
+const deleteButton = useRef<HTMLButtonElement>(null);
+const [confirming, setConfirming] = useState(false);
+const [asked, setAsked] = useState(0);
+const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
+
+const confirmDelete = () => {
+  restoreFocus.current = deleteButton.current;
+  setAsked(selection.value.length);
+  setConfirming(true);
+};
+
+const remove = () => {
+  const ids = new Set(selection.value);
+  if (ids.size === 0) return;
+  const shown = matches.filter((row) => !ids.has(row.id)).length;
+  const pages = pagesOf(shown);
+  const to = Math.min(current, pages);
+  restoreFocus.current = shown > 0 ? selectAll.current : search.current;
+  setRows(rows.filter((row) => !ids.has(row.id)));
+  setPage(to);
+  selection.clear();
+  setConfirming(false);
+  const after = shown === 0 ? (needle ? 'No invoices found' : 'No invoices left') : to !== current ? `Page ${to} of ${pages}` : '';
+  announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
+};
+
+<Toolbar.Root aria-label="Selected invoices">
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
+    Mark paid
+  </Button.Root>
+  <Button.Root
+    ref={deleteButton}
+    variant="secondary"
+    disabled={selection.value.length === 0}
+    onClick={confirmDelete}
+  >
+    Delete
+  </Button.Root>
+</Toolbar.Root>
+<Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
+  <Dialog.Title>{`Delete ${invoices(asked)}?`}</Dialog.Title>
+  <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
+  <Dialog.Footer>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={remove}>Delete</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
+## No results
+
+When nothing matches, render one row whose cell spans every column and holds an `EmptyState.Root`, so the table keeps its caption and headers. The empty state has no role, so announce the number of matches once typing settles, as the [EmptyState](/empty-state) page does, but on a new search only, so a delete's own message isn't followed by a count. "Clear search" moves focus back to the search before its own button goes away.
+
+```tsx
+import { SearchX } from 'lucide-react';
+
+const searched = useRef(needle);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searched.current === needle) return;
+    searched.current = needle;
+    announce(matches.length === 0 ? (needle ? 'No invoices found' : 'No invoices left') : `${invoices(matches.length)} found`);
+  }, 500);
+  return () => clearTimeout(timer);
+}, [needle, matches.length, announce]);
+
+const clearSearch = () => {
+  changeQuery('');
+  search.current?.focus();
+};
+
+<Table.Row>
+  <Table.Cell colSpan={5}>
+    <EmptyState.Root>
+      {needle && (
+        <EmptyState.Icon>
+          <SearchX />
+        </EmptyState.Icon>
+      )}
+      <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}</EmptyState.Description>
+      {needle && (
+        <EmptyState.Actions>
+          <Button.Root variant="secondary" onClick={clearSearch}>
+            Clear search
+          </Button.Root>
+        </EmptyState.Actions>
+      )}
+    </EmptyState.Root>
+  </Table.Cell>
+</Table.Row>
+```
+
+## Pages and narrow screens
+
+Page with `Pagination.Root` and buttons, and render it only when there is more than one page. Mark the current page with `aria-current="page"` and a step with nowhere to go with `aria-disabled="true"`, which keeps its focus at an end, as the [Pagination](/pagination) page says. The buttons swap the rows in place, so announce the new page. Wrap the table in a `ScrollArea.Root` with `axis="inline"`, `focusable` and an `aria-label`, so a table wider than the screen scrolls sideways and keyboard users can scroll it too.
+
+```tsx
+import { paginationRange } from '@tounsoo/todae';
+
+const goTo = (to: number) => {
+  if (to === current) return;
+  setPage(to);
+  announce(`Page ${to} of ${pageCount}`);
+};
+
+const step = (to: number, label: string) => (
+  <Pagination.Item>
+    <button
+      type="button"
+      aria-disabled={to < 1 || to > pageCount ? true : undefined}
+      onClick={() => to >= 1 && to <= pageCount && goTo(to)}
+    >
+      {label}
+    </button>
+  </Pagination.Item>
+);
+
+<ScrollArea.Root axis="inline" focusable aria-label="Invoices table">
+  <Table.Root>…</Table.Root>
+</ScrollArea.Root>
+{pageCount > 1 && (
+  <Pagination.Root aria-label="Invoice pages">
+    {step(current - 1, 'Previous')}
+    {paginationRange({ page: current, count: pageCount }).map((item) =>
+      typeof item === 'number' ? (
+        <Pagination.Item key={item}>
+          <button type="button" aria-current={item === current ? 'page' : undefined} onClick={() => goTo(item)}>
+            {item}
+          </button>
+        </Pagination.Item>
+      ) : (
+        <Pagination.Ellipsis key={item} />
+      ),
+    )}
+    {step(current + 1, 'Next')}
+  </Pagination.Root>
+)}
+```
+
+## Accessible composition
+
+**Todae handles:** The native table, its caption and its row and column headers. `aria-sort` on the sorted column, and an announcement after a `Table.SortButton` click. Each row checkbox's checked state, the header checkbox's mixed state, and Shift ranges, through `useSelection`. One tab stop and arrow keys for the bulk actions in `Toolbar.Root`. The confirmation's role, its first focus on Cancel, and focus sent to `restoreFocusRef` after it closes, in `Dialog.Root`. The `nav` landmark of `Pagination.Root`, and the look of a current page and of a step with nowhere to go. Sideways scrolling by keyboard in `ScrollArea.Root`.
+
+**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. `aria-current="page"` on the current page's button and `aria-disabled="true"` on a step with nowhere to go. Announcements for the number of matches, the new page and what an action did. A place for focus when an action disables the button that had it, and before "Clear search" goes away.
+
+**Watch for:** Disabling a focused button by clearing the selection without moving focus first. A focus target that a search can empty, such as a header checkbox with no matching rows, which turns disabled too. A selection that reaches rows the person can't see, on another page or hidden by a search, without a count that says so. A destructive action with no confirmation or undo. A row made clickable with `onClick` on `Table.Row`, which takes no focus: put a link or button in a cell.
+
+## When to use
+
+**When:** Records people search, sort, page through and act on in bulk, such as invoices, orders or members.
+
+**When not:** A short table people only read → a plain [Table](/table). One record's fields → [DataList](/data-list). Cell editing, column resizing, virtual scrolling or arrow keys between cells → a data grid, which is out of scope for Todae.

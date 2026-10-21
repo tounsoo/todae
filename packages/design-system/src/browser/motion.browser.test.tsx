@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
@@ -9,9 +9,9 @@ import { HeldTip } from '../test/heldTip.js';
 
 afterEach(cleanup);
 
-function Themed({ children, dir }: { children: ReactNode; dir?: 'ltr' | 'rtl' }) {
+function Themed({ children, dir, style }: { children: ReactNode; dir?: 'ltr' | 'rtl'; style?: CSSProperties }) {
   return (
-    <div data-appearance="light" data-density="comfortable" dir={dir}>
+    <div data-appearance="light" data-density="comfortable" dir={dir} style={style}>
       {children}
     </div>
   );
@@ -98,13 +98,21 @@ function IconButton({ buttonRef }: { buttonRef?: RefObject<HTMLButtonElement | n
 
 const pin = () => screen.queryByRole('button', { name: 'Pin' });
 
+// A slow runner draws few frames in a 200-280ms enter, too few to show the
+// tip following; a one-second enter gives it enough on any runner.
+const slowEnter = {
+  ['--_todae-dialog-motion-enter' as string]: '1s',
+  ['--_todae-drawer-motion-enter' as string]: '1s',
+  ['--_todae-sheet-motion-enter' as string]: '1s',
+};
+
 describe('A tip opened during an overlay enter motion', () => {
   it.each([
     ['end', 'ltr'],
     ['start', 'rtl'],
   ] as const)('stays by its trigger while a Drawer at %s slides in, %s', async (side: DrawerSide, dir) => {
     render(
-      <Themed dir={dir}>
+      <Themed dir={dir} style={slowEnter}>
         <Drawer.Root open onOpenChange={() => undefined} side={side} aria-label="Filters">
           <IconButton />
         </Drawer.Root>
@@ -117,7 +125,7 @@ describe('A tip opened during an overlay enter motion', () => {
 
   it('stays by its trigger while a Dialog fades in', async () => {
     render(
-      <Themed>
+      <Themed style={slowEnter}>
         <Dialog.Root open onOpenChange={() => undefined} aria-label="Edit">
           <IconButton />
         </Dialog.Root>
@@ -131,7 +139,7 @@ describe('A tip opened during an overlay enter motion', () => {
     function Sheet() {
       const ref = useRef<HTMLButtonElement>(null);
       return (
-        <Themed>
+        <Themed style={slowEnter}>
           <BottomSheet.Root open onOpenChange={() => undefined} aria-label="Share" initialFocusRef={ref}>
             <BottomSheet.Body>
               <IconButton buttonRef={ref} />

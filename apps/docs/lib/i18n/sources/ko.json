@@ -614,6 +614,19 @@
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
   },
+  "recipes/data-table": {
+    "(top)": "1657b8355efe",
+    "# Data table": "1f645bbafc0a",
+    "## Rows": "4289246c4520",
+    "## Sorting": "16c6b547a2b7",
+    "## Selecting across pages": "e36e7d634cff",
+    "## Bulk actions": "4a3a51c6c357",
+    "## No results": "f81fd982803b",
+    "## Pages and narrow screens": "f4e03a2c2cef",
+    "## Accessible composition": "1906b4f799d7",
+    "## When to use": "d42ffa07d586",
+    "(section order)": "6cc1bf0c30c5"
+  },
   "recipes/date-range-presets": {
     "(top)": "694e43a763f8",
     "# Date range with presets": "35ad4762b89e",
@@ -700,7 +713,7 @@
     "## Sorting": "04ab4b644bf5",
     "## Selecting rows": "d3a9fdd66cf5",
     "## Accessible composition": "934a12e27009",
-    "## When to use": "051cd0dc3752",
+    "## When to use": "6b47945cf41f",
     "## Props": "66fd0e7af4f8",
     "(section order)": "b9352e4b95f2"
   },

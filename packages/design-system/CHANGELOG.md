@@ -1,5 +1,64 @@
 # @tounsoo/todae
 
+## 0.3.0
+
+### Minor Changes
+
+- Adds Field.NumberInput with Field.Increment and Field.Decrement, and removes Field.TextInput type="number". ([#202](https://github.com/tounsoo/todae/pull/202))
+  
+  - `Field.TextInput type="number"` is gone; use `Field.NumberInput`, whose value is a `number | null`, and which reads and writes the locale's format. A JavaScript caller that still passes `type="number"` gets a development warning and a native number input.
+  - `Strings` has two new keys, `increment` and `decrement`, which are given the text of the field's label (`(field: string) => string`, with `field` empty without a label); add them to an object you type as a complete `Strings`.
+  - `Glyphs` has two new keys, `plus` and `minus`; add them to an object you type as `Required<Glyphs>`.
+
+- Chip.Overflow is removed; a +N count is a plain `Chip.Root`. ([#194](https://github.com/tounsoo/todae/pull/194))
+  
+  - Replace `<Chip.Overflow overflowCount={n} />` with a `Chip.Root` holding the text, such as `<Chip.Root aria-hidden>+4</Chip.Root>`, and a `VisuallyHidden.Root` holding its name, such as `moreChips(n)` from `useStrings`. `ChipOverflowProps` is gone, and a +N chip no longer has a dashed border.
+
+- Code.Block is now its own component, `CodeBlock.Root`, with a server entry at `@tounsoo/todae/code-block`. ([#192](https://github.com/tounsoo/todae/pull/192))
+  
+  - Replace `<Code.Block>` with `<CodeBlock.Root>`, and the `CodeBlockProps` type with `CodeBlockRootProps`.
+
+- Field.DatePicker, Field.TimePicker, Field.DateTimePicker and Field.ChipInput carry their value in a validated input, with required, min and max, and useField().getValueInputProps with notifyValueChange does so for custom controls. ([#197](https://github.com/tounsoo/todae/pull/197))
+  
+  - A picker with `min` or `max` now blocks a submit, and shows a problem in `Form.Root`, when its value is outside them; give a value in range, or drop the bound.
+  - `required` on `Field.ChipInput` now needs at least one chip, not text in the input.
+  - `Strings` has three new keys, `required`, `dateRangeUnderflow` and `dateRangeOverflow`; add them to an object you type as a complete `Strings`.
+
+- Add `role="alertdialog"` to `Dialog.Root`, which keeps backdrop clicks from closing it and focuses its `Dialog.Close` on open. ([#196](https://github.com/tounsoo/todae/pull/196))
+  
+  - `Dialog.Root role="alertdialog"` no longer closes on a backdrop click and focuses its first `Dialog.Close`; pass `dismissOnBackdrop` or `initialFocusRef` to keep the old behavior.
+  - `Dialog.Root`'s `role` takes only `'dialog'` or `'alertdialog'`.
+  - `Drawer.Root` no longer takes `role`; remove it.
+
+- A nested ThemeProvider or DensityProvider that sets no value keeps the enclosing provider's. ([#187](https://github.com/tounsoo/todae/pull/187))
+  
+  - A nested ThemeProvider that relied on resetting its subtree to `system` now needs `appearance="system"`.
+  - A nested DensityProvider that relied on resetting its subtree to `comfortable` now needs `density="comfortable"`.
+
+### Patch Changes
+
+- useCombobox passes onCreate an AbortSignal, reads a falsy failure, or a load that throws, as an Error (useMentions loads too), reports a throw after an async create with reportError, and leaves Escape on a closed list with nothing to clear to the page; overlay initial focus matches Tab: a named radio group has one stop, and a checked radio of that name outside the overlay takes the group out of it. ([#191](https://github.com/tounsoo/todae/pull/191))
+
+- Adds Form.Root and Form.Summary for native form validation. ([#195](https://github.com/tounsoo/todae/pull/195))
+
+- Field.TextInput and Field.Textarea take `onValueChange` without `onChange`, and are `readOnly` with neither. ([#187](https://github.com/tounsoo/todae/pull/187))
+
+- todae-tokens names the Todae set, modifier or variant context that a misplaced company token belongs in. ([#187](https://github.com/tounsoo/todae/pull/187))
+
+- The token catalog's `entry` has a `context` field for a button variant's tokens, such as `"primary"`. ([#193](https://github.com/tounsoo/todae/pull/193))
+
+- ThemeProvider overrides accept oklch components held in a readonly array, such as an `as const` constant. ([#187](https://github.com/tounsoo/todae/pull/187))
+
+- Add DataList: a dl of terms and details, beside each other or stacked. ([#200](https://github.com/tounsoo/todae/pull/200))
+
+- Add `Table.SortButton`, `Table.HeaderCell` `sort`, `Table.Row` `selected`, `Checkbox.Root` `indeterminate` and the `useSelection` hook. ([#201](https://github.com/tounsoo/todae/pull/201))
+
+- Each tokens.json row names the set or modifier that declares the token in `entry`. ([#187](https://github.com/tounsoo/todae/pull/187))
+
+- Add Avatar.Group, a group of Avatar.Root avatars that overlap and share one size. ([#199](https://github.com/tounsoo/todae/pull/199))
+
+- Add EmptyState: what a list, table or search shows when it has nothing, with an icon, title, description and actions. ([#198](https://github.com/tounsoo/todae/pull/198))
+
 ## 0.2.0
 
 ### Minor Changes
