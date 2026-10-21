@@ -32,7 +32,7 @@ export function Select({ value, onChange, onValueChange, className, children, ..
         {...field.getControlProps(props)}
         value={value}
         className={cx(styles.select, className)}
-        // Without either handler the select is read-only, and React says so.
+        // Without either handler React keeps the value and warns; <select> has no readOnly.
         onChange={valueChangeHandler(onChange, onValueChange)}
       >
         {children}
