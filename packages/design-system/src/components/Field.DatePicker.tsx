@@ -16,7 +16,7 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDate } from './Field.shared.js';
+import { useFieldPicker, htmlDate, boundFormat } from './Field.shared.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -26,10 +26,12 @@ export type FieldDatePickerProps = {
   value: Temporal.PlainDate | null;
   /** Fires with the date picked in the calendar. */
   onValueChange?: (value: Temporal.PlainDate) => void;
-  /** The earliest date that can be picked. */
+  /** The earliest date that can be picked. A form with an earlier date is invalid. */
   min?: Temporal.PlainDate;
-  /** The latest date that can be picked. */
+  /** The latest date that can be picked. A form with a later date is invalid. */
   max?: Temporal.PlainDate;
+  /** A form with no date is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
@@ -57,14 +59,16 @@ export type FieldDatePickerProps = {
  * calendar. Beside any other control but a Field.ColorPicker,
  * Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that
  * control is the field's control instead, and the button is named from the
- * datePicker string. With `showValue={false}` the button shows only a
- * calendar glyph.
+ * datePicker string. The date goes in a native input the browser validates,
+ * so `required`, `min` and `max` block a submit and Form.Root shows them.
+ * With `showValue={false}` the button shows only a calendar glyph.
  */
 export function DatePicker({
   value,
   onValueChange,
   min,
   max,
+  required,
   isDateDisabled,
   firstDayOfWeek,
   locale,
@@ -110,16 +114,17 @@ export function DatePicker({
           {glyphOr(calendar, <CalendarGlyph />)}
         </span>
       </button>
-      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
-      {picker.name ? (
-        <input
-          type="hidden"
-          name={picker.name}
-          value={value ? htmlDate(isoDate(value)) : ''}
-          disabled={picker.disabled}
-          form={picker.form}
-        />
-      ) : null}
+      {/* A button sends nothing and the browser can't validate it, so the date goes in a value input. */}
+      <input
+        {...picker.getValueInputProps({
+          type: 'date',
+          value: value ? htmlDate(isoDate(value)) : '',
+          required,
+          min: min && htmlDate(isoDate(min)),
+          max: max && htmlDate(isoDate(max)),
+          bound: boundFormat((raw) => isoDate(Temporal.PlainDate.from(raw)).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY })),
+        })}
+      />
       {/* Mounted while open only: a form can hold many date pickers. */}
       {picker.shown ? (
         <Popover.Root

@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import type { Strings } from '../providers/strings.js';
 
 /** What a message says is wrong, from the first failed flag of a control's `ValidityState`, or `server` for an entry in `Form.Root`'s `errors`. */
@@ -25,6 +26,22 @@ export function isValidityCarrier(node: EventTarget | null): node is ValidityCar
   return node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement;
 }
 
+/** Written by a value input, so a bound reads in the field's own format, such as "Oct 7, 2026" for 2026-10-07. */
+export const boundText = /* @__PURE__ */ new WeakMap<ValidityCarrier, (raw: string) => string>();
+
+// For each value input, the ref of its field's visible control: the carrier is hidden, so focus goes there.
+const valueInputOwners = /* @__PURE__ */ new WeakMap<ValidityCarrier, RefObject<HTMLElement | null>>();
+
+/** Makes `el` a value input of the control `owner` points at, as useField's getValueInputProps does. */
+export function registerValueInput(el: ValidityCarrier, owner: RefObject<HTMLElement | null>): void {
+  valueInputOwners.set(el, owner);
+}
+
+/** The element focus goes to for a control: its field's visible control for a value input, else itself. */
+export function focusTargetFor(el: ValidityCarrier): HTMLElement {
+  return valueInputOwners.get(el)?.current ?? el;
+}
+
 // The order the first failed flag is picked in: what is missing before what is malformed before what is out of range.
 const FLAGS = [
   'valueMissing',
@@ -38,6 +55,10 @@ const FLAGS = [
   'stepMismatch',
   'customError',
 ] as const satisfies readonly (keyof ValidityState & ValidityKind)[];
+
+function bound(el: ValidityCarrier, raw: string | undefined): string {
+  return boundText.get(el)?.(raw ?? '') ?? raw ?? '';
+}
 
 function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, strings: Strings): string {
   const bounds = el as Partial<HTMLInputElement>;
@@ -59,9 +80,9 @@ function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, str
     case 'tooLong':
       return strings.tooLong(bounds.maxLength ?? 0);
     case 'rangeUnderflow':
-      return strings.rangeUnderflow(bounds.min ?? '');
+      return strings.rangeUnderflow(bound(el, bounds.min));
     case 'rangeOverflow':
-      return strings.rangeOverflow(bounds.max ?? '');
+      return strings.rangeOverflow(bound(el, bounds.max));
     case 'stepMismatch':
       return strings.stepMismatch;
     case 'customError':

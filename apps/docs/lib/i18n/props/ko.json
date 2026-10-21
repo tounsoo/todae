@@ -662,6 +662,10 @@
       "en": "+N name. Default is the moreChips string from StringsProvider, {n} more in English.",
       "ko": "+N의 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
     },
+    "required": {
+      "en": "A form with no chips is invalid, whatever the input holds.",
+      "ko": "입력란에 무엇이 있든 칩이 없으면 폼이 유효하지 않습니다."
+    },
     "commitKeys": {
       "en": "Closed allowlist of commit keys.",
       "ko": "확정 키로 쓸 수 있는 키의 고정 목록."
@@ -811,12 +815,16 @@
       "ko": "고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있으면 그 날짜와 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest date and time that can be picked.",
-      "ko": "고를 수 있는 가장 이른 날짜와 시각."
+      "en": "The earliest date and time that can be picked. A form with an earlier one is invalid.",
+      "ko": "고를 수 있는 가장 이른 날짜와 시각. 이보다 이른 값이 있으면 폼이 유효하지 않습니다."
     },
     "max": {
-      "en": "The latest date and time that can be picked.",
-      "ko": "고를 수 있는 가장 늦은 날짜와 시각."
+      "en": "The latest date and time that can be picked. A form with a later one is invalid.",
+      "ko": "고를 수 있는 가장 늦은 날짜와 시각. 이보다 늦은 값이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date and time is invalid.",
+      "ko": "날짜와 시각이 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",
@@ -921,12 +929,16 @@
       "ko": "목록에서 고른 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest time the list offers.",
-      "ko": "목록이 보여 주는 가장 이른 시각."
+      "en": "The earliest time the list offers. A form with an earlier time is invalid.",
+      "ko": "목록이 보여 주는 가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다."
     },
     "max": {
-      "en": "The latest time the list offers.",
-      "ko": "목록이 보여 주는 가장 늦은 시각."
+      "en": "The latest time the list offers. A form with a later time is invalid.",
+      "ko": "목록이 보여 주는 가장 늦은 시각. 이보다 늦은 시각이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no time is invalid.",
+      "ko": "시각이 없으면 폼이 유효하지 않습니다."
     },
     "step": {
       "en": "Minutes between the times in the list, from midnight.",
@@ -2555,12 +2567,16 @@
       "ko": "달력에서 고른 날짜를 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest date that can be picked.",
-      "ko": "고를 수 있는 가장 이른 날짜."
+      "en": "The earliest date that can be picked. A form with an earlier date is invalid.",
+      "ko": "고를 수 있는 가장 이른 날짜. 이보다 이른 날짜가 있으면 폼이 유효하지 않습니다."
     },
     "max": {
-      "en": "The latest date that can be picked.",
-      "ko": "고를 수 있는 가장 늦은 날짜."
+      "en": "The latest date that can be picked. A form with a later date is invalid.",
+      "ko": "고를 수 있는 가장 늦은 날짜. 이보다 늦은 날짜가 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date is invalid.",
+      "ko": "날짜가 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",

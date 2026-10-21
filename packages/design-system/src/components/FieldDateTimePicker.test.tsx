@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, GlyphsProvider, Label } from '../index.js';
+import { htmlDateTime } from './Field.shared.js';
 
 afterEach(cleanup);
 
@@ -43,14 +44,16 @@ describe('Field.DateTimePicker', () => {
           <Field.DateTimePicker value={at('2026-10-13T09:30')} />
         </Field.Root>
         <Field.Root aria-label="End" name="end">
-          <Field.DateTimePicker value={at('2026-10-13T17:45:15').withCalendar('japanese')} />
+          <Field.DateTimePicker value={at('2026-10-13T17:45').withCalendar('japanese')} />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
       ['start', '2026-10-13T09:30'],
-      ['end', '2026-10-13T17:45:15'],
+      ['end', '2026-10-13T17:45'],
     ]);
+    // jsdom writes a value with seconds as 17:45:15.000; a browser keeps what HTML writes (temporal-inputs.browser.test.tsx).
+    expect(htmlDateTime(at('2026-10-13T17:45:15').withCalendar('japanese'))).toBe('2026-10-13T17:45:15');
   });
 
   it('sends a year past 9999 as HTML writes it', () => {

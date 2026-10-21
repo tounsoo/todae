@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_STRINGS } from '../providers/strings.js';
-import { describeValidity, type ValidityCarrier } from './validity.js';
+import { boundText, describeValidity, focusTargetFor, registerValueInput, type ValidityCarrier } from './validity.js';
 
 type Flags = Partial<Record<keyof ValidityState, boolean>>;
 
@@ -82,5 +82,26 @@ describe('describeValidity', () => {
     expect(describeValidity(input, DEFAULT_STRINGS)).toBeNull();
     input.type = 'email';
     expect(describeValidity(input, DEFAULT_STRINGS)?.kind).toBe('typeMismatch');
+  });
+});
+
+describe('boundText', () => {
+  it('words a bound in the field\'s format when a value input registered one, and the raw bound otherwise', () => {
+    const el = control({ rangeUnderflow: true }, { type: 'date', min: '2026-10-13' });
+    expect(describeValidity(el, DEFAULT_STRINGS)?.message).toBe('Enter 2026-10-13 or more');
+    boundText.set(el, (raw) => `on ${raw.slice(-2)}`);
+    expect(describeValidity(el, DEFAULT_STRINGS)?.message).toBe('Enter on 13 or more');
+  });
+});
+
+describe('focusTargetFor', () => {
+  it('is the control itself, or for a value input its field\'s control as it is now', () => {
+    const el = document.createElement('input');
+    expect(focusTargetFor(el)).toBe(el);
+    const owner = { current: null as HTMLElement | null };
+    registerValueInput(el, owner);
+    expect(focusTargetFor(el)).toBe(el);
+    owner.current = document.createElement('button');
+    expect(focusTargetFor(el)).toBe(owner.current);
   });
 });

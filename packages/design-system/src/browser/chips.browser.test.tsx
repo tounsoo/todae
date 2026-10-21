@@ -30,13 +30,14 @@ function ChipField({ width }: { width: number }) {
   );
 }
 
-/** The chips, overflow chip and input that are laid out (not the inert measure copy, nor the +N name beside the +N chip). */
+/** The chips, overflow chip and input that are laid out (not the inert measure copy, the +N name beside the +N chip, or the hidden value input). */
 function liveNodes(): HTMLElement[] {
   const flow = screen.getByRole('textbox').parentElement!;
   return [...flow.children].filter(
     (el): el is HTMLElement =>
       el instanceof HTMLElement &&
       !el.hasAttribute('inert') &&
+      !el.hasAttribute('data-todae-value-input') &&
       !el.previousElementSibling?.hasAttribute('data-overflow'),
   );
 }

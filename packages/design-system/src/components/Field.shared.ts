@@ -12,7 +12,13 @@ import {
   type RefObject,
 } from 'react';
 import { useFieldContext, type CountStore } from './Field.context.js';
-import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import {
+  useFieldControl,
+  type FieldControlUserProps,
+  type UseFieldResult,
+  type ValueInputOptions,
+  type ValueInputProps,
+} from '../hooks/useField.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import {
   usePopover,
@@ -128,7 +134,7 @@ export function useTextEntry(store: CountStore, value: string, maxLength: number
 // How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
 export const pickerToggles = /* @__PURE__ */ new WeakMap<HTMLButtonElement, () => void>();
 
-// A time for a hidden input stops at the smallest unit that is set.
+// A time for a value input stops at the smallest unit that is set.
 function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
   if (value.millisecond || value.microsecond || value.nanosecond) return 'millisecond';
   return value.second ? 'second' : 'minute';
@@ -140,10 +146,10 @@ function toHtmlYear(text: string) {
   return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
 }
 
-/** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's hidden input. */
+/** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's value input. */
 export const htmlDate = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
 
-/** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's hidden input. */
+/** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's value input. */
 export const htmlDateTime = (value: Temporal.PlainDateTime) =>
   toHtmlYear(value.withCalendar('iso8601').toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
 
@@ -227,10 +233,18 @@ export function useFieldPicker<Reason extends string>({
       pickerToggles.delete(button);
     };
   }, [popover.triggerRef]);
+  const form = control.form as string | undefined;
   return {
     name,
     disabled: control.disabled,
-    form: control.form as string | undefined,
+    form,
+    /** The picker's value input: under the picker's own name, which is none beside a control that took the field's. */
+    getValueInputProps: (options: ValueInputOptions): ValueInputProps => ({
+      ...field.getValueInputProps(options),
+      name,
+      disabled: control.disabled,
+      form,
+    }),
     shown,
     setOpen,
     popover,
@@ -239,5 +253,16 @@ export function useFieldPicker<Reason extends string>({
   };
 }
 
-/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimePicker's hidden input. */
+/** A bound as the button writes its value, for the message that names it. The raw text when it is not a value `format` reads. */
+export function boundFormat(format: (raw: string) => string): (raw: string) => string {
+  return (raw) => {
+    try {
+      return format(raw);
+    } catch {
+      return raw;
+    }
+  };
+}
+
+/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimePicker's value input. */
 export const htmlTime = (value: Temporal.PlainTime) => value.toString({ smallestUnit: timeUnit(value) });

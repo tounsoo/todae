@@ -1,6 +1,6 @@
 import type { Strings } from '../providers/strings.js';
 import type { Dismissal, FormErrors, Reading, SummaryEntry } from './Form.context.js';
-import { describeValidity, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import { describeValidity, focusTargetFor, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
 
 export const SCOPE_ATTRIBUTE = 'data-todae-validation-scope';
 export const SCOPE_SELECTOR = '[data-todae-validation-scope]';
@@ -103,8 +103,9 @@ export function labelOf(carrier: ValidityCarrier, scope: Element): string {
     if (legend) return legend;
   }
   const group = carrier instanceof HTMLInputElement && carrier.type === 'radio' ? carrier.closest('[role="radiogroup"]') : null;
-  const from = group ?? carrier;
-  const label = group ? '' : carrier.labels?.[0]?.textContent?.trim();
+  // A value input has no label of its own: its field's control has.
+  const from = group ?? focusTargetFor(carrier);
+  const label = group ? '' : (from as Partial<HTMLInputElement>).labels?.[0]?.textContent?.trim();
   return label || textOf(from.getAttribute('aria-labelledby'), from) || from.getAttribute('aria-label') || carrier.name;
 }
 
@@ -115,8 +116,9 @@ export function readScope(scope: Element, strings: Strings): Reading[] {
     name: carrier.name,
     native: describeValidity(carrier, strings),
     label: labelOf(carrier, scope),
-    id: carrier.id,
-    disabled: carrier.matches(':disabled'),
+    // A value input is not what a person reaches: its field's control is.
+    id: focusTargetFor(carrier).id,
+    disabled: carrier.matches(':disabled') || focusTargetFor(carrier).matches(':disabled'),
   }));
 }
 

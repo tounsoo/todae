@@ -203,6 +203,8 @@ export {
   type FieldControlUserProps,
   type FieldControlWire,
   type UseFieldResult,
+  type ValueInputOptions,
+  type ValueInputProps,
 } from './hooks/useField.js';
 export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset.js';
 export {

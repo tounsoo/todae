@@ -4,6 +4,7 @@ import axe from 'axe-core';
 import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Fieldset, Form, Label, RadioGroup } from '../index.js';
+import { getTabbables } from '../overlay/tabbables.js';
 
 afterEach(cleanup);
 
@@ -172,3 +173,87 @@ describe('customValidity in a browser', () => {
   });
 });
 
+
+describe('value inputs in a browser', () => {
+  function Booking({ summary, initial = null }: { summary?: boolean; initial?: Temporal.PlainDate | null }) {
+    const [day, setDay] = useState(initial);
+    return (
+      <main data-appearance="light" data-density="comfortable">
+        <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
+          {summary ? <Form.Summary /> : null}
+          <Field.Group>
+            <Label.Root htmlFor="start">Start date</Label.Root>
+            <Field.Root id="start" name="start">
+              <Field.DatePicker
+                value={day}
+                onValueChange={setDay}
+                required
+                min={Temporal.PlainDate.from('2026-10-13')}
+                locale="en-US"
+              />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Text id="note" label="Note" />
+          <Button.Root type="submit">Book</Button.Root>
+        </Form.Root>
+      </main>
+    );
+  }
+
+  const book = () => userEvent.click(screen.getByRole('button', { name: 'Book' }));
+
+  it('blocks a submit with a required date missing, shows it, and focuses the picker button', async () => {
+    render(<Booking />);
+    await book();
+    expect(await screen.findByText('This field is required')).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' })));
+  });
+
+  it('focuses the picker button from the summary row, and names a min in the picker date style', async () => {
+    render(<Booking summary initial={Temporal.PlainDate.from('2026-10-01')} />);
+    await book();
+    const summary = await screen.findByRole('group', { name: '1 problem to fix' });
+    expect(summary.textContent).toContain('Enter Oct 13, 2026 or more');
+    await userEvent.click(screen.getByRole('link', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+  });
+
+  it('sends a date, and a date and time with seconds, as HTML writes them', async () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Day" name="day">
+          <Field.DatePicker value={Temporal.PlainDate.from('2026-10-13')} />
+        </Field.Root>
+        <Field.Root aria-label="At" name="at">
+          <Field.DateTimePicker value={Temporal.PlainDateTime.from('2026-10-13T17:45:15')} />
+        </Field.Root>
+        <Field.Root aria-label="Accent" name="accent">
+          <Field.ColorPicker value="#3366FF" />
+        </Field.Root>
+      </form>,
+    );
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
+      ['day', '2026-10-13'],
+      ['at', '2026-10-13T17:45:15'],
+      ['accent', '#3366FF'],
+    ]);
+  });
+
+  it('are skipped by Tab, which goes from the picker button to the next control', async () => {
+    render(<Booking initial={Temporal.PlainDate.from('2026-10-20')} />);
+    const button = screen.getByRole('button', { name: 'Start date' });
+    button.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(screen.getByLabelText('Note'));
+    expect(getTabbables(screen.getByTestId('form')).some((el) => el.hasAttribute('data-todae-value-input'))).toBe(false);
+  });
+
+  it('passes axe with the problem showing', async () => {
+    render(<Booking summary />);
+    await book();
+    await screen.findByRole('group', { name: '1 problem to fix' });
+    const result = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
+    expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+  });
+});

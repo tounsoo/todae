@@ -24,7 +24,7 @@ import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } fr
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
-import { isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import { focusTargetFor, isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 
 export type { FormErrors } from './Form.context.js';
@@ -150,7 +150,7 @@ function reduce(state: FormState, action: FormAction): FormState {
 }
 
 /**
- * The first enabled control, in document order, that has a problem to fix: a
+ * The first enabled control, in document order, that has a problem to fix (for a value input, its field's control): a
  * control in a scope only when it is the one its scope shows in `failed`, else,
  * with `native`, a native problem of a control no scope reads.
  */
@@ -158,12 +158,15 @@ function firstProblem(form: HTMLFormElement, failed: readonly SummaryEntry[], na
   const read = scopedControls(form);
   // Every scope speaks for its controls through the one it shows; a disabled one can't take focus, and the others stay quiet.
   const shown = new Set<Element>(failed.map((entry) => entry.reading.carrier));
-  return [...form.elements].find(
+  const problem = [...form.elements].find(
     (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
       !el.matches(':disabled') &&
+      !focusTargetFor(el).matches(':disabled') &&
       (read.has(el) ? shown.has(el) : native && el.willValidate && !el.validity.valid),
   );
+  // A value input is hidden, so focus goes to its field's control.
+  return problem && focusTargetFor(problem);
 }
 
 /**
@@ -348,7 +351,7 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
     label: entry.reading.label,
     error: entry.error,
     disabled: entry.reading.disabled,
-    focus: () => entry.reading.carrier.focus(),
+    focus: () => focusTargetFor(entry.reading.carrier).focus(),
   });
   return (
     <div

@@ -31,6 +31,8 @@ export type FieldChipInputProps = {
   /** Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
   chipRemoveIcon?: ReactNode;
   overflowLabel?: (n: number) => string;
+  /** A form with no chips is invalid, whatever the input holds. */
+  required?: boolean;
   ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
 
@@ -47,6 +49,7 @@ export function ChipInput({
   chipRemoveLabel,
   chipRemoveIcon,
   overflowLabel,
+  required,
   className,
   onKeyDown: onKeyDownProp,
   ref,
@@ -119,9 +122,18 @@ export function ChipInput({
       {...control}
       value={inputValue}
       type="text"
+      aria-required={required ? true : props['aria-required']}
       className={cx(styles.input, className)}
       onChange={(event) => onInputValueChange(event.target.value)}
       onKeyDown={onKeyDown}
+    />
+  );
+  // A form has only ever sent the text being typed, not the chips, so this has no name and sends nothing. It is empty exactly when there are no chips, which `required` checks.
+  const carrier = (
+    <input
+      {...field.getValueInputProps({ type: 'text', value: chips.join(','), required })}
+      name={undefined}
+      disabled={disabled}
     />
   );
   const measure =
@@ -154,6 +166,7 @@ export function ChipInput({
           </div>
         ) : null}
         {input}
+        {carrier}
         {measure}
       </div>
     );
@@ -170,6 +183,7 @@ export function ChipInput({
       {chipNodes}
       {overflow}
       {input}
+      {carrier}
       {measure}
     </div>
   );

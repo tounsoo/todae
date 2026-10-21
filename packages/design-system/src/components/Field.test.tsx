@@ -2075,7 +2075,7 @@ describe('Field.ChipInput row', () => {
     const flow = container.querySelector('[class*="flow"]') as HTMLElement;
     expect(flow.querySelector('[class*="row"]')).toBeNull();
     expect(flow.getAttribute('data-chip-layout')).toBe('row');
-    expect([...flow.children]).toEqual([input]);
+    expect([...flow.children]).toEqual([input, flow.querySelector('[data-todae-value-input]')]);
   });
 
   it('measures an empty row without clamping the input line', () => {
@@ -2110,9 +2110,10 @@ describe('Field.ChipInput row', () => {
     );
     const flow = container.querySelector('[class*="flow"]') as HTMLElement;
     const input = flow.querySelector('input');
+    const carrier = flow.querySelector('[data-todae-value-input]');
     const measure = flow.querySelector('[inert][aria-hidden]');
     expect(flow.querySelector('[class*="row"]')).toBeNull();
-    expect([...flow.children]).toEqual([input, measure]);
+    expect([...flow.children]).toEqual([input, carrier, measure]);
     expect(flow.querySelector('.measure, [class*="measure"] span')?.parentElement).not.toBe(flow);
   });
 

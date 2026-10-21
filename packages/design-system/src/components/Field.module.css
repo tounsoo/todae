@@ -473,7 +473,7 @@
   }
 
   /* With nothing beside it but its popover, the field is as wide as the swatch. */
-  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[data-todae-value-input]))) {
     inline-size: fit-content;
   }
 

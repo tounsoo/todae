@@ -1,4 +1,13 @@
-import { useCallback, useMemo, type Ref } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  type InputHTMLAttributes,
+  type Ref,
+  type RefCallback,
+} from 'react';
 import {
   inputLabel,
   mergeDescribedBy,
@@ -8,6 +17,10 @@ import {
 } from '../components/Field.context.js';
 import { useRevalidate } from '../components/Form.context.js';
 import { useStableComposedRef } from '../components/props.js';
+import { boundText, registerValueInput } from '../components/validity.js';
+import visuallyHidden from '../components/VisuallyHidden.module.css';
+
+function noop() {}
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {
@@ -48,6 +61,28 @@ export type FieldControlWire = {
   'data-todae-field-control': '' | 'name';
 };
 
+export type ValueInputOptions = {
+  /** The native type that fits the value, so the browser validates it as that type: `date` for a date, `text` for a value of your own. */
+  type: 'text' | 'number' | 'date' | 'time' | 'datetime-local' | 'color';
+  /** The value in that type's format, such as `2026-10-07` for `date`. `''` for none. */
+  value: string;
+  /** The value may not be `''`. */
+  required?: boolean;
+  /** The lowest value, in the type's format. */
+  min?: string;
+  /** The highest value, in the type's format. */
+  max?: string;
+  /** The type's `step`, such as `any` to accept every value. */
+  step?: string;
+  /** Writes a `min` or `max` in the field's own format, such as "Oct 7, 2026", for the message that names it. Without it, the raw value is named. */
+  bound?: (raw: string) => string;
+};
+
+export type ValueInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  ref: RefCallback<HTMLInputElement>;
+  'data-todae-value-input': '';
+};
+
 export type UseFieldResult = {
   /** The id a `Label htmlFor` points at. */
   id: string;
@@ -65,6 +100,15 @@ export type UseFieldResult = {
     props?: P,
     options?: FieldControlOptions,
   ) => Omit<P, keyof FieldControlWire> & FieldControlWire;
+  /**
+   * Props for a native `<input>` that carries a non-native control's value: it
+   * submits under the field's name, and the browser validates it, so
+   * `required`, `min` and `max` work and `Form.Root` shows and focuses the
+   * control. Render it beside the control. It is hidden from sight and from
+   * assistive technology, is not a tab stop and never takes a press. A problem
+   * on it moves focus to the field's control, the one `getControlProps` wired.
+   */
+  getValueInputProps: (options: ValueInputOptions) => ValueInputProps;
 };
 
 /**
@@ -86,6 +130,21 @@ export function useFieldControl(counted: boolean): UseFieldResult {
   const setFocusTarget = useControlSetter(inputRef);
   const setPresence = useControlPresence(ctx.store, counted);
   useRevalidate();
+  // Whether a control already took the field's name; the value input then goes without one.
+  const named = ctx.store.named > 0;
+  const watching = useRef<boolean | null>(null);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  useEffect(() => {
+    const listener = () => {
+      if (watching.current !== null && watching.current !== ctx.store.named > 0) rerender();
+    };
+    ctx.store.presence.add(listener);
+    // A control that mounted before this effect ran has already announced itself.
+    listener();
+    return () => {
+      ctx.store.presence.delete(listener);
+    };
+  }, [ctx.store]);
   const setControl = useCallback(
     (node: HTMLElement | null) => {
       setFocusTarget(node);
@@ -119,8 +178,54 @@ export function useFieldControl(counted: boolean): UseFieldResult {
     },
     [composedRef, ctx],
   );
+  const valueInputRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node) registerValueInput(node, ctx.inputRef);
+    },
+    [ctx.inputRef],
+  );
+  // The latest bound, read when a message needs it, so a new function each render registers nothing new.
+  const bound = useRef<ValueInputOptions['bound']>(undefined);
+  const boundRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node) boundText.set(node, (raw) => bound.current?.(raw) ?? raw);
+      valueInputRef(node);
+    },
+    [valueInputRef],
+  );
+  const getValueInputProps = useCallback(
+    (options: ValueInputOptions): ValueInputProps => {
+      bound.current = options.bound;
+      watching.current = named;
+      return {
+        ref: boundRef,
+        type: options.type,
+        name: named ? undefined : ctx.name,
+        value: options.value,
+        required: options.required,
+        min: options.min,
+        max: options.max,
+        step: options.step,
+        disabled: ctx.disabled,
+        // Not readOnly or hidden: the browser leaves both out of validation. The change handler only keeps React from calling the value uncontrolled.
+        onChange: noop,
+        tabIndex: -1,
+        'aria-hidden': true,
+        'data-todae-value-input': '',
+        className: visuallyHidden.root,
+      };
+    },
+    [boundRef, ctx.disabled, ctx.name, named],
+  );
   return useMemo(
-    () => ({ id: ctx.inputId, name: ctx.name, disabled: ctx.disabled, invalid: ctx.invalid, getControlProps }),
-    [ctx.disabled, ctx.inputId, ctx.invalid, ctx.name, getControlProps],
+    () => ({
+      id: ctx.inputId,
+      name: ctx.name,
+      disabled: ctx.disabled,
+      invalid: ctx.invalid,
+      getControlProps,
+      getValueInputProps,
+    }),
+    [ctx.disabled, ctx.inputId, ctx.invalid, ctx.name, getControlProps, getValueInputProps],
   );
 }
