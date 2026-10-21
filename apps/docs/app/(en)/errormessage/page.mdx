@@ -2,7 +2,7 @@ import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo'
 
 # ErrorMessage
 
-Validation text below a control. A sibling, not a Field part. `id` is required. There is no default `role="alert"` and no `aria-live`. `invalid` lives on the control or on `Field.Root`.
+Validation text below a control. A sibling, not a Field part. `id` is required outside a [Form](/form). There is no default `role="alert"` and no `aria-live`. `invalid` lives on the control or on `Field.Root`.
 
 Mount the error only while it applies, and include its id in `aria-describedby` only then.
 
@@ -30,9 +30,25 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId;
 
 To announce a submit-time error, pass `role="alert"` on this component. The package does not choose announcement policy.
 
+## In a Form
+
+Inside a [Form](/form), a `Field.Group` or `Fieldset.Root` is a validation scope, and `ErrorMessage.Root` takes no `id`. It renders only while the scope shows a problem, with the problem's text unless you pass children, and the scope sets `aria-invalid` on its controls and adds the message's id to their `aria-describedby` while it renders. A function child gets the error's `kind` and `message`.
+
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Work email</Label.Root>
+  <Field.Root id={id} name="email">
+    <Field.TextInput type="email" required value={email} onValueChange={setEmail} />
+  </Field.Root>
+  <ErrorMessage.Root />
+</Field.Group>
+```
+
 ## Accessible composition
 
-**Todae handles:** `ErrorMessage.Root` renders a `<span>` with the required `id`, `data-todae-error` and the error text color. It has no `role` and no `aria-live`, and writes nothing onto the control. `aria-invalid` comes from `invalid` on the control, `Field.Root`, `RadioGroup.Root` or a surrounding [Fieldset](/fieldset), not from this component.
+**Todae handles:** `ErrorMessage.Root` renders a `<span>` with the `id` you pass, or the scope's inside a Form, `data-todae-error` and the error text color. It has no `role` and no `aria-live`, and writes nothing onto the control. `aria-invalid` comes from `invalid` on the control, `Field.Root`, `RadioGroup.Root` or a surrounding [Fieldset](/fieldset), not from this component. In a Form, the scope also wires `aria-invalid` and `aria-describedby`.
 
 **You supply:** Mount it only while the error applies, and only then add its id to the control's `aria-describedby` (on `Field.Root` inside a Field) and set `invalid`. Say what is wrong and how to fix it. For an error that appears on submit, pass `role="alert"` so it is announced. For a group, point `aria-describedby` on `Fieldset.Root` at it.
 

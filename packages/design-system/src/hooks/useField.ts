@@ -6,6 +6,7 @@ import {
   useControlSetter,
   useFieldContext,
 } from '../components/Field.context.js';
+import { useRevalidate } from '../components/Form.context.js';
 import { useStableComposedRef } from '../components/props.js';
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
@@ -84,6 +85,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
   const { inputRef } = ctx;
   const setFocusTarget = useControlSetter(inputRef);
   const setPresence = useControlPresence(ctx.store, counted);
+  useRevalidate();
   const setControl = useCallback(
     (node: HTMLElement | null) => {
       setFocusTarget(node);

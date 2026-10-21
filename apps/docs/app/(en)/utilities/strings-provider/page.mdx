@@ -247,6 +247,66 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`Steps.Item`'s hidden status word for a step with an `error`</Table.Cell>
       <Table.Cell>`Failed`</Table.Cell>
     </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`valueMissing`</Table.HeaderCell>
+      <Table.Cell>A control the browser reports empty though it is required, shown by `ErrorMessage.Root` and `Form.Summary`</Table.Cell>
+      <Table.Cell>`This field is required`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatchEmail`</Table.HeaderCell>
+      <Table.Cell>An `email` input whose value is not an email address</Table.Cell>
+      <Table.Cell>`Enter an email address`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatchUrl`</Table.HeaderCell>
+      <Table.Cell>A `url` input whose value is not a URL</Table.Cell>
+      <Table.Cell>`Enter a URL`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`typeMismatch`</Table.HeaderCell>
+      <Table.Cell>An input whose value does not fit its type, other than `email` and `url`</Table.Cell>
+      <Table.Cell>`Enter a value in the right format`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`badInput`</Table.HeaderCell>
+      <Table.Cell>An input whose entry the browser cannot turn into a value</Table.Cell>
+      <Table.Cell>`Enter a valid value`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`patternMismatch`</Table.HeaderCell>
+      <Table.Cell>An input whose value does not match its `pattern`</Table.Cell>
+      <Table.Cell>`Match the requested format`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`tooShort(min)`</Table.HeaderCell>
+      <Table.Cell>A value shorter than `minLength`</Table.Cell>
+      <Table.Cell>`Use at least {min} characters`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`tooLong(max)`</Table.HeaderCell>
+      <Table.Cell>A value longer than `maxLength`</Table.Cell>
+      <Table.Cell>`Use at most {max} characters`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`rangeUnderflow(min)`</Table.HeaderCell>
+      <Table.Cell>A value below `min`; `min` is the attribute's text</Table.Cell>
+      <Table.Cell>`Enter {min} or more`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`rangeOverflow(max)`</Table.HeaderCell>
+      <Table.Cell>A value above `max`; `max` is the attribute's text</Table.Cell>
+      <Table.Cell>`Enter {max} or less`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`stepMismatch`</Table.HeaderCell>
+      <Table.Cell>A value that does not fit `step`</Table.Cell>
+      <Table.Cell>`Enter a value that fits the allowed steps`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`formErrors(count)`</Table.HeaderCell>
+      <Table.Cell>`Form.Summary`'s title</Table.Cell>
+      <Table.Cell>`{count} problems to fix`</Table.Cell>
+    </Table.Row>
   </Table.Body>
 </Table.Root>
 </ScrollRegion>
@@ -255,7 +315,7 @@ A string that depends on a number or a label is a function.
 
 ## Accessible composition
 
-**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip and attachment remove buttons, the `+N` chip and `Conversation.ScrollButton`, the sheet name from `useCombobox`, and the live messages of `Field.Counter`, `useClipboard` and `Conversation`, with the counter's description, and the status words of `Steps.Item`. A part's own prop wins, as listed above.
+**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip and attachment remove buttons, the `+N` chip and `Conversation.ScrollButton`, the sheet name from `useCombobox`, and the live messages of `Field.Counter`, `useClipboard` and `Conversation`, with the counter's description, and the status words of `Steps.Item`, and the validation text of `ErrorMessage.Root` and `Form.Summary`. A part's own prop wins, as listed above.
 
 **You supply:** Every key your app shows, in the reader's language. The function keys get the label or the number, so place it where your language needs it and pick the plural form there. `StringsProvider` renders no element and sets no `lang`, so set `lang` on `<html>`, or on an element around a part in another language, so screen readers pronounce the words right. For `Breadcrumbs` and `Pagination` from the server entries, pass `aria-label` yourself, as above.
 

@@ -9,6 +9,11 @@ export type CheckboxRootProps = {
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   invalid?: boolean;
+  /**
+   * A message for a rule the browser can't check, set with
+   * `setCustomValidity` on the checkbox. An empty string or undefined means the rule holds.
+   */
+  customValidity?: string;
   name?: string;
   value?: string;
   className?: string;

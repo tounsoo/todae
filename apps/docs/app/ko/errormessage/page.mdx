@@ -2,7 +2,7 @@ import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo'
 
 # ErrorMessage
 
-컨트롤 아래에 두는 검증 텍스트입니다. Field 파트가 아닌 형제 요소입니다. `id`는 필수입니다. 기본 `role="alert"`도 `aria-live`도 없습니다. `invalid`는 컨트롤이나 `Field.Root`에 둡니다.
+컨트롤 아래에 두는 검증 텍스트입니다. Field 파트가 아닌 형제 요소입니다. [Form](/form) 밖에서는 `id`가 필수입니다. 기본 `role="alert"`도 `aria-live`도 없습니다. `invalid`는 컨트롤이나 `Field.Root`에 둡니다.
 
 오류는 해당될 때만 마운트하고, 그때만 그 id를 `aria-describedby`에 포함하세요.
 
@@ -30,9 +30,25 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId;
 
 제출 시점의 오류를 알리려면 이 컴포넌트에 `role="alert"`를 넘기세요. 패키지는 알림 정책을 정하지 않습니다.
 
+## Form 안에서
+
+[Form](/form) 안에서는 `Field.Group`이나 `Fieldset.Root`가 검증 범위이고, `ErrorMessage.Root`는 `id`를 받지 않습니다. 범위가 문제를 보여 줄 때만 렌더링되며, children을 넘기지 않으면 문제의 텍스트를 보여 줍니다. 범위는 컨트롤에 `aria-invalid`를 설정하고, 메시지가 렌더링되는 동안 그 id를 컨트롤의 `aria-describedby`에 더합니다. 함수 자식은 오류의 `kind`와 `message`를 받습니다.
+
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Work email</Label.Root>
+  <Field.Root id={id} name="email">
+    <Field.TextInput type="email" required value={email} onValueChange={setEmail} />
+  </Field.Root>
+  <ErrorMessage.Root />
+</Field.Group>
+```
+
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `ErrorMessage.Root`는 필수 `id`, `data-todae-error`, 오류 텍스트 색상을 가진 `<span>`을 렌더링합니다. `role`과 `aria-live`가 없고, 컨트롤에는 아무것도 쓰지 않습니다. `aria-invalid`는 이 컴포넌트가 아니라 컨트롤, `Field.Root`, `RadioGroup.Root`, 바깥 [Fieldset](/fieldset)의 `invalid`에서 옵니다.
+**Todae가 맡는 것:** `ErrorMessage.Root`는 넘긴 `id`(Form 안에서는 범위의 id), `data-todae-error`, 오류 텍스트 색상을 가진 `<span>`을 렌더링합니다. `role`과 `aria-live`가 없고, 컨트롤에는 아무것도 쓰지 않습니다. `aria-invalid`는 이 컴포넌트가 아니라 컨트롤, `Field.Root`, `RadioGroup.Root`, 바깥 [Fieldset](/fieldset)의 `invalid`에서 옵니다. Form 안에서는 범위가 `aria-invalid`와 `aria-describedby`도 연결합니다.
 
 **직접 제공할 것:** 오류가 해당될 때만 마운트하고, 그때만 컨트롤의 `aria-describedby`(Field 안에서는 `Field.Root`)에 id를 넣고 `invalid`를 켜세요. 무엇이 잘못됐고 어떻게 고치는지 쓰세요. 제출할 때 나타나는 오류에는 `role="alert"`를 넘겨 알려지게 하세요. 그룹이라면 `Fieldset.Root`의 `aria-describedby`가 이 메시지를 가리키게 하세요.
 
