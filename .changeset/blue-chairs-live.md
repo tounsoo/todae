@@ -1,5 +1,0 @@
----
-"@tounsoo/todae": patch
----
-
-useCombobox passes onCreate an AbortSignal, reads a falsy failure, or a load that throws, as an Error (useMentions loads too), reports a throw after an async create with reportError, and leaves Escape on a closed list with nothing to clear to the page; overlay initial focus matches Tab: a named radio group has one stop, and a checked radio of that name outside the overlay takes the group out of it.
