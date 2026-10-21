@@ -6,6 +6,7 @@ import {
   commitNumber,
   formatNumber,
   isPartialNumber,
+  onGrid,
   keypadFor,
   parseNumber,
   shownDecimals,
@@ -362,6 +363,43 @@ describe('boundsOf and canStep', () => {
     expect(canStep(-4, 1, { min: 0 })).toBe(true);
     expect(canStep(null, 1, range)).toBe(true);
     expect(canStep(5, 1, {})).toBe(true);
+  });
+});
+
+describe('a grid read at large operands', () => {
+  // value - base cancels digits, and a small step multiplies the error: 100.3 from 100 by 0.1 is 2.9999999999999716 steps.
+  const cases: [number, number, number][] = [
+    [100, 0.1, 100.3],
+    [100, 0.1, 100.7],
+    [1000, 0.01, 1000.05],
+    [1000, 0.01, 1000.07],
+    [1000, 0.01, 1000.15],
+    [14.63, 0.005, 15.045],
+    [10000, 0.01, 10000.05],
+  ];
+  it.each(cases)('min %s, step %s: %s is on the grid and steps both ways', (min, step, at) => {
+    const range = { min, step };
+    expect(onGrid(at, range)).toBe(true);
+    expect(canStep(at, step, range)).toBe(true);
+    expect(canStep(at, -step, range)).toBe(true);
+    expect(stepNumber(at, step, range)).toBeGreaterThan(at);
+    expect(stepNumber(at, -step, range)).toBeLessThan(at);
+    expect(commitNumber(at, range)).toBe(at);
+  });
+
+  it('still finds a value that is off the grid off it', () => {
+    expect(onGrid(100.35, { min: 100, step: 0.1 })).toBe(false);
+    expect(onGrid(100.30001, { min: 100, step: 0.1 })).toBe(false);
+    expect(commitNumber(100.35, { min: 100, step: 0.1 })).toBe(100.4);
+  });
+});
+
+describe('boundsOf with a max that carries noise below a grid point', () => {
+  it('gives the clean grid point, which a commit can reach', () => {
+    const max = 0.3 - 0.1;
+    expect(boundsOf({ min: 0, max, step: 0.1 }).high).toBe(0.2);
+    expect(commitNumber(5, { min: 0, max, step: 0.1 })).toBe(0.2);
+    expect(boundsOf({ max: 1.1 - 0.2, step: 0.1 }).high).toBe(0.9);
   });
 });
 

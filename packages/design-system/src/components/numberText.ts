@@ -201,10 +201,16 @@ const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.m
 // Half away from zero, as Intl rounds the text, where Math.round takes a tie toward +Infinity.
 const nearest = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
 
-// The grid index of a value, with the same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5. Fifteen digits are what a double holds, so the guard only rounds an index that is not whole and has fewer than 16 digits, such as 12345678901.23 on a 0.01 grid; a whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
+// The error bound of a quotient `(value - base) / step`, in steps: the subtraction can be off by about an ulp of its larger operand, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps). It is capped where the operands leave no grid a double can resolve, so a value is never read as on a grid it is only near.
+const slack = (value: number, base: number, step: number) =>
+  Math.min(1e-6, (8 * Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step);
+
+// The grid index of a value. An index within the error bound of a whole number or a half is that one, so a value on the grid reads as on it and a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5). Any other index gets the 15-digit guard of the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
 function indexOf(value: number, base: number, step: number): number {
   const raw = (value - base) / step;
-  return Number.isInteger(raw) || Math.abs(raw) >= 1e15 ? raw : Number(raw.toPrecision(15));
+  if (Number.isInteger(raw) || Math.abs(raw) >= 1e15) return raw;
+  const half = Math.round(raw * 2) / 2;
+  return Math.abs(raw - half) <= slack(value, base, step) ? half : Number(raw.toPrecision(15));
 }
 
 /** Whether a value sits on the `step` grid, counted from `min`, or from 0 without one. True with no `step`. */
@@ -266,8 +272,8 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
     let index = Math.floor(indexOf(max, base, step));
     high = pointAt(index, range);
     if (high > max) {
-      // A point past `max` comes from a grid too fine for a double. Where `max` is on the grid it is the answer; above 1e15 the grid is only as exact as a double, so a whole quotient counts as on it. Otherwise step back, and where a double holds no lower point, take `max` itself.
-      if (onGrid(max, range)) high = max;
+      // A `max` on the grid within the error bound of a point (0.3 - 0.1 on a 0.1 grid) has that clean point as its answer, so no commit carries the noise. A point further past `max` comes from a grid too fine for a double: where `max` is on the grid it is the answer, and above 1e15 the grid is only as exact as a double, so a whole quotient counts as on it. Otherwise step back, and where a double holds no lower point, take `max` itself.
+      if (onGrid(max, range)) high = high - max <= slack(max, base, step) * step ? high : max;
       else {
         while (high > max) {
           const lower = pointAt(index - 1, range);

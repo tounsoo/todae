@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Quantity, input, valueInput, type, key, button, type NumberProps } from '../test/number.js';
 import type { NumberFormatOptions } from './numberText.js';
@@ -306,5 +306,37 @@ describe('Field.NumberInput stepping a percent draft', () => {
     key('ArrowUp');
     expect(onCommit).toHaveBeenLastCalledWith(0.08);
     expect(input().value).toBe('8%');
+  });
+});
+
+describe('Field.NumberInput on a grid read at large operands', () => {
+  it.each([
+    [100, 0.1, 100.3],
+    [100, 0.1, 100.7],
+    [1000, 0.01, 1000.05],
+    [1000, 0.01, 1000.07],
+    [14.63, 0.005, 15.045],
+  ])('min %s, step %s: steps both ways from %s with no off-grid warning', (min, step, at) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<Quantity initial={at} min={min} step={step} locale="en" formatOptions={{ maximumFractionDigits: 3 }} buttons />);
+    expect(warn).not.toHaveBeenCalled();
+    expect(button('Increase').disabled).toBe(false);
+    expect(button('Decrease').disabled).toBe(false);
+    act(() => key('ArrowUp'));
+    expect(Number(valueInput().value)).toBeGreaterThan(at);
+    act(() => key('ArrowDown'));
+    act(() => key('ArrowDown'));
+    expect(Number(valueInput().value)).toBeLessThan(at);
+  });
+
+  it('commits the clean grid point of a max with noise below it, and the value input accepts it', () => {
+    render(<Quantity initial={null} min={0} max={0.3 - 0.1} step={0.1} locale="en" />);
+    type('5');
+    fireEvent.blur(input());
+    expect(input().value).toBe('0.2');
+    expect(valueInput().value).toBe('0.2');
+    expect(valueInput().max).toBe('0.2');
+    expect(valueInput().validity.valid).toBe(true);
+    expect(input().getAttribute('aria-valuemax')).toBe('0.2');
   });
 });

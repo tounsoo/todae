@@ -389,6 +389,7 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
               if (mode === 'auto') form.current?.requestSubmit();
             }}
           />
+          <Field.Increment />
         </Field.Root>
         {mode === 'formRoot' ? <ErrorMessage.Root /> : null}
       </Field.Group>
@@ -477,6 +478,105 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     await settle();
     expect(told).toEqual([8]);
     expect(sent).toEqual(['8']);
+  });
+
+  it('a product that submits from onValueChange: a step with no draft sends the new number, from a key and from a button', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} mode="auto" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await settle();
+    expect(told).toEqual([4]);
+    expect(sent).toEqual(['4']);
+    await userEvent.click(screen.getByRole('button', { name: /^Increase/ }));
+    await settle();
+    expect(told).toEqual([4, 5]);
+    expect(sent).toEqual(['4', '5']);
+  });
+
+  it('a product that submits from onValueChange: a held button sends each number once', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} mode="auto" initial={0} />);
+    const increase = screen.getByRole('button', { name: /^Increase/ });
+    const box = increase.getBoundingClientRect();
+    const point = { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2, button: 0, pointerId: 1, bubbles: true };
+    increase.dispatchEvent(new PointerEvent('pointerdown', point));
+    await waitFor(() => expect(told.length).toBeGreaterThan(2), { timeout: 3000 });
+    increase.dispatchEvent(new PointerEvent('pointerup', point));
+    await settle();
+    expect(told).toEqual(told.map((_, index) => index + 1));
+    expect(sent).toEqual(told.map(String));
+  });
+
+  it('sends the form when the commit takes the input out of the page', async () => {
+    const sent: Sent = [];
+    function Wizard() {
+      const [value, setValue] = useState<number | null>(3);
+      return (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(`${new FormData(event.currentTarget).get('quantity')}`);
+          }}
+        >
+          {value === 7 ? (
+            <p>Done</p>
+          ) : (
+            <Field.Root aria-label="Quantity" name="quantity">
+              <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+            </Field.Root>
+          )}
+        </form>
+      );
+    }
+    render(<Wizard />);
+    await userEvent.click(input());
+    await replace('7');
+    document.querySelector('form')!.requestSubmit();
+    await waitFor(() => expect(sent).toEqual(['null']));
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+  });
+
+  it('commits a typed text on a submit of a form inside a shadow root', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const container = document.createElement('div');
+    host.attachShadow({ mode: 'open' }).appendChild(container);
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    function Shadowed() {
+      const [value, setValue] = useState<number | null>(3);
+      return (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+          }}
+        >
+          <Field.Root aria-label="Quantity" name="quantity">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                told.push(next);
+                setValue(next);
+              }}
+            />
+          </Field.Root>
+        </form>
+      );
+    }
+    const { unmount } = render(<Shadowed />, { container });
+    const field = container.querySelector<HTMLInputElement>('[role=spinbutton]')!;
+    await userEvent.click(field);
+    await userEvent.keyboard('{Control>}a{/Control}9');
+    container.querySelector('form')!.requestSubmit();
+    await waitFor(() => expect(sent).toEqual(['9']));
+    expect(told).toEqual([9]);
+    unmount();
+    host.remove();
   });
 
   it('a native validating form: a cleared required text is not sent, and a submitter that turns validation off sends it', async () => {
