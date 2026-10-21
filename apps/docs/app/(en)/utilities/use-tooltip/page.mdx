@@ -8,6 +8,7 @@ A `+N` count chip and other non-button triggers use the hook directly. Mark a no
 
 ```tsx
 const tooltip = useTooltip();
+const { moreChips } = useStrings();
 
 <>
   <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>

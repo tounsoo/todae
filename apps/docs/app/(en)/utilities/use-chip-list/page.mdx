@@ -8,6 +8,7 @@ Put `listRef` on the wrapping list and render the measure row into `measureRef`.
 
 ```tsx
 const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, maxRows: 1 });
+const { moreChips } = useStrings();
 
 <div style={{ position: 'relative' }}>
   <div ref={listRef} role="list" aria-label="Tags" className="chips" style={{ visibility: measured ? undefined : 'hidden' }}>

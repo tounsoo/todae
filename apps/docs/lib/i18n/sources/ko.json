@@ -756,7 +756,7 @@
   },
   "utilities/use-chip-list": {
     "(top)": "c9de0d3dd8c7",
-    "# useChipList": "72945876a302",
+    "# useChipList": "70c79e6b0268",
     "## Accessible composition": "b4dfd443a9c5",
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
@@ -863,7 +863,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "e6ba96f9630e",
+    "# useTooltip": "01b4c07ef8fa",
     "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
