@@ -13,6 +13,7 @@ export {
 export {
   Avatar,
   type AvatarFallbackProps,
+  type AvatarGroupProps,
   type AvatarImageProps,
   type AvatarImageStatus,
   type AvatarRootProps,
