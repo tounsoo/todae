@@ -21,7 +21,8 @@ export const meta = {
       name: 'value',
       type: 'readonly K[]',
       required: false,
-      description: 'Controlled selection, in the order keys were selected. Defined means controlled.',
+      description:
+        "Controlled selection, in the order keys were selected. Defined means controlled. A change you don't take by the end of the task that made it, such as one you set in a transition, is dropped from the next change.",
     },
     {
       name: 'defaultValue',
