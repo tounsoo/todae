@@ -493,6 +493,90 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['10', '11', '12']);
   });
 
+  it('takes each of two quick picks answered late, in order, as an answer, moving nothing', () => {
+    function Late() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      const [asked, setAsked] = useState<DateRange[]>([]);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked[0]!)}>
+            answer first
+          </button>
+          <button type="button" onClick={() => setValue(asked[1]!)}>
+            answer second
+          </button>
+          <button type="button" onClick={() => setValue({ start: date('2027-01-05'), end: date('2027-01-08') })}>
+            other
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={(next) => setAsked((current) => [...current, next])}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(october(5));
+    fireEvent.click(october(8));
+    fireEvent.click(october(10));
+    fireEvent.click(october(12));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Tuesday, November 10, 2026'));
+    fireEvent.click(screen.getByRole('button', { name: 'answer first' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(selectedCells()).toEqual(['10']);
+    fireEvent.click(screen.getByRole('button', { name: 'answer second' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(selectedCells()).toEqual(['10']);
+    // Both are answered, so a value from outside moves the grid again.
+    fireEvent.click(screen.getByRole('button', { name: 'other' }));
+    expect(screen.getByText('January 2027')).toBeTruthy();
+    expect(selectedCells()).toEqual(['5', '6', '7', '8']);
+  });
+
+  it('forgets the picks no value has answered once another value arrives', () => {
+    function Late() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      const [asked, setAsked] = useState<DateRange | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked)}>
+            answer
+          </button>
+          <button type="button" onClick={() => setValue({ start: date('2027-01-05'), end: date('2027-01-08') })}>
+            other
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={setAsked}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(october(5));
+    fireEvent.click(october(8));
+    fireEvent.click(screen.getByRole('button', { name: 'other' }));
+    expect(screen.getByText('January 2027')).toBeTruthy();
+    // The pick of October is not answered by a value that comes after another one.
+    fireEvent.click(screen.getByRole('button', { name: 'answer' }));
+    expect(screen.getByText('October 2026')).toBeTruthy();
+  });
+
   it('takes a range equal to one a controlling parent turned down as its answer, moving nothing', () => {
     function Rejecting() {
       const [value, setValue] = useState<DateRange | null>(null);

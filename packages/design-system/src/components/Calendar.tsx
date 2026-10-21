@@ -274,20 +274,23 @@ function Root(rootProps: CalendarRootProps) {
   const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
   const [pending, setPending] = useState<Pending>(IDLE);
   const { anchor, hovered } = pending;
-  // The last range a pick reported, as ISO text, until another value arrives. A new value
-  // equal to it is the parent's answer to that pick, however late it comes: the grid stays
-  // where the person has since moved it, and a range started meanwhile stays pending.
-  const [reported, setReported] = useState<string | null>(null);
-  // Any other new value, or a mode change, drops what is pending, and a new value moves the
-  // grid to its start unless the Tab stop is on one of its ends, as a value typed beside
-  // Field.DatePicker does.
+  // The ranges picks reported that no value has answered yet, as ISO text, newest last and
+  // at most REPORTED_PICKS. A new value equal to one is the parent's answer to that pick,
+  // however late it comes: the grid stays where the person has since moved it, and a range
+  // started meanwhile stays pending. The answered pick and the older ones are dropped.
+  const [reported, setReported] = useState<string[]>([]);
+  // Any other new value, or a mode change, drops what is pending and the reports, and a new
+  // value moves the grid to its start unless the Tab stop is on one of its ends, as a value
+  // typed beside Field.DatePicker does.
   const [seen, setSeen] = useState({ mode, value });
   const valueChanged = !sameRange(value, seen.value);
   if (mode !== seen.mode || valueChanged) {
     setSeen({ mode, value });
-    const answer = mode === seen.mode && value !== null && rangeText(value) === reported;
-    if (!answer) {
-      if (reported !== null) setReported(null);
+    const answered = mode === seen.mode && value !== null ? reported.indexOf(rangeText(value)) : -1;
+    if (answered >= 0) {
+      setReported(reported.slice(answered + 1));
+    } else {
+      if (reported.length > 0) setReported([]);
       setPending(IDLE);
       if (valueChanged && value && !(focused && (focused.equals(value.start) || focused.equals(value.end)))) {
         setFocused(value.start);
@@ -382,7 +385,7 @@ function Root(rootProps: CalendarRootProps) {
       // Reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
       setPending(IDLE);
-      setReported(rangeText(next));
+      setReported((current) => [...current, rangeText(next)].slice(-REPORTED_PICKS));
       setValue(next);
       onValueChange?.(next);
     },
@@ -562,6 +565,9 @@ function Header({ className, ...props }: CalendarHeaderProps) {
     </div>
   );
 }
+
+// How many picks the calendar remembers while it waits for the parent to answer them.
+const REPORTED_PICKS = 8;
 
 const YEARS_PER_PAGE = 12;
 const YEARS_PER_ROW = 4;
