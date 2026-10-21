@@ -707,3 +707,61 @@ describe('customValidity and a product\'s own setCustomValidity', () => {
     expect(deep.validationMessage).toBe('Mine');
   });
 });
+
+describe('customValidity on a control that is barred from validation', () => {
+  it('is cleared when its fieldset is disabled as the rule goes, so the form submits once enabled again', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent<HTMLFormElement>) => event.preventDefault());
+    function Pick({ message, disabled }: { message: string | undefined; disabled: boolean }) {
+      return (
+        <SignUp onSubmit={onSubmit}>
+          <Fieldset.Root customValidity={message} disabled={disabled}>
+            <input aria-label="Deep" />
+          </Fieldset.Root>
+        </SignUp>
+      );
+    }
+    const { rerender } = await mount(<Pick message="Pick" disabled={false} />);
+    rerender(<Pick message={undefined} disabled />);
+    await settle();
+    rerender(<Pick message={undefined} disabled={false} />);
+    await settle();
+    expect((screen.getByLabelText('Deep') as HTMLInputElement).validity.customError).toBe(false);
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('is cleared on a disabled Field.Root control when the rule goes', async () => {
+    function Rule({ message, disabled }: { message: string | undefined; disabled: boolean }) {
+      return (
+        <Field.Root id="n" name="n" customValidity={message} disabled={disabled}>
+          <Field.TextInput aria-label="Deep" value="" onValueChange={() => undefined} />
+        </Field.Root>
+      );
+    }
+    const { rerender } = await mount(<Rule message="Too weak" disabled={false} />);
+    rerender(<Rule message={undefined} disabled />);
+    await settle();
+    rerender(<Rule message={undefined} disabled={false} />);
+    await settle();
+    expect((screen.getByLabelText('Deep') as HTMLInputElement).validity.customError).toBe(false);
+  });
+
+  it('leaves no message on a radio that was disabled when the rule moved off it', async () => {
+    function Plan({ firstDisabled, message }: { firstDisabled: boolean; message: string | undefined }) {
+      return (
+        <RadioGroup.Root aria-label="Plan" customValidity={message}>
+          <RadioGroup.Item value="a" disabled={firstDisabled}>A</RadioGroup.Item>
+          <RadioGroup.Item value="b">B</RadioGroup.Item>
+        </RadioGroup.Root>
+      );
+    }
+    const { rerender } = await mount(<Plan firstDisabled={false} message="Pick a plan." />);
+    rerender(<Plan firstDisabled message="Pick a plan." />);
+    await settle();
+    rerender(<Plan firstDisabled message={undefined} />);
+    await settle();
+    rerender(<Plan firstDisabled={false} message={undefined} />);
+    await settle();
+    for (const radio of screen.getAllByRole('radio') as HTMLInputElement[]) expect(radio.validity.customError).toBe(false);
+  });
+});

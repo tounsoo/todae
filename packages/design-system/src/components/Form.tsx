@@ -12,7 +12,6 @@ import {
   type SubmitEvent,
 } from 'react';
 import { useStrings } from '../providers/StringsProvider.js';
-import type { Strings } from '../providers/strings.js';
 import { useDomId } from './domId.js';
 import {
   FormContext,
@@ -153,19 +152,13 @@ function reduce(state: FormState, action: FormAction): FormState {
 
 /**
  * The first enabled control, in document order, that has a problem to fix: a
- * control in a scope only when it is the one the scope shows, else, with
- * `native`, a native problem of a control no scope reads.
+ * control in a scope only when it is the one its scope shows in `failed`, else,
+ * with `native`, a native problem of a control no scope reads.
  */
-function firstProblem(
-  form: HTMLFormElement,
-  errors: FormErrors | undefined,
-  dismissal: Dismissal,
-  strings: Strings,
-  native: boolean,
-): HTMLElement | undefined {
+function firstProblem(form: HTMLFormElement, failed: readonly SummaryEntry[], native: boolean): HTMLElement | undefined {
   const read = scopedControls(form);
   // Every scope speaks for its controls through the one it shows; a disabled one can't take focus, and the others stay quiet.
-  const shown = new Set<Element>(failingEntries(form, errors, dismissal, strings, native).map((entry) => entry.reading.carrier));
+  const shown = new Set<Element>(failed.map((entry) => entry.reading.carrier));
   return [...form.elements].find(
     (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
@@ -174,7 +167,11 @@ function firstProblem(
   );
 }
 
-/** Development only: an entry of `errors` that no scope can show says so, once. A name no control has yet gets one more task, since a control may mount just after the reply. */
+/**
+ * Development only: an entry of `errors` that no scope can show says so, once.
+ * A name no control has yet gets one more task, since a control may mount just
+ * after the reply; one that mounts later still is warned about, wrongly.
+ */
 function warnUnscoped(formId: string, form: HTMLFormElement, errors: FormErrors) {
   const check = (final: boolean) => {
     if (!form.isConnected) return;
@@ -208,6 +205,8 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
   // Whether a send is waiting for its reply, until the person edits, the form resets, or a reply arrives.
   const awaiting = useRef(false);
   const resetTimer = useRef<number | undefined>(undefined);
+  // Where focus goes when there is no summary, chosen with the list it follows.
+  const focusTarget = useRef<HTMLElement | undefined>(undefined);
   const formId = useDomId();
   const key = errorsKey(errors);
   // What `refresh` reads, as of the last commit: it is called from events and effects of other components.
@@ -237,13 +236,9 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh],
   );
 
-  // The summary if one is showing, else the control.
+  // The summary if one is showing, else the control picked where the problems were read.
   useLayoutEffect(() => {
-    if (state.focus === 0) return;
-    const form = formRef.current;
-    if (form) (summaryRef.current ?? firstProblem(form, errors, state.dismissal, strings, state.native))?.focus();
-    // Only a new request moves focus; the rest is read as it is now.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (state.focus !== 0) (summaryRef.current ?? focusTarget.current)?.focus();
   }, [state.focus]);
 
   // A reply is a commit whose `errors` differ in content from the commit before and have entries; the same content in a new object does not run this.
@@ -252,7 +247,9 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     if (!form || !awaiting.current || !keyHasErrors(key)) return;
     awaiting.current = false;
     // Only server errors: a reply doesn't reach for problems the person hasn't got to.
-    dispatch({ type: 'reply', failed: failingEntries(form, errors, state.dismissal, strings, false) });
+    const failed = failingEntries(form, errors, state.dismissal, strings, false);
+    focusTarget.current = firstProblem(form, failed, false);
+    dispatch({ type: 'reply', failed });
     // By now the form shows what it has.
     if (process.env.NODE_ENV !== 'production' && errors) warnUnscoped(formId, form, errors);
     // Only a change of content is a reply.
@@ -283,7 +280,9 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     if (!form.checkValidity()) {
       event.preventDefault();
       awaiting.current = false;
-      dispatch({ type: 'submit', failed: failingEntries(form, errors, NO_DISMISSAL, strings, true), focus: true });
+      const failed = failingEntries(form, errors, NO_DISMISSAL, strings, true);
+      focusTarget.current = firstProblem(form, failed, true);
+      dispatch({ type: 'submit', failed, focus: true });
       return;
     }
     awaiting.current = true;

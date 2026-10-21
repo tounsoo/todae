@@ -150,3 +150,25 @@ describe('Form in a browser', () => {
     await waitFor(() => expect(screen.queryByRole('group', { name: '1 problem to fix' })).toBeNull());
   });
 });
+
+describe('customValidity in a browser', () => {
+  function Rule({ rule }: { rule: boolean }) {
+    const [value, setValue] = useState('');
+    return (
+      <Field.Root id="code" name="code" customValidity={rule ? 'Too short' : undefined}>
+        <Field.TextInput aria-label="Code" required value={value} onValueChange={setValue} />
+      </Field.Root>
+    );
+  }
+
+  it('clears its message when the rule goes while a native flag also fails', async () => {
+    const { rerender } = render(<Rule rule />);
+    const code = screen.getByLabelText('Code') as HTMLInputElement;
+    expect(code.validity.customError).toBe(true);
+    rerender(<Rule rule={false} />);
+    expect(code.validity.customError).toBe(false);
+    await userEvent.type(code, 'abc');
+    expect(code.validity.valid).toBe(true);
+  });
+});
+

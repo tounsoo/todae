@@ -25,7 +25,10 @@ export function pickShown(
 ): { reading: Reading; error: FormFieldError } | null {
   for (const reading of readings) {
     const server = serverErrorFor(reading.name, errors, dismissal);
-    if (server !== undefined) return { reading, error: { kind: 'server', message: server } };
+    if (server === undefined) continue;
+    // The error is the name's: of the controls that share it (a radio group), the person can only reach an enabled one.
+    const reachable = reading.disabled ? (readings.find((other) => other.name === reading.name && !other.disabled) ?? reading) : reading;
+    return { reading: reachable, error: { kind: 'server', message: server } };
   }
   if (revealed) {
     for (const reading of readings) if (reading.native) return { reading, error: reading.native };

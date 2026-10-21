@@ -14,7 +14,12 @@ function settle(carrier: ValidityCarrier) {
   messages.sort(([a], [b]) => (a === b ? 0 : a.contains(b) ? 1 : -1));
   const winner = messages[0]?.[1] ?? '';
   // Look at the element, not at what was written: a product may have changed its message since.
-  const current = carrier.validity.customError ? carrier.validationMessage : '';
+  // A control barred from validation (disabled, readOnly) reports no message, so trust the record there.
+  const current = !carrier.validity.customError
+    ? ''
+    : carrier.willValidate
+      ? carrier.validationMessage
+      : (written.get(carrier) ?? carrier.validationMessage);
   if (winner) {
     if (current !== winner) carrier.setCustomValidity(winner);
     written.set(carrier, winner);

@@ -812,3 +812,30 @@ describe('a control disabled by state below its scope', () => {
     expect(screen.queryByTestId('summary')).toBeNull();
   });
 });
+
+describe('a server error on a radio group whose first option is disabled', () => {
+  function Plans({ errors }: { errors: FormErrors }) {
+    return (
+      <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary data-testid="summary" />
+        <Field.Group>
+          <RadioGroup.Root aria-label="Plan" name="plan">
+            <RadioGroup.Item value="a" disabled>A</RadioGroup.Item>
+            <RadioGroup.Item value="b">B</RadioGroup.Item>
+          </RadioGroup.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="submit">Send</button>
+      </Form.Root>
+    );
+  }
+
+  it('takes the summary row to the enabled option, which the person can reach', async () => {
+    const { rerender } = await mount(<Plans errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Plans errors={{ plan: 'Choose.' }} />);
+    await settle();
+    fireEvent.click(within(screen.getByTestId('summary')).getByRole('button', { name: 'Plan' }));
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'B' }));
+  });
+});
