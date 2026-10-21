@@ -47,7 +47,7 @@ function contains(outer: Entry, inner: Entry): boolean {
  * tooltip the person sees beside it closes first.
  */
 function select(enabled: readonly Entry[]): Entry | undefined {
-  const popups = enabled.filter((entry) => entry.popup);
+  const popups = enabled.filter((entry) => entry.popup && entry.element());
   return innermost(enabled.filter((entry) => entry.popup || popups.every((popup) => contains(popup, entry))));
 }
 

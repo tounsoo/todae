@@ -296,4 +296,23 @@ describe('useEscapeKey', () => {
     expect(stack).toHaveBeenCalledTimes(2);
     expect(around).not.toHaveBeenCalled();
   });
+
+  it('does not pass a layer over for a popup that has no element', () => {
+    function Element({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref, { popup: false });
+      return <div ref={ref} />;
+    }
+    const popup = vi.fn();
+    const stack = vi.fn();
+    render(
+      <>
+        <Layer onEscape={popup} />
+        <Element onEscape={stack} />
+      </>,
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(stack).toHaveBeenCalledTimes(1);
+    expect(popup).not.toHaveBeenCalled();
+  });
 });
