@@ -350,11 +350,12 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "176b63cd9839",
-    "## Overrides: CSS or ThemeProvider": "212a915c83e6",
+    "## A company resolver": "f27c86502824",
+    "## Overrides: CSS or ThemeProvider": "b6e445d0f5b0",
+    "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
     "## Wrapping a component": "60f88028be57",
-    "(section order)": "280102156fc8"
+    "(section order)": "e61ac1427c00"
   },
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
