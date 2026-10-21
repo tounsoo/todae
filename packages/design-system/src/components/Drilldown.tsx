@@ -62,7 +62,6 @@ export type DrilldownLabelProps = Omit<ComponentPropsWithRef<'span'>, 'children'
 
 type Stack = readonly string[];
 
-// The stack a slide leaves, and which way it goes.
 type Motion = { from: Stack; direction: DrilldownDirection };
 
 type MotionState = { shown: Stack; motion: Motion | null };
