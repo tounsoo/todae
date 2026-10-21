@@ -153,7 +153,7 @@ function Root({
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
   // The control the shell focuses is the field's one native control, when it has one.
-  useCustomValidity(() => {
+  useCustomValidity(shellRef, () => {
     const control = inputRef.current;
     return control && isValidityCarrier(control) ? control : null;
   }, customValidity);

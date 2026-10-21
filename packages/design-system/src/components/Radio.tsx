@@ -98,6 +98,7 @@ function RadioGroupRoot({
   const groupRef = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(groupRef, ref);
   useCustomValidity(
+    groupRef,
     () => [...(groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [])].find((radio) => radio.willValidate),
     customValidity,
   );

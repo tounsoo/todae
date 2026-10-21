@@ -4,7 +4,7 @@ import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fiel
 import { ValidationScopeContext } from './Form.context.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { cx, useComposedRefs } from './props.js';
-import { firstCarrier, scopeCarriers } from './Form.model.js';
+import { carriersIn } from './Form.model.js';
 import { useValidationScope } from './ValidationScope.js';
 import styles from './Fieldset.module.css';
 
@@ -51,10 +51,11 @@ function Root({
   const refs = useComposedRefs(fieldsetRef, ref);
   const scope = useValidationScope(fieldsetRef, { onChangeCapture, onFocus, onBlur }, { describesElement: true });
   useCustomValidity(
+    fieldsetRef,
     () => {
       const node = fieldsetRef.current;
       // Its own first validating control, else the first at any depth, whose error shows where that control's does.
-      return node ? (scopeCarriers(node)[0] ?? firstCarrier(node)) : null;
+      return node ? (carriersIn(node, { own: true })[0] ?? carriersIn(node, { own: false })[0]) : null;
     },
     customValidity,
     'Fieldset.Root',

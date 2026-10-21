@@ -384,7 +384,7 @@ describe('nested scopes', () => {
 });
 
 describe('outside a Form.Root', () => {
-  it('leaves Field.Group and Fieldset.Root as plain containers', () => {
+  it('marks Field.Group and Fieldset.Root, and nothing more', () => {
     render(
       <Fieldset.Root data-testid="set">
         <Fieldset.Legend>Pick</Fieldset.Legend>
@@ -395,8 +395,22 @@ describe('outside a Form.Root', () => {
         </Field.Group>
       </Fieldset.Root>,
     );
-    expect(screen.getByTestId('group').hasAttribute('data-todae-validation-scope')).toBe(false);
-    expect(screen.getByTestId('set').hasAttribute('data-todae-validation-scope')).toBe(false);
+    expect(screen.getByTestId('group').hasAttribute('data-todae-validation-scope')).toBe(true);
+    expect(screen.getByTestId('set').hasAttribute('data-todae-validation-scope')).toBe(true);
+    expect(screen.getByTestId('group').hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('puts customValidity on the fieldset\'s own first control, not one in a nested group, as in a Form', () => {
+    render(
+      <Fieldset.Root customValidity="Check the address.">
+        <Field.Group>
+          <input aria-label="Nested" />
+        </Field.Group>
+        <input aria-label="Own" />
+      </Fieldset.Root>,
+    );
+    expect((screen.getByLabelText('Own') as HTMLInputElement).validationMessage).toBe('Check the address.');
+    expect((screen.getByLabelText('Nested') as HTMLInputElement).validationMessage).toBe('');
   });
 
   it('keeps the handlers a caller gave Field.Group and Fieldset.Root', () => {
@@ -581,5 +595,62 @@ describe('invalid={false} on a control in a scope that shows', () => {
     expect(screen.getByText('This field is required')).toBeTruthy();
     expect(input().getAttribute('aria-invalid')).toBeNull();
     expect(input().getAttribute('aria-describedby')).toBeNull();
+  });
+});
+
+describe('customValidity from several owners of one control', () => {
+  it('keeps a field\'s message under a fieldset whose own is empty', async () => {
+    await mount(
+      <SignUp>
+        <Fieldset.Root customValidity="">
+          <Field.Group>
+            <Field.Root id="n" name="n" customValidity="Too weak">
+              <Field.TextInput aria-label="Password" value="x" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Fieldset.Root>
+      </SignUp>,
+    );
+    expect((screen.getByLabelText('Password') as HTMLInputElement).validationMessage).toBe('Too weak');
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('Too weak')).toBeTruthy();
+  });
+
+  it('takes the innermost non-empty message, and the next one out when it goes', async () => {
+    function Nested({ inner }: { inner: string }) {
+      return (
+        <Fieldset.Root customValidity="Outer">
+          <Fieldset.Root customValidity={inner}>
+            <input aria-label="Deep" />
+          </Fieldset.Root>
+        </Fieldset.Root>
+      );
+    }
+    const { rerender } = await mount(<Nested inner="Inner" />);
+    const deep = screen.getByLabelText('Deep') as HTMLInputElement;
+    expect(deep.validationMessage).toBe('Inner');
+    rerender(<Nested inner="" />);
+    expect(deep.validationMessage).toBe('Outer');
+  });
+
+  it('lets go of its message when its part unmounts', async () => {
+    function Maybe({ shown }: { shown: boolean }) {
+      return (
+        <Fieldset.Root customValidity="Outer">
+          {shown ? (
+            <Field.Root id="n" name="n" customValidity="Inner">
+              <Field.TextInput aria-label="Deep" value="" onValueChange={() => undefined} />
+            </Field.Root>
+          ) : null}
+          <input aria-label="Plain" />
+        </Fieldset.Root>
+      );
+    }
+    const { rerender } = await mount(<Maybe shown />);
+    // The fieldset's own first control is the Field.Root's input, so the part's message is the one in front.
+    expect((screen.getByLabelText('Deep') as HTMLInputElement).validationMessage).toBe('Inner');
+    rerender(<Maybe shown={false} />);
+    expect((screen.getByLabelText('Plain') as HTMLInputElement).validationMessage).toBe('Outer');
   });
 });

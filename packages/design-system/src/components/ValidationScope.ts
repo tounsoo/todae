@@ -32,8 +32,8 @@ type ScopeHandlers<E extends HTMLElement> = {
 export type ValidationScope<E extends HTMLElement> = {
   /** Null outside a Form.Root: the scope does nothing there. */
   value: ValidationScopeValue | null;
-  /** Spread on the scope's element. Empty outside a Form.Root. */
-  props: ScopeHandlers<E> & { 'data-todae-validation-scope'?: string };
+  /** Spread on the scope's element. Outside a Form.Root it is the marker alone. */
+  props: ScopeHandlers<E> & { 'data-todae-validation-scope': string };
   /** Whether the scope shows an error now. */
   invalid: boolean;
   /** The id the scope's controls list in `aria-describedby`: set while the error shows and an ErrorMessage.Root is there to hold it. */
@@ -73,6 +73,7 @@ export function useValidationScope<E extends HTMLElement>(
       if (sameReadings(read.current, next)) return;
       read.current = next;
       setReadings(next);
+      form.refresh();
     };
   });
 
@@ -103,10 +104,9 @@ export function useValidationScope<E extends HTMLElement>(
   const message = shown?.error.message;
   const error = useMemo<FormFieldError | null>(() => (kind !== undefined && message !== undefined ? { kind, message } : null), [kind, message]);
 
-  // The summary reads the page itself, so it only needs telling that what this scope shows changed, or that it is gone.
-  const bump = form?.bump;
-  useLayoutEffect(() => bump?.(), [bump, kind, message]);
-  useLayoutEffect(() => bump, [bump]);
+  // The page still has this scope's elements while its cleanup runs, so the summary reads once they are gone.
+  const refresh = form?.refresh;
+  useLayoutEffect(() => () => refresh && queueMicrotask(refresh), [refresh]);
 
   // After each commit of the scope: a value set with no event still changes validity.
   const on = form !== null;
@@ -129,7 +129,8 @@ export function useValidationScope<E extends HTMLElement>(
     [on, invalid, errorId, describesElement],
   );
 
-  if (!form) return { value: null, props: handlers, invalid: false, errorId: undefined, extend };
+  // The marker is always there: a control's own fieldset is a structural fact, in a Form or not.
+  if (!form) return { value: null, props: { ...handlers, [SCOPE_ATTRIBUTE]: id }, invalid: false, errorId: undefined, extend };
 
   const props: ValidationScope<E>['props'] = {
     [SCOPE_ATTRIBUTE]: id,

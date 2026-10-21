@@ -298,9 +298,22 @@ describe('a portaled element inside a Form.Root', () => {
     await act(async () => {
       fireEvent.reset(screen.getByTestId('inner'));
     });
-    // The consumer's handler hears every reset that bubbles; Todae's own bookkeeping is for the root's.
-    expect(onReset).toHaveBeenCalledTimes(1);
+    // Like onSubmit, the consumer's handler hears only its own form's reset.
+    expect(onReset).not.toHaveBeenCalled();
     expect(screen.getByText('Taken.')).toBeTruthy();
+  });
+
+  it('tells its own onReset about its own form\'s reset', async () => {
+    const onReset = vi.fn();
+    await mount(
+      <Form.Root data-testid="form" onReset={onReset}>
+        <EmailField />
+      </Form.Root>,
+    );
+    await act(async () => {
+      fireEvent.reset(screen.getByTestId('form'));
+    });
+    expect(onReset).toHaveBeenCalledTimes(1);
   });
 
   it('changes nothing in the root or its scope when a portaled input is edited', async () => {
@@ -448,7 +461,7 @@ describe('a native reset', () => {
     await act(async () => {
       fireEvent.change(plain, { target: { value: 'abc' } });
     });
-    // The browser clears the value in a task after the reset event, once the scopes have read the old one.
+    // The browser clears the value after the event's handlers return and before any timer, once the scopes have read the old one.
     setTimeout(() => {
       plain.value = '';
     });

@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
@@ -363,5 +363,188 @@ describe('without waiting for the scopes to read', () => {
       fireEvent.submit(screen.getByTestId('form'));
     });
     expect(document.activeElement).toBe(input());
+  });
+});
+
+describe('rows that follow the page', () => {
+  function Pair() {
+    // Plain inputs: nothing in React changes when they are edited, so only the scope's own reading can tell the summary.
+    return (
+      <SignUp>
+        <Form.Summary data-testid="summary" />
+        <Fieldset.Root data-testid="set">
+          <Fieldset.Legend>Contact</Fieldset.Legend>
+          <input id="a" aria-label="A" required />
+          <input id="b" aria-label="B" required />
+          <ErrorMessage.Root />
+        </Fieldset.Root>
+      </SignUp>
+    );
+  }
+
+  it('links a scope\'s row to the control that fails now, when the first is fixed', async () => {
+    await mount(<Pair />);
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByRole('link', { name: 'Contact' }).getAttribute('href')).toBe('#a');
+    await type(screen.getByLabelText('A'), 'x');
+    await settle();
+    expect(screen.getByRole('link', { name: 'Contact' }).getAttribute('href')).toBe('#b');
+  });
+
+  it('does not list a control again once it was fixed and broken after the attempt', async () => {
+    function Two() {
+      const [a, setA] = useState('');
+      return (
+        <SignUp>
+          <Form.Summary data-testid="summary" />
+          <Field.Group>
+            <Field.Root id="a" name="a">
+              <Field.TextInput aria-label="A" required value={a} onValueChange={setA} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Field.Group>
+            <Field.Root id="b" name="b">
+              <Field.TextInput aria-label="B" required value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </SignUp>
+      );
+    }
+    await mount(<Two />);
+    await submit(screen.getByTestId('form'));
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+    await type(screen.getByLabelText('A'), 'x');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    await type(screen.getByLabelText('A'), '');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link').getAttribute('href')).toBe('#b');
+    // The next attempt lists both again.
+    await submit(screen.getByTestId('form'));
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+  });
+});
+
+describe('a reply lists only server errors', () => {
+  function Draft({ errors }: { errors: FormErrors }) {
+    return (
+      <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary data-testid="summary" />
+        <EmailField />
+        <Field.Group>
+          <Field.Root id="nick" name="nick">
+            <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="submit" formNoValidate>
+          Save draft
+        </button>
+      </Form.Root>
+    );
+  }
+  const save = () =>
+    act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    });
+
+  it('leaves out a required field the person has not reached, in the list and in focus', async () => {
+    const { rerender } = await mount(<Draft errors={{}} />);
+    await save();
+    rerender(<Draft errors={{ nick: 'Taken.' }} />);
+    await settle();
+    const summary = screen.getByTestId('summary');
+    expect(document.activeElement).toBe(summary);
+    expect(summary.textContent).toContain('Taken.');
+    expect(summary.textContent).not.toContain('required');
+    expect(screen.queryByText('This field is required')).toBeNull();
+  });
+
+  it('focuses the first control with a server error when there is no summary', async () => {
+    function NoSummary({ errors }: { errors: FormErrors }) {
+      return (
+        <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+          <EmailField />
+          <Field.Group>
+            <Field.Root id="nick" name="nick">
+              <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <button type="submit" formNoValidate>
+            Save draft
+          </button>
+        </Form.Root>
+      );
+    }
+    const { rerender } = await mount(<NoSummary errors={{}} />);
+    await save();
+    rerender(<NoSummary errors={{ nick: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(screen.getByLabelText('Nick'));
+  });
+});
+
+describe('a server error on a disabled control', () => {
+  function Locked({ errors }: { errors: FormErrors }) {
+    return (
+      <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary data-testid="summary" />
+        <Field.Group>
+          <Field.Root id="plan" name="plan" disabled>
+            <Field.TextInput aria-label="Plan" value="pro" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <Field.Group>
+          <Field.Root id="nick" name="nick">
+            <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="submit">Send</button>
+      </Form.Root>
+    );
+  }
+
+  it('shows inline and in the summary, with a row that offers nothing to press', async () => {
+    const { rerender } = await mount(<Locked errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Locked errors={{ plan: 'Plan is locked.' }} />);
+    await settle();
+    const summary = screen.getByTestId('summary');
+    expect(summary.textContent).toContain('Plan is locked.');
+    expect(screen.getAllByText('Plan is locked.').length).toBeGreaterThan(1);
+    expect(within(summary).queryByRole('link')).toBeNull();
+    expect(within(summary).queryByRole('button')).toBeNull();
+    expect(within(summary).getByText('Plan')).toBeTruthy();
+  });
+
+  it('is skipped by the focus of a reply with no summary', async () => {
+    function Bare({ errors }: { errors: FormErrors }) {
+      return (
+        <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+          <Field.Group>
+            <Field.Root id="plan" name="plan" disabled>
+              <Field.TextInput aria-label="Plan" value="pro" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Field.Group>
+            <Field.Root id="nick" name="nick">
+              <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <button type="submit">Send</button>
+        </Form.Root>
+      );
+    }
+    const { rerender } = await mount(<Bare errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Bare errors={{ plan: 'Locked.', nick: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(screen.getByLabelText('Nick'));
   });
 });

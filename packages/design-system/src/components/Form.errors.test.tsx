@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useContext, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
@@ -224,6 +224,87 @@ describe('an error nothing can show', () => {
   it('does not warn for a control in a scope, or for an empty entry', async () => {
     const warn = warnings();
     await mount(<SignUp errors={{ email: 'Taken.', ghost: '' }} />);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('a dismissal lasts while the entry does', () => {
+  it('is forgotten when errors drops the name, so the same text shows again', async () => {
+    const { rerender } = await mount(<SignUp errors={{ email: 'Taken.' }} />);
+    await type(input(), 'ben@example.com');
+    expect(screen.queryByText('Taken.')).toBeNull();
+    // An availability check: clear while it runs, set when it answers.
+    rerender(<SignUp errors={{}} />);
+    await settle();
+    rerender(<SignUp errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(screen.getByText('Taken.')).toBeTruthy();
+  });
+
+  it('is kept for the same content in a new object', async () => {
+    const { rerender } = await mount(<SignUp errors={{ email: 'Taken.' }} />);
+    await type(input(), 'ben@example.com');
+    rerender(<SignUp errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(screen.queryByText('Taken.')).toBeNull();
+  });
+});
+
+describe('a reply while waiting', () => {
+  function Sending({ errors }: { errors: Record<string, string> }) {
+    return (
+      <SignUp errors={errors}>
+        <EmailField />
+        <input aria-label="Other" />
+      </SignUp>
+    );
+  }
+
+  it('is an identical retry when the product cleared errors on send', async () => {
+    const { rerender } = await mount(<Sending errors={{ email: 'Taken.' }} />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    // onSubmit clears errors and the request goes out.
+    rerender(<Sending errors={{}} />);
+    await settle();
+    screen.getByLabelText('Other').focus();
+    rerender(<Sending errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(screen.getByText('Taken.')).toBeTruthy();
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('is not an inline rebuild of the same content', async () => {
+    const { rerender } = await mount(<Sending errors={{ email: 'Taken.' }} />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    screen.getByLabelText('Other').focus();
+    rerender(<Sending errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(screen.getByLabelText('Other'));
+  });
+});
+
+describe('a warning for an error nothing can show', () => {
+  it('waits for a control that mounts a moment later', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ui = (late: boolean) => (
+      <SignUp errors={{ nick: 'Taken.' }}>
+        {late ? (
+          <Field.Group>
+            <Field.Root id="nick" name="nick">
+              <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        ) : null}
+      </SignUp>
+    );
+    // No task passes between the two renders.
+    const { rerender } = render(ui(false));
+    rerender(ui(true));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });

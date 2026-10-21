@@ -56,13 +56,13 @@ To word one field differently, give `ErrorMessage.Root` a function. It gets the 
 
 ## Submit
 
-`Form.Root` sets `noValidate`, so the browser draws no bubbles, and runs its own check before your `onSubmit`. A submit with an invalid control calls `preventDefault()`, skips your `onSubmit` and moves focus. Your `onSubmit` runs when every control is valid. A submit from a button with `formNoValidate`, such as "Save draft", skips the check as it does natively. It is a send to the server, not an attempt: it reveals nothing the person has not reached and leaves the summary's list alone, but it shows hidden server errors again and waits for a reply as a valid submit does. `requestSubmit()` goes through the same check.
+`Form.Root` sets `noValidate`, so the browser draws no bubbles, and runs its own check before your `onSubmit`. A submit with an invalid control calls `preventDefault()`, skips your `onSubmit` and moves focus. Your `onSubmit` runs when every control is valid. A submit from a button with `formNoValidate`, such as "Save draft", skips the check as it does natively. It is a send to the server, not an attempt: it reveals nothing the person has not reached and leaves the summary's list alone, but it shows hidden server errors again and waits for a reply as a valid submit does. `requestSubmit()` goes through the same check. Your `onReset` hears only this form's reset, as `onSubmit` hears only its submit; a form portaled inside it is its own.
 
 Focus goes to `Form.Summary` if one is showing, else to the first invalid control in the page, scrolled into view.
 
 ## Summary
 
-`Form.Summary` lists what failed at the last submit, one link per scope with its label and message, or a button for a control with no `id` to link to. It takes focus on a failed submit, so a screen reader hears the count and the list, and a link moves focus to its control. A fixed control drops off the list, and the summary renders nothing before a failed submit or when none is left. A function child replaces the list.
+`Form.Summary` lists what failed at the last submit, one link per scope with its label and message, a button for a control with no `id` to link to, or plain text for a disabled control, which can't take focus. It takes focus on a failed submit, so a screen reader hears the count and the list, and a link moves focus to its control. A fixed control drops off the list, and the summary renders nothing before a failed submit or when none is left. A function child replaces the list.
 
 ```tsx
 <Form.Summary title="Check these fields">
@@ -83,7 +83,7 @@ Focus goes to `Form.Summary` if one is showing, else to the first invalid contro
 
 ## Server errors
 
-Errors you find yourself, such as a server's reply, go in `errors`, keyed by a control's `name`. Todae does not write to it.
+Errors you find yourself, such as a server's reply, go in `errors`, keyed by a control's `name`. Todae never writes to it: clear `errors` when you send, in `onSubmit`, and set it when the reply comes.
 
 ```tsx
 const [errors, setErrors] = useState<FormErrors>({});
@@ -92,6 +92,7 @@ const [errors, setErrors] = useState<FormErrors>({});
   errors={errors}
   onSubmit={async (event) => {
     event.preventDefault();
+    setErrors({});
     setErrors(await createAccount(new FormData(event.currentTarget)));
   }}
 >
@@ -99,11 +100,13 @@ const [errors, setErrors] = useState<FormErrors>({});
 </Form.Root>
 ```
 
-A server error shows at once and wins over a native problem in what is shown, since the server knows what the browser can't. It does not block a submit. An edit to a control hides its entry until the next submit, or until its text for that name changes, so the same text shows again after another failed submit. A reset hides every current entry. A server error shows for a disabled or read-only control too. When `errors` with a different content arrives after a valid submit and before any edit, focus goes to the summary or the first control with a server error. The same errors passed again in a new object, or an empty `errors`, are not a reply.
+A server error shows at once and wins over a native problem in what is shown, since the server knows what the browser can't. It does not block a submit. An edit to a control hides its entry until the next submit, or until `errors` drops that name or changes its text. Todae forgets a hidden entry as soon as it leaves `errors`, so a check that clears `errors` and then sets "Taken." again shows it again. A reset hides every current entry. A server error shows for a disabled or read-only control too, but its row in the summary is plain text, with nothing to press, and focus skips the control.
+
+After a send, a reply is a commit whose `errors` content differs from the commit before it and has entries. Clearing and then setting the same text counts, since the clear is a commit of its own; the same content rebuilt in a new object does not. A reply moves focus to the summary or the first enabled control with a server error, and the summary lists only server errors, never a native problem the person has not reached. An edit, a reset or a failed submit ends the wait.
 
 ## Rules the browser can't check
 
-`customValidity` on `Field.Root`, `Fieldset.Root`, `Checkbox.Root` and `RadioGroup.Root` sets a message with the browser's `setCustomValidity`, so it blocks a submit and follows the timing above. An empty string means the rule holds. On a `Field.Root` it goes to the field's control, on a `Fieldset.Root` to the first control of its own that takes part in validation, or, when all its controls sit in nested groups, to the first one at any depth, whose message then shows where that control's error shows, and on a `RadioGroup.Root` to its first radio that does. It works without a `Form.Root` too, as the native API.
+`customValidity` on `Field.Root`, `Fieldset.Root`, `Checkbox.Root` and `RadioGroup.Root` sets a message with the browser's `setCustomValidity`, so it blocks a submit and follows the timing above. An empty string means the rule holds. On a `Field.Root` it goes to the field's control, on a `Fieldset.Root` to the first control of its own that takes part in validation, or, when all its controls sit in nested groups, to the first one at any depth, whose message then shows where that control's error shows, and on a `RadioGroup.Root` to its first radio that does. Controls that share one element do not clobber each other: the element gets the first non-empty message, from its own part, then each fieldset outward, so a `Fieldset.Root` with an empty `customValidity` leaves a nested field's message alone. It works without a `Form.Root` too, as the native API, and picks the same control.
 
 <Example block>
   <FormRule />

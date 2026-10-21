@@ -50,27 +50,16 @@ export function sameReadings(a: readonly Reading[], b: readonly Reading[]): bool
   );
 }
 
-/** The controls whose nearest scope is `scope`: not those of a scope inside it. */
-function ownControls(scope: Element): ValidityCarrier[] {
-  return [...scope.querySelectorAll('input, select, textarea')].filter(
-    (node): node is ValidityCarrier => isValidityCarrier(node) && node.closest(SCOPE_SELECTOR) === scope,
-  );
-}
-
-/** The controls that take part in validation, whose native problems the scope shows. */
-export function scopeCarriers(scope: Element): ValidityCarrier[] {
-  return ownControls(scope).filter((node) => node.willValidate);
-}
-
-/** Every named control, validating or not, since a server error is for a name. */
-export function scopeControls(scope: Element): ValidityCarrier[] {
-  return ownControls(scope).filter((node) => node.willValidate || node.name);
-}
-
-/** The first control at any depth inside `root` that takes part in validation. */
-export function firstCarrier(root: Element): ValidityCarrier | undefined {
-  return [...root.querySelectorAll('input, select, textarea')].find(
-    (node): node is ValidityCarrier => isValidityCarrier(node) && node.willValidate,
+/**
+ * The form controls inside `root`. `own` keeps those whose nearest scope is
+ * `root`, not those of a scope inside it. A control takes part when it
+ * validates, or, with `named`, when it has a name, since a server error is for
+ * a name.
+ */
+export function carriersIn(root: Element, { own, named = false }: { own: boolean; named?: boolean }): ValidityCarrier[] {
+  return [...root.querySelectorAll('input, select, textarea')].filter(
+    (node): node is ValidityCarrier =>
+      isValidityCarrier(node) && (node.willValidate || (named && Boolean(node.name))) && (!own || node.closest(SCOPE_SELECTOR) === root),
   );
 }
 
@@ -83,7 +72,7 @@ export function errorsKey(errors: FormErrors | undefined): string {
   return JSON.stringify(entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 }
 
-export const hasEntries = (key: string) => key !== EMPTY_KEY;
+export const keyHasErrors = (key: string) => key !== EMPTY_KEY;
 
 function textOf(ids: string | null, from: Element): string {
   return (ids ?? '')
@@ -107,7 +96,7 @@ export function labelOf(carrier: ValidityCarrier, scope: Element): string {
 
 /** What a scope's controls say now. */
 export function readScope(scope: Element, strings: Strings): Reading[] {
-  return scopeControls(scope).map((carrier) => ({
+  return carriersIn(scope, { own: true, named: true }).map((carrier) => ({
     carrier,
     name: carrier.name,
     native: describeValidity(carrier, strings),
@@ -116,23 +105,23 @@ export function readScope(scope: Element, strings: Strings): Reading[] {
 }
 
 /**
- * The scopes of a form that show an error with every scope revealed, read
- * from the page itself, in document order of their controls. With `only`, just
- * those scopes.
+ * The scopes of a form that show an error, read from the page itself, in
+ * document order of their controls. `native` says whether a control's own
+ * problem counts, or only a server error.
  */
 export function failingEntries(
   form: Element,
   errors: FormErrors | undefined,
   dismissal: Dismissal,
   strings: Strings,
-  only?: ReadonlySet<string>,
+  native: boolean,
 ): SummaryEntry[] {
   const entries: SummaryEntry[] = [];
   for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) {
-    const scopeId = scope.getAttribute(SCOPE_ATTRIBUTE) ?? '';
-    if (only && !only.has(scopeId)) continue;
-    const shown = pickShown(readScope(scope, strings), errors, dismissal, true);
-    if (shown) entries.push({ scopeId, error: shown.error, label: shown.reading.label, carrier: shown.reading.carrier });
+    const shown = pickShown(readScope(scope, strings), errors, dismissal, native);
+    if (shown) {
+      entries.push({ scopeId: scope.getAttribute(SCOPE_ATTRIBUTE) ?? '', error: shown.error, label: shown.reading.label, carrier: shown.reading.carrier });
+    }
   }
   return entries.sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 }

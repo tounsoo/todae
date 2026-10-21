@@ -66,7 +66,7 @@ export function SelectionControl({
   const { disabled, invalid, errorId } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   const inputRef = useRef<HTMLInputElement>(null);
   const refs = useComposedRefs(inputRef, ref);
-  useCustomValidity(() => inputRef.current, customValidity);
+  useCustomValidity(inputRef, () => inputRef.current, customValidity);
   useRevalidate();
   const { check } = useGlyphs();
   return (

@@ -10,7 +10,7 @@ export const meta = {
       type: 'Readonly<Record<string, string>>',
       required: false,
       description:
-        'Problems you found, such as a server reply, keyed by a control name. They show at once in place of the control\'s native problem and do not block a submit. An edit to a control hides its entry until the next submit or until its text for that name changes.',
+        'Problems you found, such as a server reply, keyed by a control name. Todae never writes it: clear it when you send, in onSubmit, and set it when the reply comes. Entries show at once in place of the control\'s native problem and do not block a submit. An edit to a control hides its entry until the next submit, or until errors drops that name or changes its text. After a send, a reply is a commit whose content differs from the commit before and has entries (clear-then-set counts, a rebuild of the same content does not); it moves focus to the summary or the first enabled control with a server error and lists only server errors.',
     },
     {
       name: 'onSubmit',
@@ -23,7 +23,7 @@ export const meta = {
       name: 'onReset',
       type: 'React.FormEventHandler<HTMLFormElement>',
       required: false,
-      description: 'Runs on reset. A reset hides every shown problem again.',
+      description: 'Runs on this form\'s reset, not a portaled form\'s, as onSubmit does. A reset hides every shown problem again.',
     },
     {
       name: 'children',
