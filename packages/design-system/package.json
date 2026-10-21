@@ -112,6 +112,10 @@
       "types": "./dist/server/code.d.ts",
       "import": "./dist/code.js"
     },
+    "./code-block": {
+      "types": "./dist/server/code-block.d.ts",
+      "import": "./dist/code-block.js"
+    },
     "./kbd": {
       "types": "./dist/server/kbd.d.ts",
       "import": "./dist/kbd.js"

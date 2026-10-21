@@ -399,7 +399,7 @@
       "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 StringsProvider의 moreChipsPanel 문자열이며, 영어로는 {n} more chips(1개일 때 1 more chip)입니다."
     }
   },
-  "Code.Block": {
+  "CodeBlock.Root": {
     "tabIndex": {
       "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
       "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."

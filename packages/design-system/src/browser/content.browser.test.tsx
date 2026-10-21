@@ -12,6 +12,7 @@ import {
   Card,
   Checkbox,
   Code,
+  CodeBlock,
   Disclosure,
   ErrorMessage,
   Field,
@@ -154,9 +155,9 @@ function Gallery() {
         </Kbd.Root>{' '}
         to run <Code.Root>open()</Code.Root>.
       </p>
-      <Code.Block tabIndex={0} role="region" aria-label="Example code">
+      <CodeBlock.Root tabIndex={0} role="region" aria-label="Example code">
         <code>{'const plan = await getPlan();'}</code>
-      </Code.Block>
+      </CodeBlock.Root>
       <VisuallyHidden.Root focusable>
         <a href="#gallery-end">Skip to content</a>
       </VisuallyHidden.Root>
@@ -566,12 +567,12 @@ describe('content parts in a browser', () => {
         <Link.Root href="#x" data-testid="link">
           <Code.Root data-testid="linked">x</Code.Root>
         </Link.Root>
-        <Code.Block data-testid="block">
+        <CodeBlock.Root data-testid="block">
           <Code.Root data-testid="nested">x</Code.Root>
-        </Code.Block>
-        <Code.Block>
+        </CodeBlock.Root>
+        <CodeBlock.Root>
           <code data-testid="plain-nested">x</code>
-        </Code.Block>
+        </CodeBlock.Root>
       </Themed>,
     );
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
@@ -776,10 +777,10 @@ describe('Prose.Root in a browser', () => {
     render(
       <main data-appearance="light" data-density="compact">
         <Prose.Root data-testid="root">
-          <Code.Block data-testid="first">code</Code.Block>
+          <CodeBlock.Root data-testid="first">code</CodeBlock.Root>
           <p data-testid="after-code">Text</p>
           <Separator.Root data-testid="rule" />
-          <Code.Block data-testid="last">code</Code.Block>
+          <CodeBlock.Root data-testid="last">code</CodeBlock.Root>
         </Prose.Root>
       </main>,
     );

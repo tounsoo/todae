@@ -12510,7 +12510,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.block.fg",
@@ -12524,7 +12524,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.block.leading",
@@ -12538,7 +12538,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.block.padding",
@@ -12552,7 +12552,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.block.radius",
@@ -12566,7 +12566,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.font.family",
@@ -12580,7 +12580,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.font.scale",
@@ -12594,7 +12594,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.padding.x",
@@ -12608,7 +12608,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.padding.y",
@@ -12622,7 +12622,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.radius",
@@ -12636,7 +12636,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "code.tint",
@@ -12650,7 +12650,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Code.Root: inline code and code blocks, tinted from the text color."
+      "description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens."
     },
     {
       "path": "kbd.bg",

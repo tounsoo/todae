@@ -69,9 +69,10 @@ describe('native element component styles', () => {
     // The tint points into the opacity scale: `#/opacity/<n>/$value`.
     const step = tokens.code.tint.$value.$ref.match(/^#\/opacity\/(\d+)\/\$value$/)?.[1];
     expect(core.opacity[step].$value).toBeLessThanOrEqual(0.15);
-    expect(rule(code, '.block')).toContain('color: var(--todae-code-block-fg);');
-    // Code in a block drops its box, whether it is a Code.Root or a plain code.
-    expect(code.indexOf('.block code {')).toBeGreaterThan(code.indexOf('.root {'));
+    const block = sheet('CodeBlock');
+    expect(rule(block, '.root')).toContain('color: var(--todae-code-block-fg);');
+    // Code in a block drops its box, whether it is a Code.Root or a plain code; the descendant selector outranks Code.Root's class.
+    expect(rule(block, '.root code')).toContain('background: none;');
   });
 
   it('draw a shortcut or echoed input as plain text around its key caps', () => {

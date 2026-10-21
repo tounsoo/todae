@@ -1,6 +1,6 @@
 {
   "code": {
-    "$description": "Code.Root: inline code and code blocks, tinted from the text color.",
+    "$description": "Code.Root: inline code, tinted from the text color. CodeBlock.Root reads code.block and the shared font tokens.",
     "tint": { "$type": "number", "$value": { "$ref": "#/opacity/10/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {

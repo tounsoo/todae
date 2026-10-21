@@ -120,12 +120,12 @@
   },
   "code": {
     "(top)": "f1eb2a9590ae",
-    "# Code and Kbd": "a898e281fecc",
-    "## Code": "f86f6c8749c6",
+    "# Code and Kbd": "7a928f5103b0",
+    "## Code": "faabd5a7b533",
     "## Kbd": "868d798a03bf",
-    "## Accessible composition": "979fbd1960d5",
+    "## Accessible composition": "f497b0d99225",
     "## When to use": "2d81a4d8f4de",
-    "## Props": "d269d46cd0cc",
+    "## Props": "7cb899518e8d",
     "(section order)": "809b0e250585"
   },
   "color-picker": {
@@ -502,9 +502,9 @@
   "prose": {
     "(top)": "3b30d99936ef",
     "# Prose": "694aeebda72e",
-    "## Spacing": "5fc9e64dbe15",
+    "## Spacing": "d473ef50d913",
     "## Where the styles stop": "0454e788cf8f",
-    "## Map markdown onto Todae": "20f309de6089",
+    "## Map markdown onto Todae": "926fc809af39",
     "## Accessible composition": "ead52f9648b2",
     "## When to use": "4a1c3e03570d",
     "## Props": "7fd923db90b6",

@@ -28,6 +28,7 @@ const entries = {
   skeleton: src('server/skeleton.ts'),
   slider: src('server/slider.ts'),
   code: src('server/code.ts'),
+  'code-block': src('server/code-block.ts'),
   kbd: src('server/kbd.ts'),
   'visually-hidden': src('server/visually-hidden.ts'),
 };

@@ -1,4 +1,5 @@
 import { Code } from '@tounsoo/todae/code';
+import { CodeBlock } from '@tounsoo/todae/code-block';
 import { Disclosure } from '@tounsoo/todae/disclosure';
 import { Kbd } from '@tounsoo/todae/kbd';
 import { Link } from '@tounsoo/todae/link';
@@ -150,9 +151,9 @@ export function CodeInText() {
       <Text.Root>
         Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
       </Text.Root>
-      <Code.Block tabIndex={0} role="region" aria-label="Example code">
+      <CodeBlock.Root tabIndex={0} role="region" aria-label="Example code">
         <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
-      </Code.Block>
+      </CodeBlock.Root>
     </div>
   );
 }

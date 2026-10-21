@@ -12,25 +12,4 @@
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
-
-  /* A block with its own colors that scrolls sideways. */
-  .block {
-    padding: var(--todae-code-block-padding);
-    border-radius: var(--todae-code-block-radius);
-    background: var(--todae-code-block-bg);
-    color: var(--todae-code-block-fg);
-    font-family: var(--todae-code-font-family);
-    font-size: calc(1em * var(--todae-code-font-scale));
-    line-height: var(--todae-code-block-leading);
-    overflow-x: auto;
-  }
-
-  /* Code inside a block drops its own box, whether it is a Code.Root or a plain code. */
-  .block code {
-    padding: 0;
-    border-radius: 0;
-    background: none;
-    font-family: inherit;
-    font-size: inherit;
-  }
 }

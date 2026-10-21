@@ -1,13 +1,13 @@
 'use client';
 
-import { Code } from '@tounsoo/todae/code';
+import { CodeBlock } from '@tounsoo/todae/code-block';
 import type { ComponentProps } from 'react';
 import { ScrollRegion } from './ScrollRegion';
 
 export function DocsPre(props: ComponentProps<'pre'>) {
   return (
     <ScrollRegion kind="code" className="docs-pre">
-      <Code.Block {...props} />
+      <CodeBlock.Root {...props} />
     </ScrollRegion>
   );
 }

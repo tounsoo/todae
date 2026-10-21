@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Code.Block',
+  name: 'CodeBlock.Root',
   description: 'A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.',
   props: [
     {

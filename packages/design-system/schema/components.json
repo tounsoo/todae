@@ -855,7 +855,19 @@
       ]
     },
     {
-      "name": "Code.Block",
+      "name": "Code.Root",
+      "description": "A native code styled from the code tokens: inline, in the text color around it, on a box tinted from that color. Takes native code attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The code."
+        }
+      ]
+    },
+    {
+      "name": "CodeBlock.Root",
       "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.",
       "props": [
         {
@@ -869,18 +881,6 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "The code, usually in a code element, which drops its own box here."
-        }
-      ]
-    },
-    {
-      "name": "Code.Root",
-      "description": "A native code styled from the code tokens: inline, in the text color around it, on a box tinted from that color. Takes native code attributes.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "The code."
         }
       ]
     },
