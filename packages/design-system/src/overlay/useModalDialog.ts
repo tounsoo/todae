@@ -75,7 +75,7 @@ export function useModalDialog({
       reshowHeldInside(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
-      if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
+      if (process.env.NODE_ENV !== 'production' && !el.checkVisibility()) {
         console.error(
           'Todae: a modal <dialog> opened inside a hidden container, so the page is inert and nothing shows. Render it outside display:none ancestors such as closed popovers, tabs or <details>.',
         );

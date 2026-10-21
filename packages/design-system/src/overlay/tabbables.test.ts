@@ -4,6 +4,7 @@ import { firstTabbable, getTabbables, TOAST_HOST_ATTRIBUTE } from './tabbables.j
 describe('getTabbables', () => {
   it('skips toasts moved into the root, wherever they sit among its own content', () => {
     const root = document.createElement('dialog');
+    root.open = true;
     root.innerHTML = `<button id="own1"></button><div ${TOAST_HOST_ATTRIBUTE}><button id="toast"></button></div><button id="own2"></button>`;
     document.body.append(root);
     expect(getTabbables(root).map((el) => el.id)).toEqual(['own1', 'own2']);
