@@ -6,6 +6,7 @@ import { Button } from '../components/Button.js';
 import { Dialog, type DialogCloseReason } from '../components/Dialog.js';
 import { Drawer } from '../components/Drawer.js';
 import { Drilldown, type DrilldownChangeReason } from '../components/Drilldown.js';
+import { Menu } from '../components/Menu.js';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
@@ -31,12 +32,16 @@ function SettingsDialog({
   dir,
   defaultValue = ['settings'],
   dismissOnEscape,
+  inHeader,
+  inAccount,
 }: {
   onClose?: (reason: DialogCloseReason) => void;
   onValueChange?: (value: readonly string[], reason: DrilldownChangeReason) => void;
   dir?: 'rtl';
   defaultValue?: readonly string[];
   dismissOnEscape?: boolean;
+  inHeader?: ReactNode;
+  inAccount?: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
   return (
@@ -55,6 +60,7 @@ function SettingsDialog({
             <Dialog.Title>
               <Drilldown.Label />
             </Dialog.Title>
+            {inHeader}
             <Dialog.Close />
           </Dialog.Header>
           <Dialog.Body>
@@ -72,6 +78,7 @@ function SettingsDialog({
                 <Drilldown.Trigger value="email" variant="ghost">
                   Email
                 </Drilldown.Trigger>
+                {inAccount}
               </Drilldown.View>
               <Drilldown.View value="email" label="Email">
                 <input aria-label="Address" />
@@ -250,6 +257,7 @@ describe('Drilldown in a browser', () => {
   it('walks back on close requests sent one after another', async () => {
     const onValueChange = vi.fn();
     await openDialog(<SettingsDialog defaultValue={['settings', 'account', 'email']} onValueChange={onValueChange} />);
+    await focusInView('Address');
     const closes = vi.fn();
     dialog().addEventListener('close', closes);
     dialog().requestClose();
@@ -383,29 +391,8 @@ describe('Drilldown in a browser', () => {
 
   it('goes back on Escape in a Popover before the popover closes', async () => {
     const onValueChange = vi.fn();
-    function InPopover({ defaultValue }: { defaultValue: readonly string[] }) {
-      const popover = usePopover();
-      return (
-        <Themed>
-          <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
-          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
-            <Drilldown.Root defaultValue={defaultValue} onValueChange={onValueChange}>
-              <Drilldown.Back />
-              <Drilldown.Viewport data-testid="viewport">
-                <Drilldown.View value="filters" label="Filters">
-                  <Drilldown.Trigger value="brand">Brand</Drilldown.Trigger>
-                </Drilldown.View>
-                <Drilldown.View value="brand" label="Brand">
-                  <input aria-label="Search brands" />
-                </Drilldown.View>
-              </Drilldown.Viewport>
-            </Drilldown.Root>
-          </Popover.Root>
-        </Themed>
-      );
-    }
     for (const defaultValue of [['filters'], ['filters', 'brand']]) {
-      render(<InPopover defaultValue={defaultValue} />);
+      render(<InPopover defaultValue={defaultValue} onValueChange={onValueChange} />);
       const panel = document.querySelector<HTMLElement>('[popover]')!;
       await userEvent.click(screen.getByRole('button', { name: 'Filters' }));
       await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
@@ -432,6 +419,88 @@ describe('Drilldown in a browser', () => {
       expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' }));
     } finally {
       await emulateMedia([]);
+    }
+  });
+
+  it('lets a Menu open in a view take a close request before the stack goes back', async () => {
+    const onValueChange = vi.fn();
+    const onClose = vi.fn();
+    await openDialog(
+      <SettingsDialog
+        defaultValue={['settings', 'account']}
+        onValueChange={onValueChange}
+        onClose={onClose}
+        inAccount={
+          <Menu.Root>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        }
+      />,
+    );
+    await focusInView('Display name');
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    const menu = await screen.findByRole('menu');
+    await waitFor(() => expect(menu.matches(':popover-open')).toBe(true));
+    dialog().requestClose();
+    await waitFor(() => expect(menu.matches(':popover-open')).toBe(false));
+    expect(onValueChange).not.toHaveBeenCalled();
+    dialog().requestClose();
+    await waitFor(() => expect(onValueChange).toHaveBeenCalledWith(['settings'], 'escape'));
+    expect(dialog().open).toBe(true);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('gives Escape and close requests to a Menu open in the header before the stack goes back', async () => {
+    const onValueChange = vi.fn();
+    const header = (
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>More</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Help</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>
+    );
+    for (const close of ['key', 'request'] as const) {
+      await openDialog(<SettingsDialog defaultValue={['settings', 'account', 'email']} onValueChange={onValueChange} inHeader={header} />);
+      const menu = await screen.findByRole('menu');
+      await waitFor(() => expect(menu.matches(':popover-open')).toBe(true));
+      screen.getByRole('menuitem', { name: 'Help' }).focus();
+      await waitFor(() => expect(document.querySelector('[role="tooltip"]:popover-open')).toBeNull());
+      if (close === 'key') await userEvent.keyboard('{Escape}');
+      else dialog().requestClose();
+      await waitFor(() => expect(menu.matches(':popover-open')).toBe(false));
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(view('Email').hidden).toBe(false);
+      cleanupAll();
+    }
+  });
+
+  it('goes back on a close request Chromium does not let the page cancel, and shows the dialog again', async () => {
+    for (const dismissOnEscape of [true, false]) {
+      const onClose = vi.fn();
+      const onValueChange = vi.fn();
+      await openDialog(
+        <SettingsDialog
+          defaultValue={['settings', 'account', 'email']}
+          dismissOnEscape={dismissOnEscape}
+          onClose={onClose}
+          onValueChange={onValueChange}
+        />,
+      );
+      await focusInView('Address');
+      // What Chromium does with a close request past the page's activation:
+      // an uncancelable cancel, then it closes the dialog itself.
+      dialog().dispatchEvent(new Event('cancel', { cancelable: false }));
+      dialog().close();
+      await waitFor(() => expect(dialog().matches(':modal')).toBe(true));
+      expect(onValueChange.mock.calls).toEqual([[['settings', 'account'], 'escape']]);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(dialog().open).toBe(true);
+      expect(onClose).not.toHaveBeenCalled();
+      cleanupAll();
     }
   });
 
@@ -540,6 +609,34 @@ describe('Drilldown in a browser', () => {
     }
   });
 });
+
+function InPopover({
+  defaultValue,
+  onValueChange,
+}: {
+  defaultValue: readonly string[];
+  onValueChange?: (value: readonly string[], reason: DrilldownChangeReason) => void;
+}) {
+  const popover = usePopover();
+  return (
+    <Themed>
+      <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
+        <Drilldown.Root defaultValue={defaultValue} onValueChange={onValueChange}>
+          <Drilldown.Back />
+          <Drilldown.Viewport data-testid="viewport">
+            <Drilldown.View value="filters" label="Filters">
+              <Drilldown.Trigger value="brand">Brand</Drilldown.Trigger>
+            </Drilldown.View>
+            <Drilldown.View value="brand" label="Brand">
+              <input aria-label="Search brands" />
+            </Drilldown.View>
+          </Drilldown.Viewport>
+        </Drilldown.Root>
+      </Popover.Root>
+    </Themed>
+  );
+}
 
 function cleanupAll() {
   cleanup();

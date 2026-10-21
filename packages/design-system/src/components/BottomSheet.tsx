@@ -283,7 +283,7 @@ function BottomSheetRoot({
   // A modal <dialog> puts the sheet in the top layer, makes the rest of the
   // page inert and keeps focus inside, so no portal or focus trap is needed.
   // closedby="none" turns Escape off natively when dismissOnEscape is false.
-  const { closeOnFormSubmit, modal, closedby } = useModalDialog({
+  const { closeOnFormSubmit, closedby } = useModalDialog({
     dialogRef: sheetRef,
     node: sheetNode,
     present,
@@ -365,7 +365,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        <ModalChildren modal={modal}>{children}</ModalChildren>
+        <ModalChildren present={present}>{children}</ModalChildren>
       </dialog>
     </SheetContext.Provider>
   );

@@ -15,7 +15,7 @@ import {
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
-import { useModalContext } from '../overlay/modalContext.js';
+import { useModalPresent } from '../overlay/modalContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
@@ -207,7 +207,6 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const backRef = useRef<HTMLButtonElement | null>(null);
-  const modal = useModalContext();
 
   const push = useCallback(
     (next: string, trigger: HTMLElement) => {
@@ -293,7 +292,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
 
   // An uncontrolled stack starts over each time its modal opens. Dialog and
   // Drawer keep their content mounted while closed.
-  const present = modal?.present;
+  const present = useModalPresent();
   const controlled = value !== undefined;
   useLayoutEffect(() => {
     if (present !== false || controlled || sameStack(stack, defaultValue)) return;
@@ -303,32 +302,21 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     dispatch({ type: 'reset', stack: defaultValue });
   }, [present, controlled, defaultValue, setStack, stack]);
 
-  // Escape joins the overlays' Escape stack, which also stops the key's
-  // close request in a modal, and the modal's close requests without a key,
-  // such as the Android back gesture, come through holdCloseRequests.
-  const holds = escape === 'back' && stack.length > 1;
+  // Escape and a modal's close requests, such as the Android back gesture,
+  // come through the overlays' Escape stack, which also stops the key's close
+  // request in a modal. A popup open beside the views goes first.
   const goBack = useCallback(() => pop('escape'), [pop]);
-  const takesEscape = useCallback((event: KeyboardEvent) => {
+  const takesEscape = useCallback((event: KeyboardEvent | null) => {
     const viewport = viewportRef.current;
-    if (event.defaultPrevented || isImeKeyEvent(event) || !shows(viewport)) return false;
+    if (!shows(viewport)) return false;
+    if (!event) return true;
+    if (event.defaultPrevented || isImeKeyEvent(event)) return false;
     const target = event.target instanceof Node ? event.target : null;
     const layer = viewport?.closest('dialog, [popover]');
     if (layer) return layer.contains(target);
     return Boolean(viewport?.contains(target) || backRef.current?.contains(target));
   }, []);
-  useEscapeKey(holds, takesEscape, goBack, viewportRef);
-  const holdCloseRequests = modal?.holdCloseRequests;
-  useLayoutEffect(() => {
-    if (!holds || !holdCloseRequests) return;
-    return holdCloseRequests({
-      element: () => viewportRef.current,
-      take: () => {
-        if (!shows(viewportRef.current)) return false;
-        goBack();
-        return true;
-      },
-    });
-  }, [holds, holdCloseRequests, goBack]);
+  useEscapeKey(escape === 'back' && stack.length > 1, takesEscape, goBack, viewportRef, { popup: false });
 
   const statusOf = useCallback(
     (view: string): ViewStatus | null => {

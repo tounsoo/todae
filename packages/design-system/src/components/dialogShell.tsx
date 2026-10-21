@@ -172,7 +172,7 @@ export function DialogShellRoot({
   // Records the focus to return to, before showModal moves it. Keyed on
   // present: the page behind stays inert until the exit motion ends.
   useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef, nativeReturn: true });
-  const { closeOnFormSubmit, modal, closedby } = useModalDialog({
+  const { closeOnFormSubmit, closedby } = useModalDialog({
     dialogRef,
     node: dialogNode,
     present,
@@ -230,7 +230,7 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <ModalChildren modal={modal}>{children}</ModalChildren>
+          <ModalChildren present={present}>{children}</ModalChildren>
         </div>
       </dialog>
     </ShellContext.Provider>

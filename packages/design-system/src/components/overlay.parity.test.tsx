@@ -162,7 +162,7 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
     });
 
-    it("closes on a close request the browser won't let it cancel, even with a Drilldown that can go back", () => {
+    it("goes back in a Drilldown on a close request the browser won't let it cancel", () => {
       const onOpenChange = vi.fn();
       const onValueChange = vi.fn();
       const h = harness();
@@ -178,8 +178,8 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
         </h.Root>,
       );
       act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: false })));
-      expect(onValueChange).not.toHaveBeenCalled();
-      expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+      expect(onValueChange).toHaveBeenCalledWith(['settings'], 'escape');
+      expect(onOpenChange).not.toHaveBeenCalled();
     });
 
     it('takes close requests for a Drilldown that can go back even with dismissOnEscape off', () => {

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
-import { useEscapeKey } from './useEscapeKey.js';
+import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
 afterEach(cleanup);
 
@@ -214,7 +214,7 @@ describe('useEscapeKey', () => {
 
   it('lets a layer turn down a key by the event, passing it to the next one', () => {
     function Picky({ onEscape }: { onEscape: () => void }) {
-      useEscapeKey(true, (event) => !event.shiftKey, onEscape);
+      useEscapeKey(true, (event) => !event?.shiftKey, onEscape);
       return null;
     }
     const outer = vi.fn();
@@ -229,5 +229,35 @@ describe('useEscapeKey', () => {
     expect(outer).toHaveBeenCalledTimes(1);
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes a layer that is not a popup over for a popup beside it, but not for one around it', () => {
+    function Element({ popup = true, onEscape, children }: { popup?: boolean; onEscape: () => void; children?: ReactNode }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref, { popup });
+      return <div ref={ref}>{children}</div>;
+    }
+    const around = vi.fn();
+    const stack = vi.fn();
+    const beside = vi.fn();
+    const tree = (withBeside: boolean) => (
+      <dialog aria-label="surface">
+        <Element onEscape={around}>
+          {withBeside ? <Element onEscape={beside} /> : null}
+          <Element popup={false} onEscape={stack} />
+        </Element>
+      </dialog>
+    );
+    const { rerender, getByRole } = render(tree(true));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(beside).toHaveBeenCalledTimes(1);
+    expect(takeCloseRequest(getByRole('dialog', { hidden: true }))).toBe(true);
+    expect(beside).toHaveBeenCalledTimes(2);
+    expect(stack).not.toHaveBeenCalled();
+    rerender(tree(false));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(takeCloseRequest(getByRole('dialog', { hidden: true }))).toBe(true);
+    expect(stack).toHaveBeenCalledTimes(2);
+    expect(around).not.toHaveBeenCalled();
   });
 });

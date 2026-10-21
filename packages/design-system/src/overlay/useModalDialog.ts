@@ -1,18 +1,7 @@
-import {
-  useCallback,
-  useInsertionEffect,
-  useLayoutEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  type FormEvent,
-  type RefObject,
-} from 'react';
-import { innermost } from './layerOrder.js';
-import type { CloseRequestHolder, ModalContextValue } from './modalContext.js';
+import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { dropModal } from './modalStack.js';
 import { inToastHostWithin } from './tabbables.js';
+import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 import { reshowHeldInside } from './usePopoverSync.js';
 import { focusWithoutScroll } from '../components/revealRing.js';
@@ -23,16 +12,6 @@ export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
 // Chrome may close on Escape even though cancel was prevented. Its close
 // event comes a task later, so a close shortly after a cancel is an Escape.
 const CANCEL_CLOSE_WINDOW_MS = 500;
-
-/** Asks the holders, innermost first, until one takes the request. */
-function offerCloseRequest(holders: readonly CloseRequestHolder[]): boolean {
-  const left = [...holders];
-  for (let next = innermost(left, (h) => h.element()); next; next = innermost(left, (h) => h.element())) {
-    if (next.take()) return true;
-    left.splice(left.indexOf(next), 1);
-  }
-  return false;
-}
 
 type Options = {
   dialogRef: RefObject<HTMLDialogElement | null>;
@@ -54,8 +33,7 @@ type Options = {
  *
  * Call it where `showModal()` should run relative to the focus hooks. Pass
  * `closeOnFormSubmit` to the element's `onSubmit` after the consumer's own,
- * put `closedby` on the element, and wrap the children in `ModalChildren`
- * with `modal`.
+ * and put `closedby` on the element.
  */
 export function useModalDialog({
   dialogRef,
@@ -67,7 +45,6 @@ export function useModalDialog({
   requestClose,
 }: Options): {
   closeOnFormSubmit: (event: FormEvent<HTMLDialogElement>) => void;
-  modal: ModalContextValue;
   closedby: 'closerequest' | 'none';
 } {
   const openRef = useRef(open);
@@ -144,31 +121,20 @@ export function useModalDialog({
   // as their own top layer boxes they don't fade with the element.
   useModalLayerElement(node, present, true);
 
-  const holders = useRef<CloseRequestHolder[]>([]);
-  const [holdingCloseRequests, setHolding] = useState(false);
-  const holdCloseRequests = useCallback((holder: CloseRequestHolder) => {
-    holders.current.push(holder);
-    setHolding(true);
-    return () => {
-      holders.current = holders.current.filter((held) => held !== holder);
-      setHolding(holders.current.length > 0);
-    };
-  }, []);
-  const modal = useMemo(() => ({ present, holdCloseRequests }), [present, holdCloseRequests]);
-
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
     if (!node) return;
     const el: HTMLDialogElement = node;
     // Escape is a close request. Hold it so the owner closes the element, or
-    // a part inside that holds close requests, such as a Drilldown, goes back.
-    // Chromium sends some close requests, depending on the page's user
-    // activation, as an uncancelable cancel and closes the element anyway,
-    // so such a request closes the surface rather than reaching a holder.
+    // a layer inside that Escape would reach, such as a menu or a Drilldown
+    // going back, takes it. Chromium sends some close requests, depending on
+    // the page's user activation, as an uncancelable cancel and closes the
+    // element anyway; a layer still takes one, and onClose shows the element
+    // again.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();
-      if (event.cancelable && offerCloseRequest(holders.current)) return;
+      if (takeCloseRequest(el)) return;
       if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
@@ -222,7 +188,8 @@ export function useModalDialog({
     },
     [dialogRef],
   );
-  // A part holding close requests needs them even with dismissOnEscape off.
-  const closedby = dismissOnEscape || holdingCloseRequests ? 'closerequest' : 'none';
-  return { closeOnFormSubmit, modal, closedby };
+  // A layer inside takes close requests even with dismissOnEscape off.
+  const layerInside = useLayerInside(node);
+  const closedby = dismissOnEscape || layerInside ? 'closerequest' : 'none';
+  return { closeOnFormSubmit, closedby };
 }
