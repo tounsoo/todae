@@ -103,7 +103,6 @@ function shows(viewport: HTMLElement | null): boolean {
 // and the Drilldown.Trigger in it that pushed the view above, if one did.
 type Covered = { offset: number; trigger: HTMLElement | null };
 
-// A trigger that pushed a view takes focus back while it is still in the view below and can take it.
 function canTakeFocusBack(trigger: HTMLElement | null | undefined, view: HTMLElement): trigger is HTMLElement {
   return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
 }
@@ -121,7 +120,6 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const backRef = useRef<HTMLButtonElement | null>(null);
 
   const elementOf = useCallback((view: string) => views.current.get(view)?.element, []);
-  // Moves scroll and focus to the new view as its slide starts.
   const onChange = useCallback((next: StackChange, entering: HTMLElement | undefined, leaving: HTMLElement | undefined) => {
     const viewport = viewportRef.current;
     const scroller = viewport && scrollParent(viewport);
@@ -140,7 +138,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     for (const view of covered.current.keys()) {
       if (!next.to.includes(view)) covered.current.delete(view);
     }
-    // Before the scroll goes back to the top, for a push and a controlled jump alike.
+    // Read before the scroll goes to the top, for a push and a controlled jump alike.
     if (next.direction === 'forward' && below !== undefined && below !== top && next.to.includes(below)) {
       const pushed = opener.current;
       covered.current.set(below, { offset: scroller?.scrollTop ?? 0, trigger: pushed && pushed.view === top ? pushed.trigger : null });
