@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'EmptyState.Icon',
-  description: 'Slot for any icon, centered above the title. aria-hidden by default.',
+  description: 'A slot for any icon, centered above the title. Hidden from assistive technology unless it says otherwise.',
   props: [
     {
       name: 'children',

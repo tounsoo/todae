@@ -9293,9 +9293,9 @@
       "description": "EmptyState.Root: what a list, table or search shows when it has nothing, a centered icon, title, description and actions."
     },
     {
-      "path": "emptystate.measure",
+      "path": "emptystate.max-width",
       "type": "dimension",
-      "cssVar": "--todae-emptystate-measure",
+      "cssVar": "--todae-emptystate-max-width",
       "cssValue": "28rem",
       "ref": null,
       "layer": "contract",

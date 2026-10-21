@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'EmptyState.Description',
-  description: 'Muted text under the title, kept to a readable width. A div, so it can hold more than one paragraph or a link.',
+  description: 'Muted text under the title, kept to a readable width. A `div`, so it can hold more than one paragraph or a link.',
   props: [
     {
       name: 'children',

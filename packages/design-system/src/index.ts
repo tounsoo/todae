@@ -43,7 +43,7 @@ export {
   type EmptyStateDescriptionProps,
   type EmptyStateIconProps,
   type EmptyStateRootProps,
-  type EmptyStateTitleElement,
+  type EmptyStateTitleAs,
   type EmptyStateTitleProps,
 } from './components/EmptyState.js';
 export {

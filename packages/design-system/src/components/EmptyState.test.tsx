@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import { EmptyState, type EmptyStateTitleElement } from './EmptyState.js';
+import { EmptyState, type EmptyStateTitleAs } from './EmptyState.js';
 
 afterEach(cleanup);
 
@@ -26,7 +26,7 @@ describe('EmptyState', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('No projects yet');
   });
 
-  it.each<[EmptyStateTitleElement, string]>([
+  it.each<[EmptyStateTitleAs, string]>([
     ['h2', 'H2'],
     ['h3', 'H3'],
     ['h4', 'H4'],
@@ -49,7 +49,7 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('named').getAttribute('aria-hidden')).toBe('false');
   });
 
-  it('renders outside a root, as a server entry part must', () => {
+  it('renders on the server', () => {
     const html = renderToString(<EmptyState.Title as="h3">None</EmptyState.Title>);
     expect(html).toContain('<h3');
   });

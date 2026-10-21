@@ -13,6 +13,7 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[`document.execCommand('insertText')`](https://developer.mozilla.org/docs/Web/API/Document/execCommand)**: `useMentions`의 고르기를 textarea 실행 취소 기록의 한 단계로 남깁니다. 없으면: 훅이 텍스트를 직접 설정하고, 실행 취소가 입력한 단어를 되살리지 못할 수 있습니다.
 - **[`@scope`](https://developer.mozilla.org/docs/Web/CSS/@scope)**: `Prose.Root`가 다른 종류의 첫 요소에 닿을 때까지 마크다운 요소를 스타일합니다. 없으면: 프로즈 안의 제목, 목록, 인용문이 브라우저 기본 스타일을 따릅니다.
 - **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field`와 `Chip`의 포커스 링과 장식 요소 레이아웃, `Alert`의 열 배치, 모달 `<dialog>`가 열려 있는 동안 페이지 스크롤 멈춤(`:modal`과 함께). Todae에 필수입니다.
+- **[`text-wrap`](https://developer.mozilla.org/docs/Web/CSS/text-wrap)**: `EmptyState.Title`의 `balance`와 `EmptyState.Description`의 `pretty`로 줄 길이를 고르게 하고 마지막 줄에 단어 하나만 남는 일을 피합니다. 없으면: 줄이 고르지 않게 나뉘며, 모양에만 영향이 있습니다.
 - **[`scrollbar-gutter`](https://developer.mozilla.org/docs/Web/CSS/scrollbar-gutter)**: 모달 `<dialog>`가 페이지 스크롤을 멈추는 동안 스크롤바 자리를 유지합니다. 없으면: 모달이 열릴 때 페이지가 스크롤바 너비만큼 밀립니다.
 - **[캐스케이드 레이어](https://developer.mozilla.org/docs/Web/CSS/@layer)**: Todae의 리셋, 토큰, 컴포넌트와 회사 테마의 순서를 정합니다. Todae에 필수입니다.
 - **[상대 색상 문법](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: `color.bg.selected`처럼 토큰에서 만든 반투명 색상. Todae에 필수입니다.

@@ -207,10 +207,10 @@
   },
   "empty-state": {
     "(top)": "c1f6dbabd661",
-    "# EmptyState": "13e36f86a9c7",
-    "## No results": "67194035aeb1",
-    "## Heading level": "83ec92b06a64",
-    "## Accessible composition": "fdd780dcac13",
+    "# EmptyState": "2dc5752ff42d",
+    "## No results": "b80d2cf75e75",
+    "## Heading level": "09886305baf2",
+    "## Accessible composition": "c3421bf9c52b",
     "## When to use": "c2ba37f18926",
     "## Props": "80752af87dcf",
     "(section order)": "f355a0522991"
@@ -486,7 +486,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "d64eedd35fb3",
+    "# Native platform": "018e0f8adad8",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

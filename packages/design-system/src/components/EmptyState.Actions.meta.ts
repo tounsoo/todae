@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'EmptyState.Actions',
-  description: 'A centered row of buttons or links that wraps. A div with no role.',
+  description: 'A centered row of buttons or links that wraps. A `div` with no role.',
   props: [
     {
       name: 'children',

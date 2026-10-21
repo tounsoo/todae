@@ -1350,7 +1350,7 @@
     },
     {
       "name": "EmptyState.Actions",
-      "description": "A centered row of buttons or links that wraps. A div with no role.",
+      "description": "A centered row of buttons or links that wraps. A `div` with no role.",
       "props": [
         {
           "name": "children",
@@ -1362,7 +1362,7 @@
     },
     {
       "name": "EmptyState.Description",
-      "description": "Muted text under the title, kept to a readable width. A div, so it can hold more than one paragraph or a link.",
+      "description": "Muted text under the title, kept to a readable width. A `div`, so it can hold more than one paragraph or a link.",
       "props": [
         {
           "name": "children",
@@ -1374,7 +1374,7 @@
     },
     {
       "name": "EmptyState.Icon",
-      "description": "Slot for any icon, centered above the title. aria-hidden by default.",
+      "description": "A slot for any icon, centered above the title. Hidden from assistive technology unless it says otherwise.",
       "props": [
         {
           "name": "children",
@@ -1386,7 +1386,7 @@
     },
     {
       "name": "EmptyState.Root",
-      "description": "What a list, table or search shows when it has nothing. A div with no role, so it is not announced when it appears; takes native div attributes.",
+      "description": "What a list, table or search shows when it has nothing. A `div` with no role, so it is not announced when it appears; takes native `div` attributes.",
       "props": [
         {
           "name": "children",
@@ -1398,7 +1398,7 @@
     },
     {
       "name": "EmptyState.Title",
-      "description": "The empty state heading, at the level `as` names. An h2 by default.",
+      "description": "The empty state's heading, at the level `as` names. An `h2` by default.",
       "props": [
         {
           "name": "as",

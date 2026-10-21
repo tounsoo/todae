@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'EmptyState.Title',
-  description: 'The empty state heading, at the level `as` names. An h2 by default.',
+  description: 'The empty state\'s heading, at the level `as` names. An `h2` by default.',
   props: [
     {
       name: 'as',

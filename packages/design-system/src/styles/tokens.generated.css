@@ -810,7 +810,7 @@
   --todae-emptystate-icon-fg: var(--_todae-emptystate-icon-fg, var(--todae-color-fg-muted));
   --todae-emptystate-icon-size: var(--_todae-emptystate-icon-size, 2.5rem);
   --todae-emptystate-leading: var(--_todae-emptystate-leading, var(--todae-font-leading-default));
-  --todae-emptystate-measure: var(--_todae-emptystate-measure, 28rem);
+  --todae-emptystate-max-width: var(--_todae-emptystate-max-width, 28rem);
   --todae-emptystate-padding: var(--_todae-emptystate-padding, var(--todae-space-overlay-padding));
   --todae-emptystate-title-fg: var(--_todae-emptystate-title-fg, var(--todae-color-fg-default));
   --todae-emptystate-title-font-size: var(--_todae-emptystate-title-font-size, var(--todae-font-size-4));

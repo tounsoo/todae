@@ -27,7 +27,7 @@
 
   .title {
     margin: 0;
-    max-inline-size: var(--todae-emptystate-measure);
+    max-inline-size: var(--todae-emptystate-max-width);
     font-size: var(--todae-emptystate-title-font-size);
     font-weight: var(--todae-emptystate-title-font-weight);
     line-height: var(--todae-emptystate-title-leading);
@@ -37,7 +37,7 @@
 
   .description {
     margin: 0;
-    max-inline-size: var(--todae-emptystate-measure);
+    max-inline-size: var(--todae-emptystate-max-width);
     font-size: var(--todae-emptystate-font-size);
     line-height: var(--todae-emptystate-leading);
     color: var(--todae-emptystate-description-fg);

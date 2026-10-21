@@ -6,6 +6,7 @@ import { EmptyStateLevels, EmptyStateProjects, EmptyStateSearch } from '../../..
 
 ```tsx
 import { FolderPlus } from 'lucide-react';
+import { Button, EmptyState } from '@tounsoo/todae';
 
 <EmptyState.Root>
   <EmptyState.Icon>
@@ -26,41 +27,58 @@ import { FolderPlus } from 'lucide-react';
   <EmptyStateProjects />
 </Example>
 
-Todae는 아이콘을 제공하지 않습니다. `EmptyState.Icon`은 슬롯입니다. 직접 쓰는 아이콘 세트의 아이콘을 넣으세요. 바로 안의 `svg`나 `img`는 `emptystate.icon.size` 토큰을 따르며, 아이콘은 보조 기술에서 숨겨집니다. 일러스트레이션 파트는 없고 아이콘 슬롯만 있습니다. `EmptyState.Title`과 `EmptyState.Description`은 `emptystate.measure` 너비 안에 머물러서, 긴 설명도 읽기 좋은 줄 길이를 유지합니다. `EmptyState.Actions`는 줄바꿈되는 가운데 정렬 행입니다.
+Todae는 아이콘을 제공하지 않습니다. `EmptyState.Icon`은 슬롯입니다. 직접 쓰는 아이콘 세트의 아이콘을 넣으세요. 바로 안의 `svg`나 `img`는 `emptystate.icon.size` 토큰을 따르며, 아이콘은 보조 기술에서 숨겨집니다. 일러스트레이션 파트는 없고 아이콘 슬롯만 있습니다. `EmptyState.Title`과 `EmptyState.Description`은 `emptystate.max-width` 너비 안에 머물러서, 긴 설명도 읽기 좋은 줄 길이를 유지합니다. `EmptyState.Actions`는 줄바꿈되는 가운데 정렬 행입니다.
 
 Server Components는 `@tounsoo/todae/empty-state`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
 
 ## 결과 없음
 
-검색이나 필터에서 결과가 없으면 결과 대신 빈 상태를 보여 주고, 무엇을 검색했는지 알려 주세요. 아래 예시는 결과를 [`useAnnouncer`](/utilities/use-announcer)로도 알립니다. 빈 상태는 role이 없는 `div`이므로 Todae는 나타날 때 알리지 않습니다.
+검색이나 필터에서 결과가 없으면 결과 대신 빈 상태를 보여 주고, 무엇을 검색했는지 알려 주세요. 아래 예시는 결과를 [`useAnnouncer`](/utilities/use-announcer)로도 알립니다. 빈 상태는 role이 없는 `div`이므로 Todae는 나타날 때 알리지 않습니다. 키를 누를 때마다가 아니라 결과가 안정된 뒤에 한 번 알리고, "Clear search"는 자기 버튼이 사라지기 전에 포커스를 입력으로 되돌립니다.
 
 ```tsx
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { SearchX } from 'lucide-react';
 import { Button, EmptyState, Field, Label, useAnnouncer } from '@tounsoo/todae';
 
+const PROJECTS = ['Atlas', 'Beacon', 'Cedar', 'Delta'];
+
+function search(query: string) {
+  return PROJECTS.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+}
+
 export function ProjectSearch() {
   const id = useId();
+  const input = useRef<HTMLInputElement>(null);
   const announce = useAnnouncer();
   const [query, setQuery] = useState('');
   const matches = search(query);
+  const count = matches.length;
+  const announced = useRef(count);
+
+  // Announce once the result settles, and only when it changed.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (announced.current === count) return;
+      announced.current = count;
+      announce(count === 0 ? 'No projects found' : `${count} ${count === 1 ? 'project' : 'projects'} found`);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [count, announce]);
 
   return (
     <>
       <Field.Group>
         <Label.Root htmlFor={id}>Search projects</Label.Root>
         <Field.Root id={id}>
-          <Field.TextInput
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              announce(resultsMessage(search(event.target.value).length));
-            }}
-          />
+          <Field.TextInput ref={input} value={query} onChange={(event) => setQuery(event.target.value)} />
         </Field.Root>
       </Field.Group>
-      {matches.length > 0 ? (
-        <ProjectList projects={matches} />
+      {count > 0 ? (
+        <ul>
+          {matches.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
       ) : (
         <EmptyState.Root>
           <EmptyState.Icon>
@@ -71,7 +89,13 @@ export function ProjectSearch() {
             Nothing matches “{query}”. Check the spelling or try a shorter search.
           </EmptyState.Description>
           <EmptyState.Actions>
-            <Button.Root variant="secondary" onClick={() => setQuery('')}>
+            <Button.Root
+              variant="secondary"
+              onClick={() => {
+                setQuery('');
+                input.current?.focus();
+              }}
+            >
               Clear search
             </Button.Root>
           </EmptyState.Actions>
@@ -92,9 +116,9 @@ export function ProjectSearch() {
 
 ```tsx
 import type { ReactNode } from 'react';
-import { EmptyState, type EmptyStateTitleElement } from '@tounsoo/todae';
+import { EmptyState, type EmptyStateTitleAs } from '@tounsoo/todae';
 
-type EmptyListProps = { title: string; level: EmptyStateTitleElement; children: ReactNode };
+type EmptyListProps = { title: string; level: EmptyStateTitleAs; children: ReactNode };
 
 export function EmptyList({ title, level, children }: EmptyListProps) {
   return (
@@ -112,11 +136,11 @@ export function EmptyList({ title, level, children }: EmptyListProps) {
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 레이아웃과 페인트만 맡습니다. 모든 파트는 평범한 요소입니다. `EmptyState.Root`는 role이 없는 `div`이고, `EmptyState.Title`은 진짜 제목이며 `as`를 주지 않으면 `h2`입니다. `EmptyState.Icon`은 `aria-hidden`이고, 노출하려면 `aria-hidden={false}`를 주세요.
+**Todae가 맡는 것:** 레이아웃과 페인트, 제목을 진짜 제목으로 렌더링하는 것, 아이콘을 보조 기술에서 숨기는 것을 맡습니다. 모든 파트는 평범한 요소입니다. `EmptyState.Root`는 role이 없는 `div`이고, `EmptyState.Title`은 진짜 제목이며 `as`를 주지 않으면 `h2`입니다. `EmptyState.Icon`은 `aria-hidden`이고, 노출하려면 `aria-hidden={false}`를 주세요.
 
 **직접 제공할 것:** `as`로 정하는 제목 수준. 아이콘은 장식으로만 쓰거나 이름과 함께 쓰세요. 아이콘 자체가 의미를 전한다면 `aria-hidden={false}`, `role="img"`, `aria-label`이 필요합니다. 검색이나 필터 같은 사용자 동작 뒤에 빈 상태가 나타나면 [`useAnnouncer`](/utilities/use-announcer)나 제품이 가진 라이브 영역으로 알리세요. Todae는 알리지 않습니다.
 
-**주의할 점:** `table` 안의 빈 상태. 모든 열에 걸치는 셀, 예를 들어 `<td colSpan={4}>` 안에 넣거나 표 밖에 두세요. `table`이나 `tbody`의 직접 자식으로 둔 `div`는 올바르지 않습니다. 루트에 `role="status"`를 주고 메시지와 함께 마운트하면 스크린 리더가 알리지 않을 수 있습니다. `h4` 아래에 `h2` 빈 상태를 두는 것처럼 제목 수준을 건너뛰는 일.
+**주의할 점:** `table` 안의 빈 상태. 모든 열에 걸치는 셀, 예를 들어 `<td colSpan={4}>` 안에 넣거나 표 밖에 두세요. `table`이나 `tbody`의 직접 자식으로 둔 `div`는 올바르지 않습니다. 루트의 `role="status"`. 메시지와 함께 마운트되는 라이브 영역은 읽히지 않는 경우가 많으니 `useAnnouncer`로 알리세요. "Clear search"처럼 빈 상태를 끝내는 동작은 자기 버튼을 없애 버립니다. 검색 입력처럼 남아 있는 곳으로 포커스를 옮기세요. 그러지 않으면 포커스가 페이지로 떨어집니다. `h2` 아래에 `h4` 빈 상태를 두는 것처럼 제목 수준을 건너뛰는 일.
 
 ## 언제 쓰나요
 

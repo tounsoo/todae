@@ -1,8 +1,8 @@
 'use client';
 
-import { Button, EmptyState, Field, Label, Stack, Text, useAnnouncer, type EmptyStateTitleElement } from '@tounsoo/todae';
+import { Button, EmptyState, Field, Label, Stack, Text, useAnnouncer, type EmptyStateTitleAs } from '@tounsoo/todae';
 import { FolderPlus, SearchX } from 'lucide-react';
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 // Todae ships no icons. These come from Lucide; any icon library works.
 
@@ -24,29 +24,38 @@ export function EmptyStateProjects() {
 
 const PROJECTS = ['Atlas', 'Beacon', 'Cedar', 'Delta'];
 
+function search(query: string) {
+  return PROJECTS.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+}
+
 export function EmptyStateSearch() {
   const id = useId();
+  const input = useRef<HTMLInputElement>(null);
   const announce = useAnnouncer();
   const [query, setQuery] = useState('');
-  const matches = PROJECTS.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+  const matches = search(query);
+  const count = matches.length;
+  const announced = useRef(count);
+
+  // Announce once the result settles, and only when it changed.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (announced.current === count) return;
+      announced.current = count;
+      announce(count === 0 ? 'No projects found' : `${count} ${count === 1 ? 'project' : 'projects'} found`);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [count, announce]);
 
   return (
     <Stack.Root>
       <Field.Group>
         <Label.Root htmlFor={id}>Search projects</Label.Root>
         <Field.Root id={id}>
-          <Field.TextInput
-            value={query}
-            onChange={(event) => {
-              const next = event.target.value;
-              setQuery(next);
-              const count = PROJECTS.filter((name) => name.toLowerCase().includes(next.trim().toLowerCase())).length;
-              announce(count === 0 ? 'No projects found' : `${count} ${count === 1 ? 'project' : 'projects'} found`);
-            }}
-          />
+          <Field.TextInput ref={input} value={query} onChange={(event) => setQuery(event.target.value)} />
         </Field.Root>
       </Field.Group>
-      {matches.length > 0 ? (
+      {count > 0 ? (
         <ul>
           {matches.map((name) => (
             <li key={name}>{name}</li>
@@ -60,7 +69,13 @@ export function EmptyStateSearch() {
           <EmptyState.Title as="h3">No projects found</EmptyState.Title>
           <EmptyState.Description>Nothing matches “{query}”. Check the spelling or try a shorter search.</EmptyState.Description>
           <EmptyState.Actions>
-            <Button.Root variant="secondary" onClick={() => setQuery('')}>
+            <Button.Root
+              variant="secondary"
+              onClick={() => {
+                setQuery('');
+                input.current?.focus();
+              }}
+            >
               Clear search
             </Button.Root>
           </EmptyState.Actions>
@@ -70,7 +85,7 @@ export function EmptyStateSearch() {
   );
 }
 
-type EmptyListProps = { title: string; level: EmptyStateTitleElement; children: ReactNode };
+type EmptyListProps = { title: string; level: EmptyStateTitleAs; children: ReactNode };
 
 function EmptyList({ title, level, children }: EmptyListProps) {
   return (
