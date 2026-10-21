@@ -1,8 +1,8 @@
-import { CheckboxStates } from '../../../components/demos/CheckboxDemo';
+import { CheckboxIndeterminate, CheckboxStates } from '../../../components/demos/CheckboxDemo';
 
 # Checkbox
 
-네이티브 체크박스입니다. children이 보이는 레이블입니다. indeterminate 상태는 없습니다.
+네이티브 체크박스입니다. children이 보이는 레이블입니다.
 
 `checked`가 정의되어 있으면 제어 컴포넌트입니다. `defaultChecked`를 넘기거나 둘 다 생략하면 비제어 컴포넌트입니다. `useControlledState`는 `onCheckedChange`를 실행하지 않습니다. 컴포넌트가 실행합니다.
 
@@ -32,9 +32,32 @@ Checkbox를 `Field.Root` 안에 넣지 마세요. 그 셸은 텍스트와 칩 �
 
 늘 보이는 배타적 선택에는 [Radio](/radio)를 쓰세요. 오버레이 목록에는 [OptionList](/optionlist)를 쓰세요.
 
+## Indeterminate
+
+`indeterminate`는 일부 항목만 선택된 목록 위의 전체 선택 상자처럼 혼합 상태를 보여 줍니다. 입력의 `indeterminate` 프로퍼티를 설정하고, 체크 표시 대신 `indeterminate` 글리프를 그립니다. `checked`는 바꾸지 않습니다. 클릭하면 `checked`가 평소처럼 토글되고, 다음에 상자가 무엇을 보여 줄지는 직접 정합니다. Todae는 렌더링할 때마다 프로퍼티를 다시 설정하므로, 상태는 혼합인데 클릭 때문에 프로퍼티가 지워진 채로 남지 않습니다.
+
+```tsx
+<Checkbox.Root
+  checked={email && push}
+  indeterminate={(email || push) && !(email && push)}
+  onCheckedChange={(checked) => {
+    setEmail(checked);
+    setPush(checked);
+  }}
+>
+  All notifications
+</Checkbox.Root>
+```
+
+<Example block>
+  <CheckboxIndeterminate />
+</Example>
+
+[useSelection](/utilities/use-selection)은 `getSelectAllProps()`로 전체 선택 체크박스를 이렇게 연결합니다.
+
 ## 아이콘
 
-체크 표시는 `check` 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 Todae의 체크 표시입니다. 상자를 채우며, 체크박스가 선택된 동안에만 보입니다.
+체크 표시는 `check` 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 Todae의 체크 표시입니다. 상자를 채우며, 체크박스가 선택된 동안에만 보입니다. `indeterminate`인 동안에는 상자를 같은 방식으로 채우고 체크 표시 대신 `indeterminate` 글리프를 보여 줍니다. 기본은 가로 막대입니다.
 
 ```tsx
 import { Check } from 'lucide-react';
@@ -46,7 +69,7 @@ import { Check } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** Checkbox는 children과 함께 `<label>` 안에 든 네이티브 `<input type="checkbox">`입니다. 그래서 children이 이름이 되고, 텍스트를 클릭해도 토글됩니다. Space는 네이티브처럼 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 그려진 상자는 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `aria-*`, `id`, `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.
+**Todae가 맡는 것:** Checkbox는 children과 함께 `<label>` 안에 든 네이티브 `<input type="checkbox">`입니다. 그래서 children이 이름이 되고, 텍스트를 클릭해도 토글됩니다. Space는 네이티브처럼 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 그려진 상자는 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `indeterminate`는 입력의 `indeterminate` 프로퍼티를 설정하며, 스크린 리더는 이를 혼합 상태로 읽습니다. `aria-*`, `id`, `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.
 
 **직접 제공할 것:** 타입이 요구하는 보이는 텍스트를 `children`으로 주세요. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 `aria-describedby`에 넣으세요. 체크박스 여러 개가 한 질문에 답한다면 legend가 있는 [Fieldset](/fieldset)으로 묶으세요.
 
@@ -54,7 +77,7 @@ import { Check } from 'lucide-react';
 
 ## 언제 쓰나요
 
-**언제:** 페이지에 계속 남는 독립적인 켜기/끄기. children = 보이는 레이블.
+**언제:** 페이지에 계속 남는 독립적인 켜기/끄기. children = 보이는 레이블. 일부만 선택된 그룹 위의 상위 상자 → `indeterminate`.
 
 **쓰지 않을 때:** 여럿 중 하나만 고르는 배타적 선택 → Radio. 즉시 적용되는 설정 토글 모양 → Switch. 오버레이 다중 선택 → OptionList `selectionMode="multiple"`. Field.Root 안.
 

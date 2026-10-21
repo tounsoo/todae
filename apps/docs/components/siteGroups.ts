@@ -113,6 +113,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-modal-layer', 'useModalLayer'],
       ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],
+      ['/utilities/use-selection', 'useSelection'],
       ['/utilities/use-sheet-presentation', 'useSheetPresentation'],
       ['/utilities/use-tooltip', 'useTooltip'],
     ],

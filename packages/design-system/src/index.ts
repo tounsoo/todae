@@ -26,7 +26,7 @@ export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } fro
 export { Separator, type SeparatorRootProps } from './components/Separator.js';
 export { Prose, type ProseRootProps } from './components/Prose.js';
 export { ScrollArea, type ScrollAreaAxis, type ScrollAreaRootProps } from './components/ScrollArea.js';
-export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table.js';
+export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps, type TableSortButtonProps, type TableSort } from './components/Table.client.js';
 export { Progress, type ProgressRootProps } from './components/Progress.js';
 export { Meter, type MeterRootProps } from './components/Meter.js';
 export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
@@ -341,6 +341,12 @@ export {
   type SheetPresentationResult,
   type UseSheetPresentationOptions,
 } from './hooks/useSheetPresentation.js';
+export {
+  useSelection,
+  type SelectionState,
+  type UseSelectionOptions,
+  type UseSelectionResult,
+} from './hooks/useSelection.js';
 export {
   useClipboard,
   type ClipboardStatus,

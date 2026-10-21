@@ -10648,7 +10648,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.caption.fg",
@@ -10662,7 +10662,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.cell.padding.x",
@@ -10676,7 +10676,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.cell.padding.y",
@@ -10690,7 +10690,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.fg",
@@ -10704,7 +10704,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.border",
@@ -10718,7 +10718,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.fg",
@@ -10732,7 +10732,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.letter-spacing",
@@ -10746,7 +10746,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.text-transform",
@@ -10760,7 +10760,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.header.font.weight",
@@ -10774,7 +10774,21 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.row.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-table-row-bg-selected",
+      "cssValue": "var(--todae-color-bg-selected)",
+      "ref": "color.bg.selected",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "table.rule.thickness",
@@ -10788,7 +10802,77 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells."
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.gap",
+      "type": "dimension",
+      "cssVar": "--todae-table-sort-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.fg.default",
+      "type": "color",
+      "cssVar": "--todae-table-sort-icon-fg-default",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.fg.selected",
+      "type": "color",
+      "cssVar": "--todae-table-sort-icon-fg-selected",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-table-sort-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
+    },
+    {
+      "path": "table.sort.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-table-sort-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Table.Root and its parts: caption, header, body, footer, rows and cells, and Table.SortButton."
     },
     {
       "path": "meter.fill.critical",

@@ -1,4 +1,5 @@
 import { TableOfInvoices } from '../../../components/demos/NativeDemo';
+import { SelectableTable, SortableTable } from '../../../components/demos/TableDemo';
 
 # Table
 
@@ -30,19 +31,100 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 
 Server Components can import it from `@tounsoo/todae/table`. Give every column header `scope="col"` and every row header `scope="row"`. A `Table.Caption` names the table for screen readers. Restyle through `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
 
+## Sorting
+
+Give a sortable column's `Table.HeaderCell` a `sort` of `'ascending'`, `'descending'` or `'none'`, and put a `Table.SortButton` inside it with the column's label as its children. The cell takes `data-sort`, and `aria-sort` for the sorted column alone: `'none'` leaves `aria-sort` off, so only `data-sort` marks the column as sortable. Todae does not sort the rows. Sort them in your own code, in memory or with a request, and set each cell's `sort` from `onClick`.
+
+```tsx
+import { Table, type TableSort } from '@tounsoo/todae';
+import { useState } from 'react';
+
+export function Invoices() {
+  const [direction, setDirection] = useState<TableSort>('ascending');
+  const toggle = () => setDirection(direction === 'ascending' ? 'descending' : 'ascending');
+
+  return (
+    <Table.Root>
+      <Table.Caption>Invoices this quarter</Table.Caption>
+      <Table.Head>
+        <Table.Row>
+          <Table.HeaderCell scope="col" sort={direction}>
+            <Table.SortButton onClick={toggle}>Invoice</Table.SortButton>
+          </Table.HeaderCell>
+          <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+        </Table.Row>
+      </Table.Head>
+      <Table.Body>…</Table.Body>
+    </Table.Root>
+  );
+}
+```
+
+<Example>
+  <SortableTable />
+</Example>
+
+`Table.SortButton` is a native `<button>`. It draws the `sort` glyph of [GlyphsProvider](/utilities/glyphs-provider) after the label, an arrow pointing up by default: it shows on a sorted column, turns for a descending one, and is dimmed on an unsorted one; on a device with a hovering pointer it shows there only on hover or focus. Its look follows the header cell's `data-sort`, so a wrapper around `Table.HeaderCell` keeps working. After a click it waits for the cell's `aria-sort` or `data-sort` to change, however your code changes it, until the user's next press or key (a lone modifier key, such as Control to quiet a screen reader, doesn't count), and announces the result once through [useAnnouncer](/utilities/use-announcer): the `sortedAscending`, `sortedDescending` or `sortCleared` string of [StringsProvider](/utilities/strings-provider), with the button's `aria-label` or text as the column name. A `Table.SortButton` needs hooks, so it comes from `@tounsoo/todae`, not from `@tounsoo/todae/table`, and goes in a client component.
+
+## Selecting rows
+
+Selection state is [useSelection](/utilities/use-selection) and `Checkbox.Root`: the hook keeps the selected keys and its getters give each checkbox its props. A header checkbox from `getSelectAllProps()` is checked when every row is selected and mixed when some are. `Table.Row` takes `selected`, which only sets `data-selected` and a fill: it adds no `aria-selected`, which does not apply to a row of a table that is not a grid, so the row's checkbox carries the state for assistive technology.
+
+```tsx
+import { Checkbox, Table, useSelection, VisuallyHidden } from '@tounsoo/todae';
+
+export function Team({ people }: { people: { id: number; name: string }[] }) {
+  const selection = useSelection({ keys: people.map((person) => person.id) });
+
+  return (
+    <Table.Root>
+      <Table.Caption>Team</Table.Caption>
+      <Table.Head>
+        <Table.Row>
+          <Table.HeaderCell scope="col">
+            <Checkbox.Root {...selection.getSelectAllProps()}>
+              <VisuallyHidden.Root>Select all rows</VisuallyHidden.Root>
+            </Checkbox.Root>
+          </Table.HeaderCell>
+          <Table.HeaderCell scope="col">Name</Table.HeaderCell>
+        </Table.Row>
+      </Table.Head>
+      <Table.Body>
+        {people.map((person) => (
+          <Table.Row key={person.id} selected={selection.isSelected(person.id)}>
+            <Table.Cell>
+              <Checkbox.Root {...selection.getCheckboxProps(person.id)}>
+                <VisuallyHidden.Root>{`Select ${person.name}`}</VisuallyHidden.Root>
+              </Checkbox.Root>
+            </Table.Cell>
+            <Table.HeaderCell scope="row">{person.name}</Table.HeaderCell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>
+  );
+}
+```
+
+<Example>
+  <SelectableTable />
+</Example>
+
+Holding Shift while clicking a row's checkbox, or while pressing Space on it, selects or clears every row from the last one toggled to this one. Restyle the fill through `table.row.bg.selected`.
+
 ## Accessible composition
 
-**Todae handles:** Style only. The native `<table>`, `<caption>`, `<th>` and `<td>` the parts render keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
+**Todae handles:** The native `<table>`, `<caption>`, `<th>` and `<td>` the parts render keep their meaning, and the styles give header cells their own weight and color, so they stand out without a shade. A `Table.HeaderCell` with `sort` sets `aria-sort` for a sorted column. `Table.SortButton` is a real button, takes focus, shows a focus ring and announces the new order after its own click. `Table.Row selected` styles the row and sets no ARIA.
 
-**You supply:** A name for the table: a `Table.Caption`, or `aria-labelledby` pointing at a heading. A `Table.HeaderCell` with `scope` for every header, as above. For a table wider than its container, a [ScrollArea](/scroll-area) with `axis="inline"`, `focusable` and an `aria-label`, so keyboard users can scroll it.
+**You supply:** A name for the table: a `Table.Caption`, or `aria-labelledby` pointing at a heading. A `Table.HeaderCell` with `scope` for every header, as above. For a table wider than its container, a [ScrollArea](/scroll-area) with `axis="inline"`, `focusable` and an `aria-label`, so keyboard users can scroll it. The sorting itself, and a name for each row's checkbox that says which row it selects, such as "Select Ada Lovelace", with a name such as "Select all rows" for the header's.
 
-**Watch for:** A table drawn from `div`s, which has no rows or headers for assistive technology. Bold `Table.Cell` cells used as headers. A row made clickable with `onClick` on `Table.Row`: it takes no focus, so put a link or button in a cell. A sortable column without a `<button>` in its `Table.HeaderCell` and `aria-sort` on the `Table.HeaderCell`; Todae adds neither.
+**Watch for:** A table drawn from `div`s, which has no rows or headers for assistive technology. Bold `Table.Cell` cells used as headers. A row made clickable with `onClick` on `Table.Row`: it takes no focus, so put a link or button in a cell. `aria-sort` on more than one column: set `sort` to `'ascending'` or `'descending'` on the sorted column and `'none'` on the others. A `Table.SortButton` outside a header cell: there is no `data-sort` for its glyph or announcement to read.
 
 ## When to use
 
-**When:** Data people compare across rows and columns.
+**When:** Data people compare across rows and columns, with sorting by column and selecting rows when the data needs them.
 
-**When not:** Laying out content that is not tabular → [Stack](/stack) or CSS grid. Sorting, column resizing, virtual scrolling or cell editing → a data grid, which is out of scope for Todae.
+**When not:** Laying out content that is not tabular → [Stack](/stack) or CSS grid. Column resizing, virtual scrolling, cell editing or arrow-key navigation between cells → a data grid, which is out of scope for Todae.
 
 ## Props
 
@@ -61,3 +143,5 @@ Server Components can import it from `@tounsoo/todae/table`. Give every column h
 <PropsTable name="Table.HeaderCell" />
 
 <PropsTable name="Table.Cell" />
+
+<PropsTable name="Table.SortButton" />

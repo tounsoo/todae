@@ -39,9 +39,9 @@ import {
   IconChevronRight,
   IconDots,
   IconExclamationMark,
+  IconMinus,
   IconInfoCircle,
   IconMail,
-  IconMinus,
   IconPlayerStopFilled,
   IconPlus,
   IconRefresh,
@@ -102,6 +102,8 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
     glyphs: {
       close: <X />,
       check: <Check />,
+      indeterminate: <Minus />,
+      sort: <ArrowUp />,
       chevron: <ChevronDown />,
       separator: <ChevronRight />,
       ellipsis: <Ellipsis />,
@@ -134,6 +136,8 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
     glyphs: {
       close: <PhX />,
       check: <PhCheck weight="bold" />,
+      indeterminate: <PhMinus weight="bold" />,
+      sort: <PhArrowUp />,
       chevron: <CaretDown />,
       separator: <CaretRight />,
       ellipsis: <DotsThree weight="bold" />,
@@ -166,6 +170,8 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
     glyphs: {
       close: <IconX />,
       check: <IconCheck />,
+      indeterminate: <IconMinus />,
+      sort: <IconArrowUp />,
       chevron: <IconChevronDown />,
       separator: <IconChevronRight />,
       ellipsis: <IconDots />,

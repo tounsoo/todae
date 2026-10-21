@@ -18,6 +18,7 @@ import {
   OptionList,
   Pagination,
   Steps,
+  Table,
   Toast,
   useGlyphs,
   type Glyphs,
@@ -35,6 +36,8 @@ const ICONS: Required<Glyphs> = {
   close: <svg data-testid="close" />,
   check: <svg data-testid="check" />,
   chevron: <svg data-testid="chevron" />,
+  indeterminate: <svg data-testid="indeterminate" />,
+  sort: <svg data-testid="sort" />,
   separator: <svg data-testid="separator" />,
   ellipsis: <svg data-testid="ellipsis" />,
   calendar: <svg data-testid="calendar" />,
@@ -306,6 +309,29 @@ describe('GlyphsProvider', () => {
     expect(screen.getAllByTestId('check')).toHaveLength(1);
     expect(screen.getAllByTestId('error')).toHaveLength(1);
     expect(sheet('Steps.module.css')).toMatch(/\.marker > \[data-todae-glyph\] > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-steps-icon-size\);/);
+  });
+
+  it('uses the sort glyph in Table.SortButton and the indeterminate glyph in a mixed Checkbox.Root', () => {
+    render(
+      withIcons(
+        <>
+          <table>
+            <thead>
+              <tr>
+                <Table.HeaderCell scope="col" sort="ascending">
+                  <Table.SortButton>Name</Table.SortButton>
+                </Table.HeaderCell>
+              </tr>
+            </thead>
+          </table>
+          <Checkbox.Root indeterminate>All</Checkbox.Root>
+        </>,
+      ),
+    );
+    expect(screen.getAllByTestId('sort')).toHaveLength(1);
+    expect(screen.getAllByTestId('indeterminate')).toHaveLength(1);
+    expect(screen.queryByTestId('check')).toBeNull();
+    expect(sheet('Table.module.css')).toMatch(/\[data-sort='descending'\] \.sortButton > \[data-todae-glyph\] \{\s*rotate: 180deg;/);
   });
 
   it('sizes glyphs in each part from its tokens, and turns or mirrors directional ones', () => {
