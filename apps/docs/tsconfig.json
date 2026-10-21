@@ -42,6 +42,7 @@
       "@tounsoo/todae/skeleton": ["../../packages/design-system/src/server/skeleton.ts"],
       "@tounsoo/todae/slider": ["../../packages/design-system/src/server/slider.ts"],
       "@tounsoo/todae/code": ["../../packages/design-system/src/server/code.ts"],
+      "@tounsoo/todae/code-block": ["../../packages/design-system/src/server/code-block.ts"],
       "@tounsoo/todae/kbd": ["../../packages/design-system/src/server/kbd.ts"],
       "@tounsoo/todae/visually-hidden": ["../../packages/design-system/src/server/visually-hidden.ts"],
       "@tounsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],

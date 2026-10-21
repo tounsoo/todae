@@ -55,6 +55,8 @@ const OWN_ROOTS: Record<string, string[]> = {
   Progress: ['progress', 'meter'],
   ScrollArea: ['scroll'],
   ColorPicker: ['picker'],
+  // A code block reads code.block and the font Code.Root shares.
+  CodeBlock: ['code'],
 };
 
 describe('token consistency across component styles', () => {

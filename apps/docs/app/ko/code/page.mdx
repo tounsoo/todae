@@ -2,26 +2,26 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 # Code and Kbd
 
-`Code.Root`는 네이티브 `<code>`이고, `as="pre"`를 주면 네이티브 `<pre>`입니다. `Kbd.Root`는 네이티브 `<kbd>`입니다. 둘 다 `code`와 `kbd` contract 토큰으로 꾸밉니다. Server Components는 `@tounsoo/todae/code`와 `@tounsoo/todae/kbd`에서 가져올 수 있습니다.
+`Code.Root`는 네이티브 `<code>`, `CodeBlock.Root`는 네이티브 `<pre>`, `Kbd.Root`는 네이티브 `<kbd>`이며, `code`와 `kbd` contract 토큰으로 꾸밉니다. Server Components는 `@tounsoo/todae/code`, `@tounsoo/todae/code-block`, `@tounsoo/todae/kbd`에서 가져올 수 있습니다.
 
 ## Code
 
-`Code.Root`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `Code.Root as="pre"`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 코드는 `Code.Root`든 평범한 `<code>`든 자기 상자를 버립니다.
+`Code.Root`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `CodeBlock.Root`은 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 코드는 `Code.Root`든 평범한 `<code>`든 자기 상자를 버립니다.
 
 ```tsx
 <Text.Root>
   Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
 </Text.Root>
-<Code.Root as="pre" tabIndex={0} role="region" aria-label="Example code">
+<CodeBlock.Root tabIndex={0} role="region" aria-label="Example code">
   <code>{source}</code>
-</Code.Root>
+</CodeBlock.Root>
 ```
 
 <Example block>
   <CodeInText />
 </Example>
 
-스크롤하는 코드 블록에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. `code.font.family`와 `code.font.scale`(주변 텍스트에 대한 크기 비율)은 인라인 코드와 코드 블록의 글꼴을 함께 정합니다. 인라인 상자는 `code.tint`(텍스트 색을 얼마나 쓰는지), `code.radius`, `code.padding.x`, `code.padding.y`로, 블록은 `code.block` 토큰으로 바꾸세요.
+스크롤하는 `CodeBlock.Root`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. `code.font.family`와 `code.font.scale`(주변 텍스트에 대한 크기 비율)은 인라인 코드와 코드 블록의 글꼴을 함께 정합니다. 인라인 상자는 `code.tint`(텍스트 색을 얼마나 쓰는지), `code.radius`, `code.padding.x`, `code.padding.y`로, 블록은 `code.block` 토큰으로 바꾸세요.
 
 ## Kbd
 
@@ -41,21 +41,21 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. 코드 블록은 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
+**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. `CodeBlock.Root`은 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
 
-**직접 제공할 것:** 스크롤되는 코드 블록에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
+**직접 제공할 것:** 스크롤되는 `CodeBlock.Root`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
 
 ```tsx
 // The server entry, so a Server Component can render it.
-import { Code } from '@tounsoo/todae/code';
+import { CodeBlock } from '@tounsoo/todae/code-block';
 
-type CodeBlockProps = { label: string; children: string };
+type SourceBlockProps = { label: string; children: string };
 
-export function CodeBlock({ label, children }: CodeBlockProps) {
+export function SourceBlock({ label, children }: SourceBlockProps) {
   return (
-    <Code.Root as="pre" tabIndex={0} role="region" aria-label={label}>
+    <CodeBlock.Root tabIndex={0} role="region" aria-label={label}>
       <code>{children}</code>
-    </Code.Root>
+    </CodeBlock.Root>
   );
 }
 ```
@@ -71,5 +71,7 @@ export function CodeBlock({ label, children }: CodeBlockProps) {
 ## Props
 
 <PropsTable name="Code.Root" />
+
+<PropsTable name="CodeBlock.Root" />
 
 <PropsTable name="Kbd.Root" />

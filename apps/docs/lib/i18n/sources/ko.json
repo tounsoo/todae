@@ -120,12 +120,12 @@
   },
   "code": {
     "(top)": "f1eb2a9590ae",
-    "# Code and Kbd": "4f5cf6ca8b22",
-    "## Code": "386cb2fb206c",
+    "# Code and Kbd": "7a928f5103b0",
+    "## Code": "faabd5a7b533",
     "## Kbd": "868d798a03bf",
-    "## Accessible composition": "6523eeb9d323",
+    "## Accessible composition": "f497b0d99225",
     "## When to use": "2d81a4d8f4de",
-    "## Props": "5c93896d16a8",
+    "## Props": "7cb899518e8d",
     "(section order)": "809b0e250585"
   },
   "color-picker": {
@@ -350,7 +350,7 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "a9cd1c801ab7",
+    "## A company resolver": "f61835f0b401",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
@@ -502,9 +502,9 @@
   "prose": {
     "(top)": "3b30d99936ef",
     "# Prose": "694aeebda72e",
-    "## Spacing": "1bf8a3a7160c",
+    "## Spacing": "d473ef50d913",
     "## Where the styles stop": "0454e788cf8f",
-    "## Map markdown onto Todae": "379068f84042",
+    "## Map markdown onto Todae": "926fc809af39",
     "## Accessible composition": "ead52f9648b2",
     "## When to use": "4a1c3e03570d",
     "## Props": "7fd923db90b6",
