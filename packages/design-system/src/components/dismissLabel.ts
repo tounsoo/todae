@@ -45,29 +45,30 @@ export function useDismissLabel(
   // translation) names the button too. The children are a first guess for SSR.
   const [worded, setWorded] = useState(() => hasWords(children));
   const buttonRef = useRef<HTMLButtonElement>(null);
-  // The element as state too, so the observer below follows a button that
-  // unmounts and mounts again, as one that renders nothing at times does.
-  const [button, setButton] = useState<HTMLButtonElement | null>(null);
-  const refs = useComposedRefs(buttonRef, setButton, ref);
   const read = useCallback(() => {
-    const el = buttonRef.current;
-    setWorded(el ? isWorded(spokenText(el)) : false);
+    const button = buttonRef.current;
+    setWorded(button ? isWorded(spokenText(button)) : false);
   }, []);
   // Every commit, as the text can change; the same value bails out.
   useLayoutEffect(read);
   // A child can render its text from its own state, such as a translation
-  // that loads later, without this component rendering again.
-  useLayoutEffect(() => {
-    if (!button || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(read);
-    observer.observe(button, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['aria-hidden'],
-    });
-    return () => observer.disconnect();
-  }, [button, read]);
+  // that loads later, without this component rendering again. On the element
+  // the ref gets, so it follows a button that unmounts and mounts again.
+  const observe = useCallback(
+    (button: HTMLButtonElement | null) => {
+      if (!button || typeof MutationObserver === 'undefined') return;
+      const observer = new MutationObserver(read);
+      observer.observe(button, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['aria-hidden'],
+      });
+      return () => observer.disconnect();
+    },
+    [read],
+  );
+  const refs = useComposedRefs(buttonRef, observe, ref);
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }
