@@ -150,9 +150,9 @@ export function CodeInText() {
       <Text.Root>
         Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
       </Text.Root>
-      <Code.Block tabIndex={0} role="region" aria-label="Example code">
+      <Code.Root as="pre" tabIndex={0} role="region" aria-label="Example code">
         <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
-      </Code.Block>
+      </Code.Root>
     </div>
   );
 }

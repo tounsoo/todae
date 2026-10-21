@@ -2,17 +2,23 @@ import type { ComponentPropsWithRef } from 'react';
 import { cx } from './cx.js';
 import styles from './Code.module.css';
 
-/** A native `code`: inline code that keeps the text color around it and tints its box from that color. */
-export type CodeRootProps = ComponentPropsWithRef<'code'>;
-/** A native `pre`: a block that scrolls sideways when a line is too long. A `code` inside it drops its own box. */
-export type CodeBlockProps = ComponentPropsWithRef<'pre'>;
+export type CodeAs = 'code' | 'pre';
 
-function Root({ className, ...props }: CodeRootProps) {
-  return <code {...props} className={cx(styles.root, className)} />;
+/**
+ * A native `code`: inline code that keeps the text color around it and tints its box from that color.
+ * With `as="pre"`, a native `pre`: a block that scrolls sideways when a line is too long, and a `code` inside it drops its own box.
+ */
+export type CodeRootProps =
+  | ({ as?: 'code' } & ComponentPropsWithRef<'code'>)
+  | ({ as: 'pre' } & ComponentPropsWithRef<'pre'>);
+
+function Root(props: CodeRootProps) {
+  if (props.as === 'pre') {
+    const { as: _as, className, ...rest } = props;
+    return <pre {...rest} className={cx(styles.block, className)} />;
+  }
+  const { as: _as, className, ...rest } = props;
+  return <code {...rest} className={cx(styles.root, className)} />;
 }
 
-function Block({ className, ...props }: CodeBlockProps) {
-  return <pre {...props} className={cx(styles.block, className)} />;
-}
-
-export const Code = { Root, Block } as const;
+export const Code = { Root } as const;

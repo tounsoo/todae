@@ -22,7 +22,7 @@ Server Component에서는 `@tounsoo/todae/prose`에서 가져올 수 있습니�
 
 ## 간격
 
-각 자식은 앞의 자식에서 `prose.gap`만큼 아래에 놓입니다. 제목은 제목이 아닌 앞 요소에서 `prose.heading.space-before`만큼 아래에 놓이고, 제목 다음에 오는 요소는 다른 제목이라도 제목에서 `prose.heading.space-after`만큼 아래에 놓입니다. 첫 자식과 마지막 자식은 `Prose.Root`의 가장자리에 붙으므로, 카드나 메시지 말풍선이 고른 안쪽 여백으로 감쌀 수 있습니다. 이 간격은 자식인 Todae 컴포넌트(`Code.Block`, `Separator.Root`, `Text.Root` 등)의 여백을 대신합니다.
+각 자식은 앞의 자식에서 `prose.gap`만큼 아래에 놓입니다. 제목은 제목이 아닌 앞 요소에서 `prose.heading.space-before`만큼 아래에 놓이고, 제목 다음에 오는 요소는 다른 제목이라도 제목에서 `prose.heading.space-after`만큼 아래에 놓입니다. 첫 자식과 마지막 자식은 `Prose.Root`의 가장자리에 붙으므로, 카드나 메시지 말풍선이 고른 안쪽 여백으로 감쌀 수 있습니다. 이 간격은 자식인 Todae 컴포넌트(`Code.Root as="pre"`, `Separator.Root`, `Text.Root` 등)의 여백을 대신합니다.
 
 이 간격들과 `prose.list.item-gap`은 density 토큰을 읽으므로, `Stack.Root`처럼 `data-density`를 따릅니다.
 
@@ -42,7 +42,7 @@ const components = {
   wrapper: ({ children }) => <Prose.Root>{children}</Prose.Root>,
   a: Link.Root,
   code: Code.Root,
-  pre: Code.Block,
+  pre: (props) => <Code.Root as="pre" {...props} />,
   hr: Separator.Root,
   kbd: Kbd.Root,
   table: Table.Root,

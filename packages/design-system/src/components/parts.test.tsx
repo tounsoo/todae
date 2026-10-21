@@ -123,7 +123,7 @@ const cases: Case[] = [
   ['Skeleton.Root', (p) => <Skeleton.Root {...p} />],
   ['Slider.Root', (p) => <Slider.Root {...p} aria-label="s" />],
   ['Code.Root', (p) => <Code.Root {...p}>c</Code.Root>],
-  ['Code.Block', (p) => <Code.Block {...p}>c</Code.Block>],
+  ['Code.Root as="pre"', (p) => <Code.Root as="pre" {...p}>c</Code.Root>],
   ['Kbd.Root', (p) => <Kbd.Root {...p}>K</Kbd.Root>],
   ['VisuallyHidden.Root', (p) => <VisuallyHidden.Root {...p}>h</VisuallyHidden.Root>],
   ['Stack.Root', (p) => <Stack.Root {...p} />],

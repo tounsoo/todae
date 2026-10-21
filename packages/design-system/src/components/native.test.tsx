@@ -22,7 +22,7 @@ describe('native element components', () => {
     ['Skeleton.Root', () => <Skeleton.Root data-testid="x" className="mine" />, 'DIV'],
     ['Slider.Root', () => <Slider.Root data-testid="x" className="mine" />, 'INPUT'],
     ['Code.Root', () => <Code.Root data-testid="x" className="mine" />, 'CODE'],
-    ['Code.Block', () => <Code.Block data-testid="x" className="mine" />, 'PRE'],
+    ['Code.Root as="pre"', () => <Code.Root as="pre" data-testid="x" className="mine" />, 'PRE'],
     ['Kbd.Root', () => <Kbd.Root data-testid="x" className="mine" />, 'KBD'],
     ['VisuallyHidden.Root', () => <VisuallyHidden.Root data-testid="x" className="mine" />, 'SPAN'],
   ])('%s renders a %s with its own class and the consumer one', (_name, ui, tag) => {

@@ -399,20 +399,18 @@
       "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 StringsProvider의 moreChipsPanel 문자열이며, 영어로는 {n} more chips(1개일 때 1 more chip)입니다."
     }
   },
-  "Code.Block": {
+  "Code.Root": {
+    "as": {
+      "en": "Rendered element. A pre is a code block, and a code inside it drops its own box.",
+      "ko": "렌더링할 요소. pre는 코드 블록이며, 그 안의 code는 자기 상자를 버립니다."
+    },
     "tabIndex": {
-      "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
-      "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
+      "en": "With as=\"pre\", set 0 when the block can scroll, so keyboard users can reach and scroll it.",
+      "ko": "as=\"pre\"일 때 블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
     },
     "children": {
-      "en": "The code, usually in a code element, which drops its own box here.",
-      "ko": "코드. 보통 code 요소에 넣으며, 여기서는 그 요소가 자기 상자를 버립니다."
-    }
-  },
-  "Code.Root": {
-    "children": {
-      "en": "The code.",
-      "ko": "코드."
+      "en": "The code. In a pre, usually a code element.",
+      "ko": "코드. pre 안에서는 보통 code 요소입니다."
     }
   },
   "ColorPicker.Hue": {

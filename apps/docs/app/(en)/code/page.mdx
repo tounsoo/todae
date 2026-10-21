@@ -2,26 +2,26 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 # Code and Kbd
 
-`Code.Root` is a native `<code>`, `Code.Block` a native `<pre>` and `Kbd.Root` a native `<kbd>`, styled from the `code` and `kbd` contract tokens. Server Components can import them from `@tounsoo/todae/code` and `@tounsoo/todae/kbd`.
+`Code.Root` is a native `<code>`, or with `as="pre"` a native `<pre>`, and `Kbd.Root` a native `<kbd>`, styled from the `code` and `kbd` contract tokens. Server Components can import them from `@tounsoo/todae/code` and `@tounsoo/todae/kbd`.
 
 ## Code
 
-`Code.Root` keeps the text color around it and tints its box from that color, so it reads the same in a link or a primary button. It is a step smaller than the text around it. `Code.Block` is a block that scrolls sideways when a line is too long, and code inside it, a `Code.Root` or a plain `<code>`, drops its own box.
+`Code.Root` keeps the text color around it and tints its box from that color, so it reads the same in a link or a primary button. It is a step smaller than the text around it. `Code.Root as="pre"` is a block that scrolls sideways when a line is too long, and code inside it, a `Code.Root` or a plain `<code>`, drops its own box.
 
 ```tsx
 <Text.Root>
   Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
 </Text.Root>
-<Code.Block tabIndex={0} role="region" aria-label="Example code">
+<Code.Root as="pre" tabIndex={0} role="region" aria-label="Example code">
   <code>{source}</code>
-</Code.Block>
+</Code.Root>
 ```
 
 <Example block>
   <CodeInText />
 </Example>
 
-A `Code.Block` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. `code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
+A code block that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. `code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
 
 ## Kbd
 
@@ -41,9 +41,9 @@ Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.
 
 ## Accessible composition
 
-**Todae handles:** Only the look. The parts stay native `<code>`, `<pre>` and `<kbd>` elements, and Todae adds no role, `tabindex` or name. `Code.Root` keeps the text color around it. `Code.Block` scrolls sideways when a line is too long, but Todae does not make it focusable.
+**Todae handles:** Only the look. The parts stay native `<code>`, `<pre>` and `<kbd>` elements, and Todae adds no role, `tabindex` or name. `Code.Root` keeps the text color around it. A code block scrolls sideways when a line is too long, but Todae does not make it focusable.
 
-**You supply:** For a `Code.Block` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
+**You supply:** For a code block that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
 
 ```tsx
 // The server entry, so a Server Component can render it.
@@ -53,9 +53,9 @@ type CodeBlockProps = { label: string; children: string };
 
 export function CodeBlock({ label, children }: CodeBlockProps) {
   return (
-    <Code.Block tabIndex={0} role="region" aria-label={label}>
+    <Code.Root as="pre" tabIndex={0} role="region" aria-label={label}>
       <code>{children}</code>
-    </Code.Block>
+    </Code.Root>
   );
 }
 ```
@@ -71,7 +71,5 @@ export function CodeBlock({ label, children }: CodeBlockProps) {
 ## Props
 
 <PropsTable name="Code.Root" />
-
-<PropsTable name="Code.Block" />
 
 <PropsTable name="Kbd.Root" />

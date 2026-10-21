@@ -7,7 +7,7 @@ import { ScrollRegion } from './ScrollRegion';
 export function DocsPre(props: ComponentProps<'pre'>) {
   return (
     <ScrollRegion kind="code" className="docs-pre">
-      <Code.Block {...props} />
+      <Code.Root as="pre" {...props} />
     </ScrollRegion>
   );
 }

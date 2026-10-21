@@ -22,7 +22,7 @@ Server Components can import it from `@tounsoo/todae/prose`. The MDX pages of th
 
 ## Spacing
 
-Each child sits `prose.gap` below the one before it. A heading sits `prose.heading.space-before` below anything but a heading, and whatever follows a heading, another heading included, sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding. These spaces replace the margins of a Todae component that is a child, such as `Code.Block`, `Separator.Root` or `Text.Root`.
+Each child sits `prose.gap` below the one before it. A heading sits `prose.heading.space-before` below anything but a heading, and whatever follows a heading, another heading included, sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding. These spaces replace the margins of a Todae component that is a child, such as `Code.Root as="pre"`, `Separator.Root` or `Text.Root`.
 
 These gaps and `prose.list.item-gap` read density tokens, so they follow `data-density` as `Stack.Root` does.
 
@@ -42,7 +42,7 @@ const components = {
   wrapper: ({ children }) => <Prose.Root>{children}</Prose.Root>,
   a: Link.Root,
   code: Code.Root,
-  pre: Code.Block,
+  pre: (props) => <Code.Root as="pre" {...props} />,
   hr: Separator.Root,
   kbd: Kbd.Root,
   table: Table.Root,

@@ -350,7 +350,7 @@ main:focus {
 
 /* Code blocks and tables scroll sideways in a ScrollArea.Root, which draws its
    focus ring inside its own edge and keeps the rings of what it holds whole.
-   The docs' fenced blocks are Code.Block, with Todae's own bg and radius.
+   The docs' fenced blocks are Code.Root as="pre", with Todae's own bg and radius.
    The frame paints the same background around the block. */
 .docs-pre {
   margin-block: 1rem;
@@ -359,7 +359,7 @@ main:focus {
   background: var(--todae-code-block-bg);
 }
 
-/* Code.Block draws its own padding, type and colors; only the scrolling moves to the frame. */
+/* Code.Root as="pre" draws its own padding, type and colors; only the scrolling moves to the frame. */
 .docs-pre pre {
   margin: 0;
   overflow: visible;

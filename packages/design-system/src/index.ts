@@ -31,7 +31,7 @@ export { Meter, type MeterRootProps } from './components/Meter.js';
 export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
 export { Skeleton, type SkeletonRootProps } from './components/Skeleton.js';
 export { Slider, type SliderRootProps } from './components/Slider.js';
-export { Code, type CodeBlockProps, type CodeRootProps } from './components/Code.js';
+export { Code, type CodeAs, type CodeRootProps } from './components/Code.js';
 export { Kbd, type KbdRootProps } from './components/Kbd.js';
 export { VisuallyHidden, type VisuallyHiddenRootProps } from './components/VisuallyHidden.js';
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge.js';

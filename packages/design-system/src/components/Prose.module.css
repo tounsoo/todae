@@ -14,7 +14,7 @@
      first child and the last touch the edges, so a card or message holds it
      evenly. These rules sit in todae.components and weigh more than one
      class, so they also space a child with margins of its own, such as
-     Code.Block or Separator.Root from the native sublayer, or one that
+     a code block or Separator.Root from the native sublayer, or one that
      resets them, such as Text.Root. The heading rules weigh the same as
      each other, so the later one wins. */
   .root > :nth-child(n) {
