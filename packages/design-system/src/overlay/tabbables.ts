@@ -62,31 +62,40 @@ function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
 }
 
 // Each named radio group's one Tab stop, going forward: its checked radio, or
-// with none checked that can take focus, the first of root's that can. A group
-// is the radios of one name and one form owner. Its checked radio may sit
-// outside root, and then takes the whole group out of root, as the browser's
-// Tab does. It counts there when enabled and shown, whatever `aria-hidden` or
-// tabindex say, unless root is in an open modal dialog it is not in, since the
-// page behind that dialog is inert.
-type RadioStops = Map<HTMLFormElement | null, Map<string, HTMLInputElement>>;
+// with none checked, the root's first. A group is the radios of one name and
+// one form owner. Its checked radio may sit outside root, and then takes the
+// whole group out of root, as the browser's Tab does, unless root is in an
+// open modal dialog that radio is not in, since the page behind it is inert.
+// Which radio claims the group follows the browser: `aria-hidden` does not
+// matter there. Whether root lists it does, as for any candidate.
+type Group = { stop: HTMLInputElement | null; checked: boolean };
+type RadioStops = Map<HTMLFormElement | null, Map<string, Group>>;
+
+// Whether the browser's Tab could stop on radio `el`: tabindex, `disabled` and
+// reachability count, `aria-hidden` and `hidden` ancestors only as styles do.
+function radioTakesFocus(el: HTMLInputElement): boolean {
+  if (el.hasAttribute('tabindex') && el.tabIndex < 0) return false;
+  return !el.matches(':disabled') && isReachable(el);
+}
 
 function radioStopsIn(root: HTMLElement): RadioStops {
   const stops: RadioStops = new Map();
-  const groupOf = (el: HTMLInputElement) => {
+  for (const el of candidatesIn(root)) {
+    if (!isNamedRadio(el)) continue;
     let byName = stops.get(el.form);
     if (!byName) stops.set(el.form, (byName = new Map()));
-    return byName;
-  };
-  for (const el of candidatesIn(root)) {
-    if (!isNamedRadio(el) || !canTakeFocus(el, root)) continue;
-    const group = groupOf(el);
-    const stop = group.get(el.name);
-    if (!stop || (el.checked && !stop.checked)) group.set(el.name, el);
+    let group = byName.get(el.name);
+    if (!group) byName.set(el.name, (group = { stop: null, checked: false }));
+    if (group.checked || !radioTakesFocus(el)) continue;
+    if (el.checked) group.checked = true;
+    if (el.checked || !group.stop) group.stop = el;
   }
-  const scope = modalAround(root) ?? (root.getRootNode() as Document | ShadowRoot);
+  const scope = modalAround(root) ?? (root.getRootNode() as unknown as ParentNode);
   for (const el of scope.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')) {
-    if (!isNamedRadio(el) || root.contains(el) || el.matches(':disabled') || !isReachable(el)) continue;
-    groupOf(el).set(el.name, el);
+    const group = stops.get(el.form)?.get(el.name);
+    if (!group || group.checked || root.contains(el) || !radioTakesFocus(el)) continue;
+    group.checked = true;
+    group.stop = el;
   }
   return stops;
 }
@@ -118,7 +127,7 @@ function tabStopTest(root: HTMLElement): (el: HTMLElement) => boolean {
     if (!canTakeFocus(el, root)) return false;
     if (!isNamedRadio(el)) return true;
     stops ??= radioStopsIn(root);
-    return stops.get(el.form)?.get(el.name) === el;
+    return stops.get(el.form)?.get(el.name)?.stop === el;
   };
 }
 
@@ -133,9 +142,9 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
  * The elements in `root` that Todae treats as tab stops now: the candidates
  * Todae recognizes, in document order, minus disabled, hidden, inert and
  * aria-hidden content, and minus every radio of a named group but its one stop
- * going forward: the checked radio or, with none checked, the first, counting
- * the group's radios outside root unless root is in an open modal dialog.
- * Shift+Tab into a group with none checked lands on its last radio instead.
+ * going forward: its checked radio or, with none checked, root's first. A
+ * checked radio of the group outside root takes the group out of root, unless
+ * root is in an open modal dialog that radio is not in.
  */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
   return [...candidatesIn(root)].filter(tabStopTest(root));

@@ -172,6 +172,9 @@ describe('default initial focus on a radio group', () => {
   it.each([
     ['an unchecked radio before the root', '<input type="radio" name="g" aria-label="Outside">', 'One'],
     ['a checked radio under aria-hidden', '<div aria-hidden="true"><input type="radio" name="g" aria-label="Outside" checked></div>', 'After'],
+    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="Outside" checked tabindex="-1">', 'One'],
+    ['a disabled checked radio', '<input type="radio" name="g" aria-label="Outside" checked disabled>', 'One'],
+    ['a checked radio in an inert region', '<div inert><input type="radio" name="g" aria-label="Outside" checked></div>', 'One'],
   ])('matches forward Tab with %s', async (_case, page, name) => {
     const outside = document.createElement('div');
     outside.innerHTML = page;
@@ -190,7 +193,7 @@ describe('default initial focus on a radio group', () => {
     }
   });
 
-  it('counts a modal dialog\'s own radios when the root is in a non-modal dialog inside it', async () => {
+  it('bounds the group by the modal dialog when the root is in a non-modal dialog inside it', async () => {
     const outside = document.createElement('div');
     outside.innerHTML = '<input type="radio" name="g" aria-label="Outside" checked>';
     const modal = document.createElement('dialog');
@@ -207,6 +210,21 @@ describe('default initial focus on a radio group', () => {
       modal.close();
       modal.remove();
       outside.remove();
+    }
+  });
+
+  it('lists no radio of a group whose checked radio is under aria-hidden in the root, though Tab stops there', async () => {
+    const root = document.createElement('div');
+    root.innerHTML =
+      '<button type="button">Before</button><input type="radio" name="g" aria-label="One"><span aria-hidden="true"><input type="radio" name="g" aria-label="Two" checked></span><button type="button">After</button>';
+    document.body.append(root);
+    try {
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement?.getAttribute('aria-label')).toBe('Two');
+      expect(getTabbables(root).map((el) => el.textContent)).toEqual(['Before', 'After']);
+    } finally {
+      root.remove();
     }
   });
 });
