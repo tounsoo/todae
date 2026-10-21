@@ -226,9 +226,12 @@ describe('Calendar range mode', () => {
     expect(isDateDisabled.mock.calls.length).toBeLessThanOrEqual(30);
   });
 
-  it('carries a far scan on after the render, the far day ending a range once the scan reaches it', { timeout: 60000 }, () => {
+  it('carries a far scan on after the render, a frame checking one chunk of days before it looks at the clock', () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
     try {
+      // Every look at the clock takes longer than a frame's slice, so a frame ends after one chunk.
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
       let calls = 0;
       const isDateDisabled = () => {
         calls++;
@@ -238,23 +241,55 @@ describe('Calendar range mode', () => {
       render(<RangeControlled isDateDisabled={isDateDisabled} onValueChange={onValueChange} />);
       fireEvent.click(october(5));
       fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
-      const nextYears = screen.getByRole('button', { name: 'Next years' });
-      for (let year = 2026; year < 9999; year += 12) fireEvent.click(nextYears);
-      fireEvent.click(screen.getByRole('button', { name: '9998' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
       calls = 0;
-      fireEvent.keyDown(focusedDay(), { key: 'PageDown', shiftKey: true });
-      // About two years of days for the range, and the month's days to draw them.
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      // One jump of five years: a render checks about two years of days, and the month's days to draw them.
       expect(calls).toBeLessThanOrEqual(732 + 31);
-      const far = day('Tuesday, October 5, 9999');
+      const far = day(date('2031-10-05').toLocaleString('en-US', { dateStyle: 'full' }));
       expect(far.getAttribute('aria-disabled')).toBe('true');
       expect(far.hasAttribute('data-unavailable')).toBe(false);
       fireEvent.click(far);
       expect(onValueChange).not.toHaveBeenCalled();
+      // One frame goes on by one chunk, and the next is scheduled.
+      expect(vi.getTimerCount()).toBe(1);
+      calls = 0;
       act(() => vi.advanceTimersToNextFrame());
+      expect(calls).toBeGreaterThan(0);
+      expect(calls).toBeLessThanOrEqual(32);
+      expect(far.getAttribute('aria-disabled')).toBe('true');
+      expect(vi.getTimerCount()).toBe(1);
+      // Frames go on until the scan reaches the day.
+      for (let frame = 0; frame < 100 && vi.getTimerCount() > 0; frame++) act(() => vi.advanceTimersToNextFrame());
+      expect(vi.getTimerCount()).toBe(0);
       expect(far.hasAttribute('aria-disabled')).toBe(false);
       fireEvent.click(far);
-      expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('9999-10-05') });
+      expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('2031-10-05') });
     } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('starts a scan that has not finished over when isDateDisabled changes', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    try {
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      const { rerender } = render(<RangeControlled isDateDisabled={() => false} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      act(() => vi.advanceTimersToNextFrame());
+      const calls = vi.fn(() => false);
+      rerender(<RangeControlled isDateDisabled={calls} />);
+      // The new function is asked about the days again, from the first pick on.
+      expect(calls).toHaveBeenCalledWith(date('2026-10-06'));
+      expect(calls.mock.calls.length).toBeGreaterThan(700);
+      expect(vi.getTimerCount()).toBe(1);
+    } finally {
+      vi.restoreAllMocks();
       vi.useRealTimers();
     }
   });

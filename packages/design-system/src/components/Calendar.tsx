@@ -22,7 +22,7 @@ import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { reachFrom, type Reach, type ReachScan } from './calendarReach.js';
+import { useReach } from './calendarReach.js';
 import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 
@@ -316,35 +316,7 @@ function Root(rootProps: CalendarRootProps) {
   // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
   const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
   if (anchorRuledOut) setPending(IDLE);
-  const shownMonth = focused?.toPlainYearMonth().toString() ?? null;
-  const scan = useRef<ReachScan | null>(null);
-  // Bumped when a scan carried on after a render is done, to draw what it found.
-  const [scanned, setScanned] = useState(0);
-  const reach = useMemo(
-    () =>
-      anchor && shownMonth !== null
-        ? reachFrom(scan, anchor, Temporal.PlainYearMonth.from(shownMonth), { min, max, isDateDisabled }, SCAN_DAYS)
-        : null,
-    // The scan's cache changes outside render, so `scanned` stands for it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [anchor, isDateDisabled, max, min, shownMonth, scanned],
-  );
-  // A far jump with an isDateDisabled that rules out little would check millions of days in
-  // one render, so the rest of the scan runs in slices between frames, and until it reaches
-  // a day, that day can't end the range.
-  useEffect(() => {
-    if (!anchor || shownMonth === null || !reach || reach.done) return;
-    const month = Temporal.PlainYearMonth.from(shownMonth);
-    let frame = requestAnimationFrame(function step() {
-      const until = performance.now() + SCAN_SLICE_MS;
-      let next: Reach;
-      do next = reachFrom(scan, anchor, month, { min, max, isDateDisabled }, SCAN_DAYS);
-      while (!next.done && performance.now() < until);
-      if (next.done) setScanned((count) => count + 1);
-      else frame = requestAnimationFrame(step);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [anchor, isDateDisabled, max, min, reach, shownMonth]);
+  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled });
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>
       reach !== null &&
@@ -590,11 +562,6 @@ function Header({ className, ...props }: CalendarHeaderProps) {
     </div>
   );
 }
-
-// About two years of days: the most a render checks for a range's reach.
-const SCAN_DAYS = 732;
-// How long a frame may go on checking after a render, in milliseconds.
-const SCAN_SLICE_MS = 8;
 
 const YEARS_PER_PAGE = 12;
 const YEARS_PER_ROW = 4;

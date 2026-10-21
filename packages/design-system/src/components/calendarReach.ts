@@ -1,5 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 
+import { useEffect, useMemo, useRef, useState } from 'react';
+
 /** How far from the anchor isDateDisabled has been checked, and the nearest days it ruled out. */
 export type ReachScan = {
   anchor: Temporal.PlainDate;
@@ -47,7 +49,7 @@ export function reachFrom(
   anchor: Temporal.PlainDate,
   month: Temporal.PlainYearMonth,
   { min, max, isDateDisabled }: ReachLimits,
-  budget = Infinity,
+  budget: number,
 ): Reach {
   if (!isDateDisabled) return { first: min ?? null, last: max ?? null, done: true };
   let s = cache.current;
@@ -80,4 +82,51 @@ export function reachFrom(
     last: s.last ?? (aboveDone ? (max ?? null) : s.above),
     done: belowDone && aboveDone,
   };
+}
+
+/** About two years of days: the most a render checks for a range's reach. */
+export const SCAN_DAYS = 732;
+/** Days checked between two looks at the clock while a frame goes on with a scan. */
+export const SCAN_CHUNK_DAYS = 32;
+/** How long a frame may go on checking after a render, in milliseconds. */
+export const SCAN_SLICE_MS = 8;
+
+/**
+ * The reach of a range started on `anchor` over the shown month, null with no first
+ * pick. A render checks at most SCAN_DAYS days. A far jump with an isDateDisabled that
+ * rules out little would check millions in one render, so the rest of the scan runs in
+ * slices between frames, and until it reaches a day, that day can't end the range. A
+ * scan that hasn't finished starts over when the anchor, the month or a limit changes,
+ * and stops on unmount.
+ */
+export function useReach(
+  anchor: Temporal.PlainDate | null,
+  month: Temporal.PlainYearMonth | null,
+  { min, max, isDateDisabled }: ReachLimits,
+): Reach | null {
+  const cache = useRef<ReachScan | null>(null);
+  const monthText = month?.toString() ?? null;
+  const fresh = useMemo(
+    () =>
+      anchor && monthText !== null
+        ? reachFrom(cache, anchor, Temporal.PlainYearMonth.from(monthText), { min, max, isDateDisabled }, SCAN_DAYS)
+        : null,
+    [anchor, isDateDisabled, max, min, monthText],
+  );
+  // What the frames found, for the render that `fresh` came from.
+  const [carried, setCarried] = useState<{ from: Reach | null; reach: Reach } | null>(null);
+  useEffect(() => {
+    if (!anchor || monthText === null || !fresh || fresh.done) return;
+    const target = Temporal.PlainYearMonth.from(monthText);
+    let frame = requestAnimationFrame(function step() {
+      const until = performance.now() + SCAN_SLICE_MS;
+      let next: Reach;
+      do next = reachFrom(cache, anchor, target, { min, max, isDateDisabled }, SCAN_CHUNK_DAYS);
+      while (!next.done && performance.now() < until);
+      if (next.done) setCarried({ from: fresh, reach: next });
+      else frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [anchor, fresh, isDateDisabled, max, min, monthText]);
+  return carried && carried.from === fresh ? carried.reach : fresh;
 }
