@@ -113,6 +113,8 @@ export type TokenTree = { [key: string]: TokenNode | TokenTree };
  */
 export type TokenRef = { path: string; type: string; role: 'value' | 'component' | 'alpha' };
 
+export type TokenEntry = { kind: 'set' | 'modifier'; name: string };
+
 export type FlatToken = {
   path: string;
   type: string;
@@ -125,6 +127,8 @@ export type FlatToken = {
   cssValue: string;
   layer: Layer;
   context?: string;
+  /** The set or modifier that declares it, named in the catalog so a company knows where to override it. */
+  entry?: TokenEntry;
   /**
    * The token's `$description`, or the nearest enclosing group's in the same
    * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
@@ -820,7 +824,7 @@ export function settleDescriptions(tokens: FlatToken[], sources: FlatToken[][] =
 
 export function emitCatalog(tokens: FlatToken[]): string {
   const described = new Map(settleDescriptions(tokens).map((token) => [token.path, token.description]));
-  const rows = tokens.map(({ path, type, cssVar, cssValue, ref, layer, context }) => ({
+  const rows = tokens.map(({ path, type, cssVar, cssValue, ref, layer, context, entry }) => ({
     path,
     type,
     cssVar,
@@ -828,6 +832,7 @@ export function emitCatalog(tokens: FlatToken[]): string {
     ref,
     layer,
     context: context ?? null,
+    entry: entry ?? null,
     description: described.get(path) ?? null,
   }));
   return `${JSON.stringify({ version: 1, tokens: rows }, null, 2)}\n`;
@@ -1155,7 +1160,11 @@ function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
   return new Map(tokens.map((t) => [t.path, { $type: t.type, $value: t.value }]));
 }
 
-type TodaeOwner = { kind: 'set' | 'modifier'; name: string; context?: string };
+type TodaeOwner = TokenEntry & { context?: string };
+
+function withEntry(kind: TokenEntry['kind'], name: string, tokens: FlatToken[]): FlatToken[] {
+  return tokens.map((token) => ({ ...token, entry: { kind, name } }));
+}
 
 const MATCHED_EXTENSION_KEYS = ['layer', 'attribute', 'root', 'colorScheme', 'alias'] as const;
 
@@ -1272,7 +1281,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
         kind,
         name,
         extension,
-        tokens: await loadTokens(
+        tokens: withEntry(kind, name, await loadTokens(
           def.sources,
           `${loc} sources`,
           tokensRoot,
@@ -1281,7 +1290,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           [...paints],
           upstreamSet?.kind === 'set' ? upstreamSet.tokens : [],
           placedIn(kind, name),
-        ),
+        )),
       });
       continue;
     }
@@ -1307,7 +1316,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
       if (extension.alias && context === 'base') fail(`${loc} context "base" is reserved for shared <root>.base tokens`);
       contexts.set(
         context,
-        await loadTokens(
+        withEntry(kind, name, await loadTokens(
           sources,
           `${loc} context "${context}"`,
           tokensRoot,
@@ -1316,7 +1325,7 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
           [...paints],
           base?.kind === 'modifier' ? (base.contexts.get(context) ?? []) : [],
           placedIn(kind, name, context),
-        ),
+        )),
       );
     }
     entries.push({ kind, name, extension, defaultContext, contexts });

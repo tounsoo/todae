@@ -2,7 +2,7 @@ import { FieldLabelStates, FieldNumber } from '../../../../components/demos/Fiel
 
 # Field.TextInput
 
-`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. For a typed date, time, or date and time, read the text with `parseDate`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the input is read-only. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. For a typed date, time, or date and time, read the text with `parseDate`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
 
 ```tsx
 const id = useId();

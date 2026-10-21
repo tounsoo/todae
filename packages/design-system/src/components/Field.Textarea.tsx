@@ -10,7 +10,8 @@ import { useTextEntry } from './Field.shared.js';
 
 export type FieldTextareaProps = {
   value: string;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onValueChange?: (value: string) => void;
   placeholder?: string;
   rows?: number;
@@ -67,10 +68,15 @@ export function Textarea({
           ...(highlights !== undefined ? { anchorName: mergeAnchorNames(style?.anchorName, layer.anchorName) } : null),
         } as CSSProperties
       }
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
+      // Without either handler the field is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(event.target.value);
+            }
+          : undefined
+      }
       onScroll={composeHandlers(onScroll, layer.onScroll)}
     />
   );

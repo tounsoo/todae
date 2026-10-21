@@ -77,7 +77,7 @@ To change one of Todae's own tokens, declare it again in a set or modifier with 
 }
 ```
 
-A token in the wrong entry fails the build with a message naming the entry it belongs in. Change a core token only with a literal value, since core tokens are declared once on `:root` and reference nothing.
+Each row of the token catalog, `@tounsoo/todae/tokens.json`, names its entry in `entry`, and a token in the wrong entry fails the build with a message naming the entry it belongs in. Change a core token only with a literal value, since core tokens are declared once on `:root` and reference nothing.
 
 Build it with the `todae-tokens` CLI:
 

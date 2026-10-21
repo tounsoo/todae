@@ -19,7 +19,8 @@ const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set
 
 export type FieldTextInputProps = {
   value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   onValueChange?: (value: string) => void;
   placeholder?: string;
   type?: FieldTextInputType;
@@ -48,10 +49,15 @@ export function TextInput({
       value={value}
       type={type}
       className={cx(styles.input, className)}
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
+      // Without either handler the field is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(event.target.value);
+            }
+          : undefined
+      }
     />
   );
 }

@@ -65,6 +65,18 @@ describe('ThemeProvider', () => {
     );
   });
 
+  it('keeps the enclosing density on a nested DensityProvider with none', () => {
+    render(
+      <DensityProvider density="compact">
+        <DensityProvider data-testid="inner">
+          <DensityLabel />
+        </DensityProvider>
+      </DensityProvider>,
+    );
+    expect(screen.getByTestId('inner').getAttribute('data-density')).toBe('compact');
+    expect(screen.getByTestId('inner').textContent).toBe('compact');
+  });
+
   it('keeps the enclosing appearance on a nested provider that only sets overrides', () => {
     mockMatchMedia(false);
     render(

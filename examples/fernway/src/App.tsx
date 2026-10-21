@@ -76,7 +76,7 @@ export function App() {
             <Field.Group>
               <Label.Root htmlFor={guestsId}>Guests</Label.Root>
               <Field.Root id={guestsId}>
-                <Field.TextInput type="number" value={guests} onChange={(event) => setGuests(event.target.value)} />
+                <Field.TextInput type="number" value={guests} onValueChange={setGuests} />
               </Field.Root>
             </Field.Group>
           </Stack.Root>

@@ -178,6 +178,25 @@ describe('Field.TextInput', () => {
     >();
   });
 
+  it('takes onValueChange alone on TextInput and Textarea', () => {
+    const onText = vi.fn();
+    const onArea = vi.fn();
+    const { container } = render(
+      <>
+        <Field.Root aria-label="Name">
+          <Field.TextInput value="" onValueChange={onText} />
+        </Field.Root>
+        <Field.Root aria-label="Note">
+          <Field.Textarea value="" onValueChange={onArea} />
+        </Field.Root>
+      </>,
+    );
+    fireEvent.change(container.querySelector('input')!, { target: { value: 'Ada' } });
+    fireEvent.change(container.querySelector('textarea')!, { target: { value: 'Hi' } });
+    expect(onText).toHaveBeenCalledWith('Ada');
+    expect(onArea).toHaveBeenCalledWith('Hi');
+  });
+
   it.each([['number', '42', '7']] as const)('renders a native %s input with a string value', (type, value, next) => {
     const onValueChange = vi.fn();
     const { container } = render(
