@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -473,7 +473,7 @@
   }
 
   /* With nothing beside it but its popover, the field is as wide as the swatch. */
-  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[data-todae-value-input]))) {
     inline-size: fit-content;
   }
 

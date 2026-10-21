@@ -684,7 +684,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
     expect(fieldCss.slice(supports)).toContain('field-sizing: content');
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
-    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
+    expect(fieldCss).toContain('.shell:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
     expect(fieldCss).toContain('min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');
@@ -2075,7 +2075,7 @@ describe('Field.ChipInput row', () => {
     const flow = container.querySelector('[class*="flow"]') as HTMLElement;
     expect(flow.querySelector('[class*="row"]')).toBeNull();
     expect(flow.getAttribute('data-chip-layout')).toBe('row');
-    expect([...flow.children]).toEqual([input]);
+    expect([...flow.children]).toEqual([input, flow.querySelector('[data-todae-value-input]')]);
   });
 
   it('measures an empty row without clamping the input line', () => {
@@ -2110,9 +2110,10 @@ describe('Field.ChipInput row', () => {
     );
     const flow = container.querySelector('[class*="flow"]') as HTMLElement;
     const input = flow.querySelector('input');
+    const carrier = flow.querySelector('[data-todae-value-input]');
     const measure = flow.querySelector('[inert][aria-hidden]');
     expect(flow.querySelector('[class*="row"]')).toBeNull();
-    expect([...flow.children]).toEqual([input, measure]);
+    expect([...flow.children]).toEqual([input, carrier, measure]);
     expect(flow.querySelector('.measure, [class*="measure"] span')?.parentElement).not.toBe(flow);
   });
 

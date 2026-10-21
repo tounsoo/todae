@@ -20,6 +20,7 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` 진입 전환. 없으면: 다이얼로그가 전환 없이 나타납니다.
 - **[Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal)**: `Calendar`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`의 값과 `formatDate`, `parseDate`, `formatTime`, `parseTime`, `formatDateTime`, `parseDateTime`. 없으면, 앱이 Temporal 폴리필을 불러오지 않는 한: `Calendar.Root`와 열린 `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`는 렌더링할 때 예외가 발생하고, `parseDate`, `parseTime`, `parseDateTime`은 예외가 발생할 수 있습니다.
 - **[비동기 Clipboard API](https://developer.mozilla.org/docs/Web/API/Clipboard/writeText)**: `useClipboard`의 복사. 없거나 보안 컨텍스트가 아닌 페이지에서는: 복사가 실패하고 `status`가 `'failed'`가 됩니다.
+- **[제약 조건 검증 API](https://developer.mozilla.org/docs/Web/HTML/Constraint_validation)**: `Form.Root`와 검증 범위가 각 컨트롤의 `validity`, `willValidate`, `validationMessage`를 읽고, `checkValidity()`로 폼을 검사하며, `formNoValidate`를 위해 `SubmitEvent.submitter`를 읽고, `setCustomValidity()`로 `customValidity`를 설정합니다. `requestSubmit()`도 같은 검사를 거칩니다. Todae에 필수입니다.
 - **[`dvh` 단위](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: 모바일 브라우저 UI를 따르는 `Dialog`와 `BottomSheet` 높이. Todae에 필수입니다.
 
 가장 중요한 동작은 실제 브라우저(Playwright를 통한 Chromium)에서 테스트합니다. 겹쳐 쌓인 오버레이 사이의 Escape 순서, 모달 포커스와 복원, 뷰포트 가장자리에서의 뒤집기, 칩 오버플로 측정, 바텀 시트 드래그입니다. 모든 문서 예시도 그곳에서 axe로 검사합니다.
