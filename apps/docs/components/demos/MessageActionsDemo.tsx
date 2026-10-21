@@ -85,8 +85,9 @@ export function MessageActionsExample() {
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={(event) => {
-                    // An Escape that ends an IME composition belongs to the composition.
-                    if (event.key === 'Escape' && !event.nativeEvent.isComposing && event.keyCode !== 229) closeEditor();
+                    // An Escape that cancels an IME composition belongs to the composition. keyCode 229
+                    // marks only the Enter that ends one in Safari, so Escape checks isComposing alone.
+                    if (event.key === 'Escape' && !event.nativeEvent.isComposing) closeEditor();
                   }}
                   autoFocus
                   autoGrow

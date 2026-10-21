@@ -229,3 +229,26 @@ describe('useCombobox reset reopening a dialog', () => {
     expect(document.activeElement).toBe(reset);
   });
 });
+
+describe('useCombobox Escape in a dialog', () => {
+  function BoxInDialog({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {
+    return (
+      <Dialog.Root open onOpenChange={onOpenChange} aria-label="Settings">
+        <LabelledBox />
+      </Dialog.Root>
+    );
+  }
+
+  it('closes the list on the first Escape and the dialog on the next', async () => {
+    const changes: boolean[] = [];
+    render(<BoxInDialog onOpenChange={(open) => changes.push(open)} />);
+    const input = screen.getByRole('combobox');
+    await userEvent.click(input);
+    await waitFor(() => expect(input.getAttribute('aria-expanded')).toBe('true'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(input.getAttribute('aria-expanded')).toBe('false'));
+    expect(changes).toEqual([]);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(changes).toEqual([false]));
+  });
+});

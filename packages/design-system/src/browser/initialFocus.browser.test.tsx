@@ -89,3 +89,38 @@ describe('initial focus in a modal opened from another modal', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep' })));
   });
 });
+
+describe('default initial focus on a radio group', () => {
+  function RadioPopover() {
+    const [open, setOpen] = useState(false);
+    const popover = usePopover({ open, onOpenChange: (next) => setOpen(next) });
+    return (
+      <div data-appearance="light" data-density="comfortable">
+        <Button.Root {...popover.getTriggerProps()}>Open</Button.Root>
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Size">
+          <input type="radio" name="size" aria-label="Small" />
+          <input type="radio" name="size" aria-label="Large" defaultChecked />
+        </Popover.Root>
+      </div>
+    );
+  }
+
+  it('lands on the checked radio, where Tab would stop', async () => {
+    render(<RadioPopover />);
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Large' })));
+  });
+
+  it('matches the browser, which tabs to the checked radio of a group', async () => {
+    render(
+      <div>
+        <button type="button">Before</button>
+        <input type="radio" name="tone" aria-label="Warm" />
+        <input type="radio" name="tone" aria-label="Cool" defaultChecked />
+      </div>,
+    );
+    screen.getByRole('button', { name: 'Before' }).focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Cool' }));
+  });
+});

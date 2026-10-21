@@ -29,4 +29,27 @@ describe('getTabbables', () => {
     expect(getTabbables(root).map((el) => el.id)).toEqual(['save']);
     root.remove();
   });
+
+  it('counts one stop per radio group: the checked radio, or the first with none checked', () => {
+    const root = document.createElement('div');
+    root.innerHTML = `
+      <input type="radio" name="size" id="small">
+      <input type="radio" name="size" id="large" checked>
+      <input type="radio" name="tone" id="warm" disabled>
+      <input type="radio" name="tone" id="cool">
+      <input type="radio" name="tone" id="neutral">
+      <input type="radio" id="alone1"><input type="radio" id="alone2">
+      <form><input type="radio" name="size" id="inForm"></form>`;
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['large', 'cool', 'alone1', 'alone2', 'inForm']);
+    root.remove();
+  });
+
+  it('passes a group\'s stop on when its checked radio cannot take focus', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<input type="radio" name="size" id="small"><input type="radio" name="size" id="large" checked disabled>';
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['small']);
+    root.remove();
+  });
 });

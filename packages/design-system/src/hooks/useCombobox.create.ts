@@ -6,10 +6,10 @@ type CreateResult = string | void | Promise<string | void>;
 
 /**
  * An async create in flight: live, or dropped by `cancel`. Running its label
- * again takes a dropped one back. `startValue` is the single value when it
- * started, or when it was taken back.
+ * again takes a dropped one back, unless its `controller` was aborted.
+ * `startValue` is the single value when it started, or when it was taken back.
  */
-type CreateRequest = { label: string; startValue: string | null; dropped: boolean };
+type CreateRequest = { label: string; startValue: string | null; dropped: boolean; controller: AbortController };
 
 const NONE: ReadonlySet<string> = new Set();
 
@@ -19,6 +19,24 @@ export function readsLabel(text: string, label: string): boolean {
 }
 
 const keyOf = (label: string) => label.trim().toLowerCase();
+
+/**
+ * What a failure reads as: its reason, or an Error when it has none, so
+ * `reject()` and `throw undefined` still read as a failure next to `null`.
+ */
+export function failureOf(reason: unknown, source: string): unknown {
+  return reason ?? new Error(`${source} failed without a reason`);
+}
+
+/**
+ * Hands a throw from the caller's code after an await to the page's error
+ * reporting, as a throw from an event handler would be, rather than leaving it
+ * an unhandled rejection. Without `reportError`, as in jsdom, it throws.
+ */
+function report(thrown: unknown): void {
+  if (typeof globalThis.reportError !== 'function') throw thrown;
+  globalThis.reportError(thrown);
+}
 
 /**
  * Whether a live request, as it settles, still speaks for the field. In multiple
@@ -55,16 +73,21 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
 
   /**
    * Runs `start`, and hands its result to `commit`. While a create for `label` is
-   * pending it runs nothing, and takes that create back if it was dropped. A throw
-   * from `start`, or its rejection, is the create's failure; a throw from `commit`
-   * is the caller's.
+   * pending it runs nothing, and takes that create back if it was dropped, unless
+   * its signal was aborted: then it runs `start` again. A throw from `start`, or
+   * its rejection, is the create's failure; a throw from `commit` is the caller's,
+   * and after an await it goes to `reportError`.
    */
   const run = useCallback(
-    (label: string, start: () => CreateResult | undefined, commit: (canonical: string | void) => void) => {
+    (
+      label: string,
+      start: (signal: AbortSignal) => CreateResult | undefined,
+      commit: (canonical: string | void) => void,
+    ) => {
       const key = keyOf(label);
       const now = () => state.current;
       const pending = requests.current.get(key);
-      if (pending) {
+      if (pending && !pending.controller.signal.aborted) {
         if (pending.dropped) {
           pending.dropped = false;
           pending.startValue = now().single;
@@ -72,19 +95,21 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
         }
         return;
       }
+      if (pending) requests.current.delete(key);
       setError(null);
+      const controller = new AbortController();
       let result: CreateResult | undefined;
       try {
-        result = start();
+        result = start(controller.signal);
       } catch (reason) {
-        setError(reason);
+        setError(failureOf(reason, 'onCreate'));
         return;
       }
       if (!isThenable(result)) {
         commit(result);
         return;
       }
-      const request: CreateRequest = { label, startValue: now().single, dropped: false };
+      const request: CreateRequest = { label, startValue: now().single, dropped: false, controller };
       requests.current.set(key, request);
       sync();
       const settle = () => {
@@ -97,13 +122,17 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
         (canonical) => {
           // Rendered at once, so a controlled owner's new value is what the next
           // create to settle in this tick builds on.
-          flushSync(() => {
-            if (settle()) commit(canonical);
-          });
+          try {
+            flushSync(() => {
+              if (settle()) commit(canonical);
+            });
+          } catch (thrown) {
+            report(thrown);
+          }
         },
         (reason: unknown) => {
           // Reported only while the text still asks for this label.
-          if (settle() && readsLabel(now().inputValue, label)) setError(reason);
+          if (settle() && readsLabel(now().inputValue, label)) setError(failureOf(reason, 'onCreate'));
         },
       );
     },
@@ -117,9 +146,16 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
 
   const clearError = useCallback(() => setError(null), []);
 
-  // Unmounting, or an Activity hiding the field, drops every request. Hidden ones
-  // stay in flight, so showing the field again cannot run their labels twice.
-  useEffect(() => cancel, [cancel]);
+  // Unmounting, or an Activity hiding the field, drops every request and aborts
+  // its signal, since the field let go of it. Running its label again once shown
+  // calls `onCreate` again.
+  useEffect(
+    () => () => {
+      for (const request of requests.current.values()) request.controller.abort();
+      cancel();
+    },
+    [cancel],
+  );
 
   const isPending = useCallback((label: string) => live.has(keyOf(label)), [live]);
 

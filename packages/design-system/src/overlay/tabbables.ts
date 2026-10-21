@@ -56,9 +56,33 @@ export function isReachable(el: HTMLElement): boolean {
   return el.checkVisibility?.({ visibilityProperty: true, checkVisibilityCSS: true }) ?? el.style.display !== 'none';
 }
 
+// Whether `el` is focusable now, by its own state alone.
+function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
+  return inTabOrder(el, root) && !el.matches(':disabled') && isReachable(el);
+}
+
+// Whether `el`, a focusable radio, is its group's one Tab stop: the checked
+// radio, or with none checked that can take focus, the first that can. A group
+// is the radios of one name in one form, or outside any form in one tree.
+function isRadioGroupStop(el: HTMLInputElement, root: HTMLElement): boolean {
+  if (!el.name) return true;
+  // A form's elements include the controls its `form` attribute brings in.
+  const group = el.form ? el.form.elements : (el.getRootNode() as Document | ShadowRoot).querySelectorAll('input');
+  let first: HTMLInputElement | null = null;
+  for (const radio of group) {
+    if (!(radio instanceof HTMLInputElement) || radio.type !== 'radio') continue;
+    if (radio.name !== el.name || radio.form !== el.form) continue;
+    if (radio !== el && !canTakeFocus(radio, root)) continue;
+    if (radio.checked) return radio === el;
+    first ??= radio;
+  }
+  return first === el;
+}
+
 // Whether Tab stops on `el`, one of root's CANDIDATES, now.
 function isTabStop(el: HTMLElement, root: HTMLElement): boolean {
-  return inTabOrder(el, root) && !el.matches(':disabled') && isReachable(el);
+  if (!canTakeFocus(el, root)) return false;
+  return !(el instanceof HTMLInputElement && el.type === 'radio') || isRadioGroupStop(el, root);
 }
 
 // root's candidates in document order, less the toasts moved into it.
@@ -71,7 +95,8 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
 /**
  * The elements in `root` that Todae treats as tab stops now: the candidates
  * Todae recognizes, in document order, minus disabled, hidden, inert and
- * aria-hidden content.
+ * aria-hidden content, and minus every radio of a group but its one stop, the
+ * checked radio or, with none checked, the first.
  */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
   return [...candidatesIn(root)].filter((el) => isTabStop(el, root));
