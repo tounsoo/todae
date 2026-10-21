@@ -81,8 +81,9 @@
     block-size: 100%;
   }
 
-  /* Where a pointer can hover, an unsorted column hides its glyph until
-     hover or focus; on touch it stays, dimmed, so the column reads as
+  /* Where a pointer can hover, a glyph with no sorted header cell above it,
+     such as in a column whose sort is none or unset, hides until hover or
+     focus; on touch it stays in its default color, so the column reads as
      sortable. */
   @media (hover: hover) {
     .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :hover, :focus-visible) > .sortGlyph {

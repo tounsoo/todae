@@ -10,7 +10,7 @@ export type UseSelectionOptions<K extends string | number> = {
   keys: readonly K[];
   /** Keys that cannot be selected: ranges and select all skip them, and their checkbox is disabled. */
   disabledKeys?: readonly K[];
-  /** Controlled selection, in the order keys were selected. Defined means controlled. */
+  /** Controlled selection, in the order keys were selected. Defined means controlled. A change you don't take by the end of the task that made it, such as one you set in a transition, is dropped from the next change. */
   value?: readonly K[];
   /** Initial selection when uncontrolled. */
   defaultValue?: readonly K[];
@@ -67,9 +67,11 @@ function withSelected<K>(value: readonly K[], targets: readonly K[], selected: b
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
   const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
-  // Writes in one event build on each other, so two calls both count. After
-  // the event the committed value is the base again, so a change a
-  // controlled parent turned down is dropped.
+  // Writes build on each other until the next commit, so two calls both
+  // count. When controlled, the committed value is the base again after the
+  // calling task's microtasks, so a change the parent turned down is dropped;
+  // the reset is queued after the parent's update, so React's flush of an
+  // event's updates, also a microtask, commits first.
   const committed = useRef(value);
   const latest = useRef(value);
   useLayoutEffect(() => {
@@ -79,11 +81,12 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
   const write = (next: readonly K[]) => {
     if (next === latest.current) return;
     latest.current = next;
+    setValue(next);
+    onValueChange?.([...next]);
+    if (valueProp === undefined) return;
     queueMicrotask(() => {
       latest.current = committed.current;
     });
-    setValue(next);
-    onValueChange?.([...next]);
   };
   const selected = useMemo(() => new Set<K>(value), [value]);
   const disabled = useMemo(() => new Set<K>(disabledKeys), [disabledKeys]);

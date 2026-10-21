@@ -14,10 +14,10 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
  * that takes `sort`, with the column's label as its children. It draws the
  * `sort` glyph after the label, from the header cell's `data-sort`: shown on a
  * sorted column, turned when it is descending, and dimmed when unsorted; on
- * a device with a hovering pointer it shows only on hover or focus. It does not sort; set
- * the cell's `sort` from `onClick`. After a click it announces the column's
- * next `aria-sort` or `data-sort` change, if it comes before the user's next
- * press or key.
+ * a device with a hovering pointer it shows only on hover or focus. It does
+ * not sort; set the cell's `sort` from `onClick`. After a click it announces
+ * the column's next `aria-sort` or `data-sort` change, if it comes before the
+ * user's next press or key.
  */
 export type TableSortButtonProps = ComponentPropsWithRef<'button'>;
 
@@ -43,6 +43,7 @@ type Stop = () => void;
 const waiting = /* @__PURE__ */ new WeakMap<Element, Stop>();
 
 const USER_ACTIONS = ['pointerdown', 'keydown'] as const;
+const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'CapsLock', 'Insert', 'OS']);
 
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
   const { sort } = useGlyphs();
@@ -58,7 +59,12 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
     const doc = cell.ownerDocument;
     const stop = () => {
       observer.disconnect();
-      for (const type of USER_ACTIONS) doc.removeEventListener(type, stop, true);
+      for (const type of USER_ACTIONS) doc.removeEventListener(type, onAction, true);
+    };
+    // A lone modifier, such as Control to quiet a screen reader, is not a new action.
+    const onAction = (event: Event) => {
+      if (event instanceof KeyboardEvent && (event.repeat || MODIFIER_KEYS.has(event.key))) return;
+      stop();
     };
     const observer = new MutationObserver(() => {
       stop();
@@ -67,7 +73,7 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
       announce(say(columnName(button)));
     });
     observer.observe(cell, { attributes: true, attributeFilter: ['aria-sort', 'data-sort'] });
-    for (const type of USER_ACTIONS) doc.addEventListener(type, stop, true);
+    for (const type of USER_ACTIONS) doc.addEventListener(type, onAction, true);
     return stop;
   };
 

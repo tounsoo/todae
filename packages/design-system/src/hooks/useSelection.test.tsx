@@ -157,6 +157,15 @@ describe('useSelection', () => {
     expect(onValueChange).toHaveBeenLastCalledWith(['a', 'c']);
   });
 
+  it('keeps an uncontrolled change that has not rendered yet', async () => {
+    const { result } = setup();
+    const { toggle } = result.current;
+    toggle('a');
+    await Promise.resolve();
+    await act(async () => toggle('b'));
+    expect(result.current.value).toEqual(['a', 'b']);
+  });
+
   it('adds a key listed twice in keys once', () => {
     const { result } = setup({ keys: ['a', 'a', 'b'] });
     act(() => result.current.toggleAll());

@@ -300,6 +300,81 @@ describe('Table.SortButton', () => {
     expect(live()).toBe('');
   });
 
+  it('stops waiting at a key press', async () => {
+    function Typed() {
+      const [sort, setSort] = useState<TableSort>('none');
+      return (
+        <>
+          <button type="button" onClick={() => setSort('ascending')}>
+            loaded
+          </button>
+          <Headers sort={sort}>
+            <Table.SortButton>Name</Table.SortButton>
+          </Headers>
+        </>
+      );
+    }
+    render(<Typed />);
+    fireEvent.click(screen.getByRole('button', { name: 'Name' }));
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    fireEvent.click(screen.getByRole('button', { name: 'loaded' }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('');
+  });
+
+  it('keeps waiting through a lone modifier key', async () => {
+    function Slow() {
+      const [sort, setSort] = useState<TableSort>('none');
+      return (
+        <>
+          <button type="button" onClick={() => setSort('ascending')}>
+            loaded
+          </button>
+          <Headers sort={sort}>
+            <Table.SortButton>Name</Table.SortButton>
+          </Headers>
+        </>
+      );
+    }
+    render(<Slow />);
+    fireEvent.click(screen.getByRole('button', { name: 'Name' }));
+    fireEvent.keyDown(document.body, { key: 'Control' });
+    fireEvent.click(screen.getByRole('button', { name: 'loaded' }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('Sorted by Name, ascending');
+  });
+
+  it('keeps another column\'s wait when its own click is prevented', async () => {
+    function Busy() {
+      const [sort, setSort] = useState<TableSort>('none');
+      return (
+        <>
+          <button type="button" onClick={() => setSort('ascending')}>
+            loaded
+          </button>
+          <table>
+            <thead>
+              <tr>
+                <Table.HeaderCell scope="col" sort={sort}>
+                  <Table.SortButton>Name</Table.SortButton>
+                </Table.HeaderCell>
+                <Table.HeaderCell scope="col" sort="none">
+                  <Table.SortButton onClick={(event) => event.preventDefault()}>Amount</Table.SortButton>
+                </Table.HeaderCell>
+              </tr>
+            </thead>
+          </table>
+        </>
+      );
+    }
+    render(<Busy />);
+    fireEvent.click(screen.getByRole('button', { name: 'Name' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Amount' }));
+    fireEvent.click(screen.getByRole('button', { name: 'loaded' }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(live()).toBe('Sorted by Name, ascending');
+  });
+
   it('is in the main entry\'s Table with every server part', () => {
     expect(Object.keys(Table)).toEqual([...Object.keys(ServerTable), 'SortButton']);
   });
