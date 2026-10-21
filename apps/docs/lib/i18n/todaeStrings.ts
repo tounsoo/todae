@@ -43,6 +43,18 @@ const KOREAN: Strings = {
   stepCurrent: '진행 중',
   stepPending: '시작 전',
   stepError: '실패',
+  valueMissing: '필수 항목입니다',
+  typeMismatchEmail: '이메일 주소를 입력하세요',
+  typeMismatchUrl: 'URL을 입력하세요',
+  typeMismatch: '형식에 맞게 입력하세요',
+  badInput: '올바른 값을 입력하세요',
+  patternMismatch: '요청한 형식에 맞게 입력하세요',
+  tooShort: (min) => `${min}자 이상 입력하세요`,
+  tooLong: (max) => `${max}자 이하로 입력하세요`,
+  rangeUnderflow: (min) => `${min} 이상이어야 합니다`,
+  rangeOverflow: (max) => `${max} 이하여야 합니다`,
+  stepMismatch: '허용된 간격에 맞는 값을 입력하세요',
+  formErrors: (count) => `수정할 항목 ${count}개`,
 };
 
 /** The strings to give StringsProvider for a locale. English is Todae's default, so it sets none. */

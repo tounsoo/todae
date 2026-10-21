@@ -66,6 +66,18 @@ const FRENCH: Strings = {
   stepCurrent: 'En cours',
   stepPending: 'À faire',
   stepError: 'Échec',
+  valueMissing: 'Ce champ est obligatoire',
+  typeMismatchEmail: 'Saisissez une adresse e-mail',
+  typeMismatchUrl: 'Saisissez une URL',
+  typeMismatch: 'Saisissez une valeur au bon format',
+  badInput: 'Saisissez une valeur valide',
+  patternMismatch: 'Respectez le format demandé',
+  tooShort: (min) => `Au moins ${min} caractères`,
+  tooLong: (max) => `Au plus ${max} caractères`,
+  rangeUnderflow: (min) => `Saisissez ${min} ou plus`,
+  rangeOverflow: (max) => `Saisissez ${max} ou moins`,
+  stepMismatch: 'Saisissez une valeur au pas autorisé',
+  formErrors: (count) => `${count} problème${count === 1 ? '' : 's'} à corriger`,
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {
