@@ -10,7 +10,7 @@ import {
 
 # Field.Textarea
 
-`Field.Textarea` is a native `<textarea>` for multi-line text inside a [Field](/field). Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. Padding sits on the textarea, inside the shell.
+`Field.Textarea` is a native `<textarea>` for multi-line text inside a [Field](/field). Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. Padding sits on the textarea, inside the shell. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the textarea is read-only.
 
 ```tsx
 <Field.Root aria-label="Note">

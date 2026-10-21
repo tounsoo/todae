@@ -305,7 +305,7 @@
   },
   "field/textarea": {
     "(top)": "4d3ac00b8ea3",
-    "# Field.Textarea": "14c1c3cd31ad",
+    "# Field.Textarea": "ea1cc4b98813",
     "## Height": "c62990618acf",
     "## Density and states": "bdbe9831349f",
     "## Highlights": "e18e517ab4bb",
@@ -405,7 +405,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "bc8fe6150ac2",
+    "## Tools": "8445ce3fd244",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",
@@ -649,7 +649,7 @@
   },
   "tokens": {
     "(top)": "9f7f155f1290",
-    "# Tokens": "5797b1d8fe42",
+    "# Tokens": "411f78a001fd",
     "## When to use": "d57fe8233a0b",
     "### ThemeProvider": "e2d8c7ea0e56",
     "### DensityProvider": "5365ed3cf367",

@@ -599,6 +599,19 @@ describe('resolver-driven build', () => {
     });
   });
 
+  it('names the set or modifier that declares each token in the catalog', async () => {
+    const rows = JSON.parse((await buildTokensGraph(tokensDir)).json).tokens as { path: string; context: string | null; entry: unknown }[];
+    const entryOf = (path: string, context: string | null = null) =>
+      rows.find((row) => row.path === path && row.context === context)?.entry;
+    expect(entryOf('radius.md')).toEqual({ kind: 'set', name: 'core' });
+    expect(entryOf('color.accent.default', 'light')).toEqual({ kind: 'modifier', name: 'appearance' });
+    expect(entryOf('focus.ring.color')).toEqual({ kind: 'set', name: 'focus' });
+    expect(entryOf('button.base.radius')).toEqual({ kind: 'set', name: 'button' });
+    expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(entryOf('card.shadow')).toEqual({ kind: 'set', name: 'contract' });
+    expect(rows.every((row) => row.entry !== null)).toBe(true);
+  });
+
   it('merges sources in order, accepting inline token trees', async () => {
     const root = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({
@@ -1538,6 +1551,13 @@ describe('company token build', () => {
     await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
       /variant "outline" paint keys must match button\.primary/,
     );
+  });
+
+  it('names the company\'s own entries in its catalog', async () => {
+    const rows = JSON.parse((await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir })).json)
+      .tokens as { path: string; context: string | null; entry: unknown }[];
+    expect(rows.find((row) => row.path === 'brand.logo.size')?.entry).toEqual({ kind: 'set', name: 'brand' });
+    expect(rows.find((row) => row.path === 'button.outline.bg.default')?.entry).toEqual({ kind: 'modifier', name: 'buttonVariant' });
   });
 
   it('rejects extensions that change Todae\'s placement or redeclare its tokens', async () => {

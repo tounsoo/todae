@@ -3,7 +3,7 @@ import { mergeDescribedBy, useFieldContext } from './Field.context.js';
 import { cx } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
-import { useTextEntry } from './Field.shared.js';
+import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 /**
  * Input types that take a string value. The number type keeps its native
@@ -34,6 +34,7 @@ export function TextInput({
   type = 'text',
   className,
   maxLength,
+  readOnly,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
@@ -49,15 +50,8 @@ export function TextInput({
       value={value}
       type={type}
       className={cx(styles.input, className)}
-      // Without either handler the field is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              onChange?.(event);
-              onValueChange?.(event.target.value);
-            }
-          : undefined
-      }
+      onChange={valueChangeHandler(onChange, onValueChange)}
+      readOnly={readOnly ?? (!onChange && !onValueChange)}
     />
   );
 }

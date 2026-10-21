@@ -832,7 +832,7 @@ export function emitCatalog(tokens: FlatToken[]): string {
     ref,
     layer,
     context: context ?? null,
-    entry: entry ?? null,
+    entry: entry ?? fail(`token "${path}" has no set or modifier for the catalog`),
     description: described.get(path) ?? null,
   }));
   return `${JSON.stringify({ version: 1, tokens: rows }, null, 2)}\n`;

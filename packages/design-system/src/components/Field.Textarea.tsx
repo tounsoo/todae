@@ -6,7 +6,7 @@ import { resolveTextareaRows } from './textareaRows.js';
 import { TextareaHighlights, useTextareaHighlights, type FieldTextareaHighlight } from './TextareaHighlights.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useField } from '../hooks/useField.js';
-import { useTextEntry } from './Field.shared.js';
+import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 export type FieldTextareaProps = {
   value: string;
@@ -33,6 +33,7 @@ export function Textarea({
   className,
   style,
   maxLength,
+  readOnly,
   'aria-describedby': describedBy,
   onScroll,
   ref,
@@ -68,15 +69,8 @@ export function Textarea({
           ...(highlights !== undefined ? { anchorName: mergeAnchorNames(style?.anchorName, layer.anchorName) } : null),
         } as CSSProperties
       }
-      // Without either handler the field is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              onChange?.(event);
-              onValueChange?.(event.target.value);
-            }
-          : undefined
-      }
+      onChange={valueChangeHandler(onChange, onValueChange)}
+      readOnly={readOnly ?? (!onChange && !onValueChange)}
       onScroll={composeHandlers(onScroll, layer.onScroll)}
     />
   );

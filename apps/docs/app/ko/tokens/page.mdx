@@ -2,7 +2,7 @@ import { TokensCatalog } from '../../../components/TokensCatalog';
 
 # 토큰
 
-DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 contract 변수만 사용합니다.
+DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 contract 변수만 사용합니다. JSON 카탈로그 `@tounsoo/todae/tokens.json`은 각 토큰을 선언한 세트나 모디파이어도 `entry`에 적습니다. 회사 토큰 패키지는 그곳에서 토큰을 오버라이드합니다.
 
 코드에서 프로바이더 값을 읽으려면, `useAppearance()`는 가장 가까운 ThemeProvider의 확정된 appearance(`light` 또는 `dark`)를, `useDensity()`는 가장 가까운 DensityProvider의 density를 반환합니다. 위에 프로바이더가 없으면 `light`와 `comfortable`을 반환합니다.
 
