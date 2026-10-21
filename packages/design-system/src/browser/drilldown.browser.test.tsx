@@ -557,7 +557,7 @@ describe('Drilldown in a browser', () => {
   it('keeps the leaving view on screen until its slide ends, when CSS makes the slide longer', async () => {
     await openDialog(<SettingsDialog />);
     const style = document.createElement('style');
-    style.textContent = '[data-entering], [data-leaving] { animation-duration: 700ms; }';
+    style.textContent = '[data-entering], [data-leaving] { transition-duration: 700ms; }';
     document.head.append(style);
     try {
       const token = cssTimeMs(getComputedStyle(screen.getByTestId('viewport')).getPropertyValue('--todae-drilldown-motion-duration'))!;
@@ -693,6 +693,36 @@ describe('Drilldown in a browser', () => {
     expect(dialog().open).toBe(true);
     expect(onValueChange).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('slides a view overtaken at the middle of its slide on from where it is', async () => {
+    const offsets = (labels: readonly string[]) => {
+      const port = screen.getByTestId('viewport').getBoundingClientRect();
+      return labels.map((label) => view(label).getBoundingClientRect().left - port.left);
+    };
+    for (const second of ['push', 'pop'] as const) {
+      await openDialog(<SettingsDialog />);
+      screen.getByRole('button', { name: 'Account' }).click();
+      await waitFor(() => expect(view('Account')).not.toBeNull());
+      for (const label of ['Settings', 'Account']) {
+        for (const animation of view(label).getAnimations()) {
+          animation.pause();
+          animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 2;
+        }
+      }
+      const watched = second === 'push' ? ['Account'] : ['Account', 'Settings'];
+      const before = offsets(watched);
+      expect(Math.abs(before[0]!)).toBeGreaterThan(10);
+      if (second === 'push') screen.getByRole('button', { name: 'Email' }).click();
+      else screen.getByRole('button', { name: 'Back to Settings' }).click();
+      // Read as the change commits, before a frame moves the new slide on.
+      const after = await waitFor(() => {
+        expect(view('Account').getAttribute('data-leaving')).toBe(second === 'push' ? 'forward' : 'back');
+        return offsets(watched);
+      });
+      after.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
+      cleanupAll();
+    }
   });
 });
 
