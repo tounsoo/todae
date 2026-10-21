@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -10,11 +9,12 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { useFieldContext, usePublishStepper, type StepperEntry } from './Field.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { FieldValueInput } from './Field.ValueInput.js';
 import { valueBounds } from './Field.shared.js';
-import { labelOf } from './buttonName.js';
+import { watchLabel } from './buttonName.js';
 import { isImeKeyEvent } from './ime.js';
 import {
   canStep,
@@ -22,9 +22,11 @@ import {
   decimalsOf,
   formatNumber,
   isPartialNumber,
+  keypadFor,
   parseNumber,
   shownDecimals,
   stepNumber,
+  UNSUPPORTED_FORMAT_OPTIONS,
   type NumberFormatOptions,
 } from './numberText.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -36,7 +38,7 @@ import { useStrings } from '../providers/StringsProvider.js';
 export type FieldNumberInputProps = {
   /** The number, or null for none. Never NaN. */
   value: number | null;
-  /** Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within `min` and `max`, on `step` and rounded to the digits the text shows, or null for an empty text. Typing alone fires nothing. Without it the input is read-only. */
+  /** Fires on a person's commit, on blur, Enter, a step key, a step button or a submit of the form, with a number within `min` and `max` and, where there is a `step`, on it, which wins over the digits the text shows; without one, rounded to them. Null for an empty text. Typing alone fires nothing. Without it the input is read-only. */
   onValueChange?: (value: number | null) => void;
   /** The lowest number. A commit below it becomes it, and a form with a lower value is invalid. */
   min?: number;
@@ -44,7 +46,7 @@ export type FieldNumberInputProps = {
   max?: number;
   /** The grid a commit snaps to, counted from `min` or from 0, and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent. */
   step?: number;
-  /** What Page Up and Page Down move by. Defaults to ten steps. */
+  /** What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of `step`. Defaults to ten steps. */
   largeStep?: number;
   /** The locale for the number's text, such as "de". The browser's own when not set, so pass it when the input renders on a server. */
   locale?: string;
@@ -74,8 +76,8 @@ export type FieldNumberInputProps = {
   | 'multiple'
 >;
 
-// The text the person is typing, and the value it started from: a value the product sets since ends the draft. `failed` once a commit read the text as no number.
-type Draft = { text: string; base: number | null; failed: boolean };
+// The text the person is typing, and the value it started from: a value the product sets since ends the draft.
+type Draft = { text: string; base: number | null };
 
 // What a text says: a number, none for an empty text, or nothing readable.
 type Typed = { read: true; number: number | null } | { read: false };
@@ -122,9 +124,12 @@ export function NumberInput({
     warnOnce('number-input-range', 'Field.NumberInput has a max below its min, so every commit becomes the min.');
   }
   // TypeScript rejects these options; this is for a caller without it.
-  const unsupported = ['maximumSignificantDigits', 'minimumSignificantDigits', 'roundingMode', 'roundingIncrement', 'roundingPriority'];
-  if (formatOptions && unsupported.some((option) => (formatOptions as Record<string, unknown>)[option] !== undefined)) {
-    warnOnce('number-input-rounding', 'Field.NumberInput does not support significant-digit or rounding formatOptions: the text rounds by them, but a commit does not. Use fraction digits.');
+  if (formatOptions && UNSUPPORTED_FORMAT_OPTIONS.some((option) => (formatOptions as Record<string, unknown>)[option] !== undefined)) {
+    warnOnce('number-input-format', 'Field.NumberInput does not support notation, compactDisplay, significant-digit or rounding formatOptions: a text in compact or scientific notation cannot be read back, and the text rounds by the others where a commit does not. Use fraction digits.');
+  }
+  // Page Up and Page Down move by whole steps.
+  if (step !== undefined && page !== undefined && Number((page / step).toPrecision(15)) % 1 !== 0) {
+    warnOnce('number-input-large-step', 'Field.NumberInput has a largeStep that is not a multiple of its step, so Page Up and Page Down round it to whole steps.');
   }
   const digits = shownDecimals(text);
   if (digits !== undefined && [step, min, max].some((bound) => bound !== undefined && decimalsOf(bound) > digits)) {
@@ -133,13 +138,14 @@ export function NumberInput({
   const current = value !== null && Number.isFinite(value) ? value : null;
   const [draft, setDraft] = useState<Draft | null>(null);
   // The draft is the person's until they commit, or the product sets another value.
-  const typing = draft !== null && Object.is(draft.base, current);
+  const fixed = readOnly ?? !onValueChange;
+  // A field that can't be edited has no draft: what was typed can't be committed, and would block its form.
+  const typing = draft !== null && !fixed && !field.disabled && Object.is(draft.base, current);
   if (draft !== null && !typing) setDraft(null);
   const own = current === null ? '' : formatNumber(current, text);
   const shown = typing ? draft.text : own;
-  const fixed = readOnly ?? !onValueChange;
-  // A commit that read the text as no number leaves it, invalid, until it is a number or the product sets one.
-  const unreadable = typing && draft.failed;
+  // A text that is no number is invalid as it is typed, whether or not a commit has read it, and stays so until it is one or the product sets a value. The Form decides when that shows.
+  const unreadable = typing && draft.text.trim() !== '' && parseNumber(draft.text, text) === null;
 
   function typed(): Typed {
     if (!typing) return { read: true, number: current };
@@ -147,6 +153,8 @@ export function NumberInput({
     const number = parseNumber(draft.text, text);
     return number === null ? { read: false } : { read: true, number };
   }
+  // Where a step starts, from what the text says, as a native input steps from its value. The keys, the buttons and their disabled state all judge this one.
+  const from = typed();
 
   function commit(next: number | null) {
     const result = next === null ? null : commitNumber(next, range, text);
@@ -159,21 +167,19 @@ export function NumberInput({
   function commitDraft() {
     if (!typing || fixed) return;
     const next = typed();
+    // Text that is no number stays, invalid.
     if (next.read) commit(next.number);
-    else setDraft({ ...draft, failed: true });
   }
 
-  // From the text, as a native input steps from its value; from text that is no number, nothing: it stays, and stays invalid.
+  // From text that is no number, nothing: it stays, and stays invalid.
   function stepBy(size: number) {
-    if (fixed) return;
-    const from = typed();
-    if (!from.read || !canStep(from.number, size, range)) return;
+    if (fixed || !from.read || !canStep(from.number, size, range)) return;
     commit(stepNumber(from.number, size, range, text));
   }
 
-  // A button is at a bound where a key would do nothing: at the bound it steps toward, or outside the range, stepping away.
-  const atMax = !canStep(current, by, range);
-  const atMin = !canStep(current, -by, range);
+  // A button is disabled where a key would do nothing: from text that is no number, at the bound it steps toward, or outside the range, stepping away.
+  const atMax = !from.read || !canStep(from.number, by, range);
+  const atMin = !from.read || !canStep(from.number, -by, range);
   // The step buttons are named from it, so several fields' are told apart.
   const [label, setLabel] = useState('');
   const stepRef = useRef((_direction: 1 | -1) => {});
@@ -203,23 +209,32 @@ export function NumberInput({
   };
   const clear = useRef(() => {});
   clear.current = () => setDraft(null);
+  const submitting = useRef(() => {});
+  submitting.current = () => flushSync(commitDraft);
   useLayoutEffect(() => {
     const input = node.current;
     if (!input) return;
     const listener = (event: Event) => refuse.current(event as InputEvent);
-    // A reset puts back what the form had, which is not what was typed.
-    const reset = () => clear.current();
+    // A reset puts back what the form had, which is not what was typed, unless a handler cancels it. Those run after this listener, and after a microtask too, so it waits a task.
+    const reset = (event: Event) => {
+      window.setTimeout(() => {
+        if (!event.defaultPrevented) clear.current();
+      });
+    };
+    // A submit with no blur, such as a key's, takes what was typed. This runs before React's own handlers, which are on the root, so before Form.Root reads the form's validity and the value input.
+    const submit = () => submitting.current();
     const form = input.form;
     input.addEventListener('beforeinput', listener);
     form?.addEventListener('reset', reset);
+    form?.addEventListener('submit', submit);
     return () => {
       input.removeEventListener('beforeinput', listener);
       form?.removeEventListener('reset', reset);
+      form?.removeEventListener('submit', submit);
     };
   }, [props.form]);
-  // Every commit, as the label can change; the same text bails out.
-  const readLabel = useCallback(() => setLabel(labelOf(node.current)), []);
-  useLayoutEffect(readLabel);
+  // The label's own text can change, such as a translation that loads later, so it is watched, not read on each render.
+  useLayoutEffect(() => watchLabel(node.current, (next) => setLabel(next)), []);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (isImeKeyEvent(event) || fixed) return;
@@ -242,10 +257,7 @@ export function NumberInput({
   }
 
   function onChange(event: ChangeEvent<HTMLInputElement>) {
-    const next = event.target.value;
-    // The text stays invalid until it reads as a number, or as none.
-    const failed = unreadable && next.trim() !== '' && parseNumber(next, text) === null;
-    setDraft({ text: next, base: current, failed });
+    setDraft({ text: event.target.value, base: current });
   }
 
   // The text input sends nothing: the value input does, as the number the form reads.
@@ -269,9 +281,6 @@ export function NumberInput({
   const valueRef = useComposedRefs(valueNode, valueInput.ref);
   // The value input is invalid too, so a submit, Enter's implicit one included, is blocked and Form.Root words it.
   useCustomValidity(valueNode, () => valueNode.current, unreadable ? strings.badInput : undefined);
-  // Only a number keypad where the minus key is not needed: a field that takes negatives needs the full one. The digit keypad has no separator either, so it is for a whole grid in a format that shows no fraction. The decimal keypad's separator is the device's, not `locale`'s.
-  const whole = step !== undefined && Number.isInteger(step) && min !== undefined && Number.isInteger(min) && !digits;
-  const keypad = min !== undefined && min >= 0 ? (whole ? 'numeric' : 'decimal') : 'text';
   return (
     <>
       <input
@@ -279,7 +288,7 @@ export function NumberInput({
         type="text"
         role="spinbutton"
         data-todae-number-input=""
-        inputMode={inputMode ?? keypad}
+        inputMode={inputMode ?? keypadFor({ min, step, shown: digits })}
         spellCheck={false}
         aria-required={required || undefined}
         aria-valuenow={current ?? undefined}

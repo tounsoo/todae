@@ -1,17 +1,19 @@
 // Server-safe number text for Field.NumberInput and a text input beside any number: no hooks or context.
 import { fold } from './dateText.js';
 
-/** What `Intl.NumberFormat` takes, less what a commit can't follow: compact and scientific notation, which `parseNumber` can't read back, and significant digits and rounding options, which round the text differently from a commit. */
-export type NumberFormatOptions = Omit<
-  Intl.NumberFormatOptions,
-  | 'notation'
-  | 'compactDisplay'
-  | 'maximumSignificantDigits'
-  | 'minimumSignificantDigits'
-  | 'roundingMode'
-  | 'roundingIncrement'
-  | 'roundingPriority'
->;
+/** The options a commit can't follow: compact and scientific notation, which `parseNumber` can't read back, and significant digits and rounding options, which round the text differently from a commit. */
+export const UNSUPPORTED_FORMAT_OPTIONS = [
+  'notation',
+  'compactDisplay',
+  'maximumSignificantDigits',
+  'minimumSignificantDigits',
+  'roundingMode',
+  'roundingIncrement',
+  'roundingPriority',
+] as const;
+
+/** What `Intl.NumberFormat` takes, less `UNSUPPORTED_FORMAT_OPTIONS`. */
+export type NumberFormatOptions = Omit<Intl.NumberFormatOptions, (typeof UNSUPPORTED_FORMAT_OPTIONS)[number]>;
 
 export type NumberTextOptions = {
   /** The locale, such as "de". The runtime's own when not set. */
@@ -199,8 +201,8 @@ const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.m
 // Half away from zero, as Intl rounds the text, where Math.round takes a tie toward +Infinity.
 const nearest = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
 
-// The grid index of a value, with the same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5.
-const indexOf = (value: number, base: number, step: number) => Number(((value - base) / step).toPrecision(12));
+// The grid index of a value, with the same guard as the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5. Fifteen digits are what a double holds, so the guard holds for an index of 13 digits, such as 12345678901.23 on a 0.01 grid, and no further.
+const indexOf = (value: number, base: number, step: number) => Number(((value - base) / step).toPrecision(15));
 
 const roundersByDigits = /* @__PURE__ */ new Map<number, Intl.NumberFormat>();
 
@@ -223,6 +225,18 @@ function roundToShown(value: number, options: NumberTextOptions): number {
     roundersByDigits.set(decimals, rounder);
   }
   return Number(rounder.format(value));
+}
+
+/**
+ * The keypad a phone shows: `numeric` for a whole grid from a `min` of 0 or
+ * more in a format that shows no fraction digits (`shown` is 0, or undefined
+ * where the text keeps every digit), `decimal` for any other `min` of 0 or
+ * more, and `text` otherwise, since the number keypads have no minus key and
+ * the digit one no separator.
+ */
+export function keypadFor({ min, step, shown }: { min?: number; step?: number; shown?: number }): 'numeric' | 'decimal' | 'text' {
+  if (min === undefined || min < 0) return 'text';
+  return step !== undefined && Number.isInteger(step) && Number.isInteger(min) && !shown ? 'numeric' : 'decimal';
 }
 
 // The grid point at `index` steps from `min`, or from 0.

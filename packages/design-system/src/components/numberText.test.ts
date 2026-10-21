@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { NumberFormatOptions } from './numberText.js';
-import { boundsOf, canStep, commitNumber, formatNumber, isPartialNumber, parseNumber, shownDecimals, stepNumber } from './numberText.js';
+import {
+  boundsOf,
+  canStep,
+  commitNumber,
+  formatNumber,
+  isPartialNumber,
+  keypadFor,
+  parseNumber,
+  shownDecimals,
+  stepNumber,
+  UNSUPPORTED_FORMAT_OPTIONS,
+} from './numberText.js';
 
 const read = (text: string, locale?: string, formatOptions?: Intl.NumberFormatOptions) =>
   parseNumber(text, { locale, formatOptions });
@@ -236,6 +247,51 @@ describe('commitNumber on a grid the text does not show', () => {
   });
 });
 
+describe('the step grid of a large number', () => {
+  it('keeps the digits a double has: an index of 13 digits is not rounded to 12', () => {
+    expect(commitNumber(12345678901.23, { step: 0.01 })).toBe(12345678901.23);
+    expect(commitNumber(1234567890123, { step: 1 })).toBe(1234567890123);
+    expect(commitNumber(1234567890123.4, { step: 1 })).toBe(1234567890123);
+    expect(boundsOf({ min: 0, max: 12345678901.23, step: 0.01 })).toEqual({ low: 0, high: 12345678901.23 });
+    expect(boundsOf({ max: 1234567890123, step: 1 })).toEqual({ low: undefined, high: 1234567890123 });
+  });
+
+  it('still reads float error as the tie it is', () => {
+    expect(commitNumber(0.15, { step: 0.1 })).toBe(0.2);
+    expect(commitNumber(0.3, { step: 0.1 })).toBe(0.3);
+    expect(commitNumber(1.005, { step: 0.01 })).toBe(1.01);
+    expect(commitNumber(0.7, { step: 0.1 })).toBe(0.7);
+  });
+});
+
+describe('keypadFor', () => {
+  it('is numeric for a whole grid from 0 or more, in a format that shows no fraction digits or keeps every digit', () => {
+    expect(keypadFor({ min: 0, step: 1 })).toBe('numeric');
+    expect(keypadFor({ min: 0, step: 5, shown: 0 })).toBe('numeric');
+    expect(keypadFor({ min: 1, step: 1, shown: undefined })).toBe('numeric');
+  });
+
+  it('is decimal for any other min of 0 or more', () => {
+    expect(keypadFor({ min: 0, step: 1, shown: 2 })).toBe('decimal');
+    expect(keypadFor({ min: 0, step: 0.5 })).toBe('decimal');
+    expect(keypadFor({ min: 0 })).toBe('decimal');
+    expect(keypadFor({ min: 0.5, step: 1 })).toBe('decimal');
+  });
+
+  it('is text with no min of 0 or more, since the number keypads have no minus key', () => {
+    expect(keypadFor({})).toBe('text');
+    expect(keypadFor({ min: -1, step: 1 })).toBe('text');
+    expect(keypadFor({ step: 1, shown: 0 })).toBe('text');
+  });
+
+  it('follows the format of a locale through shownDecimals', () => {
+    expect(keypadFor({ min: 0, step: 1, shown: shownDecimals({ locale: 'en' }) })).toBe('numeric');
+    expect(keypadFor({ min: 0, step: 1, shown: shownDecimals({ locale: 'en', formatOptions: { style: 'currency', currency: 'USD' } }) })).toBe('decimal');
+    expect(keypadFor({ min: 0, step: 1, shown: shownDecimals({ locale: 'ja', formatOptions: { style: 'currency', currency: 'JPY' } }) })).toBe('numeric');
+    expect(keypadFor({ min: 0, step: 1, shown: shownDecimals({ locale: 'en', formatOptions: { style: 'percent' } }) })).toBe('decimal');
+  });
+});
+
 describe('boundsOf and canStep', () => {
   it('finds the highest and lowest value a commit can give', () => {
     expect(boundsOf({})).toEqual({ low: undefined });
@@ -368,5 +424,11 @@ describe('NumberFormatOptions', () => {
       { maximumFractionDigits: 1 },
     ];
     expect(options).toHaveLength(7);
+  });
+
+  it('names the same options at runtime', () => {
+    expect([...UNSUPPORTED_FORMAT_OPTIONS].sort()).toEqual(
+      ['compactDisplay', 'maximumSignificantDigits', 'minimumSignificantDigits', 'notation', 'roundingIncrement', 'roundingMode', 'roundingPriority'],
+    );
   });
 });

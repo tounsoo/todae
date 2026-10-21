@@ -81,3 +81,28 @@ export function labelOf(input: HTMLInputElement | null): string {
     : own || [...(input.labels ?? [])].map(spokenText).join(' ');
   return spoken.replace(/\s+/g, ' ').trim();
 }
+
+/**
+ * Calls `onChange` with the input's label text now and whenever it changes: its
+ * `<label>`s or the elements its `aria-labelledby` names, as their text or
+ * attributes change, and the input's own `aria-label` and `aria-labelledby`.
+ * Returns the cleanup.
+ */
+export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): () => void {
+  if (!input) return () => {};
+  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => watch());
+  function watch() {
+    onChange(labelOf(input));
+    if (!observer || !input) return;
+    // The elements can change, so they are found again each time.
+    observer.disconnect();
+    observer.observe(input, { attributes: true, attributeFilter: ['aria-label', 'aria-labelledby'] });
+    const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+    const named = ids.map((id) => input.ownerDocument.getElementById(id));
+    for (const element of ids.length ? named : [...(input.labels ?? [])]) {
+      if (element) observer.observe(element, { childList: true, subtree: true, characterData: true, attributes: true });
+    }
+  }
+  watch();
+  return () => observer?.disconnect();
+}

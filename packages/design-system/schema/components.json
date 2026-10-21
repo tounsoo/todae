@@ -1790,7 +1790,7 @@
     },
     {
       "name": "Field.Decrement",
-      "description": "A button that lowers the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled at min. It is named from the decrement string of StringsProvider unless its own text names it, and draws the minus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "description": "A button that lowers the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled where a step would do nothing, such as at min or while the text is no number. It is named from the decrement string of StringsProvider unless its own text names it, and draws the minus glyph of GlyphsProvider. Takes native button attributes except type.",
       "props": [
         {
           "name": "children",
@@ -1839,7 +1839,7 @@
     },
     {
       "name": "Field.Increment",
-      "description": "A button that raises the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled at max. It is named from the increment string of StringsProvider unless its own text names it, and draws the plus glyph of GlyphsProvider. Takes native button attributes except type.",
+      "description": "A button that raises the number of the field's Field.NumberInput by its step. It is not a tab stop and keeps focus in the input, holding it repeats, and it is disabled where a step would do nothing, such as at max or while the text is no number. It is named from the increment string of StringsProvider unless its own text names it, and draws the plus glyph of GlyphsProvider. Takes native button attributes except type.",
       "props": [
         {
           "name": "children",
@@ -1863,7 +1863,7 @@
           "name": "onValueChange",
           "type": "(value: number | null) => void",
           "required": false,
-          "description": "Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within min and max, on step and rounded to the digits the text shows, or null for an empty text. Typing alone fires nothing. Without it the input is read-only."
+          "description": "Fires on a person's commit, on blur, Enter, a step key, a step button or a submit of the form, with a number within min and max and, where there is a step, on it, which wins over the digits the text shows; without one, rounded to them. Null for an empty text. Typing alone fires nothing. Without it the input is read-only."
         },
         {
           "name": "min",
@@ -1887,8 +1887,8 @@
           "name": "largeStep",
           "type": "number",
           "required": false,
-          "description": "What Page Up and Page Down move by.",
-          "default": "step × 10"
+          "description": "What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of step.",
+          "default": "ten steps"
         },
         {
           "name": "locale",
@@ -1919,7 +1919,7 @@
           "type": "\"numeric\" | \"decimal\" | \"text\" | …",
           "required": false,
           "description": "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
-          "default": "\"numeric\" for a whole step and min of 0 or more in a format with no fraction digits, \"decimal\" for a min of 0 or more, else \"text\""
+          "default": "\"numeric\" for a whole grid (step and min whole numbers) with a min of 0 or more in a format that shows no fraction digits, \"decimal\" for any other min of 0 or more, else \"text\""
         }
       ]
     },

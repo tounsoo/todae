@@ -16,7 +16,7 @@ export const meta = {
       type: '(value: number | null) => void',
       required: false,
       description:
-        "Fires on a person's commit, on blur, Enter, a step key or a step button, with a number within min and max, on step and rounded to the digits the text shows, or null for an empty text. Typing alone fires nothing. Without it the input is read-only.",
+        "Fires on a person's commit, on blur, Enter, a step key, a step button or a submit of the form, with a number within min and max and, where there is a step, on it, which wins over the digits the text shows; without one, rounded to them. Null for an empty text. Typing alone fires nothing. Without it the input is read-only.",
     },
     {
       name: 'min',
@@ -41,8 +41,9 @@ export const meta = {
       name: 'largeStep',
       type: 'number',
       required: false,
-      default: 'step × 10',
-      description: 'What Page Up and Page Down move by.',
+      default: 'ten steps',
+      description:
+        'What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of step.',
     },
     {
       name: 'locale',
@@ -73,7 +74,8 @@ export const meta = {
       name: 'inputMode',
       type: '"numeric" | "decimal" | "text" | …',
       required: false,
-      default: '"numeric" for a whole step and min of 0 or more in a format with no fraction digits, "decimal" for a min of 0 or more, else "text"',
+      default:
+        '"numeric" for a whole grid (step and min whole numbers) with a min of 0 or more in a format that shows no fraction digits, "decimal" for any other min of 0 or more, else "text"',
       description: "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
     },
   ],

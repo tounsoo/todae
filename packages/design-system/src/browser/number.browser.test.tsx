@@ -95,6 +95,41 @@ describe('Field.NumberInput in a browser', () => {
     expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '77']]);
   });
 
+  it.each([true, false])('submits a readable text with no blur or Enter, as requestSubmit does (Form.Root: %s)', async (withForm) => {
+    const onSubmit = vi.fn();
+    render(<Quantity onSubmit={onSubmit} withForm={withForm} initial={3} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}9');
+    input().form!.requestSubmit();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '9']]);
+  });
+
+  it('drops an unreadable text on a form reset, but keeps it when a handler cancels the reset', async () => {
+    function Resettable({ cancel }: { cancel: boolean }) {
+      const [value, setValue] = useState<number | null>(3);
+      return (
+        <form onReset={(event) => cancel && event.preventDefault()}>
+          <Field.Root aria-label="Quantity" name="quantity">
+            <Field.NumberInput value={value} onValueChange={setValue} locale="en" />
+          </Field.Root>
+          <button type="reset">Reset</button>
+        </form>
+      );
+    }
+    const { rerender } = render(<Resettable cancel />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Control>}a{/Control}1,5');
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(input().value).toBe('1,5');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    rerender(<Resettable cancel={false} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await waitFor(() => expect(input().value).toBe('3'));
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+  });
+
   it('blocks Enter on a required empty field, shows the message and keeps focus in the input', async () => {
     const onSubmit = vi.fn();
     render(<Quantity onSubmit={onSubmit} required />);

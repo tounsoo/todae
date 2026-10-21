@@ -62,10 +62,10 @@ function StepButton({
     if (disabled) stop();
   }, [disabled, stop]);
   useEffect(() => stop, [stop]);
-  // After the layout effects, in which a Field.NumberInput registers, even one that follows this button.
+  // Once on mount, after the layout effects in which a Field.NumberInput registers, even one that follows this button.
   useEffect(() => {
     if (!store.stepper) warnOnce('step-button', 'Field.Increment and Field.Decrement have no Field.NumberInput in their Field.Root');
-  });
+  }, [store]);
 
   function press(event: PointerEvent<HTMLButtonElement>) {
     if (event.button !== 0 || disabled || !stepper) return;
