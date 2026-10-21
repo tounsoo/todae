@@ -37,7 +37,7 @@ type ValueInputEntry = {
   bound: ValueInputBound;
 };
 
-// For each value input, who it is, who it speaks for and how it words its bounds. Written by useField's getValueInputProps after each commit.
+// For each value input, who it is, who it speaks for and how it words its bounds. Written when the value input attaches, and again when its bounds change.
 const valueInputs = /* @__PURE__ */ new WeakMap<ValidityCarrier, ValueInputEntry>();
 
 /** Makes `el` a value input. */

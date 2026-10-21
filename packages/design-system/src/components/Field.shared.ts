@@ -258,11 +258,11 @@ export function valueBounds<T>(
   label: (value: T) => string,
 ) {
   return {
-    min: min === undefined ? undefined : html(min),
-    max: max === undefined ? undefined : html(max),
+    min: min == null ? undefined : html(min),
+    max: max == null ? undefined : html(max),
     bound: {
-      min: min === undefined ? undefined : label(min),
-      max: max === undefined ? undefined : label(max),
+      min: min == null ? undefined : label(min),
+      max: max == null ? undefined : label(max),
     },
   };
 }

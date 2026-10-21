@@ -852,10 +852,10 @@ describe('what a control re-renders for', () => {
 });
 
 describe('a pick beside a named control', () => {
-  function Beside({ picker }: { picker: React.ReactNode }) {
+  function Beside({ picker, errors = { when: 'Booked out.' } }: { picker: React.ReactNode; errors?: Record<string, string> }) {
     const [text, setText] = useState('');
     return (
-      <Form.Root data-testid="form" errors={{ when: 'Booked out.' }}>
+      <Form.Root data-testid="form" errors={errors}>
         <Field.Group>
           <Field.Root name="when" aria-label="When">
             <Field.TextInput value={text} onValueChange={setText} />
@@ -878,6 +878,24 @@ describe('a pick beside a named control', () => {
     });
     await settle();
     expect(screen.queryByText('Booked out.')).toBeNull();
+  });
+
+  it('leaves the text input\'s server error when a picker with its own name is picked', async () => {
+    await mount(
+      <Beside
+        picker={<Field.DatePicker name="start" value={day('2026-10-13')} locale="en-US" />}
+        errors={{ when: 'Text bad.', start: 'Date bad.' }}
+      />,
+    );
+    expect(screen.getByText('Text bad.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
+    });
+    await settle();
+    expect(screen.getByText('Text bad.')).toBeTruthy();
   });
 
   it('dismisses the field\'s server error when a color is picked', async () => {

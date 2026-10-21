@@ -109,9 +109,9 @@ export function useValueInput(ctx: FieldContextValue, ownNamed: () => number) {
   const formEdited = form?.edited;
   const touch = scope?.touch;
   const notifyValueChange = useCallback(() => {
-    // The names a server error may be filed under: the field's, and what the control and the value input send.
-    const names = [fieldName, (own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name];
-    formEdited?.([...new Set(names.filter((name): name is string => Boolean(name)))]);
+    // The names a server error may be filed under: what the control and the value input send, else the field's, which a control beside it sends.
+    const sent = [(own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name].filter((name): name is string => Boolean(name));
+    formEdited?.(sent.length ? [...new Set(sent)] : fieldName ? [fieldName] : []);
     touch?.();
   }, [fieldName, formEdited, touch]);
   return useMemo(() => ({ track, getValueInputProps, notifyValueChange }), [track, getValueInputProps, notifyValueChange]);
