@@ -45,30 +45,40 @@ export function useDismissLabel(
   // translation) names the button too. The children are a first guess for SSR.
   const [worded, setWorded] = useState(() => hasWords(children));
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const observed = useRef<{ button: HTMLButtonElement; observer: MutationObserver } | null>(null);
   const read = useCallback(() => {
     const button = buttonRef.current;
     setWorded(button ? isWorded(spokenText(button)) : false);
   }, []);
-  // Every commit, as the text can change; the same value bails out.
-  useLayoutEffect(read);
-  // A child can render its text from its own state, such as a translation
-  // that loads later, without this component rendering again. On the element
-  // the ref gets, so it follows a button that unmounts and mounts again.
-  const observe = useCallback(
-    (button: HTMLButtonElement | null) => {
-      if (!button || typeof MutationObserver === 'undefined') return;
-      const observer = new MutationObserver(read);
-      observer.observe(button, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true,
-        attributeFilter: ['aria-hidden'],
-      });
-      return () => observer.disconnect();
+  // Every commit, as the text can change; the same value bails out. A child
+  // can also render its text from its own state, such as a translation that
+  // loads later, without this component rendering again, so an observer on
+  // the button reads it then. It is kept per element, so a caller's ref that
+  // changes each render doesn't rebuild it.
+  useLayoutEffect(() => {
+    read();
+    const button = buttonRef.current;
+    if (observed.current?.button === button) return;
+    observed.current?.observer.disconnect();
+    observed.current = null;
+    if (!button) return;
+    const observer = new MutationObserver(read);
+    observer.observe(button, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['aria-hidden'],
+    });
+    observed.current = { button, observer };
+  });
+  useLayoutEffect(
+    () => () => {
+      observed.current?.observer.disconnect();
+      observed.current = null;
     },
-    [read],
+    [],
   );
-  const refs = useComposedRefs(buttonRef, observe, ref);
+  const refs = useComposedRefs(buttonRef, ref);
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }
