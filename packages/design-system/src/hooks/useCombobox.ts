@@ -26,7 +26,7 @@ import type {
 import type { PopoverWire } from '../components/Popover.wire.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { createAsyncGate } from './useCombobox.async.js';
-import { failureOf, readsLabel, useComboboxCreate } from './useCombobox.create.js';
+import { readsLabel, useComboboxCreate } from './useCombobox.create.js';
 import { isMultiple, useComboboxState } from './useCombobox.state.js';
 import { usePopoverInternal } from './usePopover.js';
 import { defaultFilter, filterOptions } from './useCombobox.filter.js';
@@ -104,7 +104,8 @@ export type UseComboboxResult = {
   activeValue: string | null;
   loading: boolean;
   /**
-   * The last load's failure, which `retry` loads again; an Error when it rejected with no reason.
+   * The last load's failure, which `retry` loads again; an Error, with the reason as its `cause`,
+   * when the reason was falsy.
    * A create's failure is in `createError`.
    */
   error: unknown | null;
@@ -112,7 +113,7 @@ export type UseComboboxResult = {
   /** True while an async `onCreate` is pending, until a pick, `clear()` or `reset()` drops it. */
   creating: boolean;
   /**
-   * What `onCreate` last threw or rejected with, or an Error when that was `undefined` or `null`,
+   * What `onCreate` last threw or rejected with, or an Error with it as `cause` when it was falsy,
    * kept only while the text still asks for that label.
    * Cleared by the next text change, pick, removal, clear, create or opening of the list. A throw
    * from a change callback is the caller's, not a create failure.
@@ -435,7 +436,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         setLoading(false);
         // A failed load still settles this query: no rows, so the create row
         // can show and no other query's rows stay active.
-        if ('error' in result) setError(failureOf(result.error, 'loadOptions'));
+        if ('error' in result) setError(result.error);
         setAsyncOptions('error' in result ? [] : result.result);
         setLoadedFor({ query, key });
       });
@@ -541,7 +542,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           return;
         }
         // With nothing to clear, Escape on a closed list goes on, so a dialog around it closes.
-        if (selectionMode === 'single' && !singleValue && inputValue !== '') {
+        const clearsText = selectionMode === 'single' && !singleValue && state.current.inputValue !== '';
+        if (clearsText) {
           event.preventDefault();
           setInputValue('');
         }
@@ -551,7 +553,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (open) setOpen(false, 'blur');
       }
     },
-    [commitActive, inputValue, isModal, move, open, selectionMode, setInputValue, setOpen, singleValue],
+    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, singleValue, state],
   );
 
   const changeInput = useCallback(

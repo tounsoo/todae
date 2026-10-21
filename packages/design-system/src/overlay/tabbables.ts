@@ -61,28 +61,48 @@ function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
   return inTabOrder(el, root) && !el.matches(':disabled') && isReachable(el);
 }
 
-// Whether `el`, a focusable radio, is its group's one Tab stop: the checked
+// Each named radio group's one Tab stop in root, going forward: its checked
 // radio, or with none checked that can take focus, the first that can. A group
-// is the radios of one name in one form, or outside any form in one tree.
-function isRadioGroupStop(el: HTMLInputElement, root: HTMLElement): boolean {
-  if (!el.name) return true;
-  // A form's elements include the controls its `form` attribute brings in.
-  const group = el.form ? el.form.elements : (el.getRootNode() as Document | ShadowRoot).querySelectorAll('input');
-  let first: HTMLInputElement | null = null;
-  for (const radio of group) {
-    if (!(radio instanceof HTMLInputElement) || radio.type !== 'radio') continue;
-    if (radio.name !== el.name || radio.form !== el.form) continue;
-    if (radio !== el && !canTakeFocus(radio, root)) continue;
-    if (radio.checked) return radio === el;
-    first ??= radio;
+// is the radios of one name and one form owner, counted within root only, so
+// a radio outside an overlay, such as one behind a modal, does not take its stop.
+type RadioStops = Map<HTMLFormElement | null, Map<string, HTMLInputElement>>;
+
+function radioStopsIn(root: HTMLElement): RadioStops {
+  const first: RadioStops = new Map();
+  const checked: RadioStops = new Map();
+  for (const el of candidatesIn(root)) {
+    if (!isNamedRadio(el) || !canTakeFocus(el, root)) continue;
+    const into = el.checked ? checked : first;
+    let byName = into.get(el.form);
+    if (!byName) into.set(el.form, (byName = new Map()));
+    if (!byName.has(el.name)) byName.set(el.name, el);
   }
-  return first === el;
+  for (const [form, byName] of checked) {
+    for (const [name, radio] of byName) {
+      let firstByName = first.get(form);
+      if (!firstByName) first.set(form, (firstByName = new Map()));
+      firstByName.set(name, radio);
+    }
+  }
+  return first;
 }
 
-// Whether Tab stops on `el`, one of root's CANDIDATES, now.
-function isTabStop(el: HTMLElement, root: HTMLElement): boolean {
-  if (!canTakeFocus(el, root)) return false;
-  return !(el instanceof HTMLInputElement && el.type === 'radio') || isRadioGroupStop(el, root);
+function isNamedRadio(el: HTMLElement): el is HTMLInputElement {
+  return el instanceof HTMLInputElement && el.type === 'radio' && el.name !== '';
+}
+
+/**
+ * Tells, for one call, whether a candidate of root is a tab stop now. Radio
+ * groups are worked out once, when the first named radio comes up.
+ */
+function tabStopTest(root: HTMLElement): (el: HTMLElement) => boolean {
+  let stops: RadioStops | null = null;
+  return (el) => {
+    if (!canTakeFocus(el, root)) return false;
+    if (!isNamedRadio(el)) return true;
+    stops ??= radioStopsIn(root);
+    return stops.get(el.form)?.get(el.name) === el;
+  };
 }
 
 // root's candidates in document order, less the toasts moved into it.
@@ -95,11 +115,12 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
 /**
  * The elements in `root` that Todae treats as tab stops now: the candidates
  * Todae recognizes, in document order, minus disabled, hidden, inert and
- * aria-hidden content, and minus every radio of a group but its one stop, the
- * checked radio or, with none checked, the first.
+ * aria-hidden content, and minus every radio of a named group in root but its
+ * one stop going forward: the checked radio or, with none checked, the first.
+ * Shift+Tab into a group with none checked lands on its last radio instead.
  */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
-  return [...candidatesIn(root)].filter((el) => isTabStop(el, root));
+  return [...candidatesIn(root)].filter(tabStopTest(root));
 }
 
 /**
@@ -127,8 +148,9 @@ export function getCandidates(root: HTMLElement): HTMLElement[] {
  * stops at the first match, and runs `accept` before the costlier checks.
  */
 export function firstTabbable(root: HTMLElement, accept?: (el: HTMLElement) => boolean): HTMLElement | null {
+  const isTabStop = tabStopTest(root);
   for (const el of candidatesIn(root)) {
-    if ((!accept || accept(el)) && isTabStop(el, root)) return el;
+    if ((!accept || accept(el)) && isTabStop(el)) return el;
   }
   return null;
 }

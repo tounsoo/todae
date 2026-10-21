@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
+import { failureOf } from './useCombobox.async.js';
 import type { ComboboxFieldState } from './useCombobox.state.js';
 
 type CreateResult = string | void | Promise<string | void>;
 
 /**
  * An async create in flight: live, or dropped by `cancel`. Running its label
- * again takes a dropped one back, unless its `controller` was aborted.
- * `startValue` is the single value when it started, or when it was taken back.
+ * again takes a dropped one back. `startValue` is the single value when it
+ * started, or when it was taken back.
  */
 type CreateRequest = { label: string; startValue: string | null; dropped: boolean; controller: AbortController };
 
@@ -19,14 +20,6 @@ export function readsLabel(text: string, label: string): boolean {
 }
 
 const keyOf = (label: string) => label.trim().toLowerCase();
-
-/**
- * What a failure reads as: its reason, or an Error when it has none, so
- * `reject()` and `throw undefined` still read as a failure next to `null`.
- */
-export function failureOf(reason: unknown, source: string): unknown {
-  return reason ?? new Error(`${source} failed without a reason`);
-}
 
 /**
  * Hands a throw from the caller's code after an await to the page's error
@@ -73,8 +66,7 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
 
   /**
    * Runs `start`, and hands its result to `commit`. While a create for `label` is
-   * pending it runs nothing, and takes that create back if it was dropped, unless
-   * its signal was aborted: then it runs `start` again. A throw from `start`, or
+   * pending it runs nothing, and takes that create back if it was dropped. A throw from `start`, or
    * its rejection, is the create's failure; a throw from `commit` is the caller's,
    * and after an await it goes to `reportError`.
    */
@@ -87,7 +79,7 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
       const key = keyOf(label);
       const now = () => state.current;
       const pending = requests.current.get(key);
-      if (pending && !pending.controller.signal.aborted) {
+      if (pending) {
         if (pending.dropped) {
           pending.dropped = false;
           pending.startValue = now().single;
@@ -95,14 +87,13 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
         }
         return;
       }
-      if (pending) requests.current.delete(key);
       setError(null);
       const controller = new AbortController();
       let result: CreateResult | undefined;
       try {
         result = start(controller.signal);
       } catch (reason) {
-        setError(failureOf(reason, 'onCreate'));
+        setError(failureOf(reason));
         return;
       }
       if (!isThenable(result)) {
@@ -132,7 +123,7 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
         },
         (reason: unknown) => {
           // Reported only while the text still asks for this label.
-          if (settle() && readsLabel(now().inputValue, label)) setError(failureOf(reason, 'onCreate'));
+          if (settle() && readsLabel(now().inputValue, label)) setError(failureOf(reason));
         },
       );
     },
@@ -146,15 +137,16 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
 
   const clearError = useCallback(() => setError(null), []);
 
-  // Unmounting, or an Activity hiding the field, drops every request and aborts
-  // its signal, since the field let go of it. Running its label again once shown
-  // calls `onCreate` again.
+  // Unmounting, or an Activity hiding the field, aborts every request and forgets
+  // it, since the field let go of it: none commits, and running its label again
+  // once shown calls `onCreate` again.
   useEffect(
     () => () => {
       for (const request of requests.current.values()) request.controller.abort();
-      cancel();
+      requests.current.clear();
+      sync();
     },
-    [cancel],
+    [sync],
   );
 
   const isPending = useCallback((label: string) => live.has(keyOf(label)), [live]);

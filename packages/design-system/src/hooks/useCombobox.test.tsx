@@ -249,6 +249,38 @@ describe('useCombobox', () => {
     expect(input.value).toBe('');
   });
 
+  it('leaves Escape on a closed list to the page with a value, or in multiple mode with text', () => {
+    const { unmount } = render(<SingleBox open={false} defaultValue="react" />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
+    unmount();
+    function MultiClosed() {
+      const cb = useCombobox({ selectionMode: 'multiple', options: OPTIONS, presentation: 'popover', open: false, defaultInputValue: 'Re' });
+      return (
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.ChipInput {...cb.getChipInputProps()} />
+        </Field.Root>
+      );
+    }
+    render(<MultiClosed />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
+  });
+
+  it('reads a load that throws before returning a promise as a failure, and stops loading', async () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: () => {
+          throw null;
+        },
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.loading).toBe(false);
+  });
+
   it('reads a load rejected with no reason as a failure', async () => {
     const { result } = renderHook(() =>
       useCombobox({ loadOptions: () => Promise.reject(undefined), presentation: 'popover' }),
@@ -1753,13 +1785,14 @@ describe('useCombobox async create', () => {
     await act(async () => calls[0]?.resolve('new'));
   });
 
-  it('reads a create rejected with no reason as a failure', async () => {
+  it.each([undefined, ''])('reads a create rejected with %j as a failure that holds it', async (reason) => {
     const { onCreate, calls } = deferredCreate();
     const { result } = multiCreate(onCreate);
     type(result, 'new');
     act(() => result.current.create());
-    await act(async () => calls[0]?.reject(undefined));
+    await act(async () => calls[0]?.reject(reason));
     expect(result.current.createError).toBeInstanceOf(Error);
+    expect((result.current.createError as Error).cause).toBe(reason);
   });
 
   it('reads a synchronous throw of null from onCreate as a failure', () => {
@@ -1862,12 +1895,13 @@ describe('useCombobox keys', () => {
     expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
   });
 
-  it('picks with the Enter an Android keyboard sends outside a composition, and ignores its Unidentified 229 keys', () => {
+  it('picks with an Enter that carries keyCode 13 and no composition, as Android keyboards are taken to send', () => {
+    // Unverified on a device: Gboard is taken to send Enter as keyCode 13 once a composition ends,
+    // and keyCode 229 only while one is open, when isComposing is true.
     const onChange = vi.fn();
     render(<SingleBox defaultOpen onValueChange={onChange} />);
     const input = screen.getByRole('combobox');
-    // Android keyboards send most keys as keyCode 229 with key 'Unidentified', composing or not.
-    expect(fireEvent.keyDown(input, { key: 'Unidentified', keyCode: 229 })).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 229, isComposing: true })).toBe(true);
     expect(onChange).not.toHaveBeenCalled();
     expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 })).toBe(false);
     expect(onChange).toHaveBeenCalledWith('react');

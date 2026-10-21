@@ -8,6 +8,7 @@ import { Dialog } from '../components/Dialog.js';
 import { Drawer } from '../components/Drawer.js';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
+import { getTabbables } from '../overlay/tabbables.js';
 
 afterEach(cleanup);
 
@@ -111,16 +112,23 @@ describe('default initial focus on a radio group', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Large' })));
   });
 
-  it('matches the browser, which tabs to the checked radio of a group', async () => {
-    render(
-      <div>
-        <button type="button">Before</button>
-        <input type="radio" name="tone" aria-label="Warm" />
-        <input type="radio" name="tone" aria-label="Cool" defaultChecked />
-      </div>,
-    );
-    screen.getByRole('button', { name: 'Before' }).focus();
-    await userEvent.keyboard('{Tab}');
-    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Cool' }));
+  it.each([
+    ['a checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked>', 'Two'],
+    ['no checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two">', 'One'],
+    ['a disabled checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked disabled>', 'One'],
+    ['a hidden checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked style="display:none">', 'One'],
+  ])('stops where the browser\'s forward Tab does, in a group with %s', async (_case, radios, name) => {
+    const root = document.createElement('div');
+    root.innerHTML = `<button type="button">Before</button>${radios}`;
+    document.body.append(root);
+    try {
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+      const landed = screen.getByRole('radio', { name });
+      expect(document.activeElement).toBe(landed);
+      expect(getTabbables(root).filter((el) => el.localName === 'input')).toEqual([landed]);
+    } finally {
+      root.remove();
+    }
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getTabbables, TOAST_HOST_ATTRIBUTE } from './tabbables.js';
+import { firstTabbable, getTabbables, TOAST_HOST_ATTRIBUTE } from './tabbables.js';
 
 describe('getTabbables', () => {
   it('skips toasts moved into the root, wherever they sit among its own content', () => {
@@ -50,6 +50,20 @@ describe('getTabbables', () => {
     root.innerHTML = '<input type="radio" name="size" id="small"><input type="radio" name="size" id="large" checked disabled>';
     document.body.append(root);
     expect(getTabbables(root).map((el) => el.id)).toEqual(['small']);
+    root.remove();
+  });
+
+  it('counts a group within the root only, so a checked radio outside leaves the root its own stop', () => {
+    const outside = document.createElement('input');
+    outside.type = 'radio';
+    outside.name = 'size';
+    outside.checked = true;
+    const root = document.createElement('div');
+    root.innerHTML = '<input type="radio" name="size" id="small"><input type="radio" name="size" id="large">';
+    document.body.append(outside, root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['small']);
+    expect(firstTabbable(root)?.id).toBe('small');
+    outside.remove();
     root.remove();
   });
 });
