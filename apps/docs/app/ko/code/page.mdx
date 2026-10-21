@@ -6,7 +6,7 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 ## Code
 
-`Code.Root`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `CodeBlock.Root`은 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 코드는 `Code.Root`든 평범한 `<code>`든 자기 상자를 버립니다.
+`Code.Root`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `CodeBlock.Root`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 코드는 `Code.Root`든 평범한 `<code>`든 자기 상자를 버립니다.
 
 ```tsx
 <Text.Root>
@@ -41,7 +41,7 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. `CodeBlock.Root`은 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
+**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. `CodeBlock.Root`는 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
 
 **직접 제공할 것:** 스크롤되는 `CodeBlock.Root`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
 
