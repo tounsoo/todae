@@ -48,17 +48,19 @@ Here a [Field.TextInput](/field/text-input) in the same field lets people type t
 
 `formatDate(date, { locale })` writes a date in the locale's numbers, such as `10/13/2026` in `en-US`, `13.10.2026` in `de` and `2026. 10. 13.` in `ko`. `parseDate(text, { locale })` reads typed text back into a `Temporal.PlainDate`, or returns `null` when the text is not a date. It reads a date in numbers in the order `formatDate` writes them or in the order of the locale's `short` date style, as `13.10.26` in `gsw`, whose `formatDate` writes `2026-10-13`. When both orders read a date, a year of four or more digits is read in `formatDate`'s order, and a year of one or two digits in the `short` style's order when that style writes the year in two digits. It also reads a date as `Intl.DateTimeFormat` writes it in the locale's `medium`, `long` or `full` date style, such as `Oct 13, 2026` or `Tuesday, October 13, 2026` in `en-US`. Letter case doesn't matter, digits may be in any script, and the parts may be separated by any punctuation, symbols or spaces. The month may be any of its long or short names, such as `Oct` or `October`. A weekday may be long, short or left out, but must be the date's. The style's other words, such as `de` in `13 de octubre de 2026`, may be replaced by a space. Three numbers that start with a year of four or more digits, such as `2026-10-13`, are read as year, month and day, unless the locale writes the year first in another order. A year is a Gregorian year, whatever the locale's own calendar. A year of one or two digits is read as the nearest such year to the current one, so a date about 50 years away needs all four digits, and a year of three digits is not read. Without `locale`, both use the runtime's own.
 
-In the example, text that isn't a date clears the date, so the form sends no date, and the field is marked invalid when it loses focus. `parseDate` doesn't check the picker's `min`, `max` or `isDateDisabled`, so check a typed date against them yourself.
+In the example, text that isn't a date clears the date, so the form sends no date, and the field is marked invalid when it loses focus. `parseDate` doesn't check the picker's `min`, `max` or `isDateDisabled`. A typed date outside `min` and `max` still makes the form invalid, but check it against `isDateDisabled` yourself.
 
 ## On its own
 
-On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, a hidden input sends the date the way HTML writes one, such as `2026-10-13`.
+On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, the form sends the date the way HTML writes one, such as `2026-10-13`.
 
 <Example block>
   <FieldDatePickerAlone />
 </Example>
 
 The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a date is picked, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the calendar puts focus on the date, else on today or the nearest date in range. Escape closes it, and focus goes back to where it was before it opened.
+
+`required` makes a form with no date invalid, and `min` and `max` make a form with an earlier or later date invalid, as well as limiting the calendar. The browser checks all three on a native `<input type="date">` that the picker renders beside its button. It is hidden from sight and from assistive technology, is not a tab stop, and is what the form sends under the field's `name`. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` or `max` written as the button writes a date, and focus goes to the button rather than the hidden input; the summary's row for the field links to the button. Outside a `Form.Root` the browser blocks the submit but cannot point at a hidden input, so wrap the form in `Form.Root`. `isDateDisabled` is not part of the check.
 
 ## Accessible composition
 

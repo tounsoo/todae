@@ -47,6 +47,26 @@ const captionId = useId();
   <FieldUseField />
 </Example>
 
+## Value inputs
+
+A control that is not a native form element sends nothing with a form and is not validated. `getValueInputProps` gives the props for a native `<input>` that carries its value, so the browser checks `required`, `min` and `max`, and `Form.Root` shows the problem and moves focus to the control.
+
+```tsx
+function Stars({ value, onChange, required }: StarsProps) {
+  const field = useField();
+  return (
+    <>
+      <span {...field.getControlProps({}, { native: false })} role="slider" tabIndex={0} aria-valuenow={value} />
+      <input
+        {...field.getValueInputProps({ type: 'number', value: value ? String(value) : '', required, min: '1', max: '5' })}
+      />
+    </>
+  );
+}
+```
+
+`type` is `text`, `number`, `date`, `time`, `datetime-local` or `color`, and `value` is in that type's format, such as `2026-10-07` for `date`, or `''` for none. `step` is the type's own. `bound` writes a `min` or `max` in the field's own format for the message that names it, such as "Oct 7, 2026", and without it the message names the raw value. The input sends its value under the field's `name`, unless another control in the field took it, and is disabled with the field. It is not read-only or `type="hidden"`, which the browser leaves out of validation. It is hidden from sight and from assistive technology, is not a tab stop, and a press on the field's shell never focuses it. Render it beside the control, inside the same `Field.Root`. A problem on it moves focus to the control `getControlProps` wired, from `Form.Root` and from a `Form.Summary` link.
+
 ## Accessible composition
 
 **Todae handles:** `getControlProps()` gives your control the Root's `id`, its `aria-describedby` merged with yours, `aria-invalid` while the Root is invalid, the Root's `aria-label` or `aria-labelledby` unless the control names itself, and `disabled`, or `aria-disabled` with `{ native: false }`. Its ref lets a press on the shell focus the control, and the shell draws its focus ring while the control or anything inside it is focus-visible. The Root's `disabled` and `invalid` include a surrounding [Fieldset](/fieldset)'s.

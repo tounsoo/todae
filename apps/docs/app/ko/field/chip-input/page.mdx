@@ -75,6 +75,10 @@ disabled와 invalid는 `Field.Root`에 있습니다.
 
 칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 `close` 글리프를 보여 줍니다. [Chip](/chip)과 같습니다.
 
+## 필수
+
+`required`는 입력란에 무엇이 있든 칩이 없는 폼을 유효하지 않게 합니다. 입력란은 확정할 때마다 비워지기 때문입니다. 브라우저는 ChipInput이 입력란 옆에 렌더링하는 네이티브 텍스트 입력에서 칩을 검사합니다. 이 입력은 화면과 보조 기술에서 숨겨지고 탭 정지점이 아니며, 칩이 없을 때만 비어 있습니다. `name`이 없으므로 아무것도 보내지 않습니다. 폼은 전과 같이 입력란의 텍스트를 필드의 `name`으로 보내고, 칩을 보내는 일은 직접 해야 합니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 나타나고 포커스는 텍스트 입력으로 가며, 텍스트 입력에는 `aria-required`가 붙습니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 입력은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 칩은 입력의 `disabled`를 따릅니다. 각 삭제 버튼은 칩 이름을 따서 이름을 갖고, 칩을 지우면 포커스가 입력으로 돌아갑니다. 입력에 텍스트가 있을 때 확정 키를 누르면 다듬은 텍스트로 `onCommit`을 호출하고, 그 키는 입력에 전달하지 않습니다. `onCommit`이 `false`를 반환하면 Enter와 Tab은 폼이나 다음 컨트롤로 전달되고, 문자 키는 여전히 입력되지 않습니다. 한국어 단어를 끝내는 Enter처럼 IME 조합에 속한 키는 입력에 맡깁니다. 누르고 있는 확정 키는 한 번만 확정합니다. 확정한 뒤 반복되는 Enter는 폼에 전달하지 않고, 반복되는 Tab은 포커스를 옮깁니다.

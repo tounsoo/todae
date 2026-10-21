@@ -75,6 +75,10 @@ Disabled and invalid live on `Field.Root`.
 
 Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as on [Chip](/chip).
 
+## Required
+
+`required` makes a form with no chips invalid, whatever the input holds, since the input is emptied on every commit. The browser checks the chips on a native text input that the ChipInput renders beside its own. It is hidden from sight and from assistive technology, is not a tab stop, and is empty exactly when there are no chips. It has no `name`, so it sends nothing: a form sends the text in the input under the field's `name`, as before, and sending the chips is up to you. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` and focus goes to the text input, which gets `aria-required`.
+
 ## Accessible composition
 
 **Todae handles:** The input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset); the chips follow the input's `disabled`. Each remove button is named after its chip, and focus returns to the input after a remove. A commit key with text in the input calls `onCommit` with the trimmed text and is kept from the input. When `onCommit` returns `false`, Enter and Tab go through, to the form or to the next control, and a character key is still kept from typing. Keys that belong to an IME composition, such as the Enter that ends a Korean word, are left to the input. A held commit key commits once: after the commit, Enter's repeats are kept from the form, and Tab's repeats move focus.

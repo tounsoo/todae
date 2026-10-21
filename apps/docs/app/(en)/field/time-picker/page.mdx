@@ -49,17 +49,19 @@ Here a [Field.TextInput](/field/text-input) in the same field lets people type t
 
 `formatTime(time, { locale })` writes a time in the locale's short time style, such as `9:30 PM` in `en-US`, `21:30` in `de` and `오후 9:30` in `ko`, or in its medium style, with seconds, when the time has seconds. `parseTime(text, { locale })` reads typed text back into a `Temporal.PlainTime`, or returns `null` when the text is not a time. It reads an hour, an hour and minutes, or an hour, minutes and seconds, such as `9`, `9:30`, `21.30.15` or `0930`, with the locale's own word for the part of the day before or after them, such as `9:30 pm` in `en-US` or `오후 9:30` in `ko`. Letter case doesn't matter, digits may be in any script, and the numbers may be separated by any punctuation, symbols or spaces, or by words the locale writes between them, such as `21 h 30` in `fr-CA`. Without a word for the part of the day, the hour is 0 to 23. Without `locale`, both use the runtime's own.
 
-In the example, text that isn't a time clears the time, so the form sends no time, and the field is marked invalid when it loses focus. `parseTime` doesn't check the picker's `min` or `max`, so check a typed time against them yourself.
+In the example, text that isn't a time clears the time, so the form sends no time, and the field is marked invalid when it loses focus. `parseTime` doesn't check the picker's `min` or `max`, but a typed time outside them makes the form invalid.
 
 ## On its own
 
-On its own, `Field.TimePicker` is the field's control. It shows the time as `formatTime` writes it in `locale`, or `placeholder` while there is none, and a press elsewhere in the field opens the list. With a `name` on the Root, a hidden input sends the time the way HTML writes one, such as `09:30`, or `09:30:15` with seconds.
+On its own, `Field.TimePicker` is the field's control. It shows the time as `formatTime` writes it in `locale`, or `placeholder` while there is none, and a press elsewhere in the field opens the list. With a `name` on the Root, the form sends the time the way HTML writes one, such as `09:30`, or `09:30:15` with seconds.
 
 <Example block>
   <FieldTimePickerAlone />
 </Example>
 
 The list opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a time is picked, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the list takes focus and starts at the time, or else at the next time from now, or its first time. Escape closes it, and focus goes back to where it was before it opened.
+
+`required` makes a form with no time invalid, and `min` and `max` make a form with an earlier or later time invalid, as well as limiting the list. The browser checks all three on a native `<input type="time">` that the picker renders beside its button. It is hidden from sight and from assistive technology, is not a tab stop, and is what the form sends under the field's `name`. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` or `max` written as the list writes a time, and focus goes to the button rather than the hidden input; the summary's row for the field links to the button. Outside a `Form.Root` the browser blocks the submit but cannot point at a hidden input, so wrap the form in `Form.Root`.
 
 ## Temporal
 
