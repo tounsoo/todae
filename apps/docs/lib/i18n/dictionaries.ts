@@ -239,6 +239,7 @@ const ko: Dictionary = {
   links: {
     '/composition': '조합',
     '/tokens': '토큰',
+    '/guides/get-started': '시작하기',
     '/guides/build-on-todae': 'Todae로 디자인 시스템 만들기',
     '/guides/css-layers': 'CSS 레이어',
     '/platform': '네이티브 플랫폼',

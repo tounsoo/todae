@@ -10,7 +10,11 @@ Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.o
 npm install @tounsoo/todae
 ```
 
-Todae needs React 19.
+Todae needs React 19, and its types need TypeScript 6 or later. An app made with create-next-app 16 starts on TypeScript 5, and npm then stops with a peer dependency error. Install TypeScript 6.0 with Todae, since typescript-eslint, which Next.js's ESLint config uses, accepts TypeScript below 6.1:
+
+```sh
+npm install @tounsoo/todae typescript@~6.0
+```
 
 ## Use
 
@@ -32,7 +36,9 @@ export function App() {
 }
 ```
 
-`todae.css` puts its rules in the `todae` cascade layer. To use it with Tailwind CSS or another reset, see [CSS layers](https://todae.omsoo.design/guides/css-layers).
+`todae.css` puts its rules in the `todae` cascade layer, so CSS outside a layer, such as a reset of your own, beats it. To use it with Tailwind CSS or a reset, see [CSS layers](https://todae.omsoo.design/guides/css-layers).
+
+In Next.js, the main entry is a client module: a Server Component can render the providers, but parts such as `Button.Root` go in a file that starts with `'use client'`. [Get started](https://todae.omsoo.design/guides/get-started) covers this and the CSS order Next.js needs.
 
 ## What's in the package
 

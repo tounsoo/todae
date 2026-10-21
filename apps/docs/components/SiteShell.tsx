@@ -38,7 +38,7 @@ export function SiteShell({
 }) {
   const dict = DICTIONARIES[locale];
   const top = [
-    ['/guides/build-on-todae', dict.topLinks.start],
+    ['/guides/get-started', dict.topLinks.start],
     [FIRST_COMPONENT, dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
