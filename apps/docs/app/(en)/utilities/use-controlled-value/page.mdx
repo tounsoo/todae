@@ -1,6 +1,6 @@
 # useControlledValue
 
-`useControlledValue(controlled, defaultValue, onChange)` is [useControlledState](/utilities/use-controlled-state) with the change callback built in. It returns `[value, change]`. `change(next, ...args)` does nothing when `next` equals the value from the last render (`Object.is`), so two calls with the same new value in one event both call `onChange`. Otherwise it stores `next` when uncontrolled, then calls `onChange(next, ...args)`, controlled or not.
+`useControlledValue(controlled, defaultValue, onChange)` is [useControlledState](/utilities/use-controlled-state) with the change callback built in. It returns `[value, change, set]`. `change(next, ...args)` does nothing when `next` equals the value from the last render (`Object.is`), so two calls with the same new value in one event both call `onChange`. Otherwise it stores `next` when uncontrolled, then calls `onChange(next, ...args)`, controlled or not.
 
 ```tsx
 function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
@@ -14,7 +14,7 @@ function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
 }
 ```
 
-Extra arguments, such as a reason, pass through to `onChange`: type them as the second type parameter, as in `useControlledValue<boolean, [reason: string]>(…)`. As with useControlledState, `undefined` means uncontrolled and `change` takes a value, not an updater function.
+Extra arguments, such as a reason, pass through to `onChange`: type them as the second type parameter, as in `useControlledValue<boolean, [reason: string]>(…)`. As with useControlledState, `undefined` means uncontrolled and `change` takes a value, not an updater function. The third entry, `set(next)`, stores `next` when uncontrolled and calls nothing, for a reset the product didn't ask for, such as going back to the default when an overlay closes.
 
 ## When to use
 
