@@ -632,6 +632,21 @@ describe('Calendar range mode', () => {
     expect(october(18).hasAttribute('aria-disabled')).toBe(false);
   });
 
+  it('reaches a far year from the first pick without isDateDisabled', { timeout: 15000 }, () => {
+    const onValueChange = vi.fn();
+    render(<RangeControlled onValueChange={onValueChange} />);
+    fireEvent.click(october(5));
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    const nextYears = screen.getByRole('button', { name: 'Next years' });
+    for (let year = 2026; year < 9999; year += 12) fireEvent.click(nextYears);
+    fireEvent.click(screen.getByRole('button', { name: '9998' }));
+    fireEvent.keyDown(focusedDay(), { key: 'PageDown', shiftKey: true });
+    const far = day('Tuesday, October 5, 9999');
+    expect(far.hasAttribute('aria-disabled')).toBe(false);
+    fireEvent.click(far);
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('9999-10-05') });
+  });
+
   it('stops a range at min and max', () => {
     render(<RangeControlled min={date('2026-10-05')} max={date('2026-10-20')} />);
     fireEvent.click(october(18));

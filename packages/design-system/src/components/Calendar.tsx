@@ -284,39 +284,44 @@ function Root(rootProps: CalendarRootProps) {
     (date: Temporal.PlainDate) => outOfRange(date) || Boolean(isDateDisabled?.(date)),
     [isDateDisabled, outOfRange],
   );
-  // The nearest day on each side of the anchor that can't be picked, as far
-  // as the shown month reaches, since only its days are drawn. A range can't
-  // reach past one.
+  // The first and last days a range from the anchor can reach: min and max,
+  // or nearer, the days beside the nearest ones isDateDisabled rules out. Those
+  // are looked for only as far as the shown month reaches, since only its days
+  // are drawn.
   const shownMonth = focused?.toPlainYearMonth().toString() ?? null;
-  const walls = useMemo(() => {
+  const reach = useMemo(() => {
     if (!anchor || shownMonth === null) return null;
-    const month = Temporal.PlainYearMonth.from(shownMonth);
-    const first = month.toPlainDate({ day: 1 });
-    const last = month.toPlainDate({ day: month.daysInMonth });
-    let before: Temporal.PlainDate | null = null;
-    for (let day = anchor; compare(day, first) > 0; ) {
-      day = day.subtract({ days: 1 });
-      if (unavailable(day)) {
-        before = day;
-        break;
+    let first = min ?? null;
+    let last = max ?? null;
+    if (isDateDisabled) {
+      const month = Temporal.PlainYearMonth.from(shownMonth);
+      const monthStart = month.toPlainDate({ day: 1 });
+      const monthEnd = month.toPlainDate({ day: month.daysInMonth });
+      const from = first && compare(first, monthStart) > 0 ? first : monthStart;
+      const to = last && compare(last, monthEnd) < 0 ? last : monthEnd;
+      for (let day = anchor; compare(day, from) > 0; ) {
+        day = day.subtract({ days: 1 });
+        if (isDateDisabled(day)) {
+          first = day.add({ days: 1 });
+          break;
+        }
+      }
+      for (let day = anchor; compare(day, to) < 0; ) {
+        day = day.add({ days: 1 });
+        if (isDateDisabled(day)) {
+          last = day.subtract({ days: 1 });
+          break;
+        }
       }
     }
-    let after: Temporal.PlainDate | null = null;
-    for (let day = anchor; compare(day, last) < 0; ) {
-      day = day.add({ days: 1 });
-      if (unavailable(day)) {
-        after = day;
-        break;
-      }
-    }
-    return { before, after };
-  }, [anchor, shownMonth, unavailable]);
+    return { first, last };
+  }, [anchor, isDateDisabled, max, min, shownMonth]);
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>
-      walls !== null &&
-      !(walls.before && compare(date, walls.before) <= 0) &&
-      !(walls.after && compare(date, walls.after) >= 0),
-    [walls],
+      reach !== null &&
+      !(reach.first && compare(date, reach.first) < 0) &&
+      !(reach.last && compare(date, reach.last) > 0),
+    [reach],
   );
   const canShow = useCallback(
     (month: Temporal.PlainYearMonth) =>
