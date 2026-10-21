@@ -2460,17 +2460,21 @@
     }
   },
   "Calendar.Root": {
+    "mode": {
+      "en": "One date, or with \"range\" a range of dates: the first pick starts it and the second ends it.",
+      "ko": "날짜 하나, 또는 \"range\"이면 날짜 범위. 첫 번째로 고른 날이 범위를 시작하고 두 번째로 고른 날이 끝냅니다."
+    },
     "value": {
-      "en": "Controlled selected date, or null for none. Pass with onValueChange.",
-      "ko": "제어되는 선택 날짜, 없으면 null. onValueChange와 함께 전달하세요."
+      "en": "Controlled selected date, or with mode=\"range\" the selected range, or null for none. Pass with onValueChange.",
+      "ko": "제어되는 선택 날짜, mode=\"range\"이면 선택 범위, 없으면 null. onValueChange와 함께 전달하세요."
     },
     "defaultValue": {
-      "en": "Initial selected date when uncontrolled.",
-      "ko": "비제어일 때 처음 선택된 날짜."
+      "en": "Initial selected date, or with mode=\"range\" the initial range, when uncontrolled.",
+      "ko": "비제어일 때 처음 선택된 날짜, mode=\"range\"이면 처음 범위."
     },
     "onValueChange": {
-      "en": "Fires with each date a person picks, even the one already selected.",
-      "ko": "사람이 고른 날짜마다, 이미 선택된 날짜라도 받아 호출됩니다."
+      "en": "Fires with each date a person picks, even the one already selected. With mode=\"range\", fires with the range when its second date is picked.",
+      "ko": "사람이 고른 날짜마다, 이미 선택된 날짜라도 받아 호출됩니다. mode=\"range\"이면 두 번째 날짜를 고를 때 범위를 받아 호출됩니다."
     },
     "min": {
       "en": "The earliest date that can be picked.",

@@ -14263,6 +14263,20 @@
       "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
+      "path": "calendar.day.bg.range",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-bg-range",
+      "cssValue": "var(--todae-color-bg-selected)",
+      "ref": "color.bg.selected",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The strip behind the days between a range's ends."
+    },
+    {
       "path": "calendar.day.bg.selected",
       "type": "color",
       "cssVar": "--todae-calendar-day-bg-selected",
@@ -14331,6 +14345,20 @@
         "name": "contract"
       },
       "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
+    },
+    {
+      "path": "calendar.day.fg.range",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-fg-range",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "A day between a range's ends, on the range strip."
     },
     {
       "path": "calendar.day.fg.selected",

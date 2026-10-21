@@ -3,25 +3,33 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Calendar.Root',
   description:
-    'A role="group" that holds one selected date, a Temporal.PlainDate, for its Calendar.Header and Calendar.Grid. It shows the month of the date that holds the grid\'s Tab stop. Todae ships no Temporal polyfill.',
+    'A role="group" that holds one selected date, a Temporal.PlainDate, or with mode="range" a DateRange, for its Calendar.Header and Calendar.Grid. In range mode the first pick starts a range and the second ends it, and a range holds only days that can be picked. It shows the month of the date that holds the grid\'s Tab stop. Todae ships no Temporal polyfill.',
   props: [
     {
-      name: 'value',
-      type: 'Temporal.PlainDate | null',
+      name: 'mode',
+      type: "'single' | 'range'",
       required: false,
-      description: 'Controlled selected date, or null for none. Pass with onValueChange.',
+      default: "'single'",
+      description: 'One date, or with "range" a range of dates: the first pick starts it and the second ends it.',
+    },
+    {
+      name: 'value',
+      type: 'Temporal.PlainDate | DateRange | null',
+      required: false,
+      description: 'Controlled selected date, or with mode="range" the selected range, or null for none. Pass with onValueChange.',
     },
     {
       name: 'defaultValue',
-      type: 'Temporal.PlainDate | null',
+      type: 'Temporal.PlainDate | DateRange | null',
       required: false,
-      description: 'Initial selected date when uncontrolled.',
+      description: 'Initial selected date, or with mode="range" the initial range, when uncontrolled.',
     },
     {
       name: 'onValueChange',
-      type: '(value: Temporal.PlainDate) => void',
+      type: '((value: Temporal.PlainDate) => void) | ((value: DateRange) => void)',
       required: false,
-      description: 'Fires with each date a person picks, even the one already selected.',
+      description:
+        'Fires with each date a person picks, even the one already selected. With mode="range", fires with the range when its second date is picked.',
     },
     {
       name: 'min',

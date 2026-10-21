@@ -64,6 +64,8 @@ export interface Strings {
   previousYears: string;
   /** Name of Calendar.Header's button to the next page of years. */
   nextYears: string;
+  /** Calendar's message in range mode after the first pick, while the range waits for its other end. */
+  pickEndDate: string;
   /** useClipboard's message after a copy. */
   copied: string;
   /** useClipboard's message when a copy fails. */
@@ -121,6 +123,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   nextMonth: 'Next month',
   previousYears: 'Previous years',
   nextYears: 'Next years',
+  pickEndDate: 'Choose an end date',
   copied: 'Copied',
   copyFailed: 'Could not copy',
   conversation: 'Conversation',

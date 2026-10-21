@@ -55,6 +55,7 @@ const FRENCH: Strings = {
   nextMonth: 'Mois suivant',
   previousYears: 'Années précédentes',
   nextYears: 'Années suivantes',
+  pickEndDate: 'Choisir une date de fin',
   copied: 'Copié',
   copyFailed: 'Copie impossible',
   conversation: 'Conversation',

@@ -1,8 +1,8 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Calendar, Fieldset, StringsProvider, type CalendarRootProps } from '../index.js';
+import { Calendar, Fieldset, StringsProvider, type CalendarRootProps, type DateRange } from '../index.js';
 
 afterEach(cleanup);
 
@@ -12,7 +12,7 @@ function Controlled({
   initial = date('2026-10-13'),
   onValueChange,
   ...props
-}: { initial?: Temporal.PlainDate | null } & Omit<CalendarRootProps, 'value'>) {
+}: { initial?: Temporal.PlainDate | null } & Omit<Extract<CalendarRootProps, { mode?: 'single' }>, 'value'>) {
   const [value, setValue] = useState(initial);
   return (
     <>
@@ -493,5 +493,223 @@ describe('Calendar', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<Calendar.Grid />)).toThrow('Calendar.Grid must render inside Calendar.Root');
     vi.restoreAllMocks();
+  });
+});
+
+function RangeControlled({
+  initial = null,
+  onValueChange,
+  ...props
+}: { initial?: DateRange | null } & Omit<Extract<CalendarRootProps, { mode: 'range' }>, 'value' | 'mode'>) {
+  const [value, setValue] = useState(initial);
+  return (
+    <>
+      <Calendar.Root
+        aria-label="Stay"
+        locale="en-US"
+        firstDayOfWeek={7}
+        defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+        {...props}
+        mode="range"
+        value={value}
+        onValueChange={(next) => {
+          setValue(next);
+          onValueChange?.(next);
+        }}
+      >
+        <Calendar.Header />
+        <Calendar.Grid />
+      </Calendar.Root>
+      <output data-testid="value">{value ? `${value.start}/${value.end}` : ''}</output>
+    </>
+  );
+}
+
+const october = (n: number) =>
+  day(Temporal.PlainDate.from({ year: 2026, month: 10, day: n }).toLocaleString('en-US', { dateStyle: 'full' }));
+const selectedCells = () =>
+  [...grid().querySelectorAll('td[aria-selected="true"]')].map((cell) => cell.textContent);
+
+describe('Calendar range mode', () => {
+  it('picks a range from two picks in either order, and reports it once', () => {
+    const onValueChange = vi.fn();
+    render(<RangeControlled onValueChange={onValueChange} />);
+    fireEvent.click(october(10));
+    expect(onValueChange).not.toHaveBeenCalled();
+    fireEvent.click(october(3));
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-03'), end: date('2026-10-10') });
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-03/2026-10-10');
+    fireEvent.click(october(20));
+    fireEvent.click(october(22));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-20/2026-10-22');
+  });
+
+  it('picks a one-day range from the same day twice', () => {
+    render(<RangeControlled />);
+    fireEvent.click(october(7));
+    fireEvent.click(october(7));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-07/2026-10-07');
+    const one = october(7);
+    expect(one.hasAttribute('data-range-start')).toBe(true);
+    expect(one.hasAttribute('data-range-end')).toBe(true);
+    expect(selectedCells()).toEqual(['7']);
+  });
+
+  it('selects every cell of the range, fills its ends and marks the days between', () => {
+    render(<RangeControlled initial={{ start: date('2026-10-03'), end: date('2026-10-06') }} />);
+    expect(selectedCells()).toEqual(['3', '4', '5', '6']);
+    expect(october(3).hasAttribute('data-selected')).toBe(true);
+    expect(october(3).hasAttribute('data-range-start')).toBe(true);
+    expect(october(6).hasAttribute('data-selected')).toBe(true);
+    expect(october(6).hasAttribute('data-range-end')).toBe(true);
+    expect(october(4).hasAttribute('data-selected')).toBe(false);
+    expect(october(4).hasAttribute('data-in-range')).toBe(true);
+    expect(october(7).hasAttribute('data-in-range')).toBe(false);
+    // The grid starts on the range's start.
+    expect(focusedDay()).toBe(october(3));
+  });
+
+  it('while waiting for the end, selects only the first pick and previews to the hovered or focused day', () => {
+    render(<RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />);
+    fireEvent.click(october(5));
+    expect(selectedCells()).toEqual(['5']);
+    expect(october(5).hasAttribute('data-selected')).toBe(true);
+    expect(october(20).hasAttribute('data-selected')).toBe(false);
+    fireEvent.pointerEnter(october(8));
+    expect(october(6).hasAttribute('data-in-range')).toBe(true);
+    expect(october(7).hasAttribute('data-in-range')).toBe(true);
+    expect(october(8).hasAttribute('data-range-end')).toBe(true);
+    expect(october(8).hasAttribute('data-selected')).toBe(false);
+    expect(october(9).hasAttribute('data-in-range')).toBe(false);
+    // Off the grid, the preview follows the focused day.
+    fireEvent.pointerLeave(grid());
+    expect(october(6).hasAttribute('data-in-range')).toBe(false);
+    fireEvent.keyDown(october(5), { key: 'ArrowLeft' });
+    expect(october(4).hasAttribute('data-range-start')).toBe(true);
+    expect(october(5).hasAttribute('data-range-end')).toBe(true);
+    expect(selectedCells()).toEqual(['5']);
+  });
+
+  it('announces that the end date is next after the first pick', async () => {
+    render(<RangeControlled />);
+    fireEvent.click(october(5));
+    await waitFor(() =>
+      expect(document.querySelector('[data-todae-announcer] [aria-live="polite"]')!.textContent).toBe(
+        'Choose an end date',
+      ),
+    );
+  });
+
+  it('reaches no day past one that cannot be picked', () => {
+    const fifteenth = (d: Temporal.PlainDate) => d.day === 15;
+    const onValueChange = vi.fn();
+    render(<RangeControlled isDateDisabled={fifteenth} onValueChange={onValueChange} />);
+    fireEvent.click(october(12));
+    // Unreachable days take focus and read as unavailable, but are not struck through.
+    const past = october(18);
+    expect(past.getAttribute('aria-disabled')).toBe('true');
+    expect(past.hasAttribute('data-unavailable')).toBe(false);
+    expect(october(14).hasAttribute('aria-disabled')).toBe(false);
+    expect(october(15).hasAttribute('data-unavailable')).toBe(true);
+    fireEvent.pointerEnter(past);
+    expect(october(13).hasAttribute('data-in-range')).toBe(false);
+    fireEvent.click(past);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(focusedDay()).toBe(past);
+    fireEvent.click(october(14));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-12/2026-10-14');
+    expect(october(18).hasAttribute('aria-disabled')).toBe(false);
+  });
+
+  it('stops a range at min and max', () => {
+    render(<RangeControlled min={date('2026-10-05')} max={date('2026-10-20')} />);
+    fireEvent.click(october(18));
+    expect(october(21)).toHaveProperty('disabled', true);
+    expect(october(5).hasAttribute('aria-disabled')).toBe(false);
+    fireEvent.click(october(5));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-05/2026-10-18');
+  });
+
+  it('drops the first pick on Escape, keeping the key from what holds the calendar', () => {
+    const outside = vi.fn();
+    document.addEventListener('keydown', outside);
+    render(<RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />);
+    fireEvent.click(october(5));
+    fireEvent.keyDown(october(5), { key: 'Escape' });
+    expect(outside).not.toHaveBeenCalled();
+    expect(selectedCells()).toEqual(['20', '21', '22']);
+    // With no range in progress, Escape is left alone.
+    fireEvent.keyDown(october(5), { key: 'Escape' });
+    expect(outside).toHaveBeenCalledTimes(1);
+    document.removeEventListener('keydown', outside);
+    fireEvent.click(october(9));
+    expect(october(9).hasAttribute('data-selected')).toBe(true);
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-20/2026-10-22');
+  });
+
+  it('follows a range set from outside to its start, dropping a first pick', () => {
+    function Outside() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue({ start: date('2027-03-02'), end: date('2027-03-09') })}>
+            set
+          </button>
+          <Calendar.Root
+            aria-label="Stay"
+            locale="en-US"
+            mode="range"
+            defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+            value={value}
+            onValueChange={setValue}
+          >
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Outside />);
+    fireEvent.click(october(5));
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('March 2027')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, March 2, 2027');
+    expect(selectedCells()).toEqual(['2', '3', '4', '5', '6', '7', '8', '9']);
+  });
+
+  it('stays on the month a range ends in', () => {
+    render(<RangeControlled />);
+    fireEvent.click(october(28));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04');
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+  });
+
+  it('selects every year a range touches in the page of years', () => {
+    render(<RangeControlled initial={{ start: date('2025-12-20'), end: date('2027-01-05') }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'December 2025' }));
+    expect(selectedCells()).toEqual(['2025', '2026', '2027']);
+  });
+
+  it('keeps its own range when uncontrolled', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar.Root
+        aria-label="Stay"
+        locale="en-US"
+        mode="range"
+        defaultValue={{ start: date('2026-10-03'), end: date('2026-10-04') }}
+        onValueChange={onValueChange}
+      >
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(october(8));
+    fireEvent.click(october(10));
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-08'), end: date('2026-10-10') });
+    expect(selectedCells()).toEqual(['8', '9', '10']);
   });
 });

@@ -232,11 +232,13 @@ export { normalizeHex } from './components/color.js';
 export { formatDate, parseDate, type DateTextOptions } from './components/dateText.js';
 export { formatTime, parseTime, type TimeTextOptions } from './components/timeText.js';
 export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
+export type { DateRange } from './components/dateRangeText.js';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,
   type CalendarGridProps,
   type CalendarHeaderProps,
+  type CalendarMode,
   type CalendarRootProps,
 } from './components/Calendar.js';
 export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav.js';

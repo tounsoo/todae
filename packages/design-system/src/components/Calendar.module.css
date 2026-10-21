@@ -171,6 +171,36 @@
     color: var(--todae-calendar-day-fg-selected);
   }
 
+  /*
+   * A range is a strip on the cells, under the day buttons, so a hovered day
+   * in it still shows its hover. The ends' cells carry it on their inner half,
+   * behind the filled day; a pending end that is not picked yet carries it whole.
+   */
+  .grid td:has(> .day[data-in-range]),
+  .grid td:has(> .day:is([data-range-start], [data-range-end]):not([data-selected])) {
+    background: var(--todae-calendar-day-bg-range);
+  }
+
+  .grid td:has(> .day[data-range-start][data-selected]:not([data-range-end])) {
+    background: linear-gradient(to right, transparent 50%, var(--todae-calendar-day-bg-range) 50%);
+  }
+
+  .grid td:has(> .day[data-range-end][data-selected]:not([data-range-start])) {
+    background: linear-gradient(to left, transparent 50%, var(--todae-calendar-day-bg-range) 50%);
+  }
+
+  .grid td:dir(rtl):has(> .day[data-range-start][data-selected]:not([data-range-end])) {
+    background: linear-gradient(to left, transparent 50%, var(--todae-calendar-day-bg-range) 50%);
+  }
+
+  .grid td:dir(rtl):has(> .day[data-range-end][data-selected]:not([data-range-start])) {
+    background: linear-gradient(to right, transparent 50%, var(--todae-calendar-day-bg-range) 50%);
+  }
+
+  .day:is([data-in-range], [data-range-start], [data-range-end]):not([data-selected]) {
+    color: var(--todae-calendar-day-fg-range);
+  }
+
   /* Forced colors drop backgrounds: paint the selected day with system colors. */
   @media (forced-colors: active) {
     .day[data-selected],
@@ -182,6 +212,15 @@
 
     :is(.day, .year)[aria-current='date']:not([data-selected]) {
       border-color: CanvasText;
+    }
+
+    /* The strip is a fill, so the days in a range are framed instead. */
+    .grid td:has(> .day:is([data-in-range], [data-range-start], [data-range-end])) {
+      background: none;
+    }
+
+    .day:is([data-in-range], [data-range-start], [data-range-end]):not([data-selected]) {
+      border-color: Highlight;
     }
 
     .nav:is(:disabled, [aria-disabled='true']),

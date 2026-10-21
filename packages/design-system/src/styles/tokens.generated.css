@@ -1165,11 +1165,13 @@
   --todae-picker-width: var(--_todae-picker-width, 15rem);
   --todae-calendar-day-bg-default: var(--_todae-calendar-day-bg-default, var(--todae-color-bg-transparent));
   --todae-calendar-day-bg-hover: var(--_todae-calendar-day-bg-hover, var(--todae-color-bg-highlight));
+  --todae-calendar-day-bg-range: var(--_todae-calendar-day-bg-range, var(--todae-color-bg-selected));
   --todae-calendar-day-bg-selected: var(--_todae-calendar-day-bg-selected, var(--todae-color-accent-default));
   --todae-calendar-day-border-current: var(--_todae-calendar-day-border-current, var(--todae-color-border-default));
   --todae-calendar-day-border-width: var(--_todae-calendar-day-border-width, var(--todae-border-width));
   --todae-calendar-day-fg-default: var(--_todae-calendar-day-fg-default, var(--todae-color-fg-default));
   --todae-calendar-day-fg-disabled: var(--_todae-calendar-day-fg-disabled, var(--todae-color-fg-placeholder));
+  --todae-calendar-day-fg-range: var(--_todae-calendar-day-fg-range, var(--todae-color-fg-default));
   --todae-calendar-day-fg-selected: var(--_todae-calendar-day-fg-selected, var(--todae-color-on-accent));
   --todae-calendar-day-radius: var(--_todae-calendar-day-radius, var(--todae-radius-md));
   --todae-calendar-day-ring-focus: var(--_todae-calendar-day-ring-focus, var(--todae-focus-ring-color));
