@@ -13,6 +13,7 @@ import {
   cli,
   todaeTokensRoot,
   catalogSelectors,
+  emitCatalog,
   flattenTokens,
   pathToPointer,
   parseComponentPointer,
@@ -607,9 +608,14 @@ describe('resolver-driven build', () => {
     expect(entryOf('color.accent.default', 'light')).toEqual({ kind: 'modifier', name: 'appearance' });
     expect(entryOf('focus.ring.color')).toEqual({ kind: 'set', name: 'focus' });
     expect(entryOf('button.base.radius')).toEqual({ kind: 'set', name: 'button' });
-    expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant', context: 'primary' });
     expect(entryOf('card.shadow')).toEqual({ kind: 'set', name: 'contract' });
     expect(rows.every((row) => row.entry !== null)).toBe(true);
+  });
+
+  it('refuses to write a catalog row with no set or modifier', () => {
+    const token: FlatToken = { path: 'space.1', type: 'dimension', value: null, ref: null, refs: [], cssVar: '--todae-space-1', cssValue: '4px', layer: 'core' };
+    expect(() => emitCatalog([token])).toThrow('token "space.1" has no set or modifier for the catalog');
   });
 
   it('merges sources in order, accepting inline token trees', async () => {
@@ -1557,7 +1563,11 @@ describe('company token build', () => {
     const rows = JSON.parse((await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir })).json)
       .tokens as { path: string; context: string | null; entry: unknown }[];
     expect(rows.find((row) => row.path === 'brand.logo.size')?.entry).toEqual({ kind: 'set', name: 'brand' });
-    expect(rows.find((row) => row.path === 'button.outline.bg.default')?.entry).toEqual({ kind: 'modifier', name: 'buttonVariant' });
+    expect(rows.find((row) => row.path === 'button.outline.bg.default')?.entry).toEqual({
+      kind: 'modifier',
+      name: 'buttonVariant',
+      context: 'outline',
+    });
   });
 
   it('rejects extensions that change Todae\'s placement or redeclare its tokens', async () => {
