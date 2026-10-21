@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
-import { useContext, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
@@ -216,8 +216,39 @@ describe('an error nothing can show', () => {
   it('warns in development, when the reply comes, for a name no control has', async () => {
     const warn = warnings();
     await reply(null, { ghost: 'Nobody home.' });
+    await act(async () => new Promise((resolve) => setTimeout(resolve)));
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toContain('ghost');
+    warn.mockRestore();
+  });
+
+  it('does not warn for a control that mounts in a scope just after the reply, ', async () => {
+    const warn = warnings();
+    function Late({ errors }: { errors: Record<string, string> }) {
+      const [on, setOn] = useState(false);
+      useEffect(() => {
+        if (errors.late) setOn(true);
+      }, [errors]);
+      return (
+        <SignUp errors={errors}>
+          <EmailField />
+          {on ? (
+            <Field.Group>
+              <Field.Root id="late" name="late">
+                <Field.TextInput aria-label="Late" value="" onValueChange={() => undefined} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
+          ) : null}
+        </SignUp>
+      );
+    }
+    const view = await mount(<Late errors={{}} />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    view.rerender(<Late errors={{ late: 'No.' }} />);
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 

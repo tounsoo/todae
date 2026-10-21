@@ -698,3 +698,117 @@ describe('what a refresh keeps after a reply', () => {
     expect(screen.queryByTestId('summary')).toBeNull();
   });
 });
+
+describe('focus inside a scope', () => {
+  it('goes to the control the scope shows, not an earlier one it does not', async () => {
+    // The server names b, so the group shows b's error, not a's native one.
+    const withServer = (
+      <SignUp errors={{ b: 'Taken.' }}>
+        <Field.Group>
+          <Field.Root id="a" name="a">
+            <Field.TextInput aria-label="A" required value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <Field.Root id="b" name="b">
+            <Field.TextInput aria-label="B" required value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </SignUp>
+    );
+    await mount(withServer);
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('Taken.')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByLabelText('B'));
+  });
+});
+
+describe('the summary reads name live', () => {
+  it('follows a control renamed after its row showed', async () => {
+    function Named({ name }: { name: string }) {
+      return (
+        <SignUp>
+          <Form.Summary>{(fields) => fields.map((field) => <span key={field.label} data-testid="row">{field.name}</span>)}</Form.Summary>
+          <Field.Group>
+            <Field.Root id="x" name={name}>
+              <Field.TextInput aria-label="X" required value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </SignUp>
+      );
+    }
+    const { rerender } = await mount(<Named name="old" />);
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByTestId('row').textContent).toBe('old');
+    rerender(<Named name="new" />);
+    await settle();
+    expect(screen.getByTestId('row').textContent).toBe('new');
+  });
+});
+
+describe('one scope with a disabled first problem', () => {
+  function Pair({ errors, disabled }: { errors: FormErrors; disabled: boolean }) {
+    return (
+      <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary data-testid="summary" />
+        <Field.Group>
+          <Field.Root id="plan" name="plan" disabled={disabled}>
+            <Field.TextInput aria-label="Plan" value="pro" onValueChange={() => undefined} />
+          </Field.Root>
+          <Field.Root id="nick" name="nick">
+            <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="submit">Send</button>
+      </Form.Root>
+    );
+  }
+
+  it('lists the disabled control as text and focuses nothing in the scope, since the scope shows only that one', async () => {
+    const { rerender } = await mount(<Pair disabled errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Pair disabled errors={{ plan: 'Locked.', nick: 'Taken.' }} />);
+    await settle();
+    const summary = screen.getByTestId('summary');
+    expect(within(summary).queryByRole('link', { name: 'Plan' })).toBeNull();
+    expect(within(summary).getByText('Plan')).toBeTruthy();
+    expect(document.activeElement).not.toBe(screen.getByLabelText('Nick'));
+  });
+});
+
+describe('a control disabled by state below its scope', () => {
+  it('updates the summary row', async () => {
+    function Plan() {
+      const [locked, setLocked] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setLocked((value) => !value)}>
+            Lock
+          </button>
+          <Field.Root id="plan" name="plan" disabled={locked}>
+            <Field.TextInput aria-label="Plan" required value="" onValueChange={() => undefined} />
+          </Field.Root>
+        </>
+      );
+    }
+    await mount(
+      <SignUp>
+        <Form.Summary data-testid="summary" />
+        <Field.Group>
+          <Plan />
+          <ErrorMessage.Root />
+        </Field.Group>
+      </SignUp>,
+    );
+    await submit(screen.getByTestId('form'));
+    const summary = screen.getByTestId('summary');
+    expect(within(summary).getByRole('link', { name: 'Plan' })).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByText('Lock'));
+    });
+    await settle();
+    // A disabled control has no native problem, so its row is gone and so is the summary.
+    expect(screen.queryByTestId('summary')).toBeNull();
+  });
+});

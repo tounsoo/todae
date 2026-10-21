@@ -25,10 +25,8 @@ export type Reading = {
 export type SummaryEntry = {
   scopeId: string;
   error: FormFieldError;
-  label: string;
-  id: string;
-  disabled: boolean;
-  carrier: ValidityCarrier;
+  /** The control the scope shows, as it read it. */
+  reading: Reading;
 };
 
 export type FormContextValue = {

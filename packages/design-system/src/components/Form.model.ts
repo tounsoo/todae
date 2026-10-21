@@ -33,23 +33,20 @@ export function pickShown(
   return null;
 }
 
-export function sameReadings(a: readonly Reading[], b: readonly Reading[]): boolean {
+export function sameReading(a: Reading, b: Reading): boolean {
   return (
-    a.length === b.length &&
-    a.every((reading, i) => {
-      const other = b[i];
-      return (
-        other !== undefined &&
-        reading.carrier === other.carrier &&
-        reading.name === other.name &&
-        reading.label === other.label &&
-        reading.id === other.id &&
-        reading.disabled === other.disabled &&
-        reading.native?.kind === other.native?.kind &&
-        reading.native?.message === other.native?.message
-      );
-    })
+    a.carrier === b.carrier &&
+    a.name === b.name &&
+    a.label === b.label &&
+    a.id === b.id &&
+    a.disabled === b.disabled &&
+    a.native?.kind === b.native?.kind &&
+    a.native?.message === b.native?.message
   );
+}
+
+export function sameReadings(a: readonly Reading[], b: readonly Reading[]): boolean {
+  return a.length === b.length && a.every((reading, i) => b[i] !== undefined && sameReading(reading, b[i]));
 }
 
 /**
@@ -76,14 +73,14 @@ export function errorsKey(errors: FormErrors | undefined): string {
 
 /** Whether a refresh would leave an entry as it is. */
 export function sameEntry(a: SummaryEntry, b: SummaryEntry): boolean {
-  return (
-    a.carrier === b.carrier &&
-    a.id === b.id &&
-    a.disabled === b.disabled &&
-    a.label === b.label &&
-    a.error.kind === b.error.kind &&
-    a.error.message === b.error.message
-  );
+  return a.scopeId === b.scopeId && a.error.kind === b.error.kind && a.error.message === b.error.message && sameReading(a.reading, b.reading);
+}
+
+/** The controls some scope of `form` reads: the ones a scope can show. */
+export function scopedControls(form: Element): Set<Element> {
+  const read = new Set<Element>();
+  for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) for (const control of carriersIn(scope, { own: true, named: true })) read.add(control);
+  return read;
 }
 
 export const keyHasErrors = (key: string) => key !== EMPTY_KEY;
@@ -136,9 +133,8 @@ export function failingEntries(
   for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) {
     const shown = pickShown(readScope(scope, strings), errors, dismissal, native);
     if (shown) {
-      const { label, id, disabled, carrier } = shown.reading;
-      entries.push({ scopeId: scope.getAttribute(SCOPE_ATTRIBUTE) ?? '', error: shown.error, label, id, disabled, carrier });
+      entries.push({ scopeId: scope.getAttribute(SCOPE_ATTRIBUTE) ?? '', error: shown.error, reading: shown.reading });
     }
   }
-  return entries.sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  return entries.sort((a, b) => (a.reading.carrier.compareDocumentPosition(b.reading.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 }

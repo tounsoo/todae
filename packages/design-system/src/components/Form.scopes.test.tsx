@@ -687,4 +687,23 @@ describe('customValidity and a product\'s own setCustomValidity', () => {
     await settle();
     expect(deep.validationMessage).toBe('Mine');
   });
+
+  it('is restored on the next commit when the product cleared it', async () => {
+    const { rerender } = await mount(<Rule message="X" />);
+    const deep = screen.getByLabelText('Deep') as HTMLInputElement;
+    deep.setCustomValidity('');
+    expect(deep.validity.customError).toBe(false);
+    rerender(<Rule message="X" />);
+    await settle();
+    expect(deep.validationMessage).toBe('X');
+  });
+
+  it('leaves the product\'s message when the rule goes after the product replaced it', async () => {
+    const { rerender } = await mount(<Rule message="X" />);
+    const deep = screen.getByLabelText('Deep') as HTMLInputElement;
+    deep.setCustomValidity('Mine');
+    rerender(<Rule message={undefined} />);
+    await settle();
+    expect(deep.validationMessage).toBe('Mine');
+  });
 });

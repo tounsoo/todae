@@ -13,10 +13,17 @@ function settle(carrier: ValidityCarrier) {
   // Every owner encloses the control, so they nest.
   messages.sort(([a], [b]) => (a === b ? 0 : a.contains(b) ? 1 : -1));
   const winner = messages[0]?.[1] ?? '';
-  if (winner === (written.get(carrier) ?? '')) return;
-  carrier.setCustomValidity(winner);
-  if (winner) written.set(carrier, winner);
-  else written.delete(carrier);
+  // Look at the element, not at what was written: a product may have changed its message since.
+  const current = carrier.validity.customError ? carrier.validationMessage : '';
+  if (winner) {
+    if (current !== winner) carrier.setCustomValidity(winner);
+    written.set(carrier, winner);
+    return;
+  }
+  // Clear only what Todae wrote and the element still holds.
+  const wrote = written.get(carrier);
+  if (wrote !== undefined && current === wrote) carrier.setCustomValidity('');
+  written.delete(carrier);
 }
 
 function release(carrier: ValidityCarrier, owner: Element) {

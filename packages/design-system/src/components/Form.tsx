@@ -12,6 +12,7 @@ import {
   type SubmitEvent,
 } from 'react';
 import { useStrings } from '../providers/StringsProvider.js';
+import type { Strings } from '../providers/strings.js';
 import { useDomId } from './domId.js';
 import {
   FormContext,
@@ -20,7 +21,7 @@ import {
   type FormErrors,
   type SummaryEntry,
 } from './Form.context.js';
-import { carriersIn, errorsKey, failingEntries, keyHasErrors, sameEntry, SCOPE_SELECTOR, serverErrorFor } from './Form.model.js';
+import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
 import { Button } from './Button.js';
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -152,34 +153,50 @@ function reduce(state: FormState, action: FormAction): FormState {
 
 /**
  * The first enabled control, in document order, that has a problem to fix: a
- * server error nothing has hidden, on a control a scope reads since no other
- * shows one, or with `native` a native problem.
+ * control in a scope only when it is the one the scope shows, else, with
+ * `native`, a native problem of a control no scope reads.
  */
-function firstProblem(form: HTMLFormElement, errors: FormErrors | undefined, dismissal: Dismissal, native: boolean): HTMLElement | undefined {
-  const read = new Set<Element>();
-  for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) for (const control of carriersIn(scope, { own: true, named: true })) read.add(control);
+function firstProblem(
+  form: HTMLFormElement,
+  errors: FormErrors | undefined,
+  dismissal: Dismissal,
+  strings: Strings,
+  native: boolean,
+): HTMLElement | undefined {
+  const read = scopedControls(form);
+  // Every scope speaks for its controls through the one it shows; a disabled one can't take focus, and the others stay quiet.
+  const shown = new Set<Element>(failingEntries(form, errors, dismissal, strings, native).map((entry) => entry.reading.carrier));
   return [...form.elements].find(
     (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
       !el.matches(':disabled') &&
-      ((native && el.willValidate && !el.validity.valid) || (read.has(el) && serverErrorFor(el.name, errors, dismissal) !== undefined)),
+      (read.has(el) ? shown.has(el) : native && el.willValidate && !el.validity.valid),
   );
 }
 
-/** Development only: an entry of `errors` that no scope can show says so, once. */
+/** Development only: an entry of `errors` that no scope can show says so, once. A name no control has yet gets one more task, since a control may mount just after the reply. */
 function warnUnscoped(formId: string, form: HTMLFormElement, errors: FormErrors) {
-  const shown = new Set<string>();
-  for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) for (const control of carriersIn(scope, { own: true, named: true })) shown.add(control.name);
-  for (const [name, text] of Object.entries(errors)) {
-    if (!text || shown.has(name)) continue;
-    const named = [...form.elements].some((el) => isValidityCarrier(el) && el.name === name);
-    warnOnce(
-      `unscoped:${formId}:${name}`,
-      `Form.Root: errors["${name}"] shows nowhere: ${
-        named ? 'its control is not inside a Field.Group or Fieldset.Root, so nothing shows it' : 'no control in the form has that name'
-      }.`,
-    );
-  }
+  const check = (final: boolean) => {
+    if (!form.isConnected) return;
+    const shown = new Set([...scopedControls(form)].map((control) => (control as ValidityCarrier).name));
+    let missing = false;
+    for (const [name, text] of Object.entries(errors)) {
+      if (!text || shown.has(name)) continue;
+      const named = [...form.elements].some((el) => isValidityCarrier(el) && el.name === name);
+      if (!named && !final) {
+        missing = true;
+        continue;
+      }
+      warnOnce(
+        `unscoped:${formId}:${name}`,
+        `Form.Root: errors["${name}"] shows nowhere: ${
+          named ? 'its control is not inside a Field.Group or Fieldset.Root, so nothing shows it' : 'no control in the form has that name'
+        }.`,
+      );
+    }
+    if (missing) window.setTimeout(() => check(true));
+  };
+  check(false);
 }
 
 function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: FormRootProps) {
@@ -224,7 +241,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
   useLayoutEffect(() => {
     if (state.focus === 0) return;
     const form = formRef.current;
-    if (form) (summaryRef.current ?? firstProblem(form, errors, state.dismissal, state.native))?.focus();
+    if (form) (summaryRef.current ?? firstProblem(form, errors, state.dismissal, strings, state.native))?.focus();
     // Only a new request moves focus; the rest is read as it is now.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.focus]);
@@ -323,11 +340,11 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
   const entries = form.failed;
   if (entries.length === 0) return null;
   const fieldOf = (entry: SummaryEntry): FormInvalidField => ({
-    name: entry.carrier.name || undefined,
-    label: entry.label,
+    name: entry.reading.name || undefined,
+    label: entry.reading.label,
     error: entry.error,
-    disabled: entry.disabled,
-    focus: () => entry.carrier.focus(),
+    disabled: entry.reading.disabled,
+    focus: () => entry.reading.carrier.focus(),
   });
   return (
     <div
@@ -347,23 +364,23 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
         <ul className={styles.list}>
           {entries.map((entry) => (
             <li key={entry.scopeId} className={styles.item}>
-              {entry.disabled ? (
+              {entry.reading.disabled ? (
                 // A disabled control can't take focus, so its row says what is wrong and offers nothing to press.
-                <span>{entry.label}</span>
-              ) : entry.id ? (
+                <span>{entry.reading.label}</span>
+              ) : entry.reading.id ? (
                 <Link.Root
-                  href={`#${entry.id}`}
+                  href={`#${entry.reading.id}`}
                   onClick={(event: MouseEvent<HTMLAnchorElement>) => {
                     event.preventDefault();
                     fieldOf(entry).focus();
                   }}
                 >
-                  {entry.label}
+                  {entry.reading.label}
                 </Link.Root>
               ) : (
                 // An `a` with no href is not a link and can't be focused, so a control with no id gets a button.
                 <Button.Root variant="ghost" onClick={fieldOf(entry).focus}>
-                  {entry.label}
+                  {entry.reading.label}
                 </Button.Root>
               )}
               <span>{entry.error.message}</span>
