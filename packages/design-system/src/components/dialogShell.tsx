@@ -20,6 +20,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
+import { ModalContext } from '../overlay/modalContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
@@ -172,7 +173,7 @@ export function DialogShellRoot({
   // Records the focus to return to, before showModal moves it. Keyed on
   // present: the page behind stays inert until the exit motion ends.
   useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef, nativeReturn: true });
-  const closeOnFormSubmit = useModalDialog({
+  const { closeOnFormSubmit, modal, holdingCloseRequests } = useModalDialog({
     dialogRef,
     node: dialogNode,
     present,
@@ -191,7 +192,7 @@ export function DialogShellRoot({
     <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
         {...props}
-        {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
+        {...{ closedby: dismissOnEscape || holdingCloseRequests ? 'closerequest' : 'none' }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
@@ -230,7 +231,9 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+          <ModalContext.Provider value={modal}>
+            <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+          </ModalContext.Provider>
         </div>
       </dialog>
     </ShellContext.Provider>

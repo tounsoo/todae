@@ -1,4 +1,15 @@
-import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
+import {
+  useCallback,
+  useInsertionEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type FormEvent,
+  type RefObject,
+} from 'react';
+import type { ModalContextValue } from './modalContext.js';
 import { dropModal } from './modalStack.js';
 import { inToastHostWithin } from './tabbables.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
@@ -31,7 +42,9 @@ type Options = {
  * person was if something closes it while the owner keeps it open.
  *
  * Call it where `showModal()` should run relative to the focus hooks. Pass
- * the returned handler to the element's `onSubmit` after the consumer's own.
+ * `closeOnFormSubmit` to the element's `onSubmit` after the consumer's own,
+ * provide `modal` to the children through `ModalContext`, and keep close
+ * requests on (`closedby="closerequest"`) while `holdingCloseRequests`.
  */
 export function useModalDialog({
   dialogRef,
@@ -41,7 +54,11 @@ export function useModalDialog({
   dismissOnEscape,
   onOpenChange,
   requestClose,
-}: Options): (event: FormEvent<HTMLDialogElement>) => void {
+}: Options): {
+  closeOnFormSubmit: (event: FormEvent<HTMLDialogElement>) => void;
+  modal: ModalContextValue;
+  holdingCloseRequests: boolean;
+} {
   const openRef = useRef(open);
   openRef.current = open;
   // Read from the listeners, so they bind once per element.
@@ -116,15 +133,30 @@ export function useModalDialog({
   // as their own top layer boxes they don't fade with the element.
   useModalLayerElement(node, present, true);
 
+  const holders = useRef<(() => void)[]>([]);
+  const [holdingCloseRequests, setHolding] = useState(false);
+  const holdCloseRequests = useCallback((handler: () => void) => {
+    holders.current.push(handler);
+    setHolding(true);
+    return () => {
+      holders.current = holders.current.filter((held) => held !== handler);
+      setHolding(holders.current.length > 0);
+    };
+  }, []);
+  const modal = useMemo(() => ({ present, holdCloseRequests }), [present, holdCloseRequests]);
+
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
     if (!node) return;
     const el: HTMLDialogElement = node;
-    // Escape is a close request. Hold it so the owner closes the element.
+    // Escape is a close request. Hold it so the owner closes the element, or
+    // a part inside that holds close requests, such as a Drilldown, goes back.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();
-      if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
+      const holder = holders.current.at(-1);
+      if (holder) holder();
+      else if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
       // Something closed the element while the owner still has it open. A
@@ -156,7 +188,7 @@ export function useModalDialog({
     };
   }, [node]);
 
-  return useCallback(
+  const closeOnFormSubmit = useCallback(
     (event: FormEvent<HTMLDialogElement>) => {
       // A form inside that already prevented its submit keeps the element open, as natively.
       if (event.defaultPrevented) return;
@@ -177,4 +209,5 @@ export function useModalDialog({
     },
     [dialogRef],
   );
+  return { closeOnFormSubmit, modal, holdingCloseRequests };
 }
