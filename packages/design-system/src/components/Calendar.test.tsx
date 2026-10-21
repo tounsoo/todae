@@ -556,6 +556,16 @@ describe('Calendar range mode', () => {
     expect(selectedCells()).toEqual(['7']);
   });
 
+  it('lets the grid hold many selected cells in range mode only', () => {
+    render(<RangeControlled initial={{ start: date('2025-12-20'), end: date('2027-01-05') }} />);
+    expect(grid().getAttribute('aria-multiselectable')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'December 2025' }));
+    expect(grid().getAttribute('aria-multiselectable')).toBe('true');
+    cleanup();
+    render(<Controlled />);
+    expect(grid().hasAttribute('aria-multiselectable')).toBe(false);
+  });
+
   it('selects every cell of the range, fills its ends and marks the days between', () => {
     render(<RangeControlled initial={{ start: date('2026-10-03'), end: date('2026-10-06') }} />);
     expect(selectedCells()).toEqual(['3', '4', '5', '6']);

@@ -670,6 +670,7 @@ function DayGrid({ className, onKeyDown, onPointerLeave, ref: refProp, ...props 
       aria-labelledby={
         props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
       }
+      aria-multiselectable={cal.mode === 'range' || undefined}
       className={cx(styles.grid, className)}
       onKeyDown={composeHandlers(onKeyDown, onDayKeyDown)}
       onPointerLeave={(event) => {
@@ -829,6 +830,7 @@ function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGrid
       aria-labelledby={
         props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
       }
+      aria-multiselectable={cal.mode === 'range' || undefined}
       className={cx(styles.grid, className)}
       onKeyDown={composeHandlers(onKeyDown, onYearKeyDown)}
     >
