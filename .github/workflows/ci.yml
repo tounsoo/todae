@@ -70,8 +70,9 @@ jobs:
     name: Docs build and screenshots
     runs-on: ubuntu-latest
     # Screenshot baselines are taken in this image, so fonts and Chromium match. Its version is
-    # @playwright/test's in apps/docs; apps/docs/scripts/visual.sh reads it from here.
+    # @playwright/test's in apps/docs, which apps/docs/visual/image.test.ts checks.
     container: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup

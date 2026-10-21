@@ -7,6 +7,7 @@ import '@tounsoo/todae/todae.css';
 import '../../app/globals.css';
 import { Example } from '../Example';
 import { Providers } from '../Providers';
+import { AXE_OPTIONS, describeViolations } from '../../test/axe';
 import { clippedRings } from '../../test/clippedRings';
 
 afterEach(cleanup);
@@ -27,15 +28,8 @@ const demos = Object.entries(modules).flatMap(([file, mod]) =>
     .map(([name, Demo]) => ({ file: file.replace('./', ''), name, Demo })),
 );
 
-/**
- * axe's color-contrast rule is WCAG 2; Todae checks contrast with APCA when
- * tokens build, so that rule is off here.
- */
 async function violations(): Promise<string[]> {
-  const result = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
-  return result.violations.map(
-    (v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`,
-  );
+  return describeViolations(await axe.run(document.body, AXE_OPTIONS));
 }
 
 describe('docs demos under axe', () => {

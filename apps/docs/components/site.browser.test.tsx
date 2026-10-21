@@ -16,6 +16,7 @@ import schema from '@tounsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
+import { AXE_OPTIONS, describeViolations } from '../test/axe';
 import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
@@ -30,10 +31,8 @@ beforeEach(() => {
 const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
-// axe's color-contrast rule is WCAG 2; Todae checks contrast with APCA, so it is off here.
 async function violations(): Promise<string[]> {
-  const result = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
-  return result.violations.map((v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`);
+  return describeViolations(await axe.run(document.body, AXE_OPTIONS));
 }
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

@@ -34,6 +34,9 @@ for (const slug of slugs) {
       });
     });
     expect(names.length).toBeGreaterThan(0);
+    // Each shot may wait out the expect timeout when it differs, so a change that touches every
+    // example still reports all of them.
+    test.setTimeout(30_000 + names.length * 10_000);
     for (const [i, name] of names.entries()) {
       await expect.soft(examples.nth(i)).toHaveScreenshot([...slug.split('/'), `${name}.png`]);
     }

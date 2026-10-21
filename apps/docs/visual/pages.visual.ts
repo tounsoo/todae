@@ -1,3 +1,4 @@
+import { AXE_OPTIONS, describeViolations } from '../test/axe.ts';
 import { expect, settle, test } from './setup.ts';
 
 // The site's own chrome in both languages: the home page, a component page and the playground.
@@ -7,18 +8,16 @@ const PAGES = ['', 'button', 'playground'];
 for (const locale of ['en', 'ko']) {
   for (const slug of PAGES) {
     const path = [locale === 'en' ? '' : locale, slug].filter(Boolean).join('/');
-    test(`${locale} /${slug}`, async ({ page }) => {
+    test(`${locale} /${slug}`, async ({ page }, testInfo) => {
       await page.goto(`/${path}`);
       await settle(page);
-      await expect(page).toHaveScreenshot([locale, `${slug || 'home'}.png`]);
-      // The demo tests run axe on the examples alone; this covers the shell around them in each
-      // language and at phone width. Color contrast is off, since Todae checks it with APCA.
+      await expect.soft(page).toHaveScreenshot([locale, `${slug || 'home'}.png`]);
+      // site.browser.test.tsx runs axe over the English chrome. This covers the Korean pages, at
+      // desktop and phone width; axe without its contrast rule finds the same in dark.
+      if (locale === 'en' || testInfo.project.name.endsWith('dark')) return;
       await page.addScriptTag({ path: require.resolve('axe-core') });
-      const violations = await page.evaluate(async () => {
-        const result = await window.axe.run(document, { rules: { 'color-contrast': { enabled: false } } });
-        return result.violations.map((v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`);
-      });
-      expect(violations).toEqual([]);
+      const result = await page.evaluate((options) => window.axe.run(document, options), AXE_OPTIONS);
+      expect(describeViolations(result)).toEqual([]);
     });
   }
 }
