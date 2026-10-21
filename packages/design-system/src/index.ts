@@ -234,12 +234,8 @@ export { normalizeHex } from './components/color.js';
 export { formatDate, parseDate, type DateTextOptions } from './components/dateText.js';
 export { formatTime, parseTime, type TimeTextOptions } from './components/timeText.js';
 export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
-export {
-  formatDateRange,
-  parseDateRange,
-  type DateRange,
-  type DateRangeTextOptions,
-} from './components/dateRangeText.js';
+export type { DateRange } from './components/dateRange.js';
+export { formatDateRange, parseDateRange, type DateRangeTextOptions } from './components/dateRangeText.js';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,

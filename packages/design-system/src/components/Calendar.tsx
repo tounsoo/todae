@@ -22,7 +22,8 @@ import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { spanOf, type DateRange } from './dateRangeText.js';
+import { reachFrom, type ReachScan } from './calendarReach.js';
+import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
@@ -124,20 +125,6 @@ type CalendarContextValue = {
 };
 
 type CalendarView = 'days' | 'years';
-
-/** How far from the anchor isDateDisabled has been checked, and the nearest days it ruled out. */
-type ReachScan = {
-  anchor: Temporal.PlainDate;
-  isDateDisabled: (date: Temporal.PlainDate) => boolean;
-  min: Temporal.PlainDate | undefined;
-  max: Temporal.PlainDate | undefined;
-  /** The earliest and latest days checked. */
-  below: Temporal.PlainDate;
-  above: Temporal.PlainDate;
-  /** The days beside the nearest ones ruled out, once found. */
-  first: Temporal.PlainDate | null;
-  last: Temporal.PlainDate | null;
-};
 
 /** What waits on a person: a range's first pick and the day hovered from it. */
 type Pending = {
@@ -325,35 +312,15 @@ function Root(rootProps: CalendarRootProps) {
   // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
   const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
   if (anchorRuledOut) setPending(IDLE);
-  // The first and last days a range from the anchor can reach: min and max,
-  // or nearer, the days beside the nearest ones isDateDisabled rules out. Only
-  // the shown month's days are drawn, so days are checked only as far as it
-  // reaches, and each day once while the anchor, isDateDisabled, min and max
-  // stay the same.
   const shownMonth = focused?.toPlainYearMonth().toString() ?? null;
   const scan = useRef<ReachScan | null>(null);
-  const reach = useMemo(() => {
-    if (!anchor || shownMonth === null) return null;
-    if (!isDateDisabled) return { first: min ?? null, last: max ?? null };
-    let s = scan.current;
-    if (!s || !s.anchor.equals(anchor) || s.isDateDisabled !== isDateDisabled || s.min !== min || s.max !== max) {
-      s = scan.current = { anchor, isDateDisabled, min, max, below: anchor, above: anchor, first: null, last: null };
-    }
-    const month = Temporal.PlainYearMonth.from(shownMonth);
-    const monthStart = month.toPlainDate({ day: 1 });
-    const monthEnd = month.toPlainDate({ day: month.daysInMonth });
-    const from = min && compare(min, monthStart) > 0 ? min : monthStart;
-    const to = max && compare(max, monthEnd) < 0 ? max : monthEnd;
-    while (!s.first && compare(s.below, from) > 0) {
-      s.below = s.below.subtract({ days: 1 });
-      if (isDateDisabled(s.below)) s.first = s.below.add({ days: 1 });
-    }
-    while (!s.last && compare(s.above, to) < 0) {
-      s.above = s.above.add({ days: 1 });
-      if (isDateDisabled(s.above)) s.last = s.above.subtract({ days: 1 });
-    }
-    return { first: s.first ?? min ?? null, last: s.last ?? max ?? null };
-  }, [anchor, isDateDisabled, max, min, shownMonth]);
+  const reach = useMemo(
+    () =>
+      anchor && shownMonth !== null
+        ? reachFrom(scan, anchor, Temporal.PlainYearMonth.from(shownMonth), { min, max, isDateDisabled })
+        : null,
+    [anchor, isDateDisabled, max, min, shownMonth],
+  );
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>
       reach !== null &&

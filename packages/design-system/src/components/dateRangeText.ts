@@ -1,16 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe range text for a text input beside Field.DateRangePicker: no hooks or context.
+import { spanOf, type DateRange } from './dateRange.js';
 import { formatDate, parseDate, type DateTextOptions } from './dateText.js';
-
-/**
- * A span of days, start and end included. Given in either order, it is read
- * with the earlier date as its start.
- */
-export type DateRange = { start: Temporal.PlainDate; end: Temporal.PlainDate };
-
-/** The range from a to b, the earlier date as its start. */
-export const spanOf = (a: Temporal.PlainDate, b: Temporal.PlainDate): DateRange =>
-  Temporal.PlainDate.compare(a, b) <= 0 ? { start: a, end: b } : { start: b, end: a };
 
 export type DateRangeTextOptions = DateTextOptions;
 

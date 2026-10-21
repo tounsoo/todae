@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateRange, parseDateRange, type DateRange } from './dateRangeText.js';
+import type { DateRange } from './dateRange.js';
+import { formatDateRange, parseDateRange } from './dateRangeText.js';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const range = (start: string, end: string): DateRange => ({ start: date(start), end: date(end) });

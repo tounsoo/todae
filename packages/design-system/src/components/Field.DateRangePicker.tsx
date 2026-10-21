@@ -16,7 +16,7 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { spanOf, type DateRange } from './dateRangeText.js';
+import { spanOf, type DateRange } from './dateRange.js';
 import { useFieldPicker, htmlDate } from './Field.shared.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
