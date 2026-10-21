@@ -1,0 +1,48 @@
+import { SelectFiles } from '../../../../components/demos/SelectionDemo';
+
+# useSelection
+
+`useSelection(options)`은 표의 행이나 목록의 항목 같은 키의 선택을 보관하고, 이를 `Checkbox.Root`에 연결하는 prop getter를 돌려줍니다. `getCheckboxProps(key)`는 항목 하나의 체크박스에 `checked`, `disabled`, `onChange`를 주고, `getSelectAllProps()`는 전체 선택 체크박스에 같은 것을 주되 일부 항목만 선택된 동안에는 `indeterminate`도 줍니다.
+
+```tsx
+const selection = useSelection({ keys: files });
+
+<Checkbox.Root {...selection.getSelectAllProps()}>Select all files</Checkbox.Root>
+{files.map((file) => (
+  <Checkbox.Root key={file} {...selection.getCheckboxProps(file)}>
+    {file}
+  </Checkbox.Root>
+))}
+```
+
+<Example block>
+  <SelectFiles />
+</Example>
+
+`keys`는 지금 선택할 수 있는 키를 표시 순서대로 나열하고, `disabledKeys`는 그중 선택할 수 없는 키입니다. `value`는 선택된 키를 선택된 순서대로 담고, `state`는 `keys`의 활성 키에 대해 `'none'`, `'some'`, `'all'` 중 하나입니다. `toggle(key)`는 키 하나를 뒤집고, `toggleAll()`은 활성 키를 모두 선택하거나, 모두 선택되어 있으면 모두 해제하며, `clear()`는 선택을 비웁니다. 키는 문자열이나 숫자입니다. 선택을 제어하려면 `value`와 `onValueChange`를, 시작 상태를 정하려면 `defaultValue`를 넘기세요. `onValueChange`는 [ToggleGroup](/toggle-group)처럼 새 키 배열을 받습니다.
+
+## 범위
+
+`getCheckboxProps`의 체크박스를 클릭하면서 Shift를 누르고 있으면, 또는 Shift를 누른 채 Space를 누르면, 마지막으로 토글한 키와 이 키 사이의 모든 활성 키가 `keys` 순서대로 이 키의 현재 상태가 됩니다. 목록을 따라 아래로 Shift 클릭하면 그 사이 행이 선택되고, 그 뒤에 선택된 행을 Shift 클릭하면 해제됩니다. `toggle(key, { range: true })`는 직접 만든 코드에서 같은 일을 합니다. 마지막으로 토글한 키가 범위의 시작입니다. 아직 없거나 더 이상 `keys`에 없으면 키 하나만 토글합니다. `toggleAll()`과 `clear()`는 이를 잊습니다. 비활성 키는 범위에서 건너뛰고, `toggle`은 비활성 키를 무시합니다.
+
+## 여러 페이지에 걸친 선택
+
+`keys`에 있는 키만 화면에 보이므로, 다른 페이지의 키처럼 `keys` 밖에서 선택된 키는 선택된 채로 남습니다. `state`, `toggleAll()`, 범위는 `keys`의 활성 키만 봅니다. `clear()`는 `value` 전체를 비웁니다. 화면에 보이는 키의 페이지보다 선택이 오래 남아야 한다면 `value`와 `onValueChange`로 `value`를 직접 상태에 보관하세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 체크박스 상태. `checked`, `disabled`, 그리고 전체 선택 상자의 `indeterminate`이며, `Checkbox.Root`가 이를 네이티브 입력의 `indeterminate` 프로퍼티로 설정합니다. getter에 넘긴 props의 `onChange`가 먼저 실행되고, 그 안에서 `preventDefault()`를 호출하면 선택은 건너뜁니다. getter는 `name`, `aria-*`를 포함해 넘긴 다른 props를 그대로 유지합니다.
+
+**직접 제공할 것:** 모든 체크박스에 무엇을 선택하는지 말하는 이름. 예를 들어 "Select Ada Lovelace"와 "Select all rows"이며, 보이는 텍스트나 [VisuallyHidden](/visually-hidden) 자식으로 줍니다. 선택 결과를 스크린 리더가 찾을 수 있는 곳. 개수나 선택에 작용하는 동작 같은 것입니다.
+
+**주의할 점:** 배경색이나 색만으로 보여 주는 선택. [Table](/table)에서 `Table.Row selected`는 배경색을 그리고 ARIA는 설정하지 않으며, 스크린 리더가 읽는 것은 행의 체크박스입니다. 행 위치인 키. 정렬하면 선택이 다른 행으로 옮겨 가므로 id를 쓰세요.
+
+## 언제 쓰나요
+
+**언제:** 목록이나 표의 여러 항목을 고르는 체크박스. 전체 선택 상자와 Shift 범위가 있을 때.
+
+**쓰지 않을 때:** 하나만 고르는 선택 → [Radio](/radio). 오버레이 목록 안의 선택 → `selectionMode="multiple"`인 [OptionList](/optionlist). 토글 버튼 모음 → [ToggleGroup](/toggle-group).
+
+## Props
+
+<PropsTable name="useSelection" />

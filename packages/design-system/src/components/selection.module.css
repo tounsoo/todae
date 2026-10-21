@@ -93,7 +93,10 @@
     block-size: 100%;
   }
 
-  .input:checked + .indicator > .glyph,
+  .input:checked + .indicator > .glyph {
+    visibility: visible;
+  }
+
   .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
   }

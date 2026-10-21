@@ -91,7 +91,7 @@
     visibility: visible;
   }
 
-  [data-sort='descending'] .sortGlyph {
+  [data-sort='descending'] .sortButton > [data-todae-glyph] {
     rotate: 180deg;
   }
 

@@ -94,7 +94,7 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
 
   const clear = () => {
     anchor.current = null;
-    setValue([]);
+    if (value.length > 0) setValue([]);
   };
 
   const getCheckboxProps: UseSelectionResult<K>['getCheckboxProps'] = (key, props = {}) => ({

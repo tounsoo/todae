@@ -118,6 +118,7 @@ const cases: Case[] = [
   ['Table.Row', (p) => <table><tbody><Table.Row {...p} /></tbody></table>],
   ['Table.HeaderCell', (p) => <table><tbody><tr><Table.HeaderCell {...p} scope="row">h</Table.HeaderCell></tr></tbody></table>],
   ['Table.Cell', (p) => <table><tbody><tr><Table.Cell {...p}>c</Table.Cell></tr></tbody></table>],
+  ['Table.SortButton', (p) => <table><thead><tr><Table.HeaderCell scope="col"><Table.SortButton {...p}>Name</Table.SortButton></Table.HeaderCell></tr></thead></table>],
   ['Progress.Root', (p) => <Progress.Root {...p} aria-label="p" />],
   ['Meter.Root', (p) => <Meter.Root {...p} value={0.5} aria-label="m" />],
   ['Loader.Root', (p) => <Loader.Root {...p} aria-label="s" />],
