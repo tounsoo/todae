@@ -94,6 +94,30 @@ export interface Strings {
   stepPending: string;
   /** Steps.Item's hidden status word for a step with an `error`. */
   stepError: string;
+  /** Text of a control the browser reports empty though it is required. */
+  valueMissing: string;
+  /** Text of an `email` input whose value is not an email address. */
+  typeMismatchEmail: string;
+  /** Text of a `url` input whose value is not a URL. */
+  typeMismatchUrl: string;
+  /** Text of an input whose value does not fit its type, other than `email` and `url`. */
+  typeMismatch: string;
+  /** Text of an input whose entry the browser cannot turn into a value, such as a number that is only a sign. */
+  badInput: string;
+  /** Text of an input whose value does not match its `pattern`. */
+  patternMismatch: string;
+  /** Text of a value shorter than the control's `minLength`. */
+  tooShort: (min: number) => string;
+  /** Text of a value longer than the control's `maxLength`. */
+  tooLong: (max: number) => string;
+  /** Text of a value below the control's `min`. `min` is the attribute's text. */
+  rangeUnderflow: (min: string) => string;
+  /** Text of a value above the control's `max`. `max` is the attribute's text. */
+  rangeOverflow: (max: string) => string;
+  /** Text of a value that does not fit the control's `step`. */
+  stepMismatch: string;
+  /** Form.Summary's title, with the number of problems it lists. */
+  formErrors: (count: number) => string;
 }
 
 /** The English Todae ships with. */
@@ -142,4 +166,16 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   stepCurrent: 'In progress',
   stepPending: 'Not started',
   stepError: 'Failed',
+  valueMissing: 'This field is required',
+  typeMismatchEmail: 'Enter an email address',
+  typeMismatchUrl: 'Enter a URL',
+  typeMismatch: 'Enter a value in the right format',
+  badInput: 'Enter a valid value',
+  patternMismatch: 'Match the requested format',
+  tooShort: (min) => `Use at least ${min} ${min === 1 ? 'character' : 'characters'}`,
+  tooLong: (max) => `Use at most ${max} ${max === 1 ? 'character' : 'characters'}`,
+  rangeUnderflow: (min) => `Enter ${min} or more`,
+  rangeOverflow: (max) => `Enter ${max} or less`,
+  stepMismatch: 'Enter a value that fits the allowed steps',
+  formErrors: (count) => `${count} ${count === 1 ? 'problem' : 'problems'} to fix`,
 });

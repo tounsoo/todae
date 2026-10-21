@@ -47,6 +47,13 @@ export const meta = {
       description: 'The mixed state, such as a select-all box over a partly selected list. Sets the input\'s indeterminate and shows the indeterminate glyph in place of the check. A click still toggles checked.',
     },
     {
+      name: 'customValidity',
+      type: 'string',
+      required: false,
+      description:
+        "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds.",
+    },
+    {
       name: 'name',
       type: 'string',
       required: false,

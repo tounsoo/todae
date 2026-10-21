@@ -1,0 +1,71 @@
+@layer todae.components {
+  .summary {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-form-summary-gap);
+    padding: var(--todae-form-summary-padding-y) var(--todae-form-summary-padding-x);
+    border: var(--todae-form-summary-border-width) solid var(--todae-form-summary-border);
+    border-radius: var(--todae-form-summary-radius);
+    background: var(--todae-form-summary-bg);
+    color: var(--todae-form-summary-fg);
+    font-size: var(--todae-form-summary-font-size);
+    line-height: var(--todae-form-summary-leading);
+  }
+
+  /* Focus lands here after a failed submit. */
+  .summary:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-form-summary-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .title {
+    margin: 0;
+    font-weight: var(--todae-form-summary-title-font-weight);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-form-summary-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Baseline, so a label and its message share a line whatever element the label is. */
+  .item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--todae-form-summary-gap);
+  }
+
+  /* A row for a control with no id is a button, drawn like the Link.Root rows. */
+  .action {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    color: var(--todae-form-summary-link-fg-default);
+    text-decoration-line: underline;
+    text-decoration-color: var(--todae-form-summary-link-decoration-default);
+    text-decoration-thickness: var(--todae-form-summary-link-decoration-thickness);
+    text-underline-offset: var(--todae-form-summary-link-decoration-offset);
+  }
+
+  .action:hover {
+    color: var(--todae-form-summary-link-fg-hover);
+    text-decoration-color: var(--todae-form-summary-link-decoration-hover);
+  }
+
+  .action:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-form-summary-link-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+    border-radius: var(--todae-form-summary-link-ring-radius);
+  }
+}

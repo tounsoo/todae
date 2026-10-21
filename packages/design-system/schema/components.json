@@ -719,6 +719,12 @@
           "description": "The mixed state, such as a select-all box over a partly selected list. Sets the input's indeterminate and shows the indeterminate glyph in place of the check. A click still toggles checked."
         },
         {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the checkbox. An empty string or undefined means the rule holds."
+        },
+        {
           "name": "name",
           "type": "string",
           "required": false,
@@ -1356,19 +1362,19 @@
     },
     {
       "name": "ErrorMessage.Root",
-      "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
+      "description": "Validation text below a control. With an id it renders as given, with no alert role. Without one, inside a Field.Group or Fieldset.Root in a Form.Root, it shows the scope's error and wires the controls' aria-describedby to itself. invalid lives on the control.",
       "props": [
         {
           "name": "id",
           "type": "string",
-          "required": true,
-          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+          "required": false,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root. Required outside a validation scope; inside one, leave it out to take the scope's error."
         },
         {
           "name": "children",
-          "type": "React.ReactNode",
+          "type": "React.ReactNode | ((error: FormFieldError) => React.ReactNode)",
           "required": false,
-          "description": "Error text."
+          "description": "Error text. Without an id, in a validation scope, a function of the scope's error is allowed too, and no children shows the error's message."
         },
         {
           "name": "className",
@@ -1698,7 +1704,7 @@
     },
     {
       "name": "Field.Group",
-      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.",
+      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "children",
@@ -1750,6 +1756,12 @@
           "required": false,
           "description": "Marks the shell invalid and sets aria-invalid on the input.",
           "default": "false"
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",
@@ -2018,7 +2030,7 @@
     },
     {
       "name": "Fieldset.Root",
-      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes.",
+      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes. Inside a Form.Root it is a validation scope: its controls' native problems show in an ErrorMessage.Root with no id.",
       "props": [
         {
           "name": "disabled",
@@ -2035,6 +2047,12 @@
           "default": "false"
         },
         {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control."
+        },
+        {
           "name": "aria-describedby",
           "type": "string",
           "required": false,
@@ -2045,6 +2063,54 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "A Fieldset.Legend first, then the controls."
+        }
+      ]
+    },
+    {
+      "name": "Form.Root",
+      "description": "A native form that checks its controls before it submits and shows each problem in a Field.Group or Fieldset.Root. Sets noValidate. Takes native form attributes.",
+      "props": [
+        {
+          "name": "errors",
+          "type": "Readonly<Record<string, string>>",
+          "required": false,
+          "description": "Problems you found, such as a server reply, keyed by a control name. Todae never writes it: clear it when you send, in onSubmit, and set it when the reply comes. Entries show at once in place of the control's native problem and do not block a submit. An edit to a control hides its entry until the next submit, or until errors drops that name or changes its text. After a send, a reply is a commit whose content differs from the commit before and has entries (clear-then-set counts, a rebuild of the same content does not); it moves focus to the summary or the first enabled control with a server error and lists only server errors."
+        },
+        {
+          "name": "onSubmit",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs for a submit with every control valid, or one sent by a submit button with formNoValidate, which is a send without the check that reveals nothing new. Form.Root checks first, and a submit with a problem does not reach it."
+        },
+        {
+          "name": "onReset",
+          "type": "React.FormEventHandler<HTMLFormElement>",
+          "required": false,
+          "description": "Runs on this form's reset, not a portaled form's, as onSubmit does. A reset hides every shown problem again."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The controls, usually in Field.Group and Fieldset.Root, and an optional Form.Summary."
+        }
+      ]
+    },
+    {
+      "name": "Form.Summary",
+      "description": "The problems a failed submit left, as links to their controls, or buttons for a control with no id. A failed submit moves focus to it. Renders nothing before one, or when no problem is left. Takes native div attributes.",
+      "props": [
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the title, which is the formErrors string with the number of problems."
+        },
+        {
+          "name": "children",
+          "type": "(fields: readonly FormInvalidField[]) => React.ReactNode",
+          "required": false,
+          "description": "Replaces the list of links. Each field has its name, label, error, whether it is disabled and a focus() that moves focus to its control."
         }
       ]
     },
@@ -3244,6 +3310,12 @@
           "type": "boolean",
           "required": false,
           "description": "Marks every radio invalid."
+        },
+        {
+          "name": "customValidity",
+          "type": "string",
+          "required": false,
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the first radio that takes part in validation. An empty string or undefined means the rule holds."
         },
         {
           "name": "orientation",
