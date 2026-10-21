@@ -2725,8 +2725,8 @@
   },
   "formatDateRange": {
     "range": {
-      "en": "The range to write, as { start, end }.",
-      "ko": "쓸 범위, { start, end } 형태."
+      "en": "The range to write, as { start, end }. The earlier date comes first, even when it is the end.",
+      "ko": "쓸 범위, { start, end } 형태. 끝이 더 이른 날짜여도 더 이른 날짜를 먼저 씁니다."
     },
     "options.locale": {
       "en": "The locale, such as ko. The runtime's own when not set.",

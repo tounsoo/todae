@@ -31,6 +31,10 @@ describe('formatDateRange', () => {
     expect(formatDateRange(range('2026-10-03', '2026-10-03'), { locale: 'en-US' })).toBe('10/3/2026\u2009–\u200910/3/2026');
   });
 
+  it('writes the earlier date first when the end comes before the start', () => {
+    expect(formatDateRange(range('2026-10-10', '2026-10-03'), { locale: 'en-US' })).toBe('10/3/2026\u2009–\u200910/10/2026');
+  });
+
   it('writes a range in another calendar as the same days in the Gregorian calendar', () => {
     const japanese = { start: date('2026-10-03').withCalendar('japanese'), end: date('2026-10-10').withCalendar('japanese') };
     expect(formatDateRange(japanese, { locale: 'ja' })).toBe('2026/10/3～2026/10/10');

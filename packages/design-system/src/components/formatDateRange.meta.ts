@@ -9,7 +9,7 @@ export const meta = {
       name: 'range',
       type: 'DateRange',
       required: true,
-      description: 'The range to write, as { start, end }.',
+      description: 'The range to write, as { start, end }. The earlier date comes first, even when it is the end.',
     },
     {
       name: 'options.locale',

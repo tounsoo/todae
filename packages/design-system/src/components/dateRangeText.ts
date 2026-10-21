@@ -44,10 +44,13 @@ function separatorFor(locale: string | undefined): string {
 /**
  * The range as `locale` writes it, both dates as `formatDate` writes them with
  * the locale's range separator between, such as `10/3/2026 – 10/10/2026` in
- * en-US and `2026. 10. 3. ~ 2026. 10. 10.` in ko.
+ * en-US and `2026. 10. 3. ~ 2026. 10. 10.` in ko. The earlier date comes
+ * first, even when it is the range's end.
  */
 export function formatDateRange(range: DateRange, options: DateRangeTextOptions = {}): string {
-  return `${formatDate(range.start, options)}${separatorFor(options.locale)}${formatDate(range.end, options)}`;
+  const [first, last] =
+    Temporal.PlainDate.compare(range.start, range.end) <= 0 ? [range.start, range.end] : [range.end, range.start];
+  return `${formatDate(first, options)}${separatorFor(options.locale)}${formatDate(last, options)}`;
 }
 
 /**
