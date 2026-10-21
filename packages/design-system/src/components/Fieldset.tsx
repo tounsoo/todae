@@ -4,9 +4,8 @@ import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fiel
 import { ValidationScopeContext } from './Form.context.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { cx, useComposedRefs } from './props.js';
-import { scopeCarriers } from './Form.model.js';
+import { firstCarrier, scopeCarriers } from './Form.model.js';
 import { useValidationScope } from './ValidationScope.js';
-import { isValidityCarrier, type ValidityCarrier } from './validity.js';
 import styles from './Fieldset.module.css';
 
 /**
@@ -21,8 +20,10 @@ export type FieldsetRootProps = {
   invalid?: boolean;
   /**
    * A message for a rule the browser can't check, set with
-   * `setCustomValidity` on the first control inside that takes part in validation. An empty string or
-   * undefined means the rule holds.
+   * `setCustomValidity` on the fieldset's own first control that takes part in
+   * validation, or, when all its controls sit in nested groups, on the first
+   * one at any depth, where its error shows. An empty string or undefined means
+   * the rule holds.
    */
   customValidity?: string;
   children?: ReactNode;
@@ -49,13 +50,15 @@ function Root({
   const fieldsetRef = useRef<HTMLFieldSetElement>(null);
   const refs = useComposedRefs(fieldsetRef, ref);
   const scope = useValidationScope(fieldsetRef, { onChangeCapture, onFocus, onBlur }, { describesElement: true });
-  const inForm = scope.value !== null;
-  useCustomValidity(() => {
-    const node = fieldsetRef.current;
-    if (!node) return null;
-    // In a form, the scope's own controls; a control of a nested scope answers to that one.
-    return inForm ? scopeCarriers(node)[0] : [...node.elements].find((el): el is ValidityCarrier => isValidityCarrier(el) && el.willValidate);
-  }, customValidity);
+  useCustomValidity(
+    () => {
+      const node = fieldsetRef.current;
+      // Its own first validating control, else the first at any depth, whose error shows where that control's does.
+      return node ? (scopeCarriers(node)[0] ?? firstCarrier(node)) : null;
+    },
+    customValidity,
+    'Fieldset.Root',
+  );
   const inner = useMemo(
     () => ({ disabled: isDisabled, invalid: isInvalid, errorId: outer.errorId }),
     [isDisabled, isInvalid, outer.errorId],

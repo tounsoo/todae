@@ -464,6 +464,91 @@ describe('where customValidity lands', () => {
     expect((screen.getByLabelText('Zip') as HTMLInputElement).validationMessage).toBe('Check the address.');
   });
 
+  describe('when all its controls sit in nested groups', () => {
+    function Nested({ message, onSubmit }: { message?: string; onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void }) {
+      return (
+        <SignUp onSubmit={onSubmit}>
+          <Fieldset.Root customValidity={message}>
+            <Fieldset.Legend>Address</Fieldset.Legend>
+            <Field.Group>
+              <Field.Root id="street" name="street">
+                <Field.TextInput aria-label="Street" value="" onValueChange={() => undefined} />
+              </Field.Root>
+              <ErrorMessage.Root data-testid="first" />
+            </Field.Group>
+            <Field.Group>
+              <Field.Root id="zip" name="zip">
+                <Field.TextInput aria-label="Zip" value="" onValueChange={() => undefined} />
+              </Field.Root>
+              <ErrorMessage.Root data-testid="second" />
+            </Field.Group>
+          </Fieldset.Root>
+        </SignUp>
+      );
+    }
+
+    it('blocks the submit and shows the message in the first group', async () => {
+      const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+      await mount(<Nested message="Check the address." onSubmit={onSubmit} />);
+      await submit(screen.getByTestId('form'));
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('first').textContent).toBe('Check the address.');
+      expect(screen.queryByTestId('second')).toBeNull();
+    });
+
+    it('lands there outside a Form too', () => {
+      render(
+        <Fieldset.Root customValidity="Check the address.">
+          <Field.Group>
+            <Field.Root id="street" name="street">
+              <Field.TextInput aria-label="Street" value="" onValueChange={() => undefined} />
+            </Field.Root>
+          </Field.Group>
+          <Field.Group>
+            <Field.Root id="zip" name="zip">
+              <Field.TextInput aria-label="Zip" value="" onValueChange={() => undefined} />
+            </Field.Root>
+          </Field.Group>
+        </Fieldset.Root>,
+      );
+      expect((screen.getByLabelText('Street') as HTMLInputElement).validationMessage).toBe('Check the address.');
+      expect((screen.getByLabelText('Zip') as HTMLInputElement).validationMessage).toBe('');
+    });
+
+    it('lets go when the message goes', async () => {
+      const { rerender } = await mount(<Nested message="Check the address." />);
+      expect((screen.getByLabelText('Street') as HTMLInputElement).validationMessage).toBe('Check the address.');
+      rerender(<Nested />);
+      await settle();
+      expect((screen.getByLabelText('Street') as HTMLInputElement).validationMessage).toBe('');
+    });
+  });
+
+  describe('with no control to go on', () => {
+    it('warns once in development', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const { rerender } = render(<Fieldset.Root customValidity="Nope." />);
+      rerender(<Fieldset.Root customValidity="Nope." />);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toContain('customValidity');
+      warn.mockRestore();
+    });
+
+    it('does not warn for a message that finds a control, or for none', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      render(
+        <>
+          <Fieldset.Root customValidity="Nope.">
+            <input aria-label="A" />
+          </Fieldset.Root>
+          <Fieldset.Root />
+        </>,
+      );
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
+
   it('skips a disabled first control in a fieldset outside a Form too', () => {
     render(
       <Fieldset.Root customValidity="Nope.">

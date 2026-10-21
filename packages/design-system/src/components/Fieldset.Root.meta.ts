@@ -23,7 +23,7 @@ export const meta = {
       type: 'string',
       required: false,
       description:
-        "A message for a rule the browser cannot check, set with setCustomValidity on the first control inside that takes part in validation. An empty string or undefined means the rule holds.",
+        "A message for a rule the browser cannot check, set with setCustomValidity on the fieldset's own first control that takes part in validation; when all its controls sit in nested groups, on the first one at any depth, where its error shows. An empty string or undefined means the rule holds. Warns in development when there is no such control.",
     },
     {
       name: 'aria-describedby',
