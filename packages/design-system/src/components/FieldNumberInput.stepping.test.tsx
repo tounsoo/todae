@@ -278,6 +278,36 @@ describe('Field.NumberInput typing', () => {
     expect(beforeInput('insertCompositionText', 'ㅎ', [0, 0]).defaultPrevented).toBe(false);
   });
 
+  it('lets digits be typed after a pasted text that is no number, which stays flagged', () => {
+    render(<Quantity initial={3} locale="en" />);
+    type('abc');
+    fireEvent.blur(input());
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    // A character that is no part of a number is still refused, a digit is not.
+    expect(beforeInput('insertText', 'x', [3, 3]).defaultPrevented).toBe(true);
+    expect(beforeInput('insertText', '5', [3, 3]).defaultPrevented).toBe(false);
+    type('abc5');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(valueInput().validity.valid).toBe(false);
+    // Deleting the rest leaves a number.
+    type('5');
+    expect(valueInput().validity.valid).toBe(true);
+  });
+
+  it('lets digits be typed after an accounting parenthesis whose closing one was deleted', () => {
+    const formatOptions = { style: 'currency', currency: 'USD', currencySign: 'accounting' } as const;
+    render(<Quantity initial={-5} locale="en" formatOptions={formatOptions} />);
+    expect(input().value).toBe('($5.00)');
+    type('(');
+    expect(beforeInput('insertText', '7', [1, 1]).defaultPrevented).toBe(false);
+    type('(7');
+    expect(beforeInput('insertText', '5', [2, 2]).defaultPrevented).toBe(false);
+    expect(input().getAttribute('aria-invalid')).toBeNull();
+    type('(75)');
+    fireEvent.blur(input());
+    expect(valueInput().value).toBe('-75');
+  });
+
   it('says exactly what is on screen as aria-valuetext, typed or not', () => {
     render(<Quantity initial={5} locale="en" />);
     expect(input().getAttribute('aria-valuetext')).toBe('5');

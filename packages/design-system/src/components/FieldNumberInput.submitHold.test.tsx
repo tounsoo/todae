@@ -259,50 +259,149 @@ describe('a Suspense boundary that hides the input while the form holds a submit
 });
 
 describe('an Activity that hides the input while the form holds a submit', () => {
-  it('sends the committed number once, when the Activity shows again', async () => {
+  function Filter({ sent }: { sent: (string | null)[] }) {
+    const [value, setValue] = useState<number | null>(5);
+    const [hidden, setHidden] = useState(false);
+    const form = useRef<HTMLFormElement>(null);
+    return (
+      <form
+        ref={form}
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('q') as string | null);
+        }}
+      >
+        <Activity mode={hidden ? 'hidden' : 'visible'}>
+          <Field.Root aria-label="Q" name="q">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                setValue(next);
+                setHidden(true);
+                form.current?.requestSubmit();
+              }}
+            />
+          </Field.Root>
+        </Activity>
+        <button type="button" onClick={() => setHidden(false)}>
+          Show
+        </button>
+        <button type="submit">Go</button>
+      </form>
+    );
+  }
+
+  it('sends the committed number once its render is in the page, not when the Activity shows', async () => {
     const sent: (string | null)[] = [];
-    function Filter() {
-      const [value, setValue] = useState<number | null>(5);
-      const [hidden, setHidden] = useState(false);
-      const form = useRef<HTMLFormElement>(null);
-      return (
-        <form
-          ref={form}
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            sent.push(new FormData(event.currentTarget).get('q') as string | null);
-          }}
-        >
-          <Activity mode={hidden ? 'hidden' : 'visible'}>
+    render(<Filter sent={sent} />);
+    await act(async () => {
+      key('ArrowUp');
+    });
+    await act(async () => {});
+    expect(sent).toEqual(['6']);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+    });
+    await act(async () => {});
+    expect(sent).toEqual(['6']);
+  });
+
+  it('sends the form even when the Activity never shows again', async () => {
+    const sent: (string | null)[] = [];
+    const { unmount } = render(<Filter sent={sent} />);
+    await act(async () => {
+      key('ArrowUp');
+    });
+    await act(async () => {});
+    unmount();
+    expect(sent).toEqual(['6']);
+  });
+});
+
+describe('a Suspense boundary that hides the input, and a submit that comes meanwhile', () => {
+  // The product answers the commit by suspending, so the boundary keeps the old page, and the held submit waits.
+  function Gate({ promise }: { promise: Promise<void> }) {
+    use(promise);
+    return null;
+  }
+
+  function Hidden({ sent, removable = false }: { sent: (string | null)[]; removable?: boolean }) {
+    const [value, setValue] = useState<number | null>(5);
+    const [gate, setGate] = useState<Promise<void> | null>(null);
+    const [shown, setShown] = useState(true);
+    return (
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('q') as string | null);
+        }}
+      >
+        <Suspense fallback={<p>loading</p>}>
+          {shown ? (
             <Field.Root aria-label="Q" name="q">
               <Field.NumberInput
                 value={value}
                 locale="en"
                 onValueChange={(next) => {
                   setValue(next);
-                  setHidden(true);
-                  form.current?.requestSubmit();
+                  setGate(new Promise<void>((resolve) => (release = resolve)));
                 }}
               />
             </Field.Root>
-          </Activity>
-          <button type="button" onClick={() => setHidden(false)}>
-            Show
+          ) : null}
+          {gate ? <Gate promise={gate} /> : null}
+        </Suspense>
+        <button type="submit">Go</button>
+        {removable ? (
+          <button type="button" onClick={() => setShown(false)}>
+            Remove
           </button>
-        </form>
-      );
-    }
-    render(<Filter />);
+        ) : null}
+      </form>
+    );
+  }
+  let release = () => {};
+
+  it('sends the held submit once the input is removed before it shows', async () => {
+    const sent: (string | null)[] = [];
+    render(<Hidden sent={sent} removable />);
+    type('7');
     await act(async () => {
-      key('ArrowUp');
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     });
-    await act(async () => {});
     expect(sent).toEqual([]);
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
     });
-    await act(async () => {});
-    expect(sent).toEqual(['6']);
+    await act(async () => {
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+    expect(sent).toEqual([null]);
+  });
+
+  it('drops the held submit when another submit of the form comes first, so nothing is sent twice', async () => {
+    const sent: (string | null)[] = [];
+    render(<Hidden sent={sent} />);
+    type('7');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    });
+    expect(sent).toEqual([]);
+    // The page still shows the old render, which another submit sends.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    });
+    expect(sent).toEqual(['5']);
+    await act(async () => {
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(sent).toEqual(['5']);
+    expect(input().value).toBe('7');
   });
 });

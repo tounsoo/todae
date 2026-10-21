@@ -34,8 +34,11 @@ function withDigits(options: NumberFormatOptions = {}): NumberFormatOptions {
   return { ...options, maximumFractionDigits: Math.max(20, options.minimumFractionDigits ?? 0) };
 }
 
+// What a locale and its format options key the caches by.
+const keyOf = (options: NumberTextOptions) => `${options.locale ?? ''}|${JSON.stringify(options.formatOptions ?? {})}`;
+
 function formatterFor(options: NumberTextOptions) {
-  const key = `${options.locale ?? ''}|${JSON.stringify(options.formatOptions ?? {})}`;
+  const key = keyOf(options);
   let format = cache.get(key);
   if (!format) {
     format = new Intl.NumberFormat(options.locale, withDigits(options.formatOptions));
@@ -60,6 +63,8 @@ type Symbols = {
   /** Text a formatted number carries besides its digits, such as a currency sign, a unit or a percent sign. */
   decoration: string[];
   percent: boolean;
+  /** Whether the format writes a negative in parentheses. */
+  accounting: boolean;
   /** Digits in the last group of the integer part, and in the others. */
   primary: number;
   secondary: number;
@@ -74,7 +79,7 @@ const canon = (text: string) => text.replace(/[−‐–—﹣]/g, '-').replace(
 const SAMPLES = [-1234567.5, -1, 0, 0.5, 1, 2, 3, 5, 11, 21, 100];
 
 function symbolsFor(options: NumberTextOptions): Symbols {
-  const key = `${options.locale ?? ''}|${JSON.stringify(options.formatOptions ?? {})}`;
+  const key = keyOf(options);
   let found = symbolCache.get(key);
   if (found) return found;
   const formatOptions = options.formatOptions ?? {};
@@ -110,6 +115,7 @@ function symbolsFor(options: NumberTextOptions): Symbols {
     // Longer first, so "kilometers" goes before "kilometer".
     decoration: [...decoration].sort((a, b) => b.length - a.length),
     percent: formatOptions.style === 'percent',
+    accounting: formatOptions.currencySign === 'accounting',
     primary,
     secondary,
   };
@@ -131,6 +137,10 @@ function scan(text: string, options: NumberTextOptions, partial: boolean): Scan 
   if (paren) {
     negative = true;
     body = paren[1]!.trim();
+  } else if (partial && symbols.accounting && body.startsWith('(')) {
+    // The pair is not closed yet, or its closing one was deleted.
+    negative = true;
+    body = body.slice(1).trim();
   }
   const sign = /^([+-]) ?/.exec(body);
   if (sign) {
@@ -198,16 +208,18 @@ export function decimalsOf(value: number): number {
 
 const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.min(100, decimals)));
 
-// The error bound of a quotient `(value - base) / step`, in steps: the subtraction can be off by about an ulp of its larger operand, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps). It is capped at a quarter of a step, so a whole index and a half can never be confused: past that the operands leave no grid a double can resolve, and a value is never read as on a grid it is only near.
-const slack = (value: number, base: number, step: number) =>
-  Math.min(0.25, (8 * Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step);
+// How far the operands' own rounding can move a quotient `(value - base) / step`, in steps: each is off by up to an ulp, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps).
+const noise = (value: number, base: number, step: number) => (Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step;
 
-// The grid index of a value. An index within the error bound of a whole number or a half is that one, so a value on the grid reads as on it and a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5). Any other index gets the 15-digit guard of the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
+// The grid index of a value. An index within 8 times that noise of a whole number (the subtraction adds some of its own), and at most a quarter step, is that number, so a value on the grid reads as on it at any operand and a bound this loose can only ever pick the nearer point. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5); the window is that tight because a wider one would take a value a third of the way up to a half. Any other index gets the 15-digit guard of the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
 function indexOf(value: number, base: number, step: number): number {
   const raw = (value - base) / step;
   if (Number.isInteger(raw) || Math.abs(raw) >= 1e15) return raw;
+  const error = noise(value, base, step);
+  const whole = Math.round(raw);
+  if (Math.abs(raw - whole) <= Math.min(0.25, 8 * error)) return whole;
   const half = Math.round(raw * 2) / 2;
-  return Math.abs(raw - half) <= slack(value, base, step) ? half : Number(raw.toPrecision(15));
+  return Math.abs(raw - half) <= Math.min(0.25, error) ? half : Number(raw.toPrecision(15));
 }
 
 /** Whether a value sits on the `step` grid, counted from `min`, or from 0 without one. True with no `step`. */
@@ -282,7 +294,7 @@ export function boundsOf(range: NumberRange): { low?: number; high?: number } {
     high = pointAt(index, range);
     if (high > max) {
       // A `max` on the grid within the error bound of a point (0.3 - 0.1 on a 0.1 grid) has that clean point as its answer, so no commit carries the noise. A point further past `max` comes from a grid too fine for a double: where `max` is on the grid it is the answer, and above 1e15 the grid is only as exact as a double, so a whole quotient counts as on it. Otherwise step back, and where a double holds no lower point, take `max` itself.
-      if (onGrid(max, range)) high = high - max <= slack(max, base, step) * step ? high : max;
+      if (onGrid(max, range)) high = high - max <= Math.min(0.25, 8 * noise(max, base, step)) * step ? high : max;
       else {
         while (high > max) {
           const lower = pointAt(index - 1, range);
@@ -313,6 +325,8 @@ export function commitNumber(value: number, range: NumberRange, text: NumberText
   const { low, high } = boundsOf(range);
   // Without a step the text's digits round, by Intl as the text is, not by the grid path: the grid's 15-digit guard rounds some values differently (17040975.57257498 shown to 5 decimals is .57257 by Intl, .57258 by the guard), and the text is what the person sees.
   let result = step === undefined ? roundToShown(value, text) : nearestPoint(value, range, step);
+  // Past the largest double no grid point is finite (and a percent's text for Infinity reads back as NaN), so the value stays as it is, or is the largest number there is.
+  if (!Number.isFinite(result)) result = Number.isFinite(value) ? value : value > 0 ? Number.MAX_VALUE : value < 0 ? -Number.MAX_VALUE : 0;
   if (high !== undefined && result > high) result = high;
   if (low !== undefined && result < low) result = low;
   return result + 0;
@@ -349,13 +363,15 @@ export function stepNumber(from: number | null, by: number, range: NumberRange, 
   if (by < 0 && high !== undefined && from > high) return high;
   const { step } = range;
   const shown = step === undefined ? shownDecimals(text) : undefined;
+  // A step that leaves the doubles changes nothing, rather than reaching Infinity or NaN.
+  const finite = (next: number) => (Number.isFinite(next) ? commitNumber(next, range, text) : from);
   if (step === undefined && shown === undefined) {
-    return commitNumber(roundTo(from + by, Math.max(decimalsOf(from), decimalsOf(by))), range, text);
+    return finite(roundTo(from + by, Math.max(decimalsOf(from), decimalsOf(by))));
   }
   // With no step, the grid is the unit the text shows, so a draft of 7.5% goes to 8%, not past it.
   const unit = step ?? Number('1e-' + shown!);
   const index = indexOf(from, step === undefined ? 0 : (range.min ?? 0), unit);
   const count = Math.max(1, Math.round(Math.abs(by) / unit));
   const point = pointAt(by > 0 ? Math.floor(index) + count : Math.ceil(index) - count, step === undefined ? { step: unit } : range);
-  return commitNumber(point, range, text);
+  return finite(point);
 }

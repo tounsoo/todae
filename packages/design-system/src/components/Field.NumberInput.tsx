@@ -152,25 +152,30 @@ export function NumberInput({
   const live = () => (typing && !waiting() ? draft : null);
   const own = current === null ? '' : formatNumber(current, text);
   const shown = typing ? draft.text : own;
+  // What the draft says, read once for the render: the flag, aria-valuenow and the buttons all use it.
+  const drafted: Typed | null = typing ? read(draft.text) : null;
   // A text that is no number blocks a submit as it is typed, whether or not a commit has read it, and stays so until it is one or the product sets a value. The Form decides when that shows.
-  const unreadable = typing && draft.text.trim() !== '' && parseNumber(draft.text, text) === null;
+  const unreadable = drafted?.read === false;
   // It is announced invalid only when more typing could not make it one, or a commit has tried to read it: a lone minus, or a group's separator in de, is on the way to a number.
-  const flagged = unreadable && (draft.failed === true || !isPartialNumber(draft.text, text));
+  const flagged = unreadable && typing && (draft.failed === true || !isPartialNumber(draft.text, text));
   const valueNode = useRef<HTMLInputElement | null>(null);
   const node = useRef<HTMLInputElement | null>(null);
   // A submit of the input's form waits for the commit instead of forcing it; the hook holds it and sends it again after the render that shows the commit. Text that is no number is flagged, and the submit is cancelled.
-  const { committed, waiting } = useFormSubmitHold(node, () => {
+  const { committed, waiting, mark } = useFormSubmitHold(node, () => {
     const outcome = draftOutcome();
     if (outcome.kind === 'none') return null;
     return outcome.kind === 'commit' ? { commit: () => commit(outcome.number) } : { unreadable: true, flag: fail };
   });
 
-  function typed(): Typed {
-    const open = live();
-    if (!open) return { read: true, number: current };
-    if (open.text.trim() === '') return { read: true, number: null };
-    const number = parseNumber(open.text, text);
+  // What a text says: a number, none for an empty text, or nothing readable.
+  function read(source: string): Typed {
+    if (source.trim() === '') return { read: true, number: null };
+    const number = parseNumber(source, text);
     return number === null ? { read: false } : { read: true, number };
+  }
+  // The draft's reading while it is live, else the number the product holds.
+  function typed(): Typed {
+    return live() && drafted ? drafted : { read: true, number: current };
   }
   // Where a step starts, from what the text says, as a native input steps from its value. The keys, the buttons and their disabled state all judge this one.
   const from = typed();
@@ -238,12 +243,13 @@ export function NumberInput({
   usePublishStepper(ctx.store, stepper);
 
   const refs = useComposedRefs(node, ref);
-  // A typed character that could not become a number never reaches the input, so the caret stays where it was. Nothing else is filtered: a deletion, a paste or an IME's text lands, and is read or flagged on commit.
+  // A typed character that could not become a number never reaches the input, so the caret stays where it was. Nothing else is filtered: a deletion, a paste or an IME's text lands, and is read or flagged on commit. The character is judged by what it does: it is refused when it spoils a text that was on its way to a number, or is no part of a number itself, so text that is already no number (a paste) does not keep digits out.
   function refuse(event: InputEvent) {
     const target = event.target as HTMLInputElement;
     const { selectionStart: from, selectionEnd: to } = target;
     if (fixed || event.isComposing || event.inputType !== 'insertText' || event.data == null || from === null || to === null) return;
-    if (!isPartialNumber(target.value.slice(0, from) + event.data + target.value.slice(to), text)) event.preventDefault();
+    if (isPartialNumber(target.value.slice(0, from) + event.data + target.value.slice(to), text)) return;
+    if (isPartialNumber(target.value, text) || !isPartialNumber(event.data, text)) event.preventDefault();
   }
   useLayoutEffect(() => {
     latest.current = { step: (direction) => stepBy(direction * by), refuse };
@@ -321,6 +327,7 @@ export function NumberInput({
         type="text"
         role="spinbutton"
         data-todae-number-input=""
+        {...mark}
         inputMode={inputMode ?? keypadFor({ min, step, shown: digits })}
         spellCheck={false}
         aria-required={required || undefined}

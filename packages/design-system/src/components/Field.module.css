@@ -69,8 +69,9 @@
     color: var(--todae-field-fg-disabled);
   }
 
-  /* Field.NumberInput's figures line up. */
-  .input[data-todae-number-input] {
+  /* Field.NumberInput's figures line up, and so do those of a legacy type="number" TextInput. */
+  .input[data-todae-number-input],
+  .input[type='number'] {
     font-variant-numeric: tabular-nums;
   }
 

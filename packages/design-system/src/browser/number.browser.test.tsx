@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { Suspense, use, useEffect, useRef, useState } from 'react';
+import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 
@@ -689,5 +689,145 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     await settle();
     expect(sent).toEqual(['6']);
     expect(input().value).toBe('6');
+  });
+});
+
+describe('a held submit when the input is hidden, in a browser', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
+
+  it('an Activity: the committed number is sent as soon as its render is in the page, and once', async () => {
+    const sent: (string | null)[] = [];
+    function Filter() {
+      const [value, setValue] = useState<number | null>(5);
+      const [hidden, setHidden] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+          }}
+        >
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <Field.Root aria-label="Quantity" name="quantity">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  setHidden(true);
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+          </Activity>
+          <button type="button" onClick={() => setHidden(false)}>
+            Show
+          </button>
+        </form>
+      );
+    }
+    render(<Filter />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(sent).toEqual(['6']));
+    await settle();
+    expect(sent).toEqual(['6']);
+    await userEvent.click(screen.getByRole('button', { name: 'Show' }));
+    await settle();
+    expect(sent).toEqual(['6']);
+    expect(input().value).toBe('6');
+  });
+
+  function Hidden({ sent, removable = false }: { sent: (string | null)[]; removable?: boolean }) {
+    const [value, setValue] = useState<number | null>(5);
+    const [gate, setGate] = useState<Promise<void> | null>(null);
+    const [shown, setShown] = useState(true);
+    const form = useRef<HTMLFormElement>(null);
+    return (
+      <form
+        ref={form}
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+        }}
+      >
+        <Suspense fallback={<p>loading</p>}>
+          {shown ? (
+            <Field.Root aria-label="Quantity" name="quantity">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  setGate(new Promise<void>((resolve) => (open = resolve)));
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+          ) : null}
+          {gate ? <Gate promise={gate} /> : null}
+        </Suspense>
+        <button type="submit">Send</button>
+        {removable ? (
+          <button type="button" onClick={() => setShown(false)}>
+            Remove
+          </button>
+        ) : null}
+      </form>
+    );
+  }
+  function Gate({ promise }: { promise: Promise<void> }) {
+    use(promise);
+    return null;
+  }
+  let open = () => {};
+
+  it('a Suspense boundary: the held submit is sent when the input is removed before it shows', async () => {
+    const sent: (string | null)[] = [];
+    render(<Hidden sent={sent} removable />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await settle();
+    expect(sent).toEqual([]);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    open();
+    await waitFor(() => expect(sent).toEqual([null]));
+    await settle();
+    expect(sent).toEqual([null]);
+  });
+
+  it('a Suspense boundary: another submit of the form drops the held one', async () => {
+    const sent: (string | null)[] = [];
+    render(<Hidden sent={sent} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await settle();
+    expect(sent).toEqual([]);
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(sent).toEqual(['5']));
+    open();
+    await waitFor(() => expect(input().value).toBe('6'));
+    await settle();
+    expect(sent).toEqual(['5']);
+  });
+});
+
+describe('a legacy type="number" TextInput in a browser', () => {
+  it('keeps its figures lined up, as Field.NumberInput does', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <Field.Root aria-label="Legacy">
+        <Field.TextInput {...({ type: 'number' } as object)} value="1" onValueChange={() => undefined} />
+      </Field.Root>,
+    );
+    const legacy = document.querySelector('input[type="number"]')!;
+    expect(getComputedStyle(legacy).fontVariantNumeric).toBe('tabular-nums');
+    cleanup();
+    render(<Quantity />);
+    expect(getComputedStyle(input()).fontVariantNumeric).toBe('tabular-nums');
   });
 });

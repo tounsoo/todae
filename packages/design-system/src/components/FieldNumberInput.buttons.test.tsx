@@ -629,3 +629,57 @@ describe('step button names in a shadow root', () => {
     view.done();
   });
 });
+
+describe('step button names when an aria-labelledby names nothing', () => {
+  it('fall back to aria-label, as accessible name computation does', () => {
+    render(
+      <Field.Root name="q">
+        <Field.NumberInput value={3} onValueChange={() => undefined} aria-labelledby="nowhere" aria-label="Quantity" />
+        <Field.Increment />
+      </Field.Root>,
+    );
+    expect(button('Increase').getAttribute('aria-label')).toBe('Increase Quantity');
+  });
+
+  it('fall back to the native label, and to an aria-label before it', () => {
+    render(
+      <>
+        <Field.Root name="q">
+          <label>
+            Native
+            <Field.NumberInput value={3} onValueChange={() => undefined} aria-labelledby="nowhere" />
+          </label>
+          <Field.Increment />
+        </Field.Root>
+        <Field.Root name="r">
+          <label>
+            Native
+            <Field.NumberInput value={3} onValueChange={() => undefined} aria-labelledby="nowhere" aria-label="Own" />
+          </label>
+          <Field.Decrement />
+        </Field.Root>
+      </>,
+    );
+    expect(button('Increase').getAttribute('aria-label')).toBe('Increase Native');
+    expect(button('Decrease').getAttribute('aria-label')).toBe('Decrease Own');
+  });
+
+  it('use the element it names when that has text, and the aria-label when it is empty', () => {
+    render(
+      <>
+        <span id="named">Named</span>
+        <span id="blank"> </span>
+        <Field.Root name="q">
+          <Field.NumberInput value={3} onValueChange={() => undefined} aria-labelledby="named" aria-label="Own" />
+          <Field.Increment />
+        </Field.Root>
+        <Field.Root name="r">
+          <Field.NumberInput value={3} onValueChange={() => undefined} aria-labelledby="blank" aria-label="Own" />
+          <Field.Decrement />
+        </Field.Root>
+      </>,
+    );
+    expect(button('Increase').getAttribute('aria-label')).toBe('Increase Named');
+    expect(button('Decrease').getAttribute('aria-label')).toBe('Decrease Own');
+  });
+});

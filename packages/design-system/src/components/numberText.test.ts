@@ -561,3 +561,50 @@ describe('a tie on a grid counted from a negative min', () => {
     expect(commitNumber(0.15, { step: 0.1 })).toBe(0.2);
   });
 });
+
+describe('a grid read at the size of its operands: values near a half', () => {
+  it('goes to the nearer point on a 0.01 grid from 1e12', () => {
+    const range = { min: 1e12, step: 0.01 };
+    expect(commitNumber(1e12 + 0.003, range)).toBe(1e12);
+    expect(commitNumber(1e12 + 0.0027, range)).toBe(1e12);
+    expect(commitNumber(1e12 + 0.007, range)).toBe(1e12 + 0.01);
+  });
+
+  it('does not read a quarter step as a half, with no min or at a step of 1', () => {
+    expect(commitNumber(2e12 + 0.003, { step: 0.01 })).toBe(2e12);
+    expect(commitNumber(3e14 + 0.25, { step: 1 })).toBe(3e14);
+  });
+});
+
+describe('a result that is not finite', () => {
+  const percent = { locale: 'en', formatOptions: { style: 'percent' } } as const;
+
+  it('leaves the value where it is when a step would leave the doubles', () => {
+    expect(stepNumber(1.7e308, 1.7e308, {}, percent)).toBe(1.7e308);
+    expect(stepNumber(1.5e308, 1e308, {})).toBe(1.5e308);
+    expect(stepNumber(1.5e308, 1e308, { step: 1 })).toBe(1.5e308);
+    expect(canStep(1.7e308, 1.7e308, {}, percent)).toBe(false);
+  });
+
+  it('commits a finite number', () => {
+    expect(commitNumber(1e308, { step: 0.01 })).toBe(1e308);
+    expect(commitNumber(Infinity, {})).toBe(Number.MAX_VALUE);
+    expect(commitNumber(-Infinity, { max: 5 })).toBe(-Number.MAX_VALUE);
+  });
+});
+
+describe('isPartialNumber with accounting signs', () => {
+  const accounting = { locale: 'en', formatOptions: { style: 'currency', currency: 'USD', currencySign: 'accounting' } } as const;
+
+  it('takes a parenthesis that is not closed', () => {
+    expect(isPartialNumber('(', accounting)).toBe(true);
+    expect(isPartialNumber('(5', accounting)).toBe(true);
+    expect(isPartialNumber('($5.0', accounting)).toBe(true);
+    expect(isPartialNumber('(5)', accounting)).toBe(true);
+  });
+
+  it('does not take one without accounting signs, or a second one', () => {
+    expect(isPartialNumber('(5', { locale: 'en' })).toBe(false);
+    expect(isPartialNumber('((5', accounting)).toBe(false);
+  });
+});

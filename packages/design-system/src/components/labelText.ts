@@ -5,21 +5,23 @@ const rootOf = (input: HTMLInputElement): Document | ShadowRoot | Node => input.
 
 const idsOf = (input: HTMLInputElement) => input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
 
-// What names an input: the elements its `aria-labelledby` points at, found in its own root, else its `<label>`s.
-function namedBy(input: HTMLInputElement): Element[] {
-  const ids = idsOf(input);
-  if (!ids.length) return [...(input.labels ?? [])];
+// The elements its `aria-labelledby` points at that exist, found in its own root.
+function referenced(input: HTMLInputElement): Element[] {
   const root = rootOf(input);
   const find = 'getElementById' in root ? (id: string) => (root as Document | ShadowRoot).getElementById(id) : (id: string) => input.ownerDocument.getElementById(id);
-  return ids.flatMap((id) => find(id) ?? []);
+  return idsOf(input).flatMap((id) => find(id) ?? []);
 }
 
-/** What names an input, from its own attributes: the elements its `aria-labelledby` points at, else its `aria-label`, else its `<label>`s. Empty without one. */
+// Every element that can name an input, to watch: the ones its `aria-labelledby` points at, and its `<label>`s.
+const namedBy = (input: HTMLInputElement): Element[] => [...referenced(input), ...(input.labels ?? [])];
+
+const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
+const textOf = (elements: Iterable<Element>) => squash([...elements].map(spokenText).join(' '));
+
+/** What names an input, as accessible name computation does: the text of the elements its `aria-labelledby` points at, when there is some, else its `aria-label`, else its `<label>`s. Empty without one. */
 export function labelOf(input: HTMLInputElement | null): string {
   if (!input) return '';
-  const own = input.getAttribute('aria-label');
-  const spoken = idsOf(input).length || !own ? namedBy(input).map(spokenText).join(' ') : own;
-  return spoken.replace(/\s+/g, ' ').trim();
+  return textOf(referenced(input)) || squash(input.getAttribute('aria-label') ?? '') || textOf(input.labels ?? []);
 }
 
 type Watch = { input: HTMLInputElement; onChange: (label: string) => void; named: Element[] };
