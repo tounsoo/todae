@@ -96,4 +96,62 @@
     overflow: hidden;
     white-space: nowrap;
   }
+
+  /* The overlap reads the group's size, not each avatar's, so it works on the
+     group's direct children whatever they are: an avatar, or one wrapped in a
+     tooltip trigger or a link. An avatar with its own size still overlaps by
+     the group's size. */
+  .group {
+    --_group-size: var(--todae-avatar-size-md);
+
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    isolation: isolate;
+  }
+
+  .group[data-size='sm'] {
+    --_group-size: var(--todae-avatar-size-sm);
+  }
+
+  .group[data-size='md'] {
+    --_group-size: var(--todae-avatar-size-md);
+  }
+
+  .group[data-size='lg'] {
+    --_group-size: var(--todae-avatar-size-lg);
+  }
+
+  /* Tooltip and Popover content is a sibling of its trigger and carries
+     [popover], and a dialog places itself: they take no part in the stack. */
+  .group > :not([popover], dialog) {
+    flex: none;
+  }
+
+  .group > :not([popover], dialog) ~ :not([popover], dialog) {
+    margin-inline-start: calc(-1 * var(--_group-size) * var(--todae-avatar-group-overlap));
+  }
+
+  /* A box-shadow is not clipped by the root's overflow: hidden. Later avatars
+     paint over earlier ones in DOM order. */
+  .group .root {
+    box-shadow: 0 0 0 var(--todae-avatar-group-ring-width) var(--todae-avatar-group-ring-color);
+  }
+
+  /* A focused wrapper rises above its neighbors' rings, so its focus ring
+     shows whole. A flex item takes z-index without a position, so a child
+     keeps its own positioning. A popover or dialog child keeps its own
+     stacking. The group isolates that z-index from the page. */
+  .group > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
+    z-index: 1;
+  }
+
+  /* Forced colors drop box-shadow and repaint the fallback background to
+     Canvas, so the edge becomes an inset border in CanvasText: it keeps
+     overlapping initials apart. */
+  @media (forced-colors: active) {
+    .group .root {
+      border: var(--todae-avatar-group-ring-width) solid CanvasText;
+    }
+  }
 }
