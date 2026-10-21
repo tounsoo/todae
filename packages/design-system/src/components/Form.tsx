@@ -121,7 +121,7 @@ function reduce(state: FormState, action: FormAction): FormState {
         native: true,
       };
     case 'draft':
-      return state.dismissal.size === 0 && !state.native ? state : { ...state, dismissal: NO_DISMISSAL, native: false };
+      return state.dismissal.size === 0 ? state : { ...state, dismissal: NO_DISMISSAL };
     case 'reply':
       return { ...state, failed: action.failed, focus: state.focus + 1, native: false };
     case 'reset':
