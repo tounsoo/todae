@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Dialog, Drilldown, StringsProvider, type DrilldownChangeReason, type DrilldownRootProps } from '../index.js';
@@ -139,6 +139,32 @@ describe('Drilldown', () => {
     );
     expect(screen.getByRole('button', { name: 'Done' }).hasAttribute('aria-label')).toBe(false);
     expect(screen.getByRole('button', { name: 'Up one level' })).toBeTruthy();
+  });
+
+  it('names Back from text its child renders later, after Back left at the first view and came back', async () => {
+    let setText: (text: string) => void = () => undefined;
+    function Later() {
+      const [text, set] = useState('');
+      setText = set;
+      return <>{text}</>;
+    }
+    render(
+      <Drilldown.Root defaultValue={['settings']}>
+        <Drilldown.Back>
+          <Later />
+        </Drilldown.Back>
+        <Drilldown.Viewport>
+          <Drilldown.View value="settings" label="Settings">
+            <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+          </Drilldown.View>
+          <Drilldown.View value="account" label="Account" />
+        </Drilldown.Viewport>
+      </Drilldown.Root>,
+    );
+    click('Account');
+    expect(screen.getByRole('button', { name: 'Back to Settings' })).toBeTruthy();
+    act(() => setText('Done'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Done' }).hasAttribute('aria-label')).toBe(false));
   });
 
   it('goes back on Escape outside a modal, unless escape is close or something else took the key', () => {
