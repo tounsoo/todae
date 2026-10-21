@@ -202,6 +202,20 @@ describe('Field.TextInput', () => {
     warn.mockRestore();
   });
 
+  it('shows no counter on a legacy type="number" TextInput, as before', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const props = { value: '12', onValueChange: () => undefined, type: 'number', maxLength: 10 } as unknown as FieldTextInputProps;
+    const { container } = render(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(screen.queryByText('Up to 10 characters')).toBeNull();
+    expect(container.querySelector('[aria-live="polite"]')).toBeNull();
+    expect(screen.getByRole('spinbutton').getAttribute('aria-describedby') ?? '').not.toContain('hint');
+  });
+
   it('takes onValueChange alone on TextInput and Textarea', () => {
     const onText = vi.fn();
     const onArea = vi.fn();

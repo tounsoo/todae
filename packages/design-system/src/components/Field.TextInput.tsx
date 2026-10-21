@@ -38,10 +38,12 @@ export function TextInput({
   const field = useField();
   const ctx = useFieldContext();
   // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
-  if ((type as string) === 'number') {
+  const legacyNumber = (type as string) === 'number';
+  if (legacyNumber) {
     warnOnce('text-input-number', 'Field.TextInput no longer supports type="number"; use Field.NumberInput, which reads and writes a number in the locale\'s format.');
   }
-  const limit = typeof maxLength === 'number' ? maxLength : undefined;
+  // Browsers ignore maxLength on a native number input, so that path shows and announces no limit, as it always did.
+  const limit = typeof maxLength === 'number' && !legacyNumber ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (

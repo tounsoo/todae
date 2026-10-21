@@ -622,3 +622,45 @@ describe('Field.NumberInput in Form.Root and a submit', () => {
     expect(input().getAttribute('aria-invalid')).toBe('true');
   });
 });
+
+describe('an unreadable draft and a submitter that turns validation off', () => {
+  it('is never sent as the old number: the submit is cancelled, the text kept and flagged', async () => {
+    const sent: (string | null)[] = [];
+    const told: (number | null)[] = [];
+    function Page() {
+      const [value, setValue] = useState<number | null>(5);
+      return (
+        <Form.Root
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('a') as string | null);
+          }}
+        >
+          <Field.Root aria-label="A" name="a">
+            <Field.NumberInput
+              value={value}
+              locale="en"
+              onValueChange={(next) => {
+                told.push(next);
+                setValue(next);
+              }}
+            />
+          </Field.Root>
+          <button type="submit" formNoValidate>
+            Skip check
+          </button>
+        </Form.Root>
+      );
+    }
+    render(<Page />);
+    type('7,,');
+    fireEvent.click(screen.getByRole('button', { name: 'Skip check' }));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(sent).toEqual([]);
+    expect(told).toEqual([]);
+    expect(input().value).toBe('7,,');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+});

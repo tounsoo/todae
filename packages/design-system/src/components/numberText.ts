@@ -198,12 +198,9 @@ export function decimalsOf(value: number): number {
 
 const roundTo = (value: number, decimals: number) => Number(value.toFixed(Math.min(100, decimals)));
 
-// Half away from zero, as Intl rounds the text, where Math.round takes a tie toward +Infinity.
-const nearest = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
-
-// The error bound of a quotient `(value - base) / step`, in steps: the subtraction can be off by about an ulp of its larger operand, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps). It is capped where the operands leave no grid a double can resolve, so a value is never read as on a grid it is only near.
+// The error bound of a quotient `(value - base) / step`, in steps: the subtraction can be off by about an ulp of its larger operand, and a small step multiplies that. A fixed number of digits cannot follow it (100.3 on a 0.1 grid from 100 is 2.9999999999999716 steps). It is capped at a quarter of a step, so a whole index and a half can never be confused: past that the operands leave no grid a double can resolve, and a value is never read as on a grid it is only near.
 const slack = (value: number, base: number, step: number) =>
-  Math.min(1e-6, (8 * Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step);
+  Math.min(0.25, (8 * Number.EPSILON * (Math.abs(value) + Math.abs(base))) / step);
 
 // The grid index of a value. An index within the error bound of a whole number or a half is that one, so a value on the grid reads as on it and a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5). Any other index gets the 15-digit guard of the max line: 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index, and one beyond 1e15, which has no fraction left to guard, is exact as it is.
 function indexOf(value: number, base: number, step: number): number {
@@ -257,6 +254,18 @@ export function keypadFor({ min, step, shown }: { min?: number; step?: number; s
 const pointAt = (index: number, { min, step = 1 }: NumberRange) =>
   roundTo((min ?? 0) + index * step, Math.max(decimalsOf(step), decimalsOf(min ?? 0)));
 
+// The grid point nearest a value, a tie going to the point with the larger absolute value, so it is "away from zero" in the value and not in the index: the index counts from `min`, and a negative `min` puts the zero inside the grid.
+function nearestPoint(value: number, range: NumberRange, step: number): number {
+  const index = indexOf(value, range.min ?? 0, step);
+  const below = Math.floor(index);
+  const fraction = index - below;
+  if (fraction === 0) return pointAt(below, range);
+  const lower = pointAt(below, range);
+  const upper = pointAt(below + 1, range);
+  if (fraction !== 0.5) return fraction < 0.5 ? lower : upper;
+  return Math.abs(upper) >= Math.abs(lower) ? upper : lower;
+}
+
 /**
  * The lowest and highest value a commit can give: `min`, and `max`, or the
  * highest point of the `step` grid within it. A `max` below `min` gives way to
@@ -303,7 +312,7 @@ export function commitNumber(value: number, range: NumberRange, text: NumberText
   const { step } = range;
   const { low, high } = boundsOf(range);
   // Without a step the text's digits round, by Intl as the text is, not by the grid path: the grid's 15-digit guard rounds some values differently (17040975.57257498 shown to 5 decimals is .57257 by Intl, .57258 by the guard), and the text is what the person sees.
-  let result = step === undefined ? roundToShown(value, text) : pointAt(nearest(indexOf(value, range.min ?? 0, step)), range);
+  let result = step === undefined ? roundToShown(value, text) : nearestPoint(value, range, step);
   if (high !== undefined && result > high) result = high;
   if (low !== undefined && result < low) result = low;
   return result + 0;

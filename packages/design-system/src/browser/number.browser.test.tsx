@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, use, useEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 
@@ -627,5 +627,67 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     await settle();
     expect(sent).toEqual(['7']);
     expect(told).toEqual([7, null]);
+  });
+
+  it('an unreadable text is never sent as the old number, with a submitter that turns validation off', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} initial={5} />);
+    await userEvent.click(input());
+    await replace('7,,');
+    await userEvent.click(screen.getByRole('button', { name: 'Send anyway' }));
+    await settle();
+    expect(sent).toEqual([]);
+    expect(told).toEqual([]);
+    expect(input().value).toBe('7,,');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('a Suspense boundary that hides the input: the held submit sends the committed number once it shows', async () => {
+    const sent: Sent = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    function Results({ value }: { value: number | null }) {
+      if (value === 6) use(gate);
+      return <p>results for {value}</p>;
+    }
+    function Filter() {
+      const [value, setValue] = useState<number | null>(5);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('quantity') as string | null);
+          }}
+        >
+          <Suspense fallback={<p>loading</p>}>
+            <Field.Root aria-label="Quantity" name="quantity">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+            <Results value={value} />
+          </Suspense>
+        </form>
+      );
+    }
+    render(<Filter />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{ArrowUp}');
+    await settle();
+    expect(sent).toEqual([]);
+    release();
+    await waitFor(() => expect(sent).toEqual(['6']));
+    await settle();
+    expect(sent).toEqual(['6']);
+    expect(input().value).toBe('6');
   });
 });

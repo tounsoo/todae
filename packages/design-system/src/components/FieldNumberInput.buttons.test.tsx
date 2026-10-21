@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, GlyphsProvider, Label, StringsProvider } from '../index.js';
@@ -585,5 +585,47 @@ describe('Field.Increment names follow a label from anywhere in the page', () =>
       await new Promise((resolve) => setTimeout(resolve));
     });
     expect(labels).not.toHaveBeenCalled();
+  });
+});
+
+describe('step button names in a shadow root', () => {
+  function inShadow(node: React.ReactNode) {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const container = document.createElement('div');
+    host.attachShadow({ mode: 'open' }).appendChild(container);
+    const view = render(node, { container });
+    const shadow = host.shadowRoot!;
+    const increase = () => shadow.querySelector<HTMLButtonElement>('button')!;
+    return { shadow, increase, done: () => { view.unmount(); host.remove(); } };
+  }
+
+  it('are named from an aria-labelledby element inside the root', () => {
+    const view = inShadow(
+      <>
+        <span id="rooms-label">Rooms</span>
+        <Field.Root aria-labelledby="rooms-label" name="rooms">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+      </>,
+    );
+    expect(view.increase().getAttribute('aria-label')).toBe('Increase Rooms');
+    view.done();
+  });
+
+  it('follow a label whose text changes inside the root', async () => {
+    const view = inShadow(
+      <>
+        <span id="rooms-label">Rooms</span>
+        <Field.Root aria-labelledby="rooms-label" name="rooms">
+          <Field.NumberInput value={1} onValueChange={() => undefined} />
+          <Field.Increment />
+        </Field.Root>
+      </>,
+    );
+    view.shadow.getElementById('rooms-label')!.textContent = 'Suites';
+    await waitFor(() => expect(view.increase().getAttribute('aria-label')).toBe('Increase Suites'));
+    view.done();
   });
 });

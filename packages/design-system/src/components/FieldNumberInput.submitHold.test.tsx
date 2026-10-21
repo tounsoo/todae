@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { startTransition, useRef, useState } from 'react';
+import { Activity, Suspense, startTransition, use, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../index.js';
 import { button, input, key, type } from '../test/number.js';
@@ -200,5 +200,109 @@ describe('the documented limit: the product sets its value in a transition', () 
     expect(log.told).toEqual([7]);
     expect(log.sent).toEqual(['5']);
     expect(input().value).toBe('7');
+  });
+});
+
+describe('a Suspense boundary that hides the input while the form holds a submit', () => {
+  it('sends the committed number once, when the boundary shows it again', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    function Results({ value }: { value: number | null }) {
+      if (value === 6) use(gate);
+      return <p>results for {value}</p>;
+    }
+    const sent: (string | null)[] = [];
+    const told: (number | null)[] = [];
+    function Filter() {
+      const [value, setValue] = useState<number | null>(5);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('q') as string | null);
+          }}
+        >
+          <Suspense fallback={<p>loading</p>}>
+            <Field.Root aria-label="Q" name="q">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  told.push(next);
+                  setValue(next);
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+            <Results value={value} />
+          </Suspense>
+        </form>
+      );
+    }
+    render(<Filter />);
+    await act(async () => {
+      key('ArrowUp');
+    });
+    expect(told).toEqual([6]);
+    expect(sent).toEqual([]);
+    await act(async () => {
+      release();
+      await gate;
+    });
+    await act(async () => {});
+    expect(sent).toEqual(['6']);
+    expect(screen.getByText('results for 6')).toBeTruthy();
+  });
+});
+
+describe('an Activity that hides the input while the form holds a submit', () => {
+  it('sends the committed number once, when the Activity shows again', async () => {
+    const sent: (string | null)[] = [];
+    function Filter() {
+      const [value, setValue] = useState<number | null>(5);
+      const [hidden, setHidden] = useState(false);
+      const form = useRef<HTMLFormElement>(null);
+      return (
+        <form
+          ref={form}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            sent.push(new FormData(event.currentTarget).get('q') as string | null);
+          }}
+        >
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <Field.Root aria-label="Q" name="q">
+              <Field.NumberInput
+                value={value}
+                locale="en"
+                onValueChange={(next) => {
+                  setValue(next);
+                  setHidden(true);
+                  form.current?.requestSubmit();
+                }}
+              />
+            </Field.Root>
+          </Activity>
+          <button type="button" onClick={() => setHidden(false)}>
+            Show
+          </button>
+        </form>
+      );
+    }
+    render(<Filter />);
+    await act(async () => {
+      key('ArrowUp');
+    });
+    await act(async () => {});
+    expect(sent).toEqual([]);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+    });
+    await act(async () => {});
+    expect(sent).toEqual(['6']);
   });
 });

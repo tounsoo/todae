@@ -517,3 +517,47 @@ describe('NumberFormatOptions', () => {
     );
   });
 });
+
+describe('a grid read at the size of its operands', () => {
+  // A double resolves 0.001 near 1e8 (an ulp is 1.5e-8), so these values are on the grid and must read so, in both directions.
+  it.each([
+    [100000216.35, 1e8, 0.001],
+    [100000216.349, 1e8, 0.001],
+    [100000000.001, 1e8, 0.001],
+    [-999890430.84, -1e9, 0.01],
+    [-999890430.85, -1e9, 0.01],
+  ])('%d from %d by %d is on the grid and steps both ways', (value, min, step) => {
+    const range = { min, step };
+    expect(onGrid(value, range)).toBe(true);
+    expect(canStep(value, step, range)).toBe(true);
+    expect(canStep(value, -step, range)).toBe(true);
+    expect(stepNumber(value, step, range)).toBeGreaterThan(value);
+    expect(stepNumber(value, -step, range)).toBeLessThan(value);
+  });
+
+  it('still reads a value between two points as off the grid', () => {
+    expect(onGrid(100000000.0001, { min: 1e8, step: 0.001 })).toBe(false);
+    expect(onGrid(100000000.0004, { min: 1e8, step: 0.001 })).toBe(false);
+  });
+
+  it('reaches a max that is on the grid', () => {
+    expect(boundsOf({ min: 1e8, step: 0.001, max: 100000216.35 }).high).toBe(100000216.35);
+    expect(commitNumber(100000216.35, { min: 1e8, step: 0.001, max: 100000216.35 })).toBe(100000216.35);
+    expect(boundsOf({ min: -1e9, step: 0.01, max: -999890430.84 }).high).toBe(-999890430.84);
+  });
+});
+
+describe('a tie on a grid counted from a negative min', () => {
+  it('goes to the point with the larger absolute value', () => {
+    expect(commitNumber(-0.25, { min: -1, step: 0.5 })).toBe(-0.5);
+    expect(commitNumber(-0.75, { min: -1, step: 0.5 })).toBe(-1);
+    expect(commitNumber(-0.05, { min: -1, step: 0.1 })).toBe(-0.1);
+    expect(commitNumber(0.25, { min: -1, step: 0.5 })).toBe(0.5);
+    expect(commitNumber(0.05, { min: -1, step: 0.1 })).toBe(0.1);
+  });
+
+  it('is unchanged without a min', () => {
+    expect(commitNumber(-0.15, { step: 0.1 })).toBe(-0.2);
+    expect(commitNumber(0.15, { step: 0.1 })).toBe(0.2);
+  });
+});

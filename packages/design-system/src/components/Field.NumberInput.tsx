@@ -148,10 +148,8 @@ export function NumberInput({
   // A field that can't be edited has no draft: what was typed can't be committed, and would block its form.
   const typing = draft !== null && !fixed && !field.disabled && Object.is(draft.base, current);
   if (draft !== null && !typing) setDraft(null);
-  // The draft a commit consumed, set at once, since `setDraft(null)` shows only in the next render and anything a commit calls back into, such as a product's auto-submit, still reads this render's draft. A consumed draft is no draft: it commits at most once.
-  const consumed = useRef<Draft | null>(null);
-  // The draft a commit has not consumed, read when called, since a callback from a commit runs before the next render.
-  const live = () => (typing && draft !== consumed.current ? draft : null);
+  // The draft a commit has not answered, read when called, since a callback from a commit runs before the next render, which is what clears `draft`: a draft is live until a commit waits for its render, so it commits at most once.
+  const live = () => (typing && !waiting() ? draft : null);
   const own = current === null ? '' : formatNumber(current, text);
   const shown = typing ? draft.text : own;
   // A text that is no number blocks a submit as it is typed, whether or not a commit has read it, and stays so until it is one or the product sets a value. The Form decides when that shows.
@@ -160,6 +158,12 @@ export function NumberInput({
   const flagged = unreadable && (draft.failed === true || !isPartialNumber(draft.text, text));
   const valueNode = useRef<HTMLInputElement | null>(null);
   const node = useRef<HTMLInputElement | null>(null);
+  // A submit of the input's form waits for the commit instead of forcing it; the hook holds it and sends it again after the render that shows the commit. Text that is no number is flagged, and the submit is cancelled.
+  const { committed, waiting } = useFormSubmitHold(node, () => {
+    const outcome = draftOutcome();
+    if (outcome.kind === 'none') return null;
+    return outcome.kind === 'commit' ? { commit: () => commit(outcome.number) } : { unreadable: true, flag: fail };
+  });
 
   function typed(): Typed {
     const open = live();
@@ -178,11 +182,16 @@ export function NumberInput({
     if (open && !open.failed) setDraft({ ...open, failed: true });
   }
 
+  // What a commit or a submit finds in the draft: none, a number (or none, for an empty text) to commit, or text that reads as nothing.
+  function draftOutcome(): { kind: 'none' | 'unreadable' } | { kind: 'commit'; number: number | null } {
+    if (!live() || fixed) return { kind: 'none' };
+    const next = typed();
+    return next.read ? { kind: 'commit', number: next.number } : { kind: 'unreadable' };
+  }
+
   // Returns what it committed, the number the product is told.
   function commit(next: number | null): number | null {
     const result = next === null ? null : commitNumber(next, range, text);
-    const open = live();
-    if (open) consumed.current = open;
     // Every commit waits for its own render, a step with no draft too: a submit in between waits for it.
     committed();
     setDraft(null);
@@ -194,19 +203,11 @@ export function NumberInput({
   }
 
   function commitDraft() {
-    if (!live() || fixed) return;
-    const next = typed();
+    const outcome = draftOutcome();
     // Text that is no number stays, invalid.
-    if (next.read) commit(next.number);
-    else fail();
+    if (outcome.kind === 'commit') commit(outcome.number);
+    else if (outcome.kind === 'unreadable') fail();
   }
-
-  // A submit of the input's form waits for the commit instead of forcing it; the hook holds it and sends it again after the render that shows the commit. Text that is no number is flagged, and the form's own check blocks the submit.
-  const committed = useFormSubmitHold(node, () => {
-    if (!live() || fixed) return null;
-    const next = typed();
-    return next.read ? { commit: () => commit(next.number) } : { unreadable: true, flag: fail };
-  });
 
   // From text that is no number, nothing: it stays, and stays invalid.
   function stepBy(size: number) {

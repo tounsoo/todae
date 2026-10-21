@@ -1,27 +1,30 @@
 import { spokenText } from './buttonName.js';
 
+// The tree an input's ids are looked up in: its document, or the shadow root it sits in.
+const rootOf = (input: HTMLInputElement): Document | ShadowRoot | Node => input.getRootNode();
+
+const idsOf = (input: HTMLInputElement) => input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+
+// What names an input: the elements its `aria-labelledby` points at, found in its own root, else its `<label>`s.
+function namedBy(input: HTMLInputElement): Element[] {
+  const ids = idsOf(input);
+  if (!ids.length) return [...(input.labels ?? [])];
+  const root = rootOf(input);
+  const find = 'getElementById' in root ? (id: string) => (root as Document | ShadowRoot).getElementById(id) : (id: string) => input.ownerDocument.getElementById(id);
+  return ids.flatMap((id) => find(id) ?? []);
+}
+
 /** What names an input, from its own attributes: the elements its `aria-labelledby` points at, else its `aria-label`, else its `<label>`s. Empty without one. */
 export function labelOf(input: HTMLInputElement | null): string {
   if (!input) return '';
-  const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
   const own = input.getAttribute('aria-label');
-  const spoken = ids.length
-    ? ids.map((id) => spokenText(input.ownerDocument.getElementById(id) ?? input.ownerDocument.createTextNode(''))).join(' ')
-    : own || [...(input.labels ?? [])].map(spokenText).join(' ');
+  const spoken = idsOf(input).length || !own ? namedBy(input).map(spokenText).join(' ') : own;
   return spoken.replace(/\s+/g, ' ').trim();
-}
-
-// What names an input: its `aria-labelledby` elements, else its `<label>`s.
-function namedBy(input: HTMLInputElement): Element[] {
-  const ids = input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
-  return ids.length ? ids.flatMap((id) => input.ownerDocument.getElementById(id) ?? []) : [...(input.labels ?? [])];
 }
 
 type Watch = { input: HTMLInputElement; onChange: (label: string) => void; named: Element[] };
 type Registry = { observer: MutationObserver; watches: Set<Watch> };
-const registries = new WeakMap<Document, Registry>();
-
-const idsOf = (input: HTMLInputElement) => input.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+const registries = new WeakMap<Node, Registry>();
 
 // Whether a node that came or went is, or holds, a label, or an element an `aria-labelledby` names: only these can change which elements name an input.
 function touchesLabels(node: Node, ids: Set<string>): boolean {
@@ -81,13 +84,13 @@ function handle(registry: Registry, records: MutationRecord[]) {
 export function watchLabel(input: HTMLInputElement | null, onChange: (label: string) => void): { stop: () => void } {
   if (!input) return { stop: () => {} };
   const watch: Watch = { input, onChange, named: namedBy(input) };
+  const root = rootOf(input);
   let registry: Registry | undefined;
   if (typeof MutationObserver !== 'undefined') {
-    const document = input.ownerDocument;
-    registry = registries.get(document);
+    registry = registries.get(root);
     if (!registry) {
       const created: Registry = { observer: new MutationObserver((records) => handle(created, records)), watches: new Set() };
-      created.observer.observe(document, {
+      created.observer.observe(root, {
         childList: true,
         subtree: true,
         characterData: true,
@@ -95,7 +98,7 @@ export function watchLabel(input: HTMLInputElement | null, onChange: (label: str
         attributeFilter: ['aria-label', 'aria-labelledby', 'aria-hidden', 'for', 'id'],
         attributeOldValue: true,
       });
-      registries.set(document, created);
+      registries.set(root, created);
       registry = created;
     }
     registry.watches.add(watch);
@@ -107,7 +110,7 @@ export function watchLabel(input: HTMLInputElement | null, onChange: (label: str
       registry.watches.delete(watch);
       if (!registry.watches.size) {
         registry.observer.disconnect();
-        registries.delete(input.ownerDocument);
+        registries.delete(root);
       }
     },
   };
