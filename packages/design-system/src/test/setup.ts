@@ -74,6 +74,23 @@ function polyfillPopover(): void {
   };
 }
 
+// jsdom runs no animations and has no layout. A hidden ancestor or an inline
+// display:none stands in for an element that isn't rendered.
+function rendered(el: Element | null): boolean {
+  if (!el) return true;
+  if (el.hasAttribute('hidden') || (el instanceof HTMLElement && el.style.display === 'none')) return false;
+  return rendered(el.parentElement);
+}
+
+function polyfillRendering(): void {
+  if (typeof Element === 'undefined') return;
+  const proto = Element.prototype;
+  proto.getAnimations ??= () => [];
+  proto.checkVisibility ??= function checkVisibility(this: Element) {
+    return rendered(this);
+  };
+}
+
 function polyfillCssSupports(): void {
   const css = globalThis.CSS ?? {};
   if (typeof css.supports === 'function') return;
@@ -138,5 +155,6 @@ polyfillDialog();
 polyfillInert();
 polyfillPointerEvent();
 polyfillPopover();
+polyfillRendering();
 polyfillCssSupports();
 polyfillMatchMedia();

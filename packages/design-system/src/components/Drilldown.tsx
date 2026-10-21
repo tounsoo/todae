@@ -128,7 +128,7 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
 
 // Not in a closed popover, a hidden tab panel or a lower view of another Drilldown.
 function shows(viewport: HTMLElement | null): boolean {
-  return viewport?.checkVisibility?.() !== false;
+  return viewport?.checkVisibility() === true;
 }
 
 function motionToken(el: HTMLElement, name: string): string {
@@ -268,17 +268,13 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     }
     // Settles when the slide's animations finish, so CSS that changes them
     // keeps the leaving view on screen as long as it moves.
-    if (viewport?.getAnimations) {
-      let current = true;
-      void Promise.allSettled(slideAnimations([viewport, entering, leaving]).map((a) => a.finished)).then(() => {
-        if (current) settle();
-      });
-      return () => {
-        current = false;
-      };
-    }
-    const timer = window.setTimeout(settle, duration);
-    return () => window.clearTimeout(timer);
+    let current = true;
+    void Promise.allSettled(slideAnimations([viewport, entering, leaving]).map((a) => a.finished)).then(() => {
+      if (current) settle();
+    });
+    return () => {
+      current = false;
+    };
   }, [motion, shown]);
 
   // After the views' own layout effects, so every view in the stack has registered.
