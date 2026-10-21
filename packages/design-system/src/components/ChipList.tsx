@@ -13,7 +13,7 @@ import { usePopover } from '../hooks/usePopover.js';
 import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
-import { ChipCount } from './chipCount.js';
+import { ChipCount, ChipCountChip } from './chipCount.js';
 import { useChipKeys } from './chipKeys.js';
 import { Popover } from './Popover.js';
 import { cx } from './cx.js';
@@ -327,7 +327,7 @@ function Root({
           <Chip.Root onRemove={onRemove ? () => undefined : undefined} removeIcon={removeIcon}>
             …
           </Chip.Root>
-          <Chip.Root data-overflow="">{`+${chips.length || 1}`}</Chip.Root>
+          <ChipCountChip count={chips.length || 1} />
         </div>
       ) : null}
       {hidden > 0 ? (

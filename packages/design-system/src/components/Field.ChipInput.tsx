@@ -8,7 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { Chip } from './Chip.js';
-import { ChipCount } from './chipCount.js';
+import { ChipCount, ChipCountChip } from './chipCount.js';
 import { isImeKeyEvent } from './ime.js';
 import { cx, useComposedRefs } from './props.js';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
@@ -135,7 +135,7 @@ export function ChipInput({
         <Chip.Root onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
           …
         </Chip.Root>
-        <Chip.Root data-overflow="">{`+${chips.length || 1}`}</Chip.Root>
+        <ChipCountChip count={chips.length || 1} />
       </div>
     ) : null;
 

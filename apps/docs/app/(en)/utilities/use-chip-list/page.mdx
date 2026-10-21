@@ -19,7 +19,7 @@ const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, 
     {hidden > 0 ? (
       <span role="listitem">
         <Chip.Root aria-hidden>{`+${hidden}`}</Chip.Root>
-        <VisuallyHidden.Root>{`${hidden} more`}</VisuallyHidden.Root>
+        <VisuallyHidden.Root>{moreChips(hidden)}</VisuallyHidden.Root>
       </span>
     ) : null}
   </div>
@@ -42,7 +42,7 @@ const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, 
 
 **Todae handles:** Measurement only. The hook sets no role, no ARIA attribute and no focus. It reads the layout of the elements on `listRef` and `measureRef` and returns `visible`, `hidden` and `measured`.
 
-**You supply:** What [ChipList](/chip-list) adds on top. A `role="list"` element, or a `<ul>`, with an accessible name, and a list item per chip. A measure row marked `aria-hidden` and `inert`, so its copies of the chips are neither read nor focusable. A name for +N: hide the count chip with `aria-hidden` and put the name in a `VisuallyHidden.Root` beside it. A way to reach the folded chips if people need them: `hidden` is only a count, and the folded chips are not rendered unless you render them. Where focus goes when a focused chip folds or is removed.
+**You supply:** What [ChipList](/chip-list) adds on top. A `role="list"` element, or a `<ul>`, with an accessible name, and a list item per chip. A measure row marked `aria-hidden` and `inert`, so its copies of the chips are neither read nor focusable. A name for +N: hide the count chip with `aria-hidden` and put the name, `moreChips(hidden)` from `useStrings`, in a `VisuallyHidden.Root` beside it. A way to reach the folded chips if people need them: `hidden` is only a count, and the folded chips are not rendered unless you render them. Where focus goes when a focused chip folds or is removed.
 
 **Watch for:** A measure row left in the accessibility tree, so screen readers read every chip twice. A static +N with no control, which tells the count but never the values.
 
