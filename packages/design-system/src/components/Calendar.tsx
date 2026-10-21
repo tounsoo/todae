@@ -35,7 +35,7 @@ type CalendarSharedProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. */
+  /** Returns true for a date that cannot be picked, such as a holiday. After a range's first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
@@ -123,6 +123,20 @@ type CalendarContextValue = {
 };
 
 type CalendarView = 'days' | 'years';
+
+/** How far from the anchor isDateDisabled has been checked, and the nearest days it ruled out. */
+type ReachScan = {
+  anchor: Temporal.PlainDate;
+  isDateDisabled: (date: Temporal.PlainDate) => boolean;
+  min: Temporal.PlainDate | undefined;
+  max: Temporal.PlainDate | undefined;
+  /** The earliest and latest days checked. */
+  below: Temporal.PlainDate;
+  above: Temporal.PlainDate;
+  /** The days beside the nearest ones ruled out, once found. */
+  first: Temporal.PlainDate | null;
+  last: Temporal.PlainDate | null;
+};
 
 const CalendarContext = /* @__PURE__ */ createContext<CalendarContextValue | null>(null);
 
@@ -242,8 +256,11 @@ function Root(rootProps: CalendarRootProps) {
   if (process.env.NODE_ENV !== 'production' && mode !== firstMode) {
     console.error('Calendar.Root cannot change mode after it mounts; give it a new key instead');
   }
-  const min = isoDate(minProp);
-  const max = isoDate(maxProp);
+  // Kept by value, so a min or max made anew each render recomputes nothing.
+  const minText = isoDate(minProp)?.toString();
+  const maxText = isoDate(maxProp)?.toString();
+  const min = useMemo(() => (minText === undefined ? undefined : Temporal.PlainDate.from(minText)), [minText]);
+  const max = useMemo(() => (maxText === undefined ? undefined : Temporal.PlainDate.from(maxText)), [maxText]);
   const { onValueChange, ...ends } = rangeProps(rootProps);
   const [value, setValue] = useControlledState<DateRange | null>(ends.value, ends.defaultValue);
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
@@ -289,36 +306,33 @@ function Root(rootProps: CalendarRootProps) {
     [isDateDisabled, outOfRange],
   );
   // The first and last days a range from the anchor can reach: min and max,
-  // or nearer, the days beside the nearest ones isDateDisabled rules out. Those
-  // are looked for only as far as the shown month reaches, since only its days
-  // are drawn.
+  // or nearer, the days beside the nearest ones isDateDisabled rules out. Only
+  // the shown month's days are drawn, so days are checked only as far as it
+  // reaches, and each day once while the anchor, isDateDisabled, min and max
+  // stay the same.
   const shownMonth = focused?.toPlainYearMonth().toString() ?? null;
+  const scan = useRef<ReachScan | null>(null);
   const reach = useMemo(() => {
     if (!anchor || shownMonth === null) return null;
-    let first = min ?? null;
-    let last = max ?? null;
-    if (isDateDisabled) {
-      const month = Temporal.PlainYearMonth.from(shownMonth);
-      const monthStart = month.toPlainDate({ day: 1 });
-      const monthEnd = month.toPlainDate({ day: month.daysInMonth });
-      const from = first && compare(first, monthStart) > 0 ? first : monthStart;
-      const to = last && compare(last, monthEnd) < 0 ? last : monthEnd;
-      for (let day = anchor; compare(day, from) > 0; ) {
-        day = day.subtract({ days: 1 });
-        if (isDateDisabled(day)) {
-          first = day.add({ days: 1 });
-          break;
-        }
-      }
-      for (let day = anchor; compare(day, to) < 0; ) {
-        day = day.add({ days: 1 });
-        if (isDateDisabled(day)) {
-          last = day.subtract({ days: 1 });
-          break;
-        }
-      }
+    if (!isDateDisabled) return { first: min ?? null, last: max ?? null };
+    let s = scan.current;
+    if (!s || !s.anchor.equals(anchor) || s.isDateDisabled !== isDateDisabled || s.min !== min || s.max !== max) {
+      s = scan.current = { anchor, isDateDisabled, min, max, below: anchor, above: anchor, first: null, last: null };
     }
-    return { first, last };
+    const month = Temporal.PlainYearMonth.from(shownMonth);
+    const monthStart = month.toPlainDate({ day: 1 });
+    const monthEnd = month.toPlainDate({ day: month.daysInMonth });
+    const from = min && compare(min, monthStart) > 0 ? min : monthStart;
+    const to = max && compare(max, monthEnd) < 0 ? max : monthEnd;
+    while (!s.first && compare(s.below, from) > 0) {
+      s.below = s.below.subtract({ days: 1 });
+      if (isDateDisabled(s.below)) s.first = s.below.add({ days: 1 });
+    }
+    while (!s.last && compare(s.above, to) < 0) {
+      s.above = s.above.add({ days: 1 });
+      if (isDateDisabled(s.above)) s.last = s.above.subtract({ days: 1 });
+    }
+    return { first: s.first ?? min ?? null, last: s.last ?? max ?? null };
   }, [anchor, isDateDisabled, max, min, shownMonth]);
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>

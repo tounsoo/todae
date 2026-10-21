@@ -2485,8 +2485,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜."
     },
     "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다."
+      "en": "Returns true for a date that cannot be picked, such as a holiday. After a range's first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위의 첫 번째 선택 뒤에는 그 날부터 보이는 달까지의 날에 대해서도, true를 돌려줄 때까지 불립니다. 함수, 첫 번째 선택, min, max가 바뀌기 전까지 같은 날에는 한 번만 불립니다."
     },
     "defaultMonth": {
       "en": "The month shown first when there is no value. Today's month when not set.",
@@ -2573,8 +2573,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜."
     },
     "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위에는 그런 날짜가 들어갈 수 없습니다."
+      "en": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one, so after the first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위에는 그런 날짜가 들어갈 수 없으므로, 첫 번째 선택 뒤에는 그 날부터 보이는 달까지의 날에 대해서도 true를 돌려줄 때까지 불립니다. 함수, 첫 번째 선택, min, max가 바뀌기 전까지 같은 날에는 한 번만 불립니다."
     },
     "firstDayOfWeek": {
       "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",

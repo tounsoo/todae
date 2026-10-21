@@ -686,6 +686,10 @@ describe('Calendar range mode', () => {
     fireEvent.click(october(14));
     expect(screen.getByTestId('value').textContent).toBe('2026-10-12/2026-10-14');
     expect(october(18).hasAttribute('aria-disabled')).toBe(false);
+    // A new first pick looks for its own limits.
+    fireEvent.click(october(18));
+    expect(october(14).getAttribute('aria-disabled')).toBe('true');
+    expect(october(16).hasAttribute('aria-disabled')).toBe(false);
   });
 
   it('reaches a far year from the first pick without isDateDisabled', { timeout: 15000 }, () => {
@@ -701,6 +705,22 @@ describe('Calendar range mode', () => {
     expect(far.hasAttribute('aria-disabled')).toBe(false);
     fireEvent.click(far);
     expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('9999-10-05') });
+  });
+
+  it('checks each day with isDateDisabled once as the grid moves away from the first pick', () => {
+    const isDateDisabled = vi.fn(() => false);
+    render(<RangeControlled isDateDisabled={isDateDisabled} />);
+    fireEvent.click(october(5));
+    for (let year = 0; year < 5; year++) fireEvent.keyDown(focusedDay(), { key: 'PageDown', shiftKey: true });
+    // A month further, and a render that moves nothing, check no more than that month's days
+    // for the range and once more to draw them.
+    isDateDisabled.mockClear();
+    fireEvent.keyDown(focusedDay(), { key: 'PageDown' });
+    expect(screen.getByText('November 2031')).toBeTruthy();
+    expect(isDateDisabled.mock.calls.length).toBeLessThanOrEqual(2 * 30);
+    isDateDisabled.mockClear();
+    fireEvent.pointerEnter(day('Monday, November 10, 2031'));
+    expect(isDateDisabled.mock.calls.length).toBeLessThanOrEqual(30);
   });
 
   it('stops a range at min and max', () => {
