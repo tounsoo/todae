@@ -12,14 +12,15 @@ import { DataTableInvoices } from '../../../../components/demos/DataTableDemo';
 
 ## 행
 
-행은 한곳에서 계산하세요. 먼저 거르고, 그다음 정렬하고, 마지막으로 페이지를 잘라 냅니다. 데이터가 서버에 있다면 검색어, 정렬, 페이지를 요청에 담아 보내고 돌아온 행을 렌더링하세요. 검색어나 정렬이 바뀌면 첫 페이지로 돌아가고, 행이 사라지면 페이지가 범위 안에 머물게 하세요.
+행은 한곳에서 계산하세요. 먼저 거르고, 그다음 정렬하고, 마지막으로 페이지를 잘라 냅니다. 데이터가 서버에 있다면 검색어, 정렬, 페이지를 요청에 담아 보내고 돌아온 행을 렌더링하세요. 이 페이지의 코드는 모든 행을 메모리에 두므로, 서버에서 페이지를 나눈다면 페이지 수와 삭제 뒤에 남는 행은 `matches`가 아니라 서버가 돌려준 전체 개수로 세세요. 검색어나 정렬이 바뀌면 첫 페이지로 돌아가고, 행이 사라지면 페이지가 범위 안에 머물게 하세요.
 
 ```ts
 const needle = query.trim().toLowerCase();
 const matches = rows
   .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
   .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
-const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
+const pageCount = pagesOf(matches.length);
 const current = Math.min(page, pageCount);
 const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 ```
@@ -38,7 +39,7 @@ const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted
 
 ## 여러 페이지에 걸친 선택
 
-`useSelection`에는 현재 페이지에 있는 행의 키를 넘기세요. 다른 페이지에서 선택한 키는 그대로 선택된 채로 남으므로, 헤더의 체크박스는 이 페이지만 선택하거나 해제하고, `selection.value`에는 선택한 키가 모두 들어 있습니다. 작업이 보이지 않는 행에도 닿는다는 것을 알 수 있도록 작업 옆에 그 개수를 보여 주세요. 검색어가 바뀌면 선택을 비워서, 검색에 가려진 행에 작업이 닿지 않게 하세요.
+`useSelection`에는 현재 페이지에 있는 행의 키를 넘기세요. 다른 페이지에서 선택한 키는 그대로 선택된 채로 남으므로, 헤더의 체크박스는 이 페이지만 선택하거나 해제하고, `selection.value`에는 선택한 키가 모두 들어 있습니다. 작업이 보이지 않는 행에도 닿는다는 것을 알 수 있도록 작업 옆에 그 개수를 보여 주세요. 검색어가 바뀔 때 선택을 비우면 검색에 가려진 행에 작업이 닿지 않습니다.
 
 ```tsx
 const selection = useSelection({ keys: pageRows.map((row) => row.id) });
@@ -72,7 +73,7 @@ const remove = () => {
   const ids = new Set(selection.value);
   if (ids.size === 0) return;
   const shown = matches.filter((row) => !ids.has(row.id)).length;
-  const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+  const pages = pagesOf(shown);
   const to = Math.min(current, pages);
   restoreFocus.current = shown > 0 ? selectAll.current : search.current;
   setRows(rows.filter((row) => !ids.has(row.id)));
@@ -132,11 +133,13 @@ const clearSearch = () => {
 <Table.Row>
   <Table.Cell colSpan={5}>
     <EmptyState.Root>
-      <EmptyState.Icon>
-        <SearchX />
-      </EmptyState.Icon>
+      {needle && (
+        <EmptyState.Icon>
+          <SearchX />
+        </EmptyState.Icon>
+      )}
       <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
-      <EmptyState.Description>{needle ? `Nothing matches “${query}”.` : 'There are no invoices left.'}</EmptyState.Description>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}</EmptyState.Description>
       {needle && (
         <EmptyState.Actions>
           <Button.Root variant="secondary" onClick={clearSearch}>
@@ -154,6 +157,8 @@ const clearSearch = () => {
 페이지는 `Pagination.Root`와 버튼으로 나누고, 페이지가 둘 이상일 때만 렌더링하세요. [Pagination](/pagination) 페이지에 적힌 대로 현재 페이지에는 `aria-current="page"`를, 갈 곳이 없는 단계에는 끝에서도 포커스를 지키는 `aria-disabled="true"`를 주세요. 버튼은 행을 제자리에서 바꾸므로 새 페이지를 알리세요. 표는 `axis="inline"`, `focusable`, `aria-label`을 준 `ScrollArea.Root`로 감싸세요. 그러면 화면보다 넓은 표가 옆으로 스크롤되고, 키보드 사용자도 스크롤할 수 있습니다.
 
 ```tsx
+import { paginationRange } from '@tounsoo/todae';
+
 const goTo = (to: number) => {
   if (to === current) return;
   setPage(to);

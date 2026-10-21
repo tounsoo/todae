@@ -586,12 +586,12 @@
   "recipes/data-table": {
     "(top)": "1657b8355efe",
     "# Data table": "1f645bbafc0a",
-    "## Rows": "7215ddb636e5",
+    "## Rows": "d765f311122a",
     "## Sorting": "16c6b547a2b7",
-    "## Selecting across pages": "1c01024f07ee",
-    "## Bulk actions": "db74bd4f7c44",
-    "## No results": "8604daeab027",
-    "## Pages and narrow screens": "aa20f936b361",
+    "## Selecting across pages": "f6ddc7fc3097",
+    "## Bulk actions": "4a3a51c6c357",
+    "## No results": "f81fd982803b",
+    "## Pages and narrow screens": "f4e03a2c2cef",
     "## Accessible composition": "1906b4f799d7",
     "## When to use": "d42ffa07d586",
     "(section order)": "6cc1bf0c30c5"

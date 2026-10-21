@@ -12,14 +12,15 @@ Search, sort by a column, page through, select rows on more than one page, then 
 
 ## Rows
 
-Work out the rows in one place: filter, then sort, then cut out the page. With data on a server, send the query, sort and page in a request and render the rows it returns. Go back to the first page when the search or sort changes, and keep the page in range when rows go away.
+Work out the rows in one place: filter, then sort, then cut out the page. With data on a server, send the query, sort and page in a request and render the rows it returns. The snippets on this page keep every row in memory; with paging on the server, count pages, and what a delete leaves, from the total the server returns rather than from `matches`. Go back to the first page when the search or sort changes, and keep the page in range when rows go away.
 
 ```ts
 const needle = query.trim().toLowerCase();
 const matches = rows
   .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
   .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
-const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
+const pageCount = pagesOf(matches.length);
 const current = Math.min(page, pageCount);
 const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 ```
@@ -38,7 +39,7 @@ const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted
 
 ## Selecting across pages
 
-Pass the keys of the rows on the current page to `useSelection`. Selected keys on other pages stay selected, so the header checkbox selects or clears only this page, and `selection.value` holds every selected key. Show that count beside the actions, so people know an action reaches rows they can't see. Clear the selection when the search changes, so an action never reaches a row the search hides.
+Pass the keys of the rows on the current page to `useSelection`. Selected keys on other pages stay selected, so the header checkbox selects or clears only this page, and `selection.value` holds every selected key. Show that count beside the actions, so people know an action reaches rows they can't see. Clearing the selection when the search changes keeps an action off rows the search hides.
 
 ```tsx
 const selection = useSelection({ keys: pageRows.map((row) => row.id) });
@@ -72,7 +73,7 @@ const remove = () => {
   const ids = new Set(selection.value);
   if (ids.size === 0) return;
   const shown = matches.filter((row) => !ids.has(row.id)).length;
-  const pages = Math.max(1, Math.ceil(shown / PAGE_SIZE));
+  const pages = pagesOf(shown);
   const to = Math.min(current, pages);
   restoreFocus.current = shown > 0 ? selectAll.current : search.current;
   setRows(rows.filter((row) => !ids.has(row.id)));
@@ -132,11 +133,13 @@ const clearSearch = () => {
 <Table.Row>
   <Table.Cell colSpan={5}>
     <EmptyState.Root>
-      <EmptyState.Icon>
-        <SearchX />
-      </EmptyState.Icon>
+      {needle && (
+        <EmptyState.Icon>
+          <SearchX />
+        </EmptyState.Icon>
+      )}
       <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
-      <EmptyState.Description>{needle ? `Nothing matches “${query}”.` : 'There are no invoices left.'}</EmptyState.Description>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}</EmptyState.Description>
       {needle && (
         <EmptyState.Actions>
           <Button.Root variant="secondary" onClick={clearSearch}>
@@ -154,6 +157,8 @@ const clearSearch = () => {
 Page with `Pagination.Root` and buttons, and render it only when there is more than one page. Mark the current page with `aria-current="page"` and a step with nowhere to go with `aria-disabled="true"`, which keeps its focus at an end, as the [Pagination](/pagination) page says. The buttons swap the rows in place, so announce the new page. Wrap the table in a `ScrollArea.Root` with `axis="inline"`, `focusable` and an `aria-label`, so a table wider than the screen scrolls sideways and keyboard users can scroll it too.
 
 ```tsx
+import { paginationRange } from '@tounsoo/todae';
+
 const goTo = (to: number) => {
   if (to === current) return;
   setPage(to);

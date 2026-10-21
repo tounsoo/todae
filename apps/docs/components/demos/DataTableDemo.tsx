@@ -236,9 +236,11 @@ export function DataTableInvoices() {
               <Table.Row>
                 <Table.Cell colSpan={5}>
                   <EmptyState.Root>
-                    <EmptyState.Icon>
-                      <SearchX />
-                    </EmptyState.Icon>
+                    {needle && (
+                      <EmptyState.Icon>
+                        <SearchX />
+                      </EmptyState.Icon>
+                    )}
                     <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
                     <EmptyState.Description>
                       {needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}
