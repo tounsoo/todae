@@ -1,0 +1,120 @@
+import { DataTableInvoices } from '../../../../components/demos/DataTableDemo';
+
+# Data table
+
+A recipe, not a package namespace. A data table is a [Table](/table) with sortable columns, a checkbox on each row from [useSelection](/utilities/use-selection), bulk actions in a [Toolbar](/toolbar), [Pagination](/pagination) and an [EmptyState](/empty-state) for no results. Which rows load, how they filter and sort, and what the actions do are your product's. There is no `DataTable.*` export.
+
+Search, sort by a column, select rows on more than one page, then mark them paid or delete them.
+
+<Example block>
+  <DataTableInvoices />
+</Example>
+
+## Rows
+
+Work out the rows in one place: filter, then sort, then cut out the page. With data on a server, send the query, sort and page in a request and render the rows it returns. Go back to the first page when the search or sort changes, and keep the page in range when rows go away.
+
+```ts
+const needle = query.trim().toLowerCase();
+const matches = rows
+  .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
+  .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
+const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+const current = Math.min(page, pageCount);
+const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+```
+
+## Sorting
+
+Keep one sorted column and its direction. Each sortable `Table.HeaderCell` takes `'ascending'` or `'descending'` when it is that column and `'none'` when it is not, and its `Table.SortButton` sets the column. The button announces the new order, as the [Table](/table) page says.
+
+```tsx
+const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted.direction : 'none');
+
+<Table.HeaderCell scope="col" sort={sortOf('customer')}>
+  <Table.SortButton onClick={() => sortBy('customer')}>Customer</Table.SortButton>
+</Table.HeaderCell>
+```
+
+## Selecting across pages
+
+Pass the keys of the rows on the current page to `useSelection`. Selected keys on other pages stay selected, so the header checkbox selects or clears only this page, and `selection.value` holds every selected key. Show that count beside the actions, so people know an action reaches rows they can't see. Clear the selection when the search changes, so an action never reaches a row the search hides.
+
+```tsx
+const selection = useSelection({ keys: pageRows.map((row) => row.id) });
+
+<Checkbox.Root ref={selectAll} {...selection.getSelectAllProps()}>
+  <VisuallyHidden.Root>Select all invoices on this page</VisuallyHidden.Root>
+</Checkbox.Root>
+```
+
+## Bulk actions
+
+Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). An action that ends the selection, such as Delete, disables the button that has focus, and the browser drops that focus, so move focus first: to the header checkbox, or to the search when no rows are left.
+
+```tsx
+const remove = () => {
+  const ids = new Set(selection.value);
+  const left = rows.filter((row) => !ids.has(row.id));
+  (left.length > 0 ? selectAll.current : search.current)?.focus();
+  setRows(left);
+  selection.clear();
+  announce(`${ids.size} deleted`);
+};
+
+<Toolbar.Root aria-label="Selected invoices">
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
+    Mark paid
+  </Button.Root>
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={remove}>
+    Delete
+  </Button.Root>
+</Toolbar.Root>
+```
+
+## No results
+
+When nothing matches, render one row whose cell spans every column and holds an `EmptyState.Root`, so the table keeps its caption and headers. The empty state has no role, so announce the number of matches once typing settles, as the [EmptyState](/empty-state) page does. "Clear search" moves focus back to the search before its own button goes away.
+
+```tsx
+<Table.Row>
+  <Table.Cell colSpan={5}>
+    <EmptyState.Root>
+      <EmptyState.Icon>
+        <SearchX />
+      </EmptyState.Icon>
+      <EmptyState.Title as="h3">No invoices found</EmptyState.Title>
+      <EmptyState.Description>Nothing matches “{query}”.</EmptyState.Description>
+      <EmptyState.Actions>
+        <Button.Root variant="secondary" onClick={clearSearch}>
+          Clear search
+        </Button.Root>
+      </EmptyState.Actions>
+    </EmptyState.Root>
+  </Table.Cell>
+</Table.Row>
+```
+
+## Pages and narrow screens
+
+Page with `Pagination.Root` and buttons, as on the [Pagination](/pagination) page, and render it only when there is more than one page. Wrap the table in a `ScrollArea.Root` with `axis="inline"`, `focusable` and an `aria-label`, so a table wider than the screen scrolls sideways and keyboard users can scroll it too.
+
+```tsx
+<ScrollArea.Root axis="inline" focusable aria-label="Invoices table">
+  <Table.Root>…</Table.Root>
+</ScrollArea.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** The native table, its caption and its row and column headers. `aria-sort` on the sorted column, and an announcement after a `Table.SortButton` click. Each row checkbox's checked state, the header checkbox's mixed state, and Shift ranges, through `useSelection`. One tab stop and arrow keys for the bulk actions in `Toolbar.Root`. The current page and the steps with nowhere to go in `Pagination.Root`. Sideways scrolling by keyboard in `ScrollArea.Root`.
+
+**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. Announcements for the number of matches and for what an action did. Focus moved before an action disables the button that has it, and before "Clear search" goes away.
+
+**Watch for:** Disabling a focused button by clearing the selection without moving focus first. A selection that reaches rows the person can't see, on another page or hidden by a search, without a count that says so. A destructive action with no way back: confirm it with a `Dialog.Root role="alertdialog"` or offer undo. A row made clickable with `onClick` on `Table.Row`, which takes no focus: put a link or button in a cell.
+
+## When to use
+
+**When:** Records people search, sort, page through and act on in bulk, such as invoices, orders or members.
+
+**When not:** A short table people only read → a plain [Table](/table). One record's fields → [DataList](/data-list). Cell editing, column resizing, virtual scrolling or arrow keys between cells → a data grid, which is out of scope for Todae.
