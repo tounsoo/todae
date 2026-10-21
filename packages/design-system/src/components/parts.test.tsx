@@ -204,6 +204,28 @@ const cases: Case[] = [
     ),
   ],
   [
+    'Field.NumberInput',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.NumberInput {...p} value={null} onValueChange={noop} />
+      </Field.Root>
+    ),
+  ],
+  ...(['Increment', 'Decrement'] as const).map(
+    (part): Case => [
+      `Field.${part}`,
+      (p) => {
+        const Part = Field[part];
+        return (
+          <Field.Root aria-label="t">
+            <Field.NumberInput value={1} onValueChange={noop} />
+            <Part {...p} />
+          </Field.Root>
+        );
+      },
+    ],
+  ),
+  [
     'Field.Textarea',
     (p) => (
       <Field.Root aria-label="t">

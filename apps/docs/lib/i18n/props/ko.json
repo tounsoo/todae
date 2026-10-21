@@ -969,8 +969,66 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.",
-      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 그 옆의 텍스트 입력은 parseTime, parseDate, parseDateTime으로 읽습니다."
+      "en": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.",
+      "ko": "네이티브 입력 type. 숫자는 Field.NumberInput을, 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 선택기 옆의 텍스트 입력은 parseTime, parseDate, parseDateTime으로 읽습니다."
+    }
+  },
+  "Field.NumberInput": {
+    "value": {
+      "en": "The number, or null for none. Never NaN.",
+      "ko": "숫자, 없으면 null. NaN은 쓰지 않습니다."
+    },
+    "onValueChange": {
+      "en": "Fires on a person's commit, on blur, Enter, a step key, a step button or a submit of the form, with a number within min and max and, where there is a step, on it, which wins over the digits the text shows; without one, rounded to them. Null for an empty text. Typing alone fires nothing. Without it the input is read-only.",
+      "ko": "사용자가 확정할 때(blur, Enter, 스텝 키, 스텝 버튼, 폼 제출) `min`과 `max` 안에 있고, `step`이 있으면 그에 맞는 숫자를 받아 호출됩니다. `step`은 텍스트가 보여 주는 자릿수보다 우선하며, `step`이 없으면 그 자릿수로 반올림된 숫자를 받습니다. 텍스트가 비어 있으면 null을 받습니다. 입력하는 동안에는 호출되지 않습니다. 이 콜백이 없으면 입력은 읽기 전용입니다."
+    },
+    "min": {
+      "en": "The lowest number. A commit below it becomes it, and a form with a lower value is invalid.",
+      "ko": "가장 낮은 숫자. 이보다 낮게 확정하면 이 값이 되고, 이보다 낮은 값이 있으면 폼이 유효하지 않습니다."
+    },
+    "max": {
+      "en": "The highest number. A commit above it becomes the highest number on the step that fits.",
+      "ko": "가장 높은 숫자. 이보다 높게 확정하면 step에 맞는 가장 높은 숫자가 됩니다."
+    },
+    "step": {
+      "en": "The grid a commit snaps to, counted from min, or from 0 without one (a value you set that is off it is shown as given, and Todae warns once in development), and what the arrow keys and step buttons move by. It wins over the digits the text shows, so give a step no finer than they are. Without it a commit keeps every digit the text shows, and a key moves by 1, or by 0.01 for a percent.",
+      "ko": "min부터(min이 없으면 0부터) 센, 확정한 값이 맞춰지는 간격이자(설정한 value가 이를 벗어나면 준 그대로 보이고 Todae가 개발 중에 한 번 경고합니다) 화살표 키와 스텝 버튼이 움직이는 크기. 텍스트가 보여 주는 자릿수보다 우선하므로 그보다 촘촘하지 않게 주세요. 없으면 확정한 값은 텍스트가 보여 주는 모든 자릿수를 유지하고, 키는 1씩, 퍼센트는 0.01씩 움직입니다."
+    },
+    "largeStep": {
+      "en": "What Page Up and Page Down move by, rounded to whole steps and at least one. Todae warns in development when it is not a multiple of step.",
+      "ko": "Page Up과 Page Down이 움직이는 크기. 최소 한 단계의 정수 단계로 반올림되며, step의 배수가 아니면 Todae가 개발 중에 경고합니다."
+    },
+    "locale": {
+      "en": "The locale for the number's text, such as \"de\". The browser's own when not set, so pass it when the input renders on a server.",
+      "ko": "숫자 텍스트의 로캘(예: \"de\"). 지정하지 않으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "formatOptions": {
+      "en": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits, which a commit rounds to. Compact and scientific notation can't be read back, and significant digits and rounding options are not supported. Put a unit or a currency sign in a Field.Affix instead when you can.",
+      "ko": "Intl.NumberFormat이 받는 숫자 표기 방식. percent나 currency 같은 style과 소수 자릿수이며, 확정은 이 자릿수로 반올림됩니다. compact 표기와 과학 표기는 다시 읽을 수 없고 유효 숫자(significant digits)와 반올림 옵션은 지원하지 않습니다. 가능하면 단위나 통화 기호는 Field.Affix에 넣으세요."
+    },
+    "required": {
+      "en": "A form with no number is invalid.",
+      "ko": "숫자가 없으면 폼이 유효하지 않습니다."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    },
+    "inputMode": {
+      "en": "Which keyboard a phone shows. The decimal keypad's separator is the device's, not locale's.",
+      "ko": "휴대전화가 보여 줄 키보드. 소수점 키패드의 구분 기호는 locale이 아니라 기기를 따릅니다."
+    }
+  },
+  "Field.Increment": {
+    "children": {
+      "en": "Content that replaces the plus sign. Text in it names the button.",
+      "ko": "더하기 기호를 대신할 내용. 텍스트가 있으면 버튼의 이름이 됩니다."
+    }
+  },
+  "Field.Decrement": {
+    "children": {
+      "en": "Content that replaces the minus sign. Text in it names the button.",
+      "ko": "빼기 기호를 대신할 내용. 텍스트가 있으면 버튼의 이름이 됩니다."
     }
   },
   "Field.TimePicker": {
@@ -2841,6 +2899,34 @@
     "options.locale": {
       "en": "The locale, such as ko. The runtime's own when not set.",
       "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "formatNumber": {
+    "value": {
+      "en": "The number to write.",
+      "ko": "쓸 숫자."
+    },
+    "options.locale": {
+      "en": "The locale, such as de. The runtime's own when not set.",
+      "ko": "de 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    },
+    "options.formatOptions": {
+      "en": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits.",
+      "ko": "Intl.NumberFormat이 받는 숫자 표기 방식. percent나 currency 같은 style과 소수 자릿수입니다."
+    }
+  },
+  "parseNumber": {
+    "text": {
+      "en": "The typed text.",
+      "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as de. The runtime's own when not set.",
+      "ko": "de 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    },
+    "options.formatOptions": {
+      "en": "How the number is written, as Intl.NumberFormat takes it. A percent style reads 13 as 0.13.",
+      "ko": "Intl.NumberFormat이 받는 숫자 표기 방식. percent style은 13을 0.13으로 읽습니다."
     }
   },
   "normalizeHex": {

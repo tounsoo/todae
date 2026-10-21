@@ -24,7 +24,7 @@ import {
 } from '../hooks/usePopover.js';
 
 export function createCountStore(): CountStore {
-  return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set(), stepper: null, steppers: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {

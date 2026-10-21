@@ -26,6 +26,8 @@ import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { createCountStore, pickerToggles } from './Field.shared.js';
 import { TextInput } from './Field.TextInput.js';
+import { NumberInput } from './Field.NumberInput.js';
+import { Decrement, Increment } from './Field.StepButton.js';
 import { Textarea } from './Field.Textarea.js';
 import { ChipInput } from './Field.ChipInput.js';
 import { Select } from './Field.Select.js';
@@ -243,6 +245,8 @@ function Root({
 }
 
 export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput.js';
+export type { FieldNumberInputProps } from './Field.NumberInput.js';
+export type { FieldDecrementProps, FieldIncrementProps } from './Field.StepButton.js';
 export type { FieldTextareaHighlight } from './TextareaHighlights.js';
 export type { FieldTextareaProps } from './Field.Textarea.js';
 export type { FieldChipInputProps } from './Field.ChipInput.js';
@@ -292,6 +296,7 @@ function Group({ className, ref, onChangeCapture, onFocus, onBlur, ...props }: F
 export const Field = {
   Root,
   TextInput,
+  NumberInput,
   Textarea,
   ChipInput,
   Select,
@@ -301,6 +306,8 @@ export const Field = {
   DateTimePicker,
   Icon,
   Affix,
+  Increment,
+  Decrement,
   Counter,
   Row,
   Group,

@@ -27,6 +27,8 @@ const KOREAN: Strings = {
   datePicker: '날짜 선택',
   dateTimePicker: '날짜와 시각 선택',
   timePicker: '시각 선택',
+  increment: (field) => (field ? `${field} 증가` : '증가'),
+  decrement: (field) => (field ? `${field} 감소` : '감소'),
   previousMonth: '이전 달',
   nextMonth: '다음 달',
   previousYears: '이전 연도',

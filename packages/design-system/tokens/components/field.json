@@ -1,6 +1,6 @@
 {
   "field": {
-    "$description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages.",
+    "$description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
@@ -97,6 +97,17 @@
       "control": {
         "size": { "$type": "dimension", "$value": { "value": 1.625, "unit": "rem" } }
       }
+    },
+    "stepper": {
+      "size": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "bg": {
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } }
+      },
+      "repeat-delay": { "$type": "duration", "$value": { "value": 400, "unit": "ms" } },
+      "repeat-interval": { "$type": "duration", "$value": { "value": 60, "unit": "ms" } }
     },
     "token": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },

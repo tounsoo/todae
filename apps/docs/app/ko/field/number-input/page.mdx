@@ -1,0 +1,162 @@
+import { FieldNumberPercent, FieldNumberPrice, FieldNumberStepper } from '../../../../components/demos/FieldDemo';
+
+# Field.NumberInput
+
+`Field.NumberInput`은 [Field](/field) 안에서 숫자를 받는 텍스트 입력입니다. `value`는 `number`나 `null`이며 `NaN`은 쓰지 않습니다. 숫자를 로캘 고유의 형식으로 보여 줍니다. 예: `en`에서는 `1,234.5`, `de`에서는 `1.234,5`. 입력은 자유롭게 할 수 있습니다. blur나 Enter가 일어나면 `parseNumber`로 텍스트를 읽고, 숫자를 `step`에 맞추고, `min`과 `max` 안으로 제한하고, 텍스트를 로캘이 쓰는 대로 다시 쓰고, `onValueChange`를 호출합니다. `onValueChange`가 없으면 입력은 읽기 전용입니다. 같은 필드 안의 `Field.Increment`와 `Field.Decrement`는 숫자를 한 단계씩 바꾸는 버튼입니다.
+
+```tsx
+const id = useId();
+const [quantity, setQuantity] = useState<number | null>(2);
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Quantity</Label.Root>
+  <Field.Root id={id} name="quantity">
+    <Field.Decrement />
+    <Field.NumberInput value={quantity} onValueChange={setQuantity} min={1} max={99} />
+    <Field.Increment />
+  </Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldNumberStepper />
+</Example>
+
+화면에 보이는 요소는 `role="spinbutton"`인 네이티브 `<input type="text">`이므로 브라우저의 텍스트 편집, 실행 취소, 선택, IME가 그대로 동작합니다. 네이티브 `<input type="number">`는 로캘 형식을 따르지 않고, 마우스 휠로 값이 바뀌고, 토큰이 닿지 않는 스피너를 그리고, `e` 같은 글자도 받습니다. 그래서 `Field.TextInput`에는 `type="number"`가 없습니다. 날짜가 선택기이듯 숫자는 `Field.NumberInput`입니다.
+
+## 입력과 확정
+
+입력은 텍스트만 바꿉니다. `onValueChange`는 사용자가 확정할 때, 곧 blur, Enter, 스텝 키, 스텝 버튼에서 호출됩니다. 그래서 상태에 들어오는 값은 `null`이거나 `min`과 `max` 안에 있고 `step`에 맞는 숫자이므로, 코드에서 따로 제한할 필요가 없습니다.
+
+- `step`이 있으면 확정한 값은 격자에서 가장 가까운 점으로 맞춰지는데, 기준은 `min`이고 `min`이 없으면 0입니다(절반인 값은 텍스트의 반올림처럼 0에서 멀어지는 쪽으로 갑니다). 그다음 범위로 제한되고, `step`과 `min`의 소수 자릿수로 반올림되므로 `0.1 + 0.2`는 `0.3`으로 확정됩니다. 격자가 텍스트가 보여 주는 자릿수보다 우선하므로 `step`, `min`, `max`는 텍스트보다 촘촘하지 않게 주세요. 퍼센트가 정수 퍼센트만 보여 주는데 `step`이 `0.005`이면 `0.075`로 확정되고 `8%`로 보이며, 개발 중에 경고합니다. `max`가 `step` 위에 있지 않으면 그보다 높은 숫자는 `step` 위에서 가장 높은 숫자가 되어, 폼이 `step`에 맞지 않는 숫자를 받는 일이 없습니다. `max`가 `min`보다 낮으면 `min`이 우선하며 개발 중에 경고합니다. `step`이 없으면 확정은 텍스트가 보여 주는 자릿수로 반올림되고, 자릿수 옵션도 없으면 입력한 자릿수를 모두 유지합니다. `min`이 없으면 Todae 자신의 확정과 스텝에서 격자는 0에서 시작합니다. 코드가 설정한 `value`가 격자에서 벗어나 있으면 준 그대로 보이고 개발 중에 한 번 경고합니다. `min`이 없을 때 브라우저는 격자를 `value` 속성에서부터 세므로 이를 잡아내지 못하고, 확정이나 스텝이 숫자를 격자 위로 옮깁니다. 이는 double이 격자의 점을 표현할 수 있는 동안만 성립합니다. 기준에서 약 1e15 스텝이 넘으면(`step` `0.1`에서 `1e14` 이상) 격자는 double만큼만 정확하고, 한 double과 다음 double의 간격이 한 스텝의 절반보다 큰 곳(`0.1` 격자에서 약 `2.8e14`부터)에서는 격자의 점 중 자신의 double이 없는 것이 있어, 스텝은 숫자 다음의 가장 가까운 double로 갑니다. 격자에서 한 스텝의 5분의 1 벗어난 값은 기준에서 약 3e14 스텝까지 벗어난 것으로 읽히고, 약 4e14 스텝을 넘으면 이 검사가 브라우저와 다를 수 있습니다. 인덱스가 2^53이 되면(`0.1` 격자에서 약 `9e14`) 스텝은 아무것도 하지 않고 스텝 버튼은 비활성화됩니다.
+- 빈 텍스트는 `null`로 확정됩니다.
+- 끝에 `-`만 있는 것, `en`의 `1,5`, `de`의 `1.5`처럼 숫자를 뜻하지 않는 텍스트는 입력하는 순간부터 제출을 막으며 입력한 그대로 남고, 확정해도 `onValueChange`는 호출되지 않습니다. 폼이 읽는 숫자 입력이 "Enter a valid value"로 유효하지 않게 되므로, Enter를 포함한 제출이 막힙니다(메시지가 언제 보일지는 [Form.Root](/form)가 정합니다). 텍스트 입력에 `aria-invalid`가 붙고 스텝 버튼이 비활성이 되는 것은 더 입력해도 숫자가 될 수 없을 때(`abc`)나 확정(blur, Enter, 스텝 키)이 읽으려다 실패했을 때뿐이므로, `-` 하나나 `de`의 `1.`처럼 묶음이 입력되다 만 텍스트는 숫자로 가는 도중에 오류로 알려지지 않습니다. 숫자를 입력하거나, 코드가 숫자를 설정하거나, 아무도 취소하지 않은 폼 리셋이 일어나면 풀립니다. 읽을 수 없는 텍스트가 있는 동안 스텝 키는 아무것도 하지 않아, 텍스트가 그대로 남고 계속 유효하지 않습니다. 필드가 읽기 전용이나 비활성이 되면 그 텍스트는 버려지므로, 편집할 수 없는 필드가 폼을 막는 일은 없습니다.
+- 로캘에서 숫자가 될 수 없는 타이핑한 글자는 거부되고 텍스트는 마지막 값을 유지합니다. 글자, 두 번째 소수점 구분 기호, `1e`가 그런 예입니다. 그 밖에는 걸러내지 않습니다. 지우기, 붙여넣기, IME 조합은 그대로 들어오므로 `5 kilometers`를 지워 나가거나 `$1,234.56`을 붙여넣을 수 있고, 숫자로 읽히지 않는 텍스트는 확정할 때 유효하지 않게 표시됩니다.
+- 코드가 설정한 숫자는 사용자가 입력하는 중이어도 텍스트를 바꿉니다. 단, 텍스트가 시작된 숫자와 같은 숫자이면 텍스트는 그대로 남습니다. 코드가 설정한 `min`과 `max` 밖의 숫자는 그대로 보이고, 편집 없는 blur로 확정되지 않습니다.
+
+`parseNumber`는 로캘의 구분 기호, 마이너스 기호, 숫자를 `Intl.NumberFormat`에서 알아냅니다. 그래서 `de`의 `1.234,5`, `fr`의 좁은 줄바꿈 없는 공백이 든 `1 234,5`, `ar-EG`의 `١٬٢٣٤٫٥`가 모두 1234.5로 읽히고, 전각 숫자는 ASCII로 바뀝니다. 묶음 구분 없이도 읽지만, 묶음 구분 기호는 로캘이 놓는 자리에서만 받습니다. 그래서 `de`의 `1.234`는 1234이고 `en`의 `1,5`는 숫자가 아닙니다. 마침표는 마침표로 묶지 않는 로캘, 예를 들어 `fr`에서는 소수점입니다.
+
+## 키
+
+키는 ARIA 스핀버튼 패턴을 따릅니다. 키를 누르면 먼저 텍스트를 읽고 그 값에서 한 단계를 움직이며, 스텝 버튼도 같은 텍스트로 판단합니다.
+
+- 위쪽 화살표와 아래쪽 화살표는 `step`만큼, `step`이 없으면 1만큼, 퍼센트는 텍스트에 보이는 1퍼센트인 0.01만큼 움직입니다.
+- Page Up과 Page Down은 `largeStep`만큼, 없으면 열 단계만큼 움직입니다. `step`이 있으면 `largeStep`은 최소 한 단계의 정수 단계로 반올림되므로, `step`이 5일 때 `largeStep` 12는 10만큼 움직이며, `step`의 배수가 아니면 개발 중에 경고합니다.
+
+Home과 End는 네이티브 number 입력처럼 캐럿을 움직입니다. 수정 키가 눌린 키와 IME 조합의 키는 브라우저에 맡깁니다. 위쪽과 아래쪽 화살표는 오른쪽에서 왼쪽으로 쓰는 페이지에서도 같은 뜻입니다. 마우스 휠로는 바뀌지 않습니다. 휠은 페이지를 스크롤하다가 숫자를 바꿔 버립니다. `step`이 없을 때 한 단계는 숫자를 넘어 텍스트가 보여 주는 다음 숫자로 가므로, 퍼센트의 `7.5`에서 올리면 `8%`이고, 자릿수 옵션이 없으면 합을 숫자와 단계의 소수 자릿수로 반올림하므로 `1.1`에서 1을 내리면 `0.1`입니다. `step`이 있으면 키는 숫자를 넘어 그 방향의 다음 격자 점으로 가므로, `step`이 5일 때 `13`에서 올리면 `15`, `7`에서 내리면 `5`이고, 1씩 움직일 때 `2.5`에서 올리면 `3`입니다. 숫자가 없을 때 증가는 `min`으로, `min`이 없으면 한 단계로 갑니다. 네이티브 입력의 `stepUp`과 `stepDown`처럼, `min`과 `max` 밖의 숫자에서 범위 쪽으로 가는 한 단계는 경계에 닿고 반대쪽으로 가는 한 단계는 아무것도 하지 않습니다. `max`가 100일 때 `150`은 아래쪽 화살표로 `100`이 되고, 위쪽 화살표는 그대로 둡니다.
+
+## 스텝 버튼
+
+`Field.Increment`와 `Field.Decrement`는 직접 놓는 버튼입니다. 입력의 양쪽 어느 쪽이든, `Affix` 안에 쌓아서든 놓을 수 있어서 `stepper` prop이 없습니다. 이 버튼들은 필드를 통해 숫자 입력을 찾습니다. 탭 정지점이 아니며, 누르면 포커스가 있던 곳에 그대로 있으므로 누른다고 일찍 확정되지 않고 휴대전화의 키보드도 내려가 있습니다. 누르고 있으면 지연 시간 뒤에 다시 한 단계씩, 일정한 간격으로 움직이며, 이 값은 `field.stepper.repeat-delay`와 `field.stepper.repeat-interval` 토큰에서 옵니다. 버튼은 텍스트가 말하는 숫자(확정한 값이든 입력 중인 값이든)에서 한 단계가 아무것도 하지 못하는 곳, 곧 `min`이나 `max`에서(경계가 `step` 위에 있지 않으면 `step` 위에서 가장 높거나 낮은 숫자에서) 그 경계 쪽으로 가는 단계, 그리고 범위 밖의 숫자에서 범위 반대쪽으로 가는 단계에서 비활성이 됩니다. 텍스트가 더 입력해도 숫자가 될 수 없거나 필드가 비활성이거나 입력이 읽기 전용일 때도 비활성입니다. 키보드로는 키가 단계를 움직입니다. 이 버튼들에는 필드마다 숫자 입력 하나가 있으며, 같은 `Field.Root`에 두 번째 입력을 두면 개발 중에 경고합니다.
+
+각 버튼은 [StringsProvider](/utilities/strings-provider)의 `increment`나 `decrement` 문자열이 필드의 레이블을 받아 만든 이름을 가져(예: "Increase Quantity") 숫자 필드가 여럿이어도 구별되고 언어마다 레이블을 알맞은 자리에 둘 수 있으며, [GlyphsProvider](/utilities/glyphs-provider)의 `plus`나 `minus` 글리프를 그립니다. 내용을 주면 글리프를 대신하고, 내용의 텍스트나 직접 준 `aria-label`이 버튼의 이름이 됩니다.
+
+## 형식
+
+`formatOptions`는 `Intl.NumberFormat`이 받는 값을 받으므로 퍼센트, 통화, 단위는 style 하나면 됩니다. `locale`은 로캘을 고르고, 없으면 브라우저의 로캘을 씁니다. 서버에서 렌더링할 때는 `locale`을 넘기세요. 가능하면 단위나 통화 기호는 [`Field.Affix`](/field)에 넣으세요. 사용자가 편집하는 텍스트에서 벗어나 있게 됩니다.
+
+```tsx
+<Field.Root id={id} name="price">
+  <Field.Affix>₩</Field.Affix>
+  <Field.NumberInput
+    value={price}
+    onValueChange={setPrice}
+    min={0}
+    step={100}
+    locale="ko"
+    formatOptions={{ maximumFractionDigits: 0 }}
+  />
+</Field.Root>
+```
+
+<Example block>
+  <FieldNumberPrice />
+</Example>
+
+percent style은 숫자를 비율로 받습니다. 0.125는 `12.5%`로 보이고, `13`을 입력하면 0.13으로 확정됩니다.
+
+```tsx
+<Field.NumberInput
+  value={rate}
+  onValueChange={setRate}
+  min={0}
+  max={1}
+  step={0.005}
+  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
+/>
+```
+
+<Example block>
+  <FieldNumberPercent />
+</Example>
+
+`formatNumber(value, { locale, formatOptions })`는 입력과 같은 방식으로 숫자를 쓰고, `parseNumber(text, { locale, formatOptions })`는 텍스트를 숫자로 읽거나, 숫자가 아니면 `null`을 돌려줍니다. 입력 밖에서 같은 숫자를 보여 주거나 읽을 때 쓰세요.
+
+```tsx
+formatNumber(0.125, { locale: 'de', formatOptions: { style: 'percent', maximumFractionDigits: 1 } }); // "12,5 %"
+parseNumber('12,5 %', { locale: 'de', formatOptions: { style: 'percent' } }); // 0.125
+```
+
+자릿수 옵션이 없으면 일반 숫자는 가진 자릿수를 모두 보여 줍니다. `Intl.NumberFormat`만 쓰면 세 자리에서 멈추므로, 이렇게 하면 텍스트와 숫자가 일치합니다. style이나 자릿수 옵션이 있고 `step`이 없으면 확정은 텍스트가 보여 주는 자릿수로 반올림되어, 텍스트, `aria-valuenow`, 폼이 읽는 숫자, `onValueChange`가 일치합니다. USD에서 `19.999`는 `20`으로, 퍼센트에서 `7.5`는 `8%`로 보이는 `0.08`로 확정됩니다. `parseNumber`는 `formatOptions`가 쓰는 퍼센트 기호, 통화 기호, 단위를 읽고, 없어도 읽습니다. compact 표기와 과학 표기는 읽지 않으므로 `formatOptions`에서 `notation`과 `compactDisplay`는 빠져 있습니다. 확정은 유효 숫자(significant digits)와 반올림 옵션도 따르지 않으므로 `maximumSignificantDigits`, `minimumSignificantDigits`, `roundingMode`, `roundingIncrement`, `roundingPriority`도 빠져 있습니다. TypeScript는 이 옵션들을 모두 거부하고, 일반 JavaScript에서 넘기면 개발 중에 경고합니다. 소수 자릿수 옵션을 쓰세요. 통화는 기호가 사용자가 편집하는 텍스트의 일부가 되므로, `Affix`를 선호하는 또 하나의 이유입니다.
+
+입력은 격자가 정수일 때, 곧 `step`과 `min`이 정수이고 `min`이 0 이상이며 형식이 소수 자릿수를 보여 주지 않으면(기본 형식도 해당합니다) 휴대전화에 숫자 키패드를, 그 밖에 `min`이 0 이상이면 소수점 키패드를(그래서 USD와 퍼센트는 이쪽입니다), 그 외에는 전체 키보드를 요청합니다. iOS의 숫자 키패드에는 마이너스 기호가 없고 숫자 키패드에는 구분 기호가 없기 때문입니다. 소수점 키패드의 구분 기호는 `locale`이 아니라 기기를 따릅니다. `inputMode`로 바꿀 수 있습니다.
+
+## 폼에서
+
+숫자는 선택기처럼 입력이 텍스트 입력 옆에 렌더링하는 네이티브 `<input type="number">`에 담깁니다. 이 입력은 화면과 보조 기술에서 숨겨지고 탭 정지점이 아니며, 폼이 필드의 `name`으로 보내는 값입니다. 그래서 폼은 어느 로캘에서든 `1234.5`를 받고, 숫자가 없으면 빈 문자열을 받습니다. 텍스트 입력은 아무것도 보내지 않습니다. `step`이 이 입력에 전달되고, `step`이 없으면 `any`이므로 `step`을 정하지 않으면 폼은 `0.5`도 받습니다. 브라우저는 이 `step`을 `min`에서부터 세고, `min`이 없으면 `value` 속성에서부터 세므로, `min`이 없을 때 코드가 설정한 `value`가 0에서 센 격자를 벗어나 있어도 검사를 통과합니다. Todae 자신의 확정은 격자 위에 있고, 그런 `value`는 개발 중에 경고합니다.
+
+`required`는 숫자가 없는 폼을 유효하지 않게 하고, `min`과 `max`는 더 낮거나 높은 숫자가 있는 폼을 유효하지 않게 합니다. 확정은 값을 범위 안으로 제한하므로, 이는 코드가 범위 밖의 숫자를 설정했을 때 일어납니다. 숫자로 읽히지 않는 텍스트도 "Enter a valid value"로 폼을 유효하지 않게 합니다. 이 모두를 브라우저가 검사합니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고, `min`과 `max`는 필드의 형식으로 쓰입니다. 예를 들어 `ko`의 통화라면 "Enter ₩1,000 or more"처럼 읽히고, 포커스는 텍스트 입력으로 갑니다. 확정은 편집으로 치므로 필드의 `name` 아래 있는 서버 오류를 숨깁니다. 입력만으로는 숨기지 않습니다.
+
+Enter는 먼저 확정하고, 그다음 브라우저가 폼을 제출합니다. 폼이 숫자를 읽기 전에 확정한 값이 상태에 들어옵니다. 값을 가진 다른 컨트롤과 마찬가지로, Enter는 브라우저의 암시적 제출 규칙에 따라 제출 버튼이 있는 폼만 제출합니다. 제출 버튼을 누르면 입력이 먼저 blur되므로 이때도 확정됩니다. `requestSubmit()`처럼 blur 없이 제출하면 확정을 기다립니다. 브라우저의 제출을 붙잡아 두고, 읽을 수 있는 텍스트는 blur처럼 확정하며, 확정이 렌더링된 뒤에 폼을 다시 제출합니다. 그래서 폼은 상태가 받아들인 값을 읽고, `onValueChange`는 한 번만, 보내는 숫자로 호출됩니다. 거부한 숫자는 보내지지 않고, 폼은 입력이 그때 보여 주는 값을 보냅니다. 제출이 이벤트 핸들러에서 시작하든, effect에서 시작하든, 직접 만든 `onValueChange`에서 시작하든 같고, 입력한 텍스트뿐 아니라 키나 스텝 버튼으로 한 스텝 뒤에도 같습니다. 확정이 필드를 페이지에서 없애도 폼은 제출됩니다. Activity나 Suspense 경계가 그 사이에 필드를 숨기면, 폼은 페이지에 확정이 보일 때(Suspense 경계는 해결될 때) 제출되고, 그 전에 필드가 제거되어도 제출됩니다. 붙잡아 둔 동안 같은 폼의 다른 제출은 필드가 보이든 숨겨졌든 붙잡아 둔 제출에 합쳐지므로, 폼은 확정한 숫자를 한 번만 보냅니다. 확정의 렌더링이 보류 중일 때도 같습니다. 예를 들어 Suspense 경계가 아직 해결되지 않았다면 폼의 모든 제출은 그 렌더링을 기다리고, 폼은 페이지에 확정이 보일 때 한 번 제출됩니다. 붙잡아 둔 제출은 React의 레이아웃 커밋 뒤에 나가므로 `onSubmit`은 전체 커밋의 DOM, ref, 레이아웃 effect를 볼 수 있지만 passive effect(`useEffect`)는 볼 수 없습니다. 누르고 있는 스텝 버튼의 반복처럼 개별 이벤트 밖의 커밋에서는 passive effect가 나중에 실행되기 때문입니다. 숫자로 읽을 수 없는 텍스트는 확정하지 않고 오류로 표시하며, 폼의 자체 검사가 제출을 막습니다. 검사는 브라우저의 것이든 `Form.Root`의 것이든 같습니다. 실행될 검사가 없을 때, 곧 `Form.Root`가 아닌 일반 `noValidate` 폼이거나 제출 버튼에 `formNoValidate`가 있을 때(`Form.Root`에서도 마찬가지입니다)는 제출을 대신 취소하므로 이전 숫자는 보내지지 않으며, 포커스가 텍스트 입력으로 이동해 어느 필드가 잘못되었는지 들을 수 있습니다. 네이티브로 검사하는 폼에서는 다시 제출할 때 브라우저가 확정한 숫자를 검사하므로, 비운 `required` 텍스트는 보내지지 않고 브라우저의 메시지를 보여 줍니다. 이 네이티브 검사는 첫 `submit`이 일어나기 전에도 실행되므로, 마지막으로 확정한 숫자가 유효하지 않으면(`required`인데 비어 있거나 범위 밖이면) 텍스트에 포커스가 있는 채로 부른 `requestSubmit()`은 그 숫자로 막힙니다. 프로그램에서 제출하기 전에 먼저 확정하세요. 필드를 blur하거나 Enter를 누르면 됩니다. Enter와 제출 버튼 누르기는 먼저 확정합니다. 폼은 확정에 답하는 렌더링 뒤에 다시 제출되므로, `onValueChange`에서 값을 동기적으로 설정하세요. transition이나 나중에 갱신되는 스토어로 설정한 값은 그 렌더링 뒤에 오므로, 폼은 붙잡아 둔 숫자를 보냅니다. 코드에서 `checkValidity()`나 `reportValidity()`로 폼을 검사해도 확정하거나 텍스트를 바꾸지 않습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 텍스트 입력은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를, Root나 둘러싼 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `role="spinbutton"`이고, 숫자가 있으면 `aria-valuenow`를(텍스트가 읽히는 동안에는 텍스트가 말하는 숫자), 설정했으면 `aria-valuemin`과 `aria-valuemax`를(확정이 줄 수 있는 가장 낮은 숫자와 가장 높은 숫자이며, `max`가 `step` 격자 위에 있지 않으면 격자 위에서 가장 높은 숫자), 화면에 있는 텍스트를 담은 `aria-valuetext`를 가지는데, 평소에는 로캘이 쓰는 텍스트(예: `₩12,000`)이고 입력하는 동안에는 입력한 텍스트 그대로입니다. `required`는 `aria-required`를 설정하고, 숫자로 읽히지 않고 더 입력해도 숫자가 될 수 없거나 확정이 읽지 못한 텍스트는 `aria-invalid`를 설정합니다. 스텝 버튼은 `increment`와 `decrement` 문자열에 필드의 레이블이 붙은 이름을 가지고, 탭 정지점이 아니며, 입력에서 `aria-controls`를 받습니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root의 `id`인 [Label](/label)이나 Root의 `aria-label` / `aria-labelledby`로 줍니다. 페이지의 로캘과 맞는 `locale`. 숫자에 단위가 있으면 `Affix`나 레이블에 쓰는 단위.
+
+**주의할 점:** `onValueChange`는 입력하는 동안 호출되지 않으므로, 키 입력마다 따라가는 실시간 합계에는 확정 시점이나 직접 만든 텍스트 입력이 필요합니다. `step`은 모든 확정을 맞춥니다. `step`이 5이면 `7`을 입력해도 `5`가 됩니다. 서버 렌더링은 `locale`을 넘기지 않으면 서버 자신의 로캘로 숫자를 쓰므로, 일치하지 않으면 hydration 경고가 날 수 있습니다.
+
+## 언제 쓰나요
+
+### Field.NumberInput
+
+**언제:** 사용자가 입력하거나 단계로 바꾸는 숫자. 수량, 가격, 백분율, 개수 같은 값입니다.
+
+**쓰지 않을 때:** 드래그로 범위에서 고르는 숫자 → [Slider](/slider). 이름 붙은 몇 가지 선택지 → [Radio](/radio)나 [Field.Select](/field/select). 우편번호처럼 숫자로 이뤄진 코드나 ID → [Field.TextInput](/field/text-input). 앞자리 0과 형식은 숫자의 것이 아니기 때문입니다.
+
+### Field.Increment
+
+**언제:** 같은 필드에 있는 `Field.NumberInput`의 숫자를 한 단계 올리는 버튼.
+
+**쓰지 않을 때:** 다른 것을 올리는 컨트롤 → [Button](/button).
+
+### Field.Decrement
+
+**언제:** 같은 필드에 있는 `Field.NumberInput`의 숫자를 한 단계 내리는 버튼.
+
+**쓰지 않을 때:** 다른 것을 내리는 컨트롤 → [Button](/button).
+
+### formatNumber
+
+**언제:** 숫자 입력 옆의 표 셀처럼, 숫자를 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** `formatOptions`로 쓸 수 없는 스타일의 숫자, 예를 들어 compact 표기 → `Intl.NumberFormat`.
+
+### parseNumber
+
+**언제:** 입력이 쓰는 로캘과 형식으로 사용자가 입력한 숫자를 읽을 때.
+
+**쓰지 않을 때:** `1234.5`처럼 형식이 고정된 텍스트 → `Number`.
+
+## Props
+
+<PropsTable name="Field.NumberInput" />
+
+<PropsTable name="Field.Increment" />
+
+<PropsTable name="Field.Decrement" />
+
+<PropsTable name="formatNumber" />
+
+<PropsTable name="parseNumber" />
