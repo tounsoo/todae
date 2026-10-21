@@ -88,7 +88,6 @@ type CalendarContextValue = {
   /** While an anchor is set, whether a range from it to the date would hold only days that can be picked. */
   reachable: (date: Temporal.PlainDate) => boolean;
   setHovered: (date: Temporal.PlainDate | null) => void;
-  clearAnchor: () => void;
   /**
    * The date that holds the grid's Tab stop. Its month is the month shown.
    * Null in a server render and hydration with no value or defaultMonth.
@@ -233,6 +232,7 @@ function Root(rootProps: CalendarRootProps) {
     disabled: disabledProp,
     className,
     children,
+    onKeyDown,
     ...props
   } = rootProps;
   const { disabled } = useFieldsetState({ disabled: disabledProp });
@@ -384,7 +384,6 @@ function Root(rootProps: CalendarRootProps) {
     },
     [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable],
   );
-  const clearAnchor = useCallback(() => setAnchor(null), []);
   const shown = useMemo(() => {
     if (!anchor) return value;
     const end = hovered ?? focused;
@@ -399,7 +398,6 @@ function Root(rootProps: CalendarRootProps) {
       shown,
       reachable,
       setHovered,
-      clearAnchor,
       focused,
       today,
       locale,
@@ -426,7 +424,6 @@ function Root(rootProps: CalendarRootProps) {
       anchor,
       shown,
       reachable,
-      clearAnchor,
       focused,
       today,
       locale,
@@ -452,6 +449,14 @@ function Root(rootProps: CalendarRootProps) {
         role="group"
         data-disabled={disabled ? '' : undefined}
         className={cx(styles.root, className)}
+        onKeyDown={composeHandlers(onKeyDown, (event) => {
+          if (event.key !== 'Escape' || !anchor) return;
+          // Only the range in progress goes. Stopping the key here keeps it from the
+          // document, where a popover around the calendar listens for Escape to close.
+          event.preventDefault();
+          event.stopPropagation();
+          setAnchor(null);
+        })}
       >
         {children}
       </div>
@@ -624,14 +629,6 @@ function DayGrid({ className, onKeyDown, onPointerLeave, ref: refProp, ...props 
   const onDayKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
     const day = event.target instanceof HTMLElement ? event.target.closest('[data-todae-calendar-cell]') : null;
     if (!day || !focused || event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === 'Escape') {
-      if (!cal.anchor) return;
-      // Only the range in progress goes: a popover around the calendar stays open.
-      event.preventDefault();
-      event.stopPropagation();
-      cal.clearAnchor();
-      return;
-    }
     const rtl = getComputedStyle(day).direction === 'rtl';
     let next: Temporal.PlainDate;
     switch (event.key) {

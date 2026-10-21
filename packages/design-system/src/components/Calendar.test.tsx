@@ -658,6 +658,24 @@ describe('Calendar range mode', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-20/2026-10-22');
   });
 
+  it('drops the first pick on Escape from anywhere in the calendar', () => {
+    const outside = vi.fn();
+    document.addEventListener('keydown', outside);
+    render(<RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />);
+    fireEvent.click(october(5));
+    const next = screen.getByRole('button', { name: 'Next month' });
+    fireEvent.keyDown(next, { key: 'Escape' });
+    expect(outside).not.toHaveBeenCalled();
+    expect(selectedCells()).toEqual(['20', '21', '22']);
+    fireEvent.click(october(6));
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    fireEvent.keyDown(focusedDay(), { key: 'Escape' });
+    expect(outside).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { expanded: true }));
+    expect(selectedCells()).toEqual(['20', '21', '22']);
+    document.removeEventListener('keydown', outside);
+  });
+
   it('follows a range set from outside to its start, dropping a first pick', () => {
     function Outside() {
       const [value, setValue] = useState<DateRange | null>(null);
