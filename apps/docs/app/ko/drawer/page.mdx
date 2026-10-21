@@ -2,7 +2,7 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 # Drawer
 
-시작이나 끝 가장자리에 고정된, 높이를 가득 채우는 모달 네이티브 `<dialog>`입니다. `Drawer.Root`는 `Dialog.Root`와 같은 props에 `side`를 더해 받고, 안쪽은 Drawer의 자체 파트로 만듭니다: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer`, `Drawer.Close`.
+시작이나 끝 가장자리에 고정된, 높이를 가득 채우는 모달 네이티브 `<dialog>`입니다. `Drawer.Root`는 `role`을 뺀 `Dialog.Root`와 같은 props에 `side`를 더해 받고, 안쪽은 Drawer의 자체 파트로 만듭니다: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer`, `Drawer.Close`.
 
 `Drawer.Header`는 자식을 한 줄로 놓습니다. 헤더 바로 안에 둔 `Drawer.Close`는 그 뒤의 요소와 함께 끝에 놓이고, 그 앞의 제목 같은 내용은 시작 쪽에 머뭅니다. `Drawer.Body`는 헤더와 푸터가 남긴 높이를 채우고 스스로 스크롤하므로, 헤더는 위에, 푸터는 아래에 머뭅니다.
 

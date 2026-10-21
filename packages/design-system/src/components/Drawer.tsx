@@ -17,7 +17,7 @@ export type DrawerSide = 'start' | 'end';
 
 /**
  * A modal dialog pinned to the start or end edge, full height. It takes
- * `Dialog.Root`'s props, and its inside is built from Drawer's own parts.
+ * `Dialog.Root`'s props but `role`, and its inside is built from Drawer's own parts.
  */
 export type DrawerRootProps = Omit<DialogRootProps, 'role'> & {
   /** The inline edge it is pinned to. Start and end follow text direction. */

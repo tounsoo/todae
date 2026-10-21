@@ -119,7 +119,8 @@ export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ..
       aria-label={label}
       {...props}
       ref={refs}
-      // Marks it for the header rule, which puts it at the end of the row.
+      // Marks it for the header rule, which puts it at the end of the row, and
+      // for an alert dialog's initial focus, which takes it as the safe choice.
       data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
@@ -171,13 +172,7 @@ export function DialogShellRoot({
     onOpenChange,
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
-  const [describedBy, setDescribedByState] = useState<string | undefined>();
-  // Read by the description check, which runs before the state update renders.
-  const describedByNow = useRef<string | undefined>(undefined);
-  const setDescribedBy = useCallback((id: string | undefined) => {
-    describedByNow.current = id;
-    setDescribedByState(id);
-  }, []);
+  const [describedBy, setDescribedBy] = useState<string | undefined>();
   const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
@@ -206,12 +201,16 @@ export function DialogShellRoot({
 
   const alertShown = role === 'alertdialog' && present && open;
   const describedByProp = props['aria-describedby'];
+  const described = Boolean(describedByProp ?? describedBy);
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || !alertShown) return;
-    if (!describedByProp && !describedByNow.current) {
-      console.error('Dialog.Root role="alertdialog" requires Dialog.Description or aria-describedby');
-    }
-  }, [alertShown, describedByProp]);
+    if (process.env.NODE_ENV === 'production' || !alertShown || described) return;
+    // A Description registers in a layout effect whose update renders after
+    // this effect, and that render clears the timer.
+    const timer = setTimeout(() =>
+      console.error('Dialog.Root role="alertdialog" requires Dialog.Description or aria-describedby'),
+    );
+    return () => clearTimeout(timer);
+  }, [alertShown, described]);
 
   return (
     <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>

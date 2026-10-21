@@ -7,21 +7,17 @@ import { DialogAlert, DialogBasic, DialogThemed } from '../../../components/demo
 열릴 때는 200ms 동안 opacity가 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
 
 ```tsx
-const keepRef = useRef<HTMLButtonElement>(null);
-
 <Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
-<Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
+<Dialog.Root open={open} onOpenChange={setOpen}>
   <Dialog.Header>
-    <Dialog.Title>Discard draft?</Dialog.Title>
+    <Dialog.Title>Invite teammates</Dialog.Title>
     <Dialog.Close />
   </Dialog.Header>
-  <Dialog.Description>This cannot be undone.</Dialog.Description>
+  <Dialog.Description>They get an email with a link to this project.</Dialog.Description>
   <Dialog.Body>…</Dialog.Body>
   <Dialog.Footer>
-    <Button.Root ref={keepRef} variant="secondary" onClick={() => setOpen(false)}>
-      Keep
-    </Button.Root>
-    <Button.Root onClick={discard}>Discard</Button.Root>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={sendInvites}>Send invites</Button.Root>
   </Dialog.Footer>
 </Dialog.Root>
 ```
@@ -42,7 +38,7 @@ iOS에서는 열린 오버레이 뒤의 페이지가 여전히 고무줄처럼 �
 
 ## Alert dialog
 
-`role="alertdialog"`는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화 상자를 나타냅니다. 배경을 클릭해도 닫히지 않고, Escape는 Cancel처럼 여전히 닫습니다. 열리면 첫 번째 닫기 파트로 포커스가 가므로, Cancel이라고 적힌 `Dialog.Close`가 `initialFocusRef` 없이도 포커스를 받습니다. 메시지가 필요합니다. `Dialog.Description`을 렌더하거나 `aria-describedby`를 전달하세요. 그렇지 않으면 개발 환경에서 오류를 기록합니다. 헤더의 닫기 버튼은 빼세요. 빠져나가는 길은 Cancel입니다.
+`role="alertdialog"`는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화 상자를 나타냅니다. 배경을 클릭해도 닫히지 않고, Escape로는 여전히 닫힙니다. 열리면 첫 번째 닫기 파트로 포커스가 가므로, Cancel이라고 적힌 `Dialog.Close`가 `initialFocusRef` 없이도 포커스를 받습니다. 메시지가 필요합니다. `Dialog.Description`을 렌더하거나 `aria-describedby`를 전달하세요. 그렇지 않으면 개발 환경에서 오류를 기록합니다. 헤더의 닫기 버튼은 빼세요. 빠져나가는 길은 Cancel입니다.
 
 ```tsx
 const restoreRef = useRef<HTMLButtonElement>(null);
@@ -112,7 +108,7 @@ export function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) 
 }
 ```
 
-**주의할 점:** `Dialog.Title` 대신 자체 제목을 렌더링하는 래퍼는 `aria-labelledby`를 넘기지 않으면 대화 상자에 이름이 없습니다. 나머지 props를 버리는 래퍼는 `aria-*`, `ref`, 포커스 ref를 잃습니다. `Dialog.Title`은 항상 `h2`를 렌더링하므로, 대화 상자 안의 제목은 `h3`부터 시작하세요. 닫힌 팝오버나 탭 패널 같은 숨겨진 컨테이너 안에 대화 상자를 렌더링하지 마세요. 페이지는 inert가 되는데 아무것도 보이지 않습니다.
+**주의할 점:** `Dialog.Title` 대신 자체 제목을 렌더링하는 래퍼는 `aria-labelledby`를 넘기지 않으면 대화 상자에 이름이 없습니다. 나머지 props를 버리는 래퍼는 `aria-*`, `ref`, 포커스 ref를 잃습니다. `Dialog.Title`은 항상 `h2`를 렌더링하므로, 대화 상자 안의 제목은 `h3`부터 시작하세요. 닫힌 팝오버나 탭 패널 같은 숨겨진 컨테이너 안에 대화 상자를 렌더링하지 마세요. 페이지는 inert가 되는데 아무것도 보이지 않습니다. alert dialog에서는 모든 `Dialog.Close`가 안전한 선택으로 여겨지므로, 파괴적인 작업은 일반 `Button.Root`로 두세요. Cancel이 비활성화되면 포커스는 첫 번째 탭 가능한 요소로 가므로, 그때는 `initialFocusRef`를 넘기세요.
 
 ## 언제 쓰나요
 

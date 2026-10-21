@@ -180,10 +180,10 @@
   },
   "dialog": {
     "(top)": "adcb7e731c7a",
-    "# Dialog": "57df88f350ec",
-    "## Alert dialog": "00845720f074",
+    "# Dialog": "69669127884e",
+    "## Alert dialog": "fcf3468d12fe",
     "## Icons": "53e5ccf42b18",
-    "## Accessible composition": "c56a7199ec04",
+    "## Accessible composition": "dc6752e3f750",
     "## When to use": "7a8f3c9d3228",
     "## Props": "81014f51f216",
     "(section order)": "a1fc27e75e4a"
@@ -200,7 +200,7 @@
   },
   "drawer": {
     "(top)": "6eefecb2497a",
-    "# Drawer": "0517cf95421b",
+    "# Drawer": "cc98cd373316",
     "## Accessible composition": "fbb5e5f7a61f",
     "## When to use": "63f4ee717695",
     "## Props": "0d9ea25d5717",

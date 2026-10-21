@@ -383,7 +383,6 @@ describe('Dialog uncontrolled and close vetoes', () => {
   });
 });
 
-
 describe('Dialog role="alertdialog"', () => {
   function Confirm(props: Partial<DialogRootProps>) {
     return (
@@ -449,29 +448,47 @@ describe('Dialog role="alertdialog"', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
   });
 
-  it('logs an error in development when it has no description', () => {
+  it('focuses the close part when opened after mount', async () => {
+    const { rerender } = render(<Confirm open={false} />);
+    rerender(<Confirm open />);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel', hidden: true })),
+    );
+  });
+
+  it('logs one error in development when it has no description', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
-      <Dialog.Root open onOpenChange={() => undefined} role="alertdialog">
-        <Dialog.Title>Delete file?</Dialog.Title>
-        <Dialog.Close>Cancel</Dialog.Close>
-      </Dialog.Root>,
+      <StrictMode>
+        <Dialog.Root open onOpenChange={() => undefined} role="alertdialog">
+          <Dialog.Title>Delete file?</Dialog.Title>
+          <Dialog.Close>Cancel</Dialog.Close>
+        </Dialog.Root>
+      </StrictMode>,
     );
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('role="alertdialog" requires'));
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('role="alertdialog" requires')));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();
   });
 
-  it('logs nothing with Dialog.Description or aria-describedby', () => {
+  it.each([
+    ['Dialog.Description', () => <Confirm />],
+    [
+      'aria-describedby',
+      () => (
+        <>
+          <p id="message">Gone for good.</p>
+          <Dialog.Root defaultOpen role="alertdialog" aria-label="Delete" aria-describedby="message">
+            <Dialog.Close>Cancel</Dialog.Close>
+          </Dialog.Root>
+        </>
+      ),
+    ],
+  ])('logs nothing with %s', async (_, ui) => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    render(<Confirm />);
-    render(
-      <>
-        <p id="message">Gone for good.</p>
-        <Dialog.Root defaultOpen role="alertdialog" aria-label="Delete" aria-describedby="message">
-          <Dialog.Close>Cancel</Dialog.Close>
-        </Dialog.Root>
-      </>,
-    );
+    render(<StrictMode>{ui()}</StrictMode>);
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();
   });
