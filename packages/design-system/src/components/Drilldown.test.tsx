@@ -43,6 +43,15 @@ describe('Drilldown', () => {
     expect(screen.getByTestId('title').textContent).toBe('Settings');
   });
 
+  it('names a view by its label only', () => {
+    render(
+      <Drilldown.Root defaultValue={['a']}>
+        <Drilldown.View value="a" label="Settings" aria-label="Other" />
+      </Drilldown.Root>,
+    );
+    expect(group('Settings')).toBeTruthy();
+  });
+
   it('pushes a view with a trigger and goes back, keeping lower views mounted but hidden', () => {
     const onValueChange = vi.fn();
     render(<Settings onValueChange={onValueChange} />);

@@ -53,7 +53,7 @@ export type DrilldownViewProps = {
   /** Names the view's group, Drilldown.Label while it shows, and Drilldown.Back from the view above it. */
   label: string;
   initialFocusRef?: RefObject<HTMLElement | null>;
-} & Omit<ComponentPropsWithRef<'div'>, 'role'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'aria-label'>;
 
 // `value` names the view to push, in place of a button's own value attribute.
 type TriggerAction = Omit<ButtonActionProps, 'value'> & { value: string };
@@ -385,11 +385,11 @@ function MountedView({
   const leaving = status === 'leaving';
   return (
     <div
-      aria-label={label}
       tabIndex={-1}
       {...props}
       ref={refs}
       role="group"
+      aria-label={label}
       className={cx(styles.view, className)}
       hidden={status === 'below'}
       inert={leaving || undefined}
