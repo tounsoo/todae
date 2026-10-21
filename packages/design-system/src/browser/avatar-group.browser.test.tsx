@@ -160,7 +160,34 @@ describe('Avatar.Group in a browser', () => {
     const panel = screen.getByTestId('panel');
     panel.showPopover();
     screen.getByRole('button', { name: 'Details' }).focus({ focusVisible: true } as FocusOptions);
+    expect(panel.matches(':has(:focus-visible)')).toBe(true);
     expect(getComputedStyle(panel).position).toBe('fixed');
+  });
+
+  it('leaves a focused dialog in the group at its own position', () => {
+    render(
+      <Themed>
+        <Avatar.Group aria-label="Assignees" size="lg">
+          <Avatar.Root label="Ada">
+            <Avatar.Fallback>AL</Avatar.Fallback>
+          </Avatar.Root>
+          <dialog data-testid="dialog" aria-label="Details">
+            <button type="button">Close</button>
+          </dialog>
+        </Avatar.Group>
+      </Themed>,
+    );
+    const dialog = screen.getByTestId('dialog') as HTMLDialogElement;
+    dialog.showModal();
+    screen.getByRole('button', { name: 'Close' }).focus({ focusVisible: true } as FocusOptions);
+    expect(dialog.matches(':has(:focus-visible)')).toBe(true);
+    expect(getComputedStyle(dialog).position).toBe('fixed');
+    dialog.close();
+  });
+
+  it('isolates the group so a lifted wrapper stays inside it', () => {
+    render(<Three />);
+    expect(getComputedStyle(screen.getByRole('group')).isolation).toBe('isolate');
   });
 
   it('lifts a wrapper whose descendant has focus', async () => {

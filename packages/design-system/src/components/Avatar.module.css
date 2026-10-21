@@ -139,8 +139,9 @@
   }
 
   /* A focused wrapper rises above its neighbors' rings, so its focus ring
-     shows whole. The group isolates that z-index from the page. */
-  .group > :not([popover]):is(:focus-visible, :has(:focus-visible)) {
+     shows whole. The group isolates that z-index from the page. Popover and
+     dialog content keep their own positioning. */
+  .group > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
     position: relative;
     z-index: 1;
   }
