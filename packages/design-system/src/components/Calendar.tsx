@@ -36,7 +36,11 @@ type CalendarSharedProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. After a range's first pick it is also called for the days from that pick to the shown month, until one returns true; each day once, until the function, the first pick, min or max changes. */
+  /**
+   * Returns true for a date that cannot be picked, such as a holiday. After a range's first pick it is also
+   * called for the days from that pick to the shown month, until one returns true; each day once, until the
+   * function, the first pick, min or max changes.
+   */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
@@ -208,28 +212,31 @@ function isoRange(range: DateRange | null | undefined): DateRange | null | undef
 const spanOf = (a: Temporal.PlainDate, b: Temporal.PlainDate): DateRange =>
   compare(a, b) <= 0 ? { start: a, end: b } : { start: b, end: a };
 
-// One range per date, so a controlled date keeps one value across renders.
-const oneDayRanges = /* @__PURE__ */ new WeakMap<Temporal.PlainDate, DateRange>();
-function oneDay(date: Temporal.PlainDate | null | undefined) {
-  if (!date) return date;
-  let range = oneDayRanges.get(date);
-  if (!range) {
-    range = { start: date, end: date };
-    oneDayRanges.set(date, range);
-  }
-  return range;
-}
+const oneDay = (date: Temporal.PlainDate | null | undefined) => date && { start: date, end: date };
 
-/** Either mode's value props as a range: single mode holds its date as a one-day range. */
-function rangeProps({ mode, value, defaultValue, onValueChange }: CalendarRootProps) {
-  if (mode === 'range') {
+/**
+ * Either mode's value props as a range: single mode holds its date as a
+ * one-day range, made once for each date so a controlled date keeps one value
+ * across renders.
+ */
+function useRangeProps(props: CalendarRootProps) {
+  const single = props.mode !== 'range' ? props : null;
+  const date = isoDate(single?.value);
+  const dateText = date === undefined ? undefined : date === null ? null : date.toString();
+  const dayValue = useMemo(
+    () => (dateText === undefined || dateText === null ? dateText : oneDay(Temporal.PlainDate.from(dateText))),
+    [dateText],
+  );
+  const onDateChange = single?.onValueChange;
+  const onDayChange = useMemo(
+    () => onDateChange && ((next: DateRange) => onDateChange(next.start)),
+    [onDateChange],
+  );
+  if (props.mode === 'range') {
+    const { value, defaultValue, onValueChange } = props;
     return { value: isoRange(value), defaultValue: isoRange(defaultValue) ?? null, onValueChange };
   }
-  return {
-    value: oneDay(isoDate(value)),
-    defaultValue: oneDay(isoDate(defaultValue)) ?? null,
-    onValueChange: onValueChange && ((next: DateRange) => onValueChange(next.start)),
-  };
+  return { value: dayValue, defaultValue: oneDay(isoDate(props.defaultValue)) ?? null, onValueChange: onDayChange };
 }
 
 function Root(rootProps: CalendarRootProps) {
@@ -265,7 +272,7 @@ function Root(rootProps: CalendarRootProps) {
   const maxText = isoDate(maxProp)?.toString();
   const min = useMemo(() => (minText === undefined ? undefined : Temporal.PlainDate.from(minText)), [minText]);
   const max = useMemo(() => (maxText === undefined ? undefined : Temporal.PlainDate.from(maxText)), [maxText]);
-  const { onValueChange, ...ends } = rangeProps(rootProps);
+  const { onValueChange, ...ends } = useRangeProps(rootProps);
   const [value, setValue] = useControlledState<DateRange | null>(ends.value, ends.defaultValue);
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
   const today = useMemo(() => (todayText === null ? null : Temporal.PlainDate.from(todayText)), [todayText]);
