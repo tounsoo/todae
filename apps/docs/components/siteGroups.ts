@@ -124,6 +124,7 @@ export const SITE_GROUPS = [
     links: [
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
+      ['/recipes/data-table', 'Data table'],
       ['/recipes/file-upload', 'File upload'],
       ['/recipes/message-actions', 'Message actions'],
     ],

@@ -1,0 +1,214 @@
+import { DataTableInvoices } from '../../../../components/demos/DataTableDemo';
+
+# Data table
+
+패키지 네임스페이스가 아니라 레시피입니다. 데이터 표는 정렬할 수 있는 열, [useSelection](/utilities/use-selection)으로 만든 행마다의 체크박스, [Toolbar](/toolbar)에 넣은 일괄 작업, [Pagination](/pagination), 결과가 없을 때의 [EmptyState](/empty-state)를 갖춘 [Table](/table)입니다. 어떤 행을 불러오고, 어떻게 거르고 정렬하며, 각 작업이 무엇을 하는지는 제품이 정합니다. `DataTable.*` export는 없습니다.
+
+검색하고, 열로 정렬하고, 페이지를 넘기고, 여러 페이지에서 행을 선택한 뒤 지급 완료로 표시하거나 삭제해 보세요.
+
+<Example block>
+  <DataTableInvoices />
+</Example>
+
+## 행
+
+행은 한곳에서 계산하세요. 먼저 거르고, 그다음 정렬하고, 마지막으로 페이지를 잘라 냅니다. 데이터가 서버에 있다면 검색어, 정렬, 페이지를 요청에 담아 보내고 돌아온 행을 렌더링하세요. 이 페이지의 코드는 모든 행을 메모리에 둡니다. 서버에서 페이지를 나누면 `matches`에는 한 페이지만 들어 있습니다. 페이지 수, 일치하는 개수, 삭제 뒤에 남는 행 같은 모든 개수는 서버가 돌려준 전체 개수로 세고, `selection.value`는 다른 페이지의 행도 가리킬 수 있으므로 일괄 작업에서는 이를 서버로 보낸 뒤 페이지를 다시 불러오세요. 검색어나 정렬이 바뀌면 첫 페이지로 돌아가고, 행이 사라지면 페이지가 범위 안에 머물게 하세요.
+
+```ts
+const needle = query.trim().toLowerCase();
+const matches = rows
+  .filter((row) => `${row.id} ${row.customer}`.toLowerCase().includes(needle))
+  .sort((a, b) => (sorted.direction === 'ascending' ? 1 : -1) * compare(a, b, sorted.column));
+const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
+const pageCount = pagesOf(matches.length);
+const current = Math.min(page, pageCount);
+const pageRows = matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+```
+
+## 정렬
+
+정렬된 열 하나와 그 방향을 상태로 두세요. 정렬할 수 있는 `Table.HeaderCell`마다, 그 열이 정렬된 열이면 `'ascending'`이나 `'descending'`을, 아니면 `'none'`을 주고, 그 안의 `Table.SortButton`이 열을 정합니다. 버튼은 [Table](/table) 페이지에 적힌 대로 새 순서를 알립니다.
+
+```tsx
+const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted.direction : 'none');
+
+<Table.HeaderCell scope="col" sort={sortOf('customer')}>
+  <Table.SortButton onClick={() => sortBy('customer')}>Customer</Table.SortButton>
+</Table.HeaderCell>
+```
+
+## 여러 페이지에 걸친 선택
+
+`useSelection`에는 현재 페이지에 있는 행의 키를 넘기세요. 다른 페이지에서 선택한 키는 그대로 선택된 채로 남으므로, 헤더의 체크박스는 이 페이지만 선택하거나 해제하고, `selection.value`에는 선택한 키가 모두 들어 있습니다. 작업이 보이지 않는 행에도 닿는다는 것을 알 수 있도록 작업 옆에 그 개수를 보여 주세요. 예제의 `changeQuery`처럼 검색어가 바뀌면 선택을 비워서, 검색에 가려진 행에 작업이 닿지 않게 하세요. 훅이 받는 키 목록이 현재 페이지이므로 Shift 범위 선택도 현재 페이지 안에서만 됩니다.
+
+```tsx
+const selection = useSelection({ keys: pageRows.map((row) => row.id) });
+
+<Checkbox.Root ref={selectAll} {...selection.getSelectAllProps()}>
+  <VisuallyHidden.Root>Select all invoices on this page</VisuallyHidden.Root>
+</Checkbox.Root>
+```
+
+## 일괄 작업
+
+작업은 그 대상의 이름을 붙인 `Toolbar.Root`에 넣고, 아무것도 선택되지 않았을 때도 버튼을 비활성화한 채 자리에 두세요. 그래야 행을 체크할 때 표가 움직이지 않습니다. 작업이 한 일은 [useAnnouncer](/utilities/use-announcer)로 알리세요. 삭제는 `Dialog.Root role="alertdialog"`로 확인을 받으세요. 삭제하면 선택이 비워지고, 그러면 대화 상자가 포커스를 돌려줄 Delete 버튼이 비활성화됩니다. 그래서 `restoreFocusRef`로 다른 곳을 지정합니다. 검색에 맞는 행이 남아 있으면 헤더의 체크박스, 아니면 검색 입력입니다. 대화 상자를 열 때 `restoreFocusRef`가 Delete를 가리키게 하므로, 클릭한 버튼에 포커스를 주지 않는 브라우저에서도 Cancel을 누르면 포커스가 그리로 돌아갑니다. 대화 상자가 묻는 개수는 열림 여부와 따로 상태에 담아 두세요. 그래야 사라지는 동안 제목이 바뀌지 않습니다. 삭제로 표가 앞 페이지로 옮겨 가거나 남은 행이 없으면 같은 알림에서 함께 알리세요. `search`는 검색 입력의 `Field.TextInput`에 건 ref입니다.
+
+```tsx
+const announce = useAnnouncer();
+const search = useRef<HTMLInputElement>(null);
+const selectAll = useRef<HTMLInputElement>(null);
+const restoreFocus = useRef<HTMLElement>(null);
+const deleteButton = useRef<HTMLButtonElement>(null);
+const [confirming, setConfirming] = useState(false);
+const [asked, setAsked] = useState(0);
+const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
+
+const confirmDelete = () => {
+  restoreFocus.current = deleteButton.current;
+  setAsked(selection.value.length);
+  setConfirming(true);
+};
+
+const remove = () => {
+  const ids = new Set(selection.value);
+  if (ids.size === 0) return;
+  const shown = matches.filter((row) => !ids.has(row.id)).length;
+  const pages = pagesOf(shown);
+  const to = Math.min(current, pages);
+  restoreFocus.current = shown > 0 ? selectAll.current : search.current;
+  setRows(rows.filter((row) => !ids.has(row.id)));
+  setPage(to);
+  selection.clear();
+  setConfirming(false);
+  const after = shown === 0 ? (needle ? 'No invoices found' : 'No invoices left') : to !== current ? `Page ${to} of ${pages}` : '';
+  announce([`${invoices(ids.size)} deleted`, after].filter(Boolean).join('. '));
+};
+
+<Toolbar.Root aria-label="Selected invoices">
+  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
+    Mark paid
+  </Button.Root>
+  <Button.Root
+    ref={deleteButton}
+    variant="secondary"
+    disabled={selection.value.length === 0}
+    onClick={confirmDelete}
+  >
+    Delete
+  </Button.Root>
+</Toolbar.Root>
+<Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
+  <Dialog.Title>{`Delete ${invoices(asked)}?`}</Dialog.Title>
+  <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
+  <Dialog.Footer>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={remove}>Delete</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
+## 결과 없음
+
+일치하는 행이 없으면, 모든 열에 걸친 셀 하나에 `EmptyState.Root`를 담은 행 하나를 렌더링하세요. 그러면 표가 캡션과 머리글을 유지합니다. 빈 상태에는 역할이 없으므로, [EmptyState](/empty-state) 페이지처럼 입력이 멈춘 뒤 일치하는 개수를 알리되, 새로 검색했을 때만 알리세요. 그래야 삭제 알림 뒤에 개수가 따라오지 않습니다. "Clear search"는 자신의 버튼이 사라지기 전에 포커스를 검색 입력으로 돌려놓습니다.
+
+```tsx
+import { SearchX } from 'lucide-react';
+
+const searched = useRef(needle);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searched.current === needle) return;
+    searched.current = needle;
+    announce(matches.length === 0 ? (needle ? 'No invoices found' : 'No invoices left') : `${invoices(matches.length)} found`);
+  }, 500);
+  return () => clearTimeout(timer);
+}, [needle, matches.length, announce]);
+
+const clearSearch = () => {
+  changeQuery('');
+  search.current?.focus();
+};
+
+<Table.Row>
+  <Table.Cell colSpan={5}>
+    <EmptyState.Root>
+      {needle && (
+        <EmptyState.Icon>
+          <SearchX />
+        </EmptyState.Icon>
+      )}
+      <EmptyState.Title as="h3">{needle ? 'No invoices found' : 'No invoices'}</EmptyState.Title>
+      <EmptyState.Description>{needle ? `Nothing matches “${query}”. Check the spelling or try a shorter search.` : 'There are no invoices left.'}</EmptyState.Description>
+      {needle && (
+        <EmptyState.Actions>
+          <Button.Root variant="secondary" onClick={clearSearch}>
+            Clear search
+          </Button.Root>
+        </EmptyState.Actions>
+      )}
+    </EmptyState.Root>
+  </Table.Cell>
+</Table.Row>
+```
+
+## 페이지와 좁은 화면
+
+페이지는 `Pagination.Root`와 버튼으로 나누고, 페이지가 둘 이상일 때만 렌더링하세요. [Pagination](/pagination) 페이지에 적힌 대로 현재 페이지에는 `aria-current="page"`를, 갈 곳이 없는 단계에는 끝에서도 포커스를 지키는 `aria-disabled="true"`를 주세요. 버튼은 행을 제자리에서 바꾸므로 새 페이지를 알리세요. 표는 `axis="inline"`, `focusable`, `aria-label`을 준 `ScrollArea.Root`로 감싸세요. 그러면 화면보다 넓은 표가 옆으로 스크롤되고, 키보드 사용자도 스크롤할 수 있습니다.
+
+```tsx
+import { paginationRange } from '@tounsoo/todae';
+
+const goTo = (to: number) => {
+  if (to === current) return;
+  setPage(to);
+  announce(`Page ${to} of ${pageCount}`);
+};
+
+const step = (to: number, label: string) => (
+  <Pagination.Item>
+    <button
+      type="button"
+      aria-disabled={to < 1 || to > pageCount ? true : undefined}
+      onClick={() => to >= 1 && to <= pageCount && goTo(to)}
+    >
+      {label}
+    </button>
+  </Pagination.Item>
+);
+
+<ScrollArea.Root axis="inline" focusable aria-label="Invoices table">
+  <Table.Root>…</Table.Root>
+</ScrollArea.Root>
+{pageCount > 1 && (
+  <Pagination.Root aria-label="Invoice pages">
+    {step(current - 1, 'Previous')}
+    {paginationRange({ page: current, count: pageCount }).map((item) =>
+      typeof item === 'number' ? (
+        <Pagination.Item key={item}>
+          <button type="button" aria-current={item === current ? 'page' : undefined} onClick={() => goTo(item)}>
+            {item}
+          </button>
+        </Pagination.Item>
+      ) : (
+        <Pagination.Ellipsis key={item} />
+      ),
+    )}
+    {step(current + 1, 'Next')}
+  </Pagination.Root>
+)}
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 네이티브 표, 캡션, 행과 열의 머리글. 정렬된 열의 `aria-sort`, 그리고 `Table.SortButton`을 클릭한 뒤의 알림. `useSelection`을 통한 각 행 체크박스의 선택 상태, 헤더 체크박스의 혼합 상태, Shift 범위 선택. `Toolbar.Root`에 넣은 일괄 작업의 탭 정지 하나와 화살표 키. `Dialog.Root`가 주는 확인 대화 상자의 역할, Cancel로 가는 첫 포커스, 닫힌 뒤 `restoreFocusRef`로 보내는 포커스. `Pagination.Root`의 `nav` 랜드마크, 그리고 현재 페이지와 갈 곳이 없는 단계의 모양. `ScrollArea.Root`의 키보드 가로 스크롤.
+
+**직접 제공할 것:** 거르기, 정렬, 페이지 나누기, 작업. 표, 툴바, 페이지 나누기, 스크롤 영역의 이름, 그리고 각 체크박스에 어떤 행을 선택하는지 말하는 이름. 현재 페이지 버튼의 `aria-current="page"`와 갈 곳이 없는 단계의 `aria-disabled="true"`. 일치하는 개수, 새 페이지, 작업이 한 일의 알림. 작업이 포커스를 가진 버튼을 비활성화할 때, 그리고 "Clear search"가 사라지기 전에 포커스가 갈 곳.
+
+**주의할 점:** 포커스를 먼저 옮기지 않고 선택을 비워서 포커스를 가진 버튼을 비활성화하는 것. 검색이 비울 수 있는 포커스 대상. 예를 들어 일치하는 행이 없는 헤더 체크박스는 함께 비활성화됩니다. 다른 페이지에 있거나 검색에 가려져 보이지 않는 행에 선택이 닿는데, 그 사실을 알려 주는 개수가 없는 것. 확인도 실행 취소도 없는 파괴적인 작업. `Table.Row`에 `onClick`을 걸어 누를 수 있게 만든 행. 포커스를 받지 않으니 셀 안에 링크나 버튼을 넣으세요.
+
+## 언제 쓰나요
+
+**쓸 때:** 사람들이 검색하고, 정렬하고, 페이지를 넘기며, 한꺼번에 작업하는 기록. 예를 들어 청구서, 주문, 구성원 목록입니다.
+
+**쓰지 않을 때:** 읽기만 하는 짧은 표 → 평범한 [Table](/table). 기록 하나의 필드 → [DataList](/data-list). 셀 편집, 열 크기 조절, 가상 스크롤, 셀 사이의 화살표 키 이동 → Todae의 범위 밖인 데이터 그리드.
