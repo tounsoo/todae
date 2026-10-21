@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Checkbox,
+  Dialog,
   EmptyState,
   Field,
   Label,
@@ -61,11 +62,13 @@ export function DataTableInvoices() {
   const searchId = useId();
   const search = useRef<HTMLInputElement>(null);
   const selectAll = useRef<HTMLInputElement>(null);
+  const restoreFocus = useRef<HTMLElement>(null);
   const announce = useAnnouncer();
   const [rows, setRows] = useState(INVOICES);
   const [query, setQuery] = useState('');
   const [sorted, setSorted] = useState<Sorted>({ column: 'id', direction: 'ascending' });
   const [page, setPage] = useState(1);
+  const [confirming, setConfirming] = useState(false);
 
   // Filter, then sort, then cut out the page. All three are your product's.
   const needle = query.trim().toLowerCase();
@@ -79,16 +82,17 @@ export function DataTableInvoices() {
   const selection = useSelection({ keys: pageRows.map((row) => row.id) });
   const selected = selection.value.length;
 
-  // Announce the number of matches once typing settles, and only when it changed.
-  const announced = useRef(matches.length);
+  // Announce the number of matches once typing settles. Only a new search
+  // announces, so a delete's own message isn't followed by a count.
+  const searched = useRef(query);
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (announced.current === matches.length) return;
-      announced.current = matches.length;
+      if (searched.current === query) return;
+      searched.current = query;
       announce(matches.length === 0 ? 'No invoices found' : `${invoices(matches.length)} found`);
     }, 500);
     return () => clearTimeout(timer);
-  }, [matches.length, announce]);
+  }, [query, matches.length, announce]);
 
   const sortOf = (column: Column): TableSort => (sorted.column === column ? sorted.direction : 'none');
   const sortBy = (column: Column) => {
@@ -111,14 +115,21 @@ export function DataTableInvoices() {
     announce(`${invoices(ids.size)} marked paid`);
   };
 
+  const goTo = (to: number) => {
+    setPage(to);
+    announce(`Page ${to} of ${pageCount}`);
+  };
+
   const remove = () => {
     const ids = new Set(selection.value);
-    const left = rows.filter((row) => !ids.has(row.id));
-    // The toolbar's buttons turn disabled once nothing is selected, which
-    // drops their focus, so move it to the table before they do.
-    (left.length > 0 ? selectAll.current : search.current)?.focus();
-    setRows(left);
+    // Delete is disabled once nothing is selected, so the dialog hands focus
+    // to the table when rows still match the search, else to the search.
+    const shown = matches.filter((row) => !ids.has(row.id)).length;
+    restoreFocus.current = shown > 0 ? selectAll.current : search.current;
+    setRows(rows.filter((row) => !ids.has(row.id)));
+    setPage(Math.min(current, Math.max(1, Math.ceil(shown / PAGE_SIZE))));
     selection.clear();
+    setConfirming(false);
     announce(`${invoices(ids.size)} deleted`);
   };
 
@@ -127,7 +138,7 @@ export function DataTableInvoices() {
       <button
         type="button"
         aria-disabled={to < 1 || to > pageCount ? true : undefined}
-        onClick={() => to >= 1 && to <= pageCount && setPage(to)}
+        onClick={() => to >= 1 && to <= pageCount && goTo(to)}
       >
         {label}
       </button>
@@ -150,11 +161,22 @@ export function DataTableInvoices() {
           <Button.Root variant="secondary" disabled={selected === 0} onClick={markPaid}>
             Mark paid
           </Button.Root>
-          <Button.Root variant="secondary" disabled={selected === 0} onClick={remove}>
+          <Button.Root variant="secondary" disabled={selected === 0} onClick={() => {
+              restoreFocus.current = null;
+              setConfirming(true);
+            }}>
             Delete
           </Button.Root>
         </Toolbar.Root>
       </Stack.Root>
+      <Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
+        <Dialog.Title>{`Delete ${invoices(selected)}?`}</Dialog.Title>
+        <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
+        <Dialog.Footer>
+          <Dialog.Close>Cancel</Dialog.Close>
+          <Button.Root onClick={remove}>Delete</Button.Root>
+        </Dialog.Footer>
+      </Dialog.Root>
       <ScrollArea.Root axis="inline" focusable aria-label="Invoices table">
         <Table.Root>
           <Table.Caption>Invoices</Table.Caption>
@@ -230,7 +252,7 @@ export function DataTableInvoices() {
           {paginationRange({ page: current, count: pageCount }).map((item) =>
             typeof item === 'number' ? (
               <Pagination.Item key={item}>
-                <button type="button" aria-current={item === current ? 'page' : undefined} onClick={() => setPage(item)}>
+                <button type="button" aria-current={item === current ? 'page' : undefined} onClick={() => goTo(item)}>
                   {item}
                 </button>
               </Pagination.Item>

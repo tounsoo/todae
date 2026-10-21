@@ -4,7 +4,7 @@ import { DataTableInvoices } from '../../../../components/demos/DataTableDemo';
 
 A recipe, not a package namespace. A data table is a [Table](/table) with sortable columns, a checkbox on each row from [useSelection](/utilities/use-selection), bulk actions in a [Toolbar](/toolbar), [Pagination](/pagination) and an [EmptyState](/empty-state) for no results. Which rows load, how they filter and sort, and what the actions do are your product's. There is no `DataTable.*` export.
 
-Search, sort by a column, select rows on more than one page, then mark them paid or delete them.
+Search, sort by a column, page through, select rows on more than one page, then mark them paid or delete them.
 
 <Example block>
   <DataTableInvoices />
@@ -50,15 +50,20 @@ const selection = useSelection({ keys: pageRows.map((row) => row.id) });
 
 ## Bulk actions
 
-Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). An action that ends the selection, such as Delete, disables the button that has focus, and the browser drops that focus, so move focus first: to the header checkbox, or to the search when no rows are left.
+Put the actions in a `Toolbar.Root` named after what they act on, and keep it in place while nothing is selected, with its buttons disabled, so the table doesn't move as rows are checked. Announce what an action did through [useAnnouncer](/utilities/use-announcer). Confirm a delete with a `Dialog.Root role="alertdialog"`. Deleting clears the selection, which disables the Delete button the dialog would give focus back to, so `restoreFocusRef` names another place: the header checkbox while rows still match the search, else the search. Cancel leaves `restoreFocusRef` empty, and focus goes back to Delete.
 
 ```tsx
+const selectAll = useRef<HTMLInputElement>(null);
+const restoreFocus = useRef<HTMLElement>(null);
+
 const remove = () => {
   const ids = new Set(selection.value);
-  const left = rows.filter((row) => !ids.has(row.id));
-  (left.length > 0 ? selectAll.current : search.current)?.focus();
-  setRows(left);
+  const shown = matches.filter((row) => !ids.has(row.id)).length;
+  restoreFocus.current = shown > 0 ? selectAll.current : search.current;
+  setRows(rows.filter((row) => !ids.has(row.id)));
+  setPage(Math.min(current, Math.max(1, Math.ceil(shown / PAGE_SIZE))));
   selection.clear();
+  setConfirming(false);
   announce(`${ids.size} deleted`);
 };
 
@@ -66,17 +71,44 @@ const remove = () => {
   <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={markPaid}>
     Mark paid
   </Button.Root>
-  <Button.Root variant="secondary" disabled={selection.value.length === 0} onClick={remove}>
+  <Button.Root
+    variant="secondary"
+    disabled={selection.value.length === 0}
+    onClick={() => {
+      restoreFocus.current = null;
+      setConfirming(true);
+    }}
+  >
     Delete
   </Button.Root>
 </Toolbar.Root>
+<Dialog.Root role="alertdialog" open={confirming} onOpenChange={setConfirming} restoreFocusRef={restoreFocus}>
+  <Dialog.Title>{`Delete ${selection.value.length} invoices?`}</Dialog.Title>
+  <Dialog.Description>Deleted invoices can't be restored.</Dialog.Description>
+  <Dialog.Footer>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={remove}>Delete</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
 ```
 
 ## No results
 
-When nothing matches, render one row whose cell spans every column and holds an `EmptyState.Root`, so the table keeps its caption and headers. The empty state has no role, so announce the number of matches once typing settles, as the [EmptyState](/empty-state) page does. "Clear search" moves focus back to the search before its own button goes away.
+When nothing matches, render one row whose cell spans every column and holds an `EmptyState.Root`, so the table keeps its caption and headers. The empty state has no role, so announce the number of matches once typing settles, as the [EmptyState](/empty-state) page does. Announce on a new search only, so a delete's own message isn't followed by a count. "Clear search" moves focus back to the search before its own button goes away.
 
 ```tsx
+const announce = useAnnouncer();
+const searched = useRef(query);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searched.current === query) return;
+    searched.current = query;
+    announce(matches.length === 0 ? 'No invoices found' : `${matches.length} found`);
+  }, 500);
+  return () => clearTimeout(timer);
+}, [query, matches.length, announce]);
+
 <Table.Row>
   <Table.Cell colSpan={5}>
     <EmptyState.Root>
@@ -97,21 +129,55 @@ When nothing matches, render one row whose cell spans every column and holds an 
 
 ## Pages and narrow screens
 
-Page with `Pagination.Root` and buttons, as on the [Pagination](/pagination) page, and render it only when there is more than one page. Wrap the table in a `ScrollArea.Root` with `axis="inline"`, `focusable` and an `aria-label`, so a table wider than the screen scrolls sideways and keyboard users can scroll it too.
+Page with `Pagination.Root` and buttons, and render it only when there is more than one page. Mark the current page with `aria-current="page"` and a step with nowhere to go with `aria-disabled="true"`, which keeps its focus at an end, as the [Pagination](/pagination) page says. The buttons swap the rows in place, so announce the new page. Wrap the table in a `ScrollArea.Root` with `axis="inline"`, `focusable` and an `aria-label`, so a table wider than the screen scrolls sideways and keyboard users can scroll it too.
 
 ```tsx
+const goTo = (to: number) => {
+  setPage(to);
+  announce(`Page ${to} of ${pageCount}`);
+};
+
+const step = (to: number, label: string) => (
+  <Pagination.Item>
+    <button
+      type="button"
+      aria-disabled={to < 1 || to > pageCount ? true : undefined}
+      onClick={() => to >= 1 && to <= pageCount && goTo(to)}
+    >
+      {label}
+    </button>
+  </Pagination.Item>
+);
+
 <ScrollArea.Root axis="inline" focusable aria-label="Invoices table">
   <Table.Root>…</Table.Root>
 </ScrollArea.Root>
+{pageCount > 1 && (
+  <Pagination.Root aria-label="Invoice pages">
+    {step(current - 1, 'Previous')}
+    {paginationRange({ page: current, count: pageCount }).map((item) =>
+      typeof item === 'number' ? (
+        <Pagination.Item key={item}>
+          <button type="button" aria-current={item === current ? 'page' : undefined} onClick={() => goTo(item)}>
+            {item}
+          </button>
+        </Pagination.Item>
+      ) : (
+        <Pagination.Ellipsis key={item} />
+      ),
+    )}
+    {step(current + 1, 'Next')}
+  </Pagination.Root>
+)}
 ```
 
 ## Accessible composition
 
-**Todae handles:** The native table, its caption and its row and column headers. `aria-sort` on the sorted column, and an announcement after a `Table.SortButton` click. Each row checkbox's checked state, the header checkbox's mixed state, and Shift ranges, through `useSelection`. One tab stop and arrow keys for the bulk actions in `Toolbar.Root`. The current page and the steps with nowhere to go in `Pagination.Root`. Sideways scrolling by keyboard in `ScrollArea.Root`.
+**Todae handles:** The native table, its caption and its row and column headers. `aria-sort` on the sorted column, and an announcement after a `Table.SortButton` click. Each row checkbox's checked state, the header checkbox's mixed state, and Shift ranges, through `useSelection`. One tab stop and arrow keys for the bulk actions in `Toolbar.Root`. The confirmation's role, its first focus on Cancel, and focus sent to `restoreFocusRef` after it closes, in `Dialog.Root`. The `nav` landmark of `Pagination.Root`, and the look of a current page and of a step with nowhere to go. Sideways scrolling by keyboard in `ScrollArea.Root`.
 
-**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. Announcements for the number of matches and for what an action did. Focus moved before an action disables the button that has it, and before "Clear search" goes away.
+**You supply:** The filtering, sorting, paging and actions. A name for the table, the toolbar, the pagination and the scroll area, and for each checkbox one that says which row it selects. `aria-current="page"` and `aria-disabled="true"` on the page buttons. Announcements for the number of matches, the new page and what an action did. A place for focus when an action disables the button that had it, and before "Clear search" goes away.
 
-**Watch for:** Disabling a focused button by clearing the selection without moving focus first. A selection that reaches rows the person can't see, on another page or hidden by a search, without a count that says so. A destructive action with no way back: confirm it with a `Dialog.Root role="alertdialog"` or offer undo. A row made clickable with `onClick` on `Table.Row`, which takes no focus: put a link or button in a cell.
+**Watch for:** Disabling a focused button by clearing the selection without moving focus first. A focus target that a search can empty, such as a header checkbox with no matching rows, which turns disabled too. A selection that reaches rows the person can't see, on another page or hidden by a search, without a count that says so. A destructive action with no confirmation or undo. A row made clickable with `onClick` on `Table.Row`, which takes no focus: put a link or button in a cell.
 
 ## When to use
 
