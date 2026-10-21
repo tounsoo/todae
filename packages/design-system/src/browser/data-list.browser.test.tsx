@@ -23,6 +23,22 @@ function list(width: string, orientation?: 'horizontal' | 'vertical') {
 }
 
 describe('DataList in a browser', () => {
+  it('puts the details beside the term as a flex item that sizes to content', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', inlineSize: '40rem' }}>
+        <DataList.Root aria-label="Order">
+          <DataList.Item>
+            <DataList.Term>Status</DataList.Term>
+            <DataList.Details>Shipped</DataList.Details>
+          </DataList.Item>
+        </DataList.Root>
+      </div>,
+    );
+    const term = screen.getByText('Status').getBoundingClientRect();
+    const details = screen.getByText('Shipped').getBoundingClientRect();
+    expect(details.left).toBeGreaterThanOrEqual(term.right);
+  });
+
   it('puts the details beside the term in a wide list', () => {
     render(list('40rem'));
     const term = screen.getByText('Status').getBoundingClientRect();
