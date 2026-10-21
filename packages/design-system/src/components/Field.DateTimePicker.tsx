@@ -12,13 +12,13 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { htmlDateTime, valueBounds } from './Field.shared.js';
-import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
 export type FieldDateTimePickerCloseReason = PickerCloseReason;
 
-export type FieldDateTimePickerProps = PickerBaseProps & {
+export type FieldDateTimePickerProps = {
   /** The date and time, or null for none. */
   value: Temporal.PlainDateTime | null;
   /** Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it. */
@@ -27,13 +27,27 @@ export type FieldDateTimePickerProps = PickerBaseProps & {
   min?: Temporal.PlainDateTime;
   /** The latest date and time that can be picked. A form with a later one is invalid. */
   max?: Temporal.PlainDateTime;
+  /** A form with no date and time is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
   firstDayOfWeek?: CalendarFirstDayOfWeek;
   /** Minutes between the times in the list, from midnight. Defaults to 30. */
   step?: number;
-};
+  /** The locale for the button's text, the calendar's names and the times, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no date and time, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them. Defaults to true. */
+  showValue?: boolean;
+  /** Controlled open state of the popover. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the popover opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDateTimePickerCloseReason) => void;
+} & PickerButtonProps;
 
 const LIST = '[role="listbox"]';
 

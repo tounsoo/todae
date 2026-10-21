@@ -6,12 +6,12 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
 import { htmlTime, valueBounds } from './Field.shared.js';
-import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PickerCloseReason;
 
-export type FieldTimePickerProps = PickerBaseProps & {
+export type FieldTimePickerProps = {
   /** The time, or null for none. */
   value: Temporal.PlainTime | null;
   /** Fires with the time picked in the list. */
@@ -20,9 +20,23 @@ export type FieldTimePickerProps = PickerBaseProps & {
   min?: Temporal.PlainTime;
   /** The latest time the list offers. A form with a later time is invalid. */
   max?: Temporal.PlainTime;
+  /** A form with no time is invalid. */
+  required?: boolean;
   /** Minutes between the times in the list, from midnight. Defaults to 30. */
   step?: number;
-};
+  /** The locale for the times' text, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no time, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time. Defaults to true. */
+  showValue?: boolean;
+  /** Controlled open state of the list. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the list opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldTimePickerCloseReason) => void;
+} & PickerButtonProps;
 
 const MINUTES_PER_DAY = 24 * 60;
 

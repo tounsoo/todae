@@ -877,8 +877,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜와 시각. 이보다 늦은 값이 있으면 폼이 유효하지 않습니다."
     },
     "required": {
-      "en": "A form with no value is invalid.",
-      "ko": "값이 없으면 폼이 유효하지 않습니다."
+      "en": "A form with no date and time is invalid.",
+      "ko": "날짜와 시각이 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",
@@ -893,16 +893,16 @@
       "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
     },
     "locale": {
-      "en": "The locale for the button's text and the picker's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼 텍스트와 선택기 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+      "en": "The locale for the button's text, the calendar's names and the times, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼 텍스트, 달력의 이름, 시각의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no value, when showValue is true.",
-      "ko": "showValue가 true일 때, 값이 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no date and time, when showValue is true.",
+      "ko": "showValue가 true일 때, 날짜와 시각이 없는 동안 버튼에 보입니다."
     },
     "showValue": {
-      "en": "Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.",
-      "ko": "버튼이 글리프 옆에 값이나 placeholder를 보여 줄지 여부. 값을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+      "en": "Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them.",
+      "ko": "버튼이 글리프 옆에 날짜와 시각이나 placeholder를 보여 줄지 여부. 날짜와 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
     "open": {
       "en": "Controlled open state of the popover. Pass with onOpenChange.",
@@ -1049,36 +1049,36 @@
       "ko": "목록이 보여 주는 가장 늦은 시각. 이보다 늦은 시각이 있으면 폼이 유효하지 않습니다."
     },
     "required": {
-      "en": "A form with no value is invalid.",
-      "ko": "값이 없으면 폼이 유효하지 않습니다."
+      "en": "A form with no time is invalid.",
+      "ko": "시각이 없으면 폼이 유효하지 않습니다."
     },
     "step": {
       "en": "Minutes between the times in the list, from midnight.",
       "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
     },
     "locale": {
-      "en": "The locale for the button's text and the picker's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼 텍스트와 선택기 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+      "en": "The locale for the times' text, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "시각 텍스트의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no value, when showValue is true.",
-      "ko": "showValue가 true일 때, 값이 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no time, when showValue is true.",
+      "ko": "showValue가 true일 때, 시각이 없는 동안 버튼에 보입니다."
     },
     "showValue": {
-      "en": "Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.",
-      "ko": "버튼이 글리프 옆에 값이나 placeholder를 보여 줄지 여부. 값을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+      "en": "Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.",
+      "ko": "버튼이 글리프 옆에 시각이나 placeholder를 보여 줄지 여부. 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
     "open": {
-      "en": "Controlled open state of the popover. Pass with onOpenChange.",
-      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+      "en": "Controlled open state of the list. Pass with onOpenChange.",
+      "ko": "목록의 제어 열림 상태. onOpenChange와 함께 전달하세요."
     },
     "defaultOpen": {
       "en": "Initial open state when uncontrolled.",
       "ko": "비제어일 때 처음 열림 상태."
     },
     "onOpenChange": {
-      "en": "Fires when the popover opens or closes, with why it closed.",
-      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
+      "en": "Fires when the list opens or closes, with why it closed.",
+      "ko": "목록이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Fieldset.Legend": {
@@ -2731,8 +2731,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜. 이보다 늦은 날짜가 있으면 폼이 유효하지 않습니다."
     },
     "required": {
-      "en": "A form with no value is invalid.",
-      "ko": "값이 없으면 폼이 유효하지 않습니다."
+      "en": "A form with no date is invalid.",
+      "ko": "날짜가 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",
@@ -2743,28 +2743,28 @@
       "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
     },
     "locale": {
-      "en": "The locale for the button's text and the picker's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼 텍스트와 선택기 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+      "en": "The locale for the button's date and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no value, when showValue is true.",
-      "ko": "showValue가 true일 때, 값이 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no date, when showValue is true.",
+      "ko": "showValue가 true일 때, 날짜가 없는 동안 버튼에 보입니다."
     },
     "showValue": {
-      "en": "Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.",
-      "ko": "버튼이 글리프 옆에 값이나 placeholder를 보여 줄지 여부. 값을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+      "en": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
+      "ko": "버튼이 글리프 옆에 날짜나 placeholder를 보여 줄지 여부. 날짜를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
     "open": {
-      "en": "Controlled open state of the popover. Pass with onOpenChange.",
-      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+      "en": "Controlled open state of the calendar. Pass with onOpenChange.",
+      "ko": "달력의 제어 열림 상태. onOpenChange와 함께 전달하세요."
     },
     "defaultOpen": {
       "en": "Initial open state when uncontrolled.",
       "ko": "비제어일 때 처음 열림 상태."
     },
     "onOpenChange": {
-      "en": "Fires when the popover opens or closes, with why it closed.",
-      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
+      "en": "Fires when the calendar opens or closes, with why it closed.",
+      "ko": "달력이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Field.DateRangePicker": {
@@ -2785,8 +2785,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜."
     },
     "required": {
-      "en": "A form with no value is invalid.",
-      "ko": "값이 없으면 폼이 유효하지 않습니다."
+      "en": "A form with no range is invalid.",
+      "ko": "범위가 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one.",
@@ -2797,28 +2797,28 @@
       "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
     },
     "locale": {
-      "en": "The locale for the button's text and the picker's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼 텍스트와 선택기 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+      "en": "The locale for the button's dates and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no value, when showValue is true.",
-      "ko": "showValue가 true일 때, 값이 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no range, when showValue is true.",
+      "ko": "showValue가 true일 때, 범위가 없는 동안 버튼에 보입니다."
     },
     "showValue": {
-      "en": "Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.",
-      "ko": "버튼이 글리프 옆에 값이나 placeholder를 보여 줄지 여부. 값을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+      "en": "Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range.",
+      "ko": "버튼이 글리프 옆에 범위나 placeholder를 보여 줄지 여부. 범위를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
     "open": {
-      "en": "Controlled open state of the popover. Pass with onOpenChange.",
-      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+      "en": "Controlled open state of the calendar. Pass with onOpenChange.",
+      "ko": "달력의 제어 열림 상태. onOpenChange와 함께 전달하세요."
     },
     "defaultOpen": {
       "en": "Initial open state when uncontrolled.",
       "ko": "비제어일 때 처음 열림 상태."
     },
     "onOpenChange": {
-      "en": "Fires when the popover opens or closes, with why it closed.",
-      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
+      "en": "Fires when the calendar opens or closes, with why it closed.",
+      "ko": "달력이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "useClipboard": {

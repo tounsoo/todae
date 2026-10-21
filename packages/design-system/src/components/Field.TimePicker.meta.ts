@@ -33,7 +33,7 @@ export const meta = {
       name: 'required',
       type: 'boolean',
       required: false,
-      description: 'A form with no value is invalid.',
+      description: 'A form with no time is invalid.',
     },
     {
       name: 'step',
@@ -46,26 +46,26 @@ export const meta = {
       name: 'locale',
       type: 'string',
       required: false,
-      description: 'The locale for the button\'s text and the picker\'s names, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
+      description: 'The locale for the times\' text, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
     },
     {
       name: 'placeholder',
       type: 'string',
       required: false,
-      description: 'Shown on the button while there is no value, when showValue is true.',
+      description: 'Shown on the button while there is no time, when showValue is true.',
     },
     {
       name: 'showValue',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.',
+      description: 'Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.',
     },
     {
       name: 'open',
       type: 'boolean',
       required: false,
-      description: 'Controlled open state of the popover. Pass with onOpenChange.',
+      description: 'Controlled open state of the list. Pass with onOpenChange.',
     },
     {
       name: 'defaultOpen',
@@ -77,7 +77,7 @@ export const meta = {
       name: 'onOpenChange',
       type: "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
       required: false,
-      description: 'Fires when the popover opens or closes, with why it closed.',
+      description: 'Fires when the list opens or closes, with why it closed.',
     },
   ],
 } as const satisfies ComponentMeta;

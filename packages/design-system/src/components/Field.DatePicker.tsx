@@ -10,12 +10,12 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { htmlDate, valueBounds } from './Field.shared.js';
-import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PickerCloseReason;
 
-export type FieldDatePickerProps = PickerBaseProps & {
+export type FieldDatePickerProps = {
   /** The date, or null for none. */
   value: Temporal.PlainDate | null;
   /** Fires with the date picked in the calendar. */
@@ -24,11 +24,25 @@ export type FieldDatePickerProps = PickerBaseProps & {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. A form with a later date is invalid. */
   max?: Temporal.PlainDate;
+  /** A form with no date is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
   firstDayOfWeek?: CalendarFirstDayOfWeek;
-};
+  /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no date, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date. Defaults to true. */
+  showValue?: boolean;
+  /** Controlled open state of the calendar. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the calendar opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDatePickerCloseReason) => void;
+} & PickerButtonProps;
 
 /** A date as the button shows it, such as "Oct 7, 2026", and as a message names it. */
 export function dateLabel(value: Temporal.PlainDate, locale: string | undefined) {

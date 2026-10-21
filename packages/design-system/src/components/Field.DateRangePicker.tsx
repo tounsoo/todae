@@ -11,12 +11,12 @@ import {
 } from './Calendar.js';
 import { spanOf, type DateRange } from './dateRange.js';
 import { htmlDateText } from './Field.shared.js';
-import { PickerShell, type PickerBaseProps, type PickerCloseReason } from './Field.PickerShell.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
 export type FieldDateRangePickerCloseReason = PickerCloseReason;
 
-export type FieldDateRangePickerProps = PickerBaseProps & {
+export type FieldDateRangePickerProps = {
   /** The range, or null for none. */
   value: DateRange | null;
   /** Fires with the range picked in the calendar, once its second date is picked. */
@@ -25,11 +25,25 @@ export type FieldDateRangePickerProps = PickerBaseProps & {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
+  /** A form with no range is invalid. */
+  required?: boolean;
   /** Returns true for a date that cannot be picked, such as a holiday. A range can't hold one. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
   firstDayOfWeek?: CalendarFirstDayOfWeek;
-};
+  /** The locale for the button's dates and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no range, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range. Defaults to true. */
+  showValue?: boolean;
+  /** Controlled open state of the calendar. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the calendar opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDateRangePickerCloseReason) => void;
+} & PickerButtonProps;
 
 const buttonFormats = /* @__PURE__ */ new Map<string, Intl.DateTimeFormat>();
 function buttonFormat(locale: string | undefined) {

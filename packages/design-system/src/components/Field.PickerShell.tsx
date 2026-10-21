@@ -12,26 +12,11 @@ import type { ValueInputOptions } from './valueInput.js';
 /** Why a picker's popover closed: a popover's reasons, a pick, or the field became disabled. */
 export type PickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
 
-/** What the pickers share: the popover's open state, the button's text and the native button attributes. */
-export type PickerBaseProps = {
-  /** A form with no value is invalid. */
-  required?: boolean;
-  /** The locale for the button's text and the picker's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
-  locale?: string;
-  /** Shown on the button while there is no value, when showValue is true. */
-  placeholder?: string;
-  /**
-   * Whether the button shows the value, or the placeholder, beside its glyph. Set it to false beside a text input that shows the value.
-   * @default true
-   */
-  showValue?: boolean;
-  /** Controlled open state of the popover. Pass with onOpenChange. */
-  open?: boolean;
-  /** Initial open state when uncontrolled. */
-  defaultOpen?: boolean;
-  /** Fires when the popover opens or closes, with why it closed. */
-  onOpenChange?: (open: boolean, reason: PickerCloseReason) => void;
-} & Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'>;
+/** The native button attributes a picker takes. */
+export type PickerButtonProps = Omit<
+  ComponentPropsWithRef<'button'>,
+  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
+>;
 
 /** What a picker's popover content uses to report a pick. */
 export type PickerShellControls<Value> = {
@@ -44,7 +29,15 @@ export type PickerShellControls<Value> = {
   close: () => void;
 };
 
-export type PickerShellProps<Value> = Omit<PickerBaseProps, 'locale'> & {
+export type PickerShellProps<Value> = {
+  required?: boolean;
+  /** Shown on the button while `shown` is null, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows its value, or the placeholder, beside its glyph. */
+  showValue?: boolean;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean, reason: PickerCloseReason) => void;
   /** The button's name beside another control, from StringsProvider. */
   label: string;
   /** The glyph after the value's text. */
@@ -62,7 +55,7 @@ export type PickerShellProps<Value> = Omit<PickerBaseProps, 'locale'> & {
   popoverProps?: PopoverChrome;
   /** The popover's content. */
   children: (controls: PickerShellControls<Value>) => ReactNode;
-};
+} & PickerButtonProps;
 
 /**
  * The button, value input and popover that Field.DatePicker,
