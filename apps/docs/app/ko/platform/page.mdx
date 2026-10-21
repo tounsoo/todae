@@ -7,6 +7,8 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog)와 `showModal()`**: `Dialog.Root`와 `BottomSheet.Root`의 최상위 레이어, `::backdrop`, inert가 되는 뒤 페이지, Escape, `<form method="dialog">`에 씁니다. Todae에 필수입니다. 스크림은 `::backdrop`에서 Todae의 사용자 정의 속성을 읽으며, 현재 브라우저에서는 `::backdrop`이 다이얼로그에서 이를 상속합니다. 상속하지 않는 오래된 엔진에서는 스크림 색이 보이지 않습니다.
 - **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `dismissOnEscape={false}`인 `BottomSheet`에서 브라우저가 Escape를 무시하게 합니다. 없으면: Escape가 여전히 닫기를 요청하고, Todae가 시트를 열린 채로 둡니다.
 - **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: 칩 측정용 사본을 숨깁니다. Todae에 필수입니다.
+- **[`getAnimations()`](https://developer.mozilla.org/docs/Web/API/Element/getAnimations)**: 미끄러져 나가는 `Drilldown` 뷰를 자신의 애니메이션이 끝날 때까지 화면에 둡니다. Todae에 필수입니다.
+- **[`checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility)**: 닫힌 팝오버나 숨겨진 탭 패널 안처럼 렌더링되지 않은 `Drilldown`은 Escape와 닫기 요청을 넘깁니다. Todae에 필수입니다.
 - **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: 하나만 열리는 아코디언. 없으면: 한 그룹의 여러 디스클로저가 동시에 열릴 수 있습니다.
 - **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: 디스클로저 내용을 서서히 나타냅니다. 없으면: 내용이 바로 나타납니다.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `autoGrow`를 쓴 `Field.Textarea`. 없으면: textarea가 rows 높이를 유지하고 스크롤됩니다.

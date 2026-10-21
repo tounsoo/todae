@@ -208,10 +208,10 @@
   "drilldown": {
     "(top)": "4bf419843b89",
     "# Drilldown": "d127a7d67b81",
-    "## The stack": "7e280867d504",
-    "## Escape and the back gesture": "3c1313c284b1",
-    "## Motion": "009e27b795fb",
-    "## Accessible composition": "66b13c439e79",
+    "## The stack": "17ef04addfdd",
+    "## Escape and the back gesture": "db7a809c7765",
+    "## Motion": "e51fdefc174a",
+    "## Accessible composition": "9f5be7b513ee",
     "## When to use": "2cc0c220f4a0",
     "## Props": "f77bad6de1f3",
     "(section order)": "d4e507781061"
@@ -487,7 +487,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "d64eedd35fb3",
+    "# Native platform": "3114e60c8747",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
