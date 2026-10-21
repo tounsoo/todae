@@ -5,7 +5,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -14,11 +13,9 @@ import {
   type RefObject,
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
-import { cssTimeMs } from '../overlay/cssTime.js';
 import { useSurfacePresent } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
-import { reducedMotion } from '../overlay/useOverlayPresence.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
@@ -27,6 +24,7 @@ import { BackGlyph, glyphOr } from './glyphs.js';
 import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
+import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type ViewStatus } from './useStackMotion.js';
 import styles from './Drilldown.module.css';
 
 /**
@@ -38,8 +36,6 @@ export type DrilldownChangeReason = 'push' | 'back' | 'escape' | 'reset';
 
 /** What Escape does below the first view: go back one view, or leave it to the overlay, which closes. */
 export type DrilldownEscape = 'back' | 'close';
-
-type DrilldownDirection = 'forward' | 'back';
 
 export type DrilldownRootProps = {
   /** Controlled stack of view values, the first view first and the shown view last. */
@@ -69,39 +65,11 @@ export type DrilldownBackProps = ButtonActionProps;
 
 export type DrilldownLabelProps = Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
-type Stack = readonly string[];
-
-type Motion = { from: Stack; direction: DrilldownDirection };
-
-type MotionState = { shown: Stack; motion: Motion | null };
-
-type MotionAction = { type: 'show'; stack: Stack } | { type: 'settle' } | { type: 'reset'; stack: Stack };
-
-function sameStack(a: Stack, b: Stack): boolean {
-  return a.length === b.length && a.every((value, i) => value === b[i]);
-}
-
-function motionReducer(state: MotionState, action: MotionAction): MotionState {
-  switch (action.type) {
-    case 'show':
-      return {
-        shown: action.stack,
-        motion: { from: state.shown, direction: action.stack.length >= state.shown.length ? 'forward' : 'back' },
-      };
-    case 'settle':
-      return state.motion ? { ...state, motion: null } : state;
-    case 'reset':
-      return { shown: action.stack, motion: null };
-  }
-}
-
 type ViewRecord = { element: HTMLElement; initialFocusRef?: RefObject<HTMLElement | null> };
-
-type ViewStatus = 'current' | 'entering' | 'leaving' | 'below';
 
 type DrilldownContextValue = {
   stack: Stack;
-  direction: DrilldownDirection | undefined;
+  direction: StackDirection | undefined;
   statusOf: (value: string) => ViewStatus | null;
   labels: ReadonlyMap<string, string>;
   push: (value: string, trigger: HTMLElement) => void;
@@ -131,86 +99,51 @@ function shows(viewport: HTMLElement | null): boolean {
   return viewport?.checkVisibility() === true;
 }
 
-function motionToken(el: HTMLElement, name: string): string {
-  return getComputedStyle(el).getPropertyValue(`--todae-drilldown-motion-${name}`).trim();
-}
-
 // What the views below the shown one get back on a pop, recorded as a
 // Drilldown.Trigger pushes: the trigger that pushed each view, and the scroll
 // offset of each view a push covered.
 type Memory = { triggers: Map<string, HTMLElement>; offsets: Map<string, number> };
 
-/**
- * Where focus goes as a slide shows `entering`: back to the trigger that
- * pushed the view just above it, while that trigger can take focus, else
- * the pushed view's `initialFocusRef`, else the view's first tab stop, else
- * the view itself.
- */
-function focusTarget(motion: Motion, shown: Stack, entering: HTMLElement, views: ReadonlyMap<string, ViewRecord>, memory: Memory) {
-  if (motion.direction === 'back') {
-    // The view just above the new top: a jump back several views returns to
-    // the trigger in the view it lands on.
-    const child = motion.from[shown.length];
-    const trigger = child === undefined ? undefined : memory.triggers.get(child);
-    if (trigger?.isConnected && entering.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled')) return trigger;
-    return firstTabbable(entering) ?? entering;
-  }
-  const top = shown.at(-1);
-  return (top === undefined ? null : views.get(top)?.initialFocusRef?.current) ?? firstTabbable(entering) ?? entering;
-}
-
-type MotionStart = {
-  motion: Motion;
-  shown: Stack;
-  entering: HTMLElement | undefined;
-  leaving: HTMLElement | undefined;
-  duration: number;
-  viewport: HTMLElement | null;
-  back: HTMLElement | null;
-  views: ReadonlyMap<string, ViewRecord>;
-  memory: Memory;
-};
-
-// Moves the height, scroll and focus to the new view as a slide starts.
-function startMotion({ motion, shown, entering, leaving, duration, viewport, back, views, memory }: MotionStart) {
-  const scroller = viewport && scrollParent(viewport);
-  const active = viewport?.ownerDocument.activeElement;
-  // Focus moves with the views when it was on them, on Back, or lost; not
-  // from another control, such as the product's own that set a controlled
-  // stack.
-  const ownsFocus = !active || active === active.ownerDocument.body || leaving?.contains(active) || back === active;
-  const top = shown.at(-1);
-  const scrollTop = motion.direction === 'back' && top !== undefined ? (memory.offsets.get(top) ?? 0) : 0;
-
-  // A restored offset needs the parent's full height at once, or the scroll
-  // container clamps it.
-  if (viewport && entering && leaving && duration > 0 && scrollTop === 0) {
-    viewport.animate([{ height: `${leaving.offsetHeight}px` }, { height: `${entering.offsetHeight}px` }], {
-      duration,
-      easing: motionToken(viewport, 'easing-enter') || 'ease',
-    });
-  }
-  if (scroller) scroller.scrollTop = scrollTop;
-  if (entering && ownsFocus) focusWithoutScroll(focusTarget(motion, shown, entering, views, memory));
-}
-
-// The animations a slide runs, without endless ones inside a view's content.
-function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]): Animation[] {
-  return elements.flatMap((el) => el?.getAnimations() ?? []).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
+// A trigger that pushed a view takes focus back while it is still in the view below and can take it.
+function canTakeFocusBack(trigger: HTMLElement | undefined, view: HTMLElement): trigger is HTMLElement {
+  return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
 }
 
 const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
   const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
-  const [{ shown, motion }, dispatch] = useReducer(motionReducer, { shown: stack, motion: null });
-  if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
-
   const memory = useRef<Memory>({ triggers: new Map(), offsets: new Map() });
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const backRef = useRef<HTMLButtonElement | null>(null);
+
+  const elementOf = useCallback((view: string) => views.current.get(view)?.element, []);
+  // Moves scroll and focus to the new view as its slide starts.
+  const onChange = useCallback((next: StackChange, entering: HTMLElement | undefined, leaving: HTMLElement | undefined) => {
+    const viewport = viewportRef.current;
+    const scroller = viewport && scrollParent(viewport);
+    const active = viewport?.ownerDocument.activeElement;
+    // Focus moves with the views when it was on them, on Back, or lost; not
+    // from another control, such as the product's own that set a controlled
+    // stack.
+    const ownsFocus = !active || active === active.ownerDocument.body || leaving?.contains(active) || backRef.current === active;
+    const top = next.to.at(-1);
+    const scrollTop = next.direction === 'back' && top !== undefined ? (memory.current.offsets.get(top) ?? 0) : 0;
+    if (scroller) scroller.scrollTop = scrollTop;
+    if (entering && ownsFocus) {
+      // The view just above the new top: a jump back several views returns
+      // to the trigger in the view it lands on.
+      const child = next.from[next.to.length];
+      const trigger = child === undefined ? undefined : memory.current.triggers.get(child);
+      const returnTo = next.direction === 'back' && canTakeFocusBack(trigger, entering) ? trigger : null;
+      const initialFocus = next.direction === 'forward' && top !== undefined ? views.current.get(top)?.initialFocusRef?.current : null;
+      focusWithoutScroll(returnTo ?? initialFocus ?? firstTabbable(entering) ?? entering);
+    }
+    return scrollTop > 0;
+  }, []);
+  const { shown, direction, statusOf, reset } = useStackMotion({ stack, viewportRef, elementOf, onChange });
 
   const push = useCallback(
     (next: string, trigger: HTMLElement) => {
@@ -252,31 +185,6 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     };
   }, []);
 
-  useLayoutEffect(() => {
-    if (!motion) return;
-    const settle = () => dispatch({ type: 'settle' });
-    const viewport = viewportRef.current;
-    const top = shown.at(-1);
-    const left = motion.from.at(-1);
-    const entering = top === undefined ? undefined : views.current.get(top)?.element;
-    const leaving = left === undefined || left === top ? undefined : views.current.get(left)?.element;
-    const duration = viewport && !reducedMotion() ? (cssTimeMs(motionToken(viewport, 'duration')) ?? 0) : 0;
-    startMotion({ motion, shown, entering, leaving, duration, viewport, back: backRef.current, views: views.current, memory: memory.current });
-    if (duration <= 0) {
-      settle();
-      return;
-    }
-    // Settles when the slide's animations finish, so CSS that changes them
-    // keeps the leaving view on screen as long as it moves.
-    let current = true;
-    void Promise.allSettled(slideAnimations([viewport, entering, leaving]).map((a) => a.finished)).then(() => {
-      if (current) settle();
-    });
-    return () => {
-      current = false;
-    };
-  }, [motion, shown]);
-
   // After the views' own layout effects, so every view in the stack has registered.
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;
@@ -299,8 +207,8 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     memory.current.triggers.clear();
     memory.current.offsets.clear();
     change(defaultValue, 'reset');
-    dispatch({ type: 'reset', stack: defaultValue });
-  }, [present, controlled, defaultValue, change, stack]);
+    reset(defaultValue);
+  }, [present, controlled, defaultValue, change, reset, stack]);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, which also stops the key's close
@@ -318,20 +226,10 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   }, []);
   useEscapeKey(escape === 'back' && stack.length > 1, takesEscape, goBack, viewportRef, { popup: false });
 
-  const statusOf = useCallback(
-    (view: string): ViewStatus | null => {
-      const top = shown.at(-1);
-      if (view === top) return motion ? 'entering' : 'current';
-      if (motion && view === motion.from.at(-1)) return 'leaving';
-      return shown.includes(view) ? 'below' : null;
-    },
-    [motion, shown],
-  );
-
   const ctx = useMemo<DrilldownContextValue>(
     () => ({
       stack: shown,
-      direction: motion?.direction,
+      direction,
       statusOf,
       labels,
       push,
@@ -340,7 +238,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
       viewportRef,
       backRef,
     }),
-    [labels, motion, pop, push, registerView, shown, statusOf],
+    [direction, labels, pop, push, registerView, shown, statusOf],
   );
 
   return <DrilldownContext.Provider value={ctx}>{children}</DrilldownContext.Provider>;
