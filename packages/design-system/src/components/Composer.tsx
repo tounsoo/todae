@@ -14,7 +14,7 @@ import {
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps } from './Button.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { glyphOr, SendGlyph, StopGlyph } from './glyphs.js';
 import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -121,7 +121,7 @@ function Submit({
   const glyphs = useGlyphs();
   const own = useRef<HTMLButtonElement>(null);
   const empty = Children.toArray(children).length === 0;
-  const [label, labelRef] = useDismissLabel(empty ? undefined : children, ariaLabel, ref, busy ? strings.stop : strings.send);
+  const [label, labelRef] = useButtonName(empty ? undefined : children, ariaLabel, ref, busy ? strings.stop : strings.send);
   const refs = useComposedRefs(own, labelRef);
   const off = busy ? !onStop : Boolean(disabled);
   // Whether the button was enabled at the last commit. A focusout while the

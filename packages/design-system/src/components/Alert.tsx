@@ -1,7 +1,7 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDismissLabel } from './dismissLabel.js';
+import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { cx } from './props.js';
 import styles from './Alert.module.css';
@@ -59,7 +59,7 @@ function Actions({ className, ...props }: AlertActionsProps) {
  * Named by the `dismiss` string unless its own text names it, so a visible label stays its name.
  */
 function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
+  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().dismiss);
   const glyph = useCloseGlyph();
   return (
     <Button.Root

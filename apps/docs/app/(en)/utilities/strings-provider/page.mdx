@@ -168,6 +168,16 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`Choose date and time`</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Increment`, unless its own text names it, given the text of its `Field.NumberInput`'s label, or an empty string without one</Table.Cell>
+      <Table.Cell>`Increase {field}`, or `Increase` with no label</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`decrement(field)`</Table.HeaderCell>
+      <Table.Cell>`Field.Decrement`, unless its own text names it, given the text of its `Field.NumberInput`'s label, or an empty string without one</Table.Cell>
+      <Table.Cell>`Decrease {field}`, or `Decrease` with no label</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`previousMonth`</Table.HeaderCell>
       <Table.Cell>`Calendar.Header`'s previous-month button</Table.Cell>
       <Table.Cell>`Previous month`</Table.Cell>

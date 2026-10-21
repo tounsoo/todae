@@ -200,7 +200,10 @@ export {
   type FieldDateTimePickerCloseReason,
   type FieldDateTimePickerProps,
   type FieldGroupProps,
+  type FieldDecrementProps,
   type FieldIconProps,
+  type FieldIncrementProps,
+  type FieldNumberInputProps,
   type FieldRootProps,
   type FieldRowProps,
   type FieldSelectProps,
@@ -260,6 +263,7 @@ export {
 export { normalizeHex } from './components/color.js';
 export { formatDate, parseDate, type DateTextOptions } from './components/dateText.js';
 export { formatTime, parseTime, type TimeTextOptions } from './components/timeText.js';
+export { formatNumber, parseNumber, type NumberFormatOptions, type NumberTextOptions } from './components/numberText.js';
 export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
 export {
   Calendar,

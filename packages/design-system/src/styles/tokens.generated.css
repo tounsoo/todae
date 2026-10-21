@@ -573,6 +573,13 @@
   --todae-field-ring-focus: var(--_todae-field-ring-focus, var(--todae-focus-ring-color));
   --todae-field-ring-invalid: var(--_todae-field-ring-invalid, var(--todae-color-danger-default));
   --todae-field-row-control-size: var(--_todae-field-row-control-size, 1.625rem);
+  --todae-field-stepper-bg-active: var(--_todae-field-stepper-bg-active, var(--todae-color-bg-pressed));
+  --todae-field-stepper-bg-hover: var(--_todae-field-stepper-bg-hover, var(--todae-color-bg-highlight));
+  --todae-field-stepper-fg: var(--_todae-field-stepper-fg, var(--todae-color-fg-muted));
+  --todae-field-stepper-radius: var(--_todae-field-stepper-radius, var(--todae-radius-sm));
+  --todae-field-stepper-repeat-delay: var(--_todae-field-stepper-repeat-delay, 400ms);
+  --todae-field-stepper-repeat-interval: var(--_todae-field-stepper-repeat-interval, 60ms);
+  --todae-field-stepper-size: var(--_todae-field-stepper-size, 1.5rem);
   --todae-field-swatch-border: var(--_todae-field-swatch-border, var(--todae-color-border-default));
   --todae-field-swatch-radius: var(--_todae-field-swatch-radius, var(--todae-radius-sm));
   --todae-field-token-bg: var(--_todae-field-token-bg, var(--todae-color-bg-subtle));

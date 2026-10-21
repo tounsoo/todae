@@ -21,6 +21,7 @@ import { useChipField } from '../hooks/useChipField.js';
 import { useField } from '../hooks/useField.js';
 import * as api from '../index.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
+import { resetWarnOnce } from './warnOnce.js';
 import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
@@ -56,6 +57,7 @@ describe('Field exports', () => {
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
+      NumberInput: Field.NumberInput,
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Select: Field.Select,
@@ -65,6 +67,8 @@ describe('Field exports', () => {
       DateTimePicker: Field.DateTimePicker,
       Icon: Field.Icon,
       Affix: Field.Affix,
+      Increment: Field.Increment,
+      Decrement: Field.Decrement,
       Counter: Field.Counter,
       Row: Field.Row,
       Group: Field.Group,
@@ -174,8 +178,42 @@ describe('Field.TextInput', () => {
   it('rejects file at the type level', () => {
     expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
-      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number'
+      'text' | 'search' | 'email' | 'url' | 'tel' | 'password'
     >();
+    expectTypeOf<NonNullable<FieldTextInputProps['type']>>().extract<'number'>().toBeNever();
+  });
+
+  it('warns once in development when TextInput is given type number at run time', () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const props = { value: '', onValueChange: () => undefined, type: 'number' } as unknown as FieldTextInputProps;
+    const { rerender } = render(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+      </Field.Root>,
+    );
+    rerender(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+      </Field.Root>,
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/no longer supports type="number".*Field.NumberInput/));
+    warn.mockRestore();
+  });
+
+  it('shows no counter on a legacy type="number" TextInput, as before', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const props = { value: '12', onValueChange: () => undefined, type: 'number', maxLength: 10 } as unknown as FieldTextInputProps;
+    const { container } = render(
+      <Field.Root aria-label="Qty">
+        <Field.TextInput {...props} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(screen.queryByText('Up to 10 characters')).toBeNull();
+    expect(container.querySelector('[aria-live="polite"]')).toBeNull();
+    expect(screen.getByRole('spinbutton').getAttribute('aria-describedby') ?? '').not.toContain('hint');
   });
 
   it('takes onValueChange alone on TextInput and Textarea', () => {
@@ -220,21 +258,6 @@ describe('Field.TextInput', () => {
     expect(both!.readOnly).toBe(false);
     expect(fixed!.readOnly).toBe(true);
     expect(container.querySelector('textarea')!.readOnly).toBe(true);
-  });
-
-  it.each([['number', '42', '7']] as const)('renders a native %s input with a string value', (type, value, next) => {
-    const onValueChange = vi.fn();
-    const { container } = render(
-      <Field.Root aria-label="When">
-        <Field.TextInput type={type} value={value} onChange={() => undefined} onValueChange={onValueChange} />
-      </Field.Root>,
-    );
-    const input = container.querySelector('input')!;
-    expect(input.type).toBe(type);
-    expect(input.value).toBe(value);
-    expect(input.getAttribute('aria-label')).toBe('When');
-    fireEvent.change(input, { target: { value: next } });
-    expect(onValueChange).toHaveBeenCalledWith(next);
   });
 });
 
@@ -303,6 +326,26 @@ describe('Field.ColorPicker beside another control part', () => {
     const field = useField();
     return <div role="slider" aria-valuenow={3} tabIndex={0} {...field.getControlProps({}, { native: false })} />;
   }
+
+  function Silent({ name }: { name?: string }) {
+    const field = useField();
+    return <input {...field.getControlProps({ name }, { sendsName: false })} />;
+  }
+
+  it('gives a control that sends nothing no name, its own or the Root, and leaves the name to one beside it', () => {
+    const { container, getByTestId } = render(
+      <form data-testid="form">
+        <Field.Root name="accent" aria-label="Accent">
+          <Silent name="mine" />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const silent = container.querySelector('input')!;
+    expect(silent.hasAttribute('name')).toBe(false);
+    expect(silent.getAttribute('data-todae-field-control')).toBe('');
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+  });
 
   it('keeps the name, and gives up the id, beside a control that is not a form element', () => {
     const { container, getByTestId } = render(
@@ -1340,18 +1383,6 @@ describe('Field.Counter', () => {
     expect(fieldCss).toContain('padding-inline-start: var(--todae-field-gap)');
     expect(fieldCss).toContain('padding-inline-end: var(--todae-field-gap)');
     expect(fieldCss).not.toMatch(/padding-(left|right)/);
-  });
-
-  it('shows no limit for number and date inputs, which browsers do not cap', () => {
-    const { container } = render(
-      <Field.Root>
-        <Field.TextInput type="number" value="12345" maxLength={4} onChange={() => undefined} />
-        <Field.Counter />
-      </Field.Root>,
-    );
-    expect(container.textContent).not.toContain('/ 4');
-    expect(container.textContent).not.toContain('Up to 4 characters');
-    expect(screen.getByRole('spinbutton').hasAttribute('aria-describedby')).toBe(false);
   });
 
   it('keeps the hint hidden when the counter is not a shell child', () => {
