@@ -22,7 +22,7 @@ Import Todae's stylesheet once, from your CSS entry:
 @import '@tounsoo/todae/todae.css';
 ```
 
-Todae's CSS sits in the `todae` cascade layer, and CSS outside any layer beats Todae's normal declarations. So a reset of your own, such as `* { padding: 0; }` or `a { text-decoration: none; }`, takes the padding from Todae's buttons and the underline from its links. A Next.js app made without Tailwind CSS has both in its `globals.css`. Put a reset in a layer named before `todae`, and with Tailwind CSS, put Todae between Tailwind's reset and its utilities, as [CSS layers](/guides/css-layers) shows. In Next.js without Tailwind CSS 4 or `postcss-import`, import the stylesheet as the Next.js section below shows instead.
+Todae's CSS sits in the `todae` cascade layer, and CSS outside any layer beats Todae's normal declarations. So a reset of your own, such as `* { padding: 0; }` or `a { text-decoration: none; }`, takes the padding from Todae's buttons and the underline from its links. A Next.js app made without Tailwind CSS has both in its `globals.css`. Put a reset in a layer named before `todae`, and with Tailwind CSS, put Todae between Tailwind's reset and its utilities, as [CSS layers](/guides/css-layers) shows. `postcss-import` doesn't read the package's `exports`, so with it, import `@tounsoo/todae/dist/todae.css` instead. In Next.js without Tailwind CSS 4 or `postcss-import`, import the stylesheet as the Next.js section below shows instead.
 
 ## Wrap the app
 

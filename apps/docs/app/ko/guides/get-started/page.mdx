@@ -22,7 +22,7 @@ Todae의 스타일시트는 CSS 진입 파일에서 한 번 import합니다.
 @import '@tounsoo/todae/todae.css';
 ```
 
-Todae의 CSS는 `todae` 캐스케이드 레이어에 있고, 어떤 레이어에도 속하지 않은 CSS는 Todae의 일반 선언을 이깁니다. 그래서 `* { padding: 0; }`이나 `a { text-decoration: none; }` 같은 앱 자체 리셋은 Todae 버튼의 패딩과 링크의 밑줄을 지웁니다. Tailwind CSS 없이 만든 Next.js 앱의 `globals.css`에는 둘 다 있습니다. [CSS 레이어](/guides/css-layers)에 나온 대로 리셋은 `todae`보다 앞에 이름을 둔 레이어에 넣고, Tailwind CSS를 쓴다면 Todae를 Tailwind의 리셋과 유틸리티 사이에 둡니다. Tailwind CSS 4나 `postcss-import` 없이 Next.js를 쓴다면 스타일시트는 아래 Next.js 섹션에 나온 대로 import합니다.
+Todae의 CSS는 `todae` 캐스케이드 레이어에 있고, 어떤 레이어에도 속하지 않은 CSS는 Todae의 일반 선언을 이깁니다. 그래서 `* { padding: 0; }`이나 `a { text-decoration: none; }` 같은 앱 자체 리셋은 Todae 버튼의 패딩과 링크의 밑줄을 지웁니다. Tailwind CSS 없이 만든 Next.js 앱의 `globals.css`에는 둘 다 있습니다. [CSS 레이어](/guides/css-layers)에 나온 대로 리셋은 `todae`보다 앞에 이름을 둔 레이어에 넣고, Tailwind CSS를 쓴다면 Todae를 Tailwind의 리셋과 유틸리티 사이에 둡니다. `postcss-import`는 패키지의 `exports`를 읽지 않으므로, 그것을 쓸 때는 `@tounsoo/todae/dist/todae.css`를 import합니다. Tailwind CSS 4나 `postcss-import` 없이 Next.js를 쓴다면 스타일시트는 아래 Next.js 섹션에 나온 대로 import합니다.
 
 ## 앱 감싸기
 
@@ -86,7 +86,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 ## 날짜와 시각
 
-`Calendar`, 날짜와 시각 선택기, 그 텍스트 도우미는 전역 `Temporal` 객체를 쓰고, Todae는 그 폴리필을 포함하지 않습니다. 브라우저에 없다면 `temporal-polyfill/global` 같은 폴리필을 전역으로 로드하세요. 어떤 파트에 필요하고 없으면 어떻게 되는지는 [네이티브 플랫폼](/platform)에 있습니다.
+`Calendar`, 날짜와 시각 선택기, 그 텍스트 도우미는 전역 `Temporal` 객체를 쓰고, Todae는 그 폴리필을 포함하지 않습니다. 브라우저에 Temporal이 없다면 `temporal-polyfill/global` 같은 폴리필을 전역으로 로드하세요. 어떤 파트에 필요하고 없으면 어떻게 되는지는 [네이티브 플랫폼](/platform)에 있습니다.
 
 ## 다음 단계
 
