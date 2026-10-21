@@ -33,7 +33,10 @@ function Three({ dir }: { dir?: 'ltr' | 'rtl' }) {
 }
 
 function overlapToken(): number {
-  return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--todae-avatar-group-overlap')) || 0.25;
+  const group = screen.getByRole('group');
+  const overlap = Number.parseFloat(getComputedStyle(group).getPropertyValue('--todae-avatar-group-overlap'));
+  expect(overlap).toBeGreaterThan(0);
+  return overlap;
 }
 
 describe('Avatar.Group in a browser', () => {
@@ -138,6 +141,48 @@ describe('Avatar.Group in a browser', () => {
     );
     const panel = screen.getByTestId('panel');
     panel.showPopover();
-    expect(Number.parseFloat(getComputedStyle(panel).marginInlineStart) || 0).toBeGreaterThanOrEqual(0);
+    expect(Number.parseFloat(getComputedStyle(panel).marginInlineStart)).toBeGreaterThanOrEqual(0);
+  });
+
+  it('leaves focused popover content in the group at its own position', () => {
+    render(
+      <Themed>
+        <Avatar.Group aria-label="Assignees" size="lg">
+          <Avatar.Root label="Ada">
+            <Avatar.Fallback>AL</Avatar.Fallback>
+          </Avatar.Root>
+          <div popover="manual" data-testid="panel">
+            <button type="button">Details</button>
+          </div>
+        </Avatar.Group>
+      </Themed>,
+    );
+    const panel = screen.getByTestId('panel');
+    panel.showPopover();
+    screen.getByRole('button', { name: 'Details' }).focus({ focusVisible: true } as FocusOptions);
+    expect(getComputedStyle(panel).position).toBe('fixed');
+  });
+
+  it('lifts a wrapper whose descendant has focus', async () => {
+    render(
+      <Themed>
+        <Avatar.Group aria-label="Assignees" size="lg">
+          <span data-testid="first">
+            <a href="#ada" aria-label="Ada">
+              <Avatar.Root>
+                <Avatar.Fallback>AL</Avatar.Fallback>
+              </Avatar.Root>
+            </a>
+          </span>
+          <Avatar.Root label="Grace">
+            <Avatar.Fallback>GH</Avatar.Fallback>
+          </Avatar.Root>
+        </Avatar.Group>
+      </Themed>,
+    );
+    const first = screen.getByTestId('first');
+    expect(getComputedStyle(first).zIndex).toBe('auto');
+    await userEvent.tab();
+    await waitFor(() => expect(getComputedStyle(first).zIndex).toBe('1'));
   });
 });

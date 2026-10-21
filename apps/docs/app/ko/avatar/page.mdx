@@ -19,7 +19,7 @@ import { AvatarBesideName, AvatarGroupExample, AvatarGroupSizes, AvatarSizes, Av
 
 `label`이 있으면 이미지와 대체 표시 중 무엇이 보이든 Avatar는 `label`로 이름 붙은 이미지 하나입니다. 그래서 스크린 리더는 "AL"이 아니라 "Ada Lovelace"라고 읽습니다. 같은 이유로 `Avatar.Image`는 `alt`를 받지 않습니다.
 
-이름이 Avatar 옆에 적혀 있으면 `label`을 빼세요. 그러면 Avatar는 장식이 되어 보조 기술에서 숨겨지므로 이름을 두 번 읽지 않습니다. `Avatar.Group`에는 "담당자"처럼 `aria-label`로 이름을 주고, "+3" Avatar에는 개수도 읽히도록 "3 more" 같은 `label`을 주세요. 이름이 그룹 옆에 적혀 있으면 Avatar에는 이름을 주지 마세요.
+이름이 Avatar 옆에 적혀 있으면 `label`을 빼세요. 그러면 Avatar는 장식이 되어 보조 기술에서 숨겨지므로 이름을 두 번 읽지 않습니다.
 
 ```tsx
 <Avatar.Root>
@@ -94,7 +94,7 @@ import { AvatarBesideName, AvatarGroupExample, AvatarGroupSizes, AvatarSizes, Av
 
 **Todae가 맡는 것:** `label`이 있으면 `Avatar.Root`는 `aria-label`로 이름 붙은 `role="img"`이고, `Avatar.Image`는 `alt=""`를 렌더링합니다. 그래서 이미지와 이니셜이 이름 하나를 함께 씁니다. `label`이 없으면 루트는 `aria-hidden`입니다. 타입에서 루트의 `role`, `aria-label`, `aria-labelledby`와 이미지의 `alt`를 뺐으므로, 래퍼가 실수로 이름을 하나 더 붙일 수 없습니다. `Avatar.Group`은 항상 `role="group"`이고, 안쪽의 `label`이 있는 Avatar는 그 그룹 안의 이미지로 하나씩 읽힙니다.
 
-**직접 제공할 것:** 둘 중 어느 쪽인지 정하는 일. 사람을 보여 주는 래퍼는 참여자 목록처럼 Avatar만 따로 있을 때 `label`을 전달하고, 이름이 옆에 적혀 있을 때는 빼야 합니다. 이름은 데이터에서 가져옵니다. Todae는 대체 표시에서 이름을 읽지 않습니다.
+**직접 제공할 것:** 둘 중 어느 쪽인지 정하는 일. 사람을 보여 주는 래퍼는 참여자 목록처럼 Avatar만 따로 있을 때 `label`을 전달하고, 이름이 옆에 적혀 있을 때는 빼야 합니다. 이름은 데이터에서 가져옵니다. Todae는 대체 표시에서 이름을 읽지 않습니다. `Avatar.Group`에는 "담당자"처럼 `aria-label`로 이름을 주고, "+3" Avatar에는 개수도 읽히도록 "3 more" 같은 `label`을 주세요. 이름이 그룹 옆에 적혀 있으면 Avatar에는 이름을 주지 마세요.
 
 **주의할 점:** `label` 없는 Avatar를 버튼, 링크, [Menu](/menu) 트리거의 유일한 내용으로 넣는 것. Avatar가 숨겨지므로 컨트롤에 이름이 없습니다. 컨트롤에 `aria-label`을 주거나 Avatar에 `label`을 주세요. 래퍼가 더한 접속 상태 점이나 테두리는 색만으로 상태를 보여 줍니다. 상태를 텍스트로도 적으세요.
 
