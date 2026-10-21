@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
+import { frontModal } from '../overlay/modalStack.js';
 import { useSurfacePresent } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
@@ -94,9 +95,15 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-// Not in a closed popover, a hidden tab panel or a lower view of another Drilldown.
-function shows(viewport: HTMLElement | null): boolean {
-  return viewport?.checkVisibility() === true;
+// With focus lost to the body, a key and a close request go to the surface in front.
+function inFrontSurface(surface: Element): boolean {
+  const front = frontModal();
+  return front === null || front.contains(surface);
+}
+
+// A key a popup or field inside already took, or one that ends an IME composition.
+function handledOrComposing(event: KeyboardEvent): boolean {
+  return event.defaultPrevented || isImeKeyEvent(event);
 }
 
 // What a view a forward change covered gets back on a pop: its scroll offset
@@ -225,17 +232,15 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   // come through the overlays' Escape stack, which also stops the key's close
   // request in a modal. A popup open beside the views goes first.
   const goBack = useCallback(() => pop('escape'), [pop]);
-  const takesEscape = useCallback((event: KeyboardEvent | null) => {
+  const takes = useCallback((target: Element | null) => {
     const viewport = viewportRef.current;
-    if (!shows(viewport)) return false;
-    if (!event) return true;
-    if (event.defaultPrevented || isImeKeyEvent(event)) return false;
-    const target = event.target instanceof Node ? event.target : null;
-    const layer = viewport?.closest('dialog, [popover]');
-    if (layer) return layer.contains(target);
-    return Boolean(viewport?.contains(target) || backRef.current?.contains(target));
+    if (!viewport?.checkVisibility()) return false;
+    const surface = viewport.closest('dialog, [popover]');
+    if (!surface) return viewport.contains(target) || backRef.current?.contains(target) === true;
+    if (target === viewport.ownerDocument.body) return inFrontSurface(surface);
+    return surface.contains(target);
   }, []);
-  useEscapeKey(escape === 'back' && stack.length > 1, takesEscape, goBack, viewportRef, { popup: false });
+  useEscapeKey(escape === 'back' && stack.length > 1, takes, goBack, viewportRef, { popup: false, passesKey: handledOrComposing });
 
   const ctx = useMemo<DrilldownContextValue>(
     () => ({

@@ -212,23 +212,59 @@ describe('useEscapeKey', () => {
     expect(beside).not.toHaveBeenCalled();
   });
 
-  it('lets a layer turn down a key by the event, passing it to the next one', () => {
+  it('lets a layer turn down Escape by where focus is, or by the key alone, passing it to the next one', () => {
     function Picky({ onEscape }: { onEscape: () => void }) {
-      useEscapeKey(true, (event) => !event?.shiftKey, onEscape);
-      return null;
+      const ref = useRef<HTMLButtonElement>(null);
+      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, undefined, {
+        passesKey: (event) => event.shiftKey,
+      });
+      return (
+        <button type="button" ref={ref}>
+          Picky
+        </button>
+      );
     }
     const outer = vi.fn();
     const inner = vi.fn();
-    render(
+    const { getByRole } = render(
       <>
         <Layer onEscape={outer} />
         <Picky onEscape={inner} />
+        <button type="button">Elsewhere</button>
       </>,
     );
-    fireEvent.keyDown(document, { key: 'Escape', shiftKey: true });
+    fireEvent.keyDown(getByRole('button', { name: 'Elsewhere' }), { key: 'Escape' });
     expect(outer).toHaveBeenCalledTimes(1);
-    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.keyDown(getByRole('button', { name: 'Picky' }), { key: 'Escape', shiftKey: true });
+    expect(outer).toHaveBeenCalledTimes(2);
+    fireEvent.keyDown(getByRole('button', { name: 'Picky' }), { key: 'Escape' });
     expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks a layer about a close request with the element that has focus', () => {
+    function Picky({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLButtonElement>(null);
+      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, ref);
+      return (
+        <button type="button" ref={ref}>
+          Picky
+        </button>
+      );
+    }
+    const onEscape = vi.fn();
+    const { getByRole } = render(
+      <dialog aria-label="surface">
+        <Picky onEscape={onEscape} />
+        <button type="button">Elsewhere</button>
+      </dialog>,
+    );
+    const dialog = getByRole('dialog', { hidden: true });
+    getByRole('button', { name: 'Elsewhere', hidden: true }).focus();
+    expect(takeCloseRequest(dialog)).toBe(false);
+    getByRole('button', { name: 'Picky', hidden: true }).focus();
+    expect(takeCloseRequest(dialog)).toBe(true);
+    expect(onEscape).toHaveBeenCalledTimes(1);
   });
 
   it('passes a layer that is not a popup over for a popup beside it, but not for one around it', () => {

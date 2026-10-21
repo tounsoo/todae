@@ -8,6 +8,7 @@ import { Drawer } from '../components/Drawer.js';
 import { Drilldown, type DrilldownChangeReason } from '../components/Drilldown.js';
 import { Menu } from '../components/Menu.js';
 import { Popover } from '../components/Popover.js';
+import { Tabs } from '../components/Tabs.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
 
@@ -94,7 +95,7 @@ function SettingsDialog({
   );
 }
 
-const dialog = () => screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+const dialog = () => document.querySelector('dialog')!;
 const view = (label: string) => document.querySelector<HTMLElement>(`[role="group"][aria-label="${label}"]`)!;
 // Off Back, whose tip, shown while it had focus, would take the first Escape.
 async function focusInView(textbox: string) {
@@ -625,16 +626,86 @@ describe('Drilldown in a browser', () => {
       cleanupAll();
     }
   });
+
+  it('answers a close request as it answers Escape when focus is outside the Popover around it', async () => {
+    for (const close of ['key', 'request'] as const) {
+      const onValueChange = vi.fn();
+      await openDialog(
+        <Themed>
+          <Dialog.Root open aria-label="Search" onOpenChange={() => undefined}>
+            <button type="button">Outside</button>
+            <InPopover defaultValue={['filters', 'brand']} defaultOpen onValueChange={onValueChange} />
+          </Dialog.Root>
+        </Themed>,
+      );
+      const panel = document.querySelector<HTMLElement>('[popover]')!;
+      await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+      screen.getByRole('button', { name: 'Outside' }).focus();
+      if (close === 'key') await userEvent.keyboard('{Escape}');
+      else dialog().requestClose();
+      await waitFor(() => expect(panel.matches(':popover-open')).toBe(false));
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(dialog().open).toBe(true);
+      cleanupAll();
+    }
+  });
+
+  it('keeps taking close requests for a Drilldown shown by a tab switch, with dismissOnEscape off', async () => {
+    const onClose = vi.fn();
+    const onValueChange = vi.fn();
+    await openDialog(
+      <Themed>
+        <Dialog.Root open aria-label="Settings" dismissOnEscape={false} onOpenChange={(_, reason) => onClose(reason)}>
+          <Tabs.Root defaultValue="general">
+            <Tabs.List aria-label="Sections">
+              <Tabs.Tab value="general">General</Tabs.Tab>
+              <Tabs.Tab value="account">Account</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="general">
+              <p>General settings</p>
+            </Tabs.Panel>
+            <Tabs.Panel value="account" keepMounted>
+              <Drilldown.Root defaultValue={['account', 'email']} onValueChange={onValueChange}>
+                <Drilldown.Viewport>
+                  <Drilldown.View value="account" label="Account" />
+                  <Drilldown.View value="email" label="Email">
+                    <input aria-label="Address" />
+                  </Drilldown.View>
+                </Drilldown.Viewport>
+              </Drilldown.Root>
+            </Tabs.Panel>
+          </Tabs.Root>
+        </Dialog.Root>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByRole('tab', { name: 'Account' }));
+    expect(view('Email').checkVisibility()).toBe(true);
+    // The back gesture reaches the dialog only while closedby lets close requests through.
+    expect(dialog().getAttribute('closedby')).toBe('closerequest');
+    await userEvent.click(screen.getByRole('tab', { name: 'General' }));
+    expect(view('Email').checkVisibility()).toBe(false);
+    // A hidden Drilldown takes nothing, so an uncancelable request closes the
+    // dialog natively and the shell shows it again.
+    dialog().dispatchEvent(new Event('cancel', { cancelable: false }));
+    dialog().close();
+    await waitFor(() => expect(dialog().matches(':modal')).toBe(true));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(dialog().open).toBe(true);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
 
 function InPopover({
   defaultValue,
+  defaultOpen,
   onValueChange,
 }: {
   defaultValue: readonly string[];
+  defaultOpen?: boolean;
   onValueChange?: (value: readonly string[], reason: DrilldownChangeReason) => void;
 }) {
-  const popover = usePopover();
+  const popover = usePopover({ defaultOpen });
   return (
     <Themed>
       <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
