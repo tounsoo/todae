@@ -40,6 +40,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'field/time-picker': () => import('../../app/(en)/field/time-picker/page.mdx'),
   'fieldset': () => import('../../app/(en)/fieldset/page.mdx'),
   'grid': () => import('../../app/(en)/grid/page.mdx'),
+  'guides/get-started': () => import('../../app/(en)/guides/get-started/page.mdx'),
   'guides/build-on-todae': () => import('../../app/(en)/guides/build-on-todae/page.mdx'),
   'guides/css-layers': () => import('../../app/(en)/guides/css-layers/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),

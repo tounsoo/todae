@@ -350,7 +350,7 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "0c0a2beee925",
+    "## A company resolver": "56356abf15d5",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
@@ -360,11 +360,22 @@
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
     "## Unlayered CSS needs no setup": "89929d797794",
-    "## Declare the order once, first": "a82f57dd03c6",
-    "## Tailwind CSS 4": "472fc4054281",
-    "## Tailwind CSS 3": "c94f31defc84",
+    "## Declare the order once, first": "f547b8e44e94",
+    "## A reset of your own": "2dfb211f2468",
+    "## Tailwind CSS 4": "4a93aa05800f",
+    "## Tailwind CSS 3": "7be255398eb7",
     "## `!important`": "48f04fecaf9b",
-    "(section order)": "dda7603e8a16"
+    "(section order)": "2f483d7fda0d"
+  },
+  "guides/get-started": {
+    "# Get started": "792a2cea3e85",
+    "## Install": "3cffd0590d1e",
+    "## Load the stylesheet": "8a8efee63bca",
+    "## Wrap the app": "1b1314bfe1ac",
+    "## Next.js": "e4b46fe5d929",
+    "## Dates and times": "ce6959e8f43e",
+    "## Next": "c2fb4b48c394",
+    "(section order)": "cbf8b3d9a243"
   },
   "label": {
     "(top)": "99eaa411e53d",
@@ -405,7 +416,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "8445ce3fd244",
+    "## Tools": "c55af8e91795",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",

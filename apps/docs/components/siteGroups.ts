@@ -8,6 +8,7 @@ export const SITE_GROUPS = [
     id: 'foundations',
     label: 'Foundations',
     links: [
+      ['/guides/get-started', 'Get started'],
       ['/guides/build-on-todae', 'Build on Todae'],
       ['/composition', 'Composition'],
       ['/tokens', 'Tokens'],

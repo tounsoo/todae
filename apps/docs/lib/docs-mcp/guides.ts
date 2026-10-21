@@ -5,6 +5,7 @@ const SOURCE = 'todae-docs' as const;
 
 /** Docs pages about building on Todae that `get_guide` returns, by topic. */
 export const GUIDES = {
+  'get-started': 'guides/get-started',
   'build-on-todae': 'guides/build-on-todae',
   tokens: 'tokens',
   'css-layers': 'guides/css-layers',

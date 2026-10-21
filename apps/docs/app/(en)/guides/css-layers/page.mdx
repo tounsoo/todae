@@ -27,6 +27,33 @@ A company design system on Todae puts its own component CSS in its layer (`acme`
 
 Import Todae's CSS from the same CSS file, after the statement. Importing it from JavaScript before that file loads names `todae` first, and every other layer then beats it.
 
+Next.js loads a stylesheet that a CSS file imports ahead of that file, unless Tailwind CSS or `postcss-import` puts it inline. There, put the statement in a file of its own, such as `layers.css`, and import the files in order from the root layout:
+
+```ts
+import './layers.css';
+import '@tounsoo/todae/todae.css';
+import './globals.css';
+```
+
+## A reset of your own
+
+A reset outside any layer beats Todae too. `* { padding: 0; }` takes the padding from Todae's buttons, and `a { text-decoration: none; }` the underline from its links. A new Next.js app's `globals.css` has both. Put the reset in a layer named before `todae` in your statement, here `reset`:
+
+```css
+@layer reset {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+```
+
 ## Tailwind CSS 4
 
 Tailwind 4 uses the layers `theme`, `base`, `components` and `utilities`, and its reset (preflight) is in `base`. Put `todae` after `base`:
@@ -36,8 +63,9 @@ Tailwind 4 uses the layers `theme`, `base`, `components` and `utilities`, and it
 
 @import 'tailwindcss';
 @import '@tounsoo/todae/todae.css';
-@import './todae-theme.css';
 ```
+
+Import a company theme from `todae-tokens build`, such as `./todae-theme.css`, right after Todae's CSS.
 
 Preflight then loses to Todae's styles, and utilities such as `bg-red-500` or `px-8` on a part win over Todae's. With Todae ahead of `base`, preflight removes button backgrounds and link underlines; with Todae after `utilities`, a utility on a part loses wherever Todae sets the same property.
 
@@ -61,12 +89,11 @@ Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the 
 
 @import 'tailwindcss/base' layer(tw-base);
 @import '@tounsoo/todae/dist/todae.css';
-@import './todae-theme.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 ```
 
-Or turn preflight off with `corePlugins: { preflight: false }` and keep `@tailwind utilities`.
+A company theme goes right after Todae's CSS here too. Or turn preflight off with `corePlugins: { preflight: false }` and keep `@tailwind utilities`.
 
 ## `!important`
 

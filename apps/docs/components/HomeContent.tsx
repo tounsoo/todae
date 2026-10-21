@@ -16,7 +16,7 @@ export function HomeContent({ locale }: { locale: Locale }) {
           <h1 id="home-title">{dict.hero.title}</h1>
           <p className="hero-lead">{dict.hero.lead}</p>
           <Stack.Root className="hero-actions" direction="row" wrap>
-            <SiteButtonLink href={localizePath('/guides/build-on-todae', locale)} trailingIcon={<ArrowIcon />}>
+            <SiteButtonLink href={localizePath('/guides/get-started', locale)} trailingIcon={<ArrowIcon />}>
               {dict.hero.start}
             </SiteButtonLink>
             <SiteButtonLink variant="secondary" href={localizePath('/playground', locale)}>

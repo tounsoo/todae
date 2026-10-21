@@ -1,0 +1,89 @@
+# Get started
+
+Install Todae, load its stylesheet once, and wrap the app in its providers. A Next.js app also keeps Todae's parts in client components.
+
+## Install
+
+```sh
+npm install @tounsoo/todae
+```
+
+Todae needs React 19, and its types need TypeScript 6 or later. A new Next.js app starts on TypeScript 5, and npm then stops with a peer dependency error (`ERESOLVE`), so install TypeScript 6 with Todae:
+
+```sh
+npm install @tounsoo/todae typescript@6
+```
+
+## Load the stylesheet
+
+Import Todae's stylesheet once, from your CSS entry:
+
+```css
+@import '@tounsoo/todae/todae.css';
+```
+
+Todae's CSS sits in the `todae` cascade layer, and CSS outside any layer beats every layer. So a reset of your own, such as `* { padding: 0; }` or `a { text-decoration: none; }`, takes the padding from Todae's buttons and the underline from its links. A new Next.js app's `globals.css` has both. Put a reset in a layer named before `todae`, and with Tailwind CSS, put Tailwind's layers around Todae's, as [CSS layers](/guides/css-layers) shows.
+
+## Wrap the app
+
+```tsx
+import { Button, DensityProvider, ThemeProvider } from '@tounsoo/todae';
+
+export function App() {
+  return (
+    <ThemeProvider appearance="system">
+      <DensityProvider density="comfortable">
+        <Button.Root>Save</Button.Root>
+      </DensityProvider>
+    </ThemeProvider>
+  );
+}
+```
+
+`appearance="system"` follows the user's light or dark setting. Both providers are optional: without them, the page is light and comfortable.
+
+## Next.js
+
+The main entry, `@tounsoo/todae`, is a client module. A Server Component, such as the root layout, can render its providers, but not a part such as `Button.Root`, which arrives there as undefined, so rendering fails with "Element type is invalid". Use parts in a file that starts with `'use client'`:
+
+```tsx
+'use client';
+
+import { Button } from '@tounsoo/todae';
+
+export function SaveButton() {
+  return <Button.Root>Save</Button.Root>;
+}
+```
+
+Some components, such as [Stack](/stack) and [Text](/text), also have an entry a Server Component can render, such as `@tounsoo/todae/stack`. Their pages name it.
+
+Next.js loads a stylesheet that a CSS file imports ahead of that file, unless Tailwind CSS or `postcss-import` puts it inline. So without them, import Todae's CSS from the root layout, after a file that holds your `@layer` statement, as [CSS layers](/guides/css-layers) explains:
+
+```tsx
+import type { ReactNode } from 'react';
+import { ThemeProvider } from '@tounsoo/todae';
+import './layers.css';
+import '@tounsoo/todae/todae.css';
+import './globals.css';
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <ThemeProvider appearance="system">{children}</ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+## Dates and times
+
+`Calendar`, the date and time pickers, `parseDate`, `parseTime` and `parseDateTime` read the global `Temporal` object, and Todae ships no polyfill for it. To support a browser without Temporal, load one globally, such as `temporal-polyfill/global`. [Native platform](/platform) lists the browser features Todae uses.
+
+## Next
+
+- [Build on Todae](/guides/build-on-todae) layers a company's tokens on Todae's and wraps its parts.
+- [Tokens](/tokens) lists every token Todae ships.
+- [MCP server](/mcp) gives AI agents Todae's components, tokens and token build.

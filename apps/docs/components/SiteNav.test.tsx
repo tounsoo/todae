@@ -28,7 +28,7 @@ describe('SiteNav', () => {
     const hrefsIn = (name: string) =>
       [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
     expect(hrefsIn('Components')).not.toContain('/composition');
-    expect(hrefsIn('Foundations')).toEqual(['/guides/build-on-todae', '/composition', '/tokens', '/guides/css-layers', '/platform']);
+    expect(hrefsIn('Foundations')).toEqual(['/guides/get-started', '/guides/build-on-todae', '/composition', '/tokens', '/guides/css-layers', '/platform']);
   });
 
   it('keeps group label ids unique for a second copy', () => {
