@@ -1009,8 +1009,8 @@
       "ko": "제목을 대신합니다. 기본 제목은 문제 개수가 들어간 formErrors 문자열입니다."
     },
     "children": {
-      "en": "Replaces the list of links. Each field has its name, label, error and a focus() that moves focus to its control.",
-      "ko": "링크 목록을 대신합니다. 각 필드는 name, label, error와, 컨트롤로 포커스를 옮기는 focus()를 가집니다."
+      "en": "Replaces the list of links. Each field has its name, label, error, whether it is disabled and a focus() that moves focus to its control.",
+      "ko": "링크 목록을 대신합니다. 각 필드는 name, label, error, 비활성 여부와, 컨트롤로 포커스를 옮기는 focus()를 가집니다."
     }
   },
   "Grid.Root": {

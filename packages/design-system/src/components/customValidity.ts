@@ -4,12 +4,19 @@ import type { ValidityCarrier } from './validity.js';
 /** For each control, the message of each part that owns a say in it, by the part's element. */
 const owners = new WeakMap<ValidityCarrier, Map<Element, string>>();
 
-/** A control has one custom validity: the first non-empty message, innermost owner first. */
+/** The message Todae last wrote to each control, so only that is ever cleared. */
+const written = new WeakMap<ValidityCarrier, string>();
+
+/** A control has one custom validity: the first non-empty message, innermost owner first. It is written only when it changes. */
 function settle(carrier: ValidityCarrier) {
-  const messages = [...(owners.get(carrier) ?? [])].filter(([, message]) => message);
+  const messages = [...(owners.get(carrier) ?? [])];
   // Every owner encloses the control, so they nest.
   messages.sort(([a], [b]) => (a === b ? 0 : a.contains(b) ? 1 : -1));
-  carrier.setCustomValidity(messages[0]?.[1] ?? '');
+  const winner = messages[0]?.[1] ?? '';
+  if (winner === (written.get(carrier) ?? '')) return;
+  carrier.setCustomValidity(winner);
+  if (winner) written.set(carrier, winner);
+  else written.delete(carrier);
 }
 
 function release(carrier: ValidityCarrier, owner: Element) {
@@ -20,10 +27,10 @@ function release(carrier: ValidityCarrier, owner: Element) {
  * Gives `message` to the control `find` returns, after every commit, so a
  * control that remounts or a rule that changes is followed. Parts that share a
  * control (a Fieldset around a Field.Root) don't clobber each other: the
- * control's own part wins, then each fieldset outward. An empty message holds
- * nothing back. Nothing is touched until a message has been given, so a
- * product's own `setCustomValidity` on a control stays. With `part`, a message
- * that finds no control warns in development, once.
+ * control's own part wins, then each fieldset outward. An empty message is no
+ * rule, as is none. Todae writes only when its message changes, and clears only
+ * what it wrote, so a product's own `setCustomValidity` on a control stays.
+ * With `part`, a message that finds no control warns in development, once.
  */
 export function useCustomValidity(
   owner: RefObject<Element | null>,
@@ -41,11 +48,11 @@ export function useCustomValidity(
       warned.current = Boolean(message) && !carrier;
     }
     const prev = held.current;
-    if (prev && (prev.carrier !== carrier || prev.owner !== element || message === undefined)) {
+    if (prev && (prev.carrier !== carrier || prev.owner !== element || !message)) {
       release(prev.carrier, prev.owner);
       held.current = null;
     }
-    if (!carrier || !element || message === undefined) return;
+    if (!carrier || !element || !message) return;
     const messages = owners.get(carrier) ?? new Map<Element, string>();
     owners.set(carrier, messages.set(element, message));
     settle(carrier);

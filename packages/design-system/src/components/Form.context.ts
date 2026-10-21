@@ -15,10 +15,21 @@ export type Reading = {
   native: FormFieldError | null;
   /** The control's name for a person, for Form.Summary. */
   label: string;
+  /** The control's id, for the summary's link. */
+  id: string;
+  /** Whether the control is disabled, itself or through a disabled fieldset. */
+  disabled: boolean;
 };
 
 /** A scope that shows an error, as Form.Summary lists it. */
-export type SummaryEntry = { scopeId: string; error: FormFieldError; label: string; carrier: ValidityCarrier };
+export type SummaryEntry = {
+  scopeId: string;
+  error: FormFieldError;
+  label: string;
+  id: string;
+  disabled: boolean;
+  carrier: ValidityCarrier;
+};
 
 export type FormContextValue = {
   /** Submit attempts since the last reset. */

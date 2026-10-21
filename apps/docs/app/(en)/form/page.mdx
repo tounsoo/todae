@@ -128,7 +128,7 @@ Outside a `Form.Root`, `Field.Group` and `Fieldset.Root` are as they were, and a
 
 **You supply:** Native rules on the controls, an `ErrorMessage.Root` with no `id` in each `Field.Group` or `Fieldset.Root` that should show a message, and a label for every control, which the summary reads. A `name` on each control that takes a server error. Translated strings through StringsProvider. Your own text for `customValidity`.
 
-**Watch for:** A control with no label reads its `name` in the summary. A control outside every scope blocks the submit but shows nothing. `readOnly` and `disabled` controls are not validated, though a server error for them shows, and `Field.TextInput` is read-only when it has no `onChange` or `onValueChange`. A server error for a name that no control in a scope carries shows nowhere, and `Form.Root` warns about it in development. A message is not announced when it appears; the summary is what moves focus and speaks.
+**Watch for:** A control with no label reads its `name` in the summary. A control outside every scope blocks the submit but shows nothing. `readOnly` and `disabled` controls are not validated, though a server error for them shows, and `Field.TextInput` is read-only when it has no `onChange` or `onValueChange`. A server error for a name that no control in a scope carries shows nowhere, and `Form.Root` warns about it in development. After a successful send the form keeps waiting, so an `errors` change that the person didn't cause, such as a poll, is taken as the reply and moves focus: set `errors` only in answer to a send. A message is not announced when it appears; the summary is what moves focus and speaks.
 
 ## When to use
 

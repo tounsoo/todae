@@ -548,3 +548,153 @@ describe('a server error on a disabled control', () => {
     expect(document.activeElement).toBe(screen.getByLabelText('Nick'));
   });
 });
+
+describe('the disabled state of a summary row', () => {
+  function Plan({ disabled, native = false, errors }: { disabled?: boolean; native?: boolean; errors: FormErrors }) {
+    const group = (
+      <Field.Group>
+        <Field.Root id="plan" name="plan" disabled={native ? undefined : disabled}>
+          <Field.TextInput aria-label="Plan" value="pro" onValueChange={() => undefined} />
+        </Field.Root>
+        <ErrorMessage.Root />
+      </Field.Group>
+    );
+    return (
+      <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+        <Form.Summary data-testid="summary" />
+        {native ? <fieldset disabled={disabled}>{group}</fieldset> : group}
+        <Field.Group>
+          <Field.Root id="nick" name="nick">
+            <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <button type="submit">Send</button>
+      </Form.Root>
+    );
+  }
+
+  it('is plain text for a control that a disabled fieldset disables', async () => {
+    const { rerender } = await mount(<Plan native disabled errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Plan native disabled errors={{ plan: 'Locked.', nick: 'Taken.' }} />);
+    await settle();
+    const summary = screen.getByTestId('summary');
+    expect(summary.textContent).toContain('Locked.');
+    expect(within(summary).queryByRole('link', { name: 'Plan' })).toBeNull();
+    expect(within(summary).getByText('Plan')).toBeTruthy();
+  });
+
+  it('is skipped by focus when a disabled fieldset disables the control', async () => {
+    function Bare({ errors }: { errors: FormErrors }) {
+      return (
+        <Form.Root data-testid="form" errors={errors} onSubmit={(event) => event.preventDefault()}>
+          <fieldset disabled>
+            <Field.Group>
+              <Field.Root id="plan" name="plan">
+                <Field.TextInput aria-label="Plan" value="pro" onValueChange={() => undefined} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
+          </fieldset>
+          <Field.Group>
+            <Field.Root id="nick" name="nick">
+              <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <button type="submit">Send</button>
+        </Form.Root>
+      );
+    }
+    const { rerender } = await mount(<Bare errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Bare errors={{ plan: 'Locked.', nick: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(screen.getByLabelText('Nick'));
+  });
+
+  it('follows a control that is disabled after its row showed', async () => {
+    const { rerender } = await mount(<Plan errors={{}} />);
+    await submit(screen.getByTestId('form'));
+    rerender(<Plan errors={{ plan: 'Locked.' }} />);
+    await settle();
+    const summary = screen.getByTestId('summary');
+    expect(within(summary).getByRole('link', { name: 'Plan' })).toBeTruthy();
+    rerender(<Plan disabled errors={{ plan: 'Locked.' }} />);
+    await settle();
+    expect(within(summary).queryByRole('link', { name: 'Plan' })).toBeNull();
+    expect(within(summary).getByText('Plan')).toBeTruthy();
+    rerender(<Plan errors={{ plan: 'Locked.' }} />);
+    await settle();
+    expect(within(summary).getByRole('link', { name: 'Plan' })).toBeTruthy();
+  });
+});
+
+describe('focus on a control no scope shows', () => {
+  it('goes to the scoped field, not an earlier unscoped one with a server error', async () => {
+    function Mixed({ errors }: { errors: FormErrors }) {
+      return (
+        <SignUp errors={errors}>
+          <input name="loose" aria-label="Loose" />
+          <EmailField />
+        </SignUp>
+      );
+    }
+    const { rerender } = await mount(<Mixed errors={{}} />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    rerender(<Mixed errors={{ loose: 'No.', email: 'Taken.' }} />);
+    await settle();
+    expect(document.activeElement).toBe(input());
+  });
+});
+
+describe('a refresh that changes nothing', () => {
+  it('keeps the rows when no listed one differs, so the summary does not render again', async () => {
+    let renders = 0;
+    await mount(
+      <SignUp>
+        <Form.Summary>
+          {(fields) => {
+            renders += 1;
+            return fields.map((field) => <span key={field.label}>{field.label}</span>);
+          }}
+        </Form.Summary>
+        <EmailField />
+        <Fieldset.Root>
+          <input aria-label="Site" type="url" />
+          <ErrorMessage.Root />
+        </Fieldset.Root>
+      </SignUp>,
+    );
+    await submit(screen.getByTestId('form'));
+    const before = renders;
+    // The scope of Site reads again and finds a problem that was not listed.
+    await type(screen.getByLabelText('Site'), 'nope');
+    await settle();
+    expect(renders).toBe(before);
+  });
+});
+
+describe('what a refresh keeps after a reply', () => {
+  it('drops the row of a server error the person clears, instead of turning it into "required"', async () => {
+    function Sending({ errors }: { errors: FormErrors }) {
+      return (
+        <SignUp errors={errors}>
+          <Form.Summary data-testid="summary" />
+          <EmailField />
+        </SignUp>
+      );
+    }
+    const { rerender } = await mount(<Sending errors={{}} />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    rerender(<Sending errors={{ email: 'Taken.' }} />);
+    await settle();
+    expect(screen.getByTestId('summary').textContent).toContain('Taken.');
+    await type(input(), '');
+    await settle();
+    expect(screen.queryByTestId('summary')).toBeNull();
+  });
+});

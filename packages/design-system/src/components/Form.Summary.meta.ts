@@ -16,7 +16,7 @@ export const meta = {
       type: '(fields: readonly FormInvalidField[]) => React.ReactNode',
       required: false,
       description:
-        'Replaces the list of links. Each field has its name, label, error and a focus() that moves focus to its control.',
+        'Replaces the list of links. Each field has its name, label, error, whether it is disabled and a focus() that moves focus to its control.',
     },
   ],
 } as const satisfies ComponentMeta;

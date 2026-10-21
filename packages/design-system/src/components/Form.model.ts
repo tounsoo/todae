@@ -43,6 +43,8 @@ export function sameReadings(a: readonly Reading[], b: readonly Reading[]): bool
         reading.carrier === other.carrier &&
         reading.name === other.name &&
         reading.label === other.label &&
+        reading.id === other.id &&
+        reading.disabled === other.disabled &&
         reading.native?.kind === other.native?.kind &&
         reading.native?.message === other.native?.message
       );
@@ -70,6 +72,18 @@ export function errorsKey(errors: FormErrors | undefined): string {
   const entries = Object.entries(errors ?? {}).filter(([, text]) => text);
   if (entries.length === 0) return EMPTY_KEY;
   return JSON.stringify(entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/** Whether a refresh would leave an entry as it is. */
+export function sameEntry(a: SummaryEntry, b: SummaryEntry): boolean {
+  return (
+    a.carrier === b.carrier &&
+    a.id === b.id &&
+    a.disabled === b.disabled &&
+    a.label === b.label &&
+    a.error.kind === b.error.kind &&
+    a.error.message === b.error.message
+  );
 }
 
 export const keyHasErrors = (key: string) => key !== EMPTY_KEY;
@@ -101,6 +115,8 @@ export function readScope(scope: Element, strings: Strings): Reading[] {
     name: carrier.name,
     native: describeValidity(carrier, strings),
     label: labelOf(carrier, scope),
+    id: carrier.id,
+    disabled: carrier.matches(':disabled'),
   }));
 }
 
@@ -120,7 +136,8 @@ export function failingEntries(
   for (const scope of form.querySelectorAll(SCOPE_SELECTOR)) {
     const shown = pickShown(readScope(scope, strings), errors, dismissal, native);
     if (shown) {
-      entries.push({ scopeId: scope.getAttribute(SCOPE_ATTRIBUTE) ?? '', error: shown.error, label: shown.reading.label, carrier: shown.reading.carrier });
+      const { label, id, disabled, carrier } = shown.reading;
+      entries.push({ scopeId: scope.getAttribute(SCOPE_ATTRIBUTE) ?? '', error: shown.error, label, id, disabled, carrier });
     }
   }
   return entries.sort((a, b) => (a.carrier.compareDocumentPosition(b.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));

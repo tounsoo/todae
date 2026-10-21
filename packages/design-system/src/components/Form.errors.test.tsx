@@ -1,5 +1,5 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useContext, useState } from 'react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { useContext, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
@@ -197,10 +197,25 @@ describe('an error nothing can show', () => {
   function warnings() {
     return vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   }
+  /** Sends a valid form, then answers with `errors`. */
+  async function reply(children: ReactNode, errors: Record<string, string>) {
+    const ui = (e: Record<string, string>) => (
+      <SignUp errors={e}>
+        <EmailField />
+        {children}
+      </SignUp>
+    );
+    const view = await mount(ui({}));
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    view.rerender(ui(errors));
+    await settle();
+    return { ...view, ui };
+  }
 
-  it('warns in development for a name no control has', async () => {
+  it('warns in development, when the reply comes, for a name no control has', async () => {
     const warn = warnings();
-    await mount(<SignUp errors={{ ghost: 'Nobody home.' }} />);
+    await reply(null, { ghost: 'Nobody home.' });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toContain('ghost');
     warn.mockRestore();
@@ -208,12 +223,7 @@ describe('an error nothing can show', () => {
 
   it('warns for a control that no scope owns, once however often it renders', async () => {
     const warn = warnings();
-    const ui = (errors: Record<string, string>) => (
-      <SignUp errors={errors}>
-        <input name="plain" aria-label="Plain" />
-      </SignUp>
-    );
-    const { rerender } = await mount(ui({ plain: 'No.' }));
+    const { rerender, ui } = await reply(<input name="plain" aria-label="Plain" />, { plain: 'No.' });
     rerender(ui({ plain: 'No.' }));
     await settle();
     expect(warn).toHaveBeenCalledTimes(1);
@@ -221,9 +231,27 @@ describe('an error nothing can show', () => {
     warn.mockRestore();
   });
 
+  it('warns again for the same name in another form', async () => {
+    const warn = warnings();
+    await reply(<input name="plain2" aria-label="Plain" />, { plain2: 'No.' });
+    cleanup();
+    await reply(<input name="plain2" aria-label="Plain" />, { plain2: 'No.' });
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it('does not warn for errors that no send is waiting for', async () => {
+    const warn = warnings();
+    const { rerender } = await mount(<SignUp errors={{ ghost: 'Nobody home.' }} />);
+    rerender(<SignUp errors={{ ghost: 'Still nobody.' }} />);
+    await settle();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('does not warn for a control in a scope, or for an empty entry', async () => {
     const warn = warnings();
-    await mount(<SignUp errors={{ email: 'Taken.', ghost: '' }} />);
+    await reply(null, { email: 'Taken.', ghost: '' });
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
@@ -283,29 +311,5 @@ describe('a reply while waiting', () => {
     rerender(<Sending errors={{ email: 'Taken.' }} />);
     await settle();
     expect(document.activeElement).toBe(screen.getByLabelText('Other'));
-  });
-});
-
-describe('a warning for an error nothing can show', () => {
-  it('waits for a control that mounts a moment later', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const ui = (late: boolean) => (
-      <SignUp errors={{ nick: 'Taken.' }}>
-        {late ? (
-          <Field.Group>
-            <Field.Root id="nick" name="nick">
-              <Field.TextInput aria-label="Nick" value="" onValueChange={() => undefined} />
-            </Field.Root>
-            <ErrorMessage.Root />
-          </Field.Group>
-        ) : null}
-      </SignUp>
-    );
-    // No task passes between the two renders.
-    const { rerender } = render(ui(false));
-    rerender(ui(true));
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
   });
 });

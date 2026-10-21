@@ -654,3 +654,37 @@ describe('customValidity from several owners of one control', () => {
     expect((screen.getByLabelText('Plain') as HTMLInputElement).validationMessage).toBe('Outer');
   });
 });
+
+describe('customValidity and a product\'s own setCustomValidity', () => {
+  function Rule({ message }: { message: string | undefined }) {
+    return (
+      <Fieldset.Root customValidity={message}>
+        <input aria-label="Deep" />
+      </Fieldset.Root>
+    );
+  }
+
+  it('is not cleared by an empty customValidity rendering again', async () => {
+    const { rerender } = await mount(<Rule message="" />);
+    const deep = screen.getByLabelText('Deep') as HTMLInputElement;
+    deep.setCustomValidity('Mine');
+    rerender(<Rule message="" />);
+    await settle();
+    rerender(<Rule message={undefined} />);
+    await settle();
+    expect(deep.validationMessage).toBe('Mine');
+  });
+
+  it('clears only what it set when the last non-empty owner goes', async () => {
+    const { rerender } = await mount(<Rule message="Rule" />);
+    const deep = screen.getByLabelText('Deep') as HTMLInputElement;
+    expect(deep.validationMessage).toBe('Rule');
+    rerender(<Rule message="" />);
+    await settle();
+    expect(deep.validationMessage).toBe('');
+    deep.setCustomValidity('Mine');
+    rerender(<Rule message="" />);
+    await settle();
+    expect(deep.validationMessage).toBe('Mine');
+  });
+});
