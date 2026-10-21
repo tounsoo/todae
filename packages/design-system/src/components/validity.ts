@@ -25,6 +25,45 @@ export function isValidityCarrier(node: EventTarget | null): node is ValidityCar
   return node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement;
 }
 
+/** The labels a value input's `min` and `max` are worded with, already in the field's own format, such as "Oct 7, 2026". */
+export type ValueInputBound = { min?: string; max?: string };
+
+type ValueInputEntry = {
+  /** The field the input belongs to: a `Field.Root`'s own object. */
+  field: object;
+  /** Finds the visible control it speaks for. */
+  owner: () => HTMLElement | null;
+  /** Words its `min` and `max`. */
+  bound: ValueInputBound;
+};
+
+// For each value input, who it is, who it speaks for and how it words its bounds. Written when the value input attaches, and again when its bounds change.
+const valueInputs = /* @__PURE__ */ new WeakMap<ValidityCarrier, ValueInputEntry>();
+
+/** Makes `el` a value input. */
+export function registerValueInput(el: ValidityCarrier, entry: ValueInputEntry): void {
+  valueInputs.set(el, entry);
+}
+
+/** The first value input of `field` inside `within`, in document order, so a rule that goes on the field's control can go there when the control is not a carrier. */
+export function valueInputOf(field: object, within: ParentNode): ValidityCarrier | null {
+  for (const el of within.querySelectorAll<HTMLInputElement>('[data-todae-value-input]')) {
+    if (valueInputs.get(el)?.field === field) return el;
+  }
+  return null;
+}
+
+/** The element focus goes to for a control: its field's visible control for a value input, else itself. */
+export function focusTargetFor(el: ValidityCarrier): HTMLElement {
+  return valueInputs.get(el)?.owner() ?? el;
+}
+
+/** What a person reaches for a control, and whether they can: a value input is hidden, so it is its field's control, which must be enabled too. */
+export function reachTarget(el: ValidityCarrier): { target: HTMLElement; disabled: boolean } {
+  const target = focusTargetFor(el);
+  return { target, disabled: el.matches(':disabled') || target.matches(':disabled') };
+}
+
 // The order the first failed flag is picked in: what is missing before what is malformed before what is out of range.
 const FLAGS = [
   'valueMissing',
@@ -38,6 +77,14 @@ const FLAGS = [
   'stepMismatch',
   'customError',
 ] as const satisfies readonly (keyof ValidityState & ValidityKind)[];
+
+// The bound as the field words it when a value input said, else the control's own attribute.
+function bound(el: ValidityCarrier, side: 'min' | 'max'): string {
+  return valueInputs.get(el)?.bound[side] ?? (el as Partial<HTMLInputElement>)[side] ?? '';
+}
+
+// Dates and times read "or later" and "or earlier", not "or more".
+const WHEN_TYPES = ['date', 'time', 'datetime-local'];
 
 function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, strings: Strings): string {
   const bounds = el as Partial<HTMLInputElement>;
@@ -59,9 +106,13 @@ function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, str
     case 'tooLong':
       return strings.tooLong(bounds.maxLength ?? 0);
     case 'rangeUnderflow':
-      return strings.rangeUnderflow(bounds.min ?? '');
+      return WHEN_TYPES.includes(bounds.type ?? '')
+        ? strings.dateRangeUnderflow(bound(el, 'min'))
+        : strings.rangeUnderflow(bound(el, 'min'));
     case 'rangeOverflow':
-      return strings.rangeOverflow(bounds.max ?? '');
+      return WHEN_TYPES.includes(bounds.type ?? '')
+        ? strings.dateRangeOverflow(bound(el, 'max'))
+        : strings.rangeOverflow(bound(el, 'max'));
     case 'stepMismatch':
       return strings.stepMismatch;
     case 'customError':

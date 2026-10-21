@@ -27,6 +27,16 @@ describe('Field.TimePicker', () => {
     expect(button.getAttribute('aria-describedby')!.split(' ')).toEqual(['hint', text.id]);
   });
 
+  it('offers an overnight range, as a native time input reads a min later than its max', () => {
+    render(
+      <Field.Root aria-label="Start" name="start">
+        <Field.TimePicker value={time('23:00')} min={time('22:00')} max={time('01:00')} step={60} locale="en-US" />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(options()).toEqual(['12:00 AM', '1:00 AM', '10:00 PM', '11:00 PM']);
+  });
+
   it('shows the placeholder while there is no time', () => {
     render(
       <Field.Root aria-label="Start">

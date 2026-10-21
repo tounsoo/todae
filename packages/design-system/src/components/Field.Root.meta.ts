@@ -23,7 +23,7 @@ export const meta = {
       type: 'string',
       required: false,
       description:
-        "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds.",
+        "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds.",
     },
     {
       name: 'id',

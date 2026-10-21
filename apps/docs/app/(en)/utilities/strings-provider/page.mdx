@@ -263,6 +263,11 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`Failed`</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`required`</Table.HeaderCell>
+      <Table.Cell>What a required picker's button, and a required ChipInput's text box, is described by, since neither is what `aria-required` says is required</Table.Cell>
+      <Table.Cell>`Required`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`valueMissing`</Table.HeaderCell>
       <Table.Cell>A control the browser reports empty though it is required, shown by `ErrorMessage.Root` and `Form.Summary`</Table.Cell>
       <Table.Cell>`This field is required`</Table.Cell>
@@ -311,6 +316,16 @@ A string that depends on a number or a label is a function.
       <Table.HeaderCell scope="row">`rangeOverflow(max)`</Table.HeaderCell>
       <Table.Cell>A value above `max`; `max` is the attribute's text</Table.Cell>
       <Table.Cell>`Enter {max} or less`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`dateRangeUnderflow(min)`</Table.HeaderCell>
+      <Table.Cell>A date, time, or date and time before `min`; `min` is in the field's own format</Table.Cell>
+      <Table.Cell>`Enter {min} or later`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`dateRangeOverflow(max)`</Table.HeaderCell>
+      <Table.Cell>A date, time, or date and time after `max`; `max` is in the field's own format</Table.Cell>
+      <Table.Cell>`Enter {max} or earlier`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`stepMismatch`</Table.HeaderCell>

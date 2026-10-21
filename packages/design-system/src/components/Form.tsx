@@ -24,7 +24,7 @@ import { errorsKey, failingEntries, keyHasErrors, sameEntry, scopedControls } fr
 import { Link } from './Link.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { warnOnce } from './warnOnce.js';
-import { isValidityCarrier, type FormFieldError, type ValidityCarrier } from './validity.js';
+import { isValidityCarrier, reachTarget, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 
 export type { FormErrors } from './Form.context.js';
@@ -150,7 +150,7 @@ function reduce(state: FormState, action: FormAction): FormState {
 }
 
 /**
- * The first enabled control, in document order, that has a problem to fix: a
+ * The first enabled control, in document order, that has a problem to fix (for a value input, its field's control): a
  * control in a scope only when it is the one its scope shows in `failed`, else,
  * with `native`, a native problem of a control no scope reads.
  */
@@ -158,12 +158,14 @@ function firstProblem(form: HTMLFormElement, failed: readonly SummaryEntry[], na
   const read = scopedControls(form);
   // Every scope speaks for its controls through the one it shows; a disabled one can't take focus, and the others stay quiet.
   const shown = new Set<Element>(failed.map((entry) => entry.reading.carrier));
-  return [...form.elements].find(
+  const problem = [...form.elements].find(
     (el): el is ValidityCarrier =>
       isValidityCarrier(el) &&
-      !el.matches(':disabled') &&
+      !reachTarget(el).disabled &&
       (read.has(el) ? shown.has(el) : native && el.willValidate && !el.validity.valid),
   );
+  // A value input is hidden, so focus goes to its field's control.
+  return problem && reachTarget(problem).target;
 }
 
 /**
@@ -221,6 +223,15 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     dispatch({ type: 'refresh', entries: failingEntries(form, errors, state.dismissal, strings, state.native) });
   }, []);
 
+  const edited = useCallback((names: readonly string[]) => {
+    // An edit is the answer to a reply that hasn't come yet.
+    awaiting.current = false;
+    for (const name of names) {
+      const text = latest.current.errors?.[name];
+      if (text) dispatch({ type: 'dismiss', name, text });
+    }
+  }, []);
+
   const ctx = useMemo<FormContextValue>(
     () => ({
       attempt: state.attempt,
@@ -231,8 +242,9 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
       formRef,
       summaryRef,
       refresh,
+      edited,
     }),
-    [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh],
+    [state.attempt, state.epoch, state.dismissal, state.failed, errors, refresh, edited],
   );
 
   // The summary if one is showing, else the control picked where the problems were read.
@@ -307,11 +319,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
           // A portaled control's change is not an edit of this form.
           const target = event.target;
           if (!(target instanceof Node) || !event.currentTarget.contains(target)) return;
-          // An edit is the answer to a reply that hasn't come yet.
-          awaiting.current = false;
-          if (!isValidityCarrier(target)) return;
-          const text = errors?.[target.name];
-          if (text) dispatch({ type: 'dismiss', name: target.name, text });
+          edited(isValidityCarrier(target) ? [target.name] : []);
         }}
         onReset={(event) => {
           // A portaled form's reset bubbles through this one, and is not this form's to hear.
@@ -348,7 +356,7 @@ function Summary({ title, children, className, ref, ...props }: FormSummaryProps
     label: entry.reading.label,
     error: entry.error,
     disabled: entry.reading.disabled,
-    focus: () => entry.reading.carrier.focus(),
+    focus: () => reachTarget(entry.reading.carrier).target.focus(),
   });
   return (
     <div

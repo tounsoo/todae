@@ -518,6 +518,10 @@
       "en": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element).",
       "ko": "닫기 요청. 제어 방식에서 열린 상태를 유지하면 대화상자가 열린 채로 남습니다. 이유: escape, backdrop, close-button, form(<form method=\"dialog\"> 제출. 제출한 요소의 값은 요소의 returnValue에 있습니다), native(다른 무언가가 요소를 닫음)."
     },
+    "role": {
+      "en": "alertdialog marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click then no longer closes it, and on open focus goes to its first close part, such as a Dialog.Close that says Cancel. It needs a Dialog.Description or an aria-describedby for the message.",
+      "ko": "alertdialog는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화상자를 나타냅니다. 이때는 배경 클릭으로 닫히지 않고, 열리면 Cancel이라고 적힌 Dialog.Close처럼 첫 번째 닫기 파트로 포커스가 갑니다. 메시지를 위해 Dialog.Description이나 aria-describedby가 필요합니다."
+    },
     "dismissOnEscape": {
       "en": "Escape calls onOpenChange(false, \"escape\").",
       "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."
@@ -666,6 +670,10 @@
       "en": "+N name. Default is the moreChips string from StringsProvider, {n} more in English.",
       "ko": "+N의 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
     },
+    "required": {
+      "en": "A form with no chips is invalid, whatever the input holds.",
+      "ko": "입력란에 무엇이 있든 칩이 없으면 폼이 유효하지 않습니다."
+    },
     "commitKeys": {
       "en": "Closed allowlist of commit keys.",
       "ko": "확정 키로 쓸 수 있는 키의 고정 목록."
@@ -717,8 +725,8 @@
       "ko": "셸을 유효하지 않음으로 표시하고 입력에 aria-invalid를 설정합니다."
     },
     "customValidity": {
-      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds.",
-      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
+      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds.",
+      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 Field.DatePicker처럼 값 입력(value input)에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
     },
     "id": {
       "en": "Input id. Auto-generated when omitted.",
@@ -815,12 +823,16 @@
       "ko": "고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있으면 그 날짜와 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest date and time that can be picked.",
-      "ko": "고를 수 있는 가장 이른 날짜와 시각."
+      "en": "The earliest date and time that can be picked. A form with an earlier one is invalid.",
+      "ko": "고를 수 있는 가장 이른 날짜와 시각. 이보다 이른 값이 있으면 폼이 유효하지 않습니다."
     },
     "max": {
-      "en": "The latest date and time that can be picked.",
-      "ko": "고를 수 있는 가장 늦은 날짜와 시각."
+      "en": "The latest date and time that can be picked. A form with a later one is invalid.",
+      "ko": "고를 수 있는 가장 늦은 날짜와 시각. 이보다 늦은 값이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date and time is invalid.",
+      "ko": "날짜와 시각이 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",
@@ -925,12 +937,16 @@
       "ko": "목록에서 고른 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest time the list offers.",
-      "ko": "목록이 보여 주는 가장 이른 시각."
+      "en": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max.",
+      "ko": "목록이 보여 주는 가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다. max보다 늦으면 min부터 자정을 지나 max까지의 밤을 넘기는 범위가 됩니다."
     },
     "max": {
-      "en": "The latest time the list offers.",
-      "ko": "목록이 보여 주는 가장 늦은 시각."
+      "en": "The latest time the list offers. A form with a later time is invalid.",
+      "ko": "목록이 보여 주는 가장 늦은 시각. 이보다 늦은 시각이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no time is invalid.",
+      "ko": "시각이 없으면 폼이 유효하지 않습니다."
     },
     "step": {
       "en": "Minutes between the times in the list, from midnight.",
@@ -2599,12 +2615,16 @@
       "ko": "달력에서 고른 날짜를 받아 호출됩니다."
     },
     "min": {
-      "en": "The earliest date that can be picked.",
-      "ko": "고를 수 있는 가장 이른 날짜."
+      "en": "The earliest date that can be picked. A form with an earlier date is invalid.",
+      "ko": "고를 수 있는 가장 이른 날짜. 이보다 이른 날짜가 있으면 폼이 유효하지 않습니다."
     },
     "max": {
-      "en": "The latest date that can be picked.",
-      "ko": "고를 수 있는 가장 늦은 날짜."
+      "en": "The latest date that can be picked. A form with a later date is invalid.",
+      "ko": "고를 수 있는 가장 늦은 날짜. 이보다 늦은 날짜가 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date is invalid.",
+      "ko": "날짜가 없으면 폼이 유효하지 않습니다."
     },
     "isDateDisabled": {
       "en": "Returns true for a date that cannot be picked, such as a holiday.",

@@ -1175,6 +1175,13 @@
           "description": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
         },
         {
+          "name": "role",
+          "type": "'dialog' | 'alertdialog'",
+          "required": false,
+          "description": "alertdialog marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click then no longer closes it, and on open focus goes to its first close part, such as a Dialog.Close that says Cancel. It needs a Dialog.Description or an aria-describedby for the message.",
+          "default": "'dialog'"
+        },
+        {
           "name": "dismissOnEscape",
           "type": "boolean",
           "required": false,
@@ -1186,7 +1193,7 @@
           "type": "boolean",
           "required": false,
           "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
-          "default": "true"
+          "default": "true, or false when role is alertdialog"
         },
         {
           "name": "aria-label",
@@ -1443,6 +1450,12 @@
           "description": "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no chips is invalid, whatever the input holds."
+        },
+        {
           "name": "overflowLabel",
           "type": "(n: number) => string",
           "required": false,
@@ -1485,7 +1498,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control. The color goes in a native text input under the field's name unless another control took it, so Field.Root's customValidity and a Form.Root scope see it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1539,7 +1552,7 @@
     },
     {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control. The date goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1557,13 +1570,19 @@
           "name": "min",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The earliest date that can be picked."
+          "description": "The earliest date that can be picked. A form with an earlier date is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The latest date that can be picked."
+          "description": "The latest date that can be picked. A form with a later date is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1618,7 +1637,7 @@
     },
     {
       "name": "Field.DateTimePicker",
-      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1636,13 +1655,19 @@
           "name": "min",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The earliest date and time that can be picked."
+          "description": "The earliest date and time that can be picked. A form with an earlier one is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The latest date and time that can be picked."
+          "description": "The latest date and time that can be picked. A form with a later one is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no date and time is invalid."
         },
         {
           "name": "isDateDisabled",
@@ -1761,7 +1786,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",
@@ -1944,7 +1969,7 @@
     },
     {
       "name": "Field.TimePicker",
-      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1962,13 +1987,19 @@
           "name": "min",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The earliest time the list offers."
+          "description": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max."
         },
         {
           "name": "max",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The latest time the list offers."
+          "description": "The latest time the list offers. A form with a later time is invalid."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "A form with no time is invalid."
         },
         {
           "name": "step",
@@ -4721,7 +4752,7 @@
     },
     {
       "name": "useField",
-      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. Takes no options.",
+      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. For a control that is not a native form element, render an input with getValueInputProps({ type, value, name, required, min, max, step, bound }, control) beside it, passing the props getControlProps returned: a hidden native input that submits the value under the field's name and that the browser validates, so required, min and max block a submit and Form.Root shows them and moves focus to the control. It follows the control's disabled and form, and takes no name when that control has one. getValueInputProps takes a type of text, number, date, time or datetime-local, the value in that type's format, and a bound that gives a min or max as the field shows it. Call notifyValueChange when a person changes the value in a way that fires no change event, such as a pick: it hides the field's server error and counts the field as edited. useField() takes no arguments.",
       "props": []
     },
     {

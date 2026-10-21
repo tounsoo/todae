@@ -21,7 +21,7 @@ import { FieldsetContext, useFieldsetState } from './Fieldset.context.js';
 import { ValidationScopeContext } from './Form.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { useValidationScope } from './ValidationScope.js';
-import { isValidityCarrier } from './validity.js';
+import { isValidityCarrier, valueInputOf } from './validity.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { createCountStore, pickerToggles } from './Field.shared.js';
@@ -152,10 +152,10 @@ function Root({
   const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
-  // The control the shell focuses is the field's one native control, when it has one.
+  // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
   useCustomValidity(shellRef, () => {
     const control = inputRef.current;
-    return control && isValidityCarrier(control) ? control : null;
+    return control && isValidityCarrier(control) ? control : shellRef.current && valueInputOf(store, shellRef.current);
   }, customValidity);
   const describedByWithError = mergeDescribedBy(describedBy, errorId);
 

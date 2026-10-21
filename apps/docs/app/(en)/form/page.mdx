@@ -120,7 +120,7 @@ The scope adds the `ErrorMessage.Root`'s id to the controls' `aria-describedby` 
 
 Outside a `Form.Root`, `Field.Group` and `Fieldset.Root` are as they were, and an `ErrorMessage.Root` with no `id` logs a development error. An `ErrorMessage.Root` with an `id` works everywhere as before, with the wiring by hand.
 
-`Field.TextInput`, `Field.Textarea`, `Field.Select`, `Checkbox.Root`, `Switch.Root` and `RadioGroup.Root` are native controls, so they take part. The pickers, `Field.ColorPicker` and `Field.ChipInput` keep their value in a hidden input, which the browser leaves out of validation, so `required` on them comes in a follow-up.
+`Field.TextInput`, `Field.Textarea`, `Field.Select`, `Checkbox.Root`, `Switch.Root` and `RadioGroup.Root` are native controls, so they take part. The pickers, `Field.ColorPicker` and `Field.ChipInput` render a native value input beside their button or text input, so `required` on a picker or a `Field.ChipInput`, and `min` and `max` on a picker, take part too. The value input is hidden, so its problem shows at the field and focus goes to the field's control: the button of a picker, or the text input of a `Field.ChipInput`. A control of your own can render one with [`useField`](/utilities/use-field)'s `getValueInputProps`.
 
 ## Accessible composition
 
