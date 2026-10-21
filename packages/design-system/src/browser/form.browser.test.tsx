@@ -142,8 +142,9 @@ describe('Form in a browser', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Go' }));
     const summary = await screen.findByRole('group', { name: '1 problem to fix' });
-    expect(summary.querySelector('a')?.textContent).toBe('Plan');
-    await userEvent.click(screen.getByRole('link', { name: 'Plan' }));
+    // The radio has no id to link to, so its row is a button.
+    expect(summary.querySelector('button')?.textContent).toBe('Plan');
+    await userEvent.click(screen.getByRole('button', { name: 'Plan' }));
     expect(document.activeElement).toBe(screen.getByLabelText('Team'));
     await userEvent.click(screen.getByLabelText('Pro'));
     await waitFor(() => expect(screen.queryByRole('group', { name: '1 problem to fix' })).toBeNull());
