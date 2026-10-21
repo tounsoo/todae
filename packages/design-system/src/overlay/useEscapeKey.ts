@@ -1,7 +1,8 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { innermost } from './layerOrder.js';
 import { frontModal, isModal } from './modalStack.js';
 
-type Entry = { handle: () => void; enabled: () => boolean; element: () => Element | null };
+type Entry = { handle: () => void; enabled: (event: KeyboardEvent) => boolean; element: () => Element | null };
 
 const stack: Entry[] = [];
 let listening = false;
@@ -30,7 +31,10 @@ function onKeyDown(event: KeyboardEvent) {
     return modals.length === 0 || !el || modals.some((modal) => modal.contains(el));
   };
   // A disabled layer keeps its place but lets Escape fall through to the next enabled one.
-  const top = [...stack].reverse().find((entry) => entry.enabled() && inFront(entry));
+  const top = innermost(
+    stack.filter((entry) => entry.enabled(event) && inFront(entry)),
+    (entry) => entry.element(),
+  );
   if (!top) return;
   event.preventDefault();
   top.handle();
@@ -53,15 +57,16 @@ function push(entry: Entry): () => void {
 }
 
 /**
- * Calls `handler` on Escape while `active && enabled`. Overlays stack: only the most recently
- * activated one handles the key, so Escape in a popover inside a sheet closes the popover first.
- * Order is activation order. Layers that activate in the same commit register child-first, so
- * open nested overlays one after another rather than together. Pass `elementRef` so a layer left
- * behind a modal `<dialog>` opened later skips the key, and the dialog gets it.
+ * Calls `handler` on Escape while `active && enabled`. Overlays stack: only one layer handles the
+ * key, so Escape in a popover inside a sheet closes the popover first. The most recently activated
+ * layer goes first, unless another layer's element is inside its own: then the innermost does.
+ * `enabled` may be a function of the key event, so a layer can let a key it doesn't want fall
+ * through to the next one. Pass `elementRef` so a layer left behind a modal `<dialog>` opened
+ * later skips the key, and the dialog gets it.
  */
 export function useEscapeKey(
   active: boolean,
-  enabled: boolean,
+  enabled: boolean | ((event: KeyboardEvent) => boolean),
   handler: () => void,
   elementRef?: RefObject<Element | null>,
 ): void {
@@ -74,7 +79,10 @@ export function useEscapeKey(
     if (!active) return;
     return push({
       handle: () => handlerRef.current(),
-      enabled: () => enabledRef.current,
+      enabled: (event) => {
+        const on = enabledRef.current;
+        return typeof on === 'function' ? on(event) : on;
+      },
       element: () => elementRef?.current ?? null,
     });
   }, [active, elementRef]);

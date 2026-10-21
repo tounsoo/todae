@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { useRef } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
 import { useEscapeKey } from './useEscapeKey.js';
@@ -185,5 +185,49 @@ describe('useEscapeKey', () => {
     );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(outer).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the key to a layer inside another first, even when the outer one activated later', () => {
+    function Element({ active = true, onEscape, children }: { active?: boolean; onEscape: () => void; children?: ReactNode }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(active, true, onEscape, ref);
+      return <div ref={ref}>{children}</div>;
+    }
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const beside = vi.fn();
+    const tree = (outerActive: boolean) => (
+      <>
+        <Element active={outerActive} onEscape={outer}>
+          <Element onEscape={inner} />
+        </Element>
+        <Element onEscape={beside} />
+      </>
+    );
+    const { rerender } = render(tree(false));
+    rerender(tree(true));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    expect(beside).not.toHaveBeenCalled();
+  });
+
+  it('lets a layer turn down a key by the event, passing it to the next one', () => {
+    function Picky({ onEscape }: { onEscape: () => void }) {
+      useEscapeKey(true, (event) => !event.shiftKey, onEscape);
+      return null;
+    }
+    const outer = vi.fn();
+    const inner = vi.fn();
+    render(
+      <>
+        <Layer onEscape={outer} />
+        <Picky onEscape={inner} />
+      </>,
+    );
+    fireEvent.keyDown(document, { key: 'Escape', shiftKey: true });
+    expect(outer).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
   });
 });
