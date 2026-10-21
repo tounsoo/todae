@@ -76,9 +76,10 @@ describe('parseDateRange', () => {
     expect(read('2026-10-03/2026-10-10', locale)).toBe('2026-10-03/2026-10-10');
   });
 
-  it('returns null for an end before the start', () => {
-    expect(read('10/10/2026 – 10/3/2026', 'en-US')).toBeNull();
-    expect(read('2026-10-10/2026-10-03', 'en-US')).toBeNull();
+  it('reads a range typed end first with the earlier date as its start', () => {
+    expect(read('10/10/2026 – 10/3/2026', 'en-US')).toBe('2026-10-03/2026-10-10');
+    expect(read('2026-10-10/2026-10-03', 'en-US')).toBe('2026-10-03/2026-10-10');
+    expect(read('2026. 10. 10. ~ 2026. 10. 3.', 'ko')).toBe('2026-10-03/2026-10-10');
   });
 
   it('returns null for text that is not two dates', () => {
