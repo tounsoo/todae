@@ -1,12 +1,23 @@
 import { useLayoutEffect, type RefObject } from 'react';
 import { firstTabbable } from './tabbables.js';
 
-/** Where an overlay puts focus when it opens: initialFocusRef, else its first tabbable, else itself. */
+const isClosePart = (el: HTMLElement) => el.hasAttribute('data-todae-close');
+
+/**
+ * Where an overlay puts focus when it opens: initialFocusRef, else, in an
+ * alertdialog, its first tabbable close part, the least destructive choice,
+ * else its first tabbable, else itself.
+ */
 export function initialFocusTarget(
   container: HTMLElement,
   initialFocusRef?: RefObject<HTMLElement | null>,
 ): HTMLElement {
-  return initialFocusRef?.current ?? firstTabbable(container) ?? container;
+  return (
+    initialFocusRef?.current ??
+    (container.getAttribute('role') === 'alertdialog' ? firstTabbable(container, isClosePart) : null) ??
+    firstTabbable(container) ??
+    container
+  );
 }
 
 export function useInitialFocus(

@@ -1,4 +1,4 @@
-import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
+import { DialogAlert, DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
 
 # Dialog
 
@@ -40,6 +40,36 @@ Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not in
 
 iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
 
+## Alert dialog
+
+`role="alertdialog"` marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click no longer closes it; Escape still does, as Cancel. On open, focus goes to its first close part, so a `Dialog.Close` that says Cancel takes it without an `initialFocusRef`. It needs a message: render `Dialog.Description` or pass `aria-describedby`, or it logs an error in development. Leave out the header close: Cancel is the way out.
+
+```tsx
+const restoreRef = useRef<HTMLButtonElement>(null);
+
+{deleted ? (
+  <Button.Root ref={restoreRef} variant="secondary" onClick={restore}>
+    Restore report.pdf
+  </Button.Root>
+) : (
+  <Button.Root onClick={() => setOpen(true)}>Delete report.pdf</Button.Root>
+)}
+<Dialog.Root role="alertdialog" open={open} onOpenChange={setOpen} restoreFocusRef={restoreRef}>
+  <Dialog.Title>Delete report.pdf?</Dialog.Title>
+  <Dialog.Description>The file is removed for everyone in this project.</Dialog.Description>
+  <Dialog.Footer>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={remove}>Delete</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
+Deleting removes the button that opened the dialog, so `restoreFocusRef` names where focus goes after the exit. Cancel leaves the opener in place, and focus goes back to it. What counts as destructive, and the wording, are the product's.
+
+<Example>
+  <DialogAlert />
+</Example>
+
 ## Icons
 
 `Dialog.Close` with no content shows the `close` glyph, a cross unless a [GlyphsProvider](/utilities/glyphs-provider) sets one, and is named by the `close` string. To use a different icon for one close, put it in a `Button.Icon`.
@@ -56,9 +86,9 @@ import { X } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `Dialog.Root` opens a native `<dialog>` with `showModal()`, so the browser gives it the dialog role, puts it in the top layer and makes the page behind it inert. `Dialog.Title` sets the dialog's `aria-labelledby` and `Dialog.Description` its `aria-describedby`; an `aria-labelledby` or `aria-describedby` you pass to the root wins. On open, focus goes to `initialFocusRef`, else the first tabbable element, else the dialog itself. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. `Dialog.Close` falls back to the `close` string ("Close") when neither its own text nor an `aria-label` names it, such as an icon.
+**Todae handles:** `Dialog.Root` opens a native `<dialog>` with `showModal()`, so the browser gives it the dialog role, puts it in the top layer and makes the page behind it inert. `Dialog.Title` sets the dialog's `aria-labelledby` and `Dialog.Description` its `aria-describedby`; an `aria-labelledby` or `aria-describedby` you pass to the root wins. On open, focus goes to `initialFocusRef`, else, with `role="alertdialog"`, the first tabbable `Dialog.Close`, else the first tabbable element, else the dialog itself. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. `Dialog.Close` falls back to the `close` string ("Close") when neither its own text nor an `aria-label` names it, such as an icon.
 
-**You supply:** A name: render `Dialog.Title`, or pass `aria-label` or `aria-labelledby` to `Dialog.Root`. A button that closes it, such as `Dialog.Close`, above all when `dismissOnEscape` is false. A `restoreFocusRef` when the opener is gone by the time it closes, such as a menu item or a `Toast.Action`. An `initialFocusRef` when the task does not start at the first control, such as the safe button of a destructive confirm.
+**You supply:** A name: render `Dialog.Title`, or pass `aria-label` or `aria-labelledby` to `Dialog.Root`. A button that closes it, such as `Dialog.Close`, above all when `dismissOnEscape` is false. A `restoreFocusRef` when the opener is gone by the time it closes, such as a menu item or a `Toast.Action`. An `initialFocusRef` when the task does not start at the first control, or when an alert dialog's safe button is not a `Dialog.Close`. A description for an alert dialog.
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -86,7 +116,7 @@ export function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) 
 
 ## When to use
 
-**When:** Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + backdrop dismiss by default.
+**When:** Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + backdrop dismiss by default. `role="alertdialog"` for a confirm that interrupts to ask for a response, such as before a destructive action.
 
 **When not:** Mobile picker from the bottom → BottomSheet. Full-height side panel → Drawer. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).
 

@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -41,7 +42,16 @@ export type DialogRootProps = {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: DialogCloseReason) => void;
+  /**
+   * `alertdialog` marks a dialog that interrupts to ask for a response, such as
+   * confirming a destructive action. It changes the defaults: a backdrop click
+   * no longer closes it, and on open focus goes to its first close part, such as
+   * a `Dialog.Close` that says Cancel. It needs a `Dialog.Description` or an
+   * `aria-describedby` for the message.
+   */
+  role?: 'dialog' | 'alertdialog';
   dismissOnEscape?: boolean;
+  /** Defaults to `true`, or `false` when `role` is `alertdialog`. */
   dismissOnBackdrop?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
   restoreFocusRef?: RefObject<HTMLElement | null>;
@@ -49,7 +59,7 @@ export type DialogRootProps = {
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
-} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'children'>;
+} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'role' | 'children'>;
 
 type ShellContextValue = {
   requestClose: (reason: DialogCloseReason) => void;
@@ -133,8 +143,9 @@ export function DialogShellRoot({
   open: openProp,
   defaultOpen = false,
   onOpenChange: onOpenChangeProp,
+  role,
   dismissOnEscape = true,
-  dismissOnBackdrop = true,
+  dismissOnBackdrop = role !== 'alertdialog',
   initialFocusRef,
   restoreFocusRef,
   className,
@@ -160,7 +171,13 @@ export function DialogShellRoot({
     onOpenChange,
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
-  const [describedBy, setDescribedBy] = useState<string | undefined>();
+  const [describedBy, setDescribedByState] = useState<string | undefined>();
+  // Read by the description check, which runs before the state update renders.
+  const describedByNow = useRef<string | undefined>(undefined);
+  const setDescribedBy = useCallback((id: string | undefined) => {
+    describedByNow.current = id;
+    setDescribedByState(id);
+  }, []);
   const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
@@ -187,10 +204,20 @@ export function DialogShellRoot({
   // the <dialog> can't take focus until showModal runs.
   useInitialFocus(dialogRef, present && open, initialFocusRef);
 
+  const alertShown = role === 'alertdialog' && present && open;
+  const describedByProp = props['aria-describedby'];
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !alertShown) return;
+    if (!describedByProp && !describedByNow.current) {
+      console.error('Dialog.Root role="alertdialog" requires Dialog.Description or aria-describedby');
+    }
+  }, [alertShown, describedByProp]);
+
   return (
     <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
         {...props}
+        role={role}
         {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}

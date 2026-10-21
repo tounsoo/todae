@@ -510,6 +510,10 @@
       "en": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element).",
       "ko": "닫기 요청. 제어 방식에서 열린 상태를 유지하면 대화상자가 열린 채로 남습니다. 이유: escape, backdrop, close-button, form(<form method=\"dialog\"> 제출. 제출한 요소의 값은 요소의 returnValue에 있습니다), native(다른 무언가가 요소를 닫음)."
     },
+    "role": {
+      "en": "alertdialog marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click then no longer closes it, and on open focus goes to its first close part, such as a Dialog.Close that says Cancel. It needs a Dialog.Description or an aria-describedby for the message.",
+      "ko": "alertdialog는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화상자를 나타냅니다. 이때는 배경 클릭으로 닫히지 않고, 열리면 Cancel이라고 적힌 Dialog.Close처럼 첫 번째 닫기 파트로 포커스가 갑니다. 메시지를 위해 Dialog.Description이나 aria-describedby가 필요합니다."
+    },
     "dismissOnEscape": {
       "en": "Escape calls onOpenChange(false, \"escape\").",
       "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."

@@ -179,13 +179,14 @@
     "(section order)": "99b29f254b91"
   },
   "dialog": {
-    "(top)": "9efb9052a45c",
+    "(top)": "adcb7e731c7a",
     "# Dialog": "57df88f350ec",
+    "## Alert dialog": "00845720f074",
     "## Icons": "53e5ccf42b18",
-    "## Accessible composition": "30a295432b88",
-    "## When to use": "b2fab8d962b5",
+    "## Accessible composition": "c56a7199ec04",
+    "## When to use": "7a8f3c9d3228",
     "## Props": "81014f51f216",
-    "(section order)": "29ce64bcc0ad"
+    "(section order)": "a1fc27e75e4a"
   },
   "disclosure": {
     "(top)": "2e46991fea65",

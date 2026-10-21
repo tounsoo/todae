@@ -1,4 +1,4 @@
-import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
+import { DialogAlert, DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
 
 # Dialog
 
@@ -40,6 +40,36 @@ const keepRef = useRef<HTMLButtonElement>(null);
 
 iOS에서는 열린 오버레이 뒤의 페이지가 여전히 고무줄처럼 튕길 수 있습니다. Chrome은 사용자 활성화가 없으면 `cancel.preventDefault()`를 무시할 수 있습니다. 그래도 상태는 네이티브 `close` 이벤트로 다시 동기화됩니다.
 
+## Alert dialog
+
+`role="alertdialog"`는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화 상자를 나타냅니다. 배경을 클릭해도 닫히지 않고, Escape는 Cancel처럼 여전히 닫습니다. 열리면 첫 번째 닫기 파트로 포커스가 가므로, Cancel이라고 적힌 `Dialog.Close`가 `initialFocusRef` 없이도 포커스를 받습니다. 메시지가 필요합니다. `Dialog.Description`을 렌더하거나 `aria-describedby`를 전달하세요. 그렇지 않으면 개발 환경에서 오류를 기록합니다. 헤더의 닫기 버튼은 빼세요. 빠져나가는 길은 Cancel입니다.
+
+```tsx
+const restoreRef = useRef<HTMLButtonElement>(null);
+
+{deleted ? (
+  <Button.Root ref={restoreRef} variant="secondary" onClick={restore}>
+    Restore report.pdf
+  </Button.Root>
+) : (
+  <Button.Root onClick={() => setOpen(true)}>Delete report.pdf</Button.Root>
+)}
+<Dialog.Root role="alertdialog" open={open} onOpenChange={setOpen} restoreFocusRef={restoreRef}>
+  <Dialog.Title>Delete report.pdf?</Dialog.Title>
+  <Dialog.Description>The file is removed for everyone in this project.</Dialog.Description>
+  <Dialog.Footer>
+    <Dialog.Close>Cancel</Dialog.Close>
+    <Button.Root onClick={remove}>Delete</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
+삭제하면 대화 상자를 연 버튼이 사라지므로, `restoreFocusRef`로 닫힌 뒤 포커스가 갈 곳을 지정합니다. Cancel은 연 버튼을 그대로 두므로 포커스가 그 버튼으로 돌아갑니다. 무엇이 파괴적인 작업인지와 문구는 제품이 정합니다.
+
+<Example>
+  <DialogAlert />
+</Example>
+
 ## 아이콘
 
 내용이 없는 `Dialog.Close`는 `close` 글리프를 보여 주며, [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 이름은 `close` 문자열에서 옵니다. 닫기 버튼 하나에만 다른 아이콘을 쓰려면 `Button.Icon`에 넣으세요.
@@ -56,9 +86,9 @@ import { X } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Dialog.Root`는 `showModal()`로 네이티브 `<dialog>`를 엽니다. 그래서 브라우저가 dialog 역할을 주고, 최상위 레이어에 올리고, 뒤의 페이지를 inert로 만듭니다. `Dialog.Title`은 대화 상자의 `aria-labelledby`를, `Dialog.Description`은 `aria-describedby`를 설정합니다. 루트에 직접 넘긴 `aria-labelledby`나 `aria-describedby`가 우선합니다. 열리면 포커스는 `initialFocusRef`로, 없으면 첫 번째 탭 가능한 요소로, 그것도 없으면 대화 상자 자체로 갑니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. `Dialog.Close`는 아이콘처럼 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열("Close")로 이름이 붙습니다.
+**Todae가 맡는 것:** `Dialog.Root`는 `showModal()`로 네이티브 `<dialog>`를 엽니다. 그래서 브라우저가 dialog 역할을 주고, 최상위 레이어에 올리고, 뒤의 페이지를 inert로 만듭니다. `Dialog.Title`은 대화 상자의 `aria-labelledby`를, `Dialog.Description`은 `aria-describedby`를 설정합니다. 루트에 직접 넘긴 `aria-labelledby`나 `aria-describedby`가 우선합니다. 열리면 포커스는 `initialFocusRef`로, 없으면 `role="alertdialog"`일 때는 첫 번째 탭 가능한 `Dialog.Close`로, 그다음은 첫 번째 탭 가능한 요소로, 그것도 없으면 대화 상자 자체로 갑니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. `Dialog.Close`는 아이콘처럼 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열("Close")로 이름이 붙습니다.
 
-**직접 제공할 것:** 이름입니다. `Dialog.Title`을 렌더링하거나, `Dialog.Root`에 `aria-label`이나 `aria-labelledby`를 넘기세요. 대화 상자를 닫는 버튼도 필요합니다. 특히 `dismissOnEscape`가 false라면 `Dialog.Close` 같은 버튼을 두세요. 메뉴 항목이나 `Toast.Action`처럼 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요. 파괴적인 확인에서 안전한 버튼처럼 작업이 첫 번째 컨트롤에서 시작하지 않는다면 `initialFocusRef`를 넘기세요.
+**직접 제공할 것:** 이름입니다. `Dialog.Title`을 렌더링하거나, `Dialog.Root`에 `aria-label`이나 `aria-labelledby`를 넘기세요. 대화 상자를 닫는 버튼도 필요합니다. 특히 `dismissOnEscape`가 false라면 `Dialog.Close` 같은 버튼을 두세요. 메뉴 항목이나 `Toast.Action`처럼 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요. 작업이 첫 번째 컨트롤에서 시작하지 않거나, alert dialog의 안전한 버튼이 `Dialog.Close`가 아니라면 `initialFocusRef`를 넘기세요. alert dialog에는 설명도 필요합니다.
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -86,7 +116,7 @@ export function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) 
 
 ## 언제 쓰나요
 
-**언제:** 가운데 정렬 모달 작업이나 확인(네이티브 `<dialog>`, 제어 `open` 또는 비제어 `defaultOpen`). 이름은 `Dialog.Title`이나 `aria-label`로 붙입니다. Escape와 배경 클릭으로 닫기가 기본입니다.
+**언제:** 가운데 정렬 모달 작업이나 확인(네이티브 `<dialog>`, 제어 `open` 또는 비제어 `defaultOpen`). 이름은 `Dialog.Title`이나 `aria-label`로 붙입니다. Escape와 배경 클릭으로 닫기가 기본입니다. 파괴적인 작업 전처럼 흐름을 끊고 응답을 요구하는 확인에는 `role="alertdialog"`.
 
 **쓰지 않을 때:** 아래에서 올라오는 모바일 선택기 → BottomSheet. 높이를 가득 채우는 사이드 패널 → Drawer. 앵커에 고정된 비모달 패널 → Popover. 짧은 힌트 → Tooltip. 모바일에서 시트로 바뀌어야 할 때(Dialog는 절대 모양이 바뀌지 않습니다).
 
