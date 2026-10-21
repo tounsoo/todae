@@ -23,20 +23,25 @@ function list(width: string, orientation?: 'horizontal' | 'vertical') {
 }
 
 describe('DataList in a browser', () => {
-  it('puts the details beside the term as a flex item that sizes to content', () => {
+  it.each([
+    ['a flex row beside a button', { display: 'flex', gap: '1rem', inlineSize: '40rem' }],
+    ['an inline-block', { display: 'inline-block' }],
+  ] as const)('sizes to its columns in %s, so the details stay beside the term', (_, style) => {
     render(
-      <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', inlineSize: '40rem' }}>
+      <div data-appearance="light" data-density="comfortable" style={style}>
         <DataList.Root aria-label="Order">
           <DataList.Item>
             <DataList.Term>Status</DataList.Term>
             <DataList.Details>Shipped</DataList.Details>
           </DataList.Item>
         </DataList.Root>
+        {style.display === 'flex' && <button type="button">Edit</button>}
       </div>,
     );
     const term = screen.getByText('Status').getBoundingClientRect();
     const details = screen.getByText('Shipped').getBoundingClientRect();
     expect(details.left).toBeGreaterThanOrEqual(term.right);
+    expect(Math.abs(details.top - term.top)).toBeLessThan(1);
   });
 
   it('puts the details beside the term in a wide list', () => {
