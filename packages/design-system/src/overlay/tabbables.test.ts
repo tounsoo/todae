@@ -78,4 +78,12 @@ describe('getTabbables', () => {
     outside.remove();
     root.remove();
   });
+
+  it('keeps a visible group when its checked radio sits in a hidden subtree, without checkVisibility', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<input type="radio" name="g" id="a"><div hidden><input type="radio" name="g" id="b" checked></div>';
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['a']);
+    root.remove();
+  });
 });

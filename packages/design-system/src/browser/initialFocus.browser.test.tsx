@@ -117,6 +117,7 @@ describe('default initial focus on a radio group', () => {
     ['no checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two">', 'One'],
     ['a disabled checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked disabled>', 'One'],
     ['a hidden checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked style="display:none">', 'One'],
+    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked tabindex="-1">', 'One'],
   ])('stops where the browser\'s forward Tab does, in a group with %s', async (_case, radios, name) => {
     const root = document.createElement('div');
     root.innerHTML = `<button type="button">Before</button>${radios}`;

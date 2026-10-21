@@ -31,10 +31,8 @@ export function inToastHostWithin(el: Element, root: Element): boolean {
 // count as removed content on purpose; one on or around root is the page's
 // business, not root's. Styles and `disabled` are not read.
 function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
-  // Engines differ on the default tabIndex of some candidates, such as
-  // contenteditable, so only a tabindex that is set takes one out.
   if (el.hasAttribute('tabindex')) {
-    if (el.tabIndex < 0) return false;
+    if (hasNegativeTabindex(el)) return false;
   } else if (el.localName === 'summary') {
     // Only a <details>'s own summary, its first summary child, takes focus.
     const details = el.parentElement;
@@ -42,6 +40,12 @@ function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
   }
   const removed = el.closest('[hidden], [aria-hidden="true"]');
   return !removed || removed === root || !root.contains(removed);
+}
+
+// Engines differ on the default tabIndex of some candidates, such as
+// contenteditable, so only a tabindex that is set takes one out.
+function hasNegativeTabindex(el: HTMLElement): boolean {
+  return el.hasAttribute('tabindex') && el.tabIndex < 0;
 }
 
 /**
@@ -62,19 +66,20 @@ function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
 }
 
 // Each named radio group's one Tab stop, going forward: its checked radio, or
-// with none checked, the root's first. A group is the radios of one name and
-// one form owner. Its checked radio may sit outside root, and then takes the
-// whole group out of root, as the browser's Tab does, unless root is in an
-// open modal dialog that radio is not in, since the page behind it is inert.
-// Which radio claims the group follows the browser: `aria-hidden` does not
-// matter there. Whether root lists it does, as for any candidate.
-type Group = { stop: HTMLInputElement | null; checked: boolean };
-type RadioStops = Map<HTMLFormElement | null, Map<string, Group>>;
+// with none checked, the root's first that can take focus. A group is the
+// radios of one name and one form owner. Its checked radio may sit outside
+// root, and then takes the whole group out of root, as Chromium's Tab does,
+// unless root is in an open modal dialog that radio is not in, since the page
+// behind it is inert. Which radio claims the group follows the browser:
+// `aria-hidden` does not matter there. Whether root lists it does, as for any
+// candidate. Null marks a group root holds that no radio claims.
+type RadioStops = Map<HTMLFormElement | null, Map<string, HTMLInputElement | null>>;
 
-// Whether the browser's Tab could stop on radio `el`: tabindex, `disabled` and
-// reachability count, `aria-hidden` and `hidden` ancestors only as styles do.
+// Whether the browser's Tab could stop on radio `el`: tabindex, `disabled`,
+// `hidden` and reachability count, `aria-hidden` does not.
 function radioTakesFocus(el: HTMLInputElement): boolean {
-  if (el.hasAttribute('tabindex') && el.tabIndex < 0) return false;
+  // `hidden` is read too, for engines without checkVisibility.
+  if (hasNegativeTabindex(el) || el.closest('[hidden]')) return false;
   return !el.matches(':disabled') && isReachable(el);
 }
 
@@ -84,18 +89,16 @@ function radioStopsIn(root: HTMLElement): RadioStops {
     if (!isNamedRadio(el)) continue;
     let byName = stops.get(el.form);
     if (!byName) stops.set(el.form, (byName = new Map()));
-    let group = byName.get(el.name);
-    if (!group) byName.set(el.name, (group = { stop: null, checked: false }));
-    if (group.checked || !radioTakesFocus(el)) continue;
-    if (el.checked) group.checked = true;
-    if (el.checked || !group.stop) group.stop = el;
+    const stop = byName.get(el.name) ?? null;
+    if (!byName.has(el.name)) byName.set(el.name, null);
+    if (stop?.checked || !radioTakesFocus(el)) continue;
+    if (el.checked || !stop) byName.set(el.name, el);
   }
-  const scope = modalAround(root) ?? (root.getRootNode() as unknown as ParentNode);
+  const scope = modalAround(root) ?? (root.getRootNode() as Document | ShadowRoot | HTMLElement);
   for (const el of scope.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')) {
-    const group = stops.get(el.form)?.get(el.name);
-    if (!group || group.checked || root.contains(el) || !radioTakesFocus(el)) continue;
-    group.checked = true;
-    group.stop = el;
+    const byName = stops.get(el.form);
+    if (!byName?.has(el.name) || byName.get(el.name)?.checked || root.contains(el) || !radioTakesFocus(el)) continue;
+    byName.set(el.name, el);
   }
   return stops;
 }
@@ -127,7 +130,7 @@ function tabStopTest(root: HTMLElement): (el: HTMLElement) => boolean {
     if (!canTakeFocus(el, root)) return false;
     if (!isNamedRadio(el)) return true;
     stops ??= radioStopsIn(root);
-    return stops.get(el.form)?.get(el.name)?.stop === el;
+    return stops.get(el.form)?.get(el.name) === el;
   };
 }
 
@@ -142,7 +145,8 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
  * The elements in `root` that Todae treats as tab stops now: the candidates
  * Todae recognizes, in document order, minus disabled, hidden, inert and
  * aria-hidden content, and minus every radio of a named group but its one stop
- * going forward: its checked radio or, with none checked, root's first. A
+ * going forward: its checked radio or, with none checked, root's first that
+ * can take focus. A
  * checked radio of the group outside root takes the group out of root, unless
  * root is in an open modal dialog that radio is not in.
  */
