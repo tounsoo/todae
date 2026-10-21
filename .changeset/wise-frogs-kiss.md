@@ -2,4 +2,4 @@
 "@tounsoo/todae": patch
 ---
 
-Add Avatar.Group: stacked, overlapping avatars with a surface-colored ring, sharing one size.
+Add Avatar.Group, a group of Avatar.Root avatars that overlap and share one size.

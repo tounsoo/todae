@@ -76,6 +76,7 @@ export function AvatarTones() {
 }
 
 export function AvatarGroupExample() {
+  const rest = PEOPLE.length - 4;
   return (
     <Avatar.Group aria-label="Assignees">
       {PEOPLE.slice(0, 4).map((person) => (
@@ -83,9 +84,11 @@ export function AvatarGroupExample() {
           <Avatar.Fallback>{person.initials}</Avatar.Fallback>
         </Avatar.Root>
       ))}
-      <Avatar.Root label="3 more">
-        <Avatar.Fallback>+3</Avatar.Fallback>
-      </Avatar.Root>
+      {rest > 0 && (
+        <Avatar.Root label={`${rest} more`}>
+          <Avatar.Fallback>+{rest}</Avatar.Fallback>
+        </Avatar.Root>
+      )}
     </Avatar.Group>
   );
 }

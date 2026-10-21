@@ -121,11 +121,13 @@
     --_group-size: var(--todae-avatar-size-lg);
   }
 
-  .group > * {
+  /* Tooltip and Popover content is a sibling of its trigger and carries
+     [popover]: it takes no part in the stack. */
+  .group > :not([popover]) {
     flex: none;
   }
 
-  .group > * + * {
+  .group > :not([popover]) ~ :not([popover]) {
     margin-inline-start: calc(-1 * var(--_group-size) * var(--todae-avatar-group-overlap));
   }
 
@@ -142,11 +144,12 @@
     z-index: 1;
   }
 
-  /* Forced colors drop box-shadow, so the ring becomes an inset border in the
-     system canvas color: it sits inside the avatar, over the one beneath. */
+  /* Forced colors drop box-shadow and repaint the fallback background to
+     Canvas, so the edge becomes an inset border in CanvasText: it keeps
+     overlapping initials apart. */
   @media (forced-colors: active) {
     .group .root {
-      border: var(--todae-avatar-group-ring-width) solid Canvas;
+      border: var(--todae-avatar-group-ring-width) solid CanvasText;
     }
   }
 }

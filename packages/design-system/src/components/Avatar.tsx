@@ -30,7 +30,7 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
-  /** Inside an `Avatar.Group`, the group's size when left out. */
+  /** Size from the avatar.size contract tokens. Left out, it is the size of the `Avatar.Group` around it, or "md". */
   size?: AvatarSize;
   /**
    * Colors behind the fallback. `neutral` reads avatar.bg and avatar.fg; other

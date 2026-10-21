@@ -12,6 +12,12 @@ export const meta = {
       description: 'Accessible name for the group, such as "Assignees".',
     },
     {
+      name: 'aria-labelledby',
+      type: 'string',
+      required: false,
+      description: 'Id of the element that names the group, in place of aria-label.',
+    },
+    {
       name: 'size',
       type: '"sm" | "md" | "lg"',
       required: false,
@@ -22,7 +28,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Avatar.Root elements, one of them optionally a +N count.',
+      description: 'Avatar.Root elements. The last one can be a +N count.',
     },
   ],
 } as const satisfies ComponentMeta;
