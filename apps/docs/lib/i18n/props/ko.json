@@ -625,12 +625,12 @@
       "ko": "제어하는 뷰 값 스택. 첫 뷰가 맨 앞, 보이는 뷰가 맨 뒤입니다. onValueChange와 함께 전달합니다."
     },
     "defaultValue": {
-      "en": "Initial stack when uncontrolled. The stack goes back to it, without onValueChange, each time an enclosing Dialog, Drawer or BottomSheet closes.",
-      "ko": "비제어일 때의 초기 스택. 바깥의 Dialog, Drawer, BottomSheet가 닫힐 때마다 onValueChange 호출 없이 이 스택으로 돌아갑니다."
+      "en": "Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer or BottomSheet closes, and onValueChange fires with reason reset.",
+      "ko": "비제어일 때의 초기 스택. 바깥의 Dialog, Drawer, BottomSheet가 닫힐 때마다 이 스택으로 돌아가고, onValueChange가 reason reset과 함께 호출됩니다."
     },
     "onValueChange": {
-      "en": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back) or escape (Escape, or the Android back gesture in a modal).",
-      "ko": "다음 스택과 함께 호출됩니다. reason은 push(Drilldown.Trigger), back(Drilldown.Back), escape(Escape, 또는 모달 안에서 Android 뒤로 제스처)입니다."
+      "en": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back), escape (Escape, or the Android back gesture in a modal) or reset (an uncontrolled stack going back to defaultValue as its overlay closes).",
+      "ko": "다음 스택과 함께 호출됩니다. reason은 push(Drilldown.Trigger), back(Drilldown.Back), escape(Escape, 또는 모달 안에서 Android 뒤로 제스처), reset(오버레이가 닫히면서 비제어 스택이 defaultValue로 돌아감)입니다."
     },
     "escape": {
       "en": "back: Escape goes back one view, and closes an enclosing overlay only at the first view. close: Escape is left to the overlay.",

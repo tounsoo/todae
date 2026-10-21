@@ -1392,13 +1392,13 @@
           "name": "defaultValue",
           "type": "readonly string[]",
           "required": false,
-          "description": "Initial stack when uncontrolled. The stack goes back to it, without onValueChange, each time an enclosing Dialog, Drawer or BottomSheet closes."
+          "description": "Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer or BottomSheet closes, and onValueChange fires with reason reset."
         },
         {
           "name": "onValueChange",
           "type": "(value: readonly string[], reason: DrilldownChangeReason) => void",
           "required": false,
-          "description": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back) or escape (Escape, or the Android back gesture in a modal)."
+          "description": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back), escape (Escape, or the Android back gesture in a modal) or reset (an uncontrolled stack going back to defaultValue as its overlay closes)."
         },
         {
           "name": "escape",
@@ -4673,7 +4673,7 @@
     },
     {
       "name": "useControlledValue",
-      "description": "useControlledValue(controlled, defaultValue, onChange) returns [value, change, set]. change(next, ...args) skips a value equal to the one from the last render (Object.is), stores it when uncontrolled, then calls onChange(next, ...args). set(next) stores next when uncontrolled and calls nothing.",
+      "description": "useControlledValue(controlled, defaultValue, onChange) returns [value, change]. change(next, ...args) skips a value equal to the one from the last render (Object.is), stores it when uncontrolled, then calls onChange(next, ...args).",
       "props": [
         {
           "name": "controlled",

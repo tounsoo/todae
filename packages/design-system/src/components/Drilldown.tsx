@@ -29,8 +29,12 @@ import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
 import styles from './Drilldown.module.css';
 
-/** Why the stack changed: a Drilldown.Trigger, Drilldown.Back, or Escape and the Android back gesture. */
-export type DrilldownChangeReason = 'push' | 'back' | 'escape';
+/**
+ * Why the stack changed: a Drilldown.Trigger, Drilldown.Back, Escape and the
+ * Android back gesture, or an uncontrolled stack starting over as the overlay
+ * around it closes.
+ */
+export type DrilldownChangeReason = 'push' | 'back' | 'escape' | 'reset';
 
 /** What Escape does below the first view: go back one view, or leave it to the overlay, which closes. */
 export type DrilldownEscape = 'back' | 'close';
@@ -198,7 +202,7 @@ function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]):
 const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
-  const [stack, change, setStack] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
+  const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
   const [{ shown, motion }, dispatch] = useReducer(motionReducer, { shown: stack, motion: null });
   if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
 
@@ -298,9 +302,9 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     if (present !== false || controlled || sameStack(stack, defaultValue)) return;
     memory.current.triggers.clear();
     memory.current.offsets.clear();
-    setStack(defaultValue);
+    change(defaultValue, 'reset');
     dispatch({ type: 'reset', stack: defaultValue });
-  }, [present, controlled, defaultValue, setStack, stack]);
+  }, [present, controlled, defaultValue, change, stack]);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, which also stops the key's close

@@ -65,14 +65,6 @@ describe('useControlledValue', () => {
     expect(onChange).toHaveBeenCalledWith('b');
   });
 
-  it('stores a value from its third entry without calling onChange', () => {
-    const onChange = vi.fn();
-    const { result } = renderHook(() => useControlledValue<string | undefined>(undefined, 'a', onChange));
-    act(() => result.current[2]('b'));
-    expect(result.current[0]).toBe('b');
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
   it('skips a value equal to the current one', () => {
     const onChange = vi.fn();
     const { result } = renderHook(() => useControlledValue<number | undefined>(undefined, Number.NaN, onChange));
