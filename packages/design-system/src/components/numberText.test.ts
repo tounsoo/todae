@@ -658,13 +658,62 @@ describe('the grid past 1e15 steps', () => {
     }
   });
 
-  it('still holds no grid where one ulp is more than half a step, and does not stick there either', () => {
-    // 3e14 on a 0.1 grid: a double is 0.0625 apart, so no double is a point of the grid.
-    const value = 300000000000000.1;
-    expect(stepNumber(value, 0.1, { step: 0.1 }, en)).toBeGreaterThan(value);
+  // A small deterministic generator, so a failure names the same value every run.
+  const sampler = (lo: number, hi: number) => {
+    let seed = 12345;
+    const draw = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+    // Two draws, so the value has fraction digits and not only whole numbers.
+    return () => lo + (hi - lo) * ((draw() * 4294967296 + draw()) / 4294967296);
+  };
+
+  it.each([
+    [2 ** 48, 2 ** 49, 0.1],
+    [3.5e13, 7e13, 0.01],
+  ])('never sticks, either way, over %s to %s on a %s grid', (lo, hi, step) => {
+    const next = sampler(lo, hi);
+    for (let k = 0; k < 3000; k++) {
+      const value = next();
+      const up = stepNumber(value, step, { step }, en);
+      const down = stepNumber(value, -step, { step }, en);
+      expect(up, `up from ${value}`).toBeGreaterThan(value);
+      expect(down, `down from ${value}`).toBeLessThan(value);
+      expect(canStep(value, step, { step }, en)).toBe(true);
+      expect(canStep(value, -step, { step }, en)).toBe(true);
+    }
   });
 
-  it('holds a fifth of a step off the grid only up to about 4e14 steps', () => {
+  it('steps up from a value whose next point commits back onto it', () => {
+    // The point 562341325190349.375 divides to a whole index, which a commit would read as ...349.3 again.
+    expect(stepNumber(562341325190349.3, 0.1, { step: 0.1 }, en)).toBeGreaterThan(562341325190349.3);
+  });
+
+  it.each([903475000000000.1, 910000000000000.1])('never steps down on an up step from %s', (value) => {
+    const up = stepNumber(value, 0.1, { step: 0.1 }, en);
+    expect(up).toBeGreaterThanOrEqual(value);
+    expect(canStep(value, 0.1, { step: 0.1 }, en)).toBe(up !== value);
+    const down = stepNumber(value, -0.1, { step: 0.1 }, en);
+    expect(down).toBeLessThanOrEqual(value);
+  });
+
+  it.each([
+    [1e15, 0.1],
+    [1e13, 0.001],
+  ])('steps %s on a %s grid correctly or not at all, never the wrong way', (value, step) => {
+    for (const by of [step, -step]) {
+      const result = stepNumber(value, by, { step }, en);
+      expect(by > 0 ? result >= value : result <= value).toBe(true);
+      expect(canStep(value, by, { step }, en)).toBe(result !== value);
+    }
+  });
+
+  it('does not step where the grid index is past 2^53', () => {
+    // 1e13 / 0.001 is 1e16 steps: no index names the next point.
+    expect(stepNumber(1e13, 0.001, { step: 0.001 }, en)).toBe(1e13);
+    expect(canStep(1e13, 0.001, { step: 0.001 }, en)).toBe(false);
+    expect(canStep(1e13, -0.001, { step: 0.001 }, en)).toBe(false);
+  });
+
+  it('holds a fifth of a step off the grid up to about 3e14 steps', () => {
     expect(onGrid(1e14 + 0.2, { step: 1 })).toBe(false);
     // Past that the noise term meets the quarter-step cap, and a value 0.1875 off reads as on the grid.
     expect(onGrid(5e14 + 0.1875, { step: 1 })).toBe(true);

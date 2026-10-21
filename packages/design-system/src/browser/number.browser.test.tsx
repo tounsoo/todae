@@ -403,6 +403,9 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
       <Form.Root ref={form} onSubmit={onSubmit}>
         {field}
         <Button.Root type="submit">Send</Button.Root>
+        <button type="submit" formNoValidate>
+          Send anyway
+        </button>
       </Form.Root>
     ) : (
       <form ref={form} noValidate={!validate} onSubmit={onSubmit}>
@@ -642,6 +645,25 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     expect(told).toEqual([]);
     expect(input().value).toBe('7,,');
     expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('an unreadable text in a Form.Root with a submitter that turns validation off: not sent, flagged, and focus moves to the text', async () => {
+    const sent: Sent = [];
+    const told: (number | null)[] = [];
+    render(<Page sent={sent} told={told} initial={5} mode="formRoot" />);
+    await userEvent.click(input());
+    await replace('7,,');
+    // The blur of the click would show the error and move the button, so the submit comes from code, with the submitter named.
+    const anyway = screen.getByRole('button', { name: 'Send anyway' });
+    anyway.focus();
+    expect(document.activeElement).toBe(anyway);
+    input().form!.requestSubmit(anyway);
+    await settle();
+    expect(sent).toEqual([]);
+    expect(told).toEqual([]);
+    expect(input().value).toBe('7,,');
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(input());
   });
 
   it('an unreadable text in a plain noValidate form is never sent as the old number', async () => {

@@ -1,8 +1,11 @@
-import { FORM_ROOT } from './Form.model.js';
+import { FORM_ROOTS } from './Form.model.js';
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
-/** What a submit finds in the input: text no number (`flag` marks it; a check that runs blocks the submit, and where none will run, a `noValidate` form that is not Form.Root or a submitter with `formNoValidate`, the submit is cancelled here), or a draft the submit commits. */
+/** What a submit finds in the input: text no number (`flag` marks it; a check that runs blocks the submit, and where none will run, a `noValidate` form that is not Form.Root or a submitter with `formNoValidate`, the submit is cancelled here and focus moves to the text), or a draft the submit commits. */
 export type SubmitDraft = { unreadable: true; flag: () => void } | { unreadable?: false; commit: () => void };
+
+// The submits whose invalid text has been given focus, so a form with several unreadable inputs focuses one of them, not the last.
+const focused = new WeakSet<Event>();
 
 type Held = { form: HTMLFormElement; submitter: HTMLElement | null };
 
@@ -60,10 +63,11 @@ function fold(held: Held, event: Event) {
  *   in its place. The unreadable text makes the value input invalid, so a
  *   form that checks (the browser's check, or Form.Root's, which words it)
  *   blocks the submit and this only flags the text. Where no check will run,
- *   a `noValidate` form that is not Form.Root (which marks its `<form>` with
- *   `FORM_ROOT`) or a submitter with `formNoValidate`, the submit is
- *   cancelled here, with `preventDefault` and `stopImmediatePropagation`, and
- *   flagged.
+ *   a `noValidate` form that is not Form.Root (which registers its `<form>` in
+ *   `FORM_ROOTS`) or a submitter with `formNoValidate` (a Form.Root's
+ *   included), the submit is cancelled here, with `preventDefault` and
+ *   `stopPropagation` (so every unreadable input of the form still flags),
+ *   flagged, and focus moves to the text.
  * - A submit of the input's form that finds a draft that reads (`read`), or
  *   the input waiting (a product's auto-submit in `onValueChange`, a step with
  *   no draft), is cancelled and held: `preventDefault` and
@@ -121,11 +125,16 @@ export function useFormSubmitHold(
       const submitter = (event as SubmitEvent).submitter;
       if (draft?.unreadable) {
         draft.flag();
-        // A check that runs blocks it: the browser's before `submit` fires, or Form.Root's, which words the error and so has to hear the event. Where none will run, a plain `noValidate` form or a submitter with `formNoValidate`, nothing else stops the old number going out.
+        // A check that runs blocks it: the browser's before `submit` fires, or Form.Root's, which words the error and so has to hear the event. Where none will run, a plain `noValidate` form or a submitter with `formNoValidate` (in a Form.Root too, whose own handler would send it), nothing else stops the old number going out. It is cancelled, and focus moves to the text so the person hears which field is invalid. Not `stopImmediatePropagation`: the other inputs of the form listen on this node too, and each flags its own text.
         const form = event.target as HTMLFormElement;
-        if ((form.noValidate && !form.hasAttribute(FORM_ROOT)) || (submitter as HTMLButtonElement | null)?.formNoValidate) {
+        if ((form.noValidate && !FORM_ROOTS.has(form)) || (submitter as HTMLButtonElement | null)?.formNoValidate) {
           event.preventDefault();
-          event.stopImmediatePropagation();
+          event.stopPropagation();
+          // The first unreadable input in the order the inputs listen, which is the order they mounted in, takes focus.
+          if (!focused.has(event)) {
+            focused.add(event);
+            node.focus();
+          }
         }
         return;
       }

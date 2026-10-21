@@ -654,6 +654,9 @@ describe('an unreadable draft and a submitter that turns validation off', () => 
     }
     render(<Page />);
     type('7,,');
+    // Focus is on the button, as a click puts it there, so focus on the text is the submit's doing.
+    screen.getByRole('button', { name: 'Skip check' }).focus();
+    expect(document.activeElement).not.toBe(input());
     fireEvent.click(screen.getByRole('button', { name: 'Skip check' }));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -662,6 +665,8 @@ describe('an unreadable draft and a submitter that turns validation off', () => 
     expect(told).toEqual([]);
     expect(input().value).toBe('7,,');
     expect(input().getAttribute('aria-invalid')).toBe('true');
+    // The person is told which field: focus is on the text.
+    expect(document.activeElement).toBe(input());
   });
 });
 
@@ -721,6 +726,66 @@ describe('an unreadable draft in a plain noValidate form', () => {
     await submit(screen.getByTestId('form'));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText('Enter a valid value')).toBeTruthy();
-    expect(screen.getByTestId('form').hasAttribute('data-todae-form')).toBe(true);
+    expect(screen.getByTestId('form').hasAttribute('data-todae-form')).toBe(false);
+  });
+
+  it('is told apart from a Form.Root by what Form.Root registers, not by an attribute the markup carries', async () => {
+    const sent: (string | null)[] = [];
+    render(
+      <form
+        noValidate
+        data-todae-form=""
+        data-testid="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push(new FormData(event.currentTarget).get('a') as string | null);
+        }}
+      >
+        <Field.Root aria-label="A" name="a">
+          <Field.NumberInput value={5} locale="en" onValueChange={() => {}} />
+        </Field.Root>
+      </form>,
+    );
+    input().focus();
+    type('7..');
+    await submit(screen.getByTestId('form'));
+    expect(sent).toEqual([]);
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('flags every unreadable input of the form, and focuses the first', async () => {
+    const sent: unknown[] = [];
+    function Num({ name }: { name: string }) {
+      const [value, setValue] = useState<number | null>(5);
+      return (
+        <Field.Root aria-label={name} name={name}>
+          <Field.NumberInput value={value} locale="en" onValueChange={setValue} />
+        </Field.Root>
+      );
+    }
+    render(
+      <form
+        noValidate
+        data-testid="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          sent.push([...new FormData(event.currentTarget).entries()]);
+        }}
+      >
+        <Num name="a" />
+        <Num name="b" />
+      </form>,
+    );
+    const [a, b] = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    // A lone minus is on its way to a number, so nothing flags it until the submit does.
+    fireEvent.change(a!, { target: { value: '-' } });
+    fireEvent.change(b!, { target: { value: '-' } });
+    expect(a!.getAttribute('aria-invalid')).toBeNull();
+    expect(b!.getAttribute('aria-invalid')).toBeNull();
+    await submit(screen.getByTestId('form'));
+    expect(sent).toEqual([]);
+    expect(a!.getAttribute('aria-invalid')).toBe('true');
+    expect(b!.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(a);
   });
 });

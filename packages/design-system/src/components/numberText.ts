@@ -215,7 +215,7 @@ const ulp = (value: number) => (value === 0 || !Number.isFinite(value) ? 0 : 2 *
 const noise = (value: number, base: number, step: number, raw: number) =>
   (ulp(value) / 2 + ulp(base) / 2) / step + Number.EPSILON * Math.abs(raw);
 
-// The grid index of a value. An index within twice that noise of a whole number, and at most a quarter step, is that number, so a value on the grid reads as on it at any operand. Up to about 4e14 steps from the base a value a fifth of a step off the grid never does; past that the noise term reaches the quarter-step cap, and a value up to a quarter step off reads as on it. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5), and one a few doubles below a half stays below it. Any other index gets the 15-digit guard of the max line, where that moves it by no more than twice the noise (past 1e14 it would drop the fraction): 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index is exact as it is. Past 1e15 steps the window still applies, since a double's error there is larger than the decimal grid point it should match (100000000000000.1 on a 0.1 grid). Where one ulp is more than half a step (about 3e14 steps on a 0.1 grid) no double is a grid point, so a value there reads as off the grid whatever it is.
+// The grid index of a value. An index within twice that noise of a whole number, and at most a quarter step, is that number, so a value on the grid reads as on it at any operand. Up to about 3e14 steps from the base a value a fifth of a step off the grid never does; past that the noise term nears the quarter-step cap, and a value up to a quarter step off reads as on it, so past about 4e14 steps the window can disagree with the browser's stepMismatch. An index within the noise itself of a half is that half, so a tie reads as one (100.35 from 100 by 0.1 is 3.4999999999999716 steps, and means 3.5), and one a few doubles below a half stays below it. Any other index gets the 15-digit guard of the max line, where that moves it by no more than twice the noise (past 1e14 it would drop the fraction): 0.15 on a 0.1 grid is 1.4999999999999998 steps, and means 1.5, and 12345678901.23 on a 0.01 grid is not whole at 16 digits. A whole index is exact as it is. Past 1e15 steps the window still applies, since a double's error there is larger than the decimal grid point it should match (100000000000000.1 on a 0.1 grid). One ulp of the value passes half a step near 2.8e14 in value on a 0.1 grid, where some grid points have no double of their own and a step lands on the nearest double beyond the value. From an index of 2^53 (about 9e14 in value on a 0.1 grid) the index itself is no longer a count, and `stepNumber` steps no further.
 function indexOf(value: number, base: number, step: number): number {
   const raw = (value - base) / step;
   if (Number.isInteger(raw)) return raw;
@@ -360,7 +360,9 @@ export function canStep(from: number | null, by: number, range: NumberRange, tex
  * 1.1 - 1 is 0.1.
  * From a value outside `min` and `max`, a step toward the range lands on the
  * bound. From no value, an increase starts at `min`, or at `by` without one,
- * and a decrease starts at `by`.
+ * and a decrease starts at `by`. A step never lands on the wrong side of
+ * `from`: where the grid index is past 2^53, or no double holds a next point,
+ * it gives `from` back, so `canStep` is false and the buttons disable.
  */
 export function stepNumber(from: number | null, by: number, range: NumberRange, text: NumberTextOptions = {}): number {
   if (from === null) return commitNumber(by > 0 && range.min !== undefined ? range.min : by, range, text);
@@ -379,12 +381,15 @@ export function stepNumber(from: number | null, by: number, range: NumberRange, 
   const index = indexOf(from, step === undefined ? 0 : (range.min ?? 0), unit);
   const count = Math.max(1, Math.round(Math.abs(by) / unit));
   const grid = step === undefined ? { step: unit } : range;
+  // Past 2^53 steps from the base a double cannot count the grid, so no index names a next point: no step.
+  if (!Number.isSafeInteger(Math.floor(index))) return from;
   let target = by > 0 ? Math.floor(index) + count : Math.ceil(index) - count;
-  let point = pointAt(target, grid);
-  // Where a double is coarser than the grid the index can be a point short; the point must still lie strictly beyond `from`, so a step never sticks. A few tries, since where no double holds the next point there is none to find.
-  for (let tries = 0; tries < 4 && (by > 0 ? point <= from : point >= from); tries++) {
+  const beyond = (next: number) => (by > 0 ? next > from : next < from);
+  // The committed value is what must lie strictly beyond `from`: a commit counts the grid again by division, and can land back on `from` from a point that is beyond it. A few tries, since where no double holds the next point there is none to find, and then the value stays, never a point on the wrong side.
+  let next = finite(pointAt(target, grid));
+  for (let tries = 0; tries < 4 && !beyond(next); tries++) {
     target += by > 0 ? 1 : -1;
-    point = pointAt(target, grid);
+    next = finite(pointAt(target, grid));
   }
-  return finite(point);
+  return beyond(next) ? next : from;
 }

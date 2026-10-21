@@ -408,14 +408,14 @@ describe('a Suspense boundary that hides the input, and a submit that comes mean
 });
 
 describe('a held submit while the render of its commit is pending', () => {
-  // The render that answers the commit suspends and never resolves, so the boundary keeps the old page.
+  // The render that answers the commit suspends and never resolves. The update is not in a transition, so the boundary hides the input behind its fallback (the input is in the page but hidden, and its effects are off). A product that sets its value in a transition keeps the old page instead, which is the documented limit pinned above, not this wait.
   const never = new Promise<void>(() => {});
   function Gate({ on }: { on: boolean }) {
     if (on) use(never);
     return null;
   }
 
-  it('waits: every later submit of the form is folded and nothing is sent until the render arrives', async () => {
+  it('waits with the input hidden behind the fallback: every later submit of the form is folded and nothing is sent until the render arrives', async () => {
     const sent: (string | null)[] = [];
     function Page() {
       const [value, setValue] = useState<number | null>(5);
@@ -443,6 +443,8 @@ describe('a held submit while the render of its commit is pending', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     });
+    // The case the comment names: the fallback shows.
+    expect(screen.queryByText('loading')).not.toBeNull();
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Go' }));
       (screen.getByTestId('form') as HTMLFormElement).requestSubmit();

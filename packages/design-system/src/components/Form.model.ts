@@ -140,5 +140,5 @@ export function failingEntries(
   return entries.sort((a, b) => (a.reading.carrier.compareDocumentPosition(b.reading.carrier) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 }
 
-// The attribute Form.Root marks its `<form>` with, so a plain `noValidate` form (no check of its own) can be told from it (which checks and words the error).
-export const FORM_ROOT = 'data-todae-form';
+// The forms that are a Form.Root, which Form.Root fills in a layout effect, so a plain `noValidate` form (no check of its own) can be told from one that checks and words the error. A set and not a DOM attribute, so the page's markup is not a signal a product's own `<form>` can fake or a test can leave behind.
+export const FORM_ROOTS = new WeakSet<HTMLFormElement>();

@@ -299,11 +299,11 @@
   "field/number-input": {
     "(top)": "843d01be2de7",
     "# Field.NumberInput": "764c575ba9a5",
-    "## Typing and committing": "9abbf68cf9cc",
+    "## Typing and committing": "077b10a5f6c4",
     "## Keys": "c5c32418f906",
     "## Step buttons": "707442fce962",
     "## Format": "4cf77b9d2a09",
-    "## In a form": "916f5e83ebd0",
+    "## In a form": "db72067fad82",
     "## Accessible composition": "76353fe25891",
     "## When to use": "d57fe8233a0b",
     "### Field.NumberInput": "5596a681fe44",
