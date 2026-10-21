@@ -73,14 +73,15 @@
     "(section order)": "5c8250327a77"
   },
   "calendar": {
-    "(top)": "f59a557c8526",
-    "# Calendar": "e7168712ba53",
+    "(top)": "e6d0bb76e386",
+    "# Calendar": "a4a59be7452f",
     "## Range and locale": "38c6da99f7fd",
+    "## Ranges": "211ede7df09b",
     "## Temporal": "084d2fd73acf",
-    "## Accessible composition": "0c0c5d991a3f",
-    "## When to use": "6a4841c3c102",
+    "## Accessible composition": "bec227ca4f36",
+    "## When to use": "41bc026898d1",
     "## Props": "1736b176a33c",
-    "(section order)": "b32de0f3c71a"
+    "(section order)": "0cc46d31c92c"
   },
   "card": {
     "(top)": "7894bae600a4",
@@ -215,8 +216,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "cb681b9174b9",
-    "## Inputs": "73b0acb6d511",
+    "# Field": "aec6c8ad1426",
+    "## Inputs": "1c7178621985",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "3c5316a2038b",
@@ -258,24 +259,37 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "5ad69a8f824e",
+    "# Field.DatePicker": "d2d2dc01e837",
     "## Typed dates": "f46aab5c8f37",
     "## On its own": "295428996e2c",
-    "## Accessible composition": "cc7efa5ff6e0",
+    "## Accessible composition": "bf09b7398d8f",
     "## When to use": "d57fe8233a0b",
-    "### Field.DatePicker": "9b0203cf918a",
+    "### Field.DatePicker": "f853e4b26b27",
     "### formatDate": "8733ccff7aed",
     "### parseDate": "9c8aa249da4e",
     "## Props": "965c55594523",
     "(section order)": "31048754c69b"
   },
+  "field/date-range-picker": {
+    "(top)": "2d895db44745",
+    "# Field.DateRangePicker": "3b280faba8cd",
+    "## Typed ranges": "3e862017ae9a",
+    "## On its own": "961e3ee09e2b",
+    "## Accessible composition": "ad3e739046e7",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DateRangePicker": "180461c4d1c7",
+    "### formatDateRange": "3f1f8443b7a9",
+    "### parseDateRange": "238d056ef780",
+    "## Props": "4ac04d344475",
+    "(section order)": "83afd8a304e4"
+  },
   "field/date-time-picker": {
     "(top)": "baff6ae91b8c",
-    "# Field.DateTimePicker": "4554ad1808bf",
+    "# Field.DateTimePicker": "eee5a363765b",
     "## Typed dates and times": "8a831120d417",
     "## On its own": "040c3c7cc0c5",
     "## Temporal": "427eeb71dd9c",
-    "## Accessible composition": "120cd5b024e7",
+    "## Accessible composition": "ee5df1c33540",
     "## When to use": "d57fe8233a0b",
     "### Field.DateTimePicker": "641960a4b398",
     "### formatDateTime": "325cf00c875c",
@@ -295,11 +309,11 @@
   },
   "field/text-input": {
     "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "c0c06c3b28e6",
+    "# Field.TextInput": "19b1b8350f1a",
     "## Number": "1a051e370546",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "42c2fe701512",
+    "### Field.TextInput": "c815eea4dbec",
     "## Props": "286d56b43a7f",
     "(section order)": "8530bb19e469"
   },
@@ -317,11 +331,11 @@
   },
   "field/time-picker": {
     "(top)": "c91058d9eff0",
-    "# Field.TimePicker": "18bf06c1f772",
+    "# Field.TimePicker": "c0cddca30b82",
     "## Typed times": "bbf503246d6e",
     "## On its own": "926177e5c068",
     "## Temporal": "d7c947f6ad86",
-    "## Accessible composition": "365e5f87cb12",
+    "## Accessible composition": "ffeee6f2f281",
     "## When to use": "d57fe8233a0b",
     "### Field.TimePicker": "4ccdb4124cea",
     "### formatTime": "fd8940b1ed01",
@@ -476,7 +490,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "d64eedd35fb3",
+    "# Native platform": "4415e9d7165b",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -713,7 +727,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "e9852fc62f38",
+    "## Glyphs": "28a4b4ff4a31",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -724,7 +738,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "036e5b7dbd01",
+    "## Strings": "00d7268af7a5",
     "## Accessible composition": "3a78acb70781",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

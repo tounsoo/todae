@@ -2,7 +2,7 @@ import { FieldLabelStates, FieldNumber } from '../../../../components/demos/Fiel
 
 # Field.TextInput
 
-`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 입력한 날짜, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
+`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 입력한 날짜, 날짜 범위, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
 
 ```tsx
 const id = useId();
@@ -54,7 +54,7 @@ const id = useId();
 
 **언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자.
 
-**쓰지 않을 때:** 시각 → `Field.TimePicker`. 날짜와 시각 → `Field.DateTimePicker`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
+**쓰지 않을 때:** 시각 → `Field.TimePicker`. 날짜 범위 → `Field.DateRangePicker`. 날짜와 시각 → `Field.DateTimePicker`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
 
 ## Props
 

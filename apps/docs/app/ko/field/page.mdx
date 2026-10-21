@@ -18,7 +18,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -34,6 +34,7 @@ import {
 - [Field.Select](/field/select): 네이티브 `<select>`.
 - [Field.ColorPicker](/field/color-picker): 색 선택기를 여는 견본.
 - [Field.DatePicker](/field/date-picker): 단독으로, 또는 날짜를 입력하는 텍스트 입력 옆에서 달력을 여는 버튼.
+- [Field.DateRangePicker](/field/date-range-picker): 시작일과 종료일을 고르는 달력을 여는 버튼. 단독으로 쓰거나, 범위를 입력하는 텍스트 입력 옆에 둡니다.
 - [Field.TimePicker](/field/time-picker): 시각 목록을 여는 버튼. 단독으로 쓰거나, 시각을 입력하는 텍스트 입력 옆에 둡니다.
 - [Field.DateTimePicker](/field/date-time-picker): 달력과 시각 목록을 여는 버튼. 단독으로 쓰거나, 날짜와 시각을 입력하는 텍스트 입력 옆에 둡니다.
 
