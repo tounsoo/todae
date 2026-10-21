@@ -64,6 +64,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'radio': () => import('../../app/(en)/radio/page.mdx'),
   'recipes/combobox': () => import('../../app/(en)/recipes/combobox/page.mdx'),
   'recipes/command-palette': () => import('../../app/(en)/recipes/command-palette/page.mdx'),
+  'recipes/date-range-presets': () => import('../../app/(en)/recipes/date-range-presets/page.mdx'),
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
   'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
   'scroll-area': () => import('../../app/(en)/scroll-area/page.mdx'),

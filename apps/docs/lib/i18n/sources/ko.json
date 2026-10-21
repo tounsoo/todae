@@ -298,7 +298,7 @@
   "field/date-range-picker": {
     "(top)": "2d895db44745",
     "# Field.DateRangePicker": "3b280faba8cd",
-    "## Typed ranges": "d8ec38f3dd9c",
+    "## Typed ranges": "158ae98b8c71",
     "## On its own": "b1f54a988629",
     "## Accessible composition": "0f3deea8054b",
     "## When to use": "d57fe8233a0b",
@@ -613,6 +613,15 @@
     "## Accessible composition": "0bca0504d409",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
+  },
+  "recipes/date-range-presets": {
+    "(top)": "694e43a763f8",
+    "# Date range with presets": "35ad4762b89e",
+    "## Presets": "d6309f8ef46e",
+    "## The field": "ccb7644f66f3",
+    "## Accessible composition": "23403c01f45e",
+    "## When to use": "5fe4b9e27636",
+    "(section order)": "f42ec7b6c387"
   },
   "recipes/file-upload": {
     "(top)": "630a61784a0e",
