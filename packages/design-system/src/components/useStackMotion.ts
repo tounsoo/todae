@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useReducer, type RefObject } from 'react';
+import { useCallback, useLayoutEffect, useReducer, useRef, type RefObject } from 'react';
 import { cssTimeMs } from '../overlay/cssTime.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 
@@ -55,6 +55,24 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
   }
 }
 
+// The views share the overlay body's scroll container, or the page's.
+function scrollContainer(el: HTMLElement): Element {
+  for (let node = el.parentElement; node && node !== el.ownerDocument.body; node = node.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(node).overflowY)) return node;
+  }
+  return el.ownerDocument.scrollingElement ?? el.ownerDocument.documentElement;
+}
+
+// The offset that brings the viewport's top to the top of `scroller`, inside
+// its padding: 0 for a viewport that starts an overlay body, and the
+// viewport's place for one further down a page.
+function topOf(viewport: HTMLElement, scroller: Element): number {
+  const page = scroller === viewport.ownerDocument.scrollingElement;
+  const edge = page ? 0 : scroller.getBoundingClientRect().top + scroller.clientTop;
+  const padding = Number.parseFloat(getComputedStyle(scroller).paddingTop);
+  return viewport.getBoundingClientRect().top - edge + scroller.scrollTop - padding;
+}
+
 function motionToken(el: HTMLElement, name: string): string {
   return getComputedStyle(el).getPropertyValue(`--todae-drilldown-motion-${name}`).trim();
 }
@@ -65,17 +83,19 @@ function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]):
   return elements.flatMap((el) => el?.getAnimations() ?? []).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
 }
 
+/** The views a change moves, as it starts. */
+export type StackViews = { entering: HTMLElement | undefined; leaving: HTMLElement | undefined };
+
 type UseStackMotionOptions = {
   stack: Stack;
   viewportRef: RefObject<HTMLElement | null>;
-  /** Stable, as is onChange: a new one runs the last change's layout effect again. */
   elementOf: (view: string) => HTMLElement | undefined;
   /**
-   * Runs as each change starts, before the views move. Returns true when it
-   * brought back a scroll offset, which needs the viewport's full height at
-   * once, or the scroll container clamps it.
+   * Runs as each change starts, before the views move, given the scroll
+   * offset before it. Returns the offset to bring back, or none to show the
+   * new view from its top.
    */
-  onChange: (change: StackChange, entering: HTMLElement | undefined, leaving: HTMLElement | undefined) => boolean;
+  onChange: (change: StackChange, views: StackViews, offset: number) => number | undefined;
 };
 
 type UseStackMotionResult = {
@@ -101,23 +121,33 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     leaving: [],
   });
   if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
+  const latest = useRef({ elementOf, onChange });
+  latest.current = { elementOf, onChange };
 
   useLayoutEffect(() => {
     if (!change) return;
+    const { elementOf, onChange } = latest.current;
     const viewport = viewportRef.current;
     const top = change.to.at(-1);
     const left = change.from.at(-1);
-    const enteringView = top === undefined ? undefined : elementOf(top);
-    const leavingView = left === undefined || left === top ? undefined : elementOf(left);
-    const keepsHeight = onChange(change, enteringView, leavingView);
-    const duration = viewport && !reducedMotion() ? (cssTimeMs(motionToken(viewport, 'duration')) ?? 0) : 0;
-    if (viewport && enteringView && leavingView && duration > 0 && !keepsHeight) {
-      viewport.animate([{ height: `${leavingView.offsetHeight}px` }, { height: `${enteringView.offsetHeight}px` }], {
+    const views: StackViews = {
+      entering: top === undefined ? undefined : elementOf(top),
+      leaving: left === undefined || left === top ? undefined : elementOf(left),
+    };
+    const scroller = viewport && scrollContainer(viewport);
+    const restored = onChange(change, views, scroller?.scrollTop ?? 0);
+    if (!viewport || !scroller) return;
+    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
+    const duration = reducedMotion() ? 0 : cssTimeMs(motionToken(viewport, 'duration'));
+    // A restored offset needs the viewport's full height at once, or the
+    // scroll container clamps it.
+    if (views.entering && views.leaving && duration && !restored) {
+      viewport.animate([{ height: `${views.leaving.offsetHeight}px` }, { height: `${views.entering.offsetHeight}px` }], {
         duration,
-        easing: motionToken(viewport, 'easing-enter') || 'ease',
+        easing: motionToken(viewport, 'easing-enter'),
       });
     }
-  }, [change, elementOf, onChange, viewportRef]);
+  }, [change, viewportRef]);
 
   // Settles each moving view when its slide's animations finish, so CSS that
   // changes them keeps it on screen as long as it moves. The entering view
@@ -128,7 +158,7 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     let current = true;
     const idle: string[] = [];
     for (const { view } of moving) {
-      const own = elementOf(view);
+      const own = latest.current.elementOf(view);
       const animations = slideAnimations(view === entering?.view ? [own, viewportRef.current] : [own]);
       if (animations.length === 0) {
         idle.push(view);
@@ -142,7 +172,7 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     return () => {
       current = false;
     };
-  }, [elementOf, entering, leaving, viewportRef]);
+  }, [entering, leaving, viewportRef]);
 
   const statusOf = useCallback(
     (view: string): ViewStatus | null => {

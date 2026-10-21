@@ -25,7 +25,8 @@ import { BackGlyph, glyphOr } from './glyphs.js';
 import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
-import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type ViewStatus } from './useStackMotion.js';
+import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type StackViews, type ViewStatus } from './useStackMotion.js';
+import { createViewMemory } from './viewMemory.js';
 import styles from './Drilldown.module.css';
 
 /**
@@ -88,13 +89,6 @@ function useDrilldown(part: string): DrilldownContextValue {
   return ctx;
 }
 
-function scrollParent(el: HTMLElement): HTMLElement | null {
-  for (let node = el.parentElement; node && node !== el.ownerDocument.body; node = node.parentElement) {
-    if (/auto|scroll/.test(getComputedStyle(node).overflowY)) return node;
-  }
-  return null;
-}
-
 // With focus lost to the body, a key and a close request go to the surface in front.
 function inFrontSurface(surface: Element): boolean {
   const front = frontModal();
@@ -106,10 +100,6 @@ function handledOrComposing(event: KeyboardEvent): boolean {
   return event.defaultPrevented || isImeKeyEvent(event);
 }
 
-// What a view a forward change covered gets back on a pop: its scroll offset
-// and the Drilldown.Trigger in it that pushed the view above, if one did.
-type Covered = { offset: number; trigger: HTMLElement | null };
-
 function canTakeFocusBack(trigger: HTMLElement | null | undefined, view: HTMLElement): trigger is HTMLElement {
   return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
 }
@@ -118,18 +108,15 @@ const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
   const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
-  const covered = useRef(new Map<string, Covered>());
-  // The trigger of the last push, until the change it asked for starts.
-  const opener = useRef<{ view: string; trigger: HTMLElement } | null>(null);
+  const [memory] = useState(createViewMemory);
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const backRef = useRef<HTMLButtonElement | null>(null);
 
-  const elementOf = useCallback((view: string) => views.current.get(view)?.element, []);
-  const onChange = useCallback((next: StackChange, entering: HTMLElement | undefined, leaving: HTMLElement | undefined) => {
+  const onChange = (next: StackChange, { entering, leaving }: StackViews, offset: number) => {
+    const back = memory.follow(next, offset);
     const viewport = viewportRef.current;
-    const scroller = viewport && scrollParent(viewport);
     const active = viewport?.ownerDocument.activeElement;
     // Focus moves with the views when it was on them, on Back, on the
     // overlay's own element, or lost; not from another control, such as the
@@ -140,28 +127,16 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
       active === viewport?.closest('dialog, [popover]') ||
       leaving?.contains(active) ||
       backRef.current === active;
-    const top = next.to.at(-1);
-    const below = next.from.at(-1);
-    for (const view of covered.current.keys()) {
-      if (!next.to.includes(view)) covered.current.delete(view);
-    }
-    // Read before the scroll goes to the top, for a push and a controlled jump alike.
-    if (next.direction === 'forward' && below !== undefined && below !== top && next.to.includes(below)) {
-      const pushed = opener.current;
-      covered.current.set(below, { offset: scroller?.scrollTop ?? 0, trigger: pushed && pushed.view === top ? pushed.trigger : null });
-    }
-    opener.current = null;
-    const back = next.direction === 'back' && top !== undefined ? covered.current.get(top) : undefined;
-    const scrollTop = back?.offset ?? 0;
-    if (scroller) scroller.scrollTop = scrollTop;
     if (entering && ownsFocus) {
+      const top = next.to.at(-1);
       const trigger = back?.trigger;
       const returnTo = canTakeFocusBack(trigger, entering) ? trigger : null;
       const initialFocus = next.direction === 'forward' && top !== undefined ? views.current.get(top)?.initialFocusRef?.current : null;
       focusWithoutScroll(returnTo ?? initialFocus ?? firstTabbable(entering) ?? entering);
     }
-    return scrollTop > 0;
-  }, []);
+    return back?.offset;
+  };
+  const elementOf = (view: string) => views.current.get(view)?.element;
   const { shown, direction, statusOf, reset } = useStackMotion({ stack, viewportRef, elementOf, onChange });
 
   const push = useCallback(
@@ -172,10 +147,10 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
         }
         return;
       }
-      opener.current = { view: next, trigger };
+      memory.pushing(next, trigger);
       change([...stack, next], 'push');
     },
-    [change, stack],
+    [change, memory, stack],
   );
   const pop = useCallback(
     (reason: DrilldownChangeReason) => {
@@ -222,11 +197,10 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const controlled = value !== undefined;
   useLayoutEffect(() => {
     if (present !== false || controlled || sameStack(stack, defaultValue)) return;
-    covered.current.clear();
-    opener.current = null;
+    memory.clear();
     change(defaultValue, 'reset');
     reset(defaultValue);
-  }, [present, controlled, defaultValue, change, reset, stack]);
+  }, [present, controlled, defaultValue, change, memory, reset, stack]);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, which also stops the key's close

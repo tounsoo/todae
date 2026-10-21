@@ -724,6 +724,52 @@ describe('Drilldown in a browser', () => {
       cleanupAll();
     }
   });
+
+  it('scrolls a page that scrolls itself to the top of an inline Drilldown on push, and back on pop', async () => {
+    const rows = Array.from({ length: 40 }, (_, i) => `Item ${i + 1}`);
+    render(
+      <Themed>
+        <div style={{ blockSize: 800 }} />
+        <Drilldown.Root defaultValue={['list']}>
+          <Drilldown.Back />
+          <Drilldown.Viewport data-testid="viewport">
+            <Drilldown.View value="list" label="Items">
+              {rows.map((row) => (
+                <div key={row}>
+                  <Drilldown.Trigger value={row} variant="ghost">
+                    {row}
+                  </Drilldown.Trigger>
+                </div>
+              ))}
+            </Drilldown.View>
+            {rows.map((row) => (
+              <Drilldown.View key={row} value={row} label={row}>
+                <p>{row} details</p>
+              </Drilldown.View>
+            ))}
+          </Drilldown.Viewport>
+        </Drilldown.Root>
+      </Themed>,
+    );
+    try {
+      const page = document.scrollingElement!;
+      const port = screen.getByTestId('viewport');
+      const row = screen.getByRole('button', { name: 'Item 30' });
+      row.scrollIntoView({ block: 'center' });
+      const offset = page.scrollTop;
+      expect(port.getBoundingClientRect().top).toBeLessThan(-300);
+      row.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(Math.abs(port.getBoundingClientRect().top)).toBeLessThan(1);
+      expect(page.scrollTop).toBeGreaterThan(700);
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Items' }));
+      expect(page.scrollTop).toBe(offset);
+    } finally {
+      cleanupAll();
+      document.scrollingElement!.scrollTop = 0;
+    }
+  });
 });
 
 function InPopover({
