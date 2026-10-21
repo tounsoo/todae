@@ -195,7 +195,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('ThemeProvider')).toEqual({
       status: 'present',
       whenToUse:
-        'Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.',
+        "Set appearance (system / light / dark) for a subtree via `data-appearance`; a nested provider overrides it, or keeps the enclosing one's when it sets none. `overrides` for allowlisted token paths only.",
       whenNotToUse:
         'Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).',
       docsUrl: `${DOCS_ORIGIN}/tokens`,
@@ -204,7 +204,8 @@ describe('docs mcp tools', () => {
     });
     expect(whenToUse('DensityProvider')).toMatchObject({
       status: 'present',
-      whenToUse: 'Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`. Spacing only.',
+      whenToUse:
+        "Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`; a nested provider with none keeps the enclosing one's. Spacing only.",
       whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → Text `size`.',
       docsUrl: `${DOCS_ORIGIN}/tokens`,
     });

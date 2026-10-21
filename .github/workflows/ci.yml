@@ -93,3 +93,16 @@ jobs:
             apps/docs/playwright-report
             apps/docs/test-results
           retention-days: 7
+
+  example:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Second-brand example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # Builds the example's tokens with todae-tokens, typechecks it and bundles it, against the package's dist.
+      - run: pnpm build:ds
+      # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
+      - run: pnpm install --frozen-lockfile --offline
+      - run: pnpm --filter fernway-example build

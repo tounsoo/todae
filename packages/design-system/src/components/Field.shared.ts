@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useSyncExternalStore,
+  type ChangeEvent,
   type ComponentPropsWithRef,
   type CSSProperties,
   type RefObject,
@@ -94,6 +95,21 @@ function pickerControl<P extends PickerOwnProps>(
     disabled: field.disabled || Boolean(props.disabled),
     'aria-invalid': field.invalid ? true : props['aria-invalid'],
     'aria-label': props['aria-label'] ?? label,
+  };
+}
+
+/**
+ * One change handler that calls `onChange` and `onValueChange`, or undefined
+ * when neither is given, so the control renders read-only.
+ */
+export function valueChangeHandler<E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+  onChange: ((event: ChangeEvent<E>) => void) | undefined,
+  onValueChange: ((value: string) => void) | undefined,
+): ((event: ChangeEvent<E>) => void) | undefined {
+  if (!onChange && !onValueChange) return undefined;
+  return (event) => {
+    onChange?.(event);
+    onValueChange?.(event.target.value);
   };
 }
 

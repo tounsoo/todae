@@ -1,0 +1,32 @@
+{
+  "button": {
+    "soft": {
+      "$description": "Fernway's soft Button.Root variant: a tinted accent fill for secondary calls to action.",
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/accent/soft/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/accent/soft-strong/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/accent/soft-strong/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/soft/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/accent/hover/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/accent/active/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
+      },
+      "border": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
+    }
+  }
+}

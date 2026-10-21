@@ -4,6 +4,7 @@ import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { hasGlyph } from './glyphs.js';
+import { valueChangeHandler } from './Field.shared.js';
 
 /**
  * A native `<select>`. Browsers with `appearance: base-select` draw the picker
@@ -31,15 +32,8 @@ export function Select({ value, onChange, onValueChange, className, children, ..
         {...field.getControlProps(props)}
         value={value}
         className={cx(styles.select, className)}
-        // Without either handler the select is read-only, and React says so.
-        onChange={
-          onChange || onValueChange
-            ? (event) => {
-                onChange?.(event);
-                onValueChange?.(event.target.value);
-              }
-            : undefined
-        }
+        // Without either handler React keeps the value and warns; <select> has no readOnly.
+        onChange={valueChangeHandler(onChange, onValueChange)}
       >
         {children}
       </select>

@@ -10,7 +10,7 @@ import {
 
 # Field.Textarea
 
-`Field.Textarea`는 [Field](/field) 안에서 여러 줄 텍스트를 받는 네이티브 `<textarea>`입니다. 높이는 CSS로만 정해집니다. `rows`는 높이와 드래그 최솟값을, `maxRows`는 상한을 정합니다. 패딩은 셸 안쪽의 textarea에 있습니다.
+`Field.Textarea`는 [Field](/field) 안에서 여러 줄 텍스트를 받는 네이티브 `<textarea>`입니다. 높이는 CSS로만 정해집니다. `rows`는 높이와 드래그 최솟값을, `maxRows`는 상한을 정합니다. 패딩은 셸 안쪽의 textarea에 있습니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 textarea는 읽기 전용입니다.
 
 ```tsx
 <Field.Root aria-label="Note">

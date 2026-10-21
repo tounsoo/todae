@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ButtonVariant, ButtonVariants } from '../components/Button.js';
 import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider.js';
 import { ThemeProvider, useAppearance } from './ThemeProvider.js';
-import { THEME_OVERRIDE_KEYS, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
+import { THEME_OVERRIDE_KEYS, type ThemeColorValue, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -63,6 +63,67 @@ describe('ThemeProvider', () => {
     expect(outer?.querySelector('[data-appearance="light"]')?.getAttribute('data-appearance')).toBe(
       'light',
     );
+  });
+
+  it('keeps the enclosing density on a nested DensityProvider with none', () => {
+    render(
+      <DensityProvider density="compact">
+        <DensityProvider data-testid="inner">
+          <DensityLabel />
+        </DensityProvider>
+      </DensityProvider>,
+    );
+    expect(screen.getByTestId('inner').getAttribute('data-density')).toBe('compact');
+    expect(screen.getByTestId('inner').textContent).toBe('compact');
+  });
+
+  it('keeps the enclosing appearance on a nested provider that only sets overrides', () => {
+    mockMatchMedia(false);
+    render(
+      <ThemeProvider appearance="dark">
+        <ThemeProvider data-testid="inner" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.45, 0.1, 155] } }}>
+          <AppearanceLabel />
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+    const inner = screen.getByTestId('inner');
+    expect(inner.getAttribute('data-appearance')).toBe('dark');
+    expect(inner.textContent).toBe('dark');
+  });
+
+  it('takes a color held in an as-const constant', () => {
+    const accent = { colorSpace: 'oklch', components: [0.45, 0.1, 155] } as const;
+    render(
+      <ThemeProvider data-testid="const" overrides={{ 'color.accent.default': accent }}>
+        x
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('const').style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.45 0.1 155)');
+    expectTypeOf(accent).toExtend<ThemeColorValue>();
+  });
+
+  it('lets a nested provider set system inside a dark one', () => {
+    mockMatchMedia(false);
+    render(
+      <ThemeProvider appearance="dark">
+        <ThemeProvider data-testid="system" appearance="system">
+          <AppearanceLabel />
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('system').getAttribute('data-appearance')).toBe('system');
+    expect(screen.getByTestId('system').textContent).toBe('light');
+  });
+
+  it('defaults to system with no provider around it', () => {
+    mockMatchMedia(true);
+    render(
+      <ThemeProvider data-testid="only">
+        <AppearanceLabel />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('only').getAttribute('data-appearance')).toBe('system');
+    expect(screen.getByTestId('only').textContent).toBe('dark');
   });
 
   it('server-renders system as system, so CSS picks the scheme before hydration', () => {

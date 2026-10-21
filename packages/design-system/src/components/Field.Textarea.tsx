@@ -6,11 +6,12 @@ import { resolveTextareaRows } from './textareaRows.js';
 import { TextareaHighlights, useTextareaHighlights, type FieldTextareaHighlight } from './TextareaHighlights.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useField } from '../hooks/useField.js';
-import { useTextEntry } from './Field.shared.js';
+import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 export type FieldTextareaProps = {
   value: string;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onValueChange?: (value: string) => void;
   placeholder?: string;
   rows?: number;
@@ -32,6 +33,7 @@ export function Textarea({
   className,
   style,
   maxLength,
+  readOnly,
   'aria-describedby': describedBy,
   onScroll,
   ref,
@@ -67,10 +69,8 @@ export function Textarea({
           ...(highlights !== undefined ? { anchorName: mergeAnchorNames(style?.anchorName, layer.anchorName) } : null),
         } as CSSProperties
       }
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
+      onChange={valueChangeHandler(onChange, onValueChange)}
+      readOnly={readOnly ?? (!onChange && !onValueChange)}
       onScroll={composeHandlers(onScroll, layer.onScroll)}
     />
   );
