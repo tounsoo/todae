@@ -48,14 +48,32 @@ export function absolutize(markdown: string): string {
   });
 }
 
+/** Per line, whether it is prose: not a code fence's opening, body or closing line. An unclosed fence runs to the end. */
+function proseLines(lines: readonly string[]): boolean[] {
+  let fence: { char: string; length: number } | null = null;
+  return lines.map((line) => {
+    const match = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+    if (fence) {
+      if (match?.[1]?.[0] === fence.char && match[1].length >= fence.length && !line.slice(match[0].length).trim()) fence = null;
+      return false;
+    }
+    if (match?.[1] && !(match[1][0] === '`' && line.slice(match[0].length).includes('`'))) {
+      fence = { char: match[1][0]!, length: match[1].length };
+      return false;
+    }
+    return true;
+  });
+}
+
 function section(markdown: string, heading: string): string | null {
   const lines = markdown.split('\n');
-  const start = lines.findIndex((line) => line === `## ${heading}`);
+  const prose = proseLines(lines);
+  const start = lines.findIndex((line, i) => prose[i] && line === `## ${heading}`);
   if (start < 0) return null;
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i++) {
     const line = lines[i];
-    if (line !== undefined && /^#{1,2} /.test(line)) {
+    if (prose[i] && line !== undefined && /^#{1,2} /.test(line)) {
       end = i;
       break;
     }
@@ -64,7 +82,9 @@ function section(markdown: string, heading: string): string | null {
 }
 
 function marker(body: string, prefix: string): string | null {
-  const line = body.split('\n').find((item) => item.startsWith(prefix));
+  const lines = body.split('\n');
+  const prose = proseLines(lines);
+  const line = lines.find((item, i) => prose[i] && item.startsWith(prefix));
   return line ? line.slice(prefix.length).trim() : null;
 }
 
@@ -79,8 +99,10 @@ function h3Blocks(body: string): { preamble: string; blocks: Map<string, string>
     else blocks.set(current, text);
     buf = [];
   };
-  for (const line of body.split('\n')) {
-    const heading = /^### (.+)$/.exec(line);
+  const lines = body.split('\n');
+  const prose = proseLines(lines);
+  for (const [i, line] of lines.entries()) {
+    const heading = prose[i] ? /^### (.+)$/.exec(line) : null;
     if (heading?.[1]) {
       flush();
       current = heading[1];

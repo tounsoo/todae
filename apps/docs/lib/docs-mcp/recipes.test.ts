@@ -35,10 +35,13 @@ describe('docs mcp recipes', () => {
     expect(() => getRecipe('dialog')).toThrow('Call list_recipes');
   });
 
-  it('says when a recipe has no When to use copy', () => {
-    expect(listRecipes().recipes.find((row) => row.name === 'combobox')?.hasWhenToUse).toBe(false);
-    expect(getRecipe('combobox').whenToUse).toBeNull();
-    expect(listRecipes().recipes.find((row) => row.name === 'reasoning')?.hasWhenToUse).toBe(true);
+  it('gives every recipe When and When not copy', () => {
+    for (const row of listRecipes().recipes) {
+      expect(row.hasWhenToUse, row.name).toBe(true);
+      const recipe = getRecipe(row.name);
+      expect(recipe.whenToUse, row.name).toBeTruthy();
+      expect(recipe.whenNotToUse, row.name).toBeTruthy();
+    }
   });
 
   it('finds the exports code names', () => {

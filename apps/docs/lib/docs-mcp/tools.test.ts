@@ -375,6 +375,37 @@ describe('docs mcp tools', () => {
     });
   });
 
+  it('ignores headings and markers inside code fences', () => {
+    const fenced = [
+      '# Tooltip',
+      '',
+      '```md',
+      '## When to use',
+      '',
+      '**When:** Fenced.',
+      '```',
+      '',
+      '## When to use',
+      '',
+      '**When:** Real.',
+      '',
+      '~~~~mdx',
+      '## Props',
+      '### Tooltip',
+      '~~~',
+      '**When not:** Still fenced.',
+      '~~~~',
+      '',
+      '**When not:** Real not.',
+      '',
+      '## Props',
+    ].join('\n');
+    expect(parseWhen(fenced, 'Tooltip')).toEqual({ whenToUse: 'Real.', whenNotToUse: 'Real not.', shared: true });
+    expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n```\n', 'Tooltip')).toBeNull();
+    // An opener whose info string has a backtick is inline code, not a fence.
+    expect(parseWhen('``` a ` b\n\n## When to use\n\n**When:** Real.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Real.' });
+  });
+
   it('errors on an unknown name', () => {
     expect(() => getComponent('Nope')).toThrow('Unknown component "Nope". Call list_components.');
     expect(() => whenToUse('Nope')).toThrow('Unknown component "Nope". Call list_components.');

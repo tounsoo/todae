@@ -20,11 +20,13 @@ export function summarize(text, limit = DESCRIPTION_LIMIT) {
   return `${head.slice(0, word > 0 ? word : limit).replace(/[\s,;:]+$/, '')}…`;
 }
 
-/** The page's title (its `# heading`) and description (the first paragraph after it). */
+/** The page's title (its `# heading`) and description (the first paragraph between it and the next heading, or empty). */
 export function pageSummary(tree, limit = DESCRIPTION_LIMIT) {
   const index = tree.children.findIndex((node) => node.type === 'heading' && node.depth === 1);
   if (index < 0) return null;
-  const paragraph = tree.children.slice(index + 1).find((node) => node.type === 'paragraph');
+  const rest = tree.children.slice(index + 1);
+  const end = rest.findIndex((node) => node.type === 'heading');
+  const paragraph = rest.slice(0, end < 0 ? rest.length : end).find((node) => node.type === 'paragraph');
   const title = plainText(tree.children[index]).trim();
   return { title, description: paragraph ? summarize(plainText(paragraph), limit) : '' };
 }
