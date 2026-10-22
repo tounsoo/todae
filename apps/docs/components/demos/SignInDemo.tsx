@@ -131,21 +131,22 @@ export function SignInExample() {
 
   const submitCode = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (sending) return;
+    // One request at a time: a check's reply would otherwise land after a new code is announced.
+    if (sending || resending) return;
     void send(checkCode(code), 'done');
   };
 
   // A full code sends itself a short pause after its last character, since an IME can still take it back.
   useEffect(() => {
-    if (step !== 'code' || code.length !== CODE_LENGTH) return;
+    if (step !== 'code' || code.length !== CODE_LENGTH || resending) return;
     const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
     return () => clearTimeout(timer);
-  }, [code, step]);
+  }, [code, step, resending]);
 
   const resend = async () => {
-    // Not while a code is being checked, whose reply would land on the new code.
     if (resending || sending) return;
     setResending(true);
+    setFailed(null);
     // A stand-in for the request; a real one also catches a failure, as send does.
     await wait(300);
     setResending(false);
@@ -200,7 +201,7 @@ export function SignInExample() {
           </Field.Group>
           {failed ? <Alert.Root tone="critical">{failed}</Alert.Root> : null}
           <Stack.Root direction="row" gap="condensed" wrap>
-            <Button.Root type="submit" aria-disabled={sending || undefined}>
+            <Button.Root type="submit" aria-disabled={sending || resending || undefined}>
               {sending ? 'Verifying…' : 'Verify'}
             </Button.Root>
             <Button.Root variant="ghost" aria-disabled={resending || sending || undefined} onClick={resend}>
