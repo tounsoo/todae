@@ -125,6 +125,21 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('123');
   });
 
+  it('applies the text a composition left in the input when it ends, which the boxes showed, not the event\'s data', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    const code = input();
+    code.focus();
+    code.setSelectionRange(2, 2);
+    fireEvent.compositionStart(code, { data: '' });
+    // A keyboard such as Gboard may compose over a whole word, so the commit's data is not always the text it put in.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(code, 'ABcd');
+    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'cd', isComposing: true, bubbles: true }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    fireEvent.compositionEnd(code, { data: 'd' });
+    expect(onValueChange).toHaveBeenLastCalledWith('ABcd');
+  });
+
   it('keeps only the allowed characters of a paste', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);

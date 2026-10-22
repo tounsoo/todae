@@ -1,5 +1,5 @@
 /// <reference types="@vitest/browser/providers/playwright" />
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -352,6 +352,71 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect([input().selectionStart, input().selectionEnd]).toEqual([1, 1]));
     expect(input().value).toBe('ABC123');
     expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  const undo = () => userEvent.keyboard('{Control>}z{/Control}');
+
+  it('keeps the undo history through a finished composition', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}C123{Home}{ArrowRight}');
+    await compose(['x']);
+    await vi.waitFor(() => expect(input().value).toBe('AxC123'));
+    await undo();
+    expect(input().value).toBe('ABC123');
+    // Each character typed is its own step, as Todae puts each in.
+    await undo();
+    expect(input().value).toBe('ABC12');
+    expect(onValueChange).toHaveBeenLastCalledWith('ABC12');
+    expect(boxes().map((box) => box.textContent).join('')).toBe('ABC12');
+  });
+
+  it('keeps the undo history through a composition the code refuses', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}C');
+    await compose(['ㅎ', '하']);
+    await vi.waitFor(() => expect(input().value).toBe('ABC'));
+    // The browser keeps the composition and the typing before it as one step.
+    await undo();
+    expect(input().value).toBe('AB');
+    expect(onValueChange).toHaveBeenLastCalledWith('AB');
+    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+    expect(input().value).toBe('ABC');
+  });
+
+  it('keeps the undo history through a cancelled composition', async () => {
+    render(<Code initial="AB" characters="alphanumeric" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}C');
+    await compose(['x'], null);
+    await vi.waitFor(() => expect(input().value).toBe('ABC'));
+    await undo();
+    expect(input().value).toBe('AB');
+  });
+
+  it('keeps a value the product sets while a composition runs, and drops the composition', async () => {
+    let reset = (_value: string) => {};
+    function Resettable() {
+      const [value, setValue] = useState('AB');
+      reset = setValue;
+      return (
+        <Field.Root aria-label="Verification code">
+          <Field.OneTimeCode characters="alphanumeric" value={value} onValueChange={setValue} />
+        </Field.Root>
+      );
+    }
+    render(<Resettable />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await session().send('Input.imeSetComposition', { text: 'c', selectionStart: 1, selectionEnd: 1 });
+    await vi.waitFor(() => expect(input().value).toBe('ABc'));
+    act(() => reset(''));
+    await session().send('Input.insertText', { text: 'c' });
+    await vi.waitFor(() => expect(input().value).toBe(''));
+    expect(boxes().map((box) => box.textContent).join('')).toBe('');
   });
 
   it('takes a composed full-width digit as its ASCII one', async () => {

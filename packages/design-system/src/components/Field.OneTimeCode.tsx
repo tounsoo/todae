@@ -9,9 +9,8 @@ import {
   type MouseEvent,
   type Ref,
 } from 'react';
-import { flushSync } from 'react-dom';
 import { activeIn } from './activeElement.js';
-import { applyEdit, cleanCode, editOf, slotsOf, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
+import { applyEdit, cleanCode, editOf, slotsOf, type CodeEdit, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
@@ -83,7 +82,7 @@ function insert(input: HTMLInputElement, text: string) {
   const doc = input.ownerDocument;
   if (activeIn(input) === input && typeof doc.execCommand === 'function') {
     try {
-      if (doc.execCommand('insertText', false, text)) return;
+      if (doc.execCommand(text ? 'insertText' : 'delete', false, text)) return;
     } catch {
       // Fall through to the written edit.
     }
@@ -91,6 +90,24 @@ function insert(input: HTMLInputElement, text: string) {
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
   write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length);
+}
+
+type Composition = { value: string; selection: CodeSelection; change?: ChangeEvent<HTMLInputElement> };
+
+// The edit a composition makes: the text it left between what was before and after the selection it started on, by the rule.
+function composedEdit(saved: Composition, live: string, options: { characters: OneTimeCodeCharacters; length: number }) {
+  const after = saved.value.length - saved.selection.end;
+  const text = live.slice(saved.selection.start, Math.max(live.length - after, saved.selection.start));
+  return editOf(saved.value, saved.selection, text, options);
+}
+
+// The range of `live` to replace, and the text, that make it `target`: what lies between their common start and end.
+function difference(live: string, target: string) {
+  let start = 0;
+  while (start < live.length && start < target.length && live[start] === target[start]) start++;
+  let end = 0;
+  while (end < live.length - start && end < target.length - start && live[live.length - 1 - end] === target[target.length - 1 - end]) end++;
+  return { from: start, to: live.length - end, insert: target.slice(start, target.length - end) };
 }
 
 /**
@@ -123,16 +140,20 @@ export function OneTimeCode({
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
   const inserting = useRef(false);
-  // The value and selection a composition started from, which it is applied to when it ends.
-  const composition = useRef<{ value: string; selection: CodeSelection } | null>(null);
+  // Set while an edit only brings the input back to the code the product already has, which onChange then doesn't hear.
+  const restoring = useRef(false);
+  // The value and selection a composition started from, which it is applied to when it ends, and its latest change event.
+  const composition = useRef<Composition | null>(null);
+  // The text a refused composition left, which the code never held, so undo and redo step over it.
+  const unheld = useRef<string | null>(null);
   // While composing, the input's own text, and the code the boxes show: the composition applied by the rule.
   const [composing, setComposing] = useState<{ live: string; shown: string } | null>(null);
   const refs = useComposedRefs(input, ref);
   const fixed = readOnly ?? (!onChange && !onValueChange);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
-  const latest = useRef({ characters, length, fixed });
+  const latest = useRef({ characters, length, fixed, value, report });
   useLayoutEffect(() => {
-    latest.current = { characters, length, fixed };
+    latest.current = { characters, length, fixed, value, report };
   });
 
   // The browser's own tooShort skips an edit a script makes, a cleaned paste among them, so the length is checked here.
@@ -152,18 +173,20 @@ export function OneTimeCode({
     const el = input.current;
     if (!el) return;
     const doc = el.ownerDocument;
-    function apply(text: string, selection: CodeSelection) {
-      const { characters, length } = latest.current;
-      const edit = editOf(el!.value, selection, text, { characters, length });
-      if (!edit) return;
-      el!.setSelectionRange(edit.from, edit.to);
+    function put({ from, to, insert: text }: CodeEdit) {
+      el!.setSelectionRange(from, to);
       // A browser may fire beforeinput for the command insert uses, which would come back here.
       inserting.current = true;
       try {
-        insert(el!, edit.insert);
+        insert(el!, text);
       } finally {
         inserting.current = false;
       }
+    }
+    function apply(text: string, selection: CodeSelection) {
+      const { characters, length } = latest.current;
+      const edit = editOf(el!.value, selection, text, { characters, length });
+      if (edit) put(edit);
     }
     // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
     function onBeforeInput(event: InputEvent) {
@@ -187,29 +210,57 @@ export function OneTimeCode({
     }
     function onCompositionStart() {
       composition.current = { value: el!.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 } };
+      // Lifts maxLength, which would cut the commit on a full code, so the text the boxes show is the text that ends it.
+      setComposing({ live: el!.value, shown: el!.value });
     }
-    function onCompositionEnd(event: CompositionEvent) {
+    // The input already holds the commit, so the code is reached from it with one more edit, which keeps the undo history that setting the value would clear.
+    function onCompositionEnd() {
       const saved = composition.current;
+      // Cleared first, so the edit below reaches onChange as an edit.
       composition.current = null;
-      // Hands the input back to `value` now, which puts back the text from before the composition.
-      flushSync(() => setComposing(null));
-      const { characters, length, fixed } = latest.current;
-      const edit = saved && !fixed ? editOf(saved.value, saved.selection, event.data ?? '', { characters, length }) : null;
-      if (edit) {
-        write(el!, applyEdit(saved!.value, edit), edit.from + edit.insert.length);
-      } else if (saved && el!.value === saved.value) {
-        el!.setSelectionRange(saved.selection.start, saved.selection.end);
+      if (saved) settle(saved);
+      setComposing(null);
+    }
+    function settle(saved: Composition) {
+      const { characters, length, fixed, value, report } = latest.current;
+      const live = el!.value;
+      // A value the product set while the person composed wins, and the composition is dropped.
+      const edit = value === saved.value && !fixed ? composedEdit(saved, live, { characters, length }) : null;
+      const target = value !== saved.value ? value : edit ? applyEdit(saved.value, edit) : saved.value;
+      if (live !== target) {
+        restoring.current = target === value;
+        try {
+          put(difference(live, target));
+        } finally {
+          restoring.current = false;
+        }
+        unheld.current = cleanCode(live, characters, length) === live ? null : live;
+      } else if (target !== value && saved.change) {
+        // The commit itself is the edit, and onChange hasn't heard it.
+        report(saved.change);
       }
+      if (activeIn(el!) !== el || value !== saved.value) return;
+      if (edit) el!.setSelectionRange(edit.from + edit.insert.length, edit.from + edit.insert.length);
+      else el!.setSelectionRange(saved.selection.start, saved.selection.end);
+    }
+    // The browser keeps the commit and the edit that replaced it as two steps; landing on the commit's text, which the code never held, goes on to the next step.
+    function onInput(event: Event) {
+      if (unheld.current === null || el!.value !== unheld.current) return;
+      const { inputType } = event as InputEvent;
+      if (inputType === 'historyUndo') doc.execCommand('undo');
+      else if (inputType === 'historyRedo') doc.execCommand('redo');
     }
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);
     el.addEventListener('compositionend', onCompositionEnd);
+    el.addEventListener('input', onInput);
     el.addEventListener('drop', onDrop, true);
     doc.addEventListener('selectionchange', sync);
     return () => {
       el.removeEventListener('beforeinput', onBeforeInput);
       el.removeEventListener('compositionstart', onCompositionStart);
       el.removeEventListener('compositionend', onCompositionEnd);
+      el.removeEventListener('input', onInput);
       el.removeEventListener('drop', onDrop, true);
       doc.removeEventListener('selectionchange', sync);
     };
@@ -222,15 +273,23 @@ export function OneTimeCode({
       const live = event.target.value;
       let shown = saved?.value ?? value;
       if (saved) {
-        const after = saved.value.length - saved.selection.end;
-        const text = live.slice(saved.selection.start, Math.max(live.length - after, saved.selection.start));
-        const edit = editOf(saved.value, saved.selection, text, { characters, length });
+        saved.change = event;
+        const edit = composedEdit(saved, live, { characters, length });
         if (edit) shown = applyEdit(saved.value, edit);
       }
       setComposing({ live, shown });
       sync();
       return;
     }
+    if (restoring.current) {
+      setComposing(null);
+      sync();
+      return;
+    }
+    report(event);
+  }
+
+  function report(event: ChangeEvent<HTMLInputElement>) {
     setComposing(null);
     onChange?.(event);
     // Autofill that skips beforeinput can bring characters the code doesn't allow.
@@ -269,7 +328,7 @@ export function OneTimeCode({
         type="text"
         inputMode={characters === 'digits' ? 'numeric' : 'text'}
         autoComplete={autoComplete}
-        maxLength={length}
+        maxLength={composing ? undefined : length}
         pattern={characters === 'digits' ? '[0-9]*' : '[A-Za-z0-9]*'}
         spellCheck={false}
         autoCorrect="off"
