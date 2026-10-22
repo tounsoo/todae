@@ -380,9 +380,11 @@ describe('useTooltipInternal holdsFocus', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
-  it('keeps the public hook without the internal holds', () => {
-    const { result } = renderHook(() => useTooltip());
+  it('keeps the internal options and holds out of the public hook', () => {
+    const stray = { holdsFocus: () => true, anchorName: '--stray' } as UseTooltipOptions;
+    const { result } = renderHook(() => useTooltip(stray));
     expect('holdHover' in result.current).toBe(false);
+    expect(result.current.getTriggerProps().style.anchorName).not.toBe('--stray');
   });
 
   it('uses a given anchorName on the trigger and the tip', () => {

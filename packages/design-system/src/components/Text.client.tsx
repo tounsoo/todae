@@ -6,10 +6,10 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { useTooltipInternal } from '../hooks/useTooltip.js';
+import { useTooltipInternal, type TooltipInternalResult } from '../hooks/useTooltip.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from './domId.js';
-import { useComposedRefs } from './props.js';
+import { composeHandlers, useComposedRefs } from './props.js';
 import { clampLines, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
 
@@ -30,24 +30,31 @@ function isCut(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
 }
 
-type ClampTipProps = { target: RefObject<HTMLElement | null>; anchor: string };
+type ClampTipProps = {
+  target: RefObject<HTMLElement | null>;
+  anchor: string;
+  hoverRef: RefObject<TooltipInternalResult | null>;
+};
 
 /**
  * The tip of a clamped Text, after it while it shows. Text.Root renders the
  * same element with or without it, so gaining a tip never remounts the text;
- * the tip listens on the text element itself.
+ * Root reaches its hover holds through `hoverRef`.
  */
-function ClampTip({ target, anchor }: ClampTipProps) {
+function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
   const [text, setText] = useState<string | null>(null);
-  // Focus on the text, or on a tab stop around it such as a link or a row,
-  // when this is the first cut text that element holds. A container focused
-  // by script, such as a dialog or a skip link's target, is no tab stop.
+  // Focus on the text, or on a tab stop or roving item around it such as a
+  // link, a row or a menu item, when this is the first cut text that element
+  // holds. A container focused by script, such as a dialog or a skip link's
+  // target, is neither. A roving item still has tabIndex -1 when it takes
+  // focus, so it counts by its marker.
   const holdsFocus = useCallback(
     (focused: Element) => {
       const el = target.current;
       if (el === null) return false;
       if (focused === el) return true;
-      return focused instanceof HTMLElement && focused.tabIndex >= 0 && focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el;
+      if (!(focused instanceof HTMLElement) || !(focused.tabIndex >= 0 || focused.hasAttribute('data-todae-roving'))) return false;
+      return focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el;
     },
     [target],
   );
@@ -83,22 +90,15 @@ function ClampTip({ target, anchor }: ClampTipProps) {
     };
   }, [check, target]);
 
-  const { getTriggerProps, holdHover, releaseHover } = tip;
-  const setTrigger = getTriggerProps().ref;
+  const { triggerRef, holdHover, releaseHover } = tip;
   useLayoutEffect(() => {
-    const el = target.current;
-    if (!el) return;
-    setTrigger(el);
-    const onPointerEnter = () => holdHover();
-    const onPointerLeave = (event: PointerEvent) => releaseHover(event.relatedTarget);
-    el.addEventListener('pointerenter', onPointerEnter);
-    el.addEventListener('pointerleave', onPointerLeave);
+    triggerRef.current = target.current;
+    hoverRef.current = { holdHover, releaseHover };
     return () => {
-      el.removeEventListener('pointerenter', onPointerEnter);
-      el.removeEventListener('pointerleave', onPointerLeave);
-      setTrigger(null);
+      triggerRef.current = null;
+      hoverRef.current = null;
     };
-  }, [holdHover, releaseHover, setTrigger, target]);
+  }, [holdHover, hoverRef, releaseHover, target, triggerRef]);
 
   const cut = text !== null;
   useLayoutEffect(() => {
@@ -108,8 +108,7 @@ function ClampTip({ target, anchor }: ClampTipProps) {
     return () => el.removeAttribute(CUT_ATTR);
   }, [cut, target]);
 
-  // Mounted only while open, so a closed tip adds no element after the text.
-  if (text === null || !tip.open) return null;
+  if (text === null) return null;
   // Clamping changes only painting, so the text stays whole in the
   // accessibility tree and the tip is for the eye alone.
   return (
@@ -119,18 +118,35 @@ function ClampTip({ target, anchor }: ClampTipProps) {
   );
 }
 
-function Root({ lines, tooltip = true, style, ref, ...props }: TextRootProps) {
+function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, ref, ...props }: TextRootProps) {
   const elRef = useRef<HTMLElement | null>(null);
+  const hoverRef = useRef<TooltipInternalResult | null>(null);
   const refs = useComposedRefs(elRef, ref);
   const anchor = `--todae-text-${useDomId()}`;
   const tipped = tooltip && clampLines(lines) !== undefined;
   const ownStyle = tipped ? ({ ...style, anchorName: mergeAnchorNames(style?.anchorName, anchor) } as CSSProperties) : style;
 
-  // One shape with or without a tip, so the text never remounts.
+  // One shape with or without a tip, so the text never remounts. The product's
+  // pointer handlers run first, and a prevented enter opens no tip. A new `as`
+  // is a new element, so the tip starts over with it.
   return (
     <>
-      <ServerText.Root {...props} lines={lines} style={ownStyle} ref={refs} />
-      {tipped ? <ClampTip target={elRef} anchor={anchor} /> : null}
+      <ServerText.Root
+        {...props}
+        lines={lines}
+        style={ownStyle}
+        onPointerEnter={tipped ? composeHandlers(onPointerEnter, () => hoverRef.current?.holdHover()) : onPointerEnter}
+        onPointerLeave={
+          tipped
+            ? (event) => {
+                onPointerLeave?.(event);
+                hoverRef.current?.releaseHover(event.relatedTarget);
+              }
+            : onPointerLeave
+        }
+        ref={refs}
+      />
+      {tipped ? <ClampTip key={props.as ?? 'p'} target={elRef} anchor={anchor} hoverRef={hoverRef} /> : null}
     </>
   );
 }

@@ -101,7 +101,9 @@ function tooltipStyle(anchorName: string): CSSProperties {
 export function useTooltip<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
 ): UseTooltipResult<I> {
-  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(options);
+  // Only the public options reach the hook, so a JavaScript caller's stray holdsFocus or anchorName does nothing.
+  const { holdsFocus: _holdsFocus, anchorName: _anchorName, ...publicOptions } = options as UseTooltipOptions<I> & TooltipInternalOptions;
+  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(publicOptions);
   return result;
 }
 
@@ -262,7 +264,10 @@ export function useTooltipInternal<I extends boolean = false>(
     let held: EventTarget | null = null;
     function onFocusIn(event: globalThis.FocusEvent) {
       const focused = event.composedPath()[0] ?? null;
-      if (!holderAccepts(focused)) return;
+      if (!holderAccepts(focused)) {
+        held = null;
+        return;
+      }
       held = focused;
       dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     }
@@ -280,12 +285,11 @@ export function useTooltipInternal<I extends boolean = false>(
     };
   }, [dispatch, enabled, hasHolder, holderAccepts, pairContains]);
 
-  const holdHover = useCallback(() => {
-    if (enabledRef.current) dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
-  }, [dispatch]);
+  // dispatch ignores holds while the tip is not enabled.
+  const holdHover = useCallback(() => dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' }), [dispatch]);
   const releaseHover = useCallback(
     (relatedTarget: EventTarget | null) => {
-      if (enabledRef.current && !pairContains(relatedTarget)) dispatch({ kind: 'release', hold: 'hover' });
+      if (!pairContains(relatedTarget)) dispatch({ kind: 'release', hold: 'hover' });
     },
     [dispatch, pairContains],
   );
@@ -309,16 +313,12 @@ export function useTooltipInternal<I extends boolean = false>(
         ref: triggerComposed(user.ref),
         style: anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style),
         'aria-describedby': open && enabled ? joinId(user['aria-describedby'], contentId) : user['aria-describedby'],
-        onPointerEnter: composeHandlers(user.onPointerEnter, () => {
-          if (enabled) dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
-        }),
+        onPointerEnter: composeHandlers(user.onPointerEnter, holdHover),
         // Releases run even when the consumer's handler prevents the event,
         // so a prevented leave or blur cannot strand the tip open.
         onPointerLeave: (event: PointerEvent<HTMLElement>) => {
           user.onPointerLeave?.(event);
-          if (enabled && !pairContains(event.relatedTarget)) {
-            dispatch({ kind: 'release', hold: 'hover' });
-          }
+          releaseHover(event.relatedTarget);
         },
         onFocus: composeHandlers(user.onFocus, () => {
           if (enabled) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
@@ -331,7 +331,7 @@ export function useTooltipInternal<I extends boolean = false>(
         },
       };
     },
-    [anchorName, contentId, dispatch, enabled, holderAccepts, open, pairContains, triggerComposed],
+    [anchorName, contentId, dispatch, enabled, holdHover, holderAccepts, open, pairContains, releaseHover, triggerComposed],
   );
 
   const setTooltip = useComposedRefs(tooltipRef);

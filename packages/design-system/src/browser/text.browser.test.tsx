@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Text } from '../index.js';
+import { Tabs, Text } from '../index.js';
 
 afterEach(cleanup);
 
@@ -191,15 +191,73 @@ describe('Text.Root lines', () => {
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
   });
 
-  it('shows no tip when a container that is no tab stop takes focus', async () => {
+  it('shows no tip when a container focused by script takes focus, and one for a tab stop', async () => {
     render(
-      <main tabIndex={-1} style={{ inlineSize: '12rem' }} data-testid="main">
-        <Text.Root lines={1}>{LONG}</Text.Root>
-      </main>,
+      <div style={{ inlineSize: '12rem' }}>
+        <main tabIndex={-1} data-testid="main">
+          <Text.Root lines={1}>{LONG}</Text.Root>
+        </main>
+        <section tabIndex={0} aria-label="Report" data-testid="stop">
+          <Text.Root lines={1}>{`Second ${LONG}`}</Text.Root>
+        </section>
+      </div>,
     );
     screen.getByTestId('main').focus();
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(openTip()).toBeNull();
+    screen.getByTestId('stop').focus();
+    await waitFor(() => expect(openTip()?.textContent).toBe(`Second ${LONG}`));
+  });
+
+  it('shows the tip when arrow keys bring focus to a roving item that holds cut text', async () => {
+    render(
+      <div style={{ inlineSize: '16rem' }}>
+        <Tabs.Root defaultValue="a">
+          <Tabs.List aria-label="Reports">
+            <Tabs.Tab value="a">North</Tabs.Tab>
+            <Tabs.Tab value="b">
+              <Text.Root as="span" lines={1} style={{ maxInlineSize: '6rem' }}>
+                {LONG}
+              </Text.Root>
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>
+      </div>,
+    );
+    await userEvent.tab();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement?.textContent).toContain('Quarterly');
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+  });
+
+  it('opens no tip on hover when the product prevents pointer enter', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root lines={1} onPointerEnter={(event) => event.preventDefault()} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>,
+    );
+    await userEvent.hover(screen.getByTestId('cut'));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(openTip()).toBeNull();
+  });
+
+  it('follows a new element when as changes', async () => {
+    const view = (as: 'p' | 'span') => (
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root as={as} lines={1} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>
+    );
+    const { rerender } = render(view('p'));
+    rerender(view('span'));
+    const cut = screen.getByTestId('cut');
+    expect(cut.tagName).toBe('SPAN');
+    await waitFor(() => expect(cut.hasAttribute('data-todae-cut')).toBe(true));
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
   });
 
   it('drops the tip when the text comes to fit', async () => {
