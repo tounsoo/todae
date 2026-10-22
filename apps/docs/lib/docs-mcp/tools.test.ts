@@ -402,6 +402,10 @@ describe('docs mcp tools', () => {
     ].join('\n');
     expect(parseWhen(fenced, 'Tooltip')).toEqual({ whenToUse: 'Real.', whenNotToUse: 'Real not.', shared: true });
     expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n```\n', 'Tooltip')).toBeNull();
+    // A heading inside a JSX element is the element's content, not a section.
+    expect(parseWhen('<Example>\n\n## When to use\n\n**When:** Demo.\n\n</Example>\n', 'Tooltip')).toBeNull();
+    // A fence left open runs to the end of the page.
+    expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n', 'Tooltip')).toBeNull();
     // An opener whose info string has a backtick is inline code, not a fence.
     expect(parseWhen('``` a ` b\n\n## When to use\n\n**When:** Real.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Real.' });
   });
