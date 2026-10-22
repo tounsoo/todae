@@ -592,6 +592,15 @@
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
   },
+  "recipes/citations": {
+    "(top)": "45f1fee3ae62",
+    "# Citations": "c1e97aef2ff3",
+    "## The marker": "260ef42d826c",
+    "## The sources list": "c939e8cf1d57",
+    "## Accessible composition": "4530405603cb",
+    "## When to use": "64d20eb01e2d",
+    "(section order)": "776f0285dccb"
+  },
   "recipes/combobox": {
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
@@ -786,11 +795,11 @@
   },
   "tooltip": {
     "(top)": "c6ad05ceec66",
-    "# Tooltip": "5a6fad0ba2ee",
+    "# Tooltip": "3e0fd9fdfe39",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
-    "## Accessible composition": "1509f4e1cfc9",
+    "## Accessible composition": "da1671bee85f",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"

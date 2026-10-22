@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type CSSProperties } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip.js';
@@ -171,6 +172,19 @@ describe('Tooltip', () => {
     expect(panel?.getAttribute('aria-label')).toBe('Policy');
     expect(panel?.getAttribute('data-surface')).toBe('panel');
     expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
+  });
+
+  it('stays inside a paragraph when its server HTML is parsed', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToString(
+      <p>
+        Text with a hint <InteractiveTip /> in it.
+      </p>,
+    );
+    const paragraph = host.querySelector('p');
+    expect(host.children).toHaveLength(1);
+    expect(paragraph?.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(paragraph?.textContent).toContain('in it.');
   });
 
   it('names the dialog from aria-labelledby', () => {

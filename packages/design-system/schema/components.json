@@ -4743,7 +4743,7 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Tooltip text, or short prose plus links when interactive."
+          "description": "Tooltip text, or short prose plus links when interactive. The tip renders a span, so it can sit in a paragraph; keep its content to phrasing elements."
         },
         {
           "name": "className",
