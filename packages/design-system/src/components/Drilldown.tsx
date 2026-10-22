@@ -15,14 +15,13 @@ import {
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
-import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { canFocusNow, firstTabbable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useButtonName } from './buttonName.js';
 import { BackGlyph, glyphOr } from './glyphs.js';
-import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
 import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type StackViews, type ViewStatus } from './useStackMotion.js';
@@ -93,11 +92,6 @@ function useDrilldown(part: string): DrilldownContextValue {
 function inFrontSurface(surface: Element): boolean {
   const front = frontModal();
   return front === null || front.contains(surface);
-}
-
-// A key a popup or field inside already took, or one that ends an IME composition.
-function handledOrComposing(event: KeyboardEvent): boolean {
-  return event.defaultPrevented || isImeKeyEvent(event);
 }
 
 function focusableIn(el: HTMLElement | null | undefined, view: HTMLElement): el is HTMLElement {

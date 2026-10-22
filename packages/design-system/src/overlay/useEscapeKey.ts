@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { isImeKeyEvent } from '../components/ime.js';
 import { frontModal, isModal } from './modalStack.js';
 
 type Entry = {
@@ -10,6 +11,11 @@ type Entry = {
   popup: boolean;
   closeRequests: boolean;
 };
+
+/** A layer's passesKey: a key a popup or field inside already took, or one that ends an IME composition. */
+export function handledOrComposing(event: KeyboardEvent): boolean {
+  return event.defaultPrevented || isImeKeyEvent(event);
+}
 
 const stack: Entry[] = [];
 const watchers = /* @__PURE__ */ new Set<() => void>();

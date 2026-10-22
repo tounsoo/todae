@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import createMDX from '@next/mdx';
+import remarkPageContents from './lib/remarkPageContents.mjs';
 import remarkPageMetadata from './lib/remarkPageMetadata.mjs';
 
 // The non-default locales in lib/i18n/config.ts, as URL prefixes.
@@ -52,5 +53,5 @@ const nextConfig = {
     ),
 };
 
-// Every MDX page exports metadata from its own title and first paragraph.
-export default createMDX({ options: { remarkPlugins: [remarkPageMetadata] } })(nextConfig);
+// Every MDX page exports metadata from its own title and first paragraph, and lists its sections.
+export default createMDX({ options: { remarkPlugins: [remarkPageMetadata, remarkPageContents] } })(nextConfig);

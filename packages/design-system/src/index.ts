@@ -146,6 +146,8 @@ export {
   Menu,
   type MenuCheckboxItemProps,
   type MenuContentProps,
+  type MenuContextTriggerProps,
+  type MenuContextTriggerRenderProps,
   type MenuGroupProps,
   type MenuItemProps,
   type MenuItemRenderProps,
@@ -288,6 +290,13 @@ export {
   type CalendarMode,
   type CalendarRootProps,
 } from './components/Calendar.js';
+export {
+  Contents,
+  type ContentsItemProps,
+  type ContentsLinkProps,
+  type ContentsListProps,
+  type ContentsRootProps,
+} from './components/Contents.js';
 export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav.js';
 export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree.js';
 export {
@@ -364,6 +373,14 @@ export {
   type UseSelectionResult,
 } from './hooks/useSelection.js';
 export { useFocusHandoff, type UseFocusHandoffOptions } from './hooks/useFocusHandoff.js';
+export {
+  useInlineEdit,
+  type UseInlineEditGroupProps,
+  type UseInlineEditInputProps,
+  type UseInlineEditOptions,
+  type UseInlineEditResult,
+  type UseInlineEditTriggerProps,
+} from './hooks/useInlineEdit.js';
 export {
   useClipboard,
   type ClipboardStatus,

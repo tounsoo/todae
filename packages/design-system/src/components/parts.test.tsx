@@ -25,6 +25,7 @@ import {
   ChipList,
   Code,
   CodeBlock,
+  Contents,
   ColorPicker,
   Description,
   Disclosure,
@@ -109,6 +110,14 @@ const cases: Case[] = [
     (p) => <Nav.Link {...p} href="/a" render={(props) => <a {...props} />}>a</Nav.Link>,
   ],
   ['Nav.Branch', (p) => <Nav.Branch {...p} label="b" />],
+  ['Contents.Root', (p) => <Contents.Root {...p} />],
+  ['Contents.List', (p) => <Contents.List {...p} />],
+  ['Contents.Item', (p) => <ul><Contents.Item {...p}>i</Contents.Item></ul>],
+  ['Contents.Link', (p) => <Contents.Root><Contents.Link {...p} href="#a">a</Contents.Link></Contents.Root>],
+  [
+    'Contents.Link render',
+    (p) => <Contents.Root><Contents.Link {...p} href="#a" render={(props) => <a {...props} />}>a</Contents.Link></Contents.Root>,
+  ],
   ['Disclosure.Root', (p) => <Disclosure.Root {...p}><summary>s</summary>c</Disclosure.Root>],
   ['Disclosure.Summary', (p) => <details><Disclosure.Summary {...p}>s</Disclosure.Summary></details>],
   ['Separator.Root', (p) => <Separator.Root {...p} />],
@@ -432,6 +441,11 @@ const cases: Case[] = [
   ['Menu.Content', (p) => (
     <Menu.Root>
       <Menu.Content {...p} aria-label="m" />
+    </Menu.Root>
+  )],
+  ['Menu.ContextTrigger', (p) => (
+    <Menu.Root>
+      <Menu.ContextTrigger {...p} />
     </Menu.Root>
   )],
   ...(['Item', 'CheckboxItem', 'Separator'] as const).map(

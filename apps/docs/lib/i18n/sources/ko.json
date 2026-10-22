@@ -77,9 +77,9 @@
     "(top)": "e6d0bb76e386",
     "# Calendar": "a4a59be7452f",
     "## Range and locale": "38c6da99f7fd",
-    "## Ranges": "dea924332ea9",
+    "## Ranges": "36a2f0465940",
     "## Temporal": "084d2fd73acf",
-    "## Accessible composition": "0537a42b7b7a",
+    "## Accessible composition": "5e28d5a261df",
     "## When to use": "41bc026898d1",
     "## Props": "1736b176a33c",
     "(section order)": "0cc46d31c92c"
@@ -160,6 +160,17 @@
     "## Hook": "4c2a5e2fd3a4",
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
+  },
+  "contents": {
+    "(top)": "7d370e419676",
+    "# Contents": "9a027578bec4",
+    "## The section being read": "f9f26855e260",
+    "## Look": "3469783dc314",
+    "## On a narrow screen": "10ea55bff04c",
+    "## Accessible composition": "3771ec920ea0",
+    "## When to use": "cab3f77f5fbb",
+    "## Props": "4c5ddfb1ffe2",
+    "(section order)": "a2cf673374a6"
   },
   "conversation": {
     "(top)": "b40257a47356",
@@ -311,7 +322,7 @@
     "(top)": "2d895db44745",
     "# Field.DateRangePicker": "3b280faba8cd",
     "## Typed ranges": "158ae98b8c71",
-    "## On its own": "b1f54a988629",
+    "## On its own": "20d9d620aa29",
     "## Accessible composition": "0f3deea8054b",
     "## When to use": "d57fe8233a0b",
     "### Field.DateRangePicker": "180461c4d1c7",
@@ -509,16 +520,17 @@
     "(section order)": "e12b559a1ab2"
   },
   "menu": {
-    "(top)": "eac8bba851e2",
+    "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
     "## Keyboard": "9867469041ca",
-    "## Checkbox and radio items": "3ee5d550ead1",
+    "## Checkbox and radio items": "57a69df768cd",
     "## Links": "ede13f3623cf",
+    "## Context menus": "395dce7d4954",
     "## Icons": "5a8e880339a4",
-    "## Accessible composition": "0982eb7067ba",
-    "## When to use": "87f5e7618788",
-    "## Props": "b96e6aef6f4c",
-    "(section order)": "4b378da7b66c"
+    "## Accessible composition": "e1a78d0b6e24",
+    "## When to use": "9a102c1309d4",
+    "## Props": "b091052a4a0b",
+    "(section order)": "63bb3d9be625"
   },
   "message": {
     "(top)": "826be7492f3a",
@@ -562,7 +574,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "65f724b4a4a8",
+    "# Native platform": "e597278aa6ab",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -676,6 +688,15 @@
     "## Accessible composition": "e04755d81c53",
     "## When to use": "f81000d34176",
     "(section order)": "c439ccbc50b3"
+  },
+  "recipes/inline-edit": {
+    "(top)": "89db7894a8df",
+    "# Inline edit": "199d2e5da2df",
+    "## Saving and cancelling": "fde5c50a40f1",
+    "## Saving to a server": "671323387f41",
+    "## Accessible composition": "01e9d8e4fbc7",
+    "## When to use": "99b196ff7fc6",
+    "(section order)": "808446d2e9ad"
   },
   "recipes/message-actions": {
     "(top)": "bbdcb5e29744",
@@ -882,7 +903,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "6407b1e79d42",
+    "## Strings": "18a0fe3319f7",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",
@@ -986,6 +1007,14 @@
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
+  },
+  "utilities/use-inline-edit": {
+    "(top)": "89db7894a8df",
+    "# useInlineEdit": "e4701b67f349",
+    "## Accessible composition": "791953511028",
+    "## When to use": "6811b76102a1",
+    "## Props": "020d1345d4d7",
+    "(section order)": "428f0e0773ae"
   },
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",
