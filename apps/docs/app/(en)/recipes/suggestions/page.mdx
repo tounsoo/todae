@@ -49,7 +49,7 @@ To send a suggestion at once instead, pass its text to the function that sends a
 
 Keep each version of a reply as a sibling under the message it answers, and remember which one shows. The turns after a reply belong to that version, so switching versions switches them too. Regenerating adds a version and shows it. Editing a message the person sent works the same way, with the switcher on their message.
 
-The switcher goes at the start of the reply's toolbar, with a separator after it. At either end its button is disabled; when that button had focus, the toolbar moves focus to the nearest one, so Next at the last version hands focus to Previous. Both buttons are described by the count, so moving to one reads the position. Announce the new count after a switch, since the change happens away from the button.
+The switcher goes at the start of the reply's toolbar, with a separator after it. At either end its button takes `aria-disabled`, not `disabled`, as a [Pagination](/pagination) step does: it is drawn disabled and keeps focus, where `disabled` would drop focus to the page. Ignore its clicks. Both buttons are described by the count, so moving to one reads the position. Announce the new count after a switch, since the change happens away from the button.
 
 ```tsx
 import { Button, Text, Toolbar, useAnnouncer } from '@tounsoo/todae';
@@ -61,6 +61,7 @@ export function VersionSwitcher({ index, count, onShow }: { index: number; count
   const position = useId();
 
   const show = (to: number) => {
+    if (to < 0 || to >= count) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -71,7 +72,7 @@ export function VersionSwitcher({ index, count, onShow }: { index: number; count
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        disabled={index === 0}
+        aria-disabled={index === 0 || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -85,7 +86,7 @@ export function VersionSwitcher({ index, count, onShow }: { index: number; count
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        disabled={index === count - 1}
+        aria-disabled={index === count - 1 || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -102,11 +103,11 @@ Render the switcher only when there are two versions or more. Key the reply's `M
 
 ## Accessible composition
 
-**Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys, skips a disabled one, and moves focus to the nearest button when the focused one turns disabled. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. `Composer.Root` sends on Enter and leaves an IME composition alone. With the messages in a [Conversation](/conversation), it announces when a reply starts and ends.
+**Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys. A `Button.Root` with `aria-disabled` is drawn disabled and keeps focus. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. `Composer.Root` sends on Enter and leaves an IME composition alone. With the messages in a [Conversation](/conversation), it announces when a reply starts and ends.
 
-**You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
+**You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. `aria-disabled` at the switcher's ends, and clicks there ignored. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
 
-**Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version. Switching away from a version that is still streaming: the reply keeps running, so keep the composer busy until it ends.
+**Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version. Switching away from a version that is still streaming, which hides the turn the reply belongs to: hold the switcher while a reply runs, as the example does. Stopping the reply to a new question, which leaves it with no reply and nothing to regenerate: put it back in the field to send again, unless the person has started another draft.
 
 ## When to use
 

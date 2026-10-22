@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Button, Menu, ToggleGroup, Toolbar } from '../index.js';
 
@@ -296,66 +295,5 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(button('After'));
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(button('Insert'));
-  });
-
-  it('moves focus to the nearest control when the focused one turns disabled, the earlier one on a tie', async () => {
-    function Pager() {
-      const [page, setPage] = useState(1);
-      return (
-        <Toolbar.Root aria-label="Pages">
-          <Button.Root disabled={page === 0} onClick={() => setPage(page - 1)}>
-            Previous
-          </Button.Root>
-          <span>{page + 1} of 2</span>
-          <Button.Root disabled={page === 1} onClick={() => setPage(page + 1)}>
-            Next
-          </Button.Root>
-          <Button.Root>Other</Button.Root>
-        </Toolbar.Root>
-      );
-    }
-    render(<Pager />);
-    // Next turns enabled in the same commit that disables Previous.
-    await userEvent.click(button('Previous'));
-    await expect.poll(() => document.activeElement).toBe(button('Next'));
-    await userEvent.click(button('Next'));
-    await expect.poll(() => document.activeElement).toBe(button('Previous'));
-  });
-
-  it('leaves focus alone when the product moved it, or when nothing else can take it', async () => {
-    function Bar() {
-      const [off, setOff] = useState(false);
-      return (
-        <>
-          <Toolbar.Root aria-label="Bar">
-            <Button.Root
-              disabled={off}
-              onClick={(event) => {
-                (event.currentTarget.ownerDocument.getElementById('elsewhere') as HTMLElement).focus();
-                setOff(true);
-              }}
-            >
-              Move
-            </Button.Root>
-            <Button.Root disabled={off} onClick={() => setOff(true)}>
-              Lone
-            </Button.Root>
-          </Toolbar.Root>
-          <button type="button" id="elsewhere">
-            Elsewhere
-          </button>
-        </>
-      );
-    }
-    const { unmount } = render(<Bar />);
-    await userEvent.click(button('Move'));
-    await new Promise((resolve) => setTimeout(resolve));
-    expect(document.activeElement).toBe(button('Elsewhere'));
-    unmount();
-
-    render(<Bar />);
-    await userEvent.click(button('Lone'));
-    await new Promise((resolve) => setTimeout(resolve));
-    expect(document.activeElement).toBe(document.body);
   });
 });

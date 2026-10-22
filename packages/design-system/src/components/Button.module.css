@@ -44,14 +44,14 @@
       var(--_lift);
   }
 
-  .root:hover:not(:disabled, a:not(:any-link)) {
+  .root:hover:not(:disabled, [aria-disabled='true'], a:not(:any-link)) {
     background: var(--todae-button-bg-hover);
     color: var(--todae-button-fg-hover);
     border-color: var(--todae-button-border-hover);
   }
 
-  .root[aria-pressed='true']:hover:not(:disabled),
-  .root:active:not(:disabled, a:not(:any-link)) {
+  .root[aria-pressed='true']:hover:not(:disabled, [aria-disabled='true']),
+  .root:active:not(:disabled, [aria-disabled='true'], a:not(:any-link)) {
     background: var(--todae-button-bg-active);
     color: var(--todae-button-fg-active);
     border-color: var(--todae-button-border-active);
@@ -73,13 +73,14 @@
   }
 
   /* A link drawn as a button with nowhere to go, an a without href, looks
-     disabled, since it can't be a :disabled button. */
-  .root:is(:disabled, a:not(:any-link)),
+     disabled, since it can't be a :disabled button. So does a button with
+     aria-disabled, which keeps focus where disabled would drop it. */
+  .root:is(:disabled, [aria-disabled='true'], a:not(:any-link)),
   .group > .root {
     --_lift: 0 0 transparent;
   }
 
-  .root:is(:disabled, a:not(:any-link)) {
+  .root:is(:disabled, [aria-disabled='true'], a:not(:any-link)) {
     cursor: not-allowed;
     background: var(--todae-button-bg-disabled);
     color: var(--todae-button-fg-disabled);
@@ -163,8 +164,10 @@
       border-color: GrayText;
     }
 
-    /* A disabled button takes GrayText from the browser; an a without href doesn't. */
-    a.root:not(:any-link) {
+    /* A disabled button takes GrayText from the browser; an a without href
+       and an aria-disabled button don't. */
+    a.root:not(:any-link),
+    .root[aria-disabled='true'] {
       color: GrayText;
       border-color: GrayText;
     }

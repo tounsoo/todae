@@ -2,4 +2,4 @@
 "@tounsoo/todae": patch
 ---
 
-Toolbar.Root moves focus to the nearest control when the focused one turns disabled.
+Button.Root draws a button with `aria-disabled="true"` as disabled, and it keeps focus.

@@ -24,9 +24,10 @@ type Turn = {
   parent: number | null;
   children: number[];
   shown: number;
-  // While the reply streams: the reply its question showed before, put back if it stops.
-  streaming?: { before: number };
 };
+
+// The one reply in flight, and the reply its question showed before it.
+type Pending = { reply: number; before: number };
 
 type Answer = { versions: readonly string[]; suggestions: readonly string[] };
 
@@ -91,23 +92,34 @@ function pathOf(turns: Record<number, Turn>): Turn[] {
   return path;
 }
 
-function VersionSwitcher({ index, count, onShow }: { index: number; count: number; onShow: (index: number) => void }) {
+function VersionSwitcher({
+  index,
+  count,
+  locked,
+  onShow,
+}: {
+  index: number;
+  count: number;
+  locked: boolean;
+  onShow: (index: number) => void;
+}) {
   const announce = useAnnouncer();
   const position = useId();
 
   const show = (to: number) => {
+    if (locked || to < 0 || to >= count) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
 
-  // The toolbar moves focus to the other button when the focused one turns disabled at an end.
+  // aria-disabled, not disabled, so a button keeps focus when it reaches an end.
   return (
     <>
       <Button.Root
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        disabled={index === 0}
+        aria-disabled={locked || index === 0 || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -121,7 +133,7 @@ function VersionSwitcher({ index, count, onShow }: { index: number; count: numbe
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        disabled={index === count - 1}
+        aria-disabled={locked || index === count - 1 || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -135,14 +147,14 @@ function VersionSwitcher({ index, count, onShow }: { index: number; count: numbe
 
 export function SuggestionsExample() {
   const [turns, setTurns] = useState(start);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [value, setValue] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const field = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(4);
   const path = pathOf(turns);
   const last = path.at(-1)!;
-  // Any reply in flight, shown or not: switching to another version doesn't stop it.
-  const busy = Object.values(turns).some((turn) => turn.streaming);
+  const busy = pending !== null;
   const suggestions = last.from === 'assistant' && !busy && value === '' ? answerTo(turns[last.parent!]!.text).suggestions : [];
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -152,7 +164,7 @@ export function SuggestionsExample() {
   // one in flight.
   const ask = (all: Record<number, Turn>, to: number) => {
     clearTimeout(timer.current);
-    const base = dropStreaming(all);
+    const base = pending ? withoutReply(all, pending) : all;
     const question = base[to]!;
     const id = nextId.current++;
     const versions = answerTo(question.text).versions;
@@ -160,10 +172,12 @@ export function SuggestionsExample() {
     setTurns({
       ...base,
       [to]: { ...question, children: [...question.children, id], shown: question.children.length },
-      [id]: { id, from: 'assistant', text: '', parent: to, children: [], shown: 0, streaming: { before: question.shown } },
+      [id]: { id, from: 'assistant', text: '', parent: to, children: [], shown: 0 },
     });
+    setPending({ reply: id, before: question.shown });
     timer.current = setTimeout(() => {
-      setTurns((now) => ({ ...now, [id]: { ...now[id]!, text, streaming: undefined } }));
+      setTurns((now) => ({ ...now, [id]: { ...now[id]!, text } }));
+      setPending(null);
     }, 1200);
   };
 
@@ -181,19 +195,21 @@ export function SuggestionsExample() {
   };
 
   const stop = () => {
+    if (!pending) return;
     clearTimeout(timer.current);
-    const streaming = Object.values(turns).find((turn) => turn.streaming);
-    const question = streaming && turns[streaming.parent!];
-    // A question stopped before any reply goes back to the field, so it can be sent again.
-    if (question && question.children.length === 1 && question.parent !== null) {
-      const { [question.id]: _, [streaming.id]: __, ...rest } = turns;
-      const before = rest[question.parent]!;
+    setPending(null);
+    const question = turns[turns[pending.reply]!.parent!]!;
+    // A question stopped before any reply goes back to the field to be sent
+    // again, unless the person has started another draft there.
+    if (question.children.length === 1 && value === '') {
+      const { [question.id]: _, [pending.reply]: __, ...rest } = turns;
+      const before = rest[question.parent!]!;
       setTurns({ ...rest, [before.id]: { ...before, children: before.children.filter((id) => id !== question.id) } });
       setValue(question.text);
       field.current?.focus();
       return;
     }
-    setTurns(dropStreaming);
+    setTurns(withoutReply(turns, pending));
   };
 
   // A suggestion fills the field, so the person can change it before sending.
@@ -211,7 +227,7 @@ export function SuggestionsExample() {
           </Message.Root>
         ) : (
           // Keyed by the question, so switching or regenerating keeps the message and the focused button.
-          <Message.Root key={`reply-${turn.parent}`} streaming={Boolean(turn.streaming)} aria-label="Assistant">
+          <Message.Root key={`reply-${turn.parent}`} streaming={pending?.reply === turn.id} aria-label="Assistant">
             <Message.Content>
               <Prose.Root>
                 <p>{turn.text}</p>
@@ -223,6 +239,8 @@ export function SuggestionsExample() {
                   <VersionSwitcher
                     index={turns[turn.parent!]!.shown}
                     count={turns[turn.parent!]!.children.length}
+                    // While a reply streams it is the one shown, so its later turns stay in view.
+                    locked={busy}
                     onShow={(index) => show(turn, index)}
                   />
                 )}
@@ -232,7 +250,7 @@ export function SuggestionsExample() {
                   </Button.Icon>
                 </Button.Root>
               </Toolbar.Root>
-              {turn.streaming && <Loader.Root variant="dots" aria-label="Writing" />}
+              {pending?.reply === turn.id && <Loader.Root variant="dots" aria-label="Writing" />}
             </Message.Actions>
           </Message.Root>
         ),
@@ -267,15 +285,10 @@ export function SuggestionsExample() {
   );
 }
 
-// A stopped or replaced reply goes away. If its question still showed it, the
-// question shows the reply it showed before.
-function dropStreaming(all: Record<number, Turn>): Record<number, Turn> {
-  const streaming = Object.values(all).find((turn) => turn.streaming);
-  if (!streaming?.streaming) return all;
-  const { [streaming.id]: _, ...rest } = all;
-  const question = rest[streaming.parent!]!;
-  const at = question.children.indexOf(streaming.id);
-  const children = question.children.filter((id) => id !== streaming.id);
-  const shown = question.shown === at ? streaming.streaming.before : question.shown > at ? question.shown - 1 : question.shown;
-  return { ...rest, [question.id]: { ...question, children, shown } };
+// Takes out the reply in flight; its question shows the reply it showed before.
+function withoutReply(all: Record<number, Turn>, pending: Pending): Record<number, Turn> {
+  const { [pending.reply]: _, ...rest } = all;
+  const question = rest[all[pending.reply]!.parent!]!;
+  const children = question.children.filter((id) => id !== pending.reply);
+  return { ...rest, [question.id]: { ...question, children, shown: pending.before } };
 }
