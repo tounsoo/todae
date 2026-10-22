@@ -21,10 +21,10 @@ export function summarize(text, limit = DESCRIPTION_LIMIT) {
 }
 
 /** The page's title (its `# heading`) and description (the first paragraph after it). */
-export function pageSummary(tree) {
+export function pageSummary(tree, limit = DESCRIPTION_LIMIT) {
   const index = tree.children.findIndex((node) => node.type === 'heading' && node.depth === 1);
   if (index < 0) return null;
   const paragraph = tree.children.slice(index + 1).find((node) => node.type === 'paragraph');
   const title = plainText(tree.children[index]).trim();
-  return { title, description: paragraph ? summarize(plainText(paragraph)) : '' };
+  return { title, description: paragraph ? summarize(plainText(paragraph), limit) : '' };
 }

@@ -7,11 +7,12 @@ import { listComponentMeta } from './meta';
 const SOURCE = 'todae-docs' as const;
 const PREFIX = 'recipes/';
 
-/** Todae exports named in `code`, such as `Disclosure.Root` and `useInlineEdit`. Names have at most one dot. */
+const NAMES = new Set(listComponentMeta().map((row) => row.name));
+
+/** Todae exports named in `code`, such as `Disclosure.Root` and `useInlineEdit`. Names have at most one dot; a fence's language tag is never one. */
 export function exportsIn(code: string): string[] {
-  const names = new Set(listComponentMeta().map((row) => row.name));
   const tokens = new Set(code.match(/(?<![\w$.])[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?/g) ?? []);
-  return [...tokens].filter((token) => names.has(token)).sort();
+  return [...tokens].filter((token) => NAMES.has(token)).sort();
 }
 
 function readRecipe(page: PageDoc) {
@@ -24,8 +25,8 @@ function readRecipe(page: PageDoc) {
     row: {
       name,
       title: page.title,
-      // The page's own description, as its link preview shows it.
-      description: pageSummary(tree)?.description || null,
+      // The first paragraph after the title, as the page's link preview reads it but not cut short.
+      description: pageSummary(tree, Infinity)?.description || null,
       uses: exportsIn(codeBlocks(page.markdown, tree).code.join('\n')),
       docsUrl,
       hasWhenToUse: whenToUse != null,

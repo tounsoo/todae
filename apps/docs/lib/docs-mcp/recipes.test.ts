@@ -15,7 +15,9 @@ describe('docs mcp recipes', () => {
     expect(listed.recipes.map((row) => row.name)).toEqual(recipeDirs);
     expect(listed.count).toBe(recipeDirs.length);
     for (const row of listed.recipes) {
+      // Every recipe page opens its intro paragraph by saying it is one.
       expect(row.description, row.name).toMatch(/^A recipe, not a package namespace\. \S/);
+      expect(row.description, row.name).not.toMatch(/…$/);
       expect(row.uses.length, row.name).toBeGreaterThan(0);
       expect(row.docsUrl).toBe(`${DOCS_ORIGIN}/recipes/${row.name}`);
     }
@@ -47,5 +49,4 @@ describe('docs mcp recipes', () => {
     ].join('\n');
     expect(exportsIn(code)).toEqual(['Button.Root', 'Field.TextInput', 'useCombobox']);
   });
-
 });

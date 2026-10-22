@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Node } from 'mdast';
-import { parseMdx as parse } from '../mdxAst';
+import { parseMdx } from '../mdxAst';
 
 /** One part of an MDX page: a heading and what follows it, up to the next heading. */
 export type Section = {
@@ -24,7 +24,7 @@ const end = (node: Node) => node.position!.end.offset!;
 export function sections(mdx: string): Section[] {
   const parts: Section[] = [{ heading: TOP, level: 0, text: '', blocks: 0 }];
   const starts = [0];
-  for (const node of parse(mdx).children) {
+  for (const node of parseMdx(mdx).children) {
     if (node.type === 'heading') {
       parts.push({ heading: mdx.slice(start(node), end(node)).trim(), level: node.depth, text: '', blocks: 0 });
       starts.push(start(node));
@@ -53,7 +53,7 @@ export function links(mdx: string): string[] {
     }
     if ('children' in node) for (const child of node.children as Node[]) visit(child);
   };
-  visit(parse(mdx));
+  visit(parseMdx(mdx));
   return found.sort();
 }
 
