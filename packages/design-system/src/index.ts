@@ -146,6 +146,8 @@ export {
   Menu,
   type MenuCheckboxItemProps,
   type MenuContentProps,
+  type MenuContextTriggerProps,
+  type MenuContextTriggerRenderProps,
   type MenuGroupProps,
   type MenuItemProps,
   type MenuItemRenderProps,
