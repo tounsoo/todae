@@ -65,7 +65,7 @@ export type TooltipInternalOptions = {
   holdsFocus?: (focused: Element) => boolean;
 };
 
-/** Hover holds for a trigger that listens on its element itself, with native events. */
+/** Hover holds for a trigger that wires its own pointer handlers. */
 export type TooltipInternalResult = {
   holdHover: () => void;
   releaseHover: (relatedTarget: EventTarget | null) => void;
@@ -101,16 +101,17 @@ function tooltipStyle(anchorName: string): CSSProperties {
 export function useTooltip<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
 ): UseTooltipResult<I> {
-  // Only the public options reach the hook, so a JavaScript caller's stray holdsFocus or anchorName does nothing.
-  const { holdsFocus: _holdsFocus, anchorName: _anchorName, ...publicOptions } = options as UseTooltipOptions<I> & TooltipInternalOptions;
-  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(publicOptions);
+  // Internal options come in a second argument, which this never passes.
+  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(options);
   return result;
 }
 
 /** useTooltip with the options and holds of {@link TooltipInternalOptions} and {@link TooltipInternalResult}. */
 export function useTooltipInternal<I extends boolean = false>(
-  options: UseTooltipOptions<I> & TooltipInternalOptions = {} as UseTooltipOptions<I>,
+  options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
+  internal: TooltipInternalOptions = {},
 ): UseTooltipResult<I> & TooltipInternalResult {
+  const { anchorName: anchorNameOption, holdsFocus } = internal;
   const {
     interactive = false as I,
     showDelay,
@@ -120,8 +121,6 @@ export function useTooltipInternal<I extends boolean = false>(
     onOpenChange,
     enabled = true,
     id,
-    anchorName: anchorNameOption,
-    holdsFocus,
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
@@ -264,10 +263,7 @@ export function useTooltipInternal<I extends boolean = false>(
     let held: EventTarget | null = null;
     function onFocusIn(event: globalThis.FocusEvent) {
       const focused = event.composedPath()[0] ?? null;
-      if (!holderAccepts(focused)) {
-        held = null;
-        return;
-      }
+      if (!holderAccepts(focused)) return;
       held = focused;
       dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     }

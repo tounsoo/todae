@@ -2043,8 +2043,8 @@
       "ko": "텍스트를 이 줄 수로 자르고 마지막 줄 끝에 말줄임표를 붙입니다. 1 이상의 정수입니다. 요소는 블록이 됩니다. 스크린 리더는 여전히 텍스트 전체를 읽습니다."
     },
     "tooltip": {
-      "en": "With lines, shows the whole text in a tooltip on hover, or while a focused element holds the text, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.",
-      "ko": "lines와 함께 쓰면, 텍스트가 잘렸을 때 포인터를 올리거나 텍스트를 담은 요소에 포커스가 있는 동안 툴팁에 텍스트 전체를 보여 줍니다. 툴팁은 스크린 리더에서 숨겨집니다. @tounsoo/todae/text 진입점은 툴팁을 그리지 않습니다."
+      "en": "With lines, shows the whole text in a tooltip on hover, or on keyboard focus of the text or a link, row or menu item around it, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.",
+      "ko": "lines와 함께 쓰면, 텍스트가 잘렸을 때 포인터를 올리거나 텍스트나 그것을 감싼 링크, 행, 메뉴 항목이 키보드 포커스를 받으면 툴팁에 텍스트 전체를 보여 줍니다. 툴팁은 스크린 리더에서 숨겨집니다. @tounsoo/todae/text 진입점은 툴팁을 그리지 않습니다."
     },
     "children": {
       "en": "Text content.",

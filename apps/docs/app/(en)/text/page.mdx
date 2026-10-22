@@ -93,7 +93,7 @@ A company token package sets the look in its own `contract` set, as the [Fernway
 
 `lines` clamps the text to that many lines and ends the last one in an ellipsis. A word longer than the line, such as a file name, breaks so it ends in the ellipsis too. The element becomes a block, so it takes the width its parent gives it; in a flex row it can shrink below its text.
 
-When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in a tooltip on hover, and while a focused element holds the text, such as a link or a row around it. A focused element that holds several cut texts shows the first one's tooltip. Clamping changes only what is painted, so screen readers read the whole text and the tooltip is hidden from them. While it shows, the tooltip is an element right after the text, so it can change what a selector such as `:last-child` matches. Escape closes it first. `tooltip={false}` turns it off. `@tounsoo/todae/text` clamps the same way but draws no tooltip, since that needs a client component.
+When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in a tooltip on hover, and on keyboard focus of the text or of a link, row or menu item around it. One that holds several cut texts shows the first one's tooltip. Clamping changes only what is painted, so screen readers read the whole text and the tooltip is hidden from them. While it shows, the tooltip is an element right after the text, so it can change what a selector such as `:last-child` matches. Escape closes it first. `tooltip={false}` turns it off. `@tounsoo/todae/text` clamps the same way but draws no tooltip, since that needs a client component.
 
 ```tsx
 <Text.Root lines={1} weight="medium">
@@ -110,7 +110,7 @@ When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in 
 
 ## Accessible composition
 
-**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element. With `lines`, the tooltip of cut text, on hover and while a focused element holds the text, hidden from screen readers, which read the whole text.
+**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element. With `lines`, the tooltip of cut text, on hover and on keyboard focus, hidden from screen readers, which read the whole text.
 
 **You supply:** The outline. Pick each heading's level from where it sits on the page, not from the size you want. A wrapper such as a section title should take the level as a prop, or render one level only where that level is always right. Give a heading an `id` when a region names itself with `aria-labelledby`.
 

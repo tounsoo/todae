@@ -26,6 +26,23 @@ function fullText(el: HTMLElement): string {
   return (el.innerText ?? el.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * Whether focus on `el` can show the tip of a cut text inside it: a tab stop
+ * or a roving item, such as a link, a row or a menu item. A container focused
+ * by script, such as a dialog or a skip link's target, is neither. A roving
+ * item still has tabIndex -1 when it takes focus, so it counts by its marker.
+ */
+function isHolder(el: Element): boolean {
+  return el instanceof HTMLElement && (el.tabIndex >= 0 || el.hasAttribute('data-todae-roving'));
+}
+
+/** The nearest holder around `el`, so a parent tree item doesn't show its child's tip. */
+function holderOf(el: Element): Element | null {
+  let node = el.parentElement;
+  while (node && !isHolder(node)) node = node.parentElement;
+  return node;
+}
+
 function isCut(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
 }
@@ -43,22 +60,21 @@ type ClampTipProps = {
  */
 function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
   const [text, setText] = useState<string | null>(null);
-  // Focus on the text, or on a tab stop or roving item around it such as a
-  // link, a row or a menu item, when this is the first cut text that element
-  // holds. A container focused by script, such as a dialog or a skip link's
-  // target, is neither. A roving item still has tabIndex -1 when it takes
-  // focus, so it counts by its marker.
+  // Focus on the text, or keyboard focus on the nearest holder around it,
+  // when this is the first cut text whose nearest holder that element is. A
+  // click or a menu opened by one moves focus without :focus-visible, and the
+  // pointer has the hover tip.
   const holdsFocus = useCallback(
     (focused: Element) => {
       const el = target.current;
       if (el === null) return false;
       if (focused === el) return true;
-      if (!(focused instanceof HTMLElement) || !(focused.tabIndex >= 0 || focused.hasAttribute('data-todae-roving'))) return false;
-      return focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el;
+      if (!isHolder(focused) || !focused.matches(':focus-visible') || holderOf(el) !== focused) return false;
+      return [...focused.querySelectorAll<HTMLElement>(`[${CUT_ATTR}]`)].find((cut) => holderOf(cut) === focused) === el;
     },
     [target],
   );
-  const tip = useTooltipInternal({ enabled: text !== null, anchorName: anchor, holdsFocus });
+  const tip = useTooltipInternal({ enabled: text !== null }, { anchorName: anchor, holdsFocus });
 
   const check = useCallback(() => {
     const el = target.current;
@@ -146,7 +162,7 @@ function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, re
         }
         ref={refs}
       />
-      {tipped ? <ClampTip key={props.as ?? 'p'} target={elRef} anchor={anchor} hoverRef={hoverRef} /> : null}
+      {tipped ? <ClampTip key={String(props.as)} target={elRef} anchor={anchor} hoverRef={hoverRef} /> : null}
     </>
   );
 }

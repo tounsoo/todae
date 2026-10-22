@@ -43,7 +43,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'With lines, shows the whole text in a tooltip on hover, or while a focused element holds the text, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.',
+      description: 'With lines, shows the whole text in a tooltip on hover, or on keyboard focus of the text or a link, row or menu item around it, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.',
     },
     {
       name: 'children',

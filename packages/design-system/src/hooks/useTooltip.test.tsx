@@ -331,7 +331,7 @@ describe('useTooltip', () => {
 
 describe('useTooltipInternal holdsFocus', () => {
   function HolderHarness({ accepts = () => true }: { accepts?: () => boolean }) {
-    const tooltip = useTooltipInternal({ holdsFocus: (focused) => focused.id === 'row' && accepts() });
+    const tooltip = useTooltipInternal({}, { holdsFocus: (focused) => focused.id === 'row' && accepts() });
     const wire = tooltip.getTooltipProps();
     return (
       <>
@@ -382,13 +382,29 @@ describe('useTooltipInternal holdsFocus', () => {
 
   it('keeps the internal options and holds out of the public hook', () => {
     const stray = { holdsFocus: () => true, anchorName: '--stray' } as UseTooltipOptions;
-    const { result } = renderHook(() => useTooltip(stray));
-    expect('holdHover' in result.current).toBe(false);
-    expect(result.current.getTriggerProps().style.anchorName).not.toBe('--stray');
+    function Stray() {
+      const tooltip = useTooltip(stray);
+      const wire = tooltip.getTooltipProps();
+      return (
+        <>
+          <span {...tooltip.getTriggerProps()} data-testid="trigger" data-hold={'holdHover' in tooltip ? '' : undefined}>
+            Name
+          </span>
+          <button type="button">Other</button>
+          {tooltip.open ? <div role="tooltip" ref={wire.ref} /> : null}
+        </>
+      );
+    }
+    render(<Stray />);
+    const trigger = screen.getByTestId('trigger');
+    expect(trigger.hasAttribute('data-hold')).toBe(false);
+    expect(trigger.style.getPropertyValue('anchor-name')).not.toBe('--stray');
+    act(() => screen.getByRole('button').focus());
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('uses a given anchorName on the trigger and the tip', () => {
-    const { result } = renderHook(() => useTooltipInternal({ anchorName: '--mine' }));
+    const { result } = renderHook(() => useTooltipInternal({}, { anchorName: '--mine' }));
     expect(result.current.getTriggerProps().style.anchorName).toBe('--mine');
     expect(result.current.getTooltipProps().style.positionAnchor).toBe('--mine');
   });

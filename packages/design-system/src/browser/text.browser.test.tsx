@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Tabs, Text } from '../index.js';
+import { Tabs, Text, Tree } from '../index.js';
 
 afterEach(cleanup);
 
@@ -230,6 +230,33 @@ describe('Text.Root lines', () => {
     await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
   });
 
+  it("shows no child item's tip while a parent tree item has focus", async () => {
+    render(
+      <div style={{ inlineSize: '14rem' }}>
+        <Tree.Root aria-label="Files" defaultExpanded={['src']}>
+          <Tree.Item value="src">
+            <Tree.Label>src</Tree.Label>
+            <Tree.Group>
+              <Tree.Item value="src/report">
+                <Tree.Label>
+                  <Text.Root as="span" lines={1} style={{ maxInlineSize: '6rem' }}>
+                    {LONG}
+                  </Text.Root>
+                </Tree.Label>
+              </Tree.Item>
+            </Tree.Group>
+          </Tree.Item>
+        </Tree.Root>
+      </div>,
+    );
+    await userEvent.tab();
+    expect(document.activeElement?.getAttribute('aria-expanded')).toBe('true');
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).toBeNull();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+  });
+
   it('opens no tip on hover when the product prevents pointer enter', async () => {
     render(
       <div style={{ inlineSize: '12rem' }}>
@@ -240,6 +267,41 @@ describe('Text.Root lines', () => {
     );
     await userEvent.hover(screen.getByTestId('cut'));
     await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(openTip()).toBeNull();
+  });
+
+  it('releases a hover tip even when the product prevents pointer leave', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root lines={1} onPointerLeave={(event) => event.preventDefault()} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()).not.toBeNull());
+    await userEvent.unhover(cut);
+    await waitFor(() => expect(openTip()).toBeNull());
+  });
+
+  it('shows no tip when a click focuses a link that holds cut text', async () => {
+    render(
+      <div style={{ inlineSize: '12rem', paddingBlockStart: '4rem' }}>
+        <a href="#report" data-testid="link" onClick={(event) => event.preventDefault()}>
+          <Text.Root lines={1} as="span" data-testid="cut">
+            {LONG}
+          </Text.Root>
+        </a>
+        <button type="button" data-testid="away">
+          Away
+        </button>
+      </div>,
+    );
+    await userEvent.click(screen.getByTestId('link'));
+    expect(document.activeElement).toBe(screen.getByTestId('link'));
+    await userEvent.hover(screen.getByTestId('away'));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     expect(openTip()).toBeNull();
   });
 
