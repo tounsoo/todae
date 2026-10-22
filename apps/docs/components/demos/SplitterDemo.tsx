@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Code, Link, ScrollArea, Splitter, Stack, Text } from '@tounsoo/todae';
+import { Button, Code, Link, ScrollArea, Splitter, Stack, Text, ToggleGroup } from '@tounsoo/todae';
 import { PanelLeft } from 'lucide-react';
 import { useId, useState, type CSSProperties, type ReactNode } from 'react';
 
@@ -182,5 +182,58 @@ export function SplitterMail() {
         </Splitter.Root>
       </Splitter.Panel>
     </Splitter.Root>
+  );
+}
+
+type Show = 'both' | 'start' | 'end';
+
+export function SplitterShow() {
+  const listId = useId();
+  const [show, setShow] = useState<Show>('both');
+
+  return (
+    <Stack.Root>
+      <ToggleGroup.Root
+        aria-label="Show"
+        value={show}
+        onValueChange={(next) => {
+          if (next) setShow(next as Show);
+        }}
+      >
+        <ToggleGroup.Item value="both">both</ToggleGroup.Item>
+        <ToggleGroup.Item value="start">start</ToggleGroup.Item>
+        <ToggleGroup.Item value="end">end</ToggleGroup.Item>
+      </ToggleGroup.Root>
+      <Splitter.Root show={show} defaultValue={200} min={140} max={320} style={frame('14rem')}>
+        <Splitter.Panel>
+          <Pane>
+            <Text.Root as="h2" size="m" id={listId}>
+              Inbox
+            </Text.Root>
+            <Stack.Root as="ul" gap="condensed">
+              {MESSAGES.map(([name, title]) => (
+                <li key={title}>
+                  <Text.Root>{name}</Text.Root>
+                </li>
+              ))}
+            </Stack.Root>
+          </Pane>
+        </Splitter.Panel>
+        <Splitter.Handle aria-labelledby={listId} />
+        <Splitter.Panel>
+          <Pane>
+            <Text.Root as="h2" size="m">
+              Launch checklist
+            </Text.Root>
+            <Text.Root tone="muted">
+              <Code.Root>show=&quot;{show}&quot;</Code.Root>.{' '}
+              {show === 'both'
+                ? 'Both panels and the handle show.'
+                : `Only the ${show} panel shows, across the whole splitter. The other panel and the handle stay mounted, out of the layout.`}
+            </Text.Root>
+          </Pane>
+        </Splitter.Panel>
+      </Splitter.Root>
+    </Stack.Root>
   );
 }
