@@ -12,7 +12,7 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: 하나만 열리는 아코디언. 없으면: 한 그룹의 여러 디스클로저가 동시에 열릴 수 있습니다.
 - **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: 디스클로저 내용을 서서히 나타냅니다. 없으면: 내용이 바로 나타납니다.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `autoGrow`를 쓴 `Field.Textarea`. 없으면: textarea가 rows 높이를 유지하고 스크롤됩니다.
-- **[`document.execCommand('insertText')`](https://developer.mozilla.org/docs/Web/API/Document/execCommand)**: `useMentions`의 고르기와 `Field.OneTimeCode`의 붙여넣기를 입력의 실행 취소 기록의 한 단계로 남깁니다. 없으면: 훅이 텍스트를 직접 설정하고, 실행 취소가 입력한 단어를 되살리지 못할 수 있습니다. `Field.OneTimeCode`는 코드를 `onValueChange`에 넘기며, 실행 취소가 이전 코드를 되살리지 못할 수 있습니다.
+- **[`document.execCommand('insertText')`](https://developer.mozilla.org/docs/Web/API/Document/execCommand)**: `useMentions`의 고르기와 `Field.OneTimeCode`의 붙여넣기를 입력의 실행 취소 기록의 한 단계로 남깁니다. 없으면: 훅이 텍스트를 직접 설정하고, 실행 취소가 입력한 단어를 되살리지 못할 수 있습니다. `Field.OneTimeCode`는 값을 직접 설정하고 `input` 이벤트를 보내며, 실행 취소가 이전 코드를 되살리지 못할 수 있습니다.
 - **[`autocomplete="one-time-code"`](https://developer.mozilla.org/docs/Web/HTML/Attributes/autocomplete#one-time-code)**: `Field.OneTimeCode`가 휴대폰이 문자 메시지의 코드를 제안할 수 있게 합니다. 없으면: 사용자가 코드를 입력하거나 붙여넣습니다.
 - **[`@scope`](https://developer.mozilla.org/docs/Web/CSS/@scope)**: `Prose.Root`가 다른 종류의 첫 요소에 닿을 때까지 마크다운 요소를 스타일합니다. 없으면: 프로즈 안의 제목, 목록, 인용문이 브라우저 기본 스타일을 따릅니다.
 - **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field`와 `Chip`의 포커스 링과 장식 요소 레이아웃, `Alert`의 열 배치, `Calendar` 범위 뒤의 띠, 모달 `<dialog>`가 열려 있는 동안 페이지 스크롤 멈춤(`:modal`과 함께). Todae에 필수입니다.
