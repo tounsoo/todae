@@ -758,12 +758,15 @@
     background: transparent;
   }
 
+  /* Fills the field's row, with the boxes at its start, so the transparent
+     input covers the room after the last box, where a press or a drop is past
+     the code. */
   .oneTimeCode {
     position: relative;
-    display: inline-flex;
+    display: flex;
+    flex: 1 1 auto;
     min-inline-size: 0;
     max-inline-size: 100%;
-    direction: ltr;
   }
 
   /* Transparent rather than hidden: it stays the focusable, clickable input,
@@ -790,6 +793,7 @@
   .slots {
     --_ring: var(--todae-field-ring-focus);
     display: flex;
+    direction: ltr;
     min-inline-size: 0;
     gap: var(--todae-field-code-gap);
     pointer-events: none;

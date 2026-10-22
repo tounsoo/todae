@@ -12,13 +12,11 @@ function Code({
   onValueChange,
   style,
   characters,
-  codeStyle,
 }: {
   initial?: string;
   onValueChange?: (value: string) => void;
   style?: CSSProperties;
   characters?: 'digits' | 'alphanumeric';
-  codeStyle?: CSSProperties;
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -29,7 +27,6 @@ function Code({
           <Field.OneTimeCode
             value={value}
             characters={characters}
-            style={codeStyle}
             onValueChange={(next) => {
               setValue(next);
               onValueChange?.(next);
@@ -72,9 +69,6 @@ async function compose(steps: string[], commit: string | null = steps.at(-1)!) {
   if (commit === null) await session().send('Input.imeSetComposition', { text: '', selectionStart: 0, selectionEnd: 0 });
   else await session().send('Input.insertText', { text: commit });
 }
-
-// A wrapper style that leaves room past the last box, where a press or a drop is past the code.
-const roomAfter = { paddingInlineEnd: '48px' } as CSSProperties;
 
 function ShadowCode() {
   const [value, setValue] = useState('123456');
@@ -406,18 +400,18 @@ describe('Field.OneTimeCode in a browser', () => {
   });
 
   it('refuses a drop past a full code, and lands one past a partial code after it', async () => {
-    render(<Code initial="123456" codeStyle={roomAfter} />);
+    render(<Code initial="123456" />);
     const past = input().getBoundingClientRect().width - 4;
     await dropAt({ x: past });
     expect(input().value).toBe('123456');
     cleanup();
-    render(<Code initial="12" codeStyle={roomAfter} />);
+    render(<Code initial="12" />);
     await dropAt({ x: past });
     await vi.waitFor(() => expect(input().value).toBe('129'));
   });
 
   it('puts the caret after a full code when the press is past the last box', async () => {
-    render(<Code initial="123456" codeStyle={roomAfter} />);
+    render(<Code initial="123456" />);
     const y = input().getBoundingClientRect().height / 2;
     await userEvent.click(input(), { position: { x: input().getBoundingClientRect().width - 4, y } });
     expect([input().selectionStart, input().selectionEnd]).toEqual([6, 6]);
