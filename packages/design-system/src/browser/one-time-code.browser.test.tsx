@@ -118,6 +118,25 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(boxes().map((box) => getComputedStyle(box).outlineStyle !== 'none')).toEqual([false, false, true, false, false, false]);
   });
 
+  it('draws every box at its full size, side by side', () => {
+    render(<Code />);
+    const rects = boxes().map((box) => box.getBoundingClientRect());
+    expect(rects.every((rect) => rect.width > 20 && rect.height > 20)).toBe(true);
+    expect(rects[1]!.left).toBeGreaterThan(rects[0]!.right);
+  });
+
+  it('shrinks its boxes to fit a narrow container', () => {
+    render(
+      <div style={{ inlineSize: '200px' }}>
+        <Code />
+      </div>,
+    );
+    const last = boxes()[5]!.getBoundingClientRect();
+    const container = input().closest('main')!.parentElement!.getBoundingClientRect();
+    expect(last.right).toBeLessThanOrEqual(container.right + 0.5);
+    expect(last.width).toBeGreaterThan(10);
+  });
+
   it('draws a box for every character the code has', () => {
     render(<Code initial="12" />);
     expect(boxes().map((box) => box.textContent)).toEqual(['1', '2', '', '', '', '']);

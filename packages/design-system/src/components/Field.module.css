@@ -761,6 +761,7 @@
   .oneTimeCode {
     position: relative;
     display: inline-flex;
+    min-inline-size: 0;
     max-inline-size: 100%;
     direction: ltr;
   }
@@ -788,7 +789,7 @@
 
   .slots {
     display: flex;
-    flex: 1;
+    min-inline-size: 0;
     gap: var(--todae-field-code-gap);
     pointer-events: none;
   }
@@ -800,7 +801,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 1 var(--todae-field-code-slot-inline-size);
+    flex: 0 1 auto;
+    inline-size: var(--todae-field-code-slot-inline-size);
     min-inline-size: 0;
     block-size: var(--todae-field-code-slot-block-size);
     border: var(--todae-field-border-width) solid var(--todae-field-border-default);
