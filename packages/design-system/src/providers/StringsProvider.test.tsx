@@ -32,6 +32,7 @@ const FRENCH: Strings = {
   notifications: 'Notifications FR',
   breadcrumbs: "Fil d'Ariane",
   pagination: 'Pages',
+  contents: 'Sur cette page',
   resizeSheet: 'Redimensionner',
   options: 'Choix',
   removeChip: (label) => `Retirer ${label}`,

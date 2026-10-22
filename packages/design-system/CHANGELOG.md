@@ -1,5 +1,53 @@
 # @tounsoo/todae
 
+## 0.4.0
+
+### Minor Changes
+
+- Add `Contents`, an "On this page" list that marks the section being read with `aria-current="location"`. ([#218](https://github.com/tounsoo/todae/pull/218))
+  
+  - `Strings` has a new key, `contents`, the name of `Contents.Root` without a label; add it to an object you type as a complete `Strings`.
+
+- CodeBlock.Root no longer has the browser's default `pre` margin. ([#212](https://github.com/tounsoo/todae/pull/212))
+  
+  - A `CodeBlock.Root` outside Prose now touches what is above and below it; space it with a `Stack.Root` or a margin of your own.
+
+- Button.Root with `aria-disabled="true"` now looks disabled, keeps focus, and ignores clicks. ([#214](https://github.com/tounsoo/todae/pull/214))
+  
+  - `Button.Root` with `aria-disabled="true"` no longer calls `onClick`, flips a toggle, submits a form or follows a link, and `Composer.Root` sends nothing on Enter while its send button has it; drop guards in your own handlers.
+
+- DataList.Root takes `minItemSize` to lay its items out in columns, spaced by the new `datalist.gap.between-columns` token. ([#208](https://github.com/tounsoo/todae/pull/208))
+  
+  - Grid.Root's inline custom properties are now the private `--_column-count` and `--_min-item-size`, so CSS that set `--todae-grid-column-count` or `--todae-grid-min-item-size` no longer applies; set the `columns` or `minItemSize` prop instead.
+
+- Add Drilldown, a stack of views with focus, Escape and back-gesture handling inside Dialog, Drawer, BottomSheet and Popover. ([#216](https://github.com/tounsoo/todae/pull/216))
+  
+  - `Strings` has two new keys, `back` and `backTo` (`(label: string) => string`); add them to an object you type as a complete `Strings`.
+
+- Calendar.Root takes mode="range", and Field.DateRangePicker, formatDateRange and parseDateRange pick and type a range of dates. ([#205](https://github.com/tounsoo/todae/pull/205))
+  
+  - `CalendarRootProps` is a union on `mode`; narrow it by `mode` before reading `value`, `defaultValue` or `onValueChange` in a wrapper's own types.
+  - `Strings` has two new keys, `dateRangePicker` and `pickEndDate`; add them to an object you type as a complete `Strings`.
+
+- `Tooltip.Root` renders a `<span>` instead of a `<div>`, so a trigger and its tip can sit inside a paragraph, and logs a development error for block content in a tip. ([#210](https://github.com/tounsoo/todae/pull/210))
+  
+  - `Tooltip.Root` and its tip are `<span>` elements, and its props and ref are a span's; retype an `HTMLDivElement` ref as `HTMLSpanElement`, and move CSS that selects them as `div`.
+  - A tip that holds block content, such as a `<p>` or `<div>`, logs a development error; keep a tip's content to phrasing content.
+
+### Patch Changes
+
+- Add `todae-tokens build --scope <selector>` for themes that apply to part of a page, and have failed token builds name the fix, including the nearest lightness that passes an APCA pair. ([#213](https://github.com/tounsoo/todae/pull/213))
+
+- `Disclosure.Summary` from the main entry takes focus when code closes its disclosure while the content holds focus. ([#211](https://github.com/tounsoo/todae/pull/211))
+
+- Text.Root takes `size="label"` for eyebrows and metadata, styled by the new `text.label.*` tokens. ([#209](https://github.com/tounsoo/todae/pull/209))
+
+- Add useFocusHandoff, which moves focus to a given element when the element it watches unmounts while holding focus. ([#212](https://github.com/tounsoo/todae/pull/212))
+
+- `Tooltip.Root` no longer logs the same content error on every render. ([#217](https://github.com/tounsoo/todae/pull/217))
+
+- Escape goes to the innermost open Popover, Menu or Tooltip by DOM nesting, not only to the one opened last, and a Dialog, Drawer or BottomSheet's close requests, such as the Android back gesture, go to the innermost open Popover or Menu inside it first. ([#216](https://github.com/tounsoo/todae/pull/216))
+
 ## 0.3.0
 
 ### Minor Changes

@@ -17,6 +17,7 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
@@ -239,6 +240,7 @@ function Root(rootProps: CalendarRootProps) {
     className,
     children,
     onKeyDown,
+    ref: refProp,
     ...props
   } = rootProps;
   const { disabled } = useFieldsetState({ disabled: disabledProp });
@@ -450,6 +452,16 @@ function Root(rootProps: CalendarRootProps) {
       moveToYear,
     ],
   );
+  // Escape, and a modal's close request such as the Android back gesture, drop
+  // only the range in progress. As a layer on the overlays' Escape stack, it
+  // answers before a popover around the calendar; stopping the key's propagation
+  // can't, when React's root is the document as in Next.js, since the popover's
+  // listener sits on the same node. A key onKeyDown prevented is left alone.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(rootRef, refProp);
+  const dropPending = useCallback(() => setPending(IDLE), []);
+  const takesEscape = useCallback((target: Element | null) => rootRef.current?.contains(target) === true, []);
+  useEscapeKey(anchor !== null, takesEscape, dropPending, rootRef, { popup: false, passesKey: handledOrComposing });
   return (
     <CalendarContext.Provider value={ctx}>
       <div
@@ -457,14 +469,8 @@ function Root(rootProps: CalendarRootProps) {
         role="group"
         data-disabled={disabled ? '' : undefined}
         className={cx(styles.root, className)}
-        onKeyDown={composeHandlers(onKeyDown, (event) => {
-          if (event.key !== 'Escape' || !anchor) return;
-          // Only the range in progress goes. Stopping the key here keeps it from the
-          // document, where a popover around the calendar listens for Escape to close.
-          event.preventDefault();
-          event.stopPropagation();
-          setPending(IDLE);
-        })}
+        ref={composedRef}
+        onKeyDown={onKeyDown}
       >
         {children}
       </div>
