@@ -412,7 +412,7 @@
     "## What a problem says": "c8019d5f7405",
     "## Submit": "a2ac8ded7ff0",
     "## Summary": "3da0810ca127",
-    "## Server errors": "9f77304c6cfb",
+    "## Server errors": "a29e407d2091",
     "## Rules the browser can't check": "99253d6a0c4e",
     "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
@@ -706,9 +706,9 @@
   "recipes/wizard": {
     "(top)": "8a3a55e1b1ed",
     "# Wizard": "9cd56741f4a9",
-    "## A form per step": "6c7734fa6c2e",
-    "## Focus on each step": "57c7d7ef2016",
-    "## Errors from the last step": "21ea66a09533",
+    "## A form per step": "0af0e0e57743",
+    "## Focus on each step": "9b2ef43cc108",
+    "## Errors from the last step": "91d1e42a0626",
     "## Accessible composition": "57c995f67a81",
     "## When to use": "e4c37a96dbb3",
     "(section order)": "58e398659b7f"

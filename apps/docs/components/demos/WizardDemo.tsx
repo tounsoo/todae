@@ -62,7 +62,8 @@ export function WizardExample() {
   // until its own Next, so its form takes them where the person can see them, and keeps a dismissal.
   const [reached, setReached] = useState(-1);
   const [sending, setSending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // Why the last request failed, shown in an Alert beside Create.
+  const [failed, setFailed] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
   const forms = useRef<(HTMLFormElement | null)[]>([]);
   const headings = useRef<(HTMLElement | null)[]>([]);
@@ -87,7 +88,7 @@ export function WizardExample() {
   const go = (index: number) => {
     moved.current = true;
     setReached((current) => Math.max(current, index));
-    setFailed(false);
+    setFailed(null);
     setStep(index);
   };
 
@@ -105,13 +106,13 @@ export function WizardExample() {
     event.preventDefault();
     if (sending) return;
     setSending(true);
-    setFailed(false);
+    setFailed(null);
     setReply({});
     let errors: FormErrors;
     try {
       errors = await createWorkspace(answers);
     } catch {
-      setFailed(true);
+      setFailed("The workspace wasn't created. Try again.");
       return;
     } finally {
       setSending(false);
@@ -123,7 +124,8 @@ export function WizardExample() {
     }
     // An error for a control no step holds can't be shown where it belongs: the request failed.
     if (named.some(([name]) => !STEPS.some((each) => each.fields.includes(name as Name)))) {
-      setFailed(true);
+      // Trying again won't change the answer, so don't ask for it.
+      setFailed("The workspace wasn't created, for a reason this form can't show. Contact support.");
       return;
     }
     const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
@@ -136,6 +138,7 @@ export function WizardExample() {
   const restart = () => {
     setAnswers(EMPTY);
     setReply({});
+    setReached(-1);
     setCreated(false);
     go(0);
   };
@@ -272,7 +275,7 @@ export function WizardExample() {
               <DataList.Details>{PLANS[answers.plan]}</DataList.Details>
             </DataList.Item>
           </DataList.Root>
-          {failed ? <Alert.Root tone="critical">The workspace wasn't created. Try again.</Alert.Root> : null}
+          {failed ? <Alert.Root tone="critical">{failed}</Alert.Root> : null}
           {actions(
             2,
             // aria-disabled, not disabled, so the button keeps focus while the request runs and ignores clicks.

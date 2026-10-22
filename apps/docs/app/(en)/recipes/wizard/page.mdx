@@ -20,6 +20,9 @@ Keep every step's form mounted and hide the ones that aren't showing with `hidde
 import { Button, ErrorMessage, Field, Form, Label, Stack, Text } from '@tounsoo/todae';
 
 <Form.Root
+  ref={(element) => {
+    forms.current[0] = element;
+  }}
   hidden={step !== 0}
   aria-labelledby={headingIds[0]}
   errors={0 <= reached ? pick(reply, STEPS[0].fields) : {}}
@@ -55,7 +58,7 @@ Next is the step's submit button, so Enter in a field moves on too. Back is `typ
 
 ## Focus on each step
 
-Move focus to the new step's heading on Next and Back. The button the person pressed is now hidden, so focus would otherwise drop to the page, and the heading tells a screen reader which step it is on. Give the heading `tabIndex={-1}`, so code can focus it but Tab skips it, and put the step's position in it, since the focused heading is what a screen reader reads. Focus it once the step shows, and only if focus isn't already in the step's form: a form that takes a reply moves focus to a control itself, and a screen reader shouldn't read the heading first. `Form.Root` makes that move in an update from its layout effect, so check in a microtask queued from your layout effect, after React has rendered it.
+Move focus to the new step's heading on Next and Back. The button the person pressed is now hidden, so focus would otherwise drop to the page, and the heading tells a screen reader which step it is on. Give the heading `tabIndex={-1}`, so code can focus it but Tab skips it, and put the step's position in it, since the focused heading is what a screen reader reads. Focus it once the step shows, and only if focus isn't already in the step's form: a form that takes a reply moves focus to a control itself, and a screen reader shouldn't read the heading first. `Form.Root` makes that move before React hands control back from the commit, as [Form](/form#server-errors) says, so check in a microtask queued from your layout effect.
 
 ```tsx
 import { useLayoutEffect, useRef, useState, type SubmitEvent } from 'react';
@@ -80,7 +83,7 @@ useLayoutEffect(() => {
 const go = (index: number) => {
   moved.current = true;
   setReached((current) => Math.max(current, index));
-  setFailed(false);
+  setFailed(null);
   setStep(index);
 };
 
@@ -137,21 +140,24 @@ const create = async (event: SubmitEvent<HTMLFormElement>) => {
   if (sending) return;
   // Hold Back and Create with aria-disabled while this is true.
   setSending(true);
-  setFailed(false);
+  setFailed(null);
   setReply({});
   let errors: FormErrors;
   try {
     errors = await createWorkspace(answers);
   } catch {
     // Shown in an Alert.Root tone="critical" beside the button, which is announced.
-    return setFailed(true);
+    return setFailed("The workspace wasn't created. Try again.");
   } finally {
     setSending(false);
   }
   const named = Object.entries(errors).filter(([, text]) => text);
   if (named.length === 0) return setCreated(true);
   // An error for a control no step holds can't be shown where it belongs: the request failed.
-  if (named.some(([name]) => !STEPS.some((each) => each.fields.includes(name as Name)))) return setFailed(true);
+  if (named.some(([name]) => !STEPS.some((each) => each.fields.includes(name as Name)))) {
+    // Trying again won't change the answer, so don't ask for it.
+    return setFailed("The workspace wasn't created, for a reason this form can't show. Contact support.");
+  }
   const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
   setReply(errors);
   // A new reply: no step has its errors yet.

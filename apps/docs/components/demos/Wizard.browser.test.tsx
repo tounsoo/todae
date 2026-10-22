@@ -151,7 +151,6 @@ it('takes a reply on two steps to each in turn, with focus on each control, and 
   const record = (event: FocusEvent) => focused.push(event.target as Element);
   document.addEventListener('focusin', record);
   await userEvent.keyboard('{Enter}');
-  await Promise.resolve();
   document.removeEventListener('focusin', record);
   expect(focused.filter((element) => element.getAttribute('tabindex') === '-1')).toEqual([]);
   // The next step shows its own error, and its form moves focus to that control, not the heading.
