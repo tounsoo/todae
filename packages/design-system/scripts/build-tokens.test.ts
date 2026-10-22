@@ -17,6 +17,7 @@ import {
   pathToPointer,
   parseComponentPointer,
   parseExtension,
+  parseScope,
   pointerToPath,
   serializeValue,
   validateDensitySpaceOnly,
@@ -1593,7 +1594,11 @@ describe('company token build', () => {
     const cases: [(resolver: Record<string, any>) => void, RegExp][] = [
       [
         (r) => (r.modifiers.density.$extensions['dev.todae'].attribute = 'data-space'),
-        /modifier "density" extends Todae's modifier "density", so its attribute must match/,
+        /modifier "density" extends Todae's modifier "density", so its attribute must be "data-density"/,
+      ],
+      [
+        (r) => (r.modifiers.density.$extensions['dev.todae'].colorScheme = true),
+        /modifier "density" extends Todae's modifier "density", so leave out colorScheme/,
       ],
       [(r) => (r.modifiers.density.default = 'roomy'), /so its default must stay "comfortable"/],
       [
@@ -1677,8 +1682,12 @@ describe('company token build', () => {
     expect(declared).toContain('--todae-brand-ink');
   });
 
+  it('accepts selector lists with escapes, functions and attribute values', () => {
+    for (const scope of ['.md\\:brand', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
+  });
+
   it('rejects a scope that is no selector list', async () => {
-    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"']) {
+    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>']) {
       await expect(buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope }), scope).rejects.toThrow(/--scope/);
     }
   });

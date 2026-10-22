@@ -117,6 +117,34 @@ describe('todae-tokens build --scope', () => {
     }
   });
 
+  it("keeps an outer ThemeProvider's overrides out of a scope, and takes those on or inside it", () => {
+    const wide = { 'button.base.font.letter-spacing': { value: 0.5, unit: 'rem' } } as const;
+    const spacing = (testId: string) =>
+      getComputedStyle(document.querySelector(`[data-testid="${testId}"]`)!).getPropertyValue('--todae-button-base-font-letter-spacing').trim();
+    render(
+      <>
+        <div className="plain" data-testid="plain" />
+        <ThemeProvider overrides={wide}>
+          <div data-testid="outer" />
+          <div className="plain" data-testid="scoped">
+            <ThemeProvider appearance="dark">
+              <div data-testid="scoped-provider" />
+            </ThemeProvider>
+            <ThemeProvider overrides={wide}>
+              <div data-testid="inner" />
+            </ThemeProvider>
+          </div>
+          <ThemeProvider overrides={wide} className="plain">
+            <div data-testid="on-scope" />
+          </ThemeProvider>
+        </ThemeProvider>
+      </>,
+    );
+    expect(spacing('outer')).toBe('0.5rem');
+    for (const id of ['scoped', 'scoped-provider']) expect(spacing(id), id).toBe(spacing('plain'));
+    for (const id of ['inner', 'on-scope']) expect(spacing(id), id).toBe('0.5rem');
+  });
+
   it('follows an appearance set on the root element', () => {
     document.documentElement.setAttribute('data-appearance', 'dark');
     render(<div className="acme" data-testid="acme" />);

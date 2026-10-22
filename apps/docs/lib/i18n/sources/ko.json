@@ -423,8 +423,8 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "89e78cba24f0",
-    "## Several themes on one page": "7ab06e677d15",
+    "## A company resolver": "cf8c90917645",
+    "## Several themes on one page": "31855e6debbf",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
