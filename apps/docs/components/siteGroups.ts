@@ -130,6 +130,7 @@ export const SITE_GROUPS = [
       ['/recipes/date-range-presets', 'Date range with presets'],
       ['/recipes/file-upload', 'File upload'],
       ['/recipes/message-actions', 'Message actions'],
+      ['/recipes/reasoning', 'Reasoning'],
       ['/recipes/suggestions', 'Suggestions'],
     ],
   },

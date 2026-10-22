@@ -69,6 +69,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/date-range-presets': () => import('../../app/(en)/recipes/date-range-presets/page.mdx'),
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
   'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
+  'recipes/reasoning': () => import('../../app/(en)/recipes/reasoning/page.mdx'),
   'recipes/suggestions': () => import('../../app/(en)/recipes/suggestions/page.mdx'),
   'scroll-area': () => import('../../app/(en)/scroll-area/page.mdx'),
   'separator': () => import('../../app/(en)/separator/page.mdx'),
