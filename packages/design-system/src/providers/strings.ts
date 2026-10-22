@@ -18,6 +18,8 @@ export interface Strings {
   breadcrumbs: string;
   /** Name of the Pagination.Root landmark. */
   pagination: string;
+  /** Name of the Contents.Root landmark when it has no label. */
+  contents: string;
   /** Name of BottomSheet.Grabber's resize control. */
   resizeSheet: string;
   /** Name in the sheet and dialog props from useCombobox's getSheetProps and getDialogProps. */
@@ -145,6 +147,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   notifications: 'Notifications',
   breadcrumbs: 'Breadcrumb',
   pagination: 'Pagination',
+  contents: 'On this page',
   resizeSheet: 'Resize sheet',
   options: 'Options',
   removeChip: (label) => `Remove ${label}`,

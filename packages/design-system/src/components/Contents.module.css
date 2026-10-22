@@ -1,0 +1,103 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-contents-gap);
+  }
+
+  /* The label lines up with the links' text, past the rule. */
+  .label {
+    padding-inline-start: calc(var(--todae-contents-rule-width) + var(--todae-contents-link-padding-x));
+    color: var(--todae-contents-label-fg);
+    font-size: var(--todae-contents-label-font-size);
+    font-weight: var(--todae-contents-label-font-weight);
+    line-height: var(--todae-contents-link-leading);
+  }
+
+  .list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* One rule runs down the whole list; nested lists indent their links
+     without a rule of their own. */
+  .top {
+    border-inline-start: var(--todae-contents-rule-width) solid var(--todae-contents-rule-color);
+  }
+
+  .item {
+    min-inline-size: 0;
+  }
+
+  /* --_depth counts the lists a link is nested in. Nested links indent their
+     text, not their box, so every marker lands on the one rule. */
+  .list .list {
+    --_depth: 1;
+  }
+
+  .list .list .list {
+    --_depth: 2;
+  }
+
+  .list .list .list .list {
+    --_depth: 3;
+  }
+
+  .link {
+    position: relative;
+    display: block;
+    padding-block: var(--todae-contents-link-padding-y);
+    padding-inline: calc(var(--todae-contents-link-padding-x) + var(--_depth, 0) * var(--todae-contents-indent)) var(--todae-contents-link-padding-x);
+    border-radius: var(--todae-contents-link-radius);
+    color: var(--todae-contents-link-fg-default);
+    font-size: var(--todae-contents-link-font-size);
+    font-weight: var(--todae-contents-link-font-weight);
+    line-height: var(--todae-contents-link-leading);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* The marker sits on the rule, as wide as the marker token, centred on it. */
+  .link::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(-1 * (var(--todae-contents-rule-width) + var(--todae-contents-marker-width)) / 2);
+    inline-size: var(--todae-contents-marker-width);
+    background: transparent;
+  }
+
+  /* Hover sits in :where() so the current link below keeps its look under the pointer. */
+  @media (hover: hover) {
+    .link:where(:hover) {
+      color: var(--todae-contents-link-fg-hover);
+    }
+  }
+
+  /* The section being read. Any value other than empty or false (in any
+     case) marks the link current. */
+  .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) {
+    color: var(--todae-contents-link-fg-current);
+    font-weight: var(--todae-contents-link-font-current-weight);
+  }
+
+  .link:where([aria-current]:not([aria-current='false' i], [aria-current='']))::before {
+    background: var(--todae-contents-marker-color);
+  }
+
+  /* An inset ring stays whole when a scroll container clips the row's sides. */
+  .link:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-contents-link-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  /* Forced colors drop backgrounds: paint the marker with a system color. */
+  @media (forced-colors: active) {
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current='']))::before {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+  }
+}
