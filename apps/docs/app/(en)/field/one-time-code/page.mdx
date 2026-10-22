@@ -1,0 +1,84 @@
+import { FieldOneTimeCode, FieldOneTimeCodeForm } from '../../../../components/demos/FieldDemo';
+
+# Field.OneTimeCode
+
+`Field.OneTimeCode` is a sign-in or verification code inside a [Field](/field), drawn as one box per character. Its `value` is a string of at most `length` characters, 6 by default. `characters` is `"digits"` by default, or `"alphanumeric"` for letters and digits. Pass `onValueChange` for the cleaned code, `onChange` for the event, or both; without either, the input is read-only. A product that sends the code as soon as it is complete does so when `value.length === length`.
+
+```tsx
+const id = useId();
+const hintId = useId();
+const [code, setCode] = useState('');
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Verification code</Label.Root>
+  <Field.Root id={id} name="code" aria-describedby={hintId}>
+    <Field.OneTimeCode value={code} onValueChange={setCode} />
+  </Field.Root>
+  <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldOneTimeCode />
+</Example>
+
+The boxes are drawn over one native `<input>`, not made of one input per character. So the browser keeps paste, undo, selection and screen reader support, and a phone can offer the code from a text message because the input has `autocomplete="one-time-code"`. Inputs split per digit break each of these. The boxes are `aria-hidden` and take no pointer events; the input is the control.
+
+## Typing, paste and autofill
+
+One rule decides what counts: a character is kept when `characters` allows it, and the code is cut to `length`. Typing, paste and autofill all follow it.
+
+- A character typed into a `digits` code that is not a digit never reaches the input, and the same goes for a character outside letters and digits in an `alphanumeric` one. Deleting, and the keys of an IME composition, are left to the browser.
+- A paste, a drop or an autofill that holds a whole code replaces the value, so pasting `123456` into `12` gives `123456`, not `121234`. Pasting `123 456` or `Your code: 482-913` gives `123456` and `482913`: the characters the code doesn't allow are dropped. A shorter paste that holds only allowed characters lands at the caret as the browser would put it.
+- Todae puts a changed paste in with `document.execCommand('insertText')`, so it is one step on the input's undo stack. Where that is not available, it hands `onValueChange` the code it worked out.
+- `onValueChange` always gets the cleaned code, also when autofill or an IME brings characters that skipped the typing filter.
+
+## Pressing a box
+
+A press on a box selects its character, so typing replaces it. A press on an empty box, or past the end of the code, puts the caret after the last character. A double click still selects the whole code. The arrow keys, Home, End and Backspace are the input's own, and the active box follows the caret: the box at the caret, or the boxes of a selection. An empty box that waits for the next character shows a blinking caret, steady under `prefers-reduced-motion: reduce`. The focus ring goes on the active boxes, not around the field.
+
+## In a form
+
+The input is the field's native, validated control, so it sends its text under the field's `name` and takes `required` and the other native attributes. It has `minLength` and `maxLength` equal to `length`, so the browser flags a code that is too short after a person has edited it, and a code your own code sets is not flagged. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, such as "Use at least 8 characters", and focus goes to the input.
+
+```tsx
+const id = useId();
+const [code, setCode] = useState('');
+
+<Form.Root onSubmit={verify}>
+  <Field.Group>
+    <Label.Root htmlFor={id}>Recovery code</Label.Root>
+    <Field.Root id={id} name="recovery">
+      <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
+    </Field.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  <Button.Root type="submit">Verify</Button.Root>
+</Form.Root>
+```
+
+<Example block>
+  <FieldOneTimeCodeForm />
+</Example>
+
+`pattern` is `[0-9]*` or `[A-Za-z0-9]*`. It leaves `length` to `minLength`, so a code that is too short reads "too short" and not "wrong format".
+
+## Accessible composition
+
+**Todae handles:** The input takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It is a text input with `autocomplete="one-time-code"`, a numeric keypad for `digits`, spell checking, autocorrect and capitalization off, and `dir="ltr"`, since codes are Latin characters. The boxes are `aria-hidden`, so a screen reader reads the input's own text.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The code's length in a [Description](/description), such as "Enter the 6-digit code we sent". The `Form.Root` or `onValueChange` that sends the code, and any resend control.
+
+**Watch for:** There is no `onComplete`: send the code from `onValueChange` when `value.length === length`, and keep a submit button for people who don't expect it to send by itself. A `value` that holds characters the code doesn't allow is shown as it is, so clean what you set. A code that is not a one-time code, such as a postal code or an ID, is better as a plain input.
+
+## When to use
+
+### Field.OneTimeCode
+
+**When:** A sign-in, two-factor or verification code of a fixed length that people type, paste or autofill from a message.
+
+**When not:** A code that has no fixed length, or any text → [Field.TextInput](/field/text-input). A number to step or format → [Field.NumberInput](/field/number-input). A separate input per digit, which breaks paste, autofill and screen readers.
+
+## Props
+
+<PropsTable name="Field.OneTimeCode" />

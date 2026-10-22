@@ -1,0 +1,84 @@
+import { FieldOneTimeCode, FieldOneTimeCodeForm } from '../../../../components/demos/FieldDemo';
+
+# Field.OneTimeCode
+
+`Field.OneTimeCode`는 [Field](/field) 안에서 쓰는 로그인·인증 코드 입력으로, 문자마다 칸 하나를 그립니다. `value`는 최대 `length`자(기본 6)의 문자열입니다. `characters`는 기본값이 `"digits"`이고, 영문자와 숫자를 허용하려면 `"alphanumeric"`을 씁니다. 정리된 코드는 `onValueChange`로, 이벤트는 `onChange`로 받으며 둘 다 써도 됩니다. 둘 다 없으면 입력은 읽기 전용입니다. 코드가 완성되자마자 전송하려는 제품은 `value.length === length`일 때 전송합니다.
+
+```tsx
+const id = useId();
+const hintId = useId();
+const [code, setCode] = useState('');
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Verification code</Label.Root>
+  <Field.Root id={id} name="code" aria-describedby={hintId}>
+    <Field.OneTimeCode value={code} onValueChange={setCode} />
+  </Field.Root>
+  <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldOneTimeCode />
+</Example>
+
+칸은 문자마다 입력을 하나씩 두는 방식이 아니라, 하나의 네이티브 `<input>` 위에 그려집니다. 그래서 브라우저의 붙여넣기, 실행 취소, 선택, 스크린 리더 지원이 그대로 동작하고, 입력에 `autocomplete="one-time-code"`가 있으므로 휴대폰이 문자 메시지의 코드를 제안할 수 있습니다. 숫자마다 입력을 나누면 이 기능이 모두 깨집니다. 칸은 `aria-hidden`이고 포인터 이벤트를 받지 않으며, 컨트롤은 입력입니다.
+
+## 입력, 붙여넣기, 자동 완성
+
+하나의 규칙이 무엇을 받을지 정합니다. `characters`가 허용하는 문자만 남기고, 코드를 `length`로 자릅니다. 입력, 붙여넣기, 자동 완성이 모두 이 규칙을 따릅니다.
+
+- `digits` 코드에 숫자가 아닌 문자를 입력하면 입력에 닿지 않으며, `alphanumeric` 코드에서 영문자와 숫자 밖의 문자도 마찬가지입니다. 삭제와 IME 조합의 키는 브라우저에 맡깁니다.
+- 코드 전체를 담은 붙여넣기, 끌어다 놓기, 자동 완성은 값 전체를 바꿉니다. 그래서 `12`에 `123456`을 붙여넣으면 `121234`가 아니라 `123456`이 됩니다. `123 456`이나 `Your code: 482-913`을 붙여넣으면 각각 `123456`과 `482913`이 됩니다. 코드가 허용하지 않는 문자는 버립니다. 허용하는 문자만 담은 더 짧은 붙여넣기는 브라우저가 넣었을 방식대로 캐럿 위치에 들어갑니다.
+- 고친 붙여넣기는 `document.execCommand('insertText')`로 넣으므로 입력의 실행 취소 기록에 한 단계로 남습니다. 그것을 쓸 수 없으면 계산한 코드를 `onValueChange`에 넘깁니다.
+- 자동 완성이나 IME가 입력 필터를 거치지 않은 문자를 가져와도 `onValueChange`는 언제나 정리된 코드를 받습니다.
+
+## 칸 누르기
+
+칸을 누르면 그 칸의 문자가 선택되므로, 입력하면 그 문자가 바뀝니다. 빈 칸이나 코드 끝 뒤의 칸을 누르면 캐럿이 마지막 문자 뒤에 놓입니다. 더블 클릭은 여전히 코드 전체를 선택합니다. 화살표 키, Home, End, Backspace는 입력 고유의 동작이며, 활성 칸은 캐럿을 따라갑니다. 캐럿이 있는 칸, 또는 선택된 범위의 칸들입니다. 다음 문자를 기다리는 빈 칸에는 깜박이는 캐럿이 보이고, `prefers-reduced-motion: reduce`에서는 깜박이지 않습니다. 포커스 링은 필드 전체가 아니라 활성 칸에 그려집니다.
+
+## 폼에서
+
+입력은 필드의 네이티브 검증 컨트롤이므로, 텍스트를 필드의 `name`으로 보내고 `required`와 다른 네이티브 속성을 받습니다. `minLength`와 `maxLength`가 `length`와 같아서, 사용자가 고친 뒤에 코드가 너무 짧으면 브라우저가 표시하며, 코드가 설정한 값은 표시하지 않습니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지 언어로 표시되고("Use at least 8 characters" 같은 문구), 포커스는 입력으로 이동합니다.
+
+```tsx
+const id = useId();
+const [code, setCode] = useState('');
+
+<Form.Root onSubmit={verify}>
+  <Field.Group>
+    <Label.Root htmlFor={id}>Recovery code</Label.Root>
+    <Field.Root id={id} name="recovery">
+      <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
+    </Field.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  <Button.Root type="submit">Verify</Button.Root>
+</Form.Root>
+```
+
+<Example block>
+  <FieldOneTimeCodeForm />
+</Example>
+
+`pattern`은 `[0-9]*` 또는 `[A-Za-z0-9]*`입니다. 길이는 `minLength`에 맡기므로, 너무 짧은 코드는 "형식 오류"가 아니라 "너무 짧음"으로 표시됩니다.
+
+## 접근 가능한 구성
+
+**Todae가 처리하는 것:** 입력은 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 둘러싼 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `autocomplete="one-time-code"`가 있는 텍스트 입력이며, `digits`에는 숫자 키패드를 요청하고, 맞춤법 검사, 자동 수정, 자동 대문자를 끄고, 코드가 라틴 문자이므로 `dir="ltr"`입니다. 칸은 `aria-hidden`이므로 스크린 리더는 입력 자체의 텍스트를 읽습니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root의 `id`인 [Label](/label), 또는 Root의 `aria-label` / `aria-labelledby`로 제공합니다. [Description](/description)에 코드의 길이("Enter the 6-digit code we sent" 같은 문구). 코드를 전송하는 `Form.Root`나 `onValueChange`, 그리고 다시 보내기 컨트롤.
+
+**주의할 점:** `onComplete`는 없습니다. `value.length === length`일 때 `onValueChange`에서 코드를 전송하되, 저절로 전송되리라 기대하지 않는 사람을 위해 제출 버튼을 두세요. 코드가 허용하지 않는 문자가 `value`에 있으면 그대로 보이므로, 설정하는 값은 직접 정리하세요. 우편번호나 ID처럼 일회용 코드가 아닌 코드는 일반 입력이 낫습니다.
+
+## 사용 시점
+
+### Field.OneTimeCode
+
+**When:** 사람들이 입력하거나, 붙여넣거나, 메시지에서 자동 완성하는, 길이가 정해진 로그인·2단계 인증·확인 코드.
+
+**When not:** 길이가 정해지지 않은 코드나 일반 텍스트 → [Field.TextInput](/field/text-input). 단계로 바꾸거나 서식을 적용할 숫자 → [Field.NumberInput](/field/number-input). 숫자마다 입력을 따로 두는 방식은 붙여넣기, 자동 완성, 스크린 리더를 깨뜨립니다.
+
+## Props
+
+<PropsTable name="Field.OneTimeCode" />

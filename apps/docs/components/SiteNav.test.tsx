@@ -62,6 +62,7 @@ describe('SiteNav', () => {
       '/field/date-range-picker',
       '/field/date-time-picker',
       '/field/number-input',
+      '/field/one-time-code',
       '/field/select',
       '/field/textarea',
       '/field/text-input',

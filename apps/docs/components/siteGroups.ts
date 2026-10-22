@@ -54,6 +54,7 @@ export const SITE_GROUPS = [
           ['/field/date-range-picker', 'DateRangePicker'],
           ['/field/date-time-picker', 'DateTimePicker'],
           ['/field/number-input', 'NumberInput'],
+          ['/field/one-time-code', 'OneTimeCode'],
           ['/field/select', 'Select'],
           ['/field/textarea', 'Textarea'],
           ['/field/text-input', 'TextInput'],
