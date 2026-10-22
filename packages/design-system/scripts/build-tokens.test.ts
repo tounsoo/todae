@@ -733,7 +733,7 @@ describe('resolver-driven build', () => {
       }
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      /token "space\.tint" in modifier "density" depends on "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other/,
+      /token "space\.tint" in modifier "density" depends on "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other, so give it a literal value or a \$ref to a token that reads no scoped modifier's tokens, such as a core token$/,
     );
   });
 
@@ -1394,6 +1394,24 @@ describe('company token build', () => {
     await expect(buildCompanyTokens({ resolver: fixed, base: tokensDir })).resolves.toBeDefined();
     const nearer = await company(darkAccent([Number((Number(fix![1]) - 0.001).toFixed(3)), 0.14, 25]));
     await expect(buildCompanyTokens({ resolver: nearer, base: tokensDir })).rejects.toThrow(/fail APCA/);
+    // Lifting color.gray.950 would pass the pair, but it also backs the dark canvas and fails other pairs.
+    expect(dimError).not.toContain('"color.gray.950"');
+    // A pair's fixes come nearest first.
+    for (const failure of dimError.split('\n  "').slice(1)) {
+      const moves = [...failure.matchAll(/from ([\d.]+) to ([\d.]+)/g)].map(([, from, to]) => Math.abs(Number(to) - Number(from)));
+      expect(moves, failure).toEqual([...moves].sort((a, b) => a - b));
+    }
+
+    // A text color whose lightness is another token's chroma gets no fix of its own.
+    const derived = await company((r) => {
+      r.sets.brand.sources.push({
+        brand: { faint: { $type: 'color', $value: { colorSpace: 'oklch', components: [{ $ref: '#/color/gray/500/$value/components/1' }, 0, 0] } } },
+      });
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.faint', bg: 'color.bg.canvas', min: 108 }];
+    });
+    const derivedError = await buildCompanyTokens({ resolver: derived, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    expect(derivedError).toContain('"brand.faint" reads its lightness from another channel, so no fix is shown for it');
+    expect(derivedError).toContain('no lightness of "color.bg.canvas" alone reaches Lc 108 without failing another pair');
 
     const retuned = await company(async (r, root) => {
       await darkAccent([0.6, 0.14, 25])(r, root);
@@ -1409,7 +1427,8 @@ describe('company token build', () => {
     });
     const error = await buildCompanyTokens({ resolver: own, base: tokensDir }).catch((e: Error) => e.message);
     expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
-    expect(error).toContain('no lightness of "brand.ink" or "color.bg.canvas" alone reaches Lc 105');
+    expect(error).toContain('no lightness of "brand.ink" alone reaches Lc 105 without failing another pair');
+    expect(error).toContain('no lightness of "color.bg.canvas" alone reaches Lc 105 without failing another pair');
     expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 102.1, below 105');
     expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 104.4, below 105');
   });
@@ -1683,11 +1702,11 @@ describe('company token build', () => {
   });
 
   it('accepts selector lists with escapes, functions and attribute values', () => {
-    for (const scope of ['.md\\:brand', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
+    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
   });
 
   it('rejects a scope that is no selector list', async () => {
-    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>']) {
+    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--']) {
       await expect(buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope }), scope).rejects.toThrow(/--scope/);
     }
   });

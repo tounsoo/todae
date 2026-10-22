@@ -797,8 +797,8 @@ export type EmitCssOptions = {
 export function parseScope(selector: string): string {
   const scope = selector.trim();
   if (scope === '') fail('--scope must be a CSS selector, such as ".brand-acme"');
-  if (/[{};@<]|\/\*|\*\/|::|-->/.test(scope)) {
-    fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "<", comments or pseudo-elements`);
+  if (/[{};@]|<\/|<!--|\/\*|\*\/|::|-->|(^|[^\\]):(before|after|first-line|first-letter)\b/i.test(scope)) {
+    fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</", comments or pseudo-elements`);
   }
   const closers: string[] = [];
   const members: string[] = [];
@@ -829,7 +829,7 @@ export function parseScope(selector: string): string {
   if (quote || closers.length > 0) fail(`--scope "${scope}" has an unclosed ${quote ? 'quote' : `"${closers.at(-1) === ')' ? '(' : '['}"`}`);
   for (const part of [...members, member].map((each) => each.trim())) {
     if (part === '') fail(`--scope "${scope}" has an empty selector in its list`);
-    if (/^[>+~]|[>+~]$/.test(part)) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
+    if (/^[>+~]|[>+~]$/.test(part.replace(/\\./g, 'x'))) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
   }
   return scope;
 }
@@ -1784,7 +1784,7 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
         if (dependency) {
           fail(
             `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other,` +
-              ' so give it a literal value or a $ref to a token no scoped modifier depends on',
+              ' so give it a literal value or a $ref to a token that reads no scoped modifier\'s tokens, such as a core token',
           );
         }
       }
@@ -1983,7 +1983,7 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
  * names, `from` is its value now, and setting it to `to`, the nearest that
  * passes without failing another pair, gives `lc`.
  */
-export type LightnessFix = { side: 'fg' | 'bg'; token: string; entry: string; from: number; to: number; lc: number };
+type LightnessFix = { side: 'fg' | 'bg'; token: string; entry: string; from: number; to: number; lc: number };
 
 /**
  * The token whose literal OKLCH holds the lightness `path` resolves to, or
@@ -2052,8 +2052,8 @@ function describeFix({ side, token, entry, from, to, lc }: LightnessFix, pair: O
 
 /**
  * Fails with every contrast pair below its minimum, and for each the nearest
- * lightness of its fg, then of its bg, that passes without failing another
- * pair that passes now.
+ * lightness of its fg or its bg that passes without failing another pair that
+ * passes now, nearest first.
  */
 export function validateContrast(entries: ResolvedEntry[]): void {
   const measured = measureContrast(entries);
@@ -2065,12 +2065,14 @@ export function validateContrast(entries: ResolvedEntry[]): void {
       const fixes = found
         .filter((fix): fix is LightnessFix => fix !== null && fix !== 'derived')
         .sort((a, b) => Math.abs(a.to - a.from) - Math.abs(b.to - b.from));
+      const none = (side: 'fg' | 'bg', i: number) =>
+        found[i] === 'derived'
+          ? `"${failing.result[side]}" reads its lightness from another channel, so no fix is shown for it`
+          : `no lightness of "${failing.result[side]}" alone reaches Lc ${min} without failing another pair; change its chroma or hue too`;
       const fix =
         fixes.length > 0
           ? `\n    fix: ${fixes.map((each) => describeFix(each, failing.result)).join(`\n    or:  `)}`
-          : found.includes('derived')
-            ? `\n    no fix shown: the lightness of "${fg}" or "${bg}" is read from another channel`
-            : `\n    no lightness of "${fg}" or "${bg}" alone reaches Lc ${min} without failing another pair; change its chroma or hue too`;
+          : `\n    ${none('fg', 0)}\n    ${none('bg', 1)}`;
       return `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} in ${where} is Lc ${lc.toFixed(1)}, below ${min}${fix}`;
     });
   if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
