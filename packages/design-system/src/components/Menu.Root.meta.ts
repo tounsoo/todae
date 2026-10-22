@@ -21,13 +21,13 @@ export const meta = {
       name: 'onOpenChange',
       type: '(open: boolean, reason: MenuOpenChangeReason) => void',
       required: false,
-      description: 'Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto.',
+      description: 'Fires on open and close. reason is trigger, context, escape, outside, select or tab. Leaving open unchanged is a veto.',
     },
     {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Menu.Trigger and Menu.Content.',
+      description: 'Menu.Trigger, Menu.ContextTrigger and Menu.Content.',
     },
   ],
 } as const satisfies ComponentMeta;

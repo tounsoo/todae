@@ -69,6 +69,19 @@ describe('Composer', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
+  it('sends nothing on Enter while the send button has aria-disabled', () => {
+    const onSend = vi.fn();
+    render(
+      <Composer.Root onSubmit={(event) => (event.preventDefault(), onSend())}>
+        <textarea aria-label="Message" />
+        <Composer.Submit aria-disabled="true" />
+      </Composer.Root>,
+    );
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
   it('leaves Enter alone when a handler prevents it, or in a read-only textarea', () => {
     const onSend = vi.fn();
     render(

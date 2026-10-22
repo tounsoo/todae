@@ -589,7 +589,8 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
-  it('is named by its trigger only when one is mounted', () => {
+  it('is named by its trigger only when one is mounted', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { rerender } = render(
       <Menu.Root defaultOpen>
         <Menu.Trigger>Actions</Menu.Trigger>
@@ -600,6 +601,8 @@ describe('Menu', () => {
     );
     const menu = () => screen.getByRole('menu', { hidden: true });
     expect(menu().getAttribute('aria-labelledby')).toBe(trigger().id);
+    await Promise.resolve();
+    expect(spy).not.toHaveBeenCalled();
     rerender(
       <Menu.Root defaultOpen>
         <Menu.Content>
@@ -608,6 +611,9 @@ describe('Menu', () => {
       </Menu.Root>,
     );
     expect(menu().hasAttribute('aria-labelledby')).toBe(false);
+    await Promise.resolve();
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Menu.Content needs aria-label'));
+    spy.mockRestore();
   });
 
   it('stays named while one of two triggers remains', () => {
@@ -891,5 +897,118 @@ describe('Menu', () => {
       ),
     ).toThrow('Menu.RadioItem must render inside Menu.RadioGroup');
     spy.mockRestore();
+  });
+});
+
+describe('Menu.ContextTrigger', () => {
+  it('logs an error when an open menu has no name', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.ContextTrigger>Row</Menu.ContextTrigger>
+        <Menu.Content>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await Promise.resolve();
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Menu.Content needs aria-label or aria-labelledby'));
+    spy.mockRestore();
+  });
+
+  it('logs no error when a Menu.Trigger names a menu that mounts open', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await Promise.resolve();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('drops a request the owner turns down', () => {
+    render(
+      <Menu.Root open={false}>
+        <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+        <Menu.Content aria-label="File">
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
+    });
+    expect(document.querySelector('span[popover]')).not.toBeNull();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: 'a' });
+    });
+    expect(document.querySelector('span[popover]')).toBeNull();
+  });
+
+  it('drops a turned-down request when a Menu.Trigger opens the menu', () => {
+    function Owner() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open} onOpenChange={(next, reason) => reason !== 'context' && setOpen(next)}>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Trigger>More</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(<Owner />);
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
+    });
+    act(() => {
+      screen.getByRole('button', { name: 'More' }).click();
+    });
+    expect(screen.getByRole('menu', { hidden: true }).style.getPropertyValue('position-anchor')).not.toContain('-box');
+    expect(document.querySelector('span[popover]')).toBeNull();
+  });
+
+  it('renders the region on the element render returns', () => {
+    render(
+      <table>
+        <tbody>
+          <Menu.Root>
+            <Menu.ContextTrigger
+              render={(props) => (
+                <tr {...props}>
+                  <td>report.pdf</td>
+                </tr>
+              )}
+            />
+          </Menu.Root>
+        </tbody>
+      </table>,
+    );
+    const row = screen.getByRole('row');
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    act(() => {
+      screen.getByRole('cell').dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(true);
+    expect(row.hasAttribute('data-open')).toBe(true);
+  });
+
+  it('keeps the browser menu from opening over an open menu', () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Content aria-label="File">
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    screen.getByRole('menuitem', { hidden: true }).dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
   });
 });

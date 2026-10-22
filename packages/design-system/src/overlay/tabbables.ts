@@ -54,7 +54,7 @@ function hasNegativeTabindex(el: HTMLElement): boolean {
  * stylesheet, `visibility`, or a closed `<details>`. `visibility: hidden`
  * blocks focus too. Tabindex and `disabled` are not read.
  */
-export function isReachable(el: HTMLElement): boolean {
+export function isReachable(el: HTMLElement | SVGElement): boolean {
   if (el.closest('[inert]')) return false;
   // Without checkVisibility, only an inline display:none is seen.
   // checkVisibilityCSS is visibilityProperty's older name, which Safari 17.4 reads.
@@ -62,7 +62,7 @@ export function isReachable(el: HTMLElement): boolean {
 }
 
 /** Whether a script can move focus to `el` now: it isn't disabled and is reachable. Tab order is not read. */
-export function canFocusNow(el: HTMLElement): boolean {
+export function canFocusNow(el: HTMLElement | SVGElement): boolean {
   return !el.matches(':disabled') && isReachable(el);
 }
 

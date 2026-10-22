@@ -77,9 +77,9 @@
     "(top)": "e6d0bb76e386",
     "# Calendar": "a4a59be7452f",
     "## Range and locale": "38c6da99f7fd",
-    "## Ranges": "dea924332ea9",
+    "## Ranges": "36a2f0465940",
     "## Temporal": "084d2fd73acf",
-    "## Accessible composition": "0537a42b7b7a",
+    "## Accessible composition": "5e28d5a261df",
     "## When to use": "41bc026898d1",
     "## Props": "1736b176a33c",
     "(section order)": "0cc46d31c92c"
@@ -322,7 +322,7 @@
     "(top)": "2d895db44745",
     "# Field.DateRangePicker": "3b280faba8cd",
     "## Typed ranges": "158ae98b8c71",
-    "## On its own": "b1f54a988629",
+    "## On its own": "20d9d620aa29",
     "## Accessible composition": "0f3deea8054b",
     "## When to use": "d57fe8233a0b",
     "### Field.DateRangePicker": "180461c4d1c7",
@@ -423,7 +423,7 @@
     "## What a problem says": "c8019d5f7405",
     "## Submit": "a2ac8ded7ff0",
     "## Summary": "3da0810ca127",
-    "## Server errors": "9f77304c6cfb",
+    "## Server errors": "a29e407d2091",
     "## Rules the browser can't check": "99253d6a0c4e",
     "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
@@ -520,16 +520,17 @@
     "(section order)": "e12b559a1ab2"
   },
   "menu": {
-    "(top)": "eac8bba851e2",
+    "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
     "## Keyboard": "9867469041ca",
-    "## Checkbox and radio items": "3ee5d550ead1",
+    "## Checkbox and radio items": "57a69df768cd",
     "## Links": "ede13f3623cf",
+    "## Context menus": "395dce7d4954",
     "## Icons": "5a8e880339a4",
-    "## Accessible composition": "0982eb7067ba",
-    "## When to use": "87f5e7618788",
-    "## Props": "b96e6aef6f4c",
-    "(section order)": "4b378da7b66c"
+    "## Accessible composition": "e1a78d0b6e24",
+    "## When to use": "9a102c1309d4",
+    "## Props": "b091052a4a0b",
+    "(section order)": "63bb3d9be625"
   },
   "message": {
     "(top)": "826be7492f3a",
@@ -677,6 +678,15 @@
     "## Accessible composition": "a51aedc3e4e1",
     "(section order)": "2ce6dd09df8f"
   },
+  "recipes/inline-edit": {
+    "(top)": "89db7894a8df",
+    "# Inline edit": "199d2e5da2df",
+    "## Saving and cancelling": "fde5c50a40f1",
+    "## Saving to a server": "671323387f41",
+    "## Accessible composition": "01e9d8e4fbc7",
+    "## When to use": "99b196ff7fc6",
+    "(section order)": "808446d2e9ad"
+  },
   "recipes/message-actions": {
     "(top)": "bbdcb5e29744",
     "# Message actions": "392d9e0335fc",
@@ -714,6 +724,16 @@
     "## When to use": "125cdba98fc2",
     "(section order)": "e092ab2bb711"
   },
+  "recipes/wizard": {
+    "(top)": "8a3a55e1b1ed",
+    "# Wizard": "9cd56741f4a9",
+    "## A form per step": "0af0e0e57743",
+    "## Focus on each step": "9b2ef43cc108",
+    "## Errors from the last step": "91d1e42a0626",
+    "## Accessible composition": "57c995f67a81",
+    "## When to use": "e4c37a96dbb3",
+    "(section order)": "58e398659b7f"
+  },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",
@@ -750,14 +770,15 @@
     "(section order)": "d9525eb32a1a"
   },
   "steps": {
-    "(top)": "2ea27e601f9e",
-    "# Steps": "cc3c0b7c3b01",
-    "## Parts": "b9c0f0f6b5b3",
+    "(top)": "304501d1ad59",
+    "# Steps": "63aa09def506",
+    "## Parts": "0579cf0e64d1",
+    "## Variants": "0eb6872fb66b",
     "## Status words": "5e1bbccafcfa",
-    "## Accessible composition": "ff32888d1c88",
-    "## When to use": "dc897768a123",
+    "## Accessible composition": "7166254b7e2d",
+    "## When to use": "0543c264e392",
     "## Props": "f0031e9635af",
-    "(section order)": "441fbe7ff385"
+    "(section order)": "e8ce99923fc1"
   },
   "switch": {
     "(top)": "5b6bda868294",
@@ -996,6 +1017,14 @@
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
+  },
+  "utilities/use-inline-edit": {
+    "(top)": "89db7894a8df",
+    "# useInlineEdit": "e4701b67f349",
+    "## Accessible composition": "791953511028",
+    "## When to use": "6811b76102a1",
+    "## Props": "020d1345d4d7",
+    "(section order)": "428f0e0773ae"
   },
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",

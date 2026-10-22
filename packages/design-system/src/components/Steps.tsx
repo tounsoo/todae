@@ -11,10 +11,20 @@ import styles from './Steps.module.css';
 export type StepsStatus = 'done' | 'current' | 'pending' | 'error';
 
 /**
- * An ordered list of steps, such as an agent's plan or a checklist. The order
- * is the list's; each Steps.Item says where it is.
+ * `plan` is work that runs: the current step spins and done steps are struck
+ * through. `progress` is where a person is in a form: the current step is a
+ * still marker and done steps keep their text.
  */
-export type StepsRootProps = ComponentPropsWithRef<'ol'>;
+export type StepsVariant = 'plan' | 'progress';
+
+/**
+ * An ordered list of steps, such as an agent's plan, a checklist or the steps
+ * of a form. The order is the list's; each Steps.Item says where it is.
+ */
+export type StepsRootProps = ComponentPropsWithRef<'ol'> & {
+  /** How the steps are drawn. Sets `data-variant`. Default `plan`. */
+  variant?: StepsVariant;
+};
 
 /** One step: a marker for its status, then its content. */
 export type StepsItemProps = ComponentPropsWithRef<'li'> & {
@@ -24,13 +34,14 @@ export type StepsItemProps = ComponentPropsWithRef<'li'> & {
   statusLabel?: string;
 };
 
-const InRoot = /* @__PURE__ */ createContext(false);
+// The Root's variant, or null outside a Root.
+const InRoot = /* @__PURE__ */ createContext<StepsVariant | null>(null);
 
-function Root({ className, ...props }: StepsRootProps) {
+function Root({ variant = 'plan', className, ...props }: StepsRootProps) {
   return (
-    <InRoot.Provider value={true}>
+    <InRoot.Provider value={variant}>
       {/* Safari drops the list role from a list without markers; role="list" keeps it. */}
-      <ol role="list" {...props} className={cx(styles.root, className)} />
+      <ol role="list" {...props} data-variant={variant} className={cx(styles.root, className)} />
     </InRoot.Provider>
   );
 }
@@ -43,7 +54,8 @@ const STATUS_STRING = {
 } as const;
 
 function Item({ status = 'pending', statusLabel, className, children, ...props }: StepsItemProps) {
-  if (!useContext(InRoot)) throw new Error('Steps.Item must be rendered inside Steps.Root');
+  const variant = useContext(InRoot);
+  if (!variant) throw new Error('Steps.Item must be rendered inside Steps.Root');
   const strings = useStrings();
   const glyphs = useGlyphs();
   const word = statusLabel || strings[STATUS_STRING[status]];
@@ -55,7 +67,7 @@ function Item({ status = 'pending', statusLabel, className, children, ...props }
       className={cx(styles.item, className)}
     >
       <span className={styles.marker} aria-hidden="true">
-        {status === 'current' ? <Loader.Root className={styles.spinner} /> : null}
+        {status === 'current' && variant === 'plan' ? <Loader.Root className={styles.spinner} /> : null}
         {status === 'done' ? <span data-todae-glyph="">{glyphOr(glyphs.check, <CheckGlyph />)}</span> : null}
         {status === 'error' ? <span data-todae-glyph="">{glyphOr(glyphs.error, <ErrorGlyph />)}</span> : null}
       </span>
