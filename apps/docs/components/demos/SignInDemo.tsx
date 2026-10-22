@@ -101,6 +101,8 @@ export function SignInExample() {
   const [resent, setResent] = useState(false);
   const [resending, setResending] = useState(false);
   const codeForm = useRef<HTMLFormElement>(null);
+  // The code last sent, so the end of a resend doesn't send the old code again.
+  const sentCode = useRef('');
   const doneHeading = useFocusOnShow<HTMLHeadingElement>(step === 'done');
   const announce = useAnnouncer();
 
@@ -133,12 +135,13 @@ export function SignInExample() {
     event.preventDefault();
     // One request at a time: a check's reply would otherwise land after a new code is announced.
     if (sending || resending) return;
+    sentCode.current = code;
     void send(checkCode(code), 'done');
   };
 
   // A full code sends itself a short pause after its last character, since an IME can still take it back.
   useEffect(() => {
-    if (step !== 'code' || code.length !== CODE_LENGTH || resending) return;
+    if (step !== 'code' || code.length !== CODE_LENGTH || code === sentCode.current || resending) return;
     const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
     return () => clearTimeout(timer);
   }, [code, step, resending]);
@@ -160,6 +163,7 @@ export function SignInExample() {
   const restart = () => {
     setPassword('');
     setCode('');
+    sentCode.current = '';
     setErrors({});
     setResent(false);
     setStep('password');

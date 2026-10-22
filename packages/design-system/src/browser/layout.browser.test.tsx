@@ -348,7 +348,7 @@ describe('A button in a Field.Root', () => {
   );
 });
 
-describe('A button beside a Field.Textarea or a wrapping Field.ChipInput', () => {
+describe('A button beside a Field.Textarea or a Field.ChipInput', () => {
   it.each(['textarea', 'chips'])('keeps Button\'s own icon-only size beside %s, since the field has no single line', (kind) => {
     render(
       <main data-appearance="light" data-density="comfortable">
