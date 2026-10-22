@@ -2,6 +2,7 @@ name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
 # With none, publishes the versions that aren't on npm yet: merging that pull request releases.
+# Once main's package is on npm, moves docs-stable, the branch the docs deploy from, to main.
 on:
   push:
     branches: [main]
@@ -107,3 +108,25 @@ jobs:
       - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
+
+  # Vercel deploys the docs and their MCP server to production from docs-stable, so they only
+  # describe what npm has. This moves it to main once main's package is on npm: after a publish
+  # succeeds, or when there are no changesets and nothing left to publish. A failed publish leaves
+  # the docs on the last release, and changes waiting in changesets stay off them until released.
+  docs:
+    name: Deploy the docs
+    needs: [select-mode, publish]
+    if: ${{ always() && (needs.select-mode.outputs.mode == 'none' || needs.publish.result == 'success') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Fast-forward only, so a run can't move the docs back to an older commit.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/docs-stable" --silent 2>/dev/null; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/docs-stable" -f sha="$GITHUB_SHA" -F force=false --silent
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/docs-stable -f sha="$GITHUB_SHA" --silent
+          fi

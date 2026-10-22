@@ -146,6 +146,8 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 
 The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app.
 
+The production branch is `docs-stable`, so `todae.omsoo.design` and its MCP server match the latest release on npm. `release.yml` moves `docs-stable` to `main` once `main`'s package is on npm: after a release publishes, or on a push with no changesets waiting. To see unreleased docs, open the Vercel preview of a pull request or of `main`.
+
 ## Docs MCP server
 
 The docs site serves a Streamable HTTP MCP server at `https://todae.omsoo.design/api/mcp`, from `apps/docs/app/api/[transport]`. The [MCP server](apps/docs/app/(en)/mcp/page.mdx) docs page shows how to connect each client. The tools live in `apps/docs/lib/docs-mcp`:
