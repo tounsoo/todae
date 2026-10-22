@@ -1,0 +1,77 @@
+import { ReasoningExample } from '../../../../components/demos/ReasoningDemo';
+
+# Reasoning
+
+A recipe, not a package namespace. A model's reasoning is a [Disclosure](/disclosure) inside the reply's [Message.Root](/message): open while the reasoning arrives, closed once the answer starts, and open again whenever someone wants to read it. There is no `Reasoning.*` export.
+
+Ask again to watch the reasoning arrive, close up when it is done, and the answer follow.
+
+<Example block>
+  <ReasoningExample />
+</Example>
+
+## The block
+
+The summary says in words what the block holds: "Thinking" while the reasoning arrives, then how long it took. Loader's `dots` beside "Thinking" is hidden from screen readers, since the word already says it. The words and the locale of the duration are your product's, from its own strings. Put the block before `Message.Content`, and pass the reasoning in a [Text](/text), or in a [Prose](/prose) when it is markdown.
+
+```tsx
+import { Disclosure, Loader } from '@tounsoo/todae';
+import type { ReactNode } from 'react';
+
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+export function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds: number; children: ReactNode }) {
+  return (
+    <Disclosure.Root open={thinking}>
+      <Disclosure.Summary>
+        {thinking ? 'Thinking' : `Thought for ${duration.format(seconds)}`}
+        {thinking && (
+          <>
+            {' '}
+            <Loader.Root variant="dots" aria-hidden="true" />
+          </>
+        )}
+      </Disclosure.Summary>
+      {children}
+    </Disclosure.Root>
+  );
+}
+```
+
+## Open while it thinks
+
+A reply goes through three phases: `thinking` while the reasoning arrives, `answering` while the answer arrives, and `done`. `seconds` is how long the thinking phase took, from your stream's timestamps.
+
+`open={thinking}` opens the block when the reasoning starts and closes it when `thinking` turns false. React sets `open` only when the prop changes, so while the block stays mounted, a person who closes it while it streams keeps it closed, and one who opens it afterwards keeps it open. Keep each message's `key` stable, since a remounted block starts from the current phase and drops the person's toggle. A reply loaded from history renders with `thinking` false, so its block starts closed.
+
+The message stays `streaming` through both the reasoning and the answer, so inside [Conversation.Content](/conversation) the reply is announced at most once when it starts and once when it ends, and not again between the reasoning and the answer.
+
+```tsx
+<Message.Root streaming={phase !== 'done'} aria-label="Assistant">
+  <Reasoning thinking={phase === 'thinking'} seconds={seconds}>
+    <Text.Root size="s" tone="muted">
+      {reasoning}
+    </Text.Root>
+  </Reasoning>
+  <Message.Content>…</Message.Content>
+  {phase === 'answering' && (
+    <Message.Actions>
+      <Loader.Root variant="dots" aria-label="Writing" />
+    </Message.Actions>
+  )}
+</Message.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard and announces the expanded state. When the block closes while a link in the reasoning has focus, the main entry's `Disclosure.Summary` moves focus to itself, which in Chromium keeps focus from falling to the page. `Message.Root` with `streaming` sets `aria-busy`, which [Conversation](/conversation) reads to announce messages as they start and finish arriving.
+
+**You supply:** Summary text that says the state in words, since the dots are hidden. The phase and the duration, from your product's stream.
+
+**Watch for:** Putting the reasoning in a live region: a screen reader would read every word as it arrives. A summary whose words stay the same while only its dots change: "Thinking" and "Thought for 6 seconds" say whether the reasoning is done; the dots don't.
+
+## When to use
+
+**When:** A model's reasoning, or a summary of it, shown beside its answer in a chat.
+
+**When not:** A plan of steps the agent works through → [Steps](/steps). Text that is always hidden until asked for, with no streaming → a plain [Disclosure](/disclosure).

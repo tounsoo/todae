@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { isReachable } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
+import { activeIn } from './activeIn.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { useButtonName } from './buttonName.js';
@@ -72,12 +73,6 @@ function removeButton(root: Element): HTMLButtonElement | null {
 /** The attachment an item holds: the item itself, or the one inside an `li`. */
 function attachmentIn(el: Element): Element | null {
   return el.matches(`[${ROOT_ATTR}]`) ? el : el.querySelector(`:scope > [${ROOT_ATTR}]`);
-}
-
-/** The focused element in the document or shadow root that holds `el`. */
-function activeIn(el: Element): Element | null {
-  const node = el.getRootNode();
-  return node instanceof Document || node instanceof ShadowRoot ? node.activeElement : null;
 }
 
 /** The focused element, looking into shadow roots. */

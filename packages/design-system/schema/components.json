@@ -1327,7 +1327,7 @@
           "name": "open",
           "type": "boolean",
           "required": false,
-          "description": "Starts the disclosure open. The browser then owns the state; follow it with onToggle."
+          "description": "Whether the disclosure is open. A change to the prop opens or closes it, and between changes the person's own toggles stand; follow them with onToggle."
         },
         {
           "name": "onToggle",
@@ -1345,7 +1345,7 @@
     },
     {
       "name": "Disclosure.Summary",
-      "description": "A native summary: the toggle that stays visible. Takes native summary attributes.",
+      "description": "A native summary: the toggle that stays visible. From the main entry, it takes focus when code closes the disclosure while its content holds focus. Takes native summary attributes.",
       "props": [
         {
           "name": "children",
