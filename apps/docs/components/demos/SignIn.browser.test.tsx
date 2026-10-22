@@ -28,6 +28,10 @@ it('shows the password with a toggle that keeps its label, and hides it again on
   expect(show()).toHaveAttribute('aria-pressed', 'true');
   expect(password().type).toBe('text');
   expect(password().spellcheck).toBe(false);
+  // The press keeps focus and the caret in the password, so typing goes on.
+  expect(document.activeElement).toBe(password());
+  await userEvent.keyboard('er');
+  expect(password().value).toBe('wronger');
   await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
   expect(password().type).toBe('password');
   expect(show()).toHaveAttribute('aria-pressed', 'false');
@@ -56,6 +60,12 @@ it('moves focus to an unmarked code field, sends a full code by itself, and conf
   expect(document.activeElement).toBe(code());
   expect(code()).toHaveAccessibleDescription(/That code isn't right/);
 
+  // A new code: the description says so, a screen reader hears it, and the old code's error goes.
+  await userEvent.click(screen.getByRole('button', { name: 'Send a new code' }));
+  await expect.poll(() => code().getAttribute('aria-invalid'), { timeout: 3000 }).toBeNull();
+  expect(code()).toHaveAccessibleDescription(/^We sent a new code/);
+  await expect.poll(() => document.querySelector('[data-todae-announcer]')?.textContent).toContain('We sent a new code.');
+  code().focus();
   await userEvent.keyboard('{Control>}a{/Control}123456');
   const heading = await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 3000 });
   await expect.poll(() => document.activeElement).toBe(heading);
@@ -73,7 +83,7 @@ it('turns down an email that has an account on sign-up, with focus on the email'
   await userEvent.type(password(), 'short{Enter}');
   // The browser's own check comes first, in the page's words.
   expect(document.activeElement).toBe(password());
-  expect(password()).toHaveAccessibleDescription(/Use at least 12 characters\.\s*Use at least 12 characters/);
+  expect(password()).toHaveAccessibleDescription(/^12 characters or more\..*Use at least 12 characters$/);
   await userEvent.type(password(), ' and some more{Enter}');
   await expect.poll(() => document.activeElement, { timeout: 3000 }).toBe(email);
   expect(email).toHaveAccessibleDescription('An account with this email already exists.');

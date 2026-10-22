@@ -243,10 +243,11 @@
     block-size: var(--todae-field-icon-size);
   }
 
-  /* An icon-only Button.Root in the field's line, such as a password reveal:
-     one line of field text tall, like the step buttons, so the field keeps
-     its height. */
-  .shell > [data-icon-only] {
+  /* An icon-only Button.Root in the line of a one-line field, such as a
+     password's show button: one line of field text tall, so the field keeps
+     its height. The element in the selector outweighs Button's own icon-only
+     padding whatever order the sheets load in. */
+  .shell:not(:has(> .textarea)) > :is(button, a)[data-icon-only] {
     box-sizing: border-box;
     flex: none;
     inline-size: var(--todae-field-action-size);
