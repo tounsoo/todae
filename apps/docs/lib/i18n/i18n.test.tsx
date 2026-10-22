@@ -25,7 +25,8 @@ import { DOCS_ORIGIN } from '../origin';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
-import { codeBlocks, links, sections, sourceRecord, staleSections } from './sections';
+import { codeBlocks } from '../mdxAst';
+import { links, sections, sourceRecord, staleSections } from './sections';
 import { stamp, type Sources } from './stamp';
 import schema from '@tounsoo/todae/schema/components.json';
 
