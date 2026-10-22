@@ -30,18 +30,17 @@ function outlineRoom(el: Element): number | null {
 /**
  * The element that draws the ring around `target`. A Todae part that draws it
  * on a child or sibling of the focused element, such as a Checkbox indicator,
- * or inside one, such as a Field.OneTimeCode box, marks that element
- * `data-todae-focus-ring`; otherwise it is the target or
- * the nearest ancestor below `area` with an outline, such as a Field shell.
+ * marks that element `data-todae-focus-ring`, even when the ring it draws is
+ * transparent and only gives the room, as Field.OneTimeCode's row of boxes
+ * does; otherwise it is the target or the nearest ancestor below `area` with
+ * an outline, such as a Field shell.
  */
 function ringOf(area: Element, target: Element): { ringed: Element; room: number } {
   // Marked rings first: a visually hidden input keeps the browser's own outline.
   for (const el of [...target.children, ...(target.parentElement?.children ?? [])]) {
-    for (const marked of [el, ...el.querySelectorAll('[data-todae-focus-ring]')]) {
-      if (!marked.hasAttribute('data-todae-focus-ring')) continue;
-      const room = outlineRoom(marked);
-      if (room !== null) return { ringed: marked, room };
-    }
+    if (!el.hasAttribute('data-todae-focus-ring')) continue;
+    const room = outlineRoom(el);
+    if (room !== null) return { ringed: el, room };
   }
   for (let el: Element | null = target; el && el !== area; el = el.parentElement) {
     const room = outlineRoom(el);

@@ -829,6 +829,13 @@
     border-color: var(--todae-field-border-disabled);
   }
 
+  /* Never seen: it gives revealRing the room of a ring around any box, the
+     moment focus lands, before the active box renders. */
+  .oneTimeCodeInput:focus-visible + .slots {
+    outline: var(--todae-focus-ring-width) solid transparent;
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
   .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--_ring);
@@ -869,6 +876,11 @@
   }
 
   @media (forced-colors: active) {
+    /* A transparent outline is drawn in a system color there. */
+    .oneTimeCodeInput:focus-visible + .slots {
+      outline-style: none;
+    }
+
     .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
       border-color: Highlight;
     }

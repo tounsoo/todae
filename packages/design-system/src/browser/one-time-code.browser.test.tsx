@@ -62,11 +62,11 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('123');
   });
 
-  it('stops at its length', async () => {
+  it('stops at its length, typing the rest over the last box', async () => {
     render(<Code />);
     await userEvent.click(input());
     await userEvent.keyboard('12345678');
-    expect(input().value).toBe('123456');
+    expect(input().value).toBe('123458');
   });
 
   it('keeps the digits of a pasted message', async () => {
@@ -180,6 +180,72 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('123456');
   });
 
+  it('replaces the last box when a digit is typed with the caret after a full code', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    expect(active()).toEqual([5]);
+    await userEvent.keyboard('9');
+    expect(input().value).toBe('123459');
+  });
+
+  it('replaces the characters from the caret with a short paste on a full code', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await paste('78');
+    expect(input().value).toBe('178456');
+  });
+
+  it('treats a dropped text as a paste, whatever surrounds the code', async () => {
+    render(<Code />);
+    const rect = input().getBoundingClientRect();
+    const data = { items: [{ mimeType: 'text/plain', data: 'Your code: 482-913' }], dragOperationsMask: 1 };
+    const at = { x: rect.left + 5, y: rect.top + rect.height / 2 };
+    for (const type of ['dragEnter', 'dragOver', 'drop']) await session().send('Input.dispatchDragEvent', { type, ...at, data });
+    await vi.waitFor(() => expect(input().value).toBe('482913'));
+  });
+
+  it('warns of nothing when it takes focus as it mounts', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      render(
+        <main data-appearance="light" data-density="comfortable">
+          <Field.Root aria-label="Verification code">
+            <Field.OneTimeCode autoFocus value="12" onValueChange={() => undefined} />
+          </Field.Root>
+        </main>,
+      );
+      expect(document.activeElement).toBe(input());
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
+  it('marks the active box inside a shadow root', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    root.append(mount);
+    const view = render(
+      <main data-appearance="light" data-density="comfortable">
+        <Field.Root aria-label="Verification code">
+          <Field.OneTimeCode value="123456" onValueChange={() => undefined} />
+        </Field.Root>
+      </main>,
+      { container: mount },
+    );
+    const inner = mount.querySelector('input')!;
+    inner.focus();
+    inner.setSelectionRange(2, 2);
+    document.dispatchEvent(new Event('selectionchange'));
+    await vi.waitFor(() => expect(inner.nextElementSibling!.querySelectorAll('[data-active]')).toHaveLength(1));
+    view.unmount();
+    host.remove();
+  });
+
   it('leaves a selection a Shift+click made', async () => {
     render(<Code initial="123456" />);
     await userEvent.click(input(), { position: boxPosition(1) });
@@ -215,7 +281,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(getComputedStyle(boxes()[2]!, '::after').display).toBe('none');
   });
 
-  it('changes the border of a box under the pointer on an editable code', async () => {
+  it('changes the border of the boxes while the pointer is over an editable code', async () => {
     render(<Code style={hoverBorder} />);
     const first = boxes()[0]!;
     const resting = getComputedStyle(first).borderColor;

@@ -1,4 +1,3 @@
-import { flushSync } from 'react-dom';
 import {
   useEffect,
   useLayoutEffect,
@@ -10,6 +9,7 @@ import {
   type MouseEvent,
   type Ref,
 } from 'react';
+import { activeIn } from './activeElement.js';
 import { cleanCode, slotsOf, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
@@ -42,7 +42,7 @@ export type FieldOneTimeCodeProps = {
 >;
 
 function readSelection(input: HTMLInputElement | null): CodeSelection | null {
-  if (!input || input.ownerDocument.activeElement !== input) return null;
+  if (!input || activeIn(input) !== input) return null;
   return { start: input.selectionStart ?? 0, end: input.selectionEnd ?? 0 };
 }
 
@@ -53,7 +53,7 @@ function sameSelection(a: CodeSelection | null, b: CodeSelection | null) {
 // Puts `text` in the input where the person's edit would, and fires the input event that reaches `onChange`. It uses the input's own undo stack where the browser has one; elsewhere it writes the value itself.
 function insert(input: HTMLInputElement, text: string) {
   const doc = input.ownerDocument;
-  if (doc.activeElement === input && typeof doc.execCommand === 'function') {
+  if (activeIn(input) === input && typeof doc.execCommand === 'function') {
     try {
       if (doc.execCommand('insertText', false, text)) return;
     } catch {
@@ -100,6 +100,7 @@ export function OneTimeCode({
   const strings = useStrings();
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
+  const inserting = useRef(false);
   const refs = useComposedRefs(input, ref);
   const fixed = readOnly ?? (!onChange && !onValueChange);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
@@ -125,38 +126,47 @@ export function OneTimeCode({
     const el = input.current;
     if (!el) return;
     const doc = el.ownerDocument;
+    function put(text: string) {
+      // A browser may fire beforeinput for the command below, which would come back here.
+      inserting.current = true;
+      try {
+        insert(el!, text);
+      } finally {
+        inserting.current = false;
+      }
+    }
     function onBeforeInput(event: InputEvent) {
       const { characters, length, fixed } = latest.current;
       const { inputType } = event;
-      // A drop lands natively, at the drop point, and the change event cleans it.
-      if (fixed || event.isComposing || !inputType.startsWith('insert') || inputType === 'insertCompositionText' || inputType === 'insertFromDrop') return;
+      if (inserting.current || fixed || event.isComposing || !inputType.startsWith('insert') || inputType === 'insertCompositionText') return;
       const data = event.data ?? event.dataTransfer?.getData('text/plain');
       if (data == null) return;
       const clean = cleanCode(data, characters, Infinity);
+      const typed = inputType === 'insertText' && data.length === 1;
       // A key, or a one-character insert from a keyboard.
-      if (inputType === 'insertText' && data.length === 1) {
-        if (clean !== data) {
-          event.preventDefault();
-          return;
-        }
-        // On a full code the box at the caret takes the character: the length limit would refuse it.
-        const at = el!.selectionStart ?? 0;
-        if (el!.value.length >= length && at === el!.selectionEnd && at < length) {
-          event.preventDefault();
-          el!.setSelectionRange(at, at + 1);
-          insert(el!, data);
-        }
-        return;
-      }
-      if (!clean) {
+      if (typed && clean !== data) {
         event.preventDefault();
         return;
       }
-      if (clean.length < length && clean === data) return;
-      event.preventDefault();
+      if (!typed && !clean) {
+        event.preventDefault();
+        return;
+      }
       // A code that fills every box replaces the value, instead of landing after what is typed.
-      if (clean.length >= length) el!.select();
-      insert(el!, clean.slice(0, length));
+      const whole = !typed && clean.length >= length;
+      const text = clean.slice(0, length);
+      const { value: current, selectionStart: from, selectionEnd: to } = el!;
+      // On a full code the length limit would refuse the insert, so it replaces the characters from the caret, or the last ones where they don't reach.
+      const replacing = !whole && current.length >= length && from === to;
+      // A drop lands natively at the drop point, which has no meaning for boxes, so it is a paste at the caret.
+      if (!whole && !replacing && inputType !== 'insertFromDrop' && clean === data) return;
+      event.preventDefault();
+      if (whole) el!.select();
+      else if (replacing) {
+        const at = Math.min(from ?? 0, length - text.length);
+        el!.setSelectionRange(at, at + text.length);
+      }
+      put(text);
     }
     el.addEventListener('beforeinput', onBeforeInput);
     doc.addEventListener('selectionchange', sync);
@@ -219,20 +229,18 @@ export function OneTimeCode({
         onClick={composeHandlers(onClickProp, onClick)}
         onFocus={(event) => {
           onFocusProp?.(event);
-          // The ring is drawn on the active box, which the scroll container's own focus handler looks for next.
-          flushSync(sync);
+          sync();
         }}
         onBlur={(event) => {
           onBlurProp?.(event);
           setSelection(null);
         }}
       />
-      <span ref={slotsNode} className={styles.slots} aria-hidden="true">
+      <span ref={slotsNode} className={styles.slots} data-todae-focus-ring="" aria-hidden="true">
         {slots.map((slot, i) => (
           <span
             key={i}
             className={styles.slot}
-            data-todae-focus-ring=""
             data-active={slot.active ? '' : undefined}
             data-filled={slot.filled ? '' : undefined}
             data-caret={slot.caret ? '' : undefined}

@@ -139,9 +139,19 @@ describe('Field.OneTimeCode', () => {
     expect(input().selectionEnd).toBe(3);
   });
 
-  it('leaves a drop to the browser', () => {
-    render(<Code initial="12" />);
-    expect(beforeInput('insertFromDrop', 'Your code: 482').defaultPrevented).toBe(false);
+  it('treats a drop as a paste, landing at the caret', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="19" onValueChange={onValueChange} />);
+    input().setSelectionRange(1, 1);
+    expect(beforeInput('insertFromDrop', 'Your 2-3').defaultPrevented).toBe(true);
+    expect(onValueChange).toHaveBeenLastCalledWith('1239');
+  });
+
+  it('replaces the value with a dropped full code, whatever surrounds it', () => {
+    const onValueChange = vi.fn();
+    render(<Code onValueChange={onValueChange} />);
+    beforeInput('insertFromDrop', 'Your code: 482-913');
+    expect(onValueChange).toHaveBeenLastCalledWith('482913');
   });
 
   it('replaces the box at the caret when a character is typed into a full code', () => {
@@ -154,10 +164,57 @@ describe('Field.OneTimeCode', () => {
     expect(input().selectionEnd).toBe(3);
   });
 
-  it('leaves a character typed at the end of a full code to the length limit', () => {
-    render(<Code initial="123456" />);
+  it('replaces the last box when a character is typed with the caret at the end of a full code', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="123456" onValueChange={onValueChange} />);
+    input().focus();
     input().setSelectionRange(6, 6);
-    expect(beforeInput('insertText', '9').defaultPrevented).toBe(false);
+    expect(beforeInput('insertText', '9').defaultPrevented).toBe(true);
+    expect(onValueChange).toHaveBeenLastCalledWith('123459');
+  });
+
+  it('replaces the characters from the caret when a short paste lands on a full code', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="123456" onValueChange={onValueChange} />);
+    input().focus();
+    input().setSelectionRange(2, 2);
+    beforeInput('insertFromPaste', '78');
+    expect(onValueChange).toHaveBeenLastCalledWith('127856');
+  });
+
+  it('replaces the last characters when a short paste lands at the end of a full code', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="123456" onValueChange={onValueChange} />);
+    input().focus();
+    input().setSelectionRange(6, 6);
+    beforeInput('insertFromPaste', '78');
+    expect(onValueChange).toHaveBeenLastCalledWith('123478');
+  });
+
+  it('does not loop when the browser fires beforeinput for its own insert command', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12" onValueChange={onValueChange} />);
+    const execCommand = vi.fn((_command: string, _ui: boolean, text?: string) => {
+      beforeInput('insertText', text ?? '');
+      return true;
+    });
+    Object.assign(document, { execCommand });
+    try {
+      input().focus();
+      beforeInput('insertFromPaste', '123456');
+      expect(execCommand).toHaveBeenCalledTimes(1);
+    } finally {
+      Reflect.deleteProperty(document, 'execCommand');
+    }
+  });
+
+  it('puts style and className on the element that draws the boxes, not on the input', () => {
+    render(<Code className="mine" style={{ color: 'rgb(1, 2, 3)' }} />);
+    const wrapper = input().parentElement!;
+    expect(wrapper.classList.contains('mine')).toBe(true);
+    expect(wrapper.style.color).toBe('rgb(1, 2, 3)');
+    expect(input().classList.contains('mine')).toBe(false);
+    expect(input().style.color).toBe('');
   });
 
   it('reaches onChange, and puts the caret after the paste, where the browser has no insert command', () => {
