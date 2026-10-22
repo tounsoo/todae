@@ -13,6 +13,7 @@ import {
   Card,
   DataList,
   EmptyState,
+  Splitter,
   Message,
   Attachment,
   Steps,
@@ -218,6 +219,14 @@ const cases: Case[] = [
     (p) => (
       <Field.Root aria-label="t">
         <Field.NumberInput {...p} value={null} onValueChange={noop} />
+      </Field.Root>
+    ),
+  ],
+  [
+    'Field.OneTimeCode',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.OneTimeCode {...p} value="" onValueChange={noop} />
       </Field.Root>
     ),
   ],
@@ -673,6 +682,20 @@ const cases: Case[] = [
           <EmptyState.Root>
             <Part {...p} />
           </EmptyState.Root>
+        );
+      },
+    ],
+  ),
+  ['Splitter.Root', (p) => <Splitter.Root {...p} />],
+  ...(['Panel', 'Handle'] as const).map(
+    (part): Case => [
+      `Splitter.${part}`,
+      (p) => {
+        const Part = Splitter[part] as (props: Native) => ReactNode;
+        return (
+          <Splitter.Root>
+            <Part {...p} />
+          </Splitter.Root>
         );
       },
     ],

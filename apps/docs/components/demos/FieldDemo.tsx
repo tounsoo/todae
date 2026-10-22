@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Form, Label, Stack, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -895,5 +895,39 @@ export function FieldUseField() {
       </Field.Root>
       <Description.Root id={hintId}>Arrow keys change the rating.</Description.Root>
     </Field.Group>
+  );
+}
+
+export function FieldOneTimeCode() {
+  const id = useId();
+  const hintId = useId();
+  const [code, setCode] = useState('');
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Verification code</Label.Root>
+      <Field.Root id={id} name="code" aria-describedby={hintId}>
+        <Field.OneTimeCode value={code} onValueChange={setCode} />
+      </Field.Root>
+      <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldOneTimeCodeForm() {
+  const id = useId();
+  const [code, setCode] = useState('48');
+  return (
+    <Form.Root onSubmit={(event) => event.preventDefault()}>
+      <Stack.Root align="start">
+        <Field.Group>
+          <Label.Root htmlFor={id}>Recovery code</Label.Root>
+          <Field.Root id={id} name="recovery">
+            <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <Button.Root type="submit">Verify</Button.Root>
+      </Stack.Root>
+    </Form.Root>
   );
 }

@@ -2337,6 +2337,63 @@
       ]
     },
     {
+      "name": "Field.OneTimeCode",
+      "description": "A code for a sign-in or a verification, drawn as boxes over one native input. The input keeps paste, undo, selection and the phone's code autofill (autocomplete=\"one-time-code\"), and the boxes are only drawn. Every insert (typing, paste, a drop, a finished IME composition) keeps the characters the code allows, with full-width ones as their ASCII ones, and follows one rule: a whole code replaces the value, and anything shorter replaces the selection and writes over the characters after it as far as it needs, cutting what still does not fit, so nothing already typed is pushed off the end of the code (with the caret after a full code, nothing lands). A press on a box selects its character so typing replaces it, and a drop lands at the box it is dropped on and copies text dragged inside the field. className and style go on the element that draws the boxes; every other native input attribute goes on the input, except type, value, defaultValue, onChange, onBeforeInput, disabled, maxLength, minLength, pattern, inputMode and dir (the input is always left to right). Todae takes typed text itself in a native beforeinput listener that runs before React's, so an onBeforeInput prop would never see it; characters sets what the code accepts.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The code: at most length characters of the allowed set."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": false,
+          "description": "Optional: onValueChange alone is enough when the event is not needed. The event holds the raw text; clean it, or use onValueChange."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Called with the code cleaned to the allowed characters and cut to length. Without it and onChange the input is read-only."
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "required": false,
+          "description": "How many characters the code has, and how many boxes are drawn.",
+          "default": "6"
+        },
+        {
+          "name": "characters",
+          "type": "\"digits\" | \"alphanumeric\"",
+          "required": false,
+          "description": "digits asks the phone for a numeric keypad and refuses other characters as they are typed.",
+          "default": "\"digits\""
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "On the element that draws the boxes, not on the input, which is transparent."
+        },
+        {
+          "name": "style",
+          "type": "CSSProperties",
+          "required": false,
+          "description": "On the element that draws the boxes, like className."
+        },
+        {
+          "name": "autoComplete",
+          "type": "string",
+          "required": false,
+          "description": "Lets the phone offer the code from a text message.",
+          "default": "\"one-time-code\""
+        }
+      ]
+    },
+    {
       "name": "Field.Root",
       "description": "Field chrome only. No value. Children render in source order.",
       "props": [
@@ -2792,6 +2849,48 @@
           "type": "NumberFormatOptions",
           "required": false,
           "description": "How the number is written, as Intl.NumberFormat takes it: style, such as percent or currency, and fraction digits."
+        }
+      ]
+    },
+    {
+      "name": "formatRelativeTime",
+      "description": "formatRelativeTime(value, now, options) returns how long before or after now the time value is, as the locale writes it, such as 3 minutes ago, yesterday or in 2 weeks in en and 3분 전, 어제 or 2주 후 in ko. Under a day it counts whole seconds, minutes or hours between the two. From a day it counts calendar days, weeks, months or years in value's time zone and the Gregorian calendar, so last month is the month before.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.ZonedDateTime",
+          "required": true,
+          "description": "The time to write, in the time zone its dates are counted in."
+        },
+        {
+          "name": "now",
+          "type": "Temporal.ZonedDateTime | Temporal.Instant",
+          "required": true,
+          "description": "The time to count from, such as Temporal.Now.instant()."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        },
+        {
+          "name": "options.style",
+          "type": "'long' | 'short' | 'narrow'",
+          "required": false,
+          "description": "How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set."
+        },
+        {
+          "name": "options.numeric",
+          "type": "'auto' | 'always'",
+          "required": false,
+          "description": "auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set."
+        },
+        {
+          "name": "options.firstDayOfWeek",
+          "type": "1 | 2 | 3 | 4 | 5 | 6 | 7",
+          "required": false,
+          "description": "The day weeks start on, from 1 for Monday to 7 for Sunday, as Calendar.Root takes it. The locale's own when not set."
         }
       ]
     },
@@ -4137,6 +4236,108 @@
       ]
     },
     {
+      "name": "Splitter.Handle",
+      "description": "The `separator` between the panels, one Tab stop. Arrow keys move it by `step` in the direction they point, Home and End go to the smallest and largest size, and Enter collapses a collapsible panel or restores it. A drag with the pointer resizes too. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the handle with text. Pass this or aria-labelledby. Default is the resizePanel string from StringsProvider.",
+          "default": "\"Resize\""
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "The id of the element that names the handle, such as the primary panel's heading."
+        }
+      ]
+    },
+    {
+      "name": "Splitter.Panel",
+      "description": "One of the two panels. A `div` that scrolls its own overflow, with an id the handle points at. While it is drawn at no size it is hidden from the tab order and the accessibility tree. Takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The panel's content."
+        }
+      ]
+    },
+    {
+      "name": "Splitter.Root",
+      "description": "Two resizable panels and the handle between them, in the order Splitter.Panel, Splitter.Handle, Splitter.Panel; more panes nest roots. `value` is the size in CSS pixels of the primary panel, the first one unless `primary` is `end`; the other takes the rest. A vertical splitter needs a definite block size. Takes native div attributes.",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "The axis the panels are laid along. A horizontal splitter puts them side by side.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "primary",
+          "type": "\"start\" | \"end\"",
+          "required": false,
+          "description": "Which panel `value` sizes. The other panel takes the rest.",
+          "default": "\"start\""
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "required": false,
+          "description": "The primary panel's size in CSS pixels, when you own it."
+        },
+        {
+          "name": "defaultValue",
+          "type": "number",
+          "required": false,
+          "description": "The primary panel's starting size in CSS pixels. Starts at 240, within `min` and `max`, without one."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: number) => void",
+          "required": false,
+          "description": "Called on every change of the size, from a drag or a key, with the new size."
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "required": false,
+          "description": "The smallest size in pixels while the panel is open. A container too narrow for it wins.",
+          "default": "0"
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The largest size in pixels. The container limits it too."
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "Pixels an arrow key moves the handle.",
+          "default": "16"
+        },
+        {
+          "name": "collapsible",
+          "type": "boolean",
+          "required": false,
+          "description": "Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Splitter.Panel, Splitter.Handle and Splitter.Panel."
+        }
+      ]
+    },
+    {
       "name": "Stack.Root",
       "description": "Flex layout. Each gap step but none reads a contract token: stack.gap-condensed, stack.gap or stack.gap-spacious.",
       "props": [
@@ -4596,6 +4797,19 @@
           "required": false,
           "description": "Font weight.",
           "default": "\"regular\"; \"bold\" for headings; text.label.font.weight with size \"label\""
+        },
+        {
+          "name": "lines",
+          "type": "number",
+          "required": false,
+          "description": "Clamps the text to this many lines, a whole number of 1 or more, with an ellipsis at the end of the last line. The element becomes a block. Screen readers still read the whole text."
+        },
+        {
+          "name": "tooltip",
+          "type": "boolean",
+          "required": false,
+          "description": "With lines, shows the whole text in a tooltip on hover, or on keyboard focus of the text or a link, row or menu item around it, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.",
+          "default": "true"
         },
         {
           "name": "children",

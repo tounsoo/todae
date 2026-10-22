@@ -1,0 +1,17 @@
+{
+  "splitter": {
+    "$description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it.",
+    "handle": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+      "target": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } },
+      "color": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+    }
+  }
+}
