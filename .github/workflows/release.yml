@@ -138,15 +138,39 @@ jobs:
           permission-workflows: write
       - env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          JUST_PUBLISHED: ${{ needs.publish.result == 'success' }}
         run: |
           set -euo pipefail
           package=@tounsoo/todae
           version=$(node -p "require('./packages/design-system/package.json').version")
+          # Whether npm has the version. Fails the job on any npm error but "not found".
+          on_npm() {
+            local out
+            if out=$(npm view "$package@$version" version 2>&1); then
+              [ "$out" = "$version" ]
+            elif [[ $out == *E404* ]]; then
+              return 1
+            else
+              echo "$out" >&2
+              exit 1
+            fi
+          }
           # A changeset that releases something names the package in its front matter; an empty one doesn't.
           waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
-          # npm exits 1 for a version it doesn't have.
-          published=$(npm view "$package@$version" version 2>/dev/null || true)
-          if [ -z "$waiting" ] && [ "$published" = "$version" ]; then
+          released=false
+          if [ -z "$waiting" ]; then
+            # The registry can take minutes to serve a version it just took.
+            for attempt in $(seq 10); do
+              if on_npm; then released=true; break; fi
+              [ "$JUST_PUBLISHED" = true ] || break
+              sleep 30
+            done
+            if [ "$JUST_PUBLISHED" = true ] && [ "$released" = false ]; then
+              echo "npm doesn't serve $package@$version yet; re-run this job" >&2
+              exit 1
+            fi
+          fi
+          if [ "$released" = true ]; then
             target=$GITHUB_SHA
           else
             latest=$(npm view "$package" version)
