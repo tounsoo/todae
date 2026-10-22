@@ -252,7 +252,7 @@ it('keeps editing when the window loses focus', async () => {
   expect(field().value).toBe('Q4 report');
 });
 
-it('keeps focus in the input while a button in the group is pressed, so Cancel cancels', async () => {
+it('keeps focus in the input while anything but a field in the group is pressed, so Cancel cancels', async () => {
   const onCancel = vi.fn();
   const accept = vi.fn(() => true);
   render(<Rename onCancel={onCancel} accept={accept} />);
@@ -267,6 +267,54 @@ it('keeps focus in the input while a button in the group is pressed, so Cancel c
   expect(onCancel).toHaveBeenCalledTimes(1);
   expect(accept).not.toHaveBeenCalled();
   expect(document.activeElement).toBe(rename());
+});
+
+it('cancels on a pointer click of Cancel, and a press on the gap keeps the edit open', async () => {
+  const onCancel = vi.fn();
+  const accept = vi.fn(() => true);
+  render(<Rename onCancel={onCancel} accept={accept} />);
+  await open();
+  fireEvent.change(field(), { target: { value: 'Q4 report' } });
+  fireEvent.mouseDown(field().parentElement!);
+  await flush();
+  expect(document.activeElement).toBe(field());
+  const cancel = screen.getByRole('button', { name: 'Cancel' });
+  fireEvent.mouseDown(cancel);
+  // A pointer click counts one press, which useFocusHandoff answers by focusing Cancel.
+  act(() => void cancel.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 })));
+  await flush();
+  expect(onCancel).toHaveBeenCalledTimes(1);
+  expect(accept).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(rename());
+});
+
+it('lets a press on another field in the group through', async () => {
+  function WithUnit() {
+    const edit = useInlineEdit({ value: '3', onCommit: () => undefined });
+    return edit.editing ? (
+      <div {...edit.getGroupProps()}>
+        <input aria-label="Name" {...edit.getInputProps()} />
+        <select aria-label="Unit">
+          <option>kg</option>
+        </select>
+      </div>
+    ) : (
+      <button {...edit.getTriggerProps()}>Rename</button>
+    );
+  }
+  render(<WithUnit />);
+  await open();
+  expect(fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Unit' }))).toBe(true);
+});
+
+it('keeps the caret where the person put it as the parent renders again', async () => {
+  const { rerender } = render(<Rename />);
+  await open();
+  fireEvent.change(field(), { target: { value: 'Q4 report' } });
+  field().setSelectionRange(2, 2);
+  rerender(<Rename onCancel={() => undefined} />);
+  await flush();
+  expect([field().selectionStart, field().selectionEnd]).toEqual([2, 2]);
 });
 
 it('commits once under StrictMode', async () => {

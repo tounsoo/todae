@@ -36,13 +36,13 @@ Press Rename, type a new name, then press Enter to save or Escape to put the nam
 
 `start()`, which the trigger calls, opens the edit from `value`, focuses the input and selects its text, so typing replaces the name. `start(draft)` opens it with another text, such as a name a failed save should offer again. Neither does anything while the edit is open.
 
-Enter and focus leaving the group save the draft through `onCommit`. Return `false` from it to keep the edit open, such as for an empty name. When focus has left the edit, Escape can't reach it any more, so `false` puts the value back and calls `onCancel` instead. A draft equal to `value` closes the edit without calling `onCommit`. Escape cancels, and calls `onCancel`. An Enter or Escape that belongs to a Korean or Japanese composition is left to the input. Escape in an edit inside a [Dialog](/dialog) or a [Drawer](/drawer) cancels the edit, and the dialog stays open; the next Escape closes it.
+Enter and focus leaving the group save the draft through `onCommit`. Return `false` from it to keep the edit open, such as for an empty name. When focus has left the edit, Escape can't reach it any more, so `false` puts the value back and calls `onCancel` instead. A draft equal to `value` closes the edit without calling `onCommit`. Escape cancels, and calls `onCancel`. An Enter or Escape pressed during a Korean or Japanese composition is left to the input. Safari can send the Escape that ends a composition after the composition, and then it cancels the edit, as Escape does in Todae's other fields. Escape in an edit inside a [Dialog](/dialog) or a [Drawer](/drawer) cancels the edit, and the dialog stays open; the next Escape closes it.
 
 When a save or a cancel closes the edit with focus inside it, focus returns to the trigger once it is back in the page. An edit that closes because focus moved elsewhere leaves focus there. A tab or window switch keeps the edit open.
 
 ## Accessible composition
 
-**Todae handles:** Focusing the input and selecting its text. Enter and Escape, with IME compositions left alone. Escape and the back gesture in a modal reaching the edit first. Saving when focus leaves the group, but not when the window loses focus. Keeping focus in the input while a button in the group is pressed, so a mouse press on Cancel cancels in Safari too. Returning focus to the trigger.
+**Todae handles:** Focusing the input and selecting its text. Enter and Escape, with IME compositions left alone. Escape and the back gesture in a modal reaching the edit first. Saving when focus leaves the group, but not when the window loses focus. Keeping focus in the input while anything in the group but a field is pressed, so a mouse press on Cancel cancels in Safari too. Returning focus to the trigger.
 
 **You supply:** A name for the input and for each icon-only button. The trigger, the group and the input, in their places in your markup. An error message tied to the input with `aria-describedby` when you turn a draft down.
 

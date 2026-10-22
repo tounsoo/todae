@@ -166,9 +166,10 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       // Safari and Firefox on macOS don't focus a clicked button, so focus
       // would leave the group and save before Cancel's click. Keeping it in
       // the input saves or cancels by the button pressed.
-      // Anywhere but the input, so a press on the gap or the error text
-      // doesn't take focus to the page and save either.
-      if (input.current && !(event.target instanceof Node && input.current.contains(event.target))) event.preventDefault();
+      // Anywhere but a field, so a press on the gap or the error text doesn't
+      // take focus to the page and save either.
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) event.preventDefault();
     },
   });
 
