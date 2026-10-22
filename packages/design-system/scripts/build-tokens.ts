@@ -797,7 +797,7 @@ export type EmitCssOptions = {
 export function parseScope(selector: string): string {
   const scope = selector.trim();
   if (scope === '') fail('--scope must be a CSS selector, such as ".brand-acme"');
-  if (/[{};@]|<\/|<!--|\/\*|\*\/|::|-->|(^|[^\\]):(before|after|first-line|first-letter)\b/i.test(scope)) {
+  if (/[{};@]|<\/|<!--|\/\*|\*\/|::|-->/.test(scope)) {
     fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</", comments or pseudo-elements`);
   }
   const closers: string[] = [];
@@ -829,7 +829,11 @@ export function parseScope(selector: string): string {
   if (quote || closers.length > 0) fail(`--scope "${scope}" has an unclosed ${quote ? 'quote' : `"${closers.at(-1) === ')' ? '(' : '['}"`}`);
   for (const part of [...members, member].map((each) => each.trim())) {
     if (part === '') fail(`--scope "${scope}" has an empty selector in its list`);
-    if (/^[>+~]|[>+~]$/.test(part.replace(/\\./g, 'x'))) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
+    // Escapes and quoted strings can hold any character, so the checks below skip them.
+    const bare = part.replace(/\\./g, 'x').replace(/"[^"]*"|'[^']*'/g, '""');
+    if (/^[>+~]|[>+~]$/.test(bare)) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
+    if (bare.includes('<')) fail(`--scope "${scope}" has a "<" outside a quoted value`);
+    if (/:(before|after|first-line|first-letter)(?![\w-])/i.test(bare)) fail(`--scope "${scope}" must not hold a pseudo-element`);
   }
   return scope;
 }
@@ -893,13 +897,16 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
     if (!alias) attributes.push(`[${attribute}]`);
   }
   // The root element gets the re-declared sets too, so components work with no provider above them.
-  const rescopedRoot = scope ? ':scope' : layered ? `:root${attributes.map((attribute) => `:not(${attribute})`).join('')}` : ':root';
+  // A scope's root selector carries the same :not()s as :root's, so on the
+  // root element it matches an unscoped build's specificity and wins by proximity.
+  const unset = attributes.map((attribute) => `:not(${attribute})`).join('');
+  const rescopedRoot = scope ? [`:scope${unset}`, ...attributes.map(at)] : [layered ? `:root${unset}` : ':root', ...attributes];
   const blocks = [
     // A scope also clears the override inputs an outer ThemeProvider set, so
     // they don't reach its tokens; a provider on or inside it sets them again.
     ...block(scope ? ':scope' : ':root', [decls(root), aliasDecls(rootAliases, aliases), scope ? clearedInputs(rescoped) : '']),
     ...scopedBlocks,
-    ...block([rescopedRoot, ...attributes].join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
+    ...block(rescopedRoot.join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
     ...aliasBlocks,
   ];
   const body = scope ? [`@scope (${scope}) {\n${indent(blocks).join('\n\n')}\n}`, ...fallbacks] : blocks;

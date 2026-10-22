@@ -1396,11 +1396,16 @@ describe('company token build', () => {
     await expect(buildCompanyTokens({ resolver: nearer, base: tokensDir })).rejects.toThrow(/fail APCA/);
     // Lifting color.gray.950 would pass the pair, but it also backs the dark canvas and fails other pairs.
     expect(dimError).not.toContain('"color.gray.950"');
-    // A pair's fixes come nearest first.
-    for (const failure of dimError.split('\n  "').slice(1)) {
-      const moves = [...failure.matchAll(/from ([\d.]+) to ([\d.]+)/g)].map(([, from, to]) => Math.abs(Number(to) - Number(from)));
-      expect(moves, failure).toEqual([...moves].sort((a, b) => a - b));
-    }
+    // A pair's fixes come nearest first: here the paper is nearer passing than the ink.
+    const both = await company((r) => {
+      const gray = (l: number) => ({ $type: 'color', $value: { colorSpace: 'oklch', components: [l, 0, 0] } });
+      r.sets.brand.sources.push({ brand: { mid: gray(0.45), paper: gray(0.75) } });
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.mid', bg: 'brand.paper', min: 45 }];
+    });
+    const bothError = await buildCompanyTokens({ resolver: both, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    const moves = [...bothError.matchAll(/of "brand\.(\w+)" \(set "brand"\) from ([\d.]+) to ([\d.]+)/g)].map(([, name, from, to]) => [name, Math.abs(Number(to) - Number(from))]);
+    expect(moves.map(([name]) => name), bothError).toEqual(['paper', 'mid', 'paper', 'mid']);
+    expect(moves[0]![1]).toBeLessThan(moves[1]![1] as number);
 
     // A text color whose lightness is another token's chroma gets no fix of its own.
     const derived = await company((r) => {
@@ -1702,11 +1707,11 @@ describe('company token build', () => {
   });
 
   it('accepts selector lists with escapes, functions and attribute values', () => {
-    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
+    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', '[data-x=":before"]', '.a:after-x', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
   });
 
   it('rejects a scope that is no selector list', async () => {
-    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--']) {
+    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--', '.a < .b', '.a\\\\:before']) {
       await expect(buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope }), scope).rejects.toThrow(/--scope/);
     }
   });

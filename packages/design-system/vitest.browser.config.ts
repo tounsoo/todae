@@ -11,10 +11,10 @@ import base from './vite.config';
  * Runs `todae-tokens build --scope` on the acme fixture, or on a company layer
  * that changes nothing, adding `core` as a core set when given.
  */
-const scopedThemeCss: BrowserCommand<[scope: string, options: { empty?: boolean; core?: Record<string, unknown> }]> = async (
+const scopedThemeCss: BrowserCommand<[scope: string, options: { empty?: boolean; core?: Record<string, unknown>; brand?: Record<string, unknown> }]> = async (
   _context,
   scope,
-  { empty = false, core },
+  { empty = false, core, brand },
 ) => {
   const root = await mkdtemp(join(tmpdir(), 'todae-scope-'));
   try {
@@ -24,16 +24,19 @@ const scopedThemeCss: BrowserCommand<[scope: string, options: { empty?: boolean;
     } else {
       await cp(join(import.meta.dirname, 'scripts/__fixtures__/acme'), root, { recursive: true });
     }
-    if (core) {
+    if (core || brand) {
       const resolver = JSON.parse(await readFile(file, 'utf8'));
-      resolver.sets.core = { sources: [core], $extensions: { 'dev.todae': { layer: 'core' } } };
-      resolver.resolutionOrder.unshift({ $ref: '#/sets/core' });
+      if (core) {
+        resolver.sets.core = { sources: [core], $extensions: { 'dev.todae': { layer: 'core' } } };
+        resolver.resolutionOrder.unshift({ $ref: '#/sets/core' });
+      }
+      if (brand) resolver.sets.brand.sources.push(brand);
       await writeFile(file, JSON.stringify(resolver));
     }
     const css = join(root, 'theme.css');
     const cli = join(import.meta.dirname, 'scripts/build-tokens.ts');
     const outputs = ['--css', css, '--catalog', join(root, 'catalog.json'), '--types', join(root, 'types.ts')];
-    await promisify(execFile)(process.execPath, ['--experimental-strip-types', '--no-warnings', cli, 'build', '--resolver', file, '--scope', scope, ...outputs]);
+    await promisify(execFile)(process.execPath, ['--experimental-strip-types', '--no-warnings', cli, 'build', '--resolver', file, ...(scope ? ['--scope', scope] : []), ...outputs]);
     return await readFile(css, 'utf8');
   } finally {
     await rm(root, { recursive: true, force: true });

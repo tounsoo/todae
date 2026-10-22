@@ -5,7 +5,8 @@ import { ThemeProvider } from '../index.js';
 
 declare module '@vitest/browser/context' {
   interface BrowserCommands {
-    scopedThemeCss: (scope: string, options: { empty?: boolean; core?: Record<string, unknown> }) => Promise<string>;
+    /** An empty scope builds without `--scope`. */
+    scopedThemeCss: (scope: string, options: { empty?: boolean; core?: Record<string, unknown>; brand?: Record<string, unknown> }) => Promise<string>;
   }
 }
 
@@ -143,6 +144,24 @@ describe('todae-tokens build --scope', () => {
     expect(spacing('outer')).toBe('0.5rem');
     for (const id of ['scoped', 'scoped-provider']) expect(spacing(id), id).toBe(spacing('plain'));
     for (const id of ['inner', 'on-scope']) expect(spacing(id), id).toBe('0.5rem');
+  });
+
+  it('wins on the root element over a theme built without a scope', async () => {
+    const red = { brand: { logo: { fg: { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0.2, 25] } } } } };
+    const unscoped = document.createElement('style');
+    unscoped.textContent = await commands.scopedThemeCss('', { brand: red });
+    document.head.append(unscoped);
+    document.documentElement.classList.add('acme');
+    try {
+      const probe = document.createElement('i');
+      probe.style.color = 'var(--todae-brand-logo-fg)';
+      document.body.append(probe);
+      expect(getComputedStyle(probe).color).toBe(computed(ACME_INK));
+      probe.remove();
+    } finally {
+      document.documentElement.classList.remove('acme');
+      unscoped.remove();
+    }
   });
 
   it('follows an appearance set on the root element', () => {
