@@ -133,6 +133,7 @@ export const SITE_GROUPS = [
       ['/recipes/file-upload', 'File upload'],
       ['/recipes/message-actions', 'Message actions'],
       ['/recipes/reasoning', 'Reasoning'],
+      ['/recipes/reorder', 'Reorder'],
       ['/recipes/suggestions', 'Suggestions'],
       ['/recipes/tool-call', 'Tool call'],
     ],

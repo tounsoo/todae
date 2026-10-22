@@ -685,6 +685,16 @@
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
   },
+  "recipes/reorder": {
+    "(top)": "d54efa3b4b16",
+    "# Reorder": "44ec44cdd779",
+    "## The move menu": "9cd5ca5bd660",
+    "## Saving the order": "db1f7d848b66",
+    "## Dragging": "97fbac7aed0e",
+    "## Accessible composition": "f07db6a62205",
+    "## When to use": "38f06c41410c",
+    "(section order)": "7fe5b2e7daca"
+  },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
     "# Suggestions": "1f16320c7c36",

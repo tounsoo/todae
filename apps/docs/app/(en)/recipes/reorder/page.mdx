@@ -1,0 +1,107 @@
+import { ReorderExample } from '../../../../components/demos/ReorderDemo';
+
+# Reorder
+
+A recipe, not a package namespace. Each row of an ordered list has a [Menu](/menu) with Move to top, Move up, Move down and Move to bottom, and the new position is announced with [`useAnnouncer`](/utilities/use-announcer). It needs no drag, so a keyboard, a screen reader or a single tap can move a row. What the list holds and where its order is saved are up to your product. There is no `Reorder.*` export.
+
+Open a row's menu and move it.
+
+<Example>
+  <ReorderExample />
+</Example>
+
+## The move menu
+
+Put the rows in an `ol`, since their order is the point, and give each row a `Menu.Trigger` named after the row. Moves the row can't make, such as Move up on the first row, take `disabled`, which a menu item draws as `aria-disabled`: the item stays in the arrow-key order and is read as unavailable, so the menu keeps the same four items on every row. Key each row by its item's id, not its index, so the row's menu moves with it and its focus return lands on the moved row.
+
+```tsx
+import { Button, Menu, Stack, Text, useAnnouncer } from '@tounsoo/todae';
+import { GripVertical } from 'lucide-react';
+import { useId } from 'react';
+
+function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
+export function PinnedChannels({
+  channels,
+  onReorder,
+}: {
+  channels: readonly { id: string; name: string }[];
+  onReorder: (channels: { id: string; name: string }[]) => void;
+}) {
+  const announce = useAnnouncer();
+  const labelId = useId();
+  const last = channels.length - 1;
+
+  const move = (from: number, to: number) => {
+    onReorder(moveItem(channels, from, to));
+    announce(`${channels[from]!.name} moved to position ${to + 1} of ${channels.length}`);
+  };
+
+  return (
+    <>
+      <Text.Root id={labelId} size="label">
+        Pinned channels
+      </Text.Root>
+      <Stack.Root as="ol" gap="none" aria-labelledby={labelId}>
+        {channels.map((channel, index) => (
+          <li key={channel.id}>
+            <Stack.Root direction="row" align="center" justify="between">
+              <Text.Root>{channel.name}</Text.Root>
+              <Menu.Root>
+                <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
+                  <Button.Icon>
+                    <GripVertical />
+                  </Button.Icon>
+                </Menu.Trigger>
+                <Menu.Content>
+                  <Menu.Item disabled={index === 0} onSelect={() => move(index, 0)}>
+                    Move to top
+                  </Menu.Item>
+                  <Menu.Item disabled={index === 0} onSelect={() => move(index, index - 1)}>
+                    Move up
+                  </Menu.Item>
+                  <Menu.Item disabled={index === last} onSelect={() => move(index, index + 1)}>
+                    Move down
+                  </Menu.Item>
+                  <Menu.Item disabled={index === last} onSelect={() => move(index, last)}>
+                    Move to bottom
+                  </Menu.Item>
+                </Menu.Content>
+              </Menu.Root>
+            </Stack.Root>
+          </li>
+        ))}
+      </Stack.Root>
+    </>
+  );
+}
+```
+
+When the menu closes, focus goes back to the trigger, which has moved with its row, and the browser scrolls it into view. The announcement says where the row went, which the person would otherwise have to find by reading the list again.
+
+## Saving the order
+
+The example changes the list as soon as a move is chosen. If your product saves the new order and the save fails, put the list back and say so with a [Toast](/toast) or an [Alert](/alert), since the announcement already said the row moved.
+
+## Dragging
+
+This recipe has no drag. You can add one on the same trigger with the browser's drag and drop, but keep the menu: WCAG 2.2 SC 2.5.7 asks for a way to move a row with a single pointer and no dragging, and the browser's drag and drop has no way to drag from a keyboard.
+
+## Accessible composition
+
+**Todae handles:** `Menu` gives the trigger `aria-haspopup` and `aria-expanded`, moves focus into the menu and through it with arrow keys, reads a `disabled` item as `aria-disabled`, and returns focus to the trigger when an item is chosen. `useAnnouncer` writes the message to a live region.
+
+**You supply:** An `ol` with a name. A name for each row's trigger that says which row it moves. `disabled` on the moves a row can't make. Keys from the item's id. The announcement, with the row's name and its new position, in your product's language.
+
+**Watch for:** Keying rows by index, which hands the trigger's focus to whichever row now sits where the moved one was. Removing a move a row can't make instead of marking it unavailable, which changes the menu from row to row. A move that isn't announced, or an announcement that gives the position but not the row. Drag as the only way to move a row.
+
+## When to use
+
+**When:** A short list whose order the person sets, such as pinned items, a playlist, the columns of a table or the steps of a checklist.
+
+**When not:** Sorting by a value such as a name or a date → a [sortable column](/table). Moving an item to another list or group → a menu item that names the destination, or a [Dialog](/dialog) to pick one.
