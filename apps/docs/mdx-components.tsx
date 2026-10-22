@@ -3,7 +3,7 @@ import { Kbd } from '@tounsoo/todae/kbd';
 import { Separator } from '@tounsoo/todae/separator';
 import type { MDXComponents } from 'mdx/types';
 import { DocsPre } from './components/DocsPre';
-import { DocsProse } from './components/DocsProse';
+import { DocsPage, PageContentsFold } from './components/DocsPage';
 import { Example } from './components/Example';
 import { LocalizedLink } from './components/LocalizedLink';
 import { PropsTable } from './components/PropsTable';
@@ -17,7 +17,8 @@ const components = {
   Example,
   PropsTable,
   pre: DocsPre,
-  wrapper: DocsProse,
+  DocsPage,
+  PageContentsFold,
 } satisfies MDXComponents;
 
 export function useMDXComponents(): MDXComponents {
