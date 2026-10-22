@@ -1135,6 +1135,12 @@
           "default": "\"horizontal\""
         },
         {
+          "name": "minItemSize",
+          "type": "string",
+          "required": false,
+          "description": "Lays the items out in columns no narrower than this CSS length, such as \"24rem\". As many columns fit as the width allows, with datalist.gap.between-columns between them, and a single column never overflows. A horizontal item stacks in a column narrower than its term column, datalist.gap.column and details minimum together. Without it the items sit in one column."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -1321,7 +1327,7 @@
           "name": "open",
           "type": "boolean",
           "required": false,
-          "description": "Starts the disclosure open. The browser then owns the state; follow it with onToggle."
+          "description": "Whether the disclosure is open. A change to the prop opens or closes it, and between changes the person's own toggles stand; follow them with onToggle."
         },
         {
           "name": "onToggle",
@@ -1339,7 +1345,7 @@
     },
     {
       "name": "Disclosure.Summary",
-      "description": "A native summary: the toggle that stays visible. Takes native summary attributes.",
+      "description": "A native summary: the toggle that stays visible. From the main entry, it takes focus when code closes the disclosure while its content holds focus. Takes native summary attributes.",
       "props": [
         {
           "name": "children",
@@ -4322,9 +4328,9 @@
         },
         {
           "name": "size",
-          "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"2xl\"",
+          "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"2xl\" | \"label\"",
           "required": false,
-          "description": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level.",
+          "description": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level. \"label\" is the role for eyebrows and metadata: it reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and a tone or weight you give wins. Unlike other sizes it sets font-family, from text.font.family by default.",
           "default": "\"m\"; for headings h1 \"2xl\", h2 \"xl\", h3 \"l\", h4 and h5 \"m\", h6 \"s\""
         },
         {
@@ -4332,14 +4338,14 @@
           "type": "\"default\" | \"muted\" | \"accent\"",
           "required": false,
           "description": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",
-          "default": "\"default\""
+          "default": "\"default\"; text.label.fg with size \"label\""
         },
         {
           "name": "weight",
           "type": "\"regular\" | \"medium\" | \"bold\"",
           "required": false,
           "description": "Font weight.",
-          "default": "\"regular\"; \"bold\" for headings"
+          "default": "\"regular\"; \"bold\" for headings; text.label.font.weight with size \"label\""
         },
         {
           "name": "children",
@@ -4737,7 +4743,7 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Tooltip text, or short prose plus links when interactive."
+          "description": "Tooltip text, or short prose plus links when interactive. The tip renders a span, so it can sit in a paragraph; keep its content to phrasing elements."
         },
         {
           "name": "className",

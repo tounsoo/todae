@@ -38,6 +38,25 @@ describe('DataList', () => {
     expect(container.querySelector('dl')!.getAttribute('data-orientation')).toBe('vertical');
   });
 
+  it('lays the items out in columns no narrower than minItemSize, keeping the caller style', () => {
+    const { container, rerender } = render(
+      <DataList.Root minItemSize="20rem" style={{ alignItems: 'start' }}>
+        <DataList.Item />
+      </DataList.Root>,
+    );
+    const list = container.querySelector('dl')!;
+    expect(list.getAttribute('data-layout')).toBe('fill');
+    expect(list.style.getPropertyValue('--_min-item-size')).toBe('20rem');
+    expect(list.style.alignItems).toBe('start');
+    rerender(
+      <DataList.Root minItemSize="">
+        <DataList.Item />
+      </DataList.Root>,
+    );
+    expect(list.hasAttribute('data-layout')).toBe(false);
+    expect(list.style.getPropertyValue('--_min-item-size')).toBe('');
+  });
+
   it('keeps a className alongside its own', () => {
     const { container } = render(
       <DataList.Root className="mine">
