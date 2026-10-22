@@ -239,6 +239,45 @@ describe('Contents in a browser', () => {
     expect(current()).toBe('Two');
   });
 
+  it('does not let a click made before any section mounts pick through the hash later', async () => {
+    function Late() {
+      const [shown, setShown] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setShown(true)}>
+            Show
+          </button>
+          <Contents.Root>
+            <Contents.Item>
+              <Contents.Link href="#late-a">A</Contents.Link>
+            </Contents.Item>
+            <Contents.Item>
+              <Contents.Link href="#late-b">B</Contents.Link>
+            </Contents.Item>
+          </Contents.Root>
+          {shown ? (
+            <>
+              <h2 id="late-a">A</h2>
+              <p style={{ blockSize: '50px', margin: 0 }} />
+              <h2 id="late-b">B</h2>
+              <div style={{ blockSize: '150vh' }} />
+            </>
+          ) : null}
+        </>
+      );
+    }
+    render(<Late />);
+    await frames(2);
+    link('B').click();
+    await frames(2);
+    screen.getByRole('button', { name: 'Show' }).click();
+    await frames(2);
+    window.scrollTo(0, document.getElementById('late-a')!.getBoundingClientRect().top + window.scrollY);
+    await waitFor(() => expect(current()).toBe('A'));
+    await frames(3);
+    expect(current()).toBe('A');
+  });
+
   it('keeps a click pick through a smooth scroll that ends after the hash changes', async () => {
     render(<Page scroller={{ scrollBehavior: 'smooth' }} />);
     await waitFor(() => expect(current()).toBe('One'));
@@ -413,6 +452,9 @@ describe('Contents in a browser', () => {
         <Page scroller={{ ...padding, blockSize }} />
       </div>
     );
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
     const { rerender } = render(fixed('300px'));
     await waitFor(() => expect(current()).toBe('One'));
     // Tall enough not to overflow, so the page is the scroller for a while.
@@ -431,6 +473,8 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('Two A'));
     at(-20);
     await waitFor(() => expect(current()).toBe('One'));
+    window.removeEventListener('error', onError);
+    expect(errors).toEqual([]);
   });
 
   it('follows a heading renamed to a section the list names', async () => {

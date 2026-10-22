@@ -212,9 +212,19 @@ function followSections(
   let passed: IntersectionObserver[] = [];
   // The first heading's parent stays watched; the scroller, whose size sets the lines' boxes, is watched by a second
   // observer that moves when the scroller changes. Observing again only on a change keeps it from calling itself.
-  const resizes = new ResizeObserver(() => measure());
+  // Resizes measure once in the next frame: several observers may report one change, and observing a new scroller
+  // from inside a resize callback would raise the browser's "ResizeObserver loop" error.
+  let frame = 0;
+  const measureSoon = () => {
+    if (!frame)
+      frame = win.requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+  };
+  const resizes = new ResizeObserver(measureSoon);
   resizes.observe(targets[0]!.parentElement ?? targets[0]!);
-  const scrollerResizes = new ResizeObserver(() => measure());
+  const scrollerResizes = new ResizeObserver(measureSoon);
   let watchedBox: Element | null = null;
   const measure = () => {
     for (const observer of passed) observer.disconnect();
@@ -258,7 +268,7 @@ function followSections(
     if (target) view.observe(target);
   };
   measure();
-  win.addEventListener('resize', measure);
+  win.addEventListener('resize', measureSoon);
 
   const inView = (el: Element) => {
     const rect = el.getBoundingClientRect();
@@ -304,7 +314,8 @@ function followSections(
       resizes.disconnect();
       scrollerResizes.disconnect();
       mutations.disconnect();
-      win.removeEventListener('resize', measure);
+      win.cancelAnimationFrame(frame);
+      win.removeEventListener('resize', measureSoon);
       doc.removeEventListener('wheel', release, options);
       doc.removeEventListener('touchstart', release, options);
       doc.removeEventListener('keydown', onKey);
@@ -324,6 +335,8 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
   const [current, setCurrent] = useState<string | null>(null);
   const picked = useRef<string | null>(null);
   const following = useRef<{ update: () => void } | null>(null);
+  // Whether the hash has had its chance to pick: on the first follow that found sections, or once a click picked.
+  const followed = useRef(false);
 
   const register = useCallback((id: string) => {
     const count = counts.current.get(id) ?? 0;
@@ -342,12 +355,13 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
 
   const pick = useCallback((id: string) => {
     picked.current = id;
+    // The click puts its own fragment in the hash, which must not pick again when sections mount later.
+    followed.current = true;
     following.current?.update();
   }, []);
 
   // Bumped when a section mounts late or is replaced, to follow the page again.
   const [generation, setGeneration] = useState(0);
-  const followed = useRef(false);
 
   useEffect(() => {
     if (!nav.current) return;
