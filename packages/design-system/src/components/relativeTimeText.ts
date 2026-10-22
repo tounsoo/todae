@@ -40,9 +40,10 @@ export function formatRelativeTime(
 ): string {
   const format = formatter(options);
   // Nanoseconds, since milliseconds floor each side and can round a difference up past a unit.
-  const elapsed = Number((value.epochNanoseconds - now.epochNanoseconds) / 1_000_000_000n);
-  // The same instant reads as just past, so numeric 'always' writes "0 seconds ago", not "in 0 seconds".
-  const seconds = elapsed === 0 ? -0 : elapsed;
+  const diff = value.epochNanoseconds - now.epochNanoseconds;
+  const elapsed = Number(diff / 1_000_000_000n);
+  // A zero keeps its direction, and the same instant reads as just past, as "0 seconds ago" with numeric 'always'.
+  const seconds = elapsed === 0 && diff <= 0n ? -0 : elapsed;
   if (Math.abs(seconds) < 60) return format.format(seconds, 'second');
   if (Math.abs(seconds) < 3600) return format.format(Math.trunc(seconds / 60), 'minute');
   const hours = Math.trunc(seconds / 3600);
@@ -62,5 +63,7 @@ export function formatRelativeTime(
   if (span.months !== 0) return format.format(months, 'month');
   const first = options.firstDayOfWeek ?? localeFirstDay(options.locale);
   const weekStart = (date: Temporal.PlainDate) => date.subtract({ days: (date.dayOfWeek - first + 7) % 7 });
-  return format.format(weekStart(from).until(weekStart(to)).days / 7, 'week');
+  const weeks = weekStart(from).until(weekStart(to)).days / 7;
+  // Up to 30 days can reach a fifth week start, which would read older than a month.
+  return format.format(Math.sign(weeks) * Math.min(Math.abs(weeks), 4), 'week');
 }

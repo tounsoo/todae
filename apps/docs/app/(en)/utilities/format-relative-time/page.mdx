@@ -2,7 +2,7 @@ import { RelativeTimeList } from '../../../../components/demos/RelativeTimeDemo'
 
 # formatRelativeTime
 
-`formatRelativeTime(value, now, options?)` returns how long before or after `now` the time `value` is, as the locale writes it, such as `3 minutes ago`, `yesterday` or `in 2 weeks` in `en` and `3분 전`, `어제` or `2주 후` in `ko`. Use it for when a message was sent, a file was edited or an item expires. It writes text with `Intl.RelativeTimeFormat` and keeps no clock, so the product passes `now` and decides when the text changes; Keeping it current below shows a timer.
+`formatRelativeTime(value, now, options?)` returns how long before or after `now` the time `value` is, as the locale writes it, such as `3 minutes ago`, `yesterday` or `in 2 weeks` in `en` and `3분 전`, `어제` or `2주 후` in `ko`. Use it for when a message was sent, a file was edited or an item expires. It writes text with `Intl.RelativeTimeFormat` and keeps no clock, so the product passes `now` and decides when the text changes. Keeping it current, below, shows a timer.
 
 ```tsx
 const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZone);
@@ -18,7 +18,7 @@ const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZon
 
 ## Units
 
-Under a day, it counts the whole seconds, minutes or hours between the two, so 59 minutes and 50 seconds is `59 minutes ago`. From a day, the time between picks the unit: days, weeks from 7 days, months from a whole month and years from a whole year. The count is in the calendar, in `value`'s time zone and the Gregorian calendar, so `yesterday`, `last week`, `last month` and `last year` are the date, week, month and year before. 11 pm two days back is `2 days ago` even when fewer than 48 hours have passed, and 23 months back is `2 years ago`. Weeks start on the locale's first day, or on `firstDayOfWeek`, as in [Calendar](/calendar). On a date with a clock change that holds 25 hours, a time on the same date stays in hours.
+Under a day, it counts the whole seconds, minutes or hours between the two, so 59 minutes and 50 seconds is `59 minutes ago`. From a day, the unit is days, then weeks from 7 dates apart, months from a whole month and years from a whole year or 12 calendar months. The count is in the calendar, in `value`'s time zone and the Gregorian calendar, so `yesterday`, `last week`, `last month` and `last year` are the date, week, month and year before. 11 pm two days back is `2 days ago` even when fewer than 48 hours have passed, and 23 months back is `2 years ago`. A count of weeks stops at 4, so a time under a month never reads older than `last month`. Weeks start on the locale's first day, or on `firstDayOfWeek`, as in [Calendar](/calendar). On a date with a clock change that holds 25 hours, a time on the same date stays in hours.
 
 `numeric` is `'auto'` by default, which writes words such as `yesterday`, `now` and `last week` where the locale has them. Pass `numeric: 'always'` for `1 day ago`. `style` takes `'short'` or `'narrow'`, such as `3 min. ago` and `3m ago` in `en`; some locales, such as `ko`, write the same words in every style.
 
@@ -38,7 +38,7 @@ useEffect(() => {
 
 ## Accessible composition
 
-**Todae handles:** Text in the locale you pass, from the locale's own rules, including plural forms.
+**Todae handles:** Text in the locale you pass, or the runtime's own when you pass none, from the locale's own rules, including plural forms.
 
 **You supply:** A `<time>` element with a machine-readable `dateTime`, such as the instant in UTC. A way to read the exact time, such as the date in visible text nearby or a [Tooltip](/tooltip) on a focusable trigger, since `3 days ago` doesn't say when. `locale` to match the page.
 

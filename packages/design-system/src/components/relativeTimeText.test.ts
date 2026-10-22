@@ -49,6 +49,9 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime(now.add({ minutes: 59, seconds: 59 }), now, en)).toBe('in 59 minutes');
     expect(formatRelativeTime(now.add({ hours: 2, minutes: 59 }), now, en)).toBe('in 2 hours');
     expect(formatRelativeTime(now, now, { locale: 'en-US', numeric: 'always' })).toBe('0 seconds ago');
+    expect(formatRelativeTime(now.add({ milliseconds: 500 }), now, { locale: 'en-US', numeric: 'always' })).toBe(
+      'in 0 seconds',
+    );
   });
 
   it('counts weeks from 7 days and months from a whole calendar month', () => {
@@ -59,6 +62,12 @@ describe('formatRelativeTime', () => {
     // 28 days both times: a whole month from the 1st, not from the 31st.
     expect(from('2026-02-01T09:30', '2026-03-01T09:30')).toBe('last month');
     expect(from('2026-01-31T09:30', '2026-02-28T09:30')).toBe('4 weeks ago');
+    // 29 days reach a fifth week start; the count stops at 4, below the month.
+    expect(from('2026-01-03T09:30', '2026-02-01T09:30')).toBe('4 weeks ago');
+    expect(from('2026-02-01T09:30', '2026-01-03T09:30')).toBe('in 4 weeks');
+    expect(from('2026-01-01T09:30', '2026-02-01T09:30')).toBe('last month');
+    // 6 days and 10 hours, but 7 dates back.
+    expect(from('2026-10-15T23:00', '2026-10-22T09:30')).toBe('last week');
     expect(from('2025-11-23T09:30', '2026-10-22T09:30')).toBe('11 months ago');
     expect(from('2025-10-23T09:30', '2026-10-22T09:30')).toBe('last year');
     expect(from('2025-10-22T09:30', '2026-10-22T09:30')).toBe('last year');
