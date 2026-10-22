@@ -63,7 +63,7 @@ export function useEntered(present: boolean, exiting: boolean): boolean {
   return entered;
 }
 
-/** `onExited` runs once as an exit ends, before `present` turns false; not when the exit is cut short, as by an unmount. */
+/** `onExited` runs once as an exit ends, in the update that turns `present` false, and not when an unmount cuts the exit short. */
 export function useOverlayPresence(
   open: boolean,
   exitMs: number,
