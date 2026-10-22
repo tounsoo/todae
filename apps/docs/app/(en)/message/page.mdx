@@ -47,7 +47,7 @@ Every part but `Message.Time` is a `div`, and all of them are optional.
 
 ## Time
 
-`Message.Time` takes the time as a `Temporal.ZonedDateTime`, so you choose the time zone it is shown in. It writes `dateTime` as the instant in UTC, such as `2026-10-14T00:41:00Z`, and the text in the value's time zone, in `locale`'s short time style and the Gregorian calendar, such as `9:41 AM` in `en-US` and `오전 9:41` in `ko`. Set `dateStyle` or `timeStyle` for another style, or pass children to show your own text, such as a relative time; `dateTime` still comes from `value`.
+`Message.Time` takes the time as a `Temporal.ZonedDateTime`, so you choose the time zone it is shown in. It writes `dateTime` as the instant in UTC, such as `2026-10-14T00:41:00Z`, and the text in the value's time zone, in `locale`'s short time style and the Gregorian calendar, such as `9:41 AM` in `en-US` and `오전 9:41` in `ko`. Set `dateStyle` or `timeStyle` for another style, or pass children to show your own text, such as a relative time from [formatRelativeTime](/utilities/format-relative-time); `dateTime` still comes from `value`.
 
 ```tsx
 const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZone);
