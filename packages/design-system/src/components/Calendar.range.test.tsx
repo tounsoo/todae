@@ -347,39 +347,60 @@ describe('Calendar range mode', () => {
     expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-10'), end: date('2026-10-12') });
   });
 
-  it('drops the first pick on Escape, keeping the key from what holds the calendar', () => {
-    const outside = vi.fn();
-    document.addEventListener('keydown', outside);
+  // The window hears the key after every document listener, such as a popover's.
+  function escapesLeftAlone() {
+    const left: boolean[] = [];
+    const listener = (event: KeyboardEvent) => left.push(!event.defaultPrevented);
+    window.addEventListener('keydown', listener);
+    return { left, stop: () => window.removeEventListener('keydown', listener) };
+  }
+
+  it('drops the first pick on Escape, taking the key from what holds the calendar', () => {
+    const escapes = escapesLeftAlone();
     render(<RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />);
     fireEvent.click(october(5));
     fireEvent.keyDown(october(5), { key: 'Escape' });
-    expect(outside).not.toHaveBeenCalled();
+    expect(escapes.left).toEqual([false]);
     expect(selectedCells()).toEqual(['20', '21', '22']);
     // With no range in progress, Escape is left alone.
     fireEvent.keyDown(october(5), { key: 'Escape' });
-    expect(outside).toHaveBeenCalledTimes(1);
-    document.removeEventListener('keydown', outside);
+    expect(escapes.left).toEqual([false, true]);
+    escapes.stop();
     fireEvent.click(october(9));
     expect(october(9).hasAttribute('data-selected')).toBe(true);
     expect(screen.getByTestId('value').textContent).toBe('2026-10-20/2026-10-22');
   });
 
   it('drops the first pick on Escape from anywhere in the calendar', () => {
-    const outside = vi.fn();
-    document.addEventListener('keydown', outside);
+    const escapes = escapesLeftAlone();
     render(<RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />);
     fireEvent.click(october(5));
     const next = screen.getByRole('button', { name: 'Next month' });
     fireEvent.keyDown(next, { key: 'Escape' });
-    expect(outside).not.toHaveBeenCalled();
+    expect(escapes.left).toEqual([false]);
     expect(selectedCells()).toEqual(['20', '21', '22']);
     fireEvent.click(october(6));
     fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
     fireEvent.keyDown(focusedDay(), { key: 'Escape' });
-    expect(outside).not.toHaveBeenCalled();
+    expect(escapes.left).toEqual([false, false]);
     fireEvent.click(screen.getByRole('button', { expanded: true }));
     expect(selectedCells()).toEqual(['20', '21', '22']);
-    document.removeEventListener('keydown', outside);
+    escapes.stop();
+  });
+
+  it('leaves Escape outside the calendar alone while a range is in progress', () => {
+    const escapes = escapesLeftAlone();
+    render(
+      <>
+        <button type="button">elsewhere</button>
+        <RangeControlled initial={{ start: date('2026-10-20'), end: date('2026-10-22') }} />
+      </>,
+    );
+    fireEvent.click(october(5));
+    fireEvent.keyDown(screen.getByRole('button', { name: 'elsewhere' }), { key: 'Escape' });
+    expect(escapes.left).toEqual([true]);
+    expect(october(5).hasAttribute('data-selected')).toBe(true);
+    escapes.stop();
   });
 
   it('follows a range set from outside to its start, dropping a first pick', () => {

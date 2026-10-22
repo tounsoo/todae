@@ -77,8 +77,9 @@ function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: Compos
     if (busy || event.repeat) return;
     const form = event.currentTarget;
     const button = defaultButton(form);
-    // As implicit submission does: a disabled default button sends nothing.
-    if (button?.matches(':disabled')) return;
+    // As implicit submission does: a disabled default button sends nothing, nor
+    // does one with aria-disabled, which Button.Root keeps from submitting.
+    if (button?.matches(':disabled, [aria-disabled="true"]')) return;
     form.requestSubmit(button);
   };
   // Nothing sends while busy, whatever starts it: Enter in a text input, a
