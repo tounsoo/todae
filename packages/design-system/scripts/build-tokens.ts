@@ -108,6 +108,7 @@ export const RESERVED_ROOTS = [
   'scroll',
   'tree',
   'nav',
+  'contents',
   'picker',
   'calendar',
   'drilldown',
