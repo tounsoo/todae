@@ -7,11 +7,11 @@
   /* minmax(0, 1fr) keeps the columns equal even when an item's content is
      wider than its share. */
   .root[data-layout='columns'] {
-    grid-template-columns: repeat(var(--todae-grid-column-count), minmax(0, 1fr));
+    grid-template-columns: repeat(var(--_column-count), minmax(0, 1fr));
   }
 
   /* min() caps the floor at the grid's width, so one column never overflows. */
   .root[data-layout='fill'] {
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--todae-grid-min-item-size), 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--_min-item-size), 100%), 1fr));
   }
 }
