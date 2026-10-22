@@ -493,6 +493,13 @@
   --todae-text-fg-default: var(--_todae-text-fg-default, var(--todae-color-fg-default));
   --todae-text-fg-muted: var(--_todae-text-fg-muted, var(--todae-color-fg-muted));
   --todae-text-font-family: var(--_todae-text-font-family, var(--todae-font-family-sans));
+  --todae-text-label-fg: var(--_todae-text-label-fg, var(--todae-text-fg-muted));
+  --todae-text-label-font-family: var(--_todae-text-label-font-family, var(--todae-text-font-family));
+  --todae-text-label-font-letter-spacing: var(--_todae-text-label-font-letter-spacing, var(--todae-font-letter-spacing-default));
+  --todae-text-label-font-size: var(--_todae-text-label-font-size, var(--todae-font-size-1));
+  --todae-text-label-font-text-transform: var(--_todae-text-label-font-text-transform, var(--todae-font-text-transform-default));
+  --todae-text-label-font-weight: var(--_todae-text-label-font-weight, var(--todae-text-weight-medium));
+  --todae-text-label-leading: var(--_todae-text-label-leading, var(--todae-font-leading-tight));
   --todae-text-leading-default: var(--_todae-text-leading-default, var(--todae-font-leading-default));
   --todae-text-leading-tight: var(--_todae-text-leading-tight, var(--todae-font-leading-tight));
   --todae-text-size-2: var(--_todae-text-size-2, var(--todae-font-size-2));
@@ -990,6 +997,7 @@
   --todae-datalist-details-fg: var(--_todae-datalist-details-fg, var(--todae-color-fg-default));
   --todae-datalist-details-min-width: var(--_todae-datalist-details-min-width, 12rem);
   --todae-datalist-font-size: var(--_todae-datalist-font-size, var(--todae-font-size-3));
+  --todae-datalist-gap-between-columns: var(--_todae-datalist-gap-between-columns, var(--todae-space-stack-gap-spacious));
   --todae-datalist-gap-column: var(--_todae-datalist-gap-column, var(--todae-space-inline-gap));
   --todae-datalist-gap-row: var(--_todae-datalist-gap-row, var(--todae-space-stack-gap));
   --todae-datalist-gap-stacked: var(--_todae-datalist-gap-stacked, var(--todae-space-stack-gap-condensed));
