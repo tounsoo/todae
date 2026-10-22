@@ -4330,10 +4330,11 @@
           "default": "false"
         },
         {
-          "name": "only",
-          "type": "\"start\" | \"end\"",
+          "name": "show",
+          "type": "\"both\" | \"start\" | \"end\"",
           "required": false,
-          "description": "Shows only this panel, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again."
+          "description": "Which panels show. \"start\" or \"end\" shows that panel alone, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again.",
+          "default": "\"both\""
         },
         {
           "name": "children",

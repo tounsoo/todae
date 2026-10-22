@@ -62,10 +62,10 @@ With `collapsible`, the first panel can go to 0. Enter on the handle collapses i
 
 ## One panel
 
-`only="start"` or `only="end"` shows that panel alone across the root, and takes the other panel and the handle out of the layout with `display: none`, so they leave the tab order and the accessibility tree. Both panels stay mounted, so their state, such as a form's values, is kept, and the panel left showing keeps its scroll position too. The size you hold is kept for when both show again. Set it below a width where two panels don't fit, such as a mail layout that shows the list or the message on a phone, or the [App shell](/recipes/app-shell) recipe, which moves its sidebar into a Drawer. Focus inside the part it hides falls to the page, so move focus before you set it, or take the focused content out as the App shell recipe does.
+`show` picks which panels show, and `"both"` is the default. `show="start"` or `show="end"` shows that panel alone across the root, and takes the other panel and the handle out of the layout with `display: none`, so they leave the tab order and the accessibility tree. Both panels stay mounted, so their state, such as a form's values, is kept, and the panel left showing keeps its scroll position too. The size you hold is kept for when both show again. Set it below a width where two panels don't fit, such as a mail layout that shows the list or the message on a phone, or the [App shell](/recipes/app-shell) recipe, which moves its sidebar into a Drawer. Focus inside the part it hides falls to the page, so move focus before you set it, or take the focused content out as the App shell recipe does.
 
 ```tsx
-<Splitter.Root only={wide ? undefined : 'end'} defaultValue={240} min={180}>
+<Splitter.Root show={wide ? 'both' : 'end'} defaultValue={240} min={180}>
   …
 </Splitter.Root>
 ```

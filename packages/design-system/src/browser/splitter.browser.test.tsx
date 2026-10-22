@@ -52,7 +52,7 @@ describe('Splitter with one panel shown', () => {
   it('lays the shown panel across the root and keeps both panels mounted', async () => {
     const { rerender } = render(<Layout defaultValue={200} />);
     const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
-    rerender(<Layout defaultValue={200} only="end" />);
+    rerender(<Layout defaultValue={200} show="end" />);
     const host = box('host');
     expect(box('second').left).toBe(host.left);
     expect(box('second').width).toBe(host.width);
@@ -61,7 +61,7 @@ describe('Splitter with one panel shown', () => {
     expect(screen.queryByRole('separator')).toBeNull();
     expect(getTabbables(document.body)).toEqual([]);
 
-    rerender(<Layout defaultValue={200} only="start" />);
+    rerender(<Layout defaultValue={200} show="start" />);
     expect(box('first').width).toBe(host.width);
     expect(getComputedStyle(screen.getByTestId('second')).display).toBe('none');
     expect(getTabbables(document.body).map((el) => el.textContent)).toEqual(['Inside']);
@@ -73,9 +73,9 @@ describe('Splitter with one panel shown', () => {
   });
 
   it('keeps the shown panel\'s scroll position', async () => {
-    const Tall = ({ only }: { only?: 'start' | 'end' }) => (
+    const Tall = ({ show }: { show?: 'start' | 'end' }) => (
       <div style={{ inlineSize: 600, blockSize: 200 }}>
-        <Splitter.Root only={only} defaultValue={200} style={{ blockSize: '100%' }}>
+        <Splitter.Root show={show} defaultValue={200} style={{ blockSize: '100%' }}>
           <Splitter.Panel data-testid="first">
             <div style={{ blockSize: 1000 }} />
           </Splitter.Panel>
@@ -89,7 +89,7 @@ describe('Splitter with one panel shown', () => {
     const { rerender } = render(<Tall />);
     const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
     second.scrollTop = 100;
-    rerender(<Tall only="end" />);
+    rerender(<Tall show="end" />);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     expect(getComputedStyle(first).display).toBe('none');
     expect(second.scrollTop).toBe(100);
@@ -99,7 +99,7 @@ describe('Splitter with one panel shown', () => {
   });
 
   it('shows a stacked root\'s panel down its whole height', () => {
-    render(<Layout orientation="vertical" defaultValue={60} primary="end" only="start" />);
+    render(<Layout orientation="vertical" defaultValue={60} primary="end" show="start" />);
     expect(box('first').height).toBe(box('host').height);
   });
 });

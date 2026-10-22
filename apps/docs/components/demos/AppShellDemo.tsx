@@ -61,7 +61,7 @@ export function AppShellExample() {
     setNavigated(drawerOpen && !wide);
     setDrawerOpen(false);
   } else if (wide && drawerOpen) setDrawerOpen(false);
-  // `only` takes the handle out of the layout, so focus on it moves to the button before the window narrows it away.
+  // `show` takes the handle out of the layout, so focus on it moves to the button before the window narrows it away.
   useLayoutEffect(() => {
     if (!wide && handle.current === handle.current?.ownerDocument.activeElement) navButton.current?.focus();
   }, [wide]);
@@ -159,7 +159,7 @@ export function AppShellExample() {
         </Toolbar.Root>
       </Stack.Root>
       <Splitter.Root
-        only={wide ? undefined : 'end'}
+        show={wide ? 'both' : 'end'}
         value={width}
         onValueChange={resize}
         min={160}

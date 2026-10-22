@@ -65,11 +65,12 @@ export const meta = {
       description: 'Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0.',
     },
     {
-      name: 'only',
-      type: '"start" | "end"',
+      name: 'show',
+      type: '"both" | "start" | "end"',
       required: false,
+      default: '"both"',
       description:
-        'Shows only this panel, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again.',
+        'Which panels show. "start" or "end" shows that panel alone, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again.',
     },
     {
       name: 'children',
