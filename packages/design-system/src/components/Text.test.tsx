@@ -53,4 +53,22 @@ describe('Text', () => {
     );
     expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
   });
+
+  it('gives the label role its own color and weight until a tone or weight is given', () => {
+    render(
+      <>
+        <Text.Root size="label" data-testid="plain">
+          Eyebrow
+        </Text.Root>
+        <Text.Root size="label" tone="accent" weight="bold" data-testid="set">
+          Eyebrow
+        </Text.Root>
+      </>,
+    );
+    const plain = screen.getByTestId('plain');
+    expect(plain.classList.contains(styles.label!)).toBe(true);
+    for (const cls of [styles.default, styles.regular, styles.m]) expect(plain.classList.contains(cls!)).toBe(false);
+    const set = screen.getByTestId('set');
+    expect(classesOf(set)).toEqual(expect.arrayContaining([styles.label, styles.accent, styles.bold]));
+  });
 });

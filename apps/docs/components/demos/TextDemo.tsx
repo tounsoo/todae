@@ -23,3 +23,14 @@ export function TextHeadingSize() {
     </>
   );
 }
+
+export function TextLabel() {
+  return (
+    <hgroup>
+      <Text.Root size="label">Release notes</Text.Root>
+      <Text.Root as="h2" size="l">
+        What changed in 0.4
+      </Text.Root>
+    </hgroup>
+  );
+}

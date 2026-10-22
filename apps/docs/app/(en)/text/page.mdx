@@ -1,9 +1,9 @@
 import { Text } from '@tounsoo/todae/text';
-import { TextHeadingSize, TextHeadings } from '../../../components/demos/TextDemo';
+import { TextHeadingSize, TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
 
 # Text
 
-Sizes `s` / `m` / `l` / `xl` / `2xl` map to `text.size.2` through `text.size.6`.
+Sizes `s` / `m` / `l` / `xl` / `2xl` map to `text.size.2` through `text.size.6`. `label` is a role of its own, for eyebrows and metadata, described under Label below.
 
 The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae does not set `font-family` from it; apply `var(--todae-text-font-family)` where you want it.
 
@@ -51,19 +51,56 @@ Choose the level for the page outline and `size` for the look. A heading that si
   <TextHeadingSize />
 </Example>
 
+## Label
+
+`size="label"` is the role for short text over or beside other text: an eyebrow over a heading, a kicker, a section number or a date. It reads `text.label.*` for its family, size, weight, leading, letter spacing, case and color, so each company decides how its labels look, such as mono, uppercase and tracked. Graphite leaves them plain: `font.size.1`, medium weight, tight leading, `color.fg.muted`, no letter spacing and no change of case.
+
+Todae applies `text.label.font.family`, unlike `text.font.family`. It reads `text.font.family`, so a theme that sets one typeface for text sets the label's too, and a theme that sets `text.label.font.family` to `font.family.mono` changes only the labels.
+
+A `tone` or `weight` you give wins over the label's own color and weight.
+
+```tsx
+<hgroup>
+  <Text.Root size="label">Release notes</Text.Root>
+  <Text.Root as="h2" size="l">
+    What changed in 0.4
+  </Text.Root>
+</hgroup>
+```
+
+<Example block>
+  <TextLabel />
+</Example>
+
+A company token package sets the look in its own `contract` set, as the [Fernway example](https://github.com/tounsoo/todae/tree/main/examples/fernway) does:
+
+```json
+{
+  "text": {
+    "label": {
+      "font": {
+        "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "value": 0.06, "unit": "rem" } },
+        "text-transform": { "$type": "textTransform", "$value": "uppercase" }
+      }
+    }
+  }
+}
+```
+
 ## Accessible composition
 
 **Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element.
 
 **You supply:** The outline. Pick each heading's level from where it sits on the page, not from the size you want. A wrapper such as a section title should take the level as a prop, or render one level only where that level is always right. Give a heading an `id` when a region names itself with `aria-labelledby`.
 
-**Watch for:** A heading tag on text that does not start a section, such as a bold line inside a card: it adds an entry to the page's list of headings. Use `weight="bold"` instead. `as="strong"` marks importance; for the bold look alone, use `weight`. A `tone` as the only sign that text means something, such as an error or a selected state.
+**Watch for:** A heading tag on text that does not start a section, such as a bold line inside a card: it adds an entry to the page's list of headings. Use `weight="bold"` instead. `as="strong"` marks importance; for the bold look alone, use `weight`. A `tone` as the only sign that text means something, such as an error or a selected state. A label is not part of the heading it sits over, so moving through headings skips it: put words the heading needs in the heading. Write a label in sentence case and let `text.label.font.text-transform` change its case, since some screen readers spell out words typed in capitals.
 
 ## When to use
 
-**When:** Body text and headings on the token scale: size s through 2xl, tone default / muted / accent, weight; `as` p / span / strong / h1–h6.
+**When:** Body text and headings on the token scale: size s through 2xl, tone default / muted / accent, weight; `as` p / span / strong / h1–h6. Eyebrows, kickers and metadata with `size="label"`.
 
-**When not:** Field names → Label. A group of controls' name → Fieldset.Legend. Hints and errors → Description / ErrorMessage. Dialog heading → `Dialog.Title`.
+**When not:** Field names → Label, not `size="label"`. A group of controls' name → Fieldset.Legend. Hints and errors → Description / ErrorMessage. Dialog heading → `Dialog.Title`.
 
 ## Props
 

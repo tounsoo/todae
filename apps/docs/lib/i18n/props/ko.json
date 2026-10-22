@@ -1941,8 +1941,8 @@
       "ko": "렌더링할 요소. 제목 수준은 문서 개요를 정하고, 기본 크기, 굵은 두께, 좁은 행간도 정합니다."
     },
     "size": {
-      "en": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level.",
-      "ko": "text.size.2부터 text.size.6까지에 대응합니다. 제목을 수준보다 크거나 작게 보이게 하려면 지정합니다."
+      "en": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level. \"label\" is the role for eyebrows and metadata: it reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and a tone or weight you give wins.",
+      "ko": "text.size.2부터 text.size.6까지에 대응합니다. 제목을 수준보다 크거나 작게 보이게 하려면 지정합니다. \"label\"은 아이브로와 메타데이터를 위한 역할로, 글꼴, 크기, 굵기, 행간, 자간, 대소문자, 색을 text.label.*에서 읽으며, 직접 준 tone이나 weight가 우선합니다."
     },
     "tone": {
       "en": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",

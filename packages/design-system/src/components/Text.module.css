@@ -9,6 +9,17 @@
     text-wrap: balance;
   }
 
+  /* The label role sets its own type. Its color and weight come before the tone and weight classes, so a given tone or weight wins. */
+  .label {
+    font-family: var(--todae-text-label-font-family);
+    font-size: var(--todae-text-label-font-size);
+    font-weight: var(--todae-text-label-font-weight);
+    line-height: var(--todae-text-label-leading);
+    letter-spacing: var(--todae-text-label-font-letter-spacing);
+    text-transform: var(--todae-text-label-font-text-transform);
+    color: var(--todae-text-label-fg);
+  }
+
   .default {
     color: var(--todae-text-fg-default);
   }

@@ -726,13 +726,14 @@
     "(section order)": "6b5ab14cc7b5"
   },
   "text": {
-    "(top)": "3fc9ccef9d05",
-    "# Text": "e833057bfd25",
+    "(top)": "b1e17b5416f8",
+    "# Text": "cf8f2e792389",
     "## Headings": "7ef059d65ca4",
-    "## Accessible composition": "60ba7e690e76",
-    "## When to use": "504f4a606802",
+    "## Label": "7546caf278d1",
+    "## Accessible composition": "46745ae644b4",
+    "## When to use": "5a57584d1a10",
     "## Props": "c29450776f88",
-    "(section order)": "a613cff43ca1"
+    "(section order)": "e63d148221ad"
   },
   "toast": {
     "(top)": "85a2f957060f",
@@ -764,7 +765,7 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "ada6a1a14d5f",
+    "## Contrast": "f6b7d4d7e13a",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "beaf90851101",
     "## Status tones": "9db538465fa4",

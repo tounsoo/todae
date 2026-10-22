@@ -24,6 +24,18 @@
     "leading": {
       "default": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
       "tight": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
+    },
+    "label": {
+      "$description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
+      "font": {
+        "family": { "$type": "fontFamily", "$value": { "$ref": "#/text/font/family/$value" } },
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } },
+        "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/default/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
     }
   }
 }

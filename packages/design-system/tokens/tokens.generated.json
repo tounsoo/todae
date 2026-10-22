@@ -4855,6 +4855,104 @@
       "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
     },
     {
+      "path": "text.label.fg",
+      "type": "color",
+      "cssVar": "--todae-text-label-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.family",
+      "type": "fontFamily",
+      "cssVar": "--todae-text-label-font-family",
+      "cssValue": "var(--todae-text-font-family)",
+      "ref": "text.font.family",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-text-label-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-label-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-text-label-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-default)",
+      "ref": "font.text-transform.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-text-label-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.leading",
+      "type": "number",
+      "cssVar": "--todae-text-label-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
       "path": "text.leading.default",
       "type": "number",
       "cssVar": "--todae-text-leading-default",
