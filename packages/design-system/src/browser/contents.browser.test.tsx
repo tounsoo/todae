@@ -216,6 +216,29 @@ describe('Contents in a browser', () => {
     expect(current()).toBe('Two A');
   });
 
+  it('drops a pick whose section goes while its link stays, so it does not come back with the section', async () => {
+    render(<Page />);
+    link('Three').click();
+    await waitFor(() => expect(current()).toBe('Three'));
+    const three = document.getElementById('three')!;
+    three.id = 'gone';
+    await waitFor(() => expect(current()).toBe('Two A'));
+    three.id = 'three';
+    await frames(3);
+    expect(current()).toBe('Two A');
+  });
+
+  it('drops a pick of a section the page lacks, so it does not hold when the section mounts', async () => {
+    render(<Page more />);
+    await waitFor(() => expect(current()).toBe('One'));
+    link('Nowhere').click();
+    scrollTo('two');
+    await waitFor(() => expect(current()).toBe('Two'));
+    document.getElementById('three')!.id = 'nowhere';
+    await frames(3);
+    expect(current()).toBe('Two');
+  });
+
   it('keeps a click pick through a smooth scroll that ends after the hash changes', async () => {
     render(<Page scroller={{ scrollBehavior: 'smooth' }} />);
     await waitFor(() => expect(current()).toBe('One'));
@@ -375,6 +398,35 @@ describe('Contents in a browser', () => {
     at(0);
     await waitFor(() => expect(current()).toBe('Two'));
     // Back from the end to 20px under the new line, which is still above the old 60px one.
+    scroller.scrollTop = scroller.scrollHeight;
+    await waitFor(() => expect(current()).toBe('Two A'));
+    at(-20);
+    await waitFor(() => expect(current()).toBe('One'));
+  });
+
+  it("keeps measuring when the scroller is the headings' parent and stops scrolling for a while", async () => {
+    // A percentage padding moves the line with the box: 20% of 100px is 20px.
+    const padding = { scrollPaddingBlockStart: '20%' };
+    // A fixed-height page, so only the box's own size changes.
+    const fixed = (blockSize: string) => (
+      <div style={{ blockSize: '2200px' }}>
+        <Page scroller={{ ...padding, blockSize }} />
+      </div>
+    );
+    const { rerender } = render(fixed('300px'));
+    await waitFor(() => expect(current()).toBe('One'));
+    // Tall enough not to overflow, so the page is the scroller for a while.
+    rerender(fixed('2000px'));
+    await frames(3);
+    rerender(fixed('100px'));
+    await frames(3);
+    window.scrollTo(0, 0);
+    const scroller = screen.getByTestId('scroller');
+    const at = (offset: number) => {
+      scroller.scrollTop += document.getElementById('two')!.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 20 + offset;
+    };
+    at(0);
+    await waitFor(() => expect(current()).toBe('Two'));
     scroller.scrollTop = scroller.scrollHeight;
     await waitFor(() => expect(current()).toBe('Two A'));
     at(-20);

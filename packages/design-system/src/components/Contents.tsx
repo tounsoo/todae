@@ -160,7 +160,11 @@ function followSections(
 
   if (targets.length === 0) {
     report(null);
-    return { update: () => report(null), stop: () => mutations.disconnect(), found: false };
+    const drop = () => {
+      picked.current = null;
+      report(null);
+    };
+    return { update: drop, stop: () => mutations.disconnect(), found: false };
   }
   const has = (id: string | null) => id !== null && targets.some((target) => target.id === id);
   let scroller = null as Element | null;
@@ -195,7 +199,9 @@ function followSections(
     pickSeen = false;
     view?.disconnect();
     const target = targets.find((el) => el.id === picked.current);
+    // A pick of a section that isn't on the page lapses now, so it can't hold when the section mounts later.
     if (target) view?.observe(target);
+    else picked.current = null;
     update();
   };
 
@@ -204,22 +210,22 @@ function followSections(
   // that line, so a section's entry changes whenever its top crosses its own
   // line, however far one scroll jumps.
   let passed: IntersectionObserver[] = [];
+  // The first heading's parent stays watched; the scroller, whose size sets the lines' boxes, is watched by a second
+  // observer that moves when the scroller changes. Observing again only on a change keeps it from calling itself.
   const resizes = new ResizeObserver(() => measure());
-  const parent = targets[0]!.parentElement ?? targets[0]!;
-  resizes.observe(parent);
+  resizes.observe(targets[0]!.parentElement ?? targets[0]!);
+  const scrollerResizes = new ResizeObserver(() => measure());
   let watchedBox: Element | null = null;
   const measure = () => {
     for (const observer of passed) observer.disconnect();
     view?.disconnect();
     scroller = scrollerOf(targets[0]!);
-    // The scroller's own size sets the lines' boxes, so watch it too; observing again only when it changes keeps the observer from calling itself.
-    const watched = scroller ?? doc.documentElement;
-    if (watched !== watchedBox) {
-      if (watchedBox && watchedBox !== parent) resizes.unobserve(watchedBox);
-      resizes.observe(watched);
-      watchedBox = watched;
-    }
     const box = scroller ?? doc.documentElement;
+    if (box !== watchedBox) {
+      scrollerResizes.disconnect();
+      scrollerResizes.observe(box);
+      watchedBox = box;
+    }
     const height = box.clientHeight;
     const padding = pixels(getComputedStyle(box).scrollPaddingBlockStart, height);
     sections = targets.map((el) => ({
@@ -271,19 +277,19 @@ function followSections(
   };
 
   const onHashChange = () => {
-    // A click's own hash keeps its pick, even while a smooth scroll hasn't brought the section into view.
+    // A hash that names the picked section keeps it, as a click's own hash does while a smooth scroll is on its way.
     if (picked.current !== null && fragmentOf(doc.location.hash) === picked.current) return;
     if (!pickHash()) release();
   };
 
-  // Listens as the key bubbles, so a widget that cancels it has had its turn.
+  // Listens as the key bubbles, so a widget that cancels it has had its turn. A widget that stops the key keeps the pick too.
   const onKey = (event: KeyboardEvent) => {
     if (SCROLL_KEYS.has(event.key) && !event.isComposing && !event.defaultPrevented && !ownsKey(event.composedPath()[0], event.key)) release();
   };
   const options = { capture: true, passive: true } as const;
   doc.addEventListener('wheel', release, options);
   doc.addEventListener('touchstart', release, options);
-  doc.addEventListener('keydown', onKey, { passive: true });
+  doc.addEventListener('keydown', onKey);
   win.addEventListener('hashchange', onHashChange);
 
   if (has(picked.current)) startPick();
@@ -296,6 +302,7 @@ function followSections(
       for (const observer of passed) observer.disconnect();
       view?.disconnect();
       resizes.disconnect();
+      scrollerResizes.disconnect();
       mutations.disconnect();
       win.removeEventListener('resize', measure);
       doc.removeEventListener('wheel', release, options);

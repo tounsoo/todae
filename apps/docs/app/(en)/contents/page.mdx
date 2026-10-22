@@ -32,7 +32,7 @@ A section is current once its heading has scrolled past its line: the place a fr
 
 `Contents.Root` follows the headings with `IntersectionObserver`, in the nearest container around the first heading that scrolls, or the page. It measures the lines again when the scroller, the first heading's parent or the window resizes, and follows a heading that mounts after its link, is replaced or is renamed.
 
-A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a hash that names a section the page shows, when the list mounts or the hash changes, picks that section. A click's own hash change keeps the pick while a smooth scroll is still on its way. The pick stays current until the person scrolls with the wheel, a touch or a scroll key that no field takes and no widget cancels, until it has been in view and leaves it, or until the hash changes to name something else.
+A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a hash that names a section the page shows, when the list mounts or the hash changes, picks that section. A hash change that names the picked section keeps the pick, so a click holds while a smooth scroll is still on its way. The pick stays current until the person scrolls with the wheel, a touch or a scroll key that no field takes and no widget stops or cancels (Space on a button presses it), until it has been in view and leaves it, or until the hash changes to name something else.
 
 ## Look
 
