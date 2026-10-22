@@ -706,10 +706,10 @@
   "recipes/wizard": {
     "(top)": "8a3a55e1b1ed",
     "# Wizard": "9cd56741f4a9",
-    "## A form per step": "1fcd5274039b",
-    "## Focus on each step": "b6305c0f6b61",
-    "## Errors from the last step": "1814ab8ddfa3",
-    "## Accessible composition": "26e369f412cf",
+    "## A form per step": "6c7734fa6c2e",
+    "## Focus on each step": "57c7d7ef2016",
+    "## Errors from the last step": "21ea66a09533",
+    "## Accessible composition": "57c995f67a81",
     "## When to use": "e4c37a96dbb3",
     "(section order)": "58e398659b7f"
   },

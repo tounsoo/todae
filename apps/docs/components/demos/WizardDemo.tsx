@@ -58,30 +58,35 @@ export function WizardExample() {
   const [answers, setAnswers] = useState(EMPTY);
   // The last reply's errors, less those of each step sent again since.
   const [reply, setReply] = useState<FormErrors>({});
-  // The steps shown since the reply. A step gets its errors from the first time it shows until its
-  // own Next, so its form takes them as the reply where the person can see it, and keeps a dismissal.
-  const [given, setGiven] = useState<ReadonlySet<number>>(new Set());
+  // The furthest step shown since the reply. A step gets its errors from the first time it shows
+  // until its own Next, so its form takes them where the person can see them, and keeps a dismissal.
+  const [reached, setReached] = useState(-1);
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [created, setCreated] = useState(false);
+  const forms = useRef<(HTMLFormElement | null)[]>([]);
   const headings = useRef<(HTMLElement | null)[]>([]);
   const createdHeading = useRef<HTMLElement>(null);
-  // Whether showing the step moves focus to its heading: not on the first render, and not when its
-  // form takes a reply, which moves focus to the control with the error.
-  const focusHeading = useRef(false);
+  // Set once the person moves, so the first render doesn't take focus.
+  const moved = useRef(false);
 
-  // Runs once the step shows, so the heading can take focus; the button pressed is now hidden.
+  // Once the step shows, its heading takes focus, as the button pressed is now hidden; unless the
+  // step's form took a reply and moved focus to a control. Form.Root does that in an update from its
+  // own layout effect, which React renders before this microtask runs.
   useLayoutEffect(() => {
-    if (focusHeading.current) headings.current[step]?.focus();
+    if (!moved.current) return;
+    queueMicrotask(() => {
+      if (!forms.current[step]?.contains(document.activeElement)) headings.current[step]?.focus();
+    });
   }, [step]);
 
   useLayoutEffect(() => {
     if (created) createdHeading.current?.focus();
   }, [created]);
 
-  const go = (index: number, errors = reply, shown = given) => {
-    focusHeading.current = shown.has(index) || Object.keys(pick(errors, STEPS[index]!.fields)).length === 0;
-    setGiven(new Set(shown).add(index));
+  const go = (index: number) => {
+    moved.current = true;
+    setReached((current) => Math.max(current, index));
     setFailed(false);
     setStep(index);
   };
@@ -102,29 +107,37 @@ export function WizardExample() {
     setSending(true);
     setFailed(false);
     setReply({});
+    let errors: FormErrors;
     try {
-      const errors = await createWorkspace(answers);
-      if (!Object.values(errors).some(Boolean)) {
-        setCreated(true);
-        return;
-      }
-      const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
-      // An error for no control the steps hold is a request that failed.
-      if (first === -1) throw new Error('The reply names no control.');
-      setReply(errors);
-      go(first, errors, new Set());
+      errors = await createWorkspace(answers);
     } catch {
       setFailed(true);
+      return;
     } finally {
       setSending(false);
     }
+    const named = Object.entries(errors).filter(([, text]) => text);
+    if (named.length === 0) {
+      setCreated(true);
+      return;
+    }
+    // An error for a control no step holds can't be shown where it belongs: the request failed.
+    if (named.some(([name]) => !STEPS.some((each) => each.fields.includes(name as Name)))) {
+      setFailed(true);
+      return;
+    }
+    const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
+    setReply(errors);
+    // A new reply: no step has its errors yet.
+    setReached(-1);
+    go(first);
   };
 
   const restart = () => {
     setAnswers(EMPTY);
     setReply({});
     setCreated(false);
-    go(0, {}, new Set());
+    go(0);
   };
 
   if (created) {
@@ -147,9 +160,12 @@ export function WizardExample() {
 
   // Every step's form stays mounted and hidden, so it keeps waiting on a reply.
   const form = (index: number) => ({
+    ref: (element: HTMLFormElement | null) => {
+      forms.current[index] = element;
+    },
     hidden: step !== index,
     'aria-labelledby': `${headingId}-step-${index}`,
-    errors: given.has(index) ? pick(reply, STEPS[index]!.fields) : {},
+    errors: index <= reached ? pick(reply, STEPS[index]!.fields) : {},
   });
 
   const heading = (index: number) => (
@@ -256,7 +272,7 @@ export function WizardExample() {
               <DataList.Details>{PLANS[answers.plan]}</DataList.Details>
             </DataList.Item>
           </DataList.Root>
-          {failed ? <Alert.Root tone="critical">The workspace wasn't created. Check your connection and try again.</Alert.Root> : null}
+          {failed ? <Alert.Root tone="critical">The workspace wasn't created. Try again.</Alert.Root> : null}
           {actions(
             2,
             // aria-disabled, not disabled, so the button keeps focus while the request runs and ignores clicks.

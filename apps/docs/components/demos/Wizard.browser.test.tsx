@@ -83,7 +83,7 @@ it('takes a server error back to the step that asks for it, with focus on the co
   await expect.poll(() => document.activeElement === email() && email() !== null, { timeout: 3000 }).toBe(true);
   document.removeEventListener('focusin', record);
   // Focus goes straight from the button to the control, so a screen reader doesn't read the heading first.
-  expect(focused.filter((element) => element.tagName === 'H3')).toEqual([]);
+  expect(focused.filter((element) => element.getAttribute('tabindex') === '-1')).toEqual([]);
   expect(current()).toBe('In progress: Account');
   expect(email()).toHaveAccessibleDescription('That address is taken.');
 
@@ -147,7 +147,13 @@ it('takes a reply on two steps to each in turn, with focus on each control, and 
   await expect.poll(() => document.activeElement === email() && email() !== null, { timeout: 3000 }).toBe(true);
   await userEvent.clear(email()!);
   await userEvent.type(email()!, 'ada@example.com');
+  const focused: Element[] = [];
+  const record = (event: FocusEvent) => focused.push(event.target as Element);
+  document.addEventListener('focusin', record);
   await userEvent.keyboard('{Enter}');
+  await Promise.resolve();
+  document.removeEventListener('focusin', record);
+  expect(focused.filter((element) => element.getAttribute('tabindex') === '-1')).toEqual([]);
   // The next step shows its own error, and its form moves focus to that control, not the heading.
   const workspace = screen.getByRole('textbox', { name: 'Workspace name' });
   expect(document.activeElement).toBe(workspace);
