@@ -348,6 +348,41 @@ describe('A button in a Field.Root', () => {
   );
 });
 
+describe('An Icon and a button beside a Field.Select', () => {
+  it.each(['comfortable', 'compact', 'spacious'])('are centered on a %s select, which keeps its height', (density) => {
+    const select = (
+      <Field.Select value="a" onValueChange={() => {}}>
+        <option value="a">Apple</option>
+      </Field.Select>
+    );
+    render(
+      <main data-appearance="light" data-density={density}>
+        <Field.Root aria-label="Plain" data-testid="plain">
+          {select}
+        </Field.Root>
+        <Field.Root aria-label="Fruit" data-testid="fruit">
+          <Field.Icon data-testid="icon">
+            <svg viewBox="0 0 16 16" />
+          </Field.Icon>
+          {select}
+          <Button.Root variant="ghost" aria-label="Clear fruit">
+            <Button.Icon>
+              <svg viewBox="0 0 16 16" />
+            </Button.Icon>
+          </Button.Root>
+        </Field.Root>
+      </main>,
+    );
+    const shell = screen.getByTestId('fruit').getBoundingClientRect();
+    expect(shell.height).toBe(screen.getByTestId('plain').getBoundingClientRect().height);
+    const middle = shell.top + shell.height / 2;
+    for (const part of [screen.getByTestId('icon'), screen.getByRole('button', { name: 'Clear fruit' })]) {
+      const box = part.getBoundingClientRect();
+      expect(Math.abs(box.top + box.height / 2 - middle)).toBeLessThan(0.5);
+    }
+  });
+});
+
 describe('A button beside a Field.Textarea', () => {
   it("keeps Button's own icon-only size, since the field has no single line", () => {
     render(
