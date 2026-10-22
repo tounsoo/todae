@@ -12,6 +12,6 @@
 
   /* min() caps the floor at the grid's width, so one column never overflows. */
   .root[data-layout='fill'] {
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--todae-grid-min-item-size), 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--_min-item-size), 100%), 1fr));
   }
 }

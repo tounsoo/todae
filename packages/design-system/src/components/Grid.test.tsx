@@ -16,7 +16,7 @@ describe('Grid', () => {
     render(<Grid.Root minItemSize="12rem" data-testid="g" />);
     const grid = screen.getByTestId('g');
     expect(grid.getAttribute('data-layout')).toBe('fill');
-    expect(grid.style.getPropertyValue('--todae-grid-min-item-size')).toBe('12rem');
+    expect(grid.style.getPropertyValue('--_min-item-size')).toBe('12rem');
   });
 
   it('takes the tracks from the caller when neither prop is set, and floors the column count at 1', () => {

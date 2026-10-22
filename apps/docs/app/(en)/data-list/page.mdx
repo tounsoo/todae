@@ -74,7 +74,7 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
 
 Each item keeps its orientation inside its column. A horizontal item stacks when its column is narrower than the term column, `datalist.gap.column` and the details minimum together, so give columns of horizontal items a `minItemSize` of at least `calc(var(--todae-datalist-term-width) + var(--todae-datalist-gap-column) + var(--todae-datalist-details-min-width))`.
 
-In a parent that sizes the list to its content, such as a flex row, the list takes the width of its widest item, so the number of columns follows its text. Give the list a width there, as the next section says.
+In a parent that sizes the list to its content, the number of columns follows the width of the items' text; the next section says how to give the list a width.
 
 ## Narrow widths
 
