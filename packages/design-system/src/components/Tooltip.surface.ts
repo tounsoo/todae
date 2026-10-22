@@ -55,12 +55,12 @@ export function isMounted(surface: TooltipSurface, open: boolean): boolean {
 }
 
 // Elements that close an open <p> in the HTML parser. Tooltip.Root is a span, so a
-// paragraph can hold it, but only while its content is phrasing content.
-const NON_PHRASING =
-  'address,article,aside,blockquote,details,dialog,div,dl,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,main,menu,nav,ol,p,pre,search,section,table,ul';
+// paragraph can hold it, but only while it holds none of these.
+const CLOSES_PARAGRAPH =
+  'address,article,aside,blockquote,center,dd,details,dialog,dir,div,dl,dt,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,li,listing,main,menu,nav,ol,p,plaintext,pre,search,section,summary,table,ul,xmp';
 
 export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): string | null {
-  if (el.querySelector(NON_PHRASING)) {
+  if (el.querySelector(CLOSES_PARAGRAPH)) {
     return 'Tooltip holds phrasing content only, such as text, links and spans, so it can sit in a paragraph.';
   }
   // What kinds of control the content holds, not what Tab reaches now: a panel

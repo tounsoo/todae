@@ -82,7 +82,7 @@ import { Archive } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** The behaviour above. A text tip is `role="tooltip"`, mounted only while open, and while it is open `getTriggerProps` adds its id to the trigger's `aria-describedby`, after the trigger's own ids. It opens on focus as well as hover, and Escape closes it. An interactive tip is `role="dialog"` with no focus trap, and Escape from inside it sends focus back to the trigger. In development, Todae logs an error when a text tip holds anything tabbable, an interactive one holds anything but links, or either holds an element that isn't phrasing content, such as a `<p>` or `<div>`.
+**Todae handles:** The behaviour above. A text tip is `role="tooltip"`, mounted only while open, and while it is open `getTriggerProps` adds its id to the trigger's `aria-describedby`, after the trigger's own ids. It opens on focus as well as hover, and Escape closes it. An interactive tip is `role="dialog"` with no focus trap, and Escape from inside it sends focus back to the trigger. In development, Todae logs an error when a text tip holds anything tabbable, an interactive one holds anything but links, or either holds an element that would close a paragraph, such as a `<p>`, `<div>` or `<li>`.
 
 **You supply:** The trigger's accessible name. The tip describes the trigger and never names it, so an icon-only trigger needs its own `aria-label` or `aria-labelledby`. A trigger that takes focus: give a wrap that is not tabbable `tabIndex={0}`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`.
 

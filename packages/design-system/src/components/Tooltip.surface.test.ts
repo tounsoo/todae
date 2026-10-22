@@ -49,7 +49,7 @@ describe('Tooltip.surface', () => {
       const el = document.createElement('span');
       el.innerHTML = '<strong>Popover API</strong><br><span>developer.mozilla.org</span>';
       expect(contentPolicyError(surface, el)).toBeNull();
-      for (const html of ['<p>Text</p>', '<div>Text</div>', '<ul><li>Text</li></ul>']) {
+      for (const html of ['<p>Text</p>', '<div>Text</div>', '<ul><li>Text</li></ul>', '<dd>Text</dd>']) {
         el.innerHTML = html;
         expect(contentPolicyError(surface, el)).toBe(error);
       }

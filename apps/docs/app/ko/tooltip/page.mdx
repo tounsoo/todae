@@ -82,7 +82,7 @@ import { Archive } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 위에서 설명한 동작입니다. 텍스트 팁은 `role="tooltip"`이고 열린 동안에만 마운트되며, 열린 동안 `getTriggerProps`가 트리거의 `aria-describedby`에 팁의 id를 더합니다. 트리거가 직접 가진 id 뒤에 붙습니다. 호버뿐 아니라 포커스로도 열리고, Escape로 닫힙니다. 인터랙티브 팁은 포커스 트랩이 없는 `role="dialog"`이고, 그 안에서 Escape를 누르면 포커스가 트리거로 돌아갑니다. 개발 환경에서는 텍스트 팁에 탭 가능한 것이 있거나, 인터랙티브 팁에 링크가 아닌 것이 있거나, 어느 팁이든 `<p>`나 `<div>`처럼 구문 요소(phrasing content)가 아닌 요소가 있으면 Todae가 오류를 기록합니다.
+**Todae가 맡는 것:** 위에서 설명한 동작입니다. 텍스트 팁은 `role="tooltip"`이고 열린 동안에만 마운트되며, 열린 동안 `getTriggerProps`가 트리거의 `aria-describedby`에 팁의 id를 더합니다. 트리거가 직접 가진 id 뒤에 붙습니다. 호버뿐 아니라 포커스로도 열리고, Escape로 닫힙니다. 인터랙티브 팁은 포커스 트랩이 없는 `role="dialog"`이고, 그 안에서 Escape를 누르면 포커스가 트리거로 돌아갑니다. 개발 환경에서는 텍스트 팁에 탭 가능한 것이 있거나, 인터랙티브 팁에 링크가 아닌 것이 있거나, 어느 팁이든 `<p>`, `<div>`, `<li>`처럼 문단을 닫게 되는 요소가 있으면 Todae가 오류를 기록합니다.
 
 **직접 제공할 것:** 트리거의 접근 가능한 이름입니다. 팁은 트리거를 설명할 뿐 이름을 붙이지 않으므로, 아이콘 전용 트리거에는 자체 `aria-label`이나 `aria-labelledby`가 필요합니다. 포커스를 받는 트리거도 필요합니다. 탭할 수 없는 래퍼에는 `tabIndex={0}`을 주세요. `interactive: true`라면 `Tooltip.Root`에 `aria-label`과 `aria-labelledby` 중 정확히 하나를 주세요.
 
