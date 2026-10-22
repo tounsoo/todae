@@ -446,6 +446,25 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
+  it('keeps the whole code of a composition for a product that uppercases what it is told', async () => {
+    const events: string[] = [];
+    render(<Listening initial="AB" mode="upper" events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['c', 'cd', 'cde', 'cdef']);
+    await vi.waitFor(() => expect(input().value).toBe('ABCDEF'));
+    expect(boxes().map((box) => box.textContent).join('')).toBe('ABCDEF');
+  });
+
+  it('reports the code before a cancelled composition back to a product that uppercases what it is told', async () => {
+    const events: string[] = [];
+    render(<Listening initial="AB" mode="upper" events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['c', 'cd'], null);
+    await vi.waitFor(() => expect(input().value).toBe('AB'));
+  });
+
   it('takes a composition that rewrites the text before the caret', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
