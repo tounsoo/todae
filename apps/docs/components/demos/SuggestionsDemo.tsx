@@ -13,8 +13,7 @@ import {
   useAnnouncer,
 } from '@tounsoo/todae';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { flushSync } from 'react-dom';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 
 // Each turn is a node. A message's replies are its children, so regenerating
 // adds a sibling, and `shown` picks the child the conversation follows.
@@ -25,9 +24,8 @@ type Turn = {
   parent: number | null;
   children: number[];
   shown: number;
-  streaming?: boolean;
-  // While streaming, the reply its question showed before, put back if it stops.
-  before?: number;
+  // While the reply streams: the reply its question showed before, put back if it stops.
+  streaming?: { before: number };
 };
 
 type Answer = { versions: readonly string[]; suggestions: readonly string[] };
@@ -93,34 +91,39 @@ function pathOf(turns: Record<number, Turn>): Turn[] {
   return path;
 }
 
-function VersionSwitcher({ turns, reply, onShow }: { turns: Record<number, Turn>; reply: Turn; onShow: (index: number) => void }) {
+function VersionSwitcher({ index, count, onShow }: { index: number; count: number; onShow: (index: number) => void }) {
   const announce = useAnnouncer();
-  const previous = useRef<HTMLButtonElement>(null);
-  const next = useRef<HTMLButtonElement>(null);
-  const question = turns[reply.parent!]!;
-  const count = question.children.length;
-  const index = question.shown;
+  const position = useId();
 
   const show = (to: number) => {
-    // A button that turns disabled while it has focus drops focus to the page,
-    // so move focus to the other one, once the new state has enabled it.
-    flushSync(() => onShow(to));
-    if (to === 0) next.current?.focus();
-    if (to === count - 1) previous.current?.focus();
+    onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
 
+  // The toolbar moves focus to the other button when the focused one turns disabled at an end.
   return (
     <>
-      <Button.Root ref={previous} variant="ghost" aria-label="Previous reply" disabled={index === 0} onClick={() => show(index - 1)}>
+      <Button.Root
+        variant="ghost"
+        aria-label="Previous reply"
+        aria-describedby={position}
+        disabled={index === 0}
+        onClick={() => show(index - 1)}
+      >
         <Button.Icon>
           <ChevronLeft />
         </Button.Icon>
       </Button.Root>
-      <Text.Root as="span" size="s" tone="muted" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <Text.Root as="span" id={position} size="s" tone="muted" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {index + 1} of {count}
       </Text.Root>
-      <Button.Root ref={next} variant="ghost" aria-label="Next reply" disabled={index === count - 1} onClick={() => show(index + 1)}>
+      <Button.Root
+        variant="ghost"
+        aria-label="Next reply"
+        aria-describedby={position}
+        disabled={index === count - 1}
+        onClick={() => show(index + 1)}
+      >
         <Button.Icon>
           <ChevronRight />
         </Button.Icon>
@@ -138,7 +141,8 @@ export function SuggestionsExample() {
   const nextId = useRef(4);
   const path = pathOf(turns);
   const last = path.at(-1)!;
-  const busy = path.some((turn) => turn.streaming);
+  // Any reply in flight, shown or not: switching to another version doesn't stop it.
+  const busy = Object.values(turns).some((turn) => turn.streaming);
   const suggestions = last.from === 'assistant' && !busy && value === '' ? answerTo(turns[last.parent!]!.text).suggestions : [];
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -156,10 +160,10 @@ export function SuggestionsExample() {
     setTurns({
       ...base,
       [to]: { ...question, children: [...question.children, id], shown: question.children.length },
-      [id]: { id, from: 'assistant', text: '', parent: to, children: [], shown: 0, streaming: true, before: question.shown },
+      [id]: { id, from: 'assistant', text: '', parent: to, children: [], shown: 0, streaming: { before: question.shown } },
     });
     timer.current = setTimeout(() => {
-      setTurns((now) => ({ ...now, [id]: { ...now[id]!, text, streaming: false, before: undefined } }));
+      setTurns((now) => ({ ...now, [id]: { ...now[id]!, text, streaming: undefined } }));
     }, 1200);
   };
 
@@ -178,6 +182,17 @@ export function SuggestionsExample() {
 
   const stop = () => {
     clearTimeout(timer.current);
+    const streaming = Object.values(turns).find((turn) => turn.streaming);
+    const question = streaming && turns[streaming.parent!];
+    // A question stopped before any reply goes back to the field, so it can be sent again.
+    if (question && question.children.length === 1 && question.parent !== null) {
+      const { [question.id]: _, [streaming.id]: __, ...rest } = turns;
+      const before = rest[question.parent]!;
+      setTurns({ ...rest, [before.id]: { ...before, children: before.children.filter((id) => id !== question.id) } });
+      setValue(question.text);
+      field.current?.focus();
+      return;
+    }
     setTurns(dropStreaming);
   };
 
@@ -196,7 +211,7 @@ export function SuggestionsExample() {
           </Message.Root>
         ) : (
           // Keyed by the question, so switching or regenerating keeps the message and the focused button.
-          <Message.Root key={`reply-${turn.parent}`} streaming={turn.streaming} aria-label="Assistant">
+          <Message.Root key={`reply-${turn.parent}`} streaming={Boolean(turn.streaming)} aria-label="Assistant">
             <Message.Content>
               <Prose.Root>
                 <p>{turn.text}</p>
@@ -205,7 +220,11 @@ export function SuggestionsExample() {
             <Message.Actions>
               <Toolbar.Root aria-label="Reply">
                 {turns[turn.parent!]!.children.length > 1 && (
-                  <VersionSwitcher turns={turns} reply={turn} onShow={(index) => show(turn, index)} />
+                  <VersionSwitcher
+                    index={turns[turn.parent!]!.shown}
+                    count={turns[turn.parent!]!.children.length}
+                    onShow={(index) => show(turn, index)}
+                  />
                 )}
                 <Button.Root variant="ghost" aria-label="Regenerate" onClick={() => regenerate(turn)}>
                   <Button.Icon>
@@ -222,7 +241,7 @@ export function SuggestionsExample() {
         <Stack.Root as="ul" direction="row" gap="condensed" wrap aria-label="Suggestions">
           {suggestions.map((text) => (
             <li key={text} style={{ maxInlineSize: '100%' }}>
-              <Button.Root variant="secondary" onClick={() => pick(text)} style={{ maxInlineSize: '100%' }}>
+              <Button.Root variant="secondary" onClick={() => pick(text)}>
                 {text}
               </Button.Root>
             </li>
@@ -248,12 +267,15 @@ export function SuggestionsExample() {
   );
 }
 
-// A stopped or replaced reply goes away, and its question shows the reply before it.
+// A stopped or replaced reply goes away. If its question still showed it, the
+// question shows the reply it showed before.
 function dropStreaming(all: Record<number, Turn>): Record<number, Turn> {
   const streaming = Object.values(all).find((turn) => turn.streaming);
-  if (!streaming) return all;
+  if (!streaming?.streaming) return all;
   const { [streaming.id]: _, ...rest } = all;
   const question = rest[streaming.parent!]!;
+  const at = question.children.indexOf(streaming.id);
   const children = question.children.filter((id) => id !== streaming.id);
-  return { ...rest, [question.id]: { ...question, children, shown: streaming.before ?? 0 } };
+  const shown = question.shown === at ? streaming.streaming.before : question.shown > at ? question.shown - 1 : question.shown;
+  return { ...rest, [question.id]: { ...question, children, shown } };
 }

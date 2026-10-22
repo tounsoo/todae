@@ -31,7 +31,8 @@ it('fills the field from a suggestion and hides the list until the next reply is
   await userEvent.keyboard('{Enter}');
   expect(field().value).toBe('');
   expect(suggestions()).toBeNull();
-  await expect.poll(() => replies()[1]?.getAttribute('aria-busy') ?? null, { timeout: 3000 }).not.toBe('true');
+  await expect.poll(() => suggestions(), { timeout: 3000 }).not.toBeNull();
+  expect(replies()).toHaveLength(2);
   const offered = within(suggestions()!).getAllByRole('button').map((button) => button.textContent);
   expect(offered).toEqual(['Does the tooltip show on focus?', 'Can I use a visually hidden label?']);
 });
@@ -43,6 +44,8 @@ it('steps between versions and keeps focus on the switcher at either end', async
   const previous = within(reply).getByRole('button', { name: 'Previous reply' });
   const next = within(reply).getByRole('button', { name: 'Next reply' });
   expect(next).toBeDisabled();
+  // Each button reads the position as its description.
+  expect(next).toHaveAccessibleDescription('2 of 2');
 
   await userEvent.click(previous);
   expect(count(reply)).toBe('1 of 2');
@@ -84,4 +87,27 @@ it('puts the shown version back when a regenerated reply is stopped', async () =
   expect(count(reply)).toBe('3 of 3');
   await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
   expect(count(reply)).toBe('1 of 2');
+});
+
+it('keeps the composer busy while a reply streams in a version not shown', async () => {
+  setup();
+  const reply = replies()[0]!;
+  await userEvent.click(within(reply).getByRole('button', { name: 'Regenerate' }));
+  await userEvent.click(within(reply).getByRole('button', { name: 'Previous reply' }));
+  expect(count(reply)).toBe('2 of 3');
+  expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+  expect(suggestions()).toBeNull();
+  // Stopping it leaves the version the person chose.
+  await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  expect(count(reply)).toBe('2 of 2');
+});
+
+it('puts a question stopped before any reply back in the field', async () => {
+  setup();
+  await userEvent.click(within(suggestions()!).getByRole('button', { name: 'What about a toggle button?' }));
+  await userEvent.keyboard('{Enter}');
+  await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(1);
+  expect(field().value).toBe('What about a toggle button?');
+  expect(document.activeElement).toBe(field());
 });

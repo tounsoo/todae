@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { useDomId } from './domId.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
-import { getTabbables, getTabOrder } from '../overlay/tabbables.js';
+import { getTabbables, getTabOrder, isReachable } from '../overlay/tabbables.js';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
 import styles from './Toolbar.module.css';
@@ -150,6 +150,35 @@ function Root({
     const key = tabKey.current;
     return key !== null && key.eventPhase === Event.NONE && !key.defaultPrevented;
   };
+
+  // A focused control that turns disabled, such as Next at the last page,
+  // drops focus to the page: Chromium blurs it at once, during React's
+  // commit. Focus goes to the nearest control that can take it, the earlier
+  // one on a tie, once the commit is done, unless something else has taken it.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const onFocusOut = (event: globalThis.FocusEvent) => {
+      const from = event.target as HTMLElement;
+      if (event.relatedTarget || !from.matches(':disabled')) return;
+      const items = itemsOf(root);
+      const at = items.indexOf(from);
+      if (at < 0) return;
+      queueMicrotask(() => {
+        const doc = root.ownerDocument;
+        if ((doc.activeElement && doc.activeElement !== doc.body) || !root.isConnected) return;
+        for (let distance = 1; distance < items.length; distance++) {
+          for (const item of [items[at - distance], items[at + distance]]) {
+            if (!item || !root.contains(item) || item.matches(':disabled') || !isReachable(item)) continue;
+            item.focus();
+            return;
+          }
+        }
+      });
+    };
+    root.addEventListener('focusout', onFocusOut);
+    return () => root.removeEventListener('focusout', onFocusOut);
+  }, []);
 
   // Tab coming back into a run goes to the item Tab last left it from, when
   // that item can still take focus. Focus from a click, a script or a screen

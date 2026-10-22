@@ -657,9 +657,9 @@
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
     "# Suggestions": "1f16320c7c36",
-    "## Suggested prompts": "2dc0b518da53",
-    "## Versions of a reply": "bfd40b165402",
-    "## Accessible composition": "1702806fdbe2",
+    "## Suggested prompts": "8f4fc6dc7ef8",
+    "## Versions of a reply": "25c46d3508b5",
+    "## Accessible composition": "31e4280493aa",
     "## When to use": "712b903230ea",
     "(section order)": "d07108b52651"
   },
@@ -785,8 +785,8 @@
   },
   "toolbar": {
     "(top)": "65f7c00fa816",
-    "# Toolbar": "5064a8aa9aee",
-    "## Accessible composition": "2f687ca43832",
+    "# Toolbar": "50adcf46a960",
+    "## Accessible composition": "506767807d82",
     "## When to use": "ca65a01ca6de",
     "## Props": "ba88e6e3c216",
     "(section order)": "26fee290bbab"
