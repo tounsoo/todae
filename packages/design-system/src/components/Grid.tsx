@@ -29,9 +29,9 @@ function Root({ columns, minItemSize, className, style, ...props }: GridRootProp
   const layout = minItemSize ? 'fill' : columns !== undefined ? 'columns' : undefined;
   const tracks =
     layout === 'fill'
-      ? { '--todae-grid-min-item-size': minItemSize }
+      ? { '--_min-item-size': minItemSize }
       : layout === 'columns'
-        ? { '--todae-grid-column-count': String(Number.isFinite(Number(columns)) ? Math.max(1, Math.floor(Number(columns))) : 1) }
+        ? { '--_column-count': String(Number.isFinite(Number(columns)) ? Math.max(1, Math.floor(Number(columns))) : 1) }
         : undefined;
   return (
     <div

@@ -33,7 +33,7 @@ type WithoutHandlers<T> = { [K in keyof T as K extends `on${string}` ? never : K
  * own with `composeRefs(wire.ref, yourRef)`.
  */
 export type TooltipNativeProps = Omit<
-  WithoutHandlers<ComponentPropsWithoutRef<'div'>>,
+  WithoutHandlers<ComponentPropsWithoutRef<'span'>>,
   | keyof TooltipWire<true>
   | 'popover'
   | 'role'
@@ -75,13 +75,13 @@ function TooltipTip({
   ref: setRef,
   ...props
 }: TooltipChrome & TooltipNativeProps & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
-  const localRef = useRef<HTMLDivElement | null>(null);
+  const localRef = useRef<HTMLSpanElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
   useContentPolicy(surface, localRef);
   return (
-    <div
+    <span
       {...props}
       {...surface.attrs}
       ref={refs}
@@ -90,7 +90,7 @@ function TooltipTip({
       style={style}
     >
       {children}
-    </div>
+    </span>
   );
 }
 
@@ -115,13 +115,13 @@ function TooltipPanel({
     onPointerEnter: TooltipWire<true>['onPointerEnter'];
     onPointerLeave: TooltipWire<true>['onPointerLeave'];
   }) {
-  const localRef = useRef<HTMLDivElement | null>(null);
+  const localRef = useRef<HTMLSpanElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
   useContentPolicy(surface, localRef);
   return (
-    <div
+    <span
       {...props}
       {...surface.attrs}
       {...contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby })}
@@ -133,7 +133,7 @@ function TooltipPanel({
       onPointerLeave={onPointerLeave}
     >
       {children}
-    </div>
+    </span>
   );
 }
 

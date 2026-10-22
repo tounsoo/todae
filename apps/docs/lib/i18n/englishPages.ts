@@ -62,6 +62,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'progress': () => import('../../app/(en)/progress/page.mdx'),
   'prose': () => import('../../app/(en)/prose/page.mdx'),
   'radio': () => import('../../app/(en)/radio/page.mdx'),
+  'recipes/citations': () => import('../../app/(en)/recipes/citations/page.mdx'),
   'recipes/combobox': () => import('../../app/(en)/recipes/combobox/page.mdx'),
   'recipes/command-palette': () => import('../../app/(en)/recipes/command-palette/page.mdx'),
   'recipes/data-table': () => import('../../app/(en)/recipes/data-table/page.mdx'),
