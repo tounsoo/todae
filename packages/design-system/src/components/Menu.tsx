@@ -20,6 +20,8 @@ import {
   type RefObject,
 } from 'react';
 import { isTextEntry } from '../hooks/hotkey.js';
+import { mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
+import { canFocusNow } from '../overlay/tabbables.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
@@ -129,11 +131,12 @@ export type MenuSeparatorProps = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
-/** Where a context request put the menu: a box in viewport coordinates, and who asked. */
+/** Where a context request put the menu, and who asked. */
 type ContextOpen = {
-  box: { top: number; left: number; width: number; height: number };
-  /** Takes focus back when the menu closes. */
-  opener: HTMLElement;
+  /** The pointer's point in viewport coordinates, or the element a key or a screen reader's command came from. */
+  at: { x: number; y: number } | { element: HTMLElement };
+  /** What had focus when the request came, to take it back on close. */
+  opener: HTMLElement | null;
   /** The Menu.ContextTrigger that asked. */
   source: string;
 };
@@ -150,11 +153,12 @@ type MenuContextValue = {
   /** The end a trigger key asked the next open to focus. Cleared when the trigger loses focus. */
   openEnd: RefObject<'first' | 'last' | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
-  /** The last context request, kept until a Menu.Trigger opens the menu. */
+  /** The context request the menu is open for, dropped when it closes. */
   context: ContextOpen | null;
   openAt: (context: ContextOpen) => void;
-  clearContext: () => void;
-  /** The anchor name of the box a context request put the menu at. */
+  /** Where focus goes when the menu closes or Tab leaves it. */
+  restoreTarget: () => HTMLElement | null;
+  /** The anchor name of the point or element a context request put the menu at. */
   pointName: string;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
@@ -199,23 +203,34 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     contextRef.current = next;
     setContextState(next);
   }, []);
+  const openRef = useRef(open);
+  openRef.current = open;
   const openAt = useCallback(
     (next: ContextOpen) => {
       setContext(next);
       setOpen(true, 'context');
+      // An owner that turns the request down does so in the same event, so a
+      // request still closed after it is dropped, not reused by a later open.
+      setTimeout(() => {
+        if (!openRef.current && contextRef.current === next) setContext(null);
+      });
     },
     [setContext, setOpen],
   );
-  const clearContext = useCallback(() => setContext(null), [setContext]);
-  // Focus goes back to whoever opened the menu: the trigger, or what had
-  // focus when a context request came.
+  // Focus goes back to what had it when a context request came, while it is
+  // still in the page and can take focus, else to the trigger.
+  const restoreTarget = useCallback(() => {
+    const opener = contextRef.current?.opener;
+    return opener?.isConnected && canFocusNow(opener) ? opener : triggerRef.current;
+  }, []);
+  // usePopover reads `current` when it restores focus.
   const restoreFocusRef = useMemo<RefObject<HTMLElement | null>>(
     () => ({
       get current() {
-        return contextRef.current?.opener ?? triggerRef.current;
+        return restoreTarget();
       },
     }),
-    [],
+    [restoreTarget],
   );
   const [triggers, setTriggers] = useState(0);
   const hasTrigger = triggers > 0;
@@ -230,6 +245,11 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   useLayoutEffect(() => {
     if (!open) initialFocusRef.current = null;
   }, [open]);
+  // A context request lasts for one open. This runs after usePopover has
+  // read where focus goes back to.
+  useLayoutEffect(() => {
+    if (!open) setContext(null);
+  }, [open, setContext]);
   // Every open starts at an end of the list and focus enters only from the
   // trigger, so the menu tracks no tab stop: items are never Tab stops, and
   // focus moving across them under the pointer does not render the menu.
@@ -247,12 +267,12 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       initialFocusRef,
       context,
       openAt,
-      clearContext,
+      restoreTarget,
       pointName,
       popover,
       roving,
     }),
-    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, clearContext, pointName, popover, roving],
+    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, restoreTarget, pointName, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -275,7 +295,6 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
     ref: refs,
     onClick: composeHandlers(onClick, () => {
       openEnd.current = null;
-      ctx.clearContext();
     }),
     // A key's request for an end lasts while the trigger has focus, so one
     // the owner refused does not carry over to a later open from code. This
@@ -315,7 +334,6 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
           return;
         }
         openEnd.current = end;
-        ctx.clearContext();
         ctx.setOpen(true, 'trigger');
       })}
     />
@@ -327,25 +345,19 @@ function isContextKey(event: KeyboardEvent<HTMLElement>): boolean {
   return event.key === 'F10' && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
 }
 
-function boxOf(el: Element): ContextOpen['box'] {
-  const { top, left, width, height } = el.getBoundingClientRect();
-  return { top, left, width, height };
-}
-
 function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: MenuContextTriggerProps) {
   const ctx = useMenu('ContextTrigger');
   // A callback, so it fits the ref of whatever element `render` returns.
   const refs = useComposedRefs<HTMLElement>(ref as Ref<HTMLElement> | undefined);
   const source = useDomId();
-  const { openAt, popover } = ctx;
+  const { openAt } = ctx;
   // Requests from inside the menu are the menu's own, and a text field keeps
   // the browser's menu, which holds its editing commands.
-  const claims = (target: EventTarget) =>
-    target instanceof Element && !popover.popoverRef.current?.contains(target) && !isTextEntry(target);
-  const request = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>, box: ContextOpen['box']) => {
+  const claims = (target: EventTarget): target is HTMLElement =>
+    target instanceof HTMLElement && !ctx.popover.popoverRef.current?.contains(target) && !isTextEntry(target);
+  const request = (at: ContextOpen['at']) => {
     const active = document.activeElement;
-    const opener = active instanceof HTMLElement && active !== document.body ? active : event.currentTarget;
-    openAt({ box, opener, source });
+    openAt({ at, opener: active instanceof HTMLElement && active !== document.body ? active : null, source });
   };
   const wire: MenuContextTriggerRenderProps = {
     ...props,
@@ -354,36 +366,38 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
     // A request a child already handled, such as an inner ContextTrigger's,
     // is not this region's.
     onContextMenu: composeHandlers(onContextMenu, (event: MouseEvent<HTMLElement>) => {
-      if (event.defaultPrevented || !claims(event.target)) return;
+      const { target } = event;
+      if (event.defaultPrevented || !claims(target)) return;
       event.preventDefault();
       const native = event.nativeEvent as globalThis.MouseEvent & { pointerType?: string };
-      // A right button, a long press or a pen opens at the point. A key or a
-      // screen reader's command opens at the element it came from.
-      const atPoint = event.button === 2 || native.pointerType === 'touch' || native.pointerType === 'pen';
-      const box = atPoint
-        ? { top: event.clientY, left: event.clientX, width: 0, height: 0 }
-        : boxOf(event.target as Element);
-      request(event, box);
+      // A key opens below its element: Chromium marks its event with button
+      // -1, and Pointer Events with an empty pointerType. A screen reader's
+      // command with no point does too. Any other request, a Mac Ctrl+click
+      // or a long press too, opens at its point.
+      const fromKey =
+        event.button === -1 || native.pointerType === '' || (event.clientX === 0 && event.clientY === 0);
+      request(fromKey ? { element: target } : { x: event.clientX, y: event.clientY });
     }),
     // Shift+F10 and the ContextMenu key open the menu from the keyboard where
     // the browser fires no contextmenu for them, as on macOS. Handling the
     // key stops the browser's own contextmenu where it would fire one.
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
-      if (!isContextKey(event) || event.defaultPrevented || !claims(event.target)) return;
+      const { target } = event;
+      if (!isContextKey(event) || event.defaultPrevented || !claims(target)) return;
       event.preventDefault();
       if (event.repeat) return;
-      request(event, boxOf(event.target as Element));
+      request({ element: target });
     }),
   };
   return render ? render(wire) : <div {...(wire as ComponentPropsWithRef<'div'>)} />;
 }
 
 /**
- * The box a context request put the menu at, in the top layer so its
+ * The point a pointer request put the menu at, in the top layer so its
  * viewport coordinates hold whatever transforms its ancestors have. It shows
  * before the menu, which can only anchor to what is earlier in the top layer.
  */
-function PointAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
+function PointAnchor({ x, y, name, open }: { x: number; y: number; name: string; open: boolean }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   usePopoverSync(ref, open);
   return (
@@ -392,17 +406,22 @@ function PointAnchor({ box, name, open }: { box: ContextOpen['box']; name: strin
       popover="manual"
       aria-hidden="true"
       className={styles.point}
-      style={
-        {
-          '--_top': `${box.top}px`,
-          '--_left': `${box.left}px`,
-          '--_width': `${box.width}px`,
-          '--_height': `${box.height}px`,
-          anchorName: name,
-        } as CSSProperties
-      }
+      style={{ '--_x': `${x}px`, '--_y': `${y}px`, anchorName: name } as CSSProperties}
     />
   );
+}
+
+/** Gives `element` the anchor `name` while it is the menu's anchor, beside any name it has. */
+function useElementAnchor(element: HTMLElement | null, name: string) {
+  useLayoutEffect(() => {
+    if (!element) return;
+    element.style.setProperty('anchor-name', mergeAnchorNames(element.style.getPropertyValue('anchor-name'), name));
+    return () => {
+      const rest = removeAnchorName(element.style.getPropertyValue('anchor-name'), name);
+      if (rest) element.style.setProperty('anchor-name', rest);
+      else element.style.removeProperty('anchor-name');
+    };
+  }, [element, name]);
 }
 
 function Content({
@@ -445,25 +464,34 @@ function Content({
       // trigger. Shift+Tab stops on it, since moving back would skip it.
       if (event.key === 'Tab') {
         ctx.setOpen(false, 'tab');
-        const trigger = ctx.triggerRef.current;
-        trigger?.focus();
-        // A trigger that could not take focus, or none, lets Tab move on from
-        // the item as usual.
-        if (event.shiftKey && trigger && document.activeElement === trigger) event.preventDefault();
+        // The trigger, or what had focus when a context request opened the menu.
+        const back = ctx.restoreTarget();
+        back?.focus();
+        // One that could not take focus, or none, lets Tab move on from the
+        // item as usual.
+        if (event.shiftKey && back && document.activeElement === back) event.preventDefault();
         return;
       }
+      // Context keys in the menu are its own, so a region around it doesn't
+      // open another menu.
+      if (isContextKey(event)) event.preventDefault();
       // Focus on the menu itself, from a press on its padding, is handled
       // by roving focus: Down and typeahead start at the first item.
     }),
   });
   const refs = useComposedRefs(localRef, wireRef, container.ref, ref);
-  const named = Boolean(ariaLabel || ariaLabelledby || ctx.hasTrigger);
   useLayoutEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && open && !named) {
-      console.error('Menu.Content needs aria-label or aria-labelledby when no Menu.Trigger names it.');
-    }
-  }, [named, open]);
-  const at = ctx.context;
+    if (process.env.NODE_ENV === 'production' || !open) return;
+    // Checked once a Menu.Trigger mounted beside the menu has had its render.
+    queueMicrotask(() => {
+      const el = localRef.current;
+      if (el && !el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby')) {
+        console.error('Menu.Content needs aria-label or aria-labelledby when no Menu.Trigger names it.');
+      }
+    });
+  }, [open]);
+  const at = ctx.context?.at;
+  useElementAnchor(at && 'element' in at ? at.element : null, ctx.pointName);
   const atStyle = at
     ? ({ '--todae-popover-anchor': ctx.pointName, positionAnchor: ctx.pointName } as CSSProperties)
     : undefined;
@@ -482,7 +510,7 @@ function Content({
   );
   return (
     <>
-      {at && <PointAnchor box={at.box} name={ctx.pointName} open={open} />}
+      {at && 'x' in at && <PointAnchor x={at.x} y={at.y} name={ctx.pointName} open={open} />}
       <div
         {...props}
         ref={refs}

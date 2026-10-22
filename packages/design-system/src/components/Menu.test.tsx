@@ -589,7 +589,9 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
-  it('is named by its trigger only when one is mounted', () => {
+  it('is named by its trigger only when one is mounted', async () => {
+    // The menu left unnamed is reported.
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { rerender } = render(
       <Menu.Root defaultOpen>
         <Menu.Trigger>Actions</Menu.Trigger>
@@ -608,6 +610,8 @@ describe('Menu', () => {
       </Menu.Root>,
     );
     expect(menu().hasAttribute('aria-labelledby')).toBe(false);
+    await Promise.resolve();
+    spy.mockRestore();
   });
 
   it('stays named while one of two triggers remains', () => {
@@ -895,7 +899,7 @@ describe('Menu', () => {
 });
 
 describe('Menu.ContextTrigger', () => {
-  it('logs an error when an open menu has no name', () => {
+  it('logs an error when an open menu has no name', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <Menu.Root defaultOpen>
@@ -905,8 +909,41 @@ describe('Menu.ContextTrigger', () => {
         </Menu.Content>
       </Menu.Root>,
     );
+    await Promise.resolve();
     expect(spy).toHaveBeenCalledWith(expect.stringContaining('Menu.Content needs aria-label or aria-labelledby'));
     spy.mockRestore();
+  });
+
+  it('logs no error when a Menu.Trigger names a menu that mounts open', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await Promise.resolve();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('drops a request the owner turns down', async () => {
+    render(
+      <Menu.Root open={false}>
+        <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+        <Menu.Content aria-label="File">
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
+    });
+    expect(document.querySelector('span[popover]')).not.toBeNull();
+    await act(() => new Promise((resolve) => setTimeout(resolve)));
+    expect(document.querySelector('span[popover]')).toBeNull();
   });
 
   it('renders the region on the element render returns', () => {

@@ -45,7 +45,7 @@ import NextLink from 'next/link';
 
 ## Context menus
 
-`Menu.ContextTrigger` is a region, such as a row, a file or a message, that opens the menu on a right click, a long press on Android, Shift+F10 or the ContextMenu key. A pointer opens the menu at the pointer; a key opens it below the focused element. The menu flips to stay in the viewport, as from `Menu.Trigger`, and opens on its first item. Escape gives focus back to whatever had it when the menu opened. The region renders a `div`; pass `render` to make it a table row or a list item, and spread the props it is handed. While its menu is open, the region carries `data-open`, so a product can highlight the row that was clicked.
+`Menu.ContextTrigger` is a region, such as a row, a file or a message, that opens the menu on a right click, a long press on Android, Shift+F10 or the ContextMenu key. A pointer opens the menu at the pointer; a key opens it below the focused element, and the menu follows that element as the page scrolls. The menu flips to stay in the viewport, as from `Menu.Trigger`, and opens on its first item. Escape gives focus back to whatever had it when the menu opened, or to the `Menu.Trigger` when that is gone or could not take focus, as after a right click on text. The region renders a `div`; pass `render` to make it a table row or a list item, and spread the props it is handed. While its menu is open, the region carries `data-open`, so a product can highlight the row that was clicked.
 
 Give each region a visible `Menu.Trigger` in the same `Menu.Root` as well. A context menu can't be seen, few people know Shift+F10, Mac keyboards have no ContextMenu key, and iOS Safari fires no `contextmenu` on a long press, so the button is how many people reach the same menu.
 

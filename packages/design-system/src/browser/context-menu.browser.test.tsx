@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
 import { Menu, type MenuOpenChangeReason } from '../components/Menu.js';
@@ -192,6 +192,142 @@ describe('Menu.ContextTrigger in a browser', () => {
     );
     await userEvent.click(screen.getByTestId('region'), { button: 'right', position: { x: 20, y: 20 } });
     await waitFor(() => expect(screen.getByRole('menu', { name: 'File' }).matches(':popover-open')).toBe(true));
+    expect(outer).not.toHaveBeenCalled();
+  });
+
+  it('opens a Mac Ctrl+click at the pointer', async () => {
+    render(
+      <Themed>
+        <FileMenu />
+      </Themed>,
+    );
+    const region = screen.getByTestId('region');
+    const r = region.getBoundingClientRect();
+    region.dispatchEvent(
+      new PointerEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        ctrlKey: true,
+        pointerType: 'mouse',
+        clientX: r.left + 200,
+        clientY: r.top + 50,
+      }),
+    );
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    expect(Math.abs(menu().getBoundingClientRect().left - (r.left + 200))).toBeLessThanOrEqual(1);
+  });
+
+  it('gives focus to Menu.Trigger after a right click on a region that takes no focus', async () => {
+    render(
+      <Themed>
+        <Menu.Root>
+          <Menu.ContextTrigger data-testid="plain">
+            report.pdf
+            <Menu.Trigger aria-label="More">…</Menu.Trigger>
+          </Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByTestId('plain'), { button: 'right', position: { x: 5, y: 5 } });
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'More' })));
+  });
+
+  it('moves Tab on from the element the keyboard opened the menu from', async () => {
+    render(
+      <Themed>
+        <Menu.Root>
+          <Menu.ContextTrigger>
+            <button type="button">Cell</button>
+            <Menu.Trigger aria-label="More">…</Menu.Trigger>
+          </Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    const cell = screen.getByRole('button', { name: 'Cell' });
+    cell.focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(menu().matches(':popover-open')).toBe(false);
+    expect(document.activeElement).toBe(cell);
+  });
+
+  it('gives focus to Menu.Trigger when the opener is gone', async () => {
+    function Rows() {
+      const [shown, setShown] = useState(true);
+      return (
+        <Menu.Root>
+          <Menu.ContextTrigger>
+            {shown && <button type="button">Cell</button>}
+            <Menu.Trigger aria-label="More">…</Menu.Trigger>
+          </Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item onSelect={() => setShown(false)}>Delete</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(
+      <Themed>
+        <Rows />
+      </Themed>,
+    );
+    screen.getByRole('button', { name: 'Cell' }).focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'More' })));
+  });
+
+  it('keeps a keyboard menu below its element when the page scrolls', async () => {
+    render(
+      <Themed>
+        <div data-testid="scroller" style={{ blockSize: 300, overflow: 'auto' }}>
+          <div style={{ blockSize: 40 }} />
+          <FileMenu />
+          <div style={{ blockSize: 800 }} />
+        </div>
+      </Themed>,
+    );
+    const region = screen.getByTestId('region');
+    region.focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    screen.getByTestId('scroller').scrollTop = 30;
+    await waitFor(() => {
+      const gap = menu().getBoundingClientRect().top - region.getBoundingClientRect().bottom;
+      expect(gap).toBeGreaterThanOrEqual(0);
+      expect(gap).toBeLessThan(16);
+    });
+  });
+
+  it('keeps context keys inside an open menu from opening the region around it', async () => {
+    const outer = vi.fn();
+    render(
+      <Themed>
+        <Menu.Root onOpenChange={outer}>
+          <Menu.ContextTrigger>
+            <FileMenu />
+          </Menu.ContextTrigger>
+          <Menu.Content aria-label="Folder">
+            <Menu.Item>New file</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    screen.getByTestId('region').focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(screen.getByRole('menu', { name: 'File' }).matches(':popover-open')).toBe(true));
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
     expect(outer).not.toHaveBeenCalled();
   });
 });
