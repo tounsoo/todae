@@ -80,6 +80,7 @@ type Drag = {
   startPointer: number;
   startSize: number;
   sign: 1 | -1;
+  scale: number;
 };
 
 type SplitterContextValue = {
@@ -109,6 +110,13 @@ const PANEL = 'data-todae-splitter-panel';
 // handle that a company wraps in its own component still counts.
 function siblingPanel(el: Element, side: 'previous' | 'next'): Element | null {
   return side === 'previous' ? el.previousElementSibling : el.nextElementSibling;
+}
+
+// Layout pixels per screen pixel along the axis, which a scaled ancestor makes other than 1.
+function layoutScale(el: HTMLElement, horizontal: boolean): number {
+  const shown = el.getBoundingClientRect()[horizontal ? 'width' : 'height'];
+  const laid = Number.parseFloat(getComputedStyle(el)[horizontal ? 'width' : 'height']);
+  return shown > 0 && laid > 0 ? laid / shown : 1;
 }
 
 function isRtl(el: HTMLElement): boolean {
@@ -174,7 +182,8 @@ function Root({
   const bounds = useMemo<Bounds>(
     () => ({
       min,
-      max: Math.min(max ?? Number.POSITIVE_INFINITY, room ?? Number.POSITIVE_INFINITY),
+      // Whole pixels, as a drag and the keys give; the sliver under a pixel left over counts as empty.
+      max: Math.min(max ?? Number.POSITIVE_INFINITY, room === null ? Number.POSITIVE_INFINITY : Math.floor(room)),
       collapsible,
     }),
     [min, max, room, collapsible],
@@ -215,7 +224,8 @@ function Root({
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const measure = () => setRoom(available(root, handle, orientation));
+    // The ref, not the state, so the first measure in the commit that attaches the handle already counts its track.
+    const measure = () => setRoom(available(root, handleRef.current, orientation));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(measure);
@@ -271,8 +281,7 @@ function Root({
       case 'min':
         return commit(floorSize(bounds));
       case 'max':
-        // Whole pixels, as a drag and the keys give; the sliver left is under a pixel, which counts as empty.
-        return Number.isFinite(bounds.max) ? commit(Math.floor(bounds.max)) : undefined;
+        return Number.isFinite(bounds.max) ? commit(bounds.max) : undefined;
       case 'toggle':
         return commit(toggledSize(size, lastOpen.current, min, step));
     }
@@ -409,6 +418,7 @@ function Handle({
           startPointer: horizontal ? event.clientX : event.clientY,
           startSize: size,
           sign: growSign(orientation, primary, isRtl(handle)),
+          scale: layoutScale(handle, horizontal),
         };
         setDragging(true);
         focusWithoutScroll(handle);
@@ -417,7 +427,7 @@ function Handle({
         const current = drag.current;
         if (current?.pointerId !== event.pointerId) return;
         const pointer = orientation === 'horizontal' ? event.clientX : event.clientY;
-        const next = dragSize(pointer, current.startPointer, current.startSize, current.sign);
+        const next = dragSize(pointer, current.startPointer, current.startSize, current.sign, current.scale);
         ctx.commit(snapSize(Math.round(next), bounds));
       })}
       onPointerUp={release(onPointerUp)}

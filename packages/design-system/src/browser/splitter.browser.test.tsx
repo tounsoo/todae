@@ -49,6 +49,18 @@ const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
 const WIDE = { '--todae-splitter-handle-target': '20px' } as CSSProperties;
 
 describe('Splitter dragging', () => {
+  it('keeps the handle under the pointer inside a scaled ancestor', async () => {
+    render(
+      <div style={{ transform: 'scale(0.5)', transformOrigin: '0 0' }}>
+        <Layout defaultValue={200} style={WIDE} />
+      </div>,
+    );
+    const host = screen.getByTestId('host').getBoundingClientRect();
+    // The handle's middle is at 210 layout pixels, 105 on screen; 70 more on screen is 140 in layout.
+    await userEvent.dragAndDrop(handle(), probeAt(host.left + 175, host.top + 50));
+    expect(now()).toBe(340);
+  });
+
   it('follows the pointer and keeps where the handle was pressed', async () => {
     render(<Layout defaultValue={200} style={WIDE} />);
     const host = screen.getByTestId('host').getBoundingClientRect();
@@ -188,7 +200,8 @@ describe('Splitter layout', () => {
     const { rerender } = render(<Layout value={900} width={500.6} />);
     // 500.6 less the 24px track: a rounded client width would say 477.
     await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('476'));
-    expect(box('first').width).toBeCloseTo(476.6, 0);
+    // Whole pixels: the 0.6px left of the other panel counts as none.
+    expect(box('first').width).toBe(476);
     expect(getComputedStyle(screen.getByTestId('second')).visibility).toBe('hidden');
     // Under a pixel of the other panel is none.
     rerender(<Layout value={476.2} width={500.6} />);

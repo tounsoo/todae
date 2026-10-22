@@ -118,8 +118,9 @@ export function keyAction(
  * The primary panel's size for a pointer at `pointer` along the axis, given the
  * size and pointer position when the drag began and `sign`, from
  * {@link growSign}. Only the distance moved counts, so the handle never
- * jumps and a layout that shifts mid-drag changes nothing.
+ * jumps and a layout that shifts mid-drag changes nothing. `scale` turns the
+ * pointer's screen pixels into the layout's, under a scaled ancestor.
  */
-export function dragSize(pointer: number, startPointer: number, startSize: number, sign: 1 | -1): number {
-  return startSize + sign * (pointer - startPointer);
+export function dragSize(pointer: number, startPointer: number, startSize: number, sign: 1 | -1, scale = 1): number {
+  return startSize + sign * (pointer - startPointer) * scale;
 }

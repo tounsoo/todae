@@ -385,6 +385,20 @@ describe('Splitter range', () => {
 });
 
 describe("Splitter at the container's edge", () => {
+  it('keeps whole pixels at a fractional room, by End, the keys or a drag', () => {
+    measured(524.6);
+    const onValueChange = vi.fn();
+    render(<Layout defaultValue={200} onValueChange={onValueChange} />);
+    expect(handle().getAttribute('aria-valuemax')).toBe('524');
+    fireEvent.keyDown(handle(), { key: 'End' });
+    fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+    fireEvent.keyDown(handle(), { key: 'ArrowLeft' });
+    expect(onValueChange.mock.calls.map(([next]) => next)).toEqual([524, 508]);
+    expect(empty()).toBeNull();
+    fireEvent.keyDown(handle(), { key: 'End' });
+    expect(empty()).toBe('end');
+  });
+
   it('reports nothing for a key that changes nothing the panel shows', () => {
     measured(300);
     const onValueChange = vi.fn();
