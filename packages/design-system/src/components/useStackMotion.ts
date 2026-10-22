@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type RefObject } from 'react';
-import { cssTimeMs } from '../overlay/cssTime.js';
+import { tokenMs } from '../overlay/cssTime.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 
 export type Stack = readonly string[];
@@ -72,8 +72,12 @@ function topOf(viewport: HTMLElement, scroller: Element): number {
   return viewport.getBoundingClientRect().top - edge + scroller.scrollTop - padding;
 }
 
-function motionToken(el: HTMLElement, name: string): string {
-  return getComputedStyle(el).getPropertyValue(`--todae-drilldown-motion-${name}`).trim();
+function enterEasing(viewport: HTMLElement): string | undefined {
+  const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
+  if (process.env.NODE_ENV !== 'production' && !easing) {
+    console.error("Drilldown: --todae-drilldown-motion-easing-enter reads empty, so the viewport's height changes at a constant speed. Load Todae's stylesheet or set the token.");
+  }
+  return easing || undefined;
 }
 
 // The animations on the elements themselves, as getAnimations() leaves out
@@ -136,13 +140,13 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     const restored = onChange(change, views, scroller?.scrollTop ?? 0);
     if (!viewport || !scroller) return;
     scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
-    const duration = reducedMotion() ? 0 : cssTimeMs(motionToken(viewport, 'duration'));
+    const duration = reducedMotion() ? 0 : tokenMs(viewport, '--todae-drilldown-motion-duration');
     // A restored offset needs the viewport's full height at once, or the
     // scroll container clamps it.
     if (views.entering && views.leaving && duration && !restored) {
       viewport.animate([{ height: `${views.leaving.offsetHeight}px` }, { height: `${views.entering.offsetHeight}px` }], {
         duration,
-        easing: motionToken(viewport, 'easing-enter'),
+        easing: enterEasing(viewport),
       });
     }
   }, [change, viewportRef]);
