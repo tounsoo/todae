@@ -3026,6 +3026,24 @@
       ]
     },
     {
+      "name": "Menu.ContextTrigger",
+      "description": "A region whose right click, long press on Android, Shift+F10 or ContextMenu key opens the menu: at the pointer, or below the focused element from the keyboard. Renders a div unless render returns another element.",
+      "props": [
+        {
+          "name": "render",
+          "type": "(props: MenuContextTriggerRenderProps) => ReactElement",
+          "required": false,
+          "description": "Renders the region as another element, such as a table row or a list item. It receives every prop, ref included, and must pass them on."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The content a context request opens the menu from."
+        }
+      ]
+    },
+    {
       "name": "Menu.Group",
       "description": "role=\"group\" inside a menu. Requires aria-label or aria-labelledby.",
       "props": [
@@ -3215,13 +3233,13 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: MenuOpenChangeReason) => void",
           "required": false,
-          "description": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto."
+          "description": "Fires on open and close. reason is trigger, context, escape, outside, select or tab. Leaving open unchanged is a veto."
         },
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Menu.Trigger and Menu.Content."
+          "description": "Menu.Trigger, Menu.ContextTrigger and Menu.Content."
         }
       ]
     },
@@ -5508,6 +5526,30 @@
           "required": false,
           "description": "Listen only while true. Pass it in the options object.",
           "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "useInlineEdit",
+      "description": "useInlineEdit({ value, onCommit, onCancel }) returns { editing, draft, setDraft, start, commit, cancel, getTriggerProps, getGroupProps, getInputProps }. Spread getTriggerProps on the button that starts the edit, getGroupProps on the element that holds the input and its buttons while editing, and getInputProps on the text input. start() opens the edit from value, focuses the input and selects its text. Enter and focus leaving the group commit, and Escape and a modal's close requests cancel; keys pressed during an IME composition are left to the input. A press in the group anywhere but on a text field, select, slider or editable element keeps focus in the input. When the edit closes with focus inside it, focus returns to the trigger.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The saved value. Each edit starts from it."
+        },
+        {
+          "name": "onCommit",
+          "type": "(draft: string) => boolean | void",
+          "required": true,
+          "description": "Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes."
+        },
+        {
+          "name": "onCancel",
+          "type": "() => void",
+          "required": false,
+          "description": "Called when the person cancels: Escape, or a Cancel button that calls cancel. Also called when focus leaves the edit with a draft onCommit turns down."
         }
       ]
     },

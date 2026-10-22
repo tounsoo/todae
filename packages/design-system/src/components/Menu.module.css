@@ -11,6 +11,23 @@
     display: flex;
   }
 
+  /* The box a context request put the menu at, which anchors to it.
+     Viewport coordinates, so its sides are physical, not logical. */
+  .anchorBox {
+    position: fixed;
+    inset: unset;
+    top: var(--_top);
+    left: var(--_left);
+    width: var(--_width);
+    height: var(--_height);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    overflow: visible;
+    pointer-events: none;
+  }
+
   .item {
     position: relative;
     box-sizing: border-box;
