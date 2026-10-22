@@ -539,6 +539,14 @@
   --todae-field-border-hover: var(--_todae-field-border-hover, var(--todae-color-border-default));
   --todae-field-border-invalid: var(--_todae-field-border-invalid, var(--todae-color-danger-default));
   --todae-field-border-width: var(--_todae-field-border-width, var(--todae-border-width));
+  --todae-field-code-caret-blink-duration: var(--_todae-field-code-caret-blink-duration, 1000ms);
+  --todae-field-code-caret-color: var(--_todae-field-code-caret-color, var(--todae-color-fg-default));
+  --todae-field-code-caret-width: var(--_todae-field-code-caret-width, 2px);
+  --todae-field-code-gap: var(--_todae-field-code-gap, var(--todae-space-2));
+  --todae-field-code-slot-block-size: var(--_todae-field-code-slot-block-size, 3.25rem);
+  --todae-field-code-slot-font-size: var(--_todae-field-code-slot-font-size, var(--todae-font-size-5));
+  --todae-field-code-slot-inline-size: var(--_todae-field-code-slot-inline-size, 2.75rem);
+  --todae-field-code-slot-radius: var(--_todae-field-code-slot-radius, var(--todae-radius-md));
   --todae-field-counter-emphasis-weight: var(--_todae-field-counter-emphasis-weight, 600);
   --todae-field-date-time-gap: var(--_todae-field-date-time-gap, var(--todae-space-stack-gap));
   --todae-field-date-time-list-max-height: var(--_todae-field-date-time-list-max-height, 18rem);

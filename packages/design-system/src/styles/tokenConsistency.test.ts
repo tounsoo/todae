@@ -134,12 +134,14 @@ describe('token consistency across component styles', () => {
       }
     }
     expect(offElement).toEqual({
+      Field: ['.oneTimeCodeInput:focus-visible + .slots .slot[data-active]'],
       selection: ['.input:focus-visible + .indicator'],
       ColorPicker: ['.area:has(.axis:focus-visible) > .thumb'],
       Tree: ['.item:focus-visible > .label'],
       ChipList: ['.more:focus-visible [data-overflow]'],
     });
     const renderedIn: Record<string, string> = {
+      Field: 'Field.OneTimeCode',
       selection: 'SelectionControl',
       ColorPicker: 'ColorPicker',
       Tree: 'Tree',
