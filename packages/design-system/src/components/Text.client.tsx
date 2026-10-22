@@ -1,189 +1,148 @@
 import {
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
-  type FocusEvent as ReactFocusEvent,
-  type PointerEvent as ReactPointerEvent,
+  type PointerEventHandler,
   type RefObject,
 } from 'react';
-import { useTooltip } from '../hooks/useTooltip.js';
+import { useTooltip, type TooltipTriggerWire } from '../hooks/useTooltip.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from './domId.js';
 import { useComposedRefs } from './props.js';
-import { clampLines, Text as ServerText, type TextRootProps } from './Text.js';
+import { clampLines, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
 
-export type { TextAs, TextHeading, TextRootProps, TextSize, TextTone, TextWeight } from './Text.js';
+export type { TextAs, TextHeading, TextSize, TextTone, TextWeight } from './Text.js';
 
-type FocusTip = {
-  el: HTMLElement;
-  show: (event: FocusEvent) => void;
-  hide: (event: FocusEvent) => void;
-};
+export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 
-type FocusWatch = { tips: Set<FocusTip>; shown: FocusTip | null; stop: () => void };
+// Marks a cut text that shows a tip, so a focused element that holds several
+// shows the first one's: querySelector reads in document order.
+const CUT_ATTR = 'data-todae-cut';
 
-// One focus listener per document for every cut text that shows a tip. A
-// focused element shows the tip of the first cut text it holds, in document
-// order, so a focused card or row with several shows one tip, not a pile.
-const watches = /* @__PURE__ */ new WeakMap<Document, FocusWatch>();
-
-function first(tips: Iterable<FocusTip>, focused: Node): FocusTip | null {
-  let pick: FocusTip | null = null;
-  for (const tip of tips) {
-    if (!focused.contains(tip.el)) continue;
-    if (!pick || pick.el.compareDocumentPosition(tip.el) & Node.DOCUMENT_POSITION_PRECEDING) pick = tip;
-  }
-  return pick;
-}
-
-function startWatch(doc: Document): FocusWatch {
-  const onFocusIn = (event: FocusEvent) => {
-    // The focused element itself, inside a shadow root too.
-    const focused = event.composedPath()[0];
-    if (!(focused instanceof Node)) return;
-    const pick = first(watch.tips, focused);
-    if (!pick) return;
-    watch.shown = pick;
-    // useTooltip's own focusin listener, which runs after this one while the
-    // tip is open, releases a focus hold whose target is outside the text, as
-    // this one's is when an ancestor holds focus. Acquiring in a microtask
-    // lets it go first.
-    queueMicrotask(() => {
-      if (watch.shown === pick) pick.show(event);
-    });
-  };
-  const onFocusOut = (event: FocusEvent) => {
-    const shown = watch.shown;
-    watch.shown = null;
-    shown?.hide(event);
-  };
-  const watch: FocusWatch = {
-    tips: new Set(),
-    shown: null,
-    stop: () => {
-      doc.removeEventListener('focusin', onFocusIn, true);
-      doc.removeEventListener('focusout', onFocusOut, true);
-    },
-  };
-  doc.addEventListener('focusin', onFocusIn, true);
-  doc.addEventListener('focusout', onFocusOut, true);
-  return watch;
-}
-
-function watchFocus(tip: FocusTip): () => void {
-  const doc = tip.el.ownerDocument;
-  let watch = watches.get(doc);
-  if (!watch) {
-    watch = startWatch(doc);
-    watches.set(doc, watch);
-  }
-  const own = watch;
-  own.tips.add(tip);
-  return () => {
-    own.tips.delete(tip);
-    if (own.shown === tip) own.shown = null;
-    if (own.tips.size > 0) return;
-    own.stop();
-    watches.delete(doc);
-  };
-}
-
-/** The text of `el` as one line, as the tip shows it. */
+/** The text of `el` as one line, as it renders: innerText leaves out what isn't rendered. jsdom has no innerText. */
 function fullText(el: HTMLElement): string {
-  return (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+  return (el.innerText ?? el.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 function isCut(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
 }
 
+type ClampTipProps = {
+  target: RefObject<HTMLElement | null>;
+  anchor: string;
+  wireRef: RefObject<TooltipTriggerWire | null>;
+  onPointerEnter: PointerEventHandler<HTMLElement> | undefined;
+  onPointerLeave: PointerEventHandler<HTMLElement> | undefined;
+};
+
 /**
- * The tip of a clamped Text, beside it. It follows the text element through
- * `target` and listens on it directly, so Text.Root renders the same element
- * with or without it and gaining a tip never remounts the text.
+ * The tip of a clamped Text, beside it. Text.Root renders the same element
+ * with or without it, so gaining a tip never remounts the text; it reaches the
+ * tip's hover handlers through `wireRef`.
  */
-function ClampTip({ target, anchor }: { target: RefObject<HTMLElement | null>; anchor: string }) {
+function ClampTip({ target, anchor, wireRef, onPointerEnter, onPointerLeave }: ClampTipProps) {
   const [text, setText] = useState<string | null>(null);
-  const tip = useTooltip({ enabled: text !== null });
-  const wire = tip.getTriggerProps();
-  const wireRef = useRef(wire);
-  wireRef.current = wire;
+  // Focus on the text, or on an element around it such as a link or a row,
+  // when this is the first cut text that element holds.
+  const holdsFocus = useCallback(
+    (focused: Element) => {
+      const el = target.current;
+      return el !== null && (focused === el || (focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el));
+    },
+    [target],
+  );
+  const tip = useTooltip({ enabled: text !== null, anchorName: anchor, holdsFocus });
+  const wire = tip.getTriggerProps({ onPointerEnter, onPointerLeave });
+
+  const check = useCallback(() => {
+    const el = target.current;
+    if (!el) return;
+    const full = fullText(el);
+    setText(full !== '' && isCut(el) ? full : null);
+  }, [target]);
+
+  // Every render, since a size, weight or lines change can cut the text
+  // without changing its box.
+  useLayoutEffect(check);
 
   useLayoutEffect(() => {
     const el = target.current;
     if (!el) return;
-    const check = () => {
-      const full = fullText(el);
-      setText(full !== '' && isCut(el) ? full : null);
-    };
-    check();
     // A child can change the text from its own state without Text rendering again.
     const mutations = typeof MutationObserver === 'undefined' ? null : new MutationObserver(check);
     mutations?.observe(el, { childList: true, subtree: true, characterData: true });
     const resizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check);
     resizes?.observe(el);
+    // A web font that loads late changes the text's width, not the box of a one-line clamp.
+    const fonts = el.ownerDocument.fonts as FontFaceSet | undefined;
+    fonts?.addEventListener?.('loadingdone', check);
     return () => {
       mutations?.disconnect();
       resizes?.disconnect();
+      fonts?.removeEventListener?.('loadingdone', check);
     };
-  }, [target]);
+  }, [check, target]);
+
+  const setTrigger = wire.ref;
+  useLayoutEffect(() => {
+    setTrigger(target.current);
+    return () => setTrigger(null);
+  }, [setTrigger, target]);
 
   const cut = text !== null;
   useLayoutEffect(() => {
     const el = target.current;
     if (!el || !cut) return;
-    // The wire's handlers read only `defaultPrevented` and `relatedTarget`, which native events carry.
-    const onPointerEnter = (event: PointerEvent) =>
-      wireRef.current.onPointerEnter(event as unknown as ReactPointerEvent<HTMLElement>);
-    const onPointerLeave = (event: PointerEvent) =>
-      wireRef.current.onPointerLeave(event as unknown as ReactPointerEvent<HTMLElement>);
-    wireRef.current.ref(el);
-    el.addEventListener('pointerenter', onPointerEnter);
-    el.addEventListener('pointerleave', onPointerLeave);
-    const stop = watchFocus({
-      el,
-      show: (event) => wireRef.current.onFocus(event as unknown as ReactFocusEvent<HTMLElement>),
-      hide: (event) => wireRef.current.onBlur(event as unknown as ReactFocusEvent<HTMLElement>),
-    });
-    return () => {
-      stop();
-      el.removeEventListener('pointerenter', onPointerEnter);
-      el.removeEventListener('pointerleave', onPointerLeave);
-      wireRef.current.ref(null);
-    };
+    el.setAttribute(CUT_ATTR, '');
+    return () => el.removeAttribute(CUT_ATTR);
   }, [cut, target]);
 
+  useLayoutEffect(() => {
+    wireRef.current = wire;
+  });
+  useLayoutEffect(
+    () => () => {
+      wireRef.current = null;
+    },
+    [wireRef],
+  );
+
   if (text === null) return null;
-  const props = tip.getTooltipProps();
-  const style = { ...props.style, ['--todae-tooltip-anchor' as string]: anchor, positionAnchor: anchor } as CSSProperties;
-  // The text itself stays in the accessibility tree whole, since only its
-  // painting is clamped, so the tip is for the eye alone.
+  // Clamping changes only painting, so the text stays whole in the
+  // accessibility tree and the tip is for the eye alone.
   return (
-    <Tooltip.Root {...props} style={style} aria-hidden="true">
+    <Tooltip.Root {...tip.getTooltipProps()} aria-hidden="true">
       {text}
     </Tooltip.Root>
   );
 }
 
-function Root({ lines, tooltip = true, style, ref, ...props }: TextRootProps) {
+function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, ref, ...props }: TextRootProps) {
   const elRef = useRef<HTMLElement | null>(null);
+  const wireRef = useRef<TooltipTriggerWire | null>(null);
   const refs = useComposedRefs(elRef, ref);
   const anchor = `--todae-text-${useDomId()}`;
   const tipped = tooltip && clampLines(lines) !== undefined;
 
-  const invalid = lines !== undefined && clampLines(lines) === undefined;
-  useLayoutEffect(() => {
-    if (process.env.NODE_ENV === 'production' || !invalid) return;
-    console.error(`Text.Root lines must be a whole number of 1 or more; got ${String(lines)}`);
-  }, [invalid, lines]);
-
-  const ownStyle = tipped ? ({ ...style, anchorName: mergeAnchorNames(style?.anchorName, anchor) } as CSSProperties) : style;
+  // One shape with or without a tip, so the text never remounts. The tip's
+  // wire runs the product's handler first, as getTriggerProps does.
   return (
     <>
-      <ServerText.Root {...props} lines={lines} style={ownStyle} ref={refs} />
-      {tipped ? <ClampTip target={elRef} anchor={anchor} /> : null}
+      <ServerText.Root
+        {...props}
+        lines={lines}
+        style={tipped ? ({ ...style, anchorName: mergeAnchorNames(style?.anchorName, anchor) } as CSSProperties) : style}
+        onPointerEnter={tipped ? (event) => (wireRef.current?.onPointerEnter ?? onPointerEnter)?.(event) : onPointerEnter}
+        onPointerLeave={tipped ? (event) => (wireRef.current?.onPointerLeave ?? onPointerLeave)?.(event) : onPointerLeave}
+        ref={refs}
+      />
+      {tipped ? (
+        <ClampTip target={elRef} anchor={anchor} wireRef={wireRef} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
+      ) : null}
     </>
   );
 }

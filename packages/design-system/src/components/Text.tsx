@@ -14,7 +14,6 @@ export type TextRootProps = {
   tone?: TextTone;
   weight?: TextWeight;
   lines?: number;
-  tooltip?: boolean;
   ref?: Ref<HTMLElement>;
 } & HTMLAttributes<HTMLElement>;
 
@@ -40,10 +39,13 @@ export function clampLines(lines: number | undefined): number | undefined {
   return lines !== undefined && Number.isInteger(lines) && lines >= 1 ? lines : undefined;
 }
 
-// The server entry draws no tooltip, so it drops `tooltip` along with the other own props.
-function Root({ as: Tag = 'p', size, tone, weight, lines, tooltip: _tooltip, className, style, ref, ...props }: TextRootProps) {
+function Root({ as: Tag = 'p', size, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
   const clamp = clampLines(lines);
+  // Logged while rendering, since a server render runs no effects.
+  if (process.env.NODE_ENV !== 'production' && lines !== undefined && clamp === undefined) {
+    console.error(`Text.Root lines must be a whole number of 1 or more; got ${String(lines)}`);
+  }
   const classes = cx(
     styles.root,
     heading && styles.heading,

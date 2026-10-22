@@ -124,12 +124,52 @@ describe('Text.Root lines', () => {
     const cut = screen.getByTestId('cut');
     await userEvent.hover(cut);
     await waitFor(() => expect(openTip()).not.toBeNull());
-    // Let the open tip's effects run, as they have by the time a person tabs.
     await new Promise((resolve) => setTimeout(resolve, 50));
-    screen.getByTestId('link').focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByTestId('link'));
     await userEvent.unhover(cut);
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(openTip()).not.toBeNull();
+  });
+
+  it('takes the first Escape for a tip opened by focus, as a visible tip must be dismissable', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <a href="#report" data-testid="link">
+          <Text.Root lines={1} as="span">
+            {LONG}
+          </Text.Root>
+        </a>
+      </div>,
+    );
+    await userEvent.tab();
+    await waitFor(() => expect(openTip()).not.toBeNull());
+    const pressed: boolean[] = [];
+    window.addEventListener('keydown', (event) => pressed.push(event.defaultPrevented), { once: true });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(openTip()).toBeNull());
+    expect(pressed).toEqual([true]);
+    expect(document.activeElement).toBe(screen.getByTestId('link'));
+  });
+
+  it('measures again when a prop change cuts the text without changing its box', async () => {
+    const { rerender } = render(
+      <div style={{ inlineSize: '20rem' }}>
+        <Text.Root lines={1} size="s" data-testid="t">
+          Revenue report for the north
+        </Text.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    rerender(
+      <div style={{ inlineSize: '20rem' }}>
+        <Text.Root lines={1} size="2xl" data-testid="t">
+          Revenue report for the north
+        </Text.Root>
+      </div>,
+    );
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
   it('drops the tip when the text comes to fit', async () => {

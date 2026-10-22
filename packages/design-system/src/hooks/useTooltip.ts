@@ -52,6 +52,8 @@ export type UseTooltipOptions<I extends boolean = false> = {
   onOpenChange?: (open: boolean, reason: TooltipOpenReason) => void;
   enabled?: boolean;
   id?: string;
+  anchorName?: string;
+  holdsFocus?: (focused: Element) => boolean;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -93,12 +95,14 @@ export function useTooltip<I extends boolean = false>(
     onOpenChange,
     enabled = true,
     id,
+    anchorName: anchorNameOption,
+    holdsFocus,
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
   const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
-  const anchorName = `--todae-tooltip-${uid}`;
+  const anchorName = anchorNameOption ?? `--todae-tooltip-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLElement | null>(null);
   const intentRef = useRef(createIntent());
@@ -108,12 +112,14 @@ export function useTooltip<I extends boolean = false>(
   const showDelayRef = useRef(showDelay);
   const hideDelayRef = useRef(hideDelay);
   const enabledRef = useRef(enabled);
+  const holdsFocusRef = useRef(holdsFocus);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
   openRef.current = open;
   onOpenChangeRef.current = onOpenChange;
   showDelayRef.current = showDelay;
   hideDelayRef.current = hideDelay;
   enabledRef.current = enabled;
+  holdsFocusRef.current = holdsFocus;
 
   const applyCommands = useCallback(
     (commands: readonly TooltipCommand[]) => {
@@ -179,6 +185,12 @@ export function useTooltip<I extends boolean = false>(
     return Boolean((trigger && trigger.contains(node)) || (tooltip && tooltip.contains(node)));
   }, []);
 
+  // Whether `node` is an element that `holdsFocus` accepts.
+  const holderAccepts = useCallback(
+    (node: EventTarget | null) => node instanceof Element && holdsFocusRef.current?.(node) === true,
+    [],
+  );
+
   useEffect(() => {
     if (enabled) return;
     intentRef.current = createIntent();
@@ -208,12 +220,38 @@ export function useTooltip<I extends boolean = false>(
   useEffect(() => {
     if (!open || !enabled) return;
     function onFocusIn(event: globalThis.FocusEvent) {
-      if (pairContains(event.target)) return;
+      if (pairContains(event.target) || holderAccepts(event.composedPath()[0] ?? null)) return;
       dispatch({ kind: 'release', hold: 'focus' });
     }
     document.addEventListener('focusin', onFocusIn);
     return () => document.removeEventListener('focusin', onFocusIn);
-  }, [dispatch, enabled, open, pairContains]);
+  }, [dispatch, enabled, holderAccepts, open, pairContains]);
+
+  // Focus on an element that holdsFocus accepts holds the tip as focus on the
+  // trigger does. The element itself is the composed path's first entry, so
+  // one inside a shadow root counts.
+  const hasHolder = holdsFocus !== undefined;
+  useEffect(() => {
+    if (!enabled || !hasHolder) return;
+    const doc = triggerRef.current?.ownerDocument ?? document;
+    function onFocusIn(event: globalThis.FocusEvent) {
+      if (holderAccepts(event.composedPath()[0] ?? null)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+    }
+    function onFocusOut(event: globalThis.FocusEvent) {
+      if (!holderAccepts(event.composedPath()[0] ?? null)) return;
+      if (holderAccepts(event.relatedTarget) || pairContains(event.relatedTarget)) return;
+      dispatch({ kind: 'release', hold: 'focus' });
+    }
+    doc.addEventListener('focusin', onFocusIn);
+    doc.addEventListener('focusout', onFocusOut);
+    // A holder that has focus when the tip turns on holds it at once. The body
+    // is the active element when nothing has focus.
+    if (doc.activeElement !== doc.body && holderAccepts(doc.activeElement)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+    return () => {
+      doc.removeEventListener('focusin', onFocusIn);
+      doc.removeEventListener('focusout', onFocusOut);
+    };
+  }, [dispatch, enabled, hasHolder, holderAccepts, pairContains]);
 
   useEffect(
     () => () => {
@@ -250,13 +288,13 @@ export function useTooltip<I extends boolean = false>(
         }),
         onBlur: (event: FocusEvent<HTMLElement>) => {
           user.onBlur?.(event);
-          if (enabled && !pairContains(event.relatedTarget)) {
+          if (enabled && !pairContains(event.relatedTarget) && !holderAccepts(event.relatedTarget)) {
             dispatch({ kind: 'release', hold: 'focus' });
           }
         },
       };
     },
-    [anchorName, contentId, dispatch, enabled, open, pairContains, triggerComposed],
+    [anchorName, contentId, dispatch, enabled, holderAccepts, open, pairContains, triggerComposed],
   );
 
   const setTooltip = useComposedRefs(tooltipRef);

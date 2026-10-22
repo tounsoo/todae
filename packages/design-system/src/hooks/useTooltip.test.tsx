@@ -328,6 +328,53 @@ describe('useTooltip', () => {
   });
 });
 
+describe('useTooltip holdsFocus', () => {
+  function HolderHarness() {
+    const tooltip = useTooltip({ holdsFocus: (focused) => focused.id === 'row' });
+    const wire = tooltip.getTooltipProps();
+    return (
+      <>
+        <a href="#row" id="row">
+          <span {...tooltip.getTriggerProps()}>Name</span>
+        </a>
+        <button type="button">Other</button>
+        {tooltip.open ? (
+          <div role="tooltip" id={wire.id} ref={wire.ref} style={wire.style}>
+            Full name
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  it('shows the tip while an accepted element has focus, and hides it when focus leaves it', () => {
+    render(<HolderHarness />);
+    act(() => screen.getByRole('link').focus());
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    act(() => screen.getByRole('button').focus());
+    advance(100);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('keeps a hover-opened tip held when focus moves to an accepted element', () => {
+    render(<HolderHarness />);
+    const trigger = screen.getByText('Name');
+    fireEvent.pointerEnter(trigger);
+    advance(300);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    act(() => screen.getByRole('link').focus());
+    fireEvent.pointerLeave(trigger);
+    advance(100);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+  });
+
+  it('uses a given anchorName on the trigger and the tip', () => {
+    const { result } = renderHook(() => useTooltip({ anchorName: '--mine' }));
+    expect(result.current.getTriggerProps().style.anchorName).toBe('--mine');
+    expect(result.current.getTooltipProps().style.positionAnchor).toBe('--mine');
+  });
+});
+
 describe('useTooltip tooltip ref', () => {
   it('keeps one ref across renders, so React does not detach it', () => {
     const { result, rerender } = renderHook(() => useTooltip());
