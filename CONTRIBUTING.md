@@ -16,7 +16,7 @@ Todae is a pnpm workspace:
 
 You need:
 
-- Node 22. `nvm use` reads `.nvmrc`.
+- Node 22.23.4 or newer, below 23. `nvm use` reads `.nvmrc`.
 - pnpm 10. The `packageManager` field in the root `package.json` pins the version.
 
 Install the dependencies:

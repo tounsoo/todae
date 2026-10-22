@@ -28,6 +28,13 @@ function fail(error: unknown) {
   return { isError: true as const, content: [{ type: 'text' as const, text: message }] };
 }
 
+// mcp-handler's option type omits this field and forwards every other option to McpServer.
+const mcpServer = {
+  serverInfo: { name: 'todae-docs', version: RELEASE.version },
+  // Each JSON element is at least two bytes, so a package inside MAX_BYTES stays under this. The SDK default is unlimited.
+  maxToolInputElements: MAX_BYTES / 2,
+};
+
 const handler = createMcpHandler(
   (server) => {
     server.tool('list_components', 'List Todae components from the published docs schema.', async () => {
@@ -178,7 +185,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  { serverInfo: { name: 'todae-docs', version: RELEASE.version } },
+  mcpServer,
   { basePath: '/api', disableSse: true },
 );
 
