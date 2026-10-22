@@ -95,7 +95,7 @@ It writes three files:
 
 The build runs every check Todae's own build runs: path format, reference cycles, layer order, light and dark parity, and APCA contrast. The contrast pairs in Todae's resolver apply to the company's colors too, so a brand accent that fails them fails the build. See the Contrast section of [Tokens](/tokens) for the pairs and how to change a minimum.
 
-When a check fails, the message says what to change: the entry a misplaced token belongs in, the token that reads a missing or out-of-order reference, the tokens one context declares and another lacks, and for a contrast pair below its minimum, the nearest lightness of its text or of its background that passes without failing another pair the build checks, set on the token that holds the literal value. Build again after taking one, since one change can fix several pairs:
+When a check fails, the message says what to change: the entry a misplaced token belongs in, the token that reads a missing or out-of-order reference, the tokens one context declares and another lacks, and for a contrast pair below its minimum, the nearest lightness of its text or of its background that passes without failing another pair the build checks, set on the token that holds the literal value. When that token is in Todae's own files, the message says to override it in the same set or modifier of your resolver. Build again after taking one, since one change can fix several pairs:
 
 ```sh
 contrast: 1 pair(s) fail APCA

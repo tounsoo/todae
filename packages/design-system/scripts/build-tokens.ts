@@ -829,8 +829,15 @@ export function parseScope(selector: string): string {
   if (quote || closers.length > 0) fail(`--scope "${scope}" has an unclosed ${quote ? 'quote' : `"${closers.at(-1) === ')' ? '(' : '['}"`}`);
   for (const part of [...members, member].map((each) => each.trim())) {
     if (part === '') fail(`--scope "${scope}" has an empty selector in its list`);
-    // Escapes and quoted strings can hold any character, so the checks below skip them.
-    const bare = part.replace(/\\./g, 'x').replace(/"[^"]*"|'[^']*'/g, '""');
+    // Quoted strings can hold any character, so the checks below skip them.
+    // An escape reads as the character it stands for, so `:befor\65` is still
+    // a pseudo-element, except an escaped ":" or combinator, which is part of a name.
+    const bare = part
+      .replace(/\\([0-9a-fA-F]{1,6})[ \t\n]?|\\(.)/g, (_, hex: string | undefined, ch: string | undefined) => {
+        const char = hex === undefined ? ch! : String.fromCodePoint(Math.min(Number.parseInt(hex, 16), 0x10ffff) || 0xfffd);
+        return /[\w-]/.test(char) ? char : 'x';
+      })
+      .replace(/"[^"]*"|'[^']*'/g, '""');
     if (/^[>+~]|[>+~]$/.test(bare)) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
     if (bare.includes('<')) fail(`--scope "${scope}" has a "<" outside a quoted value`);
     if (/::|:(before|after|first-line|first-letter)(?![\w-])/i.test(bare)) fail(`--scope "${scope}" must not hold a pseudo-element`);
@@ -1997,7 +2004,8 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
  * names, `from` is its value now, and setting it to `to`, the nearest that
  * passes without failing another pair, gives `lc`.
  */
-type LightnessFix = { side: 'fg' | 'bg'; token: string; entry: string; from: number; to: number; lc: number };
+/** `todae` is true when the literal is in Todae's own token files, which a company overrides rather than edits. */
+type LightnessFix = { side: 'fg' | 'bg'; token: string; entry: string; from: number; to: number; lc: number; todae: boolean };
 
 /**
  * The token whose literal OKLCH holds the lightness `path` resolves to, or
@@ -2019,7 +2027,7 @@ function lightnessSource(path: string, view: Map<string, EntryToken>): string | 
  * when there is none, and 'derived' when that lightness is read from another
  * channel. A token both sides read moves both, as it would in the file.
  */
-function lightnessFix(side: 'fg' | 'bg', failing: Measured, all: Measured[]): LightnessFix | 'derived' | null {
+function lightnessFix(side: 'fg' | 'bg', failing: Measured, all: Measured[], todae: Set<EntryToken>): LightnessFix | 'derived' | null {
   const { result, view } = failing;
   const token = lightnessSource(result[side], view);
   if (token === null) return 'derived';
@@ -2042,7 +2050,7 @@ function lightnessFix(side: 'fg' | 'bg', failing: Measured, all: Measured[]): Li
         const trial = { ...literal, value: { ...value, components: [rounded, ...value.components.slice(1)] } };
         for (const each of views) each.set(token, trial);
         if (passes(failing) && guarded.every(passes)) {
-          return { side, token, entry, from, to: rounded, lc: Math.abs(contrastOf(result.fg, result.bg, view, result.over)) };
+          return { side, token, entry, from, to: rounded, lc: Math.abs(contrastOf(result.fg, result.bg, view, result.over)), todae: todae.has(literal) };
         }
       }
     }
@@ -2059,9 +2067,10 @@ function guardReads(measured: Measured): Set<string> {
   return reads;
 }
 
-function describeFix({ side, token, entry, from, to, lc }: LightnessFix, pair: Omit<ContrastPair, 'over'>): string {
+function describeFix({ side, token, entry, from, to, lc, todae }: LightnessFix, pair: Omit<ContrastPair, 'over'>): string {
   const via = token === pair[side] ? '' : `, read by "${pair[side]}"`;
-  return `set the lightness of "${token}" (${entry}${via}) from ${from} to ${to}, for Lc ${lc.toFixed(1)}`;
+  const where = todae ? `Todae's ${entry}${via}; override it in your resolver's ${entry}` : `${entry}${via}`;
+  return `set the lightness of "${token}" (${where}) from ${from} to ${to}, for Lc ${lc.toFixed(1)}`;
 }
 
 /**
@@ -2069,13 +2078,14 @@ function describeFix({ side, token, entry, from, to, lc }: LightnessFix, pair: O
  * lightness of its fg or its bg that passes without failing another pair that
  * passes now, nearest first.
  */
-export function validateContrast(entries: ResolvedEntry[]): void {
+export function validateContrast(entries: ResolvedEntry[], todae: Set<EntryToken> = new Set()): void {
   const measured = measureContrast(entries);
+  let previous = '';
   const failures = measured
     .filter(({ result }) => result.lc < result.min)
     .map((failing) => {
       const { fg, bg, over, where, lc, min } = failing.result;
-      const found = (['fg', 'bg'] as const).map((side) => lightnessFix(side, failing, measured));
+      const found = (['fg', 'bg'] as const).map((side) => lightnessFix(side, failing, measured, todae));
       const fixes = found
         .filter((fix): fix is LightnessFix => fix !== null && fix !== 'derived')
         .sort((a, b) => Math.abs(a.to - a.from) - Math.abs(b.to - b.from));
@@ -2083,10 +2093,13 @@ export function validateContrast(entries: ResolvedEntry[]): void {
         found[i] === 'derived'
           ? `"${failing.result[side]}" reads its lightness from another channel, so no fix is shown for it`
           : `no lightness of "${failing.result[side]}" alone reaches Lc ${min} without failing another pair; change its chroma or hue too`;
-      const fix =
+      const advice =
         fixes.length > 0
           ? `\n    fix: ${fixes.map((each) => describeFix(each, failing.result)).join(`\n    or:  `)}`
           : `\n    ${none('fg', 0)}\n    ${none('bg', 1)}`;
+      // The same pair often fails the same way in each appearance; say it once.
+      const fix = advice === previous ? '\n    same as above' : advice;
+      previous = advice;
       return `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} in ${where} is Lc ${lc.toFixed(1)}, below ${min}${fix}`;
     });
   if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
@@ -2144,7 +2157,7 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
   validateEntries(merged);
   const own = company.flatMap(entryTokens);
   const all = settleDescriptions(checkGraph(merged), [own, upstream.flatMap(entryTokens)]);
-  validateContrast(merged);
+  validateContrast(merged, new Set(upstream.flatMap(entryTokens)));
   const { scope } = options;
   const css = scope !== undefined
     ? emitCss(merged, { layer: COMPANY_LAYER, preamble: COMPANY_PREAMBLE, scope })
