@@ -15019,6 +15019,286 @@
       "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."
     },
     {
+      "path": "contents.gap",
+      "type": "dimension",
+      "cssVar": "--todae-contents-gap",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.indent",
+      "type": "dimension",
+      "cssVar": "--todae-contents-indent",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.label.fg",
+      "type": "color",
+      "cssVar": "--todae-contents-label-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.label.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-contents-label-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.label.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-contents-label-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.fg.current",
+      "type": "color",
+      "cssVar": "--todae-contents-link-fg-current",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.fg.default",
+      "type": "color",
+      "cssVar": "--todae-contents-link-fg-default",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-contents-link-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.font.current-weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-contents-link-font-current-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-contents-link-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-contents-link-font-weight",
+      "cssValue": "var(--todae-font-weight-regular)",
+      "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.leading",
+      "type": "number",
+      "cssVar": "--todae-contents-link-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-contents-link-padding-x",
+      "cssValue": "var(--todae-space-chip-x)",
+      "ref": "space.chip.x",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-contents-link-padding-y",
+      "cssValue": "var(--todae-space-chip-y)",
+      "ref": "space.chip.y",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.radius",
+      "type": "dimension",
+      "cssVar": "--todae-contents-link-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.link.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-contents-link-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.marker.color",
+      "type": "color",
+      "cssVar": "--todae-contents-marker-color",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.marker.width",
+      "type": "dimension",
+      "cssVar": "--todae-contents-marker-width",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.rule.color",
+      "type": "color",
+      "cssVar": "--todae-contents-rule-color",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
+      "path": "contents.rule.width",
+      "type": "dimension",
+      "cssVar": "--todae-contents-rule-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read."
+    },
+    {
       "path": "picker.area.height",
       "type": "dimension",
       "cssVar": "--todae-picker-area-height",

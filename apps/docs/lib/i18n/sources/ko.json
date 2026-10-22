@@ -161,6 +161,17 @@
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
   },
+  "contents": {
+    "(top)": "7d370e419676",
+    "# Contents": "9a027578bec4",
+    "## The section being read": "f9f26855e260",
+    "## Look": "3469783dc314",
+    "## On a narrow screen": "10ea55bff04c",
+    "## Accessible composition": "3771ec920ea0",
+    "## When to use": "cab3f77f5fbb",
+    "## Props": "4c5ddfb1ffe2",
+    "(section order)": "a2cf673374a6"
+  },
   "conversation": {
     "(top)": "b40257a47356",
     "# Conversation": "f1637b098891",
@@ -562,7 +573,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "65f724b4a4a8",
+    "# Native platform": "e597278aa6ab",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -881,7 +892,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "6407b1e79d42",
+    "## Strings": "18a0fe3319f7",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

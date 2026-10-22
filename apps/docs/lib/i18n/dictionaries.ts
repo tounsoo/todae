@@ -15,6 +15,8 @@ export type Dictionary = {
   topLinks: Record<'start' | 'components' | 'playground', string>;
   /** First link on every page, shown on focus. */
   skipToContent: string;
+  /** Title and accessible name of a page's list of its own sections. */
+  onThisPage: string;
   /** The button that opens the sidebar on narrow screens, and the drawer's close button. */
   openMenu: string;
   closeMenu: string;
@@ -89,6 +91,7 @@ const en: Dictionary = {
   mainNav: 'Main',
   topLinks: { start: 'Get started', components: 'Components', playground: 'Playground' },
   skipToContent: 'Skip to content',
+  onThisPage: 'On this page',
   openMenu: 'Open navigation',
   closeMenu: 'Close',
   theme: { label: 'Theme', system: 'System', light: 'Light', dark: 'Dark' },
@@ -164,6 +167,7 @@ const ko: Dictionary = {
   mainNav: '주요 메뉴',
   topLinks: { start: '시작하기', components: '컴포넌트', playground: '플레이그라운드' },
   skipToContent: '본문으로 건너뛰기',
+  onThisPage: '이 페이지의 내용',
   openMenu: '탐색 메뉴 열기',
   closeMenu: '닫기',
   theme: { label: '테마', system: '시스템', light: '라이트', dark: '다크' },
