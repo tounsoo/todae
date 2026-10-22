@@ -16,7 +16,7 @@
   .root[data-layout='fill'] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(var(--_min-item-size), 100%), 1fr));
-    column-gap: var(--todae-datalist-columns-gap);
+    column-gap: var(--todae-datalist-gap-between-columns);
   }
 
   .item {

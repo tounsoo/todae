@@ -18,7 +18,7 @@ export const meta = {
       type: 'string',
       required: false,
       description:
-        'Lays the items out in columns no narrower than this CSS length, such as "20rem". As many columns fit as the width allows, with datalist.columns.gap between them. Without it the items sit in one column.',
+        'Lays the items out in columns no narrower than this CSS length, such as "12rem". As many columns fit as the width allows, with datalist.gap.between-columns between them. A horizontal item stacks in a column narrower than its term column and details minimum. Without it the items sit in one column.',
     },
     {
       name: 'children',

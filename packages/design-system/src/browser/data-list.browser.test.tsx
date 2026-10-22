@@ -221,18 +221,23 @@ describe('DataList in a browser', () => {
       );
     }
 
-    it('puts as many items in a row as the width allows, spaced by datalist.columns.gap', () => {
-      render(columns('30rem'));
+    it('puts as many items in a row as the width allows, spaced by datalist.gap.between-columns', () => {
+      const { container } = render(columns('30rem'));
       const [a, b, c] = ['Seats', 'Storage', 'Support'].map((text) => screen.getByText(text).getBoundingClientRect());
       expect(a!.top).toBe(b!.top);
       expect(c!.top).toBeGreaterThan(a!.top);
       expect(c!.left).toBe(a!.left);
+      const probe = document.createElement('div');
+      probe.style.inlineSize = 'var(--todae-datalist-gap-between-columns)';
+      container.firstElementChild!.append(probe);
+      const gap = probe.getBoundingClientRect().width;
+      probe.remove();
+      const rowGap = parseFloat(getComputedStyle(screen.getByLabelText('Plan')).rowGap);
+      expect(gap).not.toBe(rowGap);
       const list = screen.getByLabelText('Plan');
-      const gap = parseFloat(getComputedStyle(list).columnGap);
-      expect(gap).toBeGreaterThan(0);
       const first = list.children[0]!.getBoundingClientRect();
       const second = list.children[1]!.getBoundingClientRect();
-      expect(second.left - first.right).toBeCloseTo(gap, 0);
+      expect(second.left - first.right).toBeCloseTo(gap, 1);
     });
 
     it('keeps one column inside a list narrower than minItemSize', () => {
@@ -244,10 +249,10 @@ describe('DataList in a browser', () => {
       expect(b!.top).toBeGreaterThan(a!.top);
     });
 
-    it('lays out a horizontal item inside its column, stacking it when the column is narrow', () => {
-      render(
-        <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '30rem' }}>
-          <DataList.Root aria-label="Order" minItemSize="12rem">
+    function horizontal(width: string, minItemSize: string) {
+      return (
+        <div data-appearance="light" data-density="comfortable" style={{ inlineSize: width }}>
+          <DataList.Root aria-label="Order" minItemSize={minItemSize}>
             <DataList.Item>
               <DataList.Term>Status</DataList.Term>
               <DataList.Details>Shipped</DataList.Details>
@@ -257,12 +262,63 @@ describe('DataList in a browser', () => {
               <DataList.Details>$42.00</DataList.Details>
             </DataList.Item>
           </DataList.Root>
+        </div>
+      );
+    }
+
+    it('keeps a horizontal item beside its term in a column as wide as term, gap and details minimum', () => {
+      render(horizontal('48rem', 'calc(var(--todae-datalist-term-width) + var(--todae-datalist-gap-column) + var(--todae-datalist-details-min-width))'));
+      const [status, total] = ['Status', 'Total'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(status!.top).toBe(total!.top);
+      expect(total!.left).toBeGreaterThan(status!.left);
+      const details = screen.getByText('Shipped').getBoundingClientRect();
+      expect(Math.abs(details.top - status!.top)).toBeLessThan(1);
+      expect(details.left).toBeGreaterThanOrEqual(status!.right);
+    });
+
+    it('stacks a horizontal item in a column narrower than term, gap and details minimum', () => {
+      render(horizontal('30rem', '12rem'));
+      const [status, total] = ['Status', 'Total'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(status!.top).toBe(total!.top);
+      expect(screen.getByText('Shipped').getBoundingClientRect().top).toBeGreaterThanOrEqual(status!.bottom);
+    });
+
+    it('takes its column count from the width a flex row gives it', () => {
+      render(
+        <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', inlineSize: '40rem' }}>
+          <DataList.Root aria-label="Wide" minItemSize="12rem" orientation="vertical" style={{ flex: 1 }}>
+            {['Seats', 'Storage', 'Support'].map((term) => (
+              <DataList.Item key={term}>
+                <DataList.Term>{term}</DataList.Term>
+                <DataList.Details>1</DataList.Details>
+              </DataList.Item>
+            ))}
+          </DataList.Root>
         </div>,
       );
-      const item = screen.getByText('Status').parentElement!.getBoundingClientRect();
-      const details = screen.getByText('Shipped').getBoundingClientRect();
-      expect(details.right).toBeLessThanOrEqual(item.right + 0.5);
-      expect(details.top).toBeGreaterThanOrEqual(screen.getByText('Status').getBoundingClientRect().bottom);
+      const [a, b, c] = ['Seats', 'Storage', 'Support'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(a!.top).toBe(b!.top);
+      expect(a!.top).toBe(c!.top);
+    });
+
+    it('takes the width of its widest item in a flex row without a width', () => {
+      render(
+        <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', inlineSize: '60rem' }}>
+          <DataList.Root aria-label="Sized" minItemSize="12rem" orientation="vertical">
+            {['Seats', 'Storage', 'Support'].map((term) => (
+              <DataList.Item key={term}>
+                <DataList.Term>{term}</DataList.Term>
+                <DataList.Details>1</DataList.Details>
+              </DataList.Item>
+            ))}
+          </DataList.Root>
+        </div>,
+      );
+      const list = screen.getByLabelText('Sized').getBoundingClientRect();
+      const item = screen.getByLabelText('Sized').children[0]!.getBoundingClientRect();
+      expect(list.width).toBeLessThan(item.width * 2);
+      const [a, b] = ['Seats', 'Storage'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(b!.top).toBeGreaterThan(a!.top);
     });
   });
 

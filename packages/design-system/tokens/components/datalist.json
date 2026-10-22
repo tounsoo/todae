@@ -4,7 +4,12 @@
     "gap": {
       "row": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
       "column": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
-      "stacked": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-condensed/$value" } }
+      "stacked": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-condensed/$value" } },
+      "between-columns": {
+        "$type": "dimension",
+        "$value": { "$ref": "#/space/stack/gap-spacious/$value" },
+        "$description": "The gap between columns of items when minItemSize lays the list out in columns."
+      }
     },
     "term": {
       "width": { "$type": "dimension", "$value": { "value": 10, "unit": "rem" } },
@@ -20,13 +25,6 @@
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },
-    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
-    "columns": {
-      "gap": {
-        "$type": "dimension",
-        "$value": { "$ref": "#/space/stack/gap-spacious/$value" },
-        "$description": "The gap between columns of items when minItemSize lays the list out in columns."
-      }
-    }
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }
   }
 }

@@ -52,7 +52,7 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
 
 ## Columns
 
-`minItemSize` lays the items out in columns, each no narrower than the CSS length you give it, such as `"10rem"`. As many columns fit as the width allows, so the list reflows without a media query, and in a list narrower than `minItemSize` the single column shrinks to fit. Items fill the rows in DOM order, so the reading order stays the source order. The gap between columns is `datalist.columns.gap`, and the gap between rows stays `datalist.gap.row`. [Grid](/grid) can't lay out a list's items, since it renders a `div` and the items have to be children of the `dl`.
+`minItemSize` lays the items out in columns, each no narrower than the CSS length you give it, such as `"10rem"`. As many columns fit as the width allows, so the list reflows without a media query, and in a list narrower than `minItemSize` the single column shrinks to fit. Items fill the rows in DOM order, so the reading order stays the source order. The gap between columns is `datalist.gap.between-columns`, and the gap between rows stays `datalist.gap.row`. [Grid](/grid) can't lay out a list's items, since it renders a `div` and the items have to be children of the `dl`.
 
 ```tsx
 <DataList.Root orientation="vertical" minItemSize="10rem" aria-label="Plan">
@@ -72,7 +72,9 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
   <DataListColumns />
 </Example>
 
-Each item keeps its orientation inside its column. A horizontal item stacks when its column is narrower than the term column and the details minimum, so columns of horizontal items need a `minItemSize` of at least `datalist.term.width`, `datalist.gap.column` and `datalist.details.min-width` together, `22.5rem` at comfortable density. In a parent that sizes the list to its content, the list gets one column, as the next section says.
+Each item keeps its orientation inside its column. A horizontal item stacks when its column is narrower than the term column, `datalist.gap.column` and the details minimum together, so give columns of horizontal items a `minItemSize` of at least `calc(var(--todae-datalist-term-width) + var(--todae-datalist-gap-column) + var(--todae-datalist-details-min-width))`.
+
+In a parent that sizes the list to its content, such as a flex row, the list takes the width of its widest item, so the number of columns follows its text. Give the list a width there, as the next section says.
 
 ## Narrow widths
 
