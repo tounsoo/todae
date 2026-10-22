@@ -574,7 +574,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "e597278aa6ab",
+    "# Native platform": "9dee453bbb82",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -807,14 +807,15 @@
     "(section order)": "6b5ab14cc7b5"
   },
   "text": {
-    "(top)": "b1e17b5416f8",
+    "(top)": "8fe22cb72850",
     "# Text": "7bbe9f5e1adf",
     "## Headings": "7ef059d65ca4",
     "## Label": "96df565d38ad",
-    "## Accessible composition": "2eb09d1d4351",
-    "## When to use": "5a57584d1a10",
+    "## Lines": "fd4c38761d58",
+    "## Accessible composition": "6cc5e8de8acb",
+    "## When to use": "c1d12da73edb",
     "## Props": "c29450776f88",
-    "(section order)": "e63d148221ad"
+    "(section order)": "6a0740b430a1"
   },
   "toast": {
     "(top)": "85a2f957060f",

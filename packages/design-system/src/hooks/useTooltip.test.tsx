@@ -7,6 +7,7 @@ import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
 import {
   useTooltip,
+  useTooltipInternal,
   type TooltipTriggerUserProps,
   type TooltipWire,
   type UseTooltipOptions,
@@ -325,6 +326,87 @@ describe('useTooltip', () => {
     fireEvent.pointerLeave(panel, { relatedTarget: document.body });
     advance(100);
     expect(panel.getAttribute('data-open')).toBeNull();
+  });
+});
+
+describe('useTooltipInternal holdsFocus', () => {
+  function HolderHarness({ accepts = () => true }: { accepts?: () => boolean }) {
+    const tooltip = useTooltipInternal({}, { holdsFocus: (focused) => focused.id === 'row' && accepts() });
+    const wire = tooltip.getTooltipProps();
+    return (
+      <>
+        <a href="#row" id="row">
+          <span {...tooltip.getTriggerProps()}>Name</span>
+        </a>
+        <button type="button">Other</button>
+        {tooltip.open ? (
+          <div role="tooltip" id={wire.id} ref={wire.ref} style={wire.style}>
+            Full name
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  it('shows the tip while an accepted element has focus, and hides it when focus leaves it', () => {
+    render(<HolderHarness />);
+    act(() => screen.getByRole('link').focus());
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    act(() => screen.getByRole('button').focus());
+    advance(100);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('keeps a hover-opened tip held when focus moves to an accepted element', () => {
+    render(<HolderHarness />);
+    const trigger = screen.getByText('Name');
+    fireEvent.pointerEnter(trigger);
+    advance(300);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    act(() => screen.getByRole('link').focus());
+    fireEvent.pointerLeave(trigger);
+    advance(100);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+  });
+
+  it('releases the hold when focus leaves for the page, even once the element is no longer accepted', () => {
+    let accepted = true;
+    render(<HolderHarness accepts={() => accepted} />);
+    act(() => screen.getByRole('link').focus());
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    accepted = false;
+    act(() => screen.getByRole('link').blur());
+    advance(100);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('keeps the internal options and holds out of the public hook', () => {
+    const stray = { holdsFocus: () => true, anchorName: '--stray' } as UseTooltipOptions;
+    function Stray() {
+      const tooltip = useTooltip(stray);
+      const wire = tooltip.getTooltipProps();
+      return (
+        <>
+          <span {...tooltip.getTriggerProps()} data-testid="trigger" data-hold={'holdHover' in tooltip ? '' : undefined}>
+            Name
+          </span>
+          <button type="button">Other</button>
+          {tooltip.open ? <div role="tooltip" ref={wire.ref} /> : null}
+        </>
+      );
+    }
+    render(<Stray />);
+    const trigger = screen.getByTestId('trigger');
+    expect(trigger.hasAttribute('data-hold')).toBe(false);
+    expect(trigger.style.getPropertyValue('anchor-name')).not.toBe('--stray');
+    act(() => screen.getByRole('button').focus());
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('uses a given anchorName on the trigger and the tip', () => {
+    const { result } = renderHook(() => useTooltipInternal({}, { anchorName: '--mine' }));
+    expect(result.current.getTriggerProps().style.anchorName).toBe('--mine');
+    expect(result.current.getTooltipProps().style.positionAnchor).toBe('--mine');
   });
 });
 
