@@ -87,6 +87,7 @@ export function App() {
             <Tabs.List aria-label="Browse">
               <Tabs.Tab value="cabins">Cabins</Tabs.Tab>
               <Tabs.Tab value="partner">Partner stays</Tabs.Tab>
+              <Tabs.Tab value="business">For business</Tabs.Tab>
             </Tabs.List>
             <Tabs.Panel value="cabins">
               <Grid.Root minItemSize="16rem">
@@ -117,6 +118,9 @@ export function App() {
             </Tabs.Panel>
             <Tabs.Panel value="partner">
               <PartnerStays />
+            </Tabs.Panel>
+            <Tabs.Panel value="business">
+              <BusinessStays />
             </Tabs.Panel>
           </Tabs.Root>
 
@@ -157,5 +161,25 @@ function PartnerStays() {
         </Stack.Root>
       </section>
     </ThemeProvider>
+  );
+}
+
+// Fernway for business is a second token build of Fernway's tokens with its
+// own accent, scoped to .business, so it can sit inside the Fernway page and
+// follow its light or dark appearance.
+function BusinessStays() {
+  return (
+    <section className="business hero">
+      <Stack.Root>
+        <Text.Root as="h2" size="xl" weight="bold">
+          Fernway for business
+        </Text.Root>
+        <Text.Root>Team offsites in cabins near you, billed to one account.</Text.Root>
+        <Stack.Root direction="row" wrap>
+          <Button.Root>Plan an offsite</Button.Root>
+          <Button.Root variant="soft">Talk to sales</Button.Root>
+        </Stack.Root>
+      </Stack.Root>
+    </section>
   );
 }

@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "tokens": "todae-tokens build --resolver tokens/resolver.json --css src/theme/todae-theme.css --catalog src/theme/tokens.catalog.json --types src/theme/todae-theme.types.ts",
+    "tokens": "todae-tokens build --resolver tokens/resolver.json --css src/theme/todae-theme.css --catalog src/theme/tokens.catalog.json --types src/theme/todae-theme.types.ts && todae-tokens build --resolver tokens/business.resolver.json --scope .business --css src/theme/business.css --catalog src/theme/business.catalog.json --types src/theme/business.types.ts",
     "dev": "pnpm tokens && vite",
     "build": "pnpm tokens && tsc --noEmit && vite build"
   },

@@ -1,0 +1,16 @@
+{
+  "color": {
+    "accent": {
+      "$type": "color",
+      "default": { "$value": { "colorSpace": "oklch", "components": [0.44, 0.1, 330] } },
+      "hover": { "$value": { "colorSpace": "oklch", "components": [0.39, 0.1, 330] } },
+      "active": { "$value": { "colorSpace": "oklch", "components": [0.34, 0.09, 330] } }
+    }
+  },
+  "fernway": {
+    "hero": {
+      "bg": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [0.93, 0.04, 330] } },
+      "fg": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [0.3, 0.07, 330] } }
+    }
+  }
+}
