@@ -218,7 +218,10 @@ describe('Contents in a browser', () => {
 
   it('drops a pick whose section goes while its link stays, so it does not come back with the section', async () => {
     render(<Page />);
+    // Let the click's own hash change land first, so it can't pick Three again after the rename back.
+    const hashChanged = new Promise((resolve) => window.addEventListener('hashchange', resolve, { once: true }));
     link('Three').click();
+    await hashChanged;
     await waitFor(() => expect(current()).toBe('Three'));
     const three = document.getElementById('three')!;
     three.id = 'gone';
