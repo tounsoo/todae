@@ -50,8 +50,6 @@ function sameSelection(a: CodeSelection | null, b: CodeSelection | null) {
   return a === b || (a !== null && b !== null && a.start === b.start && a.end === b.end);
 }
 
-const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-
 // Puts `text` in the input where the person's edit would, and fires the input event that reaches `onChange`. It uses the input's own undo stack where the browser has one; elsewhere it writes the value itself.
 function insert(input: HTMLInputElement, text: string) {
   const doc = input.ownerDocument;
@@ -67,7 +65,9 @@ function insert(input: HTMLInputElement, text: string) {
   // As the browser does for a paste, keep what fits.
   const room = Math.max(input.maxLength - (input.value.length - (end - start)), 0);
   const kept = text.slice(0, room);
-  setValue?.call(input, input.value.slice(0, start) + kept + input.value.slice(end));
+  // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
+  const next = input.value.slice(0, start) + kept + input.value.slice(end);
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
   input.setSelectionRange(start + kept.length, start + kept.length);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
