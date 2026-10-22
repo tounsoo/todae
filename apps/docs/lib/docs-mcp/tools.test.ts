@@ -404,6 +404,10 @@ describe('docs mcp tools', () => {
     expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n```\n', 'Tooltip')).toBeNull();
     // A heading inside a JSX element is the element's content, not a section.
     expect(parseWhen('<Example>\n\n## When to use\n\n**When:** Demo.\n\n</Example>\n', 'Tooltip')).toBeNull();
+    // MDX has no indented code, so a fence indented four spaces still opens one.
+    expect(parseWhen('Intro.\n\n    ```md\n## When to use\n\n**When:** Fenced.\n    ```\n\n## Props\n', 'Tooltip')).toBeNull();
+    // Adjacent marker lines of one paragraph each give their own line.
+    expect(parseWhen('## When to use\n\n**When:** A.\n**When not:** B.\n', 'Tooltip')).toMatchObject({ whenToUse: 'A.', whenNotToUse: 'B.' });
     // A fence left open runs to the end of the page.
     expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n', 'Tooltip')).toBeNull();
     // An opener whose info string has a backtick is inline code, not a fence.
