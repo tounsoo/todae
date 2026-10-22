@@ -73,7 +73,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'get_recipe',
-      'Read one recipe by name (such as "data-table") or title, as MDX source with absolute links: its code, how it behaves, its accessible composition and When to use.',
+      'Read one recipe by name (such as "data-table") or title, as MDX source with absolute links: its code, how it behaves, its accessible composition, and its When to use and When not to use copy.',
       { name },
       async ({ name: recipe }) => {
         try {

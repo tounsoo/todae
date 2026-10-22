@@ -19,7 +19,8 @@ export const TOP = '(top)';
 /** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
 export const ORDER = '(section order)';
 
-function parse(mdx: string): Root {
+/** `mdx` as the MDX compiler parses it. */
+export function parse(mdx: string): Root {
   return fromMarkdown(mdx, { extensions: [mdxjs()], mdastExtensions: [mdxFromMarkdown()] });
 }
 

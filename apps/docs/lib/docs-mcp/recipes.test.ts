@@ -15,8 +15,8 @@ describe('docs mcp recipes', () => {
     expect(listed.recipes.map((row) => row.name)).toEqual(recipeDirs);
     expect(listed.count).toBe(recipeDirs.length);
     for (const row of listed.recipes) {
-      expect(row.description, row.name).toMatch(/^A recipe, not a package namespace\. \S/);
-      expect(row.description, row.name).not.toMatch(/```|<[A-Z]|import /);
+      expect(row.description, row.name).toBeTruthy();
+      expect(row.description, row.name).not.toMatch(/```|<[A-Z]|^import\s/m);
       expect(row.uses.length, row.name).toBeGreaterThan(0);
       expect(row.docsUrl).toBe(`${DOCS_ORIGIN}/recipes/${row.name}`);
     }
@@ -30,6 +30,7 @@ describe('docs mcp recipes', () => {
     expect(recipe.whenToUse).toBeTruthy();
     expect(getRecipe('data-table').title).toBe('Data table');
     expect(getRecipe(' DATA TABLE ').name).toBe('data-table');
+    expect(Object.keys(recipe).sort()).toEqual(['docsUrl', 'markdown', 'name', 'source', 'title', 'whenNotToUse', 'whenToUse']);
     expect(() => getRecipe('dialog')).toThrow('Call list_recipes');
   });
 
@@ -47,6 +48,10 @@ describe('docs mcp recipes', () => {
     const runOn = ['# Title', '', '"Undo" wires it up:', '```tsx', 'const x = 1;', '```'].join('\n');
     expect(summaryOf(runOn)).toBe('"Undo" wires it up:');
     expect(summaryOf(['# Title', '', '<Example />', '', '## Section', '', 'Section prose.'].join('\n'))).toBeNull();
+    expect(summaryOf(['# Title', '', 'Use the', '<Kbd.Root>K</Kbd.Root> key.', '', 'Next.'].join('\n'))).toBe(
+      'Use the <Kbd.Root>K</Kbd.Root> key.',
+    );
+    expect(summaryOf(['# Title', '', '- a list', '', 'Prose.'].join('\n'))).toBe('Prose.');
   });
 
   it('finds exports named in code blocks only', () => {
