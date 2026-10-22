@@ -161,6 +161,35 @@ describe('focus rings in a scrolling container', () => {
       expect(cutEdges(indicator, area())).toEqual([]);
     });
 
+    it(`scrolls ${name} to show the whole ring of a Field.OneTimeCode box, drawn on a box inside it`, async () => {
+      render(
+        <Themed>
+          {ui(
+            <>
+              {spacer}
+              <Field.Root>
+                <Field.OneTimeCode aria-label="Code" value="" onValueChange={() => undefined} />
+              </Field.Root>
+              {tail}
+            </>,
+          )}
+        </Themed>,
+      );
+      const input = await screen.findByRole('textbox', { name: 'Code' });
+      await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      // Without the area's own scroll padding, only the reveal makes room for the ring.
+      area().style.scrollPadding = '0';
+      justFit(area(), input);
+      await keyboardFocus(input);
+      const slot = await waitFor(() => {
+        const found = input.nextElementSibling!.querySelector<HTMLElement>('[data-active]');
+        expect(found).not.toBeNull();
+        return found!;
+      });
+      expect(getComputedStyle(slot).outlineStyle).not.toBe('none');
+      expect(cutEdges(slot, area())).toEqual([]);
+    });
+
     it(`scrolls ${name} to show the ColorPicker thumb's ring, away from the focused input`, async () => {
       render(
         <Themed>
