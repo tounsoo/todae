@@ -42,8 +42,8 @@ export function ReasoningExample() {
   useEffect(() => () => clearInterval(timer.current), []);
 
   // Stands in for the product's stream: reasoning words first, then the answer's.
+  // Button.Root ignores clicks while it is aria-disabled, so this never runs mid-reply.
   function ask() {
-    if (phase !== 'done') return;
     const thoughts = REASONING.split(' ');
     const words = ANSWER.split(' ');
     const started = Date.now();

@@ -133,6 +133,22 @@ describe('state in forced colors', () => {
     expect(paint(screen.getByRole('button', { name: 'Italic' }))).not.toBe(system('Highlight'));
   });
 
+  it('greys a pressed aria-disabled toggle, also while hovered or focused', async () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary" defaultPressed aria-disabled>
+          Bold
+        </Button.Root>
+      </Themed>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold' });
+    expect(paint(bold)).toBe(system('GrayText'));
+    await userEvent.hover(bold);
+    expect(paint(bold)).toBe(system('GrayText'));
+    bold.focus();
+    expect(paint(bold)).toBe(system('GrayText'));
+  });
+
   it('forces the focus ring of a pressed toggle and a checked switch', () => {
     render(
       <Themed>
@@ -266,6 +282,31 @@ describe('elements drawn as a button', () => {
     }
     expect(link.textDecorationLine).toBe('none');
     expect(nowhere.cursor).toBe('not-allowed');
+  });
+
+  it('draw an aria-disabled button like a disabled one, also while it has focus', async () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary" disabled>
+          Off
+        </Button.Root>
+        <Button.Root variant="secondary" aria-disabled="true">
+          Held
+        </Button.Root>
+      </Themed>,
+    );
+    const off = getComputedStyle(screen.getByRole('button', { name: 'Off' }));
+    const held = screen.getByRole('button', { name: 'Held' });
+    await userEvent.hover(held);
+    for (const property of ['background-color', 'color', 'border-color', 'cursor'] as const) {
+      expect({ property, held: getComputedStyle(held).getPropertyValue(property) }).toEqual({ property, held: off.getPropertyValue(property) });
+    }
+    // It keeps focus and its ring, in the disabled colors.
+    held.focus();
+    await userEvent.keyboard('{Shift}');
+    expect(document.activeElement).toBe(held);
+    expect(getComputedStyle(held).outlineStyle).toBe('solid');
+    expect(getComputedStyle(held).backgroundColor).toBe(off.backgroundColor);
   });
 
   it('join a link into a Button.Group like the buttons around it', () => {

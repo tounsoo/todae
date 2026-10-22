@@ -66,6 +66,23 @@ describe('ToggleGroup', () => {
     expect(onChange).toHaveBeenLastCalledWith(null);
   });
 
+  it('leaves an aria-disabled item unpressed on click, and keeps it focusable', () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup.Root aria-label="Align" defaultValue="left" onValueChange={onChange}>
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+        <ToggleGroup.Item value="center" aria-disabled>
+          Center
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>,
+    );
+    fireEvent.click(button('Center'));
+    expect([pressed('Left'), pressed('Center')]).toEqual(['true', 'false']);
+    expect(onChange).not.toHaveBeenCalled();
+    button('Center').focus();
+    expect(document.activeElement).toBe(button('Center'));
+  });
+
   it('presses any number in multiple mode', () => {
     const onChange = vi.fn();
     render(
