@@ -744,7 +744,7 @@
     "(top)": "d54efa3b4b16",
     "# Reorder": "d1929d1c6807",
     "## The move menu": "2b1a2e471ebc",
-    "## Dragging": "d93c4f0447e5",
+    "## Dragging": "b4c71ef5fa59",
     "## Saving the order": "ccbed730f477",
     "## Accessible composition": "87e67664f2d5",
     "## When to use": "38f06c41410c",
@@ -1113,11 +1113,12 @@
   },
   "utilities/use-reorder": {
     "(top)": "d54efa3b4b16",
-    "# useReorder": "93c2a45ef23a",
-    "## Accessible composition": "21f593b786f9",
+    "# useReorder": "d75839ccbd6e",
+    "## Touch": "2eb66b780d20",
+    "## Accessible composition": "b277a840fe64",
     "## When to use": "096cd31b6ac9",
     "## Props": "d782464e8b92",
-    "(section order)": "57bf99726801"
+    "(section order)": "26fdfe644b20"
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",

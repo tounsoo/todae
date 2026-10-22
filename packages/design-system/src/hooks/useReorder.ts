@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type PointerEvent } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from 'react';
 import { composeHandlers } from '../components/props.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
 
 export type ReorderDropPosition = 'before' | 'after';
 
@@ -39,16 +40,19 @@ export type UseReorderItemProps = {
   onDrop: DragHandler;
   onDragEnd: DragHandler;
   'data-todae-reorder-index': number;
+  'data-todae-reorder-list': string;
   'data-dragging'?: '';
   'data-drop'?: ReorderDropPosition;
 };
 
 export type UseReorderHandleUserProps = {
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
+  onMouseDown?: (event: MouseEvent<HTMLElement>) => void;
 };
 
 export type UseReorderHandleProps = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  onMouseDown: (event: MouseEvent<HTMLElement>) => void;
 };
 
 export type UseReorderResult = {
@@ -74,7 +78,18 @@ function reorderTarget(from: number, index: number, position: ReorderDropPositio
   return to > from ? to - 1 : to;
 }
 
+/** The side of `item` the point x, y is on, in the list's reading order. */
+function sideOf(item: Element, x: number, y: number, orientation: 'vertical' | 'horizontal', rtl: boolean): ReorderDropPosition {
+  const rect = item.getBoundingClientRect();
+  if (orientation === 'vertical') return y < rect.top + rect.height / 2 ? 'before' : 'after';
+  const left = x < rect.left + rect.width / 2;
+  return left !== rtl ? 'before' : 'after';
+}
+
 const INDEX = 'data-todae-reorder-index';
+const LIST = 'data-todae-reorder-list';
+// How far a finger moves on a handle before its item drags, so a tap doesn't flash a drag.
+const SLOP = 4;
 
 /** An item's index now, read from its element, so a list that changes during a drag still moves that item. */
 function indexOf(node: HTMLElement): number | null {
@@ -84,9 +99,10 @@ function indexOf(node: HTMLElement): number | null {
 
 /**
  * `useReorder({ onMove })` returns `{ dragging, drop, getItemProps, getHandleProps }`, which let a
- * person reorder a list by dragging an item's handle, with the browser's drag and drop. A drop that
- * changes the order calls `onMove(from, to)`. It has no keyboard path: pair it with a way to move an
- * item without dragging, such as a menu.
+ * person reorder a list by dragging an item's handle: with the browser's drag and drop for a mouse or
+ * a pen, and with pointer events for a finger, since browsers on touch screens differ in whether they
+ * drag at all. A drop that changes the order calls `onMove(from, to)`, and Escape cancels a drag. It
+ * has no keyboard path: pair it with a way to move an item without dragging, such as a menu.
  */
 export function useReorder({ onMove, orientation = 'vertical', disabled = false }: UseReorderOptions): UseReorderResult {
   // One type per list, so a drag from another list, or a file, is never this list's. Types are
@@ -104,6 +120,15 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const armedRef = useRef<HTMLElement | null>(null);
   const rtlRef = useRef(false);
   const dropRef = useRef<ReorderDrop | null>(null);
+  // A finger on a handle: its pointer and where it went down. A touch drag runs on pointer events, so
+  // it never arms the item for the browser's drag.
+  const touchRef = useRef<{ id: number; x: number; y: number } | null>(null);
+  const [touching, setTouching] = useState(false);
+  // Whether the last press on a handle was a finger, whose mousedown, sent after the tap, arms nothing.
+  const fingerRef = useRef(false);
+  // Read by the touch drag's window listeners.
+  const latest = useRef({ onMove, orientation, disabled });
+  latest.current = { onMove, orientation, disabled };
 
   const show = (next: ReorderDrop | null) => {
     dropRef.current = next;
@@ -114,9 +139,11 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     sourceRef.current = null;
     armedRef.current = null;
     dropRef.current = null;
+    touchRef.current = null;
     setDragging(null);
     setArmed(null);
     setDrop(null);
+    setTouching(false);
   }, []);
 
   // Items that move while armed or dragged keep their state: armed and dragging follow the element,
@@ -159,12 +186,65 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
   }, [armed, end]);
 
-  const positionOf = (event: DragEvent<HTMLElement>): ReorderDropPosition => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    if (orientation === 'vertical') return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-    const left = event.clientX < rect.left + rect.width / 2;
-    return left !== rtlRef.current ? 'before' : 'after';
-  };
+  // A touch drag: it starts once the finger moves off the press, follows the item under the finger,
+  // and drops where the finger lifts. A pointercancel, such as the browser taking the touch to scroll
+  // a handle without `touch-action: none`, ends it without a move.
+  useEffect(() => {
+    if (!touching) return;
+    const pointer = touchRef.current;
+    if (pointer === null) return;
+    /** Where a drop at x, y lands, or null where it would not move the item. */
+    const target = (x: number, y: number): ReorderDrop | null => {
+      const node = sourceRef.current;
+      const from = node && !latest.current.disabled ? indexOf(node) : null;
+      if (from === null) return null;
+      let item = document.elementFromPoint(x, y)?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
+      // An item of a list nested in this one's item isn't this list's.
+      while (item && item.getAttribute(LIST) !== node!.getAttribute(LIST)) item = item.parentElement?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
+      const index = item ? indexOf(item) : null;
+      if (index === null) return null;
+      const position = sideOf(item!, x, y, latest.current.orientation, rtlRef.current);
+      return reorderTarget(from, index, position) === from ? null : { index, position };
+    };
+    const move = (event: globalThis.PointerEvent) => {
+      if (event.pointerId !== pointer.id) return;
+      const node = sourceRef.current ?? armedRef.current;
+      if (node === null || !node.isConnected) return end();
+      if (sourceRef.current === null) {
+        if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) < SLOP) return;
+        sourceRef.current = node;
+        rtlRef.current = getComputedStyle(node).direction === 'rtl';
+        setDragging(indexOf(node));
+      }
+      show(target(event.clientX, event.clientY));
+    };
+    const up = (event: globalThis.PointerEvent) => {
+      if (event.pointerId !== pointer.id) return;
+      const node = sourceRef.current;
+      const from = node?.isConnected ? indexOf(node) : null;
+      const at = from === null ? null : target(event.clientX, event.clientY);
+      end();
+      if (from !== null && at !== null) latest.current.onMove(from, reorderTarget(from, at.index, at.position));
+    };
+    const cancel = (event: globalThis.PointerEvent) => {
+      if (event.pointerId === pointer.id) end();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', cancel);
+    };
+  }, [touching, end]);
+
+  // The browser's drag takes Escape itself and ends with dragend. A touch drag gets it here, before a
+  // dialog around the list, as does a modal's close request, such as the Android back gesture.
+  useEscapeKey(touching && dragging !== null, true, end, sourceRef);
+
+  const positionOf = (event: DragEvent<HTMLElement>): ReorderDropPosition =>
+    sideOf(event.currentTarget, event.clientX, event.clientY, orientation, rtlRef.current);
 
   /** The dragged item's index, or null when this event isn't a drag this list started and can take. */
   const source = (event: DragEvent<HTMLElement>): number | null => {
@@ -225,6 +305,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         if (sourceRef.current !== null || armed !== null) end();
       }),
       [INDEX]: index,
+      [LIST]: id,
       'data-dragging': dragging === index ? ('' as const) : undefined,
       'data-drop': drop?.index === index ? drop.position : undefined,
     };
@@ -235,8 +316,24 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     return {
       ...user,
       onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
-        if (disabled || event.button !== 0) return;
+        if (disabled || event.button !== 0 || touchRef.current !== null) return;
+        fingerRef.current = event.pointerType === 'touch';
         // A drag whose dragend never reached the list is over by now.
+        if (sourceRef.current !== null) end();
+        const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+        armedRef.current = item && indexOf(item) === index ? item : null;
+        if (fingerRef.current) {
+          if (armedRef.current === null) return;
+          touchRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+          setTouching(true);
+          return;
+        }
+        setArmed(index);
+      }),
+      // WebKit sends no pointerdown for the press after a drag, as if the button were still down from
+      // it, but it does send mousedown.
+      onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
+        if (disabled || event.button !== 0 || fingerRef.current || touchRef.current !== null || armed === index) return;
         if (sourceRef.current !== null) end();
         const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
         armedRef.current = item && indexOf(item) === index ? item : null;

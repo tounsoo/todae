@@ -2,7 +2,7 @@ import { ReorderExample } from '../../../../components/demos/ReorderDemo';
 
 # useReorder
 
-`useReorder({ onMove })` lets a person reorder a list by dragging, with the browser's drag and drop. Spread `getItemProps(index)` on each item and `getHandleProps(index)` on the element inside it that a drag starts from, such as a grip. `onMove(from, to)` gets the dragged item's index and the index it ends at.
+`useReorder({ onMove })` lets a person reorder a list by dragging: with the browser's drag and drop for a mouse or a pen, and with pointer events for a finger. Spread `getItemProps(index)` on each item and `getHandleProps(index)` on the element inside it that a drag starts from, such as a grip. `onMove(from, to)` gets the dragged item's index and the index it ends at.
 
 ```tsx
 import { useReorder } from '@tounsoo/todae';
@@ -32,13 +32,19 @@ A press on a handle makes its item draggable, so an item drags only by its handl
 
 With `orientation="horizontal"`, `before` is the side the text starts from, so it is the right side in a right-to-left page.
 
+Escape cancels a drag and leaves the order as it was. During a mouse drag the browser takes Escape itself and ends the drag with no drop; during a touch drag the hook takes it before a [Dialog](/dialog) around the list, which stays open until the next Escape.
+
+## Touch
+
+Browsers on touch screens differ: some start the browser's drag after a long press and some never do. So a finger on a handle drags with pointer events instead, the same way everywhere: the item drags once the finger moves, `drop` follows the item under the finger, and lifting the finger drops it. A tap drags nothing. The handle needs `touch-action: none`: without it the browser takes the touch to scroll the page, which cancels the drag. The page doesn't scroll during a touch drag, so in a list taller than the screen the menu is the way to move an item far.
+
 ## Accessible composition
 
-**Todae handles:** Dragging an item only by its handle. Working out the item and side a drop lands on, and the index the dragged item ends at. Ignoring drags from elsewhere.
+**Todae handles:** Dragging an item only by its handle, with a mouse, a pen or a finger. Working out the item and side a drop lands on, and the index the dragged item ends at. Ignoring drags from elsewhere. Cancelling a drag on Escape.
 
 **You supply:** Another way to move an item that needs no dragging and works from the keyboard, such as the Reorder recipe's menu: the browser's drag and drop has no keyboard path. A handle hidden from screen readers with `aria-hidden`, since that other way is the one they use. Keys from each item's id. The announcement of a move, and how the drop line and the dragged item look.
 
-**Watch for:** Drag as the only way to reorder (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A handle that is a button or a tab stop: it does nothing from the keyboard. A handle smaller than 24 by 24 CSS pixels, such as a bare icon (SC 2.5.8). A handle without `touch-action: none`, which a press on a touch screen scrolls. Dragging on touch screens hasn't been checked.
+**Watch for:** Drag as the only way to reorder (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A handle that is a button or a tab stop: it does nothing from the keyboard. A handle smaller than 24 by 24 CSS pixels, such as a bare icon (SC 2.5.8). A handle without `touch-action: none`, which a press on a touch screen scrolls instead of dragging. Touch dragging is tested with Chromium's touch input and with pointer events in Firefox and WebKit, not on a phone.
 
 ## When to use
 
