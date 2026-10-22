@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.OneTimeCode',
   description:
-    'A code for a sign-in or a verification, drawn as boxes over one native input. The input keeps paste, undo, selection and the phone\'s code autofill (autocomplete="one-time-code"), and the boxes are only drawn. Typing, paste and autofill all keep the characters the code allows and cut it to length; a pasted code replaces the whole value, a press on a box selects its character so typing replaces it, and typing on a full code replaces the box at the caret. className and style go on the element that draws the boxes; every other native input attribute goes on the input, except type, value, defaultValue, onChange, disabled, maxLength, minLength, pattern, inputMode and dir (the input is always left to right).',
+    'A code for a sign-in or a verification, drawn as boxes over one native input. The input keeps paste, undo, selection and the phone\'s code autofill (autocomplete="one-time-code"), and the boxes are only drawn. Typing, paste and autofill all keep the characters the code allows and cut it to length; a pasted code replaces the whole value, a press on a box selects its character so typing replaces it, a drop lands at the box it is dropped on, and typing on a full code replaces the box at the caret (with the caret after the code, nothing lands). className and style go on the element that draws the boxes; every other native input attribute goes on the input, except type, value, defaultValue, onChange, disabled, maxLength, minLength, pattern, inputMode and dir (the input is always left to right).',
   props: [
     {
       name: 'value',
@@ -15,7 +15,8 @@ export const meta = {
       name: 'onChange',
       type: '(event: ChangeEvent<HTMLInputElement>) => void',
       required: false,
-      description: 'Optional: onValueChange alone is enough when the event is not needed.',
+      description:
+        'Optional: onValueChange alone is enough when the event is not needed. The event holds the raw text; clean it, or use onValueChange.',
     },
     {
       name: 'onValueChange',

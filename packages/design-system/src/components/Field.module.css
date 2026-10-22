@@ -788,6 +788,7 @@
   }
 
   .slots {
+    --_ring: var(--todae-field-ring-focus);
     display: flex;
     min-inline-size: 0;
     gap: var(--todae-field-code-gap);
@@ -795,7 +796,6 @@
   }
 
   .slot {
-    --_ring: var(--todae-field-ring-focus);
     position: relative;
     box-sizing: border-box;
     display: flex;
@@ -818,8 +818,11 @@
     border-color: var(--todae-field-border-hover);
   }
 
-  .shell[data-invalid] .slot {
+  .shell[data-invalid] .slots {
     --_ring: var(--todae-field-ring-invalid);
+  }
+
+  .shell[data-invalid] .slot {
     border-color: var(--todae-field-border-invalid);
   }
 
@@ -829,10 +832,17 @@
     border-color: var(--todae-field-border-disabled);
   }
 
-  /* Never seen: it gives revealRing the room of a ring around any box, the
-     moment focus lands, before the active box renders. */
+  /* Transparent until the row is the active part: it gives revealRing the room
+     of a ring around any box, the moment focus lands, before the active box
+     renders. */
   .oneTimeCodeInput:focus-visible + .slots {
     outline: var(--todae-focus-ring-width) solid transparent;
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  /* The caret after a full code is in no box, so the row shows the ring. */
+  .oneTimeCodeInput:focus-visible + .slots[data-active] {
+    outline: var(--todae-focus-ring-width) solid var(--_ring);
     outline-offset: var(--todae-focus-ring-offset);
   }
 
@@ -876,9 +886,18 @@
   }
 
   @media (forced-colors: active) {
-    /* A transparent outline is drawn in a system color there. */
-    .oneTimeCodeInput:focus-visible + .slots {
-      outline-style: none;
+    /* The row keeps its transparent outline, which revealRing measures, and
+       the boxes take the system colors. */
+    .slots {
+      forced-color-adjust: none;
+    }
+
+    .slot {
+      forced-color-adjust: auto;
+    }
+
+    .oneTimeCodeInput:focus-visible + .slots[data-active] {
+      outline-color: Highlight;
     }
 
     .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {

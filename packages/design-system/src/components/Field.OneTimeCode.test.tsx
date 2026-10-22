@@ -121,11 +121,11 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('1239');
   });
 
-  it('leaves a clean partial paste to the browser', () => {
+  it('puts a clean partial paste in itself, where it chose', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);
-    expect(beforeInput('insertFromPaste', '123').defaultPrevented).toBe(false);
-    expect(onValueChange).not.toHaveBeenCalled();
+    expect(beforeInput('insertFromPaste', '123').defaultPrevented).toBe(true);
+    expect(onValueChange).toHaveBeenLastCalledWith('123');
   });
 
   it('does nothing for a paste with no allowed character, and keeps the selection', () => {
@@ -139,7 +139,7 @@ describe('Field.OneTimeCode', () => {
     expect(input().selectionEnd).toBe(3);
   });
 
-  it('treats a drop as a paste, landing at the caret', () => {
+  it('treats a drop that left no box as a paste at the caret', () => {
     const onValueChange = vi.fn();
     render(<Code initial="19" onValueChange={onValueChange} />);
     input().setSelectionRange(1, 1);
@@ -164,13 +164,13 @@ describe('Field.OneTimeCode', () => {
     expect(input().selectionEnd).toBe(3);
   });
 
-  it('replaces the last box when a character is typed with the caret at the end of a full code', () => {
+  it('refuses a character typed with the caret after a full code', () => {
     const onValueChange = vi.fn();
     render(<Code initial="123456" onValueChange={onValueChange} />);
     input().focus();
     input().setSelectionRange(6, 6);
     expect(beforeInput('insertText', '9').defaultPrevented).toBe(true);
-    expect(onValueChange).toHaveBeenLastCalledWith('123459');
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 
   it('replaces the characters from the caret when a short paste lands on a full code', () => {
@@ -182,13 +182,29 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('127856');
   });
 
-  it('replaces the last characters when a short paste lands at the end of a full code', () => {
+  it('refuses a short paste with the caret after a full code, but a whole code still replaces it', () => {
     const onValueChange = vi.fn();
     render(<Code initial="123456" onValueChange={onValueChange} />);
     input().focus();
     input().setSelectionRange(6, 6);
-    beforeInput('insertFromPaste', '78');
-    expect(onValueChange).toHaveBeenLastCalledWith('123478');
+    expect(beforeInput('insertFromPaste', '78').defaultPrevented).toBe(true);
+    expect(onValueChange).not.toHaveBeenCalled();
+    beforeInput('insertFromPaste', '654321');
+    expect(onValueChange).toHaveBeenLastCalledWith('654321');
+  });
+
+  it('shows the focus on the row of boxes, and in no box, while the caret is after a full code', () => {
+    const { container } = render(<Code initial="123456" />);
+    const row = container.querySelector('[aria-hidden="true"]')!;
+    const active = () => [...row.children].filter((box) => box.hasAttribute('data-active')).length;
+    expect(row.hasAttribute('data-active')).toBe(false);
+    input().focus();
+    input().setSelectionRange(3, 3);
+    fireEvent.focus(input());
+    expect([row.hasAttribute('data-active'), active()]).toEqual([false, 1]);
+    input().setSelectionRange(6, 6);
+    fireEvent.focus(input());
+    expect([row.hasAttribute('data-active'), active()]).toEqual([true, 0]);
   });
 
   it('does not loop when the browser fires beforeinput for its own insert command', () => {

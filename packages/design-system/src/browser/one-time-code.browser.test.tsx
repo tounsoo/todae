@@ -7,7 +7,17 @@ import { ErrorMessage, Field, Form, Label } from '../index.js';
 
 afterEach(cleanup);
 
-function Code({ initial = '', onValueChange, style }: { initial?: string; onValueChange?: (value: string) => void; style?: CSSProperties }) {
+function Code({
+  initial = '',
+  onValueChange,
+  style,
+  characters,
+}: {
+  initial?: string;
+  onValueChange?: (value: string) => void;
+  style?: CSSProperties;
+  characters?: 'digits' | 'alphanumeric';
+}) {
   const [value, setValue] = useState(initial);
   return (
     <main data-appearance="light" data-density="comfortable" style={style}>
@@ -16,6 +26,7 @@ function Code({ initial = '', onValueChange, style }: { initial?: string; onValu
         <Field.Root id="code" name="code">
           <Field.OneTimeCode
             value={value}
+            characters={characters}
             onValueChange={(next) => {
               setValue(next);
               onValueChange?.(next);
@@ -52,6 +63,11 @@ async function paste(text: string) {
   await userEvent.keyboard('{Control>}v{/Control}');
 }
 
+function ShadowCode() {
+  const [value, setValue] = useState('123456');
+  return <Field.OneTimeCode value={value} onValueChange={setValue} />;
+}
+
 describe('Field.OneTimeCode in a browser', () => {
   it('keeps digits as they are typed and drops anything else', async () => {
     render(<Code />);
@@ -62,11 +78,13 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('123');
   });
 
-  it('stops at its length, typing the rest over the last box', async () => {
-    render(<Code />);
+  it('stops at its length, and nothing typed after a full code lands', async () => {
+    const onValueChange = vi.fn();
+    render(<Code onValueChange={onValueChange} />);
     await userEvent.click(input());
     await userEvent.keyboard('12345678');
-    expect(input().value).toBe('123458');
+    expect(input().value).toBe('123456');
+    expect(onValueChange).toHaveBeenCalledTimes(6);
   });
 
   it('keeps the digits of a pasted message', async () => {
@@ -180,13 +198,17 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('123456');
   });
 
-  it('replaces the last box when a digit is typed with the caret after a full code', async () => {
+  it('shows the focus on the row of boxes, in no box, with the caret after a full code', async () => {
     render(<Code initial="123456" />);
     await userEvent.click(input());
     await userEvent.keyboard('{End}');
+    expect(active()).toEqual([]);
+    const row = input().nextElementSibling!;
+    expect(getComputedStyle(row).outlineStyle).not.toBe('none');
+    expect(getComputedStyle(row).outlineColor).not.toBe('rgba(0, 0, 0, 0)');
+    await userEvent.keyboard('{ArrowLeft}');
     expect(active()).toEqual([5]);
-    await userEvent.keyboard('9');
-    expect(input().value).toBe('123459');
+    expect(getComputedStyle(row).outlineColor).toBe('rgba(0, 0, 0, 0)');
   });
 
   it('replaces the characters from the caret with a short paste on a full code', async () => {
@@ -204,6 +226,55 @@ describe('Field.OneTimeCode in a browser', () => {
     const at = { x: rect.left + 5, y: rect.top + rect.height / 2 };
     for (const type of ['dragEnter', 'dragOver', 'drop']) await session().send('Input.dispatchDragEvent', { type, ...at, data });
     await vi.waitFor(() => expect(input().value).toBe('482913'));
+  });
+
+  // Drops a "9" on the middle of box `box`, with the browser's own drag events.
+  async function dropAt(box: number) {
+    const rect = input().getBoundingClientRect();
+    const data = { items: [{ mimeType: 'text/plain', data: '9' }], dragOperationsMask: 1 };
+    // The test page sits in a scaled frame, and the drag events take the top page's coordinates.
+    const frame = window.frameElement?.getBoundingClientRect();
+    const scale = frame ? frame.width / window.innerWidth : 1;
+    const at = {
+      x: (frame?.left ?? 0) + (rect.left + boxPosition(box).x) * scale,
+      y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale,
+    };
+    for (const type of ['dragEnter', 'dragOver', 'drop']) await session().send('Input.dispatchDragEvent', { type, ...at, data });
+  }
+
+  it('lands a drop at the box it is dropped on', async () => {
+    const drop = dropAt;
+    render(<Code initial="1234" />);
+    await userEvent.click(input());
+    await drop(1);
+    await vi.waitFor(() => expect(input().value).toBe('19234'));
+  });
+
+  it('lands a drop past the code after its last character', async () => {
+    render(<Code initial="1234" />);
+    await dropAt(5);
+    await vi.waitFor(() => expect(input().value).toBe('12349'));
+  });
+
+  it('lands a drop on a full code over the box it is dropped on', async () => {
+    render(<Code initial="123456" />);
+    await dropAt(2);
+    await vi.waitFor(() => expect(input().value).toBe('129456'));
+  });
+
+  it('replaces the box at the caret when a composition starts on a full code, and none after it', async () => {
+    const compose = async (text: string) => {
+      await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
+      await session().send('Input.insertText', { text });
+    };
+    render(<Code initial="ABC123" characters="alphanumeric" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose('x');
+    await vi.waitFor(() => expect(input().value).toBe('AxC123'));
+    await userEvent.keyboard('{End}');
+    await compose('y');
+    expect(input().value).toBe('AxC123');
   });
 
   it('warns of nothing when it takes focus as it mounts', () => {
@@ -232,16 +303,22 @@ describe('Field.OneTimeCode in a browser', () => {
     const view = render(
       <main data-appearance="light" data-density="comfortable">
         <Field.Root aria-label="Verification code">
-          <Field.OneTimeCode value="123456" onValueChange={() => undefined} />
+          <ShadowCode />
         </Field.Root>
       </main>,
       { container: mount },
     );
     const inner = mount.querySelector('input')!;
-    inner.focus();
-    inner.setSelectionRange(2, 2);
-    document.dispatchEvent(new Event('selectionchange'));
-    await vi.waitFor(() => expect(inner.nextElementSibling!.querySelectorAll('[data-active]')).toHaveLength(1));
+    const marked = () => [...inner.nextElementSibling!.children].flatMap((box, i) => (box.hasAttribute('data-active') ? [i] : []));
+    await userEvent.click(inner);
+    await userEvent.keyboard('{Home}{ArrowRight}{ArrowRight}');
+    await vi.waitFor(() => expect(marked()).toEqual([2]));
+    await userEvent.keyboard('{Home}');
+    await vi.waitFor(() => expect(marked()).toEqual([0]));
+    await userEvent.keyboard('9');
+    expect(inner.value).toBe('923456');
+    await userEvent.keyboard('{Control>}z{/Control}');
+    expect(inner.value).toBe('123456');
     view.unmount();
     host.remove();
   });

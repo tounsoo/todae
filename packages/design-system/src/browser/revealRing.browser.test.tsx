@@ -1,5 +1,6 @@
+/// <reference types="@vitest/browser/providers/playwright" />
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover.js';
@@ -188,6 +189,39 @@ describe('focus rings in a scrolling container', () => {
       });
       expect(getComputedStyle(slot).outlineStyle).not.toBe('none');
       expect(cutEdges(slot, area())).toEqual([]);
+    });
+
+    it(`scrolls ${name} to show the whole ring of a Field.OneTimeCode box in forced colors`, async () => {
+      const session = cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
+      await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] });
+      try {
+        render(
+          <Themed>
+            {ui(
+              <>
+                {spacer}
+                <Field.Root>
+                  <Field.OneTimeCode aria-label="Code" value="" onValueChange={() => undefined} />
+                </Field.Root>
+                {tail}
+              </>,
+            )}
+          </Themed>,
+        );
+        const input = await screen.findByRole('textbox', { name: 'Code' });
+        await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+        area().style.scrollPadding = '0';
+        justFit(area(), input);
+        await keyboardFocus(input);
+        const slot = await waitFor(() => {
+          const found = input.nextElementSibling!.querySelector<HTMLElement>('[data-active]');
+          expect(found).not.toBeNull();
+          return found!;
+        });
+        expect(cutEdges(slot, area())).toEqual([]);
+      } finally {
+        await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: '' }] });
+      }
     });
 
     it(`scrolls ${name} to show the ColorPicker thumb's ring, away from the focused input`, async () => {

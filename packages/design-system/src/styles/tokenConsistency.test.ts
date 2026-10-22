@@ -134,7 +134,11 @@ describe('token consistency across component styles', () => {
       }
     }
     expect(offElement).toEqual({
-      Field: ['.oneTimeCodeInput:focus-visible + .slots', '.oneTimeCodeInput:focus-visible + .slots .slot[data-active]'],
+      Field: [
+        '.oneTimeCodeInput:focus-visible + .slots',
+        '.oneTimeCodeInput:focus-visible + .slots[data-active]',
+        '.oneTimeCodeInput:focus-visible + .slots .slot[data-active]',
+      ],
       selection: ['.input:focus-visible + .indicator'],
       ColorPicker: ['.area:has(.axis:focus-visible) > .thumb'],
       Tree: ['.item:focus-visible > .label'],

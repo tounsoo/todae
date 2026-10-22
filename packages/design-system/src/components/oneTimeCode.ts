@@ -17,7 +17,8 @@ export type Slot = { active: boolean; filled: boolean; caret: boolean };
 /** What each of the `length` slots shows, from the code and the input's selection (null while it has no focus). */
 export function slotsOf(value: string, selection: CodeSelection | null, length: number): Slot[] {
   const collapsed = selection !== null && selection.start === selection.end;
-  const caretAt = selection !== null && collapsed ? Math.min(selection.start, length - 1) : -1;
+  // A caret after a full code is in no box.
+  const caretAt = selection !== null && collapsed && selection.start < length ? selection.start : -1;
   return Array.from({ length }, (_, i) => ({
     filled: i < value.length,
     active: selection !== null && (collapsed ? i === caretAt : i >= selection.start && i < selection.end),
