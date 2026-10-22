@@ -103,6 +103,14 @@ export {
   type ButtonVariant,
   type ButtonVariants,
 } from './components/Button.js';
+export {
+  Splitter,
+  type SplitterHandleProps,
+  type SplitterOrientation,
+  type SplitterPanelProps,
+  type SplitterPrimary,
+  type SplitterRootProps,
+} from './components/Splitter.js';
 export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar.js';
 export {
   ToggleGroup,

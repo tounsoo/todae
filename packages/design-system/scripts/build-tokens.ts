@@ -95,6 +95,7 @@ export const RESERVED_ROOTS = [
   'attachment',
   'steps',
   'emptystate',
+  'splitter',
   'breadcrumbs',
   'toolbar',
   'drawer',

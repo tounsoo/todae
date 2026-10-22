@@ -13,6 +13,7 @@ import {
   Card,
   DataList,
   EmptyState,
+  Splitter,
   Message,
   Attachment,
   Steps,
@@ -659,6 +660,20 @@ const cases: Case[] = [
           <EmptyState.Root>
             <Part {...p} />
           </EmptyState.Root>
+        );
+      },
+    ],
+  ),
+  ['Splitter.Root', (p) => <Splitter.Root {...p} />],
+  ...(['Panel', 'Handle'] as const).map(
+    (part): Case => [
+      `Splitter.${part}`,
+      (p) => {
+        const Part = Splitter[part] as (props: Native) => ReactNode;
+        return (
+          <Splitter.Root>
+            <Part {...p} />
+          </Splitter.Root>
         );
       },
     ],

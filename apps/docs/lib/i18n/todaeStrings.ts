@@ -17,6 +17,7 @@ const KOREAN: Strings = {
   breadcrumbs: '이동 경로',
   pagination: '페이지',
   resizeSheet: '시트 크기 조절',
+  resizePanel: '패널 크기 조절',
   options: '옵션',
   removeChip: (label) => `${label} 삭제`,
   removeAttachment: (name) => (name ? `${name} 삭제` : '삭제'),

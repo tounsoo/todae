@@ -1,0 +1,117 @@
+@layer todae.components {
+  .root {
+    display: grid;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  /* The primary track is the size, held inside the container by the handle's own track. */
+  .root[data-orientation='horizontal'] {
+    grid-auto-flow: column;
+  }
+
+  .root[data-orientation='horizontal'][data-primary='start'] {
+    grid-template-columns: min(var(--_size), calc(100% - var(--todae-splitter-handle-size))) auto minmax(0, 1fr);
+  }
+
+  .root[data-orientation='horizontal'][data-primary='end'] {
+    grid-template-columns: minmax(0, 1fr) auto min(var(--_size), calc(100% - var(--todae-splitter-handle-size)));
+  }
+
+  .root[data-orientation='vertical'] {
+    grid-auto-flow: row;
+  }
+
+  .root[data-orientation='vertical'][data-primary='start'] {
+    grid-template-rows: min(var(--_size), calc(100% - var(--todae-splitter-handle-size))) auto minmax(0, 1fr);
+  }
+
+  .root[data-orientation='vertical'][data-primary='end'] {
+    grid-template-rows: minmax(0, 1fr) auto min(var(--_size), calc(100% - var(--todae-splitter-handle-size)));
+  }
+
+  .root[data-dragging] {
+    user-select: none;
+  }
+
+  .root[data-dragging][data-orientation='horizontal'] {
+    cursor: col-resize;
+  }
+
+  .root[data-dragging][data-orientation='vertical'] {
+    cursor: row-resize;
+  }
+
+  .panel {
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+  }
+
+  /* Out of the tab order and the accessibility tree, and still laid out as a track of 0. */
+  .panel[data-collapsed] {
+    visibility: hidden;
+  }
+
+  .handle {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    background: var(--todae-splitter-handle-color-default);
+    touch-action: none;
+    outline: none;
+  }
+
+  .root[data-orientation='horizontal'] > .handle {
+    inline-size: var(--todae-splitter-handle-size);
+    cursor: col-resize;
+  }
+
+  .root[data-orientation='vertical'] > .handle {
+    block-size: var(--todae-splitter-handle-size);
+    cursor: row-resize;
+  }
+
+  /* The hit area, centered on the line so the layout keeps the thin track. */
+  .handle::before {
+    content: '';
+    position: absolute;
+  }
+
+  .root[data-orientation='horizontal'] > .handle::before {
+    inset-block: 0;
+    inset-inline-start: calc(50% - var(--todae-splitter-handle-target) / 2);
+    inline-size: var(--todae-splitter-handle-target);
+  }
+
+  .root[data-orientation='vertical'] > .handle::before {
+    inset-inline: 0;
+    inset-block-start: calc(50% - var(--todae-splitter-handle-target) / 2);
+    block-size: var(--todae-splitter-handle-target);
+  }
+
+  .handle:hover {
+    background: var(--todae-splitter-handle-color-hover);
+  }
+
+  .root[data-dragging] > .handle {
+    background: var(--todae-splitter-handle-color-active);
+  }
+
+  .handle:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-splitter-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  @media (forced-colors: active) {
+    .handle {
+      background: CanvasText;
+    }
+
+    .handle:hover,
+    .handle:focus-visible,
+    .root[data-dragging] > .handle {
+      background: Highlight;
+    }
+  }
+}

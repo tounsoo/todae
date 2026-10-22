@@ -20,6 +20,8 @@ export interface Strings {
   pagination: string;
   /** Name of BottomSheet.Grabber's resize control. */
   resizeSheet: string;
+  /** Name of Splitter.Handle when it has no aria-label or aria-labelledby. */
+  resizePanel: string;
   /** Name in the sheet and dialog props from useCombobox's getSheetProps and getDialogProps. */
   options: string;
   /** Name of a chip's remove button. */
@@ -146,6 +148,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   breadcrumbs: 'Breadcrumb',
   pagination: 'Pagination',
   resizeSheet: 'Resize sheet',
+  resizePanel: 'Resize',
   options: 'Options',
   removeChip: (label) => `Remove ${label}`,
   removeAttachment: (name) => (name ? `Remove ${name}` : 'Remove'),

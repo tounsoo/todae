@@ -36,6 +36,7 @@
         { "$ref": "./components/selection.json" },
         { "$ref": "./components/alert.json" },
         { "$ref": "./components/empty-state.json" },
+        { "$ref": "./components/splitter.json" },
         { "$ref": "./components/toast.json" },
         { "$ref": "./components/fieldset.json" },
         { "$ref": "./components/form.json" },
