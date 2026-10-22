@@ -133,6 +133,7 @@ export const SITE_GROUPS = [
       ['/recipes/data-table', 'Data table'],
       ['/recipes/date-range-presets', 'Date range with presets'],
       ['/recipes/file-upload', 'File upload'],
+      ['/recipes/filter-bar', 'Filter bar'],
       ['/recipes/inline-edit', 'Inline edit'],
       ['/recipes/message-actions', 'Message actions'],
       ['/recipes/reasoning', 'Reasoning'],

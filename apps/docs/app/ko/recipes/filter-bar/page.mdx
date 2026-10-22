@@ -1,0 +1,153 @@
+import { FilterBarIssues } from '../../../../components/demos/FilterBarDemo';
+
+# Filter bar
+
+패키지 네임스페이스가 아니라 레시피입니다. 필터 바는 값마다 체크박스 항목이 있는 [Menu](/menu) 버튼들을 담은 [Toolbar](/toolbar), 쓰고 있는 필터를 제거 버튼과 함께 보여 주는 [ChipList](/chip-list), 그리고 "Clear all" [Button](/button)입니다. 어떤 필드로 거르는지, 그 값과 일치 방식은 제품이 정합니다. `FilterBar.*` export는 없습니다.
+
+필터를 열어 값 몇 개를 체크한 뒤, 칩에서 하나씩 지우거나 모두 지워 보세요.
+
+<Example block>
+  <FilterBarIssues />
+</Example>
+
+## 필터
+
+고른 값은 필드마다 목록 하나씩, 객체 하나에 담고 일치하는 항목은 거기서 계산하세요. 한 필드 안의 값은 '또는'이고, 필드끼리는 서로 범위를 좁힙니다. 사람들이 패싯 필터에 기대하는 방식입니다. 이 페이지의 코드는 모든 이슈를 메모리에 둡니다. 데이터가 서버에 있다면 필터를 요청에 담아 보내고, 응답으로 온 행과 전체 개수를 보여 주세요. 거른 화면을 공유할 수 있게 하려면 필터를 URL의 쿼리 문자열에 두고 거기서 다시 읽으세요.
+
+```ts
+const FACETS = [
+  { key: 'status', label: 'Status', options: ['Open', 'In progress', 'Closed'] },
+  { key: 'priority', label: 'Priority', options: ['High', 'Medium', 'Low'] },
+  { key: 'assignee', label: 'Assignee', options: ['Jun', 'Mina', 'Sara'] },
+] as const;
+
+type FacetKey = (typeof FACETS)[number]['key'];
+type Filters = Record<FacetKey, readonly string[]>;
+
+const NONE: Filters = { status: [], priority: [], assignee: [] };
+
+const matches = ISSUES.filter((issue) =>
+  FACETS.every(({ key }) => filters[key].length === 0 || filters[key].includes(issue[key])),
+);
+
+const toggle = (key: FacetKey, value: string, on: boolean) =>
+  setFilters((current) => ({
+    ...current,
+    [key]: on ? [...current[key], value] : current[key].filter((v) => v !== value),
+  }));
+```
+
+## 필터 메뉴
+
+필드마다 `Menu.Root` 하나를 무엇을 거르는지 이름 붙인 `Toolbar.Root`에 넣으세요. 그러면 버튼들이 Tab 정지 하나를 나눠 쓰고, 화살표 키로 그 사이를 옮겨 다닙니다. `Menu.CheckboxItem`은 체크해도 메뉴를 열어 두므로 값 여러 개를 한 번에 고를 수 있습니다. Escape는 메뉴를 닫고 포커스를 메뉴 버튼으로 돌려줍니다. 어느 메뉴가 열려 있는지 `onOpenChange`로 기억해 두면, 일치하는 개수를 메뉴가 닫힐 때까지 미룰 수 있습니다(결과 참고). 필드에 고른 값이 몇 개인지는 버튼 위의 `Badge.Root`로 보여 주고, 숫자가 무엇을 뜻하는지 버튼 이름이 말하도록 시각적으로 숨긴 낱말을 붙이세요. 예를 들어 "Status 2 selected"입니다. 버튼 이름은 개수에 따라 바뀌므로 메뉴마다 `aria-label`로 이름을 주세요.
+
+```tsx
+const [openMenu, setOpenMenu] = useState<FacetKey | null>(null);
+const menuOpenChange = (key: FacetKey, open: boolean) =>
+  setOpenMenu((current) => (open ? key : current === key ? null : current));
+
+<Toolbar.Root aria-label="Filter issues">
+  {FACETS.map(({ key, label, options }, index) => (
+    <Menu.Root key={key} onOpenChange={(open) => menuOpenChange(key, open)}>
+      <Menu.Trigger ref={index === 0 ? firstFilter : undefined} variant="secondary">
+        {label}
+        {filters[key].length > 0 && (
+          <Badge.Root>
+            {filters[key].length}
+            <VisuallyHidden.Root> selected</VisuallyHidden.Root>
+          </Badge.Root>
+        )}
+      </Menu.Trigger>
+      <Menu.Content aria-label={label}>
+        {options.map((option) => (
+          <Menu.CheckboxItem
+            key={option}
+            checked={filters[key].includes(option)}
+            onCheckedChange={(on) => toggle(key, option, on)}
+          >
+            {option}
+          </Menu.CheckboxItem>
+        ))}
+      </Menu.Content>
+    </Menu.Root>
+  ))}
+</Toolbar.Root>
+```
+
+## 적용된 필터
+
+고른 값마다 "Active filters"라는 이름의 `ChipList.Root`에 칩으로 보여 주세요. `onRemove`를 넘기면 칩마다 제거 버튼이 생깁니다. 칩은 값을 체크한 순서가 아니라 메뉴 순서대로 만들고, 칩마다 필드 이름을 넣어서 두 필드의 "High"가 섞이지 않게 하세요. 칩이 사라지면 `ChipList.Root`가 그 자리를 채운 칩으로 포커스를 옮깁니다. 이 줄은 필터를 쓰는 동안에만 렌더링하세요. 마지막 칩을 지우거나 "Clear all"을 누르면 포커스를 가진 채 줄이 사라지므로, 줄에 건 `useFocusHandoff`가 포커스를 첫 필터 버튼으로 넘깁니다. 줄이 길면 `maxRows`를 넘겨 +N 버튼으로 접으세요.
+
+```tsx
+const firstFilter = useRef<HTMLButtonElement>(null);
+const chipsHandoff = useFocusHandoff({ to: firstFilter });
+const active = FACETS.flatMap(({ key, label, options }) =>
+  options.filter((option) => filters[key].includes(option)).map((value) => ({ key, label, value })),
+);
+
+{active.length > 0 && (
+  <Stack.Root ref={chipsHandoff} direction="row" align="center" gap="condensed" wrap>
+    <ChipList.Root
+      aria-label="Active filters"
+      chips={active.map(({ label, value }) => `${label}: ${value}`)}
+      onRemove={(index) => {
+        const chip = active[index];
+        if (chip) toggle(chip.key, chip.value, false);
+      }}
+    />
+    <Button.Root variant="ghost" onClick={() => setFilters(NONE)}>
+      Clear all
+    </Button.Root>
+  </Stack.Root>
+)}
+```
+
+## 결과
+
+일치하는 개수는 결과 옆에 글로 보여 주세요. 필터는 포커스를 옮기지 않고 결과를 바꾸므로, 사람이 필터 바꾸기를 멈춘 뒤 [useAnnouncer](/utilities/use-announcer)로 개수를 알리세요. 필터 메뉴가 열려 있는 동안에는 화면 낭독기가 각 값의 체크 상태를 읽으므로 알리지 말고, 메뉴가 닫히거나 칩이 사라지고 0.5초쯤 지나서 알리세요. 고른 필터를 마지막으로 알린 필터와 비교하면, 아무것도 바꾸지 않고 메뉴를 열었다 닫았을 때는 아무 말도 하지 않습니다. 데이터가 서버에 있다면 그 필터에 대한 응답이 왔을 때 알리세요. 그 전의 개수는 예전 것입니다. 이때도 메뉴가 열려 있는 동안에는 알리지 마세요. 일치하는 것이 없으면 표의 캡션과 머리글은 그대로 두고, 모든 열에 걸친 행에 필터를 지우는 버튼과 함께 `EmptyState.Root`를 넣으세요. 이 버튼은 행이 일치하면 사라지므로, `EmptyState.Actions`에도 `useFocusHandoff`를 걸어 포커스를 첫 필터 버튼으로 넘기세요.
+
+```tsx
+const announce = useAnnouncer();
+const emptyHandoff = useFocusHandoff({ to: firstFilter });
+const countOf = (count: number) => `${count} ${count === 1 ? 'issue' : 'issues'}`;
+const chosen = active.map((chip) => `${chip.key}:${chip.value}`).join('|');
+const announced = useRef(chosen);
+
+useEffect(() => {
+  if (openMenu) return;
+  const timer = setTimeout(() => {
+    if (announced.current === chosen) return;
+    announced.current = chosen;
+    announce(matches.length === 0 ? 'No issues match these filters' : `${countOf(matches.length)} shown`);
+  }, 500);
+  return () => clearTimeout(timer);
+}, [chosen, openMenu, matches.length, announce]);
+
+<Table.Row>
+  <Table.Cell colSpan={5}>
+    <EmptyState.Root>
+      <EmptyState.Title as="h3">No issues match these filters</EmptyState.Title>
+      <EmptyState.Description>Remove a filter or clear them all.</EmptyState.Description>
+      <EmptyState.Actions ref={emptyHandoff}>
+        <Button.Root variant="secondary" onClick={() => setFilters(NONE)}>
+          Clear filters
+        </Button.Root>
+      </EmptyState.Actions>
+    </EmptyState.Root>
+  </Table.Cell>
+</Table.Row>
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Toolbar.Root`에 넣은 필터 버튼의 Tab 정지 하나와 화살표 키. `Menu.Root`가 주는 각 메뉴 버튼의 연결, 키보드, Escape로 닫을 때 버튼으로 돌아가는 포커스. `Menu.CheckboxItem`이 주는 각 값의 `menuitemcheckbox` 역할과 체크 상태, 값을 체크하는 동안 열린 채 있는 메뉴. `ChipList.Root`가 주는 칩 목록, 각 제거 버튼의 이름, 지운 칩의 자리를 채운 칩으로, 없으면 그 앞 칩으로 옮기는 포커스. 칩 줄이나 빈 상태의 버튼이 포커스를 가진 채 사라질 때 `useFocusHandoff`로 첫 필터 버튼에 옮기는 포커스.
+
+**직접 제공할 것:** 필드, 그 값, 일치 방식. 툴바, 각 메뉴, 칩 목록의 이름. 버튼의 개수가 무엇을 뜻하는지 말하는 낱말. 필드 이름을 넣은 칩 레이블. 어느 메뉴가 열려 있는지. 일치하는 개수의 알림. 칩이 사라질 때 포커스가 갈 곳.
+
+**주의할 점:** 메뉴가 열린 동안 체크할 때마다 개수를 알려서, 화면 낭독기가 읽는 체크 상태를 덮어 버리는 것. 화면 낭독기 사용자는 체크 사이에 더 오래 머무르므로 짧은 타이머만으로는 막을 수 없습니다. 필터가 걸렸다는 표시가 색이나 점뿐인 버튼. 메뉴 안의 Apply 버튼을 눌러야 적용되는 필터. 그때까지 체크한 결과가 가려집니다. 쿼리가 느리다면 디바운스하되 체크는 그때그때 반영하세요. 포커스를 옮기지 않고 칩 줄을 없애서 포커스가 페이지로 떨어지는 것. 두 필드가 같은 값을 가질 때 "High"처럼 값만 말하는 칩.
+
+## 언제 쓰나요
+
+**쓸 때:** 상태, 담당자, 유형처럼 값이 정해진 몇 가지 필드로 목록, 표, 검색 결과를 좁힐 때.
+
+**쓰지 않을 때:** 자유 텍스트 검색 → [Data table](/recipes/data-table) 레시피처럼 검색 필드. 값이 많아서 입력해서 찾는 필터 → [Combobox](/recipes/combobox) 레시피. Open과 Closed처럼 화면 전체를 바꾸는 선택 하나 → [Tabs](/tabs)나 [ToggleGroup](/toggle-group). 날짜 범위 → [Date range with presets](/recipes/date-range-presets).
