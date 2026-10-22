@@ -8,7 +8,7 @@ export const meta = {
       name: 'href',
       type: 'string',
       required: false,
-      description: 'The fragment of the section, such as #props. A link to another page is never marked current.',
+      description: 'The fragment of the section, such as #props. A link to another page is not marked current.',
     },
     {
       name: 'render',

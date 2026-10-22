@@ -23,7 +23,7 @@ import styles from './Contents.module.css';
  * marks the link to the section being read with `aria-current="location"`.
  */
 export type ContentsRootProps = {
-  /** Text shown above the list, which also names the landmark. Without it, `aria-label`, `aria-labelledby` or the `contents` string names it. */
+  /** Text shown above the list, which also names the landmark. Without it, `aria-labelledby`, `aria-label` or the `contents` string names it. */
   label?: ReactNode;
   children?: ReactNode;
   className?: string;
@@ -69,6 +69,7 @@ function fragmentOf(href: string | undefined): string | null {
 
 /** Whether `href` points into the page that is showing, so its fragment names an element here. */
 function onThisPage(href: string, doc: Document): boolean {
+  if (!URL.canParse(href, doc.baseURI)) return false;
   const here = new URL(doc.URL);
   const there = new URL(href, doc.baseURI);
   return there.origin === here.origin && there.pathname === here.pathname && there.search === here.search;
@@ -78,16 +79,29 @@ function onThisPage(href: string, doc: Document): boolean {
 function scrollerOf(el: Element): Element | null {
   const { body, documentElement } = el.ownerDocument;
   for (let node = el.parentElement; node && node !== body && node !== documentElement; node = node.parentElement) {
-    if (/auto|scroll|overlay/.test(getComputedStyle(node).overflowY)) return node;
+    // `overflow-x: hidden` alone computes `overflow-y` to `auto` too, so a box counts only when it overflows.
+    if (/auto|scroll|overlay/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return node;
   }
   return null;
 }
 
-/** A length in pixels from a computed style, or 0 for `auto` and the like. */
-function pixels(value: string): number {
+/** A computed length in pixels, with a percentage of `basis`, or 0 for `auto` and the like. */
+function pixels(value: string, basis: number): number {
   const n = parseFloat(value);
-  return Number.isFinite(n) ? n : 0;
+  if (!Number.isFinite(n)) return 0;
+  return value.endsWith('%') ? (n * basis) / 100 : n;
 }
+
+function isEditable(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+}
+
+type FollowOptions = {
+  /** Whether the page's hash may pick a section now, on the first follow after mounting. */
+  pickFromHash: boolean;
+  /** Called when a section that was missing mounts or a followed one leaves the page, so following starts again. */
+  onTargetsChange: () => void;
+};
 
 /**
  * Follows the sections `ids` name and reports the one being read: the last
@@ -102,27 +116,46 @@ function followSections(
   ids: readonly string[],
   picked: { current: string | null },
   report: (id: string | null) => void,
+  { pickFromHash, onTargetsChange }: FollowOptions,
 ): { update: () => void; stop: () => void } {
   const doc = nav.ownerDocument;
+  const win = doc.defaultView;
   const root = nav.getRootNode() as Document | ShadowRoot;
+  if (!win || typeof win.IntersectionObserver === 'undefined' || typeof win.ResizeObserver === 'undefined') {
+    report(null);
+    return { update: () => {}, stop: () => {} };
+  }
   const targets = ids
     .map((id) => root.getElementById(id))
     .filter((el): el is HTMLElement => el !== null)
     .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const missing = ids.filter((id) => !targets.some((target) => target.id === id));
+
+  // Start again when a missing section mounts or a followed one is replaced.
+  const mutations = new MutationObserver(() => {
+    if (targets.some((target) => !target.isConnected) || missing.some((id) => root.getElementById(id))) onTargetsChange();
+  });
+  mutations.observe(root, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['id'],
+  });
+
   if (targets.length === 0) {
     report(null);
-    return { update: () => report(null), stop: () => {} };
+    return { update: () => report(null), stop: () => mutations.disconnect() };
   }
   const has = (id: string | null) => id !== null && targets.some((target) => target.id === id);
-  const scroller = scrollerOf(targets[0]!);
-  const padding = pixels(getComputedStyle(scroller ?? doc.documentElement).scrollPaddingBlockStart);
-  const sections = targets.map((el) => ({ el, line: padding + pixels(getComputedStyle(el).scrollMarginBlockStart) }));
+  let scroller = null as Element | null;
+  let sections: { el: HTMLElement; line: number }[] = [];
   // Whether the picked section has come into view since it was picked.
   let pickSeen = false;
 
   const update = () => {
     if (has(picked.current)) return report(picked.current);
-    const top = scroller ? scroller.getBoundingClientRect().top : 0;
+    // Scroll padding starts at the scroller's padding edge, inside its border.
+    const top = scroller ? scroller.getBoundingClientRect().top + scroller.clientTop : 0;
     let found: string | null = null;
     for (const { el, line } of sections) {
       // A pixel of slack, since a fragment link can leave the top a fraction short of the line.
@@ -134,38 +167,38 @@ function followSections(
 
   const release = () => {
     if (picked.current === null) return;
-    view.disconnect();
+    view?.disconnect();
     picked.current = null;
     update();
   };
 
   // Watches the picked section alone, to release it once it has been in view and leaves.
-  const view = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) pickSeen = true;
-        else if (pickSeen) release();
-      }
-    },
-    { root: scroller ?? doc },
-  );
-
+  let view: IntersectionObserver | null = null;
   // A fresh observation hands the observer an entry that says whether the section is in view now.
   const startPick = () => {
     pickSeen = false;
-    view.disconnect();
+    view?.disconnect();
     const target = targets.find((el) => el.id === picked.current);
-    if (target) view.observe(target);
+    if (target) view?.observe(target);
     update();
   };
 
-  // One observer per line, whose box runs from far above the scroller down to
+  // Measures the scroller and each section's line, and watches the lines with
+  // one observer per line, whose box runs from far above the scroller down to
   // that line, so a section's entry changes whenever its top crosses its own
   // line, however far one scroll jumps.
   let passed: IntersectionObserver[] = [];
-  const watchLines = () => {
+  const measure = () => {
     for (const observer of passed) observer.disconnect();
-    const height = scroller ? scroller.clientHeight : doc.documentElement.clientHeight;
+    view?.disconnect();
+    scroller = scrollerOf(targets[0]!);
+    const box = scroller ?? doc.documentElement;
+    const height = box.clientHeight;
+    const padding = pixels(getComputedStyle(box).scrollPaddingBlockStart, height);
+    sections = targets.map((el) => ({
+      el,
+      line: padding + pixels(getComputedStyle(el).scrollMarginBlockStart, height),
+    }));
     const byLine = new Map<number, IntersectionObserver>();
     for (const { el, line } of sections) {
       let observer = byLine.get(line);
@@ -179,41 +212,67 @@ function followSections(
       observer.observe(el);
     }
     passed = [...byLine.values()];
+    view = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) pickSeen = true;
+          else if (pickSeen) release();
+        }
+      },
+      { root: scroller ?? doc },
+    );
+    const target = targets.find((el) => el.id === picked.current);
+    if (target) view.observe(target);
   };
-  watchLines();
-  const resizes = new ResizeObserver(watchLines);
-  if (scroller) resizes.observe(scroller);
-  doc.defaultView?.addEventListener('resize', watchLines);
+  measure();
+  const resizes = new ResizeObserver(() => measure());
+  resizes.observe(targets[0]!.parentElement ?? targets[0]!);
+  win.addEventListener('resize', measure);
 
-  const pickHash = () => {
-    const id = fragmentOf(doc.location?.hash);
-    if (!has(id)) return;
-    picked.current = id;
-    startPick();
+  const onHashChange = () => {
+    const id = fragmentOf(doc.location.hash);
+    if (has(id)) {
+      picked.current = id;
+      startPick();
+    } else release();
   };
 
   const onKey = (event: KeyboardEvent) => {
-    if (SCROLL_KEYS.has(event.key)) release();
+    if (SCROLL_KEYS.has(event.key) && !event.isComposing && !isEditable(event.target)) release();
   };
   const options = { capture: true, passive: true } as const;
   doc.addEventListener('wheel', release, options);
   doc.addEventListener('touchstart', release, options);
   doc.addEventListener('keydown', onKey, options);
-  doc.defaultView?.addEventListener('hashchange', pickHash);
-  if (picked.current === null) pickHash();
-  update();
+  win.addEventListener('hashchange', onHashChange);
+
+  if (has(picked.current)) startPick();
+  else {
+    // A hash picks its section on load only where the page shows it, not when the browser restored another position.
+    const hashed = pickFromHash ? targets.find((el) => el.id === fragmentOf(doc.location.hash)) : undefined;
+    if (hashed) {
+      const rect = hashed.getBoundingClientRect();
+      const area = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: win.innerHeight };
+      if (rect.bottom > area.top && rect.top < area.bottom) {
+        picked.current = hashed.id;
+        startPick();
+      }
+    }
+    update();
+  }
 
   return {
     update: startPick,
     stop: () => {
       for (const observer of passed) observer.disconnect();
-      view.disconnect();
+      view?.disconnect();
       resizes.disconnect();
-      doc.defaultView?.removeEventListener('resize', watchLines);
+      mutations.disconnect();
+      win.removeEventListener('resize', measure);
       doc.removeEventListener('wheel', release, options);
       doc.removeEventListener('touchstart', release, options);
       doc.removeEventListener('keydown', onKey, options);
-      doc.defaultView?.removeEventListener('hashchange', pickHash);
+      win.removeEventListener('hashchange', onHashChange);
     },
   };
 }
@@ -250,15 +309,24 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
     following.current?.update();
   }, []);
 
+  // Bumped when a section mounts late or is replaced, to follow the page again.
+  const [generation, setGeneration] = useState(0);
+  const followed = useRef(false);
+
   useEffect(() => {
     if (!nav.current) return;
-    const follow = followSections(nav.current, ids, picked, setCurrent);
+    const follow = followSections(nav.current, ids, picked, setCurrent, {
+      pickFromHash: !followed.current,
+      onTargetsChange: () => setGeneration((n) => n + 1),
+    });
+    // The hash may pick only on the first follow that has sections to pick from.
+    if (ids.length > 0) followed.current = true;
     following.current = follow;
     return () => {
       follow.stop();
       following.current = null;
     };
-  }, [ids]);
+  }, [ids, generation]);
 
   const context = useMemo(() => ({ current, register, pick }), [current, register, pick]);
 
@@ -266,8 +334,8 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
     <nav
       {...props}
       ref={composedRef}
-      aria-label={labelled || labelledby ? ariaLabel : (ariaLabel ?? strings.contents)}
-      aria-labelledby={labelledby ?? (labelled && !ariaLabel ? labelId : undefined)}
+      aria-label={labelled || labelledby ? undefined : (ariaLabel ?? strings.contents)}
+      aria-labelledby={labelledby ?? (labelled ? labelId : undefined)}
       className={cx(styles.root, className)}
     >
       {labelled ? (
@@ -293,24 +361,29 @@ function Item({ className, ...props }: ContentsItemProps) {
   return <li {...props} className={cx(styles.item, className)} />;
 }
 
-function Link({ render, className, href, onClick, 'aria-current': ariaCurrent, ...props }: ContentsLinkProps) {
+function Link({ render, className, href, onClick, ref, 'aria-current': ariaCurrent, ...props }: ContentsLinkProps) {
   const ctx = useContext(ContentsContext);
   if (!ctx) throw new Error('Contents.Link must be rendered inside Contents.Root');
   const { current, register, pick } = ctx;
   const id = fragmentOf(href);
+  const [anchor, setAnchor] = useState<HTMLAnchorElement | null>(null);
+  const composedRef = useComposedRefs(setAnchor, ref);
+  // Only a link into the page that is showing follows its section.
+  const local = id !== null && href !== undefined && anchor !== null && onThisPage(href, anchor.ownerDocument);
 
   useEffect(() => {
-    if (id === null || !href || typeof document === 'undefined' || !onThisPage(href, document)) return;
+    if (id === null || !local) return;
     return register(id);
-  }, [id, href, register]);
+  }, [id, local, register]);
 
   const own = {
     ...props,
     href,
-    'aria-current': ariaCurrent ?? (id !== null && current === id ? ('location' as const) : undefined),
+    ref: composedRef,
+    'aria-current': ariaCurrent ?? (local && current === id ? ('location' as const) : undefined),
     className: cx(styles.link, className),
     onClick: composeHandlers(onClick, (event: MouseEvent<HTMLAnchorElement>) => {
-      if (id === null || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (!local || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       pick(id);
     }),
   };

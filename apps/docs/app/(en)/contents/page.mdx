@@ -24,21 +24,21 @@ An "On this page" list of links to the sections of a page. `Contents.Root` is a 
   <ContentsGuide />
 </Example>
 
-You give the links, as you do for [Nav](/nav). Todae doesn't read the page's headings, so the list says what you choose and your server can render it. Give each heading an `id` that its link's `href` names; a link to another page is never marked current.
+You give the links, as you do for [Nav](/nav). Todae doesn't read the page's headings, so the list says what you choose and your server can render it. Give each heading an `id` that its link's `href` names; a link to another page is not marked current.
 
 ## The section being read
 
 A section is current once its heading has scrolled past its line: the place a fragment link scrolls the heading to, which is the scroll container's `scroll-padding-block-start` plus the heading's own `scroll-margin-block-start`. Set either one to clear a sticky header, and the list counts a section as read from the same line a click on its link scrolls it to. The current section is the last one whose heading has passed its line; above the first heading, no link is current.
 
-`Contents.Root` follows the headings with `IntersectionObserver`, in the nearest scroll container around the first heading, or the page. It reads the lines again when that container or the window resizes.
+`Contents.Root` follows the headings with `IntersectionObserver`, in the nearest container around the first heading that scrolls, or the page. It measures the lines again when the first heading's parent or the window resizes, and follows a heading that mounts after its link or is replaced.
 
-A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a page hash that names a section when the list mounts or the hash changes, picks that section, and it stays current until the person scrolls with the wheel, a touch or a scroll key, or until it has been in view and leaves it.
+A short last section may never reach its line, because the page can't scroll that far. So a click on a link, a hash change that names a section, or a hash that names a section the page shows when the list mounts, picks that section. It stays current until the person scrolls with the wheel, a touch or a scroll key, until it has been in view and leaves it, or until the hash names something else.
 
 ## Look
 
 The links sit beside one rule, from `contents.rule.color` and `contents.rule.width`, and the current link draws a marker on it, from `contents.marker.color` and `contents.marker.width`, with the `contents.link.fg.current` color and `contents.link.font.current-weight`. A nested list indents its links' text by `contents.indent` per level, so every marker lands on the same rule. In forced colors the marker is `Highlight`.
 
-`Contents.Link` takes `render` the way [Link](/link) does, for a router's link.
+`Contents.Link` takes `render` the way [Link](/link) does, for a router's link. The example above uses it to scroll only its own box.
 
 ## On a narrow screen
 

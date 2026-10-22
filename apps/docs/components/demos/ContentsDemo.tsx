@@ -1,6 +1,7 @@
 'use client';
 
-import { Contents, ScrollArea, Stack, Text } from '@tounsoo/todae';
+import { Contents, ScrollArea, Stack, Text, type LinkRenderProps } from '@tounsoo/todae';
+import type { MouseEvent } from 'react';
 
 const SECTIONS = [
   { id: 'demo-install', title: 'Install', text: 'Add the package and its stylesheet, then wrap the app in its providers.' },
@@ -10,6 +11,25 @@ const SECTIONS = [
   { id: 'demo-ship', title: 'Ship', text: 'Publish the package with a changeset.' },
 ] as const;
 
+/**
+ * Scrolls only the guide's own box to the section, as a router's link would handle the click, so the docs page
+ * around the demo stays put and its address keeps no demo hash.
+ */
+function BoxLink(props: LinkRenderProps) {
+  return (
+    <a
+      {...props}
+      onClick={(event: MouseEvent<HTMLAnchorElement>) => {
+        props.onClick?.(event);
+        event.preventDefault();
+        const heading = document.getElementById(props.href!.slice(1));
+        const box = heading?.closest<HTMLElement>('[data-axis]');
+        if (heading && box) box.scrollTop += heading.getBoundingClientRect().top - box.getBoundingClientRect().top;
+      }}
+    />
+  );
+}
+
 /** A guide that scrolls in its own box, with its sections listed beside it. The last section is short, so only a click marks it. */
 export function ContentsGuide() {
   return (
@@ -17,12 +37,12 @@ export function ContentsGuide() {
       <Contents.Root label="On this page" style={{ flex: '0 0 9rem' }}>
         {SECTIONS.filter((section) => !('sub' in section)).map((section) => (
           <Contents.Item key={section.id}>
-            <Contents.Link href={`#${section.id}`}>{section.title}</Contents.Link>
+            <Contents.Link href={`#${section.id}`} render={BoxLink}>{section.title}</Contents.Link>
             {section.id === 'demo-tokens' ? (
               <Contents.List>
                 {SECTIONS.filter((sub) => 'sub' in sub).map((sub) => (
                   <Contents.Item key={sub.id}>
-                    <Contents.Link href={`#${sub.id}`}>{sub.title}</Contents.Link>
+                    <Contents.Link href={`#${sub.id}`} render={BoxLink}>{sub.title}</Contents.Link>
                   </Contents.Item>
                 ))}
               </Contents.List>

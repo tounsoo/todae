@@ -1,44 +1,69 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Contents } from '../index.js';
 
 afterEach(() => {
   cleanup();
+  window.scrollTo(0, 0);
   history.replaceState(null, '', location.pathname + location.search);
 });
 
 const LINE = 40;
 
 /** A page that scrolls in its own box, with a short last section. */
-function Page({ dir }: { dir?: 'rtl' }) {
+function Page({ dir, list = true, extra = false }: { dir?: 'rtl'; list?: boolean; extra?: boolean }) {
   const tall = { blockSize: '400px', margin: 0 };
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir} style={{ display: 'flex', gap: '1rem' }}>
-      <Contents.Root label="On this page" style={{ inlineSize: '12rem' }}>
-        <Contents.Item>
-          <Contents.Link href="#one">One</Contents.Link>
-        </Contents.Item>
-        <Contents.Item>
-          <Contents.Link href="#two">Two</Contents.Link>
-          <Contents.List>
+      {list ? (
+        <Contents.Root label="On this page" style={{ inlineSize: '12rem' }}>
+          <Contents.Item>
+            <Contents.Link href="#one">One</Contents.Link>
+          </Contents.Item>
+          <Contents.Item>
+            <Contents.Link href="#two">Two</Contents.Link>
+            <Contents.List>
+              <Contents.Item>
+                <Contents.Link href="#two-a">Two A</Contents.Link>
+              </Contents.Item>
+            </Contents.List>
+          </Contents.Item>
+          <Contents.Item>
+            <Contents.Link href="#three">Three</Contents.Link>
+          </Contents.Item>
+          {extra ? (
             <Contents.Item>
-              <Contents.Link href="#two-a">Two A</Contents.Link>
+              <Contents.Link href="/elsewhere#two">Elsewhere</Contents.Link>
             </Contents.Item>
-          </Contents.List>
-        </Contents.Item>
-        <Contents.Item>
-          <Contents.Link href="#three">Three</Contents.Link>
-        </Contents.Item>
-      </Contents.Root>
-      <div data-testid="scroller" style={{ overflowY: 'auto', blockSize: '300px', inlineSize: '20rem', scrollPaddingBlockStart: `${LINE}px` }}>
-        <h2 id="one" style={{ margin: 0 }}>One</h2>
+          ) : null}
+        </Contents.Root>
+      ) : null}
+      <div
+        data-testid="scroller"
+        style={{
+          overflowY: 'auto',
+          blockSize: '300px',
+          inlineSize: '20rem',
+          scrollPaddingBlockStart: `${LINE}px`,
+        }}
+      >
+        <h2 id="one" style={{ margin: 0 }}>
+          One
+        </h2>
         <p style={tall}>…</p>
-        <h2 id="two" style={{ margin: 0 }}>Two</h2>
+        <h2 id="two" style={{ margin: 0 }}>
+          Two
+        </h2>
         <p style={tall}>…</p>
-        <h3 id="two-a" style={{ margin: 0, scrollMarginBlockStart: '20px' }}>Two A</h3>
+        <h3 id="two-a" style={{ margin: 0, scrollMarginBlockStart: '20px' }}>
+          Two A
+        </h3>
         <p style={tall}>…</p>
-        <h2 id="three" style={{ margin: 0 }}>Three</h2>
+        <h2 id="three" style={{ margin: 0 }}>
+          Three
+        </h2>
         <p style={{ margin: 0 }}>…</p>
       </div>
     </div>
@@ -105,10 +130,99 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('One'));
   });
 
-  it('starts at the section the page hash names', async () => {
+  it('picks the section a hash change names, and leaves a hash on load alone where the page shows another place', async () => {
     history.replaceState(null, '', '#three');
     render(<Page />);
+    await waitFor(() => expect(current()).toBe('One'));
+    history.replaceState(null, '', '#two');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    await waitFor(() => expect(current()).toBe('Two'));
+    // A fragment that names no section drops the pick.
+    history.replaceState(null, '', '#nothing');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    await waitFor(() => expect(current()).toBe('One'));
+  });
+
+  it('starts at the section the page hash names when the page shows it', async () => {
+    const { rerender } = render(<Page list={false} />);
+    const scroller = screen.getByTestId('scroller');
+    scroller.scrollTop = scroller.scrollHeight;
+    history.replaceState(null, '', '#three');
+    rerender(<Page />);
     await waitFor(() => expect(current()).toBe('Three'));
+  });
+
+  it('keeps releasing a pick after the links change', async () => {
+    const { rerender } = render(<Page />);
+    link('Two').click();
+    await waitFor(() => expect(current()).toBe('Two'));
+    await frames(2);
+    rerender(<Page extra />);
+    await waitFor(() => expect(link('Elsewhere')).toBeTruthy());
+    await frames(2);
+    screen.getByTestId('scroller').scrollTop = 0;
+    await waitFor(() => expect(current()).toBe('One'));
+  });
+
+  it('never marks or picks a link to another page', async () => {
+    render(<Page extra />);
+    await waitFor(() => expect(current()).toBe('One'));
+    const elsewhere = link('Elsewhere');
+    elsewhere.addEventListener('click', (event) => event.preventDefault());
+    elsewhere.click();
+    await frames(2);
+    expect(current()).toBe('One');
+    expect(elsewhere.hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('follows headings that mount after the links', async () => {
+    function Late() {
+      const [shown, setShown] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setShown(true)}>
+            Show
+          </button>
+          <Contents.Root>
+            <Contents.Item>
+              <Contents.Link href="#late">Late</Contents.Link>
+            </Contents.Item>
+          </Contents.Root>
+          {shown ? <h2 id="late">Late</h2> : null}
+          <div style={{ blockSize: '150vh' }} />
+        </>
+      );
+    }
+    render(<Late />);
+    await frames(2);
+    expect(current()).toBeNull();
+    screen.getByRole('button', { name: 'Show' }).click();
+    await frames(2);
+    window.scrollTo(0, document.getElementById('late')!.getBoundingClientRect().top + window.scrollY);
+    await waitFor(() => expect(current()).toBe('Late'));
+  });
+
+  it('follows the page when a wrapper only hides overflow sideways', async () => {
+    render(
+      <div style={{ overflowX: 'hidden' }}>
+        <Contents.Root>
+          <Contents.Item>
+            <Contents.Link href="#page-one">One</Contents.Link>
+          </Contents.Item>
+          <Contents.Item>
+            <Contents.Link href="#page-two">Two</Contents.Link>
+          </Contents.Item>
+        </Contents.Root>
+        <h2 id="page-one">One</h2>
+        <div style={{ blockSize: '150vh' }} />
+        <h2 id="page-two">Two</h2>
+        <div style={{ blockSize: '150vh' }} />
+      </div>,
+    );
+    window.scrollTo(0, document.getElementById('page-two')!.getBoundingClientRect().top + window.scrollY);
+    await waitFor(() => expect(current()).toBe('Two'));
+    window.scrollTo(0, 0);
+    await waitFor(() => expect(current()).not.toBe('Two'));
   });
 
   it('draws the marker on the rule beside the current link, and indents nested links', async () => {
@@ -139,7 +253,9 @@ describe('Contents in a browser', () => {
   it('has no axe violations', async () => {
     render(<Page />);
     await waitFor(() => expect(current()).toBe('One'));
-    const results = await axe.run(screen.getByRole('navigation'), { rules: { 'color-contrast': { enabled: false } } });
+    const results = await axe.run(screen.getByRole('navigation'), {
+      rules: { 'color-contrast': { enabled: false } },
+    });
     expect(results.violations).toEqual([]);
   });
 });

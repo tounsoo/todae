@@ -14,7 +14,7 @@ export const meta = {
       name: 'aria-label',
       type: 'string',
       required: false,
-      description: 'Landmark name when there is no label. Default is the contents string from StringsProvider.',
+      description: 'Landmark name when there is no label or aria-labelledby. Default is the contents string from StringsProvider.',
     },
     {
       name: 'children',

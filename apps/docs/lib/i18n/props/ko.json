@@ -2673,8 +2673,8 @@
       "ko": "목록 위에 보이는 텍스트로, 랜드마크의 이름도 됩니다."
     },
     "aria-label": {
-      "en": "Landmark name when there is no label. Default is the contents string from StringsProvider.",
-      "ko": "label이 없을 때의 랜드마크 이름. 기본값은 StringsProvider의 contents 문자열입니다."
+      "en": "Landmark name when there is no label or aria-labelledby. Default is the contents string from StringsProvider.",
+      "ko": "label이나 aria-labelledby가 없을 때의 랜드마크 이름. 기본값은 StringsProvider의 contents 문자열입니다."
     },
     "children": {
       "en": "Contents.Item elements.",
@@ -2695,7 +2695,7 @@
   },
   "Contents.Link": {
     "href": {
-      "en": "The fragment of the section, such as #props. A link to another page is never marked current.",
+      "en": "The fragment of the section, such as #props. A link to another page is not marked current.",
       "ko": "섹션의 프래그먼트. 예: #props. 다른 페이지로 가는 링크는 현재 항목으로 표시되지 않습니다."
     },
     "render": {

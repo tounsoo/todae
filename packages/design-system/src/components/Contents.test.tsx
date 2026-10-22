@@ -31,6 +31,8 @@ describe('Contents', () => {
     const { rerender } = render(<Contents.Root label="In this guide" />);
     const nav = screen.getByRole('navigation', { name: 'In this guide' });
     expect(nav.hasAttribute('aria-label')).toBe(false);
+    rerender(<Contents.Root label="In this guide" aria-label="Sections" />);
+    expect(screen.getByRole('navigation', { name: 'In this guide' })).toBeTruthy();
     rerender(<Contents.Root aria-label="Sections" />);
     expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
     rerender(
