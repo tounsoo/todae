@@ -987,6 +987,7 @@
   --todae-card-padding: var(--_todae-card-padding, var(--todae-space-overlay-padding));
   --todae-card-radius: var(--_todae-card-radius, var(--todae-radius-lg));
   --todae-card-shadow: var(--_todae-card-shadow, var(--todae-shadow-none));
+  --todae-datalist-columns-gap: var(--_todae-datalist-columns-gap, var(--todae-space-stack-gap-spacious));
   --todae-datalist-details-fg: var(--_todae-datalist-details-fg, var(--todae-color-fg-default));
   --todae-datalist-details-min-width: var(--_todae-datalist-details-min-width, 12rem);
   --todae-datalist-font-size: var(--_todae-datalist-font-size, var(--todae-font-size-3));

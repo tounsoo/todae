@@ -20,6 +20,13 @@
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },
-    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+    "columns": {
+      "gap": {
+        "$type": "dimension",
+        "$value": { "$ref": "#/space/stack/gap-spacious/$value" },
+        "$description": "The gap between columns of items when minItemSize lays the list out in columns."
+      }
+    }
   }
 }

@@ -205,6 +205,67 @@ describe('DataList in a browser', () => {
     });
   });
 
+  describe('with minItemSize', () => {
+    function columns(width: string) {
+      return (
+        <div data-appearance="light" data-density="comfortable" style={{ inlineSize: width }}>
+          <DataList.Root aria-label="Plan" minItemSize="12rem" orientation="vertical">
+            {['Seats', 'Storage', 'Support'].map((term) => (
+              <DataList.Item key={term}>
+                <DataList.Term>{term}</DataList.Term>
+                <DataList.Details>{`${term} value`}</DataList.Details>
+              </DataList.Item>
+            ))}
+          </DataList.Root>
+        </div>
+      );
+    }
+
+    it('puts as many items in a row as the width allows, spaced by datalist.columns.gap', () => {
+      render(columns('30rem'));
+      const [a, b, c] = ['Seats', 'Storage', 'Support'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(a!.top).toBe(b!.top);
+      expect(c!.top).toBeGreaterThan(a!.top);
+      expect(c!.left).toBe(a!.left);
+      const list = screen.getByLabelText('Plan');
+      const gap = parseFloat(getComputedStyle(list).columnGap);
+      expect(gap).toBeGreaterThan(0);
+      const first = list.children[0]!.getBoundingClientRect();
+      const second = list.children[1]!.getBoundingClientRect();
+      expect(second.left - first.right).toBeCloseTo(gap, 0);
+    });
+
+    it('keeps one column inside a list narrower than minItemSize', () => {
+      render(columns('8rem'));
+      const list = screen.getByLabelText('Plan').getBoundingClientRect();
+      const item = screen.getByLabelText('Plan').children[0]!.getBoundingClientRect();
+      expect(item.right).toBeLessThanOrEqual(list.right + 0.5);
+      const [a, b] = ['Seats', 'Storage'].map((text) => screen.getByText(text).getBoundingClientRect());
+      expect(b!.top).toBeGreaterThan(a!.top);
+    });
+
+    it('lays out a horizontal item inside its column, stacking it when the column is narrow', () => {
+      render(
+        <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '30rem' }}>
+          <DataList.Root aria-label="Order" minItemSize="12rem">
+            <DataList.Item>
+              <DataList.Term>Status</DataList.Term>
+              <DataList.Details>Shipped</DataList.Details>
+            </DataList.Item>
+            <DataList.Item>
+              <DataList.Term>Total</DataList.Term>
+              <DataList.Details>$42.00</DataList.Details>
+            </DataList.Item>
+          </DataList.Root>
+        </div>,
+      );
+      const item = screen.getByText('Status').parentElement!.getBoundingClientRect();
+      const details = screen.getByText('Shipped').getBoundingClientRect();
+      expect(details.right).toBeLessThanOrEqual(item.right + 0.5);
+      expect(details.top).toBeGreaterThanOrEqual(screen.getByText('Status').getBoundingClientRect().bottom);
+    });
+  });
+
   it('has no axe violations', async () => {
     const { container } = render(list('40rem'));
     const results = await axe.run(container);

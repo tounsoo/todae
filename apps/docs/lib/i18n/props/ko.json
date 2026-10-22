@@ -513,6 +513,10 @@
     "orientation": {
       "en": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
       "ko": "data-orientation을 설정합니다. horizontal은 각 용어를 상세 내용 옆의 열에 두고, 둘이 들어가기에 목록이 너무 좁으면 쌓습니다. vertical은 용어를 상세 내용 위에 둡니다."
+    },
+    "minItemSize": {
+      "en": "Lays the items out in columns no narrower than this CSS length, such as \"20rem\". As many columns fit as the width allows, with datalist.columns.gap between them. Without it the items sit in one column.",
+      "ko": "항목을 이 CSS 길이(예: \"20rem\")보다 좁지 않은 열로 배치합니다. 너비가 허락하는 만큼 열이 들어가고, 열 사이에는 datalist.columns.gap이 들어갑니다. 없으면 항목은 한 열에 놓입니다."
     }
   },
   "DataList.Term": {

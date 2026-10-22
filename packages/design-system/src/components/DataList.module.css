@@ -10,6 +10,15 @@
     line-height: var(--todae-datalist-leading);
   }
 
+  /* Columns of items, as Grid.Root's minItemSize: min() caps the floor at the
+     list's width, so one column never overflows. Grid.Root renders a div,
+     which cannot wrap a dl's items. */
+  .root[data-layout='fill'] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--_min-item-size), 100%), 1fr));
+    column-gap: var(--todae-datalist-columns-gap);
+  }
+
   .item {
     display: flex;
     flex-wrap: wrap;

@@ -11771,6 +11771,20 @@
       "description": "Card.Root: a bordered surface that groups related content."
     },
     {
+      "path": "datalist.columns.gap",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-columns-gap",
+      "cssValue": "var(--todae-space-stack-gap-spacious)",
+      "ref": "space.stack.gap-spacious",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The gap between columns of items when minItemSize lays the list out in columns."
+    },
+    {
       "path": "datalist.details.fg",
       "type": "color",
       "cssVar": "--todae-datalist-details-fg",

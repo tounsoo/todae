@@ -14,6 +14,13 @@ export const meta = {
         'Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.',
     },
     {
+      name: 'minItemSize',
+      type: 'string',
+      required: false,
+      description:
+        'Lays the items out in columns no narrower than this CSS length, such as "20rem". As many columns fit as the width allows, with datalist.columns.gap between them. Without it the items sit in one column.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

@@ -173,14 +173,15 @@
     "(section order)": "ff11ef39ec84"
   },
   "data-list": {
-    "(top)": "8f15ed09a6e9",
+    "(top)": "13b4e53d2c15",
     "# DataList": "6d082816b5c1",
     "## Orientation": "88681956a8af",
+    "## Columns": "13d2f0556a03",
     "## Narrow widths": "aa96b583c5fc",
     "## Accessible composition": "561db38a366f",
     "## When to use": "12375f0bfe8a",
     "## Props": "eba21bde9683",
-    "(section order)": "6e8610a8c3fd"
+    "(section order)": "86d28c433327"
   },
   "description": {
     "(top)": "33dbf419d7e5",
