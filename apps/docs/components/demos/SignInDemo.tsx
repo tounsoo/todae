@@ -143,17 +143,12 @@ export function SignInExample() {
   }, [code, step]);
 
   const resend = async () => {
-    if (resending) return;
+    // Not while a code is being checked, whose reply would land on the new code.
+    if (resending || sending) return;
     setResending(true);
-    setFailed(null);
-    try {
-      await wait(300);
-    } catch {
-      setFailed("We couldn't send a new code. Try again.");
-      return;
-    } finally {
-      setResending(false);
-    }
+    // A stand-in for the request; a real one also catches a failure, as send does.
+    await wait(300);
+    setResending(false);
     // The error was about the old code. The code stays, so a submitted form doesn't call it missing.
     setErrors({});
     setResent(true);
@@ -208,7 +203,7 @@ export function SignInExample() {
             <Button.Root type="submit" aria-disabled={sending || undefined}>
               {sending ? 'Verifying…' : 'Verify'}
             </Button.Root>
-            <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
+            <Button.Root variant="ghost" aria-disabled={resending || sending || undefined} onClick={resend}>
               Send a new code
             </Button.Root>
           </Stack.Root>

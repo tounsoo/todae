@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type Ref, type SyntheticEvent } from 'react';
+import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type Ref } from 'react';
 import { activeIn } from './activeElement.js';
 import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
@@ -34,27 +34,27 @@ export function TextInput({
   className,
   maxLength,
   readOnly,
-  onSelect,
   ref,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
   const field = useField();
+  // Its own handle on the input, so a change of type, such as a password's show button switching
+  // to text, keeps the caret where it was rather than where the browser puts it.
   const own = useRef<HTMLInputElement>(null);
   const composedRef = useComposedRefs(own, ref);
-  // The last selection, so a change of type, such as a password's show button switching to text,
-  // keeps the caret where it was rather than where the browser puts it.
-  const selection = useRef<[number | null, number | null, 'forward' | 'backward' | 'none' | null] | null>(null);
   const shownType = useRef(type);
   useLayoutEffect(() => {
     if (shownType.current === type) return;
     shownType.current = type;
     const input = own.current;
-    const [start, end, direction] = selection.current ?? [];
-    if (!input || start == null || end == null || activeIn(input) !== input) return;
+    if (!input || activeIn(input) !== input) return;
+    // The selection is still the input's here, after this commit's value too. Chromium puts the
+    // caret at the start when it next renders a focused input whose type changed, after anything
+    // set now, so put it back in the next frame.
+    const { selectionStart: start, selectionEnd: end, selectionDirection: direction } = input;
+    if (start == null || end == null) return;
     const text = input.value;
-    // Chromium puts the caret at the start when it next renders a focused input whose type
-    // changed, after anything set here, so put it back in the next frame.
     const frame = requestAnimationFrame(() => {
       if (activeIn(input) !== input || input.value !== text) return;
       try {
@@ -65,14 +65,6 @@ export function TextInput({
     });
     return () => cancelAnimationFrame(frame);
   }, [type]);
-  const recordSelection = (event: SyntheticEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    try {
-      selection.current = [input.selectionStart, input.selectionEnd, input.selectionDirection];
-    } catch {
-      selection.current = null;
-    }
-  };
   const ctx = useFieldContext();
   // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
   const legacyNumber = (type as string) === 'number';
@@ -91,7 +83,6 @@ export function TextInput({
       type={type}
       className={cx(styles.input, className)}
       onChange={valueChangeHandler(onChange, onValueChange)}
-      onSelect={composeHandlers(onSelect, recordSelection)}
       readOnly={readOnly ?? (!onChange && !onValueChange)}
     />
   );

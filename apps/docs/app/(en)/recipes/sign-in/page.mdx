@@ -47,7 +47,7 @@ const [shown, setShown] = useState(false);
 </Field.Root>
 ```
 
-A password in a text input is text to the browser, so turn spell checking, capitalization and autocorrect off: a browser may send the words of a text input to a spell-check service. Set `shown` back to `false` in `onSubmit`, before the request goes, so the browser offers to save a password and not a line of typed text. A press on the button keeps focus in the input when the input has it, so the caret stays and the person goes on typing; Tab still reaches the button. The button is not the field's control, and `Field.Root`'s `disabled` doesn't reach it, so give it `disabled` too when the field has one, or a disabled field still shows its password.
+A password in a text input is text to the browser, so turn spell checking, capitalization and autocorrect off: a browser may send the words of a text input to a spell-check service. Set `shown` back to `false` in `onSubmit`, before the request goes, so the browser offers to save a password and not a line of typed text. A press on the button leaves focus in the input when the input has it, so the caret stays and the person goes on typing; Tab still reaches the button. The button is not the field's control, and `Field.Root`'s `disabled` doesn't reach it, so give it `disabled` too when the field has one, or a disabled field still shows its password.
 
 ## A wrong email or password
 
@@ -69,10 +69,12 @@ const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     reply = await checkPassword(email, password);
   } catch {
     // Shown in an Alert.Root tone="critical" beside the button, which is announced.
-    return setFailed("We couldn't reach the server. Try again.");
+    setFailed("We couldn't reach the server. Try again.");
+    return;
   } finally {
     setSending(false);
   }
+  // Errors the person can fix, or none: the password is right.
   if (Object.values(reply).some(Boolean)) setErrors(reply);
   else setStep('code');
 };
@@ -104,7 +106,7 @@ When the password is right and the account asks for a second step, show a new fo
   <Button.Root type="submit" aria-disabled={sending || undefined}>
     Verify
   </Button.Root>
-  <Button.Root variant="ghost" onClick={resend}>
+  <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
     Send a new code
   </Button.Root>
 </Form.Root>
@@ -133,7 +135,7 @@ A sign-up form takes a name, the email with `autoComplete="username"`, and a pas
 
 ## Accessible composition
 
-**Todae handles:** `Form.Root` checks the fields on submit, words each problem in the page's language and moves focus to the first one. It shows a server's error on its field, with `aria-invalid` and `aria-describedby`, and moves focus to that field when the reply names it. An icon-only `Button.Root` in a one-line `Field.Root` is one field line tall, and a press on it keeps focus in the input; with `pressed` it is a toggle with `aria-pressed`, and its label shows as a tooltip. `Field.OneTimeCode` sets `autocomplete="one-time-code"`, a numeric keypad and a too-short check. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while a request runs.
+**Todae handles:** `Form.Root` checks the fields on submit, words each problem in the page's language and moves focus to the first one. It shows a server's error on its field, with `aria-invalid` and `aria-describedby`, and moves focus to that field when the reply names it. An icon-only `Button.Root` in a one-line `Field.Root` is one field line tall, and a press on it leaves focus in the input; with `pressed` it is a toggle with `aria-pressed`, and its label shows as a tooltip. `Field.OneTimeCode` sets `autocomplete="one-time-code"`, a numeric keypad and a too-short check. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while a request runs.
 
 **You supply:** The `autoComplete` of each field. The input's `type` switched by the show button, its label in your product's language, its icon for each state, `disabled` when the field has it, spell checking and autocorrect off, and the password hidden again on submit. One message for a wrong email or password, on the password. A `key` on each step's form, and focus moved to the code when its step shows, and to a heading that confirms the result at the end. The code's length and where it went in a description. Sending a full code a short pause after its last character, and a visible and announced message when a new code goes out.
 

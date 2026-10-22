@@ -69,10 +69,12 @@ const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     reply = await checkPassword(email, password);
   } catch {
     // Shown in an Alert.Root tone="critical" beside the button, which is announced.
-    return setFailed("We couldn't reach the server. Try again.");
+    setFailed("We couldn't reach the server. Try again.");
+    return;
   } finally {
     setSending(false);
   }
+  // Errors the person can fix, or none: the password is right.
   if (Object.values(reply).some(Boolean)) setErrors(reply);
   else setStep('code');
 };
@@ -104,7 +106,7 @@ const submit = async (event: SubmitEvent<HTMLFormElement>) => {
   <Button.Root type="submit" aria-disabled={sending || undefined}>
     Verify
   </Button.Root>
-  <Button.Root variant="ghost" onClick={resend}>
+  <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
     Send a new code
   </Button.Root>
 </Form.Root>

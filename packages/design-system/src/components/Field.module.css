@@ -245,8 +245,9 @@
 
   /* An icon-only Button.Root in the line of a one-line field, such as a
      password's show button: one line of field text tall, so the field keeps
-     its height. The element in the selector outweighs Button's own icon-only
-     padding whatever order the sheets load in. */
+     its height. The selector outweighs Button's own icon-only padding
+     (.root[data-icon-only]) whatever order the sheets load in. The press
+     rule for these buttons is lineButtonOf in Field.tsx. */
   .shell:not(:has(> .textarea)) > :is(button, a)[data-icon-only] {
     box-sizing: border-box;
     flex: none;

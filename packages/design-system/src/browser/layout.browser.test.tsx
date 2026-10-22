@@ -348,6 +348,32 @@ describe('A button in a Field.Root', () => {
   );
 });
 
+describe('A button beside a Field.Textarea', () => {
+  it('keeps Button\'s own icon-only size, since the field has no single line', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable">
+        <Field.Root aria-label="Note">
+          <Field.Textarea value="" onChange={() => {}} />
+          <Button.Root variant="ghost" aria-label="Clear note">
+            <Button.Icon>
+              <svg viewBox="0 0 16 16" />
+            </Button.Icon>
+          </Button.Root>
+        </Field.Root>
+        <Button.Root variant="ghost" aria-label="Alone">
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </main>,
+    );
+    const inField = screen.getByRole('button', { name: 'Clear note' });
+    const alone = screen.getByRole('button', { name: 'Alone' });
+    expect(getComputedStyle(inField).paddingInlineStart).toBe(getComputedStyle(alone).paddingInlineStart);
+    expect(inField.getBoundingClientRect().height).toBe(alone.getBoundingClientRect().height);
+  });
+});
+
 describe('A password shown and hidden in a browser', () => {
   function Password() {
     const [shown, setShown] = useState(false);
@@ -356,6 +382,18 @@ describe('A password shown and hidden in a browser', () => {
       <Field.Root aria-label="Password">
         <Field.TextInput type={shown ? 'text' : 'password'} value={value} onValueChange={setValue} />
         <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={setShown}>
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+        <Button.Root
+          variant="ghost"
+          aria-label="Suggest a password"
+          onClick={() => {
+            setValue('generated');
+            setShown(true);
+          }}
+        >
           <Button.Icon>
             <svg viewBox="0 0 16 16" />
           </Button.Icon>
@@ -376,6 +414,17 @@ describe('A password shown and hidden in a browser', () => {
     }
     expect(input.type).toBe('password');
     expect(input.value).toBe('wrXYong');
+  });
+
+  it('keeps the caret a new value put, when the value and the type change together', async () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard('ab{ArrowLeft}');
+    await userEvent.click(screen.getByRole('button', { name: 'Suggest a password' }));
+    expect(document.activeElement).toBe(input);
+    await userEvent.keyboard('!');
+    expect(input.value).toBe('generated!');
   });
 });
 
