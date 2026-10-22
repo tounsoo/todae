@@ -75,6 +75,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/inline-edit': () => import('../../app/(en)/recipes/inline-edit/page.mdx'),
   'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
   'recipes/reasoning': () => import('../../app/(en)/recipes/reasoning/page.mdx'),
+  'recipes/sign-in': () => import('../../app/(en)/recipes/sign-in/page.mdx'),
   'recipes/suggestions': () => import('../../app/(en)/recipes/suggestions/page.mdx'),
   'recipes/tool-call': () => import('../../app/(en)/recipes/tool-call/page.mdx'),
   'recipes/wizard': () => import('../../app/(en)/recipes/wizard/page.mdx'),

@@ -65,7 +65,7 @@ Label works with Icon, Affix, and ChipInput.
   <FieldLabelAdornments />
 </Example>
 
-`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop.
+`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop. For a button in the field's line, such as a clear button or a password's show button, put an icon-only `Button.Root` before or after the input: it is one field line tall, so the field keeps its height. It is a button of its own, not the field's control, so a press on it doesn't move focus to the input, and `Field.Root`'s `disabled` doesn't reach it; pass `disabled` to it too. [Sign-in and sign-up](/recipes/sign-in) shows a show-password toggle.
 
 <Example block>
   <FieldAdornments />
@@ -195,7 +195,7 @@ import { Search } from 'lucide-react';
 
 **When:** Leading/trailing icon or icon control inside Root. Position = DOM order. Decorative → `interactive={false}` (aria-hidden).
 
-**When not:** Text adornments → Affix. Clickable clear/reveal as a dedicated Action (not shipped).
+**When not:** Text adornments → Affix. A clear or show-password button → an icon-only `Button.Root` in the Root.
 
 ### Field.Row
 

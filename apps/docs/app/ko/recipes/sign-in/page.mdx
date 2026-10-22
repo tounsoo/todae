@@ -1,0 +1,148 @@
+import { SignInExample, SignUpExample } from '../../../../components/demos/SignInDemo';
+
+# Sign-in and sign-up
+
+패키지 네임스페이스가 아니라 레시피입니다. 로그인 폼은 이메일과 비밀번호 [Field](/field), 비밀번호를 보여 주는 버튼, 그리고 [Field.OneTimeCode](/field/one-time-code)를 묻는 두 번째 단계로 이루어진 [Form](/form)입니다. 가입 폼은 같은 부품에 새 비밀번호를 더한 것입니다. 어떤 계정이 있는지, 비밀번호를 어떻게 확인하는지, 코드를 어디로 보내는지는 제품이 정합니다. `SignIn.*` export는 없습니다.
+
+임시 서버가 아는 계정인 `ben@example.com`과 `correct horse`로 로그인한 뒤 `123456`을 입력해 보세요. 다른 비밀번호나 코드를 넣으면 틀린 값이 어떻게 돌아오는지 볼 수 있습니다.
+
+<Example block>
+  <SignInExample />
+</Example>
+
+## 브라우저가 채우는 것
+
+비밀번호 관리자와 브라우저의 자동 완성은 `autoComplete`를 읽고 어느 필드가 무엇인지 압니다. 이메일은 계정의 이름이므로 `autoComplete="username"`을, 비밀번호는 로그인에서 `current-password`, 가입에서 `new-password`를 주고, 코드 필드에는 아무것도 주지 마세요. `Field.OneTimeCode`가 `one-time-code`를 직접 설정합니다. `new-password`가 있으면 브라우저가 강한 비밀번호를 제안하고, 옆의 사용자 이름과 함께 저장합니다. 비밀번호 관리자에서 복사한 값이 들어가도록 모든 필드에서 붙여넣기를 막지 마세요.
+
+```tsx
+<Field.Root id={emailId} name="email">
+  <Field.TextInput type="email" required autoComplete="username" value={email} onValueChange={setEmail} />
+</Field.Root>
+```
+
+## 비밀번호 보여 주기
+
+비밀번호의 `Field.Root` 안, 입력 뒤에 아이콘만 있는 `Button.Root`를 넣으세요. 필드의 줄에 있는 아이콘 전용 버튼은 필드 글자 한 줄 높이라서 필드의 높이가 그대로입니다. `pressed`로 토글로 만들고, 입력의 `type`을 `password`와 `text` 사이에서 바꾸세요. 두 상태 모두 "Show password"라는 레이블 하나를 유지하세요. 켜져 있는지는 `aria-pressed`가 스크린 리더에 알려 주고, 아이콘 전용 버튼은 레이블을 툴팁으로 보여 줍니다.
+
+```tsx
+import { Button, Field } from '@tounsoo/todae';
+import { Eye } from 'lucide-react';
+
+const [shown, setShown] = useState(false);
+
+<Field.Root id={passwordId} name="password">
+  <Field.TextInput
+    type={shown ? 'text' : 'password'}
+    required
+    autoComplete="current-password"
+    spellCheck={false}
+    autoCapitalize="none"
+    autoCorrect="off"
+    value={password}
+    onValueChange={setPassword}
+  />
+  <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={setShown}>
+    <Button.Icon>
+      <Eye />
+    </Button.Icon>
+  </Button.Root>
+</Field.Root>
+```
+
+텍스트 입력에 든 비밀번호는 브라우저에게 그냥 텍스트이므로 맞춤법 검사, 대문자 변환, 자동 고침을 끄세요. 브라우저가 텍스트 입력의 단어를 맞춤법 검사 서비스로 보낼 수 있습니다. `onSubmit`에서 요청을 보내기 전에 `shown`을 다시 `false`로 두어, 브라우저가 입력한 텍스트 한 줄이 아니라 비밀번호를 저장하겠느냐고 묻게 하세요. 이 버튼은 필드의 컨트롤이 아닙니다. 누르면 포커스가 입력으로 가지 않고 `Field.Root`의 `disabled`도 닿지 않으니, 필드에 `disabled`가 있으면 버튼에도 주세요.
+
+## 틀린 이메일이나 비밀번호
+
+이메일과 비밀번호를 함께 보내고, 서버가 거절하면 "The email or password is wrong." 같은 메시지 하나를 비밀번호에 두세요. 어느 쪽이 틀렸는지 말하지 마세요. 그러면 누구든 어떤 주소에 계정이 있는지 알게 됩니다. 이 메시지를 폼의 `errors`에 비밀번호의 `name`으로 넘기면, `Form.Root`가 필드 아래에 보여 주고 포커스를 비밀번호로 옮기며 텍스트를 선택해 바로 다시 입력할 수 있게 합니다. 실패한 요청은 버튼 옆의 [Alert](/alert)로 보여 줍니다.
+
+```tsx
+const [errors, setErrors] = useState<FormErrors>({});
+
+const submit = async (event: SubmitEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  if (sending) return;
+  setShown(false);
+  // Hold the button with aria-disabled while this is true.
+  setSending(true);
+  setErrors({});
+  try {
+    const reply = await checkPassword(email, password);
+    if (Object.values(reply).some(Boolean)) setErrors(reply);
+    else setStep('code');
+  } catch {
+    // Shown in an Alert.Root tone="critical" beside the button, which is announced.
+    setFailed("We couldn't reach the server. Try again.");
+  } finally {
+    setSending(false);
+  }
+};
+
+<Form.Root key="password" errors={errors} onSubmit={submit} aria-label="Sign in">
+  …
+</Form.Root>
+```
+
+요청이 도는 동안에는 버튼을 `disabled`가 아니라 `aria-disabled`로 막아 포커스를 유지하세요. 비밀번호 재설정 링크는 필드 밖, 버튼 옆에 두어 Tab이 비밀번호에서 토글로, 그다음 Sign in으로 가게 하세요.
+
+## 코드 단계
+
+비밀번호가 맞고 계정이 두 번째 단계를 요구하면, `Field.OneTimeCode`가 있는 새 폼을 보여 주세요. 단계마다 `Form.Root`에 자기 `key`를 주세요. 그러지 않으면 React가 이미 제출된 로그인 폼의 인스턴스를 그대로 써서, 코드 필드가 빠졌다는 표시를 단 채로 열립니다. 코드의 길이와 어디로 보냈는지는 [Description](/description)에 적으세요.
+
+```tsx
+<Form.Root key="code" ref={codeForm} errors={errors} onSubmit={verify} aria-labelledby={headingId}>
+  <Text.Root as="h3" id={headingId}>
+    Check your phone
+  </Text.Root>
+  <Field.Group>
+    <Label.Root htmlFor={codeId}>Verification code</Label.Root>
+    <Field.Root id={codeId} name="code" aria-describedby={hintId}>
+      <Field.OneTimeCode autoFocus required value={code} onValueChange={setCode} />
+    </Field.Root>
+    <Description.Root id={hintId}>Enter the 6-digit code we sent to the phone ending in 42.</Description.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  <Button.Root type="submit" aria-disabled={sending || undefined}>
+    Verify
+  </Button.Root>
+  <Button.Root variant="ghost" onClick={resend}>
+    Send a new code
+  </Button.Root>
+</Form.Root>
+```
+
+로그인 폼과 사람이 누른 버튼이 사라졌으니 `autoFocus`로 포커스를 코드로 옮기세요. 필드의 레이블과 설명이 스크린 리더에 무엇을 입력할지 알려 주고, 휴대폰은 코드 필드에 포커스가 있을 때만 문자 메시지의 코드를 제안합니다. 다 찬 코드는 마지막 글자 뒤 잠깐 쉬었다가 저절로 보내되, `Form.Root`가 먼저 확인하도록 `requestSubmit()`으로 보내고, 저절로 보내질 줄 모르는 사람을 위해 Verify를 남겨 두세요. 틀린 코드는 틀린 비밀번호처럼 `errors`에 코드의 `name`으로 돌아옵니다.
+
+```tsx
+useEffect(() => {
+  if (code.length !== 6) return;
+  // An IME can still take a full code back, so wait a moment.
+  const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
+  return () => clearTimeout(timer);
+}, [code]);
+```
+
+사람이 새 코드를 요청하면, 보냈다는 사실을 눈에 보이는 글과 스크린 리더가 듣는 말 둘 다로 알리세요. 바뀐 설명은 읽히지 않으므로, 데모는 설명을 바꾸고 [useAnnouncer](/utilities/use-announcer)도 부릅니다. 얼마나 지나야 다시 요청할 수 있는지는 제품의 규칙입니다.
+
+## 가입
+
+가입 폼은 이름, `autoComplete="username"`인 이메일, `autoComplete="new-password"`인 비밀번호와 같은 보기 버튼을 받습니다. 비밀번호 규칙은 입력하기 전에 보이도록 `Description.Root`에 두고, `minLength`처럼 브라우저가 확인할 수 있는 규칙은 설정해 `Form.Root`가 짧은 비밀번호를 페이지의 언어로 말하게 하세요. 유출된 비밀번호처럼 브라우저가 확인할 수 없는 규칙은 서버가 `errors`로 돌려줍니다. 비밀번호는 한 번만 물으세요. 보기 버튼으로 입력한 것을 확인할 수 있으니, 한 번 더 입력하는 필드는 일만 늘리고 안전은 더하지 않습니다.
+
+<Example block>
+  <SignUpExample />
+</Example>
+
+이미 계정이 있는 이메일은 이메일의 오류로 돌아옵니다. 어떤 주소에 계정이 있는지 아무에게도 알려서는 안 되는 제품이라면, 어느 경우든 같은 확인 화면을 보여 주고 그 주소로 이메일을 보내세요.
+
+## 접근 가능한 구성
+
+**Todae가 처리:** `Form.Root`는 제출할 때 필드를 확인하고, 각 문제를 페이지의 언어로 말하며, 포커스를 첫 문제로 옮깁니다. 서버의 오류를 그 필드에 `aria-invalid`와 `aria-describedby`로 보여 주고, 응답이 그 필드를 가리키면 포커스를 옮깁니다. `Field.Root` 안의 아이콘 전용 `Button.Root`는 필드 한 줄 높이이며, `pressed`가 있으면 `aria-pressed`를 가진 토글이 되고 레이블을 툴팁으로 보여 줍니다. `Field.OneTimeCode`는 `autocomplete="one-time-code"`, 숫자 키패드, 너무 짧은 코드 확인을 설정합니다. `aria-disabled`인 `Button.Root`는 요청이 도는 동안 포커스를 유지하고 클릭을 무시합니다.
+
+**직접 제공:** 각 필드의 `autoComplete`. 보기 버튼이 바꾸는 입력의 `type`, 제품의 언어로 된 레이블, 꺼진 맞춤법 검사와 자동 고침, 제출할 때 다시 숨기는 비밀번호. 틀린 이메일이나 비밀번호에 대한 메시지 하나를 비밀번호에. 단계마다 폼의 `key`, 그리고 코드 단계가 보일 때 코드로, 마지막에는 결과를 알리는 제목으로 옮기는 포커스. 설명에 적은 코드의 길이와 보낸 곳. 다 찬 코드를 마지막 글자 뒤 잠깐 쉬었다 보내는 것, 그리고 새 코드를 보냈을 때 보이고 들리는 메시지.
+
+**주의:** `aria-pressed`가 바뀔 때 "Show password"에서 "Hide password"로 바뀌는 레이블. 그러면 스크린 리더가 "Hide password, pressed"라고 읽어 반대로 들립니다. 폼을 보낼 때 보이는 채로 남은 비밀번호. 이메일과 비밀번호 중 어느 쪽이 틀렸는지 말하는 메시지. 요청이 도는 동안 Sign in에 둔 `disabled`는 포커스를 잃게 하니 `aria-disabled`를 쓰세요. `key` 없이 단계마다 다시 쓰이는 `Form.Root` 하나. 비밀번호 관리자를 방해하는 "비밀번호 확인" 필드나 붙여넣기 막기. 이메일과 비밀번호를 두 단계로 나누면서 두 번째 단계에 사용자 이름 필드를 두지 않는 것. 비밀번호 관리자는 둘을 함께 저장하려면 그것이 필요하니, 거기에 이메일을 `autoComplete="username"`인 읽기 전용 `Field.TextInput`으로 두세요.
+
+## 언제 쓰나
+
+**언제:** 제품의 첫 화면. 이메일과 비밀번호로 로그인하기, 문자 메시지·이메일·인증 앱의 코드로 하는 두 번째 단계, 계정 만들기.
+
+**쓰지 않을 때:** 코드만으로, 또는 매직 링크로 로그인 → `Field.OneTimeCode` 하나나 이메일 필드 하나인 폼. 워크스페이스와 요금제처럼 계정보다 많은 것을 묻는 가입 → [Wizard](/recipes/wizard). 다른 제공자의 페이지로 로그인 → 그곳으로 가는 링크나 `Button.Root`, 여기서 채울 것은 없습니다.

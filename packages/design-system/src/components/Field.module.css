@@ -243,6 +243,19 @@
     block-size: var(--todae-field-icon-size);
   }
 
+  /* An icon-only Button.Root in the field's line, such as a password reveal:
+     one line of field text tall, like the step buttons, so the field keeps
+     its height. */
+  .shell > [data-icon-only] {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: var(--todae-field-action-size);
+    block-size: var(--todae-field-action-size);
+    /* Centered on the field's line, which is the input's, not the button's own. */
+    margin-block: calc((var(--todae-field-font-size) * var(--todae-field-leading) - var(--todae-field-action-size)) / 2);
+    padding: 0;
+  }
+
   .adornment {
     display: inline-flex;
     align-items: center;

@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index.js';
+import { Avatar, Button, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -299,6 +299,51 @@ describe('Pagination in a browser', () => {
     expect(screen.getByTestId('plain').getAttribute('role')).toBe('none');
     expect(screen.getByTestId('nav').hasAttribute('role')).toBe(false);
   });
+});
+
+describe('A button in a Field.Root', () => {
+  const icon = (
+    <Button.Icon>
+      <svg viewBox="0 0 16 16" />
+    </Button.Icon>
+  );
+
+  it.each(['comfortable', 'compact', 'spacious'])(
+    'keeps a %s field one line tall, with an icon-only Button.Root before or after the input',
+    (density) => {
+      render(
+        <main data-appearance="light" data-density={density}>
+          <Field.Root aria-label="Plain" data-testid="plain">
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+          <Field.Root aria-label="Password" data-testid="after">
+            <Field.TextInput type="password" value="" onChange={() => {}} />
+            <Button.Root variant="ghost" aria-label="Show password" pressed={false}>
+              {icon}
+            </Button.Root>
+          </Field.Root>
+          <Field.Root aria-label="Search" data-testid="before">
+            <Button.Root variant="ghost" aria-label="Clear search">
+              {icon}
+            </Button.Root>
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+        </main>,
+      );
+      const plain = screen.getByTestId('plain').getBoundingClientRect();
+      for (const [id, name] of [
+        ['after', 'Show password'],
+        ['before', 'Clear search'],
+      ] as const) {
+        const shell = screen.getByTestId(id).getBoundingClientRect();
+        const button = screen.getByRole('button', { name }).getBoundingClientRect();
+        expect(shell.height).toBe(plain.height);
+        // field.action.size is 1.5rem.
+        expect([button.width, button.height]).toEqual([24, 24]);
+        expect(Math.abs(button.top + button.height / 2 - (shell.top + shell.height / 2))).toBeLessThan(0.5);
+      }
+    },
+  );
 });
 
 describe('Field.Group in a browser', () => {

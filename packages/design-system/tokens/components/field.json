@@ -93,6 +93,9 @@
       "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } },
       "shadow": { "$type": "shadow", "$value": { "$ref": "#/popover/shadow/$value" } }
     },
+    "action": {
+      "size": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } }
+    },
     "row": {
       "control": {
         "size": { "$type": "dimension", "$value": { "value": 1.625, "unit": "rem" } }
