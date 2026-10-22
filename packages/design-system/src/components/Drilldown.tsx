@@ -75,7 +75,7 @@ type DrilldownContextValue = {
   statusOf: (value: string) => ViewStatus | null;
   labels: ReadonlyMap<string, string>;
   push: (value: string, trigger: HTMLElement) => void;
-  pop: (reason: DrilldownChangeReason) => void;
+  pop: (reason: 'back' | 'escape') => void;
   registerView: (value: string, label: string, record: ViewRecord) => () => void;
   viewportRef: RefObject<HTMLDivElement | null>;
   backRef: RefObject<HTMLButtonElement | null>;
@@ -153,7 +153,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     [change, memory, stack],
   );
   const pop = useCallback(
-    (reason: DrilldownChangeReason) => {
+    (reason: 'back' | 'escape') => {
       if (stack.length > 1) change(stack.slice(0, -1), reason);
     },
     [change, stack],
