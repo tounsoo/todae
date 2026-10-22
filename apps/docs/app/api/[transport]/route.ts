@@ -1,3 +1,4 @@
+import type { McpServerOptions } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
@@ -28,11 +29,17 @@ function fail(error: unknown) {
   return { isError: true as const, content: [{ type: 'text' as const, text: message }] };
 }
 
-// mcp-handler's option type omits this field and forwards every other option to McpServer.
+const MIN_JSON_ELEMENT_BYTES = 2;
+// files, resolver, and scope are counted as well as each file name.
+const BUILD_TOKENS_ARGUMENT_KEYS = 3;
+
+// createMcpHandler's parameter type omits maxToolInputElements and still forwards it to McpServer.
 const mcpServer = {
   serverInfo: { name: 'todae-docs', version: RELEASE.version },
-  // Each JSON element is at least two bytes, so a package inside MAX_BYTES stays under this. The SDK default is unlimited.
-  maxToolInputElements: MAX_BYTES / 2,
+  maxToolInputElements: MAX_BYTES / MIN_JSON_ELEMENT_BYTES + MAX_FILES + BUILD_TOKENS_ARGUMENT_KEYS,
+} satisfies McpServerOptions & {
+  serverInfo: { name: string; version: string };
+  maxToolInputElements: number;
 };
 
 const handler = createMcpHandler(
