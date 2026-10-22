@@ -21,15 +21,15 @@ export function SplitterSidebar() {
   const navId = useId();
   const sidebarId = useId();
   const [width, setWidth] = useState(220);
-  // Enter restores the size before a collapse; this button tracks its own last size.
+  // Enter restores the size before a collapse; this button keeps its own, recorded when it collapses the panel.
   const [lastWidth, setLastWidth] = useState(220);
-  const resize = (next: number) => {
-    setWidth(next);
-    if (next > 0) setLastWidth(next);
+  const toggle = () => {
+    if (width > 0) setLastWidth(width);
+    setWidth(width === 0 ? lastWidth : 0);
   };
 
   return (
-    <Splitter.Root value={width} onValueChange={resize} min={160} max={360} collapsible style={frame('16rem')}>
+    <Splitter.Root value={width} onValueChange={setWidth} min={160} max={360} collapsible style={frame('16rem')}>
       <Splitter.Panel id={sidebarId}>
         <Pane>
           <Text.Root as="h2" size="m" id={navId}>
@@ -53,7 +53,7 @@ export function SplitterSidebar() {
               aria-label="Sidebar"
               aria-controls={sidebarId}
               aria-expanded={width > 0}
-              onClick={() => setWidth(width === 0 ? lastWidth : 0)}
+              onClick={toggle}
             >
               <Button.Icon>
                 <PanelLeft />

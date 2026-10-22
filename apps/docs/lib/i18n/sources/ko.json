@@ -562,7 +562,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "65f724b4a4a8",
+    "# Native platform": "7c9ab71a7683",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -732,11 +732,11 @@
     "(top)": "94fe1aa137a7",
     "# Splitter": "ac8ba698f628",
     "## Pixel sizes": "66d8ad18e31a",
-    "## Collapse": "03373efd14ea",
-    "## Keys and pointer": "368ad36f2763",
+    "## Collapse": "6e3bb637656f",
+    "## Keys and pointer": "aae11bbea428",
     "## Vertical split": "51e279c7e4d9",
     "## Nested panes": "07f88271e786",
-    "## Accessible composition": "17f79b76fcf3",
+    "## Accessible composition": "03c30fe32392",
     "## When to use": "655f41ae87fb",
     "## Props": "c87cae53423e",
     "(section order)": "d86244d0a99c"
