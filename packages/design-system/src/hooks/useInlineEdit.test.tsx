@@ -269,15 +269,12 @@ it('keeps focus in the input while anything but a field in the group is pressed,
   expect(document.activeElement).toBe(rename());
 });
 
-it('cancels on a pointer click of Cancel, and a press on the gap keeps the edit open', async () => {
+it('cancels on a pointer click of Cancel', async () => {
   const onCancel = vi.fn();
   const accept = vi.fn(() => true);
   render(<Rename onCancel={onCancel} accept={accept} />);
   await open();
   fireEvent.change(field(), { target: { value: 'Q4 report' } });
-  fireEvent.mouseDown(field().parentElement!);
-  await flush();
-  expect(document.activeElement).toBe(field());
   const cancel = screen.getByRole('button', { name: 'Cancel' });
   fireEvent.mouseDown(cancel);
   // A pointer click counts one press, which useFocusHandoff answers by focusing Cancel.
@@ -288,7 +285,7 @@ it('cancels on a pointer click of Cancel, and a press on the gap keeps the edit 
   expect(document.activeElement).toBe(rename());
 });
 
-it('lets a press on another field in the group through', async () => {
+it('lets a press on another text field or select in the group through, but not on a checkbox or button input', async () => {
   function WithUnit() {
     const edit = useInlineEdit({ value: '3', onCommit: () => undefined });
     return edit.editing ? (
@@ -297,6 +294,8 @@ it('lets a press on another field in the group through', async () => {
         <select aria-label="Unit">
           <option>kg</option>
         </select>
+        <input type="checkbox" aria-label="Also rename the file" />
+        <input type="button" value="Undo" />
       </div>
     ) : (
       <button {...edit.getTriggerProps()}>Rename</button>
@@ -305,6 +304,9 @@ it('lets a press on another field in the group through', async () => {
   render(<WithUnit />);
   await open();
   expect(fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Unit' }))).toBe(true);
+  // Safari doesn't focus a clicked checkbox, so it is kept from taking focus to the page.
+  expect(fireEvent.mouseDown(screen.getByRole('checkbox'))).toBe(false);
+  expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Undo' }))).toBe(false);
 });
 
 it('keeps the caret where the person put it as the parent renders again', async () => {

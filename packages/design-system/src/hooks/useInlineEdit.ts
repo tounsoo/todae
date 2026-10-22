@@ -166,10 +166,14 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       // Safari and Firefox on macOS don't focus a clicked button, so focus
       // would leave the group and save before Cancel's click. Keeping it in
       // the input saves or cancels by the button pressed.
-      // Anywhere but a field, so a press on the gap or the error text doesn't
-      // take focus to the page and save either.
+      // Anywhere but a field that takes focus on a click in every browser, so
+      // a press on a checkbox, the gap or the error text doesn't save either.
+      const el = event.currentTarget;
       const target = event.target instanceof Element ? event.target : null;
-      if (!target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) event.preventDefault();
+      // React bubbles a portal's events here; they aren't the group's.
+      if (!target || !el.contains(target)) return;
+      const field = target.closest(TEXT_ENTRY);
+      if (!field || !el.contains(field)) event.preventDefault();
     },
   });
 
@@ -197,3 +201,6 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
     getInputProps,
   };
 }
+
+const TEXT_ENTRY =
+  'input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="image"], [type="range"], [type="color"], [type="file"]), textarea, select, [contenteditable]:not([contenteditable="false"])';
