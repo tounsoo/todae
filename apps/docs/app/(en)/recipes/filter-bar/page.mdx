@@ -12,7 +12,7 @@ Open a filter, check a few values, then remove them from the chips or clear them
 
 ## Filters
 
-Keep the chosen values in one object, a list per field, and work out the matches from it. Values in one field are either-or, and fields narrow each other, which is what people expect from faceted filters. With data on a server, send the filters in the request and show the rows and the total it returns. To make a filtered view shareable, keep the filters in the URL's query string and read them back from there.
+Keep the chosen values in one object, a list per field, and work out the matches from it. Values in one field are either-or, and fields narrow each other, which is what people expect from faceted filters. The snippets on this page keep every issue in memory. With data on a server, send the filters in the request and show the rows and the total it returns. To make a filtered view shareable, keep the filters in the URL's query string and read them back from there.
 
 ```ts
 const FACETS = [
@@ -26,7 +26,7 @@ type Filters = Record<FacetKey, readonly string[]>;
 
 const NONE: Filters = { status: [], priority: [], assignee: [] };
 
-const matches = issues.filter((issue) =>
+const matches = ISSUES.filter((issue) =>
   FACETS.every(({ key }) => filters[key].length === 0 || filters[key].includes(issue[key])),
 );
 
@@ -39,12 +39,16 @@ const toggle = (key: FacetKey, value: string, on: boolean) =>
 
 ## Filter menus
 
-Put one `Menu.Root` per field in a `Toolbar.Root` named after what it filters, so the buttons share one Tab stop and the arrow keys move between them. A `Menu.CheckboxItem` stays open when it is checked, so people can pick several values in one go; Escape or Tab closes the menu and returns focus to its button. Show how many values a field has in a `Badge.Root` on its button, with a visually hidden word so the button's name says what the number means, such as "Status 2 selected". Name each menu with `aria-label`, since the button's name changes with the count.
+Put one `Menu.Root` per field in a `Toolbar.Root` named after what it filters, so the buttons share one Tab stop and the arrow keys move between them. A `Menu.CheckboxItem` leaves its menu open when it is checked, so people can pick several values in one go; Escape closes the menu and returns focus to its button. Keep which menu is open from `onOpenChange`, so the count of matches can wait until it closes (see Results). Show how many values a field has in a `Badge.Root` on its button, with a visually hidden word so the button's name says what the number means, such as "Status 2 selected". Name each menu with `aria-label`, since the button's name changes with the count.
 
 ```tsx
+const [openMenu, setOpenMenu] = useState<FacetKey | null>(null);
+const menuOpenChange = (key: FacetKey, open: boolean) =>
+  setOpenMenu((current) => (open ? key : current === key ? null : current));
+
 <Toolbar.Root aria-label="Filter issues">
   {FACETS.map(({ key, label, options }, index) => (
-    <Menu.Root key={key}>
+    <Menu.Root key={key} onOpenChange={(open) => menuOpenChange(key, open)}>
       <Menu.Trigger ref={index === 0 ? firstFilter : undefined} variant="secondary">
         {label}
         {filters[key].length > 0 && (
@@ -72,20 +76,24 @@ Put one `Menu.Root` per field in a `Toolbar.Root` named after what it filters, s
 
 ## Active filters
 
-List each chosen value as a chip in a `ChipList.Root`, labelled "Active filters", with `onRemove` so each chip has a remove button, and give each chip a key from its field and value. When a chip goes, `ChipList.Root` moves focus to the chip that takes its place. Render the row only while a filter is in use. Removing the last chip or pressing "Clear all" takes the row away with focus in it, so `useFocusHandoff` on the row hands focus to the first filter button. Pass `maxRows` to fold a long row into a +N button.
+List each chosen value as a chip in a `ChipList.Root`, labelled "Active filters", with `onRemove` so each chip has a remove button. Build the chips in the order of the menus, not the order values were checked, and name the field in each, so two fields' "High" stay apart. When a chip goes, `ChipList.Root` moves focus to the chip that takes its place. Render the row only while a filter is in use. Removing the last chip or pressing "Clear all" takes the row away with focus in it, so `useFocusHandoff` on the row hands focus to the first filter button. Pass `maxRows` to fold a long row into a +N button.
 
 ```tsx
 const firstFilter = useRef<HTMLButtonElement>(null);
 const chipsHandoff = useFocusHandoff({ to: firstFilter });
-const active = FACETS.flatMap(({ key, label }) => filters[key].map((value) => ({ key, label, value })));
+const active = FACETS.flatMap(({ key, label, options }) =>
+  options.filter((option) => filters[key].includes(option)).map((value) => ({ key, label, value })),
+);
 
 {active.length > 0 && (
   <Stack.Root ref={chipsHandoff} direction="row" align="center" gap="condensed" wrap>
     <ChipList.Root
       aria-label="Active filters"
       chips={active.map(({ label, value }) => `${label}: ${value}`)}
-      getKey={(_, index) => `${active[index].key}:${active[index].value}`}
-      onRemove={(index) => toggle(active[index].key, active[index].value, false)}
+      onRemove={(index) => {
+        const chip = active[index];
+        if (chip) toggle(chip.key, chip.value, false);
+      }}
     />
     <Button.Root variant="ghost" onClick={() => setFilters(NONE)}>
       Clear all
@@ -96,22 +104,24 @@ const active = FACETS.flatMap(({ key, label }) => filters[key].map((value) => ({
 
 ## Results
 
-Show the number of matches as text beside the results. Filters change the results without moving focus, so announce the number through [useAnnouncer](/utilities/use-announcer) once the person stops changing them, about half a second after the last change, so checking three values in a menu says the count once. When nothing matches, keep the table's caption and headers and put an `EmptyState.Root` in a row that spans every column, with a button that clears the filters. That button goes away once rows match, so give its actions a hand-off to the first filter button too.
+Show the number of matches as text beside the results. Filters change the results without moving focus, so announce the number through [useAnnouncer](/utilities/use-announcer) once the person stops changing them: not while a filter menu is open, where the screen reader reads each value's checked state, and about half a second after the menu closes or a chip goes. Compare the chosen filters with the ones last announced, so a menu opened and closed without a change says nothing. With data on a server, announce when the response for those filters arrives instead, since the count before it is the old one. When nothing matches, keep the table's caption and headers and put an `EmptyState.Root` in a row that spans every column, with a button that clears the filters. That button goes away once rows match, so give its actions a hand-off to the first filter button too.
 
 ```tsx
 const announce = useAnnouncer();
 const emptyHandoff = useFocusHandoff({ to: firstFilter });
-const key = JSON.stringify(filters);
-const announced = useRef(key);
+const countOf = (count: number) => `${count} ${count === 1 ? 'issue' : 'issues'}`;
+const chosen = active.map((chip) => `${chip.key}:${chip.value}`).join('|');
+const announced = useRef(chosen);
 
 useEffect(() => {
+  if (openMenu) return;
   const timer = setTimeout(() => {
-    if (announced.current === key) return;
-    announced.current = key;
-    announce(matches.length === 0 ? 'No issues match these filters' : `${issues(matches.length)} shown`);
+    if (announced.current === chosen) return;
+    announced.current = chosen;
+    announce(matches.length === 0 ? 'No issues match these filters' : `${countOf(matches.length)} shown`);
   }, 500);
   return () => clearTimeout(timer);
-}, [key, matches.length, announce]);
+}, [chosen, openMenu, matches.length, announce]);
 
 <Table.Row>
   <Table.Cell colSpan={5}>
@@ -130,11 +140,11 @@ useEffect(() => {
 
 ## Accessible composition
 
-**Todae handles:** One Tab stop and arrow keys for the filter buttons in `Toolbar.Root`. Each menu's button wiring, its keyboard, and focus back on its button when it closes, in `Menu.Root`. The `menuitemcheckbox` role and checked state of each value, and the menu staying open while values are checked, in `Menu.CheckboxItem`. The list of chips, each remove button's name, and focus moving to the next chip when one is removed, in `ChipList.Root`. Focus moving to the first filter button when the row of chips or the empty state's button unmounts while it holds focus, through `useFocusHandoff`.
+**Todae handles:** One Tab stop and arrow keys for the filter buttons in `Toolbar.Root`. Each menu's button wiring, its keyboard, and focus back on its button when Escape closes it, in `Menu.Root`. The `menuitemcheckbox` role and checked state of each value, and the menu staying open while values are checked, in `Menu.CheckboxItem`. The list of chips, each remove button's name, and focus moving to the chip that takes a removed chip's place, else the one before it, in `ChipList.Root`. Focus moving to the first filter button when the row of chips or the empty state's button unmounts while it holds focus, through `useFocusHandoff`.
 
-**You supply:** The fields, their values and how they match. A name for the toolbar, each menu and the chip list. Words for what a button's count means. A key for each chip. The announcement of the number of matches, and where focus goes when the chips go away.
+**You supply:** The fields, their values and how they match. A name for the toolbar, each menu and the chip list. Words for what a button's count means. Chip labels that name their field. Which menu is open, and the announcement of the number of matches, and where focus goes when the chips go away.
 
-**Watch for:** A count announced on every check while a menu is open, which talks over the checked state the screen reader reads. A button whose only sign of a filter is a color or a dot. Filters that apply only after an Apply button inside the menu, which hides the result of each check until then; if the query is slow, debounce it and keep each check live. Removing the chip row without moving focus, which drops focus to the page. A filter's chip that names only the value, such as "High", when two fields share a value.
+**Watch for:** A count announced after each check while a menu is open, which talks over the checked state the screen reader reads; a short timer alone doesn't stop it, since a screen reader user pauses longer between checks. A button whose only sign of a filter is a color or a dot. Filters that apply only after an Apply button inside the menu, which hides the result of each check until then; if the query is slow, debounce it and keep each check live. Removing the chip row without moving focus, which drops focus to the page. A filter's chip that names only the value, such as "High", when two fields share a value.
 
 ## When to use
 

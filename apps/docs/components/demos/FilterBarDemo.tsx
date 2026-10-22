@@ -16,10 +16,7 @@ import {
   VisuallyHidden,
   type BadgeTone,
 } from '@tounsoo/todae';
-import { ListFilter } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-
-// Todae ships no icons. These come from Lucide; any icon library works.
 
 type Status = 'Open' | 'In progress' | 'Closed';
 type Priority = 'High' | 'Medium' | 'Low';
@@ -48,19 +45,24 @@ type Filters = Record<FacetKey, readonly string[]>;
 
 const NONE: Filters = { status: [], priority: [], assignee: [] };
 const TONES: Record<Status, BadgeTone> = { Open: 'info', 'In progress': 'warning', Closed: 'neutral' };
-const issues = (count: number) => `${count} ${count === 1 ? 'issue' : 'issues'}`;
+const countOf = (count: number) => `${count} ${count === 1 ? 'issue' : 'issues'}`;
 
 export function FilterBarIssues() {
   const announce = useAnnouncer();
   const firstFilter = useRef<HTMLButtonElement>(null);
   const [filters, setFilters] = useState<Filters>(NONE);
+  // The field whose menu is open, if any.
+  const [openMenu, setOpenMenu] = useState<FacetKey | null>(null);
 
   const matches = ISSUES.filter((issue) =>
     FACETS.every(({ key }) => filters[key].length === 0 || filters[key].includes(issue[key])),
   );
 
-  // One chip per chosen value, in the order of the menus.
-  const active = FACETS.flatMap(({ key, label }) => filters[key].map((value) => ({ key, label, value })));
+  // One chip per chosen value, in the order of the menus, however they were checked.
+  const active = FACETS.flatMap(({ key, label, options }) =>
+    options.filter((option) => filters[key].includes(option)).map((value) => ({ key, label, value })),
+  );
+  const chosen = active.map((chip) => `${chip.key}:${chip.value}`).join('|');
 
   const toggle = (key: FacetKey, value: string, on: boolean) =>
     setFilters((current) => ({
@@ -74,18 +76,23 @@ export function FilterBarIssues() {
   const chipsHandoff = useFocusHandoff({ to: firstFilter });
   const emptyHandoff = useFocusHandoff({ to: firstFilter });
 
-  // Announce the number of matches once the person stops changing filters.
-  // A menu stays open while they check several, so each check doesn't speak.
-  const key = JSON.stringify(filters);
-  const announced = useRef(key);
+  // Announce the number of matches once the person stops changing filters:
+  // half a second after a filter menu closes, a chip goes or Clear all.
+  // While a menu is open, the screen reader is reading each item's checked
+  // state, so the count waits.
+  const announced = useRef(chosen);
   useEffect(() => {
+    if (openMenu) return;
     const timer = setTimeout(() => {
-      if (announced.current === key) return;
-      announced.current = key;
-      announce(matches.length === 0 ? 'No issues match these filters' : `${issues(matches.length)} shown`);
+      if (announced.current === chosen) return;
+      announced.current = chosen;
+      announce(matches.length === 0 ? 'No issues match these filters' : `${countOf(matches.length)} shown`);
     }, 500);
     return () => clearTimeout(timer);
-  }, [key, matches.length, announce]);
+  }, [chosen, openMenu, matches.length, announce]);
+
+  const menuOpenChange = (key: FacetKey, open: boolean) =>
+    setOpenMenu((current) => (open ? key : current === key ? null : current));
 
   return (
     <Stack.Root style={{ inlineSize: '100%' }}>
@@ -93,13 +100,8 @@ export function FilterBarIssues() {
         {FACETS.map(({ key, label, options }, index) => {
           const count = filters[key].length;
           return (
-            <Menu.Root key={key}>
+            <Menu.Root key={key} onOpenChange={(open) => menuOpenChange(key, open)}>
               <Menu.Trigger ref={index === 0 ? firstFilter : undefined} variant="secondary">
-                {index === 0 && (
-                  <Button.Icon>
-                    <ListFilter />
-                  </Button.Icon>
-                )}
                 {label}
                 {count > 0 && (
                   <Badge.Root>
@@ -128,10 +130,9 @@ export function FilterBarIssues() {
           <ChipList.Root
             aria-label="Active filters"
             chips={active.map(({ label, value }) => `${label}: ${value}`)}
-            getKey={(_, index) => `${active[index]!.key}:${active[index]!.value}`}
             onRemove={(index) => {
-              const chip = active[index]!;
-              toggle(chip.key, chip.value, false);
+              const chip = active[index];
+              if (chip) toggle(chip.key, chip.value, false);
             }}
           />
           <Button.Root variant="ghost" onClick={() => setFilters(NONE)}>
@@ -139,7 +140,7 @@ export function FilterBarIssues() {
           </Button.Root>
         </Stack.Root>
       )}
-      <Text.Root tone="muted">{`${matches.length} of ${issues(ISSUES.length)}`}</Text.Root>
+      <Text.Root tone="muted">{`${matches.length} of ${countOf(ISSUES.length)}`}</Text.Root>
       <ScrollArea.Root axis="inline" focusable aria-label="Issues table">
         <Table.Root>
           <Table.Caption>Issues</Table.Caption>
