@@ -48,7 +48,7 @@ it('moves focus to the summary when a call is denied', async () => {
   const call = summary('create_branch');
   expect(call).toHaveFocus();
   expect(call).toHaveTextContent('Denied');
-  expect(screen.getByText(/didn't make the branch/)).toBeVisible();
+  expect(await screen.findByText(/didn't make the branch/)).toBeVisible();
 });
 
 it('keeps a call someone opened by hand open as it finishes', async () => {
@@ -64,4 +64,18 @@ it('keeps a call someone opened by hand open as it finishes', async () => {
   await expect.poll(() => call.textContent, { timeout: 3000 }).toContain('Done');
   expect(call.parentElement).toHaveAttribute('open');
   expect(screen.getByRole('region', { name: 'create_branch output' })).toBeVisible();
+});
+
+it('keeps the reply busy only while the agent writes, not while a call waits', async () => {
+  render(
+    <Providers>
+      <ToolCallExample />
+    </Providers>,
+  );
+  const reply = screen.getByRole('article', { name: 'Assistant' });
+  expect(reply).not.toHaveAttribute('aria-busy', 'true');
+  await userEvent.click(screen.getByRole('button', { name: 'Deny' }));
+  expect(reply).toHaveAttribute('aria-busy', 'true');
+  await expect.poll(() => reply.getAttribute('aria-busy'), { timeout: 3000 }).not.toBe('true');
+  expect(screen.getByText(/didn't make the branch/)).toBeVisible();
 });

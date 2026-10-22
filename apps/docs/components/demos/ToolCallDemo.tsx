@@ -127,6 +127,7 @@ function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved:
 
 export function ToolCallExample() {
   const [calls, setCalls] = useState(CALLS);
+  const [replying, setReplying] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -134,21 +135,25 @@ export function ToolCallExample() {
   const update = (id: string, change: Partial<ToolCallData>) =>
     setCalls((current) => current.map((call) => (call.id === id ? { ...call, ...change } : call)));
 
-  // Stands in for the product's agent: an approved call runs, then reports its output.
+  // Stands in for the product's agent, which resumes its turn either way: an approved
+  // call runs, then reports its output; a denied one gets a short reply.
   const decide = (id: string, approved: boolean) => {
+    clearTimeout(timer.current);
     if (!approved) {
       update(id, { status: 'denied' });
+      setReplying(true);
+      timer.current = setTimeout(() => setReplying(false), 800);
       return;
     }
     update(id, { status: 'running' });
-    clearTimeout(timer.current);
     timer.current = setTimeout(() => update(id, { status: 'done', output: RESULT }), 1500);
   };
 
   const last = calls[calls.length - 1]!;
-  // Stands in for the stream's own flag: the agent writes while the approved call runs,
-  // and its turn is paused while a call waits.
-  const streaming = calls.some((call) => call.status === 'running');
+  // Stands in for the stream's own flag: on while the agent's turn is going, off while
+  // it waits for a decision.
+  const waiting = calls.some((call) => call.status === 'pending');
+  const streaming = !waiting && (replying || calls.some((call) => call.status === 'running'));
 
   return (
     <Message.Root streaming={streaming} aria-label="Assistant" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
@@ -160,7 +165,7 @@ export function ToolCallExample() {
       {calls.map((call) => (
         <ToolCall key={call.id} call={call} onDecide={(approved) => decide(call.id, approved)} />
       ))}
-      {(last.status === 'done' || last.status === 'denied') && (
+      {!streaming && (last.status === 'done' || last.status === 'denied') && (
         <Message.Content>
           <Prose.Root>
             <p>

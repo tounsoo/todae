@@ -657,8 +657,8 @@
   "recipes/tool-call": {
     "(top)": "5d279955457e",
     "# Tool call": "fff9ba9cd0f7",
-    "## The call": "01edef5b625c",
-    "## Approval": "4d18f1417284",
+    "## The call": "6b61c945717c",
+    "## Approval": "c3769047287c",
     "## Accessible composition": "61c40af10d7a",
     "## When to use": "125cdba98fc2",
     "(section order)": "e092ab2bb711"
