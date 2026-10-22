@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.OneTimeCode',
   description:
-    'A code for a sign-in or a verification, drawn as boxes over one native input. The input keeps paste, undo, selection and the phone\'s code autofill (autocomplete="one-time-code"), and the boxes are only drawn. Typing, paste and autofill all keep the characters the code allows and cut it to length; a pasted code replaces the whole value, and a press on a box selects its character so typing replaces it. It takes native input attributes except type, value, defaultValue, onChange, disabled, maxLength, minLength, pattern and inputMode.',
+    'A code for a sign-in or a verification, drawn as boxes over one native input. The input keeps paste, undo, selection and the phone\'s code autofill (autocomplete="one-time-code"), and the boxes are only drawn. Typing, paste and autofill all keep the characters the code allows and cut it to length; a pasted code replaces the whole value, a press on a box selects its character so typing replaces it, and typing on a full code replaces the box at the caret. className and style go on the element that draws the boxes; every other native input attribute goes on the input, except type, value, defaultValue, onChange, disabled, maxLength, minLength, pattern, inputMode and dir (the input is always left to right).',
   props: [
     {
       name: 'value',
@@ -45,18 +45,17 @@ export const meta = {
       description: 'On the element that draws the boxes, not on the input, which is transparent.',
     },
     {
+      name: 'style',
+      type: 'CSSProperties',
+      required: false,
+      description: 'On the element that draws the boxes, like className.',
+    },
+    {
       name: 'autoComplete',
       type: 'string',
       required: false,
       default: '"one-time-code"',
       description: 'Lets the phone offer the code from a text message.',
-    },
-    {
-      name: 'dir',
-      type: '"ltr" | "rtl" | "auto"',
-      required: false,
-      default: '"ltr"',
-      description: 'Codes are Latin characters, so the boxes run left to right even on a right-to-left page.',
     },
   ],
 } as const satisfies ComponentMeta;

@@ -1134,9 +1134,9 @@
       "en": "Lets the phone offer the code from a text message.",
       "ko": "휴대폰이 문자 메시지의 코드를 제안할 수 있게 합니다."
     },
-    "dir": {
-      "en": "Codes are Latin characters, so the boxes run left to right even on a right-to-left page.",
-      "ko": "코드는 라틴 문자이므로 오른쪽에서 왼쪽으로 쓰는 페이지에서도 칸은 왼쪽에서 오른쪽으로 놓입니다."
+    "style": {
+      "en": "On the element that draws the boxes, like className.",
+      "ko": "className처럼 칸을 그리는 요소에 붙습니다."
     }
   },
   "Field.Increment": {

@@ -814,7 +814,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .shell:hover:not([data-disabled]) .slot {
+  .shell:hover:not([data-disabled]) .oneTimeCodeInput:not(:read-only) + .slots .slot {
     border-color: var(--todae-field-border-hover);
   }
 
@@ -837,6 +837,10 @@
 
   .shell[data-invalid] .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
     border-color: var(--todae-field-border-invalid);
+  }
+
+  .oneTimeCodeInput:read-only + .slots .slot[data-caret]::after {
+    display: none;
   }
 
   .slot[data-caret]::after {

@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, Label } from '../index.js';
+import { ErrorMessage, Field, Form, Label } from '../index.js';
+import { mount, submit } from '../test/form.js';
 import type { FieldOneTimeCodeProps } from '../index.js';
 
 afterEach(cleanup);
@@ -33,7 +34,7 @@ describe('Field.OneTimeCode', () => {
     expect(input().autocomplete).toBe('one-time-code');
     expect(input().getAttribute('inputmode')).toBe('numeric');
     expect(input().maxLength).toBe(6);
-    expect(input().minLength).toBe(6);
+    expect(input().minLength).toBe(-1);
     expect(input().pattern).toBe('[0-9]*');
     expect(input().getAttribute('spellcheck')).toBe('false');
     expect(input().dir).toBe('ltr');
@@ -44,7 +45,6 @@ describe('Field.OneTimeCode', () => {
     render(<Code length={4} characters="alphanumeric" />);
     expect(input().getAttribute('inputmode')).toBe('text');
     expect(input().maxLength).toBe(4);
-    expect(input().minLength).toBe(4);
     expect(input().pattern).toBe('[A-Za-z0-9]*');
   });
 
@@ -80,6 +80,16 @@ describe('Field.OneTimeCode', () => {
     render(<Code characters="alphanumeric" />);
     expect(beforeInput('insertText', 'k').defaultPrevented).toBe(false);
     expect(beforeInput('insertText', '-').defaultPrevented).toBe(true);
+  });
+
+  it('treats a multi-character insert like a paste', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12" onValueChange={onValueChange} />);
+    input().setSelectionRange(2, 2);
+    expect(beforeInput('insertText', '123456').defaultPrevented).toBe(true);
+    expect(onValueChange).toHaveBeenLastCalledWith('123456');
+    expect(beforeInput('insertText', '482-913').defaultPrevented).toBe(true);
+    expect(onValueChange).toHaveBeenLastCalledWith('482913');
   });
 
   it('leaves a deletion and an IME composition alone', () => {
@@ -118,11 +128,80 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it('does nothing for a paste with no allowed character, and keeps the selection', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="1234" onValueChange={onValueChange} />);
+    input().setSelectionRange(1, 3);
+    expect(beforeInput('insertFromPaste', 'abc').defaultPrevented).toBe(true);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(input().value).toBe('1234');
+    expect(input().selectionStart).toBe(1);
+    expect(input().selectionEnd).toBe(3);
+  });
+
+  it('leaves a drop to the browser', () => {
+    render(<Code initial="12" />);
+    expect(beforeInput('insertFromDrop', 'Your code: 482').defaultPrevented).toBe(false);
+  });
+
+  it('replaces the box at the caret when a character is typed into a full code', () => {
+    render(<Code initial="123456" />);
+    input().focus();
+    input().setSelectionRange(2, 2);
+    expect(beforeInput('insertText', '9').defaultPrevented).toBe(true);
+    expect(input().value).toBe('129456');
+    expect(input().selectionStart).toBe(3);
+    expect(input().selectionEnd).toBe(3);
+  });
+
+  it('leaves a character typed at the end of a full code to the length limit', () => {
+    render(<Code initial="123456" />);
+    input().setSelectionRange(6, 6);
+    expect(beforeInput('insertText', '9').defaultPrevented).toBe(false);
+  });
+
+  it('reaches onChange, and puts the caret after the paste, where the browser has no insert command', () => {
+    const onChange = vi.fn();
+    render(<Code initial="19" onChange={onChange} />);
+    const code = input();
+    code.setSelectionRange(1, 1);
+    fireEvent(code, new InputEvent('beforeinput', { inputType: 'insertFromPaste', data: '2 3', bubbles: true, cancelable: true }));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(code.value).toBe('1239');
+    expect(code.selectionStart).toBe(3);
+  });
+
+  it('keeps what fits of a paste where the browser has no insert command', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12345" onValueChange={onValueChange} />);
+    input().setSelectionRange(1, 1);
+    beforeInput('insertFromPaste', '7 8');
+    expect(onValueChange).toHaveBeenLastCalledWith('172345');
+  });
+
   it('cleans a value that arrives by change, such as autofill', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);
     fireEvent.change(input(), { target: { value: '12 34-56 78' } });
     expect(onValueChange).toHaveBeenLastCalledWith('123456');
+  });
+
+  it('does not select a box for a click that is not a press', () => {
+    render(<Code initial="123456" />);
+    input().focus();
+    input().setSelectionRange(6, 6);
+    fireEvent.click(input(), { detail: 0 });
+    expect(input().selectionStart).toBe(6);
+    expect(input().selectionEnd).toBe(6);
+  });
+
+  it('keeps a range a drag or a Shift+click selected', () => {
+    render(<Code initial="123456" />);
+    input().focus();
+    input().setSelectionRange(1, 4);
+    fireEvent.click(input(), { detail: 1, clientX: 0 });
+    expect(input().selectionStart).toBe(1);
+    expect(input().selectionEnd).toBe(4);
   });
 
   it('is read-only without a change handler', () => {
@@ -137,5 +216,40 @@ describe('Field.OneTimeCode', () => {
   it('is disabled by its Field.Root', () => {
     render(<Code disabled />);
     expect(input().disabled).toBe(true);
+  });
+
+  it('blocks a submit of a code that is too short, even when a script set it, and words it in the page\'s language', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    await mount(
+      <Form.Root data-testid="form" onSubmit={onSubmit}>
+        <Field.Group>
+          <Label.Root htmlFor="code">Verification code</Label.Root>
+          <Field.Root id="code" name="code">
+            <Field.OneTimeCode value="48" onValueChange={() => undefined} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+      </Form.Root>,
+    );
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Use at least 6 characters')).toBeTruthy();
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('lets a complete code, and an empty optional one, submit', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    for (const value of ['482913', '']) {
+      cleanup();
+      await mount(
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Root id="code" name="code" aria-label="Verification code">
+            <Field.OneTimeCode value={value} onValueChange={() => undefined} />
+          </Field.Root>
+        </Form.Root>,
+      );
+      await submit(screen.getByTestId('form'));
+    }
+    expect(onSubmit).toHaveBeenCalledTimes(2);
   });
 });

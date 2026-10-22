@@ -1,16 +1,16 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
-import { useState } from 'react';
+import { cdp, userEvent } from '@vitest/browser/context';
+import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, Label } from '../index.js';
+import { ErrorMessage, Field, Form, Label } from '../index.js';
 
 afterEach(cleanup);
 
-function Code({ initial = '', onValueChange }: { initial?: string; onValueChange?: (value: string) => void }) {
+function Code({ initial = '', onValueChange, style }: { initial?: string; onValueChange?: (value: string) => void; style?: CSSProperties }) {
   const [value, setValue] = useState(initial);
   return (
-    <main data-appearance="light" data-density="comfortable">
+    <main data-appearance="light" data-density="comfortable" style={style}>
       <Field.Group>
         <Label.Root htmlFor="code">Verification code</Label.Root>
         <Field.Root id="code" name="code">
@@ -29,6 +29,13 @@ function Code({ initial = '', onValueChange }: { initial?: string; onValueChange
 
 const input = () => screen.getByLabelText<HTMLInputElement>('Verification code');
 const boxes = () => [...input().nextElementSibling!.children] as HTMLElement[];
+const session = () => cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
+const boxPosition = (i: number) => {
+  const rect = boxes()[i]!.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2 - input().getBoundingClientRect().left, y: rect.height / 2 };
+};
+// The default theme draws the hover border as the resting one, so the tests give it a color to see.
+const hoverBorder = { '--todae-field-border-hover': 'rgb(255, 0, 0)' } as CSSProperties;
 const active = () => boxes().flatMap((box, i) => (box.hasAttribute('data-active') ? [i] : []));
 
 // Copies from a scratch field and pastes with the keyboard, so the browser sends a real paste.
@@ -140,5 +147,132 @@ describe('Field.OneTimeCode in a browser', () => {
   it('draws a box for every character the code has', () => {
     render(<Code initial="12" />);
     expect(boxes().map((box) => box.textContent)).toEqual(['1', '2', '', '', '', '']);
+  });
+
+  it('treats a keyboard\'s multi-character insert as a paste', async () => {
+    render(<Code initial="12" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await session().send('Input.insertText', { text: '123456' });
+    expect(input().value).toBe('123456');
+    await userEvent.keyboard('{Control>}a{/Control}');
+    await session().send('Input.insertText', { text: '482-913' });
+    expect(input().value).toBe('482913');
+  });
+
+  it('keeps the selection when a paste has no character the code allows', async () => {
+    render(<Code initial="1234" />);
+    await userEvent.click(input());
+    input().setSelectionRange(1, 3);
+    await paste('abc');
+    expect(input().value).toBe('1234');
+    expect(input().selectionStart).toBe(1);
+    expect(input().selectionEnd).toBe(3);
+  });
+
+  it('replaces the box at the caret when a character is typed into a full code', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}{ArrowRight}9');
+    expect(input().value).toBe('129456');
+    expect(active()).toEqual([3]);
+    await userEvent.keyboard('{Control>}z{/Control}');
+    expect(input().value).toBe('123456');
+  });
+
+  it('leaves a selection a Shift+click made', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input(), { position: boxPosition(1) });
+    await userEvent.click(input(), { position: boxPosition(4), modifiers: ['Shift'] });
+    expect(input().selectionStart).toBe(1);
+    expect(input().selectionEnd).toBeGreaterThan(2);
+    expect(active().length).toBeGreaterThan(1);
+  });
+
+  it('leaves the caret where it is when its label is clicked', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input());
+    input().setSelectionRange(1, 1);
+    await userEvent.click(screen.getByText('Verification code'));
+    expect([input().selectionStart, input().selectionEnd]).toEqual([1, 1]);
+  });
+
+  it('shows no caret and no hover border on a read-only code', async () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={hoverBorder}>
+        <Field.Root aria-label="Verification code">
+          <Field.OneTimeCode value="12" readOnly />
+        </Field.Root>
+      </main>,
+    );
+    const first = boxes()[0]!;
+    const resting = getComputedStyle(first).borderColor;
+    await userEvent.hover(input());
+    expect(getComputedStyle(first).borderColor).toBe(resting);
+    input().focus();
+    input().setSelectionRange(2, 2);
+    await userEvent.keyboard('{End}');
+    expect(getComputedStyle(boxes()[2]!, '::after').display).toBe('none');
+  });
+
+  it('changes the border of a box under the pointer on an editable code', async () => {
+    render(<Code style={hoverBorder} />);
+    const first = boxes()[0]!;
+    const resting = getComputedStyle(first).borderColor;
+    await userEvent.hover(input());
+    expect(getComputedStyle(first).borderColor).not.toBe(resting);
+  });
+
+  it('blocks a submit of a short code that a cleaned paste left, and words it', async () => {
+    function Recovery() {
+      const [value, setValue] = useState('');
+      return (
+        <main data-appearance="light" data-density="comfortable">
+          <Form.Root onSubmit={(event) => event.preventDefault()}>
+            <Field.Group>
+              <Label.Root htmlFor="code">Verification code</Label.Root>
+              <Field.Root id="code" name="code">
+                <Field.OneTimeCode value={value} onValueChange={setValue} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
+            <button type="submit">Verify</button>
+          </Form.Root>
+        </main>
+      );
+    }
+    render(<Recovery />);
+    await userEvent.click(input());
+    await paste('12 3');
+    expect(input().value).toBe('123');
+    await userEvent.click(screen.getByRole('button', { name: 'Verify' }));
+    expect(await screen.findByText('Use at least 6 characters')).toBeTruthy();
+  });
+
+  it('keeps the caret and fires onChange where the browser inserts nothing', async () => {
+    const onChange = vi.fn();
+    function Plain() {
+      const [value, setValue] = useState('19');
+      return (
+        <Field.Root aria-label="Verification code">
+          <Field.OneTimeCode
+            value={value}
+            onChange={(event) => {
+              onChange();
+              setValue(event.target.value);
+            }}
+          />
+        </Field.Root>
+      );
+    }
+    render(<Plain />);
+    input().focus();
+    input().setSelectionRange(1, 1);
+    const execCommand = vi.spyOn(document, 'execCommand').mockReturnValue(false);
+    await paste('2 3');
+    execCommand.mockRestore();
+    expect(input().value).toBe('1239');
+    expect(onChange).toHaveBeenCalled();
+    expect(input().selectionStart).toBe(3);
   });
 });
