@@ -129,18 +129,18 @@ The button stays one element in both layouts, so it keeps focus when the layout 
 
 Mark the current page's link with `aria-current="page"`, which your router sets (see [Nav](/nav)). In the sidebar, focus stays on the link the person chose, so they can go on to the next one. Some routers announce the new page, as Next.js does; with one that doesn't, announce its title with [useAnnouncer](/utilities/use-announcer).
 
-Close the drawer whenever the page changes, from one of its links or from Back, in the render that shows the new page. Key that check on everything a nav link can change, such as the path and the query string. The link that was chosen goes away with the drawer, so send focus to the new page's heading: `restoreFocusRef` points at the heading when the page changed while the drawer was open, and at the header button otherwise, so Escape and the close button put focus back on the button, even after a link whose navigation hasn't arrived yet. Drawer reads the ref once it has closed, after the new page has rendered, so the heading is the new page's. The current page's link changes no page, so it closes the drawer itself. A click with a modifier key opens the link elsewhere, so it leaves the drawer open.
+Close the drawer whenever the page changes, from one of its links or from Back, in the render that shows the new page. Key that check on everything a nav link can change: the path, the query string and, if your links use it, the hash. The link that was chosen goes away with the drawer, so send focus to the new page's heading: `restoreFocusRef` points at the heading when the page changed while the drawer was open, and at the header button otherwise, so Escape and the close button put focus back on the button, even after a link whose navigation hasn't arrived yet. Drawer reads the ref once it has closed, after the new page has rendered, so the heading is the new page's. The current page's link changes no page, so it closes the drawer itself, and focus goes back to the header button. A click with a modifier key opens the link elsewhere, so it leaves the drawer open.
 
 ```tsx
 const heading = useRef<HTMLElement>(null);
 const [navigated, setNavigated] = useState(false);
-const url = pathname + search;
+// The URL your router shows, such as `${location.pathname}${location.search}${location.hash}`.
 const [shownUrl, setShownUrl] = useState(url);
 if (url !== shownUrl) {
   setShownUrl(url);
-  setNavigated(drawerOpen);
+  setNavigated(drawerOpen && !wide);
   setDrawerOpen(false);
-}
+} else if (wide && drawerOpen) setDrawerOpen(false);
 const openDrawer = () => {
   setNavigated(false);
   setDrawerOpen(true);
@@ -157,7 +157,7 @@ const openDrawer = () => {
       if (!elsewhere && (event.target as Element).closest('a[aria-current="page"]')) setDrawerOpen(false);
     }}
   >
-    {nav}
+    {!wide && nav}
   </Drawer.Body>
 </Drawer.Root>
 

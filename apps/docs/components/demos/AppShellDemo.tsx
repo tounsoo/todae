@@ -15,7 +15,7 @@ import {
 import { Bell, CreditCard, House, MenuIcon, PanelLeft, Search, Settings, Users } from 'lucide-react';
 import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 
-export const WIDE = '(min-width: 48rem)';
+const WIDE = '(min-width: 48rem)';
 
 function subscribe(onChange: () => void) {
   const query = window.matchMedia(WIDE);
@@ -53,15 +53,14 @@ export function AppShellExample() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Whether the page changed while the drawer was open, which sends focus to the new page's heading as it closes.
   const [navigated, setNavigated] = useState(false);
-  // A window that widens shows the sidebar, so the drawer closes, and Drawer puts focus back on the button.
-  if (wide && drawerOpen) setDrawerOpen(false);
-  // Any change of page closes the drawer, a link in it or Back alike, in the render that shows the new page.
+  // Any change of page closes the drawer, a link in it or Back alike, in the render that shows the new page. A window
+  // that widens shows the sidebar, so it closes the drawer too, and Drawer puts focus back on the button.
   const [shownPage, setShownPage] = useState(page);
   if (page !== shownPage) {
     setShownPage(page);
-    setNavigated(drawerOpen);
+    setNavigated(drawerOpen && !wide);
     setDrawerOpen(false);
-  }
+  } else if (wide && drawerOpen) setDrawerOpen(false);
   // `only` takes the handle out of the layout, so focus on it moves to the button before the window narrows it away.
   useLayoutEffect(() => {
     if (!wide && handle.current === handle.current?.ownerDocument.activeElement) navButton.current?.focus();
@@ -200,7 +199,7 @@ export function AppShellExample() {
             if (!elsewhere && (event.target as Element).closest('a[aria-current="page"]')) setDrawerOpen(false);
           }}
         >
-          {navigation()}
+          {!wide && navigation()}
         </Drawer.Body>
       </Drawer.Root>
     </div>

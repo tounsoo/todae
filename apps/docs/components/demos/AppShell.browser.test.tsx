@@ -17,6 +17,8 @@ afterEach(async () => {
 const navButton = () => screen.getByRole('button', { name: 'Navigation' });
 const main = () => screen.getByRole('region', { name: /./ });
 const navs = () => screen.queryAllByRole('navigation', { name: 'Main' });
+// Hidden copies count too: the nav must never be in the page twice.
+const navsInPage = () => document.querySelectorAll('nav[aria-label="Main"]').length;
 
 function setup() {
   render(
@@ -29,6 +31,7 @@ function setup() {
 it('shows the sidebar beside the page on a wide screen, and hides it from the header button', async () => {
   setup();
   expect(navs()).toHaveLength(1);
+  expect(navsInPage()).toBe(1);
   expect(navButton()).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByRole('separator', { name: 'Resize navigation' })).toBeVisible();
   await userEvent.click(navButton());
@@ -44,6 +47,7 @@ it('moves the nav into a drawer on a narrow screen, and keeps the page mounted',
   await page.viewport(400, 700);
   await expect.poll(() => navButton().getAttribute('aria-haspopup')).toBe('dialog');
   expect(navs()).toHaveLength(0);
+  expect(navsInPage()).toBe(1);
   expect(screen.queryByRole('separator')).toBeNull();
   expect(main()).toBe(before);
   expect(main().getBoundingClientRect().width).toBeGreaterThan(300);

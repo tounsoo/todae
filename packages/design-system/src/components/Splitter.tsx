@@ -97,6 +97,7 @@ type SplitterContextValue = {
   attachHandle: (el: HTMLDivElement | null) => void;
   drag: RefObject<Drag | null>;
   setDragging: (dragging: boolean) => void;
+  endDrag: () => void;
   commit: (size: number) => void;
   apply: (action: SplitterKeyAction) => void;
 };
@@ -243,12 +244,19 @@ function Root({
     return () => observer.disconnect();
   }, [orientation, handle, only]);
 
-  // A handle that `only` hides mid-drag gets no release.
-  useEffect(() => {
-    if (!only || !drag.current) return;
+  // Every way a drag ends: a release, a handle that unmounts, and one that `only` hides, which gets no release.
+  const endDrag = useCallback(() => {
+    const current = drag.current;
+    if (!current) return;
     drag.current = null;
+    const el = handleRef.current;
+    if (el?.hasPointerCapture?.(current.pointerId)) el.releasePointerCapture(current.pointerId);
     setDragging(false);
-  }, [only]);
+  }, []);
+
+  useEffect(() => {
+    if (only) endDrag();
+  }, [only, endDrag]);
 
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
@@ -312,6 +320,7 @@ function Root({
     attachHandle,
     drag,
     setDragging,
+    endDrag,
     commit,
     apply,
   };
@@ -378,15 +387,8 @@ function Handle({
   });
 
   // A handle that leaves mid-drag gets no release.
-  const { setDragging } = ctx;
-  useEffect(
-    () => () => {
-      if (!drag.current) return;
-      drag.current = null;
-      setDragging(false);
-    },
-    [drag, setDragging],
-  );
+  const { setDragging, endDrag } = ctx;
+  useEffect(() => endDrag, [endDrag]);
 
   const name = ariaLabel || (ariaLabelledby ? undefined : resizePanel);
   // Until the container is measured, with no `max`, the range reaches the size it shows.
@@ -396,9 +398,7 @@ function Handle({
   const release =
     (theirs: ((event: PointerEvent<HTMLDivElement>) => void) | undefined) => (event: PointerEvent<HTMLDivElement>) => {
       theirs?.(event);
-      if (drag.current?.pointerId !== event.pointerId) return;
-      drag.current = null;
-      setDragging(false);
+      if (drag.current?.pointerId === event.pointerId) endDrag();
     };
 
   return (

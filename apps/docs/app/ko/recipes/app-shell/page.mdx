@@ -129,18 +129,18 @@ useLayoutEffect(() => {
 
 현재 페이지의 링크에는 `aria-current="page"`를 표시하며, 이것은 라우터가 설정합니다([Nav](/nav) 참고). 사이드바에서는 포커스가 사용자가 고른 링크에 남으므로 다음 링크로 이어서 갈 수 있습니다. Next.js처럼 새 페이지를 알려 주는 라우터도 있습니다. 그렇지 않은 라우터라면 [useAnnouncer](/utilities/use-announcer)로 페이지 제목을 알리세요.
 
-드로어의 링크든 뒤로 가기든 페이지가 바뀔 때마다, 새 페이지를 보여 주는 렌더링에서 드로어를 닫으세요. 이 확인은 경로와 쿼리 문자열처럼 내비게이션 링크가 바꿀 수 있는 모든 것을 기준으로 하세요. 고른 링크는 드로어와 함께 사라지므로 새 페이지의 제목으로 포커스를 보냅니다. `restoreFocusRef`는 드로어가 열린 동안 페이지가 바뀌었으면 제목을, 그렇지 않으면 헤더 버튼을 가리키므로, 아직 이동이 끝나지 않은 링크를 누른 뒤에도 Escape와 닫기 버튼은 버튼으로 포커스를 돌려줍니다. Drawer는 닫히고 난 뒤, 새 페이지가 렌더링된 다음에 ref를 읽으므로 제목은 새 페이지의 것입니다. 현재 페이지의 링크는 페이지를 바꾸지 않으므로 직접 드로어를 닫습니다. 수정 키를 누른 클릭은 링크를 다른 곳에서 열므로 드로어를 열어 둡니다.
+드로어의 링크든 뒤로 가기든 페이지가 바뀔 때마다, 새 페이지를 보여 주는 렌더링에서 드로어를 닫으세요. 이 확인은 내비게이션 링크가 바꿀 수 있는 모든 것, 즉 경로와 쿼리 문자열, 그리고 링크가 쓴다면 해시를 기준으로 하세요. 고른 링크는 드로어와 함께 사라지므로 새 페이지의 제목으로 포커스를 보냅니다. `restoreFocusRef`는 드로어가 열린 동안 페이지가 바뀌었으면 제목을, 그렇지 않으면 헤더 버튼을 가리키므로, 아직 이동이 끝나지 않은 링크를 누른 뒤에도 Escape와 닫기 버튼은 버튼으로 포커스를 돌려줍니다. Drawer는 닫히고 난 뒤, 새 페이지가 렌더링된 다음에 ref를 읽으므로 제목은 새 페이지의 것입니다. 현재 페이지의 링크는 페이지를 바꾸지 않으므로 직접 드로어를 닫고, 포커스는 헤더 버튼으로 돌아갑니다. 수정 키를 누른 클릭은 링크를 다른 곳에서 열므로 드로어를 열어 둡니다.
 
 ```tsx
 const heading = useRef<HTMLElement>(null);
 const [navigated, setNavigated] = useState(false);
-const url = pathname + search;
+// The URL your router shows, such as `${location.pathname}${location.search}${location.hash}`.
 const [shownUrl, setShownUrl] = useState(url);
 if (url !== shownUrl) {
   setShownUrl(url);
-  setNavigated(drawerOpen);
+  setNavigated(drawerOpen && !wide);
   setDrawerOpen(false);
-}
+} else if (wide && drawerOpen) setDrawerOpen(false);
 const openDrawer = () => {
   setNavigated(false);
   setDrawerOpen(true);
@@ -157,7 +157,7 @@ const openDrawer = () => {
       if (!elsewhere && (event.target as Element).closest('a[aria-current="page"]')) setDrawerOpen(false);
     }}
   >
-    {nav}
+    {!wide && nav}
   </Drawer.Body>
 </Drawer.Root>
 
