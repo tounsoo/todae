@@ -13,6 +13,14 @@
       "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
       "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "progress": {
+        "$description": "Steps.Root variant=\"progress\": the current step's still marker, a ring with a dot in it. Its bg and fg come from the current slots above.",
+        "border": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "dot": {
+          "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+          "size": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
+        }
+      },
       "bg": {
         "done": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
         "current": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
@@ -34,16 +42,6 @@
     },
     "icon": {
       "size": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
-    },
-    "progress": {
-      "$description": "Steps.Root variant=\"progress\": the still marker of the current step, a ring and a dot in it.",
-      "current": {
-        "border": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
-        "dot": {
-          "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
-          "size": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
-        }
-      }
     },
     "line": {
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Alert,
   Button,
   DataList,
   ErrorMessage,
@@ -15,16 +16,15 @@ import {
   type FormErrors,
   type StepsStatus,
 } from '@tounsoo/todae';
-import { useId, useRef, useState, type ReactNode, type SubmitEvent } from 'react';
-import { flushSync } from 'react-dom';
+import { useId, useLayoutEffect, useRef, useState, type ReactNode, type SubmitEvent } from 'react';
 
 type Answers = { name: string; email: string; workspace: string; plan: string };
 type Name = keyof Answers;
 
 const EMPTY: Answers = { name: '', email: '', workspace: '', plan: '' };
 
-// Each step and the controls it holds, so a reply's errors go back to the step that asks for them.
-const STEPS: readonly { title: string; fields: readonly Name[] }[] = [
+// Each step and the controls it holds, so a reply's errors go to the step that asks for them.
+const STEPS: readonly { title: string; fields: readonly string[] }[] = [
   { title: 'Account', fields: ['name', 'email'] },
   { title: 'Workspace', fields: ['workspace', 'plan'] },
   { title: 'Review', fields: [] },
@@ -35,6 +35,11 @@ const PLANS: Record<string, string> = { team: 'Team', pro: 'Pro' };
 function statusOf(index: number, step: number): StepsStatus {
   if (index < step) return 'done';
   return index === step ? 'current' : 'pending';
+}
+
+// The entries of a reply that belong, or don't belong, to a step's controls.
+function pick(reply: FormErrors, fields: readonly string[], keep = true): FormErrors {
+  return Object.fromEntries(Object.entries(reply).filter(([name]) => fields.includes(name) === keep));
 }
 
 // A stand-in for the server, which knows this address.
@@ -48,55 +53,69 @@ export function WizardExample() {
   const headingId = useId();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(EMPTY);
-  const [errors, setErrors] = useState<FormErrors[]>(() => STEPS.map(() => ({})));
+  // The last reply's errors, less those of each step sent again since.
+  const [reply, setReply] = useState<FormErrors>({});
   const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [created, setCreated] = useState(false);
-  const headings = useRef<(HTMLHeadingElement | null)[]>([]);
-  const createdHeading = useRef<HTMLHeadingElement>(null);
+  const forms = useRef<(HTMLFormElement | null)[]>([]);
+  const headings = useRef<(HTMLElement | null)[]>([]);
+  const createdHeading = useRef<HTMLElement>(null);
+  // Set once the person moves, so the first render doesn't take focus.
+  const moved = useRef(false);
+
+  // Runs after the shown step's form has taken any reply. If it moved focus to a control with an
+  // error, focus stays there; otherwise the step's heading takes it, as the button pressed is hidden.
+  useLayoutEffect(() => {
+    if (!moved.current) return;
+    if (!forms.current[step]?.contains(document.activeElement)) headings.current[step]?.focus();
+  }, [step]);
+
+  useLayoutEffect(() => {
+    if (created) createdHeading.current?.focus();
+  }, [created]);
+
+  const go = (index: number) => {
+    moved.current = true;
+    setStep(index);
+  };
 
   const set = (name: Name) => (value: string) => setAnswers((current) => ({ ...current, [name]: value }));
 
-  // Shows a step and moves focus to its heading, which a screen reader reads as the new step.
-  const show = (index: number) => {
-    flushSync(() => setStep(index));
-    headings.current[index]?.focus();
-  };
-
-  // A step's form calls this only when every control in it is valid.
+  // A step's form calls this once its controls pass the check.
   const next = (index: number) => (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Moving on is a send: clear this step's server errors, as Form.Root asks.
-    setErrors((current) => current.map((each, at) => (at === index ? {} : each)));
-    show(index + 1);
+    // Moving on sends the step again: drop its errors, as Form.Root asks.
+    setReply((current) => pick(current, STEPS[index]!.fields, false));
+    go(index + 1);
   };
 
   const create = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (sending) return;
     setSending(true);
-    setErrors(STEPS.map(() => ({})));
-    const reply = await createWorkspace(answers);
-    setSending(false);
-    const first = STEPS.findIndex((each) => each.fields.some((name) => reply[name]));
-    if (first === -1) {
-      flushSync(() => setCreated(true));
-      createdHeading.current?.focus();
-      return;
+    setFailed(false);
+    setReply({});
+    try {
+      const errors = await createWorkspace(answers);
+      const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
+      if (first === -1) {
+        setCreated(true);
+        return;
+      }
+      setReply(errors);
+      go(first);
+    } catch {
+      setFailed(true);
+    } finally {
+      setSending(false);
     }
-    // Each step's form takes its own errors. The first step's form is still waiting on a reply from its
-    // Next, so as it shows again it moves focus to the control with the error, not to the heading.
-    setErrors(STEPS.map((each) => Object.fromEntries(each.fields.filter((name) => reply[name]).map((name) => [name, reply[name]!]))));
-    setStep(first);
   };
 
   const restart = () => {
-    flushSync(() => {
-      setAnswers(EMPTY);
-      setErrors(STEPS.map(() => ({})));
-      setCreated(false);
-      setStep(0);
-    });
-    headings.current[0]?.focus();
+    setAnswers(EMPTY);
+    setReply({});
+    setCreated(false);
+    go(0);
   };
 
   if (created) {
@@ -117,12 +136,23 @@ export function WizardExample() {
     );
   }
 
+  // Every step's form stays mounted and hidden, so it keeps waiting on a reply. Only the step that
+  // shows gets its errors, so a reply lands on a form the person can see.
+  const form = (index: number) => ({
+    ref: (element: HTMLFormElement | null) => {
+      forms.current[index] = element;
+    },
+    hidden: step !== index,
+    'aria-labelledby': `${headingId}-step-${index}`,
+    errors: step === index ? pick(reply, STEPS[index]!.fields) : {},
+  });
+
   const heading = (index: number) => (
     <Text.Root
       as="h3"
       id={`${headingId}-step-${index}`}
-      ref={(element: HTMLElement | null) => {
-        headings.current[index] = element as HTMLHeadingElement | null;
+      ref={(element) => {
+        headings.current[index] = element;
       }}
       tabIndex={-1}
     >
@@ -136,7 +166,8 @@ export function WizardExample() {
   const actions = (index: number, submit: ReactNode) => (
     <Stack.Root direction="row" gap="condensed" wrap>
       {index > 0 ? (
-        <Button.Root type="button" variant="secondary" onClick={() => show(index - 1)}>
+        // Held while the last step sends, so the reply comes back to the answers it was sent.
+        <Button.Root type="button" variant="secondary" aria-disabled={sending || undefined} onClick={() => go(index - 1)}>
           Back
         </Button.Root>
       ) : null}
@@ -154,8 +185,7 @@ export function WizardExample() {
         ))}
       </Steps.Root>
 
-      {/* Every step's form stays mounted, so its values and its wait for a reply survive while it is hidden. */}
-      <Form.Root hidden={step !== 0} aria-labelledby={`${headingId}-step-0`} errors={errors[0]} onSubmit={next(0)}>
+      <Form.Root {...form(0)} onSubmit={next(0)}>
         <Stack.Root gap="normal">
           {heading(0)}
           <Field.Group>
@@ -176,7 +206,7 @@ export function WizardExample() {
         </Stack.Root>
       </Form.Root>
 
-      <Form.Root hidden={step !== 1} aria-labelledby={`${headingId}-step-1`} errors={errors[1]} onSubmit={next(1)}>
+      <Form.Root {...form(1)} onSubmit={next(1)}>
         <Stack.Root gap="normal">
           {heading(1)}
           <Field.Group>
@@ -200,7 +230,7 @@ export function WizardExample() {
         </Stack.Root>
       </Form.Root>
 
-      <Form.Root hidden={step !== 2} aria-labelledby={`${headingId}-step-2`} onSubmit={create}>
+      <Form.Root {...form(2)} onSubmit={create}>
         <Stack.Root gap="normal">
           {heading(2)}
           <DataList.Root>
@@ -221,9 +251,10 @@ export function WizardExample() {
               <DataList.Details>{PLANS[answers.plan]}</DataList.Details>
             </DataList.Item>
           </DataList.Root>
+          {failed ? <Alert.Root tone="critical">The workspace wasn't created. Check your connection and try again.</Alert.Root> : null}
           {actions(
             2,
-            // aria-disabled, not disabled, so the button keeps focus while the request runs.
+            // aria-disabled, not disabled, so the button keeps focus while the request runs and ignores clicks.
             <Button.Root type="submit" aria-disabled={sending || undefined}>
               {sending ? 'Creating…' : 'Create workspace'}
             </Button.Root>,

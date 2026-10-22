@@ -706,10 +706,10 @@
   "recipes/wizard": {
     "(top)": "8a3a55e1b1ed",
     "# Wizard": "4a738459ed5d",
-    "## A form per step": "ee9b023dd2b2",
-    "## Focus on each step": "50bc0d772691",
-    "## Errors from the last step": "60f0d9d2c403",
-    "## Accessible composition": "fdd39999ae4c",
+    "## A form per step": "81ed5454bbc4",
+    "## Focus on each step": "159d4d895b52",
+    "## Errors from the last step": "accb46f52215",
+    "## Accessible composition": "57c995f67a81",
     "## When to use": "e4c37a96dbb3",
     "(section order)": "58e398659b7f"
   },
@@ -751,7 +751,7 @@
   "steps": {
     "(top)": "304501d1ad59",
     "# Steps": "63aa09def506",
-    "## Parts": "0a3c5dc6483c",
+    "## Parts": "0579cf0e64d1",
     "## Variants": "0eb6872fb66b",
     "## Status words": "5e1bbccafcfa",
     "## Accessible composition": "7166254b7e2d",

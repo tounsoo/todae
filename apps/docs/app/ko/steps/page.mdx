@@ -23,7 +23,7 @@ import { StepsExample, StepsProgressExample } from '../../../components/demos/St
 - `Steps.Root`는 `role="list"`가 붙은 `ol`이므로, Safari에서도 목록 표시 없이 목록으로 남습니다.
 - `Steps.Item`은 표시와 그 뒤의 내용으로 된 `li`입니다. `status`가 `data-status`와 표시를 정합니다. `done` 단계는 채운 원 위에 `check` 글리프를 보여 줍니다. `current` 단계는 `aria-current="step"`을 받습니다. `pending` 단계는 빈 원을, `error`가 있는 단계는 critical 색으로 `error` 글리프를 보여 줍니다. 기본값은 `pending`입니다.
 
-표시와 그 색은 `steps.marker.*` 토큰에서, progress 변형의 현재 단계 표시는 `steps.progress.*`에서, 텍스트 색은 `steps.fg.*`에서, 선은 `steps.line.*`에서, 단계 사이 간격은 `steps.gap`에서 옵니다.
+표시와 그 색은 `steps.marker.*` 토큰에서, progress 변형의 현재 단계 표시는 `steps.marker.progress.*`에서, 텍스트 색은 `steps.fg.*`에서, 선은 `steps.line.*`에서, 단계 사이 간격은 `steps.gap`에서 옵니다.
 
 ## 변형
 

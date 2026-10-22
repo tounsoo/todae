@@ -104,15 +104,15 @@
   }
 
   .root[data-variant='progress'] > .item[data-status='current'] > .marker {
-    border-color: var(--todae-steps-progress-current-border);
+    border-color: var(--todae-steps-marker-progress-border);
   }
 
   .root[data-variant='progress'] > .item[data-status='current'] > .marker::before {
     content: '';
-    inline-size: var(--todae-steps-progress-current-dot-size);
-    block-size: var(--todae-steps-progress-current-dot-size);
+    inline-size: var(--todae-steps-marker-progress-dot-size);
+    block-size: var(--todae-steps-marker-progress-dot-size);
     border-radius: 50%;
-    background: var(--todae-steps-progress-current-dot-color);
+    background: var(--todae-steps-marker-progress-dot-color);
   }
 
   .item[data-status='error'] {

@@ -107,3 +107,23 @@ it('takes a second reply with the same error back again', async () => {
   await expect.poll(() => document.activeElement === email() && email() !== null, { timeout: 3000 }).toBe(true);
   expect(email()).toHaveAccessibleDescription('That address is taken.');
 });
+
+it('holds Back while the last step sends, and starts again on the first step', async () => {
+  setup();
+  await fillAccount('ada@example.com');
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await fillWorkspace();
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Create workspace' }));
+  const back = screen.getByRole('button', { name: 'Back' });
+  expect(back).toHaveAttribute('aria-disabled', 'true');
+  // Playwright's click waits on an aria-disabled button, so press it with the keyboard.
+  back.focus();
+  await userEvent.keyboard('{Enter}');
+  expect(current()).toBe('In progress: Review');
+
+  await expect.poll(() => document.activeElement?.textContent, { timeout: 3000 }).toBe('Workspace created');
+  await userEvent.click(screen.getByRole('button', { name: 'Start again' }));
+  expect(document.activeElement).toBe(heading(/Step 1 of 3\s*Account/));
+  expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('');
+});

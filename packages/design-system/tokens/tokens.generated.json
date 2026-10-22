@@ -12975,6 +12975,48 @@
       "description": "Steps.Root: a numbered list of steps, each done, current, pending or in error, drawn as a plan or as progress through a form."
     },
     {
+      "path": "steps.marker.progress.border",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-progress-border",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Steps.Root variant=\"progress\": the current step's still marker, a ring with a dot in it. Its bg and fg come from the current slots above."
+    },
+    {
+      "path": "steps.marker.progress.dot.color",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-progress-dot-color",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Steps.Root variant=\"progress\": the current step's still marker, a ring with a dot in it. Its bg and fg come from the current slots above."
+    },
+    {
+      "path": "steps.marker.progress.dot.size",
+      "type": "dimension",
+      "cssVar": "--todae-steps-marker-progress-dot-size",
+      "cssValue": "0.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Steps.Root variant=\"progress\": the current step's still marker, a ring with a dot in it. Its bg and fg come from the current slots above."
+    },
+    {
       "path": "steps.marker.size",
       "type": "dimension",
       "cssVar": "--todae-steps-marker-size",
@@ -12987,48 +13029,6 @@
         "name": "contract"
       },
       "description": "Steps.Root: a numbered list of steps, each done, current, pending or in error, drawn as a plan or as progress through a form."
-    },
-    {
-      "path": "steps.progress.current.border",
-      "type": "color",
-      "cssVar": "--todae-steps-progress-current-border",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Steps.Root variant=\"progress\": the still marker of the current step, a ring and a dot in it."
-    },
-    {
-      "path": "steps.progress.current.dot.color",
-      "type": "color",
-      "cssVar": "--todae-steps-progress-current-dot-color",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Steps.Root variant=\"progress\": the still marker of the current step, a ring and a dot in it."
-    },
-    {
-      "path": "steps.progress.current.dot.size",
-      "type": "dimension",
-      "cssVar": "--todae-steps-progress-current-dot-size",
-      "cssValue": "0.5rem",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Steps.Root variant=\"progress\": the still marker of the current step, a ring and a dot in it."
     },
     {
       "path": "breadcrumbs.current.fg",
