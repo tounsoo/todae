@@ -29,8 +29,9 @@ async function checkPassword(email: string, password: string): Promise<FormError
   return { password: 'The email or password is wrong.' };
 }
 
+// Longer than the auto-send's pause, as a real check can be, so a code changed during it is in the demo.
 async function checkCode(code: string): Promise<FormErrors> {
-  await wait(600);
+  await wait(1200);
   return code === '123456' ? {} : { code: "That code isn't right. Check the latest message, or send a new code." };
 }
 

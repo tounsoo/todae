@@ -104,10 +104,10 @@ When the password is right and the account asks for a second step, show a new fo
     <ErrorMessage.Root />
   </Field.Group>
   {/* One request at a time: hold both while either runs. */}
-  <Button.Root type="submit" aria-disabled={sending || resending || undefined}>
+  <Button.Root type="submit" aria-disabled={busy || undefined}>
     Verify
   </Button.Root>
-  <Button.Root variant="ghost" aria-disabled={sending || resending || undefined} onClick={resend}>
+  <Button.Root variant="ghost" aria-disabled={busy || undefined} onClick={resend}>
     Send a new code
   </Button.Root>
 </Form.Root>
@@ -116,17 +116,19 @@ When the password is right and the account asks for a second step, show a new fo
 The sign-in form and the button the person pressed are gone, so move focus to the code with `autoFocus`. The field's label and description tell a screen reader what to type, and a phone offers a code from a text message only while the code field has focus. Send a full code by itself a short pause after its last character, with `requestSubmit()` so `Form.Root` checks it first, and keep Verify for people who don't expect that. A wrong code comes back in `errors` under the code's `name`, as a wrong password does.
 
 ```tsx
+// One request at a time.
+const busy = sending || resending;
 // Set to the code on submit and on resend: the code that doesn't send itself.
 const skipCode = useRef('');
 useEffect(() => {
-  if (code.length !== 6 || code === skipCode.current || sending || resending) return;
+  if (code.length !== 6 || code === skipCode.current || busy) return;
   // An IME can still take a full code back, so wait a moment.
   const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
   return () => clearTimeout(timer);
-}, [code, sending, resending]);
+}, [code, busy]);
 ```
 
-When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced, and don't send by itself a code that was already sent, or one in the field when a new code is asked for, or the end of a resend checks the old code again. How soon a person may ask again is your product's rule.
+When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced. Don't send by itself a code that was already sent or one that was in the field when a new code was asked for. Otherwise the end of a resend checks the old code again. How soon a person may ask again is your product's rule.
 
 ## Sign-up
 

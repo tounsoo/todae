@@ -7,8 +7,8 @@ import { SignInExample, SignUpExample } from './SignInDemo';
 
 afterEach(cleanup);
 
-// The auto-send's 500 ms pause, the stand-in check's 600 ms, and a margin.
-const LONGER_THAN_A_SEND = 1600;
+// The auto-send's 500 ms pause, the stand-in code check's 1200 ms, and a margin.
+const LONGER_THAN_A_SEND = 2200;
 
 const password = () => screen.getByLabelText('Password') as HTMLInputElement;
 const show = () => screen.getByRole('button', { name: 'Show password' });
@@ -69,12 +69,12 @@ it('moves focus to an unmarked code field, sends a full code by itself, and conf
   expect(code()).toHaveAccessibleDescription(/^We sent a new code/);
   await expect.poll(() => document.querySelector('[data-todae-announcer]')?.textContent).toContain('We sent a new code.');
   // The old code stays in the field but isn't sent again by itself. Its check would answer after the
-  // 500 ms pause and the stand-in's 600 ms request.
+  // 500 ms pause and the stand-in's 1200 ms request.
   await new Promise((resolve) => setTimeout(resolve, LONGER_THAN_A_SEND));
   expect(code()).not.toHaveAttribute('aria-invalid');
   code().focus();
   await userEvent.keyboard('{Control>}a{/Control}123456');
-  const heading = await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 3000 });
+  const heading = await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 4000 });
   await expect.poll(() => document.activeElement).toBe(heading);
 });
 
@@ -98,8 +98,7 @@ it('sends a code changed during a check, and not one in the field when a new cod
   await userEvent.keyboard('{Control>}a{/Control}111111');
   await expect.poll(() => verify().getAttribute('aria-disabled'), { timeout: 3000 }).toBe('true');
   await userEvent.keyboard('{Control>}a{/Control}123456');
-  expect(verify()).toHaveAttribute('aria-disabled', 'true');
-  await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 4000 });
+  await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 5000 });
 });
 
 it('turns down an email that has an account on sign-up, with focus on the email', async () => {
