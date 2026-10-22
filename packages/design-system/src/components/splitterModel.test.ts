@@ -173,6 +173,11 @@ describe('growSign', () => {
 });
 
 describe('dragSize', () => {
+  it('turns screen pixels into layout pixels by the scale', () => {
+    expect(dragSize(170, 100, 200, 1, 2)).toBe(340);
+    expect(dragSize(170, 100, 200, -1, 2)).toBe(60);
+  });
+
   it('adds the distance the pointer moved, in the direction that grows the panel', () => {
     expect(dragSize(343, 100, 240, 1)).toBe(483);
     expect(dragSize(60, 100, 240, 1)).toBe(200);
