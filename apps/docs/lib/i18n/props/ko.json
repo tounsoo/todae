@@ -2048,6 +2048,14 @@
       "en": "Font weight.",
       "ko": "글꼴 굵기."
     },
+    "lines": {
+      "en": "Clamps the text to this many lines, a whole number of 1 or more, with an ellipsis at the end of the last line. The element becomes a block. Screen readers still read the whole text.",
+      "ko": "텍스트를 이 줄 수로 자르고 마지막 줄 끝에 말줄임표를 붙입니다. 1 이상의 정수입니다. 요소는 블록이 됩니다. 스크린 리더는 여전히 텍스트 전체를 읽습니다."
+    },
+    "tooltip": {
+      "en": "With lines, shows the whole text in a tooltip on hover, or on keyboard focus of the text or a link, row or menu item around it, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.",
+      "ko": "lines와 함께 쓰면, 텍스트가 잘렸을 때 포인터를 올리거나 텍스트나 그것을 감싼 링크, 행, 메뉴 항목이 키보드 포커스를 받으면 툴팁에 텍스트 전체를 보여 줍니다. 툴팁은 스크린 리더에서 숨겨집니다. @tounsoo/todae/text 진입점은 툴팁을 그리지 않습니다."
+    },
     "children": {
       "en": "Text content.",
       "ko": "텍스트 내용."
@@ -3027,6 +3035,12 @@
     "id": {
       "en": "Base for the listbox id.",
       "ko": "listbox id의 기반."
+    }
+  },
+  "Steps.Root": {
+    "variant": {
+      "en": "plan is work that runs: the current step shows a spinner and done steps are struck through. progress is where a person is in a form: the current step shows a still ring with a dot and done steps keep their text. Sets data-variant.",
+      "ko": "plan은 실행되는 작업입니다. 현재 단계는 스피너를 보여 주고 끝난 단계에는 취소선을 긋습니다. progress는 사람이 폼의 어디까지 왔는지입니다. 현재 단계는 점이 든 멈춘 고리를 보여 주고 끝난 단계는 텍스트를 그대로 둡니다. data-variant를 설정합니다."
     }
   },
   "Steps.Item": {

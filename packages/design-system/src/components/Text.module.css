@@ -67,4 +67,13 @@
   .bold {
     font-weight: var(--todae-text-weight-bold);
   }
+
+  /* lines: Text.tsx sets --_lines. A word longer than the line breaks, so it ends in the ellipsis instead of being cut. */
+  .clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--_lines);
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
 }

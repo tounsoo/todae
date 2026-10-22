@@ -1,6 +1,6 @@
 {
   "steps": {
-    "$description": "Steps.Root: a numbered list of steps, each done, current, pending or in error.",
+    "$description": "Steps.Root: a numbered list of steps, each done, current, pending or in error, drawn as a plan or as progress through a form.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
     "fg": {
@@ -13,6 +13,14 @@
       "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
       "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "progress": {
+        "$description": "Steps.Root variant=\"progress\": the current step's still marker, a ring with a dot in it. Its bg and fg come from the current slots above.",
+        "border": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "dot": {
+          "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+          "size": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
+        }
+      },
       "bg": {
         "done": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
         "current": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
