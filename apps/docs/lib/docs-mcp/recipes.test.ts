@@ -15,7 +15,8 @@ describe('docs mcp recipes', () => {
     expect(listed.recipes.map((row) => row.name)).toEqual(recipeDirs);
     expect(listed.count).toBe(recipeDirs.length);
     for (const row of listed.recipes) {
-      expect(row.description, row.name).toBeTruthy();
+      expect(row.description, row.name).toMatch(/^(?!```)[A-Za-z[`*_]/);
+      expect(row.description, row.name).not.toContain('```');
       expect(row.uses.length, row.name).toBeGreaterThan(0);
       expect(row.docsUrl).toBe(`${DOCS_ORIGIN}/recipes/${row.name}`);
     }
@@ -28,12 +29,21 @@ describe('docs mcp recipes', () => {
     expect(recipe.markdown).toContain(`](${DOCS_ORIGIN}/disclosure)`);
     expect(recipe.whenToUse).toBeTruthy();
     expect(getRecipe('data-table').title).toBe('Data table');
+    expect(getRecipe(' DATA TABLE ').name).toBe('data-table');
     expect(() => getRecipe('dialog')).toThrow('Call list_recipes');
   });
 
-  it('takes the first paragraph after the title as the summary', () => {
+  it('says when a recipe has no When to use copy', () => {
+    expect(listRecipes().recipes.find((row) => row.name === 'combobox')?.hasWhenToUse).toBe(false);
+    expect(getRecipe('combobox').whenToUse).toBeNull();
+    expect(listRecipes().recipes.find((row) => row.name === 'reasoning')?.hasWhenToUse).toBe(true);
+  });
+
+  it('takes the first prose paragraph after the title as the summary', () => {
     const markdown = "import { X } from './x';\n\n# Title\n\nFirst line\nsecond line.\n\nMore.";
     expect(summaryOf(markdown)).toBe('First line second line.');
+    const codeFirst = ['# Title', '', '<Example>', '  <Demo />', '</Example>', '', '```tsx', 'const x = 1;', '', 'x;', '```', '', '[Link](/link) prose.'].join('\n');
+    expect(summaryOf(codeFirst)).toBe(`[Link](${DOCS_ORIGIN}/link) prose.`);
   });
 
   it('finds exports named in code blocks only', () => {

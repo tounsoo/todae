@@ -62,7 +62,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'list_recipes',
-      "List Todae's recipes: copyable code on the docs site that puts Todae's exports together for a product flow, such as a data table, a wizard or a chat reply's reasoning. Recipes are not package exports. Each row has the recipe's summary and the exports its code imports.",
+      "List Todae's recipes: copyable code on the docs site that puts Todae's exports together for a product flow, such as a data table, a wizard or a chat reply's reasoning. Recipes are not package exports. Each row has the recipe's summary and the exports its code names.",
       async () => {
         try {
           return ok(listRecipes());
