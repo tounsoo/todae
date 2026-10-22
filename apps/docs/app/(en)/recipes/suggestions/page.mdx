@@ -1,0 +1,107 @@
+import { SuggestionsExample } from '../../../../components/demos/SuggestionsDemo';
+
+# Suggestions
+
+A recipe, not a package namespace. Suggested prompts above the [Composer](/composer) are [Button](/button)s in a labelled list, and the "2 of 3" switcher between versions of a reply is two Buttons and a count in the reply's [Toolbar](/toolbar). Which prompts to suggest and how replies branch are up to your product. There is no `Suggestions.*` export.
+
+Pick a suggestion to put it in the field, then send it. Regenerate a reply to add a version, and step between versions with the arrows.
+
+<Example block>
+  <SuggestionsExample />
+</Example>
+
+## Suggested prompts
+
+Show starter prompts in an empty conversation and follow-ups after a reply. A suggestion puts its text in the field and moves focus there, so the person can change it before sending, and Enter sends it. Hide the list while a reply runs and while the field has text, so a suggestion never replaces a draft. A suggestion that doesn't fit shows its full text as a tooltip, as any Button whose label is cut off does.
+
+```tsx
+import { Button, Composer, Field, Stack } from '@tounsoo/todae';
+
+const pick = (text: string) => {
+  setValue(text);
+  field.current?.focus();
+};
+
+{!busy && value === '' && suggestions.length > 0 && (
+  <Stack.Root as="ul" direction="row" gap="condensed" wrap aria-label="Suggestions">
+    {suggestions.map((text) => (
+      <li key={text}>
+        <Button.Root variant="secondary" onClick={() => pick(text)}>
+          {text}
+        </Button.Root>
+      </li>
+    ))}
+  </Stack.Root>
+)}
+<Composer.Root busy={busy} onSubmit={send}>
+  <Field.Root aria-label="Message">
+    <Field.Textarea ref={field} value={value} onChange={(event) => setValue(event.target.value)} autoGrow />
+    <Field.Row>
+      <Composer.Submit disabled={value.trim() === ''} onStop={stop} />
+    </Field.Row>
+  </Field.Root>
+</Composer.Root>
+```
+
+To send a suggestion at once instead, set the value and call `requestSubmit()` on the composer's form. The list goes away as the reply starts, so move focus to the field first.
+
+## Versions of a reply
+
+Keep each version of a reply as a sibling under the message it answers, and remember which one shows. The turns after a reply belong to that version, so switching versions switches them too. Regenerating adds a version and shows it. Editing a message the person sent works the same way, with the switcher on their message.
+
+The switcher goes at the start of the reply's toolbar, with a separator after it. The ends disable their button, and a button that turns disabled while it has focus drops focus to the page, so move focus to the other button. Render the new state with `flushSync` first, since with two versions the other button is still disabled until then. Announce the new count, since the change happens away from the button.
+
+```tsx
+import { Button, Text, Toolbar, useAnnouncer } from '@tounsoo/todae';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef } from 'react';
+import { flushSync } from 'react-dom';
+
+export function VersionSwitcher({ index, count, onShow }: { index: number; count: number; onShow: (index: number) => void }) {
+  const announce = useAnnouncer();
+  const previous = useRef<HTMLButtonElement>(null);
+  const next = useRef<HTMLButtonElement>(null);
+
+  const show = (to: number) => {
+    flushSync(() => onShow(to));
+    if (to === 0) next.current?.focus();
+    if (to === count - 1) previous.current?.focus();
+    announce(`Reply ${to + 1} of ${count}`);
+  };
+
+  return (
+    <>
+      <Button.Root ref={previous} variant="ghost" aria-label="Previous reply" disabled={index === 0} onClick={() => show(index - 1)}>
+        <Button.Icon>
+          <ChevronLeft />
+        </Button.Icon>
+      </Button.Root>
+      <Text.Root as="span" size="s" tone="muted">
+        {index + 1} of {count}
+      </Text.Root>
+      <Button.Root ref={next} variant="ghost" aria-label="Next reply" disabled={index === count - 1} onClick={() => show(index + 1)}>
+        <Button.Icon>
+          <ChevronRight />
+        </Button.Icon>
+      </Button.Root>
+      <Toolbar.Separator />
+    </>
+  );
+}
+```
+
+Render the switcher only when there are two versions or more. Key the reply's `Message.Root` by the message it answers, not by the version, so switching keeps the same message and the button that has focus.
+
+## Accessible composition
+
+**Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys, and skips a disabled one. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. `Composer.Root` sends on Enter and leaves an IME composition alone. [Conversation](/conversation) announces when a reply starts and ends.
+
+**You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. Focus moved off a switcher button before it turns disabled. The announcement of the new version.
+
+**Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version.
+
+## When to use
+
+**When:** Prompts a person can start from, follow-ups the assistant offers after a reply, and moving between regenerated or edited versions of a turn.
+
+**When not:** Completing what the person is typing → [mentions and slash commands](/utilities/use-mentions). Actions on one message, such as copy or rate → [Message actions](/recipes/message-actions).

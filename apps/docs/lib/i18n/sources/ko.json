@@ -654,6 +654,15 @@
     "## When to use": "2320a958107a",
     "(section order)": "6486b947abab"
   },
+  "recipes/suggestions": {
+    "(top)": "64f0689194fa",
+    "# Suggestions": "1f16320c7c36",
+    "## Suggested prompts": "2dc0b518da53",
+    "## Versions of a reply": "bfd40b165402",
+    "## Accessible composition": "1702806fdbe2",
+    "## When to use": "712b903230ea",
+    "(section order)": "d07108b52651"
+  },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",
