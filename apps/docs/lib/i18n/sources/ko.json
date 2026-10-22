@@ -732,8 +732,8 @@
   "recipes/reorder": {
     "(top)": "d54efa3b4b16",
     "# Reorder": "d1929d1c6807",
-    "## The move menu": "42a78214ee76",
-    "## Dragging": "02871a250cba",
+    "## The move menu": "2b1a2e471ebc",
+    "## Dragging": "d93c4f0447e5",
     "## Saving the order": "ccbed730f477",
     "## Accessible composition": "87e67664f2d5",
     "## When to use": "38f06c41410c",
@@ -1102,7 +1102,7 @@
   "utilities/use-reorder": {
     "(top)": "d54efa3b4b16",
     "# useReorder": "93c2a45ef23a",
-    "## Accessible composition": "2b1773192d06",
+    "## Accessible composition": "21f593b786f9",
     "## When to use": "096cd31b6ac9",
     "## Props": "d782464e8b92",
     "(section order)": "57bf99726801"
