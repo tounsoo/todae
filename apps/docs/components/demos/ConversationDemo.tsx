@@ -22,8 +22,8 @@ export function ConversationExample() {
 
   useEffect(() => () => clearInterval(timer.current), []);
 
+  // Button.Root ignores clicks while it is aria-disabled, so this never runs mid-reply.
   function ask() {
-    if (streaming) return;
     const words = REPLY.split(' ');
     const id = turns.length + 1;
     let shown = 0;

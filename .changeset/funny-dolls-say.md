@@ -1,0 +1,7 @@
+---
+"@tounsoo/todae": minor
+---
+
+Button.Root with `aria-disabled="true"` now looks disabled, keeps focus, and ignores clicks.
+
+- `Button.Root` with `aria-disabled="true"` no longer calls `onClick`, flips a toggle, submits a form or follows a link; drop guards in your own handlers.
