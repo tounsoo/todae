@@ -110,17 +110,24 @@ describe('Drilldown focus and surface reset in a browser', () => {
     expect(document.activeElement).toBe(account);
   });
 
-  it('returns focus to the first tab stop of the view below when the trigger is gone', async () => {
-    function Gone() {
+  it("returns focus to the view below's initialFocusRef when the trigger is gone and the ref can take focus, else its first tab stop", async () => {
+    function Gone({ initialFocus }: { initialFocus: 'none' | 'filter' | 'disabled' }) {
       const [shown, setShown] = useState(true);
+      const filter = useRef<HTMLInputElement>(null);
+      const disabled = useRef<HTMLButtonElement>(null);
+      const ref = initialFocus === 'filter' ? filter : initialFocus === 'disabled' ? disabled : undefined;
       return (
         <Themed>
           <Dialog.Root open aria-label="Items" onOpenChange={() => undefined}>
             <Drilldown.Root defaultValue={['list']}>
               <Drilldown.Back />
               <Drilldown.Viewport data-testid="viewport">
-                <Drilldown.View value="list" label="List">
+                <Drilldown.View value="list" label="List" initialFocusRef={ref}>
                   <button type="button">Sort</button>
+                  <input aria-label="Filter" ref={filter} />
+                  <button type="button" disabled ref={disabled}>
+                    Export
+                  </button>
                   {shown ? <Drilldown.Trigger value="item">Item</Drilldown.Trigger> : null}
                 </Drilldown.View>
                 <Drilldown.View value="item" label="Item">
@@ -134,12 +141,17 @@ describe('Drilldown focus and surface reset in a browser', () => {
         </Themed>
       );
     }
-    await openDialog(<Gone />);
-    await userEvent.click(screen.getByRole('button', { name: 'Item' }));
-    await settled();
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Back to List' }));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Sort' }));
+    const sort = () => screen.getByRole('button', { name: 'Sort' });
+    const expected = { none: sort, filter: () => screen.getByRole('textbox', { name: 'Filter' }), disabled: sort };
+    for (const initialFocus of ['none', 'filter', 'disabled'] as const) {
+      await openDialog(<Gone initialFocus={initialFocus} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Item' }));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Back to List' }));
+      expect(document.activeElement).toBe(expected[initialFocus]());
+      cleanupAll();
+    }
   });
 
   it('leaves focus on a control outside the views that set a controlled stack', async () => {

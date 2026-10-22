@@ -731,8 +731,8 @@
       "ko": "뷰 그룹의 이름이자, 뷰가 보이는 동안의 Drilldown.Label, 위 뷰에서의 Drilldown.Back 이름에 쓰입니다."
     },
     "initialFocusRef": {
-      "en": "Where focus goes when the view shows with nothing remembered for it: on a push, or the first time a controlled change shows it. Without it, the first tab stop in the view, or the view itself.",
-      "ko": "기억해 둔 것이 없는 뷰가 보일 때, 즉 push되거나 제어하는 값으로 처음 보일 때 포커스가 갈 곳. 없으면 뷰의 첫 탭 정지점, 그것도 없으면 뷰 자체입니다."
+      "en": "Where focus goes when the view shows with no trigger to return to: on a push, the first time a controlled change shows it, or on a pop once the trigger that pushed the view above is gone. Without it, or when it can't take focus, the first tab stop in the view, or the view itself.",
+      "ko": "돌아갈 트리거가 없는 뷰가 보일 때, 즉 push되거나 제어하는 값으로 처음 보이거나, 위 뷰를 push한 트리거가 사라진 뒤 pop될 때 포커스가 갈 곳. 없거나 포커스를 받을 수 없으면 뷰의 첫 탭 정지점, 그것도 없으면 뷰 자체입니다."
     },
     "children": {
       "en": "The view's content.",

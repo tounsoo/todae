@@ -21,7 +21,7 @@ export const meta = {
       name: 'initialFocusRef',
       type: 'RefObject<HTMLElement | null>',
       required: false,
-      description: 'Where focus goes when the view shows with nothing remembered for it: on a push, or the first time a controlled change shows it. Without it, the first tab stop in the view, or the view itself.',
+      description: 'Where focus goes when the view shows with no trigger to return to: on a push, the first time a controlled change shows it, or on a pop once the trigger that pushed the view above is gone. Without it, or when it can\'t take focus, the first tab stop in the view, or the view itself.',
     },
     {
       name: 'children',

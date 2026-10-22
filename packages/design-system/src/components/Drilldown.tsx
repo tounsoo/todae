@@ -100,8 +100,8 @@ function handledOrComposing(event: KeyboardEvent): boolean {
   return event.defaultPrevented || isImeKeyEvent(event);
 }
 
-function canTakeFocusBack(trigger: HTMLElement | null, view: HTMLElement): trigger is HTMLElement {
-  return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
+function canTakeFocus(el: HTMLElement | null | undefined, view: HTMLElement): el is HTMLElement {
+  return Boolean(el?.isConnected && view.contains(el) && isReachable(el) && !el.matches(':disabled'));
 }
 
 // Focus moves with the views when it was on them, on Back, on the overlay's
@@ -119,12 +119,13 @@ function movesFocus(active: Element | null, viewport: HTMLElement | null, leavin
 
 /**
  * Where focus goes in the view a change shows: the trigger it remembers, else
- * its first tab stop. A view with nothing remembered, newly pushed or never
- * shown before, tries its initialFocusRef first.
+ * its initialFocusRef, else its first tab stop, else the view itself.
  */
 function focusTarget(view: HTMLElement, remembered: Covered | undefined, initialFocus: HTMLElement | null | undefined): HTMLElement {
-  if (remembered === undefined) return initialFocus ?? firstTabbable(view) ?? view;
-  return canTakeFocusBack(remembered.trigger, view) ? remembered.trigger : (firstTabbable(view) ?? view);
+  for (const el of [remembered?.trigger, initialFocus]) {
+    if (canTakeFocus(el, view)) return el;
+  }
+  return firstTabbable(view) ?? view;
 }
 
 const EMPTY: Stack = [];
