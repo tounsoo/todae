@@ -5,6 +5,7 @@ import {
   useState,
   type ChangeEvent,
   type CSSProperties,
+  type DragEvent,
   type InputHTMLAttributes,
   type MouseEvent,
   type Ref,
@@ -128,6 +129,7 @@ export function OneTimeCode({
   autoComplete = 'one-time-code',
   ref,
   onClick: onClickProp,
+  onDrop: onDropProp,
   onFocus: onFocusProp,
   onBlur: onBlurProp,
   ...props
@@ -179,17 +181,6 @@ export function OneTimeCode({
       const edit = editOf(el!.value, { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, text, { characters, length });
       if (edit) put(el!, edit, inserting);
     }
-    function onDrop(event: DragEvent) {
-      if (latest.current.fixed || event.defaultPrevented) return;
-      // Cancelling the drop also cancels the drag's deleteByDrag, so text dragged inside the field is copied, not moved.
-      event.preventDefault();
-      const box = nearestBox(slotsNode.current?.children, event.clientX);
-      const at = box < 0 ? el!.value.length : box;
-      if (activeIn(el!) !== el) el!.focus();
-      const { characters, length } = latest.current;
-      const edit = editOf(el!.value, { start: at, end: at }, event.dataTransfer?.getData('text/plain') ?? '', { characters, length });
-      if (edit) put(el!, edit, inserting);
-    }
     function onCompositionStart() {
       composition.current = { start: latest.current.value, reported: null };
       // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
@@ -220,13 +211,11 @@ export function OneTimeCode({
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);
     el.addEventListener('compositionend', onCompositionEnd);
-    el.addEventListener('drop', onDrop, true);
     doc.addEventListener('selectionchange', sync);
     return () => {
       el.removeEventListener('beforeinput', onBeforeInput);
       el.removeEventListener('compositionstart', onCompositionStart);
       el.removeEventListener('compositionend', onCompositionEnd);
-      el.removeEventListener('drop', onDrop, true);
       doc.removeEventListener('selectionchange', sync);
     };
   }, []);
@@ -274,6 +263,20 @@ export function OneTimeCode({
     sync();
   }
 
+  // Chromium would move the selection to the drop point on the invisible input's own text, which means nothing for boxes, so the drop lands at the box nearest it, by the rule a press uses.
+  function onDrop(event: DragEvent<HTMLInputElement>) {
+    // A drop the product cancelled, in its onDrop or before it, lands nothing.
+    if (fixed || event.defaultPrevented) return;
+    // Cancelling the drop also cancels the drag's deleteByDrag, so text dragged inside the field is copied, not moved.
+    event.preventDefault();
+    const target = event.currentTarget;
+    const box = nearestBox(slotsNode.current?.children, event.clientX);
+    const at = box < 0 ? target.value.length : box;
+    if (activeIn(target) !== target) target.focus();
+    const edit = editOf(target.value, { start: at, end: at }, event.dataTransfer.getData('text/plain'), { characters, length });
+    if (edit) put(target, edit, inserting);
+  }
+
   const control = field.getControlProps({ ...props, ref: refs });
   const shown = composing?.shown ?? value;
   const slots = slotsOf(shown, selection, length);
@@ -298,6 +301,7 @@ export function OneTimeCode({
         className={styles.oneTimeCodeInput}
         onChange={onChangeInput}
         onClick={composeHandlers(onClickProp, onClick)}
+        onDrop={composeHandlers(onDropProp, onDrop)}
         onFocus={(event) => {
           onFocusProp?.(event);
           sync();
