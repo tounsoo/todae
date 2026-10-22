@@ -997,6 +997,7 @@
   --todae-datalist-details-fg: var(--_todae-datalist-details-fg, var(--todae-color-fg-default));
   --todae-datalist-details-min-width: var(--_todae-datalist-details-min-width, 12rem);
   --todae-datalist-font-size: var(--_todae-datalist-font-size, var(--todae-font-size-3));
+  --todae-datalist-gap-between-columns: var(--_todae-datalist-gap-between-columns, var(--todae-space-stack-gap-spacious));
   --todae-datalist-gap-column: var(--_todae-datalist-gap-column, var(--todae-space-inline-gap));
   --todae-datalist-gap-row: var(--_todae-datalist-gap-row, var(--todae-space-stack-gap));
   --todae-datalist-gap-stacked: var(--_todae-datalist-gap-stacked, var(--todae-space-stack-gap-condensed));

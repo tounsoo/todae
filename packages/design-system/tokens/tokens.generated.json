@@ -11911,6 +11911,20 @@
       "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
     },
     {
+      "path": "datalist.gap.between-columns",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-between-columns",
+      "cssValue": "var(--todae-space-stack-gap-spacious)",
+      "ref": "space.stack.gap-spacious",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The gap between columns of items when minItemSize lays the list out in columns."
+    },
+    {
       "path": "datalist.gap.column",
       "type": "dimension",
       "cssVar": "--todae-datalist-gap-column",

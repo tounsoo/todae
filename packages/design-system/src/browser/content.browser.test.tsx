@@ -524,19 +524,17 @@ describe('content parts in a browser', () => {
     expect(style('rtl-dots').animationDirection).toBe('normal');
     expect(style('rtl-dots').scale).toBe('-1 1');
     expect(style('dots').scale).toBe('none');
-    const media = (features: { name: string; value: string }[]) =>
-      (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
     try {
-      await media([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+      await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
       expect(style('dots').animationName).toBe('none');
-      await media([{ name: 'forced-colors', value: 'active' }]);
+      await emulateMedia([{ name: 'forced-colors', value: 'active' }]);
       expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
       // The dots take Highlight, as the ring's arc does.
       const highlight = style('spinner-variant').backgroundImage.match(/rgba?\([^)]*\)/)?.[0];
       expect(highlight).toBeTruthy();
       expect(style('dots').backgroundImage).toContain(highlight);
     } finally {
-      await media([]);
+      await emulateMedia([]);
     }
   });
 
@@ -842,5 +840,89 @@ describe('Prose.Root in a browser', () => {
     expect(style('task-2').marginBlockStart).toBe('8px');
     expect(style('empty-class').paddingInlineStart).toBe('24px');
     expect(style('empty-2').marginBlockStart).toBe('8px');
+  });
+});
+
+function emulateMedia(features: { name: string; value: string }[]) {
+  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
+}
+
+describe('Disclosure', () => {
+  function Reasoning({ open }: { open: boolean }) {
+    return (
+      <Disclosure.Root open={open}>
+        <Disclosure.Summary>Reasoning</Disclosure.Summary>
+        <a href="#source">Source</a>
+      </Disclosure.Root>
+    );
+  }
+
+  it('moves focus from its content straight to the summary when code closes it', async () => {
+    // No fade, so the content hides as soon as it closes.
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Reasoning open />);
+      const link = screen.getByRole('link', { name: 'Source' });
+      const moves: (EventTarget | null)[] = [];
+      link.addEventListener('focusout', (event) => moves.push(event.relatedTarget));
+      link.focus();
+      rerender(<Reasoning open={false} />);
+      const summary = screen.getByText('Reasoning');
+      await expect.poll(() => document.activeElement).toBe(summary);
+      // Focus never passed through the page.
+      expect(moves).toEqual([summary]);
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('moves focus inside a shadow root', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    try {
+      const { rerender } = render(<Reasoning open />, { container: shadow as unknown as HTMLElement });
+      shadow.querySelector('a')!.focus();
+      rerender(<Reasoning open={false} />);
+      await expect.poll(() => shadow.activeElement).toBe(shadow.querySelector('summary'));
+    } finally {
+      host.remove();
+    }
+  });
+
+  it('leaves focus on a control inside the summary', async () => {
+    const Labelled = ({ open }: { open: boolean }) => (
+      <Disclosure.Root open={open}>
+        <Disclosure.Summary>
+          Reasoning <button type="button">Copy</button>
+        </Disclosure.Summary>
+        <p>Text</p>
+      </Disclosure.Root>
+    );
+    const { rerender } = render(<Labelled open />);
+    const copy = screen.getByRole('button', { name: 'Copy' });
+    copy.focus();
+    rerender(<Labelled open={false} />);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(document.activeElement).toBe(copy);
+  });
+
+  it('leaves focus alone when the content does not hold it', async () => {
+    const { rerender } = render(
+      <>
+        <button type="button">Elsewhere</button>
+        <Reasoning open />
+      </>,
+    );
+    const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+    elsewhere.focus();
+    rerender(
+      <>
+        <button type="button">Elsewhere</button>
+        <Reasoning open={false} />
+      </>,
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(document.activeElement).toBe(elsewhere);
   });
 });

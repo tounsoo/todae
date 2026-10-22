@@ -513,6 +513,10 @@
     "orientation": {
       "en": "Sets data-orientation. Horizontal puts each term in a column beside its details, and stacks them when the list is too narrow for both. Vertical puts the term above its details.",
       "ko": "data-orientation을 설정합니다. horizontal은 각 용어를 상세 내용 옆의 열에 두고, 둘이 들어가기에 목록이 너무 좁으면 쌓습니다. vertical은 용어를 상세 내용 위에 둡니다."
+    },
+    "minItemSize": {
+      "en": "Lays the items out in columns no narrower than this CSS length, such as \"24rem\". As many columns fit as the width allows, with datalist.gap.between-columns between them, and a single column never overflows. A horizontal item stacks in a column narrower than its term column, datalist.gap.column and details minimum together. Without it the items sit in one column.",
+      "ko": "항목을 이 CSS 길이(예: \"24rem\")보다 좁지 않은 열로 배치합니다. 너비가 허락하는 만큼 열이 들어가고 열 사이에는 datalist.gap.between-columns가 들어가며, 열이 하나뿐이어도 넘치지 않습니다. 가로 항목은 열이 용어 열, datalist.gap.column, 상세 내용의 최소 너비를 더한 것보다 좁으면 쌓입니다. 없으면 항목은 한 열에 놓입니다."
     }
   },
   "DataList.Term": {
@@ -593,8 +597,8 @@
       "ko": "같은 name을 가진 디스클로저는 하나만 열리는 아코디언이 됩니다. 브라우저가 최대 하나만 열어 두고, 선이 그 사이를 나눕니다."
     },
     "open": {
-      "en": "Starts the disclosure open. The browser then owns the state; follow it with onToggle.",
-      "ko": "디스클로저를 열린 채로 시작합니다. 그 뒤로는 브라우저가 상태를 맡으니, onToggle로 따라가세요."
+      "en": "Whether the disclosure is open. A change to the prop opens or closes it, and between changes the person's own toggles stand; follow them with onToggle.",
+      "ko": "디스클로저가 열려 있는지 여부. prop이 바뀌면 열거나 닫고, 그 사이에는 사용자가 직접 연 상태나 닫은 상태가 유지되니, onToggle로 따라가세요."
     },
     "onToggle": {
       "en": "Called after the disclosure opens or closes.",
@@ -2117,8 +2121,8 @@
   },
   "Tooltip.Root": {
     "children": {
-      "en": "Tooltip text, or short prose plus links when interactive.",
-      "ko": "팁 텍스트, 또는 인터랙티브일 때 짧은 글과 링크."
+      "en": "Tooltip text, or short prose plus links when interactive. The tip renders a span, so it can sit in a paragraph; keep its content to phrasing elements.",
+      "ko": "팁 텍스트, 또는 인터랙티브일 때 짧은 글과 링크. 팁은 span으로 렌더링되므로 문단 안에 둘 수 있으며, 내용은 구문 요소(phrasing content)로만 채웁니다."
     },
     "className": {
       "en": "Class name for the tip surface.",
