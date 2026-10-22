@@ -18,7 +18,7 @@ export type ViewStatus =
 
 type MotionState = {
   shown: Stack;
-  /** The last change, kept until a reset so its layout effect runs once. */
+  /** The last change, kept until a reset. */
   change: StackChange | null;
   entering: Moving | null;
   /** Every view still sliding out, also those an earlier change moved. */
@@ -126,9 +126,13 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
   if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
   const latest = useRef({ elementOf, onChange });
   latest.current = { elementOf, onChange };
+  // An effect created again on a tree that already shows the change, as an
+  // <Activity> that shows again does, must not move focus or scroll again.
+  const applied = useRef<StackChange | null>(null);
 
   useLayoutEffect(() => {
-    if (!change) return;
+    if (!change || applied.current === change) return;
+    applied.current = change;
     const { elementOf, onChange } = latest.current;
     const viewport = viewportRef.current;
     const top = change.to.at(-1);

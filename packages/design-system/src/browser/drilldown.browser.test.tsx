@@ -763,6 +763,39 @@ describe('Drilldown in a browser', () => {
     }
   });
 
+  it('applies a change once, so an Activity that shows the views again leaves focus memory alone', async () => {
+    const ui = (mode: 'visible' | 'hidden') => (
+      <Themed>
+        <Activity mode={mode}>
+          <Drilldown.Root defaultValue={['settings']}>
+            <Drilldown.Back />
+            <Drilldown.Viewport data-testid="viewport">
+              <Drilldown.View value="settings" label="Settings">
+                <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+                <Drilldown.Trigger value="about">About</Drilldown.Trigger>
+              </Drilldown.View>
+              <Drilldown.View value="account" label="Account" />
+              <Drilldown.View value="about" label="About">
+                <input aria-label="Version" />
+              </Drilldown.View>
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </Activity>
+      </Themed>
+    );
+    const { rerender } = render(ui('visible'));
+    try {
+      await userEvent.click(screen.getByRole('button', { name: 'About' }));
+      await settled();
+      rerender(ui('hidden'));
+      rerender(ui('visible'));
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'About' }));
+    } finally {
+      cleanupAll();
+    }
+  });
+
   it('scrolls a page that scrolls itself to the top of an inline Drilldown on push, and back on pop', async () => {
     const rows = Array.from({ length: 40 }, (_, i) => `Item ${i + 1}`);
     render(
