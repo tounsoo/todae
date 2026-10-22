@@ -30,9 +30,9 @@ You give the links, as you do for [Nav](/nav). Todae doesn't read the page's hea
 
 A section is current once its heading has scrolled past its line: the place a fragment link scrolls the heading to, which is the scroll container's `scroll-padding-block-start` plus the heading's own `scroll-margin-block-start`. Set either one to clear a sticky header, and the list counts a section as read from the same line a click on its link scrolls it to. The current section is the last one whose heading has passed its line; above the first heading, no link is current.
 
-`Contents.Root` follows the headings with `IntersectionObserver`, in the nearest container around the first heading that scrolls, or the page. It measures the lines again when the first heading's parent or the window resizes, and follows a heading that mounts after its link or is replaced.
+`Contents.Root` follows the headings with `IntersectionObserver`, in the nearest container around the first heading that scrolls, or the page. It measures the lines again when the scroller, the first heading's parent or the window resizes, and follows a heading that mounts after its link or is replaced.
 
-A short last section may never reach its line, because the page can't scroll that far. So a click on a link, a hash change that names a section, or a hash that names a section the page shows when the list mounts, picks that section. It stays current until the person scrolls with the wheel, a touch or a scroll key, until it has been in view and leaves it, or until the hash names something else.
+A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a hash that names a section the page shows, when the list mounts or the hash changes, picks that section. It stays current until the person scrolls with the wheel, a touch or a scroll key, until it has been in view and leaves it, or until the hash changes to name something else.
 
 ## Look
 

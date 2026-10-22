@@ -1,8 +1,8 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Contents } from '../index.js';
+import { Contents, type LinkRenderProps } from '../index.js';
 
 afterEach(() => {
   cleanup();
@@ -13,26 +13,54 @@ afterEach(() => {
 const LINE = 40;
 
 /** A page that scrolls in its own box, with a short last section. */
-function Page({ dir, list = true, extra = false }: { dir?: 'rtl'; list?: boolean; extra?: boolean }) {
+type PageProps = {
+  dir?: 'rtl';
+  list?: boolean;
+  /** Adds a link to another page. */
+  extra?: boolean;
+  /** Adds a link to a section the page lacks, which changes the followed ids. */
+  more?: boolean;
+  /** Renders the links through a router-like render that drops the ref. */
+  refless?: boolean;
+  scroller?: CSSProperties;
+};
+
+const RefLess = ({ ref: _ref, ...props }: LinkRenderProps) => <a {...props} />;
+
+function Page({ dir, list = true, extra = false, more = false, refless = false, scroller }: PageProps) {
+  const render = refless ? RefLess : undefined;
   const tall = { blockSize: '400px', margin: 0 };
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir} style={{ display: 'flex', gap: '1rem' }}>
       {list ? (
         <Contents.Root label="On this page" style={{ inlineSize: '12rem' }}>
           <Contents.Item>
-            <Contents.Link href="#one">One</Contents.Link>
+            <Contents.Link href="#one" render={render}>
+              One
+            </Contents.Link>
           </Contents.Item>
           <Contents.Item>
-            <Contents.Link href="#two">Two</Contents.Link>
+            <Contents.Link href="#two" render={render}>
+              Two
+            </Contents.Link>
             <Contents.List>
               <Contents.Item>
-                <Contents.Link href="#two-a">Two A</Contents.Link>
+                <Contents.Link href="#two-a" render={render}>
+                  Two A
+                </Contents.Link>
               </Contents.Item>
             </Contents.List>
           </Contents.Item>
           <Contents.Item>
-            <Contents.Link href="#three">Three</Contents.Link>
+            <Contents.Link href="#three" render={render}>
+              Three
+            </Contents.Link>
           </Contents.Item>
+          {more ? (
+            <Contents.Item>
+              <Contents.Link href="#nowhere">Nowhere</Contents.Link>
+            </Contents.Item>
+          ) : null}
           {extra ? (
             <Contents.Item>
               <Contents.Link href="/elsewhere#two">Elsewhere</Contents.Link>
@@ -47,6 +75,7 @@ function Page({ dir, list = true, extra = false }: { dir?: 'rtl'; list?: boolean
           blockSize: '300px',
           inlineSize: '20rem',
           scrollPaddingBlockStart: `${LINE}px`,
+          ...scroller,
         }}
       >
         <h2 id="one" style={{ margin: 0 }}>
@@ -130,17 +159,24 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('One'));
   });
 
-  it('picks the section a hash change names, and leaves a hash on load alone where the page shows another place', async () => {
+  it('picks the section a hash change names where the page shows it, and drops the pick for any other hash', async () => {
     history.replaceState(null, '', '#three');
     render(<Page />);
+    // Loaded with a hash the page doesn't show, as after a restored scroll position.
     await waitFor(() => expect(current()).toBe('One'));
+    const scroller = screen.getByTestId('scroller');
     history.replaceState(null, '', '#two');
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-    await waitFor(() => expect(current()).toBe('Two'));
-    // A fragment that names no section drops the pick.
+    await frames(2);
+    expect(current()).toBe('One');
+    scroller.scrollTop = scroller.scrollHeight;
+    await waitFor(() => expect(current()).toBe('Two A'));
+    history.replaceState(null, '', '#three');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    await waitFor(() => expect(current()).toBe('Three'));
     history.replaceState(null, '', '#nothing');
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-    await waitFor(() => expect(current()).toBe('One'));
+    await waitFor(() => expect(current()).toBe('Two A'));
   });
 
   it('starts at the section the page hash names when the page shows it', async () => {
@@ -157,8 +193,8 @@ describe('Contents in a browser', () => {
     link('Two').click();
     await waitFor(() => expect(current()).toBe('Two'));
     await frames(2);
-    rerender(<Page extra />);
-    await waitFor(() => expect(link('Elsewhere')).toBeTruthy());
+    rerender(<Page more />);
+    await waitFor(() => expect(link('Nowhere')).toBeTruthy());
     await frames(2);
     screen.getByTestId('scroller').scrollTop = 0;
     await waitFor(() => expect(current()).toBe('One'));
@@ -223,6 +259,64 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('Two'));
     window.scrollTo(0, 0);
     await waitFor(() => expect(current()).not.toBe('Two'));
+  });
+
+  it('works through a render that drops the ref', async () => {
+    render(<Page refless />);
+    await waitFor(() => expect(current()).toBe('One'));
+    link('Three').click();
+    await waitFor(() => expect(current()).toBe('Three'));
+  });
+
+  it('keeps a pick while keys go to a field', async () => {
+    render(
+      <>
+        <input aria-label="Search" />
+        <Page />
+      </>,
+    );
+    link('Three').click();
+    await waitFor(() => expect(current()).toBe('Three'));
+    const search = screen.getByRole('textbox', { name: 'Search' });
+    search.focus();
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    await frames(2);
+    expect(current()).toBe('Three');
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await waitFor(() => expect(current()).toBe('Two A'));
+  });
+
+  it('reads a percentage scroll padding against the scroller, from inside its border', async () => {
+    // 20% of the 300px box is 60px; the 10px border moves the padding edge down too.
+    render(<Page scroller={{ scrollPaddingBlockStart: '20%', borderBlockStart: '10px solid' }} />);
+    const scroller = screen.getByTestId('scroller');
+    const at = (id: string, offset: number) => {
+      const top = scroller.getBoundingClientRect().top + scroller.clientTop;
+      scroller.scrollTop += document.getElementById(id)!.getBoundingClientRect().top - top - 60 + offset;
+    };
+    at('two', -5);
+    await waitFor(() => expect(current()).toBe('One'));
+    at('two', 0);
+    await waitFor(() => expect(current()).toBe('Two'));
+  });
+
+  it('measures again when the scroller resizes', async () => {
+    const { rerender } = render(<Page />);
+    await waitFor(() => expect(current()).toBe('One'));
+    rerender(<Page scroller={{ blockSize: '100px' }} />);
+    await frames(2);
+    // Two sits 30px below the line, inside the shorter box: still not passed.
+    scrollTo('two', -30);
+    await waitFor(() => expect(current()).toBe('One'));
+    scrollTo('two', 5);
+    await waitFor(() => expect(current()).toBe('Two'));
+  });
+
+  it('follows a heading renamed to a section the list names', async () => {
+    render(<Page more />);
+    await waitFor(() => expect(current()).toBe('One'));
+    document.getElementById('one')!.id = 'nowhere';
+    await waitFor(() => expect(current()).toBe('Nowhere'));
   });
 
   it('draws the marker on the rule beside the current link, and indents nested links', async () => {

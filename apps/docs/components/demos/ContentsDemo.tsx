@@ -21,10 +21,14 @@ function BoxLink(props: LinkRenderProps) {
       {...props}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
         props.onClick?.(event);
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
-        const heading = document.getElementById(props.href!.slice(1));
+        const heading = document.getElementById(decodeURIComponent(props.href!.slice(1)));
         const box = heading?.closest<HTMLElement>('[data-axis]');
-        if (heading && box) box.scrollTop += heading.getBoundingClientRect().top - box.getBoundingClientRect().top;
+        if (!heading || !box) return;
+        // Land where a fragment link would: on the box's scroll padding, inside its border.
+        const line = box.getBoundingClientRect().top + box.clientTop + (parseFloat(getComputedStyle(box).scrollPaddingBlockStart) || 0);
+        box.scrollTop += heading.getBoundingClientRect().top - line;
       }}
     />
   );

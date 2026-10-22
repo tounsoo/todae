@@ -69,9 +69,13 @@ function fragmentOf(href: string | undefined): string | null {
 
 /** Whether `href` points into the page that is showing, so its fragment names an element here. */
 function onThisPage(href: string, doc: Document): boolean {
-  if (!URL.canParse(href, doc.baseURI)) return false;
+  let there: URL;
+  try {
+    there = new URL(href, doc.baseURI);
+  } catch {
+    return false;
+  }
   const here = new URL(doc.URL);
-  const there = new URL(href, doc.baseURI);
   return there.origin === here.origin && there.pathname === here.pathname && there.search === here.search;
 }
 
@@ -80,7 +84,8 @@ function scrollerOf(el: Element): Element | null {
   const { body, documentElement } = el.ownerDocument;
   for (let node = el.parentElement; node && node !== body && node !== documentElement; node = node.parentElement) {
     // `overflow-x: hidden` alone computes `overflow-y` to `auto` too, so a box counts only when it overflows.
-    if (/auto|scroll|overlay/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return node;
+    // A pixel of slack, since both sizes are rounded.
+    if (/auto|scroll|overlay/.test(getComputedStyle(node).overflowY) && node.scrollHeight - node.clientHeight > 1) return node;
   }
   return null;
 }
@@ -92,8 +97,9 @@ function pixels(value: string, basis: number): number {
   return value.endsWith('%') ? (n * basis) / 100 : n;
 }
 
-function isEditable(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+/** Whether a key on `target` belongs to a control, such as a field, a button or a widget with a role, rather than to scrolling. */
+function ownsKeys(target: EventTarget | undefined): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName) || target.hasAttribute('role'));
 }
 
 type FollowOptions = {
@@ -117,23 +123,26 @@ function followSections(
   picked: { current: string | null },
   report: (id: string | null) => void,
   { pickFromHash, onTargetsChange }: FollowOptions,
-): { update: () => void; stop: () => void } {
+): { update: () => void; stop: () => void; found: boolean } {
   const doc = nav.ownerDocument;
   const win = doc.defaultView;
   const root = nav.getRootNode() as Document | ShadowRoot;
   if (!win || typeof win.IntersectionObserver === 'undefined' || typeof win.ResizeObserver === 'undefined') {
     report(null);
-    return { update: () => {}, stop: () => {} };
+    return { update: () => {}, stop: () => {}, found: false };
   }
   const targets = ids
     .map((id) => root.getElementById(id))
     .filter((el): el is HTMLElement => el !== null)
     .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   const missing = ids.filter((id) => !targets.some((target) => target.id === id));
+  const followedIds = targets.map((target) => target.id);
+  if (picked.current !== null && !ids.includes(picked.current)) picked.current = null;
 
-  // Start again when a missing section mounts or a followed one is replaced.
+  // Start again when a missing section mounts, or a followed one is replaced or renamed.
   const mutations = new MutationObserver(() => {
-    if (targets.some((target) => !target.isConnected) || missing.some((id) => root.getElementById(id))) onTargetsChange();
+    const changed = targets.some((target, i) => !target.isConnected || target.id !== followedIds[i]);
+    if (changed || missing.some((id) => root.getElementById(id))) onTargetsChange();
   });
   mutations.observe(root, {
     childList: true,
@@ -144,7 +153,7 @@ function followSections(
 
   if (targets.length === 0) {
     report(null);
-    return { update: () => report(null), stop: () => mutations.disconnect() };
+    return { update: () => report(null), stop: () => mutations.disconnect(), found: false };
   }
   const has = (id: string | null) => id !== null && targets.some((target) => target.id === id);
   let scroller = null as Element | null;
@@ -188,10 +197,20 @@ function followSections(
   // that line, so a section's entry changes whenever its top crosses its own
   // line, however far one scroll jumps.
   let passed: IntersectionObserver[] = [];
+  const resizes = new ResizeObserver(() => measure());
+  resizes.observe(targets[0]!.parentElement ?? targets[0]!);
+  let watchedBox: Element | null = null;
   const measure = () => {
     for (const observer of passed) observer.disconnect();
     view?.disconnect();
     scroller = scrollerOf(targets[0]!);
+    // The scroller's own size sets the lines' boxes, so watch it too; observing again only when it changes keeps the observer from calling itself.
+    const watched = scroller ?? doc.documentElement;
+    if (watched !== watchedBox) {
+      if (watchedBox) resizes.unobserve(watchedBox);
+      resizes.observe(watched);
+      watchedBox = watched;
+    }
     const box = scroller ?? doc.documentElement;
     const height = box.clientHeight;
     const padding = pixels(getComputedStyle(box).scrollPaddingBlockStart, height);
@@ -225,20 +244,30 @@ function followSections(
     if (target) view.observe(target);
   };
   measure();
-  const resizes = new ResizeObserver(() => measure());
-  resizes.observe(targets[0]!.parentElement ?? targets[0]!);
   win.addEventListener('resize', measure);
 
-  const onHashChange = () => {
+  const inView = (el: Element) => {
+    const rect = el.getBoundingClientRect();
+    const area = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: win.innerHeight };
+    return rect.bottom > area.top && rect.top < area.bottom;
+  };
+
+  // A hash picks its section only where the page shows it, not where history restored another position.
+  const pickHash = () => {
     const id = fragmentOf(doc.location.hash);
-    if (has(id)) {
-      picked.current = id;
-      startPick();
-    } else release();
+    const target = targets.find((el) => el.id === id);
+    if (!target || !inView(target)) return false;
+    picked.current = target.id;
+    startPick();
+    return true;
+  };
+
+  const onHashChange = () => {
+    if (!pickHash()) release();
   };
 
   const onKey = (event: KeyboardEvent) => {
-    if (SCROLL_KEYS.has(event.key) && !event.isComposing && !isEditable(event.target)) release();
+    if (SCROLL_KEYS.has(event.key) && !event.isComposing && !ownsKeys(event.composedPath()[0])) release();
   };
   const options = { capture: true, passive: true } as const;
   doc.addEventListener('wheel', release, options);
@@ -247,21 +276,10 @@ function followSections(
   win.addEventListener('hashchange', onHashChange);
 
   if (has(picked.current)) startPick();
-  else {
-    // A hash picks its section on load only where the page shows it, not when the browser restored another position.
-    const hashed = pickFromHash ? targets.find((el) => el.id === fragmentOf(doc.location.hash)) : undefined;
-    if (hashed) {
-      const rect = hashed.getBoundingClientRect();
-      const area = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: win.innerHeight };
-      if (rect.bottom > area.top && rect.top < area.bottom) {
-        picked.current = hashed.id;
-        startPick();
-      }
-    }
-    update();
-  }
+  else if (!pickFromHash || !pickHash()) update();
 
   return {
+    found: true,
     update: startPick,
     stop: () => {
       for (const observer of passed) observer.disconnect();
@@ -319,8 +337,8 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
       pickFromHash: !followed.current,
       onTargetsChange: () => setGeneration((n) => n + 1),
     });
-    // The hash may pick only on the first follow that has sections to pick from.
-    if (ids.length > 0) followed.current = true;
+    // The hash may pick only on the first follow that found sections to pick from.
+    if (follow.found) followed.current = true;
     following.current = follow;
     return () => {
       follow.stop();
@@ -366,15 +384,17 @@ function Link({ render, className, href, onClick, ref, 'aria-current': ariaCurre
   if (!ctx) throw new Error('Contents.Link must be rendered inside Contents.Root');
   const { current, register, pick } = ctx;
   const id = fragmentOf(href);
-  const [anchor, setAnchor] = useState<HTMLAnchorElement | null>(null);
-  const composedRef = useComposedRefs(setAnchor, ref);
-  // Only a link into the page that is showing follows its section.
-  const local = id !== null && href !== undefined && anchor !== null && onThisPage(href, anchor.ownerDocument);
+  const anchor = useRef<HTMLAnchorElement>(null);
+  const composedRef = useComposedRefs(anchor, ref);
+  // Only a link into the page that is showing follows its section. A render that drops the ref falls back to this document.
+  const [local, setLocal] = useState(false);
 
   useEffect(() => {
-    if (id === null || !local) return;
+    const here = id !== null && href !== undefined && onThisPage(href, anchor.current?.ownerDocument ?? document);
+    setLocal(here);
+    if (!here || id === null) return;
     return register(id);
-  }, [id, local, register]);
+  }, [id, href, register]);
 
   const own = {
     ...props,
@@ -383,7 +403,7 @@ function Link({ render, className, href, onClick, ref, 'aria-current': ariaCurre
     'aria-current': ariaCurrent ?? (local && current === id ? ('location' as const) : undefined),
     className: cx(styles.link, className),
     onClick: composeHandlers(onClick, (event: MouseEvent<HTMLAnchorElement>) => {
-      if (!local || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (!local || id === null || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       pick(id);
     }),
   };
