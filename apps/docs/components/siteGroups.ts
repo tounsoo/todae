@@ -131,6 +131,7 @@ export const SITE_GROUPS = [
     id: 'recipes',
     label: 'Recipes',
     links: [
+      ['/recipes/app-shell', 'App shell'],
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],

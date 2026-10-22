@@ -22,6 +22,8 @@ export function useFocusRestore(
 
   useLayoutEffect(() => {
     if (active) {
+      // Only when it opens: a new restoreTo while it is open runs this again, with focus already inside.
+      if (wasActive.current) return;
       wasActive.current = true;
       const current = document.activeElement;
       prior.current = current instanceof HTMLElement ? current : null;

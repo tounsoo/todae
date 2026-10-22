@@ -53,6 +53,24 @@ describe('useFocusRestore', () => {
     restore.current.remove();
   });
 
+  it('keeps the opener it saw on open when restoreTo changes while open', async () => {
+    const opener = document.createElement('button');
+    const heading = { current: document.createElement('h2') };
+    heading.current.tabIndex = -1;
+    document.body.append(opener, heading.current);
+    opener.focus();
+    const { rerender } = render(<Restore active nativeReturn />);
+    screen.getByText('inside').focus();
+    rerender(<Restore active restore={heading} nativeReturn />);
+    // A closing modal dialog puts focus back on its opener; restoreTo still wins.
+    opener.focus();
+    rerender(<Restore active={false} restore={heading} nativeReturn />);
+    await Promise.resolve();
+    expect(document.activeElement).toBe(heading.current);
+    opener.remove();
+    heading.current.remove();
+  });
+
   it('does not move focus when it mounts closed', async () => {
     const restore = { current: document.createElement('button') };
     document.body.appendChild(restore.current);

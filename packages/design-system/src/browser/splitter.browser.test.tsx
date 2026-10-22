@@ -48,6 +48,62 @@ const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
 // A 20px track, so the press at its center lands 10px past the panel's edge.
 const WIDE = { '--todae-splitter-handle-target': '20px' } as CSSProperties;
 
+describe('Splitter with one panel shown', () => {
+  it('lays the shown panel across the root and keeps both panels mounted', async () => {
+    const { rerender } = render(<Layout defaultValue={200} />);
+    const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
+    rerender(<Layout defaultValue={200} show="end" />);
+    const host = box('host');
+    expect(box('second').left).toBe(host.left);
+    expect(box('second').width).toBe(host.width);
+    expect(box('second').height).toBe(host.height);
+    expect(getComputedStyle(screen.getByTestId('first')).display).toBe('none');
+    expect(screen.queryByRole('separator')).toBeNull();
+    expect(getTabbables(document.body)).toEqual([]);
+
+    rerender(<Layout defaultValue={200} show="start" />);
+    expect(box('first').width).toBe(host.width);
+    expect(getComputedStyle(screen.getByTestId('second')).display).toBe('none');
+    expect(getTabbables(document.body).map((el) => el.textContent)).toEqual(['Inside']);
+
+    rerender(<Layout defaultValue={200} />);
+    await waitFor(() => expect(box('first').width).toBe(200));
+    expect(now()).toBe(200);
+    expect([screen.getByTestId('first'), screen.getByTestId('second')]).toEqual([first, second]);
+  });
+
+  it('keeps the shown panel\'s scroll position', async () => {
+    const Tall = ({ show }: { show?: 'start' | 'end' }) => (
+      <div style={{ inlineSize: 600, blockSize: 200 }}>
+        <Splitter.Root show={show} defaultValue={200} style={{ blockSize: '100%' }}>
+          <Splitter.Panel data-testid="first">
+            <div style={{ blockSize: 1000 }} />
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize" />
+          <Splitter.Panel data-testid="second">
+            <div style={{ blockSize: 1000 }} />
+          </Splitter.Panel>
+        </Splitter.Root>
+      </div>
+    );
+    const { rerender } = render(<Tall />);
+    const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
+    second.scrollTop = 100;
+    rerender(<Tall show="end" />);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    expect(getComputedStyle(first).display).toBe('none');
+    expect(second.scrollTop).toBe(100);
+    rerender(<Tall />);
+    await waitFor(() => expect(first.getBoundingClientRect().width).toBe(200));
+    expect(second.scrollTop).toBe(100);
+  });
+
+  it('shows a stacked root\'s panel down its whole height', () => {
+    render(<Layout orientation="vertical" defaultValue={60} primary="end" show="start" />);
+    expect(box('first').height).toBe(box('host').height);
+  });
+});
+
 describe('Splitter dragging', () => {
   it('keeps the handle under the pointer inside a scaled ancestor', async () => {
     render(
