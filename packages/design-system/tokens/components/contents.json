@@ -1,0 +1,43 @@
+{
+  "contents": {
+    "$description": "Contents.Root: an \"On this page\" list of links to the page's sections, with a marker on the section being read.",
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+    "label": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "indent": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
+    "rule": {
+      "color": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+      "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } }
+    },
+    "marker": {
+      "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
+    "link": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/space/chip/y/$value" } }
+      },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } },
+        "current-weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      }
+    }
+  }
+}

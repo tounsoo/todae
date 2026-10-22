@@ -1020,6 +1020,84 @@
       ]
     },
     {
+      "name": "Contents.Item",
+      "description": "One entry in a Contents.Root or Contents.List. An li; takes native li attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A Contents.Link, or a Contents.Link followed by the Contents.List of its sub-sections."
+        }
+      ]
+    },
+    {
+      "name": "Contents.Link",
+      "description": "A link to a section of the page by its href fragment. Renders an a, or a router link through render; takes native a attributes.",
+      "props": [
+        {
+          "name": "href",
+          "type": "string",
+          "required": false,
+          "description": "The fragment of the section, such as #props. A link to another page is never marked current."
+        },
+        {
+          "name": "render",
+          "type": "(props: React.ComponentPropsWithRef<\"a\">) => React.ReactElement",
+          "required": false,
+          "description": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a."
+        },
+        {
+          "name": "aria-current",
+          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "required": false,
+          "description": "Set by Contents.Root to location on the link to the section being read. A value you pass wins."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The link text, usually the heading of the section."
+        }
+      ]
+    },
+    {
+      "name": "Contents.List",
+      "description": "A nested list of Contents.Item elements, for the sections under one heading. A ul; takes native ul attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Contents.Item elements."
+        }
+      ]
+    },
+    {
+      "name": "Contents.Root",
+      "description": "A nav landmark holding a list of links to the sections of the page. It marks the link to the section being read with aria-current=\"location\". Takes native nav attributes.",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text shown above the list, which also names the landmark."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Landmark name when there is no label. Default is the contents string from StringsProvider."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Contents.Item elements."
+        }
+      ]
+    },
+    {
       "name": "Conversation.Content",
       "description": "Holds the messages, spaced by conversation.gap. When an article in it takes aria-busy=\"true\", as Message.Root does while streaming, Conversation announces that a message is arriving; when that clears, that it finished, unless the message holds a role=\"alert\" or another message starts at the same time. Takes native div attributes.",
       "props": [
