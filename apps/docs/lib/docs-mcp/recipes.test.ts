@@ -15,8 +15,8 @@ describe('docs mcp recipes', () => {
     expect(listed.recipes.map((row) => row.name)).toEqual(recipeDirs);
     expect(listed.count).toBe(recipeDirs.length);
     for (const row of listed.recipes) {
-      expect(row.description, row.name).toMatch(/^(?!```)[A-Za-z[`*_]/);
-      expect(row.description, row.name).not.toContain('```');
+      expect(row.description, row.name).toMatch(/^A recipe, not a package namespace\. \S/);
+      expect(row.description, row.name).not.toMatch(/```|<[A-Z]|import /);
       expect(row.uses.length, row.name).toBeGreaterThan(0);
       expect(row.docsUrl).toBe(`${DOCS_ORIGIN}/recipes/${row.name}`);
     }
@@ -44,6 +44,9 @@ describe('docs mcp recipes', () => {
     expect(summaryOf(markdown)).toBe('First line second line.');
     const codeFirst = ['# Title', '', '<Example>', '  <Demo />', '</Example>', '', '```tsx', 'const x = 1;', '', 'x;', '```', '', '[Link](/link) prose.'].join('\n');
     expect(summaryOf(codeFirst)).toBe(`[Link](${DOCS_ORIGIN}/link) prose.`);
+    const runOn = ['# Title', '', '"Undo" wires it up:', '```tsx', 'const x = 1;', '```'].join('\n');
+    expect(summaryOf(runOn)).toBe('"Undo" wires it up:');
+    expect(summaryOf(['# Title', '', '<Example />', '', '## Section', '', 'Section prose.'].join('\n'))).toBeNull();
   });
 
   it('finds exports named in code blocks only', () => {
