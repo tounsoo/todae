@@ -5412,6 +5412,18 @@
       "props": []
     },
     {
+      "name": "useFocusHandoff",
+      "description": "useFocusHandoff({ to }) returns a ref for an element that can unmount while it holds focus, such as buttons that go away once they are used. When it unmounts with focus inside, focus moves to to once the commit is done, unless something else took focus by then or to is gone too. A click on a control inside, other than a script's click(), focuses that control first, since Safari and Firefox on macOS do not focus a clicked button.",
+      "props": [
+        {
+          "name": "to",
+          "type": "RefObject<HTMLElement | null>",
+          "required": true,
+          "description": "The element that takes focus when the watched element unmounts while it holds focus."
+        }
+      ]
+    },
+    {
       "name": "useGlyphs",
       "description": "useGlyphs() returns the glyphs in effect: the nearest GlyphsProvider's, merged over its parents'. An unset or null key means Todae's own glyph.",
       "props": []

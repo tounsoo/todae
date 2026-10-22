@@ -585,6 +585,8 @@ describe('content parts in a browser', () => {
     expect(style('inline').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(style('block').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(style('block').overflowX).toBe('auto');
+    expect(style('block').marginBlockStart).toBe('0px');
+    expect(style('block').marginBlockEnd).toBe('0px');
     expect(style('nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(style('nested').paddingLeft).toBe('0px');
     expect(style('plain-nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');

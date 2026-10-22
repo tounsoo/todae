@@ -370,6 +370,7 @@ export {
   type UseSelectionOptions,
   type UseSelectionResult,
 } from './hooks/useSelection.js';
+export { useFocusHandoff, type UseFocusHandoffOptions } from './hooks/useFocusHandoff.js';
 export {
   useClipboard,
   type ClipboardStatus,

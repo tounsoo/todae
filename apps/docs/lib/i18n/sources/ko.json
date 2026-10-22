@@ -534,7 +534,7 @@
   "message": {
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
-    "## Parts": "1dc2b7bbaefb",
+    "## Parts": "6bffffd777b1",
     "## Time": "e262fbffa78a",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
@@ -704,6 +704,15 @@
     "## Accessible composition": "bac05d860697",
     "## When to use": "712b903230ea",
     "(section order)": "d07108b52651"
+  },
+  "recipes/tool-call": {
+    "(top)": "5d279955457e",
+    "# Tool call": "fff9ba9cd0f7",
+    "## The call": "01397268497d",
+    "## Approval": "08e6fe8aeac5",
+    "## Accessible composition": "7f59895fd94c",
+    "## When to use": "125cdba98fc2",
+    "(section order)": "e092ab2bb711"
   },
   "scroll-area": {
     "(top)": "a2750334232a",
@@ -954,6 +963,14 @@
     "## When to use": "e08f8ff9959e",
     "## Props": "6c08c2462796",
     "(section order)": "cdd5be9159bd"
+  },
+  "utilities/use-focus-handoff": {
+    "(top)": "c39294d70c41",
+    "# useFocusHandoff": "5d3528e5e173",
+    "## Accessible composition": "7baa96756f90",
+    "## When to use": "9d9b3610001a",
+    "## Props": "0966ab575439",
+    "(section order)": "e92564e007c0"
   },
   "utilities/use-highlight": {
     "(top)": "bff7d331f656",

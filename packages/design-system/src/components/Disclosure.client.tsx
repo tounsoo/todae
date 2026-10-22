@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { Root, Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
-import { activeIn } from './activeIn.js';
+import { activeIn } from './activeElement.js';
 import { hasGlyph } from './glyphs.js';
 import { useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';

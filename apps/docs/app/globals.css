@@ -400,7 +400,6 @@ main:focus {
 
 /* CodeBlock.Root draws its own padding, type and colors; only the scrolling moves to the frame. */
 .docs-pre pre {
-  margin: 0;
   overflow: visible;
 }
 
