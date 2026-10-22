@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Form, Label, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Form, Label, Stack, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -918,14 +918,16 @@ export function FieldOneTimeCodeForm() {
   const [code, setCode] = useState('48');
   return (
     <Form.Root onSubmit={(event) => event.preventDefault()}>
-      <Field.Group>
-        <Label.Root htmlFor={id}>Recovery code</Label.Root>
-        <Field.Root id={id} name="recovery">
-          <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
-        </Field.Root>
-        <ErrorMessage.Root />
-      </Field.Group>
-      <Button.Root type="submit">Verify</Button.Root>
+      <Stack.Root align="start">
+        <Field.Group>
+          <Label.Root htmlFor={id}>Recovery code</Label.Root>
+          <Field.Root id={id} name="recovery">
+            <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
+          </Field.Root>
+          <ErrorMessage.Root />
+        </Field.Group>
+        <Button.Root type="submit">Verify</Button.Root>
+      </Stack.Root>
     </Form.Root>
   );
 }
