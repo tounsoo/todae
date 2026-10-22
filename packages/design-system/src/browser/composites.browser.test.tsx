@@ -179,6 +179,34 @@ describe('Menu in a browser', () => {
     expect(screen.getByRole('menu', { hidden: true }).matches(':popover-open')).toBe(false);
   });
 
+  it('returns focus to the trigger after a choice that moves the trigger in the page', async () => {
+    function Rows() {
+      const [rows, setRows] = useState(['A', 'B', 'C']);
+      return (
+        <ul>
+          {rows.map((row) => (
+            <li key={row}>
+              <Menu.Root>
+                <Menu.Trigger>{`Move ${row}`}</Menu.Trigger>
+                <Menu.Content>
+                  <Menu.Item onSelect={() => setRows([...rows.filter((r) => r !== row), row])}>To the end</Menu.Item>
+                </Menu.Content>
+              </Menu.Root>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    render(<Rows />);
+    const trigger = screen.getByRole('button', { name: 'Move A' });
+    trigger.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement?.textContent).toBe('To the end'));
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getAllByRole('listitem').at(-1)!.contains(trigger)).toBe(true);
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
   it('Tab closes the menu and moves focus past the trigger', async () => {
     render(<MenuHarness />);
     await userEvent.click(screen.getByRole('button', { name: 'Actions' }));

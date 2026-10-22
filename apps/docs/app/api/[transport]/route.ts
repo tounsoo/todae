@@ -7,6 +7,7 @@ import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
 import { getComponent, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
+import { RELEASE } from '../../../lib/version';
 
 // Longer than build_tokens' own time limit, so a stopped build can still report it.
 export const maxDuration = 30;
@@ -177,7 +178,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  { serverInfo: { name: 'todae-docs', version: '0.0.0' } },
+  { serverInfo: { name: 'todae-docs', version: RELEASE.version } },
   { basePath: '/api', disableSse: true },
 );
 
