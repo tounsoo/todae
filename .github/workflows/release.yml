@@ -2,6 +2,7 @@ name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
 # With none, publishes the versions that aren't on npm yet: merging that pull request releases.
+# Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm.
 on:
   push:
     branches: [main]
@@ -49,10 +50,8 @@ jobs:
         with:
           cache: false
       # GitHub starts no workflows for pushes made with GITHUB_TOKEN, so CI would never run on the
-      # Version Packages pull request. A GitHub App's token starts them; without the app, the
-      # workflow falls back to GITHUB_TOKEN.
+      # Version Packages pull request. The release app's token starts them.
       - id: app-token
-        if: ${{ vars.RELEASE_APP_CLIENT_ID != '' }}
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
@@ -61,7 +60,7 @@ jobs:
           permission-pull-requests: write
       - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          github-token: ${{ steps.app-token.outputs.token || github.token }}
+          github-token: ${{ steps.app-token.outputs.token }}
 
   pack:
     name: Build and pack
@@ -107,3 +106,80 @@ jobs:
       - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
+
+  # Vercel deploys the docs and their MCP server to production from docs-stable, so they only
+  # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
+  # above went: to this commit when its package version is on npm and no changeset that releases
+  # something is waiting, otherwise to the commit tagged with the latest version on npm. A failed
+  # publish so leaves the docs on the last release, and re-running this job catches up after one.
+  docs:
+    name: Deploy the docs
+    needs: [select-mode, publish]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          # The release tags and docs-stable.
+          fetch-depth: 0
+      # GitHub refuses GITHUB_TOKEN any ref update that adds or changes a workflow file, and moving
+      # docs-stable usually does, so the release app moves it.
+      - id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
+      - env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          JUST_PUBLISHED: ${{ needs.publish.result == 'success' }}
+        run: |
+          set -euo pipefail
+          package=@tounsoo/todae
+          version=$(node -p "require('./packages/design-system/package.json').version")
+          # Whether npm has the version. Fails the job on any npm error but "not found".
+          on_npm() {
+            local out
+            if out=$(npm view "$package@$version" version 2>&1); then
+              [ "$out" = "$version" ]
+            elif [[ $out == *E404* ]]; then
+              return 1
+            else
+              echo "$out" >&2
+              exit 1
+            fi
+          }
+          # A changeset that releases something names the package in its front matter; an empty one doesn't.
+          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
+          released=false
+          if [ -z "$waiting" ]; then
+            # The registry can take minutes to serve a version it just took.
+            for attempt in $(seq 10); do
+              if on_npm; then released=true; break; fi
+              [ "$JUST_PUBLISHED" = true ] || break
+              sleep 30
+            done
+            if [ "$JUST_PUBLISHED" = true ] && [ "$released" = false ]; then
+              echo "npm doesn't serve $package@$version yet; re-run this job" >&2
+              exit 1
+            fi
+          fi
+          if [ "$released" = true ]; then
+            target=$GITHUB_SHA
+          else
+            latest=$(npm view "$package" version)
+            target=$(git rev-list -n 1 "refs/tags/$package@$latest")
+          fi
+          current=$(git rev-parse -q --verify refs/remotes/origin/docs-stable || true)
+          if [ -z "$current" ]; then
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/docs-stable -f sha="$target" --silent
+          elif git merge-base --is-ancestor "$target" "$current"; then
+            echo "docs-stable is already at or past $target"
+          else
+            # Fast-forward only: GitHub answers 422 when docs-stable was moved off main's history by hand.
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/docs-stable" -f sha="$target" -F force=false --silent
+          fi

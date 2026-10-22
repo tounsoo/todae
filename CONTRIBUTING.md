@@ -139,12 +139,14 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 
 - Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
-- A GitHub App, so CI runs on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`. Install the app on this repository with read and write access to contents and pull requests, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`. Without them, the workflow opens the pull request with `GITHUB_TOKEN`.
+- A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment.
 
 ## Deploy the docs
 
 The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app.
+
+The production branch is `docs-stable`, so `todae.omsoo.design` and its MCP server match the latest release on npm. The docs job in `release.yml` runs on every push to `main` and moves `docs-stable` forward, never back: to that commit when its package version is on npm and no changeset that releases something is waiting, otherwise to the commit tagged with the latest version on npm. The first run creates the branch, so set Vercel's production branch to `docs-stable` only after it exists. It waits behind a release that waits for approval in the `npm` environment. If the job fails, re-run it; after a publish it fails when npm still doesn't serve the new version five minutes later. To see unreleased docs, open the Vercel preview of a pull request or of `main`.
 
 ## Docs MCP server
 
