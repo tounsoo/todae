@@ -57,8 +57,8 @@ describe('Tooltip.surface', () => {
   });
 
   it('lists exactly the elements that make the HTML parser close a paragraph', () => {
-    // Elements of HTML's element index that can appear in body content (the parser drops table parts there);
-    // the parser decides which of them end an open <p>.
+    // Most elements of HTML's element index; head-only and foreign elements, which never close a paragraph,
+    // and table parts, which the parser drops in body content, are left out. The parser decides which end an open <p>.
     const elements =
       'a,abbr,address,area,article,aside,audio,b,bdi,bdo,blockquote,br,button,canvas,center,cite,code,data,datalist,dd,del,details,dfn,dialog,dir,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,i,iframe,img,input,ins,kbd,label,li,listing,main,map,mark,menu,meter,nav,object,ol,output,p,picture,plaintext,pre,progress,q,ruby,s,samp,search,section,select,slot,small,span,strong,sub,summary,sup,table,template,textarea,time,u,ul,var,video,wbr,xmp';
     const listed = new Set(CLOSES_PARAGRAPH.split(','));
