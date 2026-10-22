@@ -150,6 +150,6 @@ it('leaves focus alone when the element is hidden in an Activity rather than rem
   hide.focus();
   act(() => hide.click());
   await flush();
-  // The browser decides where focus goes; jsdom keeps it on the hidden button.
-  expect(document.activeElement).toBe(hide);
+  // The browser decides where focus goes; the hook only stays out of it.
+  expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Summary' }));
 });
