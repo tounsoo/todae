@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -24,7 +25,7 @@ import { canFocusNow } from '../overlay/tabbables.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
-import { isPopoverOpen, usePopoverSync } from '../overlay/usePopoverSync.js';
+import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -159,7 +160,7 @@ type MenuContextValue = {
   context: ContextOpen | null;
   openAt: (context: ContextOpen) => void;
   /** Where focus goes when the menu closes or Tab leaves it. */
-  restoreTarget: () => HTMLElement | null;
+  restoreTarget: () => HTMLElement | SVGElement | null;
   /** The anchor name of the box a context request put the menu at. */
   boxName: string;
   popover: UsePopoverResult;
@@ -183,8 +184,17 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   // Set while the input that asked for a close is still being handled, so
   // the focus move that same input makes does not ask a second time.
   const closeAsked = useRef(false);
+  const [context, setContextState] = useState<ContextOpen | null>(null);
+  const contextRef = useRef<ContextOpen | null>(null);
+  const setContext = useCallback((next: ContextOpen | null) => {
+    contextRef.current = next;
+    setContextState(next);
+  }, []);
   const setOpen = useCallback(
     (next: boolean, reason: MenuOpenChangeReason) => {
+      // An open asked for another way, such as by a Menu.Trigger, isn't a
+      // pending context request's.
+      if (next && reason !== 'context') setContext(null);
       if (!next) {
         closeAsked.current = true;
         setTimeout(() => {
@@ -193,49 +203,48 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       }
       setOpenValue(next, reason);
     },
-    [setOpenValue],
+    [setOpenValue, setContext],
   );
   const domId = useDomId();
   const triggerId = `${domId}-trigger`;
   const boxName = `--${domId}-box`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [context, setContextState] = useState<ContextOpen | null>(null);
-  const contextRef = useRef<ContextOpen | null>(null);
-  const setContext = useCallback((next: ContextOpen | null) => {
-    contextRef.current = next;
-    setContextState(next);
-  }, []);
-  const openRef = useRef(open);
   const openAt = useCallback(
     (next: ContextOpen) => {
       setContext(next);
       setOpen(true, 'context');
-      if (openRef.current) return;
-      // A request holds for the open that follows it, however late the owner
-      // applies it, until the next press or key: one the owner turned down
-      // is then dropped, not reused by a later open.
-      const drop = () => {
-        document.removeEventListener('pointerdown', drop, true);
-        document.removeEventListener('keydown', drop, true);
-        if (!openRef.current && contextRef.current === next) setContext(null);
-      };
-      document.addEventListener('pointerdown', drop, true);
-      document.addEventListener('keydown', drop, true);
     },
     [setContext, setOpen],
   );
+  // A request holds for the open that follows it, however late the owner
+  // applies it, until the next press or key: one the owner turned down is
+  // then dropped, not reused by a later open. A held key's repeats and a lone
+  // modifier are not a next key.
+  useEffect(() => {
+    if (!context || open) return;
+    const drop = (event: Event) => {
+      if (event instanceof globalThis.KeyboardEvent && (event.repeat || MODIFIER_KEYS.has(event.key))) return;
+      setContext(null);
+    };
+    document.addEventListener('pointerdown', drop, true);
+    document.addEventListener('keydown', drop, true);
+    return () => {
+      document.removeEventListener('pointerdown', drop, true);
+      document.removeEventListener('keydown', drop, true);
+    };
+  }, [context, open, setContext]);
   // Focus goes back to what had it when a context request came, while it is
   // still in the page and can take focus, else to the trigger.
-  const restoreTarget = useCallback((): HTMLElement | null => {
-    // An SVG element focuses, matches and checks its visibility as an HTML one does.
-    const opener = contextRef.current?.opener as HTMLElement | null | undefined;
+  const restoreTarget = useCallback(() => {
+    const opener = contextRef.current?.opener;
     return opener?.isConnected && canFocusNow(opener) ? opener : triggerRef.current;
   }, []);
-  // usePopover reads `current` when it restores focus.
+  // usePopover reads `current` when it restores focus, and only focuses it,
+  // which an SVG element does as an HTML one does.
   const restoreFocusRef = useMemo<RefObject<HTMLElement | null>>(
     () => ({
       get current() {
-        return restoreTarget();
+        return restoreTarget() as HTMLElement | null;
       },
     }),
     [restoreTarget],
@@ -252,9 +261,6 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   // The item chosen for one open never carries over to the next.
   useLayoutEffect(() => {
     if (!open) initialFocusRef.current = null;
-  }, [open]);
-  useLayoutEffect(() => {
-    openRef.current = open;
   }, [open]);
   // A context request lasts for one open. This runs after usePopover has
   // read where focus goes back to.
@@ -351,6 +357,8 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
   );
 }
 
+const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph']);
+
 function isContextKey(event: KeyboardEvent<HTMLElement>): boolean {
   if (event.key === 'ContextMenu') return true;
   return event.key === 'F10' && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
@@ -379,10 +387,10 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
     target instanceof Element && !ctx.popover.popoverRef.current?.contains(target) && !isTextEntry(target);
   const request = (box: ContextOpen['box']) => {
     const active = document.activeElement;
-    const focused = (active instanceof HTMLElement || active instanceof SVGElement) && active !== document.body;
+    let opener: ContextOpen['opener'] = null;
+    if ((active instanceof HTMLElement || active instanceof SVGElement) && active !== document.body) opener = active;
     // A request that comes while the menu has focus keeps the opener before it.
-    const opener =
-      focused && ctx.popover.popoverRef.current?.contains(active) ? (ctx.context?.opener ?? null) : focused ? active : null;
+    if (opener && ctx.popover.popoverRef.current?.contains(opener)) opener = ctx.context?.opener ?? null;
     openAt({ box, opener, source });
   };
   const wire: MenuContextTriggerRenderProps = {
@@ -481,6 +489,8 @@ function Content({
     const active = document.activeElement;
     el.hidePopover();
     el.showPopover();
+    // Popovers held open inside it, such as an item's tooltip, go back in front.
+    reshowHeldInside(el);
     if (active instanceof HTMLElement && el.contains(active)) focusWithoutScroll(active);
   });
   const { openEnd, initialFocusRef, roving } = ctx;

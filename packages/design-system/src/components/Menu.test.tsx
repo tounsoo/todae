@@ -950,6 +950,30 @@ describe('Menu.ContextTrigger', () => {
     expect(document.querySelector('span[popover]')).toBeNull();
   });
 
+  it('drops a turned-down request when a Menu.Trigger opens the menu', () => {
+    function Owner() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open} onOpenChange={(next, reason) => reason !== 'context' && setOpen(next)}>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Trigger>More</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(<Owner />);
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
+    });
+    act(() => {
+      screen.getByRole('button', { name: 'More' }).click();
+    });
+    expect(screen.getByRole('menu', { hidden: true }).style.getPropertyValue('position-anchor')).not.toContain('-box');
+    expect(document.querySelector('span[popover]')).toBeNull();
+  });
+
   it('renders the region on the element render returns', () => {
     render(
       <table>

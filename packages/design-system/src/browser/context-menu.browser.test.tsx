@@ -110,6 +110,32 @@ describe('Menu.ContextTrigger in a browser', () => {
     expect(document.activeElement).toBe(region);
   });
 
+  it('opens below the nearest box when the focused element has none', async () => {
+    render(
+      <Themed>
+        <div data-testid="box" style={{ marginBlockStart: 200, marginInlineStart: 120, inlineSize: 300 }}>
+          <Menu.Root>
+            <Menu.ContextTrigger data-testid="region" style={{ display: 'contents' }}>
+              report.pdf
+            </Menu.ContextTrigger>
+            <Menu.Content aria-label="File">
+              <Menu.Item>Open</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </div>
+      </Themed>,
+    );
+    // As a screen reader asks for the menu of an element that has no box.
+    screen
+      .getByTestId('region')
+      .dispatchEvent(new PointerEvent('contextmenu', { bubbles: true, cancelable: true, button: -1, pointerType: '' }));
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    const r = screen.getByTestId('box').getBoundingClientRect();
+    const m = menu().getBoundingClientRect();
+    expect(m.top).toBeGreaterThanOrEqual(r.bottom);
+    expect(Math.abs(m.left - r.left)).toBeLessThanOrEqual(1);
+  });
+
   it('opens on the ContextMenu key', async () => {
     render(
       <Themed>
@@ -467,5 +493,23 @@ describe('Menu.ContextTrigger in a browser', () => {
       expect(m.top).toBeLessThan(r.top + 76);
     });
     expect(menu().matches(':popover-open')).toBe(true);
+  });
+
+  it('keeps focus on the item when a request moves the open menu', async () => {
+    render(
+      <Themed>
+        <FileMenu withTrigger />
+      </Themed>,
+    );
+    screen.getByRole('button', { name: 'More' }).focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    const item = screen.getByRole('menuitem', { name: 'Delete' });
+    await waitFor(() => expect(document.activeElement).toBe(item));
+    screen
+      .getByTestId('region')
+      .dispatchEvent(new PointerEvent('contextmenu', { bubbles: true, cancelable: true, button: 0, pointerType: '' }));
+    await waitFor(() => expect(menu().getBoundingClientRect().top).toBeGreaterThanOrEqual(screen.getByTestId('region').getBoundingClientRect().bottom));
+    expect(menu().matches(':popover-open')).toBe(true);
+    expect(document.activeElement).toBe(item);
   });
 });
