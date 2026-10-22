@@ -73,13 +73,13 @@ function nearestBox(slots: HTMLCollection | undefined, clientX: number) {
   return nearest;
 }
 
-// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`. The event is an `InputEvent` like the browser's own, so a product reads `inputType` and `data` from it: `insertText` with the inserted text, or `deleteContentBackward` when nothing was inserted.
-function write(input: HTMLInputElement, next: string, caret: number, data: string) {
+// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`. The event is an `InputEvent` of one fixed type, `insertReplacementText`, whose `data` is the whole new code, so a product reads the same thing from every write Todae makes.
+function write(input: HTMLInputElement, next: string, caret: number) {
   // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
   input.setSelectionRange(caret, caret);
   input.dispatchEvent(
-    new InputEvent('input', { bubbles: true, inputType: data ? 'insertText' : 'deleteContentBackward', data: data || null }),
+    new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText', data: next }),
   );
 }
 
@@ -95,7 +95,7 @@ function insert(input: HTMLInputElement, text: string) {
   }
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
-  write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length, text);
+  write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length);
 }
 
 // Makes `edit` as the person's own, with `inserting` set while it runs.
@@ -146,8 +146,8 @@ export function OneTimeCode({
   const inserting = useRef(false);
   // The selection the last insert began from, kept from its beforeinput for the change event that follows when the browser makes the insert itself. Only an insert sets it: a deletion or a history step has no insert to place, and any other beforeinput or a blur drops it.
   const insertAt = useRef<CodeSelection | null>(null);
-  // The code and the selection a composition started from, the last code it reported while it ran (or null), and the `value` the product rendered after that report (undefined until it has).
-  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null; answered: string | undefined } | null>(null);
+  // The code and the selection a composition started from, and the last code it reported while it ran (or null).
+  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null } | null>(null);
   // Set while the end of a composition reports a code that the change event's own reading would not (a take-back to the value the product already holds).
   const forceReport = useRef(false);
   // While composing, the input's own text, which React renders so it writes nothing that would end the IME, and the code the boxes show.
@@ -158,9 +158,6 @@ export function OneTimeCode({
   const latest = useRef({ characters, length, fixed, value });
   useLayoutEffect(() => {
     latest.current = { characters, length, fixed, value };
-    // The value the product rendered in answer to the composition's last report, which may differ from what it was told (an uppercased code).
-    const saved = composition.current;
-    if (saved && saved.reported !== null && saved.answered === undefined) saved.answered = value;
   });
 
   // The browser's own tooShort skips an edit a script makes, a cleaned paste among them, so the length is checked here.
@@ -197,7 +194,7 @@ export function OneTimeCode({
       if (edit) put(el!, edit, inserting);
     }
     function onCompositionStart() {
-      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null, answered: undefined };
+      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null };
       // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
       el!.removeAttribute('maxlength');
     }
@@ -210,8 +207,9 @@ export function OneTimeCode({
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
       if (!saved) return;
-      // The product overrode the composition only with a value that is neither the code it started from, a code Todae reported, nor what the product rendered in answer to one. Then its value wins, and undo can't bring the dropped composition back.
-      if (value !== saved.start && value !== saved.reported && value !== saved.answered) return;
+      // Told apart by content, not by when the value arrived. `cleanCode` lets only digits and Latin letters through, so the one lossless change a product can make to a code it was told is its case: a `value` equal to the last reported code, ignoring case, is the product's answer to it (an uppercased code, however late). A `value` that is neither the code the composition started from nor that answer is an override, and it wins; undo can't bring the dropped composition back. Accepted limit: an override that equals the start code is indistinguishable from no change.
+      const answer = saved.reported !== null && value.toLowerCase() === saved.reported.toLowerCase();
+      if (value !== saved.start && !answer) return;
       const live = el!.value;
       const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);
       const target = edit ? applyEdit(saved.start, edit) : saved.start;
@@ -227,7 +225,7 @@ export function OneTimeCode({
       forceReport.current = report;
       // Written, not put in with execCommand, which would leave the commit on the undo stack as a step that is no code.
       try {
-        write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start, edit?.insert ?? '');
+        write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start);
       } finally {
         forceReport.current = false;
       }
@@ -256,7 +254,6 @@ export function OneTimeCode({
       if (next === text && next !== value) {
         if (saved) {
           saved.reported = next;
-          saved.answered = undefined;
         }
         onChange?.(event);
         onValueChange?.(next);

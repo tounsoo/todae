@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState, type ClipboardEvent, type CSSProperties, type DragEvent } from 'react';
+import { useEffect, useState, type ClipboardEvent, type CSSProperties, type DragEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
 
@@ -477,6 +477,53 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(events.at(-1)).toBe(`value:${initial}`);
   });
 
+  // Products that answer a report late or by clearing, which the composition's end tells from an override by the content of `value`.
+  function Answering({ initial, mode, calls }: { initial: string; mode: 'clear' | 'effect' | 'timer'; calls: string[] }) {
+    const [value, setValue] = useState(initial);
+    useEffect(() => {
+      if (mode === 'effect') setValue((v) => v.toUpperCase());
+    }, [value, mode]);
+    return (
+      <Field.Root aria-label="Verification code">
+        <Field.OneTimeCode
+          characters="alphanumeric"
+          value={value}
+          onValueChange={(next) => {
+            calls.push(next);
+            if (mode === 'clear') setValue(next.length === 6 ? '' : next);
+            else if (mode === 'timer') setTimeout(() => setValue(next.toUpperCase()), 50);
+            else setValue(next);
+          }}
+        />
+      </Field.Root>
+    );
+  }
+
+  it('leaves a product that clears a full code cleared when a composition ends', async () => {
+    const calls: string[] = [];
+    render(<Answering initial="ABC12" mode="clear" calls={calls} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['k', 'か']);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(input().value).toBe('');
+    expect(calls).toEqual(['ABC12k']);
+  });
+
+  it.each([['effect'], ['timer']] as const)('takes a composition back for a product that normalizes in %s', async (mode) => {
+    for (const initial of ['AB', 'ABC12']) {
+      const calls: string[] = [];
+      const view = render(<Answering initial={initial} mode={mode} calls={calls} />);
+      await userEvent.click(input());
+      await userEvent.keyboard('{End}');
+      await compose(['k', 'か']);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      expect(input().value).toBe(initial);
+      expect(calls.at(-1)).toBe(initial);
+      view.unmount();
+    }
+  });
+
   it('reports the code before a cancelled composition to a product whose value stays fixed', async () => {
     const heard: string[] = [];
     render(
@@ -493,12 +540,16 @@ describe('Field.OneTimeCode in a browser', () => {
 
   it('gives onChange an input event with an inputType for the code a composition is taken back to', async () => {
     const types: Array<string | undefined> = [];
+    const data: Array<string | null> = [];
     render(
       <Field.Root aria-label="Verification code">
         <Field.OneTimeCode
           characters="alphanumeric"
           value="AB"
-          onChange={(event) => types.push((event.nativeEvent as InputEvent).inputType)}
+          onChange={(event) => {
+            types.push((event.nativeEvent as InputEvent).inputType);
+            data.push((event.nativeEvent as InputEvent).data);
+          }}
         />
       </Field.Root>,
     );
@@ -506,7 +557,8 @@ describe('Field.OneTimeCode in a browser', () => {
     await userEvent.keyboard('{End}');
     await compose(['k', 'か'], null);
     await vi.waitFor(() => expect(types.length).toBeGreaterThan(1));
-    expect(types.at(-1)).toBe('insertText');
+    expect(types.at(-1)).toBe('insertReplacementText');
+    expect(data.at(-1)).toBe('AB');
   });
 
   it('does not place a change that has no beforeinput by the selection of a deletion that was cancelled', async () => {
