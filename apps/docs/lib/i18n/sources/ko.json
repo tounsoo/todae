@@ -534,7 +534,7 @@
   "menu": {
     "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
-    "## Keyboard": "9867469041ca",
+    "## Keyboard": "7a30a02ae4c8",
     "## Checkbox and radio items": "57a69df768cd",
     "## Links": "ede13f3623cf",
     "## Context menus": "395dce7d4954",
@@ -728,6 +728,16 @@
     "## Accessible composition": "a8e1011be55b",
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
+  },
+  "recipes/reorder": {
+    "(top)": "d54efa3b4b16",
+    "# Reorder": "d1929d1c6807",
+    "## The move menu": "2b1a2e471ebc",
+    "## Dragging": "d93c4f0447e5",
+    "## Saving the order": "ccbed730f477",
+    "## Accessible composition": "87e67664f2d5",
+    "## When to use": "38f06c41410c",
+    "(section order)": "21628fd2b383"
   },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
@@ -1088,6 +1098,14 @@
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
+  },
+  "utilities/use-reorder": {
+    "(top)": "d54efa3b4b16",
+    "# useReorder": "93c2a45ef23a",
+    "## Accessible composition": "21f593b786f9",
+    "## When to use": "096cd31b6ac9",
+    "## Props": "d782464e8b92",
+    "(section order)": "57bf99726801"
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",

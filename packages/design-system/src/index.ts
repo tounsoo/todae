@@ -385,6 +385,17 @@ export {
 } from './hooks/useSelection.js';
 export { useFocusHandoff, type UseFocusHandoffOptions } from './hooks/useFocusHandoff.js';
 export {
+  useReorder,
+  type ReorderDrop,
+  type ReorderDropPosition,
+  type UseReorderHandleProps,
+  type UseReorderHandleUserProps,
+  type UseReorderItemProps,
+  type UseReorderItemUserProps,
+  type UseReorderOptions,
+  type UseReorderResult,
+} from './hooks/useReorder.js';
+export {
   useInlineEdit,
   type UseInlineEditGroupProps,
   type UseInlineEditInputProps,
