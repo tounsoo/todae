@@ -2601,14 +2601,6 @@
     "id": {
       "en": "Tooltip id. Default is a generated id.",
       "ko": "팁 id. 기본값은 생성된 id입니다."
-    },
-    "anchorName": {
-      "en": "CSS anchor name the trigger and tooltip share. Default is a generated name. Give it when the trigger sets anchor-name itself.",
-      "ko": "트리거와 툴팁이 함께 쓰는 CSS 앵커 이름. 기본값은 생성된 이름입니다. 트리거가 anchor-name을 직접 지정할 때 주세요."
-    },
-    "holdsFocus": {
-      "en": "Also holds the tooltip open while an element it accepts has focus, such as an element around the trigger. useTooltip listens for focus on the document.",
-      "ko": "이 함수가 받아들이는 요소에 포커스가 있는 동안에도 툴팁을 열어 둡니다. 트리거를 감싼 요소가 그 예입니다. useTooltip은 문서에서 포커스를 듣습니다."
     }
   },
   "ScrollArea.Root": {

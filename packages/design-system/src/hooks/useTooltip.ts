@@ -52,8 +52,23 @@ export type UseTooltipOptions<I extends boolean = false> = {
   onOpenChange?: (open: boolean, reason: TooltipOpenReason) => void;
   enabled?: boolean;
   id?: string;
+};
+
+/**
+ * Options for Todae's own parts, not exported from the package. `anchorName`
+ * is the CSS anchor name the trigger and tip share, for a trigger that sets it
+ * itself. `holdsFocus` also holds the tip while an element it accepts has
+ * focus, such as an element around the trigger.
+ */
+export type TooltipInternalOptions = {
   anchorName?: string;
   holdsFocus?: (focused: Element) => boolean;
+};
+
+/** Hover holds for a trigger that listens on its element itself, with native events. */
+export type TooltipInternalResult = {
+  holdHover: () => void;
+  releaseHover: (relatedTarget: EventTarget | null) => void;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -86,6 +101,14 @@ function tooltipStyle(anchorName: string): CSSProperties {
 export function useTooltip<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
 ): UseTooltipResult<I> {
+  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(options);
+  return result;
+}
+
+/** useTooltip with the options and holds of {@link TooltipInternalOptions} and {@link TooltipInternalResult}. */
+export function useTooltipInternal<I extends boolean = false>(
+  options: UseTooltipOptions<I> & TooltipInternalOptions = {} as UseTooltipOptions<I>,
+): UseTooltipResult<I> & TooltipInternalResult {
   const {
     interactive = false as I,
     showDelay,
@@ -229,29 +252,43 @@ export function useTooltip<I extends boolean = false>(
 
   // Focus on an element that holdsFocus accepts holds the tip as focus on the
   // trigger does. The element itself is the composed path's first entry, so
-  // one inside a shadow root counts.
+  // one inside a shadow root counts. Only a focusin acquires, so a tip never
+  // opens without the person moving focus, and the hold ends when focus
+  // leaves that element, even if holdsFocus no longer accepts it by then.
   const hasHolder = holdsFocus !== undefined;
   useEffect(() => {
     if (!enabled || !hasHolder) return;
     const doc = triggerRef.current?.ownerDocument ?? document;
+    let held: EventTarget | null = null;
     function onFocusIn(event: globalThis.FocusEvent) {
-      if (holderAccepts(event.composedPath()[0] ?? null)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+      const focused = event.composedPath()[0] ?? null;
+      if (!holderAccepts(focused)) return;
+      held = focused;
+      dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     }
     function onFocusOut(event: globalThis.FocusEvent) {
-      if (!holderAccepts(event.composedPath()[0] ?? null)) return;
+      if (held === null || event.composedPath()[0] !== held) return;
       if (holderAccepts(event.relatedTarget) || pairContains(event.relatedTarget)) return;
+      held = null;
       dispatch({ kind: 'release', hold: 'focus' });
     }
     doc.addEventListener('focusin', onFocusIn);
     doc.addEventListener('focusout', onFocusOut);
-    // A holder that has focus when the tip turns on holds it at once. The body
-    // is the active element when nothing has focus.
-    if (doc.activeElement !== doc.body && holderAccepts(doc.activeElement)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     return () => {
       doc.removeEventListener('focusin', onFocusIn);
       doc.removeEventListener('focusout', onFocusOut);
     };
   }, [dispatch, enabled, hasHolder, holderAccepts, pairContains]);
+
+  const holdHover = useCallback(() => {
+    if (enabledRef.current) dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
+  }, [dispatch]);
+  const releaseHover = useCallback(
+    (relatedTarget: EventTarget | null) => {
+      if (enabledRef.current && !pairContains(relatedTarget)) dispatch({ kind: 'release', hold: 'hover' });
+    },
+    [dispatch, pairContains],
+  );
 
   useEffect(
     () => () => {
@@ -328,5 +365,7 @@ export function useTooltip<I extends boolean = false>(
     tooltipRef,
     getTriggerProps,
     getTooltipProps,
+    holdHover,
+    releaseHover,
   };
 }

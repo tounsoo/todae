@@ -4,10 +4,9 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type PointerEventHandler,
   type RefObject,
 } from 'react';
-import { useTooltip, type TooltipTriggerWire } from '../hooks/useTooltip.js';
+import { useTooltipInternal } from '../hooks/useTooltip.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from './domId.js';
 import { useComposedRefs } from './props.js';
@@ -22,7 +21,7 @@ export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 // shows the first one's: querySelector reads in document order.
 const CUT_ATTR = 'data-todae-cut';
 
-/** The text of `el` as one line, as it renders: innerText leaves out what isn't rendered. jsdom has no innerText. */
+/** The text of `el` as one line. innerText leaves out text that isn't rendered, such as `display: none`; jsdom has no innerText. */
 function fullText(el: HTMLElement): string {
   return (el.innerText ?? el.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
@@ -31,38 +30,33 @@ function isCut(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
 }
 
-type ClampTipProps = {
-  target: RefObject<HTMLElement | null>;
-  anchor: string;
-  wireRef: RefObject<TooltipTriggerWire | null>;
-  onPointerEnter: PointerEventHandler<HTMLElement> | undefined;
-  onPointerLeave: PointerEventHandler<HTMLElement> | undefined;
-};
+type ClampTipProps = { target: RefObject<HTMLElement | null>; anchor: string };
 
 /**
- * The tip of a clamped Text, beside it. Text.Root renders the same element
- * with or without it, so gaining a tip never remounts the text; it reaches the
- * tip's hover handlers through `wireRef`.
+ * The tip of a clamped Text, after it while it shows. Text.Root renders the
+ * same element with or without it, so gaining a tip never remounts the text;
+ * the tip listens on the text element itself.
  */
-function ClampTip({ target, anchor, wireRef, onPointerEnter, onPointerLeave }: ClampTipProps) {
+function ClampTip({ target, anchor }: ClampTipProps) {
   const [text, setText] = useState<string | null>(null);
-  // Focus on the text, or on an element around it such as a link or a row,
-  // when this is the first cut text that element holds.
+  // Focus on the text, or on a tab stop around it such as a link or a row,
+  // when this is the first cut text that element holds. A container focused
+  // by script, such as a dialog or a skip link's target, is no tab stop.
   const holdsFocus = useCallback(
     (focused: Element) => {
       const el = target.current;
-      return el !== null && (focused === el || (focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el));
+      if (el === null) return false;
+      if (focused === el) return true;
+      return focused instanceof HTMLElement && focused.tabIndex >= 0 && focused.contains(el) && focused.querySelector(`[${CUT_ATTR}]`) === el;
     },
     [target],
   );
-  const tip = useTooltip({ enabled: text !== null, anchorName: anchor, holdsFocus });
-  const wire = tip.getTriggerProps({ onPointerEnter, onPointerLeave });
+  const tip = useTooltipInternal({ enabled: text !== null, anchorName: anchor, holdsFocus });
 
   const check = useCallback(() => {
     const el = target.current;
     if (!el) return;
-    const full = fullText(el);
-    setText(full !== '' && isCut(el) ? full : null);
+    setText(isCut(el) ? fullText(el) || null : null);
   }, [target]);
 
   // Every render, since a size, weight or lines change can cut the text
@@ -77,21 +71,34 @@ function ClampTip({ target, anchor, wireRef, onPointerEnter, onPointerLeave }: C
     mutations?.observe(el, { childList: true, subtree: true, characterData: true });
     const resizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check);
     resizes?.observe(el);
-    // A web font that loads late changes the text's width, not the box of a one-line clamp.
-    const fonts = el.ownerDocument.fonts as FontFaceSet | undefined;
-    fonts?.addEventListener?.('loadingdone', check);
+    // A web font that loads late changes the text's width, not the box of a
+    // one-line clamp. jsdom has no document.fonts.
+    const doc = el.ownerDocument;
+    const fonts = 'fonts' in doc ? doc.fonts : null;
+    fonts?.addEventListener('loadingdone', check);
     return () => {
       mutations?.disconnect();
       resizes?.disconnect();
-      fonts?.removeEventListener?.('loadingdone', check);
+      fonts?.removeEventListener('loadingdone', check);
     };
   }, [check, target]);
 
-  const setTrigger = wire.ref;
+  const { getTriggerProps, holdHover, releaseHover } = tip;
+  const setTrigger = getTriggerProps().ref;
   useLayoutEffect(() => {
-    setTrigger(target.current);
-    return () => setTrigger(null);
-  }, [setTrigger, target]);
+    const el = target.current;
+    if (!el) return;
+    setTrigger(el);
+    const onPointerEnter = () => holdHover();
+    const onPointerLeave = (event: PointerEvent) => releaseHover(event.relatedTarget);
+    el.addEventListener('pointerenter', onPointerEnter);
+    el.addEventListener('pointerleave', onPointerLeave);
+    return () => {
+      el.removeEventListener('pointerenter', onPointerEnter);
+      el.removeEventListener('pointerleave', onPointerLeave);
+      setTrigger(null);
+    };
+  }, [holdHover, releaseHover, setTrigger, target]);
 
   const cut = text !== null;
   useLayoutEffect(() => {
@@ -101,17 +108,8 @@ function ClampTip({ target, anchor, wireRef, onPointerEnter, onPointerLeave }: C
     return () => el.removeAttribute(CUT_ATTR);
   }, [cut, target]);
 
-  useLayoutEffect(() => {
-    wireRef.current = wire;
-  });
-  useLayoutEffect(
-    () => () => {
-      wireRef.current = null;
-    },
-    [wireRef],
-  );
-
-  if (text === null) return null;
+  // Mounted only while open, so a closed tip adds no element after the text.
+  if (text === null || !tip.open) return null;
   // Clamping changes only painting, so the text stays whole in the
   // accessibility tree and the tip is for the eye alone.
   return (
@@ -121,28 +119,18 @@ function ClampTip({ target, anchor, wireRef, onPointerEnter, onPointerLeave }: C
   );
 }
 
-function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, ref, ...props }: TextRootProps) {
+function Root({ lines, tooltip = true, style, ref, ...props }: TextRootProps) {
   const elRef = useRef<HTMLElement | null>(null);
-  const wireRef = useRef<TooltipTriggerWire | null>(null);
   const refs = useComposedRefs(elRef, ref);
   const anchor = `--todae-text-${useDomId()}`;
   const tipped = tooltip && clampLines(lines) !== undefined;
+  const ownStyle = tipped ? ({ ...style, anchorName: mergeAnchorNames(style?.anchorName, anchor) } as CSSProperties) : style;
 
-  // One shape with or without a tip, so the text never remounts. The tip's
-  // wire runs the product's handler first, as getTriggerProps does.
+  // One shape with or without a tip, so the text never remounts.
   return (
     <>
-      <ServerText.Root
-        {...props}
-        lines={lines}
-        style={tipped ? ({ ...style, anchorName: mergeAnchorNames(style?.anchorName, anchor) } as CSSProperties) : style}
-        onPointerEnter={tipped ? (event) => (wireRef.current?.onPointerEnter ?? onPointerEnter)?.(event) : onPointerEnter}
-        onPointerLeave={tipped ? (event) => (wireRef.current?.onPointerLeave ?? onPointerLeave)?.(event) : onPointerLeave}
-        ref={refs}
-      />
-      {tipped ? (
-        <ClampTip target={elRef} anchor={anchor} wireRef={wireRef} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
-      ) : null}
+      <ServerText.Root {...props} lines={lines} style={ownStyle} ref={refs} />
+      {tipped ? <ClampTip target={elRef} anchor={anchor} /> : null}
     </>
   );
 }

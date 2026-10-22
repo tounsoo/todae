@@ -39,11 +39,15 @@ export function clampLines(lines: number | undefined): number | undefined {
   return lines !== undefined && Number.isInteger(lines) && lines >= 1 ? lines : undefined;
 }
 
+// Each invalid value is reported once, since this logs while rendering.
+const reported = /* @__PURE__ */ new Set<number>();
+
 function Root({ as: Tag = 'p', size, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
   const clamp = clampLines(lines);
   // Logged while rendering, since a server render runs no effects.
-  if (process.env.NODE_ENV !== 'production' && lines !== undefined && clamp === undefined) {
+  if (process.env.NODE_ENV !== 'production' && lines !== undefined && clamp === undefined && !reported.has(lines)) {
+    reported.add(lines);
     console.error(`Text.Root lines must be a whole number of 1 or more; got ${String(lines)}`);
   }
   const classes = cx(

@@ -98,23 +98,28 @@ describe('Text', () => {
   });
 
   it.each([0, -1, 1.5, Number.NaN])('clamps nothing for lines={%s}', (lines) => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    render(
-      <Text.Root lines={lines} data-testid="t">
-        Long
-      </Text.Root>,
-    );
-    const el = screen.getByTestId('t');
-    expect(el.classList.contains(styles.clamp!)).toBe(false);
-    expect(el.style.getPropertyValue('--_lines')).toBe('');
-    vi.restoreAllMocks();
-  });
-
-  it('logs a development error for lines that are not a whole number of 1 or more', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     try {
-      render(<Text.Root lines={0}>Long</Text.Root>);
-      expect(error).toHaveBeenCalledWith('Text.Root lines must be a whole number of 1 or more; got 0');
+      render(
+        <Text.Root lines={lines} data-testid="t">
+          Long
+        </Text.Root>,
+      );
+      const el = screen.getByTestId('t');
+      expect(el.classList.contains(styles.clamp!)).toBe(false);
+      expect(el.style.getPropertyValue('--_lines')).toBe('');
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('logs a development error once for each value of lines that is not a whole number of 1 or more', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      render(<Text.Root lines={-2}>Long</Text.Root>);
+      render(<Text.Root lines={-2}>Again</Text.Root>);
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledWith('Text.Root lines must be a whole number of 1 or more; got -2');
     } finally {
       error.mockRestore();
     }

@@ -172,6 +172,36 @@ describe('Text.Root lines', () => {
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
+  it('keeps the same element when lines comes and goes, and adds nothing after the text until the tip opens', async () => {
+    const box = (lines?: number) => (
+      <div style={{ inlineSize: '12rem' }} data-testid="box">
+        <Text.Root lines={lines} data-testid="t">
+          {LONG}
+        </Text.Root>
+      </div>
+    );
+    const { rerender } = render(box());
+    const el = screen.getByTestId('t');
+    rerender(box(1));
+    expect(screen.getByTestId('t')).toBe(el);
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    expect(screen.getByTestId('box').childElementCount).toBe(1);
+    rerender(box());
+    expect(screen.getByTestId('t')).toBe(el);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+  });
+
+  it('shows no tip when a container that is no tab stop takes focus', async () => {
+    render(
+      <main tabIndex={-1} style={{ inlineSize: '12rem' }} data-testid="main">
+        <Text.Root lines={1}>{LONG}</Text.Root>
+      </main>,
+    );
+    screen.getByTestId('main').focus();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).toBeNull();
+  });
+
   it('drops the tip when the text comes to fit', async () => {
     render(
       <div style={{ inlineSize: '12rem' }} data-testid="box">

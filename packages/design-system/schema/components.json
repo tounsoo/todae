@@ -5756,18 +5756,6 @@
           "type": "string",
           "required": false,
           "description": "Tooltip id. Default is a generated id."
-        },
-        {
-          "name": "anchorName",
-          "type": "string",
-          "required": false,
-          "description": "CSS anchor name the trigger and tooltip share. Default is a generated name. Give it when the trigger sets anchor-name itself."
-        },
-        {
-          "name": "holdsFocus",
-          "type": "(focused: Element) => boolean",
-          "required": false,
-          "description": "Also holds the tooltip open while an element it accepts has focus, such as an element around the trigger. useTooltip listens for focus on the document."
         }
       ]
     },

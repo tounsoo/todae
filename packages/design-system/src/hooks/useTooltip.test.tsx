@@ -7,6 +7,7 @@ import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
 import {
   useTooltip,
+  useTooltipInternal,
   type TooltipTriggerUserProps,
   type TooltipWire,
   type UseTooltipOptions,
@@ -328,9 +329,9 @@ describe('useTooltip', () => {
   });
 });
 
-describe('useTooltip holdsFocus', () => {
-  function HolderHarness() {
-    const tooltip = useTooltip({ holdsFocus: (focused) => focused.id === 'row' });
+describe('useTooltipInternal holdsFocus', () => {
+  function HolderHarness({ accepts = () => true }: { accepts?: () => boolean }) {
+    const tooltip = useTooltipInternal({ holdsFocus: (focused) => focused.id === 'row' && accepts() });
     const wire = tooltip.getTooltipProps();
     return (
       <>
@@ -368,8 +369,24 @@ describe('useTooltip holdsFocus', () => {
     expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
+  it('releases the hold when focus leaves for the page, even once the element is no longer accepted', () => {
+    let accepted = true;
+    render(<HolderHarness accepts={() => accepted} />);
+    act(() => screen.getByRole('link').focus());
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    accepted = false;
+    act(() => screen.getByRole('link').blur());
+    advance(100);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('keeps the public hook without the internal holds', () => {
+    const { result } = renderHook(() => useTooltip());
+    expect('holdHover' in result.current).toBe(false);
+  });
+
   it('uses a given anchorName on the trigger and the tip', () => {
-    const { result } = renderHook(() => useTooltip({ anchorName: '--mine' }));
+    const { result } = renderHook(() => useTooltipInternal({ anchorName: '--mine' }));
     expect(result.current.getTriggerProps().style.anchorName).toBe('--mine');
     expect(result.current.getTooltipProps().style.positionAnchor).toBe('--mine');
   });
