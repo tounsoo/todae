@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import type { CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Splitter, type SplitterRootProps } from '../index.js';
+import { ScrollArea, Splitter, type SplitterRootProps } from '../index.js';
 import { getTabbables } from '../overlay/tabbables.js';
 
 const probes: HTMLElement[] = [];
@@ -163,6 +163,35 @@ describe('Splitter layout', () => {
     rerender(<Layout defaultValue={200} width={900} />);
     await waitFor(() => expect(box('second').width).toBeGreaterThan(690));
     expect(box('first').width).toBe(200);
+  });
+});
+
+describe('Splitter panels', () => {
+  it('scroll their own overflow, and hold a ScrollArea that fills them', () => {
+    render(
+      <div style={{ inlineSize: 600, blockSize: 200 }}>
+        <Splitter.Root defaultValue={200} style={{ blockSize: '100%' }}>
+          <Splitter.Panel data-testid="plain">
+            <div style={{ blockSize: 600 }}>Tall</div>
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize" />
+          <Splitter.Panel data-testid="scrolled">
+            <ScrollArea.Root data-testid="area" style={{ blockSize: '100%' }}>
+              <div style={{ blockSize: 600 }}>Tall</div>
+            </ScrollArea.Root>
+          </Splitter.Panel>
+        </Splitter.Root>
+      </div>,
+    );
+    const plain = screen.getByTestId('plain');
+    expect(plain.getBoundingClientRect().height).toBe(200);
+    expect(plain.scrollHeight).toBeGreaterThan(plain.clientHeight);
+    const panel = screen.getByTestId('scrolled');
+    const area = screen.getByTestId('area');
+    expect(panel.getBoundingClientRect().height).toBe(200);
+    expect(area.getBoundingClientRect().height).toBe(200);
+    expect(area.scrollHeight).toBeGreaterThan(area.clientHeight);
+    expect(panel.scrollHeight).toBe(panel.clientHeight);
   });
 });
 
