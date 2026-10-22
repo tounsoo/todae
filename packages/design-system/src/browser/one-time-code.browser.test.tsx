@@ -352,9 +352,28 @@ describe('Field.OneTimeCode in a browser', () => {
     const onValueChange = vi.fn();
     render(<Code characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
-    await compose(['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef']);
+    for (const text of ['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef']) await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
+    // The full code too, before the composition ends, since it began on an empty code.
+    await vi.waitFor(() => expect(onValueChange.mock.calls).toEqual([['a'], ['ab'], ['abc'], ['abcd'], ['abcde'], ['abcdef']]));
+    await session().send('Input.insertText', { text: 'abcdef' });
     await vi.waitFor(() => expect(input().value).toBe('abcdef'));
-    expect(onValueChange.mock.calls).toEqual([['a'], ['ab'], ['abc'], ['abcd'], ['abcde'], ['abcdef']]);
+    expect(onValueChange).toHaveBeenCalledTimes(6);
+  });
+
+  it('holds a full code a composition makes on a code that was not empty until it ends', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="ABC12" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    // A romaji step: `k` is on its way to `か`, which the code refuses.
+    await compose(['k', 'か']);
+    await vi.waitFor(() => expect(input().value).toBe('ABC12'));
+    expect(onValueChange).not.toHaveBeenCalled();
+    await session().send('Input.imeSetComposition', { text: 'k', selectionStart: 1, selectionEnd: 1 });
+    await vi.waitFor(() => expect(boxes().map((box) => box.textContent).join('')).toBe('ABC12k'));
+    expect(onValueChange).not.toHaveBeenCalled();
+    await session().send('Input.insertText', { text: 'k' });
+    await vi.waitFor(() => expect(onValueChange.mock.calls).toEqual([['ABC12k']]));
   });
 
   it('takes a composition that rewrites the text before the caret', async () => {
