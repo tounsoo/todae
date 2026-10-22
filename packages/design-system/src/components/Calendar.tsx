@@ -382,17 +382,14 @@ function Root(rootProps: CalendarRootProps) {
         announce(strings.pickEndDate);
         return;
       }
-      // Reported even when it is the value already selected, but not remembered then: an
-      // answer that keeps the value doesn't change it, so nothing would take the report back.
+      // Reported even when it is the value already selected.
       const next = spanOf(anchor ?? date, date);
       setPending(IDLE);
-      if (!value || rangeText(value) !== rangeText(next)) {
-        setReported((current) => [...current, rangeText(next)].slice(-REPORTED_PICKS));
-      }
+      setReported((current) => [...current, rangeText(next)].slice(-REPORTED_PICKS));
       setValue(next);
       onValueChange?.(next);
     },
-    [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable, value],
+    [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable],
   );
   const shown = useMemo(() => {
     if (!anchor) return value;

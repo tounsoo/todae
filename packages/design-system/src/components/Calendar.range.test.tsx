@@ -544,7 +544,7 @@ describe('Calendar range mode', () => {
   it.each([
     [8, 'November 2026'],
     [9, 'October 2026'],
-  ])('remembers only the last eight picks no value has answered: after %i, the first one answered shows %s', (picks, month) => {
+  ])('takes a late answer to the first of %i unanswered picks as an answer only within the last eight, showing %s', (picks, month) => {
     function Late() {
       const [value, setValue] = useState<DateRange | null>(null);
       const [asked, setAsked] = useState<DateRange[]>([]);
