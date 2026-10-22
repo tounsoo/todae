@@ -5,6 +5,8 @@ import { BottomSheet } from './BottomSheet.js';
 import { Dialog } from './Dialog.js';
 import { Drawer } from './Drawer.js';
 import { Drilldown } from './Drilldown.js';
+import { Tooltip } from './Tooltip.js';
+import { useTooltip } from '../hooks/useTooltip.js';
 
 afterEach(cleanup);
 
@@ -201,6 +203,38 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       expect(screen.getByRole('group', { name: 'Settings' })).toBeTruthy();
       expect(getSurface().getAttribute('closedby')).toBe('none');
       expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('leaves close requests to the surface while a Tooltip inside takes only the Escape key', () => {
+      const onOpenChange = vi.fn();
+      const onTipChange = vi.fn();
+      const h = harness();
+      function Tip() {
+        const tooltip = useTooltip({ open: true, onOpenChange: onTipChange });
+        return (
+          <>
+            <button type="button" {...tooltip.getTriggerProps()}>
+              Archive
+            </button>
+            <Tooltip.Root {...tooltip.getTooltipProps()}>Archive the file</Tooltip.Root>
+          </>
+        );
+      }
+      const surface = (dismissOnEscape: boolean) => (
+        <h.Root open onOpenChange={onOpenChange} dismissOnEscape={dismissOnEscape}>
+          <h.Title>Files</h.Title>
+          <Tip />
+        </h.Root>
+      );
+      const { rerender } = render(surface(false));
+      expect(getSurface().getAttribute('closedby')).toBe('none');
+      rerender(surface(true));
+      act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+      expect(onTipChange).not.toHaveBeenCalled();
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Archive', hidden: true }), { key: 'Escape' });
+      expect(onTipChange).toHaveBeenCalledWith(false, 'escape');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
     });
 
     it('starts an uncontrolled Drilldown over with reason reset when it closes', () => {

@@ -7,6 +7,7 @@ type Entry = {
   passesKey: (event: KeyboardEvent) => boolean;
   element: () => Element | null;
   popup: boolean;
+  closeRequests: boolean;
 };
 
 const stack: Entry[] = [];
@@ -72,15 +73,16 @@ function inside(scope: Element, entry: Entry): boolean {
 
 /**
  * The layers that take a request with focus on `target`, inside one of
- * `scope` or anywhere when it is null, leaving out those that pass the Escape
- * key `event` on. A disabled layer keeps its place in the stack but is left
+ * `scope` or anywhere when it is null: for the Escape key `event`, those that
+ * don't pass it on, and without one, a modal's close request, those that take
+ * close requests. A disabled layer keeps its place in the stack but is left
  * out, so the request falls through to the next one.
  */
 function candidates(scope: readonly Element[] | null, target: Element | null, event?: KeyboardEvent): Entry[] {
   return stack.filter(
     (entry) =>
       (scope === null || scope.some((el) => inside(el, entry))) &&
-      !(event && entry.passesKey(event)) &&
+      (event ? !entry.passesKey(event) : entry.closeRequests) &&
       entry.takes(target),
   );
 }
@@ -114,13 +116,14 @@ function subscribe(watcher: () => void): () => void {
 }
 
 /**
- * Whether a layer sits inside `element`, kept current as layers come and go.
- * Registration only: whether a layer takes a request is read when one comes.
+ * Whether a layer that takes close requests sits inside `element`, kept
+ * current as layers come and go. Registration only: whether a layer takes a
+ * request is read when one comes.
  */
 export function useLayerInside(element: Element | null): boolean {
   return useSyncExternalStore(
     subscribe,
-    () => element !== null && stack.some((entry) => inside(element, entry)),
+    () => element !== null && stack.some((entry) => entry.closeRequests && inside(element, entry)),
     () => false,
   );
 }
@@ -155,14 +158,20 @@ function push(entry: Entry): () => void {
  * handled or one that ends an IME composition. `elementRef` places the
  * layer: a layer left behind a modal `<dialog>` opened later skips the key,
  * and the dialog gets it. A layer with `popup: false` yields to every open
- * popup whose element doesn't contain its own.
+ * popup whose element doesn't contain its own. A layer with
+ * `closeRequests: false`, such as a tooltip, answers the Escape key only, and
+ * a modal's close requests pass it by.
  */
 export function useEscapeKey(
   active: boolean,
   enabled: boolean | ((target: Element | null) => boolean),
   handler: () => void,
   elementRef: RefObject<Element | null>,
-  { popup = true, passesKey }: { popup?: boolean; passesKey?: (event: KeyboardEvent) => boolean } = {},
+  {
+    popup = true,
+    closeRequests = true,
+    passesKey,
+  }: { popup?: boolean; closeRequests?: boolean; passesKey?: (event: KeyboardEvent) => boolean } = {},
 ): void {
   const latest = useRef({ handler, enabled, passesKey });
   latest.current = { handler, enabled, passesKey };
@@ -178,6 +187,7 @@ export function useEscapeKey(
       passesKey: (event) => latest.current.passesKey?.(event) === true,
       element: () => elementRef.current,
       popup,
+      closeRequests,
     });
-  }, [active, elementRef, popup]);
+  }, [active, elementRef, popup, closeRequests]);
 }

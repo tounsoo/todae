@@ -196,7 +196,7 @@ export function useTooltip<I extends boolean = false>(
     dispatch({ kind: 'escape' }, restoreFocus);
   }, [dispatch]);
 
-  useEscapeKey(open, enabled, onEscape, tooltipRef);
+  useEscapeKey(open, enabled, onEscape, tooltipRef, { closeRequests: false });
 
   useLayoutEffect(() => {
     if (restoreEpoch === 0 || open) return;
