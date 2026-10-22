@@ -708,13 +708,13 @@
   },
   "recipes/reorder": {
     "(top)": "d54efa3b4b16",
-    "# Reorder": "71bfc253035c",
-    "## The move menu": "d2fe0fb4bae5",
+    "# Reorder": "d1929d1c6807",
+    "## The move menu": "42a78214ee76",
+    "## Dragging": "5cd52fe3aeae",
     "## Saving the order": "ccbed730f477",
-    "## Dragging": "fb6b5b7bf6dc",
-    "## Accessible composition": "2af14b1be5dc",
+    "## Accessible composition": "95ac766cbb1f",
     "## When to use": "38f06c41410c",
-    "(section order)": "7fe5b2e7daca"
+    "(section order)": "21628fd2b383"
   },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
@@ -1051,6 +1051,14 @@
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
+  },
+  "utilities/use-reorder": {
+    "(top)": "d54efa3b4b16",
+    "# useReorder": "5311931daaa9",
+    "## Accessible composition": "e9357eebba8a",
+    "## When to use": "096cd31b6ac9",
+    "## Props": "d782464e8b92",
+    "(section order)": "57bf99726801"
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",

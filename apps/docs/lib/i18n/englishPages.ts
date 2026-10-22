@@ -113,6 +113,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-mentions': () => import('../../app/(en)/utilities/use-mentions/page.mdx'),
   'utilities/use-modal-layer': () => import('../../app/(en)/utilities/use-modal-layer/page.mdx'),
   'utilities/use-popover': () => import('../../app/(en)/utilities/use-popover/page.mdx'),
+  'utilities/use-reorder': () => import('../../app/(en)/utilities/use-reorder/page.mdx'),
   'utilities/use-roving-focus': () => import('../../app/(en)/utilities/use-roving-focus/page.mdx'),
   'utilities/use-selection': () => import('../../app/(en)/utilities/use-selection/page.mdx'),
   'utilities/use-sheet-presentation': () => import('../../app/(en)/utilities/use-sheet-presentation/page.mdx'),

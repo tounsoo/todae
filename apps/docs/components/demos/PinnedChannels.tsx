@@ -1,7 +1,7 @@
 'use client';
 
-import { Button, Menu, Stack, Text, useAnnouncer } from '@tounsoo/todae';
-import { EllipsisVertical } from 'lucide-react';
+import { Button, Menu, Stack, Text, useAnnouncer, useReorder, type ReorderDrop } from '@tounsoo/todae';
+import { EllipsisVertical, GripVertical } from 'lucide-react';
 import { useId } from 'react';
 
 export type Channel = { id: string; name: string };
@@ -11,6 +11,14 @@ function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
   const [item] = next.splice(from, 1);
   next.splice(to, 0, item!);
   return next;
+}
+
+// A line at the edge the dragged row would land on.
+function dropLine(drop: ReorderDrop | null, index: number) {
+  if (drop?.index !== index) return undefined;
+  const width = 'var(--todae-focus-ring-width)';
+  const offset = drop.position === 'before' ? width : `calc(-1 * ${width})`;
+  return `inset 0 ${offset} 0 var(--todae-color-accent-default)`;
 }
 
 export function PinnedChannels({
@@ -28,6 +36,7 @@ export function PinnedChannels({
     onReorder(moveItem(channels, from, to));
     announce(`${channels[from]!.name} moved to position ${to + 1} of ${channels.length}`);
   };
+  const reorder = useReorder({ onMove: move });
 
   return (
     <>
@@ -43,9 +52,23 @@ export function PinnedChannels({
             ['Move to bottom', last],
           ] as const;
           return (
-            <li key={channel.id}>
-              <Stack.Root direction="row" align="center" justify="between">
-                <Text.Root>{channel.name}</Text.Root>
+            <li
+              key={channel.id}
+              {...reorder.getItemProps(index)}
+              style={{
+                boxShadow: dropLine(reorder.drop, index),
+                background: reorder.dragging === index ? 'var(--todae-color-bg-subtle)' : undefined,
+              }}
+            >
+              <Stack.Root direction="row" align="center" gap="condensed">
+                <span
+                  {...reorder.getHandleProps(index)}
+                  aria-hidden
+                  style={{ display: 'flex', cursor: 'grab', touchAction: 'none', color: 'var(--todae-color-fg-muted)' }}
+                >
+                  <GripVertical size="1em" />
+                </span>
+                <Text.Root style={{ flex: 1 }}>{channel.name}</Text.Root>
                 <Menu.Root>
                   <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
                     <Button.Icon>

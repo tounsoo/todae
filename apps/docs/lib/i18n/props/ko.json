@@ -3282,5 +3282,19 @@
       "en": "Called when the person cancels: Escape, or a Cancel button that calls cancel. Also called when focus leaves the edit with a draft onCommit turns down.",
       "ko": "사람이 취소할 때 불립니다. Escape나 cancel을 부르는 Cancel 버튼이 그렇습니다. onCommit이 거절한 초안을 둔 채 포커스가 편집을 떠날 때도 불립니다."
     }
+  },
+  "useReorder": {
+    "onMove": {
+      "en": "Called on a drop that changes the order, with the dragged item's index and the index it ends at.",
+      "ko": "순서를 바꾸는 놓기에서, 끈 항목의 인덱스와 그 항목이 놓이는 인덱스를 받아 불립니다."
+    },
+    "orientation": {
+      "en": "The axis the items run along. Default 'vertical'. In a horizontal list, 'before' follows the text direction.",
+      "ko": "항목이 늘어선 축. 기본값은 'vertical'. 가로 목록에서 'before'는 텍스트 방향을 따릅니다."
+    },
+    "disabled": {
+      "en": "Turn dragging off.",
+      "ko": "끌기를 끕니다."
+    }
   }
 }
