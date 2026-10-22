@@ -140,8 +140,8 @@ export function OneTimeCode({
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
   const inserting = useRef(false);
-  // The code a composition started from, and the last code it reported while it ran.
-  const composition = useRef<{ start: string; reported: string | null } | null>(null);
+  // The code and the selection a composition started from, and the last code it reported while it ran.
+  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null } | null>(null);
   // While composing, the input's own text, which React renders so it writes nothing that would end the IME, and the code the boxes show.
   const [composing, setComposing] = useState<{ live: string; shown: string } | null>(null);
   const refs = useComposedRefs(input, ref);
@@ -183,7 +183,7 @@ export function OneTimeCode({
       if (edit) put(el!, edit, inserting);
     }
     function onCompositionStart() {
-      composition.current = { start: latest.current.value, reported: null };
+      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null };
       // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
       el!.removeAttribute('maxlength');
     }
@@ -200,7 +200,7 @@ export function OneTimeCode({
         setComposing(null);
         return;
       }
-      const target = reconcile(saved.start, live, { characters, length });
+      const target = reconcile(saved.start, live, { characters, length }, saved.selection);
       if (live === target) {
         if (target !== value && target !== saved.reported) onValueChange?.(target);
       } else {
@@ -225,7 +225,7 @@ export function OneTimeCode({
     const text = event.target.value;
     const saved = composition.current;
     if ((event.nativeEvent as InputEvent).isComposing) {
-      const next = reconcile(saved?.start ?? value, text, { characters, length });
+      const next = reconcile(saved?.start ?? value, text, { characters, length }, saved?.selection);
       setComposing({ live: text, shown: next });
       // A composed text that is already a valid code, such as a whole alphanumeric code a phone keyboard composes as one word, is reported as it is typed; anything else waits for the end.
       if (next === text && next !== value) {

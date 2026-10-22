@@ -125,4 +125,32 @@ describe('reconcile', () => {
   ] as const)('%s', (_name, previous, text, characters, expected) => {
     expect(reconcile(previous, text, { characters, length: 6 })).toBe(expected);
   });
+
+  it.each([
+    ['writes a character typed next to the same one over the box it was typed at', 'AB1123', [2, 2], 'AB11123', 'AB1123'],
+    ['writes a repeated pair typed at the start over the first boxes', 'ABAB12', [0, 0], 'ABABAB12', 'ABAB12'],
+    ['inserts a character typed next to the same one where it was typed', 'A11', [1, 1], 'A111', 'A111'],
+    ['replaces a selected range with a character it holds', 'ABCD', [1, 3], 'ACD', 'ACD'],
+    ['takes a rewrite before the selection it started from', 'AB', [2, 2], 'AX', 'AX'],
+  ] as const)('with the selection it started from, %s', (_name, previous, [start, end], text, expected) => {
+    expect(reconcile(previous, text, { characters: 'alphanumeric', length: 6 }, { start, end })).toBe(expected);
+  });
+
+  it('reads the text an insert at a selection leaves as the edit the rule makes there', () => {
+    const options = { characters: 'alphanumeric', length: 6 } as const;
+    // Repeated letters, so the insert could be read at more than one place.
+    for (const value of ['', 'a', 'aa', 'aba', 'aabb', 'abab', 'aaaaa', 'abbaab']) {
+      for (let start = 0; start <= value.length; start++) {
+        for (let end = start; end <= value.length; end++) {
+          for (const text of ['a', 'b', 'aa', 'ab', 'aab', 'ba-b', 'abababa']) {
+            const edit = editOf(value, { start, end }, text, options);
+            // What a composition leaves in the input, which has no maxLength while it runs.
+            const typed = value.slice(0, start) + text + value.slice(end);
+            expect(reconcile(value, typed, options, { start, end })).toBe(edit ? applyEdit(value, edit) : value);
+            if (edit) expect(reconcile(value, applyEdit(value, edit), options)).toBe(applyEdit(value, edit));
+          }
+        }
+      }
+    }
+  });
 });

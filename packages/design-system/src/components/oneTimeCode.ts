@@ -50,30 +50,51 @@ export function editOf(
   return insert ? { from, to, insert } : null;
 }
 
-/** The edit that makes `from` into `to`: the range between their common start and end, and what `to` has there. */
-export function difference(from: string, to: string): CodeEdit {
+/**
+ * The edit that makes `from` into `to`: the range between their common start
+ * and end, and what `to` has there. With `near`, the selection the change
+ * started from, the range starts no later than its start and ends no earlier
+ * than its end, so a character typed next to the same one is placed where it
+ * was typed.
+ */
+export function difference(from: string, to: string, near?: CodeSelection): CodeEdit {
+  const shorter = Math.min(from.length, to.length);
   let start = 0;
-  while (start < from.length && start < to.length && from[start] === to[start]) start++;
+  while (start < Math.min(shorter, near?.start ?? shorter) && from[start] === to[start]) start++;
+  const most = Math.min(shorter - start, near ? Math.max(from.length - near.end, 0) : Infinity);
   let end = 0;
-  while (end < from.length - start && end < to.length - start && from[from.length - 1 - end] === to[to.length - 1 - end]) end++;
+  while (end < most && from[from.length - 1 - end] === to[to.length - 1 - end]) end++;
   return { from: start, to: from.length - end, insert: to.slice(start, to.length - end) };
 }
 
 /**
- * The code the field holds when its text went from `previous` to `text` by an
- * edit Todae didn't make itself (autofill, an insert the browser won't let be
- * cancelled, a composition): what changed between them is taken as an insert
- * over the range it replaced, by `editOf`, and a deletion is kept as it is.
- * `previous` when the insert brings nothing the code allows.
+ * The edit that makes `previous` into the code the field holds when its text
+ * went from `previous` to `text` by an edit Todae didn't make itself
+ * (autofill, an insert the browser won't let be cancelled, a composition):
+ * what changed between them is taken as an insert over the range it replaced,
+ * by `editOf`, and a deletion is kept as it is. `near` is the selection the
+ * change started from, when it is known. Null when the insert brings nothing
+ * the code allows.
  */
+export function reconcileEdit(
+  previous: string,
+  text: string,
+  options: { characters: OneTimeCodeCharacters; length: number },
+  near?: CodeSelection,
+): CodeEdit | null {
+  const { from, to, insert } = difference(previous, text, near);
+  if (!insert) return { from: 0, to: previous.length, insert: cleanCode(text, options.characters, options.length) };
+  return editOf(previous, { start: from, end: to }, insert, options);
+}
+
+/** The code `reconcileEdit` gives: `previous` when the insert brings nothing the code allows. */
 export function reconcile(
   previous: string,
   text: string,
   options: { characters: OneTimeCodeCharacters; length: number },
+  near?: CodeSelection,
 ): string {
-  const { from, to, insert } = difference(previous, text);
-  if (!insert) return cleanCode(text, options.characters, options.length);
-  const edit = editOf(previous, { start: from, end: to }, insert, options);
+  const edit = reconcileEdit(previous, text, options, near);
   return edit ? applyEdit(previous, edit) : previous;
 }
 

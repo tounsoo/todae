@@ -455,6 +455,23 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it('lands a composed character next to the same one at the box it was typed at', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB1123" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}{ArrowRight}');
+    await compose(['1']);
+    await vi.waitFor(() => expect(input().value).toBe('AB1123'));
+    expect(onValueChange).not.toHaveBeenCalled();
+    cleanup();
+    render(<Code initial="ABAB12" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}');
+    await compose(['A', 'AB']);
+    await vi.waitFor(() => expect(input().value).toBe('ABAB12'));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('takes a composed full-width digit as its ASCII one', async () => {
     render(<Code initial="123456" />);
     await userEvent.click(input());
