@@ -348,12 +348,22 @@ describe('A button in a Field.Root', () => {
   );
 });
 
-describe('A button beside a Field.Textarea', () => {
-  it('keeps Button\'s own icon-only size, since the field has no single line', () => {
+describe('A button beside a Field.Textarea or a wrapping Field.ChipInput', () => {
+  it.each(['textarea', 'chips'])('keeps Button\'s own icon-only size beside %s, since the field has no single line', (kind) => {
     render(
       <main data-appearance="light" data-density="comfortable">
         <Field.Root aria-label="Note">
-          <Field.Textarea value="" onChange={() => {}} />
+          {kind === 'textarea' ? (
+            <Field.Textarea value="" onChange={() => {}} />
+          ) : (
+            <Field.ChipInput
+              chips={['one', 'two']}
+              inputValue=""
+              onInputValueChange={() => undefined}
+              onCommit={() => undefined}
+              onChipRemove={() => undefined}
+            />
+          )}
           <Button.Root variant="ghost" aria-label="Clear note">
             <Button.Icon>
               <svg viewBox="0 0 16 16" />

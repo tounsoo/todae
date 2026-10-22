@@ -49,7 +49,8 @@ export function TextInput({
     shownType.current = type;
     const input = own.current;
     if (!input || activeIn(input) !== input) return;
-    // The selection is still the input's here, after this commit's value too. Chromium puts the
+    // The selection is still the input's here: the caret it had, or the end of a value this commit
+    // wrote. Chromium puts the
     // caret at the start when it next renders a focused input whose type changed, after anything
     // set now, so put it back in the next frame.
     const { selectionStart: start, selectionEnd: end, selectionDirection: direction } = input;

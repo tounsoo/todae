@@ -103,10 +103,11 @@ const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     <Description.Root id={hintId}>Enter the 6-digit code we sent to the phone ending in 42.</Description.Root>
     <ErrorMessage.Root />
   </Field.Group>
-  <Button.Root type="submit" aria-disabled={sending || undefined}>
+  {/* One request at a time: hold both while either runs. */}
+  <Button.Root type="submit" aria-disabled={sending || resending || undefined}>
     Verify
   </Button.Root>
-  <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
+  <Button.Root variant="ghost" aria-disabled={sending || resending || undefined} onClick={resend}>
     Send a new code
   </Button.Root>
 </Form.Root>
@@ -123,7 +124,7 @@ useEffect(() => {
 }, [code]);
 ```
 
-사람이 새 코드를 요청하면, 보냈다는 사실을 눈에 보이는 글과 스크린 리더가 듣는 말 둘 다로 알리세요. 바뀐 설명은 읽히지 않으므로, 데모는 설명을 바꾸고 [useAnnouncer](/utilities/use-announcer)도 부르며, 더는 맞지 않는 틀린 코드의 오류를 지웁니다. 요청이 도는 동안에는 Verify처럼 버튼을 `aria-disabled`로 막으세요. 얼마나 지나야 다시 요청할 수 있는지는 제품의 규칙입니다.
+사람이 새 코드를 요청하면, 보냈다는 사실을 눈에 보이는 글과 스크린 리더가 듣는 말 둘 다로 알리세요. 바뀐 설명은 읽히지 않으므로, 데모는 설명을 바꾸고 [useAnnouncer](/utilities/use-announcer)도 부르며, 더는 맞지 않는 틀린 코드의 오류를 지웁니다. 어느 요청이든 도는 동안에는 이 버튼과 Verify를 함께 `aria-disabled`로 막아, 새 코드를 알린 뒤에 이전 코드의 확인 결과가 돌아오지 않게 하세요. 얼마나 지나야 다시 요청할 수 있는지는 제품의 규칙입니다.
 
 ## 가입
 
@@ -135,7 +136,7 @@ useEffect(() => {
 
 ## 접근 가능한 구성
 
-**Todae가 처리:** `Form.Root`는 제출할 때 필드를 확인하고, 각 문제를 페이지의 언어로 말하며, 포커스를 첫 문제로 옮깁니다. 서버의 오류를 그 필드에 `aria-invalid`와 `aria-describedby`로 보여 주고, 응답이 그 필드를 가리키면 포커스를 옮깁니다. 한 줄 `Field.Root` 안의 아이콘 전용 `Button.Root`는 필드 한 줄 높이이고 누르면 포커스가 입력에 남으며, `pressed`가 있으면 `aria-pressed`를 가진 토글이 되고 레이블을 툴팁으로 보여 줍니다. `Field.OneTimeCode`는 `autocomplete="one-time-code"`, 숫자 키패드, 너무 짧은 코드 확인을 설정합니다. `aria-disabled`인 `Button.Root`는 요청이 도는 동안 포커스를 유지하고 클릭을 무시합니다.
+**Todae가 처리:** `Form.Root`는 제출할 때 필드를 확인하고, 각 문제를 페이지의 언어로 말하며, 포커스를 첫 문제로 옮깁니다. 서버의 오류를 그 필드에 `aria-invalid`와 `aria-describedby`로 보여 주고, 응답이 그 필드를 가리키면 포커스를 옮깁니다. 한 줄 `Field.Root` 안의 아이콘 전용 `Button.Root`는 필드 한 줄 높이이고 입력에 포커스가 있으면 누르더라도 포커스가 입력에 남으며, `pressed`가 있으면 `aria-pressed`를 가진 토글이 되고 레이블을 툴팁으로 보여 줍니다. `Field.OneTimeCode`는 `autocomplete="one-time-code"`, 숫자 키패드, 너무 짧은 코드 확인을 설정합니다. `aria-disabled`인 `Button.Root`는 요청이 도는 동안 포커스를 유지하고 클릭을 무시합니다.
 
 **직접 제공:** 각 필드의 `autoComplete`. 보기 버튼이 바꾸는 입력의 `type`, 제품의 언어로 된 레이블, 상태마다의 아이콘, 필드에 있을 때의 `disabled`, 꺼진 맞춤법 검사와 자동 고침, 제출할 때 다시 숨기는 비밀번호. 틀린 이메일이나 비밀번호에 대한 메시지 하나를 비밀번호에. 단계마다 폼의 `key`, 그리고 코드 단계가 보일 때 코드로, 마지막에는 결과를 알리는 제목으로 옮기는 포커스. 설명에 적은 코드의 길이와 보낸 곳. 다 찬 코드를 마지막 글자 뒤 잠깐 쉬었다 보내는 것, 그리고 새 코드를 보냈을 때 보이고 들리는 메시지.
 

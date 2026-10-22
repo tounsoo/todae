@@ -103,10 +103,11 @@ When the password is right and the account asks for a second step, show a new fo
     <Description.Root id={hintId}>Enter the 6-digit code we sent to the phone ending in 42.</Description.Root>
     <ErrorMessage.Root />
   </Field.Group>
-  <Button.Root type="submit" aria-disabled={sending || undefined}>
+  {/* One request at a time: hold both while either runs. */}
+  <Button.Root type="submit" aria-disabled={sending || resending || undefined}>
     Verify
   </Button.Root>
-  <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
+  <Button.Root variant="ghost" aria-disabled={sending || resending || undefined} onClick={resend}>
     Send a new code
   </Button.Root>
 </Form.Root>
@@ -123,7 +124,7 @@ useEffect(() => {
 }, [code]);
 ```
 
-When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold the button with `aria-disabled` while the request runs, as Verify is held. How soon a person may ask again is your product's rule.
+When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced. How soon a person may ask again is your product's rule.
 
 ## Sign-up
 
@@ -135,7 +136,7 @@ A sign-up form takes a name, the email with `autoComplete="username"`, and a pas
 
 ## Accessible composition
 
-**Todae handles:** `Form.Root` checks the fields on submit, words each problem in the page's language and moves focus to the first one. It shows a server's error on its field, with `aria-invalid` and `aria-describedby`, and moves focus to that field when the reply names it. An icon-only `Button.Root` in a one-line `Field.Root` is one field line tall, and a press on it leaves focus in the input; with `pressed` it is a toggle with `aria-pressed`, and its label shows as a tooltip. `Field.OneTimeCode` sets `autocomplete="one-time-code"`, a numeric keypad and a too-short check. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while a request runs.
+**Todae handles:** `Form.Root` checks the fields on submit, words each problem in the page's language and moves focus to the first one. It shows a server's error on its field, with `aria-invalid` and `aria-describedby`, and moves focus to that field when the reply names it. An icon-only `Button.Root` in a one-line `Field.Root` is one field line tall, and a press on it leaves focus in the input when the input has it; with `pressed` it is a toggle with `aria-pressed`, and its label shows as a tooltip. `Field.OneTimeCode` sets `autocomplete="one-time-code"`, a numeric keypad and a too-short check. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while a request runs.
 
 **You supply:** The `autoComplete` of each field. The input's `type` switched by the show button, its label in your product's language, its icon for each state, `disabled` when the field has it, spell checking and autocorrect off, and the password hidden again on submit. One message for a wrong email or password, on the password. A `key` on each step's form, and focus moved to the code when its step shows, and to a heading that confirms the result at the end. The code's length and where it went in a description. Sending a full code a short pause after its last character, and a visible and announced message when a new code goes out.
 

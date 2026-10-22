@@ -125,7 +125,7 @@ function inOwnPopover(target: EventTarget | null, shell: HTMLElement): boolean {
 
 // An icon-only Button.Root placed straight in the shell, beside the input.
 function lineButtonOf(target: EventTarget | null, shell: HTMLElement): HTMLElement | null {
-  const button = target instanceof Element ? target.closest<HTMLElement>('[data-icon-only]') : null;
+  const button = target instanceof Element ? target.closest<HTMLElement>(':is(button, a)[data-icon-only]') : null;
   return button?.parentElement === shell ? button : null;
 }
 
