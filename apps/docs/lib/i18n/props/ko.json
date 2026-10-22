@@ -3208,5 +3208,27 @@
       "en": "The element that takes focus when the watched element unmounts while it holds focus.",
       "ko": "지켜보는 요소가 포커스를 가진 채로 언마운트될 때 포커스를 받는 요소."
     }
+  },
+  "formatRelativeTime": {
+    "value": {
+      "en": "The time to write, in the time zone its dates are counted in.",
+      "ko": "쓸 시각. 날짜는 이 값의 시간대에서 셉니다."
+    },
+    "now": {
+      "en": "The time to count from, such as Temporal.Now.instant().",
+      "ko": "Temporal.Now.instant()처럼 기준이 되는 시각."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    },
+    "options.style": {
+      "en": "How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set.",
+      "ko": "Intl.RelativeTimeFormat이 받는 표기 길이. long(3 minutes ago), short(3 min. ago) 또는 narrow입니다. 지정하지 않으면 long입니다."
+    },
+    "options.numeric": {
+      "en": "auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set.",
+      "ko": "auto는 로캘에 있으면 어제나 지금 같은 낱말을 쓰고, always는 1일 전처럼 숫자를 씁니다. 지정하지 않으면 auto입니다."
+    }
   }
 }
