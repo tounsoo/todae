@@ -669,9 +669,9 @@
   "recipes/inline-edit": {
     "(top)": "89db7894a8df",
     "# Inline edit": "199d2e5da2df",
-    "## Saving and cancelling": "b795b770206f",
-    "## Saving to a server": "24142d48fd2c",
-    "## Accessible composition": "9c874d90a82e",
+    "## Saving and cancelling": "fde5c50a40f1",
+    "## Saving to a server": "671323387f41",
+    "## Accessible composition": "01e9d8e4fbc7",
     "## When to use": "99b196ff7fc6",
     "(section order)": "808446d2e9ad"
   },
@@ -987,8 +987,8 @@
   },
   "utilities/use-inline-edit": {
     "(top)": "89db7894a8df",
-    "# useInlineEdit": "8c252b0e31f8",
-    "## Accessible composition": "94c2c3d1029e",
+    "# useInlineEdit": "07f2b23fbf5a",
+    "## Accessible composition": "fd0a54e02eed",
     "## When to use": "6811b76102a1",
     "## Props": "020d1345d4d7",
     "(section order)": "428f0e0773ae"

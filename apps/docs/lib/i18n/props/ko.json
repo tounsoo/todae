@@ -3215,8 +3215,8 @@
       "ko": "저장된 값. 편집은 매번 이 값에서 시작합니다."
     },
     "onCommit": {
-      "en": "Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name. Not called when the draft equals value; the edit just closes.",
-      "ko": "사람이 저장할 때 초안과 함께 불립니다. Enter, commit을 부르는 Save 버튼, 편집을 떠나는 포커스가 그렇습니다. 빈 이름처럼 편집을 이어 가려면 false를 반환하세요. 초안이 value와 같으면 불리지 않고 편집만 닫힙니다."
+      "en": "Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes.",
+      "ko": "사람이 저장할 때 초안과 함께 불립니다. Enter, commit을 부르는 Save 버튼, 편집을 떠나는 포커스가 그렇습니다. 빈 이름처럼 편집을 이어 가려면 false를 반환하세요. 포커스가 편집을 떠난 뒤라면 false는 값을 되돌리고 onCancel을 부릅니다. 초안이 value와 같으면 불리지 않고 편집만 닫힙니다."
     },
     "onCancel": {
       "en": "Called when the person cancels: Escape, or a Cancel button that calls cancel.",

@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -9,14 +8,16 @@ import {
   type MouseEvent,
   type RefCallback,
 } from 'react';
-import { activeIn, focusLost } from '../components/activeElement.js';
-import { isImeKeyEvent } from '../components/ime.js';
+import { activeIn } from '../components/activeElement.js';
+import { escapeHandledOrComposing, isImeKeyEvent } from '../components/ime.js';
+import { useComposedRefs } from '../components/props.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { useFocusHandoff } from './useFocusHandoff.js';
 
 export type UseInlineEditOptions = {
   /** The saved value. Each edit starts from it. */
   value: string;
-  /** Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name. Not called when the draft equals value; the edit just closes. */
+  /** Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes. */
   onCommit: (draft: string) => boolean | void;
   /** Called when the person cancels: Escape, or a Cancel button that calls cancel. */
   onCancel?: () => void;
@@ -46,7 +47,7 @@ export type UseInlineEditResult = {
   /** The text in the input while editing. */
   draft: string;
   setDraft: (draft: string) => void;
-  /** Opens the edit with `draft`, value by default, then focuses the input and selects its text. */
+  /** Opens the edit with `draft`, value by default, then focuses the input and selects its text. Does nothing while editing. */
   start: (draft?: string) => void;
   /** Saves the draft through onCommit and closes the edit, unless onCommit returns false. */
   commit: () => void;
@@ -60,16 +61,16 @@ export type UseInlineEditResult = {
   getInputProps: () => UseInlineEditInputProps;
 };
 
-type Edit = { editing: boolean; draft: string; opened: number };
+type Edit = { editing: boolean; draft: string };
 
 /**
  * Edits a value in place, such as a name in a list. Enter saves and Escape
  * cancels, both left alone while an IME composition is open; focus leaving
- * the group saves too. When the edit closes with focus inside it, focus
- * returns to the trigger.
+ * the group saves too, or cancels when onCommit turns the draft down. When the
+ * edit closes with focus inside it, focus returns to the trigger.
  */
 export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOptions): UseInlineEditResult {
-  const [edit, setEdit] = useState<Edit>({ editing: false, draft: '', opened: 0 });
+  const [edit, setEdit] = useState<Edit>({ editing: false, draft: '' });
   // The edit as handlers last set it, so an Enter and the blur that follows
   // as the group unmounts commit once.
   const live = useRef(edit);
@@ -78,7 +79,6 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   const trigger = useRef<HTMLElement | null>(null);
   const group = useRef<HTMLElement | null>(null);
   const input = useRef<HTMLInputElement | null>(null);
-  const returnFocus = useRef(false);
 
   const update = useCallback((next: Edit) => {
     live.current = next;
@@ -86,76 +86,60 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   }, []);
 
   const start = useCallback(
-    (draft?: string) => update({ editing: true, draft: draft ?? latest.current.value, opened: live.current.opened + 1 }),
+    (draft?: string) => {
+      if (live.current.editing) return;
+      update({ editing: true, draft: draft ?? latest.current.value });
+    },
     [update],
   );
 
   const setDraft = useCallback((draft: string) => update({ ...live.current, draft }), [update]);
 
-  const close = useCallback(
-    (fromBlur: boolean) => {
-      const el = group.current;
-      returnFocus.current = !fromBlur && el !== null && el.contains(activeIn(el));
-      update({ ...live.current, editing: false });
-    },
-    [update],
-  );
+  const close = useCallback(() => update({ ...live.current, editing: false }), [update]);
+
+  const cancel = useCallback(() => {
+    if (!live.current.editing) return;
+    latest.current.onCancel?.();
+    close();
+  }, [close]);
 
   const save = useCallback(
     (fromBlur: boolean) => {
       const { editing, draft } = live.current;
       if (!editing) return;
       if (draft !== latest.current.value && latest.current.onCommit(draft) === false) {
-        // Turned down: a Save button that took focus by the keyboard gives it
-        // back to the input, so the person can fix the text.
+        // Focus has gone elsewhere, where Escape can't reach the edit, so a
+        // draft turned down as focus leaves puts the value back.
+        if (fromBlur) return cancel();
+        // A Save button that took focus by the keyboard gives it back to the
+        // input, so the person can fix the text.
         const el = group.current;
-        if (!fromBlur && el?.contains(activeIn(el))) input.current?.focus();
+        if (el?.contains(activeIn(el))) input.current?.focus();
         return;
       }
-      close(fromBlur);
+      close();
     },
-    [close],
+    [cancel, close],
   );
 
   const commit = useCallback(() => save(false), [save]);
-
-  const cancel = useCallback(() => {
-    if (!live.current.editing) return;
-    latest.current.onCancel?.();
-    close(false);
-  }, [close]);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, so an edit in a Dialog cancels
   // before the dialog closes.
   const takes = useCallback((target: Element | null) => group.current?.contains(target) === true, []);
-  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: handledOrComposing });
+  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: escapeHandledOrComposing });
 
-  useLayoutEffect(() => {
-    if (edit.opened === 0 || !live.current.editing) return;
-    input.current?.focus();
-    input.current?.select();
-  }, [edit.opened]);
-
-  useLayoutEffect(() => {
-    if (edit.editing || !returnFocus.current) return;
-    returnFocus.current = false;
-    // Once the commit is done, as useFocusHandoff does, so the trigger has
-    // mounted and its onFocus handlers run.
-    queueMicrotask(() => {
-      const el = trigger.current;
-      if (el?.isConnected && focusLost(el.ownerDocument)) el.focus();
-    });
-  }, [edit.editing]);
-
+  const handoff = useFocusHandoff({ to: trigger });
+  const groupRef = useComposedRefs<HTMLElement>(group, handoff);
+  // A callback ref, which fits a button as well as any other element.
   const triggerRef = useCallback((el: HTMLElement | null) => {
     trigger.current = el;
   }, []);
-  const groupRef = useCallback((el: HTMLElement | null) => {
-    group.current = el;
-  }, []);
   const inputRef = useCallback((el: HTMLInputElement | null) => {
     input.current = el;
+    el?.focus();
+    el?.select();
   }, []);
 
   const getTriggerProps = (): UseInlineEditTriggerProps => ({ ref: triggerRef, onClick: () => start() });
@@ -177,7 +161,8 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       // Safari and Firefox on macOS don't focus a clicked button, so focus
       // would leave the group and save before Cancel's click. Keeping it in
       // the input saves or cancels by the button pressed.
-      if (input.current && !input.current.contains(event.target as Node)) event.preventDefault();
+      const target = event.target instanceof Element ? event.target.closest('button, [role="button"]') : null;
+      if (target && event.currentTarget.contains(target)) event.preventDefault();
     },
   });
 
@@ -186,7 +171,7 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
     value: edit.draft,
     onChange: (event) => setDraft(event.target.value),
     onKeyDown: (event) => {
-      if (event.key !== 'Enter' || isImeKeyEvent(event)) return;
+      if (event.key !== 'Enter' || event.defaultPrevented || isImeKeyEvent(event)) return;
       // An enclosing form would submit on Enter.
       event.preventDefault();
       commit();
@@ -204,9 +189,4 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
     getGroupProps,
     getInputProps,
   };
-}
-
-// A key a popup or field inside already took, or one that ends an IME composition.
-function handledOrComposing(event: globalThis.KeyboardEvent): boolean {
-  return event.defaultPrevented || isImeKeyEvent(event);
 }

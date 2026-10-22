@@ -50,3 +50,19 @@ it('cancels on a click of Cancel without saving first', async () => {
   expect(screen.getByText('Q3 report')).toBeVisible();
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Rename' })));
 });
+
+it('commits when Tab moves focus out of the edit, and leaves focus there', async () => {
+  render(
+    <>
+      <Rename />
+      <button>Elsewhere</button>
+    </>,
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Rename' }));
+  await userEvent.keyboard('Q4 report');
+  await userEvent.tab();
+  await userEvent.tab();
+  const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+  await waitFor(() => expect(screen.getByText('Q4 report')).toBeVisible());
+  expect(document.activeElement).toBe(elsewhere);
+});

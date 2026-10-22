@@ -16,7 +16,7 @@ export const meta = {
       type: '(draft: string) => boolean | void',
       required: true,
       description:
-        'Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name. Not called when the draft equals value; the edit just closes.',
+        'Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes.',
     },
     {
       name: 'onCancel',

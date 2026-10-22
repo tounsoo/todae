@@ -34,9 +34,9 @@ Press Rename, type a new name, then press Enter to save or Escape to put the nam
   <InlineEditExample />
 </Example>
 
-`start()`, which the trigger calls, opens the edit from `value`, focuses the input and selects its text, so typing replaces the name. `start(draft)` opens it with another text, such as a name a failed save should offer again.
+`start()`, which the trigger calls, opens the edit from `value`, focuses the input and selects its text, so typing replaces the name. `start(draft)` opens it with another text, such as a name a failed save should offer again. Neither does anything while the edit is open.
 
-Enter and focus leaving the group save the draft through `onCommit`. Return `false` from it to keep the edit open, such as for an empty name. A draft equal to `value` closes the edit without calling `onCommit`. Escape cancels, and calls `onCancel`. An Enter or Escape that belongs to a Korean or Japanese composition is left to the input. Escape in an edit inside a [Dialog](/dialog) or a [Drawer](/drawer) cancels the edit, and the dialog stays open; the next Escape closes it.
+Enter and focus leaving the group save the draft through `onCommit`. Return `false` from it to keep the edit open, such as for an empty name. When focus has left the edit, Escape can't reach it any more, so `false` puts the value back and calls `onCancel` instead. A draft equal to `value` closes the edit without calling `onCommit`. Escape cancels, and calls `onCancel`. An Enter or Escape that belongs to a Korean or Japanese composition is left to the input. Escape in an edit inside a [Dialog](/dialog) or a [Drawer](/drawer) cancels the edit, and the dialog stays open; the next Escape closes it.
 
 When a save or a cancel closes the edit with focus inside it, focus returns to the trigger once it is back in the page. An edit that closes because focus moved elsewhere leaves focus there. A tab or window switch keeps the edit open.
 
@@ -46,7 +46,7 @@ When a save or a cancel closes the edit with focus inside it, focus returns to t
 
 **You supply:** A name for the input and for each icon-only button. The trigger, the group and the input, in their places in your markup. An error message tied to the input with `aria-describedby` when you turn a draft down.
 
-**Watch for:** A trigger whose name doesn't say what it edits: describe it by the value, as the example does, so the new value is read when focus returns. Turning a draft down without showing why. A Save or Cancel button outside the group: focus moving to it from the input saves before its click.
+**Watch for:** A trigger whose name doesn't say what it edits: describe it by the value, as the example does, so the new value is read when focus returns. Turning a draft down without showing why. A Save or Cancel button outside the group: focus moving to it from the input saves before its click. A list keyed by the value: a rename gives the row a new key, React mounts a new row, and focus has nowhere to return. Key rows by an id.
 
 ## When to use
 

@@ -65,7 +65,7 @@ export function InlineName({ name, onRename }: { name: string; onRename: (name: 
 
 ## Saving and cancelling
 
-Enter and the Save button save, and so does moving focus out of the edit, such as with Tab. Escape and the Cancel button put the name back. A save or a cancel returns focus to Rename, which the name describes, so a screen reader reads the new name with the button and the page needs no announcement. An empty name keeps the edit open and shows its error until the person types a name or cancels.
+Enter and the Save button save, and so does moving focus out of the edit, such as with Tab. Escape and the Cancel button put the name back. A save or a cancel returns focus to Rename, which the name describes, so a screen reader reads the new name with the button and the page needs no announcement. An empty name keeps the edit open and shows its error until the person types a name or cancels. Moving focus away with an empty name puts the old name back.
 
 In a [Table](/table), a cell holds the same markup.
 
@@ -75,6 +75,8 @@ Show the new name at once, and send it. If the save fails, put the old name back
 
 ```tsx
 const announce = useAnnouncer();
+// The name that failed to save, offered again by Try again.
+const [failed, setFailed] = useState<string | null>(null);
 const edit = useInlineEdit({
   value: name,
   onCommit: (draft) => {
@@ -82,6 +84,7 @@ const edit = useInlineEdit({
     if (next === '') return false;
     const before = name;
     setName(next);
+    // rename sends the name to your server.
     rename(next).catch(() => {
       setName(before);
       setFailed(next);
@@ -109,7 +112,7 @@ const edit = useInlineEdit({
 
 **You supply:** Names for the input and for the Rename, Save and Cancel buttons. The name's id as Rename's description. The error message and its id in the field's `aria-describedby`. The announcement when a save to the server fails. All of them in your product's language.
 
-**Watch for:** A Rename button that says only "Rename" in a list of names: describe each one by its name, as the example does. A Save or Cancel button outside the edit's group, which would save as focus moves to it. A name the server turns down after the edit has closed, shown as if it were saved.
+**Watch for:** A Rename button that says only "Rename" in a list of names: describe each one by its name, as the example does. A Save or Cancel button outside the edit's group, which would save as focus moves to it. A name the server turns down after the edit has closed, shown as if it were saved. A list keyed by the name: a rename mounts a new row, and focus has nowhere to return. Key rows by an id.
 
 ## When to use
 

@@ -78,6 +78,51 @@ it('leaves an Enter that ends an IME composition to the input', async () => {
   expect(field().value).toBe('보고서');
 });
 
+it('leaves an Escape that ends an IME composition to the input', async () => {
+  const onCancel = vi.fn();
+  render(<Rename onCancel={onCancel} />);
+  await open();
+  fireEvent.change(field(), { target: { value: '보고' } });
+  fireEvent.keyDown(field(), { key: 'Escape', isComposing: true });
+  // Safari sends the Escape that ends a composition after compositionend.
+  fireEvent.keyDown(field(), { key: 'Escape', keyCode: 229 });
+  await flush();
+  expect(onCancel).not.toHaveBeenCalled();
+  expect(field().value).toBe('보고');
+});
+
+it('leaves an Enter a handler before it took to that handler', async () => {
+  render(<Rename />);
+  await open();
+  fireEvent.change(field(), { target: { value: 'Q4 report' } });
+  const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+  enter.preventDefault();
+  act(() => void field().dispatchEvent(enter));
+  await flush();
+  expect(field().value).toBe('Q4 report');
+});
+
+it('opens with a given draft, and start does nothing while editing', async () => {
+  function Retry() {
+    const edit = useInlineEdit({ value: 'Q3 report', onCommit: () => undefined });
+    return (
+      <>
+        <button onClick={() => edit.start('Q4 report')}>Try again</button>
+        {edit.editing && <input aria-label="Name" {...edit.getInputProps()} />}
+      </>
+    );
+  }
+  render(<Retry />);
+  const retry = screen.getByRole('button', { name: 'Try again' });
+  act(() => retry.click());
+  await flush();
+  expect(field().value).toBe('Q4 report');
+  fireEvent.change(field(), { target: { value: 'Q5 report' } });
+  act(() => retry.click());
+  await flush();
+  expect(field().value).toBe('Q5 report');
+});
+
 it('cancels on Escape, restores the value and returns focus', async () => {
   const onCancel = vi.fn();
   render(<Rename onCancel={onCancel} />);
@@ -176,18 +221,22 @@ it('commits when focus leaves the group, and leaves focus where it went', async 
   expect(document.activeElement).toBe(elsewhere);
 });
 
-it('keeps editing when focus leaving the group is turned down', async () => {
+it('puts the value back when focus leaving the group is turned down', async () => {
+  const onCancel = vi.fn();
   render(
     <>
-      <Rename />
+      <Rename onCancel={onCancel} />
       <button>Elsewhere</button>
     </>,
   );
   await open();
   fireEvent.change(field(), { target: { value: '' } });
-  act(() => screen.getByRole('button', { name: 'Elsewhere' }).focus());
+  const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+  act(() => elsewhere.focus());
   await flush();
-  expect(field().value).toBe('');
+  expect(onCancel).toHaveBeenCalledTimes(1);
+  expect(screen.getByText('Q3 report')).toBeTruthy();
+  expect(document.activeElement).toBe(elsewhere);
 });
 
 it('keeps editing when the window loses focus', async () => {
@@ -210,6 +259,7 @@ it('keeps focus in the input while a button in the group is pressed, so Cancel c
   const cancel = screen.getByRole('button', { name: 'Cancel' });
   expect(fireEvent.mouseDown(cancel)).toBe(false);
   expect(fireEvent.mouseDown(field())).toBe(true);
+  expect(fireEvent.mouseDown(field().parentElement!)).toBe(true);
   act(() => cancel.click());
   await flush();
   expect(onCancel).toHaveBeenCalledTimes(1);

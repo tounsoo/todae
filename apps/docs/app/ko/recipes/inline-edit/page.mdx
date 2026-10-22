@@ -65,7 +65,7 @@ export function InlineName({ name, onRename }: { name: string; onRename: (name: 
 
 ## 저장과 취소
 
-Enter와 Save 버튼이 저장하고, Tab 등으로 포커스를 편집 밖으로 옮겨도 저장됩니다. Escape와 Cancel 버튼은 이름을 되돌립니다. 저장이나 취소는 이름이 설명하는 Rename으로 포커스를 되돌리므로, 스크린 리더가 버튼과 함께 새 이름을 읽고 페이지는 따로 알릴 필요가 없습니다. 빈 이름은 이름을 입력하거나 취소할 때까지 편집을 열어 두고 오류를 보여 줍니다.
+Enter와 Save 버튼이 저장하고, Tab 등으로 포커스를 편집 밖으로 옮겨도 저장됩니다. Escape와 Cancel 버튼은 이름을 되돌립니다. 저장이나 취소는 이름이 설명하는 Rename으로 포커스를 되돌리므로, 스크린 리더가 버튼과 함께 새 이름을 읽고 페이지는 따로 알릴 필요가 없습니다. 빈 이름은 이름을 입력하거나 취소할 때까지 편집을 열어 두고 오류를 보여 줍니다. 빈 이름으로 포커스를 옮기면 이전 이름으로 돌아갑니다.
 
 [Table](/table)에서는 셀에 같은 마크업을 넣습니다.
 
@@ -75,6 +75,8 @@ Enter와 Save 버튼이 저장하고, Tab 등으로 포커스를 편집 밖으�
 
 ```tsx
 const announce = useAnnouncer();
+// The name that failed to save, offered again by Try again.
+const [failed, setFailed] = useState<string | null>(null);
 const edit = useInlineEdit({
   value: name,
   onCommit: (draft) => {
@@ -82,6 +84,7 @@ const edit = useInlineEdit({
     if (next === '') return false;
     const before = name;
     setName(next);
+    // rename sends the name to your server.
     rename(next).catch(() => {
       setName(before);
       setFailed(next);
@@ -109,7 +112,7 @@ const edit = useInlineEdit({
 
 **직접 제공할 것:** 입력과 Rename, Save, Cancel 버튼의 이름. Rename의 설명이 되는 이름의 id. 오류 메시지와, 필드의 `aria-describedby`에 넣은 그 id. 서버 저장이 실패했을 때의 알림. 모두 제품의 언어로.
 
-**주의할 점:** 이름 목록에서 "Rename"이라고만 말하는 Rename 버튼. 예제처럼 각 버튼을 그 이름으로 설명하세요. 편집 그룹 밖의 Save나 Cancel 버튼. 포커스가 그 버튼으로 옮겨 가면서 저장됩니다. 편집이 닫힌 뒤 서버가 거절한 이름을 저장된 것처럼 보여 주는 것.
+**주의할 점:** 이름 목록에서 "Rename"이라고만 말하는 Rename 버튼. 예제처럼 각 버튼을 그 이름으로 설명하세요. 편집 그룹 밖의 Save나 Cancel 버튼. 포커스가 그 버튼으로 옮겨 가면서 저장됩니다. 편집이 닫힌 뒤 서버가 거절한 이름을 저장된 것처럼 보여 주는 것. 이름을 key로 쓰는 목록. 이름을 바꾸면 새 행이 마운트되어 포커스가 돌아갈 곳이 없습니다. 행의 key는 id로 정하세요.
 
 ## 언제 쓰나요
 
