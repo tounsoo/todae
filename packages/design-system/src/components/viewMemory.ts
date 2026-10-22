@@ -32,7 +32,10 @@ export function createViewMemory(): ViewMemory {
       }
       const top = to.at(-1);
       const below = from.at(-1);
-      if (top === undefined) return undefined;
+      if (top === undefined) {
+        triggers.clear();
+        return undefined;
+      }
       if (top !== below && direction === 'forward') {
         // A trigger goes back to the view it sits in, and only that view.
         const pushedBy = triggers.get(top);

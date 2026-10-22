@@ -370,7 +370,7 @@ describe('Drilldown focus with a stack the product sets later', () => {
     }
   });
 
-  it("returns focus to a view's own trigger, not an earlier push's, when the product applies two pushes one after the other", async () => {
+  it("never returns focus to an earlier push's trigger when the product applies two pushes one after the other", async () => {
     render(<Deferred apply={(update) => setTimeout(update, 50)} />);
     try {
       const account = screen.getByRole('button', { name: 'Account' });

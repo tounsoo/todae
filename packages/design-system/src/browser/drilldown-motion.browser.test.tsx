@@ -227,11 +227,12 @@ describe('Drilldown motion, height and scroll in a browser', () => {
       expect(port.getBoundingClientRect().top).toBeLessThan(-300);
       row.focus();
       await userEvent.keyboard('{Enter}');
-      expect(Math.abs(port.getBoundingClientRect().top)).toBeLessThan(1);
+      // Polled: under a loaded runner the commit can land after the key's promise.
+      await expect.poll(() => Math.abs(port.getBoundingClientRect().top)).toBeLessThan(1);
       expect(page.scrollTop).toBeGreaterThan(700);
       await settled();
       await userEvent.click(screen.getByRole('button', { name: 'Back to Items' }));
-      expect(page.scrollTop).toBe(offset);
+      await expect.poll(() => page.scrollTop).toBe(offset);
     } finally {
       cleanupAll();
       document.scrollingElement!.scrollTop = 0;
