@@ -16,6 +16,7 @@ const KOREAN: Strings = {
   notifications: '알림',
   breadcrumbs: '이동 경로',
   pagination: '페이지',
+  contents: '이 페이지의 내용',
   resizeSheet: '시트 크기 조절',
   options: '옵션',
   removeChip: (label) => `${label} 삭제`,

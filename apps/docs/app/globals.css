@@ -298,6 +298,45 @@ main:focus {
   letter-spacing: -0.01em;
 }
 
+/* ---------- On this page ---------- */
+
+/* Narrow screens fold the page's sections under the lede; wide ones list them
+   in a column beside the page, where the column fits without narrowing it. */
+.docs-contents {
+  display: none;
+}
+
+.docs-contents-fold > nav {
+  margin-block-start: 0.75rem;
+}
+
+@media (min-width: 84rem) {
+  .layout:has(.docs-page) main {
+    max-inline-size: calc(46rem + 3rem + 13rem);
+  }
+
+  .docs-page {
+    display: grid;
+    grid-template-columns: minmax(0, 46rem) 13rem;
+    column-gap: 3rem;
+    align-items: start;
+  }
+
+  .docs-contents {
+    display: block;
+    position: sticky;
+    inset-block-start: calc(var(--docs-topbar) + 2.5rem);
+  }
+
+  .docs-contents-scroll {
+    max-block-size: calc(100dvh - var(--docs-topbar) - 5rem);
+  }
+
+  .docs-contents-fold {
+    display: none;
+  }
+}
+
 .docs-prose > h4 {
   font-weight: 600;
 }

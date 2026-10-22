@@ -10,9 +10,9 @@ import {
   type RefCallback,
 } from 'react';
 import { activeIn } from '../components/activeElement.js';
-import { escapeHandledOrComposing, isImeKeyEvent } from '../components/ime.js';
+import { isImeKeyEvent } from '../components/ime.js';
 import { useComposedRefs } from '../components/props.js';
-import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useFocusHandoff } from './useFocusHandoff.js';
 
 export type UseInlineEditOptions = {
@@ -129,7 +129,7 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   // come through the overlays' Escape stack, so an edit in a Dialog cancels
   // before the dialog closes.
   const takes = useCallback((target: Element | null) => group.current?.contains(target) === true, []);
-  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: escapeHandledOrComposing });
+  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: handledOrComposing });
 
   const handoff = useFocusHandoff({ to: trigger });
   const groupRef = useComposedRefs<HTMLElement>(group, handoff);

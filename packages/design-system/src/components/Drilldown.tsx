@@ -15,14 +15,13 @@ import {
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
-import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { canFocusNow, firstTabbable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useButtonName } from './buttonName.js';
 import { BackGlyph, glyphOr } from './glyphs.js';
-import { escapeHandledOrComposing } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
 import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type StackViews, type ViewStatus } from './useStackMotion.js';
@@ -219,7 +218,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     if (target === viewport.ownerDocument.body) return inFrontSurface(surface);
     return surface.contains(target);
   }, []);
-  useEscapeKey(escape === 'back' && stack.length > 1, takes, goBack, viewportRef, { popup: false, passesKey: escapeHandledOrComposing });
+  useEscapeKey(escape === 'back' && stack.length > 1, takes, goBack, viewportRef, { popup: false, passesKey: handledOrComposing });
 
   const ctx = useMemo<DrilldownContextValue>(
     () => ({
