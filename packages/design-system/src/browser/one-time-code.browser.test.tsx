@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState, type CSSProperties, type DragEvent } from 'react';
+import { useState, type ClipboardEvent, type CSSProperties, type DragEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
 
@@ -14,6 +14,7 @@ function Code({
   characters,
   dir,
   onDrop,
+  onPaste,
 }: {
   initial?: string;
   onValueChange?: (value: string) => void;
@@ -21,6 +22,7 @@ function Code({
   characters?: 'digits' | 'alphanumeric';
   dir?: 'ltr' | 'rtl';
   onDrop?: (event: DragEvent<HTMLInputElement>) => void;
+  onPaste?: (event: ClipboardEvent<HTMLInputElement>) => void;
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -32,6 +34,7 @@ function Code({
             value={value}
             characters={characters}
             onDrop={onDrop}
+            onPaste={onPaste}
             onValueChange={(next) => {
               setValue(next);
               onValueChange?.(next);
@@ -238,6 +241,19 @@ describe('Field.OneTimeCode in a browser', () => {
     await userEvent.keyboard('{Home}{ArrowRight}');
     await paste('78');
     expect(input().value).toBe('178456');
+  });
+
+  it('lands nothing when the product cancels the paste, in its onPaste or before it', async () => {
+    const onValueChange = vi.fn();
+    const cancel = (event: ClipboardEvent) => event.preventDefault();
+    for (const view of [<Code initial="1234" onValueChange={onValueChange} onPaste={cancel} />, <div onPasteCapture={cancel}><Code initial="1234" onValueChange={onValueChange} /></div>]) {
+      cleanup();
+      render(view);
+      await userEvent.click(input());
+      await paste('56');
+      expect(input().value).toBe('1234');
+    }
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 
   it('treats a dropped text as a paste, whatever surrounds the code', async () => {

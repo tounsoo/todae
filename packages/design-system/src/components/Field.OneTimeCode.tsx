@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ClipboardEvent,
   type CSSProperties,
   type DragEvent,
   type InputHTMLAttributes,
@@ -131,6 +132,7 @@ export function OneTimeCode({
   ref,
   onClick: onClickProp,
   onDrop: onDropProp,
+  onPaste: onPasteProp,
   onFocus: onFocusProp,
   onBlur: onBlurProp,
   ...props
@@ -175,7 +177,7 @@ export function OneTimeCode({
       // One the browser won't let be cancelled is read back by the change event instead, so its insert and this one don't both land.
       if (inserting.current || latest.current.fixed || event.isComposing || !event.cancelable || !inputType.startsWith('insert')) return;
       if (inputType === 'insertCompositionText' || inputType === 'insertFromComposition') return;
-      const text = event.data ?? event.dataTransfer?.getData('text/plain');
+      const text = event.data;
       if (text == null) return;
       event.preventDefault();
       const { characters, length } = latest.current;
@@ -280,6 +282,15 @@ export function OneTimeCode({
     if (edit) put(target, edit, inserting);
   }
 
+  // A paste lands by the rule from its own event, which holds its text in every browser, where its beforeinput may not. One the product cancelled lands nothing.
+  function onPaste(event: ClipboardEvent<HTMLInputElement>) {
+    if (fixed || event.defaultPrevented) return;
+    event.preventDefault();
+    const target = event.currentTarget;
+    const edit = editOf(target.value, { start: target.selectionStart ?? 0, end: target.selectionEnd ?? 0 }, event.clipboardData.getData('text/plain'), { characters, length });
+    if (edit) put(target, edit, inserting);
+  }
+
   const control = field.getControlProps({ ...props, ref: refs });
   const shown = composing?.shown ?? value;
   const slots = slotsOf(shown, selection, length);
@@ -305,6 +316,7 @@ export function OneTimeCode({
         onChange={onChangeInput}
         onClick={composeHandlers(onClickProp, onClick)}
         onDrop={composeHandlers(onDropProp, onDrop)}
+        onPaste={composeHandlers(onPasteProp, onPaste)}
         onFocus={(event) => {
           onFocusProp?.(event);
           sync();

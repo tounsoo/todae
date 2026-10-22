@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
@@ -23,6 +23,12 @@ const input = () => screen.getByLabelText<HTMLInputElement>('Verification code')
 
 function beforeInput(inputType: string, data: string) {
   const event = new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
+  fireEvent(input(), event);
+  return event;
+}
+
+function paste(text: string) {
+  const event = createEvent.paste(input(), { clipboardData: { getData: (type: string) => (type === 'text/plain' ? text : '') } });
   fireEvent(input(), event);
   return event;
 }
@@ -94,7 +100,7 @@ describe('Field.OneTimeCode', () => {
     input().setSelectionRange(2, 2);
     beforeInput('insertText', '３');
     expect(onValueChange).toHaveBeenLastCalledWith('123');
-    beforeInput('insertFromPaste', '４８２９１３');
+    paste('４８２９１３');
     expect(onValueChange).toHaveBeenLastCalledWith('482913');
   });
 
@@ -158,7 +164,7 @@ describe('Field.OneTimeCode', () => {
   it('keeps only the allowed characters of a paste', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);
-    expect(beforeInput('insertFromPaste', 'Your code: 482-913').defaultPrevented).toBe(true);
+    expect(paste('Your code: 482-913').defaultPrevented).toBe(true);
     expect(onValueChange).toHaveBeenLastCalledWith('482913');
   });
 
@@ -166,7 +172,7 @@ describe('Field.OneTimeCode', () => {
     const onValueChange = vi.fn();
     render(<Code initial="12" onValueChange={onValueChange} />);
     input().setSelectionRange(2, 2);
-    beforeInput('insertFromPaste', '123456');
+    paste('123456');
     expect(onValueChange).toHaveBeenLastCalledWith('123456');
   });
 
@@ -174,14 +180,14 @@ describe('Field.OneTimeCode', () => {
     const onValueChange = vi.fn();
     render(<Code initial="19" onValueChange={onValueChange} />);
     input().setSelectionRange(1, 1);
-    beforeInput('insertFromPaste', '2 3');
+    paste('2 3');
     expect(onValueChange).toHaveBeenLastCalledWith('1239');
   });
 
   it('puts a clean partial paste in itself, where it chose', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);
-    expect(beforeInput('insertFromPaste', '123').defaultPrevented).toBe(true);
+    expect(paste('123').defaultPrevented).toBe(true);
     expect(onValueChange).toHaveBeenLastCalledWith('123');
   });
 
@@ -189,7 +195,7 @@ describe('Field.OneTimeCode', () => {
     const onValueChange = vi.fn();
     render(<Code initial="1234" onValueChange={onValueChange} />);
     input().setSelectionRange(1, 3);
-    expect(beforeInput('insertFromPaste', 'abc').defaultPrevented).toBe(true);
+    expect(paste('abc').defaultPrevented).toBe(true);
     expect(onValueChange).not.toHaveBeenCalled();
     expect(input().value).toBe('1234');
     expect(input().selectionStart).toBe(1);
@@ -235,7 +241,7 @@ describe('Field.OneTimeCode', () => {
     render(<Code initial="123456" onValueChange={onValueChange} />);
     input().focus();
     input().setSelectionRange(2, 2);
-    beforeInput('insertFromPaste', '78');
+    paste('78');
     expect(onValueChange).toHaveBeenLastCalledWith('127856');
   });
 
@@ -244,9 +250,9 @@ describe('Field.OneTimeCode', () => {
     render(<Code initial="123456" onValueChange={onValueChange} />);
     input().focus();
     input().setSelectionRange(6, 6);
-    expect(beforeInput('insertFromPaste', '78').defaultPrevented).toBe(true);
+    expect(paste('78').defaultPrevented).toBe(true);
     expect(onValueChange).not.toHaveBeenCalled();
-    beforeInput('insertFromPaste', '654321');
+    paste('654321');
     expect(onValueChange).toHaveBeenLastCalledWith('654321');
   });
 
@@ -274,7 +280,7 @@ describe('Field.OneTimeCode', () => {
     Object.assign(document, { execCommand });
     try {
       input().focus();
-      beforeInput('insertFromPaste', '123456');
+      paste('123456');
       expect(execCommand).toHaveBeenCalledTimes(1);
     } finally {
       Reflect.deleteProperty(document, 'execCommand');
@@ -295,7 +301,7 @@ describe('Field.OneTimeCode', () => {
     render(<Code initial="19" onChange={onChange} />);
     const code = input();
     code.setSelectionRange(1, 1);
-    fireEvent(code, new InputEvent('beforeinput', { inputType: 'insertFromPaste', data: '2 3', bubbles: true, cancelable: true }));
+    paste('2 3');
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(code.value).toBe('1239');
     expect(code.selectionStart).toBe(3);
@@ -305,7 +311,7 @@ describe('Field.OneTimeCode', () => {
     const onValueChange = vi.fn();
     render(<Code initial="12345" onValueChange={onValueChange} />);
     input().setSelectionRange(1, 1);
-    beforeInput('insertFromPaste', '7 8');
+    paste('7 8');
     expect(onValueChange).toHaveBeenLastCalledWith('178345');
   });
 
@@ -313,7 +319,7 @@ describe('Field.OneTimeCode', () => {
     const onValueChange = vi.fn();
     render(<Code initial="12345" onValueChange={onValueChange} />);
     input().setSelectionRange(5, 5);
-    beforeInput('insertFromPaste', '78');
+    paste('78');
     expect(onValueChange).toHaveBeenLastCalledWith('123457');
   });
 
