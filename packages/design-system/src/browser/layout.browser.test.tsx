@@ -348,22 +348,12 @@ describe('A button in a Field.Root', () => {
   );
 });
 
-describe('A button beside a Field.Textarea or a Field.ChipInput', () => {
-  it.each(['textarea', 'chips'])('keeps Button\'s own icon-only size beside %s, since the field has no single line', (kind) => {
+describe('A button beside a Field.Textarea', () => {
+  it("keeps Button's own icon-only size, since the field has no single line", () => {
     render(
       <main data-appearance="light" data-density="comfortable">
         <Field.Root aria-label="Note">
-          {kind === 'textarea' ? (
-            <Field.Textarea value="" onChange={() => {}} />
-          ) : (
-            <Field.ChipInput
-              chips={['one', 'two']}
-              inputValue=""
-              onInputValueChange={() => undefined}
-              onCommit={() => undefined}
-              onChipRemove={() => undefined}
-            />
-          )}
+          <Field.Textarea value="" onChange={() => {}} />
           <Button.Root variant="ghost" aria-label="Clear note">
             <Button.Icon>
               <svg viewBox="0 0 16 16" />
@@ -382,6 +372,60 @@ describe('A button beside a Field.Textarea or a Field.ChipInput', () => {
     expect(getComputedStyle(inField).paddingInlineStart).toBe(getComputedStyle(alone).paddingInlineStart);
     expect(inField.getBoundingClientRect().height).toBe(alone.getBoundingClientRect().height);
   });
+});
+
+describe('A button beside a Field.ChipInput', () => {
+  function Chips({ chips, testId }: { chips: string[]; testId: string }) {
+    return (
+      <Field.Root aria-label={testId} data-testid={testId}>
+        <Field.ChipInput
+          chips={chips}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={() => undefined}
+        />
+        <Button.Root variant="ghost" aria-label={`Clear ${testId}`}>
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </Field.Root>
+    );
+  }
+
+  it.each(['comfortable', 'compact', 'spacious'])(
+    'keeps a %s field one line tall, and stays the same size on the first line when chips wrap',
+    (density) => {
+      render(
+        <main data-appearance="light" data-density={density} style={{ inlineSize: '16rem' }}>
+          <Field.Root aria-label="Plain" data-testid="plain">
+            <Field.ChipInput
+              chips={[]}
+              inputValue=""
+              onInputValueChange={() => undefined}
+              onCommit={() => undefined}
+              onChipRemove={() => undefined}
+            />
+          </Field.Root>
+          <Chips chips={[]} testId="empty" />
+          <Chips chips={['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot']} testId="wrapped" />
+        </main>,
+      );
+      const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.5;
+      expect(screen.getByTestId('empty').getBoundingClientRect().height).toBe(screen.getByTestId('plain').getBoundingClientRect().height);
+      const wrapped = screen.getByTestId('wrapped').getBoundingClientRect();
+      expect(wrapped.height).toBeGreaterThan(screen.getByTestId('plain').getBoundingClientRect().height);
+      for (const name of ['Clear empty', 'Clear wrapped']) {
+        const button = screen.getByRole('button', { name }).getBoundingClientRect();
+        expect([button.width, button.height]).toEqual([size, size]);
+      }
+      // On the first line, centered on the first chip.
+      const chip = screen.getByText('alpha').closest('span')!.getBoundingClientRect();
+      const button = screen.getByRole('button', { name: 'Clear wrapped' }).getBoundingClientRect();
+      expect(Math.abs(button.top + button.height / 2 - (chip.top + chip.height / 2))).toBeLessThan(0.5);
+    },
+  );
 });
 
 describe('A password shown and hidden in a browser', () => {

@@ -101,7 +101,7 @@ export function SignInExample() {
   const [resent, setResent] = useState(false);
   const [resending, setResending] = useState(false);
   const codeForm = useRef<HTMLFormElement>(null);
-  // The code last sent, so the end of a resend doesn't send the old code again.
+  // The code last sent, or in the field when a new one was asked for, so it isn't sent by itself again.
   const sentCode = useRef('');
   const doneHeading = useFocusOnShow<HTMLHeadingElement>(step === 'done');
   const announce = useAnnouncer();
@@ -141,15 +141,17 @@ export function SignInExample() {
 
   // A full code sends itself a short pause after its last character, since an IME can still take it back.
   useEffect(() => {
-    if (step !== 'code' || code.length !== CODE_LENGTH || code === sentCode.current || resending) return;
+    if (step !== 'code' || code.length !== CODE_LENGTH || code === sentCode.current || sending || resending) return;
     const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
     return () => clearTimeout(timer);
-  }, [code, step, resending]);
+  }, [code, step, sending, resending]);
 
   const resend = async () => {
     if (resending || sending) return;
     setResending(true);
     setFailed(null);
+    // A code typed before the new one was asked for is the old one: don't send it by itself.
+    sentCode.current = code;
     // A stand-in for the request; a real one also catches a failure, as send does.
     await wait(300);
     setResending(false);
