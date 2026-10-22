@@ -2,7 +2,7 @@ name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
 # With none, publishes the versions that aren't on npm yet: merging that pull request releases.
-# Once main's package is on npm, moves docs-stable, the branch the docs deploy from, to main.
+# Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm.
 on:
   push:
     branches: [main]
@@ -110,23 +110,54 @@ jobs:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
 
   # Vercel deploys the docs and their MCP server to production from docs-stable, so they only
-  # describe what npm has. This moves it to main once main's package is on npm: after a publish
-  # succeeds, or when there are no changesets and nothing left to publish. A failed publish leaves
-  # the docs on the last release, and changes waiting in changesets stay off them until released.
+  # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
+  # above went: to this commit when its package version is on npm and no changeset that releases
+  # something is waiting, otherwise to the commit tagged with the latest version on npm. A failed
+  # publish so leaves the docs on the last release, and re-running this job catches up after one.
   docs:
     name: Deploy the docs
     needs: [select-mode, publish]
-    if: ${{ always() && (needs.select-mode.outputs.mode == 'none' || needs.publish.result == 'success') }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
-      # Fast-forward only, so a run can't move the docs back to an older commit.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          # The release tags and docs-stable.
+          fetch-depth: 0
+      # GitHub refuses GITHUB_TOKEN any ref update that adds or changes a workflow file, and moving
+      # docs-stable usually does, so the release app moves it.
+      - id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
       - env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/docs-stable" --silent 2>/dev/null; then
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/docs-stable" -f sha="$GITHUB_SHA" -F force=false --silent
+          set -euo pipefail
+          package=@tounsoo/todae
+          version=$(node -p "require('./packages/design-system/package.json').version")
+          # A changeset that releases something names the package in its front matter; an empty one doesn't.
+          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
+          # npm exits 1 for a version it doesn't have.
+          published=$(npm view "$package@$version" version 2>/dev/null || true)
+          if [ -z "$waiting" ] && [ "$published" = "$version" ]; then
+            target=$GITHUB_SHA
           else
-            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/docs-stable -f sha="$GITHUB_SHA" --silent
+            latest=$(npm view "$package" version)
+            target=$(git rev-list -n 1 "refs/tags/$package@$latest")
+          fi
+          current=$(git rev-parse -q --verify refs/remotes/origin/docs-stable || true)
+          if [ -z "$current" ]; then
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/docs-stable -f sha="$target" --silent
+          elif git merge-base --is-ancestor "$target" "$current"; then
+            echo "docs-stable is already at or past $target"
+          else
+            # Fast-forward only: GitHub answers 422 when docs-stable was moved off main's history by hand.
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/docs-stable" -f sha="$target" -F force=false --silent
           fi
