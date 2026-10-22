@@ -3,9 +3,10 @@ import { cx } from './cx.js';
 import styles from './Disclosure.module.css';
 
 /**
- * A native `details`. The browser handles the keyboard, the expanded state a
- * screen reader announces and find-in-page into closed content. Disclosures
- * that share a `name` form an exclusive accordion.
+ * A native `details`. The browser handles the keyboard and the expanded state a
+ * screen reader announces, and browsers that support it, such as Chrome, open
+ * it for find-in-page. Disclosures that share a `name` form an exclusive
+ * accordion.
  */
 export type DisclosureRootProps = ComponentPropsWithRef<'details'>;
 /** A native `summary`, the always-visible toggle. Put it first in the root. */

@@ -64,7 +64,7 @@ The message stays `streaming` through both the reasoning and the answer, so insi
 
 ## Accessible composition
 
-**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard and announces the expanded state. When the block closes while a link in the reasoning has focus, the main entry's `Disclosure.Summary` moves focus to itself, which in Chromium keeps focus from falling to the page. `Message.Root` with `streaming` sets `aria-busy`, which [Conversation](/conversation) reads to announce messages as they start and finish arriving.
+**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard and announces the expanded state. When the block closes while a link in the reasoning has focus, the main entry's `Disclosure.Summary` moves focus to itself, so focus doesn't fall to the page. `Message.Root` with `streaming` sets `aria-busy`, which [Conversation](/conversation) reads to announce messages as they start and finish arriving.
 
 **You supply:** Summary text that says the state in words, since the dots are hidden. The phase and the duration, from your product's stream.
 
