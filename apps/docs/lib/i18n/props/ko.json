@@ -3303,8 +3303,8 @@
   },
   "Splitter.Handle": {
     "aria-label": {
-      "en": "Names the handle. Pass this or aria-labelledby, such as the id of the primary panel's heading. Default is the resizePanel string from StringsProvider.",
-      "ko": "핸들의 이름. 이것이나 aria-labelledby를 지정하세요. 기준 패널의 제목 id가 좋습니다. 기본값은 StringsProvider의 resizePanel 문자열입니다."
+      "en": "Names the handle with text. Pass this or aria-labelledby. Default is the resizePanel string from StringsProvider.",
+      "ko": "핸들의 이름이 되는 텍스트. 이것이나 aria-labelledby를 지정하세요. 기본값은 StringsProvider의 resizePanel 문자열입니다."
     },
     "aria-labelledby": {
       "en": "The id of the element that names the handle, such as the primary panel's heading.",

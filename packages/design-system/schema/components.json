@@ -4126,7 +4126,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Names the handle. Pass this or aria-labelledby, such as the id of the primary panel's heading. Default is the resizePanel string from StringsProvider.",
+          "description": "Names the handle with text. Pass this or aria-labelledby. Default is the resizePanel string from StringsProvider.",
           "default": "\"Resize\""
         },
         {
