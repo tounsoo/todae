@@ -3202,5 +3202,11 @@
       "en": "Buttons or links.",
       "ko": "버튼 또는 링크."
     }
+  },
+  "useFocusHandoff": {
+    "to": {
+      "en": "The element that takes focus when the watched element unmounts while it holds focus.",
+      "ko": "지켜보는 요소가 포커스를 가진 채로 언마운트될 때 포커스를 받는 요소."
+    }
   }
 }
