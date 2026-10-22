@@ -1728,7 +1728,7 @@ describe('company token build', () => {
   });
 
   it('rejects a scope that is no selector list', async () => {
-    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--', '.a < .b', '.a\\\\:before', '.a:befor\\65', '.a:\\62 efore']) {
+    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--', '.a < .b', '.a\\\\:before', '.a:befor\\65', '.a:\\62 efore', '.a:\\62\r\nefore', '.a:\\62\fefore']) {
       await expect(buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope }), scope).rejects.toThrow(/--scope/);
     }
   });

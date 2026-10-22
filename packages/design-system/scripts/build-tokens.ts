@@ -833,7 +833,7 @@ export function parseScope(selector: string): string {
     // An escape reads as the character it stands for, so `:befor\65` is still
     // a pseudo-element, except an escaped ":" or combinator, which is part of a name.
     const bare = part
-      .replace(/\\([0-9a-fA-F]{1,6})[ \t\n]?|\\(.)/g, (_, hex: string | undefined, ch: string | undefined) => {
+      .replace(/\\([0-9a-fA-F]{1,6})(?:\r\n|[ \t\n\r\f])?|\\(.)/g, (_, hex: string | undefined, ch: string | undefined) => {
         const char = hex === undefined ? ch! : String.fromCodePoint(Math.min(Number.parseInt(hex, 16), 0x10ffff) || 0xfffd);
         return /[\w-]/.test(char) ? char : 'x';
       })
