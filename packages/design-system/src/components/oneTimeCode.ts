@@ -50,6 +50,33 @@ export function editOf(
   return insert ? { from, to, insert } : null;
 }
 
+/** The edit that makes `from` into `to`: the range between their common start and end, and what `to` has there. */
+export function difference(from: string, to: string): CodeEdit {
+  let start = 0;
+  while (start < from.length && start < to.length && from[start] === to[start]) start++;
+  let end = 0;
+  while (end < from.length - start && end < to.length - start && from[from.length - 1 - end] === to[to.length - 1 - end]) end++;
+  return { from: start, to: from.length - end, insert: to.slice(start, to.length - end) };
+}
+
+/**
+ * The code the field holds when its text went from `previous` to `text` by an
+ * edit Todae didn't make itself (autofill, an insert the browser won't let be
+ * cancelled, a composition): what changed between them is taken as an insert
+ * over the range it replaced, by `editOf`, and a deletion is kept as it is.
+ * `previous` when the insert brings nothing the code allows.
+ */
+export function reconcile(
+  previous: string,
+  text: string,
+  options: { characters: OneTimeCodeCharacters; length: number },
+): string {
+  const { from, to, insert } = difference(previous, text);
+  if (!insert) return cleanCode(text, options.characters, options.length);
+  const edit = editOf(previous, { start: from, end: to }, insert, options);
+  return edit ? applyEdit(previous, edit) : previous;
+}
+
 export type Slot = { active: boolean; filled: boolean; caret: boolean };
 
 /** What each of the `length` slots shows, from the code and the input's selection (null while it has no focus). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyEdit, cleanCode, editOf, type OneTimeCodeCharacters } from './oneTimeCode.js';
+import { applyEdit, cleanCode, editOf, reconcile, type OneTimeCodeCharacters } from './oneTimeCode.js';
 
 describe('cleanCode', () => {
   it.each([
@@ -103,5 +103,26 @@ describe('editOf', () => {
         }
       }
     }
+  });
+});
+
+describe('reconcile', () => {
+  it.each([
+    ['keeps a deletion', '123456', '12456', 'digits', '12456'],
+    ['keeps a deletion of everything', '1234', '', 'digits', ''],
+    ['inserts at the caret of a partial code', '12', '132', 'digits', '132'],
+    ['writes an insert over the box it lands on in a full code', 'ABC123', 'AxBC123', 'alphanumeric', 'AxC123'],
+    ['replaces a range', '1234', '1984', 'digits', '1984'],
+    ['takes a rewrite before the caret', 'AB', 'AX', 'alphanumeric', 'AX'],
+    ['replaces the value with a whole code', '12', '654321', 'digits', '654321'],
+    ['keeps the first whole code of a longer text', '', '12 34-56 78', 'digits', '123456'],
+    ['keeps the allowed characters of an insert', '12', '12a3', 'digits', '123'],
+    ['keeps the code when the insert brings nothing it allows', 'ABC', 'ABC하', 'alphanumeric', 'ABC'],
+    ['keeps a full code when the insert brings nothing it allows', 'ABC123', 'AㅎBC123', 'alphanumeric', 'ABC123'],
+    ['refuses an insert after a full code', '123456', '1234569', 'digits', '123456'],
+    ['takes full-width characters as their ASCII ones', '123456', '1１23456', 'digits', '113456'],
+    ['takes a text that did not change as it is', '123', '123', 'digits', '123'],
+  ] as const)('%s', (_name, previous, text, characters, expected) => {
+    expect(reconcile(previous, text, { characters, length: 6 })).toBe(expected);
   });
 });
