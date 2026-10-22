@@ -33,6 +33,7 @@ const FRENCH: Strings = {
   notifications: 'Notifications FR',
   breadcrumbs: "Fil d'Ariane",
   pagination: 'Pages',
+  contents: 'Sur cette page',
   resizeSheet: 'Redimensionner',
   resizePanel: 'Redimensionner le panneau',
   options: 'Choix',
