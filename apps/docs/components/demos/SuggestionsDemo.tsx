@@ -18,11 +18,14 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 // Each turn links to the message it answers or follows. A message's replies
 // are the turns whose parent it is, so regenerating adds a sibling, and
 // `shown` maps each message to the id of the reply the thread follows.
-type Turn = { id: number; from: 'user' | 'assistant'; text: string; parent: number | null };
-type Thread = { turns: Record<number, Turn>; shown: Record<number, number> };
+// A reply stopped before it had any text keeps `stopped`, so it can be asked again.
+type Turn = { id: number; from: 'user' | 'assistant'; text: string; parent: number | null; stopped?: true };
 
 // The one reply in flight, and the reply its question showed before it, if any.
 type Pending = { reply: number; before: number | undefined };
+
+// The reply in flight lives in the thread, so each change is one update.
+type Thread = { turns: Record<number, Turn>; shown: Record<number, number>; pending: Pending | null };
 
 type Answer = { versions: readonly string[]; suggestions: readonly string[] };
 
@@ -75,6 +78,7 @@ function start(): Thread {
       3: { id: 3, from: 'assistant', text: ANSWERS[FIRST]!.versions[1]!, parent: 1 },
     },
     shown: { 1: 3 },
+    pending: null,
   };
 }
 
@@ -101,8 +105,12 @@ function without(thread: Thread, id: number, before: number | undefined): Thread
   const { [id]: _, ...turns } = thread.turns;
   const parent = thread.turns[id]!.parent!;
   const { [parent]: __, ...shown } = thread.shown;
-  return { turns, shown: before === undefined ? shown : { ...shown, [parent]: before } };
+  return { ...thread, turns, shown: before === undefined ? shown : { ...shown, [parent]: before } };
 }
+
+// The thread with the reply in flight taken out, and its question showing what it showed before.
+const cancelled = (thread: Thread): Thread =>
+  thread.pending ? { ...without(thread, thread.pending.reply, thread.pending.before), pending: null } : thread;
 
 function VersionSwitcher({
   index,
@@ -160,12 +168,11 @@ function VersionSwitcher({
 
 export function SuggestionsExample() {
   const [thread, setThread] = useState(start);
-  const [pending, setPending] = useState<Pending | null>(null);
   const [value, setValue] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const field = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(4);
-  const { turns } = thread;
+  const { turns, pending } = thread;
   const path = pathOf(thread);
   const last = path.at(-1)!;
   const busy = pending !== null;
@@ -183,21 +190,20 @@ export function SuggestionsExample() {
     setThread({
       turns: { ...base.turns, [id]: { id, from: 'assistant', text: '', parent: question.id } },
       shown: { ...base.shown, [question.id]: id },
+      pending: { reply: id, before: base.shown[question.id] },
     });
-    setPending({ reply: id, before: base.shown[question.id] });
     timer.current = setTimeout(() => {
-      setThread((now) => ({ ...now, turns: { ...now.turns, [id]: { ...now.turns[id]!, text } } }));
-      setPending(null);
+      setThread((now) => ({ ...now, turns: { ...now.turns, [id]: { ...now.turns[id]!, text } }, pending: null }));
     }, 1200);
   };
 
   // While a reply runs, only that reply can be asked for again, and asking
-  // again cancels the one in flight.
+  // again cancels the one in flight. A stopped reply is replaced, not kept as a version.
   const regenerateHeld = (answer: Turn) => pending !== null && pending.reply !== answer.id;
   const regenerate = (answer: Turn) => {
     clearTimeout(timer.current);
-    const base = pending ? without(thread, pending.reply, pending.before) : thread;
-    ask(base, turns[answer.parent!]!);
+    const base = cancelled(thread);
+    ask(answer.stopped ? without(base, answer.id, undefined) : base, turns[answer.parent!]!);
   };
 
   const show = (answer: Turn, reply: number) =>
@@ -208,24 +214,29 @@ export function SuggestionsExample() {
     const id = nextId.current++;
     const question: Turn = { id, from: 'user', text: value.trim(), parent: last.id };
     setValue('');
-    ask({ turns: { ...turns, [id]: question }, shown: { ...thread.shown, [last.id]: id } }, question);
+    ask({ ...thread, turns: { ...turns, [id]: question }, shown: { ...thread.shown, [last.id]: id } }, question);
   };
 
   const stop = () => {
     if (!pending) return;
     clearTimeout(timer.current);
-    setPending(null);
-    const stopped = without(thread, pending.reply, pending.before);
+    const stopped = cancelled(thread);
     const question = turns[turns[pending.reply]!.parent!]!;
-    // A question stopped before any reply goes back to the field to be sent
-    // again, unless the person has started another draft there.
-    if (repliesTo(stopped, question.id).length === 0 && !hasDraft) {
-      setThread(without(stopped, question.id, undefined));
-      setValue(question.text);
-      field.current?.focus();
+    if (repliesTo(stopped, question.id).length > 0) {
+      setThread(stopped);
       return;
     }
-    setThread(stopped);
+    // A question stopped before any reply goes back to the field to be sent
+    // again. If the person has started another draft there, the reply stays
+    // as stopped instead, so Regenerate can ask again.
+    if (hasDraft) {
+      const reply = turns[pending.reply]!;
+      setThread({ ...thread, turns: { ...turns, [reply.id]: { ...reply, stopped: true } }, pending: null });
+      return;
+    }
+    setThread(without(stopped, question.id, undefined));
+    setValue(question.text);
+    field.current?.focus();
   };
 
   // A suggestion fills the field, so the person can change it before sending.
@@ -249,9 +260,13 @@ export function SuggestionsExample() {
           // Keyed by the question, so switching or regenerating keeps the message and the focused button.
           <Message.Root key={`reply-${turn.parent}`} streaming={pending?.reply === turn.id} aria-label="Assistant">
             <Message.Content>
-              <Prose.Root>
-                <p>{turn.text}</p>
-              </Prose.Root>
+              {turn.stopped ? (
+                <Text.Root tone="muted">Stopped before a reply.</Text.Root>
+              ) : (
+                <Prose.Root>
+                  <p>{turn.text}</p>
+                </Prose.Root>
+              )}
             </Message.Content>
             <Message.Actions>
               <Toolbar.Root aria-label="Reply">

@@ -67,7 +67,7 @@ import { ChevronLeft, Ellipsis } from 'lucide-react';
 
 **You supply:** The links or buttons, with their state: `aria-current="page"` on the current page's control and `aria-disabled="true"` on a step with nowhere to go. Todae sets neither. Text or `aria-label` on previous and next controls that show only an arrow. When buttons swap the results in place, Todae announces nothing; move focus to the results or announce the change with [useAnnouncer](/utilities/use-announcer).
 
-**Watch for:** An element between `Pagination.Item` and your control: the current and muted styles match the item's direct child, so they stop applying. A current page marked by a class alone, which is neither announced nor drawn as current. An `aria-disabled` button still fires its click, so its handler must do nothing.
+**Watch for:** An element between `Pagination.Item` and your control: the current and muted styles match the item's direct child, so they stop applying. A current page marked by a class alone, which is neither announced nor drawn as current. A plain `button` with `aria-disabled` still fires its click, so its handler must do nothing; a `Button.Root` ignores the click itself.
 
 ## When to use
 

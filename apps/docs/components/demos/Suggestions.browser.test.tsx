@@ -114,7 +114,7 @@ it('puts a question stopped before any reply back in the field', async () => {
   expect(document.activeElement).toBe(field());
 });
 
-it('keeps a draft typed while the reply ran when that reply is stopped', async () => {
+it('keeps a draft typed while the reply ran when that reply is stopped, and the stopped reply can be asked again', async () => {
   setup();
   await userEvent.click(within(suggestions()!).getByRole('button', { name: 'What about a toggle button?' }));
   await userEvent.keyboard('{Enter}');
@@ -122,6 +122,15 @@ it('keeps a draft typed while the reply ran when that reply is stopped', async (
   await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
   expect(field().value).toBe('my draft');
   expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(2);
+  const stopped = replies()[1]!;
+  expect(stopped).toHaveTextContent('Stopped before a reply.');
+
+  await userEvent.click(within(stopped).getByRole('button', { name: 'Regenerate' }));
+  // The stopped reply is replaced, not kept as a version.
+  expect(within(replies()[1]!).queryByRole('button', { name: 'Next reply' })).toBeNull();
+  await expect.poll(() => replies()[1]!.getAttribute('aria-busy'), { timeout: 3000 }).not.toBe('true');
+  expect(replies()[1]).not.toHaveTextContent('Stopped before a reply.');
+  expect(field().value).toBe('my draft');
 });
 
 it('holds Regenerate on other replies while a reply runs', async () => {
