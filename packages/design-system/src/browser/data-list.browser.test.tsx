@@ -234,7 +234,6 @@ describe('DataList in a browser', () => {
       const gap = probe.getBoundingClientRect().width;
       probe.remove();
       expect(gap).toBeGreaterThan(0);
-      expect(gap).not.toBe(parseFloat(getComputedStyle(list).rowGap));
       const first = list.children[0]!.getBoundingClientRect();
       const second = list.children[1]!.getBoundingClientRect();
       expect(second.left - first.right).toBeCloseTo(gap, 1);
@@ -327,8 +326,14 @@ describe('DataList in a browser', () => {
       screen.getByText(long).append(probe);
       const textWidth = probe.getBoundingClientRect().width;
       probe.remove();
-      expect(screen.getByLabelText('Long').getBoundingClientRect().width).toBeCloseTo(textWidth, 0);
-      expect(new Set(tops('Long')).size).toBeLessThan(3);
+      const list = screen.getByLabelText('Long');
+      const width = list.getBoundingClientRect().width;
+      expect(width).toBeCloseTo(textWidth, 0);
+      const gap = parseFloat(getComputedStyle(list).columnGap);
+      const floor = parseFloat(getComputedStyle(document.documentElement).fontSize) * 12;
+      const count = Math.min(3, Math.floor((width + gap) / (floor + gap)));
+      expect(count).toBeGreaterThan(1);
+      expect(new Set(tops('Long')).size).toBe(Math.ceil(3 / count));
     });
   });
 

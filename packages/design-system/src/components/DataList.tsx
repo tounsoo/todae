@@ -12,7 +12,8 @@ export type DataListRootProps = {
   orientation?: DataListOrientation;
   /**
    * Lays the items out in columns no narrower than this CSS length, such as
-   * "24rem". As many columns fit as the width allows, and a single column never
+   * "24rem". As many columns fit as the width allows, with
+   * `datalist.gap.between-columns` between them, and a single column never
    * overflows. A horizontal item stacks in a column narrower than its term
    * column, `datalist.gap.column` and details minimum together. Without it the
    * items sit in one column.
