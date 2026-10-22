@@ -23,7 +23,7 @@ export type FieldOneTimeCodeCharacters = OneTimeCodeCharacters;
 export type FieldOneTimeCodeProps = {
   /** The code: at most `length` characters of the allowed set. */
   value: string;
-  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  /** Optional: `onValueChange` alone is enough when the event is not needed. The event holds the raw text; clean it, or use `onValueChange`. */
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   /** Called with the code cleaned to the allowed characters and cut to `length`. Without it and `onChange` the input is read-only. */
   onValueChange?: (value: string) => void;
@@ -77,7 +77,7 @@ function insert(input: HTMLInputElement, text: string) {
  * input. The input keeps paste, undo, selection and the phone's code autofill
  * (`autocomplete="one-time-code"`), and the boxes are only drawn. Typing,
  * paste and autofill all keep the characters the code allows and cut it to
- * `length`; a pasted code replaces the whole value, and a press on a box
+ * `length`; a pasted code replaces the whole value, a drop is a paste at the caret, and a press on a box
  * selects its character so typing replaces it.
  */
 export function OneTimeCode({
