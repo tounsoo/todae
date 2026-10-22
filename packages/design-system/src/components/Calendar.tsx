@@ -24,6 +24,7 @@ import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { useReach } from './calendarReach.js';
+import { handledOrComposing } from './ime.js';
 import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 
@@ -452,15 +453,16 @@ function Root(rootProps: CalendarRootProps) {
       moveToYear,
     ],
   );
-  // Escape drops only the range in progress. As a layer on the overlays' Escape
-  // stack, it answers before a popover around the calendar. Stopping the key's
-  // propagation can't do that when React's root is the document, as in Next.js,
-  // since the popover's listener sits on the same node.
+  // Escape, and a modal's close request such as the Android back gesture, drop
+  // only the range in progress. As a layer on the overlays' Escape stack, it
+  // answers before a popover around the calendar; stopping the key's propagation
+  // can't, when React's root is the document as in Next.js, since the popover's
+  // listener sits on the same node. A key onKeyDown prevented is left alone.
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(rootRef, refProp);
   const dropPending = useCallback(() => setPending(IDLE), []);
   const takesEscape = useCallback((target: Element | null) => rootRef.current?.contains(target) === true, []);
-  useEscapeKey(anchor !== null, takesEscape, dropPending, rootRef, { popup: false });
+  useEscapeKey(anchor !== null, takesEscape, dropPending, rootRef, { popup: false, passesKey: handledOrComposing });
   return (
     <CalendarContext.Provider value={ctx}>
       <div

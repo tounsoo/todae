@@ -388,6 +388,18 @@ describe('Calendar range mode', () => {
     escapes.stop();
   });
 
+  it('keeps the first pick when onKeyDown prevents Escape', () => {
+    render(
+      <RangeControlled
+        initial={{ start: date('2026-10-20'), end: date('2026-10-22') }}
+        onKeyDown={(event) => event.key === 'Escape' && event.preventDefault()}
+      />,
+    );
+    fireEvent.click(october(5));
+    fireEvent.keyDown(october(5), { key: 'Escape' });
+    expect(october(5).hasAttribute('data-selected')).toBe(true);
+  });
+
   it('leaves Escape outside the calendar alone while a range is in progress', () => {
     const escapes = escapesLeftAlone();
     render(

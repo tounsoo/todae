@@ -13,3 +13,8 @@ export function isImeKeyEvent(event: ImeKeyEvent, commitKeys: readonly string[] 
   const composing = 'nativeEvent' in event ? event.nativeEvent.isComposing : event.isComposing;
   return composing || event.key === 'Process' || (event.keyCode === 229 && commitKeys.includes(event.key));
 }
+
+/** An Escape layer's passesKey: a key a popup or field inside already took, or one that ends an IME composition. */
+export function handledOrComposing(event: KeyboardEvent): boolean {
+  return event.defaultPrevented || isImeKeyEvent(event);
+}
