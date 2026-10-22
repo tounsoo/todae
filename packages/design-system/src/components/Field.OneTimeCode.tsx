@@ -238,12 +238,18 @@ export function OneTimeCode({
     sync();
   }
 
-  // A press on a box selects its character, so typing replaces it; a press on an empty box or past the last one puts the caret after the code. Done on click rather than by cancelling the press, so a phone focuses natively and keeps its keyboard.
+  // A press on a box selects its character, so typing replaces it; a press on an empty box or past the last one puts the caret after the code, and a double press selects the whole code. Done on click rather than by cancelling the press, so a phone focuses natively and keeps its keyboard.
   function onClick(event: MouseEvent<HTMLInputElement>) {
+    const target = event.currentTarget;
+    // The first press selected one box, which the browser's word selection keeps, so the second selects the code itself.
+    if (event.detail === 2) {
+      target.setSelectionRange(0, target.value.length);
+      sync();
+      return;
+    }
     const nearest = nearestBox(slotsNode.current?.children, event.clientX);
     // Only a press: a label's click and an assistive technology's carry no position of the person's.
     if (event.detail !== 1 || nearest < 0) return;
-    const target = event.currentTarget;
     // The press collapsed the caret, so a range is a drag or a Shift+click that selected on purpose.
     if (target.selectionStart !== target.selectionEnd) return;
     if (nearest < value.length) target.setSelectionRange(nearest, nearest + 1);

@@ -138,6 +138,15 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('129456');
   });
 
+  it('selects the whole code on a double click', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.dblClick(input(), { position: boxPosition(2) });
+    expect([input().selectionStart, input().selectionEnd]).toEqual([0, 6]);
+    expect(active()).toEqual([0, 1, 2, 3, 4, 5]);
+    await paste('654321');
+    expect(input().value).toBe('654321');
+  });
+
   it('puts the caret after the code when a box past it is pressed', async () => {
     render(<Code initial="12" />);
     const box = boxes()[5]!.getBoundingClientRect();
