@@ -89,13 +89,15 @@ describe('Splitter dragging', () => {
     const host = screen.getByTestId('host').getBoundingClientRect();
     await userEvent.dragAndDrop(handle(), probeAt(host.left + 60, host.top + 100));
     expect(now()).toBe(0);
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(true);
+    expect(screen.getByTestId('root').hasAttribute('data-collapsed')).toBe(true);
+    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('hidden');
     expect(box('first').width).toBe(0);
     expect(box('second').width).toBeGreaterThan(590);
     // Between half of min and min the panel holds at min.
     await userEvent.dragAndDrop(handle(), probeAt(host.left + 100, host.top + 100));
     expect(now()).toBe(150);
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(false);
+    expect(screen.getByTestId('root').hasAttribute('data-collapsed')).toBe(false);
+    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
   });
 
   it('resizes a panel at the end from the far edge', async () => {
@@ -140,6 +142,24 @@ describe('Splitter layout', () => {
     rerender(<Layout value={400} width={800} />);
     await waitFor(() => expect(box('first').width).toBe(400));
     expect(box('second').width).toBeGreaterThan(390);
+  });
+
+  it('shows the width it draws when the container is narrower than min', async () => {
+    render(<Layout defaultValue={200} min={100} width={60} />);
+    await waitFor(() => expect(now()).toBe(59));
+    expect(box('first').width).toBeCloseTo(59, 0);
+    expect(handle().getAttribute('aria-valuemin')).toBe('59');
+    expect(handle().getAttribute('aria-valuemax')).toBe('59');
+  });
+
+  it('keeps both panels inside a root with padding', async () => {
+    render(<Layout defaultValue={200} style={{ padding: 20 }} />);
+    await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('559'));
+    await userEvent.click(handle());
+    await userEvent.keyboard('{End}');
+    const root = screen.getByTestId('root').getBoundingClientRect();
+    expect(box('second').right).toBeLessThanOrEqual(root.right - 20 + 0.5);
+    expect(box('first').width + handle().getBoundingClientRect().width + box('second').width).toBeCloseTo(560, 0);
   });
 
   it('does not widen the page when the handle sits at the edge of the viewport', () => {
@@ -278,6 +298,100 @@ describe('Splitter focus', () => {
     expect(line.width).toBeLessThan(4);
     const target = getComputedStyle(handle(), '::before');
     expect(Number.parseFloat(target.width)).toBeGreaterThanOrEqual(24);
-    expect(handle().style.touchAction === '' && getComputedStyle(handle()).touchAction).toBe('none');
+    expect(getComputedStyle(handle()).touchAction).toBe('none');
+  });
+
+  it('hides the collapsed panel at the end, and not the one beside it', () => {
+    render(<Layout value={0} collapsible primary="end" />);
+    expect(getComputedStyle(screen.getByTestId('second')).visibility).toBe('hidden');
+    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
+  });
+
+  it('does not hide a panel at size 0 that is not collapsible', () => {
+    render(<Layout value={0} />);
+    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
+  });
+
+  it('moves focus from a panel that collapses to the handle, without scrolling the page', async () => {
+    const { rerender } = render(<Layout value={200} collapsible />);
+    screen.getByRole('button', { name: 'Inside' }).focus();
+    rerender(<Layout value={0} collapsible />);
+    expect(document.activeElement).toBe(handle());
+    expect(document.scrollingElement?.scrollTop).toBe(0);
+  });
+});
+
+describe('Splitter hit area', () => {
+  /** What a pointer at `offset` px past the handle's line reaches, along the axis. */
+  const hit = (offset: number, vertical = false) => {
+    const line = handle().getBoundingClientRect();
+    return vertical
+      ? document.elementFromPoint(line.left + line.width / 2, line.top + offset)
+      : document.elementFromPoint(line.left + offset, line.top + line.height / 2);
+  };
+
+  it('reaches over the panel after the line and leaves the scrollbar of the panel before it alone', () => {
+    render(<Layout defaultValue={200} />);
+    expect(hit(10)).toBe(handle());
+    expect(hit(-6)).not.toBe(handle());
+    expect(screen.getByTestId('first').contains(hit(-6))).toBe(true);
+  });
+
+  it('is the same in right-to-left text, where the end side is on the left', () => {
+    render(<Layout defaultValue={200} dir="rtl" />);
+    expect(hit(-10)).toBe(handle());
+    expect(hit(6)).not.toBe(handle());
+  });
+
+  it('reaches toward the start where a panel at the end is collapsed at the edge', () => {
+    render(<Layout value={0} collapsible primary="end" width={300} />);
+    expect(hit(-10)).toBe(handle());
+  });
+
+  it('reaches toward the start where the first panel fills the room', async () => {
+    render(<Layout value={900} width={400} />);
+    await waitFor(() => expect(box('second').width).toBe(0));
+    expect(hit(-10)).toBe(handle());
+  });
+
+  it('reaches toward the end below a stacked first panel, and toward the start when it fills the room', async () => {
+    const { rerender } = render(<Layout orientation="vertical" defaultValue={100} width={300} height={300} />);
+    expect(hit(10, true)).toBe(handle());
+    expect(hit(-6, true)).not.toBe(handle());
+    rerender(<Layout orientation="vertical" value={900} width={300} height={300} />);
+    await waitFor(() => expect(box('second').height).toBe(0));
+    expect(hit(-10, true)).toBe(handle());
+  });
+});
+
+describe('Splitter panels with controls', () => {
+  it('scroll a focused control into view with its ring whole', async () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <div style={{ inlineSize: 400, blockSize: 120 }}>
+          <Splitter.Root defaultValue={200} style={{ blockSize: '100%' }}>
+            <Splitter.Panel data-testid="scrolled">
+              <div style={{ blockSize: 400 }}>Tall</div>
+              <button type="button">Deep</button>
+            </Splitter.Panel>
+            <Splitter.Handle aria-label="Resize" />
+            <Splitter.Panel>Main</Splitter.Panel>
+          </Splitter.Root>
+        </div>
+      </>,
+    );
+    screen.getByRole('button', { name: 'Before' }).focus();
+    await userEvent.tab();
+    const deep = screen.getByRole('button', { name: 'Deep' });
+    expect(document.activeElement).toBe(deep);
+    const panel = screen.getByTestId('scrolled');
+    const ring = getComputedStyle(deep);
+    const room = Number.parseFloat(ring.outlineWidth) + Number.parseFloat(ring.outlineOffset);
+    expect(room).toBeGreaterThan(0);
+    const view = panel.getBoundingClientRect();
+    expect(panel.scrollTop).toBeGreaterThan(0);
+    expect(deep.getBoundingClientRect().bottom + room).toBeLessThanOrEqual(view.top + panel.clientHeight + 1);
+    expect(Number.parseFloat(getComputedStyle(panel).scrollPaddingBottom)).toBeGreaterThanOrEqual(room);
   });
 });

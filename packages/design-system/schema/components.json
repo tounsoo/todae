@@ -4111,7 +4111,7 @@
           "name": "min",
           "type": "number",
           "required": false,
-          "description": "The smallest size in pixels while the panel is open.",
+          "description": "The smallest size in pixels while the panel is open. A container too narrow for it wins.",
           "default": "0"
         },
         {

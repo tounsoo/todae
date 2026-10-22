@@ -48,10 +48,14 @@
     min-inline-size: 0;
     min-block-size: 0;
     overflow: auto;
+    /* Room for a ring past the focused box when it scrolls into view. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   }
 
-  /* Out of the tab order and the accessibility tree, and still laid out as a track of 0. */
-  .panel[data-collapsed] {
+  /* The root knows it is collapsed before any script runs, and the primary panel is the first or the last by structure.
+     Out of the tab order and the accessibility tree, and still laid out as a track of 0. */
+  .root[data-collapsed][data-primary='start'] > .panel:has(+ .handle),
+  .root[data-collapsed][data-primary='end'] > .handle + .panel {
     visibility: hidden;
   }
 
@@ -74,7 +78,8 @@
     cursor: row-resize;
   }
 
-  /* The hit area, centered on the line so the layout keeps the thin track. */
+  /* The hit area starts at the line and reaches toward the end side, since the scrollbar of the panel before the
+     handle sits against the line. Where the end side has no width, it reaches toward the start instead. */
   .handle::before {
     content: '';
     position: absolute;
@@ -82,35 +87,30 @@
 
   .root[data-orientation='horizontal'] > .handle::before {
     inset-block: 0;
-    inset-inline-start: calc(50% - var(--todae-splitter-handle-target) / 2);
+    inset-inline: 0 auto;
     inline-size: var(--todae-splitter-handle-target);
   }
 
   .root[data-orientation='vertical'] > .handle::before {
     inset-inline: 0;
-    inset-block-start: calc(50% - var(--todae-splitter-handle-target) / 2);
+    inset-block: 0 auto;
     block-size: var(--todae-splitter-handle-target);
   }
 
-  /* A collapsed panel leaves the handle at the root's edge: its hit area extends only toward the open panel. */
-  .root[data-orientation='horizontal'] > .panel[data-collapsed] + .handle::before {
-    inset-inline-start: 0;
-  }
-
-  .root[data-orientation='horizontal'] > .handle:has(+ .panel[data-collapsed])::before {
+  .root[data-orientation='horizontal'][data-primary='start'][data-full] > .handle::before,
+  .root[data-orientation='horizontal'][data-primary='end'][data-collapsed] > .handle::before {
     inset-inline: auto 0;
   }
 
-  .root[data-orientation='vertical'] > .panel[data-collapsed] + .handle::before {
-    inset-block-start: 0;
-  }
-
-  .root[data-orientation='vertical'] > .handle:has(+ .panel[data-collapsed])::before {
+  .root[data-orientation='vertical'][data-primary='start'][data-full] > .handle::before,
+  .root[data-orientation='vertical'][data-primary='end'][data-collapsed] > .handle::before {
     inset-block: auto 0;
   }
 
-  .handle:hover {
-    background: var(--todae-splitter-handle-color-hover);
+  @media (hover: hover) {
+    .handle:hover {
+      background: var(--todae-splitter-handle-color-hover);
+    }
   }
 
   .root[data-dragging] > .handle {

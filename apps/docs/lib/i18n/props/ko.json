@@ -3231,8 +3231,8 @@
       "ko": "끌기나 키로 크기가 바뀔 때마다 새 크기와 함께 호출됩니다."
     },
     "min": {
-      "en": "The smallest size in pixels while the panel is open.",
-      "ko": "패널이 열려 있을 때의 가장 작은 크기(픽셀)."
+      "en": "The smallest size in pixels while the panel is open. A container too narrow for it wins.",
+      "ko": "패널이 열려 있을 때의 가장 작은 크기(픽셀). 컨테이너가 이보다 좁으면 컨테이너가 우선합니다."
     },
     "max": {
       "en": "The largest size in pixels. The container limits it too.",

@@ -1,10 +1,13 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Splitter, type SplitterRootProps } from '../index.js';
+import { resetWarnOnce } from './warnOnce.js';
 
 afterEach(() => {
   cleanup();
+  resetWarnOnce();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -24,6 +27,30 @@ function Layout(props: SplitterRootProps) {
 
 const handle = () => screen.getByRole('separator');
 const press = (key: string) => fireEvent.keyDown(handle(), { key });
+const root = () => screen.getByTestId('root');
+const collapsed = () => root().hasAttribute('data-collapsed');
+
+/** A container `width` pixels wide, as a layout engine would report it. */
+function measured(width: number) {
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(width);
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+}
+
+const down = (clientX = 100, init: PointerEventInit = {}) =>
+  fireEvent.pointerDown(handle(), {
+    button: 0,
+    isPrimary: true,
+    pointerId: 1,
+    clientX,
+    ...init,
+  });
+const move = (clientX: number, pointerId = 1) => fireEvent.pointerMove(handle(), { pointerId, clientX });
 
 describe('Splitter.Handle semantics', () => {
   it('is a focusable vertical separator for side-by-side panels, with its value and range', () => {
@@ -83,28 +110,14 @@ describe('Splitter.Handle semantics', () => {
   });
 
   it('gives the container as the largest size once it is measured', () => {
-    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(600);
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        disconnect() {}
-      },
-    );
+    measured(600);
     render(<Layout defaultValue={240} min={100} />);
     expect(handle().getAttribute('aria-valuemax')).toBe('600');
     expect(screen.getByTestId('root').style.getPropertyValue('--_size')).toBe('240px');
   });
 
   it('shows a size past the measured container as the container', () => {
-    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(300);
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        disconnect() {}
-      },
-    );
+    measured(300);
     render(<Layout defaultValue={500} />);
     expect(handle().getAttribute('aria-valuenow')).toBe('300');
   });
@@ -187,7 +200,7 @@ describe('Splitter keys', () => {
     expect(screen.getByTestId('root').style.getPropertyValue('--_size')).toBe('300px');
   });
 
-  it('runs the product\'s key handler first and lets it stop the move', () => {
+  it("runs the product's key handler first and lets it stop the move", () => {
     render(
       <Splitter.Root defaultValue={240}>
         <Splitter.Panel />
@@ -238,7 +251,7 @@ describe('Splitter collapse', () => {
     render(<Layout defaultValue={240} min={100} />);
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('240');
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(false);
+    expect(collapsed()).toBe(false);
   });
 
   it('collapses to 0 on Enter and restores the size before on the next', () => {
@@ -248,19 +261,18 @@ describe('Splitter collapse', () => {
     press('ArrowRight');
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('0');
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(true);
-    expect(screen.getByTestId('second').hasAttribute('data-collapsed')).toBe(false);
+    expect(collapsed()).toBe(true);
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('256');
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(false);
+    expect(collapsed()).toBe(false);
     expect(onValueChange.mock.calls).toEqual([[256], [0], [256]]);
   });
 
   it('collapses the last panel when it is the primary one', () => {
     render(<Layout defaultValue={240} primary="end" collapsible />);
     press('Enter');
-    expect(screen.getByTestId('second').hasAttribute('data-collapsed')).toBe(true);
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(false);
+    expect(collapsed()).toBe(true);
+    expect(root().dataset.primary).toBe('end');
   });
 
   it('collapses by arrow from min and opens to min with the opposite arrow', () => {
@@ -273,7 +285,7 @@ describe('Splitter collapse', () => {
 
   it('opens a panel that started collapsed to min on Enter', () => {
     render(<Layout defaultValue={0} min={180} collapsible />);
-    expect(screen.getByTestId('first').hasAttribute('data-collapsed')).toBe(true);
+    expect(collapsed()).toBe(true);
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('180');
   });
@@ -308,8 +320,275 @@ describe('Splitter parts', () => {
     expect(refs.handle).toBe(handle());
   });
 
-  it('keep the product\'s style on the root', () => {
+  it("keep the product's style on the root", () => {
     render(<Layout defaultValue={100} style={{ blockSize: 300 }} />);
     expect(screen.getByTestId('root').style.blockSize).toBe('300px');
+  });
+});
+
+describe('Splitter on the server', () => {
+  it('renders a collapsed panel as collapsed before any script runs', () => {
+    const html = renderToString(<Layout defaultValue={0} min={180} collapsible />);
+    expect(html).toMatch(/<div[^>]*data-testid="root"[^>]*data-collapsed=""/);
+    expect(renderToString(<Layout defaultValue={0} collapsible primary="end" />)).toContain('data-collapsed=""');
+    expect(renderToString(<Layout defaultValue={200} collapsible />)).not.toContain('data-collapsed');
+  });
+});
+
+describe('Splitter range', () => {
+  it('does not collapse a panel that is not collapsible, even at size 0', () => {
+    render(<Layout defaultValue={0} />);
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
+    expect(collapsed()).toBe(false);
+  });
+
+  it('reads a coherent range before the container is measured', () => {
+    render(<Layout defaultValue={300} />);
+    expect(handle().getAttribute('aria-valuemin')).toBe('0');
+    expect(handle().getAttribute('aria-valuemax')).toBe('300');
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+  });
+
+  it('lets the room win over min: the range reports what is drawn', () => {
+    measured(60);
+    render(<Layout defaultValue={200} min={100} />);
+    expect(handle().getAttribute('aria-valuenow')).toBe('60');
+    expect(handle().getAttribute('aria-valuemin')).toBe('60');
+    expect(handle().getAttribute('aria-valuemax')).toBe('60');
+    expect(root().style.getPropertyValue('--_size')).toBe('60px');
+  });
+
+  it('leaves the padding of the root out of the room', () => {
+    measured(300);
+    render(<Layout defaultValue={200} style={{ padding: '20px' }} />);
+    expect(handle().getAttribute('aria-valuemax')).toBe('260');
+  });
+
+  it('marks a panel that fills the room', () => {
+    measured(300);
+    const { rerender } = render(<Layout value={300} />);
+    expect(root().hasAttribute('data-full')).toBe(true);
+    rerender(<Layout value={100} />);
+    expect(root().hasAttribute('data-full')).toBe(false);
+  });
+});
+
+describe("Splitter at the container's edge", () => {
+  it('reports nothing for a key that changes nothing the panel shows', () => {
+    measured(300);
+    const onValueChange = vi.fn();
+    render(<Layout value={500} onValueChange={onValueChange} />);
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+    press('ArrowRight');
+    press('End');
+    expect(onValueChange).not.toHaveBeenCalled();
+    press('ArrowLeft');
+    expect(onValueChange).toHaveBeenCalledWith(284);
+  });
+
+  it('reports nothing for a pointer move that lands on the size shown', () => {
+    measured(300);
+    const onValueChange = vi.fn();
+    render(<Layout value={500} onValueChange={onValueChange} />);
+    down(100);
+    move(400);
+    expect(onValueChange).not.toHaveBeenCalled();
+    move(50);
+    expect(onValueChange).toHaveBeenCalledWith(250);
+  });
+});
+
+describe('Splitter dragging', () => {
+  it('moves by the distance the pointer went from the size at the press', () => {
+    const onValueChange = vi.fn();
+    render(<Layout defaultValue={240} onValueChange={onValueChange} />);
+    down(100);
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    move(160);
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+    move(40);
+    expect(handle().getAttribute('aria-valuenow')).toBe('180');
+    fireEvent.pointerUp(handle(), { pointerId: 1 });
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    move(300);
+    expect(handle().getAttribute('aria-valuenow')).toBe('180');
+  });
+
+  it('grows against the pointer for a panel at the end, and with the text direction', () => {
+    const { unmount } = render(<Layout defaultValue={240} primary="end" />);
+    down(100);
+    move(160);
+    expect(handle().getAttribute('aria-valuenow')).toBe('180');
+    unmount();
+    render(
+      <div dir="rtl">
+        <Layout defaultValue={240} />
+      </div>,
+    );
+    down(100);
+    move(160);
+    expect(handle().getAttribute('aria-valuenow')).toBe('180');
+  });
+
+  it('ignores a pointer that is not the primary one, and a second press', () => {
+    render(<Layout defaultValue={240} />);
+    down(100, { isPrimary: false, pointerId: 2 });
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    down(100);
+    down(500, { pointerId: 3 });
+    move(130, 3);
+    expect(handle().getAttribute('aria-valuenow')).toBe('240');
+    move(130);
+    expect(handle().getAttribute('aria-valuenow')).toBe('270');
+  });
+
+  it.each([
+    ['pointerup', fireEvent.pointerUp],
+    ['pointercancel', fireEvent.pointerCancel],
+    ['lostpointercapture', fireEvent.lostPointerCapture],
+  ])("ends on %s even when the product's handler prevents default", (name, fire) => {
+    const prevent = (event: { preventDefault: () => void }) => event.preventDefault();
+    const handlers = {
+      pointerup: { onPointerUp: prevent },
+      pointercancel: { onPointerCancel: prevent },
+      lostpointercapture: { onLostPointerCapture: prevent },
+    }[name];
+    render(
+      <Splitter.Root data-testid="root" defaultValue={240}>
+        <Splitter.Panel />
+        <Splitter.Handle {...handlers} />
+        <Splitter.Panel />
+      </Splitter.Root>,
+    );
+    down(100);
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    fire(handle(), { pointerId: 1 });
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    move(200);
+    expect(handle().getAttribute('aria-valuenow')).toBe('240');
+  });
+
+  it('stops dragging when the handle leaves in the middle of a drag', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { rerender } = render(<Layout defaultValue={240} />);
+    down(100);
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    rerender(
+      <Splitter.Root data-testid="root" defaultValue={240}>
+        <Splitter.Panel />
+        <Splitter.Panel />
+      </Splitter.Root>,
+    );
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+  });
+});
+
+describe('Splitter restore point', () => {
+  it('goes back to the size before a drag that ended collapsed, not to where it passed', () => {
+    render(<Layout defaultValue={240} min={100} collapsible />);
+    down(300);
+    move(250);
+    move(200);
+    move(100);
+    move(0);
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
+    fireEvent.pointerUp(handle(), { pointerId: 1 });
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('240');
+  });
+
+  it('goes back to the size the product held before it set 0', () => {
+    function Controlled() {
+      const [value, setValue] = useState(300);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(0)}>
+            Close
+          </button>
+          <Layout value={value} onValueChange={setValue} min={100} collapsible />
+        </>
+      );
+    }
+    render(<Controlled />);
+    press('ArrowLeft');
+    press('ArrowRight');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+  });
+
+  it('restores the size it was last open at, for a panel that started collapsed', () => {
+    render(<Layout defaultValue={0} min={100} collapsible />);
+    press('Enter');
+    press('ArrowRight');
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('116');
+  });
+});
+
+describe('Splitter focus', () => {
+  it('moves focus from a panel that collapses to the handle', () => {
+    const { rerender } = render(<Layout value={200} collapsible />);
+    screen.getByRole('button', { name: 'Inside' }).focus();
+    rerender(<Layout value={0} collapsible />);
+    expect(document.activeElement).toBe(handle());
+  });
+
+  it('leaves focus outside the collapsing panel where it is', () => {
+    const { rerender } = render(
+      <>
+        <button type="button">Elsewhere</button>
+        <Layout value={200} collapsible />
+      </>,
+    );
+    screen.getByRole('button', { name: 'Elsewhere' }).focus();
+    rerender(
+      <>
+        <button type="button">Elsewhere</button>
+        <Layout value={0} collapsible />
+      </>,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Elsewhere' }));
+  });
+
+  it("runs the product's focus handler on a panel", () => {
+    const onFocus = vi.fn();
+    render(
+      <Splitter.Root defaultValue={100}>
+        <Splitter.Panel onFocus={onFocus}>
+          <button type="button">Inside</button>
+        </Splitter.Panel>
+        <Splitter.Handle />
+        <Splitter.Panel />
+      </Splitter.Root>,
+    );
+    screen.getByRole('button', { name: 'Inside' }).focus();
+    expect(onFocus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Splitter shape', () => {
+  it('warns once for a root without two panels and a handle', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const broken = (
+      <Splitter.Root>
+        <Splitter.Panel />
+        <Splitter.Handle />
+      </Splitter.Root>
+    );
+    const { unmount } = render(broken);
+    unmount();
+    render(broken);
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error.mock.calls[0]?.[0]).toContain('two Splitter.Panel and one Splitter.Handle');
+  });
+
+  it('does not warn for the right shape', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<Layout defaultValue={100} />);
+    expect(error).not.toHaveBeenCalled();
   });
 });

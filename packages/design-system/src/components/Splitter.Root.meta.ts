@@ -42,7 +42,7 @@ export const meta = {
       type: 'number',
       required: false,
       default: '0',
-      description: 'The smallest size in pixels while the panel is open.',
+      description: 'The smallest size in pixels while the panel is open. A container too narrow for it wins.',
     },
     {
       name: 'max',

@@ -1,6 +1,5 @@
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useId,
@@ -10,6 +9,7 @@ import {
   useState,
   type ComponentPropsWithRef,
   type CSSProperties,
+  type FocusEvent,
   type KeyboardEvent,
   type PointerEvent,
   type RefObject,
@@ -17,14 +17,14 @@ import {
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { focusWithoutScroll, revealRing } from './revealRing.js';
 import {
-  ceilingSize,
   clampSize,
   DEFAULT_SIZE,
+  dragSize,
   floorSize,
+  growSign,
   keyAction,
-  pointerSize,
   snapSize,
   stepSize,
   toggledSize,
@@ -33,6 +33,7 @@ import {
   type SplitterOrientation,
   type SplitterPrimary,
 } from './splitterModel.js';
+import { warnOnce } from './warnOnce.js';
 import styles from './Splitter.module.css';
 
 export type { SplitterOrientation, SplitterPrimary };
@@ -55,7 +56,7 @@ export type SplitterRootProps = {
   defaultValue?: number;
   /** Called on every change of the size, from a drag or a key, with the new size. */
   onValueChange?: (value: number) => void;
-  /** The smallest size in pixels while the panel is open. */
+  /** The smallest size in pixels while the panel is open. A container too narrow for it wins. */
   min?: number;
   /** The largest size in pixels. The container limits it too. */
   max?: number;
@@ -71,19 +72,22 @@ export type SplitterPanelProps = ComponentPropsWithRef<'div'>;
 /** The `separator` between the panels. Name it with `aria-label` or `aria-labelledby`. */
 export type SplitterHandleProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-type Drag = { pointerId: number; origin: number; sign: 1 | -1; offset: number };
+type Drag = {
+  pointerId: number;
+  startPointer: number;
+  startSize: number;
+  sign: 1 | -1;
+};
 
 type SplitterContextValue = {
   orientation: SplitterOrientation;
   primary: SplitterPrimary;
   size: number;
   bounds: Bounds;
-  collapsible: boolean;
-  rootRef: RefObject<HTMLDivElement | null>;
   handleRef: RefObject<HTMLDivElement | null>;
   drag: RefObject<Drag | null>;
   setDragging: (dragging: boolean) => void;
-  setSize: (size: number) => void;
+  commit: (size: number, from?: number) => void;
   apply: (action: SplitterKeyAction) => void;
 };
 
@@ -96,7 +100,6 @@ function useSplitter(part: string): SplitterContextValue {
 }
 
 const PANEL = 'data-todae-splitter-panel';
-let warnedShape = false;
 
 // The nearest panel before or after `el` among its siblings, so a panel or
 // handle that a company wraps in its own component still counts.
@@ -112,12 +115,7 @@ function siblingPanel(el: Element, side: 'previous' | 'next'): Element | null {
 }
 
 function isRtl(el: HTMLElement): boolean {
-  try {
-    return el.matches(':dir(rtl)');
-  } catch {
-    // Engines without :dir, such as jsdom.
-    return el.closest('[dir]')?.getAttribute('dir') === 'rtl';
-  }
+  return el.matches(':dir(rtl)');
 }
 
 // The space a root's tracks share: its content box along the axis, less the handle's own track.
@@ -153,12 +151,17 @@ function Root({
   const handleRef = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const lastOpen = useRef(0);
+  const collapsedByUs = useRef(false);
   const composedRef = useComposedRefs(rootRef, ref);
   const [room, setRoom] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
 
   const bounds = useMemo<Bounds>(
-    () => ({ min, max: Math.min(max ?? Number.POSITIVE_INFINITY, room ?? Number.POSITIVE_INFINITY), collapsible }),
+    () => ({
+      min,
+      max: Math.min(max ?? Number.POSITIVE_INFINITY, room ?? Number.POSITIVE_INFINITY),
+      collapsible,
+    }),
     [min, max, room, collapsible],
   );
   const [stored, change] = useControlledValue<number>(
@@ -167,9 +170,28 @@ function Root({
     onValueChange,
   );
   const size = clampSize(stored, bounds);
+  const collapsed = collapsible && size === 0;
+  const full = room !== null && size >= room;
 
+  // A change of the size the panel already shows, such as a key at the
+  // container's edge while the size the product holds is past it, reports nothing.
+  // `from` is the size a collapse goes back to: the shown one, or where a drag began.
+  const commit = (next: number, from = size) => {
+    if (next === size) return;
+    if (next === 0) {
+      collapsedByUs.current = true;
+      if (from > 0) lastOpen.current = from;
+    }
+    change(next);
+  };
+
+  // A product that sets the size to 0 itself collapses the panel from the size it had.
+  const previous = useRef(size);
   useEffect(() => {
-    if (size > 0) lastOpen.current = size;
+    const before = previous.current;
+    previous.current = size;
+    if (size === 0 && before > 0 && !collapsedByUs.current) lastOpen.current = before;
+    collapsedByUs.current = false;
   }, [size]);
 
   useLayoutEffect(() => {
@@ -183,34 +205,41 @@ function Root({
     return () => observer.disconnect();
   }, [orientation]);
 
+  // Focus inside a panel that collapses would fall to the page; the handle is the way back.
+  useLayoutEffect(() => {
+    const handle = handleRef.current;
+    if (!collapsed || !handle) return;
+    const active = handle.ownerDocument.activeElement;
+    if (active && siblingPanel(handle, primary === 'start' ? 'previous' : 'next')?.contains(active)) {
+      focusWithoutScroll(handle);
+    }
+  }, [collapsed, primary]);
+
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || warnedShape) return;
     const root = rootRef.current;
     if (!root) return;
     const panels = root.querySelectorAll(`:scope > [${PANEL}]`).length;
     const handles = root.querySelectorAll(':scope > [role="separator"]').length;
     if (panels !== 2 || handles !== 1) {
-      warnedShape = true;
-      console.error(
+      warnOnce(
+        'splitter-shape',
         'Splitter.Root holds two Splitter.Panel and one Splitter.Handle as direct children, in the order Panel, Handle, Panel. Nest a Splitter.Root in a panel for more panes.',
+        'error',
       );
     }
   }, []);
 
-  const setSize = useCallback((next: number) => change(next), [change]);
   const apply = (action: SplitterKeyAction) => {
     switch (action) {
       case 'grow':
       case 'shrink':
-        return change(stepSize(action, size, bounds, step));
+        return commit(stepSize(action, size, bounds, step));
       case 'min':
-        return change(floorSize(bounds));
-      case 'max': {
-        const largest = ceilingSize(bounds);
-        return Number.isFinite(largest) ? change(largest) : undefined;
-      }
+        return commit(floorSize(bounds));
+      case 'max':
+        return Number.isFinite(bounds.max) ? commit(bounds.max) : undefined;
       case 'toggle':
-        return collapsible ? change(toggledSize(size, lastOpen.current, bounds, step)) : undefined;
+        return collapsible ? commit(toggledSize(size, lastOpen.current, bounds, step)) : undefined;
     }
   };
 
@@ -220,12 +249,10 @@ function Root({
     primary,
     size,
     bounds,
-    collapsible,
-    rootRef,
     handleRef,
     drag,
     setDragging,
-    setSize,
+    commit,
     apply,
   };
 
@@ -238,34 +265,28 @@ function Root({
         data-orientation={orientation}
         data-primary={primary}
         data-dragging={dragging ? '' : undefined}
+        data-collapsed={collapsed ? '' : undefined}
+        data-full={full ? '' : undefined}
         style={{ ...style, '--_size': `${size}px` } as CSSProperties}
       />
     </SplitterContext.Provider>
   );
 }
 
-function Panel({ id: idProp, className, ref, ...props }: SplitterPanelProps) {
-  const { primary, size } = useSplitter('Panel');
+function Panel({ id: idProp, className, onFocus, ref, ...props }: SplitterPanelProps) {
+  useSplitter('Panel');
   const generated = useId();
-  const own = useRef<HTMLDivElement>(null);
-  const composedRef = useComposedRefs(own, ref);
-  const [isPrimary, setIsPrimary] = useState(false);
-
-  // Which panel is the primary one is a matter of DOM order, read after each commit.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- no dependency list: the siblings change without a prop changing, and a same value renders nothing.
-  useLayoutEffect(() => {
-    const el = own.current;
-    if (el) setIsPrimary(siblingPanel(el, primary === 'start' ? 'previous' : 'next') === null);
-  });
 
   return (
     <div
       {...props}
-      ref={composedRef}
+      ref={ref}
       id={idProp ?? generated}
       data-todae-splitter-panel=""
       className={cx(styles.panel, className)}
-      data-collapsed={isPrimary && size === 0 ? '' : undefined}
+      onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLDivElement>) =>
+        revealRing(event.currentTarget, event.target),
+      )}
     />
   );
 }
@@ -285,7 +306,7 @@ function Handle({
 }: SplitterHandleProps) {
   const ctx = useSplitter('Handle');
   const { resizePanel } = useStrings();
-  const { orientation, primary, size, bounds, collapsible, drag, handleRef } = ctx;
+  const { orientation, primary, size, bounds, drag, handleRef } = ctx;
   const composedRef = useComposedRefs(handleRef, ref);
   const [controls, setControls] = useState<string | undefined>();
 
@@ -296,14 +317,29 @@ function Handle({
     setControls((el && siblingPanel(el, primary === 'start' ? 'previous' : 'next'))?.id || undefined);
   });
 
-  const name = ariaLabel || (ariaLabelledby ? undefined : resizePanel);
-  const largest = ceilingSize(bounds);
+  // A handle that leaves mid-drag gets no release.
+  const { setDragging } = ctx;
+  useEffect(
+    () => () => {
+      if (!drag.current) return;
+      drag.current = null;
+      setDragging(false);
+    },
+    [drag, setDragging],
+  );
 
-  const end = (event: PointerEvent<HTMLDivElement>) => {
-    if (drag.current?.pointerId !== event.pointerId) return;
-    drag.current = null;
-    ctx.setDragging(false);
-  };
+  const name = ariaLabel || (ariaLabelledby ? undefined : resizePanel);
+  // Until the container is measured, with no `max`, the range reaches the size it shows.
+  const largest = Number.isFinite(bounds.max) ? bounds.max : Math.max(size, floorSize(bounds));
+
+  // A release runs Todae's part whatever the product's handler did.
+  const release =
+    (theirs: ((event: PointerEvent<HTMLDivElement>) => void) | undefined) => (event: PointerEvent<HTMLDivElement>) => {
+      theirs?.(event);
+      if (drag.current?.pointerId !== event.pointerId) return;
+      drag.current = null;
+      setDragging(false);
+    };
 
   return (
     <div
@@ -315,44 +351,48 @@ function Handle({
       aria-labelledby={ariaLabelledby}
       aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
       aria-valuenow={Math.round(size)}
-      aria-valuemin={collapsible ? 0 : Math.round(bounds.min)}
-      aria-valuemax={Number.isFinite(largest) ? Math.round(largest) : undefined}
+      aria-valuemin={Math.round(floorSize(bounds))}
+      aria-valuemax={Math.round(largest)}
       aria-controls={controls}
       className={cx(styles.handle, className)}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.altKey || event.ctrlKey || event.metaKey) return;
-        const action = keyAction(event.key, orientation, primary, isRtl(event.currentTarget));
-        if (!action || (action === 'toggle' && !collapsible)) return;
+        const action = keyAction(
+          event.key,
+          orientation,
+          primary,
+          orientation === 'horizontal' && isRtl(event.currentTarget),
+        );
+        if (!action || (action === 'toggle' && !bounds.collapsible)) return;
         event.preventDefault();
         ctx.apply(action);
       })}
       onPointerDown={composeHandlers(onPointerDown, (event: PointerEvent<HTMLDivElement>) => {
-        const root = ctx.rootRef.current;
-        if (event.button !== 0 || !root) return;
+        if (event.button !== 0 || !event.isPrimary || drag.current) return;
         const handle = event.currentTarget;
         const horizontal = orientation === 'horizontal';
-        const sign = (horizontal ? (primary === 'start') !== isRtl(handle) : primary === 'start') ? 1 : -1;
-        const panel = siblingPanel(handle, primary === 'start' ? 'previous' : 'next');
-        const rect = (panel ?? root).getBoundingClientRect();
-        const origin = horizontal ? (sign > 0 ? rect.left : rect.right) : sign > 0 ? rect.top : rect.bottom;
-        const shown = panel ? (horizontal ? rect.width : rect.height) : size;
-        const press = horizontal ? event.clientX : event.clientY;
         // Not a text selection or a native drag; focus is moved by hand below.
         event.preventDefault();
         handle.setPointerCapture?.(event.pointerId);
-        drag.current = { pointerId: event.pointerId, origin, sign, offset: sign * (press - origin) - shown };
-        ctx.setDragging(true);
+        drag.current = {
+          pointerId: event.pointerId,
+          startPointer: horizontal ? event.clientX : event.clientY,
+          startSize: size,
+          sign: growSign(orientation, primary, horizontal && isRtl(handle)),
+        };
+        setDragging(true);
         focusWithoutScroll(handle);
       })}
       onPointerMove={composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
         const current = drag.current;
         if (current?.pointerId !== event.pointerId) return;
         const pointer = orientation === 'horizontal' ? event.clientX : event.clientY;
-        ctx.setSize(snapSize(Math.round(pointerSize(pointer, current.origin, current.sign, current.offset)), bounds));
+        const next = dragSize(pointer, current.startPointer, current.startSize, current.sign);
+        ctx.commit(snapSize(Math.round(next), bounds), current.startSize);
       })}
-      onPointerUp={composeHandlers(onPointerUp, end)}
-      onPointerCancel={composeHandlers(onPointerCancel, end)}
-      onLostPointerCapture={composeHandlers(onLostPointerCapture, end)}
+      onPointerUp={release(onPointerUp)}
+      onPointerCancel={release(onPointerCancel)}
+      onLostPointerCapture={release(onLostPointerCapture)}
     />
   );
 }
