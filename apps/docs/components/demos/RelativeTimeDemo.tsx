@@ -3,7 +3,7 @@
 import { DataList, formatRelativeTime } from '@tounsoo/todae';
 import { useLocale } from '../../lib/i18n/useLocale';
 
-export function RelativeTimeFile() {
+export function RelativeTimeList() {
   const locale = useLocale();
   // A fixed clock, so the demo reads the same on every visit; a product passes its own.
   const now = Temporal.ZonedDateTime.from('2026-10-22T09:30:00+09:00[Asia/Seoul]');

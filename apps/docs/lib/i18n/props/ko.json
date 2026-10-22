@@ -3224,11 +3224,15 @@
     },
     "options.style": {
       "en": "How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set.",
-      "ko": "Intl.RelativeTimeFormat이 받는 표기 길이. long(3 minutes ago), short(3 min. ago) 또는 narrow입니다. 지정하지 않으면 long입니다."
+      "ko": "Intl.RelativeTimeFormat이 받는 표기 길이. long, short 또는 narrow이며, en에서는 3 minutes ago, 3 min. ago처럼 씁니다. 지정하지 않으면 long입니다."
     },
     "options.numeric": {
       "en": "auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set.",
       "ko": "auto는 로캘에 있으면 어제나 지금 같은 낱말을 쓰고, always는 1일 전처럼 숫자를 씁니다. 지정하지 않으면 auto입니다."
+    },
+    "options.firstDayOfWeek": {
+      "en": "The day weeks start on, from 1 for Monday to 7 for Sunday, as Calendar.Root takes it. The locale's own when not set.",
+      "ko": "주가 시작하는 요일. Calendar.Root처럼 월요일 1부터 일요일 7까지입니다. 지정하지 않으면 로캘의 첫 요일입니다."
     }
   }
 }
