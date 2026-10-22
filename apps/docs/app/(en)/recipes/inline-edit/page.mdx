@@ -1,0 +1,118 @@
+import { InlineEditExample } from '../../../../components/demos/InlineEditDemo';
+
+# Inline edit
+
+A recipe, not a package namespace. A value a person can rename where it is shown is a [Text](/text) with an icon-only [Button](/button) after it. While editing, a [Field](/field) text input and Save and Cancel buttons take their place. [useInlineEdit](/utilities/use-inline-edit) carries the keys and focus. There is no `InlineEdit.*` export.
+
+Press Rename, type a new name, then press Enter to save or Escape to put the name back.
+
+<Example>
+  <InlineEditExample />
+</Example>
+
+```tsx
+import { Button, ErrorMessage, Field, Stack, Text, useInlineEdit } from '@tounsoo/todae';
+import { Check, Pencil, X } from 'lucide-react';
+import { useId } from 'react';
+
+export function InlineName({ name, onRename }: { name: string; onRename: (name: string) => void }) {
+  const nameId = useId();
+  const errorId = useId();
+  const edit = useInlineEdit({
+    value: name,
+    onCommit: (draft) => {
+      if (draft.trim() === '') return false;
+      onRename(draft.trim());
+    },
+  });
+  const invalid = edit.draft.trim() === '';
+
+  if (edit.editing) {
+    return (
+      <Stack.Root {...edit.getGroupProps()} gap="condensed">
+        <Stack.Root direction="row" gap="condensed" align="center">
+          <Field.Root aria-label="Name" invalid={invalid} aria-describedby={invalid ? errorId : undefined}>
+            <Field.TextInput {...edit.getInputProps()} />
+          </Field.Root>
+          <Button.Root variant="ghost" aria-label="Save" onClick={edit.commit}>
+            <Button.Icon>
+              <Check />
+            </Button.Icon>
+          </Button.Root>
+          <Button.Root variant="ghost" aria-label="Cancel" onClick={edit.cancel}>
+            <Button.Icon>
+              <X />
+            </Button.Icon>
+          </Button.Root>
+        </Stack.Root>
+        {invalid ? <ErrorMessage.Root id={errorId}>Enter a name.</ErrorMessage.Root> : null}
+      </Stack.Root>
+    );
+  }
+
+  return (
+    <Stack.Root direction="row" gap="condensed" align="center">
+      <Text.Root id={nameId}>{name}</Text.Root>
+      <Button.Root {...edit.getTriggerProps()} variant="ghost" aria-label="Rename" aria-describedby={nameId}>
+        <Button.Icon>
+          <Pencil />
+        </Button.Icon>
+      </Button.Root>
+    </Stack.Root>
+  );
+}
+```
+
+## Saving and cancelling
+
+Enter and the Save button save, and so does moving focus out of the edit, such as with Tab. Escape and the Cancel button put the name back. A save or a cancel returns focus to Rename, which the name describes, so a screen reader reads the new name with the button and the page needs no announcement. An empty name keeps the edit open and shows its error until the person types a name or cancels.
+
+In a [Table](/table), a cell holds the same markup.
+
+## Saving to a server
+
+Show the new name at once, and send it. If the save fails, put the old name back, say so with `useAnnouncer`, and offer to try again: `start(draft)` opens the edit with the name that failed.
+
+```tsx
+const announce = useAnnouncer();
+const edit = useInlineEdit({
+  value: name,
+  onCommit: (draft) => {
+    const next = draft.trim();
+    if (next === '') return false;
+    const before = name;
+    setName(next);
+    rename(next).catch(() => {
+      setName(before);
+      setFailed(next);
+      announce(`Couldn't rename to ${next}.`, { politeness: 'assertive' });
+    });
+  },
+});
+
+{failed !== null && (
+  <Button.Root
+    variant="secondary"
+    onClick={() => {
+      setFailed(null);
+      edit.start(failed);
+    }}
+  >
+    Try again
+  </Button.Root>
+)}
+```
+
+## Accessible composition
+
+**Todae handles:** `useInlineEdit` focuses the input and selects the name, saves on Enter and when focus leaves the edit, cancels on Escape, leaves IME compositions alone, cancels the edit before a [Dialog](/dialog) around it closes, keeps focus in the input while Save or Cancel is pressed, and returns focus to Rename. An icon-only `Button.Root` shows its `aria-label` as a tooltip. `Field.Root invalid` sets `aria-invalid` on the input.
+
+**You supply:** Names for the input and for the Rename, Save and Cancel buttons. The name's id as Rename's description. The error message and its id in the field's `aria-describedby`. The announcement when a save to the server fails. All of them in your product's language.
+
+**Watch for:** A Rename button that says only "Rename" in a list of names: describe each one by its name, as the example does. A Save or Cancel button outside the edit's group, which would save as focus moves to it. A name the server turns down after the edit has closed, shown as if it were saved.
+
+## When to use
+
+**When:** Renaming a file, a list, a conversation or a row where its name is shown.
+
+**When not:** Text over several lines → a `Field.Textarea` in a [Form](/form) or a [Dialog](/dialog). Several values that change together → a [Form](/form).

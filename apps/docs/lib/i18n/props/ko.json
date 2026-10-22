@@ -3208,5 +3208,19 @@
       "en": "The element that takes focus when the watched element unmounts while it holds focus.",
       "ko": "지켜보는 요소가 포커스를 가진 채로 언마운트될 때 포커스를 받는 요소."
     }
+  },
+  "useInlineEdit": {
+    "value": {
+      "en": "The saved value. Each edit starts from it.",
+      "ko": "저장된 값. 편집은 매번 이 값에서 시작합니다."
+    },
+    "onCommit": {
+      "en": "Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name. Not called when the draft equals value; the edit just closes.",
+      "ko": "사람이 저장할 때 초안과 함께 불립니다. Enter, commit을 부르는 Save 버튼, 편집을 떠나는 포커스가 그렇습니다. 빈 이름처럼 편집을 이어 가려면 false를 반환하세요. 초안이 value와 같으면 불리지 않고 편집만 닫힙니다."
+    },
+    "onCancel": {
+      "en": "Called when the person cancels: Escape, or a Cancel button that calls cancel.",
+      "ko": "사람이 취소할 때 불립니다. Escape나 cancel을 부르는 Cancel 버튼이 그렇습니다."
+    }
   }
 }
