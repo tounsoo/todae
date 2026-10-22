@@ -244,7 +244,8 @@ function Root({
     return () => observer.disconnect();
   }, [orientation, handle, only]);
 
-  // Every way a drag ends: a release, a handle that unmounts, and one that `only` hides, which gets no release.
+  // Every way a drag ends: a release, a handle that unmounts, and one that `only` hides, which gets no release. A
+  // removed handle has lost its capture already, and its ref is null by then.
   const endDrag = useCallback(() => {
     const current = drag.current;
     if (!current) return;
@@ -254,7 +255,7 @@ function Root({
     setDragging(false);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (only) endDrag();
   }, [only, endDrag]);
 
