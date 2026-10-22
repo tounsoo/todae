@@ -2,4 +2,4 @@
 "@tounsoo/todae": patch
 ---
 
-`Tooltip.Root` logs a content error once until the content changes, instead of on every render.
+`Tooltip.Root` no longer logs the same content error on every render.
