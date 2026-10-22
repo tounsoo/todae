@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -19,7 +20,7 @@ export type UseInlineEditOptions = {
   value: string;
   /** Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes. */
   onCommit: (draft: string) => boolean | void;
-  /** Called when the person cancels: Escape, or a Cancel button that calls cancel. */
+  /** Called when the person cancels: Escape, or a Cancel button that calls cancel. Also called when focus leaves the edit with a draft onCommit turns down. */
   onCancel?: () => void;
 };
 
@@ -55,7 +56,7 @@ export type UseInlineEditResult = {
   cancel: () => void;
   /** Props for the button that starts the edit, such as Rename. Focus returns to it when the edit closes. */
   getTriggerProps: () => UseInlineEditTriggerProps;
-  /** Props for the element that holds the input and its Save and Cancel buttons while editing. */
+  /** Props for the element that holds the input and its Save and Cancel buttons while editing. Render it only while editing: focus returns to the trigger as it unmounts. */
   getGroupProps: () => UseInlineEditGroupProps;
   /** Props for the text input. */
   getInputProps: () => UseInlineEditInputProps;
@@ -138,9 +139,13 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   }, []);
   const inputRef = useCallback((el: HTMLInputElement | null) => {
     input.current = el;
-    el?.focus();
-    el?.select();
   }, []);
+
+  useLayoutEffect(() => {
+    if (!edit.editing) return;
+    input.current?.focus();
+    input.current?.select();
+  }, [edit.editing]);
 
   const getTriggerProps = (): UseInlineEditTriggerProps => ({ ref: triggerRef, onClick: () => start() });
 
@@ -161,8 +166,9 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       // Safari and Firefox on macOS don't focus a clicked button, so focus
       // would leave the group and save before Cancel's click. Keeping it in
       // the input saves or cancels by the button pressed.
-      const target = event.target instanceof Element ? event.target.closest('button, [role="button"]') : null;
-      if (target && event.currentTarget.contains(target)) event.preventDefault();
+      // Anywhere but the input, so a press on the gap or the error text
+      // doesn't take focus to the page and save either.
+      if (input.current && !(event.target instanceof Node && input.current.contains(event.target))) event.preventDefault();
     },
   });
 

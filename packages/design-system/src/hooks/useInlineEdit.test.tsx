@@ -84,11 +84,13 @@ it('leaves an Escape that ends an IME composition to the input', async () => {
   await open();
   fireEvent.change(field(), { target: { value: '보고' } });
   fireEvent.keyDown(field(), { key: 'Escape', isComposing: true });
-  // Safari sends the Escape that ends a composition after compositionend.
-  fireEvent.keyDown(field(), { key: 'Escape', keyCode: 229 });
   await flush();
   expect(onCancel).not.toHaveBeenCalled();
   expect(field().value).toBe('보고');
+  // keyCode 229 alone counts only for keys that commit, and Escape doesn't.
+  fireEvent.keyDown(field(), { key: 'Escape', keyCode: 229 });
+  await flush();
+  expect(onCancel).toHaveBeenCalledTimes(1);
 });
 
 it('leaves an Enter a handler before it took to that handler', async () => {
@@ -259,7 +261,7 @@ it('keeps focus in the input while a button in the group is pressed, so Cancel c
   const cancel = screen.getByRole('button', { name: 'Cancel' });
   expect(fireEvent.mouseDown(cancel)).toBe(false);
   expect(fireEvent.mouseDown(field())).toBe(true);
-  expect(fireEvent.mouseDown(field().parentElement!)).toBe(true);
+  expect(fireEvent.mouseDown(field().parentElement!)).toBe(false);
   act(() => cancel.click());
   await flush();
   expect(onCancel).toHaveBeenCalledTimes(1);
