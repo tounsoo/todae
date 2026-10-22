@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { Activity, useState, type ReactNode } from 'react';
+import { Activity, useRef, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
@@ -791,6 +791,39 @@ describe('Drilldown in a browser', () => {
       rerender(ui('visible'));
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'About' }));
+    } finally {
+      cleanupAll();
+    }
+  });
+
+  it("focuses a view's initialFocusRef when a controlled change that shortens the stack shows it for the first time", async () => {
+    function Jump() {
+      const [stack, setStack] = useState<readonly string[]>(['settings', 'account', 'email']);
+      const frequency = useRef<HTMLInputElement>(null);
+      return (
+        <Themed>
+          <Drilldown.Root value={stack} onValueChange={setStack}>
+            <Drilldown.Viewport data-testid="viewport">
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+              <Drilldown.View value="email" label="Email">
+                <button type="button" onClick={() => setStack(['settings', 'notifications'])}>
+                  Notification settings
+                </button>
+              </Drilldown.View>
+              <Drilldown.View value="notifications" label="Notifications" initialFocusRef={frequency}>
+                <input aria-label="Digest" />
+                <input aria-label="Frequency" ref={frequency} />
+              </Drilldown.View>
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </Themed>
+      );
+    }
+    render(<Jump />);
+    try {
+      await userEvent.click(screen.getByRole('button', { name: 'Notification settings' }));
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Frequency' }));
     } finally {
       cleanupAll();
     }

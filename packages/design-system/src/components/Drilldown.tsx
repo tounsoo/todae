@@ -26,7 +26,7 @@ import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll } from './revealRing.js';
 import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type StackViews, type ViewStatus } from './useStackMotion.js';
-import { createViewMemory } from './viewMemory.js';
+import { createViewMemory, type Covered } from './viewMemory.js';
 import styles from './Drilldown.module.css';
 
 /**
@@ -100,8 +100,31 @@ function handledOrComposing(event: KeyboardEvent): boolean {
   return event.defaultPrevented || isImeKeyEvent(event);
 }
 
-function canTakeFocusBack(trigger: HTMLElement | null | undefined, view: HTMLElement): trigger is HTMLElement {
+function canTakeFocusBack(trigger: HTMLElement | null, view: HTMLElement): trigger is HTMLElement {
   return Boolean(trigger?.isConnected && view.contains(trigger) && isReachable(trigger) && !trigger.matches(':disabled'));
+}
+
+// Focus moves with the views when it was on them, on Back, on the overlay's
+// own element, or lost; not from another control, such as the product's own
+// that set a controlled stack.
+function movesFocus(active: Element | null, viewport: HTMLElement | null, leaving: HTMLElement | undefined, back: HTMLElement | null): boolean {
+  return (
+    !active ||
+    active === active.ownerDocument.body ||
+    active === viewport?.closest('dialog, [popover]') ||
+    leaving?.contains(active) === true ||
+    back === active
+  );
+}
+
+/**
+ * Where focus goes in the view a change shows: the trigger it remembers, else
+ * its first tab stop. A view with nothing remembered, newly pushed or never
+ * shown before, tries its initialFocusRef first.
+ */
+function focusTarget(view: HTMLElement, remembered: Covered | undefined, initialFocus: HTMLElement | null | undefined): HTMLElement {
+  if (remembered === undefined) return initialFocus ?? firstTabbable(view) ?? view;
+  return canTakeFocusBack(remembered.trigger, view) ? remembered.trigger : (firstTabbable(view) ?? view);
 }
 
 const EMPTY: Stack = [];
@@ -115,26 +138,15 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
   const backRef = useRef<HTMLButtonElement | null>(null);
 
   const onChange = (next: StackChange, { entering, leaving }: StackViews, offset: number) => {
-    const back = memory.follow(next, offset);
+    const remembered = memory.follow(next, offset);
     const viewport = viewportRef.current;
-    const active = viewport?.ownerDocument.activeElement;
-    // Focus moves with the views when it was on them, on Back, on the
-    // overlay's own element, or lost; not from another control, such as the
-    // product's own that set a controlled stack.
-    const ownsFocus =
-      !active ||
-      active === active.ownerDocument.body ||
-      active === viewport?.closest('dialog, [popover]') ||
-      leaving?.contains(active) ||
-      backRef.current === active;
-    if (entering && ownsFocus) {
+    const active = viewport?.ownerDocument.activeElement ?? null;
+    if (entering && movesFocus(active, viewport, leaving, backRef.current)) {
       const top = next.to.at(-1);
-      const trigger = back?.trigger;
-      const returnTo = canTakeFocusBack(trigger, entering) ? trigger : null;
-      const initialFocus = next.direction === 'forward' && top !== undefined ? views.current.get(top)?.initialFocusRef?.current : null;
-      focusWithoutScroll(returnTo ?? initialFocus ?? firstTabbable(entering) ?? entering);
+      const initialFocus = top === undefined ? null : views.current.get(top)?.initialFocusRef?.current;
+      focusWithoutScroll(focusTarget(entering, remembered, initialFocus));
     }
-    return back?.offset;
+    return remembered?.offset;
   };
   const elementOf = (view: string) => views.current.get(view)?.element;
   const { shown, direction, statusOf, reset, requestPush } = useStackMotion({ stack, viewportRef, elementOf, onChange });
