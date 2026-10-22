@@ -5,12 +5,39 @@ const ALLOWED: Record<OneTimeCodeCharacters, RegExp> = {
   alphanumeric: /[^A-Za-z0-9]/g,
 };
 
-/** The characters of `text` the code allows, cut to `length`. The one rule that typing, paste and autofill share. */
+/** The characters of `text` the code allows, cut to `length`. Full-width digits and letters count as their ASCII ones. */
 export function cleanCode(text: string, characters: OneTimeCodeCharacters, length: number): string {
-  return text.replace(ALLOWED[characters], '').slice(0, length);
+  return text.normalize('NFKC').replace(ALLOWED[characters], '').slice(0, length);
 }
 
 export type CodeSelection = { start: number; end: number };
+
+/** Replace `value.slice(from, to)` with `insert`. */
+export type CodeEdit = { from: number; to: number; insert: string };
+
+/**
+ * The one rule for every insert: typing, paste, drop and a finished composition.
+ * A whole code replaces the value. Anything shorter replaces the selection and
+ * writes over the characters after it as far as it needs room, and what still
+ * doesn't fit is cut, so nothing already typed moves out of its box. Null when
+ * nothing would land.
+ */
+export function editOf(
+  value: string,
+  selection: CodeSelection,
+  text: string,
+  { characters, length }: { characters: OneTimeCodeCharacters; length: number },
+): CodeEdit | null {
+  const clean = cleanCode(text, characters, Infinity);
+  if (!clean) return null;
+  if (clean.length >= length) return { from: 0, to: value.length, insert: clean.slice(0, length) };
+  const from = Math.min(selection.start, value.length);
+  const end = Math.min(Math.max(selection.end, from), value.length);
+  const kept = value.length - (end - from);
+  const to = Math.min(end + Math.max(clean.length - (length - kept), 0), value.length);
+  const insert = clean.slice(0, Math.max(length - (value.length - (to - from)), 0));
+  return insert ? { from, to, insert } : null;
+}
 
 export type Slot = { active: boolean; filled: boolean; caret: boolean };
 
