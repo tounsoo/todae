@@ -123,6 +123,7 @@ export const SITE_GROUPS = [
     id: 'recipes',
     label: 'Recipes',
     links: [
+      ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
       ['/recipes/data-table', 'Data table'],

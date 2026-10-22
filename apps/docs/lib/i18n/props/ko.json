@@ -2117,8 +2117,8 @@
   },
   "Tooltip.Root": {
     "children": {
-      "en": "Tooltip text, or short prose plus links when interactive.",
-      "ko": "팁 텍스트, 또는 인터랙티브일 때 짧은 글과 링크."
+      "en": "Tooltip text, or short prose plus links when interactive. The tip renders a span, so it can sit in a paragraph; keep its content to phrasing elements.",
+      "ko": "팁 텍스트, 또는 인터랙티브일 때 짧은 글과 링크. 팁은 span으로 렌더링되므로 문단 안에 둘 수 있으며, 내용은 구문 요소(phrasing content)로만 채웁니다."
     },
     "className": {
       "en": "Class name for the tip surface.",

@@ -10,7 +10,7 @@ Default is text-only `role="tooltip"`. Hover waits for the `tooltip.delay.show` 
 
 Pass `interactive: true` to [useTooltip](/utilities/use-tooltip). The surface is a non-modal tip dialog. It uses `popover="manual"` and `role="dialog"`. React Aria PreviewTrigger with Popover also forces `role="dialog"` on a hover tip that is not a modal. It never uses `role="tooltip"`. Set exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
 
-Placement is CSS anchors. The tip sits above the trigger and flips below when it cannot fit. There is no arrow and no placement prop. The tip is drawn in the top layer and placed against its trigger's untransformed box, so a trigger inside an element moved with a CSS transform gets its tip where the trigger would be without the transform.
+Placement is CSS anchors. The tip sits above the trigger and flips below when it cannot fit. There is no arrow and no placement prop. The tip is drawn in the top layer and placed against its trigger's untransformed box, so a trigger inside an element moved with a CSS transform gets its tip where the trigger would be without the transform. `Tooltip.Root` renders a `<span>`, so a trigger and its tip can sit inside a paragraph, as in the [Citations](/recipes/citations) recipe. Keep a tip's content to phrasing elements.
 
 ## Examples
 
