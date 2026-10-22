@@ -391,20 +391,47 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).toHaveBeenCalledTimes(6);
   });
 
-  it('holds a full code a composition makes on a code that was not empty until it ends', async () => {
-    const onValueChange = vi.fn();
-    render(<Code initial="ABC12" characters="alphanumeric" onValueChange={onValueChange} />);
+  // A product that listens through onChange alone, through both, or that answers each report with an uppercased code.
+  function Listening({ initial, mode, events }: { initial: string; mode: 'change' | 'both' | 'upper'; events: string[] }) {
+    const [value, setValue] = useState(initial);
+    return (
+      <Field.Root aria-label="Verification code">
+        <Field.OneTimeCode
+          characters="alphanumeric"
+          value={value}
+          onChange={mode === 'upper' ? undefined : (event) => {
+            events.push(`change:${event.target.value}`);
+            if (mode === 'change') setValue(event.target.value);
+          }}
+          onValueChange={mode === 'change' ? undefined : (next) => {
+            events.push(`value:${next}`);
+            setValue(mode === 'upper' ? next.toUpperCase() : next);
+          }}
+        />
+      </Field.Root>
+    );
+  }
+
+  it.each(['change', 'both'] as const)('reports a full code a composition makes on a code that was not empty, to a product with %s', async (mode) => {
+    const events: string[] = [];
+    render(<Listening initial="ABC12" mode={mode} events={events} />);
     await userEvent.click(input());
     await userEvent.keyboard('{End}');
-    // A romaji step: `k` is on its way to `か`, which the code refuses.
-    await compose(['k', 'か']);
-    await vi.waitFor(() => expect(input().value).toBe('ABC12'));
-    expect(onValueChange).not.toHaveBeenCalled();
-    await session().send('Input.imeSetComposition', { text: 'k', selectionStart: 1, selectionEnd: 1 });
-    await vi.waitFor(() => expect(boxes().map((box) => box.textContent).join('')).toBe('ABC12k'));
-    expect(onValueChange).not.toHaveBeenCalled();
-    await session().send('Input.insertText', { text: 'k' });
-    await vi.waitFor(() => expect(onValueChange.mock.calls).toEqual([['ABC12k']]));
+    await compose(['x']);
+    await vi.waitFor(() => expect(input().value).toBe('ABC12x'));
+    expect(events.at(-1)).toBe(mode === 'change' ? 'change:ABC12x' : 'value:ABC12x');
+    if (mode === 'both') expect(events).toContain('change:ABC12x');
+  });
+
+  it.each(['change', 'both'] as const)('reports a composition that overwrites a box of a full code, to a product with %s', async (mode) => {
+    const events: string[] = [];
+    render(<Listening initial="ABC123" mode={mode} events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['x']);
+    await vi.waitFor(() => expect(input().value).toBe('AxC123'));
+    expect(events).toContain('change:AxC123');
+    if (mode === 'both') expect(events).toContain('value:AxC123');
   });
 
   it('takes a composition that rewrites the text before the caret', async () => {
@@ -438,6 +465,16 @@ describe('Field.OneTimeCode in a browser', () => {
     await compose(['c', 'cd'], null);
     await vi.waitFor(() => expect(onValueChange.mock.calls).toEqual([['ABc'], ['ABcd'], ['AB']]));
     expect(input().value).toBe('AB');
+  });
+
+  it('calls onChange for the code before a cancelled composition that it reports back', async () => {
+    const events: string[] = [];
+    render(<Listening initial="AB" mode="both" events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['c', 'cd'], null);
+    await vi.waitFor(() => expect(events.at(-1)).toBe('value:AB'));
+    expect(events.at(-2)).toBe('change:AB');
   });
 
   const undo = () => userEvent.keyboard('{Control>}z{/Control}');
@@ -755,4 +792,5 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onChange).toHaveBeenCalled();
     expect(input().selectionStart).toBe(3);
   });
+
 });

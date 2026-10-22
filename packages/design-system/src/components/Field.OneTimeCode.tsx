@@ -228,8 +228,8 @@ export function OneTimeCode({
       const start = saved?.start ?? value;
       const next = reconcile(start, text, { characters, length }, saved?.selection);
       setComposing({ live: text, shown: next });
-      // A composed text that is already a valid code is reported as it is typed, as a phone keyboard may compose a whole alphanumeric code as one word; anything else waits for the end. So does a full code on one that wasn't empty, which a romaji or pinyin step such as `k` can make and the next step take back.
-      if (next === text && next !== value && (next.length < length || start === '')) {
+      // A composed text that is already a valid code is reported as it is typed, as a phone keyboard may compose a whole alphanumeric code as one word; anything else waits for the end. A romaji or pinyin step such as `k` can be reported and then taken back.
+      if (next === text && next !== value) {
         if (saved) saved.reported = next;
         onChange?.(event);
         onValueChange?.(next);
