@@ -5182,6 +5182,18 @@
       "props": []
     },
     {
+      "name": "useFocusHandoff",
+      "description": "useFocusHandoff({ to }) returns a ref callback for an element that can unmount while it holds focus. When that element unmounts with focus inside it, focus moves to the element in to once the commit is done, unless focus is already on another element in the page or to is not in the page.",
+      "props": [
+        {
+          "name": "to",
+          "type": "RefObject<HTMLElement | null>",
+          "required": true,
+          "description": "The element that takes focus when the watched element unmounts while it holds focus."
+        }
+      ]
+    },
+    {
       "name": "useGlyphs",
       "description": "useGlyphs() returns the glyphs in effect: the nearest GlyphsProvider's, merged over its parents'. An unset or null key means Todae's own glyph.",
       "props": []

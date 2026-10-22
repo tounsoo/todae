@@ -1,0 +1,48 @@
+import { FocusHandoffRequest } from '../../../../components/demos/FocusHandoffDemo';
+
+# useFocusHandoff
+
+`useFocusHandoff({ to })`는 사용하고 나면 사라지는 버튼처럼, 포커스를 가진 채로 언마운트될 수 있는 요소에 줄 ref를 반환합니다. 그 요소가 안에 포커스를 가진 채로 언마운트되면 포커스는 `to`의 요소로 옮겨 갑니다.
+
+```tsx
+const summary = useRef<HTMLElement>(null);
+const handoff = useFocusHandoff({ to: summary });
+
+<Disclosure.Summary ref={summary}>…</Disclosure.Summary>
+{pending && (
+  <Stack.Root ref={handoff} direction="row" gap="condensed" role="group" aria-label="Delete 3 files">
+    <Button.Root onClick={approve}>Approve</Button.Root>
+    <Button.Root variant="secondary" onClick={deny}>
+      Deny
+    </Button.Root>
+  </Stack.Root>
+)}
+```
+
+키보드로 Allow나 Deny를 누른 다음 Ask again을 눌러 보세요. 포커스는 그 자리를 대신하는 버튼에 머뭅니다.
+
+<Example>
+  <FocusHandoffRequest />
+</Example>
+
+넘겨주기는 React가 업데이트를 마칠 때까지 기다리므로, 여기의 Ask again처럼 `to`가 같은 업데이트에서 마운트되는 요소를 가리켜도 됩니다. 그때 이미 `autoFocus`를 받은 필드처럼 페이지의 다른 요소에 포커스가 있거나, `to`의 요소가 페이지에 없으면 아무것도 하지 않습니다. 요소가 페이지에서 빠질 때만 반응합니다. CSS로 숨기거나 숨겨진 Activity에 남은 요소의 포커스는 브라우저가 다루는 대로 둡니다.
+
+요소가 사라지는 모든 경우를 다루므로, 다른 기기나 서버처럼 다른 곳에서 온 결정도 클릭과 똑같이 포커스를 옮깁니다. [Tool call](/recipes/tool-call) 레시피가 Approve와 Deny 버튼에 이것을 씁니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 요소가 언마운트될 때 포커스가 그 안에 있었는지 알아채고, 포커스가 이미 페이지의 다른 곳으로 가지 않았다면 업데이트가 끝난 뒤 `to`로 옮깁니다.
+
+**직접 제공할 것:** 버튼, 링크, `summary`, `tabIndex={-1}`인 요소처럼 포커스를 받을 수 있고, 읽는 사람이 다음에 볼 자리에 놓인 `to`의 요소.
+
+**주의할 점:** 조건에 따라 같은 자리에서 같은 타입의 요소로 바꾸는 것. React가 요소를 그대로 두고 안만 바꾸므로 아무것도 언마운트되지 않습니다. 각 분기에 `key`를 따로 주세요. 사라진 요소가 있던 곳에서 먼 `to`. 읽는 사람이 위치를 잃습니다. 요청 뒤처럼 나중에야 나타나는 `to`. 마운트될 때쯤에는 넘겨주기가 이미 지나갔습니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 승인과 거부 버튼, 실행 취소 막대, 행이 바뀐 뒤의 행 동작처럼 스스로 사라지거나 업데이트로 사라지는 컨트롤.
+
+**쓰지 않을 때:** 대화 상자, 서랍, 팝오버 닫기 → 스스로 포커스를 되돌립니다. 첨부 파일 제거 → [Attachment](/attachment)가 포커스를 다음 제거 버튼으로 옮깁니다. 컨트롤이 남는 클릭에 맞춰 포커스 옮기기 → 핸들러에서 `focus()`를 부르세요.
+
+## Props
+
+<PropsTable name="useFocusHandoff" />

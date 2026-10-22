@@ -10,6 +10,7 @@ import {
   Message,
   Prose,
   Stack,
+  useFocusHandoff,
   type BadgeTone,
 } from '@tounsoo/todae';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -66,13 +67,9 @@ const json = (value: unknown) => JSON.stringify(value, null, 2);
 function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved: boolean) => void }) {
   const nameId = useId();
   const summary = useRef<HTMLElement>(null);
+  // The buttons unmount once the call is decided; focus they held moves to the summary.
+  const handoff = useFocusHandoff({ to: summary });
   const status = STATUS[call.status];
-
-  // The buttons unmount once the call is decided, so focus moves to the summary first.
-  const decide = (approved: boolean) => {
-    summary.current?.focus();
-    onDecide(approved);
-  };
 
   return (
     <Stack.Root gap="condensed">
@@ -114,9 +111,9 @@ function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved:
         </DataList.Root>
       </Disclosure.Root>
       {call.status === 'pending' && (
-        <Stack.Root direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
-          <Button.Root onClick={() => decide(true)}>Approve</Button.Root>
-          <Button.Root variant="secondary" onClick={() => decide(false)}>
+        <Stack.Root ref={handoff} direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
+          <Button.Root onClick={() => onDecide(true)}>Approve</Button.Root>
+          <Button.Root variant="secondary" onClick={() => onDecide(false)}>
             Deny
           </Button.Root>
         </Stack.Root>

@@ -108,6 +108,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-controlled-value', 'useControlledValue'],
       ['/utilities/use-dropzone', 'useDropzone'],
       ['/utilities/use-field', 'useField'],
+      ['/utilities/use-focus-handoff', 'useFocusHandoff'],
       ['/utilities/use-highlight', 'useHighlight'],
       ['/utilities/use-hotkey', 'useHotkey'],
       ['/utilities/use-mentions', 'useMentions'],

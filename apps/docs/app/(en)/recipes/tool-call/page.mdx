@@ -102,21 +102,17 @@ For a tool whose input is a few plain values, such as a search query, a horizont
 
 A call that waits for approval opens, so its input can be read before it runs, and shows Approve and Deny after it. Set `open` from the status, so the call opens when it starts waiting and closes when it runs or is denied. React sets `open` only when that value changes, so a call someone opens by hand stays open as it finishes. Name the buttons' group by the tool's name, so "Approve" says what it approves. When two waiting calls can use the same tool, add something from the input that tells them apart, such as a file's path, to the group's name and to each region's name.
 
-The buttons go away once the call is decided, which would drop focus to the page. Move focus to the call's summary first. The DataList from the call above goes where the `…` is.
+The buttons go away once the call is decided, which would drop focus to the page. [useFocusHandoff](/utilities/use-focus-handoff) on their group moves focus to the call's summary when they go while one has focus, whether the click decided the call or the decision came from elsewhere, such as another device. The DataList from the call above goes where the `…` is.
 
 ```tsx
-import { Badge, Button, Code, CodeBlock, DataList, Disclosure, Stack } from '@tounsoo/todae';
+import { Badge, Button, Code, CodeBlock, DataList, Disclosure, Stack, useFocusHandoff } from '@tounsoo/todae';
 import { useId, useRef } from 'react';
 
 export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved: boolean) => void }) {
   const nameId = useId();
   const summary = useRef<HTMLElement>(null);
+  const handoff = useFocusHandoff({ to: summary });
   const status = STATUS[call.status];
-
-  const decide = (approved: boolean) => {
-    summary.current?.focus();
-    onDecide(approved);
-  };
 
   return (
     <Stack.Root gap="condensed">
@@ -127,9 +123,9 @@ export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (ap
         …
       </Disclosure.Root>
       {call.status === 'pending' && (
-        <Stack.Root direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
-          <Button.Root onClick={() => decide(true)}>Approve</Button.Root>
-          <Button.Root variant="secondary" onClick={() => decide(false)}>
+        <Stack.Root ref={handoff} direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
+          <Button.Root onClick={() => onDecide(true)}>Approve</Button.Root>
+          <Button.Root variant="secondary" onClick={() => onDecide(false)}>
             Deny
           </Button.Root>
         </Stack.Root>
@@ -143,11 +139,11 @@ A call that waits pauses the agent's turn, so clear `streaming` while any call w
 
 ## Accessible composition
 
-**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the toggle, Enter and Space, the expanded state a screen reader hears, and find in page in a closed call. The summary's focus ring. A Badge has no role, so its label is read with the summary's text.
+**Todae handles:** `useFocusHandoff` moves focus to the summary when the approval buttons unmount while one has focus. `Disclosure.Root` is a native `<details>`, so the browser handles the toggle, Enter and Space, the expanded state a screen reader hears, and find in page in a closed call. The summary's focus ring. A Badge has no role, so its label is read with the summary's text.
 
-**You supply:** A status label in words, not only a tone's color. A Tab stop, role and name for each CodeBlock, as on the [Code](/code) page. A name for the approval buttons' group. Focus moved to the summary before the approval buttons go away.
+**You supply:** A status label in words, not only a tone's color. A Tab stop, role and name for each CodeBlock, as on the [Code](/code) page. A name for the approval buttons' group. The summary as the place focus goes when the approval buttons go away.
 
-**Watch for:** Buttons, links or other controls inside the summary: the summary is itself the toggle, and a control inside it can't be reached the same way in every browser. Removing a call from the reply when it finishes: find in page and screen readers can no longer reach what the agent did. A decision that arrives from elsewhere, such as another device, while focus is on Approve or Deny: the buttons go away and focus drops to the page, which the recipe's click handler doesn't cover. Announcing every status change: Conversation already says when the reply finishes, and a call that runs and finishes on its own is part of that.
+**Watch for:** Buttons, links or other controls inside the summary: the summary is itself the toggle, and a control inside it can't be reached the same way in every browser. Removing a call from the reply when it finishes: find in page and screen readers can no longer reach what the agent did. Announcing every status change: Conversation already says when the reply finishes, and a call that runs and finishes on its own is part of that.
 
 ## When to use
 

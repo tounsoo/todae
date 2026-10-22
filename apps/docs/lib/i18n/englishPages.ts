@@ -98,6 +98,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-controlled-value': () => import('../../app/(en)/utilities/use-controlled-value/page.mdx'),
   'utilities/use-dropzone': () => import('../../app/(en)/utilities/use-dropzone/page.mdx'),
   'utilities/use-field': () => import('../../app/(en)/utilities/use-field/page.mdx'),
+  'utilities/use-focus-handoff': () => import('../../app/(en)/utilities/use-focus-handoff/page.mdx'),
   'utilities/use-highlight': () => import('../../app/(en)/utilities/use-highlight/page.mdx'),
   'utilities/use-hotkey': () => import('../../app/(en)/utilities/use-hotkey/page.mdx'),
   'utilities/use-mentions': () => import('../../app/(en)/utilities/use-mentions/page.mdx'),

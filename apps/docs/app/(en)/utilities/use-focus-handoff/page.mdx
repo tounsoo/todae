@@ -1,0 +1,48 @@
+import { FocusHandoffRequest } from '../../../../components/demos/FocusHandoffDemo';
+
+# useFocusHandoff
+
+`useFocusHandoff({ to })` returns a ref for an element that can unmount while it holds focus, such as buttons that go away once they are used. When that element unmounts with focus inside it, focus moves to the element in `to`.
+
+```tsx
+const summary = useRef<HTMLElement>(null);
+const handoff = useFocusHandoff({ to: summary });
+
+<Disclosure.Summary ref={summary}>…</Disclosure.Summary>
+{pending && (
+  <Stack.Root ref={handoff} direction="row" gap="condensed" role="group" aria-label="Delete 3 files">
+    <Button.Root onClick={approve}>Approve</Button.Root>
+    <Button.Root variant="secondary" onClick={deny}>
+      Deny
+    </Button.Root>
+  </Stack.Root>
+)}
+```
+
+Press Allow or Deny with the keyboard, then Ask again: focus stays on the buttons that take their place.
+
+<Example>
+  <FocusHandoffRequest />
+</Example>
+
+The hand-off waits until React has finished the update, so `to` can point at an element that mounts in the same update, as Ask again does here. It does nothing when focus is already on another element in the page by then, such as a field that took `autoFocus`, or when the element in `to` is not in the page. It reacts only to the element leaving the page: one hidden with CSS, or kept in a hidden Activity, keeps its focus as the browser handles it.
+
+It covers every way the element can go away, so a decision that arrives from elsewhere, such as another device or the server, moves focus the same way a click does. The [Tool call](/recipes/tool-call) recipe uses it on its Approve and Deny buttons.
+
+## Accessible composition
+
+**Todae handles:** Noticing that focus was inside the element as it unmounts, and moving focus to `to` once the update is done, unless focus already went somewhere else in the page.
+
+**You supply:** An element in `to` that can take focus, such as a button, a link, a `summary`, or an element with `tabIndex={-1}`, placed where the reader would look next.
+
+**Watch for:** A condition that swaps the element for one of the same type in the same place: React keeps the element and changes only what is inside, so nothing unmounts. Give each branch its own `key`. A `to` that is far from where the removed element was: the reader loses their place. A `to` that only appears later, such as after a request: by the time it mounts, the hand-off has passed.
+
+## When to use
+
+**When:** Controls that remove themselves or are removed by an update, such as approve and deny buttons, an undo bar, or a row's actions after the row changes.
+
+**When not:** Closing a dialog, drawer or popover → they put focus back themselves. Removing an attachment → [Attachment](/attachment) moves focus to the next remove button. Moving focus in response to a click that keeps the control → call `focus()` in your handler.
+
+## Props
+
+<PropsTable name="useFocusHandoff" />

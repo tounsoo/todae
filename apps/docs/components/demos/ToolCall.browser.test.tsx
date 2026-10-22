@@ -82,3 +82,15 @@ it('keeps the reply busy only while the agent writes, not while a call waits', a
   await expect.poll(() => reply.getAttribute('aria-busy'), { timeout: 3000 }).not.toBe('true');
   expect(screen.getByText(/didn't make the branch/)).toBeVisible();
 });
+
+it('moves focus to the summary when a decision arrives while a button has focus', async () => {
+  render(
+    <Providers>
+      <ToolCallExample />
+    </Providers>,
+  );
+  // A keyboard user tabs to Approve; Deny is pressed for them without moving focus, as a decision from elsewhere would be.
+  screen.getByRole('button', { name: 'Approve' }).focus();
+  screen.getByRole('button', { name: 'Deny' }).click();
+  await expect.poll(() => document.activeElement).toBe(summary('create_branch'));
+});

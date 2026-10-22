@@ -17,6 +17,7 @@ import { useButtonName } from './buttonName.js';
 import { useDomId } from './domId.js';
 import { Progress, type ProgressRootProps } from './Progress.js';
 import { cx, useComposedRefs } from './props.js';
+import { activeIn, focusLost } from '../hooks/activeElement.js';
 import { focusWithoutScroll } from './revealRing.js';
 import styles from './Attachment.module.css';
 
@@ -74,19 +75,6 @@ function attachmentIn(el: Element): Element | null {
   return el.matches(`[${ROOT_ATTR}]`) ? el : el.querySelector(`:scope > [${ROOT_ATTR}]`);
 }
 
-/** The focused element in the document or shadow root that holds `el`. */
-function activeIn(el: Element): Element | null {
-  const node = el.getRootNode();
-  return node instanceof Document || node instanceof ShadowRoot ? node.activeElement : null;
-}
-
-/** The focused element, looking into shadow roots. */
-function deepActive(doc: Document): Element | null {
-  let active = doc.activeElement;
-  while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
-  return active;
-}
-
 /**
  * Called as an attachment holding focus unmounts, while it is still in the
  * page. Once the commit is done, if the attachment is gone and
@@ -107,8 +95,7 @@ function handOffFocus(root: HTMLElement) {
   queueMicrotask(() => {
     // Still there: a StrictMode check, or a hidden Suspense or Activity tree.
     if (root.isConnected || !list.isConnected) return;
-    const active = deepActive(doc);
-    if (active && active.isConnected && active !== doc.body) return;
+    if (!focusLost(doc)) return;
     const now = items();
     for (const other of [...now.slice(slot), ...now.slice(0, slot).reverse()]) {
       const button = removeButton(attachmentIn(other)!);

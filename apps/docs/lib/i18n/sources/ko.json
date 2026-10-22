@@ -658,8 +658,8 @@
     "(top)": "5d279955457e",
     "# Tool call": "fff9ba9cd0f7",
     "## The call": "01397268497d",
-    "## Approval": "79c164b38f7d",
-    "## Accessible composition": "61c40af10d7a",
+    "## Approval": "08e6fe8aeac5",
+    "## Accessible composition": "7f59895fd94c",
     "## When to use": "125cdba98fc2",
     "(section order)": "e092ab2bb711"
   },
@@ -912,6 +912,14 @@
     "## When to use": "e08f8ff9959e",
     "## Props": "6c08c2462796",
     "(section order)": "cdd5be9159bd"
+  },
+  "utilities/use-focus-handoff": {
+    "(top)": "c39294d70c41",
+    "# useFocusHandoff": "6ee31f474ceb",
+    "## Accessible composition": "2d2d7359b1f6",
+    "## When to use": "9d9b3610001a",
+    "## Props": "0966ab575439",
+    "(section order)": "e92564e007c0"
   },
   "utilities/use-highlight": {
     "(top)": "bff7d331f656",
