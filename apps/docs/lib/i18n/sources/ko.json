@@ -730,13 +730,13 @@
   },
   "splitter": {
     "(top)": "94fe1aa137a7",
-    "# Splitter": "601c25948c7a",
+    "# Splitter": "ac8ba698f628",
     "## Pixel sizes": "66d8ad18e31a",
-    "## Collapse": "db2cbf73f61d",
-    "## Keys and pointer": "c6d08b2ee613",
+    "## Collapse": "03373efd14ea",
+    "## Keys and pointer": "368ad36f2763",
     "## Vertical split": "51e279c7e4d9",
     "## Nested panes": "07f88271e786",
-    "## Accessible composition": "34667c0b8064",
+    "## Accessible composition": "17f79b76fcf3",
     "## When to use": "655f41ae87fb",
     "## Props": "c87cae53423e",
     "(section order)": "d86244d0a99c"

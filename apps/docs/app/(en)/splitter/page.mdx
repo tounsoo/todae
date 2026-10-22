@@ -40,7 +40,7 @@ export function AppLayout() {
   <SplitterSidebar />
 </Example>
 
-`Splitter.Root` is a grid, and the size reaches the sheet as a custom property, so a server renders the layout with no measurement. It never overflows its container: if the container is narrower than the size, the first panel shrinks to fit and the size you hold stays as it is, so it shows again when there is room. A vertical splitter, and any splitter that should fill its parent, needs a definite size from you along its height, as the examples do with `blockSize`.
+`Splitter.Root` is a grid, and the size reaches the sheet as a custom property, so a server renders the layout with no measurement. It never overflows its container: if the container is narrower than the size, the first panel shrinks to fit and the size you hold stays as it is, so it shows again when there is room. Room wins over `min` too: in a container narrower than `min` the panel is as wide as the container allows, and the handle's range says so. A vertical splitter, and any splitter that should fill its parent, needs a definite size from you along its height, as the examples do with `blockSize`.
 
 ## Pixel sizes
 
@@ -58,7 +58,7 @@ Saving a size is yours. `onValueChange` fires on every change, from a drag or a 
 
 ## Collapse
 
-With `collapsible`, the first panel can go to 0. Enter on the handle collapses it, and Enter again restores the size it had. A drag that goes below half of `min` snaps to 0, and a drag between that and `min` stops at `min`, so the panel is either closed or at least `min` wide. The handle's `aria-valuemin` is 0 while a panel is collapsible. A collapsed panel is hidden, so its links and buttons leave the tab order and the accessibility tree, and the handle stays as the way back. A button of your own can reopen it too: it sets the size you hold, and `aria-expanded` and `aria-controls` point at the panel, whose `id` you can set on `Splitter.Panel`.
+With `collapsible`, the first panel can go to 0. Enter on the handle collapses it, and Enter again restores the size it had when it collapsed, also when a drag or your own code collapsed it, and not a size it passed on the way. A drag that goes below half of `min` snaps to 0, and a drag between that and `min` stops at `min`, so the panel is either closed or at least `min` wide. The handle's `aria-valuemin` is 0 while a panel is collapsible. A collapsed panel is hidden, in the server's HTML too, so its links and buttons leave the tab order and the accessibility tree, and the handle stays as the way back. Focus inside a panel that collapses moves to the handle. A panel at size 0 that is not `collapsible` stays visible. A button of your own can reopen it too: it sets the size you hold, and `aria-expanded` and `aria-controls` point at the panel, whose `id` you can set on `Splitter.Panel`. Enter's restore size is Todae's own, so a button of your own tracks the last size it knows, as the sidebar example does.
 
 ## Keys and pointer
 
@@ -93,7 +93,7 @@ The arrow keys move the handle the way they point, by `step` pixels (16 by defau
 </Table.Root>
 </ScrollRegion>
 
-A press with the primary pointer button on the handle focuses it and captures the pointer, and the size follows the pointer from there. The handle does not jump to the pointer: it keeps the distance from where it was pressed. The thin line has a hit area of at least 24 pixels centered on it, and `touch-action: none` lets a touch drag it. `data-dragging` is on the root while the pointer is down.
+A press with the primary pointer button on the handle focuses it and captures the pointer, and the size follows the pointer from there. The handle does not jump to the pointer: the size changes by the distance the pointer moves, so a layout that shifts during the drag changes nothing. A second pointer is ignored while one is dragging. The thin line has a hit area of at least 1.5rem (24px at the default size) that starts at the line and reaches over the panel after it, which leaves the scrollbar of the panel before the line free to use; where the panel after has no width, it reaches the other way. `touch-action: none` lets a touch drag it. `data-dragging` is on the root while the pointer is down.
 
 ## Vertical split
 
@@ -155,7 +155,7 @@ Panels scroll their own overflow (`overflow: auto`), so content stays in its pan
 
 **You supply:** A name that says what the handle resizes. `aria-labelledby` pointing at the heading of the panel it sizes, as the examples do, or `aria-label`. A definite size for the root along the axis where the panels stack, and a heading or label inside each panel. The saved size, when it should outlive the page, and a way to restore a collapsed panel for people who do not find the handle, such as a button wired as in Collapse.
 
-**Watch for:** A handle with no name beyond "Resize", when two splitters share a page: name each one. A panel's own `aria-label` on its plain `div`, which assistive technology ignores; put the label on a landmark inside, such as a `nav`. A panel that can overflow but holds nothing focusable, such as plain text in a narrow pane: a keyboard cannot scroll it, so wrap the content in a [ScrollArea](/scroll-area), which takes a Tab stop while it overflows. A vertical root with no block size, which collapses to its content. A panel wrapped in another component: the root finds its panels and handle as direct children by the `data-todae-splitter-panel` attribute and the separator role, so the wrapper must render them as direct children and pass props through. More than two panels in one root, which the root warns about in development.
+**Watch for:** A handle with no name beyond "Resize", when two splitters share a page: name each one. A panel's own `aria-label` on its plain `div`, which assistive technology ignores; put the label on a landmark inside, such as a `nav`. A panel that can overflow but holds nothing focusable, such as plain text in a narrow pane: a keyboard cannot scroll it, so wrap the content in a [ScrollArea](/scroll-area), which takes a Tab stop while it overflows. A vertical root with no block size, which collapses to its content. A `gap` on the root, which is not supported: the tracks are the two panels and the handle. A panel wrapped in another component: the root finds its panels and handle as direct children by the `data-todae-splitter-panel` attribute and the separator role, so the wrapper must render them as direct children and pass props through. More than two panels in one root, which the root warns about in development.
 
 ## When to use
 
