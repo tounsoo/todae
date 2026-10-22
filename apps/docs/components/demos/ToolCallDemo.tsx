@@ -128,9 +128,17 @@ function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved:
 export function ToolCallExample() {
   const [calls, setCalls] = useState(CALLS);
   const [replying, setReplying] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const later = (run: () => void, ms: number) => {
+    const timer = setTimeout(() => {
+      timers.current.delete(timer);
+      run();
+    }, ms);
+    timers.current.add(timer);
+  };
 
   const update = (id: string, change: Partial<ToolCallData>) =>
     setCalls((current) => current.map((call) => (call.id === id ? { ...call, ...change } : call)));
@@ -138,15 +146,14 @@ export function ToolCallExample() {
   // Stands in for the product's agent, which resumes its turn either way: an approved
   // call runs, then reports its output; a denied one gets a short reply.
   const decide = (id: string, approved: boolean) => {
-    clearTimeout(timer.current);
     if (!approved) {
       update(id, { status: 'denied' });
       setReplying(true);
-      timer.current = setTimeout(() => setReplying(false), 800);
+      later(() => setReplying(false), 800);
       return;
     }
     update(id, { status: 'running' });
-    timer.current = setTimeout(() => update(id, { status: 'done', output: RESULT }), 1500);
+    later(() => update(id, { status: 'done', output: RESULT }), 1500);
   };
 
   const last = calls[calls.length - 1]!;

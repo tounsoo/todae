@@ -80,7 +80,7 @@ export function ToolCall({ call }: { call: ToolCallData }) {
 }
 ```
 
-Put each call, rendered by the `ToolCall` from Approval below, in the [Message](/message) beside the text around it, in the order your stream gives them. A part of `Message.Root` is spaced from the next one, so a call needs no margin of its own. Set `streaming` from your agent's stream, not from the calls: on while the agent is producing the reply, including while a call runs, and off when the turn ends or pauses for a decision, as Approval below shows.
+Put each call, rendered by the `ToolCall` from Approval below, in the [Message](/message) beside the text around it, in the order your stream gives them. A part of `Message.Root` is spaced from the next one, so a call needs no margin of its own. Set `streaming` from your agent's stream, not from the calls: on while the agent is producing the reply, including while a call runs, and off when the turn ends or pauses for a decision, as the end of Approval below says.
 
 ```tsx
 <Message.Root streaming={streaming} aria-label="Assistant">

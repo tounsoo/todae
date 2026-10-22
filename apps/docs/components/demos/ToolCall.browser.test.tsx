@@ -28,11 +28,14 @@ it('moves focus to the summary when a call is approved, then fills in its output
   );
   await userEvent.click(screen.getByRole('button', { name: 'Approve' }));
   const call = summary('create_branch');
+  const reply = screen.getByRole('article', { name: 'Assistant' });
   expect(call).toHaveFocus();
   expect(call).toHaveTextContent('Running');
+  expect(reply).toHaveAttribute('aria-busy', 'true');
   expect(call.parentElement).not.toHaveAttribute('open');
   expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull();
   await expect.poll(() => call.textContent, { timeout: 3000 }).toContain('Done');
+  expect(reply).not.toHaveAttribute('aria-busy', 'true');
   expect(call).toHaveFocus();
   expect(screen.getByRole('region', { name: 'create_branch output' })).toHaveTextContent('focus-ring-brand');
 });

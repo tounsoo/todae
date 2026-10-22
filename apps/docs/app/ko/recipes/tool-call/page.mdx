@@ -80,7 +80,7 @@ export function ToolCall({ call }: { call: ToolCallData }) {
 }
 ```
 
-아래 승인에 나오는 `ToolCall`로 그린 각 호출은 스트림이 준 순서대로 [Message](/message) 안의 앞뒤 텍스트 사이에 넣으세요. `Message.Root`의 파트는 다음 파트와 간격이 생기므로 호출에 따로 margin을 줄 필요가 없습니다. `streaming`은 호출이 아니라 에이전트의 스트림에서 정하세요. 호출이 실행되는 동안을 포함해 에이전트가 답을 만드는 동안 켜고, 차례가 끝나거나 결정을 기다리며 멈추면 끕니다. 아래 승인에서 다룹니다.
+아래 승인에 나오는 `ToolCall`로 그린 각 호출은 스트림이 준 순서대로 [Message](/message) 안의 앞뒤 텍스트 사이에 넣으세요. `Message.Root`의 파트는 다음 파트와 간격이 생기므로 호출에 따로 margin을 줄 필요가 없습니다. `streaming`은 호출이 아니라 에이전트의 스트림에서 정하세요. 호출이 실행되는 동안을 포함해 에이전트가 답을 만드는 동안 켜고, 차례가 끝나거나 결정을 기다리며 멈추면 끕니다. 아래 승인의 끝에서 다룹니다.
 
 ```tsx
 <Message.Root streaming={streaming} aria-label="Assistant">
