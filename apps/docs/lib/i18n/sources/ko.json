@@ -536,7 +536,7 @@
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
     "## Parts": "6bffffd777b1",
-    "## Time": "e262fbffa78a",
+    "## Time": "819983498d7c",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
     "## When to use": "6bef71b8e38f",
@@ -900,6 +900,16 @@
     "## When to use": "02fd64ae0747",
     "## Props": "d83af1624b33",
     "(section order)": "8da5a3f9ff32"
+  },
+  "utilities/format-relative-time": {
+    "(top)": "1c9805d8db6e",
+    "# formatRelativeTime": "827d5cf2fd5d",
+    "## Units": "766563d1e369",
+    "## Keeping it current": "df4ae4830453",
+    "## Accessible composition": "c78d3b14437c",
+    "## When to use": "1a72b28cec32",
+    "## Props": "7a782299b149",
+    "(section order)": "dbe6ee6c2910"
   },
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",

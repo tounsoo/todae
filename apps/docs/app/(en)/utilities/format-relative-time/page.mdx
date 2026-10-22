@@ -1,0 +1,55 @@
+import { RelativeTimeList } from '../../../../components/demos/RelativeTimeDemo';
+
+# formatRelativeTime
+
+`formatRelativeTime(value, now, options?)` returns how long before or after `now` the time `value` is, as the locale writes it, such as `3 minutes ago`, `yesterday` or `in 2 weeks` in `en` and `3분 전`, `어제` or `2주 후` in `ko`. Use it for when a message was sent, a file was edited or an item expires. It writes text with `Intl.RelativeTimeFormat` and keeps no clock, so the product passes `now` and decides when the text changes. Keeping it current, below, shows a timer.
+
+```tsx
+const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZone);
+
+<time dateTime={editedAt.toInstant().toString()}>
+  {formatRelativeTime(editedAt, now, { locale })}
+</time>
+```
+
+<Example>
+  <RelativeTimeList />
+</Example>
+
+## Units
+
+Under a day, it counts the whole seconds, minutes or hours between the two, so 59 minutes and 50 seconds is `59 minutes ago`. From a day, the unit is days, then weeks from 7 dates apart, months from a whole month and years from a whole year or 12 calendar months. The count is the difference between calendar dates, weeks, months or years, in `value`'s time zone and the Gregorian calendar, so `yesterday`, `last week`, `last month` and `last year` are the date, week, month and year before. At noon on October 22, 2026, 11 pm on October 20 is `2 days ago` though only 37 hours have passed, November 2024 is `2 years ago`, and January 31 to March 1 is `2 months` apart. A count of weeks stops at 4, so a time with no whole month between it and `now` never reads older than `last month`. Weeks start on the locale's first day, or on `firstDayOfWeek`, as in [Calendar](/calendar). On a date with a clock change that holds 25 hours, a time on the same date stays in hours.
+
+`numeric` is `'auto'` by default, which writes words such as `yesterday`, `now` and `last week` where the locale has them. Pass `numeric: 'always'` for `1 day ago`. `style` takes `'short'` or `'narrow'`, such as `3 min. ago` and `3m ago` in `en`; some locales, such as `ko`, write the same words in every style.
+
+## Keeping it current
+
+The text is right for the `now` it was given. To keep it current, keep `now` in state and update it on a timer, at a pace that fits the smallest unit on screen. A server render and the browser's first render read different clocks, so start from the instant the server rendered at, passed down as a string such as `renderedAt`, and read the browser's clock only after hydration:
+
+```tsx
+const [now, setNow] = useState(() => Temporal.Instant.from(renderedAt));
+
+useEffect(() => {
+  setNow(Temporal.Now.instant());
+  const timer = setInterval(() => setNow(Temporal.Now.instant()), 60_000);
+  return () => clearInterval(timer);
+}, []);
+```
+
+## Accessible composition
+
+**Todae handles:** Text in the locale you pass, or the runtime's own when you pass none, from the locale's own rules, including plural forms.
+
+**You supply:** A `<time>` element with a machine-readable `dateTime`, such as the instant in UTC. A way to read the exact time, such as the date in visible text nearby or a [Tooltip](/tooltip) on a focusable trigger, since `3 days ago` doesn't say when. `locale` to match the page.
+
+**Watch for:** Text that updates inside a live region is read each time it changes; keep a ticking time out of one. A `title` attribute alone isn't reachable by keyboard or touch.
+
+## When to use
+
+**When:** A time where how long ago matters more than when, such as a message, a comment, a file's last edit or an expiry.
+
+**When not:** A time the reader has to be somewhere at, such as a meeting or a flight → [formatDateTime](/field/date-time-picker) or `Intl.DateTimeFormat`.
+
+## Props
+
+<PropsTable name="formatRelativeTime" />

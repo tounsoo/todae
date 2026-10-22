@@ -98,6 +98,7 @@ export const SITE_GROUPS = [
     label: 'Utilities',
     links: [
       ['/utilities/compose-refs', 'composeRefs'],
+      ['/utilities/format-relative-time', 'formatRelativeTime'],
       ['/utilities/glyphs-provider', 'GlyphsProvider'],
       ['/utilities/strings-provider', 'StringsProvider'],
       ['/utilities/theme-override-style', 'themeOverrideStyle'],

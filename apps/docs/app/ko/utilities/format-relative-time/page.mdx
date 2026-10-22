@@ -1,0 +1,55 @@
+import { RelativeTimeList } from '../../../../components/demos/RelativeTimeDemo';
+
+# formatRelativeTime
+
+`formatRelativeTime(value, now, options?)`는 `value` 시각이 `now`보다 얼마나 앞서거나 뒤인지를 로캘이 쓰는 대로 반환합니다. `en`에서는 `3 minutes ago`, `yesterday`, `in 2 weeks`, `ko`에서는 `3분 전`, `어제`, `2주 후`처럼 씁니다. 메시지를 보낸 때, 파일을 고친 때, 항목이 만료되는 때에 쓰세요. 텍스트는 `Intl.RelativeTimeFormat`으로 쓰고 시계는 두지 않으므로, `now`는 제품이 넘기고 텍스트가 언제 바뀔지도 제품이 정합니다. 타이머는 아래 최신으로 유지하기에 있습니다.
+
+```tsx
+const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZone);
+
+<time dateTime={editedAt.toInstant().toString()}>
+  {formatRelativeTime(editedAt, now, { locale })}
+</time>
+```
+
+<Example>
+  <RelativeTimeList />
+</Example>
+
+## 단위
+
+하루 미만이면 두 시각 사이의 초, 분, 시간을 온전한 단위로 셉니다. 그래서 59분 50초는 `59분 전`입니다. 하루부터는 일을, 날짜가 7일 떨어지면 주를, 한 달이 차면 월을, 한 해가 차거나 달력으로 12개월이면 연을 씁니다. 수는 `value`의 시간대와 그레고리력에서 달력의 날짜, 주, 달, 해가 몇 개 차이 나는지입니다. 그래서 `어제`, `지난주`, `지난달`, `작년`은 바로 앞 날짜, 주, 달, 해입니다. 2026년 10월 22일 정오에 10월 20일 밤 11시는 37시간밖에 지나지 않았어도 `그저께`이고, 2024년 11월은 `2년 전`이며, 1월 31일과 3월 1일은 `2개월` 차이입니다. 주의 수는 4에서 멈추므로, `now`와의 사이에 온전한 한 달이 없는 시각은 `지난달`보다 오래되어 보이지 않습니다. 주는 로캘의 첫 요일이나 `firstDayOfWeek`에서 시작하며, [Calendar](/calendar)와 같습니다. 시계가 바뀌어 25시간인 날에는 같은 날짜의 시각은 시간으로 남습니다.
+
+`numeric`의 기본값은 `'auto'`이며, 로캘에 있으면 `어제`, `지금`, `지난주` 같은 낱말을 씁니다. `1일 전`처럼 쓰려면 `numeric: 'always'`를 넘기세요. `style`은 `'short'`나 `'narrow'`를 받으며, `en`에서는 `3 min. ago`, `3m ago`처럼 씁니다. `ko`처럼 모든 스타일에서 같은 낱말을 쓰는 로캘도 있습니다.
+
+## 최신으로 유지하기
+
+텍스트는 받은 `now`에 맞습니다. 최신으로 유지하려면 `now`를 상태에 두고 타이머로 갱신하세요. 주기는 화면에 보이는 가장 작은 단위에 맞추세요. 서버 렌더링과 브라우저의 첫 렌더링은 서로 다른 시계를 읽으므로, `renderedAt`처럼 서버가 렌더링한 시각을 문자열로 넘겨받아 시작하고, 브라우저의 시계는 하이드레이션 뒤에만 읽으세요.
+
+```tsx
+const [now, setNow] = useState(() => Temporal.Instant.from(renderedAt));
+
+useEffect(() => {
+  setNow(Temporal.Now.instant());
+  const timer = setInterval(() => setNow(Temporal.Now.instant()), 60_000);
+  return () => clearInterval(timer);
+}, []);
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 복수형을 포함해, 넘긴 로캘의 규칙에 따른 텍스트. 넘기지 않으면 런타임의 로캘입니다.
+
+**직접 제공할 것:** UTC 시각처럼 기계가 읽을 수 있는 `dateTime`이 있는 `<time>` 요소. `3일 전`은 정확히 언제인지 말해 주지 않으므로, 가까이 보이는 날짜나 포커스할 수 있는 트리거의 [Tooltip](/tooltip)처럼 정확한 시각을 읽을 방법. 페이지에 맞는 `locale`.
+
+**주의할 점:** 라이브 영역 안에서 바뀌는 텍스트는 바뀔 때마다 읽힙니다. 계속 갱신되는 시각은 라이브 영역 밖에 두세요. `title` 속성만으로는 키보드나 터치로 닿을 수 없습니다.
+
+## 언제 쓰나요
+
+**언제:** 메시지, 댓글, 파일의 마지막 수정, 만료처럼 정확한 때보다 얼마나 지났는지가 중요한 시각.
+
+**쓰지 않을 때:** 회의나 항공편처럼 읽는 사람이 그때 어딘가에 있어야 하는 시각 → [formatDateTime](/field/date-time-picker)이나 `Intl.DateTimeFormat`.
+
+## Props
+
+<PropsTable name="formatRelativeTime" />
