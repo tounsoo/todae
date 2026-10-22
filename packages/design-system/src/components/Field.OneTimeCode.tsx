@@ -142,6 +142,8 @@ export function OneTimeCode({
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
   const inserting = useRef(false);
+  // The selection the last insert began from, kept from its beforeinput for the change event that follows when the browser makes the insert itself.
+  const insertAt = useRef<CodeSelection | null>(null);
   // The code and the selection a composition started from, and the last code it reported while it ran.
   const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null } | null>(null);
   // While composing, the input's own text, which React renders so it writes nothing that would end the IME, and the code the boxes show.
@@ -174,12 +176,15 @@ export function OneTimeCode({
     // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
     function onBeforeInput(event: InputEvent) {
       const { inputType } = event;
+      insertAt.current = inserting.current ? null : { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 };
       // One the browser won't let be cancelled is read back by the change event instead, so its insert and this one don't both land.
       if (inserting.current || latest.current.fixed || event.isComposing || !event.cancelable || !inputType.startsWith('insert')) return;
       if (inputType === 'insertCompositionText' || inputType === 'insertFromComposition') return;
       const text = event.data;
       if (text == null) return;
       event.preventDefault();
+      // Todae makes this one, so no change event is left to read.
+      insertAt.current = null;
       const { characters, length } = latest.current;
       const edit = editOf(el!.value, { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, text, { characters, length });
       if (edit) put(el!, edit, inserting);
@@ -226,6 +231,7 @@ export function OneTimeCode({
     const text = event.target.value;
     const saved = composition.current;
     if ((event.nativeEvent as InputEvent).isComposing) {
+      insertAt.current = null;
       const start = saved?.start ?? value;
       const next = reconcile(start, text, { characters, length }, saved?.selection);
       setComposing({ live: text, shown: next });
@@ -239,8 +245,11 @@ export function OneTimeCode({
       return;
     }
     setComposing(null);
+    // Where an insert the browser made began, so a character typed next to the same one lands where it was typed; autofill sends no beforeinput, and what was kept from an earlier one is gone.
+    const near = insertAt.current ?? undefined;
+    insertAt.current = null;
     // The input held `value` before this change, so the change is read by the rule: autofill that skips beforeinput, an insert the browser wouldn't let be cancelled, the code a composition ends on, undo.
-    const next = reconcile(value, text, { characters, length });
+    const next = reconcile(value, text, { characters, length }, near);
     const { inputType } = event.nativeEvent as InputEvent;
     // Undo and redo can step to a text that is no code, such as a composition's commit before the code it made, so the code stays and React puts it back.
     if ((inputType === 'historyUndo' || inputType === 'historyRedo') && next !== text) return;

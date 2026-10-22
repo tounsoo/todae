@@ -824,4 +824,20 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().selectionStart).toBe(3);
   });
 
+  it.each([
+    ['AB1123', 'AB11123', 2, '1'],
+    ['ABAB12', 'ABABAB12', 0, 'AB'],
+  ])('places a non-cancelable insert at the caret it was typed at: %s', async (initial, text, caret, data) => {
+    const onValueChange = vi.fn();
+    render(<Code initial={initial} characters="alphanumeric" onValueChange={onValueChange} />);
+    input().focus();
+    input().setSelectionRange(caret, caret);
+    // A browser that won't let the insert be cancelled still sends beforeinput first.
+    input().dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: false, inputType: 'insertText', data }));
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    set.call(input(), text);
+    input().setSelectionRange(caret + data.length, caret + data.length);
+    input().dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data }));
+    await vi.waitFor(() => expect(input().value).toBe(initial));
+  });
 });
