@@ -1,0 +1,51 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "fernway-business",
+  "version": "2025.10",
+  "description": "Fernway for business: Fernway's tokens with a plum accent, built with --scope .business for the business section of the page.",
+  "sets": {
+    "core": {
+      "sources": [{ "$ref": "./core.json" }],
+      "$extensions": { "dev.todae": { "layer": "core" } }
+    },
+    "button": {
+      "sources": [{ "$ref": "./button.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    },
+    "contract": {
+      "sources": [{ "$ref": "./contract.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    },
+    "fernway": {
+      "sources": [{ "$ref": "./fernway.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    }
+  },
+  "modifiers": {
+    "appearance": {
+      "contexts": {
+        "light": [{ "$ref": "./appearance/light.json" }, { "$ref": "./business/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }, { "$ref": "./business/dark.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
+      }
+    },
+    "buttonVariant": {
+      "contexts": {
+        "soft": [{ "$ref": "./button.soft.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+      }
+    }
+  },
+  "resolutionOrder": [
+    { "$ref": "#/sets/core" },
+    { "$ref": "#/modifiers/appearance" },
+    { "$ref": "#/sets/button" },
+    { "$ref": "#/modifiers/buttonVariant" },
+    { "$ref": "#/sets/contract" },
+    { "$ref": "#/sets/fernway" }
+  ]
+}

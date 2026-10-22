@@ -60,8 +60,8 @@
   },
   "button": {
     "(top)": "600ac73d282c",
-    "# Button": "aae9c2136ae4",
-    "## Toggle": "b7fa7b0a3692",
+    "# Button": "020a1421545f",
+    "## Toggle": "90c603ff1e5f",
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
     "## Links": "efe167041072",
@@ -204,10 +204,10 @@
   },
   "disclosure": {
     "(top)": "2e46991fea65",
-    "# Disclosure": "ddc841de1cf2",
+    "# Disclosure": "4f22a35cfb18",
     "## Accordion": "9b661bdebd9d",
     "## Icons": "90cd4835c3a3",
-    "## Accessible composition": "b8c936aa784a",
+    "## Accessible composition": "9773f4547249",
     "## When to use": "e742af5b01d9",
     "## Props": "1ff9b4973419",
     "(section order)": "a6ce995bf6d0"
@@ -424,12 +424,13 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "f61835f0b401",
+    "## A company resolver": "23b228dee217",
+    "## Several themes on one page": "a81e42a147ff",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
     "## Wrapping a component": "60f88028be57",
-    "(section order)": "e61ac1427c00"
+    "(section order)": "9fe9aab4b317"
   },
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
@@ -490,7 +491,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "c55af8e91795",
+    "## Tools": "3ee522ae3457",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",
@@ -511,7 +512,7 @@
   "message": {
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
-    "## Parts": "b17d83409780",
+    "## Parts": "6bffffd777b1",
     "## Time": "e262fbffa78a",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
@@ -544,7 +545,7 @@
     "## The page range": "b12b2453c51a",
     "## Current page and steps": "6bdbeb6bbf17",
     "## Icons": "5d31286c3152",
-    "## Accessible composition": "7e878166331f",
+    "## Accessible composition": "08cbdccd900c",
     "## When to use": "845543a903b7",
     "## Props": "c301ffbdb503",
     "(section order)": "89f482eae21e"
@@ -595,9 +596,9 @@
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
     "# Citations": "c1e97aef2ff3",
-    "## The marker": "260ef42d826c",
+    "## The marker": "2c9750d72f95",
     "## The sources list": "c939e8cf1d57",
-    "## Accessible composition": "4530405603cb",
+    "## Accessible composition": "88e29406f3af",
     "## When to use": "64d20eb01e2d",
     "(section order)": "776f0285dccb"
   },
@@ -669,9 +670,18 @@
     "# Reasoning": "10634b450405",
     "## The block": "5e20fe67fa9c",
     "## Open while it thinks": "521213ee7a21",
-    "## Accessible composition": "82c0fcbfdd70",
+    "## Accessible composition": "a8e1011be55b",
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
+  },
+  "recipes/suggestions": {
+    "(top)": "64f0689194fa",
+    "# Suggestions": "1f16320c7c36",
+    "## Suggested prompts": "f32fcd4e4a57",
+    "## Versions of a reply": "4520581d7ef1",
+    "## Accessible composition": "bac05d860697",
+    "## When to use": "712b903230ea",
+    "(section order)": "d07108b52651"
   },
   "recipes/tool-call": {
     "(top)": "5d279955457e",
@@ -793,7 +803,7 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "3e31a76527b8",
+    "## Contrast": "44eaedc60d4a",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "943aff38b55f",
     "## Status tones": "9db538465fa4",
@@ -806,7 +816,7 @@
   "toolbar": {
     "(top)": "65f7c00fa816",
     "# Toolbar": "5064a8aa9aee",
-    "## Accessible composition": "2f687ca43832",
+    "## Accessible composition": "a8765009b0f4",
     "## When to use": "ca65a01ca6de",
     "## Props": "ba88e6e3c216",
     "(section order)": "26fee290bbab"

@@ -1,5 +1,6 @@
 @import '@tounsoo/todae/todae.css';
 @import './theme/todae-theme.css';
+@import './theme/business.css';
 
 body {
   margin: 0;

@@ -2,7 +2,7 @@ import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos
 
 # Disclosure
 
-`Disclosure.Root`는 네이티브 `<details>`, `Disclosure.Summary`는 네이티브 `<summary>`이며, `disclosure` contract 토큰으로 스타일을 정합니다. 키보드 조작, 스크린 리더가 읽는 펼침 상태, 닫힌 내용 안의 페이지 내 찾기, 열림 표시는 브라우저가 처리합니다.
+`Disclosure.Root`는 네이티브 `<details>`, `Disclosure.Summary`는 네이티브 `<summary>`이며, `disclosure` contract 토큰으로 스타일을 정합니다. 키보드 조작, 스크린 리더가 읽는 펼침 상태, 열림 표시는 브라우저가 처리합니다. 지원하는 브라우저는 페이지 내 찾기가 닫힌 디스클로저의 내용과 일치하면 그것을 열기도 합니다.
 
 ```tsx
 <Disclosure.Root>
@@ -55,7 +55,7 @@ import { ChevronDown } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** summary의 포커스 링, 표시 기호의 색, 스크린 리더에서 숨긴 chevron 글리프, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. `open` prop이 false가 되는 것처럼 코드가 디스클로저를 닫을 때 내용이 포커스를 가지고 있으면 summary가 포커스를 받으며, Chromium에서는 이 덕분에 포커스가 페이지로 빠지지 않습니다. 서버 진입점의 summary는 그렇게 하지 않습니다. 나머지는 브라우저가 맡습니다. summary의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 페이지 내 찾기입니다.
+**Todae가 맡는 것:** summary의 포커스 링, 표시 기호의 색, 스크린 리더에서 숨긴 chevron 글리프, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. `open` prop이 false가 되는 것처럼 코드가 디스클로저를 닫을 때 내용이 포커스를 가지고 있으면 Chromium, Firefox, WebKit에서는 summary가 포커스를 받아 포커스가 페이지로 빠지지 않습니다. 서버 진입점의 summary는 그렇게 하지 않습니다. 나머지는 브라우저가 맡습니다. summary의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 그리고 브라우저가 지원하면 페이지 내 찾기를 위해 닫힌 디스클로저를 여는 것입니다.
 
 **직접 제공할 것:** 각 `Disclosure.Root`의 첫 자식으로 `Disclosure.Summary`를 두고, 무엇이 열리는지 알려 주는 텍스트를 넣으세요. chevron 글리프 대신 직접 만든 아이콘을 summary에 넣는다면, 아이콘에 `aria-hidden="true"`를 주세요. 열린 상태는 이미 알려집니다.
 

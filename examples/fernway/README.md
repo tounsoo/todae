@@ -11,6 +11,7 @@ Fernway is a made-up cabin-booking company. This app themes Todae for it with to
 - `tokens/fernway.json` is a set of Fernway's own tokens, which `src/app.css` reads.
 - `vite.config.ts` uses `@vitejs/plugin-react`, which also hides the warning a plain Vite build prints about the `"use client"` line at the top of Todae's bundle. The line is there for React Server Components and is safe to ignore.
 - `src/App.tsx` sets a partner lodge's colors at runtime with `ThemeProvider` `overrides` and the generated `THEME_OVERRIDE_TYPES`.
+- `tokens/business.resolver.json` is Fernway for business: the same token files plus `tokens/business/*.json`, which change the accent and hero colors. `pnpm tokens` builds it with `--scope .business`, so its CSS applies only inside the "For business" panel, which follows the page's light or dark appearance.
 
 To change one of Todae's tokens, put it in a set or modifier with the same name as the Todae one that declares it. Each row of the token catalog, `@tounsoo/todae/tokens.json`, names that entry in `entry`. [Build on Todae](https://todae.omsoo.design/guides/build-on-todae) explains each entry. The build names the right one when a token is in the wrong place.
 
@@ -27,4 +28,4 @@ pnpm --filter fernway-example dev
 
 The second install links the `todae-tokens` command, which only exists once the package is built. An app that installs `@tounsoo/todae` from npm gets it on the first install.
 
-`pnpm tokens` runs `todae-tokens build`, which writes `src/theme/todae-theme.css`, `src/theme/tokens.catalog.json` and `src/theme/todae-theme.types.ts`. They are generated on every `dev` and `build`, so they are not committed.
+`pnpm tokens` runs `todae-tokens build`, which writes `src/theme/todae-theme.css`, `src/theme/tokens.catalog.json` and `src/theme/todae-theme.types.ts`, then builds Fernway for business into `src/theme/business.*`. They are generated on every `dev` and `build`, so they are not committed.

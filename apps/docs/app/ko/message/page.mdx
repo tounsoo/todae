@@ -39,7 +39,7 @@ Server Components는 `@tounsoo/todae/message`에서 가져올 수 있습니다.
 
 - `Message.Avatar`에는 `Avatar.Root`를 넣습니다. 이것이 있으면 다른 파트는 그 옆에 한 열로 놓입니다. 어시스턴트나 시스템 메시지에서는 그 뒤에, 사용자의 메시지에서는 그 앞에 놓입니다.
 - `Message.Header`는 작성자 이름과 `Message.Time`을 담는 줄입니다. 바로 안의 제목이나 문단은 margin이 없습니다.
-- `Message.Content`는 본문입니다. 사용자의 메시지에서는 이것이 말풍선입니다. 렌더링한 markdown은 그 안의 [Prose](/prose) root에 넣으세요. 한 메시지에 여러 개를 두고, [Tool call](/recipes/tool-call) 레시피의 호출처럼 다른 요소를 그 사이에 넣어도 됩니다.
+- `Message.Content`는 본문입니다. 사용자의 메시지에서는 이것이 말풍선입니다. 렌더링한 markdown은 그 안의 [Prose](/prose) root에 넣으세요. 한 메시지에 여러 개를 두고, [Tool call](/recipes/tool-call) 레시피의 호출처럼 다른 요소를 그 사이에 넣어도 됩니다. [Citations](/recipes/citations) 레시피는 여기에 번호 붙은 출처 표시와 출처 목록을 더합니다.
 - `Message.Time`은 메시지를 보낸 시각을 나타내는 `<time>`입니다. 헤더에 두어도 되고 동작 줄에 두어도 됩니다.
 - `Message.Actions`는 복사나 다시 시도처럼 메시지에 대한 동작을 담는 줄입니다. 동작이 여러 개면 [Toolbar](/toolbar)에 넣어 탭 정지를 하나로 만드세요. `reveal="hover"`를 주면 포인터가 메시지 위에 있거나 포커스가 그 안에 있을 때만 보입니다. 휴대폰처럼 hover가 없는 화면에서는 늘 보입니다. [Message actions](/recipes/message-actions) 레시피는 복사, 다시 생성, 평가, 편집 버튼을 이 줄에 넣습니다.
 

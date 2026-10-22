@@ -57,13 +57,17 @@ function contentNameOf(
 }
 
 function useContentPolicy(surface: TipSurface | PanelSurface, contentRef: RefObject<HTMLElement | null>) {
+  const reported = useRef<string | null>(null);
+  // Checks after each render of the tooltip and logs a message only when it differs from the last one.
+  // A text tip mounts only while open, so it checks again each time it opens.
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
     if (process.env.NODE_ENV === 'production') return;
     const error = contentPolicyError(surface, el);
-    if (error) console.error(error);
-  }, [contentRef, surface]);
+    if (error && error !== reported.current) console.error(error);
+    reported.current = error;
+  });
 }
 
 function TooltipTip({

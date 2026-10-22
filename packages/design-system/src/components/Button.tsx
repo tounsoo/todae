@@ -43,7 +43,9 @@ type ButtonOwnProps = {
  * Props of a Button.Root that renders its own `<button>`; one drawn on
  * another element takes {@link ButtonRenderedProps}.
  * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
- * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`.
+ * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`
+ * or the button is `aria-disabled`. An `aria-disabled` button ignores clicks:
+ * `onClick` doesn't run, and it submits no form and follows no link.
  */
 export type ButtonRootProps = ButtonOwnProps & {
   pressed?: boolean;
@@ -140,6 +142,9 @@ function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   };
 }
 
+// aria-disabled is a string or a boolean in React's types.
+const isAriaDisabled = (value: unknown) => value === true || value === 'true';
+
 // Overloads, not one union, so a handler passed with `render` still gets its event type.
 // The button one is last, since ComponentProps<typeof Button.Root> reads the last.
 function Root(props: ButtonRenderedProps): ReactElement;
@@ -166,11 +171,20 @@ function Root({
   const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
-  const handleClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
+  const composedClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
     if (!toggle) return;
     setPressed(!pressed);
     onPressedChange?.(!pressed);
   });
+  // aria-disabled keeps the button focusable, not usable: a click runs no
+  // onClick, flips no toggle, submits no form and follows no link.
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    if (isAriaDisabled(props['aria-disabled'])) {
+      event.preventDefault();
+      return;
+    }
+    composedClick(event);
+  };
   const [read, setRead] = useState<Content | null>(null);
   const direct = hint(children);
   const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
