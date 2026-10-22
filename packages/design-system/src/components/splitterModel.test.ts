@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ceilingSize,
   clampSize,
+  dragSize,
   floorSize,
+  growSign,
   keyAction,
-  pointerSize,
   snapSize,
   stepSize,
   toggledSize,
@@ -31,9 +31,13 @@ describe('clampSize', () => {
     expect(clampSize(40, collapsible)).toBe(100);
   });
 
-  it('never goes below min when the container is narrower than min', () => {
-    expect(clampSize(300, { min: 100, max: 60, collapsible: false })).toBe(100);
-    expect(ceilingSize({ min: 100, max: 60, collapsible: false })).toBe(100);
+  it('lets the room win when the container is narrower than min', () => {
+    const narrow: Bounds = { min: 100, max: 60, collapsible: false };
+    expect(clampSize(300, narrow)).toBe(60);
+    expect(clampSize(20, narrow)).toBe(60);
+    expect(floorSize(narrow)).toBe(60);
+    expect(clampSize(40, { ...narrow, collapsible: true })).toBe(60);
+    expect(clampSize(0, { ...narrow, collapsible: true })).toBe(0);
   });
 });
 
@@ -52,11 +56,11 @@ describe('snapSize', () => {
   });
 });
 
-describe('floorSize and ceilingSize', () => {
-  it('give the ends of the range, 0 at the low end when collapsible', () => {
+describe('floorSize', () => {
+  it('is 0 when collapsible, else min, and never above max', () => {
     expect(floorSize(open)).toBe(100);
     expect(floorSize(collapsible)).toBe(0);
-    expect(ceilingSize(open)).toBe(400);
+    expect(floorSize({ min: 100, max: 60, collapsible: false })).toBe(60);
   });
 });
 
@@ -84,6 +88,10 @@ describe('toggledSize', () => {
   it('restores the size before, kept inside the range', () => {
     expect(toggledSize(0, 260, collapsible, 16)).toBe(260);
     expect(toggledSize(0, 900, collapsible, 16)).toBe(400);
+  });
+
+  it('keeps a restored size inside a container narrower than it', () => {
+    expect(toggledSize(0, 300, { min: 100, max: 60, collapsible: true }, 16)).toBe(60);
   });
 
   it('opens to min, or at least one step, when there is no size to go back to', () => {
@@ -138,12 +146,42 @@ describe('keyAction', () => {
   });
 });
 
-describe('pointerSize', () => {
-  it('measures from the panel edge and keeps the press offset', () => {
-    // A start panel from x=100: the handle is pressed 3px into its line, 240px along.
-    expect(pointerSize(343, 100, 1, 3)).toBe(240);
-    expect(pointerSize(443, 100, 1, 3)).toBe(340);
-    // An end panel from x=1000, growing toward smaller x.
-    expect(pointerSize(757, 1000, -1, 3)).toBe(240);
+describe('growSign', () => {
+  it('grows a first panel toward larger coordinates and a last one toward smaller', () => {
+    expect(growSign('horizontal', 'start', false)).toBe(1);
+    expect(growSign('horizontal', 'end', false)).toBe(-1);
+    expect(growSign('vertical', 'start', false)).toBe(1);
+    expect(growSign('vertical', 'end', false)).toBe(-1);
+  });
+
+  it('flips a horizontal layout in right-to-left text, and a vertical one not', () => {
+    expect(growSign('horizontal', 'start', true)).toBe(-1);
+    expect(growSign('horizontal', 'end', true)).toBe(1);
+    expect(growSign('vertical', 'start', true)).toBe(1);
+  });
+
+  it('is the direction of the arrow that grows the panel', () => {
+    for (const orientation of ['horizontal', 'vertical'] as const) {
+      for (const primary of ['start', 'end'] as const) {
+        for (const rtl of [false, true]) {
+          const [toward, away] = orientation === 'horizontal' ? ['ArrowRight', 'ArrowLeft'] : ['ArrowDown', 'ArrowUp'];
+          const sign = growSign(orientation, primary, rtl);
+          expect(keyAction(sign === 1 ? toward! : away!, orientation, primary, rtl)).toBe('grow');
+          expect(keyAction(sign === 1 ? away! : toward!, orientation, primary, rtl)).toBe('shrink');
+        }
+      }
+    }
+  });
+});
+
+describe('dragSize', () => {
+  it('adds the distance the pointer moved, in the direction that grows the panel', () => {
+    expect(dragSize(343, 100, 240, 1)).toBe(483);
+    expect(dragSize(60, 100, 240, 1)).toBe(200);
+    expect(dragSize(60, 100, 240, -1)).toBe(280);
+  });
+
+  it('does not depend on where the layout sits, only on how far the pointer went', () => {
+    expect(dragSize(150, 100, 240, 1)).toBe(dragSize(1150, 1100, 240, 1));
   });
 });
