@@ -12,7 +12,7 @@ function Controlled({
   initial = date('2026-10-13'),
   onValueChange,
   ...props
-}: { initial?: Temporal.PlainDate | null } & Omit<CalendarRootProps, 'value'>) {
+}: { initial?: Temporal.PlainDate | null } & Omit<Extract<CalendarRootProps, { mode?: 'single' }>, 'value'>) {
   const [value, setValue] = useState(initial);
   return (
     <>
@@ -425,6 +425,80 @@ describe('Calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'set' }));
     expect(screen.getByText('March 2027')).toBeTruthy();
     expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, March 2, 2027');
+  });
+
+  it('stays on a picked date that a controlling parent turns down', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={onValueChange}>
+        <Calendar.Header />
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    expect(onValueChange).toHaveBeenCalledWith(date('2026-11-04'));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(focusedDay().closest('td')!.hasAttribute('aria-selected')).toBe(false);
+  });
+
+  it('takes a value equal to a pick a controlling parent turned down as its answer, moving nothing', () => {
+    function Rejecting() {
+      const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
+      return (
+        <>
+          <button type="button" onClick={() => setValue(date('2026-11-04'))}>
+            set
+          </button>
+          <button type="button" onClick={() => setValue(date('2026-12-08'))}>
+            other
+          </button>
+          <Calendar.Root aria-label="Start" locale="en-US" value={value} onValueChange={() => {}}>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Rejecting />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(day('Wednesday, November 4, 2026'));
+    for (let month = 0; month < 4; month++) fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    expect(screen.getByText('March 2027')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('March 2027')).toBeTruthy();
+    // Another value forgets the pick, so the same value set again moves the grid.
+    fireEvent.click(screen.getByRole('button', { name: 'other' }));
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'set' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(focusedDay().closest('td')!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('keeps the month shown when a controlling parent answers a pick after focus moved on', () => {
+    function Late() {
+      const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
+      const [asked, setAsked] = useState<Temporal.PlainDate | null>(null);
+      return (
+        <>
+          <button type="button" onClick={() => setValue(asked)}>
+            answer
+          </button>
+          <Calendar.Root aria-label="Start" locale="en-US" value={value} onValueChange={setAsked}>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(day('Tuesday, October 20, 2026'));
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'answer' }));
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(focusedDay().getAttribute('aria-label')).toBe('Friday, November 20, 2026');
   });
 
   it('keeps its own value when uncontrolled', () => {

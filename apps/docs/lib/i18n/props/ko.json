@@ -969,8 +969,8 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.",
-      "ko": "네이티브 입력 type. 숫자는 Field.NumberInput을, 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 선택기 옆의 텍스트 입력은 parseTime, parseDate, parseDateTime으로 읽습니다."
+      "en": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker, a range of dates Field.DateRangePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate, parseDateRange or parseDateTime.",
+      "ko": "네이티브 입력 type. 숫자는 Field.NumberInput을, 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜 범위는 Field.DateRangePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 선택기 옆의 텍스트 입력은 parseTime, parseDate, parseDateRange, parseDateTime으로 읽습니다."
     }
   },
   "Field.NumberInput": {
@@ -2668,17 +2668,21 @@
     }
   },
   "Calendar.Root": {
+    "mode": {
+      "en": "One date, or with \"range\" a range of dates: the first pick starts it and the second ends it.",
+      "ko": "날짜 하나, 또는 \"range\"이면 날짜 범위. 첫 번째로 고른 날이 범위를 시작하고 두 번째로 고른 날이 끝냅니다."
+    },
     "value": {
-      "en": "Controlled selected date, or null for none. Pass with onValueChange.",
-      "ko": "제어되는 선택 날짜, 없으면 null. onValueChange와 함께 전달하세요."
+      "en": "Controlled selected date, or with mode=\"range\" the selected range, or null for none. Pass with onValueChange.",
+      "ko": "제어되는 선택 날짜, mode=\"range\"이면 선택 범위, 없으면 null. onValueChange와 함께 전달하세요."
     },
     "defaultValue": {
-      "en": "Initial selected date when uncontrolled.",
-      "ko": "비제어일 때 처음 선택된 날짜."
+      "en": "Initial selected date, or with mode=\"range\" the initial range, when uncontrolled.",
+      "ko": "비제어일 때 처음 선택된 날짜, mode=\"range\"이면 처음 범위."
     },
     "onValueChange": {
-      "en": "Fires with each date a person picks, even the one already selected.",
-      "ko": "사람이 고른 날짜마다, 이미 선택된 날짜라도 받아 호출됩니다."
+      "en": "Fires with each date a person picks, even the one already selected. With mode=\"range\", fires with the range when its second date is picked.",
+      "ko": "사람이 고른 날짜마다, 이미 선택된 날짜라도 받아 호출됩니다. mode=\"range\"이면 두 번째 날짜를 고를 때 범위를 받아 호출됩니다."
     },
     "min": {
       "en": "The earliest date that can be picked.",
@@ -2689,8 +2693,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜."
     },
     "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다."
+      "en": "Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위 모드에서는 범위에 그런 날짜가 들어갈 수 없습니다."
     },
     "defaultMonth": {
       "en": "The month shown first when there is no value. Today's month when not set.",
@@ -2749,6 +2753,60 @@
     "showValue": {
       "en": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
       "ko": "버튼이 글리프 옆에 날짜나 placeholder를 보여 줄지 여부. 날짜를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+    },
+    "open": {
+      "en": "Controlled open state of the calendar. Pass with onOpenChange.",
+      "ko": "달력의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때 처음 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires when the calendar opens or closes, with why it closed.",
+      "ko": "달력이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
+    }
+  },
+  "Field.DateRangePicker": {
+    "value": {
+      "en": "The range, or null for none.",
+      "ko": "범위, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires with the range picked in the calendar, once its second date is picked.",
+      "ko": "달력에서 두 번째 날짜를 고르면 고른 범위를 받아 호출됩니다."
+    },
+    "min": {
+      "en": "The earliest date that can be picked.",
+      "ko": "고를 수 있는 가장 이른 날짜."
+    },
+    "max": {
+      "en": "The latest date that can be picked.",
+      "ko": "고를 수 있는 가장 늦은 날짜."
+    },
+    "required": {
+      "en": "A form with no range is invalid.",
+      "ko": "범위가 없으면 폼이 유효하지 않습니다."
+    },
+    "isDateDisabled": {
+      "en": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위에는 그런 날짜가 들어갈 수 없습니다."
+    },
+    "firstDayOfWeek": {
+      "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",
+      "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
+    },
+    "locale": {
+      "en": "The locale for the button's dates and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Shown on the button while there is no range, when showValue is true.",
+      "ko": "showValue가 true일 때, 범위가 없는 동안 버튼에 보입니다."
+    },
+    "showValue": {
+      "en": "Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range.",
+      "ko": "버튼이 글리프 옆에 범위나 placeholder를 보여 줄지 여부. 범위를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
     "open": {
       "en": "Controlled open state of the calendar. Pass with onOpenChange.",
@@ -2875,6 +2933,26 @@
     "text": {
       "en": "The typed text.",
       "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "formatDateRange": {
+    "range": {
+      "en": "The range to write, as { start, end }. The earlier date comes first, even when it is the end.",
+      "ko": "쓸 범위, { start, end } 형태. 끝이 더 이른 날짜여도 더 이른 날짜를 먼저 씁니다."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "parseDateRange": {
+    "text": {
+      "en": "The typed text, with a year on each date.",
+      "ko": "입력된 텍스트. 날짜마다 연도가 있어야 합니다."
     },
     "options.locale": {
       "en": "The locale, such as ko. The runtime's own when not set.",

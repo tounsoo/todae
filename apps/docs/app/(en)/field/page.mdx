@@ -18,7 +18,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.NumberInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker` or `Field.DateTimePicker`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.NumberInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker` or `Field.DateTimePicker`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
 
 <Example block>
   <FieldStates />
@@ -35,6 +35,7 @@ Each input part has its own page:
 - [Field.Select](/field/select): a native `<select>`.
 - [Field.ColorPicker](/field/color-picker): a swatch that opens a color picker.
 - [Field.DatePicker](/field/date-picker): a button that opens a calendar, alone or beside a text input to type the date in.
+- [Field.DateRangePicker](/field/date-range-picker): a button that opens a calendar to pick a start and an end date, alone or beside a text input to type the range in.
 - [Field.TimePicker](/field/time-picker): a button that opens a list of times, alone or beside a text input to type the time in.
 - [Field.DateTimePicker](/field/date-time-picker): a button that opens a calendar and a list of times, alone or beside a text input to type the date and time in.
 

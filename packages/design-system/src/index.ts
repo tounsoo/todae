@@ -199,6 +199,8 @@ export {
   type FieldCounterProps,
   type FieldDateTimePickerCloseReason,
   type FieldDateTimePickerProps,
+  type FieldDateRangePickerCloseReason,
+  type FieldDateRangePickerProps,
   type FieldGroupProps,
   type FieldDecrementProps,
   type FieldIconProps,
@@ -265,11 +267,14 @@ export { formatDate, parseDate, type DateTextOptions } from './components/dateTe
 export { formatTime, parseTime, type TimeTextOptions } from './components/timeText.js';
 export { formatNumber, parseNumber, type NumberFormatOptions, type NumberTextOptions } from './components/numberText.js';
 export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
+export type { DateRange } from './components/dateRange.js';
+export { formatDateRange, parseDateRange, type DateRangeTextOptions } from './components/dateRangeText.js';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,
   type CalendarGridProps,
   type CalendarHeaderProps,
+  type CalendarMode,
   type CalendarRootProps,
 } from './components/Calendar.js';
 export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav.js';

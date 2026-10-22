@@ -1,14 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-import type { ComponentPropsWithRef } from 'react';
-import { useDomId } from './domId.js';
-import { mergeDescribedBy } from './Field.context.js';
-import { cx } from './props.js';
-import styles from './Field.module.css';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CalendarGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import type { PopoverCloseReason } from '../hooks/usePopover.js';
-import { Popover } from './Popover.js';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
@@ -16,11 +9,11 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDate, valueBounds } from './Field.shared.js';
-import { FieldValueInput } from './Field.ValueInput.js';
+import { htmlDate, valueBounds } from './Field.shared.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
-export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+export type FieldDatePickerCloseReason = PickerCloseReason;
 
 export type FieldDatePickerProps = {
   /** The date, or null for none. */
@@ -49,10 +42,7 @@ export type FieldDatePickerProps = {
   defaultOpen?: boolean;
   /** Fires when the calendar opens or closes, with why it closed. */
   onOpenChange?: (open: boolean, reason: FieldDatePickerCloseReason) => void;
-} & Omit<
-  ComponentPropsWithRef<'button'>,
-  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
->;
+} & PickerButtonProps;
 
 /** A date as the button shows it, such as "Oct 7, 2026", and as a message names it. */
 export function dateLabel(value: Temporal.PlainDate, locale: string | undefined) {
@@ -60,100 +50,55 @@ export function dateLabel(value: Temporal.PlainDate, locale: string | undefined)
 }
 
 /**
- * A button that opens a Calendar in a popover. On its own it is the field's
- * control and shows the date, and a press elsewhere in the field opens the
- * calendar. Beside any other control but a Field.ColorPicker,
- * Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that
+ * A button that opens a Calendar in a popover and closes it on a picked date.
+ * On its own it is the field's control, shows the date, and a press elsewhere
+ * in the field opens the calendar. Beside any other control but a
+ * Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker
+ * or Field.DateTimePicker, such as a Field.TextInput to type the date in, that
  * control is the field's control instead, and the button is named from the
- * datePicker string. The date goes in a native input the browser validates,
- * so `required`, `min` and `max` block a submit and Form.Root shows them.
- * With `showValue={false}` the button shows only a calendar glyph.
+ * datePicker string. The date goes in a native input the browser validates, so
+ * `required`, `min` and `max` block a submit and Form.Root shows them. With
+ * `showValue` set to false, the button shows only a calendar glyph.
  */
 export function DatePicker({
   value,
-  onValueChange,
   min,
   max,
-  required,
   isDateDisabled,
   firstDayOfWeek,
   locale,
-  placeholder,
-  showValue = true,
-  open,
-  defaultOpen,
-  onOpenChange,
-  className,
-  style,
-  'aria-describedby': describedBy,
   ...props
 }: FieldDatePickerProps) {
   const strings = useStrings();
   const { calendar } = useGlyphs();
-  const textId = useDomId();
-  // The button's name is not the date, so the date it shows is its description.
-  const picker = useFieldPicker<'select'>({
-    props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
-    label: strings.datePicker,
-    open,
-    defaultOpen,
-    onOpenChange,
-    style,
-    required,
-    // The calendar's Tab stop: the date, or else today or the nearest date in range.
-    focusSelector: CALENDAR_TAB_STOP,
-  });
   return (
-    <>
-      <button
-        {...picker.triggerProps}
-        type="button"
-        data-todae-field-picker=""
-        data-glyph-only={showValue ? undefined : ''}
-        className={cx(styles.picker, className)}
-      >
-        {showValue ? (
-          <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value ? dateLabel(value, locale) : placeholder}
-          </span>
-        ) : null}
-        <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
-          {glyphOr(calendar, <CalendarGlyph />)}
-        </span>
-      </button>
-      <FieldValueInput
-        {...picker.valueInput({
-          type: 'date',
-          value: value ? htmlDate(isoDate(value)) : '',
-          ...valueBounds(min, max, (date) => htmlDate(isoDate(date)), (date) => dateLabel(date, locale)),
-        })}
-      />
-      {/* Mounted while open only: a form can hold many date pickers. */}
-      {picker.shown ? (
-        <Popover.Root
-          {...picker.popover.getPopoverProps()}
-          role="dialog"
-          aria-label={strings.datePicker}
-          className={styles.datePickerPopover}
+    <PickerShell
+      {...props}
+      label={strings.datePicker}
+      glyph={glyphOr(calendar, <CalendarGlyph />)}
+      shown={value ? dateLabel(value, locale) : null}
+      // The calendar's Tab stop: the date, or else today or the nearest date in range.
+      focusSelector={CALENDAR_TAB_STOP}
+      valueInput={{
+        type: 'date',
+        value: value ? htmlDate(isoDate(value)) : '',
+        ...valueBounds(min, max, (date) => htmlDate(isoDate(date)), (date) => dateLabel(date, locale)),
+      }}
+    >
+      {({ pick }) => (
+        <CalendarParts.Root
+          value={value}
+          onValueChange={pick}
+          min={min}
+          max={max}
+          isDateDisabled={isDateDisabled}
+          firstDayOfWeek={firstDayOfWeek}
+          locale={locale}
         >
-          <CalendarParts.Root
-            value={value}
-            onValueChange={(next) => {
-              picker.notifyValueChange();
-              onValueChange?.(next);
-              picker.setOpen(false, 'select');
-            }}
-            min={min}
-            max={max}
-            isDateDisabled={isDateDisabled}
-            firstDayOfWeek={firstDayOfWeek}
-            locale={locale}
-          >
-            <CalendarParts.Header />
-            <CalendarParts.Grid />
-          </CalendarParts.Root>
-        </Popover.Root>
-      ) : null}
-    </>
+          <CalendarParts.Header />
+          <CalendarParts.Grid />
+        </CalendarParts.Root>
+      )}
+    </PickerShell>
   );
 }

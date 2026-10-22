@@ -35,6 +35,7 @@ import { ColorPicker } from './Field.ColorPicker.js';
 import { DatePicker } from './Field.DatePicker.js';
 import { TimePicker } from './Field.TimePicker.js';
 import { DateTimePicker } from './Field.DateTimePicker.js';
+import { DateRangePicker } from './Field.DateRangePicker.js';
 import { Counter } from './Field.Counter.js';
 
 /**
@@ -88,7 +89,7 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select, Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker.
+// A control whose picker a press beside it opens: a select or a picker that useFieldPicker drives.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
   return (
     control instanceof HTMLSelectElement ||
@@ -255,6 +256,7 @@ export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field
 export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker.js';
 export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker.js';
 export type { FieldDateTimePickerCloseReason, FieldDateTimePickerProps } from './Field.DateTimePicker.js';
+export type { FieldDateRangePickerCloseReason, FieldDateRangePickerProps } from './Field.DateRangePicker.js';
 export type { FieldCounterProps } from './Field.Counter.js';
 
 export type FieldRowProps = {
@@ -304,6 +306,7 @@ export const Field = {
   DatePicker,
   TimePicker,
   DateTimePicker,
+  DateRangePicker,
   Icon,
   Affix,
   Increment,

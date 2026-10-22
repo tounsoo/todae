@@ -8,9 +8,10 @@ import { warnOnce } from './warnOnce.js';
 
 /**
  * Input types that take a string value. A number is `Field.NumberInput`, a
- * time `Field.TimePicker`, a date `Field.DatePicker` and both
- * `Field.DateTimePicker`, with a text input beside any of the pickers read by
- * `parseTime`, `parseDate` or `parseDateTime` for a typed value.
+ * time `Field.TimePicker`, a date `Field.DatePicker`, a range of dates
+ * `Field.DateRangePicker` and both `Field.DateTimePicker`, with a text input
+ * beside any of the pickers read by `parseTime`, `parseDate`,
+ * `parseDateRange` or `parseDateTime` for a typed value.
  */
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
 

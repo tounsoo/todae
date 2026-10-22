@@ -56,6 +56,8 @@ export interface Strings {
   timePicker: string;
   /** Name of Field.DateTimePicker's popover, and of its button beside another control but a picker. */
   dateTimePicker: string;
+  /** Name of Field.DateRangePicker's popover, and of its button beside another control but a picker. */
+  dateRangePicker: string;
   /** Name of Field.Increment when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
   increment: (field: string) => string;
   /** Name of Field.Decrement when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
@@ -68,6 +70,8 @@ export interface Strings {
   previousYears: string;
   /** Name of Calendar.Header's button to the next page of years. */
   nextYears: string;
+  /** Calendar's message in range mode after the first pick, while the range waits for its other end. */
+  pickEndDate: string;
   /** useClipboard's message after a copy. */
   copied: string;
   /** useClipboard's message when a copy fails. */
@@ -157,12 +161,14 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   datePicker: 'Choose date',
   timePicker: 'Choose time',
   dateTimePicker: 'Choose date and time',
+  dateRangePicker: 'Choose dates',
   increment: (field) => (field ? `Increase ${field}` : 'Increase'),
   decrement: (field) => (field ? `Decrease ${field}` : 'Decrease'),
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   previousYears: 'Previous years',
   nextYears: 'Next years',
+  pickEndDate: 'Choose an end date',
   copied: 'Copied',
   copyFailed: 'Could not copy',
   sortedAscending: (column) => `Sorted by ${column}, ascending`,
