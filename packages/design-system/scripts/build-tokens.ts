@@ -4,8 +4,54 @@ import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { clearedInputs, parseScope, scopeFallbacks } from './tokens/scope.ts';
+import { validateContrast } from './tokens/contrast.ts';
+import {
+  LAYER_RANK,
+  PATH_RE,
+  RULES,
+  block,
+  didYouMean,
+  fail,
+  indent,
+  isRecord,
+  isRef,
+  parseComponentPointer,
+  pathToPointer,
+  pointerToPath,
+  type ContrastPair,
+  type EntryToken,
+  type FlatToken,
+  type Layer,
+  type ResolvedEntry,
+  type Rule,
+  type SlotRules,
+  type TodaeExtension,
+  type TokenEntry,
+  type TokenNode,
+  type TokenRef,
+  type TokenTree,
+} from './tokens/shared.ts';
 
-export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
+export { PATH_RE, RULES, didYouMean, fail, isRecord, parseComponentPointer, pathToPointer, pointerToPath } from './tokens/shared.ts';
+export type {
+  ContrastPair,
+  EntryToken,
+  FlatToken,
+  Layer,
+  ResolvedEntry,
+  Rule,
+  SlotRules,
+  TodaeExtension,
+  TokenEntry,
+  TokenNode,
+  TokenRef,
+  TokenTree,
+} from './tokens/shared.ts';
+export { parseScope } from './tokens/scope.ts';
+export { apcaContrast, composite, contrastOf, contrastResults, oklchToSrgb, validateContrast } from './tokens/contrast.ts';
+export type { ContrastResult } from './tokens/contrast.ts';
+
 export const RESERVED_ROOTS = [
   'color',
   'space',
@@ -84,100 +130,7 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.text-transform',
 ] as const;
 
-const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
 const LAYER_ORDER = Object.keys(LAYER_RANK).join(' < ');
-
-/** `; did you mean "x"?` for the known path closest to `path`, when one is close. */
-export function didYouMean(path: string, known: Iterable<string>): string {
-  let best: { path: string; distance: number } | null = null;
-  for (const candidate of known) {
-    if (Math.abs(candidate.length - path.length) > 3) continue;
-    const distance = editDistance(path, candidate);
-    if (distance <= Math.max(1, Math.floor(path.length / 6)) && (best === null || distance < best.distance)) {
-      best = { path: candidate, distance };
-    }
-  }
-  return best ? `; did you mean "${best.path}"?` : '';
-}
-
-function editDistance(a: string, b: string): number {
-  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    const row = [i];
-    for (let j = 1; j <= b.length; j++) {
-      row[j] = Math.min(previous[j]! + 1, row[j - 1]! + 1, previous[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
-    }
-    previous = row;
-  }
-  return previous[b.length]!;
-}
-
-/**
- * Todae-specific checks a set or modifier opts into with
- * `$extensions["dev.todae"].rules`. Every set always gets the generic checks:
- * path format, a $type per token, value shapes, ref existence, cycles, layer
- * order, resolution order, and context parity.
- */
-export const RULES = ['reserved-roots', 'density-space', 'button'] as const;
-export type Rule = (typeof RULES)[number];
-
-/** Token groups (`*` matches one segment) mapped to the exact leaves each must have. */
-export type SlotRules = Record<string, string[]>;
-
-export type Layer = keyof typeof LAYER_RANK;
-
-export type TokenNode = {
-  $type?: string;
-  $value: unknown;
-  /** The token's own `$description`, or the nearest group's. */
-  $description?: string;
-};
-
-export type TokenTree = { [key: string]: TokenNode | TokenTree };
-
-/**
- * A token another token's value reads: the whole value (`value`), the OKLCH
- * channels of a color (`component`), or a color's alpha (`alpha`). `type` is
- * the $type the target must have.
- */
-export type TokenRef = { path: string; type: string; role: 'value' | 'component' | 'alpha' };
-
-/** A set or modifier, and for a variant modifier (`alias`) the context, since a variant's tokens belong to its context. */
-export type TokenEntry = { kind: 'set' | 'modifier'; name: string; context?: string };
-
-export type FlatToken = {
-  path: string;
-  type: string;
-  value: unknown;
-  /** The aliased token, or the color whose channels this color reads; shown in the catalog. */
-  ref: string | null;
-  /** Every token the value reads, `ref` included. */
-  refs: TokenRef[];
-  cssVar: string;
-  cssValue: string;
-  layer: Layer;
-  context?: string;
-  /**
-   * The token's `$description`, or the nearest enclosing group's in the same
-   * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
-   * row of a path.
-   */
-  description?: string;
-};
-
-/** A token as a resolver loads it. */
-export type EntryToken = FlatToken & {
-  /** The set or modifier that declares it, named in the catalog so a company knows where to override it. */
-  entry: TokenEntry;
-};
-
-export function fail(message: string): never {
-  throw new Error(message);
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export function cssVarName(path: string): string {
   return `--todae-${path.replaceAll('.', '-')}`;
@@ -185,10 +138,6 @@ export function cssVarName(path: string): string {
 
 function isToken(value: unknown): value is TokenNode {
   return isRecord(value) && '$value' in value;
-}
-
-function isRef(value: unknown): value is { $ref: string } {
-  return isRecord(value) && typeof value.$ref === 'string';
 }
 
 function sortKeys(keys: string[]): string[] {
@@ -409,50 +358,6 @@ export function consumeCssVar(path: string, aliases: readonly AliasGroup[] = [BU
     }
   }
   return null;
-}
-
-export function pathToPointer(path: string): string {
-  return `#/${path.split('.').join('/')}/$value`;
-}
-
-/**
- * Parses a DTCG 2025.10 JSON Pointer alias (`#/color/gray/50/$value`) into the
- * dot path of the token it names. Only whole-value aliases are supported here;
- * color channels use {@link parseComponentPointer}.
- */
-export function pointerToPath(pointer: string, loc: string): string {
-  if (!pointer.startsWith('#/')) {
-    const hint = PATH_RE.test(pointer) ? `; write "${pathToPointer(pointer)}"` : '';
-    fail(`${loc} $ref "${pointer}" must be a JSON Pointer like "#/color/gray/50/$value"${hint}`);
-  }
-  const segments = pointer
-    .slice(2)
-    .split('/')
-    .map((segment) => segment.replaceAll('~1', '/').replaceAll('~0', '~'));
-  if (segments.at(-1) !== '$value') {
-    fail(`${loc} $ref "${pointer}" must end at a token's /$value`);
-  }
-  const tokenSegments = segments.slice(0, -1);
-  if (tokenSegments.includes('$value')) {
-    fail(`${loc} $ref "${pointer}" points inside a value; only whole-value aliases are supported`);
-  }
-  const path = tokenSegments.join('.');
-  if (tokenSegments.some((segment) => segment === '' || segment.includes('.')) || !PATH_RE.test(path)) {
-    fail(`${loc} $ref "${pointer}" must name a token with lowercase segments`);
-  }
-  return path;
-}
-
-const OKLCH_CHANNELS = ['l', 'c', 'h'] as const;
-
-/**
- * Parses a property-level pointer to one OKLCH channel of another color token,
- * `#/color/accent/default/$value/components/0`, into its token path and channel.
- */
-export function parseComponentPointer(pointer: string, loc: string): { path: string; channel: 'l' | 'c' | 'h' } {
-  const match = typeof pointer === 'string' ? pointer.match(/^(#\/.+\/\$value)\/components\/([0-2])$/) : null;
-  if (!match) fail(`${loc} component $ref "${String(pointer)}" must point at "#/<token>/$value/components/0|1|2"`);
-  return { path: pointerToPath(match[1]!, loc), channel: OKLCH_CHANNELS[Number(match[2])]! };
 }
 
 type Serialized = { ref: string | null; refs: TokenRef[]; cssValue: string };
@@ -751,11 +656,6 @@ function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string
     .join('\n');
 }
 
-function block(selector: string, lines: string[]): string[] {
-  const body = lines.filter((line) => line !== '');
-  return body.length === 0 ? [] : [`${selector} {\n${body.join('\n')}\n}`];
-}
-
 /**
  * Emits one CSS layer from the resolved entries, in resolutionOrder:
  * - sets before the first scoped modifier are declared on `:root`;
@@ -788,62 +688,6 @@ export type EmitCssOptions = {
    */
   scope?: string;
 };
-
-/**
- * Checks a `--scope` selector before it goes into `@scope (…)` and `:is(…)`.
- * It can't be parsed without a browser, so this rejects what could end the
- * rule or the file early.
- */
-export function parseScope(selector: string): string {
-  const scope = selector.trim();
-  if (scope === '') fail('--scope must be a CSS selector, such as ".brand-acme"');
-  if (/[{};@]|<\/|<!--|\/\*|\*\/|-->/.test(scope)) {
-    fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</" or comments`);
-  }
-  const closers: string[] = [];
-  const members: string[] = [];
-  let member = '';
-  let quote: string | null = null;
-  for (let i = 0; i < scope.length; i++) {
-    const ch = scope[i]!;
-    if (ch === '\\') {
-      if (i + 1 === scope.length) fail(`--scope "${scope}" ends in a backslash`);
-      member += ch + scope[++i];
-      continue;
-    }
-    if (!quote && closers.length === 0 && ch === ',') {
-      members.push(member);
-      member = '';
-      continue;
-    }
-    member += ch;
-    if (quote) {
-      if (ch === quote) quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'") quote = ch;
-    else if (ch === '(') closers.push(')');
-    else if (ch === '[') closers.push(']');
-    else if ((ch === ')' || ch === ']') && closers.pop() !== ch) fail(`--scope "${scope}" has an unmatched "${ch}"`);
-  }
-  if (quote || closers.length > 0) fail(`--scope "${scope}" has an unclosed ${quote ? 'quote' : `"${closers.at(-1) === ')' ? '(' : '['}"`}`);
-  for (const part of [...members, member].map((each) => each.trim())) {
-    if (part === '') fail(`--scope "${scope}" has an empty selector in its list`);
-    // Quoted strings can hold any character, so the checks below skip them.
-    // An escape reads as the character it stands for, so `:befor\65` is still
-    // a pseudo-element, except an escaped ":" or combinator, which is part of a name.
-    const bare = part
-      .replace(/\\([0-9a-fA-F]{1,6})(?:\r\n|[ \t\n\r\f])?|\\(.)/g, (_, hex: string | undefined, ch: string | undefined) => {
-        const char = hex === undefined ? ch! : String.fromCodePoint(Math.min(Number.parseInt(hex, 16), 0x10ffff) || 0xfffd);
-        return /[\w-]/.test(char) ? char : 'x';
-      })
-      .replace(/"[^"]*"|'[^']*'/g, '""');
-    if (/^[>+~]|[>+~]$/.test(bare)) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
-    if (bare.includes('<')) fail(`--scope "${scope}" has a "<" outside a quoted value`);
-    if (/::|:(before|after|first-line|first-letter)(?![\w-])/i.test(bare)) fail(`--scope "${scope}" must not hold a pseudo-element`);
-  }
-  return scope;
-}
 
 export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}): string {
   const aliases = options.aliases ?? aliasGroups(entries);
@@ -925,36 +769,6 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
   ];
   const body = scope ? [`@scope (${scope}) {\n${indent(blocks).join('\n\n')}\n}`, ...fallbacks] : blocks;
   return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${body.join('\n\n')}\n}\n`;
-}
-
-/**
- * Rules for a scope element without the modifier's attribute, outside
- * `@scope (S)`: it takes the context of the nearest element around it that
- * has the attribute (the `to` limit stops at a nearer one), the same under
- * "system" in `media`, or the default when no element has the attribute.
- */
-function scopeFallbacks(
-  scope: string,
-  attribute: string,
-  context: string,
-  lines: string[],
-  { rootDefault, media }: { rootDefault: boolean; media: string | null },
-): string[] {
-  const bare = `:is(${scope}):not([${attribute}])`;
-  const nearest = (value: string) => block(`@scope ([${attribute}="${value}"]) to ([${attribute}])`, indent(block(bare, lines)));
-  return [
-    ...nearest(context),
-    ...(rootDefault ? block(`${bare}:not([${attribute}] *)`, lines) : []),
-    ...(media ? block(`@media ${media}`, indent(nearest('system'))) : []),
-  ];
-}
-
-function clearedInputs(tokens: FlatToken[]): string {
-  return tokens.map((t) => `  --_${t.cssVar.slice(2)}: initial;`).join('\n');
-}
-
-function indent(rules: string[]): string[] {
-  return rules.map((rule) => rule.replace(/^/gm, '  '));
 }
 
 /**
@@ -1115,36 +929,6 @@ export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPa
 }
 
 export const TODAE_EXTENSION = 'dev.todae';
-
-/**
- * A text color and the background it sits on, checked with APCA in every
- * context of the set or modifier that declares it. `min` is the lowest
- * absolute Lc allowed. `over` lists the opaque surfaces a translucent `bg`
- * may sit on; the pair is checked over each one. Without it, `bg` must be
- * opaque.
- */
-export type ContrastPair = { fg: string; bg: string; min: number; over?: string[] };
-
-export type TodaeExtension = {
-  layer: Layer;
-  rules?: Rule[];
-  slots?: SlotRules;
-  contrast?: ContrastPair[];
-  attribute?: string;
-  root?: boolean;
-  colorScheme?: boolean;
-  alias?: boolean;
-};
-
-export type ResolvedEntry =
-  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: EntryToken[] }
-  | {
-      kind: 'modifier';
-      name: string;
-      extension: TodaeExtension;
-      defaultContext: string;
-      contexts: Map<string, EntryToken[]>;
-    };
 
 const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const CONTEXT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -1812,297 +1596,6 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
     }
   }
   return all;
-}
-
-// APCA lightness contrast (Lc), with the APCA-W3 0.0.98G-4g constants the
-// WCAG 3 drafts reference. Lc is positive for dark text on a light
-// background and negative for light on dark; checks compare its magnitude.
-type Oklch = { l: number; c: number; h: number; alpha: number };
-type Rgb = [r: number, g: number, b: number];
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-function encodeSrgb(linear: number): number {
-  const v = clamp01(linear);
-  return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
-}
-
-/** OKLCH to gamma-encoded sRGB in [0, 1], clipped to the sRGB gamut. */
-export function oklchToSrgb({ l, c, h }: Pick<Oklch, 'l' | 'c' | 'h'>): Rgb {
-  const rad = (h * Math.PI) / 180;
-  const a = c * Math.cos(rad);
-  const b = c * Math.sin(rad);
-  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
-  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
-  return [
-    encodeSrgb(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
-    encodeSrgb(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
-    encodeSrgb(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
-  ];
-}
-
-/** Paints `top` with its alpha over an opaque `bottom`, in gamma-encoded sRGB as browsers composite. */
-export function composite(top: Oklch, bottom: Rgb): Rgb {
-  const rgb = oklchToSrgb(top);
-  return rgb.map((channel, i) => channel * top.alpha + bottom[i]! * (1 - top.alpha)) as Rgb;
-}
-
-function screenLuminance([r, g, b]: Rgb): number {
-  const y = 0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4;
-  return y > 0.022 ? y : y + (0.022 - y) ** 1.414;
-}
-
-/** APCA Lc of `text` on `background`, both gamma-encoded sRGB. */
-export function apcaContrast(text: Rgb, background: Rgb): number {
-  const yt = screenLuminance(text);
-  const yb = screenLuminance(background);
-  if (Math.abs(yb - yt) < 0.0005) return 0;
-  if (yb > yt) {
-    const sapc = (yb ** 0.56 - yt ** 0.57) * 1.14;
-    return sapc < 0.1 ? 0 : (sapc - 0.027) * 100;
-  }
-  const sapc = (yb ** 0.65 - yt ** 0.62) * 1.14;
-  return sapc > -0.1 ? 0 : (sapc + 0.027) * 100;
-}
-
-const CHANNEL_INDEX = { l: 0, c: 1, h: 2 } as const;
-
-/** The literal OKLCH a color token resolves to in one view of the graph. */
-function resolveOklch(path: string, view: Map<string, FlatToken>, stack: string[] = []): Oklch {
-  if (stack.includes(path)) fail(`contrast: color "${path}" refers to itself through ${stack.join(' → ')}`);
-  const token = view.get(path);
-  if (!token) fail(`contrast: token "${path}" does not exist${didYouMean(path, view.keys())}`);
-  if (token.type !== 'color') fail(`contrast: token "${path}" is a ${token.type}, not a color`);
-  const value = token.value;
-  if (isRef(value)) return resolveOklch(pointerToPath(value.$ref, `Token "${path}"`), view, [...stack, path]);
-  const record = value as { components: unknown[]; alpha?: unknown };
-  const channels = record.components.map((component) => {
-    if (typeof component === 'number') return component;
-    const ref = parseComponentPointer((component as { $ref: string }).$ref, `Token "${path}"`);
-    const origin = resolveOklch(ref.path, view, [...stack, path]);
-    return [origin.l, origin.c, origin.h][CHANNEL_INDEX[ref.channel]]!;
-  });
-  const alpha = isRef(record.alpha)
-    ? resolveNumber(pointerToPath(record.alpha.$ref, `Token "${path}" alpha`), view, [...stack, path])
-    : ((record.alpha as number | undefined) ?? 1);
-  return { l: channels[0]!, c: channels[1]!, h: channels[2]!, alpha };
-}
-
-/** The literal a number token resolves to in one view of the graph. */
-function resolveNumber(path: string, view: Map<string, FlatToken>, stack: string[]): number {
-  if (stack.includes(path)) fail(`contrast: number "${path}" refers to itself through ${stack.join(' → ')}`);
-  const token = view.get(path);
-  if (!token) fail(`contrast: token "${path}" does not exist`);
-  if (token.type !== 'number') fail(`contrast: token "${path}" is a ${token.type}, not a number`);
-  if (isRef(token.value)) return resolveNumber(pointerToPath(token.value.$ref, `Token "${path}"`), view, [...stack, path]);
-  return token.value as number;
-}
-
-/**
- * APCA Lc of `fg` painted on `bg`. A translucent `fg` is composited over the
- * background. `bg` must be opaque, unless `over` names the opaque surface it
- * is composited over first.
- */
-export function contrastOf(fg: string, bg: string, view: Map<string, FlatToken>, over?: string): number {
-  const back = resolveOklch(bg, view);
-  let base: Rgb;
-  if (over === undefined) {
-    if (back.alpha !== 1) fail(`contrast: background "${bg}" must be opaque, or list the surfaces it sits on in "over"`);
-    base = oklchToSrgb(back);
-  } else {
-    const surface = resolveOklch(over, view);
-    if (surface.alpha !== 1) fail(`contrast: surface "${over}" under "${bg}" must be opaque`);
-    base = composite(back, oklchToSrgb(surface));
-  }
-  return apcaContrast(composite(resolveOklch(fg, view), base), base);
-}
-
-export type ContrastResult = Omit<ContrastPair, 'over'> & {
-  /** The surface under a translucent `bg`, one result per `over` entry. */
-  over?: string;
-  /** The declaring set, or the modifier and context, e.g. `appearance "dark"`. */
-  where: string;
-  /** Absolute APCA Lc. */
-  lc: number;
-};
-
-/** A result with the view of the graph it was measured in and every token its colors read. */
-type Measured = { result: ContrastResult; view: Map<string, EntryToken>; reads: Set<string> };
-
-/** Every token `path`'s value reads, at any depth, `path` included. */
-function readsOf(path: string, view: Map<string, EntryToken>, out = new Set<string>()): Set<string> {
-  if (out.has(path)) return out;
-  out.add(path);
-  const value = view.get(path)?.value;
-  if (isRef(value)) return readsOf(pointerToPath(value.$ref, `Token "${path}"`), view, out);
-  if (!isRecord(value)) return out;
-  const refs = [...(Array.isArray(value.components) ? value.components : []), value.alpha].filter(isRef);
-  for (const ref of refs) {
-    const loc = `Token "${path}"`;
-    readsOf(ref.$ref.includes('/components/') ? parseComponentPointer(ref.$ref, loc).path : pointerToPath(ref.$ref, loc), view, out);
-  }
-  return out;
-}
-
-/**
- * Measures every declared contrast pair. Each pair runs once per combination
- * of the declaring modifier's contexts and every color-scheme modifier's
- * contexts, so a set's pairs are checked in light and dark too, and once per
- * `over` surface in each. Other modifiers stay at their defaults.
- */
-function measureContrast(entries: ResolvedEntry[]): Measured[] {
-  const measured: Measured[] = [];
-  for (const declaring of entries) {
-    const pairs = declaring.extension.contrast;
-    if (!pairs) continue;
-    const varied = entries.filter(
-      (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
-        entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
-    );
-    let combos: Map<ResolvedEntry, string>[] = [new Map()];
-    for (const modifier of varied) {
-      combos = combos.flatMap((combo) => [...modifier.contexts.keys()].map((context) => new Map([...combo, [modifier, context]])));
-    }
-    for (const combo of combos) {
-      const view = new Map<string, EntryToken>();
-      for (const entry of entries) {
-        const tokens =
-          entry.kind === 'set'
-            ? entry.tokens
-            : entry.extension.alias
-              ? [...entry.contexts.values()].flat()
-              : (entry.contexts.get(combo.get(entry) ?? entry.defaultContext) ?? []);
-        for (const token of tokens) view.set(token.path, token);
-      }
-      const where =
-        combo.size > 0
-          ? [...combo].map(([entry, context]) => `${entry.name} "${context}"`).join(', ')
-          : `${declaring.kind} "${declaring.name}"`;
-      for (const { over, ...pair } of pairs) {
-        for (const surface of over ?? [undefined]) {
-          const lc = Math.abs(contrastOf(pair.fg, pair.bg, view, surface));
-          const result = surface === undefined ? { ...pair, where, lc } : { ...pair, over: surface, where, lc };
-          measured.push({ result, view, reads: new Set() });
-        }
-      }
-    }
-  }
-  return measured;
-}
-
-/** Every declared contrast pair, measured as `measureContrast` describes. */
-export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
-  return measureContrast(entries).map(({ result }) => result);
-}
-
-/**
- * A lightness that would make a failing pair pass: `token` holds the literal
- * lightness `fg` or `bg` resolves to, in the set or modifier context `entry`
- * names, `from` is its value now, and setting it to `to`, the nearest that
- * passes without failing another pair, gives `lc`.
- */
-/** `todae` is true when the literal is in Todae's own token files, which a company overrides rather than edits. */
-type LightnessFix = { side: 'fg' | 'bg'; token: string; entry: string; from: number; to: number; lc: number; todae: boolean };
-
-/**
- * The token whose literal OKLCH holds the lightness `path` resolves to, or
- * null when its lightness is read from another channel.
- */
-function lightnessSource(path: string, view: Map<string, EntryToken>): string | null {
-  const value = view.get(path)!.value;
-  if (isRef(value)) return lightnessSource(pointerToPath(value.$ref, `Token "${path}"`), view);
-  const l = (value as { components: unknown[] }).components[0];
-  if (typeof l === 'number') return path;
-  const ref = parseComponentPointer((l as { $ref: string }).$ref, `Token "${path}"`);
-  return ref.channel === 'l' ? lightnessSource(ref.path, view) : null;
-}
-
-/**
- * The lightness nearest the current one, in steps of 0.001, at which the
- * failing pair reaches its minimum and every pair that passes now still
- * does, changing only the token that holds `side`'s literal lightness; null
- * when there is none, and 'derived' when that lightness is read from another
- * channel. A token both sides read moves both, as it would in the file.
- */
-function lightnessFix(side: 'fg' | 'bg', failing: Measured, all: Measured[], todae: Set<EntryToken>): LightnessFix | 'derived' | null {
-  const { result, view } = failing;
-  const token = lightnessSource(result[side], view);
-  if (token === null) return 'derived';
-  const literal = view.get(token)!;
-  const value = literal.value as { components: unknown[] };
-  const from = value.components[0] as number;
-  const { kind, name } = literal.entry;
-  const entry = `${kind} "${name}"${kind === 'modifier' && literal.context ? ` context "${literal.context}"` : ''}`;
-  // The passing pairs measured in a view where the token is this same literal, and that read it.
-  const guarded = all.filter(
-    (other) => other.result.lc >= other.result.min && other.view.get(token) === literal && guardReads(other).has(token),
-  );
-  const views = new Set([view, ...guarded.map((other) => other.view)]);
-  const passes = ({ result: r, view: v }: Measured) => Math.abs(contrastOf(r.fg, r.bg, v, r.over)) >= r.min;
-  try {
-    for (let step = 1; step <= 1000; step++) {
-      for (const to of [from - step / 1000, from + step / 1000]) {
-        const rounded = Number(to.toFixed(3));
-        if (rounded < 0 || rounded > 1) continue;
-        const trial = { ...literal, value: { ...value, components: [rounded, ...value.components.slice(1)] } };
-        for (const each of views) each.set(token, trial);
-        if (passes(failing) && guarded.every(passes)) {
-          return { side, token, entry, from, to: rounded, lc: Math.abs(contrastOf(result.fg, result.bg, view, result.over)), todae: todae.has(literal) };
-        }
-      }
-    }
-    return null;
-  } finally {
-    for (const each of views) each.set(token, literal);
-  }
-}
-
-/** Every token a measured pair's colors read, filled in once. */
-function guardReads(measured: Measured): Set<string> {
-  const { result, view, reads } = measured;
-  for (const path of [result.fg, result.bg, ...(result.over ? [result.over] : [])]) readsOf(path, view, reads);
-  return reads;
-}
-
-function describeFix({ side, token, entry, from, to, lc, todae }: LightnessFix, pair: Omit<ContrastPair, 'over'>): string {
-  const via = token === pair[side] ? '' : `, read by "${pair[side]}"`;
-  const where = todae ? `Todae's ${entry}${via}; override it in your resolver's ${entry}` : `${entry}${via}`;
-  return `set the lightness of "${token}" (${where}) from ${from} to ${to}, for Lc ${lc.toFixed(1)}`;
-}
-
-/**
- * Fails with every contrast pair below its minimum, and for each the nearest
- * lightness of its fg or its bg that passes without failing another pair that
- * passes now, nearest first.
- */
-export function validateContrast(entries: ResolvedEntry[], todae: Set<EntryToken> = new Set()): void {
-  const measured = measureContrast(entries);
-  let previous = '';
-  const failures = measured
-    .filter(({ result }) => result.lc < result.min)
-    .map((failing) => {
-      const { fg, bg, over, where, lc, min } = failing.result;
-      const found = (['fg', 'bg'] as const).map((side) => lightnessFix(side, failing, measured, todae));
-      const fixes = found
-        .filter((fix): fix is LightnessFix => fix !== null && fix !== 'derived')
-        .sort((a, b) => Math.abs(a.to - a.from) - Math.abs(b.to - b.from));
-      const none = (side: 'fg' | 'bg', i: number) =>
-        found[i] === 'derived'
-          ? `"${failing.result[side]}" reads its lightness from another channel, so no fix is shown for it`
-          : `no lightness of "${failing.result[side]}" alone reaches Lc ${min} without failing another pair; change its chroma or hue too`;
-      const advice =
-        fixes.length > 0
-          ? `\n    fix: ${fixes.map((each) => describeFix(each, failing.result)).join(`\n    or:  `)}`
-          : `\n    ${none('fg', 0)}\n    ${none('bg', 1)}`;
-      // The same pair often fails the same way in each appearance; say it once.
-      const fix = advice === previous ? '\n    same as above' : advice;
-      previous = advice;
-      return `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} in ${where} is Lc ${lc.toFixed(1)}, below ${min}${fix}`;
-    });
-  if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
 }
 
 export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
