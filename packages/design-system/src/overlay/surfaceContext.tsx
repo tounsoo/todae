@@ -1,12 +1,10 @@
-import { createContext, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ToolbarContext } from '../components/toolbarContext.js';
 
-/** Whether an overlay surface's owner has it open, and whether it is present: open or, for a modal, mounted through its exit motion. */
-export type Surface = { open: boolean; present: boolean };
+/** The calls an overlay surface's content adds with useSurfaceClosed. */
+export type SurfaceListeners = Set<() => void>;
 
-type Listeners = Set<() => void>;
-
-const SurfaceClosedContext = /* @__PURE__ */ createContext<Listeners | undefined>(undefined);
+const SurfaceClosedContext = /* @__PURE__ */ createContext<SurfaceListeners | undefined>(undefined);
 
 /**
  * Calls `onClosed` once each time the overlay surface around this part
@@ -29,30 +27,22 @@ export function useSurfaceClosed(onClosed: () => void): void {
   }, [listeners]);
 }
 
-function notify(listeners: Listeners) {
-  for (const listener of [...listeners]) listener();
+/**
+ * An overlay surface's side of useSurfaceClosed: the listeners to pass to
+ * SurfaceChildren, and the call that tells them the surface finished
+ * closing. The surface makes it as its exit ends, while its content is still
+ * mounted, never as it unmounts, which can cut an exit short.
+ */
+export function useSurfaceClosedSignal(): [listeners: SurfaceListeners, closed: () => void] {
+  const [listeners] = useState<SurfaceListeners>(() => new Set());
+  const closed = useCallback(() => {
+    for (const listener of [...listeners]) listener();
+  }, [listeners]);
+  return [listeners, closed];
 }
 
-/** Wraps an overlay surface's children: tells them when it finishes closing, and keeps a Toolbar around the surface from reaching in. */
-export function SurfaceChildren({ open, present, children }: Surface & { children: ReactNode }) {
-  const [listeners] = useState<Listeners>(() => new Set());
-  // A surface that keeps its content mounted finishes closing as it stops
-  // being present. One that unmounts it with the exit, as BottomSheet does,
-  // never renders it absent, so its content hears at the unmount instead.
-  // Layout cleanups run parent first, so the content is still listening.
-  const wasPresent = useRef(present);
-  const exiting = useRef(false);
-  useLayoutEffect(() => {
-    if (wasPresent.current && !present) notify(listeners);
-    wasPresent.current = present;
-    exiting.current = present && !open;
-  }, [listeners, open, present]);
-  useLayoutEffect(
-    () => () => {
-      if (exiting.current) notify(listeners);
-    },
-    [listeners],
-  );
+/** Wraps an overlay surface's children: lets them hear when it finishes closing, and keeps a Toolbar around the surface from reaching in. */
+export function SurfaceChildren({ listeners, children }: { listeners: SurfaceListeners; children: ReactNode }) {
   return (
     <SurfaceClosedContext.Provider value={listeners}>
       <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>

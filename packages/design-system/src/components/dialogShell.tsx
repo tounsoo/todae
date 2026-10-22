@@ -21,7 +21,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
-import { SurfaceChildren } from '../overlay/surfaceContext.js';
+import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
@@ -173,7 +173,8 @@ export function DialogShellRoot({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
-  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
+  const [closedListeners, closed] = useSurfaceClosedSignal();
+  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty, closed);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
@@ -256,7 +257,7 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <SurfaceChildren open={open} present={present}>{children}</SurfaceChildren>
+          <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
         </div>
       </dialog>
     </ShellContext.Provider>

@@ -76,6 +76,29 @@ describe('Drilldown focus and surface reset in a browser', () => {
     });
   }
 
+  for (const [kind, gone] of [
+    ['BottomSheet', 'removed'],
+    ['Dialog', 'hidden'],
+  ] as const) {
+    it(`reports no reset when the whole ${kind} is ${gone} during its exit`, async () => {
+      const onValueChange = vi.fn();
+      const ui = (open: boolean, mode: 'visible' | 'hidden' = 'visible') => (
+        <Activity mode={mode}>
+          <Surfaced kind={kind} open={open} onValueChange={onValueChange} />
+        </Activity>
+      );
+      const { rerender } = render(ui(true));
+      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+      await settled();
+      rerender(ui(false));
+      rerender(gone === 'removed' ? null : ui(false, 'hidden'));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(onValueChange.mock.calls).toEqual([[['filters', 'brand'], 'push']]);
+      cleanupAll();
+    });
+  }
+
   it('returns focus to the trigger when Escape goes back from focus on the dialog itself', async () => {
     await openDialog(<SettingsDialog />);
     const account = screen.getByRole('button', { name: 'Account' });

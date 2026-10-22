@@ -23,7 +23,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus.js';
-import { SurfaceChildren } from '../overlay/surfaceContext.js';
+import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -268,7 +268,8 @@ function BottomSheetRoot({
     return () => setGrabbers((n) => n - 1);
   }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
-  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom');
+  const [closedListeners, closed] = useSurfaceClosedSignal();
+  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom', closed);
   const entered = useEntered(present, exiting);
   const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
     sheetRef.current = node;
@@ -365,7 +366,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        <SurfaceChildren open={open} present={present}>{children}</SurfaceChildren>
+        <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
       </dialog>
     </SheetContext.Provider>
   );

@@ -63,16 +63,20 @@ export function useEntered(present: boolean, exiting: boolean): boolean {
   return entered;
 }
 
+/** `onExited` runs once as an exit ends, before `present` turns false; not when the exit is cut short, as by an unmount. */
 export function useOverlayPresence(
   open: boolean,
   exitMs: number,
   node: HTMLElement | null,
   propertyName: string,
-): { present: boolean; exiting: boolean; finishExit: () => void } {
+  onExited?: () => void,
+): { present: boolean; exiting: boolean } {
   const [present, setPresent] = useState(open);
   const [exiting, setExiting] = useState(false);
   const exitingRef = useRef(exiting);
   exitingRef.current = exiting;
+  const onExitedRef = useRef(onExited);
+  onExitedRef.current = onExited;
 
   useLayoutEffect(() => {
     if (open) {
@@ -84,14 +88,18 @@ export function useOverlayPresence(
     if (reducedMotion()) {
       setPresent(false);
       setExiting(false);
+      onExitedRef.current?.();
       return;
     }
     setExiting(true);
   }, [open, present]);
 
   const finishExit = useCallback(() => {
+    if (!exitingRef.current) return;
+    exitingRef.current = false;
     setPresent(false);
     setExiting(false);
+    onExitedRef.current?.();
   }, []);
 
   useEffect(() => {
@@ -121,5 +129,5 @@ export function useOverlayPresence(
     };
   }, [exiting, finishExit, node, propertyName]);
 
-  return { present, exiting, finishExit };
+  return { present, exiting };
 }

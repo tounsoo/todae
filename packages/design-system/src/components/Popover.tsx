@@ -1,5 +1,5 @@
-import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
-import { SurfaceChildren } from '../overlay/surfaceContext.js';
+import { useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
+import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
 import { composeHandlers, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
@@ -65,6 +65,13 @@ function PopoverRoot({
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
+  // A popover has no exit motion, so it finishes closing as it closes.
+  const [closedListeners, closed] = useSurfaceClosedSignal();
+  const wasOpen = useRef(open);
+  useLayoutEffect(() => {
+    if (wasOpen.current && !open) closed();
+    wasOpen.current = open;
+  }, [closed, open]);
   return (
     <div
       {...props}
@@ -81,7 +88,7 @@ function PopoverRoot({
       aria-label={role ? ariaLabel : undefined}
       aria-labelledby={role ? ariaLabelledby : undefined}
     >
-      <SurfaceChildren open={open} present={open}>{children}</SurfaceChildren>
+      <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
     </div>
   );
 }
