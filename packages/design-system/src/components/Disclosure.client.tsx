@@ -20,8 +20,8 @@ function Summary({ children, ref, ...props }: DisclosureSummaryProps) {
 
   // A disclosure closed by code, such as a prop change, hides the content that
   // has focus, and the browser drops focus to the page. The observer's
-  // microtask runs before that in Chromium, so focus moves to the summary
-  // instead, without scrolling a container that follows its end.
+  // microtask runs before that in Chromium, Firefox and WebKit, so focus moves
+  // to the summary instead, without scrolling a container that follows its end.
   useEffect(() => {
     const summary = own.current;
     const details = summary?.parentElement;
