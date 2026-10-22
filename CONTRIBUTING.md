@@ -139,7 +139,7 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 
 - Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
-- A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`. Without them, the workflow opens the pull request with `GITHUB_TOKEN`, and the docs job fails.
+- A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment.
 
 ## Deploy the docs
