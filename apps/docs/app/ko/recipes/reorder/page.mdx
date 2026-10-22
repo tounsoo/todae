@@ -1,0 +1,149 @@
+import { ReorderExample } from '../../../../components/demos/ReorderDemo';
+
+# Reorder
+
+패키지 네임스페이스가 아니라 레시피입니다. 순서 있는 목록의 각 행에는 [`useReorder`](/utilities/use-reorder)로 끌 수 있는 손잡이와, 키보드, 화면 낭독기, 끌 수 없는 사람을 위한 Move to top, Move up, Move down, Move to bottom이 든 [Menu](/menu)가 있습니다. 어느 쪽으로 옮기든 새 위치는 [`useAnnouncer`](/utilities/use-announcer)로 알립니다. 목록에 무엇이 들고 순서를 어디에 저장할지는 제품이 정합니다. `Reorder.*` export는 없습니다.
+
+행을 손잡이로 끌거나, 행의 메뉴를 열어 옮겨 보세요.
+
+<Example>
+  <ReorderExample />
+</Example>
+
+## 이동 메뉴
+
+순서가 핵심이므로 행을 `ol`에 넣고, 각 행에 그 행의 이름을 붙인 `Menu.Trigger`를 둡니다. 첫 행의 Move up처럼 그 행이 할 수 없는 이동에는 `disabled`를 줍니다. 메뉴 항목은 이를 `aria-disabled`로 그리므로, 항목이 화살표 키 순서에 남고 사용할 수 없다고 읽혀 모든 행의 메뉴가 같은 네 항목을 유지합니다. 각 행의 key는 인덱스가 아니라 항목의 id로 주세요. 그래야 행의 메뉴가 행과 함께 옮겨지고, 포커스가 옮겨진 행으로 돌아옵니다. 예제는 네 이동을 목적지와 함께 나열하고, 목적지가 행의 원래 자리이거나 목록 밖이면 그 이동을 사용할 수 없게 합니다.
+
+```tsx
+import { Button, Menu, Stack, Text, useAnnouncer, useReorder, type ReorderDrop } from '@tounsoo/todae';
+import { EllipsisVertical, GripVertical } from 'lucide-react';
+import { useId } from 'react';
+
+function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
+// The grip spans the row's height, with padding beside the icon, so it is easy to hit: at least
+// 24 by 24 CSS pixels (WCAG 2.2 SC 2.5.8).
+const gripStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  alignSelf: 'stretch',
+  paddingInline: 'var(--todae-space-control-x)',
+  cursor: 'grab',
+  touchAction: 'none',
+  color: 'var(--todae-color-fg-muted)',
+} as const;
+
+// A line at the edge the dragged row would land on.
+function dropLine(drop: ReorderDrop | null, index: number) {
+  if (drop?.index !== index) return undefined;
+  const width = 'var(--todae-focus-ring-width)';
+  const offset = drop.position === 'before' ? width : `calc(-1 * ${width})`;
+  return `inset 0 ${offset} 0 var(--todae-color-accent-default)`;
+}
+
+export function PinnedChannels({
+  channels,
+  onReorder,
+}: {
+  channels: readonly { id: string; name: string }[];
+  onReorder: (channels: { id: string; name: string }[]) => void;
+}) {
+  const announce = useAnnouncer();
+  const labelId = useId();
+  const last = channels.length - 1;
+
+  const move = (from: number, to: number) => {
+    onReorder(moveItem(channels, from, to));
+    announce(`${channels[from]!.name} moved to position ${to + 1} of ${channels.length}`);
+  };
+  const reorder = useReorder({ onMove: move });
+
+  return (
+    <>
+      <Text.Root id={labelId} size="label">
+        Pinned channels
+      </Text.Root>
+      <Stack.Root as="ol" gap="none" aria-labelledby={labelId}>
+        {channels.map((channel, index) => {
+          const moves = [
+            ['Move to top', 0],
+            ['Move up', index - 1],
+            ['Move down', index + 1],
+            ['Move to bottom', last],
+          ] as const;
+          return (
+            <li
+              key={channel.id}
+              {...reorder.getItemProps(index)}
+              style={{
+                boxShadow: dropLine(reorder.drop, index),
+                background: reorder.dragging === index ? 'var(--todae-color-bg-subtle)' : undefined,
+              }}
+            >
+              <Stack.Root direction="row" align="center" gap="condensed">
+                <span
+                  {...reorder.getHandleProps(index)}
+                  aria-hidden
+                  style={gripStyle}
+                >
+                  <GripVertical size="1em" />
+                </span>
+                <Text.Root style={{ flex: 1 }}>{channel.name}</Text.Root>
+                <Menu.Root>
+                  <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
+                    <Button.Icon>
+                      <EllipsisVertical />
+                    </Button.Icon>
+                  </Menu.Trigger>
+                  <Menu.Content>
+                    {moves.map(([label, to]) => (
+                      <Menu.Item
+                        key={label}
+                        disabled={to === index || to < 0 || to > last}
+                        onSelect={() => move(index, to)}
+                      >
+                        {label}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Content>
+                </Menu.Root>
+              </Stack.Root>
+            </li>
+          );
+        })}
+      </Stack.Root>
+    </>
+  );
+}
+```
+
+메뉴가 닫히면 포커스는 행과 함께 옮겨진 트리거로 돌아가고, 트리거가 화면 밖에 있으면 브라우저가 화면 안으로 스크롤합니다. 알림은 행이 어디로 갔는지 말해 줍니다. 알림이 없으면 목록을 다시 읽어야 알 수 있습니다.
+
+## 끌기
+
+`useReorder`는 행에 브라우저의 drag and drop을 붙입니다. 각 행에 `getItemProps(index)`를, 그 손잡이에 `getHandleProps(index)`를 펼쳐 넣으세요. 손잡이를 누르면 그 행만 끌 수 있게 되므로, 행의 텍스트는 그대로 선택할 수 있고 행은 손잡이로만 끌 수 있습니다. 행을 끄는 동안 `drop`은 행이 어느 행 옆, 어느 쪽에 놓일지 알려 주고, 예제는 그 자리에 토큰으로 선을 그립니다. 놓으면 메뉴와 같은 `move`를 부르므로 끌기도 알려집니다. 목록 밖에 놓으면 순서는 그대로입니다.
+
+손잡이는 `aria-hidden`이고 탭 정지가 아닙니다. 끌기에는 키보드 방법이 없으므로, 키보드로 행을 옮기는 방법은 메뉴이고(WCAG 2.2 SC 2.1.1), 끌지 않고 단일 포인터로 옮기는 방법도 메뉴입니다(SC 2.5.7). 손잡이는 행의 높이만큼 늘어나고 아이콘 옆에 여백이 있어 누르기 쉬우며, 적어도 24×24 CSS 픽셀입니다(SC 2.5.8). 터치 화면에서 손잡이를 눌러도 페이지가 스크롤되지 않도록 손잡이에 `touch-action: none`을 주세요. 터치 화면에서의 끌기는 확인하지 않았으며, 그곳에서는 메뉴가 동작합니다.
+
+## 순서 저장
+
+예제는 이동을 고르는 즉시 목록을 바꿉니다. 제품이 새 순서를 저장하다 실패하면, 목록을 되돌리고 [Toast](/toast)나 [Alert](/alert)로 알려 주세요. 알림은 이미 행이 옮겨졌다고 말했기 때문입니다. React는 한 번의 렌더에서 옮기는 포커스된 요소의 포커스를 유지하므로, 행을 되돌려도 트리거의 포커스가 남습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Menu`는 트리거에 `aria-haspopup`과 `aria-expanded`를 주고, 포커스를 메뉴 안으로 옮겨 화살표 키로 이동하게 하며, `disabled` 항목을 `aria-disabled`로 읽히게 하고, 항목을 고르면 포커스를 트리거로 돌려줍니다. `useReorder`는 행을 손잡이로만 끌게 하고, 놓일 자리를 계산하며, 파일처럼 목록 밖에서 온 끌기는 무시합니다. `useAnnouncer`는 메시지를 live region에 씁니다.
+
+**직접 제공할 것:** 이름이 있는 `ol`. 어느 행을 옮기는지 말하는 각 행 트리거의 이름. 그 행이 할 수 없는 이동에 주는 `disabled`. 항목의 id로 만든 key. 화면 낭독기에서 숨긴 손잡이와, 놓일 자리의 선과 끄는 행의 모양. 행의 이름과 새 위치를 담아 제품의 언어로 쓴 알림.
+
+**주의할 점:** 인덱스로 key를 주는 것. 옮겨진 행이 있던 자리에 새로 온 행의 트리거가 포커스를 받습니다. 그 행이 할 수 없는 이동을 사용할 수 없다고 표시하지 않고 빼는 것. 메뉴가 행마다 달라집니다. 알리지 않는 이동, 또는 위치만 말하고 행은 말하지 않는 알림. 끌기만으로 행을 옮기게 하는 것. 버튼이거나 탭 정지인 손잡이. 키보드로는 아무것도 하지 않는 컨트롤이 늘어납니다. 이동을 알린 뒤 저장이 실패하는 것. 행이 되돌아간 것도 알리세요.
+
+## 언제 쓰나요
+
+**쓸 때:** 고정한 항목, 재생 목록, 표의 열, 체크리스트의 단계처럼 사람이 순서를 정하는 짧은 목록.
+
+**쓰지 않을 때:** 이름이나 날짜 같은 값으로 정렬 → [정렬할 수 있는 열](/table). 항목을 다른 목록이나 그룹으로 옮기기 → 목적지를 이름으로 단 메뉴 항목, 또는 목적지를 고르는 [Dialog](/dialog).
