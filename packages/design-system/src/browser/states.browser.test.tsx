@@ -133,6 +133,22 @@ describe('state in forced colors', () => {
     expect(paint(screen.getByRole('button', { name: 'Italic' }))).not.toBe(system('Highlight'));
   });
 
+  it('greys a pressed aria-disabled toggle, also while hovered or focused', async () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary" defaultPressed aria-disabled>
+          Bold
+        </Button.Root>
+      </Themed>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold' });
+    expect(paint(bold)).toBe(system('GrayText'));
+    await userEvent.hover(bold);
+    expect(paint(bold)).toBe(system('GrayText'));
+    bold.focus();
+    expect(paint(bold)).toBe(system('GrayText'));
+  });
+
   it('forces the focus ring of a pressed toggle and a checked switch', () => {
     render(
       <Themed>

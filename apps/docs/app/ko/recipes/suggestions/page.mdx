@@ -71,8 +71,9 @@ export function VersionSwitcher({
   const announce = useAnnouncer();
   const position = useId();
 
+  const held = (to: number) => locked || to < 0 || to >= count;
   const show = (to: number) => {
-    if (locked || to < 0 || to >= count) return;
+    if (held(to)) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -83,7 +84,7 @@ export function VersionSwitcher({
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        aria-disabled={locked || index === 0 || undefined}
+        aria-disabled={held(index - 1) || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -97,7 +98,7 @@ export function VersionSwitcher({
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        aria-disabled={locked || index === count - 1 || undefined}
+        aria-disabled={held(index + 1) || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -111,6 +112,19 @@ export function VersionSwitcher({
 ```
 
 버전이 두 개 이상일 때만 전환기를 렌더링하세요. 답의 `Message.Root`는 버전이 아니라 그 답이 응답하는 메시지로 key를 주어, 버전을 바꿔도 같은 메시지와 포커스를 가진 버튼이 남게 하세요.
+
+답 하나가 진행되는 동안에는 다른 모든 답의 Regenerate를 전환기처럼 `aria-disabled`로 막아 두세요. [Message actions](/recipes/message-actions)에서는 Regenerate가 진행 중인 답을 취소하지만, 답이 갈라지면 앞의 답을 다시 생성할 때 더 새로운 질문이 더 이상 보이지 않는 버전에 답 없이 남게 됩니다. 진행 중인 답의 Regenerate는 그대로 동작하며 그 답을 바꿉니다.
+
+```tsx
+// pending is the one reply in flight, or null.
+const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
+
+<Button.Root variant="ghost" aria-label="Regenerate" aria-disabled={held(reply) || undefined} onClick={() => !held(reply) && regenerate(reply)}>
+  <Button.Icon>
+    <RotateCcw />
+  </Button.Icon>
+</Button.Root>
+```
 
 ## 접근성을 지키는 조합
 

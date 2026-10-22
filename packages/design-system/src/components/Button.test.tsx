@@ -91,6 +91,17 @@ describe('Button.Root toggle', () => {
     expect(button.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('does not flip a controlled toggle with aria-disabled={true}', () => {
+    const onPressedChange = vi.fn();
+    render(
+      <Button.Root pressed onPressedChange={onPressedChange} aria-disabled>
+        Bold
+      </Button.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Bold' }));
+    expect(onPressedChange).not.toHaveBeenCalled();
+  });
+
   it('toggles when only a child prevented the click', () => {
     const onPressedChange = vi.fn();
     render(

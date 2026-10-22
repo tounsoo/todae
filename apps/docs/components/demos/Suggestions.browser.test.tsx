@@ -133,7 +133,22 @@ it('holds Regenerate on other replies while a reply runs', async () => {
   first.focus();
   await userEvent.keyboard('{Enter}');
   // The question just sent keeps its reply.
-  await expect.poll(() => replies().length).toBe(2);
+  expect(replies()).toHaveLength(2);
   expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(2);
   expect(count(replies()[0]!)).toBe('2 of 2');
+  await expect.poll(() => first.getAttribute('aria-disabled'), { timeout: 3000 }).toBeNull();
+});
+
+it('regenerates the reply that is running, and stopping that still puts its question back', async () => {
+  setup();
+  await userEvent.click(within(suggestions()!).getByRole('button', { name: 'What about a toggle button?' }));
+  await userEvent.keyboard('{Enter}');
+  const running = within(replies()[1]!).getByRole('button', { name: 'Regenerate' });
+  expect(running).not.toHaveAttribute('aria-disabled');
+  await userEvent.click(running);
+  // Still one reply in flight, so no version switcher.
+  expect(within(replies()[1]!).queryByRole('button', { name: 'Next reply' })).toBeNull();
+  await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(1);
+  expect(field().value).toBe('What about a toggle button?');
 });

@@ -43,7 +43,8 @@ type ButtonOwnProps = {
  * Props of a Button.Root that renders its own `<button>`; one drawn on
  * another element takes {@link ButtonRenderedProps}.
  * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
- * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`.
+ * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`
+ * or the button is `aria-disabled`.
  */
 export type ButtonRootProps = ButtonOwnProps & {
   pressed?: boolean;
@@ -145,7 +146,6 @@ const isAriaDisabled = (value: unknown) => value === true || value === 'true';
 
 // Overloads, not one union, so a handler passed with `render` still gets its event type.
 // The button one is last, since ComponentProps<typeof Button.Root> reads the last.
-
 function Root(props: ButtonRenderedProps): ReactElement;
 function Root(props: ButtonRootProps): ReactElement;
 function Root({

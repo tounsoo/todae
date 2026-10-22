@@ -17,9 +17,9 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 
 // Each turn links to the message it answers or follows. A message's replies
 // are the turns whose parent it is, so regenerating adds a sibling, and
-// `shown` maps each message to the id of the reply the conversation follows.
+// `shown` maps each message to the id of the reply the thread follows.
 type Turn = { id: number; from: 'user' | 'assistant'; text: string; parent: number | null };
-type Conversation = { turns: Record<number, Turn>; shown: Record<number, number> };
+type Thread = { turns: Record<number, Turn>; shown: Record<number, number> };
 
 // The one reply in flight, and the reply its question showed before it, if any.
 type Pending = { reply: number; before: number | undefined };
@@ -67,7 +67,7 @@ const UNKNOWN: Answer = {
 
 const answerTo = (question: string): Answer => ANSWERS[question] ?? UNKNOWN;
 
-function start(): Conversation {
+function start(): Thread {
   return {
     turns: {
       1: { id: 1, from: 'user', text: FIRST, parent: null },
@@ -79,28 +79,28 @@ function start(): Conversation {
 }
 
 // The replies to a message, oldest first. Ids only grow, so their order is the order of arrival.
-const repliesTo = ({ turns }: Conversation, id: number) =>
+const repliesTo = ({ turns }: Thread, id: number) =>
   Object.values(turns)
     .filter((turn) => turn.parent === id)
     .sort((a, b) => a.id - b.id);
 
-// The turns the conversation follows now, from the first message.
-function pathOf(conversation: Conversation): Turn[] {
+// The turns the thread follows now, from the first message.
+function pathOf(thread: Thread): Turn[] {
   const path: Turn[] = [];
-  let turn: Turn | undefined = conversation.turns[1];
+  let turn: Turn | undefined = thread.turns[1];
   while (turn) {
     path.push(turn);
-    const next = conversation.shown[turn.id];
-    turn = next === undefined ? undefined : conversation.turns[next];
+    const next = thread.shown[turn.id];
+    turn = next === undefined ? undefined : thread.turns[next];
   }
   return path;
 }
 
 // Takes a turn out, and points its parent back at `before`.
-function without(conversation: Conversation, id: number, before: number | undefined): Conversation {
-  const { [id]: _, ...turns } = conversation.turns;
-  const parent = conversation.turns[id]!.parent!;
-  const { [parent]: __, ...shown } = conversation.shown;
+function without(thread: Thread, id: number, before: number | undefined): Thread {
+  const { [id]: _, ...turns } = thread.turns;
+  const parent = thread.turns[id]!.parent!;
+  const { [parent]: __, ...shown } = thread.shown;
   return { turns, shown: before === undefined ? shown : { ...shown, [parent]: before } };
 }
 
@@ -118,8 +118,9 @@ function VersionSwitcher({
   const announce = useAnnouncer();
   const position = useId();
 
+  const held = (to: number) => locked || to < 0 || to >= count;
   const show = (to: number) => {
-    if (locked || to < 0 || to >= count) return;
+    if (held(to)) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -131,7 +132,7 @@ function VersionSwitcher({
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        aria-disabled={locked || index === 0 || undefined}
+        aria-disabled={held(index - 1) || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -145,7 +146,7 @@ function VersionSwitcher({
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        aria-disabled={locked || index === count - 1 || undefined}
+        aria-disabled={held(index + 1) || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -158,72 +159,74 @@ function VersionSwitcher({
 }
 
 export function SuggestionsExample() {
-  const [conversation, setConversation] = useState(start);
+  const [thread, setThread] = useState(start);
   const [pending, setPending] = useState<Pending | null>(null);
   const [value, setValue] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const field = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(4);
-  const { turns } = conversation;
-  const path = pathOf(conversation);
+  const { turns } = thread;
+  const path = pathOf(thread);
   const last = path.at(-1)!;
   const busy = pending !== null;
-  const suggestions = last.from === 'assistant' && !busy && value === '' ? answerTo(turns[last.parent!]!.text).suggestions : [];
+  const hasDraft = value.trim() !== '';
+  const suggestions = last.from === 'assistant' && !busy && !hasDraft ? answerTo(turns[last.parent!]!.text).suggestions : [];
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
   // Adds a reply to `question` that streams for a moment, then shows its
   // text. Stands in for the product's request.
-  const ask = (base: Conversation, question: Turn) => {
+  const ask = (base: Thread, question: Turn) => {
     const id = nextId.current++;
     const versions = answerTo(question.text).versions;
     const text = versions[repliesTo(base, question.id).length % versions.length]!;
-    setConversation({
+    setThread({
       turns: { ...base.turns, [id]: { id, from: 'assistant', text: '', parent: question.id } },
       shown: { ...base.shown, [question.id]: id },
     });
     setPending({ reply: id, before: base.shown[question.id] });
     timer.current = setTimeout(() => {
-      setConversation((now) => ({ ...now, turns: { ...now.turns, [id]: { ...now.turns[id]!, text } } }));
+      setThread((now) => ({ ...now, turns: { ...now.turns, [id]: { ...now.turns[id]!, text } } }));
       setPending(null);
     }, 1200);
   };
 
   // While a reply runs, only that reply can be asked for again, and asking
   // again cancels the one in flight.
+  const regenerateHeld = (answer: Turn) => pending !== null && pending.reply !== answer.id;
   const regenerate = (answer: Turn) => {
-    if (pending && pending.reply !== answer.id) return;
+    if (regenerateHeld(answer)) return;
     clearTimeout(timer.current);
-    const base = pending ? without(conversation, pending.reply, pending.before) : conversation;
+    const base = pending ? without(thread, pending.reply, pending.before) : thread;
     ask(base, turns[answer.parent!]!);
   };
 
   const show = (answer: Turn, reply: number) =>
-    setConversation((now) => ({ ...now, shown: { ...now.shown, [answer.parent!]: reply } }));
+    setThread((now) => ({ ...now, shown: { ...now.shown, [answer.parent!]: reply } }));
 
   const send = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const id = nextId.current++;
     const question: Turn = { id, from: 'user', text: value.trim(), parent: last.id };
     setValue('');
-    ask({ turns: { ...turns, [id]: question }, shown: { ...conversation.shown, [last.id]: id } }, question);
+    ask({ turns: { ...turns, [id]: question }, shown: { ...thread.shown, [last.id]: id } }, question);
   };
 
   const stop = () => {
     if (!pending) return;
     clearTimeout(timer.current);
     setPending(null);
-    const stopped = without(conversation, pending.reply, pending.before);
+    const stopped = without(thread, pending.reply, pending.before);
     const question = turns[turns[pending.reply]!.parent!]!;
     // A question stopped before any reply goes back to the field to be sent
     // again, unless the person has started another draft there.
-    if (repliesTo(stopped, question.id).length === 0 && value.trim() === '') {
-      setConversation(without(stopped, question.id, undefined));
+    if (repliesTo(stopped, question.id).length === 0 && !hasDraft) {
+      setThread(without(stopped, question.id, undefined));
       setValue(question.text);
       field.current?.focus();
       return;
     }
-    setConversation(stopped);
+    setThread(stopped);
   };
 
   // A suggestion fills the field, so the person can change it before sending.
@@ -234,12 +237,16 @@ export function SuggestionsExample() {
 
   return (
     <Stack.Root gap="normal" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
-      {path.map((turn) =>
-        turn.from === 'user' ? (
-          <Message.Root key={turn.id} from="user" aria-label="You">
-            <Message.Content>{turn.text}</Message.Content>
-          </Message.Root>
-        ) : (
+      {path.map((turn) => {
+        if (turn.from === 'user') {
+          return (
+            <Message.Root key={turn.id} from="user" aria-label="You">
+              <Message.Content>{turn.text}</Message.Content>
+            </Message.Root>
+          );
+        }
+        const versions = repliesTo(thread, turn.parent!);
+        return (
           // Keyed by the question, so switching or regenerating keeps the message and the focused button.
           <Message.Root key={`reply-${turn.parent}`} streaming={pending?.reply === turn.id} aria-label="Assistant">
             <Message.Content>
@@ -249,19 +256,19 @@ export function SuggestionsExample() {
             </Message.Content>
             <Message.Actions>
               <Toolbar.Root aria-label="Reply">
-                {repliesTo(conversation, turn.parent!).length > 1 && (
+                {versions.length > 1 && (
                   <VersionSwitcher
-                    index={repliesTo(conversation, turn.parent!).indexOf(turn)}
-                    count={repliesTo(conversation, turn.parent!).length}
+                    index={versions.indexOf(turn)}
+                    count={versions.length}
                     // While a reply streams it is the one shown, so its later turns stay in view.
                     locked={busy}
-                    onShow={(index) => show(turn, repliesTo(conversation, turn.parent!)[index]!.id)}
+                    onShow={(index) => show(turn, versions[index]!.id)}
                   />
                 )}
                 <Button.Root
                   variant="ghost"
                   aria-label="Regenerate"
-                  aria-disabled={(pending && pending.reply !== turn.id) || undefined}
+                  aria-disabled={regenerateHeld(turn) || undefined}
                   onClick={() => regenerate(turn)}
                 >
                   <Button.Icon>
@@ -272,8 +279,8 @@ export function SuggestionsExample() {
               {pending?.reply === turn.id && <Loader.Root variant="dots" aria-label="Writing" />}
             </Message.Actions>
           </Message.Root>
-        ),
-      )}
+        );
+      })}
       {suggestions.length > 0 && (
         <Stack.Root as="ul" direction="row" gap="condensed" wrap aria-label="Suggestions">
           {suggestions.map((text) => (

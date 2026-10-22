@@ -36,7 +36,7 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 ## 토글
 
-`pressed`나 `defaultPressed`를 주면 버튼이 토글이 됩니다. `aria-pressed`를 설정하고 클릭하면 상태가 바뀝니다. `onPressedChange`는 새 상태를 받습니다. 눌린 버튼은 active 색과 안쪽 테두리를 유지합니다. 토글 여러 개를 묶을 때는 [ToggleGroup](/toggle-group)을 쓰세요.
+`pressed`나 `defaultPressed`를 주면 버튼이 토글이 됩니다. `aria-pressed`를 설정하고, `aria-disabled`가 아니면 클릭할 때 상태가 바뀝니다. `onPressedChange`는 새 상태를 받습니다. 눌린 버튼은 active 색과 안쪽 테두리를 유지합니다. 토글 여러 개를 묶을 때는 [ToggleGroup](/toggle-group)을 쓰세요.
 
 ```tsx
 <Button.Root variant="secondary" pressed={muted} onPressedChange={setMuted}>

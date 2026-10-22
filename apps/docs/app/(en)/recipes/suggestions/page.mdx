@@ -71,8 +71,9 @@ export function VersionSwitcher({
   const announce = useAnnouncer();
   const position = useId();
 
+  const held = (to: number) => locked || to < 0 || to >= count;
   const show = (to: number) => {
-    if (locked || to < 0 || to >= count) return;
+    if (held(to)) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -83,7 +84,7 @@ export function VersionSwitcher({
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        aria-disabled={locked || index === 0 || undefined}
+        aria-disabled={held(index - 1) || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -97,7 +98,7 @@ export function VersionSwitcher({
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        aria-disabled={locked || index === count - 1 || undefined}
+        aria-disabled={held(index + 1) || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -111,6 +112,19 @@ export function VersionSwitcher({
 ```
 
 Render the switcher only when there are two versions or more. Key the reply's `Message.Root` by the message it answers, not by the version, so switching keeps the same message and the button that has focus.
+
+Hold Regenerate on every other reply while one runs, with `aria-disabled` as on the switcher. In [Message actions](/recipes/message-actions), Regenerate cancels the reply in flight; once replies branch, regenerating an earlier reply would also leave the newer question without a reply, in a version no longer shown. Regenerate on the reply that is running stays live and replaces it.
+
+```tsx
+// pending is the one reply in flight, or null.
+const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
+
+<Button.Root variant="ghost" aria-label="Regenerate" aria-disabled={held(reply) || undefined} onClick={() => !held(reply) && regenerate(reply)}>
+  <Button.Icon>
+    <RotateCcw />
+  </Button.Icon>
+</Button.Root>
+```
 
 ## Accessible composition
 

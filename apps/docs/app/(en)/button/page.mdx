@@ -36,7 +36,7 @@ Overflowing label.
 
 ## Toggle
 
-Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `aria-pressed` and flips on click. `onPressedChange` gets the new state. A pressed button keeps the active colors with an inset ring. For a set of toggles, use [ToggleGroup](/toggle-group).
+Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `aria-pressed` and flips on click, unless it is `aria-disabled`. `onPressedChange` gets the new state. A pressed button keeps the active colors with an inset ring. For a set of toggles, use [ToggleGroup](/toggle-group).
 
 ```tsx
 <Button.Root variant="secondary" pressed={muted} onPressedChange={setMuted}>
