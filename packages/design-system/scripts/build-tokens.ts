@@ -798,7 +798,7 @@ export function parseScope(selector: string): string {
   const scope = selector.trim();
   if (scope === '') fail('--scope must be a CSS selector, such as ".brand-acme"');
   if (/[{};@]|<\/|<!--|\/\*|\*\/|-->/.test(scope)) {
-    fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</", comments or pseudo-elements`);
+    fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</" or comments`);
   }
   const closers: string[] = [];
   const members: string[] = [];
@@ -906,12 +906,12 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
     // they don't reach its tokens; a provider on or inside it sets them again.
     ...block(scope ? ':scope' : ':root', [decls(root), aliasDecls(rootAliases, aliases), scope ? clearedInputs(rescoped) : '']),
     ...scopedBlocks,
-    // A scope's alias defaults keep :scope's lower specificity, so an alias
-    // attribute on the scope element itself still wins over them.
-    ...(scope
+    // Alias defaults keep a bare :scope's or :root's lower specificity, so an
+    // alias attribute on that element itself still wins over them.
+    ...(scope || layered
       ? [
           ...block(rescopedRoot.join(',\n'), [overridableDecls(rescoped)]),
-          ...block([':scope', ...attributes.map(at)].join(',\n'), [aliasDecls(defaults, aliases)]),
+          ...block([scope ? ':scope' : ':root', ...attributes.map(at)].join(',\n'), [aliasDecls(defaults, aliases)]),
         ]
       : block(rescopedRoot.join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)])),
     ...aliasBlocks,

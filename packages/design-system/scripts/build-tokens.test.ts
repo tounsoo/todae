@@ -1307,7 +1307,7 @@ describe('company token build', () => {
       }
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
-    const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
+    const rescoped = blockOf(css, ':root,\n[data-appearance],\n[data-density]');
     expect(rescoped).toContain('--todae-button-lift: var(--todae-button-primary-lift);');
     expect(rescoped).not.toContain('--todae-button-bg-default:');
     expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
@@ -1368,7 +1368,9 @@ describe('company token build', () => {
       r.resolutionOrder.push({ $ref: '#/modifiers/badgeTone' });
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
-    expect(blockOf(css, '[data-appearance],\n[data-density]')).toContain('--todae-badge-bg: var(--todae-badge-solid-bg);');
+    // On a bare :root, so data-badge-tone on the root element still wins over the default.
+    expect(blockOf(css, ':root,\n[data-appearance],\n[data-density]')).toContain('--todae-badge-bg: var(--todae-badge-solid-bg);');
+    expect(blockOf(css, ':root:not([data-appearance]):not([data-density]),\n[data-appearance],\n[data-density]')).not.toContain('--todae-badge-bg:');
     expect(blockOf(css, '[data-badge-tone="soft"]')).toContain('--todae-badge-bg: var(--todae-badge-soft-bg);');
   });
 
