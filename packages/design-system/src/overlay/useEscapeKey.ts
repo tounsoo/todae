@@ -65,26 +65,36 @@ function modalsInFront(target: EventTarget | null): Element[] {
   return [...document.querySelectorAll('dialog[open]')].filter(isModal);
 }
 
+function inside(scope: Element, entry: Entry): boolean {
+  const el = entry.element();
+  return Boolean(el && scope.contains(el));
+}
+
+/**
+ * The layers that take a request with focus on `target`, inside one of
+ * `scope` or anywhere when it is null, leaving out those that pass the Escape
+ * key `event` on. A disabled layer keeps its place in the stack but is left
+ * out, so the request falls through to the next one.
+ */
+function candidates(scope: readonly Element[] | null, target: Element | null, event?: KeyboardEvent): Entry[] {
+  return stack.filter(
+    (entry) =>
+      (scope === null || scope.some((el) => inside(el, entry))) &&
+      !(event && entry.passesKey(event)) &&
+      entry.takes(target),
+  );
+}
+
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
   const modals = modalsInFront(event.target);
-  const inFront = (entry: Entry) => {
-    const el = entry.element();
-    return modals.length === 0 || !el || modals.some((modal) => modal.contains(el));
-  };
   const target = event.target instanceof Element ? event.target : null;
-  // A disabled layer keeps its place but lets Escape fall through to the next enabled one.
-  const top = select(stack.filter((entry) => inFront(entry) && entry.takes(target) && !entry.passesKey(event)));
+  const top = select(candidates(modals.length > 0 ? modals : null, target, event));
   if (!top) return;
   event.preventDefault();
   top.handle();
-}
-
-function inside(scope: Element, entry: Entry): boolean {
-  const el = entry.element();
-  return Boolean(el && scope.contains(el));
 }
 
 /**
@@ -93,8 +103,7 @@ function inside(scope: Element, entry: Entry): boolean {
  * reach, and returns whether one took it.
  */
 export function takeCloseRequest(dialog: Element): boolean {
-  const target = dialog.ownerDocument.activeElement;
-  const top = select(stack.filter((entry) => inside(dialog, entry) && entry.takes(target)));
+  const top = select(candidates([dialog], dialog.ownerDocument.activeElement));
   top?.handle();
   return top !== undefined;
 }
@@ -143,16 +152,16 @@ function push(entry: Entry): () => void {
  * element with focus, the key's target or, for a close request, the
  * document's active element, so both reach the same layer. `passesKey` lets a
  * layer pass on what only a key carries, such as a key a field inside already
- * handled or one that ends an IME composition. Pass `elementRef` so a layer
- * left behind a modal `<dialog>` opened later skips the key, and the dialog
- * gets it. A layer with `popup: false` yields to every open popup whose
- * element doesn't contain its own.
+ * handled or one that ends an IME composition. `elementRef` places the
+ * layer: a layer left behind a modal `<dialog>` opened later skips the key,
+ * and the dialog gets it. A layer with `popup: false` yields to every open
+ * popup whose element doesn't contain its own.
  */
 export function useEscapeKey(
   active: boolean,
   enabled: boolean | ((target: Element | null) => boolean),
   handler: () => void,
-  elementRef?: RefObject<Element | null>,
+  elementRef: RefObject<Element | null>,
   { popup = true, passesKey }: { popup?: boolean; passesKey?: (event: KeyboardEvent) => boolean } = {},
 ): void {
   const latest = useRef({ handler, enabled, passesKey });
@@ -167,7 +176,7 @@ export function useEscapeKey(
         return typeof on === 'function' ? on(target) : on;
       },
       passesKey: (event) => latest.current.passesKey?.(event) === true,
-      element: () => elementRef?.current ?? null,
+      element: () => elementRef.current,
       popup,
     });
   }, [active, elementRef, popup]);

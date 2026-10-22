@@ -9,14 +9,17 @@ afterEach(cleanup);
 function Layer({
   active = true,
   enabled = true,
+  rendered = true,
   onEscape,
 }: {
   active?: boolean;
   enabled?: boolean;
+  rendered?: boolean;
   onEscape: () => void;
 }) {
-  useEscapeKey(active, enabled, onEscape);
-  return null;
+  const ref = useRef<HTMLDivElement>(null);
+  useEscapeKey(active, enabled, onEscape, ref);
+  return rendered ? <div ref={ref} /> : null;
 }
 
 describe('useEscapeKey', () => {
@@ -215,7 +218,7 @@ describe('useEscapeKey', () => {
   it('lets a layer turn down Escape by where focus is, or by the key alone, passing it to the next one', () => {
     function Picky({ onEscape }: { onEscape: () => void }) {
       const ref = useRef<HTMLButtonElement>(null);
-      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, undefined, {
+      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, ref, {
         passesKey: (event) => event.shiftKey,
       });
       return (
@@ -307,7 +310,7 @@ describe('useEscapeKey', () => {
     const stack = vi.fn();
     render(
       <>
-        <Layer onEscape={popup} />
+        <Layer rendered={false} onEscape={popup} />
         <Element onEscape={stack} />
       </>,
     );
