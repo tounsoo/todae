@@ -1707,7 +1707,7 @@ describe('company token build', () => {
   });
 
   it('accepts selector lists with escapes, functions and attribute values', () => {
-    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', '[data-x=":before"]', '.a:after-x', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
+    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', '[data-x=":before"]', '[data-x="a::b"]', '.a:after-x', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
   });
 
   it('rejects a scope that is no selector list', async () => {

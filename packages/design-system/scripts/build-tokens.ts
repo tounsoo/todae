@@ -797,7 +797,7 @@ export type EmitCssOptions = {
 export function parseScope(selector: string): string {
   const scope = selector.trim();
   if (scope === '') fail('--scope must be a CSS selector, such as ".brand-acme"');
-  if (/[{};@]|<\/|<!--|\/\*|\*\/|::|-->/.test(scope)) {
+  if (/[{};@]|<\/|<!--|\/\*|\*\/|-->/.test(scope)) {
     fail(`--scope "${scope}" must be a selector list without braces, semicolons, at-rules, "</", comments or pseudo-elements`);
   }
   const closers: string[] = [];
@@ -833,7 +833,7 @@ export function parseScope(selector: string): string {
     const bare = part.replace(/\\./g, 'x').replace(/"[^"]*"|'[^']*'/g, '""');
     if (/^[>+~]|[>+~]$/.test(bare)) fail(`--scope "${scope}" must not start or end a selector with a combinator`);
     if (bare.includes('<')) fail(`--scope "${scope}" has a "<" outside a quoted value`);
-    if (/:(before|after|first-line|first-letter)(?![\w-])/i.test(bare)) fail(`--scope "${scope}" must not hold a pseudo-element`);
+    if (/::|:(before|after|first-line|first-letter)(?![\w-])/i.test(bare)) fail(`--scope "${scope}" must not hold a pseudo-element`);
   }
   return scope;
 }
@@ -906,7 +906,14 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
     // they don't reach its tokens; a provider on or inside it sets them again.
     ...block(scope ? ':scope' : ':root', [decls(root), aliasDecls(rootAliases, aliases), scope ? clearedInputs(rescoped) : '']),
     ...scopedBlocks,
-    ...block(rescopedRoot.join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
+    // A scope's alias defaults keep :scope's lower specificity, so an alias
+    // attribute on the scope element itself still wins over them.
+    ...(scope
+      ? [
+          ...block(rescopedRoot.join(',\n'), [overridableDecls(rescoped)]),
+          ...block([':scope', ...attributes.map(at)].join(',\n'), [aliasDecls(defaults, aliases)]),
+        ]
+      : block(rescopedRoot.join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)])),
     ...aliasBlocks,
   ];
   const body = scope ? [`@scope (${scope}) {\n${indent(blocks).join('\n\n')}\n}`, ...fallbacks] : blocks;

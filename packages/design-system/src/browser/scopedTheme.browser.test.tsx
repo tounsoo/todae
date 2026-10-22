@@ -164,6 +164,18 @@ describe('todae-tokens build --scope', () => {
     }
   });
 
+  it('takes an alias attribute set on the scope element itself', () => {
+    render(
+      <>
+        <div className="acme" data-testid="primary" />
+        <div className="acme" data-button-variant="outline" data-testid="outline" />
+      </>,
+    );
+    expect(tokenColor('primary', 'button-bg-default')).toBe(computed(ACME_LIGHT));
+    expect(tokenColor('outline', 'button-bg-default')).toBe(tokenColor('outline', 'button-outline-bg-default'));
+    expect(tokenColor('outline', 'button-bg-default')).not.toBe(computed(ACME_LIGHT));
+  });
+
   it('follows an appearance set on the root element', () => {
     document.documentElement.setAttribute('data-appearance', 'dark');
     render(<div className="acme" data-testid="acme" />);
