@@ -14,7 +14,7 @@ import {
   useAnnouncer,
   type FormErrors,
 } from '@tounsoo/todae';
-import { Eye } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type SubmitEvent } from 'react';
 
 const CODE_LENGTH = 6;
@@ -53,12 +53,13 @@ type PasswordFieldProps = {
   shown: boolean;
   onShownChange: (shown: boolean) => void;
   minLength?: number;
+  disabled?: boolean;
   'aria-describedby'?: string;
 };
 
-function PasswordField({ id, name, shown, onShownChange, 'aria-describedby': describedBy, ...input }: PasswordFieldProps) {
+function PasswordField({ id, name, shown, onShownChange, disabled, 'aria-describedby': describedBy, ...input }: PasswordFieldProps) {
   return (
-    <Field.Root id={id} name={name} aria-describedby={describedBy}>
+    <Field.Root id={id} name={name} disabled={disabled} aria-describedby={describedBy}>
       <Field.TextInput
         {...input}
         type={shown ? 'text' : 'password'}
@@ -68,11 +69,10 @@ function PasswordField({ id, name, shown, onShownChange, 'aria-describedby': des
         autoCapitalize="none"
         autoCorrect="off"
       />
-      {/* One label in both states: aria-pressed says whether the password shows. */}
-      <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={onShownChange}>
-        <Button.Icon>
-          <Eye />
-        </Button.Icon>
+      {/* One label in both states: aria-pressed says whether the password shows. Field.Root's
+          disabled doesn't reach a button, so it gets its own. */}
+      <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={onShownChange} disabled={disabled}>
+        <Button.Icon>{shown ? <EyeOff /> : <Eye />}</Button.Icon>
       </Button.Root>
     </Field.Root>
   );
@@ -99,6 +99,7 @@ export function SignInExample() {
   // Why the last request failed, shown in an Alert beside the button.
   const [failed, setFailed] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [resending, setResending] = useState(false);
   const codeForm = useRef<HTMLFormElement>(null);
   const doneHeading = useFocusOnShow<HTMLHeadingElement>(step === 'done');
   const announce = useAnnouncer();
@@ -142,7 +143,19 @@ export function SignInExample() {
   }, [code, step]);
 
   const resend = async () => {
-    await wait(300);
+    if (resending) return;
+    setResending(true);
+    setFailed(null);
+    try {
+      await wait(300);
+    } catch {
+      setFailed("We couldn't send a new code. Try again.");
+      return;
+    } finally {
+      setResending(false);
+    }
+    // The error was about the old code. The code stays, so a submitted form doesn't call it missing.
+    setErrors({});
     setResent(true);
     // The hint changes too, but a description that changes isn't read out.
     announce('We sent a new code.');
@@ -195,7 +208,7 @@ export function SignInExample() {
             <Button.Root type="submit" aria-disabled={sending || undefined}>
               {sending ? 'Verifying…' : 'Verify'}
             </Button.Root>
-            <Button.Root variant="ghost" onClick={resend}>
+            <Button.Root variant="ghost" aria-disabled={resending || undefined} onClick={resend}>
               Send a new code
             </Button.Root>
           </Stack.Root>
@@ -322,7 +335,7 @@ export function SignUpExample() {
             shown={shown}
             onShownChange={setShown}
           />
-          <Description.Root id={ids.rules}>Use at least 12 characters.</Description.Root>
+          <Description.Root id={ids.rules}>12 characters or more. A few words you'll remember work well.</Description.Root>
           <ErrorMessage.Root />
         </Field.Group>
         {failed ? <Alert.Root tone="critical">{failed}</Alert.Root> : null}

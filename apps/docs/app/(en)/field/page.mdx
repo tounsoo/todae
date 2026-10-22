@@ -65,7 +65,7 @@ Label works with Icon, Affix, and ChipInput.
   <FieldLabelAdornments />
 </Example>
 
-`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop. For a button in the field's line, such as a clear button or a password's show button, put an icon-only `Button.Root` before or after the input: it is one field line tall, so the field keeps its height. It is a button of its own, not the field's control, so a press on it doesn't move focus to the input, and `Field.Root`'s `disabled` doesn't reach it; pass `disabled` to it too. [Sign-in and sign-up](/recipes/sign-in) shows a show-password toggle.
+`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop. For a button in the field's line, such as a clear button or a password's show button, put an icon-only `Button.Root` before or after the input: in a one-line field it is one field line tall, so the field keeps its height. A press on it keeps focus in the input when the input has it, so the caret stays; Tab still reaches it. It is a button of its own, not the field's control, and `Field.Root`'s `disabled` doesn't reach it; pass `disabled` to it too. [Sign-in and sign-up](/recipes/sign-in) shows a show-password toggle.
 
 <Example block>
   <FieldAdornments />

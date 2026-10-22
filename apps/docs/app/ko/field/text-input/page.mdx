@@ -2,7 +2,7 @@ import { FieldLabelStates } from '../../../../components/demos/FieldDemo';
 
 # Field.TextInput
 
-`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`를 받습니다. 숫자는 [Field.NumberInput](/field/number-input)입니다. 입력한 날짜, 날짜 범위, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
+`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열입니다. 이벤트가 필요하면 `onChange`를, 새 문자열만 필요하면 `onValueChange`를 넘기거나 둘 다 넘기세요. 둘 다 없으면 입력은 읽기 전용입니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`를 받습니다. 비밀번호의 보기 버튼이 `text`로 바꿀 때처럼 입력에 포커스가 있는 동안 `type`이 바뀌어도 캐럿은 있던 자리에 남습니다. 숫자는 [Field.NumberInput](/field/number-input)입니다. 입력한 날짜, 날짜 범위, 시각, 날짜와 시각은 [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker), [Field.DateTimePicker](/field/date-time-picker) 옆에서 `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`으로 읽으세요. `id`는 `Field.Root`에 두세요.
 
 ```tsx
 const id = useId();

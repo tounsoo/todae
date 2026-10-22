@@ -337,13 +337,46 @@ describe('A button in a Field.Root', () => {
       ] as const) {
         const shell = screen.getByTestId(id).getBoundingClientRect();
         const button = screen.getByRole('button', { name }).getBoundingClientRect();
+        const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.5;
         expect(shell.height).toBe(plain.height);
-        // field.action.size is 1.5rem.
-        expect([button.width, button.height]).toEqual([24, 24]);
+        // field.action.size is 1.5rem, and Button's own icon-only padding doesn't apply.
+        expect([button.width, button.height]).toEqual([size, size]);
+        expect(getComputedStyle(screen.getByRole('button', { name })).paddingInlineStart).toBe('0px');
         expect(Math.abs(button.top + button.height / 2 - (shell.top + shell.height / 2))).toBeLessThan(0.5);
       }
     },
   );
+});
+
+describe('A password shown and hidden in a browser', () => {
+  function Password() {
+    const [shown, setShown] = useState(false);
+    const [value, setValue] = useState('');
+    return (
+      <Field.Root aria-label="Password">
+        <Field.TextInput type={shown ? 'text' : 'password'} value={value} onValueChange={setValue} />
+        <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={setShown}>
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </Field.Root>
+    );
+  }
+
+  it('keeps focus and the caret in the input when the show button switches its type', async () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard('wrong{ArrowLeft}{ArrowLeft}{ArrowLeft}');
+    for (const typed of ['X', 'Y']) {
+      await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+      expect(document.activeElement).toBe(input);
+      await userEvent.keyboard(typed);
+    }
+    expect(input.type).toBe('password');
+    expect(input.value).toBe('wrXYong');
+  });
 });
 
 describe('Field.Group in a browser', () => {

@@ -2222,3 +2222,44 @@ describe('Field input labels', () => {
     });
   }
 });
+
+describe('A button in the field line', () => {
+  function Password({ disabled = false }: { disabled?: boolean }) {
+    return (
+      <>
+        <Field.Root aria-label="Password">
+          <Field.TextInput type="password" value="secret" onChange={() => {}} />
+          <Button.Root variant="ghost" aria-label="Show password" disabled={disabled}>
+            <Button.Icon>
+              <svg />
+            </Button.Icon>
+          </Button.Root>
+        </Field.Root>
+        <button type="button">Elsewhere</button>
+      </>
+    );
+  }
+  const press = (target: Element) => {
+    const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 });
+    target.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it('keeps focus in the input that has it', () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    const show = screen.getByRole('button', { name: 'Show password' });
+    input.focus();
+    expect(press(show.querySelector('svg') as Element)).toBe(true);
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('is an ordinary press when focus is outside the field, or the button is disabled', () => {
+    const { container, rerender } = render(<Password />);
+    screen.getByRole('button', { name: 'Elsewhere' }).focus();
+    expect(press(screen.getByRole('button', { name: 'Show password' }))).toBe(false);
+    rerender(<Password disabled />);
+    (container.querySelector('input') as HTMLInputElement).focus();
+    expect(press(screen.getByRole('button', { name: 'Show password' }))).toBe(false);
+  });
+});
