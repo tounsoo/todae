@@ -5387,6 +5387,20 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
+      "path": "field.action.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-action-size",
+      "cssValue": "1.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
       "path": "field.bg.default",
       "type": "color",
       "cssVar": "--todae-field-bg-default",

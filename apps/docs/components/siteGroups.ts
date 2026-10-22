@@ -143,6 +143,7 @@ export const SITE_GROUPS = [
       ['/recipes/message-actions', 'Message actions'],
       ['/recipes/reasoning', 'Reasoning'],
       ['/recipes/reorder', 'Reorder'],
+      ['/recipes/sign-in', 'Sign-in and sign-up'],
       ['/recipes/suggestions', 'Suggestions'],
       ['/recipes/tool-call', 'Tool call'],
       ['/recipes/wizard', 'Wizard'],
