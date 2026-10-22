@@ -3,21 +3,25 @@
     display: grid;
     min-inline-size: 0;
     min-block-size: 0;
-    /* The handle's hit area reaches past the root's edge when the container is narrow; it must not widen the page. */
-    overflow: clip;
   }
 
-  /* The primary track is the size, held inside the container by the handle's own track. */
+  /* The primary track is the size, held inside the container by the handle's own track, which is as wide as its hit area. */
   .root[data-orientation='horizontal'] {
     grid-auto-flow: column;
   }
 
   .root[data-orientation='horizontal'][data-primary='start'] {
-    grid-template-columns: min(var(--_size), calc(100% - var(--todae-splitter-handle-size))) auto minmax(0, 1fr);
+    grid-template-columns:
+      min(var(--_size), calc(100% - var(--todae-splitter-handle-target)))
+      var(--todae-splitter-handle-target)
+      minmax(0, 1fr);
   }
 
   .root[data-orientation='horizontal'][data-primary='end'] {
-    grid-template-columns: minmax(0, 1fr) auto min(var(--_size), calc(100% - var(--todae-splitter-handle-size)));
+    grid-template-columns:
+      minmax(0, 1fr)
+      var(--todae-splitter-handle-target)
+      min(var(--_size), calc(100% - var(--todae-splitter-handle-target)));
   }
 
   .root[data-orientation='vertical'] {
@@ -25,11 +29,17 @@
   }
 
   .root[data-orientation='vertical'][data-primary='start'] {
-    grid-template-rows: min(var(--_size), calc(100% - var(--todae-splitter-handle-size))) auto minmax(0, 1fr);
+    grid-template-rows:
+      min(var(--_size), calc(100% - var(--todae-splitter-handle-target)))
+      var(--todae-splitter-handle-target)
+      minmax(0, 1fr);
   }
 
   .root[data-orientation='vertical'][data-primary='end'] {
-    grid-template-rows: minmax(0, 1fr) auto min(var(--_size), calc(100% - var(--todae-splitter-handle-size)));
+    grid-template-rows:
+      minmax(0, 1fr)
+      var(--todae-splitter-handle-target)
+      min(var(--_size), calc(100% - var(--todae-splitter-handle-target)));
   }
 
   .root[data-dragging] {
@@ -52,85 +62,69 @@
     scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   }
 
-  /* The root knows it is collapsed before any script runs, and the primary panel is the first or the last by structure.
-     Out of the tab order and the accessibility tree, and still laid out as a track of 0. */
-  .root[data-collapsed][data-primary='start'] > .panel:has(+ .handle),
-  .root[data-collapsed][data-primary='end'] > .handle + .panel {
+  /* The root knows which side is drawn at no size before any script runs, and the panels are the first and the last
+     by structure. Out of the tab order and the accessibility tree, and still laid out as a track of 0. */
+  .root[data-empty='start'] > .panel:first-child,
+  .root[data-empty='end'] > .panel:last-child {
     visibility: hidden;
   }
 
+  /* The handle is its own hit area: nothing of it overlaps a panel. The line is drawn centered in it. */
   .handle {
     position: relative;
-    z-index: 1;
     box-sizing: border-box;
-    background: var(--todae-splitter-handle-color-default);
     touch-action: none;
     outline: none;
   }
 
   .root[data-orientation='horizontal'] > .handle {
-    inline-size: var(--todae-splitter-handle-size);
     cursor: col-resize;
   }
 
   .root[data-orientation='vertical'] > .handle {
-    block-size: var(--todae-splitter-handle-size);
     cursor: row-resize;
   }
 
-  /* The hit area starts at the line and reaches toward the end side, since the scrollbar of the panel before the
-     handle sits against the line. Where the end side has no width, it reaches toward the start instead. */
   .handle::before {
     content: '';
     position: absolute;
+    inset: 0;
+    margin: auto;
+    background: var(--todae-splitter-handle-color-default);
   }
 
   .root[data-orientation='horizontal'] > .handle::before {
-    inset-block: 0;
-    inset-inline: 0 auto;
-    inline-size: var(--todae-splitter-handle-target);
+    inline-size: var(--todae-splitter-handle-size);
   }
 
   .root[data-orientation='vertical'] > .handle::before {
-    inset-inline: 0;
-    inset-block: 0 auto;
-    block-size: var(--todae-splitter-handle-target);
-  }
-
-  .root[data-orientation='horizontal'][data-primary='start'][data-full] > .handle::before,
-  .root[data-orientation='horizontal'][data-primary='end'][data-collapsed] > .handle::before {
-    inset-inline: auto 0;
-  }
-
-  .root[data-orientation='vertical'][data-primary='start'][data-full] > .handle::before,
-  .root[data-orientation='vertical'][data-primary='end'][data-collapsed] > .handle::before {
-    inset-block: auto 0;
+    block-size: var(--todae-splitter-handle-size);
   }
 
   @media (hover: hover) {
-    .handle:hover {
+    .handle:hover::before {
       background: var(--todae-splitter-handle-color-hover);
     }
   }
 
-  .root[data-dragging] > .handle {
+  .root[data-dragging] > .handle::before {
     background: var(--todae-splitter-handle-color-active);
   }
 
-  /* The ring sits inside the hit area, so it never reaches past the handle's ends or the root's edge. */
-  .handle:focus-visible::before {
+  /* The ring goes around the track, inside it, so it is whole at the root's edge and in a scrolling panel around a nested root. */
+  .handle:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-splitter-ring-focus);
     outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
   @media (forced-colors: active) {
-    .handle {
+    .handle::before {
       background: CanvasText;
     }
 
-    .handle:hover,
-    .handle:focus-visible,
-    .root[data-dragging] > .handle {
+    .handle:hover::before,
+    .handle:focus-visible::before,
+    .root[data-dragging] > .handle::before {
       background: Highlight;
     }
   }

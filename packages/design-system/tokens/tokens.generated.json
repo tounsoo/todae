@@ -9584,7 +9584,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "splitter.handle.color.default",
@@ -9598,7 +9598,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "splitter.handle.color.hover",
@@ -9612,7 +9612,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "splitter.handle.size",
@@ -9626,7 +9626,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "splitter.handle.target",
@@ -9640,7 +9640,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "splitter.ring.focus",
@@ -9654,7 +9654,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Splitter.Root: two resizable panels and the handle between them. The handle is a line with a larger hit area."
+      "description": "Splitter.Root: two resizable panels and the handle between them. The handle's track is the hit area, and the line is drawn centered in it."
     },
     {
       "path": "toast.border-width",

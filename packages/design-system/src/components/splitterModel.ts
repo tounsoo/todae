@@ -55,15 +55,13 @@ export function stepSize(direction: 'grow' | 'shrink', size: number, bounds: Bou
 }
 
 /**
- * The size Enter gives: 0 for an open panel, and for a collapsed one the size
- * it had before, or `min` (at least `step`) when it never had one.
+ * The size Enter gives: 0 for an open panel, and for a closed one the size
+ * the product held before, as it is (the room clamps what is drawn, not what
+ * is held), or `min` (at least `step`) when it never had one.
  */
-export function toggledSize(size: number, restore: number, bounds: Bounds, step: number): number {
+export function toggledSize(size: number, restore: number, min: number, step: number): number {
   if (size > 0) return 0;
-  return clampSize(restore > 0 ? restore : Math.max(bounds.min, step), {
-    ...bounds,
-    collapsible: false,
-  });
+  return restore > 0 ? restore : Math.max(min, step);
 }
 
 /**

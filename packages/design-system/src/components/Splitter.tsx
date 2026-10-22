@@ -66,7 +66,7 @@ export type SplitterRootProps = {
   collapsible?: boolean;
 } & Omit<ComponentPropsWithRef<'div'>, 'defaultValue'>;
 
-/** One of the two panels. A `div`, hidden from the tab order and the accessibility tree while it is collapsed. */
+/** One of the two panels. A `div`, hidden from the tab order and the accessibility tree while it is drawn at no size. */
 export type SplitterPanelProps = ComponentPropsWithRef<'div'>;
 
 /** The `separator` between the panels. Name it with `aria-label` or `aria-labelledby`. */
@@ -87,7 +87,7 @@ type SplitterContextValue = {
   handleRef: RefObject<HTMLDivElement | null>;
   drag: RefObject<Drag | null>;
   setDragging: (dragging: boolean) => void;
-  commit: (size: number, from?: number) => void;
+  commit: (size: number) => void;
   apply: (action: SplitterKeyAction) => void;
 };
 
@@ -151,7 +151,6 @@ function Root({
   const handleRef = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const lastOpen = useRef(0);
-  const collapsedByUs = useRef(false);
   const composedRef = useComposedRefs(rootRef, ref);
   const [room, setRoom] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -170,29 +169,30 @@ function Root({
     onValueChange,
   );
   const size = clampSize(stored, bounds);
-  const collapsed = collapsible && size === 0;
-  const full = room !== null && size >= room;
+  // The side drawn at no size: the primary panel at 0, or the other one when the primary fills the room.
+  const empty =
+    size === 0 ? primary : room !== null && size >= room ? (primary === 'start' ? 'end' : 'start') : undefined;
+
+  // The size on screen as of the latest change, which a render has not caught up with while moves queue.
+  const shown = useRef(size);
+  useLayoutEffect(() => {
+    shown.current = size;
+  });
 
   // A change of the size the panel already shows, such as a key at the
   // container's edge while the size the product holds is past it, reports nothing.
-  // `from` is the size a collapse goes back to: the shown one, or where a drag began.
-  const commit = (next: number, from = size) => {
-    if (next === size) return;
-    if (next === 0) {
-      collapsedByUs.current = true;
-      if (from > 0) lastOpen.current = from;
-    }
+  const commit = (next: number) => {
+    const drawn = clampSize(next, bounds);
+    if (drawn === shown.current) return;
+    shown.current = drawn;
     change(next);
   };
 
-  // A product that sets the size to 0 itself collapses the panel from the size it had.
-  const previous = useRef(size);
+  // Enter restores the size the product held when the panel was last open, whoever closed it. A drag in
+  // progress holds sizes it only passes through, so it records once it ends.
   useEffect(() => {
-    const before = previous.current;
-    previous.current = size;
-    if (size === 0 && before > 0 && !collapsedByUs.current) lastOpen.current = before;
-    collapsedByUs.current = false;
-  }, [size]);
+    if (!dragging && stored > 0) lastOpen.current = stored;
+  }, [dragging, stored]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -205,15 +205,15 @@ function Root({
     return () => observer.disconnect();
   }, [orientation]);
 
-  // Focus inside a panel that collapses would fall to the page; the handle is the way back.
+  // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
     const handle = handleRef.current;
-    if (!collapsed || !handle) return;
+    if (!empty || !handle) return;
     const active = handle.ownerDocument.activeElement;
-    if (active && siblingPanel(handle, primary === 'start' ? 'previous' : 'next')?.contains(active)) {
+    if (active && siblingPanel(handle, empty === 'start' ? 'previous' : 'next')?.contains(active)) {
       focusWithoutScroll(handle);
     }
-  }, [collapsed, primary]);
+  }, [empty]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -239,7 +239,7 @@ function Root({
       case 'max':
         return Number.isFinite(bounds.max) ? commit(bounds.max) : undefined;
       case 'toggle':
-        return collapsible ? commit(toggledSize(size, lastOpen.current, bounds, step)) : undefined;
+        return commit(toggledSize(size, lastOpen.current, min, step));
     }
   };
 
@@ -265,8 +265,7 @@ function Root({
         data-orientation={orientation}
         data-primary={primary}
         data-dragging={dragging ? '' : undefined}
-        data-collapsed={collapsed ? '' : undefined}
-        data-full={full ? '' : undefined}
+        data-empty={empty}
         style={{ ...style, '--_size': `${size}px` } as CSSProperties}
       />
     </SplitterContext.Provider>
@@ -388,7 +387,7 @@ function Handle({
         if (current?.pointerId !== event.pointerId) return;
         const pointer = orientation === 'horizontal' ? event.clientX : event.clientY;
         const next = dragSize(pointer, current.startPointer, current.startSize, current.sign);
-        ctx.commit(snapSize(Math.round(next), bounds), current.startSize);
+        ctx.commit(snapSize(Math.round(next), bounds));
       })}
       onPointerUp={release(onPointerUp)}
       onPointerCancel={release(onPointerCancel)}

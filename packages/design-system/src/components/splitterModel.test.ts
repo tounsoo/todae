@@ -82,21 +82,18 @@ describe('stepSize', () => {
 
 describe('toggledSize', () => {
   it('collapses an open panel to 0', () => {
-    expect(toggledSize(250, 250, collapsible, 16)).toBe(0);
+    expect(toggledSize(250, 250, 100, 16)).toBe(0);
   });
 
-  it('restores the size before, kept inside the range', () => {
-    expect(toggledSize(0, 260, collapsible, 16)).toBe(260);
-    expect(toggledSize(0, 900, collapsible, 16)).toBe(400);
-  });
-
-  it('keeps a restored size inside a container narrower than it', () => {
-    expect(toggledSize(0, 300, { min: 100, max: 60, collapsible: true }, 16)).toBe(60);
+  it('restores the size the product held, as it is', () => {
+    expect(toggledSize(0, 260, 100, 16)).toBe(260);
+    expect(toggledSize(0, 900, 100, 16)).toBe(900);
+    expect(toggledSize(0, 60, 100, 16)).toBe(60);
   });
 
   it('opens to min, or at least one step, when there is no size to go back to', () => {
-    expect(toggledSize(0, 0, collapsible, 16)).toBe(100);
-    expect(toggledSize(0, 0, { min: 0, max: 400, collapsible: true }, 16)).toBe(16);
+    expect(toggledSize(0, 0, 100, 16)).toBe(100);
+    expect(toggledSize(0, 0, 0, 16)).toBe(16);
   });
 });
 

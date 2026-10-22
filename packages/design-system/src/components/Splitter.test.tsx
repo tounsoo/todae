@@ -28,7 +28,7 @@ function Layout(props: SplitterRootProps) {
 const handle = () => screen.getByRole('separator');
 const press = (key: string) => fireEvent.keyDown(handle(), { key });
 const root = () => screen.getByTestId('root');
-const collapsed = () => root().hasAttribute('data-collapsed');
+const empty = () => root().getAttribute('data-empty');
 
 /** A container `width` pixels wide, as a layout engine would report it. */
 function measured(width: number) {
@@ -251,7 +251,7 @@ describe('Splitter collapse', () => {
     render(<Layout defaultValue={240} min={100} />);
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('240');
-    expect(collapsed()).toBe(false);
+    expect(empty()).toBeNull();
   });
 
   it('collapses to 0 on Enter and restores the size before on the next', () => {
@@ -261,17 +261,17 @@ describe('Splitter collapse', () => {
     press('ArrowRight');
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('0');
-    expect(collapsed()).toBe(true);
+    expect(empty()).toBe('start');
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('256');
-    expect(collapsed()).toBe(false);
+    expect(empty()).toBeNull();
     expect(onValueChange.mock.calls).toEqual([[256], [0], [256]]);
   });
 
   it('collapses the last panel when it is the primary one', () => {
     render(<Layout defaultValue={240} primary="end" collapsible />);
     press('Enter');
-    expect(collapsed()).toBe(true);
+    expect(empty()).toBe('end');
     expect(root().dataset.primary).toBe('end');
   });
 
@@ -285,7 +285,7 @@ describe('Splitter collapse', () => {
 
   it('opens a panel that started collapsed to min on Enter', () => {
     render(<Layout defaultValue={0} min={180} collapsible />);
-    expect(collapsed()).toBe(true);
+    expect(empty()).toBe('start');
     press('Enter');
     expect(handle().getAttribute('aria-valuenow')).toBe('180');
   });
@@ -327,19 +327,21 @@ describe('Splitter parts', () => {
 });
 
 describe('Splitter on the server', () => {
-  it('renders a collapsed panel as collapsed before any script runs', () => {
+  it('renders an empty panel as empty before any script runs', () => {
     const html = renderToString(<Layout defaultValue={0} min={180} collapsible />);
-    expect(html).toMatch(/<div[^>]*data-testid="root"[^>]*data-collapsed=""/);
-    expect(renderToString(<Layout defaultValue={0} collapsible primary="end" />)).toContain('data-collapsed=""');
-    expect(renderToString(<Layout defaultValue={200} collapsible />)).not.toContain('data-collapsed');
+    expect(html).toMatch(/<div[^>]*data-testid="root"[^>]*data-empty="start"/);
+    expect(renderToString(<Layout defaultValue={0} collapsible primary="end" />)).toContain('data-empty="end"');
+    expect(renderToString(<Layout defaultValue={200} collapsible />)).not.toContain('data-empty');
   });
 });
 
 describe('Splitter range', () => {
-  it('does not collapse a panel that is not collapsible, even at size 0', () => {
+  it('marks a panel at size 0 as empty whether or not it is collapsible', () => {
     render(<Layout defaultValue={0} />);
     expect(handle().getAttribute('aria-valuenow')).toBe('0');
-    expect(collapsed()).toBe(false);
+    expect(empty()).toBe('start');
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
   });
 
   it('reads a coherent range before the container is measured', () => {
@@ -364,12 +366,14 @@ describe('Splitter range', () => {
     expect(handle().getAttribute('aria-valuemax')).toBe('260');
   });
 
-  it('marks a panel that fills the room', () => {
+  it('marks the other panel as empty when the primary one fills the room', () => {
     measured(300);
     const { rerender } = render(<Layout value={300} />);
-    expect(root().hasAttribute('data-full')).toBe(true);
+    expect(empty()).toBe('end');
+    rerender(<Layout value={300} primary="end" />);
+    expect(empty()).toBe('start');
     rerender(<Layout value={100} />);
-    expect(root().hasAttribute('data-full')).toBe(false);
+    expect(empty()).toBeNull();
   });
 });
 
@@ -484,6 +488,28 @@ describe('Splitter dragging', () => {
 });
 
 describe('Splitter restore point', () => {
+  it('goes back to the held size when a narrow window collapsed it, not to what was drawn', () => {
+    function Controlled() {
+      const [value, setValue] = useState(300);
+      return <Layout value={value} onValueChange={setValue} min={100} collapsible />;
+    }
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(200);
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(<Controlled />);
+    expect(handle().getAttribute('aria-valuenow')).toBe('200');
+    press('Home');
+    expect(handle().getAttribute('aria-valuenow')).toBe('0');
+    press('Enter');
+    expect(handle().getAttribute('aria-valuenow')).toBe('200');
+    expect(root().style.getPropertyValue('--_size')).toBe('200px');
+  });
+
   it('goes back to the size before a drag that ended collapsed, not to where it passed', () => {
     render(<Layout defaultValue={240} min={100} collapsible />);
     down(300);
