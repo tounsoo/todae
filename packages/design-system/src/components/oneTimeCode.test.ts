@@ -11,6 +11,11 @@ describe('cleanCode', () => {
     ['ㅎ하', 'alphanumeric', 6, ''],
     ['abc', 'digits', 6, ''],
     ['1234567', 'digits', Infinity, '1234567'],
+    ['０９ＡＺａｚ', 'alphanumeric', 6, '09AZaz'],
+    // Only full-width digits and letters count as ASCII, not every character that has a compatibility form.
+    ['½①²٣', 'digits', 6, ''],
+    ['ﬁ™', 'alphanumeric', 6, ''],
+    ['１½', 'digits', 6, '1'],
   ] as const)('keeps %j as %s cut to %d: %j', (text, characters, length, expected) => {
     expect(cleanCode(text, characters, length)).toBe(expected);
   });

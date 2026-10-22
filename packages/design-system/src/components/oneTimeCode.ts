@@ -5,9 +5,15 @@ const ALLOWED: Record<OneTimeCodeCharacters, RegExp> = {
   alphanumeric: /[^A-Za-z0-9]/g,
 };
 
+// Full-width digits and Latin letters, which sit 0xFEE0 above their ASCII ones. Not NFKC, which also turns "½" into "12" and "①" into "1".
+const FULL_WIDTH = /[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g;
+
 /** The characters of `text` the code allows, cut to `length`. Full-width digits and letters count as their ASCII ones. */
 export function cleanCode(text: string, characters: OneTimeCodeCharacters, length: number): string {
-  return text.normalize('NFKC').replace(ALLOWED[characters], '').slice(0, length);
+  return text
+    .replace(FULL_WIDTH, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replace(ALLOWED[characters], '')
+    .slice(0, length);
 }
 
 export type CodeSelection = { start: number; end: number };
