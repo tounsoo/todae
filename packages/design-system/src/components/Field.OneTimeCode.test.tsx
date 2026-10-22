@@ -147,6 +147,27 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange.mock.calls).toEqual([['ABcd']]);
   });
 
+  it('calls onChange as well as onValueChange for the code a composition ends on when the input already holds it', () => {
+    const raw: string[] = [];
+    const onChange = vi.fn((event: { target: HTMLInputElement }) => raw.push(event.target.value));
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onChange={onChange} onValueChange={onValueChange} />);
+    const code = input();
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    code.focus();
+    code.setSelectionRange(2, 2);
+    fireEvent.compositionStart(code, { data: '' });
+    set.call(code, 'ABcd하');
+    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'cd하', isComposing: true, bubbles: true }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    // The commit drops the character the code refuses without an input event of its own.
+    set.call(code, 'ABcd');
+    fireEvent.compositionEnd(code, { data: 'cd' });
+    expect(onValueChange.mock.calls).toEqual([['ABcd']]);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(raw).toEqual(['ABcd']);
+  });
+
   it('takes a composition that rewrites the text before the caret', () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);

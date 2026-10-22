@@ -149,9 +149,9 @@ export function OneTimeCode({
   const refs = useComposedRefs(input, ref);
   const fixed = readOnly ?? (!onChange && !onValueChange);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
-  const latest = useRef({ characters, length, fixed, value, onValueChange });
+  const latest = useRef({ characters, length, fixed, value });
   useLayoutEffect(() => {
-    latest.current = { characters, length, fixed, value, onValueChange };
+    latest.current = { characters, length, fixed, value };
   });
 
   // The browser's own tooShort skips an edit a script makes, a cleaned paste among them, so the length is checked here.
@@ -193,7 +193,7 @@ export function OneTimeCode({
       const saved = composition.current;
       // Cleared first, so the write below reaches onChange as an edit.
       composition.current = null;
-      const { characters, length, value, onValueChange } = latest.current;
+      const { characters, length, value } = latest.current;
       el!.setAttribute('maxlength', String(length));
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
@@ -203,11 +203,12 @@ export function OneTimeCode({
       const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);
       const target = edit ? applyEdit(saved.start, edit) : saved.start;
       if (live === target) {
-        if (target !== value && target !== saved.reported) onValueChange?.(target);
-      } else {
-        // Written, not put in with execCommand, which would leave the commit on the undo stack as a step that is no code.
-        write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start);
+        if (target === value || target === saved.reported) return;
+        // The input already holds the code, so React would see no change; put the code the product has there first, so the write below reaches onChange as the edit it is, like every other path that reports.
+        el!.value = value;
       }
+      // Written, not put in with execCommand, which would leave the commit on the undo stack as a step that is no code.
+      write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start);
     }
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);

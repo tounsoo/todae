@@ -434,6 +434,18 @@ describe('Field.OneTimeCode in a browser', () => {
     if (mode === 'both') expect(events).toContain('value:AxC123');
   });
 
+  it('calls onChange when it reports back the code before a composition that went from a code to a text the code refuses and was cancelled', async () => {
+    const events: string[] = [];
+    render(<Listening initial="AB" mode="both" events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    // A romaji step `k` is a code, so it is reported; `か` is not, so the composition is cancelled on the code the person saw last.
+    await compose(['k', 'か'], null);
+    await vi.waitFor(() => expect(events.at(-1)).toBe('value:AB'));
+    expect(events.at(-2)).toBe('change:AB');
+    expect(input().value).toBe('AB');
+  });
+
   it('takes a composition that rewrites the text before the caret', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
