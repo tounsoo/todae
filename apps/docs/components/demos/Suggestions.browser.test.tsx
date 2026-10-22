@@ -123,3 +123,17 @@ it('keeps a draft typed while the reply ran when that reply is stopped', async (
   expect(field().value).toBe('my draft');
   expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(2);
 });
+
+it('holds Regenerate on other replies while a reply runs', async () => {
+  setup();
+  await userEvent.click(within(suggestions()!).getByRole('button', { name: 'What about a toggle button?' }));
+  await userEvent.keyboard('{Enter}');
+  const first = within(replies()[0]!).getByRole('button', { name: 'Regenerate' });
+  expect(first).toHaveAttribute('aria-disabled', 'true');
+  first.focus();
+  await userEvent.keyboard('{Enter}');
+  // The question just sent keeps its reply.
+  await expect.poll(() => replies().length).toBe(2);
+  expect(screen.getAllByRole('article', { name: 'You' })).toHaveLength(2);
+  expect(count(replies()[0]!)).toBe('2 of 2');
+});

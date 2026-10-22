@@ -140,8 +140,12 @@ function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   };
 }
 
+// aria-disabled is a string or a boolean in React's types.
+const isAriaDisabled = (value: unknown) => value === true || value === 'true';
+
 // Overloads, not one union, so a handler passed with `render` still gets its event type.
 // The button one is last, since ComponentProps<typeof Button.Root> reads the last.
+
 function Root(props: ButtonRenderedProps): ReactElement;
 function Root(props: ButtonRootProps): ReactElement;
 function Root({
@@ -167,7 +171,8 @@ function Root({
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
   const handleClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
-    if (!toggle) return;
+    // aria-disabled keeps the button focusable, not usable: the product ignores the click, and the toggle doesn't flip.
+    if (!toggle || isAriaDisabled(props['aria-disabled'])) return;
     setPressed(!pressed);
     onPressedChange?.(!pressed);
   });

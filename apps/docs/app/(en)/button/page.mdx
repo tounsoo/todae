@@ -7,7 +7,7 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 Icon-only roots tip that name. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip. Auto tips are never interactive.
 
-Variants use the existing paint packs. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. It doesn't stop clicks, so ignore them in your handler.
+Variants use the existing paint packs. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. It doesn't stop clicks, so ignore them in your handler; a toggle doesn't flip.
 
 ```tsx
 <Button.Root onClick={save}>Save</Button.Root>

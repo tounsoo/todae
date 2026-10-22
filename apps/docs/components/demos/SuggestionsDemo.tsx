@@ -15,19 +15,14 @@ import {
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 
-// Each turn is a node. A message's replies are its children, so regenerating
-// adds a sibling, and `shown` picks the child the conversation follows.
-type Turn = {
-  id: number;
-  from: 'user' | 'assistant';
-  text: string;
-  parent: number | null;
-  children: number[];
-  shown: number;
-};
+// Each turn links to the message it answers or follows. A message's replies
+// are the turns whose parent it is, so regenerating adds a sibling, and
+// `shown` maps each message to the id of the reply the conversation follows.
+type Turn = { id: number; from: 'user' | 'assistant'; text: string; parent: number | null };
+type Conversation = { turns: Record<number, Turn>; shown: Record<number, number> };
 
-// The one reply in flight, and the reply its question showed before it.
-type Pending = { reply: number; before: number };
+// The one reply in flight, and the reply its question showed before it, if any.
+type Pending = { reply: number; before: number | undefined };
 
 type Answer = { versions: readonly string[]; suggestions: readonly string[] };
 
@@ -72,24 +67,41 @@ const UNKNOWN: Answer = {
 
 const answerTo = (question: string): Answer => ANSWERS[question] ?? UNKNOWN;
 
-function start(): Record<number, Turn> {
+function start(): Conversation {
   return {
-    1: { id: 1, from: 'user', text: FIRST, parent: null, children: [2, 3], shown: 1 },
-    2: { id: 2, from: 'assistant', text: ANSWERS[FIRST]!.versions[0]!, parent: 1, children: [], shown: 0 },
-    3: { id: 3, from: 'assistant', text: ANSWERS[FIRST]!.versions[1]!, parent: 1, children: [], shown: 0 },
+    turns: {
+      1: { id: 1, from: 'user', text: FIRST, parent: null },
+      2: { id: 2, from: 'assistant', text: ANSWERS[FIRST]!.versions[0]!, parent: 1 },
+      3: { id: 3, from: 'assistant', text: ANSWERS[FIRST]!.versions[1]!, parent: 1 },
+    },
+    shown: { 1: 3 },
   };
 }
 
+// The replies to a message, oldest first. Ids only grow, so their order is the order of arrival.
+const repliesTo = ({ turns }: Conversation, id: number) =>
+  Object.values(turns)
+    .filter((turn) => turn.parent === id)
+    .sort((a, b) => a.id - b.id);
+
 // The turns the conversation follows now, from the first message.
-function pathOf(turns: Record<number, Turn>): Turn[] {
+function pathOf(conversation: Conversation): Turn[] {
   const path: Turn[] = [];
-  let turn: Turn | undefined = turns[1];
+  let turn: Turn | undefined = conversation.turns[1];
   while (turn) {
     path.push(turn);
-    const next = turn.children[turn.shown];
-    turn = next === undefined ? undefined : turns[next];
+    const next = conversation.shown[turn.id];
+    turn = next === undefined ? undefined : conversation.turns[next];
   }
   return path;
+}
+
+// Takes a turn out, and points its parent back at `before`.
+function without(conversation: Conversation, id: number, before: number | undefined): Conversation {
+  const { [id]: _, ...turns } = conversation.turns;
+  const parent = conversation.turns[id]!.parent!;
+  const { [parent]: __, ...shown } = conversation.shown;
+  return { turns, shown: before === undefined ? shown : { ...shown, [parent]: before } };
 }
 
 function VersionSwitcher({
@@ -146,70 +158,72 @@ function VersionSwitcher({
 }
 
 export function SuggestionsExample() {
-  const [turns, setTurns] = useState(start);
+  const [conversation, setConversation] = useState(start);
   const [pending, setPending] = useState<Pending | null>(null);
   const [value, setValue] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const field = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(4);
-  const path = pathOf(turns);
+  const { turns } = conversation;
+  const path = pathOf(conversation);
   const last = path.at(-1)!;
   const busy = pending !== null;
   const suggestions = last.from === 'assistant' && !busy && value === '' ? answerTo(turns[last.parent!]!.text).suggestions : [];
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  // Adds a reply to the question with id `to` that streams for a moment, then
-  // shows its text. Stands in for the product's request. A new one cancels the
-  // one in flight.
-  const ask = (all: Record<number, Turn>, to: number) => {
-    clearTimeout(timer.current);
-    const base = pending ? withoutReply(all, pending) : all;
-    const question = base[to]!;
+  // Adds a reply to `question` that streams for a moment, then shows its
+  // text. Stands in for the product's request.
+  const ask = (base: Conversation, question: Turn) => {
     const id = nextId.current++;
     const versions = answerTo(question.text).versions;
-    const text = versions[question.children.length % versions.length]!;
-    setTurns({
-      ...base,
-      [to]: { ...question, children: [...question.children, id], shown: question.children.length },
-      [id]: { id, from: 'assistant', text: '', parent: to, children: [], shown: 0 },
+    const text = versions[repliesTo(base, question.id).length % versions.length]!;
+    setConversation({
+      turns: { ...base.turns, [id]: { id, from: 'assistant', text: '', parent: question.id } },
+      shown: { ...base.shown, [question.id]: id },
     });
-    setPending({ reply: id, before: question.shown });
+    setPending({ reply: id, before: base.shown[question.id] });
     timer.current = setTimeout(() => {
-      setTurns((now) => ({ ...now, [id]: { ...now[id]!, text } }));
+      setConversation((now) => ({ ...now, turns: { ...now.turns, [id]: { ...now.turns[id]!, text } } }));
       setPending(null);
     }, 1200);
   };
 
-  const regenerate = (answer: Turn) => ask(turns, answer.parent!);
+  // While a reply runs, only that reply can be asked for again, and asking
+  // again cancels the one in flight.
+  const regenerate = (answer: Turn) => {
+    if (pending && pending.reply !== answer.id) return;
+    clearTimeout(timer.current);
+    const base = pending ? without(conversation, pending.reply, pending.before) : conversation;
+    ask(base, turns[answer.parent!]!);
+  };
 
-  const show = (answer: Turn, index: number) =>
-    setTurns((all) => ({ ...all, [answer.parent!]: { ...all[answer.parent!]!, shown: index } }));
+  const show = (answer: Turn, reply: number) =>
+    setConversation((now) => ({ ...now, shown: { ...now.shown, [answer.parent!]: reply } }));
 
   const send = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const id = nextId.current++;
-    const question: Turn = { id, from: 'user', text: value.trim(), parent: last.id, children: [], shown: 0 };
+    const question: Turn = { id, from: 'user', text: value.trim(), parent: last.id };
     setValue('');
-    ask({ ...turns, [last.id]: { ...last, children: [...last.children, id], shown: last.children.length }, [id]: question }, id);
+    ask({ turns: { ...turns, [id]: question }, shown: { ...conversation.shown, [last.id]: id } }, question);
   };
 
   const stop = () => {
     if (!pending) return;
     clearTimeout(timer.current);
     setPending(null);
+    const stopped = without(conversation, pending.reply, pending.before);
     const question = turns[turns[pending.reply]!.parent!]!;
     // A question stopped before any reply goes back to the field to be sent
     // again, unless the person has started another draft there.
-    if (question.children.length === 1 && value === '') {
-      const { [question.id]: _, [pending.reply]: __, ...rest } = turns;
-      const before = rest[question.parent!]!;
-      setTurns({ ...rest, [before.id]: { ...before, children: before.children.filter((id) => id !== question.id) } });
+    if (repliesTo(stopped, question.id).length === 0 && value.trim() === '') {
+      setConversation(without(stopped, question.id, undefined));
       setValue(question.text);
       field.current?.focus();
       return;
     }
-    setTurns(withoutReply(turns, pending));
+    setConversation(stopped);
   };
 
   // A suggestion fills the field, so the person can change it before sending.
@@ -235,16 +249,21 @@ export function SuggestionsExample() {
             </Message.Content>
             <Message.Actions>
               <Toolbar.Root aria-label="Reply">
-                {turns[turn.parent!]!.children.length > 1 && (
+                {repliesTo(conversation, turn.parent!).length > 1 && (
                   <VersionSwitcher
-                    index={turns[turn.parent!]!.shown}
-                    count={turns[turn.parent!]!.children.length}
+                    index={repliesTo(conversation, turn.parent!).indexOf(turn)}
+                    count={repliesTo(conversation, turn.parent!).length}
                     // While a reply streams it is the one shown, so its later turns stay in view.
                     locked={busy}
-                    onShow={(index) => show(turn, index)}
+                    onShow={(index) => show(turn, repliesTo(conversation, turn.parent!)[index]!.id)}
                   />
                 )}
-                <Button.Root variant="ghost" aria-label="Regenerate" onClick={() => regenerate(turn)}>
+                <Button.Root
+                  variant="ghost"
+                  aria-label="Regenerate"
+                  aria-disabled={(pending && pending.reply !== turn.id) || undefined}
+                  onClick={() => regenerate(turn)}
+                >
                   <Button.Icon>
                     <RotateCcw />
                   </Button.Icon>
@@ -283,12 +302,4 @@ export function SuggestionsExample() {
       </Composer.Root>
     </Stack.Root>
   );
-}
-
-// Takes out the reply in flight; its question shows the reply it showed before.
-function withoutReply(all: Record<number, Turn>, pending: Pending): Record<number, Turn> {
-  const { [pending.reply]: _, ...rest } = all;
-  const question = rest[all[pending.reply]!.parent!]!;
-  const children = question.children.filter((id) => id !== pending.reply);
-  return { ...rest, [question.id]: { ...question, children, shown: pending.before } };
 }

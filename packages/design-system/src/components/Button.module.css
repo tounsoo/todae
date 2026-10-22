@@ -151,14 +151,14 @@
     }
 
     .root[aria-pressed='true'],
-    .root[aria-pressed='true']:is(:hover, :active, :focus-visible):not(:disabled) {
+    .root[aria-pressed='true']:is(:hover, :active, :focus-visible):not(:disabled, [aria-disabled='true']) {
       background: Highlight;
       color: HighlightText;
       border-color: Highlight;
       box-shadow: none;
     }
 
-    .root[aria-pressed='true']:disabled {
+    .root[aria-pressed='true']:is(:disabled, [aria-disabled='true']) {
       background: GrayText;
       color: Canvas;
       border-color: GrayText;

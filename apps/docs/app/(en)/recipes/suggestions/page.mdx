@@ -56,12 +56,23 @@ import { Button, Text, Toolbar, useAnnouncer } from '@tounsoo/todae';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useId } from 'react';
 
-export function VersionSwitcher({ index, count, onShow }: { index: number; count: number; onShow: (index: number) => void }) {
+export function VersionSwitcher({
+  index,
+  count,
+  locked,
+  onShow,
+}: {
+  index: number;
+  count: number;
+  // True while a reply runs, so the turn it belongs to stays in view.
+  locked: boolean;
+  onShow: (index: number) => void;
+}) {
   const announce = useAnnouncer();
   const position = useId();
 
   const show = (to: number) => {
-    if (to < 0 || to >= count) return;
+    if (locked || to < 0 || to >= count) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -72,7 +83,7 @@ export function VersionSwitcher({ index, count, onShow }: { index: number; count
         variant="ghost"
         aria-label="Previous reply"
         aria-describedby={position}
-        aria-disabled={index === 0 || undefined}
+        aria-disabled={locked || index === 0 || undefined}
         onClick={() => show(index - 1)}
       >
         <Button.Icon>
@@ -86,7 +97,7 @@ export function VersionSwitcher({ index, count, onShow }: { index: number; count
         variant="ghost"
         aria-label="Next reply"
         aria-describedby={position}
-        aria-disabled={index === count - 1 || undefined}
+        aria-disabled={locked || index === count - 1 || undefined}
         onClick={() => show(index + 1)}
       >
         <Button.Icon>
@@ -107,7 +118,7 @@ Render the switcher only when there are two versions or more. Key the reply's `M
 
 **You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. `aria-disabled` at the switcher's ends, and clicks there ignored. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
 
-**Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version. Switching away from a version that is still streaming, which hides the turn the reply belongs to: hold the switcher while a reply runs, as the example does. Stopping the reply to a new question, which leaves it with no reply and nothing to regenerate: put it back in the field to send again, unless the person has started another draft.
+**Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version. Switching away from a version that is still streaming, which hides the turn the reply belongs to: hold the switcher, and Regenerate on other replies, while a reply runs, as the example does. Stopping the reply to a new question, which leaves it with no reply and nothing to regenerate: put it back in the field to send again, unless the person has started another draft.
 
 ## When to use
 

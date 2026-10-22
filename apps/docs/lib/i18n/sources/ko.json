@@ -60,7 +60,7 @@
   },
   "button": {
     "(top)": "600ac73d282c",
-    "# Button": "aa525156702a",
+    "# Button": "7e90007b210a",
     "## Toggle": "b7fa7b0a3692",
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
@@ -658,8 +658,8 @@
     "(top)": "64f0689194fa",
     "# Suggestions": "1f16320c7c36",
     "## Suggested prompts": "8f4fc6dc7ef8",
-    "## Versions of a reply": "e9daf14c7290",
-    "## Accessible composition": "e732e63facd3",
+    "## Versions of a reply": "c8c481b43ef8",
+    "## Accessible composition": "383d6ed3858b",
     "## When to use": "712b903230ea",
     "(section order)": "d07108b52651"
   },
