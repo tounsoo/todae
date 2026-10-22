@@ -103,7 +103,7 @@ it('keeps focus on a focused row its props move, as a revert after a failed save
 
 it('moves a row dragged by its grip and announces where it went', async () => {
   setup();
-  const grip = (name: string) => trigger(name).closest('li')!.querySelector('[aria-hidden]')!;
+  const grip = (name: string) => trigger(name).closest('li')!.querySelector(':scope > * > [aria-hidden]')!;
   const rect = trigger('Marketing').closest('li')!.getBoundingClientRect();
   await userEvent.dragAndDrop(grip('Design'), trigger('Marketing').closest('li')!, {
     targetPosition: { x: 40, y: rect.height - 2 },

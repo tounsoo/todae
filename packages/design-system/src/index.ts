@@ -378,7 +378,9 @@ export {
   type ReorderDrop,
   type ReorderDropPosition,
   type UseReorderHandleProps,
+  type UseReorderHandleUserProps,
   type UseReorderItemProps,
+  type UseReorderItemUserProps,
   type UseReorderOptions,
   type UseReorderResult,
 } from './hooks/useReorder.js';

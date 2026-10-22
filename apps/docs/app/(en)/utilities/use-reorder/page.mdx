@@ -28,17 +28,17 @@ Drag a row by its grip. The [Reorder](/recipes/reorder) recipe pairs the hook wi
   <ReorderExample />
 </Example>
 
-A press on a handle makes its item draggable, so a drag starts only from a handle and text in the items stays selectable. While an item is dragged, `dragging` is its index and `drop` says which item it would land beside and on which side, `before` or `after`, or is `null` where a drop would not move it. The items carry the same state as `data-dragging` and `data-drop`, for styles. A drop calls `onMove` only when the order changes. Escape, or a drop outside the items, calls nothing. Drags that didn't start from this list's handles, such as files or another list's items, are ignored, so they can't be dropped there.
+A press on a handle makes its item draggable, so an item drags only by its handle and text in the items stays selectable. While an item is dragged, `dragging` is its index and `drop` says which item it would land beside and on which side, `before` or `after`, or is `null` where a drop would not move it. The items carry the same state as `data-dragging` and `data-drop`, for styles. A drop calls `onMove` only when the order changes, and a drop outside the items calls nothing. `from` is where the dragged item is when it is dropped, so a list that changes during a drag still moves that item, and a drag whose item is removed is dropped. Drags that didn't start from this list's handles, such as files, selected text or another list's items, are ignored, so they can't be dropped there. Both getters take your own props as a second argument, and run your handlers before their own.
 
 With `orientation="horizontal"`, `before` is the side the text starts from, so it is the right side in a right-to-left page.
 
 ## Accessible composition
 
-**Todae handles:** Starting a drag only from a handle. Working out the item and side a drop lands on, and the index the dragged item ends at. Ignoring drags from elsewhere.
+**Todae handles:** Dragging an item only by its handle. Working out the item and side a drop lands on, and the index the dragged item ends at. Ignoring drags from elsewhere.
 
 **You supply:** Another way to move an item that needs no dragging and works from the keyboard, such as the Reorder recipe's menu: the browser's drag and drop has no keyboard path. A handle hidden from screen readers with `aria-hidden`, since that other way is the one they use. Keys from each item's id. The announcement of a move, and how the drop line and the dragged item look.
 
-**Watch for:** Drag as the only way to reorder (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A handle that is a button or a tab stop: it does nothing from the keyboard. A handle without `touch-action: none`, which scrolls the page on a touch screen instead of starting the drag.
+**Watch for:** Drag as the only way to reorder (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A handle that is a button or a tab stop: it does nothing from the keyboard. A handle without `touch-action: none`, which a press on a touch screen scrolls. Dragging on touch screens hasn't been checked.
 
 ## When to use
 

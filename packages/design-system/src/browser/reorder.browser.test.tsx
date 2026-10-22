@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -6,9 +6,21 @@ import { useReorder } from '../index.js';
 
 afterEach(cleanup);
 
-function List({ onMove }: { onMove?: (from: number, to: number) => void }) {
-  const [items, setItems] = useState(['A', 'B', 'C', 'D']);
+type ListProps = {
+  onMove?: (from: number, to: number) => void;
+  items?: string[];
+  orientation?: 'vertical' | 'horizontal';
+  disabled?: boolean;
+  dir?: 'ltr' | 'rtl';
+  onDragOver?: () => void;
+};
+
+function List({ onMove, items: initial = ['A', 'B', 'C', 'D'], orientation, disabled, dir, onDragOver }: ListProps) {
+  const [items, setItems] = useState(initial);
+  const horizontal = orientation === 'horizontal';
   const reorder = useReorder({
+    orientation,
+    disabled,
     onMove: (from, to) => {
       onMove?.(from, to);
       setItems((list) => {
@@ -20,13 +32,30 @@ function List({ onMove }: { onMove?: (from: number, to: number) => void }) {
     },
   });
   return (
+    <ul dir={dir} style={{ inlineSize: horizontal ? 400 : 200, padding: 0, margin: 0, listStyle: 'none', display: horizontal ? 'flex' : 'block' }}>
+      {items.map((item, index) => (
+        <li key={item} {...reorder.getItemProps(index, { onDragOver })} style={{ blockSize: 40, inlineSize: horizontal ? 100 : undefined, display: 'flex' }}>
+          <span data-testid={`handle-${item}`} {...reorder.getHandleProps(index)} style={{ inlineSize: 24 }}>
+            ::
+          </span>
+          <span data-testid={`text-${item}`}>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// A list whose items come from props, so a test can change them during a drag.
+function Controlled({ items, onMove }: { items: string[]; onMove: (from: number, to: number) => void }) {
+  const reorder = useReorder({ onMove });
+  return (
     <ul style={{ inlineSize: 200, padding: 0, margin: 0, listStyle: 'none' }}>
       {items.map((item, index) => (
         <li key={item} {...reorder.getItemProps(index)} style={{ blockSize: 40, display: 'flex' }}>
           <span data-testid={`handle-${item}`} {...reorder.getHandleProps(index)} style={{ inlineSize: 24 }}>
             ::
           </span>
-          <span data-testid={`text-${item}`}>{item}</span>
+          <span>{item}</span>
         </li>
       ))}
     </ul>
@@ -70,4 +99,159 @@ it('starts a drag only from a handle', async () => {
   });
   expect(onMove).not.toHaveBeenCalled();
   for (const item of screen.getAllByRole('listitem')) expect(item).not.toHaveAttribute('draggable');
+});
+
+// fireEvent gives each event a new DataTransfer, so dispatch drag events with one that lasts the drag.
+function fireDrag(node: Element, type: string, init: DragEventInit) {
+  act(() => {
+    node.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, ...init }));
+  });
+}
+
+// Steps a drag by hand, for what userEvent.dragAndDrop can't stop between: a press on the handle,
+// dragstart, then dragover and drop at a point of the target.
+function drag(handle: string) {
+  const dataTransfer = new DataTransfer();
+  fireEvent.pointerDown(screen.getByTestId(`handle-${handle}`), { button: 0 });
+  const source = screen.getByTestId(`handle-${handle}`).closest('li')!;
+  fireDrag(source, 'dragstart', { dataTransfer });
+  const at = (name: string, side: 'start' | 'end', axis: 'x' | 'y' = 'y') => {
+    const rect = screen.getByText(name).closest('li')!.getBoundingClientRect();
+    const near = axis === 'y' ? { clientX: rect.left + 5, clientY: side === 'start' ? rect.top + 2 : rect.bottom - 2 } : { clientX: side === 'start' ? rect.left + 2 : rect.right - 2, clientY: rect.top + 5 };
+    return { target: screen.getByText(name).closest('li')!, init: { dataTransfer, ...near } };
+  };
+  return {
+    over(name: string, side: 'start' | 'end', axis?: 'x' | 'y') {
+      const { target, init } = at(name, side, axis);
+      fireDrag(target, 'dragover', init);
+      return target;
+    },
+    drop(name: string, side: 'start' | 'end', axis?: 'x' | 'y') {
+      const { target, init } = at(name, side, axis);
+      fireDrag(target, 'drop', init);
+      fireDrag(source, 'dragend', { dataTransfer });
+    },
+    end() {
+      fireDrag(source, 'dragend', { dataTransfer });
+    },
+  };
+}
+
+const item = (name: string) => screen.getByText(name).closest('li')!;
+
+it('says where the dragged item would land, and nothing where a drop would not move it', () => {
+  render(<List />);
+  const d = drag('B');
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  d.over('C', 'end');
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
+  d.over('C', 'start');
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  d.over('A', 'end');
+  expect(item('A')).not.toHaveAttribute('data-drop');
+  d.over('A', 'start');
+  expect(item('A')).toHaveAttribute('data-drop', 'before');
+  d.end();
+  expect(item('A')).not.toHaveAttribute('data-drop');
+  expect(item('B')).not.toHaveAttribute('data-dragging');
+});
+
+it('clears the line when the drag leaves the item', () => {
+  render(<List />);
+  const d = drag('A');
+  d.over('C', 'end');
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
+  fireDrag(item('C'), 'dragleave', { clientX: 400, clientY: 400 });
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  d.end();
+});
+
+it('ignores a drag this list did not start, such as another list\'s item or a file', () => {
+  const first = vi.fn();
+  const second = vi.fn();
+  render(
+    <>
+      <List onMove={first} />
+      <List onMove={second} items={['W', 'X', 'Y', 'Z']} />
+    </>,
+  );
+  const d = drag('A');
+  const target = d.over('Y', 'end');
+  expect(target).not.toHaveAttribute('data-drop');
+  d.drop('Y', 'end');
+  expect(first).not.toHaveBeenCalled();
+  expect(second).not.toHaveBeenCalled();
+
+  const file = new DataTransfer();
+  file.items.add(new File(['x'], 'x.txt', { type: 'text/plain' }));
+  fireDrag(item('C'), 'dragover', { dataTransfer: file, clientX: 5, clientY: item('C').getBoundingClientRect().bottom - 2 });
+  expect(item('C')).not.toHaveAttribute('data-drop');
+});
+
+it('takes the side in a horizontal list from the text direction', () => {
+  const onMove = vi.fn();
+  const { unmount } = render(<List orientation="horizontal" onMove={onMove} />);
+  let d = drag('A');
+  d.over('C', 'end', 'x');
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
+  d.drop('C', 'end', 'x');
+  expect(onMove).toHaveBeenLastCalledWith(0, 2);
+  unmount();
+
+  render(<List orientation="horizontal" dir="rtl" onMove={onMove} />);
+  d = drag('A');
+  // In a right-to-left list the text starts at the right, so the right edge is before.
+  d.over('C', 'end', 'x');
+  expect(item('C')).toHaveAttribute('data-drop', 'before');
+  d.drop('C', 'start', 'x');
+  expect(onMove).toHaveBeenLastCalledWith(0, 2);
+});
+
+it('starts no drag and stops one under way when disabled', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<List onMove={onMove} />);
+  const d = drag('A');
+  d.over('C', 'end');
+  rerender(<List onMove={onMove} disabled />);
+  d.over('C', 'end');
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  d.drop('C', 'end');
+  expect(onMove).not.toHaveBeenCalled();
+
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).not.toHaveAttribute('draggable');
+});
+
+it('moves the dragged item when the list changes during the drag', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<Controlled onMove={onMove} items={['A', 'B', 'C', 'D']} />);
+  const d = drag('B');
+  // Another device adds an item at the top: B is now at index 2.
+  rerender(<Controlled onMove={onMove} items={['N', 'A', 'B', 'C', 'D']} />);
+  d.drop('D', 'end');
+  expect(onMove).toHaveBeenCalledWith(2, 4);
+});
+
+it('forgets a drag whose item was removed, and then ignores drags it did not start', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<Controlled onMove={onMove} items={['A', 'B', 'C', 'D']} />);
+  drag('B');
+  rerender(<Controlled onMove={onMove} items={['A', 'C', 'D']} />);
+  fireDrag(item('C'), 'dragover', { dataTransfer: new DataTransfer(), clientX: 5, clientY: item('C').getBoundingClientRect().bottom - 2 });
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove'));
+  });
+  for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
+  expect(onMove).not.toHaveBeenCalled();
+});
+
+it('runs the caller\'s own handlers with its own', () => {
+  const onDragOver = vi.fn();
+  render(<List onDragOver={onDragOver} />);
+  const d = drag('A');
+  d.over('C', 'end');
+  expect(onDragOver).toHaveBeenCalled();
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
+  d.end();
 });

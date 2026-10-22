@@ -114,9 +114,9 @@ When the menu closes, focus goes back to the trigger, which has moved with its r
 
 ## Dragging
 
-`useReorder` puts the browser's drag and drop on the rows. Spread `getItemProps(index)` on each row and `getHandleProps(index)` on its grip: a press on the grip makes that row draggable, so text in the rows stays selectable and a drag starts only from a grip. While a row is dragged, `drop` says which row it would land beside and on which side, and the example draws a line there from tokens. A drop calls the same `move` as the menu, so a drag is announced too. Escape, or a drop outside the list, leaves the order as it was.
+`useReorder` puts the browser's drag and drop on the rows. Spread `getItemProps(index)` on each row and `getHandleProps(index)` on its grip: a press on the grip makes that row draggable, so text in the rows stays selectable and a row drags only by its grip. While a row is dragged, `drop` says which row it would land beside and on which side, and the example draws a line there from tokens. A drop calls the same `move` as the menu, so a drag is announced too. A drop outside the list leaves the order as it was.
 
-The grip is `aria-hidden` and not a tab stop: dragging has no keyboard path, so the menu is the way to move a row from the keyboard (WCAG 2.2 SC 2.1.1), and it is the way to move one with a single pointer and no dragging (SC 2.5.7). Give the grip `touch-action: none`, so a drag that starts on it doesn't scroll the page on a touch screen.
+The grip is `aria-hidden` and not a tab stop: dragging has no keyboard path, so the menu is the way to move a row from the keyboard (WCAG 2.2 SC 2.1.1), and it is the way to move one with a single pointer and no dragging (SC 2.5.7). Give the grip `touch-action: none`, so a press on it doesn't scroll the page on a touch screen. Dragging on touch screens hasn't been checked; the menu works there.
 
 ## Saving the order
 
@@ -124,7 +124,7 @@ The example changes the list as soon as a move is chosen. If your product saves 
 
 ## Accessible composition
 
-**Todae handles:** `Menu` gives the trigger `aria-haspopup` and `aria-expanded`, moves focus into the menu and through it with arrow keys, reads a `disabled` item as `aria-disabled`, and returns focus to the trigger when an item is chosen. `useReorder` starts a drag only from a grip, works out where a drop lands, and ignores drags from outside the list, such as files. `useAnnouncer` writes the message to a live region.
+**Todae handles:** `Menu` gives the trigger `aria-haspopup` and `aria-expanded`, moves focus into the menu and through it with arrow keys, reads a `disabled` item as `aria-disabled`, and returns focus to the trigger when an item is chosen. `useReorder` drags a row only by its grip, works out where a drop lands, and ignores drags from outside the list, such as files. `useAnnouncer` writes the message to a live region.
 
 **You supply:** An `ol` with a name. A name for each row's trigger that says which row it moves. `disabled` on the moves a row can't make. Keys from the item's id. A grip hidden from screen readers, and a look for the drop line and the dragged row. The announcement, with the row's name and its new position, in your product's language.
 
