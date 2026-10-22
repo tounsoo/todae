@@ -12,11 +12,13 @@ import { CitationsExample } from '../../../../components/demos/CitationsDemo';
 
 ## 인용 표시
 
-표시마다 `interactive: true`를 준 [useTooltip](/utilities/use-tooltip)을 하나씩 쓰므로, 미리 보기에 출처 링크를 넣을 수 있고 포인터가 미리 보기로 건너갈 수 있습니다. 목록에서 해당 출처 항목을 가리키는 표시의 `Link.Root`에 `getTriggerProps`를 펼칩니다. 보이는 글자는 번호이고, 그 앞의 시각적으로 숨긴 단어가 스크린 리더에 링크 이름을 "Source 1"로 알려 줍니다. `Tooltip.Root`는 `<span>`으로 렌더링되므로 표시와 미리 보기가 렌더러가 쓴 문단 안에 들어갑니다. 미리 보기의 내용은 링크, `<br />`, `Text.Root as="span"` 같은 구문 요소(phrasing content)로만 채웁니다.
+표시마다 `interactive: true`를 준 [useTooltip](/utilities/use-tooltip)을 하나씩 쓰므로, 미리 보기에 출처 링크를 넣을 수 있고 포인터가 미리 보기로 건너갈 수 있습니다. 목록에서 해당 출처 항목을 가리키는 표시의 `Link.Root`에 `getTriggerProps`를 펼칩니다. 보이는 글자는 번호이고, 그 앞의 시각적으로 숨긴 단어가 스크린 리더에 링크 이름을 "Source 1"로 알려 줍니다. `Tooltip.Root`는 `<span>`으로 렌더링되므로 표시와 미리 보기가 렌더러가 쓴 문단 안에 들어갑니다. 미리 보기의 내용은 링크, `<br />`, `Text.Root as="span"` 같은 구문 요소(phrasing content)로만 채웁니다. 개발 환경에서는 팁 안의 `<p>`나 `<div>`에 Todae가 오류를 기록합니다.
 
 ```tsx
 import { Link, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
 import { useId } from 'react';
+
+type Source = { title: string; site: string; url: string };
 
 export function Citation({ number, source, href }: { number: number; source: Source; href: string }) {
   const tooltip = useTooltip({ interactive: true });
@@ -75,16 +77,16 @@ const id = useId();
 </Message.Root>
 ```
 
-## Accessible composition
+## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `useTooltip`은 포인터를 올리면 `tooltip.delay.show` 토큰만큼 기다렸다가, 포커스를 받으면 바로 미리 보기를 열고, 열려 있는 동안 미리 보기를 표시의 `aria-describedby`에 더합니다. `Tooltip.Root`는 놓은 자리에 렌더링되므로, 표시 바로 뒤에 두면 Tab이 표시에서 미리 보기의 링크로 이동합니다. Escape는 미리 보기를 닫고, 안에서 누르면 포커스를 표시로 돌려보냅니다. `interactive`인 `Tooltip.Root`는 포커스를 가두지 않는 비모달 `role="dialog"`입니다. `<ol>`의 번호는 Prose가 붙입니다.
+**Todae가 맡는 것:** `useTooltip`은 포인터를 올리면 `tooltip.delay.show` 토큰만큼 기다렸다가, 포커스를 받으면 바로 미리 보기를 열고, 열려 있는 동안 미리 보기를 표시의 `aria-describedby`에 더합니다. `Tooltip.Root`는 놓은 자리에 렌더링되므로, 표시 바로 뒤에 두면 Tab이 표시에서 미리 보기의 링크로 이동합니다. Escape는 미리 보기를 닫고, 안에서 누르면 포커스를 표시로 돌려보냅니다. `interactive`인 `Tooltip.Root`는 포커스를 가두지 않는 비모달 `role="dialog"`입니다.
 
 **직접 제공할 것:** 맥락 없는 번호만으로는 뜻이 없으므로, 표시마다 "Source 1" 같은 이름. 미리 보기마다 이름(여기서는 `aria-labelledby`로 연결한 제목). 페이지에서 겹치지 않는 목록 항목 id. 출처 목록의 이름이 되는 제목.
 
-**주의할 점:** 터치 화면에서는 미리 보기가 포커스로만 열리므로, 탭하면 표시를 따라 목록으로 이동합니다. 미리 보기에 보이는 것은 모두 목록에도 둡니다. 미리 보기에는 링크만 둡니다. 복사 같은 버튼은 목록이나 [Message actions](/recipes/message-actions)에 둡니다. 아직 스트리밍 중인 답변의 표시는 출처가 정해진 뒤에 렌더링해, 번호와 링크가 포인터 아래에서 바뀌지 않게 합니다.
+**주의할 점:** 터치 화면에서는 탭하면 표시를 따라 목록으로 이동하고 미리 보기는 보이지 않으므로, 미리 보기에 보이는 것은 모두 목록에도 둡니다. 미리 보기가 열린 동안에는 표시마다 미리 보기의 링크라는 Tab 정지가 하나 더 생깁니다. 목록의 번호는 브라우저의 목록 표시이므로, Tailwind의 preflight처럼 이를 없애는 CSS reset을 쓰면 목록에 번호가 사라집니다. 미리 보기에는 링크만 둡니다. 복사 같은 버튼은 목록이나 [Message actions](/recipes/message-actions)에 둡니다. 아직 스트리밍 중인 답변의 표시는 출처가 정해진 뒤에 렌더링해, 번호와 링크가 포인터 아래에서 바뀌지 않게 합니다.
 
-## When to use
+## 언제 쓰나요
 
-**When:** 검색 결과, 문서, 도구 출력 같은 출처를 글 안에서 인용하는 답변.
+**쓸 때:** 검색 결과, 문서, 도구 출력 같은 출처를 글 안에서 인용하는 답변.
 
-**When not:** 글에 표시 없이 출처 목록만 있을 때 → 목록만. 미리 보기가 필요 없는 문서 페이지의 각주 → `<ol>`을 가리키는 일반 링크. 메시지에 첨부한 파일 → [Attachment](/attachment).
+**쓰지 않을 때:** 글에 표시 없이 출처 목록만 있을 때 → 목록만. 미리 보기가 필요 없는 문서 페이지의 각주 → `<ol>`을 가리키는 일반 링크. 메시지에 첨부한 파일 → [Attachment](/attachment).

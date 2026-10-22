@@ -594,9 +594,9 @@
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
     "# Citations": "c1e97aef2ff3",
-    "## The marker": "70e0cb973e6f",
+    "## The marker": "260ef42d826c",
     "## The sources list": "c939e8cf1d57",
-    "## Accessible composition": "1400a0ae4884",
+    "## Accessible composition": "8b087d37ffbb",
     "## When to use": "64d20eb01e2d",
     "(section order)": "776f0285dccb"
   },
@@ -797,7 +797,7 @@
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
-    "## Accessible composition": "1509f4e1cfc9",
+    "## Accessible composition": "e6b7a044c88c",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"

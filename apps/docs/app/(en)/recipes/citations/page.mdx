@@ -12,11 +12,13 @@ Hover over a number or move focus to it to preview its source. Follow it to jump
 
 ## The marker
 
-Each marker is its own [useTooltip](/utilities/use-tooltip) with `interactive: true`, so the preview can hold the source's link and the pointer can cross onto it. Spread `getTriggerProps` on the marker's `Link.Root`, which points at the source's item in the list. The visible text is the number; a visually hidden word in front of it names the link "Source 1" for screen readers. `Tooltip.Root` renders a `<span>`, so the marker and its preview sit inside the paragraph your renderer writes. Keep the preview's content to phrasing elements, such as a link, `<br />` and `Text.Root as="span"`.
+Each marker is its own [useTooltip](/utilities/use-tooltip) with `interactive: true`, so the preview can hold the source's link and the pointer can cross onto it. Spread `getTriggerProps` on the marker's `Link.Root`, which points at the source's item in the list. The visible text is the number; a visually hidden word in front of it names the link "Source 1" for screen readers. `Tooltip.Root` renders a `<span>`, so the marker and its preview sit inside the paragraph your renderer writes. Keep the preview's content to phrasing elements, such as a link, `<br />` and `Text.Root as="span"`; in development, Todae logs an error for a `<p>` or `<div>` in a tip.
 
 ```tsx
 import { Link, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
 import { useId } from 'react';
+
+type Source = { title: string; site: string; url: string };
 
 export function Citation({ number, source, href }: { number: number; source: Source; href: string }) {
   const tooltip = useTooltip({ interactive: true });
@@ -77,11 +79,11 @@ const id = useId();
 
 ## Accessible composition
 
-**Todae handles:** `useTooltip` opens the preview on hover after the `tooltip.delay.show` token and on focus at once, and adds the preview to the marker's `aria-describedby` while it is open. `Tooltip.Root` renders where you put it, so with it right after the marker, Tab moves from the marker into the preview's link. Escape closes it, and from inside it sends focus back to the marker. `Tooltip.Root` with `interactive` is a non-modal `role="dialog"` with no focus trap. Prose numbers the `<ol>`.
+**Todae handles:** `useTooltip` opens the preview on hover after the `tooltip.delay.show` token and on focus at once, and adds the preview to the marker's `aria-describedby` while it is open. `Tooltip.Root` renders where you put it, so with it right after the marker, Tab moves from the marker into the preview's link. Escape closes it, and from inside it sends focus back to the marker. `Tooltip.Root` with `interactive` is a non-modal `role="dialog"` with no focus trap.
 
 **You supply:** A name for each marker, such as "Source 1", since a bare number says nothing out of context. A name for each preview, here its title through `aria-labelledby`. Ids for the list items that are unique on the page. A heading that names the sources list.
 
-**Watch for:** On a touch screen the preview opens on focus only, so a tap follows the marker to the list; keep everything the preview shows in the list too. Links only in the preview: copy and other buttons belong in the list or in [Message actions](/recipes/message-actions). Markers inside a reply that is still streaming: render a marker once its source is known, so its number and link don't change under the pointer.
+**Watch for:** On a touch screen a tap follows the marker to the list and the preview doesn't show, so keep everything the preview shows in the list too. Each marker adds a second Tab stop, its preview's link, while the preview is open. The list's numbers are the browser's list markers, so a CSS reset that removes them, such as Tailwind's preflight, leaves the list unnumbered. Links only in the preview: copy and other buttons belong in the list or in [Message actions](/recipes/message-actions). Markers inside a reply that is still streaming: render a marker once its source is known, so its number and link don't change under the pointer.
 
 ## When to use
 

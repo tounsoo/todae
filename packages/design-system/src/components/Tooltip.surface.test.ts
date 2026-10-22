@@ -42,4 +42,17 @@ describe('Tooltip.surface', () => {
       expect(contentPolicyError(panel, el)).toBe('Interactive Tooltip allows links only. Use Popover.');
     }
   });
+
+  it('rejects content that would close a paragraph', () => {
+    const error = 'Tooltip holds phrasing content only, such as text, links and spans, so it can sit in a paragraph.';
+    for (const surface of [resolveSurface(false, 'tip-1'), resolveSurface(true, 'panel-1')]) {
+      const el = document.createElement('span');
+      el.innerHTML = '<strong>Popover API</strong><br><span>developer.mozilla.org</span>';
+      expect(contentPolicyError(surface, el)).toBeNull();
+      for (const html of ['<p>Text</p>', '<div>Text</div>', '<ul><li>Text</li></ul>']) {
+        el.innerHTML = html;
+        expect(contentPolicyError(surface, el)).toBe(error);
+      }
+    }
+  });
 });
