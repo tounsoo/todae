@@ -23,6 +23,14 @@ describe('getTabbables', () => {
     root.remove();
   });
 
+  it('counts a focusable separator, such as a Splitter handle, as a tab stop', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<button id="before"></button><div role="separator" tabindex="0" id="handle"></div><button id="after"></button>';
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['before', 'handle', 'after']);
+    root.remove();
+  });
+
   it('skips a hidden input even with a tabindex', () => {
     const root = document.createElement('div');
     root.innerHTML = '<input type="hidden" tabindex="0" id="token"><button id="save"></button>';

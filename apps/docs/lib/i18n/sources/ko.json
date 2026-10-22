@@ -574,7 +574,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "9dee453bbb82",
+    "# Native platform": "b6d04775aa34",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -770,6 +770,19 @@
     "## Props": "a289d00d67fe",
     "(section order)": "87884b291211"
   },
+  "splitter": {
+    "(top)": "94fe1aa137a7",
+    "# Splitter": "a7b395ca39f0",
+    "## Pixel sizes": "66d8ad18e31a",
+    "## Collapse": "f8951d3085d6",
+    "## Keys and pointer": "aae11bbea428",
+    "## Vertical split": "51e279c7e4d9",
+    "## Nested panes": "07f88271e786",
+    "## Accessible composition": "417479ea09ec",
+    "## When to use": "655f41ae87fb",
+    "## Props": "c87cae53423e",
+    "(section order)": "d86244d0a99c"
+  },
   "stack": {
     "(top)": "3dde9f089aaf",
     "# Stack": "53ee26a470d1",
@@ -925,7 +938,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "18a0fe3319f7",
+    "## Strings": "c7d82e0dd44a",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

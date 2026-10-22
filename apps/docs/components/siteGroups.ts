@@ -79,6 +79,7 @@ export const SITE_GROUPS = [
       ['/scroll-area', 'ScrollArea'],
       ['/separator', 'Separator'],
       ['/slider', 'Slider'],
+      ['/splitter', 'Splitter'],
       ['/stack', 'Stack'],
       ['/steps', 'Steps'],
       ['/switch', 'Switch'],

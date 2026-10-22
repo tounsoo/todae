@@ -3277,6 +3277,64 @@
       "ko": "지켜보는 요소가 포커스를 가진 채로 언마운트될 때 포커스를 받는 요소."
     }
   },
+  "Splitter.Root": {
+    "orientation": {
+      "en": "The axis the panels are laid along. A horizontal splitter puts them side by side.",
+      "ko": "패널이 놓이는 축. 가로 스플리터는 패널을 나란히 놓습니다."
+    },
+    "primary": {
+      "en": "Which panel `value` sizes. The other panel takes the rest.",
+      "ko": "`value`가 크기를 정하는 패널. 다른 패널이 나머지를 차지합니다."
+    },
+    "value": {
+      "en": "The primary panel's size in CSS pixels, when you own it.",
+      "ko": "크기를 직접 관리할 때 쓰는, 기준 패널의 크기(CSS 픽셀)."
+    },
+    "defaultValue": {
+      "en": "The primary panel's starting size in CSS pixels. Starts at 240, within `min` and `max`, without one.",
+      "ko": "기준 패널의 시작 크기(CSS 픽셀). 없으면 `min`과 `max` 안에서 240으로 시작합니다."
+    },
+    "onValueChange": {
+      "en": "Called on every change of the size, from a drag or a key, with the new size.",
+      "ko": "끌기나 키로 크기가 바뀔 때마다 새 크기와 함께 호출됩니다."
+    },
+    "min": {
+      "en": "The smallest size in pixels while the panel is open. A container too narrow for it wins.",
+      "ko": "패널이 열려 있을 때의 가장 작은 크기(픽셀). 컨테이너가 이보다 좁으면 컨테이너가 우선합니다."
+    },
+    "max": {
+      "en": "The largest size in pixels. The container limits it too.",
+      "ko": "가장 큰 크기(픽셀). 컨테이너로도 제한됩니다."
+    },
+    "step": {
+      "en": "Pixels an arrow key moves the handle.",
+      "ko": "화살표 키가 핸들을 움직이는 픽셀 수."
+    },
+    "collapsible": {
+      "en": "Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0.",
+      "ko": "기준 패널이 0으로 접힐 수 있게 합니다. Enter가 접고 펼치며, `min`의 절반 아래로 끌면 0으로 붙습니다."
+    },
+    "children": {
+      "en": "Splitter.Panel, Splitter.Handle and Splitter.Panel.",
+      "ko": "Splitter.Panel, Splitter.Handle, Splitter.Panel."
+    }
+  },
+  "Splitter.Panel": {
+    "children": {
+      "en": "The panel's content.",
+      "ko": "패널의 콘텐츠."
+    }
+  },
+  "Splitter.Handle": {
+    "aria-label": {
+      "en": "Names the handle with text. Pass this or aria-labelledby. Default is the resizePanel string from StringsProvider.",
+      "ko": "핸들의 이름이 되는 텍스트. 이것이나 aria-labelledby를 지정하세요. 기본값은 StringsProvider의 resizePanel 문자열입니다."
+    },
+    "aria-labelledby": {
+      "en": "The id of the element that names the handle, such as the primary panel's heading.",
+      "ko": "핸들의 이름이 되는 요소의 id. 기준 패널의 제목 등."
+    }
+  },
   "useInlineEdit": {
     "value": {
       "en": "The saved value. Each edit starts from it.",

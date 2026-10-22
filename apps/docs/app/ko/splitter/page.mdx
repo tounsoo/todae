@@ -1,0 +1,172 @@
+import { Table } from '@tounsoo/todae/table';
+import { ScrollRegion } from '../../../components/ScrollRegion';
+import { SplitterEditor, SplitterMail, SplitterSidebar } from '../../../components/demos/SplitterDemo';
+
+# Splitter
+
+사이드바와 그 옆 페이지처럼 크기를 조절할 수 있는 두 패널입니다. `Splitter.Root`는 `Splitter.Panel`, `Splitter.Handle`, 두 번째 `Splitter.Panel`을 이 순서대로 담습니다. `value`는 첫 번째 패널의 크기(CSS 픽셀)이고, 두 번째 패널이 나머지를 차지합니다. 핸들은 Tab 정지점이 하나인 `separator`입니다. 끌거나, 포커스를 두고 화살표 키를 누르세요.
+
+```tsx
+import { useId, useState } from 'react';
+import { Splitter, Text } from '@tounsoo/todae';
+
+export function AppLayout() {
+  const navId = useId();
+  const [width, setWidth] = useState(240);
+
+  return (
+    <Splitter.Root
+      value={width}
+      onValueChange={setWidth}
+      min={180}
+      max={480}
+      collapsible
+      style={{ blockSize: '100%' }}
+    >
+      <Splitter.Panel>
+        <Text.Root as="h2" id={navId}>
+          Projects
+        </Text.Root>
+        …
+      </Splitter.Panel>
+      <Splitter.Handle aria-labelledby={navId} />
+      <Splitter.Panel>…</Splitter.Panel>
+    </Splitter.Root>
+  );
+}
+```
+
+<Example block>
+  <SplitterSidebar />
+</Example>
+
+`Splitter.Root`는 그리드이고 크기는 커스텀 프로퍼티로 시트에 전달되므로, 서버가 측정 없이 레이아웃을 렌더링합니다. 컨테이너 안에 머뭅니다. 핸들 트랙의 너비보다 좁아지기 전까지는 그렇습니다. 컨테이너가 크기보다 좁으면 첫 번째 패널이 맞게 줄어들고, 보관 중인 크기는 그대로여서 공간이 생기면 다시 나타납니다. `min`보다도 공간이 우선합니다. 컨테이너가 `min`보다 좁으면 패널은 컨테이너가 허용하는 만큼만 넓어지고, 핸들의 범위도 그대로 알려 줍니다. 세로 스플리터와 부모를 채워야 하는 스플리터는 예제가 `blockSize`로 하듯이 높이 방향의 확정된 크기를 직접 정해 줘야 합니다.
+
+## 픽셀 크기
+
+크기는 퍼센트가 아니라 CSS 픽셀입니다. 창 크기가 바뀌어도 사이드바는 너비를 유지하고 다른 패널이 늘고 줄어듭니다. 사이드바, 파일 트리, 채팅 사이드 패널에 필요한 동작입니다. `min`과 `max`도 픽셀이며, `max`는 컨테이너로도 제한됩니다. `value`나 `defaultValue`가 없으면 첫 번째 패널은 240px에서 시작하고 `min`과 `max` 안으로 맞춰집니다. 같은 크기의 두 편집기 같은 비례 분할은 다루지 않습니다.
+
+크기를 저장하는 일은 제품의 몫입니다. `onValueChange`는 끌기나 키로 값이 바뀔 때마다 새 크기(픽셀)와 함께 호출됩니다. Todae는 아무것도 저장하지 않으므로, 제품이 환경설정을 두는 곳에 크기를 보관했다가 `defaultValue`나 `value`로 다시 넘기세요.
+
+```tsx
+<Splitter.Root defaultValue={savedWidth} onValueChange={saveWidth} min={180} max={480}>
+  …
+</Splitter.Root>
+```
+
+`primary="end"`는 두 번째 패널의 크기를 정하고 첫 번째 패널이 나머지를 차지하게 합니다. 가장자리 끝에 놓는 사이드 패널에 씁니다.
+
+## 접기
+
+`collapsible`이면 첫 번째 패널이 0이 될 수 있습니다. 핸들에서 Enter를 누르면 접히고, 다시 누르면 접힐 때의 크기로 돌아옵니다. 끌기나 제품의 코드가 접은 경우에도 같고, 지나가던 중간 크기로는 돌아가지 않습니다. `min`의 절반 아래로 끌면 0으로 붙고, 그보다 크고 `min`보다 작은 곳으로 끌면 `min`에서 멈추므로 패널은 닫혀 있거나 최소한 `min`만큼 넓습니다. 접을 수 있는 동안 핸들의 `aria-valuemin`은 0입니다. Enter는 루트가 보관 중인 크기로 되돌리므로, 접을 때 창이 좁았어도 그 크기가 줄어들지 않습니다. 크기 없이 그려지는 패널은 어느 쪽이든, `collapsible`이든 아니든 숨겨집니다. 0인 기준 패널, 그리고 기준 패널이 공간을 모두 차지할 때의 다른 패널입니다. 서버가 보낸 HTML은 0인 기준 패널을 숨기므로 그 안의 링크와 버튼은 첫 화면부터 탭 순서와 접근성 트리에서 빠집니다. 측정된 공간이 필요한 다른 패널은 브라우저에서 루트가 측정된 뒤에 숨겨지며, 1픽셀보다 적게 남으면 없는 것으로 칩니다. 핸들은 다시 여는 길로 남습니다. 비어 가는 패널 안에 포커스가 있으면 핸들로 옮겨집니다. 제품의 버튼으로도 접힌 패널을 다시 열 수 있습니다. 버튼이 보관 중인 크기를 바꾸고, `aria-expanded`와 `aria-controls`가 패널을 가리키게 하면 됩니다. 패널의 `id`는 `Splitter.Panel`에 지정할 수 있습니다. Enter가 되돌리는 크기는 Todae가 따로 기억하므로, 제품의 버튼은 사이드바 예제처럼 패널을 접을 때 너비를 직접 기록해 자신의 마지막 크기를 따로 기억합니다.
+
+## 키와 포인터
+
+화살표 키는 가리키는 방향으로 핸들을 `step`픽셀(기본 16)만큼 움직입니다. 핸들을 크기를 정하는 패널 쪽으로 움직이면 그 패널이 줄어들므로, 어느 화살표가 키우는지는 패널의 위치에 따라 달라집니다. 오른쪽에서 왼쪽으로 쓰는 텍스트에서는 첫 번째 패널이 오른쪽에 있으므로 왼쪽 화살표가 키웁니다. Todae는 요소에서 방향을 읽습니다.
+
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">키</Table.HeaderCell>
+      <Table.HeaderCell scope="col">나란히</Table.HeaderCell>
+      <Table.HeaderCell scope="col">쌓음</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">화살표 키</Table.HeaderCell>
+      <Table.Cell>왼쪽과 오른쪽 화살표가 핸들을 왼쪽과 오른쪽으로 움직입니다</Table.Cell>
+      <Table.Cell>위쪽과 아래쪽 화살표가 핸들을 위와 아래로 움직입니다</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`Home`과 `End`</Table.HeaderCell>
+      <Table.Cell>가장 작은 크기(접을 수 있으면 0, 아니면 `min`)와 가장 큰 크기</Table.Cell>
+      <Table.Cell>같습니다</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`Enter`</Table.HeaderCell>
+      <Table.Cell>접을 수 있는 패널을 접거나 되돌립니다</Table.Cell>
+      <Table.Cell>같습니다</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
+
+핸들을 주 포인터 버튼으로 누르면 포커스가 가고 포인터가 캡처되며, 그때부터 크기가 포인터를 따라갑니다. 핸들이 포인터 위치로 튀지 않고, 포인터가 움직인 거리만큼 크기가 바뀌므로 끄는 도중 레이아웃이 밀려도 달라지는 것이 없습니다. 끄는 동안 다른 포인터는 무시됩니다. 핸들은 레이아웃에서 1.5rem(`splitter.handle.target`, 기본 크기에서 24px)을 차지하고, 이 띠 전체가 포인터 대상입니다. 1px 선(`splitter.handle.size`)은 그 가운데에 그려집니다. 어느 패널과도 겹치지 않으므로 패널의 스크롤바와 컨트롤은 자기 픽셀을 그대로 씁니다. 테마는 토큰으로 띠를 좁힐 수 있지만 포인터 대상도 그만큼 작아집니다. `touch-action: none`으로 터치로도 끌 수 있습니다. 포인터를 누르고 있는 동안 루트에 `data-dragging`이 붙습니다.
+
+## 세로 분할
+
+`orientation="vertical"`은 패널을 위아래로 쌓고, 핸들은 위쪽과 아래쪽 화살표로 움직이는 가로 구분선이 됩니다. 패널이 높이를 나누어 쓰므로 루트에 블록 크기가 필요합니다.
+
+```tsx
+import { useId } from 'react';
+import { Splitter, Text } from '@tounsoo/todae';
+
+export function EditorWithOutput() {
+  const editorId = useId();
+
+  return (
+    <Splitter.Root orientation="vertical" defaultValue={96} min={64} style={{ blockSize: '18rem' }}>
+      <Splitter.Panel>
+        <Text.Root as="h2" id={editorId}>
+          Query
+        </Text.Root>
+        …
+      </Splitter.Panel>
+      <Splitter.Handle aria-labelledby={editorId} />
+      <Splitter.Panel>…</Splitter.Panel>
+    </Splitter.Root>
+  );
+}
+```
+
+<Example block>
+  <SplitterEditor />
+</Example>
+
+## 중첩 패널
+
+루트 하나에는 패널이 정확히 둘입니다. 패널을 더 두려면 패널 안에 `Splitter.Root`를 넣으세요. 메일함, 메시지 목록, 읽기 창으로 이루어진 메일 레이아웃이 이렇게 만들어집니다. 메일함이 나머지와 나뉘고, 목록이 메시지와 나뉩니다. 루트마다 자기 크기, 범위, 핸들이 있고 안쪽 루트는 자기 패널을 채웁니다.
+
+```tsx
+<Splitter.Root defaultValue={160} min={120} collapsible style={{ blockSize: '18rem' }}>
+  <Splitter.Panel>…mailboxes…</Splitter.Panel>
+  <Splitter.Handle aria-labelledby={mailboxesId} />
+  <Splitter.Panel>
+    <Splitter.Root defaultValue={200} min={160} style={{ blockSize: '100%' }}>
+      <Splitter.Panel>…message list…</Splitter.Panel>
+      <Splitter.Handle aria-labelledby={inboxId} />
+      <Splitter.Panel>…reading pane…</Splitter.Panel>
+    </Splitter.Root>
+  </Splitter.Panel>
+</Splitter.Root>
+```
+
+<Example block>
+  <SplitterMail />
+</Example>
+
+패널은 넘치는 내용을 스스로 스크롤하므로(`overflow: auto`) 내용이 자기 창 안에 머뭅니다. 패널 안의 `block-size: 100%`인 [ScrollArea](/scroll-area)는 패널을 채우고 그 안에서 스크롤되며, 패널 자체는 스크롤되지 않습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 윈도 스플리터 패턴입니다. `Splitter.Handle`은 포커스를 받을 수 있는 `role="separator"`이고, 레이아웃과 교차하는 `aria-orientation`, 픽셀 단위의 `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, 크기를 정하는 패널을 가리키는 `aria-controls`를 갖습니다. `aria-controls`는 핸들이 브라우저에서 마운트된 뒤에 설정되므로 서버의 HTML에는 없습니다. 위의 키로 물리적 방향과 텍스트 방향에 맞게, 그리고 포인터로 움직입니다. 자기 이름이 없는 핸들은 [StringsProvider](/utilities/strings-provider)의 `resizePanel` 문자열에서 "Resize"라는 이름을 받습니다. 크기 없이 그려지는 패널은 `visibility`로 숨겨지므로 탭 순서와 접근성 트리에서 빠집니다.
+
+**직접 제공할 것:** 핸들이 무엇의 크기를 조절하는지 말해 주는 이름입니다. 예제처럼 크기를 정하는 패널의 제목을 가리키는 `aria-labelledby`나 `aria-label`을 쓰세요. 패널이 쌓이는 축으로 루트에 확정된 크기, 그리고 각 패널 안의 제목이나 레이블도 필요합니다. 페이지보다 오래 남아야 하는 저장된 크기, 핸들을 찾지 못하는 사람을 위한 접힌 패널을 되돌리는 방법(접기에서처럼 연결한 버튼 등)도 직접 제공합니다.
+
+**주의할 점:** 한 페이지에 스플리터가 둘 이상인데 핸들 이름이 "Resize"뿐인 경우: 각각 이름을 붙이세요. 일반 `div`인 패널 자체의 `aria-label`은 보조 기술이 무시하므로, 안쪽의 `nav` 같은 랜드마크에 레이블을 두세요. 넘칠 수 있는데 포커스를 받는 것이 없는 패널, 예를 들어 좁은 창 안의 일반 텍스트: 키보드로는 스크롤할 수 없으므로 내용을 넘치는 동안 Tab 정지점이 되는 [ScrollArea](/scroll-area)로 감싸세요. 블록 크기가 없는 세로 루트는 내용 크기로 줄어듭니다. 루트의 `gap`은 지원하지 않습니다. 트랙은 두 패널과 핸들뿐입니다. 다른 컴포넌트로 감싼 패널: 루트에는 다른 것이 들어가지 않습니다. 패널, 핸들, 패널 세 요소만 이 순서로 두며 `data-todae-splitter-panel` 속성과 separator 역할로 찾으므로, 래퍼는 이들을 직계 자식으로 렌더링하고 props를 그대로 넘겨야 합니다. 루트 하나에 패널이 셋이거나 다른 요소가 있거나 순서가 다르면 개발 중 루트의 자식이 바뀔 때마다 경고가 나옵니다. Suspense 경계는 패널을 감싸지 말고 패널 안에 두세요.
+
+## 언제 쓰나요
+
+**언제:** 사용자가 크기를 조절해야 하고 창이 바뀌어도 크기를 유지해야 하는 두 영역: 사이드바와 본문, 편집기와 출력, 목록과 읽기 창.
+
+**쓰지 않을 때:** 열고 닫기만 하는 패널 → Drawer나 Disclosure. 휴대폰에서 드로어가 되는 사이드바 → Drawer. 같거나 비례하는 열 → Grid. 숫자를 정하는 컨트롤 → Slider.
+
+## Props
+
+<PropsTable name="Splitter.Root" />
+
+<PropsTable name="Splitter.Panel" />
+
+<PropsTable name="Splitter.Handle" />

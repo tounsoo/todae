@@ -80,6 +80,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'scroll-area': () => import('../../app/(en)/scroll-area/page.mdx'),
   'separator': () => import('../../app/(en)/separator/page.mdx'),
   'slider': () => import('../../app/(en)/slider/page.mdx'),
+  'splitter': () => import('../../app/(en)/splitter/page.mdx'),
   'loader': () => import('../../app/(en)/loader/page.mdx'),
   'stack': () => import('../../app/(en)/stack/page.mdx'),
   'steps': () => import('../../app/(en)/steps/page.mdx'),
