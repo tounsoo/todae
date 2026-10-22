@@ -46,7 +46,7 @@ When a save or a cancel closes the edit with focus inside it, focus returns to t
 
 **You supply:** A name for the input and for each icon-only button. The trigger, the group and the input, in their places in your markup. An error message tied to the input with `aria-describedby` when you turn a draft down.
 
-**Watch for:** A trigger whose name doesn't say what it edits: describe it by the value, as the example does, so the new value is read when focus returns. Turning a draft down without showing why. A Save or Cancel button outside the group: focus moving to it from the input saves before its click. A list keyed by the value: a rename gives the row a new key, React mounts a new row, and focus has nowhere to return. Key rows by an id. A control in the group whose popup renders elsewhere in the page, such as in a portal: focus moving into the popup leaves the group and saves. A group hidden with CSS instead of removed: focus returns to the trigger only as the group leaves the page.
+**Watch for:** A trigger whose name doesn't say what it edits: describe it by the value, as the example does, so the new value is read when focus returns. Turning a draft down without showing why. A Save or Cancel button outside the group: focus moving to it from the input saves before its click. A list keyed by the value: a rename gives the row a new key, React mounts a new row, and focus has nowhere to return. Key rows by an id. A control in the group whose popup renders elsewhere in the page, such as in a portal: focus moving into the popup leaves the group and saves.
 
 ## When to use
 

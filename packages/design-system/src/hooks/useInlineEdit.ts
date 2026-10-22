@@ -9,11 +9,9 @@ import {
   type MouseEvent,
   type RefCallback,
 } from 'react';
-import { activeIn } from '../components/activeElement.js';
+import { activeIn, focusLost } from '../components/activeElement.js';
 import { isImeKeyEvent } from '../components/ime.js';
-import { useComposedRefs } from '../components/props.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
-import { useFocusHandoff } from './useFocusHandoff.js';
 
 export type UseInlineEditOptions = {
   /** The saved value. Each edit starts from it. */
@@ -56,7 +54,7 @@ export type UseInlineEditResult = {
   cancel: () => void;
   /** Props for the button that starts the edit, such as Rename. Focus returns to it when the edit closes. */
   getTriggerProps: () => UseInlineEditTriggerProps;
-  /** Props for the element that holds the input and its Save and Cancel buttons while editing. Render it only while editing: focus returns to the trigger as it unmounts. */
+  /** Props for the element that holds the input and its Save and Cancel buttons while editing. When the edit closes with focus inside it, focus returns to the trigger. */
   getGroupProps: () => UseInlineEditGroupProps;
   /** Props for the text input. */
   getInputProps: () => UseInlineEditInputProps;
@@ -101,7 +99,12 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
 
   const setDraft = useCallback((draft: string) => update({ ...live.current, draft }), [update]);
 
-  const close = useCallback(() => update({ ...live.current, editing: false }), [update]);
+  const returnFocus = useRef(false);
+  const close = useCallback(() => {
+    const el = group.current;
+    returnFocus.current = el !== null && el.contains(activeIn(el));
+    update({ ...live.current, editing: false });
+  }, [update]);
 
   const cancel = useCallback(() => {
     if (!live.current.editing) return;
@@ -136,8 +139,22 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   const takes = useCallback((target: Element | null) => group.current?.contains(target) === true, []);
   useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: handledOrComposing });
 
-  const handoff = useFocusHandoff({ to: trigger });
-  const groupRef = useComposedRefs<HTMLElement>(group, handoff);
+  // Not useFocusHandoff on the group: when both branches render the same
+  // component, React keeps the group's element as the trigger's wrapper, so
+  // nothing unmounts, yet the input that held focus is gone.
+  useLayoutEffect(() => {
+    if (edit.editing || !returnFocus.current) return;
+    returnFocus.current = false;
+    // Once the commit is done, so the trigger has mounted.
+    queueMicrotask(() => {
+      const el = trigger.current;
+      if (el?.isConnected && focusLost(el.ownerDocument)) el.focus();
+    });
+  }, [edit.editing]);
+
+  const groupRef = useCallback((el: HTMLElement | null) => {
+    group.current = el;
+  }, []);
   // A callback ref, which fits a button as well as any other element.
   const triggerRef = useCallback((el: HTMLElement | null) => {
     trigger.current = el;

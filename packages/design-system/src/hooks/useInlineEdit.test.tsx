@@ -370,6 +370,28 @@ it("leaves a press in a portal rendered from the group to the portal", async () 
   expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Option' }))).toBe(true);
 });
 
+it('returns focus to the trigger when both branches render the same element', async () => {
+  function SameWrapper() {
+    const [name, setName] = useState('Q3 report');
+    const edit = useInlineEdit({ value: name, onCommit: setName });
+    return edit.editing ? (
+      <div {...edit.getGroupProps()}>
+        <input aria-label="Name" {...edit.getInputProps()} />
+      </div>
+    ) : (
+      <div>
+        <button {...edit.getTriggerProps()}>Rename</button>
+      </div>
+    );
+  }
+  render(<SameWrapper />);
+  await open();
+  fireEvent.change(field(), { target: { value: 'Q4 report' } });
+  fireEvent.keyDown(field(), { key: 'Enter' });
+  await flush();
+  expect(document.activeElement).toBe(rename());
+});
+
 it('keeps the caret where the person put it as the parent renders again', async () => {
   const { rerender } = render(<Rename />);
   await open();
