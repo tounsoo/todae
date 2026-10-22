@@ -366,10 +366,10 @@
   "field/one-time-code": {
     "(top)": "b43a66a94949",
     "# Field.OneTimeCode": "c5af11a9c5a9",
-    "## Typing, paste and autofill": "f376f718d920",
-    "## Pressing a box": "41fff40c1730",
+    "## Typing, paste and autofill": "b6428e3d1280",
+    "## Pressing a box": "a43f173fe6b7",
     "## In a form": "2581e4c3656d",
-    "## Accessible composition": "771a9cf2fdd9",
+    "## Accessible composition": "767d0d2b5a3a",
     "## When to use": "d57fe8233a0b",
     "### Field.OneTimeCode": "ff1df9097660",
     "## Props": "94eca171c885",
