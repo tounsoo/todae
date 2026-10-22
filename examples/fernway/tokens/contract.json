@@ -10,5 +10,14 @@
         "spread": { "value": -8, "unit": "px" }
       }
     }
+  },
+  "text": {
+    "label": {
+      "font": {
+        "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "value": 0.06, "unit": "rem" } },
+        "text-transform": { "$type": "textTransform", "$value": "uppercase" }
+      }
+    }
   }
 }

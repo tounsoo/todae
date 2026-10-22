@@ -92,7 +92,12 @@
             { "fg": "option.fg.selected", "bg": "option.bg.selected-highlighted", "min": 60, "over": ["popover.bg", "color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
             { "fg": "tree.item.fg.selected", "bg": "tree.item.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
             { "fg": "table.fg", "bg": "table.row.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
-            { "fg": "table.header.fg", "bg": "table.row.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] }
+            { "fg": "table.header.fg", "bg": "table.row.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
+            { "fg": "text.label.fg", "bg": "color.bg.canvas", "min": 60 },
+            { "fg": "text.label.fg", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "text.label.fg", "bg": "color.bg.subtle", "min": 60 },
+            { "fg": "text.label.fg", "bg": "color.bg.elevated", "min": 60 },
+            { "fg": "text.label.fg", "bg": "popover.bg", "min": 60 }
           ]
         }
       }
