@@ -1,6 +1,8 @@
 @layer todae.components.native {
-  /* A block with its own colors that scrolls sideways. */
+  /* A block with its own colors that scrolls sideways. No margin of its own,
+     so the layout around it sets the space, as it does for other parts. */
   .root {
+    margin: 0;
     padding: var(--todae-code-block-padding);
     border-radius: var(--todae-code-block-radius);
     background: var(--todae-code-block-bg);
