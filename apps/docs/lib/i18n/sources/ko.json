@@ -60,8 +60,8 @@
   },
   "button": {
     "(top)": "600ac73d282c",
-    "# Button": "aae9c2136ae4",
-    "## Toggle": "b7fa7b0a3692",
+    "# Button": "020a1421545f",
+    "## Toggle": "90c603ff1e5f",
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
     "## Links": "efe167041072",
@@ -544,7 +544,7 @@
     "## The page range": "b12b2453c51a",
     "## Current page and steps": "6bdbeb6bbf17",
     "## Icons": "5d31286c3152",
-    "## Accessible composition": "7e878166331f",
+    "## Accessible composition": "08cbdccd900c",
     "## When to use": "845543a903b7",
     "## Props": "c301ffbdb503",
     "(section order)": "89f482eae21e"
@@ -673,6 +673,15 @@
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
   },
+  "recipes/suggestions": {
+    "(top)": "64f0689194fa",
+    "# Suggestions": "1f16320c7c36",
+    "## Suggested prompts": "f32fcd4e4a57",
+    "## Versions of a reply": "4520581d7ef1",
+    "## Accessible composition": "bac05d860697",
+    "## When to use": "712b903230ea",
+    "(section order)": "d07108b52651"
+  },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",
@@ -797,7 +806,7 @@
   "toolbar": {
     "(top)": "65f7c00fa816",
     "# Toolbar": "5064a8aa9aee",
-    "## Accessible composition": "2f687ca43832",
+    "## Accessible composition": "a8765009b0f4",
     "## When to use": "ca65a01ca6de",
     "## Props": "ba88e6e3c216",
     "(section order)": "26fee290bbab"

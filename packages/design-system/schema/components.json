@@ -498,7 +498,7 @@
     },
     {
       "name": "Button.Root",
-      "description": "Native button, or an a through render. Owns variant, type, and disabled. Default type is button.",
+      "description": "Native button, or an a through render. Owns variant, type, and disabled. Default type is button. aria-disabled=\"true\" draws it disabled and keeps it focusable; a click then runs no onClick and flips no toggle.",
       "props": [
         {
           "name": "variant",
