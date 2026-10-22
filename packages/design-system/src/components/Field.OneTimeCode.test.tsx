@@ -35,7 +35,7 @@ function paste(text: string) {
 
 describe('Field.OneTimeCode', () => {
   // A type check, which `pnpm typecheck` runs: the directive fails as unused if the props accept onBeforeInput.
-  it('does not accept onBeforeInput, which would never see the text Todae takes itself', () => {
+  it('type check: does not accept onBeforeInput, which would never see the text Todae takes itself', () => {
     const element = (
       <Field.OneTimeCode
         value=""

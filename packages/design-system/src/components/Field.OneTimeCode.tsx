@@ -207,8 +207,8 @@ export function OneTimeCode({
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
       if (!saved) return;
-      // Told apart by content, not by when the value arrived. `cleanCode` lets only digits and Latin letters through, so the one lossless change a product can make to a code it was told is its case: a `value` equal to any code reported during the composition, ignoring case, is the product's answer to it (an uppercased code, however late, even to an earlier step). A `value` that is neither the code the composition started from nor that answer is an override, and it wins; undo can't bring the dropped composition back. Accepted limit: an override that equals the start code is indistinguishable from no change.
-      const answer = saved.heard.includes(value.toLowerCase());
+      // Told apart by content, not by when the value arrived. `cleanCode` lets only digits and Latin letters through, so the one lossless change a product can make to a code it was told is its case: a `value` equal to the start code or any code reported during the composition, ignoring case, is the product's answer to it (an uppercased code, however late, even to an earlier step). A `value` that is neither the code the composition started from nor that answer is an override, and it wins; undo can't bring the dropped composition back. Accepted limit: an override that equals the start code is indistinguishable from no change.
+      const answer = value.toLowerCase() === saved.start.toLowerCase() || saved.heard.includes(value.toLowerCase());
       if (value !== saved.start && !answer) return;
       const live = el!.value;
       const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);

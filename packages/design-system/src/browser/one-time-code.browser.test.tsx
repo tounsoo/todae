@@ -529,7 +529,7 @@ describe('Field.OneTimeCode in a browser', () => {
     }
   });
 
-  it('takes a composition back for a product whose answer to an earlier step arrives after a later one', async () => {
+  it('takes a composition back for a product holding its answer to an earlier step when the composition ends', async () => {
     const calls: string[] = [];
     render(<Answering initial="AB" mode="timer" calls={calls} />);
     await userEvent.click(input());
