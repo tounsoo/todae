@@ -38,9 +38,9 @@ import { DrilldownFilterDrawer, DrilldownOrderSheet, DrilldownSettingsDialog } f
 
 값은 뷰 값의 스택으로, 첫 뷰가 맨 앞에, 보이는 뷰가 맨 뒤에 옵니다. `Drilldown.Root`는 `value`와 `onValueChange`, 또는 `defaultValue`를 받습니다. `onValueChange`는 다음 스택과 이유를 받습니다. 트리거에서는 `push`, `Drilldown.Back`에서는 `back`, Escape나 Android 뒤로 제스처에서는 `escape`, 제어하지 않는 스택이 처음으로 돌아갈 때는 `reset`입니다. 고정된 트리가 아니라 스택이므로 한 뷰에 두 곳에서 들어갈 수 있고, 제어하는 `value`로 여러 뷰를 한 번에 건너뛸 수 있습니다. 딥 링크라면 `['settings', 'account', 'email']`처럼 넘깁니다.
 
-뷰는 값이 스택에 있는 동안 마운트됩니다. 스택 아래쪽 뷰는 마운트된 채 숨겨지므로 돌아가도 폼 입력이 남아 있습니다. 스택에서 빠진 뷰는 슬라이드가 끝나면 언마운트됩니다. 제어하지 않는 스택은 바깥의 Dialog, Drawer, BottomSheet, Popover가 퇴장 모션까지 마치고 다 닫힐 때마다 `defaultValue`로 돌아가고, `onValueChange`는 이유 `reset`을 받습니다. 제어하는 스택은 둔 그대로 남고, 퇴장 중에 다시 열린 표면의 스택도 그대로 남습니다. 표면이 다 닫히기 전에 언마운트하거나 `<Activity>`로 숨긴 Drilldown은 `reset`을 받지 않고, 퇴장 중에 표면 자체를 언마운트하거나 숨긴 경우에도 받지 않습니다.
+뷰는 값이 스택에 있는 동안 마운트됩니다. 스택 아래쪽 뷰는 마운트된 채 숨겨지므로 돌아가도 폼 입력이 남아 있습니다. 스택에서 빠진 뷰는 슬라이드가 끝나면 언마운트됩니다. 제어하지 않는 스택은 바깥의 Dialog, Drawer, BottomSheet, Popover가 퇴장 모션까지 마치고 다 닫힐 때마다 `defaultValue`로 돌아가고, `onValueChange`는 이유 `reset`을 받습니다. 제어하는 스택은 둔 그대로 남고, 퇴장 중에 다시 열린 표면의 스택도 그대로 남습니다. 표면이 다 닫히기 전에 언마운트하거나 `<Activity>`로 숨긴 Drilldown은 `reset`을 받지 않고, 퇴장 중에 표면 자체를 언마운트한 경우에도 받지 않습니다. 퇴장 중에 `<Activity>`로 숨긴 표면은 숨겨져 있는 동안 `reset`을 보내지 않고, 다시 보이고 다 닫힐 때 보냅니다.
 
-`Drilldown.Trigger`는 [Button](/button)이고 Button의 props를 받으므로, primary 다음 버튼, chevron이 붙은 ghost 행, `render`를 통한 링크가 될 수 있습니다. 단계를 먼저 검증하는 것처럼 비동기 작업 뒤에 push하려면 `value`를 제어하고 작업이 끝났을 때 스택을 설정하세요. 그래도 Back은 포커스를 트리거로 돌려보냅니다.
+`Drilldown.Trigger`는 [Button](/button)이고 Button의 props를 받으므로, primary 다음 버튼, chevron이 붙은 ghost 행, `render`를 통한 링크가 될 수 있습니다. 단계를 먼저 검증하는 것처럼 비동기 작업 뒤에 push하려면 `value`를 제어하고 작업이 끝났을 때 스택을 설정하세요. 그래도 Back은 포커스를 트리거로 돌려보냅니다. 다음 스택 변경이 그 뷰를 보여 주면 트리거의 push로 치므로, 거절한 push를 나중에 직접 하더라도 포커스는 트리거로 돌아갑니다.
 
 ```tsx
 import { ChevronRight } from 'lucide-react';
@@ -59,7 +59,7 @@ import { ChevronRight } from 'lucide-react';
 
 ## Escape와 뒤로 제스처
 
-기본값인 `escape="back"`에서는 Escape가 뷰를 하나 뒤로 가고, 첫 뷰에서만 오버레이를 닫습니다. Escape가 가장 안쪽 층부터 닫는 것과 같은 방식입니다. Popover 안에서는 팝오버가 닫히기 전에 Escape가 뒤로 가고, 다른 Drilldown의 뷰 안에 있는 Drilldown에서는 안쪽이 먼저 뒤로 갑니다. Android 뒤로 제스처와 버튼은 키 없이 닫기 요청(close request)으로 모달 `<dialog>`에 도착하고, Drilldown은 이것에도 같게 답하므로 깊은 스택이 한 번에 사라지지 않습니다. Chrome은 연이은 닫기 요청 중 일부만 페이지가 취소하게 하고 나머지에서는 다이얼로그를 닫습니다. 그런 요청에도 Drilldown은 뒤로 가고, 다이얼로그는 다시 열립니다. 오버레이 안에 열린 메뉴, 팝오버, 툴팁은 뷰 옆에 있든 뷰 안에 있든 Drilldown이 뒤로 가기 전에 Escape와 뒤로 제스처를 먼저 받습니다. 둘 다 포커스가 Drilldown을 감싼 다이얼로그나 팝오버 안에 있을 때, 또는 그 표면이 맨 앞에 있는 채로 포커스가 페이지로 빠졌을 때만 Drilldown에 갑니다. 그래서 Drilldown을 담은 Popover 밖에 포커스가 있으면 Escape와 뒤로 제스처는 팝오버를 닫습니다. `dismissOnEscape={false}`인 다이얼로그에서도 돌아갈 뷰가 있는 동안 Escape는 뒤로 갑니다. `escape="close"`는 Escape를 오버레이에 맡깁니다. 목록을 닫는 콤보박스처럼 뷰 안의 컨트롤이 이미 받은 Escape, IME 조합 중인 키, 그리고 닫힌 팝오버나 숨겨진 탭 패널 안처럼 화면에 없는 Drilldown으로는 뒤로 가지 않습니다.
+기본값인 `escape="back"`에서는 Escape가 뷰를 하나 뒤로 가고, 첫 뷰에서만 오버레이를 닫습니다. Escape가 가장 안쪽 층부터 닫는 것과 같은 방식입니다. Popover 안에서는 팝오버가 닫히기 전에 Escape가 뒤로 가고, 다른 Drilldown의 뷰 안에 있는 Drilldown에서는 안쪽이 먼저 뒤로 갑니다. Android 뒤로 제스처와 버튼은 키 없이 닫기 요청(close request)으로 모달 `<dialog>`에 도착하고, Drilldown은 이것에도 같게 답하므로 깊은 스택이 한 번에 사라지지 않습니다. Chrome은 연이은 닫기 요청 중 일부만 페이지가 취소하게 하고 나머지에서는 다이얼로그를 닫습니다. 그런 요청에도 Drilldown은 뒤로 가고, 다이얼로그는 다시 열립니다. 오버레이 안에 열린 메뉴와 팝오버는 뷰 옆에 있든 뷰 안에 있든 Drilldown이 뒤로 가기 전에 Escape와 뒤로 제스처를 먼저 받고, 열린 툴팁은 Escape만 받습니다. 둘 다 포커스가 Drilldown을 감싼 다이얼로그나 팝오버 안에 있을 때, 또는 그 표면이 맨 앞에 있는 채로 포커스가 페이지로 빠졌을 때만 Drilldown에 갑니다. 그래서 Drilldown을 담은 Popover 밖에 포커스가 있으면 Escape와 뒤로 제스처는 팝오버를 닫습니다. `dismissOnEscape={false}`인 다이얼로그에서도 돌아갈 뷰가 있는 동안 Escape는 뒤로 갑니다. `escape="close"`는 Escape를 오버레이에 맡깁니다. 목록을 닫는 콤보박스처럼 뷰 안의 컨트롤이 이미 받은 Escape, IME 조합 중인 키, 그리고 닫힌 팝오버나 숨겨진 탭 패널 안처럼 화면에 없는 Drilldown으로는 뒤로 가지 않습니다.
 
 BottomSheet 안에서는 시트가 스냅 위치를 유지하고 grabber는 여전히 시트를 끕니다. 가장자리를 밀어 뒤로 가는 동작은 없습니다.
 

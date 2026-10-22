@@ -275,6 +275,9 @@ function Deferred({ apply }: { apply: (update: () => void) => void }) {
             <button type="button" onClick={() => setStack(['settings', 'about'])}>
               About
             </button>
+            <button type="button" onClick={() => setStack(['settings', 'account'])}>
+              Open account
+            </button>
           </Drilldown.View>
           <Drilldown.View value="account" label="Account">
             <input aria-label="Display name" />
@@ -318,6 +321,20 @@ describe('Drilldown focus with a stack the product sets later', () => {
       await settled();
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search' }));
+    } finally {
+      cleanupAll();
+    }
+  });
+  it('treats the next change that shows a pushed view as that push, however late it comes', async () => {
+    render(<Deferred apply={() => undefined} />);
+    try {
+      const account = screen.getByRole('button', { name: 'Account' });
+      await userEvent.click(account);
+      await userEvent.click(screen.getByRole('button', { name: 'Open account' }));
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' }));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      expect(document.activeElement).toBe(account);
     } finally {
       cleanupAll();
     }

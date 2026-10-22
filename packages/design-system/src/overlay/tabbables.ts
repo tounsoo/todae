@@ -61,9 +61,14 @@ export function isReachable(el: HTMLElement): boolean {
   return el.checkVisibility?.({ visibilityProperty: true, checkVisibilityCSS: true }) ?? el.style.display !== 'none';
 }
 
+/** Whether a script can move focus to `el` now: it isn't disabled and is reachable. Tab order is not read. */
+export function canFocusNow(el: HTMLElement): boolean {
+  return !el.matches(':disabled') && isReachable(el);
+}
+
 // Whether `el` is focusable now, by its own state alone.
 function canTakeFocus(el: HTMLElement, root: HTMLElement): boolean {
-  return inTabOrder(el, root) && !el.matches(':disabled') && isReachable(el);
+  return inTabOrder(el, root) && canFocusNow(el);
 }
 
 // Each named radio group's one Tab stop, going forward: its checked radio, or

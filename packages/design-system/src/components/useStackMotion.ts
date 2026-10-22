@@ -88,7 +88,7 @@ const ENTER_EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 function motionDuration(viewport: HTMLElement): number {
   const ms = tokenMs(viewport, '--todae-drilldown-motion-duration');
   if (ms === null) {
-    warnOnce('drilldown-motion-duration', `Drilldown: --todae-drilldown-motion-duration can't be read, so the viewport's height changes over ${DURATION_MS}ms. Load Todae's stylesheet or set the token.`, 'error');
+    warnOnce('drilldown-motion-duration', `Drilldown: --todae-drilldown-motion-duration can't be read, so the viewport's height changes over ${DURATION_MS}ms. Load Todae's stylesheet or set the token.`);
   }
   return ms ?? DURATION_MS;
 }
@@ -96,7 +96,7 @@ function motionDuration(viewport: HTMLElement): number {
 function enterEasing(viewport: HTMLElement): string {
   const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
   if (!easing) {
-    warnOnce('drilldown-motion-easing-enter', `Drilldown: --todae-drilldown-motion-easing-enter can't be read, so the viewport's height changes with ${ENTER_EASING}. Load Todae's stylesheet or set the token.`, 'error');
+    warnOnce('drilldown-motion-easing-enter', `Drilldown: --todae-drilldown-motion-easing-enter can't be read, so the viewport's height changes with ${ENTER_EASING}. Load Todae's stylesheet or set the token.`);
   }
   return easing || ENTER_EASING;
 }

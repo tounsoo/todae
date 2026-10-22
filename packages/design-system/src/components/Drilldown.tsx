@@ -16,7 +16,7 @@ import { useControlledValue } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
-import { firstTabbable, isReachable } from '../overlay/tabbables.js';
+import { canFocusNow, firstTabbable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
@@ -101,7 +101,7 @@ function handledOrComposing(event: KeyboardEvent): boolean {
 }
 
 function canTakeFocus(el: HTMLElement | null | undefined, view: HTMLElement): el is HTMLElement {
-  return Boolean(el?.isConnected && view.contains(el) && isReachable(el) && !el.matches(':disabled'));
+  return Boolean(el?.isConnected && view.contains(el) && canFocusNow(el));
 }
 
 // Focus moves with the views when it was on them, on Back, on the overlay's

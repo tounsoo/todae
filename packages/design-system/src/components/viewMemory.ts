@@ -4,7 +4,7 @@ import type { StackChange } from './useStackMotion.js';
 export type Covered = { offset: number; trigger: HTMLElement | null };
 
 export type ViewMemory = {
-  /** Notes the trigger that pushed `view`, for the first change that shows it, however late the product applies the push. */
+  /** Notes the trigger that pushed `view`, for the next change, however late the product applies the push. */
   pushed: (view: string, trigger: HTMLElement) => void;
   /**
    * Follows a change of the shown stack as it starts, given the scroll offset
@@ -32,11 +32,12 @@ export function createViewMemory(): ViewMemory {
       if (top === undefined) return undefined;
       if (top !== below) {
         const trigger = triggers.get(top) ?? null;
-        triggers.delete(top);
         if (direction === 'forward' && below !== undefined && to.includes(below)) {
           covered.set(below, { offset, trigger });
         }
       }
+      // A push the product applies arrives as the next change; one it turned down never does.
+      triggers.clear();
       return direction === 'back' ? covered.get(top) : undefined;
     },
     clear() {
