@@ -335,6 +335,23 @@ describe('Splitter on the server', () => {
   });
 });
 
+describe('Splitter with one panel shown', () => {
+  it('marks the root with the panel it shows, and no empty side, from the server on', () => {
+    const html = renderToString(<Layout defaultValue={0} collapsible only="end" />);
+    expect(html).toMatch(/<div[^>]*data-testid="root"[^>]*data-only="end"/);
+    expect(html).not.toContain('data-empty');
+  });
+
+  it('keeps the size it holds for when both panels show again', () => {
+    measured(400);
+    const { rerender } = render(<Layout defaultValue={400} only="end" />);
+    expect(empty()).toBeNull();
+    rerender(<Layout defaultValue={400} />);
+    expect(root().hasAttribute('data-only')).toBe(false);
+    expect(handle().getAttribute('aria-valuenow')).toBe('400');
+  });
+});
+
 describe('Splitter range', () => {
   it('marks a panel at size 0 as empty whether or not it is collapsible', () => {
     render(<Layout defaultValue={0} />);

@@ -67,6 +67,11 @@ export type SplitterRootProps = {
   step?: number;
   /** Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0. */
   collapsible?: boolean;
+  /**
+   * Shows only this panel, across the whole root, and takes the other panel and the handle out of the layout with
+   * `display: none`. Both panels stay mounted, and the size is kept for when both show again.
+   */
+  only?: SplitterPrimary;
 } & Omit<ComponentPropsWithRef<'div'>, 'defaultValue'>;
 
 /** One of the two panels. A `div`, hidden from the tab order and the accessibility tree while it is drawn at no size. */
@@ -160,6 +165,7 @@ function Root({
   max,
   step = 16,
   collapsible = false,
+  only,
   className,
   style,
   ref,
@@ -193,7 +199,8 @@ function Root({
     defaultValue ?? Math.min(Math.max(DEFAULT_SIZE, min), max ?? Number.POSITIVE_INFINITY),
   );
   const size = clampSize(stored, bounds);
-  const empty = emptySide(size, room, primary);
+  // One panel shown alone fills the root, whatever the size says.
+  const empty = only ? undefined : emptySide(size, room, primary);
 
   // The size last asked for, which a render has not caught up with while moves queue in one frame. It is the
   // only dedupe, so a move back to the size on screen still counts after one away from it.
@@ -311,6 +318,7 @@ function Root({
         data-primary={primary}
         data-dragging={dragging ? '' : undefined}
         data-empty={empty}
+        data-only={only}
         style={{ ...style, '--_size': `${size}px` } as CSSProperties}
       />
     </SplitterContext.Provider>

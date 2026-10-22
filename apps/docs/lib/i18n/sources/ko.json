@@ -628,6 +628,17 @@
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
   },
+  "recipes/app-shell": {
+    "(top)": "ead1bf85f7b3",
+    "# App shell": "931a2df39007",
+    "## Layout": "3a06fea84f3c",
+    "## Sidebar": "a67b8367beb0",
+    "## Narrow screens": "ccc5a0ca7ab0",
+    "## Navigating": "84138b725f16",
+    "## Accessible composition": "4b9e1db5a2e8",
+    "## When to use": "dba76d62c249",
+    "(section order)": "cbe0ddccb14a"
+  },
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
     "# Citations": "c1e97aef2ff3",
@@ -787,13 +798,14 @@
     "# Splitter": "a7b395ca39f0",
     "## Pixel sizes": "66d8ad18e31a",
     "## Collapse": "f8951d3085d6",
+    "## One panel": "6929433025e4",
     "## Keys and pointer": "aae11bbea428",
     "## Vertical split": "51e279c7e4d9",
     "## Nested panes": "07f88271e786",
     "## Accessible composition": "417479ea09ec",
-    "## When to use": "655f41ae87fb",
+    "## When to use": "742071388726",
     "## Props": "c87cae53423e",
-    "(section order)": "d86244d0a99c"
+    "(section order)": "6d27abd98db6"
   },
   "stack": {
     "(top)": "3dde9f089aaf",

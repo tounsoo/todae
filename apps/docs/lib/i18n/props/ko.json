@@ -3348,6 +3348,10 @@
       "en": "Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0.",
       "ko": "기준 패널이 0으로 접힐 수 있게 합니다. Enter가 접고 펼치며, `min`의 절반 아래로 끌면 0으로 붙습니다."
     },
+    "only": {
+      "en": "Shows only this panel, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again.",
+      "ko": "이 패널만 루트 전체에 걸쳐 보여 주고, 다른 패널과 핸들은 `display: none`으로 레이아웃에서 뺍니다. 두 패널 모두 마운트된 채로 남고, 크기는 둘 다 다시 보일 때를 위해 유지됩니다."
+    },
     "children": {
       "en": "Splitter.Panel, Splitter.Handle and Splitter.Panel.",
       "ko": "Splitter.Panel, Splitter.Handle, Splitter.Panel."

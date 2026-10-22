@@ -65,6 +65,13 @@ export const meta = {
       description: 'Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0.',
     },
     {
+      name: 'only',
+      type: '"start" | "end"',
+      required: false,
+      description:
+        'Shows only this panel, across the whole root, and takes the other panel and the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both show again.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
