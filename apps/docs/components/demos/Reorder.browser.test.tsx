@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { ReorderExample } from './ReorderDemo';
+import { PinnedChannels, ReorderExample } from './ReorderDemo';
 
 afterEach(cleanup);
 
@@ -22,46 +22,80 @@ function setup() {
   );
 }
 
-async function choose(name: string, item: string) {
+// Opens a row's menu from the keyboard and walks to an item with the arrow keys.
+async function open(name: string, item: string) {
   trigger(name).focus();
   await userEvent.keyboard('{Enter}');
   const menu = await screen.findByRole('menu');
-  await userEvent.click(within(menu).getByRole('menuitem', { name: item }));
+  const items = within(menu).getAllByRole('menuitem');
+  const target = items.findIndex((element) => element.textContent === item);
+  await expect.poll(() => document.activeElement).toBe(items[0]);
+  if (target > 0) await userEvent.keyboard('{ArrowDown}'.repeat(target));
+  expect(document.activeElement).toBe(items[target]);
+  return items[target]!;
 }
 
 it('moves a row from its menu, keeps focus on its button and announces the new position', async () => {
   setup();
-  await choose('Design', 'Move down');
+  await open('Design', 'Move down');
+  await userEvent.keyboard('{Enter}');
   expect(order()).toEqual(['Engineering', 'Design', 'Marketing', 'Sales', 'Support']);
   await expect.poll(() => document.activeElement).toBe(trigger('Design'));
   await expect.poll(() => politeRegion()?.textContent).toBe('Design moved to position 2 of 5');
 
-  await choose('Design', 'Move to bottom');
+  await open('Design', 'Move to bottom');
+  await userEvent.keyboard(' ');
   expect(order()).toEqual(['Engineering', 'Marketing', 'Sales', 'Support', 'Design']);
   await expect.poll(() => document.activeElement).toBe(trigger('Design'));
   await expect.poll(() => politeRegion()?.textContent).toBe('Design moved to position 5 of 5');
 
-  await choose('Support', 'Move to top');
+  await userEvent.click(await open('Support', 'Move to top'));
   expect(order()).toEqual(['Support', 'Engineering', 'Marketing', 'Sales', 'Design']);
   await expect.poll(() => document.activeElement).toBe(trigger('Support'));
+  await expect.poll(() => politeRegion()?.textContent).toBe('Support moved to position 1 of 5');
 
-  await choose('Sales', 'Move up');
+  await open('Sales', 'Move up');
+  await userEvent.keyboard('{Enter}');
   expect(order()).toEqual(['Support', 'Engineering', 'Sales', 'Marketing', 'Design']);
   await expect.poll(() => document.activeElement).toBe(trigger('Sales'));
+  await expect.poll(() => politeRegion()?.textContent).toBe('Sales moved to position 3 of 5');
 });
 
-it('marks the moves a row at an end cannot make as unavailable, and keeps them in the arrow-key order', async () => {
+it('keeps the moves a row at an end cannot make in the arrow-key order, unavailable', async () => {
   setup();
-  trigger('Design').focus();
-  await userEvent.keyboard('{Enter}');
-  const menu = await screen.findByRole('menu');
-  const items = within(menu).getAllByRole('menuitem');
+  const said = politeRegion()?.textContent ?? '';
+  const up = await open('Design', 'Move up');
+  const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
   expect(items.map((item) => item.textContent)).toEqual(['Move to top', 'Move up', 'Move down', 'Move to bottom']);
   expect(items.map((item) => item.getAttribute('aria-disabled'))).toEqual(['true', 'true', null, null]);
 
-  // Choosing an unavailable move does nothing and leaves the menu open.
-  items[0]!.focus();
+  expect(document.activeElement).toBe(up);
   await userEvent.keyboard('{Enter}');
-  expect(order()[0]).toBe('Design');
+  expect(order()).toEqual(['Design', 'Engineering', 'Marketing', 'Sales', 'Support']);
   expect(screen.getByRole('menu')).toBeVisible();
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(politeRegion()?.textContent ?? '').toBe(said);
+});
+
+it('keeps focus on a row the product moves back, as after a failed save', async () => {
+  const channels = [
+    { id: 'design', name: 'Design' },
+    { id: 'engineering', name: 'Engineering' },
+    { id: 'marketing', name: 'Marketing' },
+  ];
+  // Design was moved to the top; putting it back moves its element, which React keeps focused.
+  const before = [channels[1]!, channels[2]!, channels[0]!];
+  const { rerender } = render(
+    <Providers>
+      <PinnedChannels channels={channels} onReorder={() => {}} />
+    </Providers>,
+  );
+  trigger('Design').focus();
+  rerender(
+    <Providers>
+      <PinnedChannels channels={before} onReorder={() => {}} />
+    </Providers>,
+  );
+  expect(order()).toEqual(['Engineering', 'Marketing', 'Design']);
+  expect(document.activeElement).toBe(trigger('Design'));
 });
