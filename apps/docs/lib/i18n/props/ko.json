@@ -1111,8 +1111,8 @@
       "ko": "코드. 허용된 문자 집합에서 최대 length자입니다."
     },
     "onChange": {
-      "en": "Optional: onValueChange alone is enough when the event is not needed.",
-      "ko": "선택 사항입니다. 이벤트가 필요 없으면 onValueChange만으로 충분합니다."
+      "en": "Optional: onValueChange alone is enough when the event is not needed. The event holds the raw text; clean it, or use onValueChange.",
+      "ko": "선택 사항입니다. 이벤트가 필요 없으면 onValueChange만으로 충분합니다. 이벤트에는 정리 전의 원문이 담기므로, 직접 정리하거나 onValueChange를 쓰세요."
     },
     "onValueChange": {
       "en": "Called with the code cleaned to the allowed characters and cut to length. Without it and onChange the input is read-only.",
