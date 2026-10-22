@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Activity, StrictMode, useRef, useState } from 'react';
 import { afterEach, expect, it } from 'vitest';
 import { useFocusHandoff } from './useFocusHandoff.js';
@@ -73,9 +73,48 @@ it('moves focus when another update removes the element while it holds focus', a
 
 it('focuses a clicked control first, so a click that leaves focus on the body still hands it on', async () => {
   render(<Decision />);
-  act(() => screen.getByRole('button', { name: 'Approve' }).click());
+  // A pointer click that doesn't focus the button, as in Safari and Firefox on macOS.
+  fireEvent.click(screen.getByRole('button', { name: 'Approve' }), { detail: 1 });
   await flush();
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Summary' }));
+});
+
+it('focuses the clicked control, not a focusable wrapper around it', () => {
+  function Wrapped() {
+    const summary = useRef<HTMLButtonElement>(null);
+    const handoff = useFocusHandoff<HTMLDivElement>({ to: summary });
+    return (
+      <>
+        <button ref={summary}>Summary</button>
+        <div ref={handoff}>
+          <div tabIndex={-1} aria-label="Wrapper">
+            <button>Approve</button>
+          </div>
+        </div>
+      </>
+    );
+  }
+  render(<Wrapped />);
+  const approve = screen.getByRole('button', { name: 'Approve' });
+  fireEvent.click(approve, { detail: 1 });
+  expect(document.activeElement).toBe(approve);
+  act(() => approve.focus());
+  fireEvent.click(approve, { detail: 1 });
+  expect(document.activeElement).toBe(approve);
+});
+
+it('leaves focus alone on a scripted click', async () => {
+  render(
+    <>
+      <input aria-label="Composer" />
+      <Decision />
+    </>,
+  );
+  const composer = screen.getByRole('textbox', { name: 'Composer' });
+  act(() => composer.focus());
+  act(() => screen.getByRole('button', { name: 'Approve' }).click());
+  await flush();
+  expect(document.activeElement).toBe(composer);
 });
 
 it('hands focus on under StrictMode', async () => {

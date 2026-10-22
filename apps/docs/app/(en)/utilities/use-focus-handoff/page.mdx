@@ -29,7 +29,7 @@ Press Allow or Deny with the keyboard, then Ask again: focus stays on the button
 
 The hand-off waits until React has finished the update, so `to` can point at an element that mounts in the same update, as Ask again does here. It does nothing when focus is already on another element in the page by then, such as a field that took `autoFocus`, or when the element in `to` is not in the page. It reacts only to the element leaving the page: for one hidden with CSS or kept in a hidden Activity, it does nothing, and the browser decides where focus goes.
 
-Whatever unmounts the element, a click or an update, focus moves the same way, so a decision that arrives from elsewhere, such as another device or the server, moves focus the same way a click does. A click on a control inside the element focuses that control first, since Safari and Firefox on macOS don't focus a clicked button. The [Tool call](/recipes/tool-call) recipe uses it on its Approve and Deny buttons.
+Focus moves the same way whatever unmounts the element, so a decision that arrives from elsewhere, such as another device or the server, is handled like a click. A pointer click on a control inside the element focuses that control first, since Safari and Firefox on macOS don't focus a clicked button. A script's `click()` doesn't, so a shortcut that clicks Approve while the reader types leaves focus where it is. The [Tool call](/recipes/tool-call) recipe uses it on its Approve and Deny buttons.
 
 ## Accessible composition
 

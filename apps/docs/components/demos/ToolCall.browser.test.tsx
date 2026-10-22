@@ -90,6 +90,6 @@ it('moves focus to the summary when a pointer click leaves focus elsewhere, as S
     </Providers>,
   );
   // A click that doesn't focus the button, as in Safari and Firefox on macOS.
-  screen.getByRole('button', { name: 'Deny' }).click();
+  screen.getByRole('button', { name: 'Deny' }).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
   await expect.poll(() => document.activeElement).toBe(summary('create_branch'));
 });

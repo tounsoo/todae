@@ -12,8 +12,8 @@ export type UseFocusHandoffOptions = {
  * Returns a ref for an element that can unmount while it holds focus, such as
  * buttons that go away once they are used. When it unmounts with focus inside,
  * focus moves to `to` once the commit is done, unless something else took
- * focus by then or `to` is gone too. A click on a control inside focuses that
- * control first, since Safari and Firefox on macOS do not focus a clicked button.
+ * focus by then or `to` is gone too. A pointer click on a control inside focuses
+ * that control first, since Safari and Firefox on macOS do not focus a clicked button.
  */
 export function useFocusHandoff<T extends HTMLElement = HTMLElement>({ to }: UseFocusHandoffOptions): RefCallback<T> {
   return useCallback(
@@ -22,8 +22,14 @@ export function useFocusHandoff<T extends HTMLElement = HTMLElement>({ to }: Use
       // In the capture phase, so the control has focus before the product's
       // onClick, which may remove the element at once.
       const focusClicked = (event: MouseEvent) => {
-        const control = getCandidates(el).find((candidate) => candidate.contains(event.target as Node));
-        if (control && activeIn(control) !== control) focusWithoutScroll(control);
+        // Pointer clicks only: a keyboard click already has focus, and a
+        // script's click() must not pull focus from where the reader is.
+        if (event.detail === 0) return;
+        // The innermost one: candidates come in document order, wrappers first.
+        const control = getCandidates(el)
+          .filter((candidate) => candidate.contains(event.target as Node))
+          .at(-1);
+        if (control && !control.contains(activeIn(control))) focusWithoutScroll(control);
       };
       el.addEventListener('click', focusClicked, true);
       // React runs this cleanup before it takes the element out, so focus is
