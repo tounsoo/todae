@@ -1,5 +1,6 @@
 import { Text } from '@tounsoo/todae/text';
 import { TextHeadingSize, TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
+import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
@@ -88,17 +89,36 @@ A company token package sets the look in its own `contract` set, as the [Fernway
 }
 ```
 
+## Lines
+
+`lines` clamps the text to that many lines and ends the last one in an ellipsis. A word longer than the line, such as a file name, breaks so it ends in the ellipsis too. The element becomes a block, so it takes the width its parent gives it; in a flex row it can shrink below its text.
+
+When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in a tooltip on hover, and while a focused element holds the text, such as a link or a row around it. A focused element that holds several cut texts shows the first one's tooltip. Clamping changes only what is painted, so screen readers read the whole text and the tooltip is hidden from them. `tooltip={false}` turns it off. `@tounsoo/todae/text` clamps the same way but draws no tooltip, since that needs a client component.
+
+```tsx
+<Text.Root lines={1} weight="medium">
+  quarterly-revenue-report-northern-region-final.pdf
+</Text.Root>
+<Text.Root lines={2} size="s" tone="muted">
+  Every branch office's numbers for July through September, with notes from each regional lead and the forecast for the next quarter.
+</Text.Root>
+```
+
+<Example block>
+  <TextLines />
+</Example>
+
 ## Accessible composition
 
-**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element.
+**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element. With `lines`, the tooltip of cut text, on hover and while a focused element holds the text, hidden from screen readers, which read the whole text.
 
 **You supply:** The outline. Pick each heading's level from where it sits on the page, not from the size you want. A wrapper such as a section title should take the level as a prop, or render one level only where that level is always right. Give a heading an `id` when a region names itself with `aria-labelledby`.
 
-**Watch for:** A heading tag on text that does not start a section, such as a bold line inside a card: it adds an entry to the page's list of headings. Use `weight="bold"` instead. `as="strong"` marks importance; for the bold look alone, use `weight`. A `tone` as the only sign that text means something, such as an error or a selected state. A label is not part of the heading it sits over, so moving through headings skips it: put words the heading needs in the heading. Write a label in sentence case and set its case with `text.label.font.text-transform`, so a theme can change it.
+**Watch for:** A heading tag on text that does not start a section, such as a bold line inside a card: it adds an entry to the page's list of headings. Use `weight="bold"` instead. `as="strong"` marks importance; for the bold look alone, use `weight`. A `tone` as the only sign that text means something, such as an error or a selected state. A label is not part of the heading it sits over, so moving through headings skips it: put words the heading needs in the heading. Write a label in sentence case and set its case with `text.label.font.text-transform`, so a theme can change it. Cutting text a person has to read in full, such as an error or a price, with `lines`: the tooltip needs a hover or a focus, and on a touch screen plain text gets neither. Keep `lines` for names and titles whose full text the next screen shows.
 
 ## When to use
 
-**When:** Body text and headings on the token scale: size s through 2xl, tone default / muted / accent, weight; `as` p / span / strong / h1–h6. Eyebrows, kickers and metadata with `size="label"`.
+**When:** Body text and headings on the token scale: size s through 2xl, tone default / muted / accent, weight; `as` p / span / strong / h1–h6. Eyebrows, kickers and metadata with `size="label"`. Names and titles cut to a number of lines with `lines`.
 
 **When not:** Field names → Label, not `size="label"`. A group of controls' name → Fieldset.Legend. Hints and errors → Description / ErrorMessage. Dialog heading → `Dialog.Title`.
 

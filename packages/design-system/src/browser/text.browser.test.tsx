@@ -1,0 +1,162 @@
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@vitest/browser/context';
+import { afterEach, describe, expect, it } from 'vitest';
+import { Text } from '../index.js';
+
+afterEach(cleanup);
+
+const LONG = 'Quarterly revenue report for the northern region, with every branch office and its numbers';
+
+const openTip = () => document.querySelector<HTMLElement>('[role="tooltip"]:popover-open');
+
+describe('Text.Root lines', () => {
+  it('clamps the text to its lines and leaves text that fits alone', () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root lines={2} data-testid="cut">
+          {LONG}
+        </Text.Root>
+        <Text.Root lines={2} data-testid="fits">
+          Short
+        </Text.Root>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    const lineHeight = parseFloat(getComputedStyle(cut).lineHeight);
+    expect(cut.getBoundingClientRect().height).toBeCloseTo(lineHeight * 2, 0);
+    expect(cut.scrollHeight).toBeGreaterThan(cut.clientHeight);
+    const fits = screen.getByTestId('fits');
+    expect(fits.scrollHeight).toBe(fits.clientHeight);
+  });
+
+  it('ends a word longer than the line in the ellipsis instead of cutting it', () => {
+    render(
+      <div style={{ inlineSize: '8rem' }}>
+        <Text.Root lines={1} data-testid="t">
+          quarterly-revenue-report-northern-region-final.pdf
+        </Text.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    expect(el.scrollWidth).toBe(el.clientWidth);
+    expect(el.scrollHeight).toBeGreaterThan(el.clientHeight);
+  });
+
+  it('shows the full text in a tip on hover only when it is cut, hidden from assistive tech', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root lines={1} data-testid="cut">
+          {LONG}
+        </Text.Root>
+        <Text.Root lines={1} data-testid="fits">
+          Short
+        </Text.Root>
+      </div>,
+    );
+    await userEvent.hover(screen.getByTestId('fits'));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(openTip()).toBeNull();
+
+    const cut = screen.getByTestId('cut');
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+    expect(openTip()!.getAttribute('aria-hidden')).toBe('true');
+    expect(cut.hasAttribute('aria-describedby')).toBe(false);
+
+    await userEvent.unhover(cut);
+    await waitFor(() => expect(openTip()).toBeNull());
+  });
+
+  it('places the tip by the text', async () => {
+    render(
+      <div style={{ inlineSize: '12rem', marginBlockStart: '6rem', marginInlineStart: '4rem' }}>
+        <Text.Root lines={1} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()).not.toBeNull());
+    const tip = openTip()!.getBoundingClientRect();
+    const text = cut.getBoundingClientRect();
+    expect(tip.bottom).toBeLessThanOrEqual(text.top + 1);
+    expect(text.top - tip.bottom).toBeLessThan(24);
+  });
+
+  it('shows the tip of the first cut text a focused element holds, and hides it on blur', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <a href="#report" data-testid="link">
+          <Text.Root lines={1} as="span">
+            {LONG}
+          </Text.Root>
+          <Text.Root lines={1} as="span" size="s">
+            {`Second ${LONG}`}
+          </Text.Root>
+        </a>
+        <button type="button">After</button>
+      </div>,
+    );
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByTestId('link'));
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+    expect(document.querySelectorAll('[role="tooltip"]:popover-open')).toHaveLength(1);
+    // The tip is not part of the link's name.
+    let name = '';
+    screen.getByRole('link', { name: (computed) => ((name = computed), true) });
+    expect(name.replace(/\s+/g, ' ')).toBe(`${LONG} Second ${LONG}`);
+
+    await userEvent.tab();
+    await waitFor(() => expect(openTip()).toBeNull());
+  });
+
+  it('keeps a focus-held tip open when the pointer leaves', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <a href="#report" data-testid="link">
+          <Text.Root lines={1} as="span" data-testid="cut">
+            {LONG}
+          </Text.Root>
+        </a>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()).not.toBeNull());
+    // Let the open tip's effects run, as they have by the time a person tabs.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    screen.getByTestId('link').focus();
+    await userEvent.unhover(cut);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).not.toBeNull();
+  });
+
+  it('drops the tip when the text comes to fit', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }} data-testid="box">
+        <Text.Root lines={1} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    await userEvent.hover(cut);
+    await waitFor(() => expect(openTip()).not.toBeNull());
+    screen.getByTestId('box').style.inlineSize = '200rem';
+    await waitFor(() => expect(openTip()).toBeNull());
+  });
+
+  it('draws no tip with tooltip={false}', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <Text.Root lines={1} tooltip={false} data-testid="cut">
+          {LONG}
+        </Text.Root>
+      </div>,
+    );
+    await userEvent.hover(screen.getByTestId('cut'));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(openTip()).toBeNull();
+  });
+});

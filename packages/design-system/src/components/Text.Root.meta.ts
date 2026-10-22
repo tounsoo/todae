@@ -33,6 +33,19 @@ export const meta = {
       description: 'Font weight.',
     },
     {
+      name: 'lines',
+      type: 'number',
+      required: false,
+      description: 'Clamps the text to this many lines, a whole number of 1 or more, with an ellipsis at the end of the last line. The element becomes a block. Screen readers still read the whole text.',
+    },
+    {
+      name: 'tooltip',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description: 'With lines, shows the whole text in a tooltip on hover, or while a focused element holds the text, when the text is cut. The tooltip is hidden from screen readers. The @tounsoo/todae/text entry draws no tooltip.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

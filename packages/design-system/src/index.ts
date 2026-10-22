@@ -308,7 +308,7 @@ export {
   type TextSize,
   type TextTone,
   type TextWeight,
-} from './components/Text.js';
+} from './components/Text.client.js';
 export {
   useAnnouncer,
   type Announce,
