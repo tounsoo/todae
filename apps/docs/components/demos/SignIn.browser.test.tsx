@@ -66,7 +66,7 @@ it('moves focus to an unmarked code field, sends a full code by itself, and conf
   expect(code()).toHaveAccessibleDescription(/^We sent a new code/);
   await expect.poll(() => document.querySelector('[data-todae-announcer]')?.textContent).toContain('We sent a new code.');
   // The old code stays in the field but isn't sent again by itself.
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1600));
   expect(code()).not.toHaveAttribute('aria-invalid');
   code().focus();
   await userEvent.keyboard('{Control>}a{/Control}123456');

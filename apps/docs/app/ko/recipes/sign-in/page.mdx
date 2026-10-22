@@ -116,14 +116,14 @@ const submit = async (event: SubmitEvent<HTMLFormElement>) => {
 로그인 폼과 사람이 누른 버튼이 사라졌으니 `autoFocus`로 포커스를 코드로 옮기세요. 필드의 레이블과 설명이 스크린 리더에 무엇을 입력할지 알려 주고, 휴대폰은 코드 필드에 포커스가 있을 때만 문자 메시지의 코드를 제안합니다. 다 찬 코드는 마지막 글자 뒤 잠깐 쉬었다가 저절로 보내되, `Form.Root`가 먼저 확인하도록 `requestSubmit()`으로 보내고, 저절로 보내질 줄 모르는 사람을 위해 Verify를 남겨 두세요. 틀린 코드는 틀린 비밀번호처럼 `errors`에 코드의 `name`으로 돌아옵니다.
 
 ```tsx
-// Set to the code in the submit handler, so the end of a resend doesn't send the old code again.
+// Set to the code on submit and on resend, so the old code isn't sent by itself again.
 const sentCode = useRef('');
 useEffect(() => {
-  if (code.length !== 6 || code === sentCode.current || resending) return;
+  if (code.length !== 6 || code === sentCode.current || sending || resending) return;
   // An IME can still take a full code back, so wait a moment.
   const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
   return () => clearTimeout(timer);
-}, [code, resending]);
+}, [code, sending, resending]);
 ```
 
 사람이 새 코드를 요청하면, 보냈다는 사실을 눈에 보이는 글과 스크린 리더가 듣는 말 둘 다로 알리세요. 바뀐 설명은 읽히지 않으므로, 데모는 설명을 바꾸고 [useAnnouncer](/utilities/use-announcer)도 부르며, 더는 맞지 않는 틀린 코드의 오류를 지웁니다. 어느 요청이든 도는 동안에는 이 버튼과 Verify를 함께 `aria-disabled`로 막아, 새 코드를 알린 뒤에 이전 코드의 확인 결과가 돌아오지 않게 하세요. 이미 보낸 코드는 저절로 다시 보내지 마세요. 그러지 않으면 새 코드 요청이 끝날 때 이전 코드를 다시 확인합니다. 얼마나 지나야 다시 요청할 수 있는지는 제품의 규칙입니다.
