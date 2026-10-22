@@ -79,25 +79,26 @@ function topOf(viewport: HTMLElement, scroller: Element): number {
   return top - scroller.getBoundingClientRect().top - scroller.clientTop - Number.parseFloat(paddingTop);
 }
 
-// The viewport's height as the last frame drew it: the height animation's
-// while one plays, else the height of the views on screen before the change,
-// which leaves out an entering view that wasn't sliding out.
-function heightBefore(viewport: HTMLElement, entering: HTMLElement, reentering: boolean, animation: Animation | null): string {
-  const playing = animation?.playState === 'running' || animation?.playState === 'paused';
-  if (playing || reentering) return getComputedStyle(viewport).height;
-  const { display } = entering.style;
-  entering.style.display = 'none';
-  const height = getComputedStyle(viewport).height;
-  entering.style.display = display;
-  return height;
-}
-
 function enterEasing(viewport: HTMLElement): string | undefined {
   const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
   if (process.env.NODE_ENV !== 'production' && !easing) {
     console.error("Drilldown: --todae-drilldown-motion-easing-enter reads empty, so the viewport's height changes at a constant speed. Load Todae's stylesheet or set the token.");
   }
   return easing || undefined;
+}
+
+// The viewport's height for views of `height`, as its box-sizing reads it.
+function heightFor(viewport: HTMLElement, height: number): string {
+  const style = getComputedStyle(viewport);
+  if (style.boxSizing !== 'border-box') return `${height}px`;
+  const frame = [style.paddingTop, style.paddingBottom, style.borderTopWidth, style.borderBottomWidth];
+  return `${frame.reduce((sum, value) => sum + Number.parseFloat(value), height)}px`;
+}
+
+// The views share one grid cell, so the viewport is as tall as the tallest
+// view on screen.
+function tallest(views: readonly HTMLElement[]): number {
+  return Math.max(0, ...views.map((view) => view.getBoundingClientRect().height));
 }
 
 // The animations on the elements themselves, as getAnimations() leaves out
@@ -165,34 +166,43 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     const scroller = viewport && scrollContainer(viewport);
     const restored = onChange(change, views, scroller?.scrollTop ?? 0);
     if (!viewport || !scroller) return;
-    const duration = reducedMotion() ? 0 : tokenMs(viewport, '--todae-drilldown-motion-duration');
-    // A restored offset needs the viewport's full height at once, or the
-    // scroll container clamps it.
-    const height =
-      views.entering && views.leaving && duration && restored === undefined
-        ? {
-            from: heightBefore(viewport, views.entering, reentering, heightAnimation.current),
-            to: `${views.entering.offsetHeight}px`,
-            duration,
-          }
-        : null;
+    // The height on screen: the height animation's while it holds one, else
+    // the tallest of the views on screen before the change.
+    const before = heightAnimation.current ? getComputedStyle(viewport).height : null;
     heightAnimation.current?.cancel();
     heightAnimation.current = null;
-    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
-    if (height) {
-      heightAnimation.current = viewport.animate([{ height: height.from }, { height: height.to }], {
-        duration: height.duration,
+    const duration = reducedMotion() ? 0 : tokenMs(viewport, '--todae-drilldown-motion-duration');
+    if (views.entering && views.leaving && duration) {
+      const onScreen = leaving.flatMap(({ view }) => elementOf(view) ?? []);
+      const from = before ?? heightFor(viewport, tallest(reentering ? [...onScreen, views.entering] : onScreen));
+      const to = heightFor(viewport, views.entering.getBoundingClientRect().height);
+      // Held at the end until the last view settles, so a slide that CSS
+      // makes longer doesn't hand the height back to the taller views.
+      heightAnimation.current = viewport.animate([{ height: from }, { height: to }], {
+        duration,
         easing: enterEasing(viewport),
+        fill: 'forwards',
       });
     }
-  }, [change, reentering, viewportRef]);
+    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
+    // An offset the height on screen can't reach needs the views' full height at once.
+    if (restored !== undefined && heightAnimation.current && scroller.scrollTop < restored) {
+      heightAnimation.current.cancel();
+      heightAnimation.current = null;
+      scroller.scrollTop = restored;
+    }
+  }, [change, leaving, reentering, viewportRef]);
 
   // Settles each moving view when its slide's transitions finish, so CSS that
   // changes them keeps it on screen as long as it moves. The entering view
   // waits for the viewport's height too.
   useLayoutEffect(() => {
     const moving = entering ? [entering, ...leaving] : leaving;
-    if (moving.length === 0) return;
+    if (moving.length === 0) {
+      heightAnimation.current?.cancel();
+      heightAnimation.current = null;
+      return;
+    }
     let current = true;
     const idle: string[] = [];
     for (const { view } of moving) {

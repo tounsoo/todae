@@ -89,20 +89,25 @@ describe('Drilldown motion, height and scroll in a browser', () => {
     expect(view('Email').inert).toBe(false);
   });
 
-  it('keeps the leaving view on screen until its slide ends, when CSS makes the slide longer', async () => {
-    await openDialog(<SettingsDialog />);
+  it('keeps the leaving view on screen and the height at the new view until the slide ends, when CSS makes the slide longer', async () => {
+    await openDialog(<SettingsDialog defaultValue={['settings', 'account']} inAccount={<div style={{ blockSize: 200 }} />} />);
     const style = document.createElement('style');
     style.textContent = '[data-entering], [data-leaving] { transition-duration: 700ms; }';
     document.head.append(style);
     try {
-      const token = cssTimeMs(getComputedStyle(screen.getByTestId('viewport')).getPropertyValue('--todae-drilldown-motion-duration'))!;
+      const viewport = screen.getByTestId('viewport');
+      const token = cssTimeMs(getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-duration'))!;
       expect(token).toBeLessThan(500);
-      await userEvent.click(screen.getByRole('button', { name: 'Account' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       await new Promise((resolve) => setTimeout(resolve, token + 100));
-      expect(view('Settings').checkVisibility()).toBe(true);
-      expect(view('Settings').inert).toBe(true);
+      expect(view('Account').checkVisibility()).toBe(true);
+      expect(view('Account').inert).toBe(true);
+      const settings = view('Settings').getBoundingClientRect().height;
+      expect(view('Account').getBoundingClientRect().height - settings).toBeGreaterThan(150);
+      expect(Math.abs(viewport.getBoundingClientRect().height - settings)).toBeLessThan(1);
       await settled();
-      expect(view('Settings').hidden).toBe(true);
+      expect(view('Account')).toBeNull();
+      expect(Math.abs(viewport.getBoundingClientRect().height - settings)).toBeLessThan(1);
     } finally {
       style.remove();
     }
@@ -132,7 +137,7 @@ describe('Drilldown motion, height and scroll in a browser', () => {
     }
   });
 
-  it('slides a view overtaken during its slide on from where it is, and the height too on a push', async () => {
+  it('slides a view overtaken during its slide on from where it is, and the height too', async () => {
     const viewport = () => screen.getByTestId('viewport');
     const offsets = (labels: readonly string[]) => {
       const port = viewport().getBoundingClientRect();
@@ -162,8 +167,7 @@ describe('Drilldown motion, height and scroll in a browser', () => {
         return offsets(watched);
       });
       after.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
-      // A pop brings back an offset, so its height is the views' own at once.
-      if (second === 'push') expect(Math.abs(viewport().getBoundingClientRect().height - heightBefore)).toBeLessThan(2);
+      expect(Math.abs(viewport().getBoundingClientRect().height - heightBefore)).toBeLessThan(2);
       cleanupAll();
     }
   });
