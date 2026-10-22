@@ -41,7 +41,7 @@ export type FieldOneTimeCodeProps = {
   ref?: Ref<HTMLInputElement>;
 } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'defaultValue' | 'type' | 'onChange' | 'className' | 'style' | 'disabled' | 'maxLength' | 'minLength' | 'pattern' | 'inputMode' | 'dir'
+  'value' | 'defaultValue' | 'type' | 'onChange' | 'onBeforeInput' | 'onBeforeInputCapture' | 'className' | 'style' | 'disabled' | 'maxLength' | 'minLength' | 'pattern' | 'inputMode' | 'dir'
 >;
 
 // Read through activeIn, which looks into shadow roots, so the boxes follow the caret in one too.

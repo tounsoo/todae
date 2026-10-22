@@ -34,6 +34,17 @@ function paste(text: string) {
 }
 
 describe('Field.OneTimeCode', () => {
+  it('does not accept onBeforeInput, which would never see the text Todae takes itself', () => {
+    expect(() => (
+      <Field.OneTimeCode
+        value=""
+        onValueChange={() => {}}
+        // @ts-expect-error Todae takes typed text in its own beforeinput listener.
+        onBeforeInput={() => {}}
+      />
+    )).toBeTypeOf('function');
+  });
+
   it('is one text input the phone can fill from a message, named by its label', () => {
     render(<Code />);
     expect(input().type).toBe('text');
