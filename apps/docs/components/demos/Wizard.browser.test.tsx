@@ -74,10 +74,16 @@ it('takes a server error back to the step that asks for it, with focus on the co
   await userEvent.click(screen.getByRole('button', { name: 'Next' }));
   await fillWorkspace();
   await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  const focused: Element[] = [];
+  const record = (event: FocusEvent) => focused.push(event.target as Element);
+  document.addEventListener('focusin', record);
   await userEvent.click(screen.getByRole('button', { name: 'Create workspace' }));
 
   const email = () => screen.queryByRole('textbox', { name: 'Work email' });
   await expect.poll(() => document.activeElement === email() && email() !== null, { timeout: 3000 }).toBe(true);
+  document.removeEventListener('focusin', record);
+  // Focus goes straight from the button to the control, so a screen reader doesn't read the heading first.
+  expect(focused.filter((element) => element.tagName === 'H3')).toEqual([]);
   expect(current()).toBe('In progress: Account');
   expect(email()).toHaveAccessibleDescription('That address is taken.');
 
@@ -126,4 +132,35 @@ it('holds Back while the last step sends, and starts again on the first step', a
   await userEvent.click(screen.getByRole('button', { name: 'Start again' }));
   expect(document.activeElement).toBe(heading(/Step 1 of 3\s*Account/));
   expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('');
+});
+
+it('takes a reply on two steps to each in turn, with focus on each control, and keeps an edit across Back', async () => {
+  setup();
+  await fillAccount('ben@example.com');
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await userEvent.type(screen.getByRole('textbox', { name: 'Workspace name' }), 'Todae');
+  await userEvent.click(screen.getByRole('radio', { name: 'Team' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Create workspace' }));
+
+  const email = () => screen.queryByRole('textbox', { name: 'Work email' });
+  await expect.poll(() => document.activeElement === email() && email() !== null, { timeout: 3000 }).toBe(true);
+  await userEvent.clear(email()!);
+  await userEvent.type(email()!, 'ada@example.com');
+  await userEvent.keyboard('{Enter}');
+  // The next step shows its own error, and its form moves focus to that control, not the heading.
+  const workspace = screen.getByRole('textbox', { name: 'Workspace name' });
+  expect(document.activeElement).toBe(workspace);
+  expect(workspace).toHaveAccessibleDescription('That name is taken.');
+
+  // An edit hides the error, and it stays hidden after going back and forward again.
+  await userEvent.type(workspace, ' Labs');
+  expect(workspace).not.toHaveAttribute('aria-invalid', 'true');
+  await userEvent.click(screen.getByRole('button', { name: 'Back' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(document.activeElement).toBe(heading(/Step 2 of 3\s*Workspace/));
+  expect(workspace).not.toHaveAttribute('aria-invalid', 'true');
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Create workspace' }));
+  await expect.poll(() => document.activeElement?.textContent, { timeout: 3000 }).toBe('Workspace created');
 });

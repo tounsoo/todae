@@ -24,7 +24,7 @@ type Name = keyof Answers;
 const EMPTY: Answers = { name: '', email: '', workspace: '', plan: '' };
 
 // Each step and the controls it holds, so a reply's errors go to the step that asks for them.
-const STEPS: readonly { title: string; fields: readonly string[] }[] = [
+const STEPS: readonly { title: string; fields: readonly Name[] }[] = [
   { title: 'Account', fields: ['name', 'email'] },
   { title: 'Workspace', fields: ['workspace', 'plan'] },
   { title: 'Review', fields: [] },
@@ -42,10 +42,13 @@ function pick(reply: FormErrors, fields: readonly string[], keep = true): FormEr
   return Object.fromEntries(Object.entries(reply).filter(([name]) => fields.includes(name) === keep));
 }
 
-// A stand-in for the server, which knows this address.
+// A stand-in for the server, which knows this address and this workspace.
 async function createWorkspace(answers: Answers): Promise<FormErrors> {
   await new Promise((resolve) => setTimeout(resolve, 600));
-  return answers.email.trim().toLowerCase() === 'ben@example.com' ? { email: 'That address is taken.' } : {};
+  const errors: Record<string, string> = {};
+  if (answers.email.trim().toLowerCase() === 'ben@example.com') errors.email = 'That address is taken.';
+  if (answers.workspace.trim().toLowerCase() === 'todae') errors.workspace = 'That name is taken.';
+  return errors;
 }
 
 export function WizardExample() {
@@ -55,28 +58,31 @@ export function WizardExample() {
   const [answers, setAnswers] = useState(EMPTY);
   // The last reply's errors, less those of each step sent again since.
   const [reply, setReply] = useState<FormErrors>({});
+  // The steps shown since the reply. A step gets its errors from the first time it shows until its
+  // own Next, so its form takes them as the reply where the person can see it, and keeps a dismissal.
+  const [given, setGiven] = useState<ReadonlySet<number>>(new Set());
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [created, setCreated] = useState(false);
-  const forms = useRef<(HTMLFormElement | null)[]>([]);
   const headings = useRef<(HTMLElement | null)[]>([]);
   const createdHeading = useRef<HTMLElement>(null);
-  // Set once the person moves, so the first render doesn't take focus.
-  const moved = useRef(false);
+  // Whether showing the step moves focus to its heading: not on the first render, and not when its
+  // form takes a reply, which moves focus to the control with the error.
+  const focusHeading = useRef(false);
 
-  // Runs after the shown step's form has taken any reply. If it moved focus to a control with an
-  // error, focus stays there; otherwise the step's heading takes it, as the button pressed is hidden.
+  // Runs once the step shows, so the heading can take focus; the button pressed is now hidden.
   useLayoutEffect(() => {
-    if (!moved.current) return;
-    if (!forms.current[step]?.contains(document.activeElement)) headings.current[step]?.focus();
+    if (focusHeading.current) headings.current[step]?.focus();
   }, [step]);
 
   useLayoutEffect(() => {
     if (created) createdHeading.current?.focus();
   }, [created]);
 
-  const go = (index: number) => {
-    moved.current = true;
+  const go = (index: number, errors = reply, shown = given) => {
+    focusHeading.current = shown.has(index) || Object.keys(pick(errors, STEPS[index]!.fields)).length === 0;
+    setGiven(new Set(shown).add(index));
+    setFailed(false);
     setStep(index);
   };
 
@@ -92,18 +98,21 @@ export function WizardExample() {
 
   const create = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (sending) return;
     setSending(true);
     setFailed(false);
     setReply({});
     try {
       const errors = await createWorkspace(answers);
-      const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
-      if (first === -1) {
+      if (!Object.values(errors).some(Boolean)) {
         setCreated(true);
         return;
       }
+      const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
+      // An error for no control the steps hold is a request that failed.
+      if (first === -1) throw new Error('The reply names no control.');
       setReply(errors);
-      go(first);
+      go(first, errors, new Set());
     } catch {
       setFailed(true);
     } finally {
@@ -115,7 +124,7 @@ export function WizardExample() {
     setAnswers(EMPTY);
     setReply({});
     setCreated(false);
-    go(0);
+    go(0, {}, new Set());
   };
 
   if (created) {
@@ -136,15 +145,11 @@ export function WizardExample() {
     );
   }
 
-  // Every step's form stays mounted and hidden, so it keeps waiting on a reply. Only the step that
-  // shows gets its errors, so a reply lands on a form the person can see.
+  // Every step's form stays mounted and hidden, so it keeps waiting on a reply.
   const form = (index: number) => ({
-    ref: (element: HTMLFormElement | null) => {
-      forms.current[index] = element;
-    },
     hidden: step !== index,
     'aria-labelledby': `${headingId}-step-${index}`,
-    errors: step === index ? pick(reply, STEPS[index]!.fields) : {},
+    errors: given.has(index) ? pick(reply, STEPS[index]!.fields) : {},
   });
 
   const heading = (index: number) => (

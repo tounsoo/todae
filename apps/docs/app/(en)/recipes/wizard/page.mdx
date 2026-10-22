@@ -4,7 +4,7 @@ import { WizardExample } from '../../../../components/demos/WizardDemo';
 
 A recipe, not a package namespace. A wizard splits one long form into steps: a [Steps](/steps) list says where the person is, each step is its own [Form](/form) with its own rules, and the last step sends everything. Which steps there are and what each asks for are up to your product. There is no `Wizard.*` export.
 
-Go through the steps, or use `ben@example.com`, an address the stand-in server knows, to see an error from the last step come back to the first.
+Go through the steps, or use `ben@example.com` and the workspace name `Todae`, which the stand-in server knows, to see errors from the last step come back to the steps that ask for them.
 
 <Example block>
   <WizardExample />
@@ -20,12 +20,9 @@ Keep every step's form mounted and hide the ones that aren't showing with `hidde
 import { Button, ErrorMessage, Field, Form, Label, Stack, Text } from '@tounsoo/todae';
 
 <Form.Root
-  ref={(element) => {
-    forms.current[0] = element;
-  }}
   hidden={step !== 0}
   aria-labelledby={headingIds[0]}
-  errors={step === 0 ? pick(reply, STEPS[0].fields) : {}}
+  errors={given.has(0) ? pick(reply, STEPS[0].fields) : {}}
   onSubmit={next(0)}
 >
   <Stack.Root gap="normal">
@@ -58,25 +55,26 @@ Next is the step's submit button, so Enter in a field moves on too. Back is `typ
 
 ## Focus on each step
 
-Move focus to the new step's heading on Next and Back. The button the person pressed is now hidden, so focus would otherwise drop to the page, and the heading tells a screen reader which step it is on. Give the heading `tabIndex={-1}`, so code can focus it but Tab skips it, and put the step's position in it, since the focused heading is what a screen reader reads. Focus it in a layout effect on the step, which runs once the step shows and after its form has taken a reply, and leave focus where it is when the form has already moved it to a control.
+Move focus to the new step's heading on Next and Back. The button the person pressed is now hidden, so focus would otherwise drop to the page, and the heading tells a screen reader which step it is on. Give the heading `tabIndex={-1}`, so code can focus it but Tab skips it, and put the step's position in it, since the focused heading is what a screen reader reads. Focus it in a layout effect on the step, which runs once the step shows. Skip it when the step's form is about to take a reply, which moves focus to a control itself, so a screen reader doesn't read the heading and then the control.
 
 ```tsx
 import { useLayoutEffect, useRef, useState, type SubmitEvent } from 'react';
 
 const [step, setStep] = useState(0);
-const forms = useRef<(HTMLFormElement | null)[]>([]);
+// The steps shown since the last reply: each gets its errors from then until its own Next.
+const [given, setGiven] = useState<ReadonlySet<number>>(new Set());
 const headings = useRef<(HTMLElement | null)[]>([]);
-// Set once the person moves, so the first render doesn't take focus.
-const moved = useRef(false);
+// Not on the first render, and not when the step's form takes a reply, which focuses a control.
+const focusHeading = useRef(false);
 
-// Runs after the shown step's form has taken any reply, which may have moved focus to a control.
+// Runs once the step shows, so its heading can take focus.
 useLayoutEffect(() => {
-  if (!moved.current) return;
-  if (!forms.current[step]?.contains(document.activeElement)) headings.current[step]?.focus();
+  if (focusHeading.current) headings.current[step]?.focus();
 }, [step]);
 
-const go = (index: number) => {
-  moved.current = true;
+const go = (index: number, errors = reply, shown = given) => {
+  focusHeading.current = shown.has(index) || Object.keys(pick(errors, STEPS[index].fields)).length === 0;
+  setGiven(new Set(shown).add(index));
   setStep(index);
 };
 
@@ -110,12 +108,14 @@ function statusOf(index: number, step: number): StepsStatus {
 
 ## Errors from the last step
 
-The last step lists the answers in a [DataList](/data-list) and sends them. A server can still turn down an answer from an earlier step, such as an address that is taken. Keep the reply's errors and a table of which step holds which control, give the shown step's form its own entries and the hidden ones none, and show the first step with an error. Hold Back while the request runs, so the reply comes back to the answers it was sent, and show a request that fails in an [Alert](/alert) beside the button.
+The last step lists the answers in a [DataList](/data-list) and sends them. A server can still turn down an answer from an earlier step, such as an address that is taken. Keep the reply's errors and a table of which step holds which control, and show the first step with an error. Give a step its entries from the first time it shows after the reply until its own Next, and none before: a hidden form would take the reply where focus can't reach it. Treat an error for a control no step holds as a failed request, never as a success. Hold Back while the request runs, so the reply comes back to the answers it was sent, and show a request that fails in an [Alert](/alert) beside the button.
 
 ```tsx
 import type { FormErrors } from '@tounsoo/todae';
 
-const STEPS: readonly { title: string; fields: readonly string[] }[] = [
+type Name = 'name' | 'email' | 'workspace' | 'plan';
+
+const STEPS: readonly { title: string; fields: readonly Name[] }[] = [
   { title: 'Account', fields: ['name', 'email'] },
   { title: 'Workspace', fields: ['workspace', 'plan'] },
   { title: 'Review', fields: [] },
@@ -128,16 +128,20 @@ function pick(reply: FormErrors, fields: readonly string[], keep = true): FormEr
 
 const create = async (event: SubmitEvent<HTMLFormElement>) => {
   event.preventDefault();
+  if (sending) return;
   // Hold Back and Create with aria-disabled while this is true.
   setSending(true);
   setFailed(false);
   setReply({});
   try {
     const errors = await createWorkspace(answers);
+    if (!Object.values(errors).some(Boolean)) return setCreated(true);
     const first = STEPS.findIndex((each) => each.fields.some((name) => errors[name]));
-    if (first === -1) return setCreated(true);
+    // An error for no control the steps hold is a request that failed.
+    if (first === -1) throw new Error('The reply names no control.');
     setReply(errors);
-    go(first);
+    // A new reply: no step has its errors yet.
+    go(first, errors, new Set());
   } catch {
     // Shown in an Alert.Root tone="critical" beside the button, which is announced.
     setFailed(true);
@@ -147,13 +151,13 @@ const create = async (event: SubmitEvent<HTMLFormElement>) => {
 };
 ```
 
-That step's form is still waiting on a reply from its own Next, since a form that sent keeps waiting until the person edits it or it resets. So when its `errors` arrive it takes them as the reply, as [Form](/form#server-errors) describes: it shows the message and moves focus to the control, which a screen reader reads with its error, and the heading effect leaves focus there. This is why the steps stay mounted, and why a step gets its errors only when it shows: a hidden form would take the reply where focus can't reach it. When the person fixes that step and presses Next, the next step with an error shows and its form takes its errors the same way.
+That step's form is still waiting on a reply from its own Next, since a form that sent keeps waiting until the person edits it, it resets or a reply arrives. So when its `errors` arrive it takes them as the reply, as [Form](/form#server-errors) describes: it shows the message and moves focus to the control, which a screen reader reads with its error. This is why the steps stay mounted. A step keeps its entries while hidden once it has shown them, so an error the person has edited stays hidden when they go back and forth. When the person fixes that step and presses Next, the next step with an error shows and its form takes its errors the same way.
 
 ## Accessible composition
 
 **Todae handles:** `Form.Root` checks a step's controls on Next, words each problem in the page's language and moves focus to the first one. It shows a server error on its control, with `aria-invalid` and `aria-describedby`, and a form that sent moves focus to the control when the reply names it. `Steps.Root` is an ordered list whose items read their status word first, with `aria-current="step"` on the current step. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while the last step sends.
 
-**You supply:** A form per step, all mounted, with `hidden` on the ones not showing. Focus moved to the heading of the step you show on Next and Back, unless its form has moved focus to a control, and to a heading that confirms the result at the end. Back and Create held while the last step sends, and a message for a request that fails. The step's position in its heading. A table of which step holds which control, so a server's errors reach the right form. A name for the step list and labels in your product's language.
+**You supply:** A form per step, all mounted, with `hidden` on the ones not showing. Focus moved to the heading of the step you show on Next and Back, unless its form is taking a reply, and to a heading that confirms the result at the end. Back and Create held while the last step sends, and a message for a request that fails. The step's position in its heading. A table of which step holds which control, so a server's errors reach the right form. A name for the step list and labels in your product's language.
 
 **Watch for:** One `Form.Root` around every step, which marks a step invalid the moment it shows. Unmounting the steps that aren't showing, so a server error from the last step shows on its control but nobody moves focus there. Focus left on a hidden button after Next, which drops it to the page. Focusing the heading right after setting the step, before the step shows, which does nothing. Letting the person go back and edit while the last step sends: the edit ends the form's wait, so the reply shows its error but doesn't move focus, and the error may be about an answer they have since changed. Hiding a step with `display: none` on a styled wrapper such as `Stack.Root`, whose own `display` beats `hidden`: put `hidden` on the form. A disabled Next or Send button while a request runs, which drops focus; use `aria-disabled`. Steps that each have their own URL: the browser's back button then moves between steps too, so update the page's title and move focus the same way on each.
 

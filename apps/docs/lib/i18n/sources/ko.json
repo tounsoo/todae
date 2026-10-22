@@ -705,11 +705,11 @@
   },
   "recipes/wizard": {
     "(top)": "8a3a55e1b1ed",
-    "# Wizard": "4a738459ed5d",
-    "## A form per step": "81ed5454bbc4",
-    "## Focus on each step": "159d4d895b52",
-    "## Errors from the last step": "accb46f52215",
-    "## Accessible composition": "57c995f67a81",
+    "# Wizard": "9cd56741f4a9",
+    "## A form per step": "1fcd5274039b",
+    "## Focus on each step": "b6305c0f6b61",
+    "## Errors from the last step": "1814ab8ddfa3",
+    "## Accessible composition": "26e369f412cf",
     "## When to use": "e4c37a96dbb3",
     "(section order)": "58e398659b7f"
   },
