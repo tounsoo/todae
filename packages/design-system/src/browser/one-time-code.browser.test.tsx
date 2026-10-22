@@ -519,6 +519,21 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(active()).toEqual([]);
   });
 
+  it('keeps the boxes left to right in a right-to-left page, with the room after the code past the last box', async () => {
+    render(<Code initial="12" dir="rtl" />);
+    const field = input().getBoundingClientRect();
+    const last = boxes()[5]!.getBoundingClientRect();
+    expect(boxes()[0]!.getBoundingClientRect().left).toBeCloseTo(field.left, 0);
+    // The middle of the room between the last box and the end of the row.
+    const past = (last.right + field.right) / 2 - field.left;
+    expect(past).toBeGreaterThan(last.right - field.left + 10);
+    const y = field.height / 2;
+    await userEvent.click(input(), { position: { x: past, y } });
+    expect([input().selectionStart, input().selectionEnd]).toEqual([2, 2]);
+    await dropAt({ x: past });
+    await vi.waitFor(() => expect(input().value).toBe('129'));
+  });
+
   it('warns of nothing when it takes focus as it mounts', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     try {
