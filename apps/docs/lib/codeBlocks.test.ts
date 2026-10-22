@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { codeBlocks } from './i18n/sections';
+import { codeBlocks } from './mdxAst';
 
 const APP = join(process.cwd(), 'app');
 const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh']);

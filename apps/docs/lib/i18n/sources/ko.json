@@ -518,14 +518,14 @@
     "(section order)": "0a8b0f340b98"
   },
   "mcp": {
-    "# MCP server": "665be01352f7",
+    "# MCP server": "eaf89d1168a7",
     "## Connect": "047ac15aa3f9",
     "### Claude Code": "f04346316cde",
     "### Claude Desktop and claude.ai": "a4b395854e3c",
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "3ee522ae3457",
+    "## Tools": "a77fc09b3e90",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",

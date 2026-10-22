@@ -153,9 +153,11 @@ The production branch is `docs-stable`, so `todae.omsoo.design` and its MCP serv
 The docs site serves a Streamable HTTP MCP server at `https://todae.omsoo.design/api/mcp`, from `apps/docs/app/api/[transport]`. The [MCP server](apps/docs/app/(en)/mcp/page.mdx) docs page shows how to connect each client. The tools live in `apps/docs/lib/docs-mcp`:
 
 - `list_components`, `get_component` and `when_to_use` read `@tounsoo/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+- `list_recipes` and `get_recipe` read the English pages under `apps/docs/app/(en)/recipes/`, so a new recipe page shows up with no change to the server.
 - `list_tokens` and `get_token` read the token catalog, `@tounsoo/todae/tokens.json`.
 - `get_contrast_pairs` runs `@tounsoo/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder; a server instance runs at most two builds at once. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
 - `get_guide` returns the English source of the pages in `GUIDES` (`lib/docs-mcp/guides.ts`).
+- `get_changes` reads `packages/design-system/CHANGELOG.md`, which `next.config.mjs` traces into the route, since the npm package doesn't ship it.
 
 ## Graft
 

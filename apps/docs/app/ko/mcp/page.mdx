@@ -1,6 +1,6 @@
 # MCP 서버
 
-Todae는 `https://todae.omsoo.design/api/mcp`에서 Model Context Protocol(MCP) 서버를 운영합니다. 여기에 연결한 AI 에이전트는 Todae의 컴포넌트와 토큰을 찾아보고, 두 버전 사이에 무엇이 바뀌었는지 확인하고, 회사의 토큰 파일을 `todae-tokens build`와 같은 빌드로 검사하고, Todae 위에 만드는 디자인 시스템의 시작 파일을 작성할 수 있습니다. Streamable HTTP로 통신하며 로그인이나 설치가 필요 없습니다.
+Todae는 `https://todae.omsoo.design/api/mcp`에서 Model Context Protocol(MCP) 서버를 운영합니다. 여기에 연결한 AI 에이전트는 Todae의 컴포넌트, 레시피, 토큰을 찾아보고, 두 버전 사이에 무엇이 바뀌었는지 확인하고, 회사의 토큰 파일을 `todae-tokens build`와 같은 빌드로 검사하고, Todae 위에 만드는 디자인 시스템의 시작 파일을 작성할 수 있습니다. Streamable HTTP로 통신하며 로그인이나 설치가 필요 없습니다. 이 서버는 npm에 올라간 `@tounsoo/todae`의 최신 버전을 설명하고 그 버전을 자기 버전으로 알려 주므로, `main`의 변경은 다음 릴리스와 함께 반영됩니다.
 
 ## 연결하기
 
@@ -66,9 +66,14 @@ Streamable HTTP를 지원하는 클라이언트에는 URL을 그대로 넣습니
 
 컴포넌트:
 
-- `list_components`: 모든 컴포넌트와 파트, 그리고 각각의 설명과 문서 페이지.
+- `list_components`: 모든 컴포넌트, 파트, 훅, 헬퍼와 각각의 설명, 문서 페이지.
 - `get_component`: 컴포넌트나 파트 하나와 그 props, 파트.
 - `when_to_use`: 컴포넌트 문서 페이지의 "When to use" 섹션. 이 섹션이 없는 페이지는 `status: "missing"`을 돌려주며, 서버가 내용을 직접 지어내지 않습니다.
+
+레시피:
+
+- `list_recipes`: 모든 레시피와 그 요약, 코드가 쓰는 export. 레시피는 데이터 테이블이나 위저드 같은 제품 흐름에 맞춰 Todae의 export를 엮는 문서 속 코드입니다.
+- `get_recipe`: 레시피 하나의 페이지 소스와 코드. `data-table` 같은 이름이나 제목으로 찾습니다.
 
 토큰:
 
