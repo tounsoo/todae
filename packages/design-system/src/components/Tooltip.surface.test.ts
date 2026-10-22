@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentPolicyError, resolveSurface } from './Tooltip.surface.js';
+import { CLOSES_PARAGRAPH, contentPolicyError, resolveSurface } from './Tooltip.surface.js';
 
 describe('Tooltip.surface', () => {
   it('rejects tabbables in tip content', () => {
@@ -49,8 +49,8 @@ describe('Tooltip.surface', () => {
       const el = document.createElement('span');
       el.innerHTML = '<strong>Popover API</strong><br><span>developer.mozilla.org</span>';
       expect(contentPolicyError(surface, el)).toBeNull();
-      for (const html of ['<p>Text</p>', '<div>Text</div>', '<ul><li>Text</li></ul>', '<dd>Text</dd>']) {
-        el.innerHTML = html;
+      for (const tag of CLOSES_PARAGRAPH.split(',')) {
+        el.replaceChildren(document.createElement(tag));
         expect(contentPolicyError(surface, el)).toBe(error);
       }
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Link, Message, Prose, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
+import { Badge, Link, Message, Prose, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
 import { Fragment, useId } from 'react';
 
 type Source = { title: string; site: string; url: string };
@@ -42,12 +42,10 @@ function Citation({ number, source, href }: { number: number; source: Source; hr
   const titleId = useId();
   return (
     <>
-      <sup>
-        <Link.Root href={href} {...tooltip.getTriggerProps()}>
-          <VisuallyHidden.Root>Source </VisuallyHidden.Root>
-          {number}
-        </Link.Root>
-      </sup>
+      <Link.Root href={href} {...tooltip.getTriggerProps()}>
+        <VisuallyHidden.Root>Source </VisuallyHidden.Root>
+        <Badge.Root>{number}</Badge.Root>
+      </Link.Root>
       <Tooltip.Root {...tooltip.getTooltipProps()} aria-labelledby={titleId}>
         <Link.Root id={titleId} href={source.url}>
           {source.title}

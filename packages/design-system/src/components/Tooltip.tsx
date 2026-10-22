@@ -1,5 +1,6 @@
 import {
   useLayoutEffect,
+  useMemo,
   useRef,
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -138,7 +139,8 @@ function TooltipPanel({
 }
 
 function TooltipRoot(props: TooltipRootProps) {
-  const surface = resolveSurface(props.interactive, props.id);
+  // Stable across renders, so the content check runs once rather than on every render.
+  const surface = useMemo(() => resolveSurface(props.interactive, props.id), [props.interactive, props.id]);
   if (!isMounted(surface, props.open)) return null;
   if (props.interactive) {
     const { id: _id, interactive: _interactive, 'aria-label': _label, 'aria-labelledby': _labelledby, ...rest } = props;

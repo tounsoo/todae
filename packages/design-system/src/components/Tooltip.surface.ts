@@ -56,7 +56,7 @@ export function isMounted(surface: TooltipSurface, open: boolean): boolean {
 
 // Elements that close an open <p> in the HTML parser. Tooltip.Root is a span, so a
 // paragraph can hold it, but only while it holds none of these.
-const CLOSES_PARAGRAPH =
+export const CLOSES_PARAGRAPH =
   'address,article,aside,blockquote,center,dd,details,dialog,dir,div,dl,dt,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,li,listing,main,menu,nav,ol,p,plaintext,pre,search,section,summary,table,ul,xmp';
 
 export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): string | null {

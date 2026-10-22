@@ -187,6 +187,28 @@ describe('Tooltip', () => {
     expect(paragraph?.textContent).toContain('in it.');
   });
 
+  it('logs a content error once across renders', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    function BlockTip({ count }: { count: number }) {
+      const tooltip = useTooltip({ interactive: true });
+      return (
+        <>
+          <button type="button" {...tooltip.getTriggerProps()}>
+            Hint {count}
+          </button>
+          <Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
+            <div>Block</div>
+          </Tooltip.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<BlockTip count={1} />);
+    rerender(<BlockTip count={2} />);
+    rerender(<BlockTip count={3} />);
+    expect(error.mock.calls.filter(([message]) => String(message).startsWith('Tooltip holds phrasing'))).toHaveLength(1);
+    error.mockRestore();
+  });
+
   it('names the dialog from aria-labelledby', () => {
     render(
       <>
