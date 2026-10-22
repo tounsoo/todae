@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Node } from 'mdast';
-import { parseMdx } from '../mdxAst';
+import { parseMdx } from '../mdxAst.ts';
 
 /** One part of an MDX page: a heading and what follows it, up to the next heading. */
 export type Section = {
