@@ -12,7 +12,7 @@ Pick a suggestion to put it in the field, then send it. Regenerate a reply to ad
 
 ## Suggested prompts
 
-Show starter prompts in an empty conversation and follow-ups after a reply, in the same list; the example shows follow-ups. A suggestion puts its text in the field and moves focus there, so the person can change it before sending, and Enter sends it. Hide the list while a reply runs and while the field has text, so a suggestion never replaces a draft. Cap each item at the row's width, so a suggestion that doesn't fit is cut off and shows its full text as a tooltip, as any Button whose label is cut off does.
+Show starter prompts in an empty conversation and follow-ups after a reply, in the same list; the example shows follow-ups. A suggestion puts its text in the field and moves focus there, so the person can change it before sending, and Enter sends it. Hide the list while a reply runs and while the field has text other than spaces, so a suggestion never replaces a draft. Cap each item at the row's width, so a suggestion that doesn't fit is cut off and shows its full text as a tooltip, as any Button whose label is cut off does.
 
 ```tsx
 import { Button, Composer, Field, Stack } from '@tounsoo/todae';
@@ -22,7 +22,7 @@ const pick = (text: string) => {
   field.current?.focus();
 };
 
-{!busy && value === '' && suggestions.length > 0 && (
+{!busy && value.trim() === '' && suggestions.length > 0 && (
   <Stack.Root as="ul" direction="row" gap="condensed" wrap aria-label="Suggestions">
     {suggestions.map((text) => (
       <li key={text} style={{ maxInlineSize: '100%' }}>
@@ -116,10 +116,17 @@ Render the switcher only when there are two versions or more. Key the reply's `M
 Hold Regenerate on every other reply while one runs, with `aria-disabled` as on the switcher. In [Message actions](/recipes/message-actions), Regenerate cancels the reply in flight; once replies branch, regenerating an earlier reply would also leave the newer question without a reply, in a version no longer shown. Regenerate on the reply that is running stays live and replaces it.
 
 ```tsx
-// pending is the one reply in flight, or null.
-const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
+// pendingReply is the id of the one reply in flight, or null.
+const regenerateHeld = (reply: { id: string }) => pendingReply !== null && pendingReply !== reply.id;
 
-<Button.Root variant="ghost" aria-label="Regenerate" aria-disabled={held(reply) || undefined} onClick={() => !held(reply) && regenerate(reply)}>
+<Button.Root
+  variant="ghost"
+  aria-label="Regenerate"
+  aria-disabled={regenerateHeld(reply) || undefined}
+  onClick={() => {
+    if (!regenerateHeld(reply)) regenerate(reply);
+  }}
+>
   <Button.Icon>
     <RotateCcw />
   </Button.Icon>
@@ -130,7 +137,7 @@ const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
 
 **Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys. A `Button.Root` with `aria-disabled` is drawn disabled and keeps focus. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. `Composer.Root` sends on Enter and leaves an IME composition alone. With the messages in a [Conversation](/conversation), it announces when a reply starts and ends.
 
-**You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. `aria-disabled` at the switcher's ends, and clicks there ignored. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
+**You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. `aria-disabled` at the switcher's ends and on Regenerate for other replies while one runs, and clicks there ignored. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
 
 **Watch for:** A suggestion that replaces a draft the person wrote. Suggestions that move focus or are announced as they appear: they come with every reply, so let the person reach them with Tab. Removing the list while one of its buttons has focus, as sending a suggestion at once does. A switcher that changes only the reply but leaves the later turns of the other version. Switching away from a version that is still streaming, which hides the turn the reply belongs to: hold the switcher, and Regenerate on other replies, while a reply runs, as the example does. Stopping the reply to a new question, which leaves it with no reply and nothing to regenerate: put it back in the field to send again, unless the person has started another draft.
 

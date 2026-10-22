@@ -145,7 +145,11 @@ it('regenerates the reply that is running, and stopping that still puts its ques
   await userEvent.keyboard('{Enter}');
   const running = within(replies()[1]!).getByRole('button', { name: 'Regenerate' });
   expect(running).not.toHaveAttribute('aria-disabled');
+  await new Promise((resolve) => setTimeout(resolve, 700));
   await userEvent.click(running);
+  // The restarted reply is still running after the first one would have ended.
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  expect(replies()[1]).toHaveAttribute('aria-busy', 'true');
   // Still one reply in flight, so no version switcher.
   expect(within(replies()[1]!).queryByRole('button', { name: 'Next reply' })).toBeNull();
   await userEvent.click(screen.getByRole('button', { name: 'Stop' }));

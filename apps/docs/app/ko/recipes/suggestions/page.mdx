@@ -12,7 +12,7 @@ import { SuggestionsExample } from '../../../../components/demos/SuggestionsDemo
 
 ## 제안 프롬프트
 
-빈 대화에서는 시작 프롬프트를, 답 다음에는 이어서 물을 프롬프트를 같은 목록으로 보여 주세요. 예제는 이어서 물을 프롬프트를 보여 줍니다. 제안을 누르면 그 텍스트가 필드에 들어가고 포커스가 필드로 옮겨 가므로, 보내기 전에 고칠 수 있고 Enter로 보낼 수 있습니다. 답이 진행되는 동안과 필드에 텍스트가 있는 동안에는 목록을 숨겨서, 제안이 쓰던 초안을 덮어쓰지 않게 하세요. 각 항목의 너비를 줄 너비로 제한하면, 다 들어가지 않는 제안은 잘리고 레이블이 잘린 다른 Button처럼 전체 텍스트를 tooltip으로 보여 줍니다.
+빈 대화에서는 시작 프롬프트를, 답 다음에는 이어서 물을 프롬프트를 같은 목록으로 보여 주세요. 예제는 이어서 물을 프롬프트를 보여 줍니다. 제안을 누르면 그 텍스트가 필드에 들어가고 포커스가 필드로 옮겨 가므로, 보내기 전에 고칠 수 있고 Enter로 보낼 수 있습니다. 답이 진행되는 동안과 필드에 공백이 아닌 텍스트가 있는 동안에는 목록을 숨겨서, 제안이 쓰던 초안을 덮어쓰지 않게 하세요. 각 항목의 너비를 줄 너비로 제한하면, 다 들어가지 않는 제안은 잘리고 레이블이 잘린 다른 Button처럼 전체 텍스트를 tooltip으로 보여 줍니다.
 
 ```tsx
 import { Button, Composer, Field, Stack } from '@tounsoo/todae';
@@ -22,7 +22,7 @@ const pick = (text: string) => {
   field.current?.focus();
 };
 
-{!busy && value === '' && suggestions.length > 0 && (
+{!busy && value.trim() === '' && suggestions.length > 0 && (
   <Stack.Root as="ul" direction="row" gap="condensed" wrap aria-label="Suggestions">
     {suggestions.map((text) => (
       <li key={text} style={{ maxInlineSize: '100%' }}>
@@ -113,13 +113,20 @@ export function VersionSwitcher({
 
 버전이 두 개 이상일 때만 전환기를 렌더링하세요. 답의 `Message.Root`는 버전이 아니라 그 답이 응답하는 메시지로 key를 주어, 버전을 바꿔도 같은 메시지와 포커스를 가진 버튼이 남게 하세요.
 
-답 하나가 진행되는 동안에는 다른 모든 답의 Regenerate를 전환기처럼 `aria-disabled`로 막아 두세요. [Message actions](/recipes/message-actions)에서는 Regenerate가 진행 중인 답을 취소하지만, 답이 갈라지면 앞의 답을 다시 생성할 때 더 새로운 질문이 더 이상 보이지 않는 버전에 답 없이 남게 됩니다. 진행 중인 답의 Regenerate는 그대로 동작하며 그 답을 바꿉니다.
+답 하나가 진행되는 동안에는 다른 모든 답의 Regenerate를 전환기처럼 `aria-disabled`로 막아 두세요. [Message actions](/recipes/message-actions)에서 Regenerate는 진행 중인 답을 취소합니다. 답이 갈라진 뒤에는 앞의 답을 다시 생성하면 더 새로운 질문도 더 이상 보이지 않는 버전에 답 없이 남게 됩니다. 진행 중인 답의 Regenerate는 그대로 동작하며 그 답을 바꿉니다.
 
 ```tsx
-// pending is the one reply in flight, or null.
-const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
+// pendingReply is the id of the one reply in flight, or null.
+const regenerateHeld = (reply: { id: string }) => pendingReply !== null && pendingReply !== reply.id;
 
-<Button.Root variant="ghost" aria-label="Regenerate" aria-disabled={held(reply) || undefined} onClick={() => !held(reply) && regenerate(reply)}>
+<Button.Root
+  variant="ghost"
+  aria-label="Regenerate"
+  aria-disabled={regenerateHeld(reply) || undefined}
+  onClick={() => {
+    if (!regenerateHeld(reply)) regenerate(reply);
+  }}
+>
   <Button.Icon>
     <RotateCcw />
   </Button.Icon>
@@ -130,7 +137,7 @@ const held = (reply: Turn) => pending !== null && pending.reply !== reply.id;
 
 **Todae가 맡는 것:** `Toolbar.Root`는 답의 버튼에 탭 정지 하나와 화살표 키를 줍니다. `aria-disabled`인 `Button.Root`는 비활성 모양으로 그려지고 포커스를 유지합니다. 아이콘만 있는 `Button.Root`는 `aria-label`을 tooltip으로 보여 주고, 레이블이 잘린 Button은 전체 텍스트를 보여 줍니다. `Composer.Root`는 Enter로 보내고 IME 조합은 건드리지 않습니다. 메시지를 [Conversation](/conversation)에 넣으면 답이 시작되고 끝날 때 알립니다.
 
-**직접 제공할 것:** 제안 목록과 아이콘만 있는 각 버튼의 이름. 제안이 필드를 채울 때 필드로 옮기는 포커스. 전환기 양 끝의 `aria-disabled`와 거기서 무시하는 클릭. 전환기 버튼의 설명이 되는 개수와 새 버전의 알림. 제품의 언어로 쓴 모든 이름과 개수.
+**직접 제공할 것:** 제안 목록과 아이콘만 있는 각 버튼의 이름. 제안이 필드를 채울 때 필드로 옮기는 포커스. 전환기 양 끝과, 답이 진행되는 동안 다른 답의 Regenerate에 주는 `aria-disabled`, 그리고 거기서 무시하는 클릭. 전환기 버튼의 설명이 되는 개수와 새 버전의 알림. 제품의 언어로 쓴 모든 이름과 개수.
 
 **주의할 점:** 사람이 쓴 초안을 덮어쓰는 제안. 나타날 때 포커스를 옮기거나 알려지는 제안. 제안은 답마다 함께 오므로 Tab으로 닿게 두세요. 목록의 버튼에 포커스가 있는 채로 목록을 없애는 것. 제안을 바로 보낼 때 그렇게 됩니다. 답만 바꾸고 다른 버전의 이후 차례는 그대로 두는 전환기. 아직 streaming 중인 버전에서 다른 버전으로 바꾸는 것. 그 답이 속한 차례가 가려지므로, 예제처럼 답이 진행되는 동안에는 전환기와 다른 답의 Regenerate를 막아 두세요. 새 질문의 답을 멈추는 것. 질문에 답이 없고 다시 생성할 것도 없게 되므로, 사람이 다른 초안을 쓰기 시작하지 않았다면 질문을 필드에 되돌려 다시 보낼 수 있게 하세요.
 

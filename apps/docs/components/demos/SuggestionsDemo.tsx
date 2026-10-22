@@ -303,7 +303,7 @@ export function SuggestionsExample() {
             maxRows={6}
           />
           <Field.Row>
-            <Composer.Submit disabled={value.trim() === ''} onStop={stop} />
+            <Composer.Submit disabled={!hasDraft} onStop={stop} />
           </Field.Row>
         </Field.Root>
       </Composer.Root>
