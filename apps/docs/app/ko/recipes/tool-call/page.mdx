@@ -1,0 +1,165 @@
+import { ToolCallExample } from '../../../../components/demos/ToolCallDemo';
+
+# Tool call
+
+패키지 네임스페이스가 아니라 레시피입니다. 어시스턴트 답 안의 도구 호출은 [Disclosure](/disclosure)이고, 그 summary가 도구 이름과 상태를 나타내는 [Badge](/badge)를 보여 주며, 입력과 출력은 안쪽의 [DataList](/data-list)에 담습니다. 승인을 기다리는 호출에는 [Button](/button) 두 개를 더합니다. 도구가 무엇을 하고 언제 실행되는지는 제품이 정합니다. `ToolCall.*` export는 없습니다.
+
+호출을 열어 입력과 출력을 읽어 보세요. 마지막 호출은 승인을 기다립니다. 승인하면 실행되는 모습을 볼 수 있고, 거부할 수도 있습니다.
+
+<Example block>
+  <ToolCallExample />
+</Example>
+
+## 호출
+
+각 호출은 에이전트의 스트림이 갱신하는 데이터로 두세요. id, 도구 이름, 상태, 입력, 그리고 결과가 생기면 출력이나 오류를 담습니다. 상태마다 라벨과 tone을 한 번만 정해 두면 모든 호출이 같은 말을 씁니다.
+
+```ts
+import type { BadgeTone } from '@tounsoo/todae';
+
+type ToolCallStatus = 'pending' | 'running' | 'done' | 'error' | 'denied';
+
+type ToolCallData = {
+  id: string;
+  name: string;
+  status: ToolCallStatus;
+  input: Record<string, unknown>;
+  output?: unknown;
+  error?: string;
+};
+
+const STATUS: Record<ToolCallStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: 'Needs approval', tone: 'warning' },
+  running: { label: 'Running', tone: 'info' },
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+  denied: { label: 'Denied', tone: 'neutral' },
+};
+```
+
+summary에는 이름을 [Code](/code)로, 상태를 Badge로 넣으므로 스크린 리더는 둘을 듣고 나서 호출이 열려 있는지 듣습니다. 입력과 출력은 [CodeBlock](/code)에 담은 JSON이고, 각각 이름 있는 영역이자 탭 정지이므로 키보드로 긴 줄을 스크롤할 수 있습니다. 도구가 많은 것을 돌려줄 수 있으니 출력에는 최대 높이를 주세요.
+
+```tsx
+import { Badge, Code, CodeBlock, DataList, Disclosure } from '@tounsoo/todae';
+
+export function ToolCall({ call }: { call: ToolCallData }) {
+  const status = STATUS[call.status];
+  return (
+    <Disclosure.Root>
+      <Disclosure.Summary>
+        <Code.Root>{call.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
+      </Disclosure.Summary>
+      <DataList.Root orientation="vertical">
+        <DataList.Item>
+          <DataList.Term>Input</DataList.Term>
+          <DataList.Details>
+            <CodeBlock.Root tabIndex={0} role="region" aria-label={`${call.name} input`}>
+              {JSON.stringify(call.input, null, 2)}
+            </CodeBlock.Root>
+          </DataList.Details>
+        </DataList.Item>
+        {call.status === 'done' && (
+          <DataList.Item>
+            <DataList.Term>Output</DataList.Term>
+            <DataList.Details>
+              <CodeBlock.Root tabIndex={0} role="region" aria-label={`${call.name} output`} style={{ maxBlockSize: '16rem' }}>
+                {JSON.stringify(call.output, null, 2)}
+              </CodeBlock.Root>
+            </DataList.Details>
+          </DataList.Item>
+        )}
+        {call.status === 'error' && (
+          <DataList.Item>
+            <DataList.Term>Error</DataList.Term>
+            <DataList.Details>{call.error}</DataList.Details>
+          </DataList.Item>
+        )}
+      </DataList.Root>
+    </Disclosure.Root>
+  );
+}
+```
+
+각 호출은 스트림이 준 순서대로 [Message](/message) 안의 앞뒤 텍스트 사이에 넣으세요. `Message.Root`의 파트는 다음 파트와 간격이 생기므로 호출에 따로 margin을 줄 필요가 없습니다. 호출이 실행되는 동안 메시지의 `streaming`을 유지하면 [Conversation](/conversation)이 답이 끝났을 때 알립니다.
+
+```tsx
+<Message.Root streaming={streaming} aria-label="Assistant">
+  <Message.Content>
+    <Prose.Root>{intro}</Prose.Root>
+  </Message.Content>
+  {calls.map((call) => (
+    <ToolCall key={call.id} call={call} />
+  ))}
+  <Message.Content>
+    <Prose.Root>{answer}</Prose.Root>
+  </Message.Content>
+</Message.Root>
+```
+
+검색어처럼 입력이 몇 개의 단순한 값인 도구라면, JSON보다 입력의 키를 가로 DataList로 보여 주는 편이 읽기 쉽습니다.
+
+## 승인
+
+승인을 기다리는 호출은 실행 전에 입력을 읽을 수 있도록 열리고, 그 뒤에 Approve와 Deny를 보여 줍니다. `open`을 상태에서 정하면 호출은 기다리기 시작할 때 열리고, 실행되거나 거부되면 닫힙니다. React는 그 값이 바뀔 때만 `open`을 설정하므로, 누군가 직접 연 호출은 끝난 뒤에도 열려 있습니다. 버튼 그룹의 이름은 도구 이름으로 정하세요. 여러 호출이 기다릴 때 "Approve"가 무엇을 승인하는지 알 수 있습니다.
+
+호출이 정해지면 버튼이 사라지고, 그러면 포커스가 페이지로 떨어집니다. 먼저 포커스를 호출의 summary로 옮기세요.
+
+```tsx
+import { Button, Disclosure, Stack } from '@tounsoo/todae';
+import { useId, useRef } from 'react';
+
+export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved: boolean) => void }) {
+  const nameId = useId();
+  const summary = useRef<HTMLElement>(null);
+  const status = STATUS[call.status];
+
+  const decide = (approved: boolean) => {
+    summary.current?.focus();
+    onDecide(approved);
+  };
+
+  return (
+    <Stack.Root gap="condensed">
+      <Disclosure.Root open={call.status === 'pending'}>
+        <Disclosure.Summary ref={summary}>
+          <Code.Root id={nameId}>{call.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
+        </Disclosure.Summary>
+        …
+      </Disclosure.Root>
+      {call.status === 'pending' && (
+        <Stack.Root direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
+          <Button.Root onClick={() => decide(true)}>Approve</Button.Root>
+          <Button.Root variant="secondary" onClick={() => decide(false)}>
+            Deny
+          </Button.Root>
+        </Stack.Root>
+      )}
+    </Stack.Root>
+  );
+}
+```
+
+누군가 정할 때까지 에이전트는 멈추고, 스크린 리더 사용자는 답을 읽고 있지 않을 수 있습니다. 기다리는 호출을 스트림이 알려 오면 [useAnnouncer](/utilities/use-announcer)로 알리세요.
+
+```ts
+const announce = useAnnouncer();
+
+function receive(call: ToolCallData) {
+  setCalls((calls) => upsert(calls, call));
+  if (call.status === 'pending') announce(`${call.name} needs your approval`);
+}
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 열고 닫기, Enter와 Space, 스크린 리더가 듣는 펼침 상태, 닫힌 호출 안의 페이지 내 찾기는 브라우저가 맡습니다. summary의 포커스 링. Badge에는 role이 없으므로 그 라벨은 summary의 텍스트와 함께 읽힙니다.
+
+**직접 제공할 것:** tone의 색만이 아니라 말로 쓴 상태 라벨. [Code](/code) 페이지에서처럼 각 CodeBlock의 탭 정지, role, 이름. 승인 버튼 그룹의 이름. 승인 버튼이 사라지기 전에 summary로 옮기는 포커스. 호출이 승인을 기다릴 때의 알림.
+
+**주의할 점:** summary 안의 버튼, 링크 같은 컨트롤. summary 자체가 열고 닫는 버튼이라 그 안의 컨트롤은 브라우저마다 같은 방법으로 닿지 않습니다. 끝난 호출을 답에서 없애는 것. 페이지 내 찾기와 스크린 리더가 에이전트가 한 일에 더는 닿지 못합니다. 상태가 바뀔 때마다 알리는 것. 답이 끝나면 Conversation이 이미 알리고, 스스로 실행되고 끝나는 호출은 그 일부입니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 채팅에서 어시스턴트가 읽는 사람 대신 실행한 일을 입력, 출력과 함께 보여 줄 때. 검색, 가져오기, 파일 변경 같은 일입니다. 호출이 실행되기 전에 읽는 사람에게 승인을 받을 때.
+
+**쓰지 않을 때:** 텍스트로 streaming되는 어시스턴트의 추론 → [Prose](/prose)를 담은 [Disclosure](/disclosure). 작업의 정해진 단계를 따라가는 진행 → [Steps](/steps). 계속하기 전에 읽는 사람이 처리해야 하는 결과 → 메시지 안의 [Alert](/alert).

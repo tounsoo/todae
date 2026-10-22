@@ -1,0 +1,165 @@
+import { ToolCallExample } from '../../../../components/demos/ToolCallDemo';
+
+# Tool call
+
+A recipe, not a package namespace. A tool call in an assistant's reply is a [Disclosure](/disclosure) whose summary shows the tool's name and a [Badge](/badge) for its status, with the input and output in a [DataList](/data-list) inside. A call that waits for approval adds two [Button](/button)s. What the tool does and when it runs are up to your product. There is no `ToolCall.*` export.
+
+Open a call to read its input and output. The last call waits for approval: approve it to watch it run, or deny it.
+
+<Example block>
+  <ToolCallExample />
+</Example>
+
+## The call
+
+Keep each call as data that your agent's stream updates: an id, the tool's name, a status, the input, and the output or error once it has one. Map each status to a label and a tone once, so every call shows the same words.
+
+```ts
+import type { BadgeTone } from '@tounsoo/todae';
+
+type ToolCallStatus = 'pending' | 'running' | 'done' | 'error' | 'denied';
+
+type ToolCallData = {
+  id: string;
+  name: string;
+  status: ToolCallStatus;
+  input: Record<string, unknown>;
+  output?: unknown;
+  error?: string;
+};
+
+const STATUS: Record<ToolCallStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: 'Needs approval', tone: 'warning' },
+  running: { label: 'Running', tone: 'info' },
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+  denied: { label: 'Denied', tone: 'neutral' },
+};
+```
+
+The summary holds the name in [Code](/code) and the status as a Badge, so a screen reader hears both, then whether the call is open. The input and output are JSON in a [CodeBlock](/code), each a named region with a Tab stop so a keyboard can scroll a long line. Give the output a maximum height, since a tool can return a lot.
+
+```tsx
+import { Badge, Code, CodeBlock, DataList, Disclosure } from '@tounsoo/todae';
+
+export function ToolCall({ call }: { call: ToolCallData }) {
+  const status = STATUS[call.status];
+  return (
+    <Disclosure.Root>
+      <Disclosure.Summary>
+        <Code.Root>{call.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
+      </Disclosure.Summary>
+      <DataList.Root orientation="vertical">
+        <DataList.Item>
+          <DataList.Term>Input</DataList.Term>
+          <DataList.Details>
+            <CodeBlock.Root tabIndex={0} role="region" aria-label={`${call.name} input`}>
+              {JSON.stringify(call.input, null, 2)}
+            </CodeBlock.Root>
+          </DataList.Details>
+        </DataList.Item>
+        {call.status === 'done' && (
+          <DataList.Item>
+            <DataList.Term>Output</DataList.Term>
+            <DataList.Details>
+              <CodeBlock.Root tabIndex={0} role="region" aria-label={`${call.name} output`} style={{ maxBlockSize: '16rem' }}>
+                {JSON.stringify(call.output, null, 2)}
+              </CodeBlock.Root>
+            </DataList.Details>
+          </DataList.Item>
+        )}
+        {call.status === 'error' && (
+          <DataList.Item>
+            <DataList.Term>Error</DataList.Term>
+            <DataList.Details>{call.error}</DataList.Details>
+          </DataList.Item>
+        )}
+      </DataList.Root>
+    </Disclosure.Root>
+  );
+}
+```
+
+Put each call in the [Message](/message) beside the text around it, in the order your stream gives them. A part of `Message.Root` is spaced from the next one, so a call needs no margin of its own. Keep `streaming` on the message while a call runs, so [Conversation](/conversation) says when the reply finishes.
+
+```tsx
+<Message.Root streaming={streaming} aria-label="Assistant">
+  <Message.Content>
+    <Prose.Root>{intro}</Prose.Root>
+  </Message.Content>
+  {calls.map((call) => (
+    <ToolCall key={call.id} call={call} />
+  ))}
+  <Message.Content>
+    <Prose.Root>{answer}</Prose.Root>
+  </Message.Content>
+</Message.Root>
+```
+
+For a tool whose input is a few plain values, such as a search query, a horizontal DataList of the input's keys reads better than JSON.
+
+## Approval
+
+A call that waits for approval opens, so its input can be read before it runs, and shows Approve and Deny after it. Set `open` from the status, so the call opens when it starts waiting and closes when it runs or is denied. React sets `open` only when that value changes, so a call someone opens by hand stays open as it finishes. Name the buttons' group by the tool's name, so "Approve" says what it approves when several calls wait.
+
+The buttons go away once the call is decided, which would drop focus to the page. Move focus to the call's summary first.
+
+```tsx
+import { Button, Disclosure, Stack } from '@tounsoo/todae';
+import { useId, useRef } from 'react';
+
+export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved: boolean) => void }) {
+  const nameId = useId();
+  const summary = useRef<HTMLElement>(null);
+  const status = STATUS[call.status];
+
+  const decide = (approved: boolean) => {
+    summary.current?.focus();
+    onDecide(approved);
+  };
+
+  return (
+    <Stack.Root gap="condensed">
+      <Disclosure.Root open={call.status === 'pending'}>
+        <Disclosure.Summary ref={summary}>
+          <Code.Root id={nameId}>{call.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
+        </Disclosure.Summary>
+        …
+      </Disclosure.Root>
+      {call.status === 'pending' && (
+        <Stack.Root direction="row" gap="condensed" role="group" aria-labelledby={nameId}>
+          <Button.Root onClick={() => decide(true)}>Approve</Button.Root>
+          <Button.Root variant="secondary" onClick={() => decide(false)}>
+            Deny
+          </Button.Root>
+        </Stack.Root>
+      )}
+    </Stack.Root>
+  );
+}
+```
+
+The agent stops until someone decides, and a screen reader user may not be reading the reply. When your stream reports a call that waits, say so with [useAnnouncer](/utilities/use-announcer).
+
+```ts
+const announce = useAnnouncer();
+
+function receive(call: ToolCallData) {
+  setCalls((calls) => upsert(calls, call));
+  if (call.status === 'pending') announce(`${call.name} needs your approval`);
+}
+```
+
+## Accessible composition
+
+**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the toggle, Enter and Space, the expanded state a screen reader hears, and find in page in a closed call. The summary's focus ring. A Badge has no role, so its label is read with the summary's text.
+
+**You supply:** A status label in words, not only a tone's color. A Tab stop, role and name for each CodeBlock, as on the [Code](/code) page. A name for the approval buttons' group. Focus moved to the summary before the approval buttons go away. An announcement when a call waits for approval.
+
+**Watch for:** Buttons, links or other controls inside the summary: the summary is itself the toggle, and a control inside it can't be reached the same way in every browser. Removing a call from the reply when it finishes: find in page and screen readers can no longer reach what the agent did. Announcing every status change: Conversation already says when the reply finishes, and a call that runs and finishes on its own is part of that.
+
+## When to use
+
+**When:** Showing what an assistant ran on the reader's behalf in a chat: a search, a fetch, a file change, with its input and output. Asking the reader to approve a call before it runs.
+
+**When not:** The assistant's reasoning, which streams as text → a [Disclosure](/disclosure) with [Prose](/prose). Progress through known steps of a task → [Steps](/steps). A result the reader must act on before going on → an [Alert](/alert) in the message.
