@@ -35,4 +35,6 @@ export interface Glyphs {
   stop?: ReactNode;
   /** A Steps.Item with an error. Todae draws an exclamation mark. */
   error?: ReactNode;
+  /** Drilldown.Back with no content. Point it toward the start of a left-to-right line: it is mirrored in right-to-left. Todae draws a chevron. */
+  back?: ReactNode;
 }

@@ -65,7 +65,8 @@
         { "$ref": "./components/tree.json" },
         { "$ref": "./components/nav.json" },
         { "$ref": "./components/picker.json" },
-        { "$ref": "./components/calendar.json" }
+        { "$ref": "./components/calendar.json" },
+        { "$ref": "./components/drilldown.json" }
       ],
       "$extensions": {
         "dev.todae": {

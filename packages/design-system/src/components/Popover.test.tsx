@@ -160,7 +160,7 @@ describe('Popover', () => {
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync.js', './Popover.wire.js', './Popover.module.css', './props.js', './revealRing.js', './cx.js', './toolbarContext.js']),
+      new Set(['react', '../overlay/usePopoverSync.js', './Popover.wire.js', './Popover.module.css', './props.js', './revealRing.js', './cx.js', '../overlay/surfaceContext.js']),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');

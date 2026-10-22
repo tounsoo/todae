@@ -1466,6 +1466,152 @@
       ]
     },
     {
+      "name": "Drilldown.Back",
+      "description": "Ghost Button.Root that goes back one view. Renders nothing at the first view. With no content it shows the back glyph.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Text of two or more letters or digits names the button by itself. Otherwise the backTo string from StringsProvider names it with the label of the view below, or the back string when that view has no label.",
+          "default": "\"Back to {label}\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before going back. Call event.preventDefault() to stay."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button content. Without it, the back glyph from GlyphsProvider, or Todae's chevron pointing to the start of the line."
+        }
+      ]
+    },
+    {
+      "name": "Drilldown.Label",
+      "description": "span with the shown view's label. Put it in Dialog.Title, Drawer.Title or BottomSheet.Title, so the overlay's title and name follow the view.",
+      "props": []
+    },
+    {
+      "name": "Drilldown.Root",
+      "description": "Owns the stack of views, the first view first and the shown view last. Renders no element, so it can wrap an overlay header and body.",
+      "props": [
+        {
+          "name": "value",
+          "type": "readonly string[]",
+          "required": false,
+          "description": "Controlled stack of view values, the first view first and the shown view last. Pass with onValueChange."
+        },
+        {
+          "name": "defaultValue",
+          "type": "readonly string[]",
+          "required": false,
+          "description": "Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer, BottomSheet or Popover finishes closing, and onValueChange fires with reason reset."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: readonly string[], reason: DrilldownChangeReason) => void",
+          "required": false,
+          "description": "Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back), escape (Escape, or the Android back gesture in a modal) or reset (an uncontrolled stack going back to defaultValue as its overlay finishes closing)."
+        },
+        {
+          "name": "escape",
+          "type": "\"back\" | \"close\"",
+          "required": false,
+          "description": "back: Escape goes back one view, and closes an enclosing overlay only at the first view. close: Escape is left to the overlay.",
+          "default": "\"back\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Drilldown.Viewport, Drilldown.Back and Drilldown.Label, anywhere inside."
+        }
+      ]
+    },
+    {
+      "name": "Drilldown.Trigger",
+      "description": "Button.Root that pushes its value onto the stack. Takes Button.Root's props, such as variant and render, so it can be a Next button or a row.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The Drilldown.View to push. Focus returns to this trigger when that view is popped."
+        },
+        {
+          "name": "variant",
+          "type": "ButtonVariant",
+          "required": false,
+          "description": "Button variant.",
+          "default": "\"primary\""
+        },
+        {
+          "name": "render",
+          "type": "(props: ButtonRenderProps) => ReactElement",
+          "required": false,
+          "description": "Draws the trigger on another element, such as a row or a link, as Button.Root does."
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLElement>",
+          "required": false,
+          "description": "Runs before the push. Call event.preventDefault() to stay on this view."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Trigger content."
+        }
+      ]
+    },
+    {
+      "name": "Drilldown.View",
+      "description": "div with role=\"group\", named by its label. Mounted while its value is in the stack; a view lower in the stack is hidden, and a leaving view is inert and aria-hidden until its slide ends.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The value Drilldown.Trigger pushes and the stack holds."
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": true,
+          "description": "Names the view's group, Drilldown.Label while it shows, and Drilldown.Back from the view above it."
+        },
+        {
+          "name": "initialFocusRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Where focus goes when the view shows with no trigger to return to: on a push, the first time a controlled change shows it, or on a pop once the trigger that pushed the view above is gone. Without it, or when it can't take focus, the first tab stop in the view, or the view itself."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The view's content."
+        }
+      ]
+    },
+    {
+      "name": "Drilldown.Viewport",
+      "description": "div that holds the views. During a slide it stacks the leaving and entering views in one grid cell, clips them, animates its height and sets data-direction to forward or back.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Drilldown.View elements."
+        }
+      ]
+    },
+    {
       "name": "EmptyState.Actions",
       "description": "A centered row of buttons or links that wraps. A `div` with no role.",
       "props": [

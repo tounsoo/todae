@@ -1,9 +1,12 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRef, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from './BottomSheet.js';
 import { Dialog } from './Dialog.js';
 import { Drawer } from './Drawer.js';
+import { Drilldown } from './Drilldown.js';
+import { Tooltip } from './Tooltip.js';
+import { useTooltip } from '../hooks/useTooltip.js';
 
 afterEach(cleanup);
 
@@ -135,6 +138,134 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(blocked).not.toHaveBeenCalled();
       expect(getSurface()).not.toBeNull();
+    });
+
+    it('goes back in a Drilldown on Escape before it closes', () => {
+      const onOpenChange = vi.fn();
+      const onValueChange = vi.fn();
+      const h = harness();
+      const cancel = () => act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      render(
+        <h.Root open onOpenChange={onOpenChange}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings', 'account']} onValueChange={onValueChange}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>,
+      );
+      cancel();
+      expect(onValueChange).toHaveBeenCalledWith(['settings'], 'escape');
+      expect(onOpenChange).not.toHaveBeenCalled();
+      cancel();
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    });
+
+    it("goes back in a Drilldown on a close request the browser won't let it cancel", () => {
+      const onOpenChange = vi.fn();
+      const onValueChange = vi.fn();
+      const h = harness();
+      render(
+        <h.Root open onOpenChange={onOpenChange}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings', 'account']} onValueChange={onValueChange}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>,
+      );
+      act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: false })));
+      expect(onValueChange).toHaveBeenCalledWith(['settings'], 'escape');
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('takes close requests for a Drilldown that can go back even with dismissOnEscape off', () => {
+      const onOpenChange = vi.fn();
+      const h = harness();
+      render(
+        <h.Root open onOpenChange={onOpenChange} dismissOnEscape={false}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings', 'account']}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings" />
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>,
+      );
+      expect(getSurface().getAttribute('closedby')).toBe('closerequest');
+      act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      expect(screen.getByRole('group', { name: 'Settings' })).toBeTruthy();
+      expect(getSurface().getAttribute('closedby')).toBe('none');
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('leaves close requests to the surface while a Tooltip inside takes only the Escape key', () => {
+      const onOpenChange = vi.fn();
+      const onTipChange = vi.fn();
+      const h = harness();
+      function Tip() {
+        const tooltip = useTooltip({ open: true, onOpenChange: onTipChange });
+        return (
+          <>
+            <button type="button" {...tooltip.getTriggerProps()}>
+              Archive
+            </button>
+            <Tooltip.Root {...tooltip.getTooltipProps()}>Archive the file</Tooltip.Root>
+          </>
+        );
+      }
+      const surface = (dismissOnEscape: boolean) => (
+        <h.Root open onOpenChange={onOpenChange} dismissOnEscape={dismissOnEscape}>
+          <h.Title>Files</h.Title>
+          <Tip />
+        </h.Root>
+      );
+      const { rerender } = render(surface(false));
+      expect(getSurface().getAttribute('closedby')).toBe('none');
+      rerender(surface(true));
+      act(() => void getSurface().dispatchEvent(new Event('cancel', { cancelable: true })));
+      expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+      expect(onTipChange).not.toHaveBeenCalled();
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Archive', hidden: true }), { key: 'Escape' });
+      expect(onTipChange).toHaveBeenCalledWith(false, 'escape');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts an uncontrolled Drilldown over with reason reset when it closes', () => {
+      const onValueChange = vi.fn();
+      const h = harness();
+      const surface = (open: boolean) => (
+        <h.Root open={open} onOpenChange={() => undefined}>
+          <h.Title>Settings</h.Title>
+          <Drilldown.Root defaultValue={['settings']} onValueChange={onValueChange}>
+            <Drilldown.Viewport>
+              <Drilldown.View value="settings" label="Settings">
+                <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+              </Drilldown.View>
+              <Drilldown.View value="account" label="Account" />
+            </Drilldown.Viewport>
+          </Drilldown.Root>
+        </h.Root>
+      );
+      const { rerender } = render(surface(true));
+      fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+      vi.useFakeTimers();
+      try {
+        rerender(surface(false));
+        act(() => vi.runAllTimers());
+      } finally {
+        vi.useRealTimers();
+      }
+      expect(onValueChange.mock.calls).toEqual([
+        [['settings', 'account'], 'push'],
+        [['settings'], 'reset'],
+      ]);
     });
 
     it('dismisses on scrim and ignores panel clicks', async () => {

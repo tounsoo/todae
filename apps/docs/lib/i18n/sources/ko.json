@@ -220,6 +220,17 @@
     "## Props": "0d9ea25d5717",
     "(section order)": "d183e3412ad2"
   },
+  "drilldown": {
+    "(top)": "4bf419843b89",
+    "# Drilldown": "d127a7d67b81",
+    "## The stack": "83d5b267f06b",
+    "## Escape and the back gesture": "4b5508144b49",
+    "## Motion": "6b8d6acb585c",
+    "## Accessible composition": "11f6dae2074f",
+    "## When to use": "2cc0c220f4a0",
+    "## Props": "f77bad6de1f3",
+    "(section order)": "d4e507781061"
+  },
   "empty-state": {
     "(top)": "c1f6dbabd661",
     "# EmptyState": "2dc5752ff42d",
@@ -551,7 +562,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "f07e966f9cb6",
+    "# Native platform": "65f724b4a4a8",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -840,7 +851,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "0da9c9a1b2a2",
+    "## Glyphs": "79786a87f258",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -851,7 +862,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "20025e73d7b6",
+    "## Strings": "6407b1e79d42",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

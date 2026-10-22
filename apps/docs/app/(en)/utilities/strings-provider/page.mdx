@@ -283,6 +283,16 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`Failed`</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`back`</Table.HeaderCell>
+      <Table.Cell>`Drilldown.Back` when its own text does not name it and the view below has no label</Table.Cell>
+      <Table.Cell>`Back`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`backTo(label)`</Table.HeaderCell>
+      <Table.Cell>`Drilldown.Back` when its own text does not name it, with the label of the view it goes back to</Table.Cell>
+      <Table.Cell>`Back to {label}`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`required`</Table.HeaderCell>
       <Table.Cell>What a required picker's button, and a required ChipInput's text box, is described by, since neither is what `aria-required` says is required</Table.Cell>
       <Table.Cell>`Required`</Table.Cell>

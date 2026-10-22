@@ -11,6 +11,7 @@ import {
   Clock as PhClock,
   Copy as PhCopy,
   CaretDown,
+  CaretLeft,
   CaretRight,
   Check as PhCheck,
   DotsThree,
@@ -36,6 +37,7 @@ import {
   IconCopy,
   IconCheck,
   IconChevronDown,
+  IconChevronLeft,
   IconChevronRight,
   IconDots,
   IconExclamationMark,
@@ -59,6 +61,7 @@ import {
   Check,
   Copy,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Ellipsis,
   Info,
@@ -114,6 +117,7 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       send: <ArrowUp />,
       stop: <Square fill="currentColor" />,
       error: <X />,
+      back: <ChevronLeft />,
     },
     icons: {
       plus: <Plus />,
@@ -148,6 +152,7 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       send: <PhArrowUp />,
       stop: <PhStop weight="fill" />,
       error: <ExclamationMark weight="bold" />,
+      back: <CaretLeft />,
     },
     icons: {
       plus: <PhPlus />,
@@ -182,6 +187,7 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       send: <IconArrowUp />,
       stop: <IconPlayerStopFilled />,
       error: <IconExclamationMark />,
+      back: <IconChevronLeft />,
     },
     icons: {
       plus: <IconPlus />,

@@ -1,6 +1,7 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { dropModal } from './modalStack.js';
 import { inToastHostWithin } from './tabbables.js';
+import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 import { reshowHeldInside } from './usePopoverSync.js';
 import { focusWithoutScroll } from '../components/revealRing.js';
@@ -31,7 +32,8 @@ type Options = {
  * person was if something closes it while the owner keeps it open.
  *
  * Call it where `showModal()` should run relative to the focus hooks. Pass
- * the returned handler to the element's `onSubmit` after the consumer's own.
+ * `closeOnFormSubmit` to the element's `onSubmit` after the consumer's own,
+ * and put `closedby` on the element.
  */
 export function useModalDialog({
   dialogRef,
@@ -41,7 +43,10 @@ export function useModalDialog({
   dismissOnEscape,
   onOpenChange,
   requestClose,
-}: Options): (event: FormEvent<HTMLDialogElement>) => void {
+}: Options): {
+  closeOnFormSubmit: (event: FormEvent<HTMLDialogElement>) => void;
+  closedby: 'closerequest' | 'none';
+} {
   const openRef = useRef(open);
   openRef.current = open;
   // Read from the listeners, so they bind once per element.
@@ -70,7 +75,7 @@ export function useModalDialog({
       reshowHeldInside(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
-      if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
+      if (process.env.NODE_ENV !== 'production' && !el.checkVisibility()) {
         console.error(
           'Todae: a modal <dialog> opened inside a hidden container, so the page is inert and nothing shows. Render it outside display:none ancestors such as closed popovers, tabs or <details>.',
         );
@@ -120,10 +125,16 @@ export function useModalDialog({
   useLayoutEffect(() => {
     if (!node) return;
     const el: HTMLDialogElement = node;
-    // Escape is a close request. Hold it so the owner closes the element.
+    // Escape is a close request. Hold it so the owner closes the element, or
+    // a layer inside that Escape would reach, such as a menu or a Drilldown
+    // going back, takes it. Chromium sends some close requests, depending on
+    // the page's user activation, as an uncancelable cancel and closes the
+    // element anyway; a layer still takes one, and onClose shows the element
+    // again.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();
+      if (takeCloseRequest(el)) return;
       if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
@@ -156,7 +167,7 @@ export function useModalDialog({
     };
   }, [node]);
 
-  return useCallback(
+  const closeOnFormSubmit = useCallback(
     (event: FormEvent<HTMLDialogElement>) => {
       // A form inside that already prevented its submit keeps the element open, as natively.
       if (event.defaultPrevented) return;
@@ -177,4 +188,8 @@ export function useModalDialog({
     },
     [dialogRef],
   );
+  // A layer inside takes close requests even with dismissOnEscape off.
+  const layerInside = useLayerInside(node);
+  const closedby = dismissOnEscape || layerInside ? 'closerequest' : 'none';
+  return { closeOnFormSubmit, closedby };
 }

@@ -1,6 +1,14 @@
 import type { Strings } from '@tounsoo/todae';
 import type { Locale } from './config';
 
+// 으로 after a final consonant other than ㄹ, else 로; (으)로 after anything but Hangul.
+function towardParticle(word: string): string {
+  const code = (word.trimEnd().at(-1) ?? '').charCodeAt(0) - 0xac00;
+  if (Number.isNaN(code) || code < 0 || code > 11171) return '(으)로';
+  const final = code % 28;
+  return final === 0 || final === 8 ? '로' : '으로';
+}
+
 /** Todae's own text in Korean, for the parts of the site that render in the reader's language, such as the playground's preview. */
 const KOREAN: Strings = {
   close: '닫기',
@@ -50,6 +58,8 @@ const KOREAN: Strings = {
   stepCurrent: '진행 중',
   stepPending: '시작 전',
   stepError: '실패',
+  back: '뒤로',
+  backTo: (label) => `${label}${towardParticle(label)} 돌아가기`,
   required: '필수',
   valueMissing: '필수 항목입니다',
   typeMismatchEmail: '이메일 주소를 입력하세요',

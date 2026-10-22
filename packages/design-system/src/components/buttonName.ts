@@ -77,18 +77,30 @@ export function useButtonName(
   const [worded, setWorded] = useState(() => hasWords(children));
   const buttonRef = useRef<HTMLButtonElement>(null);
   const refs = useComposedRefs(buttonRef, ref);
+  const watched = useRef<{ button: HTMLButtonElement; stop: () => void } | null>(null);
   const read = useCallback(() => {
     const button = buttonRef.current;
     setWorded(button ? isWorded(spokenText(button)) : false);
   }, []);
-  // Every commit, as the text can change; the same value bails out.
-  useLayoutEffect(read);
-  // A child can render its text from its own state, such as a translation
-  // that loads later, without this component rendering again.
+  // Every commit, as the text can change; the same value bails out. A child
+  // can also render its text from its own state, such as a translation that
+  // loads later, without this component rendering again, so a watch on the
+  // button reads it then. It is kept per element, so a caller's ref that
+  // changes each render doesn't rebuild it, and a button that mounts again is
+  // followed.
   useLayoutEffect(() => {
+    read();
     const button = buttonRef.current;
-    if (!button) return;
-    return watchElements(() => [[button, BUTTON_CHANGES]], read).stop;
-  }, [read]);
+    if (watched.current?.button === button) return;
+    watched.current?.stop();
+    watched.current = button ? { button, stop: watchElements(() => [[button, BUTTON_CHANGES]], read).stop } : null;
+  });
+  useLayoutEffect(
+    () => () => {
+      watched.current?.stop();
+      watched.current = null;
+    },
+    [],
+  );
   return [ariaLabel || (worded ? undefined : fallback), refs];
 }

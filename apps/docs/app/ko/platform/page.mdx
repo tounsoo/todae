@@ -5,8 +5,10 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[CSS 앵커 포지셔닝](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: 팝오버와 툴팁을 트리거 옆에 배치하고, `position-try-fallbacks`로 뷰포트 가장자리에서 뒤집고, `Field.Textarea`의 하이라이트를 textarea 위에 배치합니다. 없으면: 표면이 트리거 옆에 배치되지 않고 뷰포트 왼쪽 위 모서리 근처에 놓이며, 하이라이트는 그려지지 않습니다.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: `Popover.Root`와 `Tooltip.Root`를 최상위 레이어에 표시합니다. Todae에 필수입니다.
 - **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog)와 `showModal()`**: `Dialog.Root`와 `BottomSheet.Root`의 최상위 레이어, `::backdrop`, inert가 되는 뒤 페이지, Escape, `<form method="dialog">`에 씁니다. Todae에 필수입니다. 스크림은 `::backdrop`에서 Todae의 사용자 정의 속성을 읽으며, 현재 브라우저에서는 `::backdrop`이 다이얼로그에서 이를 상속합니다. 상속하지 않는 오래된 엔진에서는 스크림 색이 보이지 않습니다.
-- **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `dismissOnEscape={false}`인 `BottomSheet`에서 브라우저가 Escape를 무시하게 합니다. 없으면: Escape가 여전히 닫기를 요청하고, Todae가 시트를 열린 채로 둡니다.
+- **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `dismissOnEscape={false}`인 `Dialog`, `Drawer`, `BottomSheet`에서 브라우저가 Escape와 뒤로 제스처를 무시하게 합니다. 다만 열린 팝오버나 메뉴, 또는 돌아갈 뷰가 있는 `Drilldown`처럼 안쪽 층이 받을 수 있는 동안은 예외입니다. 툴팁은 Escape만 받으므로 `closedby`를 바꾸지 않습니다. 없으면: Escape가 여전히 닫기를 요청하고, Todae가 표면을 열린 채로 둡니다.
 - **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: 칩 측정용 사본을 숨깁니다. Todae에 필수입니다.
+- **[`getAnimations()`](https://developer.mozilla.org/docs/Web/API/Element/getAnimations)**: 미끄러져 나가는 `Drilldown` 뷰를 자신의 전환이 끝날 때까지 화면에 둡니다. Todae에 필수입니다.
+- **[`checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility)**: 닫힌 팝오버나 숨겨진 탭 패널 안처럼 렌더링되지 않은 `Drilldown`은 Escape와 닫기 요청을 넘깁니다. Todae에 필수입니다.
 - **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: 하나만 열리는 아코디언. 없으면: 한 그룹의 여러 디스클로저가 동시에 열릴 수 있습니다.
 - **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: 디스클로저 내용을 서서히 나타냅니다. 없으면: 내용이 바로 나타납니다.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `autoGrow`를 쓴 `Field.Textarea`. 없으면: textarea가 rows 높이를 유지하고 스크롤됩니다.
@@ -17,7 +19,7 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[`scrollbar-gutter`](https://developer.mozilla.org/docs/Web/CSS/scrollbar-gutter)**: 모달 `<dialog>`가 페이지 스크롤을 멈추는 동안 스크롤바 자리를 유지합니다. 없으면: 모달이 열릴 때 페이지가 스크롤바 너비만큼 밀립니다.
 - **[캐스케이드 레이어](https://developer.mozilla.org/docs/Web/CSS/@layer)**: Todae의 리셋, 토큰, 컴포넌트와 회사 테마의 순서를 정합니다. Todae에 필수입니다.
 - **[상대 색상 문법](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: `color.bg.selected`처럼 토큰에서 만든 반투명 색상. Todae에 필수입니다.
-- **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` 진입 전환. 없으면: 다이얼로그가 전환 없이 나타납니다.
+- **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` 진입 전환과 미끄러져 들어오는 `Drilldown` 뷰. 없으면: 다이얼로그와 뷰가 전환 없이 나타납니다.
 - **[Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal)**: `Calendar`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`의 값과 `formatDate`, `parseDate`, `formatDateRange`, `parseDateRange`, `formatTime`, `parseTime`, `formatDateTime`, `parseDateTime`. 없으면, 앱이 Temporal 폴리필을 불러오지 않는 한: `Calendar.Root`와 열린 `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`는 렌더링할 때 예외가 발생하고, `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime`은 예외가 발생할 수 있습니다.
 - **[비동기 Clipboard API](https://developer.mozilla.org/docs/Web/API/Clipboard/writeText)**: `useClipboard`의 복사. 없거나 보안 컨텍스트가 아닌 페이지에서는: 복사가 실패하고 `status`가 `'failed'`가 됩니다.
 - **[제약 조건 검증 API](https://developer.mozilla.org/docs/Web/HTML/Constraint_validation)**: `Form.Root`와 검증 범위가 각 컨트롤의 `validity`, `willValidate`, `validationMessage`를 읽고, `checkValidity()`로 폼을 검사하며, `formNoValidate`를 위해 `SubmitEvent.submitter`를 읽고, `setCustomValidity()`로 `customValidity`를 설정합니다. `requestSubmit()`도 같은 검사를 거칩니다. Todae에 필수입니다.

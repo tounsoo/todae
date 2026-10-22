@@ -12,6 +12,7 @@ import {
   Composer,
   Dialog,
   Disclosure,
+  Drilldown,
   Field,
   GlyphsProvider,
   Menu,
@@ -47,6 +48,7 @@ const ICONS: Required<Glyphs> = {
   send: <svg data-testid="send" />,
   stop: <svg data-testid="stop" />,
   error: <svg data-testid="error" />,
+  back: <svg data-testid="back" />,
 };
 
 function withIcons(children: ReactNode, glyphs: Glyphs = ICONS) {
@@ -294,6 +296,24 @@ describe('GlyphsProvider', () => {
     rerender(composer(true));
     expect(screen.queryByTestId('send')).toBeNull();
     expect(screen.getAllByTestId('stop')).toHaveLength(1);
+  });
+
+  it("uses the back glyph for an empty Drilldown.Back, else Todae's chevron, on a wrapper that mirrors in right-to-left", () => {
+    const back = (glyphs?: Glyphs) =>
+      withIcons(
+        <Drilldown.Root defaultValue={['a', 'b']}>
+          <Drilldown.Back />
+          <Drilldown.Back>Done</Drilldown.Back>
+        </Drilldown.Root>,
+        glyphs,
+      );
+    const { rerender } = render(back());
+    expect(screen.getAllByTestId('back')).toHaveLength(1);
+    expect(screen.getByTestId('back').parentElement?.hasAttribute('data-todae-glyph')).toBe(true);
+    rerender(back({}));
+    expect(screen.getByRole('button', { name: 'Back' }).querySelector('[data-todae-glyph] > svg')).toBeTruthy();
+    expect(sheet('Drilldown.module.css')).toMatch(/\.glyph > :is\(svg, img\) \{[^}]*inline-size: 100%;/);
+    expect(sheet('Drilldown.module.css')).toMatch(/\.backIcon > \[data-todae-glyph\]:dir\(rtl\) \{\s*scale: -1 1;/);
   });
 
   it('uses the check and error glyphs for done and failed Steps.Item markers', () => {

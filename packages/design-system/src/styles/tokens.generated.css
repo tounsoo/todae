@@ -1254,6 +1254,11 @@
   --todae-calendar-nav-icon-size: var(--_todae-calendar-nav-icon-size, 1rem);
   --todae-calendar-weekday-fg: var(--_todae-calendar-weekday-fg, var(--todae-color-fg-muted));
   --todae-calendar-weekday-font-weight: var(--_todae-calendar-weekday-font-weight, var(--todae-font-weight-regular));
+  --todae-drilldown-back-icon-size: var(--_todae-drilldown-back-icon-size, var(--todae-button-base-icon-size));
+  --todae-drilldown-motion-duration: var(--_todae-drilldown-motion-duration, var(--todae-motion-duration-moderate));
+  --todae-drilldown-motion-easing-enter: var(--_todae-drilldown-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-drilldown-motion-easing-exit: var(--_todae-drilldown-motion-easing-exit, var(--todae-motion-easing-exit));
+  --todae-drilldown-ring-focus: var(--_todae-drilldown-ring-focus, var(--todae-focus-ring-color));
   --todae-button-border-width: var(--todae-button-base-border-width);
   --todae-button-font-letter-spacing: var(--todae-button-base-font-letter-spacing);
   --todae-button-font-size: var(--todae-button-base-font-size);
