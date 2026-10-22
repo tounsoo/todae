@@ -44,7 +44,7 @@ export function Reasoning({ thinking, seconds, children }: { thinking: boolean; 
 
 `open={thinking}`은 추론이 시작되면 블록을 열고, `thinking`이 false가 되면 닫습니다. React는 prop이 바뀔 때만 `open`을 설정하므로, 블록이 마운트되어 있는 동안에는 streaming 중에 블록을 닫은 사람에게는 닫힌 채로, 끝난 뒤에 연 사람에게는 열린 채로 남습니다. 다시 마운트된 블록은 현재 단계에서 다시 시작하고 사용자가 바꾼 상태를 잃으므로, 각 메시지의 `key`를 그대로 유지하세요. 기록에서 불러온 답은 `thinking`이 false로 렌더링되므로 블록이 닫힌 채로 시작합니다.
 
-메시지는 추론과 답 내내 `streaming` 상태입니다. [Conversation.Content](/conversation) 안에서는 답이 끝날 때 한 번 알리고, streaming이 시작되기 전에 메시지가 마운트되었다면 시작될 때도 한 번 알립니다.
+메시지는 추론과 답 내내 `streaming` 상태이므로, [Conversation.Content](/conversation) 안에서 답은 시작될 때 많아야 한 번, 끝날 때 한 번 알려지고, 추론과 답 사이에는 다시 알려지지 않습니다.
 
 ```tsx
 <Message.Root streaming={phase !== 'done'} aria-label="Assistant">
@@ -64,11 +64,11 @@ export function Reasoning({ thinking, seconds, children }: { thinking: boolean; 
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고 펼침 상태를 알립니다. 추론 안의 링크가 포커스를 가진 채로 블록이 닫히면 메인 진입점의 `Disclosure.Summary`가 포커스를 자기에게로 옮기므로, 포커스가 페이지로 빠지지 않습니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 그것이 풀릴 때, 그리고 이미 보이는 메시지에서 시작될 때 알립니다.
+**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고 펼침 상태를 알립니다. 추론 안의 링크가 포커스를 가진 채로 블록이 닫히면 메인 진입점의 `Disclosure.Summary`가 포커스를 자기에게로 옮기며, Chromium에서는 이 덕분에 포커스가 페이지로 빠지지 않습니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 이를 읽어 메시지가 도착하기 시작할 때와 다 도착했을 때 알립니다.
 
 **직접 제공할 것:** dots는 숨겨지므로 상태를 말로 알리는 summary 텍스트. 제품의 stream에서 얻는 단계와 걸린 시간.
 
-**주의할 점:** 추론을 live region에 넣는 것. 스크린 리더가 도착하는 단어를 하나하나 읽습니다. dots만 바뀌는 summary. 추론이 끝났는지는 dots가 아니라 "Thinking"과 "Thought for 6 seconds"가 알려 줍니다.
+**주의할 점:** 추론을 live region에 넣는 것. 스크린 리더가 도착하는 단어를 하나하나 읽습니다. 단어는 그대로이고 dots만 바뀌는 summary. 추론이 끝났는지는 dots가 아니라 "Thinking"과 "Thought for 6 seconds"가 알려 줍니다.
 
 ## 언제 쓰나요
 
