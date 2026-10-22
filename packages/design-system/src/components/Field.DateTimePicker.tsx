@@ -1,14 +1,9 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsWithRef } from 'react';
-import { useDomId } from './domId.js';
-import { mergeDescribedBy } from './Field.context.js';
-import { cx } from './props.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './Field.module.css';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CalendarGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import type { PopoverCloseReason } from '../hooks/usePopover.js';
-import { Popover } from './Popover.js';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
@@ -16,12 +11,12 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { useFieldPicker, htmlDateTime, valueBounds } from './Field.shared.js';
-import { FieldValueInput } from './Field.ValueInput.js';
+import { htmlDateTime, valueBounds } from './Field.shared.js';
+import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
-export type FieldDateTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+export type FieldDateTimePickerCloseReason = PickerCloseReason;
 
 export type FieldDateTimePickerProps = {
   /** The date and time, or null for none. */
@@ -52,10 +47,7 @@ export type FieldDateTimePickerProps = {
   defaultOpen?: boolean;
   /** Fires when the popover opens or closes, with why it closed. */
   onOpenChange?: (open: boolean, reason: FieldDateTimePickerCloseReason) => void;
-} & Omit<
-  ComponentPropsWithRef<'button'>,
-  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
->;
+} & PickerButtonProps;
 
 const LIST = '[role="listbox"]';
 
@@ -192,103 +184,59 @@ function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined
  * A button that opens a Calendar and a list of times in a popover, side by
  * side, or the list under the calendar on a narrow screen. A picked date and a
  * picked time make the value, and picking a time while the calendar holds a
- * date it offers closes the popover. On its own it is the field's control and shows
- * the date and time, and a press elsewhere in the field opens the popover.
- * Beside any other control but a Field.ColorPicker, Field.DatePicker,
- * Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type
- * the date and time in, that control is the field's control instead, and the
- * button is named from the dateTimePicker string. The date and time go in a
- * native input the browser validates, so `required`, `min` and `max` block a
- * submit and Form.Root shows them. With `showValue={false}` the button shows
- * only a calendar glyph.
+ * date it offers closes the popover. On its own it is the field's control,
+ * shows the date and time, and a press elsewhere in the field opens the
+ * popover. Beside any other control but a Field.ColorPicker, Field.DatePicker,
+ * Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a
+ * Field.TextInput to type the date and time in, that control is the field's
+ * control instead, and the button is named from the dateTimePicker string. The
+ * date and time go in a native input the browser validates, so `required`,
+ * `min` and `max` block a submit and Form.Root shows them. With `showValue`
+ * set to false, the button shows only a calendar glyph.
  */
 export function DateTimePicker({
   value,
-  onValueChange,
   min,
   max,
-  required,
   isDateDisabled,
   firstDayOfWeek,
   step = 30,
   locale,
-  placeholder,
-  showValue = true,
-  open,
-  defaultOpen,
-  onOpenChange,
-  className,
-  style,
-  'aria-describedby': describedBy,
   ...props
 }: FieldDateTimePickerProps) {
   const strings = useStrings();
   const { calendar } = useGlyphs();
-  const textId = useDomId();
-  // The button's name is not the date and time, so what it shows is its description.
-  const picker = useFieldPicker<'select'>({
-    props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
-    label: strings.dateTimePicker,
-    open,
-    defaultOpen,
-    onOpenChange,
-    style,
-    required,
-    // The calendar's Tab stop: the date, or else today or the nearest date in range.
-    focusSelector: CALENDAR_TAB_STOP,
-  });
   return (
-    <>
-      <button
-        {...picker.triggerProps}
-        type="button"
-        data-todae-field-picker=""
-        data-glyph-only={showValue ? undefined : ''}
-        className={cx(styles.picker, className)}
-      >
-        {showValue ? (
-          <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value ? dateTimeLabel(value, locale) : placeholder}
-          </span>
-        ) : null}
-        <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
-          {glyphOr(calendar, <CalendarGlyph />)}
-        </span>
-      </button>
-      <FieldValueInput
-        {...picker.valueInput({
-          type: 'datetime-local',
-          value: value ? htmlDateTime(value) : '',
-          // The list picks any time, so no step is off.
-          step: 'any',
-          ...valueBounds(min, max, htmlDateTime, (at) => dateTimeLabel(at, locale)),
-        })}
-      />
-      {/* Mounted while open only: a form can hold many date and time pickers. */}
-      {picker.shown ? (
-        <Popover.Root
-          {...picker.popover.getPopoverProps()}
-          role="dialog"
-          aria-label={strings.dateTimePicker}
-          className={styles.datePickerPopover}
-        >
-          <DateTimePanel
-            value={value}
-            min={min}
-            max={max}
-            isDateDisabled={isDateDisabled}
-            firstDayOfWeek={firstDayOfWeek}
-            step={step}
-            locale={locale}
-            label={strings.timePicker}
-            onValueChange={(next) => {
-              picker.notifyValueChange();
-              onValueChange?.(next);
-            }}
-            onDone={() => picker.setOpen(false, 'select')}
-          />
-        </Popover.Root>
-      ) : null}
-    </>
+    <PickerShell
+      {...props}
+      label={strings.dateTimePicker}
+      glyph={glyphOr(calendar, <CalendarGlyph />)}
+      shown={value ? dateTimeLabel(value, locale) : null}
+      // The calendar's Tab stop: the date, or else today or the nearest date in range.
+      focusSelector={CALENDAR_TAB_STOP}
+      valueInput={{
+        type: 'datetime-local',
+        value: value ? htmlDateTime(value) : '',
+        // The list picks any time, so no step is off.
+        step: 'any',
+        ...valueBounds(min, max, htmlDateTime, (at) => dateTimeLabel(at, locale)),
+      }}
+    >
+      {({ pick, close }) => (
+        <DateTimePanel
+          value={value}
+          min={min}
+          max={max}
+          isDateDisabled={isDateDisabled}
+          firstDayOfWeek={firstDayOfWeek}
+          step={step}
+          locale={locale}
+          label={strings.timePicker}
+          // The popover closes once a time completes the pick, not on the pick itself.
+          onValueChange={(next) => pick(next, { close: false })}
+          onDone={close}
+        />
+      )}
+    </PickerShell>
   );
 }

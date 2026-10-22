@@ -282,6 +282,14 @@ const cases: Case[] = [
     ),
   ],
   [
+    'Field.DateRangePicker',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.DateRangePicker {...p} value={null} />
+      </Field.Root>
+    ),
+  ],
+  [
     'Calendar.Root',
     (p) => <Calendar.Root {...p} aria-label="c" />,
   ],

@@ -42,7 +42,7 @@ const [invalid, setInvalid] = useState(false);
   <FieldDatePicked />
 </Example>
 
-여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 날짜를 입력할 수도 있습니다. 고른 날짜는 `formatDate`로 텍스트에 쓰이고, `parseDate`가 날짜로 읽은 입력은 달력을 그 달로 옮깁니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 달력 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 날짜를 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `2026-10-13` 형식으로 날짜를 보내려면 Root 대신 선택기에 `name`을 두세요.
+여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 날짜를 입력할 수도 있습니다. 고른 날짜는 `formatDate`로 텍스트에 쓰이고, `parseDate`가 날짜로 읽은 입력은 달력을 그 달로 옮깁니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 달력 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 날짜를 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `2026-10-13` 형식으로 날짜를 보내려면 Root 대신 선택기에 `name`을 두세요.
 
 ## 입력한 날짜
 
@@ -64,7 +64,7 @@ const [invalid, setInvalid] = useState(false);
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜는 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.TimePicker`, `Field.DateTimePicker`, 다른 `Field.DatePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `datePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `datePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 [Calendar](/calendar)와 같은 키로 움직입니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다. 필수 선택기의 버튼은 버튼에 `aria-required`를 쓸 수 없으므로, StringsProvider의 `required` 문자열로 설명됩니다.
+**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜는 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`, 다른 `Field.DatePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `datePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `datePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 [Calendar](/calendar)와 같은 키로 움직입니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다. 필수 선택기의 버튼은 버튼에 `aria-required`를 쓸 수 없으므로, StringsProvider의 `required` 문자열로 설명됩니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 텍스트 입력과 그 옆의 선택기에는 같은 날짜를 주고, `formatDate`로 쓰고 `parseDate`로 읽으세요.
 
@@ -76,7 +76,7 @@ const [invalid, setInvalid] = useState(false);
 
 **언제:** 예약이나 마감일처럼 한 달을 보면서 고르는 편이 좋은 폼의 날짜.
 
-**쓰지 않을 때:** 생일처럼 외우고 있는 날짜 → `parseDate`로 읽는 [Field.TextInput](/field/text-input). 페이지에 펼쳐 둔 달력 → [Calendar](/calendar). 시각이 있는 날짜 → [Field.DateTimePicker](/field/date-time-picker).
+**쓰지 않을 때:** 생일처럼 외우고 있는 날짜 → `parseDate`로 읽는 [Field.TextInput](/field/text-input). 페이지에 펼쳐 둔 달력 → [Calendar](/calendar). 시작일과 종료일 → [Field.DateRangePicker](/field/date-range-picker). 시각이 있는 날짜 → [Field.DateTimePicker](/field/date-time-picker).
 
 ### formatDate
 

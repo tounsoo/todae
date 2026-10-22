@@ -74,14 +74,15 @@
     "(section order)": "5c8250327a77"
   },
   "calendar": {
-    "(top)": "f59a557c8526",
-    "# Calendar": "e7168712ba53",
+    "(top)": "e6d0bb76e386",
+    "# Calendar": "a4a59be7452f",
     "## Range and locale": "38c6da99f7fd",
+    "## Ranges": "dea924332ea9",
     "## Temporal": "084d2fd73acf",
-    "## Accessible composition": "0c0c5d991a3f",
-    "## When to use": "6a4841c3c102",
+    "## Accessible composition": "0537a42b7b7a",
+    "## When to use": "41bc026898d1",
     "## Props": "1736b176a33c",
-    "(section order)": "b32de0f3c71a"
+    "(section order)": "0cc46d31c92c"
   },
   "card": {
     "(top)": "7894bae600a4",
@@ -250,8 +251,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "e9665d9d7ec9",
-    "## Inputs": "e5136edbacd2",
+    "# Field": "253e479f2907",
+    "## Inputs": "f4b3f17160ce",
     "## Label": "7d0c50d3c651",
     "## Messages": "34bda9e4b60a",
     "## Counter": "ca3bd330d359",
@@ -294,24 +295,37 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "5ad69a8f824e",
+    "# Field.DatePicker": "d2d2dc01e837",
     "## Typed dates": "a9bc729f1755",
     "## On its own": "b1d2f5440119",
-    "## Accessible composition": "fbd85c622ae7",
+    "## Accessible composition": "d44831dbbcd9",
     "## When to use": "d57fe8233a0b",
-    "### Field.DatePicker": "9b0203cf918a",
+    "### Field.DatePicker": "f853e4b26b27",
     "### formatDate": "8733ccff7aed",
     "### parseDate": "9c8aa249da4e",
     "## Props": "965c55594523",
     "(section order)": "31048754c69b"
   },
+  "field/date-range-picker": {
+    "(top)": "2d895db44745",
+    "# Field.DateRangePicker": "3b280faba8cd",
+    "## Typed ranges": "158ae98b8c71",
+    "## On its own": "b1f54a988629",
+    "## Accessible composition": "0f3deea8054b",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DateRangePicker": "180461c4d1c7",
+    "### formatDateRange": "3f1f8443b7a9",
+    "### parseDateRange": "238d056ef780",
+    "## Props": "4ac04d344475",
+    "(section order)": "83afd8a304e4"
+  },
   "field/date-time-picker": {
     "(top)": "baff6ae91b8c",
-    "# Field.DateTimePicker": "4554ad1808bf",
+    "# Field.DateTimePicker": "eee5a363765b",
     "## Typed dates and times": "0bf3c1d5c09e",
     "## On its own": "411d07eab154",
     "## Temporal": "427eeb71dd9c",
-    "## Accessible composition": "2c99c46f8e23",
+    "## Accessible composition": "dff5e1f9dcc6",
     "## When to use": "d57fe8233a0b",
     "### Field.DateTimePicker": "641960a4b398",
     "### formatDateTime": "325cf00c875c",
@@ -349,10 +363,10 @@
   },
   "field/text-input": {
     "(top)": "8ae5e158e6c5",
-    "# Field.TextInput": "03561621fe1b",
+    "# Field.TextInput": "9f9709ca9cd6",
     "## Accessible composition": "8aa58c41f117",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "099ae196b945",
+    "### Field.TextInput": "6c7769378088",
     "## Props": "286d56b43a7f",
     "(section order)": "7de09df07162"
   },
@@ -370,11 +384,11 @@
   },
   "field/time-picker": {
     "(top)": "c91058d9eff0",
-    "# Field.TimePicker": "18bf06c1f772",
+    "# Field.TimePicker": "c0cddca30b82",
     "## Typed times": "dca979543684",
     "## On its own": "45bd56452ca5",
     "## Temporal": "d7c947f6ad86",
-    "## Accessible composition": "075374016b83",
+    "## Accessible composition": "80c06e4918c3",
     "## When to use": "d57fe8233a0b",
     "### Field.TimePicker": "23d7d67f1ee4",
     "### formatTime": "fd8940b1ed01",
@@ -546,7 +560,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "52bcae8157cd",
+    "# Native platform": "65f724b4a4a8",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -623,6 +637,15 @@
     "## Accessible composition": "1906b4f799d7",
     "## When to use": "d42ffa07d586",
     "(section order)": "6cc1bf0c30c5"
+  },
+  "recipes/date-range-presets": {
+    "(top)": "694e43a763f8",
+    "# Date range with presets": "35ad4762b89e",
+    "## Presets": "2d2dfd4f2c47",
+    "## The field": "0220ad580a2f",
+    "## Accessible composition": "81e5d354604a",
+    "## When to use": "5fe4b9e27636",
+    "(section order)": "f42ec7b6c387"
   },
   "recipes/file-upload": {
     "(top)": "630a61784a0e",
@@ -798,7 +821,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "f7c3fc2cca4a",
+    "## Glyphs": "79786a87f258",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -809,7 +832,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "b9b644da1e5b",
+    "## Strings": "6407b1e79d42",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

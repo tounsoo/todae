@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateTime, formatTime, normalizeHex, parseDate, parseDateTime, parseTime, useChipField, useField } from '@tounsoo/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -674,6 +674,62 @@ export function FieldDatePickerAlone() {
           onValueChange={setDate}
           locale={locale}
           placeholder="Pick a date"
+        />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldDateRangePicked() {
+  const id = useId();
+  const locale = useLocale();
+  const [range, setRange] = useState<DateRange | null>(null);
+  const [text, setText] = useState('');
+  const [invalid, setInvalid] = useState(false);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Stay</Label.Root>
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setRange(parseDateRange(event.target.value, { locale }));
+            setInvalid(false);
+          }}
+          onBlur={() => {
+            if (range) setText(formatDateRange(range, { locale }));
+            else setInvalid(text.trim() !== '');
+          }}
+        />
+        <Field.DateRangePicker
+          value={range}
+          onValueChange={(next) => {
+            setRange(next);
+            setText(formatDateRange(next, { locale }));
+            setInvalid(false);
+          }}
+          locale={locale}
+          showValue={false}
+        />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldDateRangePickerAlone() {
+  const id = useId();
+  const locale = useLocale();
+  const [range, setRange] = useState<DateRange | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Trip dates</Label.Root>
+      <Field.Root id={id}>
+        <Field.DateRangePicker
+          value={range}
+          onValueChange={setRange}
+          locale={locale}
+          placeholder="Pick dates"
         />
       </Field.Root>
     </Field.Group>

@@ -1,8 +1,8 @@
-import { CalendarInline } from '../../../components/demos/CalendarDemo';
+import { CalendarInline, CalendarRange } from '../../../components/demos/CalendarDemo';
 
 # Calendar
 
-`Calendar.Root` holds one selected date as a `Temporal.PlainDate`. `Calendar.Header` shows the month and year between buttons to the previous and next month, and `Calendar.Grid` shows that month's days, one week to a row. Pressing the month and year swaps the days for a page of twelve years, and the buttons beside it go to the previous and next page. Picking a year shows its month again, keeping the month and day where it can. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` with the date a person picks.
+`Calendar.Root` holds one selected date as a `Temporal.PlainDate`, or with `mode="range"` a range of dates. `Calendar.Header` shows the month and year between buttons to the previous and next month, and `Calendar.Grid` shows that month's days, one week to a row. Pressing the month and year swaps the days for a page of twelve years, and the buttons beside it go to the previous and next page. Picking a year shows its month again, keeping the month and day where it can. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` with the date a person picks.
 
 ```tsx
 <Calendar.Root aria-label="Start date" value={date} onValueChange={setDate}>
@@ -25,13 +25,30 @@ With no value, the grid starts on `defaultMonth`, else on today's month, kept wi
 
 A server render does not know today, so with no `value` or `defaultMonth` the grid has no weeks until the page hydrates, and today is marked only then. When the calendar renders on a server, also pass `locale` and `firstDayOfWeek`, so the server and the browser draw the same names and columns.
 
+## Ranges
+
+With `mode="range"`, `Calendar.Root` holds a `DateRange`, `{ start, end }` with both days included, and `value`, `defaultValue` and `onValueChange` take one. The first pick starts a range and the second ends it, in either order, and `onValueChange` gets the range once the second date is picked; picking the same day twice makes a one-day range. Until then the grid shows the range from the first pick to the hovered day, or else the focused day, when that day can end the range, and otherwise only the first pick. Escape drops the first pick, and so does a change to `min`, `max` or `isDateDisabled` that rules it out. A range holds only days that can be picked, so after the first pick, a day past one that `isDateDisabled`, `min` or `max` rules out can't end it. To find that day, `isDateDisabled` is called for each day from the first pick to the shown month, within `min` and `max`, until it rules one out. A render checks at most about two years of those days, and the rest are checked in short slices between frames; until the scan reaches a day, that day can't end the range. This scan reuses its answers while `isDateDisabled`, the first pick, `min` and `max` stay the same, so a function made anew on each render scans again, and a scan that hasn't finished also starts over when any of them changes, so a far range needs a function that stays the same. One that reads changing data, such as booked days, should be made anew when that data changes, and the scan then starts again from the first pick. Apart from the scan, each day the grid draws is checked on every render. A new `value` equal to one of the last eight picks reported that no value has answered yet is taken as the parent's answer to that pick, however late it comes, so it neither moves the grid nor drops a range started since; that pick and the older ones then count as answered, so quick picks can be answered in turn. Any other new `value` drops a first pick and moves the grid to its start, unless the focused day is one of its ends. So a parent that turns a pick down and later sets that same value itself, with no other value between, doesn't move the grid to it. On the page of years, every year the range touches is selected, or while a range waits for its end, only the first pick's year.
+
+```tsx
+<Calendar.Root aria-label="Stay" mode="range" value={range} onValueChange={setRange}>
+  <Calendar.Header />
+  <Calendar.Grid />
+</Calendar.Root>
+```
+
+<Example block>
+  <CalendarRange />
+</Example>
+
+For a range in a form, use [Field.DateRangePicker](/field/date-range-picker).
+
 ## Temporal
 
 Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it renders, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
 
 ## Accessible composition
 
-**Todae handles:** `Calendar.Root` is a `role="group"`. `Calendar.Grid` is a `role="grid"` table, labelled by the header's month while a `Calendar.Header` is rendered, with a column header for each weekday whose `abbr` is the full name. It is one Tab stop: arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Left and Right swap in a right-to-left page. Each day is a button named with the full date, the selected one's cell has `aria-selected`, and today has `aria-current="date"`. Dates `isDateDisabled` rules out have `aria-disabled`, and days outside `min` and `max` are disabled. The month and year is a button with `aria-expanded`, true while the years show, inside a live region, so a screen reader hears it change. The page of years is a `role="grid"` with the same single Tab stop: arrow keys move by year and row, Home and End to the ends of the row, and Page Up and Page Down by page. The buttons beside the heading are named from the `previousMonth` and `nextMonth` strings in [StringsProvider](/utilities/strings-provider), or `previousYears` and `nextYears` while the years show, and they and the heading draw the `chevron` glyph from [GlyphsProvider](/utilities/glyphs-provider). `disabled`, or a disabled [Fieldset](/fieldset), disables every button.
+**Todae handles:** `Calendar.Root` is a `role="group"`. `Calendar.Grid` is a `role="grid"` table, labelled by the header's month while a `Calendar.Header` is rendered, with a column header for each weekday whose `abbr` is the full name. It is one Tab stop: arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Left and Right swap in a right-to-left page. Each day is a button named with the full date, the selected one's cell has `aria-selected`, and today has `aria-current="date"`. Dates `isDateDisabled` rules out have `aria-disabled`, and days outside `min` and `max` are disabled. The month and year is a button with `aria-expanded`, true while the years show, inside a live region, so a screen reader hears it change. The page of years is a `role="grid"` with the same single Tab stop: arrow keys move by year and row, Home and End to the ends of the row, and Page Up and Page Down by page. The buttons beside the heading are named from the `previousMonth` and `nextMonth` strings in [StringsProvider](/utilities/strings-provider), or `previousYears` and `nextYears` while the years show, and they and the heading draw the `chevron` glyph from [GlyphsProvider](/utilities/glyphs-provider). `disabled`, or a disabled [Fieldset](/fieldset), disables every button. In range mode, the grid and the page of years have `aria-multiselectable`, and every day or year the range touches has `aria-selected`, or while a range waits for its end, only the first pick's. After the first pick, the `pickEndDate` string is announced through a live region, and the days that can't end the range have `aria-disabled` and still take focus. Escape then drops the first pick and stops there, so a popover around the calendar stays open.
 
 **You supply:** A name for the group, with `aria-label` or `aria-labelledby`, and one for the grid when there is no `Calendar.Header`. `locale` when the page's language is not the browser's.
 
@@ -41,7 +58,7 @@ Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it rende
 
 **When:** Pick one date from a calendar shown on the page, such as on a booking screen.
 
-**When not:** A date in a form field → [Field.DatePicker](/field/date-picker). A date with a time → [Field.DateTimePicker](/field/date-time-picker).
+**When not:** A date in a form field → [Field.DatePicker](/field/date-picker). A range of dates in a form field → [Field.DateRangePicker](/field/date-range-picker). A date with a time → [Field.DateTimePicker](/field/date-time-picker).
 
 ## Props
 

@@ -110,7 +110,7 @@ export function useTextEntry(store: CountStore, value: string, maxLength: number
   );
 }
 
-// How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
+// How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.DateRangePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
 export const pickerToggles = /* @__PURE__ */ new WeakMap<HTMLButtonElement, () => void>();
 
 // A time for a value input stops at the smallest unit that is set.
@@ -135,10 +135,13 @@ function checkHtmlYear(year: number) {
   }
 }
 
+/** A date as HTML writes one, such as 2026-10-07, for Field.DateRangePicker's text value input, which holds any year. */
+export const htmlDateText = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
+
 /** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's value input. */
 export const htmlDate = (value: Temporal.PlainDate) => {
   checkHtmlYear(value.year);
-  return toHtmlYear(value.toString({ calendarName: 'never' }));
+  return htmlDateText(value);
 };
 
 /** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's value input. */
@@ -149,8 +152,9 @@ export const htmlDateTime = (value: Temporal.PlainDateTime) => {
 };
 
 /**
- * What Field.ColorPicker, Field.DatePicker, Field.TimePicker and Field.DateTimePicker share: the
- * button's control props, the open state, which closes when the field is
+ * What the Field pickers share: Field.ColorPicker, Field.DatePicker,
+ * Field.DateRangePicker, Field.TimePicker and Field.DateTimePicker. It gives
+ * the button's control props, the open state, which closes when the field is
  * disabled, and the popover, which focuses the element `focusSelector` finds
  * when it opens, or without one its first tabbable.
  */

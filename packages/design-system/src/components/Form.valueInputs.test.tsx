@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getCandidates, getTabbables } from '../overlay/tabbables.js';
-import { ErrorMessage, Field, Form, Label, useField, type FieldControlUserProps } from '../index.js';
+import { ErrorMessage, Field, Form, Label, useField, type DateRange, type FieldControlUserProps } from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
 import { resetWarnOnce } from './warnOnce.js';
@@ -496,11 +496,48 @@ describe('a bound beyond year 9999', () => {
   });
 });
 
+describe('a required date range picker in Form.Root', () => {
+  it('blocks a submit with no range and focuses the picker button, and sends a range as an ISO 8601 interval', async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    function Stay() {
+      const [value, setValue] = useState<DateRange | null>(null);
+      return (
+        <Form.Root data-testid="form" onSubmit={onSubmit}>
+          <Field.Group>
+            <Label.Root htmlFor="stay">Stay</Label.Root>
+            <Field.Root id="stay" name="stay">
+              <Field.DateRangePicker value={value} onValueChange={setValue} required locale="en-US" />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <button type="button" onClick={() => setValue({ start: day('2026-10-03'), end: day('2026-10-10') })}>
+            Pick
+          </button>
+        </Form.Root>
+      );
+    }
+    await mount(<Stay />);
+    expect(valueInput().type).toBe('text');
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('This field is required')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Stay' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
+    await settle();
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
+      ['stay', '2026-10-03/2026-10-10'],
+    ]);
+    await submit(screen.getByTestId('form'));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('a required picker', () => {
   it.each([
     ['date', <Field.DatePicker key="d" value={null} required />],
     ['time', <Field.TimePicker key="t" value={null} required />],
     ['date and time', <Field.DateTimePicker key="dt" value={null} required />],
+    ['range', <Field.DateRangePicker key="r" value={null} required />],
   ])('describes its %s button as required, since a button cannot say aria-required', async (_, picker) => {
     await mount(<Field.Root aria-label="When" name="when">{picker}</Field.Root>);
     const button = screen.getByRole('button');

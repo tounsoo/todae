@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -13,30 +14,30 @@ import {
   type MouseEvent,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { useReach } from './calendarReach.js';
+import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
 export type CalendarFirstDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-export type CalendarRootProps = {
-  /** Controlled selected date, or null for none. Pass with onValueChange. */
-  value?: Temporal.PlainDate | null;
-  /** Initial selected date when uncontrolled. */
-  defaultValue?: Temporal.PlainDate | null;
-  /** Fires with each date a person picks, even the one already selected. */
-  onValueChange?: (value: Temporal.PlainDate) => void;
+/** Whether Calendar.Root picks one date or a range of dates. */
+export type CalendarMode = 'single' | 'range';
+
+type CalendarSharedProps = {
   /** The earliest date that can be picked. */
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. */
+  /** Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
@@ -48,12 +49,47 @@ export type CalendarRootProps = {
   disabled?: boolean;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'onChange'>;
 
+/**
+ * Calendar.Root's props, which follow `mode`: one date by default, or with
+ * `mode="range"` a DateRange.
+ */
+export type CalendarRootProps =
+  | (CalendarSharedProps & {
+      /** One date, or with "range" a range of dates: the first pick starts it and the second ends it. Defaults to "single". */
+      mode?: 'single';
+      /** Controlled selected date, or null for none. Pass with onValueChange. */
+      value?: Temporal.PlainDate | null;
+      /** Initial selected date when uncontrolled. */
+      defaultValue?: Temporal.PlainDate | null;
+      /** Fires with each date a person picks, even the one already selected. */
+      onValueChange?: (value: Temporal.PlainDate) => void;
+    })
+  | (CalendarSharedProps & {
+      /** One date, or with "range" a range of dates: the first pick starts it and the second ends it. */
+      mode: 'range';
+      /** Controlled selected range, or null for none. Pass with onValueChange. */
+      value?: DateRange | null;
+      /** Initial selected range when uncontrolled. */
+      defaultValue?: DateRange | null;
+      /** Fires with the range when its second date is picked. */
+      onValueChange?: (value: DateRange) => void;
+    });
+
 export type CalendarHeaderProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
 export type CalendarGridProps = Omit<ComponentPropsWithRef<'table'>, 'children' | 'role'>;
 
 type CalendarContextValue = {
-  value: Temporal.PlainDate | null;
+  mode: CalendarMode;
+  /** The selected range; in single mode the date as a one-day range. */
+  value: DateRange | null;
+  /** In range mode, the first pick of a range still waiting for its other end. */
+  anchor: Temporal.PlainDate | null;
+  /** The range the grid draws: the value, or while an anchor is set, the anchor to the hovered or focused day. */
+  shown: DateRange | null;
+  /** While an anchor is set, whether a range from it to the date would hold only days that can be picked. */
+  reachable: (date: Temporal.PlainDate) => boolean;
+  setHovered: (date: Temporal.PlainDate | null) => void;
   /**
    * The date that holds the grid's Tab stop. Its month is the month shown.
    * Null in a server render and hydration with no value or defaultMonth.
@@ -89,6 +125,14 @@ type CalendarContextValue = {
 };
 
 type CalendarView = 'days' | 'years';
+
+/** What waits on a person: a range's first pick and the day hovered from it. */
+type Pending = {
+  anchor: Temporal.PlainDate | null;
+  hovered: Temporal.PlainDate | null;
+};
+
+const IDLE: Pending = { anchor: null, hovered: null };
 
 const CalendarContext = /* @__PURE__ */ createContext<CalendarContextValue | null>(null);
 
@@ -141,32 +185,79 @@ export function isoDate<T extends Temporal.PlainDate | null | undefined>(date: T
   return (date && date.calendarId !== 'iso8601' ? date.withCalendar('iso8601') : date) as T;
 }
 
-const same = (a: Temporal.PlainDate | null, b: Temporal.PlainDate | null) =>
-  a === b || (a !== null && b !== null && a.equals(b));
+const sameRange = (a: DateRange | null, b: DateRange | null) =>
+  a === b || (a !== null && b !== null && a.start.equals(b.start) && a.end.equals(b.end));
 
-function Root({
-  value: valueProp,
-  defaultValue,
-  onValueChange,
-  min: minProp,
-  max: maxProp,
-  isDateDisabled,
-  defaultMonth,
-  firstDayOfWeek,
-  locale: localeProp,
-  disabled: disabledProp,
-  className,
-  children,
-  ...props
-}: CalendarRootProps) {
-  const { disabled } = useFieldsetState({ disabled: disabledProp });
-  const min = isoDate(minProp);
-  const max = isoDate(maxProp);
-  const [value, setValue] = useControlledValue<Temporal.PlainDate | null>(
-    isoDate(valueProp),
-    isoDate(defaultValue) ?? null,
-    onValueChange as ((next: Temporal.PlainDate | null) => void) | undefined,
+const compare = (a: Temporal.PlainDate, b: Temporal.PlainDate) => Temporal.PlainDate.compare(a, b);
+
+const rangeText = (range: DateRange) => `${range.start}/${range.end}`;
+
+/** The range in the ISO calendar, its ends in order. */
+function isoRange(range: DateRange | null | undefined): DateRange | null | undefined {
+  return range && spanOf(isoDate(range.start), isoDate(range.end));
+}
+
+const oneDay = (date: Temporal.PlainDate | null | undefined) => date && { start: date, end: date };
+
+/**
+ * Either mode's value props as a range: single mode holds its date as a
+ * one-day range. The value is made once for each pair of dates, so a
+ * controlled value keeps one object across renders.
+ */
+function useRangeProps(props: CalendarRootProps) {
+  const range = props.mode === 'range' ? isoRange(props.value) : oneDay(isoDate(props.value));
+  const text = range ? rangeText(range) : range;
+  const value = useMemo(() => {
+    if (text === null || text === undefined) return text;
+    const [start, end] = text.split('/');
+    return { start: Temporal.PlainDate.from(start!), end: Temporal.PlainDate.from(end!) };
+  }, [text]);
+  const onDateChange = props.mode !== 'range' ? props.onValueChange : undefined;
+  const onDayChange = useMemo(
+    () => onDateChange && ((next: DateRange) => onDateChange(next.start)),
+    [onDateChange],
   );
+  if (props.mode === 'range') {
+    return { value, defaultValue: isoRange(props.defaultValue) ?? null, onValueChange: props.onValueChange };
+  }
+  return { value, defaultValue: oneDay(isoDate(props.defaultValue)) ?? null, onValueChange: onDayChange };
+}
+
+function Root(rootProps: CalendarRootProps) {
+  const {
+    mode = 'single',
+    value: _value,
+    defaultValue: _defaultValue,
+    onValueChange: _onValueChange,
+    min: minProp,
+    max: maxProp,
+    isDateDisabled,
+    defaultMonth,
+    firstDayOfWeek,
+    locale: localeProp,
+    disabled: disabledProp,
+    className,
+    children,
+    onKeyDown,
+    ...props
+  } = rootProps;
+  const { disabled } = useFieldsetState({ disabled: disabledProp });
+  const strings = useStrings();
+  const announce = useAnnouncer();
+  const [firstMode] = useState(mode);
+  const modeReported = useRef(false);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || mode === firstMode || modeReported.current) return;
+    modeReported.current = true;
+    console.error('Calendar.Root cannot change mode after it mounts; give it a new key instead');
+  }, [firstMode, mode]);
+  // Kept by value, so a min or max made anew each render recomputes nothing.
+  const minText = isoDate(minProp)?.toString();
+  const maxText = isoDate(maxProp)?.toString();
+  const min = useMemo(() => (minText === undefined ? undefined : Temporal.PlainDate.from(minText)), [minText]);
+  const max = useMemo(() => (maxText === undefined ? undefined : Temporal.PlainDate.from(maxText)), [maxText]);
+  const { onValueChange, ...ends } = useRangeProps(rootProps);
+  const [value, setValue] = useControlledState<DateRange | null>(ends.value, ends.defaultValue);
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
   const today = useMemo(() => (todayText === null ? null : Temporal.PlainDate.from(todayText)), [todayText]);
   const locale = useMemo(
@@ -177,17 +268,40 @@ function Root({
   // Null until something sets it: then the grid starts on today, which a
   // server render and hydration do not know.
   const [focusedState, setFocused] = useState<Temporal.PlainDate | null>(
-    () => value ?? isoDate(defaultMonth?.toPlainDate({ day: 1 })) ?? null,
+    () => value?.start ?? isoDate(defaultMonth?.toPlainDate({ day: 1 })) ?? null,
   );
-  const start = focusedState ?? today;
-  const focused = start === null ? null : clampDate(start, min, max);
-  // A value from outside, such as one typed in a text input beside Field.DatePicker, moves the
-  // grid to it.
-  const [lastValue, setLastValue] = useState(value);
-  if (!same(value, lastValue)) {
-    setLastValue(value);
-    if (value) setFocused(value);
+  const startOrToday = focusedState ?? today;
+  const focused = startOrToday === null ? null : clampDate(startOrToday, min, max);
+  const [pending, setPending] = useState<Pending>(IDLE);
+  const { anchor, hovered } = pending;
+  // The ranges picks reported that no value has answered yet, as ISO text, newest last and
+  // at most REPORTED_PICKS. A new value equal to one is the parent's answer to that pick,
+  // however late it comes: the grid stays where the person has since moved it, and a range
+  // started meanwhile stays pending. The answered pick and the older ones are dropped.
+  const [reported, setReported] = useState<string[]>([]);
+  // Any other new value, or a mode change, drops what is pending and the reports, and a new
+  // value moves the grid to its start unless the Tab stop is on one of its ends, as a value
+  // typed beside Field.DatePicker does.
+  const [seen, setSeen] = useState({ mode, value });
+  const valueChanged = !sameRange(value, seen.value);
+  if (mode !== seen.mode || valueChanged) {
+    setSeen({ mode, value });
+    const answered = mode === seen.mode && value !== null ? reported.indexOf(rangeText(value)) : -1;
+    if (answered >= 0) {
+      setReported(reported.slice(answered + 1));
+    } else {
+      if (reported.length > 0) setReported([]);
+      setPending(IDLE);
+      if (valueChanged && value && !(focused && (focused.equals(value.start) || focused.equals(value.end)))) {
+        setFocused(value.start);
+      }
+    }
   }
+  const setHovered = useCallback(
+    (date: Temporal.PlainDate | null) =>
+      setPending((current) => (current.hovered === date ? current : { ...current, hovered: date })),
+    [],
+  );
   const focusRequest = useRef(false);
   const headingId = useDomId();
 
@@ -201,6 +315,17 @@ function Root({
   const unavailable = useCallback(
     (date: Temporal.PlainDate) => outOfRange(date) || Boolean(isDateDisabled?.(date)),
     [isDateDisabled, outOfRange],
+  );
+  // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
+  const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
+  if (anchorRuledOut) setPending(IDLE);
+  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled });
+  const reachable = useCallback(
+    (date: Temporal.PlainDate) =>
+      reach !== null &&
+      !(reach.first && compare(date, reach.first) < 0) &&
+      !(reach.last && compare(date, reach.last) > 0),
+    [reach],
   );
   const canShow = useCallback(
     (month: Temporal.PlainYearMonth) =>
@@ -249,17 +374,37 @@ function Root({
   );
   const select = useCallback(
     (date: Temporal.PlainDate) => {
-      if (disabled || unavailable(date)) return;
+      if (disabled || unavailable(date) || (anchor && !reachable(date))) return;
       setFocused(date);
-      // A pick is reported even when it is the date already selected.
-      setValue(date);
+      // In single mode a pick is a whole range of one day.
+      if (mode === 'range' && !anchor) {
+        setPending({ anchor: date, hovered: null });
+        announce(strings.pickEndDate);
+        return;
+      }
+      // Reported even when it is the value already selected.
+      const next = spanOf(anchor ?? date, date);
+      setPending(IDLE);
+      setReported((current) => [...current, rangeText(next)].slice(-REPORTED_PICKS));
+      setValue(next);
+      onValueChange?.(next);
     },
-    [disabled, setValue, unavailable],
+    [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable],
   );
+  const shown = useMemo(() => {
+    if (!anchor) return value;
+    const end = hovered ?? focused;
+    return end && reachable(end) ? spanOf(anchor, end) : { start: anchor, end: anchor };
+  }, [anchor, focused, hovered, reachable, value]);
 
   const ctx = useMemo(
     () => ({
+      mode,
       value,
+      anchor,
+      shown,
+      reachable,
+      setHovered,
       focused,
       today,
       locale,
@@ -281,7 +426,12 @@ function Root({
       moveToYear,
     }),
     [
+      mode,
       value,
+      anchor,
+      shown,
+      reachable,
+      setHovered,
       focused,
       today,
       locale,
@@ -307,6 +457,14 @@ function Root({
         role="group"
         data-disabled={disabled ? '' : undefined}
         className={cx(styles.root, className)}
+        onKeyDown={composeHandlers(onKeyDown, (event) => {
+          if (event.key !== 'Escape' || !anchor) return;
+          // Only the range in progress goes. Stopping the key here keeps it from the
+          // document, where a popover around the calendar listens for Escape to close.
+          event.preventDefault();
+          event.stopPropagation();
+          setPending(IDLE);
+        })}
       >
         {children}
       </div>
@@ -408,6 +566,9 @@ function Header({ className, ...props }: CalendarHeaderProps) {
   );
 }
 
+// How many picks the calendar remembers while it waits for the parent to answer them.
+const REPORTED_PICKS = 8;
+
 const YEARS_PER_PAGE = 12;
 const YEARS_PER_ROW = 4;
 // Temporal's first and last years.
@@ -451,7 +612,7 @@ function Grid(props: CalendarGridProps) {
   return cal.view === 'years' ? <YearGrid {...props} /> : <DayGrid {...props} />;
 }
 
-function DayGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProps) {
+function DayGrid({ className, onKeyDown, onPointerLeave, ref: refProp, ...props }: CalendarGridProps) {
   const cal = useCalendar('Grid');
   const ref = useRef<HTMLTableElement>(null);
   const composedRef = useComposedRefs(ref, refProp);
@@ -510,6 +671,8 @@ function DayGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridP
         return;
     }
     event.preventDefault();
+    // The keys take the range's preview from the pointer.
+    cal.setHovered(null);
     cal.moveFocus(next, true);
   };
 
@@ -521,8 +684,13 @@ function DayGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridP
       aria-labelledby={
         props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
       }
+      aria-multiselectable={cal.mode === 'range' || undefined}
       className={cx(styles.grid, className)}
       onKeyDown={composeHandlers(onKeyDown, onDayKeyDown)}
+      onPointerLeave={(event) => {
+        onPointerLeave?.(event);
+        cal.setHovered(null);
+      }}
     >
       <thead>
         <tr>
@@ -557,25 +725,37 @@ function DayGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridP
 
 function Day({ date }: { date: Temporal.PlainDate }) {
   const cal = useCalendar('Grid');
-  const selected = cal.value !== null && date.equals(cal.value);
+  const { shown, anchor } = cal;
+  const inShown = shown !== null && compare(date, shown.start) >= 0 && compare(date, shown.end) <= 0;
+  const rangeStart = inShown && date.equals(shown.start);
+  const rangeEnd = inShown && date.equals(shown.end);
+  // While a range waits for its end, only the anchor is picked.
+  const selected = anchor ? date.equals(anchor) : rangeStart || rangeEnd;
+  const range = cal.mode === 'range';
   const outOfRange = cal.outOfRange(date);
   const unavailable = cal.unavailable(date);
+  const unreachable = anchor !== null && !unavailable && !cal.reachable(date);
   const isToday = cal.today !== null && date.equals(cal.today);
   return (
-    <td aria-selected={selected ? true : undefined}>
+    <td aria-selected={(anchor ? selected : inShown) ? true : undefined}>
       <button
         type="button"
         className={styles.day}
         tabIndex={cal.focused !== null && date.equals(cal.focused) ? 0 : -1}
         // Outside min and max a day is disabled, as the keys never reach it;
-        // one ruled out by isDateDisabled still takes focus, to be read.
+        // one ruled out by isDateDisabled, or past one from a range's first
+        // pick, still takes focus, to be read.
         disabled={cal.disabled || outOfRange}
-        aria-disabled={unavailable && !outOfRange ? true : undefined}
+        aria-disabled={(unavailable && !outOfRange) || unreachable ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
         aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
         data-selected={selected ? '' : undefined}
+        data-in-range={range && inShown && !rangeStart && !rangeEnd ? '' : undefined}
+        data-range-start={range && rangeStart ? '' : undefined}
+        data-range-end={range && rangeEnd ? '' : undefined}
         data-unavailable={unavailable ? '' : undefined}
         data-todae-calendar-cell=""
+        onPointerEnter={anchor ? () => cal.setHovered(date) : undefined}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           // A click also moves the Tab stop, even to a date isDateDisabled rules out.
           cal.moveFocus(date, false);
@@ -664,6 +844,7 @@ function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGrid
       aria-labelledby={
         props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
       }
+      aria-multiselectable={cal.mode === 'range' || undefined}
       className={cx(styles.grid, className)}
       onKeyDown={composeHandlers(onKeyDown, onYearKeyDown)}
     >
@@ -682,7 +863,11 @@ function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGrid
 
 function Year({ year }: { year: number }) {
   const cal = useCalendar('Grid');
-  const selected = cal.value !== null && cal.value.year === year;
+  // As in the days, while a range waits for its end only the first pick's year is selected.
+  const { anchor, value } = cal;
+  const selected = anchor
+    ? anchor.year === year
+    : value !== null && value.start.year <= year && year <= value.end.year;
   const inRange = cal.yearInRange(year);
   return (
     <td aria-selected={selected ? true : undefined}>
