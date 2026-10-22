@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useState } from 'react';
+import { useState, type PointerEvent } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { useReorder } from '../index.js';
 
@@ -58,6 +58,19 @@ function Controlled({ items, onMove }: { items: string[]; onMove: (from: number,
           <span>{item}</span>
         </li>
       ))}
+    </ul>
+  );
+}
+
+function Grip({ onPointerDown }: { onPointerDown: (event: PointerEvent<HTMLElement>) => void }) {
+  const reorder = useReorder({ onMove: () => {} });
+  return (
+    <ul>
+      <li data-testid="item" {...reorder.getItemProps(0)}>
+        <span data-testid="grip" {...reorder.getHandleProps(0, { onPointerDown })}>
+          ::
+        </span>
+      </li>
     </ul>
   );
 }
@@ -121,6 +134,7 @@ function drag(handle: string) {
     return { target: screen.getByText(name).closest('li')!, init: { dataTransfer, ...near } };
   };
   return {
+    dataTransfer,
     over(name: string, side: 'start' | 'end', axis?: 'x' | 'y') {
       const { target, init } = at(name, side, axis);
       fireDrag(target, 'dragover', init);
@@ -197,6 +211,7 @@ it('takes the side in a horizontal list from the text direction', () => {
   d.drop('C', 'end', 'x');
   expect(onMove).toHaveBeenLastCalledWith(0, 2);
   unmount();
+  onMove.mockClear();
 
   render(<List orientation="horizontal" dir="rtl" onMove={onMove} />);
   d = drag('A');
@@ -204,7 +219,7 @@ it('takes the side in a horizontal list from the text direction', () => {
   d.over('C', 'end', 'x');
   expect(item('C')).toHaveAttribute('data-drop', 'before');
   d.drop('C', 'start', 'x');
-  expect(onMove).toHaveBeenLastCalledWith(0, 2);
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
 });
 
 it('starts no drag and stops one under way when disabled', () => {
@@ -228,6 +243,9 @@ it('moves the dragged item when the list changes during the drag', () => {
   const d = drag('B');
   // Another device adds an item at the top: B is now at index 2.
   rerender(<Controlled onMove={onMove} items={['N', 'A', 'B', 'C', 'D']} />);
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  expect(item('B')).toHaveAttribute('draggable', 'true');
+  expect(item('A')).not.toHaveAttribute('data-dragging');
   d.drop('D', 'end');
   expect(onMove).toHaveBeenCalledWith(2, 4);
 });
@@ -235,18 +253,33 @@ it('moves the dragged item when the list changes during the drag', () => {
 it('forgets a drag whose item was removed, and then ignores drags it did not start', () => {
   const onMove = vi.fn();
   const { rerender } = render(<Controlled onMove={onMove} items={['A', 'B', 'C', 'D']} />);
-  drag('B');
+  const d = drag('B');
   rerender(<Controlled onMove={onMove} items={['A', 'C', 'D']} />);
-  fireDrag(item('C'), 'dragover', { dataTransfer: new DataTransfer(), clientX: 5, clientY: item('C').getBoundingClientRect().bottom - 2 });
+  for (const node of screen.getAllByRole('listitem')) {
+    expect(node).not.toHaveAttribute('data-dragging');
+    expect(node).not.toHaveAttribute('draggable');
+  }
+  // The drag's own data, still in the browser's hands, no longer reaches the list.
+  d.over('C', 'end');
   expect(item('C')).not.toHaveAttribute('data-drop');
-  act(() => {
-    window.dispatchEvent(new PointerEvent('pointermove'));
-  });
-  for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
+  d.drop('C', 'end');
   expect(onMove).not.toHaveBeenCalled();
 });
 
-it('runs the caller\'s own handlers with its own', () => {
+it('runs the caller\'s own handlers with its own, and skips its own after one that prevents the default', () => {
+  const onPointerDown = vi.fn();
+  render(<Grip onPointerDown={onPointerDown} />);
+  fireEvent.pointerDown(screen.getByTestId('grip'), { button: 0 });
+  expect(onPointerDown).toHaveBeenCalled();
+  expect(screen.getByTestId('item')).toHaveAttribute('draggable', 'true');
+  fireEvent.pointerUp(window);
+  cleanup();
+
+  render(<Grip onPointerDown={(event) => event.preventDefault()} />);
+  fireEvent.pointerDown(screen.getByTestId('grip'), { button: 0 });
+  expect(screen.getByTestId('item')).not.toHaveAttribute('draggable');
+  cleanup();
+
   const onDragOver = vi.fn();
   render(<List onDragOver={onDragOver} />);
   const d = drag('A');

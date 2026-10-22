@@ -3293,8 +3293,8 @@
       "ko": "항목이 늘어선 축. 기본값은 'vertical'. 가로 목록에서 'before'는 텍스트 방향을 따릅니다."
     },
     "disabled": {
-      "en": "Turn dragging off, also for a drag under way.",
-      "ko": "끌기를 끕니다. 진행 중인 끌기도 멈춥니다."
+      "en": "Turn dragging off. While it is on, a drag under way can't be dropped.",
+      "ko": "끌기를 끕니다. 켜져 있는 동안에는 진행 중인 끌기도 놓을 수 없습니다."
     }
   }
 }
