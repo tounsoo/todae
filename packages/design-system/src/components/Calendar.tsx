@@ -14,6 +14,7 @@ import {
   type MouseEvent,
   type RefObject,
 } from 'react';
+import { localeFirstDay, type DayOfWeek } from './weekInfo.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
@@ -28,7 +29,7 @@ import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
-export type CalendarFirstDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CalendarFirstDayOfWeek = DayOfWeek;
 
 /** Whether Calendar.Root picks one date or a range of dates. */
 export type CalendarMode = 'single' | 'range';
@@ -141,23 +142,6 @@ function useCalendar(part: string): CalendarContextValue {
   const ctx = useContext(CalendarContext);
   if (!ctx) throw new Error(`Calendar.${part} must render inside Calendar.Root`);
   return ctx;
-}
-
-// Browsers ship the method; Node 22 and older Chromium and Safari, the accessor.
-type WeekInfoLocale = Intl.Locale & {
-  getWeekInfo?: () => { firstDay: number };
-  weekInfo?: { firstDay: number };
-};
-
-function localeFirstDay(locale: string): CalendarFirstDayOfWeek {
-  try {
-    const info = new Intl.Locale(locale) as WeekInfoLocale;
-    const day = (info.getWeekInfo?.() ?? info.weekInfo)?.firstDay;
-    if (day && day >= 1 && day <= 7) return day as CalendarFirstDayOfWeek;
-  } catch {
-    // A locale Intl cannot read keeps the default.
-  }
-  return 7;
 }
 
 function clampDate(date: Temporal.PlainDate, min?: Temporal.PlainDate, max?: Temporal.PlainDate) {

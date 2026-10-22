@@ -80,6 +80,7 @@ export const SITE_GROUPS = [
       ['/scroll-area', 'ScrollArea'],
       ['/separator', 'Separator'],
       ['/slider', 'Slider'],
+      ['/splitter', 'Splitter'],
       ['/stack', 'Stack'],
       ['/steps', 'Steps'],
       ['/switch', 'Switch'],
@@ -99,6 +100,7 @@ export const SITE_GROUPS = [
     label: 'Utilities',
     links: [
       ['/utilities/compose-refs', 'composeRefs'],
+      ['/utilities/format-relative-time', 'formatRelativeTime'],
       ['/utilities/glyphs-provider', 'GlyphsProvider'],
       ['/utilities/strings-provider', 'StringsProvider'],
       ['/utilities/theme-override-style', 'themeOverrideStyle'],

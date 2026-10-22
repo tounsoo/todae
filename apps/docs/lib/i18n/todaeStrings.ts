@@ -18,6 +18,7 @@ const KOREAN: Strings = {
   pagination: '페이지',
   contents: '이 페이지의 내용',
   resizeSheet: '시트 크기 조절',
+  resizePanel: '패널 크기 조절',
   options: '옵션',
   removeChip: (label) => `${label} 삭제`,
   removeAttachment: (name) => (name ? `${name} 삭제` : '삭제'),

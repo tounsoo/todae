@@ -103,6 +103,14 @@ export {
   type ButtonVariant,
   type ButtonVariants,
 } from './components/Button.js';
+export {
+  Splitter,
+  type SplitterHandleProps,
+  type SplitterOrientation,
+  type SplitterPanelProps,
+  type SplitterPrimary,
+  type SplitterRootProps,
+} from './components/Splitter.js';
 export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar.js';
 export {
   ToggleGroup,
@@ -284,6 +292,7 @@ export { formatNumber, parseNumber, type NumberFormatOptions, type NumberTextOpt
 export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
 export type { DateRange } from './components/dateRange.js';
 export { formatDateRange, parseDateRange, type DateRangeTextOptions } from './components/dateRangeText.js';
+export { formatRelativeTime, type RelativeTimeTextOptions } from './components/relativeTimeText.js';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,

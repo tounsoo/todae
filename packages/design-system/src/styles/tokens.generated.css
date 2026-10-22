@@ -838,6 +838,12 @@
   --todae-emptystate-title-font-size: var(--_todae-emptystate-title-font-size, var(--todae-font-size-4));
   --todae-emptystate-title-font-weight: var(--_todae-emptystate-title-font-weight, var(--todae-font-weight-bold));
   --todae-emptystate-title-leading: var(--_todae-emptystate-title-leading, var(--todae-font-leading-tight));
+  --todae-splitter-handle-color-active: var(--_todae-splitter-handle-color-active, var(--todae-color-accent-default));
+  --todae-splitter-handle-color-default: var(--_todae-splitter-handle-color-default, var(--todae-color-border-subtle));
+  --todae-splitter-handle-color-hover: var(--_todae-splitter-handle-color-hover, var(--todae-color-border-default));
+  --todae-splitter-handle-size: var(--_todae-splitter-handle-size, 1px);
+  --todae-splitter-handle-target: var(--_todae-splitter-handle-target, 1.5rem);
+  --todae-splitter-ring-focus: var(--_todae-splitter-ring-focus, var(--todae-focus-ring-color));
   --todae-toast-border-width: var(--_todae-toast-border-width, var(--todae-border-width));
   --todae-toast-critical-bg: var(--_todae-toast-critical-bg, var(--todae-color-status-critical-bg));
   --todae-toast-critical-border: var(--_todae-toast-critical-border, var(--todae-color-status-critical-border));

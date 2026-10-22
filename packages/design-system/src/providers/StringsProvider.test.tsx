@@ -9,6 +9,7 @@ import {
   ChipList,
   Dialog,
   Pagination,
+  Splitter,
   StringsProvider,
   Toast,
   createToaster,
@@ -34,6 +35,7 @@ const FRENCH: Strings = {
   pagination: 'Pages',
   contents: 'Sur cette page',
   resizeSheet: 'Redimensionner',
+  resizePanel: 'Redimensionner le panneau',
   options: 'Choix',
   removeChip: (label) => `Retirer ${label}`,
   removeAttachment: (name) => `Retirer ${name}`,
@@ -109,6 +111,7 @@ describe('StringsProvider', () => {
     expect(english.breadcrumbs).toBe('Breadcrumb');
     expect(english.pagination).toBe('Pagination');
     expect(english.resizeSheet).toBe('Resize sheet');
+    expect(english.resizePanel).toBe('Resize');
     expect(english.options).toBe('Options');
     expect(english.removeChip('Alpha')).toBe('Remove Alpha');
     expect(english.moreChips(3)).toBe('3 more');
@@ -269,6 +272,19 @@ describe('StringsProvider', () => {
     expect(screen.getByRole('button', { name: 'Redimensionner', hidden: true })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Fermer', hidden: true })).toBeTruthy();
     act(() => void vi.advanceTimersByTime(0));
+  });
+
+  it('names Splitter.Handle from the provider unless it has its own name', () => {
+    render(
+      <StringsProvider strings={FRENCH}>
+        <Splitter.Root defaultValue={100}>
+          <Splitter.Panel />
+          <Splitter.Handle />
+          <Splitter.Panel />
+        </Splitter.Root>
+      </StringsProvider>,
+    );
+    expect(screen.getByRole('separator', { name: 'Redimensionner le panneau' })).toBeTruthy();
   });
 
   it('leaves the server entries of Breadcrumbs and Pagination in English', () => {

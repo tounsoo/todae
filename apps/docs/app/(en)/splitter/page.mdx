@@ -1,0 +1,172 @@
+import { Table } from '@tounsoo/todae/table';
+import { ScrollRegion } from '../../../components/ScrollRegion';
+import { SplitterEditor, SplitterMail, SplitterSidebar } from '../../../components/demos/SplitterDemo';
+
+# Splitter
+
+Two panels you can resize, such as a sidebar and the page beside it. `Splitter.Root` holds a `Splitter.Panel`, a `Splitter.Handle` and a second `Splitter.Panel`, in that order. `value` is the size of the first panel in CSS pixels, and the second panel takes the rest. The handle is a `separator` with one Tab stop: drag it, or focus it and press the arrow keys.
+
+```tsx
+import { useId, useState } from 'react';
+import { Splitter, Text } from '@tounsoo/todae';
+
+export function AppLayout() {
+  const navId = useId();
+  const [width, setWidth] = useState(240);
+
+  return (
+    <Splitter.Root
+      value={width}
+      onValueChange={setWidth}
+      min={180}
+      max={480}
+      collapsible
+      style={{ blockSize: '100%' }}
+    >
+      <Splitter.Panel>
+        <Text.Root as="h2" id={navId}>
+          Projects
+        </Text.Root>
+        …
+      </Splitter.Panel>
+      <Splitter.Handle aria-labelledby={navId} />
+      <Splitter.Panel>…</Splitter.Panel>
+    </Splitter.Root>
+  );
+}
+```
+
+<Example block>
+  <SplitterSidebar />
+</Example>
+
+`Splitter.Root` is a grid, and the size reaches the sheet as a custom property, so a server renders the layout with no measurement. It stays inside its container, down to the width of the handle's own track: if the container is narrower than the size, the first panel shrinks to fit and the size you hold stays as it is, so it shows again when there is room. Room wins over `min` too: in a container narrower than `min` the panel is as wide as the container allows, and the handle's range says so. A vertical splitter, and any splitter that should fill its parent, needs a definite size from you along its height, as the examples do with `blockSize`.
+
+## Pixel sizes
+
+Sizes are CSS pixels, not percentages. A sidebar keeps its width when the window resizes and the other panel flexes, which is what a sidebar, a file tree or a chat side panel needs. `min` and `max` are pixels too, and the container limits `max` as well. With no `value` or `defaultValue` the first panel starts at 240px, kept within `min` and `max`. Proportional splits, such as two equal editors, are not covered.
+
+Saving a size is yours. `onValueChange` fires on every change, from a drag or a key, with the new size in pixels. Todae stores nothing, so keep the size where your product keeps preferences and pass it back as `defaultValue` or `value`.
+
+```tsx
+<Splitter.Root defaultValue={savedWidth} onValueChange={saveWidth} min={180} max={480}>
+  …
+</Splitter.Root>
+```
+
+`primary="end"` sizes the second panel instead and lets the first take the rest, for a side panel on the far edge.
+
+## Collapse
+
+With `collapsible`, the first panel can go to 0. Enter on the handle collapses it, and Enter again restores the size it had when it collapsed, also when a drag or your own code collapsed it, and not a size it passed on the way. A drag that goes below half of `min` snaps to 0, and a drag between that and `min` stops at `min`, so the panel is either closed or at least `min` wide. The handle's `aria-valuemin` is 0 while a panel is collapsible. Enter restores the size the root holds, so a window too narrow at the time of the collapse does not lower it. A panel drawn at no size is hidden, whichever panel it is and whether or not it is `collapsible`: the primary panel at 0, and the other panel when the primary one fills the whole room. The server's HTML hides the primary panel at 0, so its links and buttons leave the tab order and the accessibility tree from the first paint; the other panel, which needs the measured room, is hidden once the root is measured in the browser, which counts less than a pixel of it as none. The handle stays as the way back. Focus inside a panel that empties moves to the handle. A button of your own can reopen a collapsed panel too: it sets the size you hold, and `aria-expanded` and `aria-controls` point at the panel, whose `id` you can set on `Splitter.Panel`. Enter's restore size is Todae's own, so a button of your own keeps its own last size: it records the width when it collapses the panel, as the sidebar example does.
+
+## Keys and pointer
+
+The arrow keys move the handle the way they point, by `step` pixels (16 by default). Moving it toward the panel being sized shrinks that panel, so which arrow grows it depends on where the panel is. In right-to-left text the first panel is on the right, so Left grows it. Todae reads the direction from the element.
+
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Key</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Side by side</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Stacked</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Arrow keys</Table.HeaderCell>
+      <Table.Cell>Left and Right move the handle left and right</Table.Cell>
+      <Table.Cell>Up and Down move the handle up and down</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`Home` and `End`</Table.HeaderCell>
+      <Table.Cell>The smallest size (0 when collapsible, else `min`), and the largest</Table.Cell>
+      <Table.Cell>The same</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`Enter`</Table.HeaderCell>
+      <Table.Cell>Collapses a collapsible panel, or restores it</Table.Cell>
+      <Table.Cell>The same</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
+
+A press with the primary pointer button on the handle focuses it and captures the pointer, and the size follows the pointer from there. The handle does not jump to the pointer: the size changes by the distance the pointer moves, so a layout that shifts during the drag changes nothing. A second pointer is ignored while one is dragging. The handle takes 1.5rem of layout (`splitter.handle.target`, 24px at the default size), and that whole strip is the pointer target; the 1px line (`splitter.handle.size`) is drawn in its middle. Nothing of it overlaps a panel, so a panel's scrollbar and controls keep every pixel of their own. A theme can narrow the strip with the token, at the cost of a smaller target. `touch-action: none` lets a touch drag it. `data-dragging` is on the root while the pointer is down.
+
+## Vertical split
+
+`orientation="vertical"` stacks the panels, and the handle becomes a horizontal separator that Up and Down move. The root needs a block size, since the panels share it.
+
+```tsx
+import { useId } from 'react';
+import { Splitter, Text } from '@tounsoo/todae';
+
+export function EditorWithOutput() {
+  const editorId = useId();
+
+  return (
+    <Splitter.Root orientation="vertical" defaultValue={96} min={64} style={{ blockSize: '18rem' }}>
+      <Splitter.Panel>
+        <Text.Root as="h2" id={editorId}>
+          Query
+        </Text.Root>
+        …
+      </Splitter.Panel>
+      <Splitter.Handle aria-labelledby={editorId} />
+      <Splitter.Panel>…</Splitter.Panel>
+    </Splitter.Root>
+  );
+}
+```
+
+<Example block>
+  <SplitterEditor />
+</Example>
+
+## Nested panes
+
+A root holds exactly two panels. For more panes, put a `Splitter.Root` inside a panel, which is how a mail layout of mailboxes, a message list and a reading pane is built: the mailboxes split from the rest, and the list splits from the message. Each root has its own size, bounds and handle, and the inner root fills its panel.
+
+```tsx
+<Splitter.Root defaultValue={160} min={120} collapsible style={{ blockSize: '18rem' }}>
+  <Splitter.Panel>…mailboxes…</Splitter.Panel>
+  <Splitter.Handle aria-labelledby={mailboxesId} />
+  <Splitter.Panel>
+    <Splitter.Root defaultValue={200} min={160} style={{ blockSize: '100%' }}>
+      <Splitter.Panel>…message list…</Splitter.Panel>
+      <Splitter.Handle aria-labelledby={inboxId} />
+      <Splitter.Panel>…reading pane…</Splitter.Panel>
+    </Splitter.Root>
+  </Splitter.Panel>
+</Splitter.Root>
+```
+
+<Example block>
+  <SplitterMail />
+</Example>
+
+Panels scroll their own overflow (`overflow: auto`), so content stays in its pane. A [ScrollArea](/scroll-area) with `block-size: 100%` in a panel fills it and scrolls there, with the panel itself not scrolling.
+
+## Accessible composition
+
+**Todae handles:** The window splitter pattern. `Splitter.Handle` is a focusable `role="separator"` with `aria-orientation` across the layout, `aria-valuenow`, `aria-valuemin` and `aria-valuemax` in pixels, and `aria-controls` pointing at the panel it sizes, which the handle sets once it has mounted in the browser, so the server's HTML has none. It moves with the keys above, by physical direction and with the text direction, and by pointer. A handle with no name of its own is named "Resize" from the `resizePanel` string of [StringsProvider](/utilities/strings-provider). A panel drawn at no size is hidden with `visibility`, so it leaves the tab order and the accessibility tree.
+
+**You supply:** A name that says what the handle resizes. `aria-labelledby` pointing at the heading of the panel it sizes, as the examples do, or `aria-label`. A definite size for the root along the axis where the panels stack, and a heading or label inside each panel. The saved size, when it should outlive the page, and a way to restore a collapsed panel for people who do not find the handle, such as a button wired as in Collapse.
+
+**Watch for:** A handle with no name beyond "Resize", when two splitters share a page: name each one. A panel's own `aria-label` on its plain `div`, which assistive technology ignores; put the label on a landmark inside, such as a `nav`. A panel that can overflow but holds nothing focusable, such as plain text in a narrow pane: a keyboard cannot scroll it, so wrap the content in a [ScrollArea](/scroll-area), which takes a Tab stop while it overflows. A vertical root with no block size, which collapses to its content. A `gap` on the root, which is not supported: the tracks are the two panels and the handle. A panel wrapped in another component: the root holds nothing else, only the panel, the handle and the panel as its three elements, in that order, and finds them by the `data-todae-splitter-panel` attribute and the separator role, so the wrapper must render them as direct children and pass props through. A third panel, another element or the wrong order in one root, which the root warns about in development whenever its children change. A Suspense boundary goes inside a panel, not around one.
+
+## When to use
+
+**When:** Two areas the person should size, which keep their size while the window changes: a sidebar and main content, an editor and its output, a list and a reading pane.
+
+**When not:** A panel that only opens and closes → Drawer or Disclosure. A sidebar that becomes a drawer on a phone → Drawer. Equal or proportional columns → Grid. A control that sets a number → Slider.
+
+## Props
+
+<PropsTable name="Splitter.Root" />
+
+<PropsTable name="Splitter.Panel" />
+
+<PropsTable name="Splitter.Handle" />
