@@ -915,8 +915,8 @@
   },
   "utilities/use-focus-handoff": {
     "(top)": "c39294d70c41",
-    "# useFocusHandoff": "6ee31f474ceb",
-    "## Accessible composition": "2d2d7359b1f6",
+    "# useFocusHandoff": "759a072fcfb5",
+    "## Accessible composition": "7baa96756f90",
     "## When to use": "9d9b3610001a",
     "## Props": "0966ab575439",
     "(section order)": "e92564e007c0"

@@ -5,7 +5,7 @@ export function activeIn(el: Element): Element | null {
 }
 
 /** The focused element, looking into shadow roots. */
-export function deepActive(doc: Document): Element | null {
+function deepActive(doc: Document): Element | null {
   let active = doc.activeElement;
   while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
   return active;

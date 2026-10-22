@@ -17,7 +17,7 @@ import { useButtonName } from './buttonName.js';
 import { useDomId } from './domId.js';
 import { Progress, type ProgressRootProps } from './Progress.js';
 import { cx, useComposedRefs } from './props.js';
-import { activeIn, focusLost } from '../hooks/activeElement.js';
+import { activeIn, focusLost } from './activeElement.js';
 import { focusWithoutScroll } from './revealRing.js';
 import styles from './Attachment.module.css';
 
