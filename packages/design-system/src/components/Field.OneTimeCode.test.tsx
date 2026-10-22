@@ -127,17 +127,32 @@ describe('Field.OneTimeCode', () => {
 
   it('applies the text a composition left in the input when it ends, which the boxes showed, not the event\'s data', () => {
     const onValueChange = vi.fn();
-    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    const { container } = render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     const code = input();
     code.focus();
     code.setSelectionRange(2, 2);
     fireEvent.compositionStart(code, { data: '' });
     // A keyboard such as Gboard may compose over a whole word, so the commit's data is not always the text it put in.
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(code, 'ABcd');
-    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'cd', isComposing: true, bubbles: true }));
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(code, 'ABcd하');
+    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'cd하', isComposing: true, bubbles: true }));
+    expect(container.querySelector('[aria-hidden="true"]')!.textContent).toBe('ABcd');
     expect(onValueChange).not.toHaveBeenCalled();
-    fireEvent.compositionEnd(code, { data: 'd' });
-    expect(onValueChange).toHaveBeenLastCalledWith('ABcd');
+    fireEvent.compositionEnd(code, { data: '하' });
+    expect(onValueChange.mock.calls).toEqual([['ABcd']]);
+  });
+
+  it('takes a composition that rewrites the text before the caret', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    const code = input();
+    code.focus();
+    code.setSelectionRange(2, 2);
+    fireEvent.compositionStart(code, { data: '' });
+    // A keyboard that recomposes the word before the caret replaces it.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(code, 'AX');
+    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'X', isComposing: true, bubbles: true }));
+    fireEvent.compositionEnd(code, { data: 'X' });
+    expect(onValueChange.mock.calls).toEqual([['AX']]);
   });
 
   it('keeps only the allowed characters of a paste', () => {
@@ -307,6 +322,20 @@ describe('Field.OneTimeCode', () => {
     render(<Code onValueChange={onValueChange} />);
     fireEvent.change(input(), { target: { value: '12 34-56 78' } });
     expect(onValueChange).toHaveBeenLastCalledWith('123456');
+  });
+
+  it('reads a change it didn\'t make by the rule, and reports none that leaves the code as it is', () => {
+    const onChange = vi.fn();
+    const onValueChange = vi.fn();
+    render(<Code initial="123456" onChange={onChange} onValueChange={onValueChange} />);
+    // An insert after a full code lands nothing, however it arrives.
+    fireEvent.change(input(), { target: { value: '1234569' } });
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(input().value).toBe('123456');
+    // An insert in the middle writes over the box it lands on.
+    fireEvent.change(input(), { target: { value: '1293456' } });
+    expect(onValueChange).toHaveBeenLastCalledWith('129456');
   });
 
   it('does not select a box for a click that is not a press', () => {

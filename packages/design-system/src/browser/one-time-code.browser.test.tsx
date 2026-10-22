@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties, type DragEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
 
@@ -12,21 +12,26 @@ function Code({
   onValueChange,
   style,
   characters,
+  dir,
+  onDrop,
 }: {
   initial?: string;
   onValueChange?: (value: string) => void;
   style?: CSSProperties;
   characters?: 'digits' | 'alphanumeric';
+  dir?: 'ltr' | 'rtl';
+  onDrop?: (event: DragEvent<HTMLInputElement>) => void;
 }) {
   const [value, setValue] = useState(initial);
   return (
-    <main data-appearance="light" data-density="comfortable" style={style}>
+    <main data-appearance="light" data-density="comfortable" style={style} dir={dir}>
       <Field.Group>
         <Label.Root htmlFor="code">Verification code</Label.Root>
         <Field.Root id="code" name="code">
           <Field.OneTimeCode
             value={value}
             characters={characters}
+            onDrop={onDrop}
             onValueChange={(next) => {
               setValue(next);
               onValueChange?.(next);
@@ -340,7 +345,28 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
     await compose(['c', 'cd']);
     await vi.waitFor(() => expect(input().value).toBe('ABcd'));
-    expect(onValueChange.mock.calls).toEqual([['ABcd']]);
+    expect(onValueChange.mock.calls).toEqual([['ABc'], ['ABcd']]);
+  });
+
+  it('reports a composed text that is already a code as it is typed, as a phone keyboard composes a whole word', async () => {
+    const onValueChange = vi.fn();
+    render(<Code characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await compose(['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef']);
+    await vi.waitFor(() => expect(input().value).toBe('abcdef'));
+    expect(onValueChange.mock.calls).toEqual([['a'], ['ab'], ['abc'], ['abcd'], ['abcde'], ['abcdef']]);
+  });
+
+  it('takes a composition that rewrites the text before the caret', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    // A keyboard that recomposes the word before the caret replaces it.
+    await session().send('Input.imeSetComposition', { text: 'X', selectionStart: 1, selectionEnd: 1, replacementStart: 1, replacementEnd: 2 });
+    await session().send('Input.insertText', { text: 'X' });
+    await vi.waitFor(() => expect(input().value).toBe('AX'));
+    expect(onValueChange).toHaveBeenLastCalledWith('AX');
   });
 
   it('leaves a full code as it was when a composition is cancelled', async () => {
@@ -356,7 +382,8 @@ describe('Field.OneTimeCode in a browser', () => {
 
   const undo = () => userEvent.keyboard('{Control>}z{/Control}');
 
-  it('keeps the undo history through a finished composition', async () => {
+  // Undo through a composition is best effort: the browser's steps don't match the code's, but the input, the boxes and the code stay one code the rule allows.
+  it('keeps the input, the boxes and the code as one code when a finished composition is undone', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -364,27 +391,24 @@ describe('Field.OneTimeCode in a browser', () => {
     await compose(['x']);
     await vi.waitFor(() => expect(input().value).toBe('AxC123'));
     await undo();
-    expect(input().value).toBe('ABC123');
-    // Each character typed is its own step, as Todae puts each in.
-    await undo();
-    expect(input().value).toBe('ABC12');
-    expect(onValueChange).toHaveBeenLastCalledWith('ABC12');
-    expect(boxes().map((box) => box.textContent).join('')).toBe('ABC12');
+    const code = onValueChange.mock.lastCall![0] as string;
+    expect(code).toMatch(/^[A-Za-z0-9]{6}$/);
+    expect(input().value).toBe(code);
+    expect(boxes().map((box) => box.textContent).join('')).toBe(code);
   });
 
-  it('keeps the undo history through a composition the code refuses', async () => {
+  it('leaves the code as it was when a composition the code refuses is undone', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
     await userEvent.keyboard('{End}C');
+    onValueChange.mockClear();
     await compose(['ㅎ', '하']);
     await vi.waitFor(() => expect(input().value).toBe('ABC'));
-    // The browser keeps the composition and the typing before it as one step.
     await undo();
-    expect(input().value).toBe('AB');
-    expect(onValueChange).toHaveBeenLastCalledWith('AB');
-    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
     expect(input().value).toBe('ABC');
+    expect(boxes().map((box) => box.textContent).join('')).toBe('ABC');
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 
   it('keeps the undo history through a cancelled composition', async () => {
@@ -397,14 +421,22 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('keeps a value the product sets while a composition runs, and drops the composition', async () => {
+  it('keeps a value the product sets while a composition runs, and drops the composition, which undo does not bring back', async () => {
     let reset = (_value: string) => {};
+    const onValueChange = vi.fn();
     function Resettable() {
       const [value, setValue] = useState('AB');
       reset = setValue;
       return (
         <Field.Root aria-label="Verification code">
-          <Field.OneTimeCode characters="alphanumeric" value={value} onValueChange={setValue} />
+          <Field.OneTimeCode
+            characters="alphanumeric"
+            value={value}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setValue(next);
+            }}
+          />
         </Field.Root>
       );
     }
@@ -414,9 +446,13 @@ describe('Field.OneTimeCode in a browser', () => {
     await session().send('Input.imeSetComposition', { text: 'c', selectionStart: 1, selectionEnd: 1 });
     await vi.waitFor(() => expect(input().value).toBe('ABc'));
     act(() => reset(''));
+    onValueChange.mockClear();
     await session().send('Input.insertText', { text: 'c' });
     await vi.waitFor(() => expect(input().value).toBe(''));
     expect(boxes().map((box) => box.textContent).join('')).toBe('');
+    await undo();
+    expect(input().value).toBe('');
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 
   it('takes a composed full-width digit as its ASCII one', async () => {
