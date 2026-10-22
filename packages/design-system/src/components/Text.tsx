@@ -17,6 +17,9 @@ export type TextRootProps = {
   ref?: Ref<HTMLElement>;
 } & HTMLAttributes<HTMLElement>;
 
+/** The element Text.Root renders without `as`. */
+export const DEFAULT_AS: TextAs = 'p';
+
 /** The size a heading takes when none is given. Pick the level for the outline and `size` for the look. */
 const HEADING_SIZE: Record<TextHeading, TextSize> = {
   h1: '2xl',
@@ -42,7 +45,7 @@ export function clampLines(lines: number | undefined): number | undefined {
 // Each invalid value is reported once, since this logs while rendering.
 const reported = /* @__PURE__ */ new Set<number>();
 
-function Root({ as: Tag = 'p', size, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
+function Root({ as: Tag = DEFAULT_AS, size, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
   const clamp = clampLines(lines);
   // Logged while rendering, since a server render runs no effects.

@@ -305,6 +305,55 @@ describe('Text.Root lines', () => {
     expect(openTip()).toBeNull();
   });
 
+  it('shows no tip from an aria-activedescendant host, and looks past an element that cannot take focus', async () => {
+    render(
+      <div style={{ inlineSize: '12rem' }}>
+        <div role="listbox" tabIndex={0} aria-label="Reports" aria-activedescendant="second" data-testid="list">
+          <div role="option" id="first" aria-selected="false">
+            <Text.Root as="span" lines={1}>
+              {LONG}
+            </Text.Root>
+          </div>
+          <div role="option" id="second" aria-selected="true">
+            Second
+          </div>
+        </div>
+        <a href="#row" data-testid="row">
+          <button type="button" disabled>
+            <Text.Root as="span" lines={1}>
+              {`Row ${LONG}`}
+            </Text.Root>
+          </button>
+        </a>
+      </div>,
+    );
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByTestId('list'));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).toBeNull();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByTestId('row'));
+    await waitFor(() => expect(openTip()?.textContent).toBe(`Row ${LONG}`));
+  });
+
+  it('shows no tip when a click focuses the text itself', async () => {
+    render(
+      <div style={{ inlineSize: '12rem', paddingBlockStart: '4rem' }}>
+        <Text.Root lines={1} tabIndex={-1} data-testid="cut">
+          {LONG}
+        </Text.Root>
+        <button type="button" data-testid="away">
+          Away
+        </button>
+      </div>,
+    );
+    await userEvent.click(screen.getByTestId('cut'));
+    expect(document.activeElement).toBe(screen.getByTestId('cut'));
+    await userEvent.hover(screen.getByTestId('away'));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).toBeNull();
+  });
+
   it('follows a new element when as changes', async () => {
     const view = (as: 'p' | 'span') => (
       <div style={{ inlineSize: '12rem' }}>

@@ -7,10 +7,11 @@ import {
   type RefObject,
 } from 'react';
 import { useTooltipInternal, type TooltipInternalResult } from '../hooks/useTooltip.js';
+import { canFocusNow } from '../overlay/tabbables.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from './domId.js';
 import { composeHandlers, useComposedRefs } from './props.js';
-import { clampLines, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
+import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
 
 export type { TextAs, TextHeading, TextSize, TextTone, TextWeight } from './Text.js';
@@ -28,12 +29,17 @@ function fullText(el: HTMLElement): string {
 
 /**
  * Whether focus on `el` can show the tip of a cut text inside it: a tab stop
- * or a roving item, such as a link, a row or a menu item. A container focused
- * by script, such as a dialog or a skip link's target, is neither. A roving
- * item still has tabIndex -1 when it takes focus, so it counts by its marker.
+ * or a roving item that can take focus now, such as a link, a row or a menu
+ * item. A container focused by script, such as a dialog or a skip link's
+ * target, is neither. A roving item still has tabIndex -1 when it takes
+ * focus, so it counts by its marker. An `aria-activedescendant` host, such as
+ * a listbox, keeps focus while its active item moves, so it shows no tip
+ * rather than the wrong one. Chromium gives an `a` without `href` tabIndex 0.
  */
 function isHolder(el: Element): boolean {
-  return el instanceof HTMLElement && (el.tabIndex >= 0 || el.hasAttribute('data-todae-roving'));
+  if (!(el instanceof HTMLElement) || el.hasAttribute('aria-activedescendant')) return false;
+  if (el instanceof HTMLAnchorElement && !el.hasAttribute('href')) return false;
+  return (el.tabIndex >= 0 || el.hasAttribute('data-todae-roving')) && canFocusNow(el);
 }
 
 /** The nearest holder around `el`, so a parent tree item doesn't show its child's tip. */
@@ -60,16 +66,17 @@ type ClampTipProps = {
  */
 function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
   const [text, setText] = useState<string | null>(null);
-  // Focus on the text, or keyboard focus on the nearest holder around it,
-  // when this is the first cut text whose nearest holder that element is. A
+  // Keyboard focus on the text, or on the nearest holder around it when this
+  // is the first cut text whose nearest holder that element is. A
   // click or a menu opened by one moves focus without :focus-visible, and the
   // pointer has the hover tip.
   const holdsFocus = useCallback(
     (focused: Element) => {
       const el = target.current;
       if (el === null) return false;
+      if (!focused.matches(':focus-visible')) return false;
       if (focused === el) return true;
-      if (!isHolder(focused) || !focused.matches(':focus-visible') || holderOf(el) !== focused) return false;
+      if (!isHolder(focused) || holderOf(el) !== focused) return false;
       return [...focused.querySelectorAll<HTMLElement>(`[${CUT_ATTR}]`)].find((cut) => holderOf(cut) === focused) === el;
     },
     [target],
@@ -162,7 +169,7 @@ function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, re
         }
         ref={refs}
       />
-      {tipped ? <ClampTip key={String(props.as)} target={elRef} anchor={anchor} hoverRef={hoverRef} /> : null}
+      {tipped ? <ClampTip key={props.as ?? DEFAULT_AS} target={elRef} anchor={anchor} hoverRef={hoverRef} /> : null}
     </>
   );
 }
