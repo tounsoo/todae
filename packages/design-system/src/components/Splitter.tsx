@@ -240,7 +240,8 @@ function Root({
     // A token or font size that changes the handle's track moves the room without moving the root.
     if (handle) observer.observe(handle);
     return () => observer.disconnect();
-  }, [orientation, handle]);
+    // `only` hides the handle and shows it again, which changes the room in the same pass.
+  }, [orientation, handle, only]);
 
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {

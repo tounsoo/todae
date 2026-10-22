@@ -343,10 +343,13 @@ describe('Splitter with one panel shown', () => {
   });
 
   it('keeps the size it holds for when both panels show again', () => {
-    measured(400);
-    const { rerender } = render(<Layout defaultValue={400} only="end" />);
+    measured(300);
+    const { rerender } = render(<Layout value={400} only="end" />);
     expect(empty()).toBeNull();
-    rerender(<Layout defaultValue={400} />);
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+    // Showing the handle again measures the room afresh.
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(800);
+    rerender(<Layout value={400} />);
     expect(root().hasAttribute('data-only')).toBe(false);
     expect(handle().getAttribute('aria-valuenow')).toBe('400');
   });

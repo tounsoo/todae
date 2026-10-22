@@ -12,14 +12,17 @@ Drag the handle, or hide the navigation from the header's first button. On a nar
 
 ## Layout
 
-A skip link comes first, then the `header`, then the splitter, with the sidebar's `Nav.Root` in the first panel and `main` in the second. Give `main` the skip link's target id and `tabIndex={-1}`, so the link moves focus into it. The shell is a grid of two rows: the header's, and one that takes the rest, which the splitter fills. Each panel scrolls its own content, so the header stays in view.
+The `header` comes first, with a skip link at its start, then the splitter, with the sidebar's `Nav.Root` in the first panel and `main` in the second. Give `main` the skip link's target id and `tabIndex={-1}`, so the link moves focus into it. The shell is a grid of two rows: the header's, and one that takes the rest, which the splitter fills. Each panel scrolls its own content, so the header stays in view.
 
 ```tsx
+const sidebarId = useId();
+const navButton = useRef<HTMLButtonElement>(null);
+
 <div className="shell">
-  <VisuallyHidden.Root focusable>
-    <Link.Root href="#main">Skip to content</Link.Root>
-  </VisuallyHidden.Root>
   <Stack.Root as="header" direction="row" align="center" gap="condensed">
+    <VisuallyHidden.Root focusable>
+      <Link.Root href="#main">Skip to content</Link.Root>
+    </VisuallyHidden.Root>
     <Button.Root ref={navButton} variant="ghost" aria-label="Navigation">
       …
     </Button.Root>
@@ -50,22 +53,23 @@ A skip link comes first, then the `header`, then the splitter, with the sidebar'
 
 ## Sidebar
 
-The sidebar's width is the splitter's `value`, in pixels, so it keeps its width while the window changes and the main content flexes. With `collapsible`, Enter on the handle hides it and shows it again. The header's button does the same for people who don't find the handle: it sets the width you hold and keeps its own last width, as on the [Splitter](/splitter) page, with `aria-expanded` and `aria-controls` pointing at the panel. Keep the width where your product keeps preferences and pass it back as `value`.
+The sidebar's width is the splitter's `value`, in pixels, so it keeps its width while the window changes and the main content flexes. With `collapsible`, Enter on the handle hides it and shows it again. The header's button does the same for people who don't find the handle: it sets the width you hold, with `aria-expanded` and `aria-controls` pointing at the panel. Enter's restore width is the splitter's own, so the button keeps its own last width, recorded on every change above 0 so that it matches however the sidebar was collapsed. Keep the width where your product keeps preferences and pass it back as `value`.
 
 ```tsx
 const [width, setWidth] = useState(240);
 const [lastWidth, setLastWidth] = useState(240);
-const toggleSidebar = () => {
-  if (width > 0) setLastWidth(width);
-  setWidth(width === 0 ? lastWidth : 0);
+const resize = (next: number) => {
+  if (next > 0) setLastWidth(next);
+  setWidth(next);
 };
+const toggleSidebar = () => setWidth(width === 0 ? lastWidth : 0);
 ```
 
 ## Narrow screens
 
-Below the breakpoint, 48rem here, the sidebar moves into a `Drawer.Root` at the start edge, and the same header button opens it. The shell fills the window, so read the window's width with `matchMedia`. Then set `only="end"` on the splitter: it shows the main panel alone and takes the sidebar's panel and the handle out of the layout, with the main panel still mounted. Crossing the breakpoint, which zooming the page to 200% does on most screens, then keeps the page's focus, its scroll position and anything typed into it. Render the `Nav.Root` in one place at a time: the first panel while wide, the drawer while narrow.
+Below the breakpoint, 48rem here, the sidebar moves into a `Drawer.Root` at the start edge, and the same header button opens it. The shell fills the window, so read the window's width with `matchMedia`. Then set `only="end"` on the splitter: it shows the main panel alone and takes the sidebar's panel and the handle out of the layout, with the main panel still mounted. Crossing the breakpoint, which zooming in can do, then keeps focus in the page, its scroll position and anything typed into it. Render the `Nav.Root` in one place at a time: the first panel while wide, the drawer while narrow.
 
-The server has no window, so choose the layout it sends. Sending the narrow one, as here, never squeezes the main content on a phone, and a wide window switches as it hydrates, with nothing remounted.
+The server has no window, so choose the layout it sends. Sending the narrow one, as here, never squeezes the main content on a phone, and a wide window switches as it hydrates, with nothing remounted, though the sidebar then appears after the first paint. A product that knows the width from a cookie or a client hint can send the right layout instead.
 
 ```tsx
 const WIDE = '(min-width: 48rem)';
@@ -81,44 +85,62 @@ function useWide() {
 }
 
 const wide = useWide();
+const handle = useRef<HTMLDivElement>(null);
 const sidebarHandoff = useFocusHandoff({ to: navButton });
 // A window that widens shows the sidebar, so the drawer closes, and Drawer puts focus back on the button.
 if (wide && drawerOpen) setDrawerOpen(false);
+// `only` takes the handle out of the layout, so focus on it moves to the button.
+useLayoutEffect(() => {
+  if (!wide && handle.current === handle.current?.ownerDocument.activeElement) navButton.current?.focus();
+}, [wide]);
 
 <Button.Root
   ref={navButton}
   variant="ghost"
   aria-label="Navigation"
   {...(wide ? { 'aria-controls': sidebarId, 'aria-expanded': width > 0 } : { 'aria-haspopup': 'dialog' as const })}
-  onClick={wide ? toggleSidebar : () => setDrawerOpen(true)}
+  onClick={wide ? toggleSidebar : openDrawer}
 >
-  <Button.Icon>{wide ? <PanelLeft /> : <Menu />}</Button.Icon>
+  {wide ? (
+    <Button.Icon>
+      <PanelLeft />
+    </Button.Icon>
+  ) : (
+    <Button.Icon>
+      <MenuIcon />
+    </Button.Icon>
+  )}
 </Button.Root>
 
-<Splitter.Root only={wide ? undefined : 'end'} value={width} onValueChange={setWidth} min={180} max={360} collapsible>
+<Splitter.Root only={wide ? undefined : 'end'} value={width} onValueChange={resize} min={180} max={360} collapsible>
   <Splitter.Panel id={sidebarId}>{wide && <div ref={sidebarHandoff}>{nav}</div>}</Splitter.Panel>
-  <Splitter.Handle aria-label="Resize navigation" />
+  <Splitter.Handle ref={handle} aria-label="Resize navigation" />
   <Splitter.Panel>…</Splitter.Panel>
 </Splitter.Root>
 ```
 
-The button stays one element in both layouts, so it keeps focus when the layout switches under it. While wide it hides and shows the sidebar; while narrow it opens a dialog, which `aria-haspopup="dialog"` says. A sidebar that unmounts while it holds focus hands it to the button through `useFocusHandoff`, so focus doesn't fall to the page when the window narrows.
+The button stays one element in both layouts, so it keeps focus when the layout switches under it. While wide it hides and shows the sidebar; while narrow it opens a dialog, which `aria-haspopup="dialog"` says. A sidebar that unmounts while it holds focus hands it to the button through `useFocusHandoff`, and focus on the handle, which stays mounted, moves to the button in a layout effect, so focus doesn't fall to the page when the window narrows.
 
 ## Navigating
 
 Mark the current page's link with `aria-current="page"`, which your router sets (see [Nav](/nav)). In the sidebar, focus stays on the link the person chose, so they can go on to the next one. Some routers announce the new page, as Next.js does; with one that doesn't, announce its title with [useAnnouncer](/utilities/use-announcer).
 
-In the drawer, the chosen link goes away with the drawer, so close it and send focus to the new page's heading through `restoreFocusRef`. Set the ref when a link is chosen and clear it when the drawer opens, so Escape and the close button still put focus back on the header button. A click with a modifier key opens the link elsewhere, so it leaves the drawer open.
+Close the drawer whenever the page changes, from one of its links or from Back, in the render that shows the new page. The chosen link goes away with the drawer, so send focus to the new page's heading: `restoreFocusRef` points at the heading once a link is chosen and at the header button otherwise, so Escape and the close button still put focus back on the button. Drawer reads the ref once it has closed, after the new page has rendered, so the heading is the new page's even when the router commits the page later. The current page's link changes nothing, so it closes the drawer itself. A click with a modifier key opens the link elsewhere, so it leaves the drawer open.
 
 ```tsx
 const heading = useRef<HTMLElement>(null);
-const returnTo = useRef<HTMLElement | null>(null);
+const [chose, setChose] = useState(false);
+const [shownPath, setShownPath] = useState(pathname);
+if (pathname !== shownPath) {
+  setShownPath(pathname);
+  setDrawerOpen(false);
+}
 const openDrawer = () => {
-  returnTo.current = null;
+  setChose(false);
   setDrawerOpen(true);
 };
 
-<Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={returnTo}>
+<Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={chose ? heading : navButton}>
   <Drawer.Header>
     <Drawer.Title>Atlas</Drawer.Title>
     <Drawer.Close />
@@ -126,9 +148,10 @@ const openDrawer = () => {
   <Drawer.Body
     onClick={(event) => {
       const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-      if (elsewhere || !(event.target as Element).closest('a[href]')) return;
-      returnTo.current = heading.current;
-      setDrawerOpen(false);
+      const link = (event.target as Element).closest('a[href]');
+      if (elsewhere || !link) return;
+      setChose(true);
+      if (link.getAttribute('aria-current') === 'page') setDrawerOpen(false);
     }}
   >
     {nav}
@@ -144,9 +167,9 @@ const openDrawer = () => {
 
 **Todae handles:** The `nav` landmark, its lists and the current link's look, in `Nav.Root`. The resizable sidebar: the handle's role, value, keys and pointer, Enter to collapse, and a collapsed panel hidden from the tab order and the accessibility tree, in `Splitter`. The main panel shown alone with both panels kept mounted, through `only`. A modal drawer that takes focus, closes on Escape, makes the page behind it inert and puts focus back on the button or on `restoreFocusRef`, in `Drawer.Root`. One Tab stop for the header's actions, in `Toolbar.Root`. A skip link shown while it has focus, in `VisuallyHidden.Root focusable`. Focus moving to the header button when the sidebar unmounts holding it, through `useFocusHandoff`.
 
-**You supply:** The pages and their links, and which one is current. The `header` and `main` landmarks, the skip link and its target. Names for the nav, the handle, the header button and the toolbar. The breakpoint and the layout the server sends. The nav in one place at a time. Closing the drawer when the window widens or a link is chosen, and where focus goes then. Saving the sidebar's width.
+**You supply:** The pages and their links, and which one is current. The `header` and `main` landmarks, the skip link and its target. Names for the nav, the handle, the header button and the toolbar. The breakpoint and the layout the server sends. The nav in one place at a time. Closing the drawer when the window widens or the page changes, and where focus goes then. Moving focus off the handle before `only` hides it. Saving the sidebar's width.
 
-**Watch for:** A different layout below the breakpoint in place of `only`, which remounts the page, so a person who zooms in loses their place and what they typed. A second copy of the nav hidden with CSS other than `display: none`, which leaves two `nav` landmarks of the same name. A drawer that stays open after the window widens. A drawer link that sends focus back to the header button, which leaves a screen reader at the top of the new page instead of its heading. A skip link target without `tabIndex={-1}`, which moves the page but not every screen reader's reading position. Focus on the handle when the layout narrows, which `only` takes out of the layout, so focus falls to the page.
+**Watch for:** A different layout below the breakpoint in place of `only`, which remounts the page, so a person who zooms in loses their place and what they typed. A second copy of the nav hidden with CSS other than `display: none`, which leaves two `nav` landmarks of the same name. A drawer that stays open after the window widens or after Back. A drawer link that sends focus back to the header button, which leaves a screen reader at the top of the new page instead of its heading. A skip link target without `tabIndex={-1}`, which moves the page but not every screen reader's reading position. Focus left on the handle when the layout narrows: `only` takes it out of the layout, so focus falls to the page.
 
 ## When to use
 

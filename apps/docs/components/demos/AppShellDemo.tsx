@@ -12,8 +12,8 @@ import {
   useFocusHandoff,
   VisuallyHidden,
 } from '@tounsoo/todae';
-import { Bell, CreditCard, House, Menu, PanelLeft, Search, Settings, Users } from 'lucide-react';
-import { useId, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
+import { Bell, CreditCard, House, MenuIcon, PanelLeft, Search, Settings, Users } from 'lucide-react';
+import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 
 export const WIDE = '(min-width: 48rem)';
 
@@ -45,21 +45,35 @@ export function AppShellExample() {
   const sidebarId = useId();
   const navButton = useRef<HTMLButtonElement>(null);
   const heading = useRef<HTMLElement>(null);
-  const returnTo = useRef<HTMLElement | null>(null);
+  const handle = useRef<HTMLDivElement>(null);
   const sidebarHandoff = useFocusHandoff({ to: navButton });
   const [page, setPage] = useState<string>('#home');
   const [width, setWidth] = useState(200);
   const [lastWidth, setLastWidth] = useState(200);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Whether a link in the drawer was chosen, which sends focus to the new page's heading when the drawer closes.
+  const [chose, setChose] = useState(false);
   // A window that widens shows the sidebar, so the drawer closes, and Drawer puts focus back on the button.
   if (wide && drawerOpen) setDrawerOpen(false);
+  // Any change of page closes the drawer, a link in it or Back alike, in the commit that shows the new page.
+  const [shownPage, setShownPage] = useState(page);
+  if (page !== shownPage) {
+    setShownPage(page);
+    setDrawerOpen(false);
+  }
+  // `only` takes the handle out of the layout, so focus on it moves to the button before the window narrows it away.
+  useLayoutEffect(() => {
+    if (!wide && handle.current === handle.current?.ownerDocument.activeElement) navButton.current?.focus();
+  }, [wide]);
 
-  const toggleSidebar = () => {
-    if (width > 0) setLastWidth(width);
-    setWidth(width === 0 ? lastWidth : 0);
+  // The button restores the last width the sidebar had, whoever collapsed it.
+  const resize = (next: number) => {
+    if (next > 0) setLastWidth(next);
+    setWidth(next);
   };
+  const toggleSidebar = () => setWidth(width === 0 ? lastWidth : 0);
   const openDrawer = () => {
-    returnTo.current = null;
+    setChose(false);
     setDrawerOpen(true);
   };
   const current = PAGES.find((p) => p.href === page) ?? PAGES[0];
@@ -73,6 +87,8 @@ export function AppShellExample() {
               href={href}
               aria-current={page === href ? 'page' : undefined}
               onClick={(event: MouseEvent) => {
+                // A modified click would open the link elsewhere; this demo's links go nowhere, so it does nothing.
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
                 setPage(href);
               }}
@@ -116,7 +132,15 @@ export function AppShellExample() {
           {...(wide ? { 'aria-controls': sidebarId, 'aria-expanded': width > 0 } : { 'aria-haspopup': 'dialog' as const })}
           onClick={wide ? toggleSidebar : openDrawer}
         >
-          <Button.Icon>{wide ? <PanelLeft /> : <Menu />}</Button.Icon>
+          {wide ? (
+            <Button.Icon>
+              <PanelLeft />
+            </Button.Icon>
+          ) : (
+            <Button.Icon>
+              <MenuIcon />
+            </Button.Icon>
+          )}
         </Button.Root>
         <Text.Root as="span" weight="bold">
           Atlas
@@ -137,7 +161,7 @@ export function AppShellExample() {
       <Splitter.Root
         only={wide ? undefined : 'end'}
         value={width}
-        onValueChange={setWidth}
+        onValueChange={resize}
         min={160}
         max={320}
         collapsible
@@ -149,7 +173,7 @@ export function AppShellExample() {
             </div>
           )}
         </Splitter.Panel>
-        <Splitter.Handle aria-label="Resize navigation" />
+        <Splitter.Handle ref={handle} aria-label="Resize navigation" />
         <Splitter.Panel>
           <Stack.Root as="section" id={mainId} tabIndex={-1} aria-labelledby={headingId} style={pad}>
             <Text.Root as="h2" size="l" id={headingId} ref={heading} tabIndex={-1}>
@@ -163,7 +187,7 @@ export function AppShellExample() {
           </Stack.Root>
         </Splitter.Panel>
       </Splitter.Root>
-      <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={returnTo}>
+      <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={chose ? heading : navButton}>
         <Drawer.Header>
           <Drawer.Title>Atlas</Drawer.Title>
           <Drawer.Close />
@@ -172,10 +196,12 @@ export function AppShellExample() {
           onClick={(event) => {
             // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
             const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-            if (elsewhere || !(event.target as Element).closest('a[href]')) return;
-            // The link goes with the drawer, so focus goes to the new page's heading.
-            returnTo.current = heading.current;
-            setDrawerOpen(false);
+            const link = (event.target as Element).closest('a[href]');
+            if (elsewhere || !link) return;
+            // The link goes with the drawer, so focus goes to the new page's heading once the page changes.
+            setChose(true);
+            // The current page's link changes nothing, so it closes the drawer itself.
+            if (link.getAttribute('aria-current') === 'page') setDrawerOpen(false);
           }}
         >
           {navigation()}

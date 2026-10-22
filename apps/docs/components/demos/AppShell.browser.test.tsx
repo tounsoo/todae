@@ -95,3 +95,36 @@ it('moves focus into the page from the skip link', async () => {
   await userEvent.keyboard('{Enter}');
   await expect.poll(() => document.activeElement).toBe(main());
 });
+
+it('moves focus from the handle to the header button when the window narrows', async () => {
+  setup();
+  screen.getByRole('separator', { name: 'Resize navigation' }).focus();
+  await page.viewport(400, 700);
+  await expect.poll(() => document.activeElement).toBe(navButton());
+});
+
+it('restores the width the sidebar last had when the handle collapsed it', async () => {
+  setup();
+  const separator = screen.getByRole('separator', { name: 'Resize navigation' });
+  separator.focus();
+  await userEvent.keyboard('{End}');
+  expect(separator).toHaveAttribute('aria-valuenow', '320');
+  await userEvent.keyboard('{Enter}');
+  expect(navButton()).toHaveAttribute('aria-expanded', 'false');
+  await userEvent.click(navButton());
+  expect(separator).toHaveAttribute('aria-valuenow', '320');
+});
+
+it('keeps the drawer open for a modified click, and closes it from the current page link', async () => {
+  await page.viewport(400, 700);
+  setup();
+  await userEvent.click(navButton());
+  const drawer = await screen.findByRole('dialog', { name: 'Atlas' });
+  const home = within(drawer).getByRole('link', { name: 'Home' });
+  home.addEventListener('click', (event) => event.preventDefault(), { once: true });
+  home.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+  expect(screen.getByRole('dialog', { name: 'Atlas' })).toBeVisible();
+  await userEvent.click(home);
+  await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+  await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Home' }));
+});

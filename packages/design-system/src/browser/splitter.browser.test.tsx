@@ -72,6 +72,33 @@ describe('Splitter with one panel shown', () => {
     expect([screen.getByTestId('first'), screen.getByTestId('second')]).toEqual([first, second]);
   });
 
+  it('keeps the shown panel\'s scroll position', async () => {
+    const Tall = ({ only }: { only?: 'start' | 'end' }) => (
+      <div style={{ inlineSize: 600, blockSize: 200 }}>
+        <Splitter.Root only={only} defaultValue={200} style={{ blockSize: '100%' }}>
+          <Splitter.Panel data-testid="first">
+            <div style={{ blockSize: 1000 }} />
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize" />
+          <Splitter.Panel data-testid="second">
+            <div style={{ blockSize: 1000 }} />
+          </Splitter.Panel>
+        </Splitter.Root>
+      </div>
+    );
+    const { rerender } = render(<Tall />);
+    const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
+    first.scrollTop = 100;
+    second.scrollTop = 100;
+    rerender(<Tall only="end" />);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    expect(getComputedStyle(first).display).toBe('none');
+    expect(second.scrollTop).toBe(100);
+    rerender(<Tall />);
+    await waitFor(() => expect(first.getBoundingClientRect().width).toBe(200));
+    expect(second.scrollTop).toBe(100);
+  });
+
   it('shows a stacked root\'s panel down its whole height', () => {
     render(<Layout orientation="vertical" defaultValue={60} primary="end" only="start" />);
     expect(box('first').height).toBe(box('host').height);
