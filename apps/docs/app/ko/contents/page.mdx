@@ -1,0 +1,76 @@
+import { ContentsGuide } from '../../../components/demos/ContentsDemo';
+
+# Contents
+
+페이지의 섹션으로 가는 링크를 모은 "이 페이지의 내용" 목록입니다. `Contents.Root`는 목록을 담은 `nav` 랜드마크이고, 각 `Contents.Item`은 섹션 제목을 프래그먼트로 가리키는 `Contents.Link`를 담으며, `Contents.List`는 한 제목 아래의 섹션을 중첩합니다. 페이지를 스크롤하는 동안 지금 읽고 있는 섹션의 링크가 `aria-current="location"`을 받습니다.
+
+```tsx
+<Contents.Root label="On this page">
+  <Contents.Item>
+    <Contents.Link href="#install">Install</Contents.Link>
+  </Contents.Item>
+  <Contents.Item>
+    <Contents.Link href="#tokens">Tokens</Contents.Link>
+    <Contents.List>
+      <Contents.Item>
+        <Contents.Link href="#colors">Colors</Contents.Link>
+      </Contents.Item>
+    </Contents.List>
+  </Contents.Item>
+</Contents.Root>
+```
+
+<Example>
+  <ContentsGuide />
+</Example>
+
+[Nav](/nav)처럼 링크는 직접 넣습니다. Todae는 페이지의 제목을 읽지 않으므로, 목록에는 여러분이 고른 내용이 들어가고 서버에서 렌더링할 수 있습니다. 각 제목에 링크의 `href`가 가리키는 `id`를 붙이세요. 다른 페이지로 가는 링크는 현재 항목으로 표시되지 않습니다.
+
+## 읽고 있는 섹션
+
+섹션은 제목이 자기 기준선을 지나 스크롤되면 현재 섹션이 됩니다. 기준선은 프래그먼트 링크가 제목을 스크롤해 두는 자리로, 스크롤 컨테이너의 `scroll-padding-block-start`에 제목 자신의 `scroll-margin-block-start`를 더한 위치입니다. 고정된 헤더를 피하려고 둘 중 하나를 설정하면, 목록은 링크를 눌렀을 때 스크롤되는 그 기준선에서 섹션을 읽은 것으로 칩니다. 현재 섹션은 제목이 기준선을 지난 섹션 중 마지막 섹션이고, 첫 제목보다 위에서는 어떤 링크도 현재 항목이 아닙니다.
+
+`Contents.Root`는 첫 제목을 감싼 가장 가까운 스크롤 컨테이너, 또는 페이지에서 `IntersectionObserver`로 제목을 따라갑니다. 그 컨테이너나 창의 크기가 바뀌면 기준선을 다시 읽습니다.
+
+짧은 마지막 섹션은 페이지가 그만큼 스크롤되지 않아 기준선에 닿지 못할 수 있습니다. 그래서 링크를 누르거나, 목록이 마운트될 때 또는 해시가 바뀔 때 페이지 해시가 섹션을 가리키면 그 섹션이 선택되고, 사용자가 휠, 터치, 스크롤 키로 스크롤하거나 그 섹션이 화면에 들어왔다가 벗어날 때까지 현재 항목으로 남습니다.
+
+## 모양
+
+링크는 `contents.rule.color`와 `contents.rule.width`로 그린 하나의 선 옆에 놓이고, 현재 링크는 그 선 위에 `contents.marker.color`와 `contents.marker.width`로 표시를 그리며, 색은 `contents.link.fg.current`, 굵기는 `contents.link.font.current-weight`입니다. 중첩된 목록은 단계마다 링크의 텍스트를 `contents.indent`만큼 들여 쓰므로 모든 표시가 같은 선 위에 놓입니다. 강제 색상 모드에서 표시는 `Highlight`입니다.
+
+`Contents.Link`는 라우터 링크를 위해 [Link](/link)처럼 `render`를 받습니다.
+
+## 좁은 화면에서
+
+Contents에는 자체 접기 기능이 없습니다. 페이지 옆에 열을 둘 자리가 없으면, 이 사이트처럼 목록을 페이지 제목 아래의 [Disclosure](/disclosure)에 넣거나 빼세요.
+
+```tsx
+<Disclosure.Root>
+  <Disclosure.Summary>On this page</Disclosure.Summary>
+  <Contents.Root aria-label="On this page">…</Contents.Root>
+</Disclosure.Root>
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `label`, `aria-label`, `aria-labelledby` 또는 [StringsProvider](/utilities/strings-provider)의 `contents` 문자열로 이름이 붙는 `nav` 랜드마크. 각 목록은 `ul role="list"`입니다. 읽고 있는 섹션의 링크에 `aria-current="location"`을 붙여, 색으로 그린 표시만이 아니라 스크린 리더도 어느 섹션인지 말해 줍니다. 포커스 링은 링크 안쪽에 그려지므로, 양옆을 자르는 스크롤 컨테이너 안에서도 온전히 보입니다.
+
+**직접 제공할 것:** 링크마다 `id`가 있는 제목과, 제목과 같은 링크 텍스트. 섹션이 고정된 헤더 아래에 가려지지 않도록 헤더 높이를 `scroll-padding-block-start`나 `scroll-margin-block-start`로 지정하세요.
+
+**주의할 점:** 옆 열과 접힌 복사본이 동시에 보이는 것처럼 같은 이름의 Contents가 한 페이지에 둘 있는 경우. 쓰지 않는 쪽은 `display: none`으로 숨기세요. 제목이 아닌 요소로 가는 링크는 스크린 리더 사용자가 제목 탐색으로 닿을 수 없습니다.
+
+## 언제 쓰나요
+
+**언제:** 가이드, 문서 페이지, 설정 페이지처럼 섹션이 여럿인 긴 페이지에서 독자가 섹션 사이를 오가며 지금 위치를 알고 싶을 때.
+
+**쓰지 않을 때:** 페이지 사이 이동 → [Nav](/nav). 현재 페이지 위의 경로 → [Breadcrumbs](/breadcrumbs). 한 번에 하나만 보이는 패널 → Tabs. 짧은 섹션이 두세 개뿐이라 목록이 필요 없는 페이지.
+
+## Props
+
+<PropsTable name="Contents.Root" />
+
+<PropsTable name="Contents.List" />
+
+<PropsTable name="Contents.Item" />
+
+<PropsTable name="Contents.Link" />

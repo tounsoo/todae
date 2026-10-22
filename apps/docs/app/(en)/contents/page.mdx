@@ -1,0 +1,76 @@
+import { ContentsGuide } from '../../../components/demos/ContentsDemo';
+
+# Contents
+
+An "On this page" list of links to the sections of a page. `Contents.Root` is a `nav` landmark holding a list, each `Contents.Item` holds a `Contents.Link` to a section's heading by its fragment, and a `Contents.List` nests the sections under one heading. While the page scrolls, the link to the section being read takes `aria-current="location"`.
+
+```tsx
+<Contents.Root label="On this page">
+  <Contents.Item>
+    <Contents.Link href="#install">Install</Contents.Link>
+  </Contents.Item>
+  <Contents.Item>
+    <Contents.Link href="#tokens">Tokens</Contents.Link>
+    <Contents.List>
+      <Contents.Item>
+        <Contents.Link href="#colors">Colors</Contents.Link>
+      </Contents.Item>
+    </Contents.List>
+  </Contents.Item>
+</Contents.Root>
+```
+
+<Example>
+  <ContentsGuide />
+</Example>
+
+You give the links, as you do for [Nav](/nav). Todae doesn't read the page's headings, so the list says what you choose and your server can render it. Give each heading an `id` that its link's `href` names; a link to another page is never marked current.
+
+## The section being read
+
+A section is current once its heading has scrolled past its line: the place a fragment link scrolls the heading to, which is the scroll container's `scroll-padding-block-start` plus the heading's own `scroll-margin-block-start`. Set either one to clear a sticky header, and the list counts a section as read from the same line a click on its link scrolls it to. The current section is the last one whose heading has passed its line; above the first heading, no link is current.
+
+`Contents.Root` follows the headings with `IntersectionObserver`, in the nearest scroll container around the first heading, or the page. It reads the lines again when that container or the window resizes.
+
+A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a page hash that names a section when the list mounts or the hash changes, picks that section, and it stays current until the person scrolls with the wheel, a touch or a scroll key, or until it has been in view and leaves it.
+
+## Look
+
+The links sit beside one rule, from `contents.rule.color` and `contents.rule.width`, and the current link draws a marker on it, from `contents.marker.color` and `contents.marker.width`, with the `contents.link.fg.current` color and `contents.link.font.current-weight`. A nested list indents its links' text by `contents.indent` per level, so every marker lands on the same rule. In forced colors the marker is `Highlight`.
+
+`Contents.Link` takes `render` the way [Link](/link) does, for a router's link.
+
+## On a narrow screen
+
+Contents has no folding of its own. Where a column beside the page doesn't fit, put the list in a [Disclosure](/disclosure) under the page's title, as this site does, or leave it out:
+
+```tsx
+<Disclosure.Root>
+  <Disclosure.Summary>On this page</Disclosure.Summary>
+  <Contents.Root aria-label="On this page">…</Contents.Root>
+</Disclosure.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** A `nav` landmark, named by `label`, `aria-label`, `aria-labelledby` or the `contents` string from [StringsProvider](/utilities/strings-provider). Each list is a `ul role="list"`. `aria-current="location"` on the link to the section being read, so a screen reader says which section it is, not only a marker drawn in color. Focus rings drawn inside the link, so a scroll container that clips its sides keeps them whole.
+
+**You supply:** A heading with an `id` for each link, and link text that matches the heading. A sticky header's height as `scroll-padding-block-start` or `scroll-margin-block-start`, so a section isn't hidden under it.
+
+**Watch for:** Two Contents on one page with the same name, such as a column and a folded copy both shown at once: hide the one not in use with `display: none`. Links to elements that aren't headings, which a screen reader user can't reach with heading navigation.
+
+## When to use
+
+**When:** A long page with several sections, such as a guide, a docs page or a settings page, where readers jump between sections and want to know where they are.
+
+**When not:** Navigation between pages → [Nav](/nav). The trail above the current page → [Breadcrumbs](/breadcrumbs). Panels that show one at a time → Tabs. A page with two or three short sections, which needs no list.
+
+## Props
+
+<PropsTable name="Contents.Root" />
+
+<PropsTable name="Contents.List" />
+
+<PropsTable name="Contents.Item" />
+
+<PropsTable name="Contents.Link" />

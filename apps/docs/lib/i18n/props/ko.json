@@ -2667,6 +2667,50 @@
       "ko": "하위 페이지인 Nav.Item 요소."
     }
   },
+  "Contents.Root": {
+    "label": {
+      "en": "Text shown above the list, which also names the landmark.",
+      "ko": "목록 위에 보이는 텍스트로, 랜드마크의 이름도 됩니다."
+    },
+    "aria-label": {
+      "en": "Landmark name when there is no label. Default is the contents string from StringsProvider.",
+      "ko": "label이 없을 때의 랜드마크 이름. 기본값은 StringsProvider의 contents 문자열입니다."
+    },
+    "children": {
+      "en": "Contents.Item elements.",
+      "ko": "Contents.Item 요소."
+    }
+  },
+  "Contents.List": {
+    "children": {
+      "en": "Contents.Item elements.",
+      "ko": "Contents.Item 요소."
+    }
+  },
+  "Contents.Item": {
+    "children": {
+      "en": "A Contents.Link, or a Contents.Link followed by the Contents.List of its sub-sections.",
+      "ko": "Contents.Link, 또는 Contents.Link와 그 뒤에 오는 하위 섹션의 Contents.List."
+    }
+  },
+  "Contents.Link": {
+    "href": {
+      "en": "The fragment of the section, such as #props. A link to another page is never marked current.",
+      "ko": "섹션의 프래그먼트. 예: #props. 다른 페이지로 가는 링크는 현재 항목으로 표시되지 않습니다."
+    },
+    "render": {
+      "en": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a.",
+      "ko": "라우터 링크처럼 일반 a가 아닌 것을 렌더링합니다. 클래스 이름을 포함한 모든 prop을 받으며, 이를 a에 전달해야 합니다."
+    },
+    "aria-current": {
+      "en": "Set by Contents.Root to location on the link to the section being read. A value you pass wins.",
+      "ko": "읽고 있는 섹션의 링크에 Contents.Root가 location으로 설정합니다. 직접 전달한 값이 우선합니다."
+    },
+    "children": {
+      "en": "The link text, usually the heading of the section.",
+      "ko": "링크 텍스트로, 보통 섹션의 제목입니다."
+    }
+  },
   "Calendar.Root": {
     "mode": {
       "en": "One date, or with \"range\" a range of dates: the first pick starts it and the second ends it.",
