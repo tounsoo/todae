@@ -88,6 +88,8 @@ it('sends a code changed during a check, and not one in the field when a new cod
 
   // A full code typed and a new one asked for before it sends itself: it waits for Verify.
   await userEvent.keyboard('123456');
+  // Still waiting out the pause, so the code hasn't gone.
+  expect(verify()).not.toHaveAttribute('aria-disabled');
   await userEvent.click(screen.getByRole('button', { name: 'Send a new code' }));
   await expect.poll(() => code()).toHaveAccessibleDescription(/^We sent a new code/);
   await new Promise((resolve) => setTimeout(resolve, LONGER_THAN_A_SEND));
