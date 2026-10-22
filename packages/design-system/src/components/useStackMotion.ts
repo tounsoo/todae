@@ -64,12 +64,13 @@ function scrollContainer(el: HTMLElement): Element {
 
 // The offset that brings the viewport's top to the top of `scroller`, inside
 // its padding: 0 for a viewport that starts an overlay body, and the
-// viewport's place for one further down a page.
+// viewport's place for one further down a page. The page scrolls the
+// viewport's own box to the top of the window, past the root's padding.
 function topOf(viewport: HTMLElement, scroller: Element): number {
-  const page = scroller === viewport.ownerDocument.scrollingElement;
-  const edge = page ? 0 : scroller.getBoundingClientRect().top + scroller.clientTop;
-  const padding = Number.parseFloat(getComputedStyle(scroller).paddingTop);
-  return viewport.getBoundingClientRect().top - edge + scroller.scrollTop - padding;
+  const top = viewport.getBoundingClientRect().top + scroller.scrollTop;
+  if (scroller === viewport.ownerDocument.scrollingElement) return top;
+  const { paddingTop } = getComputedStyle(scroller);
+  return top - scroller.getBoundingClientRect().top - scroller.clientTop - Number.parseFloat(paddingTop);
 }
 
 function enterEasing(viewport: HTMLElement): string | undefined {
