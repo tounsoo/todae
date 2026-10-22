@@ -6,8 +6,8 @@ export type Stack = readonly string[];
 
 export type StackDirection = 'forward' | 'back';
 
-/** A change of the shown stack, as its slide starts. */
-export type StackChange = { from: Stack; to: Stack; direction: StackDirection };
+/** A change of the shown stack, as its slide starts, with the trigger that pushed the view it shows, if one did. */
+export type StackChange = { from: Stack; to: Stack; direction: StackDirection; trigger: HTMLElement | null };
 
 /** A view sliding in or out, in the direction of the change that moved it. */
 type Moving = { view: string; direction: StackDirection };
@@ -23,9 +23,16 @@ type MotionState = {
   entering: Moving | null;
   /** Every view still sliding out, also those an earlier change moved. */
   leaving: readonly Moving[];
+  /** A push's trigger, until the render that shows the stack it asked for, or keeps the stack. */
+  pushing: { to: Stack; trigger: HTMLElement } | null;
 };
 
-type MotionAction = { type: 'show'; stack: Stack } | { type: 'settle'; views: readonly string[] } | { type: 'reset'; stack: Stack };
+type MotionAction =
+  | { type: 'push'; to: Stack; trigger: HTMLElement }
+  | { type: 'show'; stack: Stack }
+  | { type: 'kept' }
+  | { type: 'settle'; views: readonly string[] }
+  | { type: 'reset'; stack: Stack };
 
 export function sameStack(a: Stack, b: Stack): boolean {
   return a.length === b.length && a.every((value, i) => value === b[i]);
@@ -33,16 +40,22 @@ export function sameStack(a: Stack, b: Stack): boolean {
 
 function motionReducer(state: MotionState, action: MotionAction): MotionState {
   switch (action.type) {
+    case 'push':
+      return { ...state, pushing: { to: action.to, trigger: action.trigger } };
+    case 'kept':
+      return { ...state, pushing: null };
     case 'show': {
       const direction: StackDirection = action.stack.length >= state.shown.length ? 'forward' : 'back';
       const top = action.stack.at(-1);
       const left = state.shown.at(-1);
       const leaving = left === undefined || left === top ? state.leaving : [...state.leaving, { view: left, direction }];
+      const trigger = state.pushing && sameStack(state.pushing.to, action.stack) ? state.pushing.trigger : null;
       return {
         shown: action.stack,
-        change: { from: state.shown, to: action.stack, direction },
+        change: { from: state.shown, to: action.stack, direction, trigger },
         entering: top === undefined || top === left ? null : { view: top, direction },
         leaving: leaving.filter((moving) => moving.view !== top),
+        pushing: null,
       };
     }
     case 'settle': {
@@ -51,7 +64,7 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
       return entering === state.entering && leaving.length === state.leaving.length ? state : { ...state, entering, leaving };
     }
     case 'reset':
-      return { shown: action.stack, change: null, entering: null, leaving: [] };
+      return { shown: action.stack, change: null, entering: null, leaving: [], pushing: null };
   }
 }
 
@@ -108,6 +121,8 @@ type UseStackMotionResult = {
   statusOf: (view: string) => ViewStatus | null;
   /** Shows `stack` at once, with no slide. */
   reset: (stack: Stack) => void;
+  /** Notes that `trigger` asks for `to`, so the change to it carries the trigger. */
+  requestPush: (to: Stack, trigger: HTMLElement) => void;
 };
 
 /**
@@ -117,13 +132,15 @@ type UseStackMotionResult = {
  * during a slide lets the views already moving finish theirs.
  */
 export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseStackMotionOptions): UseStackMotionResult {
-  const [{ shown, change, entering, leaving }, dispatch] = useReducer(motionReducer, {
+  const [{ shown, change, entering, leaving, pushing }, dispatch] = useReducer(motionReducer, {
     shown: stack,
     change: null,
     entering: null,
     leaving: [],
+    pushing: null,
   });
   if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
+  else if (pushing) dispatch({ type: 'kept' });
   const latest = useRef({ elementOf, onChange });
   latest.current = { elementOf, onChange };
   // An effect created again on a tree that already shows the change, as an
@@ -193,6 +210,7 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
   );
 
   const reset = useCallback((next: Stack) => dispatch({ type: 'reset', stack: next }), []);
+  const requestPush = useCallback((to: Stack, trigger: HTMLElement) => dispatch({ type: 'push', to, trigger }), []);
 
-  return { shown, direction: entering || leaving.length > 0 ? change?.direction : undefined, statusOf, reset };
+  return { shown, direction: entering || leaving.length > 0 ? change?.direction : undefined, statusOf, reset, requestPush };
 }
