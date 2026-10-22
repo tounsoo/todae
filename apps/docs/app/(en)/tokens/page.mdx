@@ -54,7 +54,7 @@ function Panel() {
 
 ## Contrast
 
-The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, a background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. A pair with a translucent background, such as a selected row's, lists in `over` the opaque surfaces it can sit on, and is measured over each one. The build fails when a pair falls short in any appearance.
+The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, a background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. A pair with a translucent background, such as a selected row's, lists in `over` the opaque surfaces it can sit on, and is measured over each one. The build fails when a pair falls short in any appearance, and names the nearest lightness of the text or background color that would pass.
 
 The pairs live in `$extensions["dev.todae"].contrast` in `tokens/resolver.json`: pairs of semantic colors on the appearance modifier, and pairs of Field, Nav, OptionList and Tree text on their own backgrounds, such as `field.fg.placeholder` on `field.bg.default`, and of `text.label.fg` on the four `color.bg` surfaces and `popover.bg`, on the contract set. A company token package inherits them, so a rebranded accent is checked, and so are those component colors. A company can list a pair with the same `fg` and `bg` in any of its sets or modifiers to change its minimum; it keeps Todae's `over` surfaces unless it lists its own. A company can also add pairs for its own tokens.
 

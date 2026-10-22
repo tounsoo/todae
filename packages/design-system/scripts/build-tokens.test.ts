@@ -17,6 +17,7 @@ import {
   pathToPointer,
   parseComponentPointer,
   parseExtension,
+  parseScope,
   pointerToPath,
   serializeValue,
   validateDensitySpaceOnly,
@@ -708,7 +709,7 @@ describe('resolver-driven build', () => {
       ];
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier/,
+      /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier in resolutionOrder; list modifier "density" before set "button"/,
     );
   });
 
@@ -732,7 +733,7 @@ describe('resolver-driven build', () => {
       }
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      /token "space\.tint" in modifier "density" depends on "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other/,
+      /token "space\.tint" in modifier "density" depends on "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other, so give it a literal value or a \$ref to a token that reads no scoped modifier's tokens, such as a core token$/,
     );
   });
 
@@ -794,7 +795,7 @@ describe('resolver-driven build', () => {
     expect(chained.tokens.find((t) => t.path === 'field.veil')?.refs.map((r) => r.path)).toEqual(['color.gray.950', 'field.fade']);
 
     await expect(buildTokensGraph(await withVeil({ $ref: '#/opacity/99/$value' }))).rejects.toThrow(
-      /\$ref "opacity\.99" does not exist/,
+      /token "field\.veil" reads \$ref "opacity\.99", which does not exist/,
     );
     await expect(buildTokensGraph(await withVeil({ $ref: '#/space/2/$value' }))).rejects.toThrow(
       /token "field\.veil" alpha must reference a number, not the dimension "space\.2"/,
@@ -808,7 +809,9 @@ describe('resolver-driven build', () => {
       resolver.modifiers.appearance!.contexts.dark!.push({ color: { veil: veil(0.5) } });
       (resolver.sets.contract!.sources as unknown[]).push({ field: { fade: { $type: 'number', $value: 0.5 } } });
     });
-    await expect(buildTokensGraph(upward)).rejects.toThrow(/must point at a lower layer than appearance/);
+    await expect(buildTokensGraph(upward)).rejects.toThrow(
+      /token "color\.veil" reads \$ref "field\.fade" from the contract layer, but a \$ref must point at a lower layer than appearance \(core < appearance < density < contract\)/,
+    );
   });
 
   it('allows refs within one set or context, but not cycles or type changes', async () => {
@@ -1304,7 +1307,7 @@ describe('company token build', () => {
       }
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
-    const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
+    const rescoped = blockOf(css, ':root,\n[data-appearance],\n[data-density]');
     expect(rescoped).toContain('--todae-button-lift: var(--todae-button-primary-lift);');
     expect(rescoped).not.toContain('--todae-button-bg-default:');
     expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
@@ -1365,7 +1368,9 @@ describe('company token build', () => {
       r.resolutionOrder.push({ $ref: '#/modifiers/badgeTone' });
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
-    expect(blockOf(css, '[data-appearance],\n[data-density]')).toContain('--todae-badge-bg: var(--todae-badge-solid-bg);');
+    // On a bare :root, so data-badge-tone on the root element still wins over the default.
+    expect(blockOf(css, ':root,\n[data-appearance],\n[data-density]')).toContain('--todae-badge-bg: var(--todae-badge-solid-bg);');
+    expect(blockOf(css, ':root:not([data-appearance]):not([data-density]),\n[data-appearance],\n[data-density]')).not.toContain('--todae-badge-bg:');
     expect(blockOf(css, '[data-badge-tone="soft"]')).toContain('--todae-badge-bg: var(--todae-badge-soft-bg);');
   });
 
@@ -1381,6 +1386,55 @@ describe('company token build', () => {
       /"color\.on-accent" on "color\.accent\.default" in appearance "dark" is Lc \d+\.\d, below 60/,
     );
 
+    // The build names the nearest lightness that passes, and taking it passes.
+    const dimError = await buildCompanyTokens({ resolver: dim, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    const fix = dimError.match(
+      /(?:fix|or): {1,2}set the lightness of "color\.accent\.default" \(modifier "appearance" context "dark"\) from 0\.6 to (0\.\d+), for Lc 6\d\.\d/,
+    );
+    expect(fix, dimError).not.toBeNull();
+    const fixed = await company(darkAccent([Number(fix![1]), 0.14, 25]));
+    await expect(buildCompanyTokens({ resolver: fixed, base: tokensDir })).resolves.toBeDefined();
+    const nearer = await company(darkAccent([Number((Number(fix![1]) - 0.001).toFixed(3)), 0.14, 25]));
+    await expect(buildCompanyTokens({ resolver: nearer, base: tokensDir })).rejects.toThrow(/fail APCA/);
+    // Lifting color.gray.950 would pass the pair, but it also backs the dark canvas and fails other pairs.
+    expect(dimError).not.toContain('"color.gray.950"');
+    // A pair's fixes come nearest first: here the paper is nearer passing than the ink.
+    const both = await company((r) => {
+      const gray = (l: number) => ({ $type: 'color', $value: { colorSpace: 'oklch', components: [l, 0, 0] } });
+      r.sets.brand.sources.push({ brand: { mid: gray(0.45), paper: gray(0.75) } });
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.mid', bg: 'brand.paper', min: 45 }];
+    });
+    const bothError = await buildCompanyTokens({ resolver: both, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    const moves = [...bothError.matchAll(/of "brand\.(\w+)" \(set "brand"\) from ([\d.]+) to ([\d.]+)/g)].map(([, name, from, to]) => [name, Math.abs(Number(to) - Number(from))]);
+    expect(moves.map(([name]) => name), bothError).toEqual(['paper', 'mid']);
+    expect(moves[0]![1]).toBeLessThan(moves[1]![1] as number);
+    // The dark failure has the same fix, so it says so rather than repeating it.
+    expect(bothError).toMatch(/in appearance "dark" is Lc 40\.0, below 45\n {4}same as above$/);
+
+    // A literal in Todae's own files is overridden, not edited.
+    const onTodae = await company((r) => {
+      // The paper's lightness is a chroma, so only the gray can move.
+      r.sets.brand.sources.push({
+        brand: { paper: { $type: 'color', $value: { colorSpace: 'oklch', components: [{ $ref: '#/color/gray/500/$value/components/1' }, 0, 0] } } },
+      });
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.gray.300', bg: 'brand.paper', min: 90 }];
+    });
+    const onTodaeError = await buildCompanyTokens({ resolver: onTodae, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    expect(onTodaeError).toContain(
+      'fix: set the lightness of "color.gray.300" (Todae\'s set "core"; override it in your resolver\'s set "core") from 0.82 to 0.917, for Lc 90.0',
+    );
+
+    // A text color whose lightness is another token's chroma gets no fix of its own.
+    const derived = await company((r) => {
+      r.sets.brand.sources.push({
+        brand: { faint: { $type: 'color', $value: { colorSpace: 'oklch', components: [{ $ref: '#/color/gray/500/$value/components/1' }, 0, 0] } } },
+      });
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.faint', bg: 'color.bg.canvas', min: 108 }];
+    });
+    const derivedError = await buildCompanyTokens({ resolver: derived, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    expect(derivedError).toContain('"brand.faint" reads its lightness from another channel, so no fix is shown for it');
+    expect(derivedError).toContain('no lightness of "color.bg.canvas" alone reaches Lc 108 without failing another pair');
+
     const retuned = await company(async (r, root) => {
       await darkAccent([0.6, 0.14, 25])(r, root);
       r.modifiers.appearance.$extensions['dev.todae'].contrast = [
@@ -1395,6 +1449,8 @@ describe('company token build', () => {
     });
     const error = await buildCompanyTokens({ resolver: own, base: tokensDir }).catch((e: Error) => e.message);
     expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
+    expect(error).toContain('no lightness of "brand.ink" alone reaches Lc 105 without failing another pair');
+    expect(error).toContain('no lightness of "color.bg.canvas" alone reaches Lc 105 without failing another pair');
     expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 102.1, below 105');
     expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 104.4, below 105');
   });
@@ -1505,7 +1561,13 @@ describe('company token build', () => {
     const missing = await company((r) => {
       r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.nope', bg: 'color.bg.canvas', min: 1 }];
     });
-    await expect(buildCompanyTokens({ resolver: missing, base: tokensDir })).rejects.toThrow(/token "color\.fg\.nope" does not exist/);
+    await expect(buildCompanyTokens({ resolver: missing, base: tokensDir })).rejects.toThrow(/token "color\.fg\.nope" does not exist$/);
+    const typo = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.defualt', bg: 'color.bg.canvas', min: 1 }];
+    });
+    await expect(buildCompanyTokens({ resolver: typo, base: tokensDir })).rejects.toThrow(
+      'token "color.fg.defualt" does not exist; did you mean "color.fg.default"?',
+    );
   });
 
   it('merges the catalog and types only the company tokens', async () => {
@@ -1541,7 +1603,7 @@ describe('company token build', () => {
       await writeFile(file, JSON.stringify(tokens));
     });
     await expect(buildCompanyTokens({ resolver: roomy, base: tokensDir })).rejects.toThrow(
-      /modifier "density" comfortable\/roomy key trees differ/,
+      /modifier "density" comfortable\/roomy key trees differ: "space\.overlay\.[a-z.-]+" only in comfortable/,
     );
     const brand = await company((resolver) => {
       resolver.modifiers.appearance.contexts.dark = [{ color: {} }];
@@ -1554,7 +1616,7 @@ describe('company token build', () => {
       await writeFile(file, JSON.stringify(tokens));
     });
     await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
-      /variant "outline" paint keys must match button\.primary/,
+      /variant "outline" paint keys must match button\.primary: "ring\.focus" only in primary/,
     );
   });
 
@@ -1573,7 +1635,11 @@ describe('company token build', () => {
     const cases: [(resolver: Record<string, any>) => void, RegExp][] = [
       [
         (r) => (r.modifiers.density.$extensions['dev.todae'].attribute = 'data-space'),
-        /modifier "density" extends Todae's modifier "density", so its attribute must match/,
+        /modifier "density" extends Todae's modifier "density", so its attribute must be "data-density"/,
+      ],
+      [
+        (r) => (r.modifiers.density.$extensions['dev.todae'].colorScheme = true),
+        /modifier "density" extends Todae's modifier "density", so leave out colorScheme/,
       ],
       [(r) => (r.modifiers.density.default = 'roomy'), /so its default must stay "comfortable"/],
       [
@@ -1645,6 +1711,28 @@ describe('company token build', () => {
     }
   });
 
+  it('builds a scoped theme that holds every token, so nested scopes never leak into each other', async () => {
+    const scoped = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope: '.acme, [data-brand="acme"]' });
+    const unscoped = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    expect(scoped.json).toBe(unscoped.json);
+    expect(scoped.overrideTypes).toBe(unscoped.overrideTypes);
+    expect(scoped.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {\n@scope (.acme, [data-brand="acme"]) {')).toBe(true);
+    const declared = new Set(scoped.css.match(/--todae-[a-z0-9-]+(?=: )/g));
+    const todae = (await buildTokensGraph(tokensDir)).css.match(/--todae-[a-z0-9-]+(?=: )/g)!;
+    expect(todae.filter((name) => !declared.has(name))).toEqual([]);
+    expect(declared).toContain('--todae-brand-ink');
+  });
+
+  it('accepts selector lists with escapes, functions and attribute values', () => {
+    for (const scope of ['.md\\:brand', '.a\\+', '[data-x="<"]', '.a\\:before', '[data-x=":before"]', '[data-x="a::b"]', '.a:after-x', '.a\\3a before', '.a\\3e', ':is(.a, .b) .c', '[data-brand="a,b"]', '.a > .b, #c']) expect(parseScope(scope)).toBe(scope);
+  });
+
+  it('rejects a scope that is no selector list', async () => {
+    for (const scope of ['', ' ', '.a { color: red', '.a; }', '@media print', '.a /* x */', '.a::before', '.a[x', '.a)', ':is(.a', '[x="]"', '.a\\', '.a,', ', .a', '.a,,.b', '> .a', '.a +', '.a</style>', '.a:before', '.a:FIRST-LINE', '.a<!--', '.a < .b', '.a\\\\:before', '.a:befor\\65', '.a:\\62 efore', '.a:\\62\r\nefore', '.a:\\62\fefore']) {
+      await expect(buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, scope }), scope).rejects.toThrow(/--scope/);
+    }
+  });
+
   it('can be imported when argv[1] is not a file', () => {
     const out = execFileSync(
       process.execPath,
@@ -1684,6 +1772,8 @@ describe('company token build', () => {
     expect(await readFile(join(out, 'acme.types.ts'), 'utf8')).toContain("'brand.ink': 'color'");
     await writeFile(join(out, 'acme.css'), '');
     await expect(cli(args('--check'))).rejects.toThrow(/acme\.css drifted/);
+    await cli(args('--scope', '.acme'));
+    expect(await readFile(join(out, 'acme.css'), 'utf8')).toContain('@scope (.acme) {');
     await expect(cli(['build'])).rejects.toThrow(/Usage: todae-tokens build/);
     await expect(cli(['buld', '--resolver', join(acme, 'resolver.json')])).rejects.toThrow(/Usage: todae-tokens build/);
     await expect(cli([])).rejects.toThrow(/Usage: todae-tokens build/);

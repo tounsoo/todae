@@ -95,6 +95,14 @@ It writes three files:
 
 The build runs every check Todae's own build runs: path format, reference cycles, layer order, light and dark parity, and APCA contrast. The contrast pairs in Todae's resolver apply to the company's colors too, so a brand accent that fails them fails the build. See the Contrast section of [Tokens](/tokens) for the pairs and how to change a minimum.
 
+When a check fails, the message says what to change: the entry a misplaced token belongs in, the token that reads a missing or out-of-order reference, the tokens one context declares and another lacks, and for a contrast pair below its minimum, the nearest lightness of its text or of its background that passes without failing another pair the build checks, set on the token that holds the literal value. When that token is in Todae's own files, the message says to override it in the same set or modifier of your resolver. Build again after taking one, since one change can fix several pairs:
+
+```sh
+contrast: 1 pair(s) fail APCA
+  "color.on-accent" on "color.accent.active" in appearance "dark" is Lc 56.2, below 60
+    fix: set the lightness of "color.accent.active" (modifier "appearance" context "dark") from 0.74 to 0.764, for Lc 60.1
+```
+
 Load the CSS after Todae's:
 
 ```ts
@@ -103,6 +111,26 @@ import './todae-theme.css';
 ```
 
 If your app has cascade layers of its own, such as Tailwind's, import both files from your CSS entry after a layer statement instead. See [CSS layers](/guides/css-layers).
+
+## Several themes on one page
+
+The theme CSS changes Todae's tokens for the whole page. To give part of a page another theme, such as a sub-brand, build that theme with `--scope` and a CSS selector:
+
+```sh
+npx --no todae-tokens build --resolver ./tokens/business.resolver.json --scope .business --css ./business-theme.css
+```
+
+The CSS then holds all of Todae's tokens and the company's inside `@scope (.business)`, so an element that matches the selector and everything in it take the theme, and nothing outside it does. Load it after Todae's CSS, as above, and load as many scoped themes as the page needs. A scope holds the whole theme, so a scope inside another scope shows none of the outer theme's tokens, nor the `overrides` of a `ThemeProvider` around it, and the nearer scope wins whichever file loads last. That makes a scoped file larger than Todae's own token CSS: about 17 KB gzipped, against 11 KB.
+
+An element the selector matches takes the appearance and density of the nearest element around it that sets `data-appearance` or `data-density`, such as a `ThemeProvider`, or the defaults when there is none. A `ThemeProvider` inside the scope, or on the scoped element itself, switches them as it does anywhere:
+
+```tsx
+<ThemeProvider appearance="dark" className="business">
+  …
+</ThemeProvider>
+```
+
+A scoped theme is built on Todae's tokens, not on another company theme. For a sub-brand, list the main brand's token files in the sub-brand's resolver, followed by the files that change, as `business.resolver.json` in [`examples/fernway`](https://github.com/tounsoo/todae/tree/main/examples/fernway) does.
 
 ## Overrides: CSS or ThemeProvider
 

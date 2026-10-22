@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": false,
+    "rewriteRelativeImportExtensions": true,
     "declaration": true,
     "outDir": "dist/scripts",
     "rootDir": "scripts",
