@@ -139,7 +139,7 @@ export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (ap
 }
 ```
 
-A call that waits pauses the agent's turn, so clear `streaming` while any call waits, even if another still runs, and set it again when the agent resumes, whether the call was approved or denied. The buttons then don't sit inside a busy message. [Conversation](/conversation) says the message finished when the wait starts and that one started when the turn resumes. Those words don't mention the approval, so for a clearer cue, announce the wait yourself with [useAnnouncer](/utilities/use-announcer) when a call's status turns to `pending`.
+A call that waits pauses the agent's turn, so clear `streaming` while any call waits, even if another still runs, and set it again when the agent resumes, whether the call was approved or denied. The buttons then don't sit inside a busy message. [Conversation](/conversation) says the message finished when the wait starts and that one started when the turn resumes. Those words don't mention the approval. For a clearer cue, set `announceMessages={false}` on `Conversation.Root` and make all three announcements yourself with [useAnnouncer](/utilities/use-announcer): an announcement of the wait made alongside Conversation's own would be replaced by its "finished", which comes a moment later.
 
 ## Accessible composition
 

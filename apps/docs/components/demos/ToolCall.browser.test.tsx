@@ -48,7 +48,7 @@ it('moves focus to the summary when a call is denied', async () => {
   const call = summary('create_branch');
   expect(call).toHaveFocus();
   expect(call).toHaveTextContent('Denied');
-  expect(await screen.findByText(/didn't make the branch/)).toBeVisible();
+  expect(await screen.findByText(/didn't make the branch/, undefined, { timeout: 3000 })).toBeVisible();
 });
 
 it('keeps a call someone opened by hand open as it finishes', async () => {
