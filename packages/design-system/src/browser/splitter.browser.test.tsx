@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import type { CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ScrollArea, Splitter, type SplitterRootProps } from '../index.js';
+import { Checkbox, ScrollArea, Splitter, type SplitterRootProps } from '../index.js';
 import { getTabbables } from '../overlay/tabbables.js';
 
 const probes: HTMLElement[] = [];
@@ -21,7 +21,11 @@ function probeAt(x: number, y: number): HTMLElement {
   return probe;
 }
 
-type LayoutProps = SplitterRootProps & { width?: number | string; height?: number | string; dir?: 'rtl' };
+type LayoutProps = SplitterRootProps & {
+  width?: number | string;
+  height?: number | string;
+  dir?: 'rtl';
+};
 
 function Layout({ width = 600, height = 200, dir, style, ...props }: LayoutProps) {
   return (
@@ -41,8 +45,8 @@ function Layout({ width = 600, height = 200, dir, style, ...props }: LayoutProps
 const handle = () => screen.getByRole('separator');
 const now = () => Number(handle().getAttribute('aria-valuenow'));
 const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
-// A wide handle so a press lands well inside it, away from its near edge.
-const WIDE = { '--todae-splitter-handle-size': '20px' } as CSSProperties;
+// A 20px track, so the press at its center lands 10px past the panel's edge.
+const WIDE = { '--todae-splitter-handle-target': '20px' } as CSSProperties;
 
 describe('Splitter dragging', () => {
   it('follows the pointer and keeps where the handle was pressed', async () => {
@@ -63,7 +67,10 @@ describe('Splitter dragging', () => {
     const watch = new MutationObserver(() => {
       sawDragging ||= root.hasAttribute('data-dragging');
     });
-    watch.observe(root, { attributes: true, attributeFilter: ['data-dragging'] });
+    watch.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-dragging'],
+    });
     const host = screen.getByTestId('host').getBoundingClientRect();
     await userEvent.dragAndDrop(handle(), probeAt(host.left + 300, host.top + 100));
     watch.disconnect();
@@ -89,14 +96,14 @@ describe('Splitter dragging', () => {
     const host = screen.getByTestId('host').getBoundingClientRect();
     await userEvent.dragAndDrop(handle(), probeAt(host.left + 60, host.top + 100));
     expect(now()).toBe(0);
-    expect(screen.getByTestId('root').hasAttribute('data-collapsed')).toBe(true);
+    expect(screen.getByTestId('root').getAttribute('data-empty')).toBe('start');
     expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('hidden');
     expect(box('first').width).toBe(0);
-    expect(box('second').width).toBeGreaterThan(590);
+    expect(box('second').width).toBeGreaterThan(570);
     // Between half of min and min the panel holds at min.
     await userEvent.dragAndDrop(handle(), probeAt(host.left + 100, host.top + 100));
     expect(now()).toBe(150);
-    expect(screen.getByTestId('root').hasAttribute('data-collapsed')).toBe(false);
+    expect(screen.getByTestId('root').hasAttribute('data-empty')).toBe(false);
     expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
   });
 
@@ -141,20 +148,20 @@ describe('Splitter layout', () => {
     // The size is pixels: a roomy container shows it again.
     rerender(<Layout value={400} width={800} />);
     await waitFor(() => expect(box('first').width).toBe(400));
-    expect(box('second').width).toBeGreaterThan(390);
+    expect(box('second').width).toBeGreaterThan(370);
   });
 
   it('shows the width it draws when the container is narrower than min', async () => {
     render(<Layout defaultValue={200} min={100} width={60} />);
-    await waitFor(() => expect(now()).toBe(59));
-    expect(box('first').width).toBeCloseTo(59, 0);
-    expect(handle().getAttribute('aria-valuemin')).toBe('59');
-    expect(handle().getAttribute('aria-valuemax')).toBe('59');
+    await waitFor(() => expect(now()).toBe(36));
+    expect(box('first').width).toBeCloseTo(36, 0);
+    expect(handle().getAttribute('aria-valuemin')).toBe('36');
+    expect(handle().getAttribute('aria-valuemax')).toBe('36');
   });
 
   it('keeps both panels inside a root with padding', async () => {
     render(<Layout defaultValue={200} style={{ padding: 20 }} />);
-    await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('559'));
+    await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('536'));
     await userEvent.click(handle());
     await userEvent.keyboard('{End}');
     const root = screen.getByTestId('root').getBoundingClientRect();
@@ -170,10 +177,10 @@ describe('Splitter layout', () => {
 
   it('gives the container as the largest size', async () => {
     render(<Layout defaultValue={200} width={500} />);
-    await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('499'));
+    await waitFor(() => expect(handle().getAttribute('aria-valuemax')).toBe('476'));
     await userEvent.click(handle());
     await userEvent.keyboard('{End}');
-    expect(now()).toBe(499);
+    expect(now()).toBe(476);
     expect(box('first').width + box('second').width + handle().getBoundingClientRect().width).toBeCloseTo(500, 0);
   });
 
@@ -181,7 +188,7 @@ describe('Splitter layout', () => {
     const { rerender } = render(<Layout defaultValue={200} width={600} />);
     expect(box('first').width).toBe(200);
     rerender(<Layout defaultValue={200} width={900} />);
-    await waitFor(() => expect(box('second').width).toBeGreaterThan(690));
+    await waitFor(() => expect(box('second').width).toBeGreaterThan(670));
     expect(box('first').width).toBe(200);
   });
 });
@@ -282,34 +289,97 @@ describe('Splitter focus', () => {
     expect(now()).toBe(184);
   });
 
-  it('shows a ring when the keyboard focuses the handle, also with the panel collapsed at the edge', async () => {
-    render(<Layout value={0} collapsible />);
-    const ring = () => getComputedStyle(handle(), '::before').outlineStyle;
-    expect(ring()).toBe('none');
+  it('shows a ring around the whole track when the keyboard focuses the handle', async () => {
+    render(<Layout defaultValue={200} />);
+    expect(getComputedStyle(handle()).outlineStyle).toBe('none');
+    await userEvent.tab();
     await userEvent.tab();
     expect(document.activeElement).toBe(handle());
-    expect(ring()).toBe('solid');
-    expect(Number.parseFloat(getComputedStyle(handle(), '::before').outlineWidth)).toBeGreaterThan(0);
+    const ring = getComputedStyle(handle());
+    expect(ring.outlineStyle).toBe('solid');
+    expect(Number.parseFloat(ring.outlineWidth)).toBeGreaterThan(0);
+    // Inside the track, so nothing clips it.
+    expect(Number.parseFloat(ring.outlineOffset)).toBeLessThan(0);
   });
 
-  it('has a hit area at least 24px across around a thin line', () => {
+  it.each([
+    ['at the start edge', '{Home}', 0],
+    ['at the room', '{End}', 376],
+    ['at room - 16', '{End}{ArrowLeft}', 360],
+  ])('keeps the focus ring whole %s', async (_name, keys, size) => {
+    render(<Layout defaultValue={200} width={400} />);
+    handle().focus();
+    await userEvent.keyboard(keys);
+    await waitFor(() => expect(now()).toBe(size));
+    const root = screen.getByTestId('root').getBoundingClientRect();
+    const track = handle().getBoundingClientRect();
+    const ring = getComputedStyle(handle());
+    expect(ring.outlineStyle).toBe('solid');
+    // Drawn inside the track, which lies inside the root.
+    expect(Number.parseFloat(ring.outlineOffset)).toBeLessThanOrEqual(-Number.parseFloat(ring.outlineWidth));
+    expect(track.left).toBeGreaterThanOrEqual(root.left - 0.5);
+    expect(track.right).toBeLessThanOrEqual(root.right + 0.5);
+  });
+
+  it('has a track 24px across by default, with a thin line drawn in its middle', () => {
     render(<Layout defaultValue={200} />);
-    const line = handle().getBoundingClientRect();
-    expect(line.width).toBeLessThan(4);
-    const target = getComputedStyle(handle(), '::before');
-    expect(Number.parseFloat(target.width)).toBeGreaterThanOrEqual(24);
+    const track = handle().getBoundingClientRect();
+    expect(track.width).toBe(24);
+    expect(box('second').left).toBeCloseTo(track.right, 0);
+    expect(box('first').right).toBeCloseTo(track.left, 0);
+    const line = getComputedStyle(handle(), '::before');
+    expect(Number.parseFloat(line.width)).toBe(1);
+    expect(line.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(getComputedStyle(handle()).touchAction).toBe('none');
   });
 
-  it('hides the collapsed panel at the end, and not the one beside it', () => {
-    render(<Layout value={0} collapsible primary="end" />);
-    expect(getComputedStyle(screen.getByTestId('second')).visibility).toBe('hidden');
-    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
+  it.each([
+    ['the first panel at 0, not collapsible', { value: 0 }, 'first', 'second'],
+    ['the first panel at 0, collapsible', { value: 0, collapsible: true }, 'first', 'second'],
+    ['the last panel at 0, collapsible', { value: 0, collapsible: true, primary: 'end' as const }, 'second', 'first'],
+    ['the last panel at 0, not collapsible', { value: 0, primary: 'end' as const }, 'second', 'first'],
+    ['the other panel when the first fills the room', { value: 900, width: 400 }, 'second', 'first'],
+    [
+      'the first panel when the last fills the room',
+      { value: 900, width: 400, primary: 'end' as const },
+      'first',
+      'second',
+    ],
+  ])('hides %s, and only that one', async (_name, props, hidden, shown) => {
+    render(<Layout {...props} />);
+    await waitFor(() => expect(getComputedStyle(screen.getByTestId(hidden)).visibility).toBe('hidden'));
+    expect(getComputedStyle(screen.getByTestId(shown)).visibility).toBe('visible');
+    expect(box(hidden).width).toBe(0);
   });
 
-  it('does not hide a panel at size 0 that is not collapsible', () => {
-    render(<Layout value={0} />);
-    expect(getComputedStyle(screen.getByTestId('first')).visibility).toBe('visible');
+  it('takes the controls of a panel at the full room out of the tab order', async () => {
+    render(
+      <Splitter.Root data-testid="root" value={900} style={{ inlineSize: 400 }}>
+        <Splitter.Panel>Main</Splitter.Panel>
+        <Splitter.Handle aria-label="Resize" />
+        <Splitter.Panel>
+          <button type="button">Hidden</button>
+        </Splitter.Panel>
+      </Splitter.Root>,
+    );
+    await waitFor(() => expect(getTabbables(screen.getByTestId('root'))).toEqual([handle()]));
+  });
+
+  it('moves focus from a panel that empties to the handle, also the last one, without scrolling the page', () => {
+    const last = (value: number) => (
+      <Splitter.Root data-testid="root" value={value} primary="end" style={{ inlineSize: 400 }}>
+        <Splitter.Panel>Main</Splitter.Panel>
+        <Splitter.Handle aria-label="Resize" />
+        <Splitter.Panel>
+          <button type="button">Late</button>
+        </Splitter.Panel>
+      </Splitter.Root>
+    );
+    const { rerender } = render(last(200));
+    screen.getByRole('button', { name: 'Late' }).focus();
+    rerender(last(0));
+    expect(document.activeElement).toBe(handle());
+    expect(document.scrollingElement?.scrollTop).toBe(0);
   });
 
   it('moves focus from a panel that collapses to the handle, without scrolling the page', async () => {
@@ -322,58 +392,105 @@ describe('Splitter focus', () => {
 });
 
 describe('Splitter hit area', () => {
-  /** What a pointer at `offset` px past the handle's line reaches, along the axis. */
-  const hit = (offset: number, vertical = false) => {
-    const line = handle().getBoundingClientRect();
-    return vertical
-      ? document.elementFromPoint(line.left + line.width / 2, line.top + offset)
-      : document.elementFromPoint(line.left + offset, line.top + line.height / 2);
-  };
+  /** What a press `offset` px past the track's start edge reaches (negative: the panel before it), and whether it starts a drag. */
+  async function pressAt(offset: number, vertical = false) {
+    const track = handle().getBoundingClientRect();
+    const x = vertical ? track.left + track.width / 2 : track.left + offset;
+    const y = vertical ? track.top + offset : track.top + track.height / 2;
+    const target = document.elementFromPoint(x, y);
+    let dragging = false;
+    if (target === handle()) {
+      // A made-up pointer id has nothing to capture.
+      handle().setPointerCapture = () => undefined;
+      handle().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          isPrimary: true,
+          pointerId: 7,
+          clientX: x,
+          clientY: y,
+        }),
+      );
+      await new Promise((resolve) => setTimeout(resolve));
+      dragging = screen.getByTestId('root').hasAttribute('data-dragging');
+      handle().dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7 }));
+    }
+    return { target, dragging };
+  }
 
-  it('reaches over the panel after the line and leaves the scrollbar of the panel before it alone', () => {
+  it('is the handle track: a press 2px into either panel next to it does not start a drag', async () => {
     render(<Layout defaultValue={200} />);
-    expect(hit(10)).toBe(handle());
-    expect(hit(-6)).not.toBe(handle());
-    expect(screen.getByTestId('first').contains(hit(-6))).toBe(true);
+    const before = await pressAt(-2);
+    expect(screen.getByTestId('first').contains(before.target)).toBe(true);
+    expect(before.dragging).toBe(false);
+    const after = await pressAt(26);
+    expect(screen.getByTestId('second').contains(after.target)).toBe(true);
+    expect(after.dragging).toBe(false);
   });
 
-  it('is the same in right-to-left text, where the end side is on the left', () => {
-    render(<Layout defaultValue={200} dir="rtl" />);
-    expect(hit(-10)).toBe(handle());
-    expect(hit(6)).not.toBe(handle());
+  it('is the whole track, from its first pixel to its last', async () => {
+    render(<Layout defaultValue={200} />);
+    for (const offset of [0.5, 1, 12, 23, 23.5]) expect((await pressAt(offset)).dragging).toBe(true);
   });
 
-  it('reaches toward the start where a panel at the end is collapsed at the edge', () => {
-    render(<Layout value={0} collapsible primary="end" width={300} />);
-    expect(hit(-10)).toBe(handle());
+  it('lays the panels out against the track, so nothing of it covers a panel', () => {
+    render(
+      <Splitter.Root data-testid="root" defaultValue={200} style={{ inlineSize: 600, blockSize: 200 }}>
+        <Splitter.Panel data-testid="first">
+          <div style={{ blockSize: 600 }}>Tall</div>
+        </Splitter.Panel>
+        <Splitter.Handle aria-label="Resize" />
+        <Splitter.Panel data-testid="second">
+          <button type="button" style={{ inlineSize: '100%' }}>
+            Edge
+          </button>
+        </Splitter.Panel>
+      </Splitter.Root>,
+    );
+    const track = handle().getBoundingClientRect();
+    expect(box('first').right).toBeCloseTo(track.left, 0);
+    expect(screen.getByTestId('first').contains(document.elementFromPoint(track.left - 1, track.top + 40))).toBe(true);
+    const edge = screen.getByRole('button', { name: 'Edge' });
+    expect(edge.getBoundingClientRect().left).toBeCloseTo(track.right, 0);
+    const at = edge.getBoundingClientRect();
+    expect(document.elementFromPoint(track.right + 1, at.top + at.height / 2)).toBe(edge);
   });
 
-  it('reaches toward the start where the first panel fills the room', async () => {
-    render(<Layout value={900} width={400} />);
+  it('is the same in right-to-left text, vertical, and for a panel at the end', async () => {
+    const { rerender } = render(<Layout defaultValue={200} dir="rtl" />);
+    expect((await pressAt(12)).dragging).toBe(true);
+    expect((await pressAt(-2)).dragging).toBe(false);
+    rerender(<Layout defaultValue={200} primary="end" />);
+    expect((await pressAt(12)).dragging).toBe(true);
+    expect((await pressAt(26)).dragging).toBe(false);
+    rerender(<Layout orientation="vertical" defaultValue={100} width={300} height={300} />);
+    expect((await pressAt(12, true)).dragging).toBe(true);
+    expect((await pressAt(-2, true)).dragging).toBe(false);
+    expect((await pressAt(26, true)).dragging).toBe(false);
+  });
+
+  it('stays inside the root when the panel fills the room or is empty', async () => {
+    const { rerender } = render(<Layout value={900} width={400} />);
     await waitFor(() => expect(box('second').width).toBe(0));
-    expect(hit(-10)).toBe(handle());
-  });
-
-  it('reaches toward the end below a stacked first panel, and toward the start when it fills the room', async () => {
-    const { rerender } = render(<Layout orientation="vertical" defaultValue={100} width={300} height={300} />);
-    expect(hit(10, true)).toBe(handle());
-    expect(hit(-6, true)).not.toBe(handle());
-    rerender(<Layout orientation="vertical" value={900} width={300} height={300} />);
-    await waitFor(() => expect(box('second').height).toBe(0));
-    expect(hit(-10, true)).toBe(handle());
+    const root = () => screen.getByTestId('root').getBoundingClientRect();
+    expect(handle().getBoundingClientRect().right).toBeLessThanOrEqual(root().right + 0.5);
+    rerender(<Layout value={0} primary="end" width={400} />);
+    expect(handle().getBoundingClientRect().left).toBeGreaterThanOrEqual(root().left - 0.5);
+    expect(handle().getBoundingClientRect().right).toBeLessThanOrEqual(root().right + 0.5);
   });
 });
 
 describe('Splitter panels with controls', () => {
-  it('scroll a focused control into view with its ring whole', async () => {
+  it('scroll a focused control into view with its ring whole, also when the ring is on another element', async () => {
     render(
       <>
-        <button type="button">Before</button>
         <div style={{ inlineSize: 400, blockSize: 120 }}>
           <Splitter.Root defaultValue={200} style={{ blockSize: '100%' }}>
             <Splitter.Panel data-testid="scrolled">
               <div style={{ blockSize: 400 }}>Tall</div>
-              <button type="button">Deep</button>
+              <Checkbox.Root>Archived</Checkbox.Root>
+              <div style={{ blockSize: 200 }} />
             </Splitter.Panel>
             <Splitter.Handle aria-label="Resize" />
             <Splitter.Panel>Main</Splitter.Panel>
@@ -381,17 +498,24 @@ describe('Splitter panels with controls', () => {
         </div>
       </>,
     );
-    screen.getByRole('button', { name: 'Before' }).focus();
-    await userEvent.tab();
-    const deep = screen.getByRole('button', { name: 'Deep' });
-    expect(document.activeElement).toBe(deep);
     const panel = screen.getByTestId('scrolled');
-    const ring = getComputedStyle(deep);
+    const box = screen.getByRole('checkbox', { name: 'Archived' });
+    // The checkbox's own box ends a pixel inside the bottom edge: wholly in view, so the browser's own
+    // scroll-into-view leaves the panel alone and only the ring reveal can bring the ring in.
+    const view = panel.getBoundingClientRect();
+    panel.scrollTop += box.getBoundingClientRect().bottom - (view.top + panel.clientHeight - 1);
+    const before = panel.scrollTop;
+    // The browser's own scroll is held back, as revealRing's tests do, so only the panel's reveal can move it.
+    await userEvent.keyboard('{Shift}');
+    box.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(box);
+    const indicator = box.nextElementSibling as HTMLElement;
+    const ring = getComputedStyle(indicator);
+    expect(ring.outlineStyle).not.toBe('none');
     const room = Number.parseFloat(ring.outlineWidth) + Number.parseFloat(ring.outlineOffset);
     expect(room).toBeGreaterThan(0);
-    const view = panel.getBoundingClientRect();
-    expect(panel.scrollTop).toBeGreaterThan(0);
-    expect(deep.getBoundingClientRect().bottom + room).toBeLessThanOrEqual(view.top + panel.clientHeight + 1);
+    expect(panel.scrollTop).toBeGreaterThan(before);
+    expect(indicator.getBoundingClientRect().bottom + room).toBeLessThanOrEqual(view.top + panel.clientHeight + 1);
     expect(Number.parseFloat(getComputedStyle(panel).scrollPaddingBottom)).toBeGreaterThanOrEqual(room);
   });
 });
