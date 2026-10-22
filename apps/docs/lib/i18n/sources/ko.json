@@ -117,7 +117,7 @@
     "## Read-only": "bf8f7bba4f06",
     "## Icons": "b76e9ef78246",
     "## Accessible composition": "0e767dafb800",
-    "## When to use": "660aafd186ab",
+    "## When to use": "6a15b8ea4b6c",
     "## Props": "f1197757b3d6",
     "(section order)": "a3d54a508f96"
   },
@@ -586,7 +586,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "ffa7c9dcfe89",
+    "# Native platform": "d5b976cf4cf0",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -689,6 +689,17 @@
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "a51aedc3e4e1",
     "(section order)": "2ce6dd09df8f"
+  },
+  "recipes/filter-bar": {
+    "(top)": "231c49c8f664",
+    "# Filter bar": "8062d11edffa",
+    "## Filters": "24d88e2c6c9e",
+    "## Filter menus": "1f3d4b07d34c",
+    "## Active filters": "193caeededba",
+    "## Results": "d52ef8137726",
+    "## Accessible composition": "e04755d81c53",
+    "## When to use": "f81000d34176",
+    "(section order)": "c439ccbc50b3"
   },
   "recipes/inline-edit": {
     "(top)": "89db7894a8df",
@@ -819,14 +830,15 @@
     "(section order)": "6b5ab14cc7b5"
   },
   "text": {
-    "(top)": "b1e17b5416f8",
+    "(top)": "8fe22cb72850",
     "# Text": "7bbe9f5e1adf",
     "## Headings": "7ef059d65ca4",
     "## Label": "96df565d38ad",
-    "## Accessible composition": "2eb09d1d4351",
-    "## When to use": "5a57584d1a10",
+    "## Lines": "fd4c38761d58",
+    "## Accessible composition": "6cc5e8de8acb",
+    "## When to use": "c1d12da73edb",
     "## Props": "c29450776f88",
-    "(section order)": "e63d148221ad"
+    "(section order)": "6a0740b430a1"
   },
   "toast": {
     "(top)": "85a2f957060f",

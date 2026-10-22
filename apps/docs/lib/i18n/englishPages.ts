@@ -71,6 +71,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/data-table': () => import('../../app/(en)/recipes/data-table/page.mdx'),
   'recipes/date-range-presets': () => import('../../app/(en)/recipes/date-range-presets/page.mdx'),
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
+  'recipes/filter-bar': () => import('../../app/(en)/recipes/filter-bar/page.mdx'),
   'recipes/inline-edit': () => import('../../app/(en)/recipes/inline-edit/page.mdx'),
   'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
   'recipes/reasoning': () => import('../../app/(en)/recipes/reasoning/page.mdx'),

@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs } from './Text.js';
 import styles from './Text.module.css';
 
@@ -82,5 +83,68 @@ describe('Text', () => {
     expect(at('root')).toBeLessThan(at('heading'));
     expect(at('heading')).toBeLessThan(at('label'));
     for (const cls of ['default', 'muted', 'accent', 'regular', 'medium', 'bold']) expect(at('label')).toBeLessThan(at(cls));
+  });
+
+  it('clamps to lines through a class and --_lines, keeping the given style', () => {
+    render(
+      <Text.Root lines={2} style={{ color: 'red' }} data-testid="t">
+        Long
+      </Text.Root>,
+    );
+    const el = screen.getByTestId('t');
+    expect(classesOf(el)).toEqual([styles.root, styles.m, styles.clamp]);
+    expect(el.style.getPropertyValue('--_lines')).toBe('2');
+    expect(el.style.color).toBe('red');
+  });
+
+  it.each([0, -1, 1.5, Number.NaN])('clamps nothing for lines={%s}', (lines) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      render(
+        <Text.Root lines={lines} data-testid="t">
+          Long
+        </Text.Root>,
+      );
+      const el = screen.getByTestId('t');
+      expect(el.classList.contains(styles.clamp!)).toBe(false);
+      expect(el.style.getPropertyValue('--_lines')).toBe('');
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('logs a development error once for each value of lines that is not a whole number of 1 or more', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      render(<Text.Root lines={-2}>Long</Text.Root>);
+      render(<Text.Root lines={-2}>Again</Text.Root>);
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledWith('Text.Root lines must be a whole number of 1 or more; got -2');
+    } finally {
+      error.mockRestore();
+    }
+  });
+});
+
+describe('Text from the main entry', () => {
+  it('renders the same element, with an anchor for its tip only while it clamps with one', () => {
+    const { rerender } = render(<ClientText.Root data-testid="t">Long</ClientText.Root>);
+    const el = screen.getByTestId('t');
+    expect(classesOf(el)).toEqual([styles.root, styles.m]);
+    expect(el.style.getPropertyValue('anchor-name')).toBe('');
+    rerender(
+      <ClientText.Root lines={1} data-testid="t">
+        Long
+      </ClientText.Root>,
+    );
+    expect(screen.getByTestId('t')).toBe(el);
+    expect(el.classList.contains(styles.clamp!)).toBe(true);
+    expect(el.style.getPropertyValue('anchor-name')).toMatch(/^--todae-text-/);
+    rerender(
+      <ClientText.Root lines={1} tooltip={false} data-testid="t">
+        Long
+      </ClientText.Root>,
+    );
+    expect(el.style.getPropertyValue('anchor-name')).toBe('');
   });
 });
