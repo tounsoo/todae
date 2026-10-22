@@ -101,10 +101,12 @@ export function SignInExample() {
   const [resent, setResent] = useState(false);
   const [resending, setResending] = useState(false);
   const codeForm = useRef<HTMLFormElement>(null);
-  // The code last sent, or in the field when a new one was asked for, so it isn't sent by itself again.
-  const sentCode = useRef('');
+  // The code that doesn't send itself: the one last sent, or the one in the field when a new code was asked for.
+  const skipCode = useRef('');
   const doneHeading = useFocusOnShow<HTMLHeadingElement>(step === 'done');
   const announce = useAnnouncer();
+  // One request at a time: a check's reply would otherwise land after a new code is announced.
+  const busy = sending || resending;
 
   const send = async (request: Promise<FormErrors>, next: typeof step) => {
     setSending(true);
@@ -133,25 +135,24 @@ export function SignInExample() {
 
   const submitCode = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // One request at a time: a check's reply would otherwise land after a new code is announced.
-    if (sending || resending) return;
-    sentCode.current = code;
+    if (busy) return;
+    skipCode.current = code;
     void send(checkCode(code), 'done');
   };
 
   // A full code sends itself a short pause after its last character, since an IME can still take it back.
   useEffect(() => {
-    if (step !== 'code' || code.length !== CODE_LENGTH || code === sentCode.current || sending || resending) return;
+    if (step !== 'code' || code.length !== CODE_LENGTH || code === skipCode.current || busy) return;
     const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
     return () => clearTimeout(timer);
-  }, [code, step, sending, resending]);
+  }, [code, step, busy]);
 
   const resend = async () => {
-    if (resending || sending) return;
+    if (busy) return;
     setResending(true);
     setFailed(null);
     // A code typed before the new one was asked for is the old one: don't send it by itself.
-    sentCode.current = code;
+    skipCode.current = code;
     // A stand-in for the request; a real one also catches a failure, as send does.
     await wait(300);
     setResending(false);
@@ -165,7 +166,7 @@ export function SignInExample() {
   const restart = () => {
     setPassword('');
     setCode('');
-    sentCode.current = '';
+    skipCode.current = '';
     setErrors({});
     setResent(false);
     setStep('password');
@@ -207,10 +208,10 @@ export function SignInExample() {
           </Field.Group>
           {failed ? <Alert.Root tone="critical">{failed}</Alert.Root> : null}
           <Stack.Root direction="row" gap="condensed" wrap>
-            <Button.Root type="submit" aria-disabled={sending || resending || undefined}>
+            <Button.Root type="submit" aria-disabled={busy || undefined}>
               {sending ? 'Verifying…' : 'Verify'}
             </Button.Root>
-            <Button.Root variant="ghost" aria-disabled={resending || sending || undefined} onClick={resend}>
+            <Button.Root variant="ghost" aria-disabled={busy || undefined} onClick={resend}>
               Send a new code
             </Button.Root>
           </Stack.Root>

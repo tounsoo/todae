@@ -7,6 +7,9 @@ import { SignInExample, SignUpExample } from './SignInDemo';
 
 afterEach(cleanup);
 
+// The auto-send's 500 ms pause, the stand-in check's 600 ms, and a margin.
+const LONGER_THAN_A_SEND = 1600;
+
 const password = () => screen.getByLabelText('Password') as HTMLInputElement;
 const show = () => screen.getByRole('button', { name: 'Show password' });
 const code = () => screen.getByRole('textbox', { name: 'Verification code' }) as HTMLInputElement;
@@ -65,13 +68,38 @@ it('moves focus to an unmarked code field, sends a full code by itself, and conf
   await expect.poll(() => code().getAttribute('aria-invalid'), { timeout: 3000 }).toBeNull();
   expect(code()).toHaveAccessibleDescription(/^We sent a new code/);
   await expect.poll(() => document.querySelector('[data-todae-announcer]')?.textContent).toContain('We sent a new code.');
-  // The old code stays in the field but isn't sent again by itself.
-  await new Promise((resolve) => setTimeout(resolve, 1600));
+  // The old code stays in the field but isn't sent again by itself. Its check would answer after the
+  // 500 ms pause and the stand-in's 600 ms request.
+  await new Promise((resolve) => setTimeout(resolve, LONGER_THAN_A_SEND));
   expect(code()).not.toHaveAttribute('aria-invalid');
   code().focus();
   await userEvent.keyboard('{Control>}a{/Control}123456');
   const heading = await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 3000 });
   await expect.poll(() => document.activeElement).toBe(heading);
+});
+
+it('sends a code changed during a check, and not one in the field when a new code is asked for', async () => {
+  signIn();
+  await userEvent.type(screen.getByRole('textbox', { name: 'Email' }), 'ben@example.com');
+  await userEvent.type(password(), 'correct horse{Enter}');
+  await expect.poll(() => document.activeElement === screen.queryByRole('textbox', { name: 'Verification code' }), { timeout: 3000 }).toBe(true);
+  // Verify, which reads "Verifying…" while a check runs.
+  const verify = () => screen.getByRole('button', { name: /^Verify/ });
+
+  // A full code typed and a new one asked for before it sends itself: it waits for Verify.
+  await userEvent.keyboard('123456');
+  await userEvent.click(screen.getByRole('button', { name: 'Send a new code' }));
+  await expect.poll(() => code()).toHaveAccessibleDescription(/^We sent a new code/);
+  await new Promise((resolve) => setTimeout(resolve, LONGER_THAN_A_SEND));
+  expect(screen.queryByRole('heading', { name: 'Signed in' })).toBeNull();
+
+  // A wrong code sends itself; changed while it is checked, the new code sends after.
+  code().focus();
+  await userEvent.keyboard('{Control>}a{/Control}111111');
+  await expect.poll(() => verify().getAttribute('aria-disabled'), { timeout: 3000 }).toBe('true');
+  await userEvent.keyboard('{Control>}a{/Control}123456');
+  expect(verify()).toHaveAttribute('aria-disabled', 'true');
+  await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 4000 });
 });
 
 it('turns down an email that has an account on sign-up, with focus on the email', async () => {

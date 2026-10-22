@@ -501,6 +501,12 @@
     padding-block: 0;
   }
 
+  /* With no block padding on the shell, an Icon, Affix or line button beside
+     the select is centered on it, not set at the shell's top edge. */
+  .shell:has(> .select) > :is(.adornment, :is(button, a)[data-icon-only]) {
+    align-self: center;
+  }
+
   .shell:has(> .select:first-child) {
     padding-inline-start: 0;
   }
