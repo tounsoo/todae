@@ -80,7 +80,7 @@ export function ToolCall({ call }: { call: ToolCallData }) {
 }
 ```
 
-Put each call in the [Message](/message) beside the text around it, in the order your stream gives them. A part of `Message.Root` is spaced from the next one, so a call needs no margin of its own. Keep `streaming` on the message until the reply is finished, through calls that run and calls that wait for approval, so [Conversation](/conversation) says once that the reply started and once that it finished.
+Put each call, rendered by the `ToolCall` from Approval below, in the [Message](/message) beside the text around it, in the order your stream gives them. A part of `Message.Root` is spaced from the next one, so a call needs no margin of its own. Set `streaming` from your agent's stream, not from the calls: on while the agent is producing the reply, including while a call runs, and off when the turn ends.
 
 ```tsx
 <Message.Root streaming={streaming} aria-label="Assistant">
@@ -100,12 +100,14 @@ For a tool whose input is a few plain values, such as a search query, a horizont
 
 ## Approval
 
-A call that waits for approval opens, so its input can be read before it runs, and shows Approve and Deny after it. Set `open` from the status, so the call opens when it starts waiting and closes when it runs or is denied. React sets `open` only when that value changes, so a call someone opens by hand stays open as it finishes. Name the buttons' group by the tool's name, so "Approve" says what it approves. When two waiting calls can use the same tool, add something from the input that tells them apart, such as a file's path, to that name and to the input's region.
+A call that waits for approval opens, so its input can be read before it runs, and shows Approve and Deny after it. Set `open` from the status, so the call opens when it starts waiting and closes when it runs or is denied. React sets `open` only when that value changes, so a call someone opens by hand stays open as it finishes. Name the buttons' group by the tool's name, so "Approve" says what it approves. When two waiting calls can use the same tool, add something from the input that tells them apart, such as a file's path, to the group's name and to each region's name.
 
 The buttons go away once the call is decided, which would drop focus to the page. Move focus to the call's summary first. The DataList from the call above goes where the `…` is.
 
+A call that waits pauses the agent's turn, so clear `streaming` while it waits and set it again when the call is approved. [Conversation](/conversation) then says the reply finished, which tells a screen reader user that the reply, and its question, are ready to read, and the buttons don't sit inside a busy message.
+
 ```tsx
-import { Badge, Button, Code, Disclosure, Stack } from '@tounsoo/todae';
+import { Badge, Button, Code, CodeBlock, DataList, Disclosure, Stack } from '@tounsoo/todae';
 import { useId, useRef } from 'react';
 
 export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved: boolean) => void }) {
@@ -139,25 +141,13 @@ export function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (ap
 }
 ```
 
-The agent stops until someone decides, and a screen reader user may not be reading the reply. When your stream reports that a call has started to wait, say so with [useAnnouncer](/utilities/use-announcer), once, since a stream may send the same call more than once.
-
-```tsx
-const announce = useAnnouncer();
-
-function receive(call: ToolCallData) {
-  const before = calls.find((known) => known.id === call.id);
-  setCalls((current) => upsert(current, call));
-  if (call.status === 'pending' && before?.status !== 'pending') announce(`${call.name} needs your approval`);
-}
-```
-
 ## Accessible composition
 
 **Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the toggle, Enter and Space, the expanded state a screen reader hears, and find in page in a closed call. The summary's focus ring. A Badge has no role, so its label is read with the summary's text.
 
-**You supply:** A status label in words, not only a tone's color. A Tab stop, role and name for each CodeBlock, as on the [Code](/code) page. A name for the approval buttons' group. Focus moved to the summary before the approval buttons go away. An announcement when a call waits for approval.
+**You supply:** A status label in words, not only a tone's color. A Tab stop, role and name for each CodeBlock, as on the [Code](/code) page. A name for the approval buttons' group. Focus moved to the summary before the approval buttons go away.
 
-**Watch for:** Buttons, links or other controls inside the summary: the summary is itself the toggle, and a control inside it can't be reached the same way in every browser. Removing a call from the reply when it finishes: find in page and screen readers can no longer reach what the agent did. A decision that arrives from elsewhere, such as another device, while focus is on Approve or Deny: the buttons go away the same way, so move focus to the summary then too. Announcing every status change: Conversation already says when the reply finishes, and a call that runs and finishes on its own is part of that.
+**Watch for:** Buttons, links or other controls inside the summary: the summary is itself the toggle, and a control inside it can't be reached the same way in every browser. Removing a call from the reply when it finishes: find in page and screen readers can no longer reach what the agent did. A decision that arrives from elsewhere, such as another device, while focus is on Approve or Deny: the buttons go away and focus drops to the page, which the recipe's click handler doesn't cover. Announcing every status change: Conversation already says when the reply finishes, and a call that runs and finishes on its own is part of that.
 
 ## When to use
 

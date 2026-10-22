@@ -141,12 +141,14 @@ export function ToolCallExample() {
       return;
     }
     update(id, { status: 'running' });
+    clearTimeout(timer.current);
     timer.current = setTimeout(() => update(id, { status: 'done', output: RESULT }), 1500);
   };
 
   const last = calls[calls.length - 1]!;
-  // The reply isn't finished while a call runs or waits for approval.
-  const streaming = calls.some((call) => call.status === 'pending' || call.status === 'running');
+  // Stands in for the stream's own flag: the agent writes while the approved call runs,
+  // and its turn is paused while a call waits.
+  const streaming = calls.some((call) => call.status === 'running');
 
   return (
     <Message.Root streaming={streaming} aria-label="Assistant" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
