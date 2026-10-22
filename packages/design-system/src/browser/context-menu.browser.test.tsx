@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useState, type ReactNode } from 'react';
+import { startTransition, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
 import { Menu, type MenuOpenChangeReason } from '../components/Menu.js';
@@ -359,5 +359,113 @@ describe('Menu.ContextTrigger in a browser', () => {
     );
     await userEvent.click(screen.getByTestId('icon'), { button: 'right' });
     await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+  });
+
+  it('gives focus back to a focused icon', async () => {
+    render(
+      <Themed>
+        <FileMenu>
+          <svg data-testid="icon" tabIndex={0} width="24" height="24" aria-label="Star" role="img">
+            <rect width="24" height="24" />
+          </svg>
+        </FileMenu>
+      </Themed>,
+    );
+    const icon = screen.getByTestId('icon');
+    icon.focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(icon));
+  });
+
+  it('keeps the first opener when a screen reader asks from another region while the menu has focus', async () => {
+    render(
+      <Themed>
+        <Menu.Root>
+          <Menu.ContextTrigger data-testid="a" tabIndex={0}>
+            A
+          </Menu.ContextTrigger>
+          <Menu.ContextTrigger data-testid="b" style={{ blockSize: 60 }}>
+            B
+          </Menu.ContextTrigger>
+          <Menu.Content aria-label="File">
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    const a = screen.getByTestId('a');
+    a.focus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    expect(document.activeElement?.getAttribute('role')).toBe('menuitem');
+    screen
+      .getByTestId('b')
+      .dispatchEvent(new PointerEvent('contextmenu', { bubbles: true, cancelable: true, button: 0, pointerType: '' }));
+    await waitFor(() => expect(screen.getByTestId('b').hasAttribute('data-open')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(a));
+  });
+
+  it('opens at the pointer for an owner that opens in a transition', async () => {
+    function Late() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open} onOpenChange={(next) => startTransition(() => setOpen(next))}>
+          <Menu.ContextTrigger data-testid="region" style={{ blockSize: 120, inlineSize: 400 }}>
+            report.pdf
+            <Menu.Trigger aria-label="More">…</Menu.Trigger>
+          </Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(
+      <Themed>
+        <Late />
+      </Themed>,
+    );
+    const region = screen.getByTestId('region');
+    await userEvent.click(region, { button: 'right', position: { x: 250, y: 80 } });
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    const r = region.getBoundingClientRect();
+    expect(Math.abs(menu().getBoundingClientRect().left - (r.left + 250))).toBeLessThanOrEqual(1);
+    expect(region.hasAttribute('data-open')).toBe(true);
+  });
+
+  it('moves a menu the owner keeps open to a request that comes while it is open', async () => {
+    function KeptOpen() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open} onOpenChange={(next) => next && setOpen(true)}>
+          <Menu.ContextTrigger data-testid="region" style={{ blockSize: 120, inlineSize: 400 }}>
+            report.pdf
+          </Menu.ContextTrigger>
+          <Menu.Trigger>More</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(
+      <Themed>
+        <KeptOpen />
+      </Themed>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
+    const region = screen.getByTestId('region');
+    await userEvent.click(region, { button: 'right', position: { x: 300, y: 60 } });
+    const r = region.getBoundingClientRect();
+    await waitFor(() => {
+      const m = menu().getBoundingClientRect();
+      expect(m.top).toBeGreaterThanOrEqual(r.top + 60);
+      expect(m.top).toBeLessThan(r.top + 76);
+    });
+    expect(menu().matches(':popover-open')).toBe(true);
   });
 });

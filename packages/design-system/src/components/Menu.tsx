@@ -24,7 +24,7 @@ import { canFocusNow } from '../overlay/tabbables.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
-import { usePopoverSync } from '../overlay/usePopoverSync.js';
+import { isPopoverOpen, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -138,7 +138,7 @@ type ContextOpen = {
    */
   box: { top: number; left: number; width: number; height: number };
   /** What had focus when the request came, to take it back on close. */
-  opener: HTMLElement | null;
+  opener: HTMLElement | SVGElement | null;
   /** The Menu.ContextTrigger that asked. */
   source: string;
 };
@@ -161,7 +161,7 @@ type MenuContextValue = {
   /** Where focus goes when the menu closes or Tab leaves it. */
   restoreTarget: () => HTMLElement | null;
   /** The anchor name of the box a context request put the menu at. */
-  pointName: string;
+  boxName: string;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
 };
@@ -197,7 +197,7 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   );
   const domId = useDomId();
   const triggerId = `${domId}-trigger`;
-  const pointName = `--${domId}-point`;
+  const boxName = `--${domId}-box`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [context, setContextState] = useState<ContextOpen | null>(null);
   const contextRef = useRef<ContextOpen | null>(null);
@@ -205,17 +205,30 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     contextRef.current = next;
     setContextState(next);
   }, []);
+  const openRef = useRef(open);
   const openAt = useCallback(
     (next: ContextOpen) => {
       setContext(next);
       setOpen(true, 'context');
+      if (openRef.current) return;
+      // A request holds for the open that follows it, however late the owner
+      // applies it, until the next press or key: one the owner turned down
+      // is then dropped, not reused by a later open.
+      const drop = () => {
+        document.removeEventListener('pointerdown', drop, true);
+        document.removeEventListener('keydown', drop, true);
+        if (!openRef.current && contextRef.current === next) setContext(null);
+      };
+      document.addEventListener('pointerdown', drop, true);
+      document.addEventListener('keydown', drop, true);
     },
     [setContext, setOpen],
   );
   // Focus goes back to what had it when a context request came, while it is
   // still in the page and can take focus, else to the trigger.
-  const restoreTarget = useCallback(() => {
-    const opener = contextRef.current?.opener;
+  const restoreTarget = useCallback((): HTMLElement | null => {
+    // An SVG element focuses, matches and checks its visibility as an HTML one does.
+    const opener = contextRef.current?.opener as HTMLElement | null | undefined;
     return opener?.isConnected && canFocusNow(opener) ? opener : triggerRef.current;
   }, []);
   // usePopover reads `current` when it restores focus.
@@ -240,12 +253,14 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   useLayoutEffect(() => {
     if (!open) initialFocusRef.current = null;
   }, [open]);
-  // A context request lasts for one open, and one the owner turned down in
-  // its event is dropped, not reused by a later open. This runs after
-  // usePopover has read where focus goes back to.
   useLayoutEffect(() => {
-    if (!open && context) setContext(null);
-  }, [open, context, setContext]);
+    openRef.current = open;
+  }, [open]);
+  // A context request lasts for one open. This runs after usePopover has
+  // read where focus goes back to.
+  useLayoutEffect(() => {
+    if (!open) setContext(null);
+  }, [open, setContext]);
   // Every open starts at an end of the list and focus enters only from the
   // trigger, so the menu tracks no tab stop: items are never Tab stops, and
   // focus moving across them under the pointer does not render the menu.
@@ -264,11 +279,11 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       context,
       openAt,
       restoreTarget,
-      pointName,
+      boxName,
       popover,
       roving,
     }),
-    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, restoreTarget, pointName, popover, roving],
+    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, restoreTarget, boxName, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -342,18 +357,13 @@ function isContextKey(event: KeyboardEvent<HTMLElement>): boolean {
 }
 
 /**
- * The element a key's request opens the menu below: `target` or its nearest
- * ancestor inside `region` that has a box, unlike a `display: contents` wrapper.
+ * The box a key's request opens the menu below: that of `target` or its
+ * nearest ancestor with one, unlike a `display: contents` wrapper.
  */
-function boxed(target: Element, region: HTMLElement): Element {
-  for (let el: Element | null = target; el && el !== region; el = el.parentElement) {
-    if (el.getClientRects().length > 0) return el;
-  }
-  return region;
-}
-
-function boxOf(el: Element): ContextOpen['box'] {
-  const { top, left, width, height } = el.getBoundingClientRect();
+function keyBox(target: Element): ContextOpen['box'] {
+  let el: Element | null = target;
+  while (el && el.getClientRects().length === 0) el = el.parentElement;
+  const { top, left, width, height } = (el ?? target).getBoundingClientRect();
   return { top, left, width, height };
 }
 
@@ -369,7 +379,11 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
     target instanceof Element && !ctx.popover.popoverRef.current?.contains(target) && !isTextEntry(target);
   const request = (box: ContextOpen['box']) => {
     const active = document.activeElement;
-    openAt({ box, opener: active instanceof HTMLElement && active !== document.body ? active : null, source });
+    const focused = (active instanceof HTMLElement || active instanceof SVGElement) && active !== document.body;
+    // A request that comes while the menu has focus keeps the opener before it.
+    const opener =
+      focused && ctx.popover.popoverRef.current?.contains(active) ? (ctx.context?.opener ?? null) : focused ? active : null;
+    openAt({ box, opener, source });
   };
   const wire: MenuContextTriggerRenderProps = {
     ...props,
@@ -390,7 +404,7 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
         event.button === -1 ||
         native.pointerType === '' ||
         (native.pointerType === undefined && event.clientX === 0 && event.clientY === 0);
-      request(fromKey ? boxOf(boxed(target, event.currentTarget)) : { top: event.clientY, left: event.clientX, width: 0, height: 0 });
+      request(fromKey ? keyBox(target) : { top: event.clientY, left: event.clientX, width: 0, height: 0 });
     }),
     // Shift+F10 and the ContextMenu key open the menu from the keyboard where
     // the browser fires no contextmenu for them, as on macOS. Handling the
@@ -400,7 +414,7 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
       if (!isContextKey(event) || event.defaultPrevented || !claims(target)) return;
       event.preventDefault();
       if (event.repeat) return;
-      request(boxOf(boxed(target, event.currentTarget)));
+      request(keyBox(target));
     }),
   };
   return render ? render(wire) : <div {...(wire as ComponentPropsWithRef<'div'>)} />;
@@ -412,7 +426,7 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
  * menu stays put if the element it came from goes away. It shows before the
  * menu, which can only anchor to what is earlier in the top layer.
  */
-function PointAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
+function BoxAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   usePopoverSync(ref, open);
   return (
@@ -420,7 +434,7 @@ function PointAnchor({ box, name, open }: { box: ContextOpen['box']; name: strin
       ref={ref}
       popover="manual"
       aria-hidden="true"
-      className={styles.point}
+      className={styles.anchorBox}
       style={
         {
           '--_top': `${box.top}px`,
@@ -454,6 +468,21 @@ function Content({
     ctx.popover.getPopoverProps();
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
+  const at = ctx.context;
+  // A context request that comes while the menu is already open shows its box
+  // after the menu, which can only anchor to what is earlier in the top
+  // layer, so the menu is shown again in front of it, keeping focus.
+  const anchored = useRef({ open: false, box: false });
+  useLayoutEffect(() => {
+    const before = anchored.current;
+    anchored.current = { open, box: Boolean(at) };
+    const el = localRef.current;
+    if (!el || !open || !at || !before.open || before.box || !isPopoverOpen(el)) return;
+    const active = document.activeElement;
+    el.hidePopover();
+    el.showPopover();
+    if (active instanceof HTMLElement && el.contains(active)) focusWithoutScroll(active);
+  });
   const { openEnd, initialFocusRef, roving } = ctx;
   const { reachableItems } = roving;
   // However the menu opens, it starts on an end of the list, never on the
@@ -500,9 +529,8 @@ function Content({
       }
     });
   }, [open, ctx.hasTrigger, ariaLabel, ariaLabelledby]);
-  const at = ctx.context;
   const atStyle = at
-    ? ({ '--todae-popover-anchor': ctx.pointName, positionAnchor: ctx.pointName } as CSSProperties)
+    ? ({ '--todae-popover-anchor': ctx.boxName, positionAnchor: ctx.boxName } as CSSProperties)
     : undefined;
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
@@ -519,7 +547,7 @@ function Content({
   );
   return (
     <>
-      {at && <PointAnchor box={at.box} name={ctx.pointName} open={open} />}
+      {at && <BoxAnchor box={at.box} name={ctx.boxName} open={open} />}
       <div
         {...props}
         ref={refs}

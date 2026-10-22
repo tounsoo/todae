@@ -601,6 +601,8 @@ describe('Menu', () => {
     );
     const menu = () => screen.getByRole('menu', { hidden: true });
     expect(menu().getAttribute('aria-labelledby')).toBe(trigger().id);
+    await Promise.resolve();
+    expect(spy).not.toHaveBeenCalled();
     rerender(
       <Menu.Root defaultOpen>
         <Menu.Content>
@@ -940,6 +942,10 @@ describe('Menu.ContextTrigger', () => {
     );
     act(() => {
       fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
+    });
+    expect(document.querySelector('span[popover]')).not.toBeNull();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: 'a' });
     });
     expect(document.querySelector('span[popover]')).toBeNull();
   });

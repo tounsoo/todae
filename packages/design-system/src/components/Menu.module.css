@@ -13,7 +13,7 @@
 
   /* The box a context request put the menu at, which anchors to it.
      Viewport coordinates, so its sides are physical, not logical. */
-  .point {
+  .anchorBox {
     position: fixed;
     inset: unset;
     top: var(--_top);
