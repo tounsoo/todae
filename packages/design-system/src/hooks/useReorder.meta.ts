@@ -23,7 +23,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: "Turn dragging off. While it is on, a drag under way can't be dropped.",
+      description: "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",
     },
   ],
 } as const satisfies ComponentMeta;

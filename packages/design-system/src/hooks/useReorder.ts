@@ -15,7 +15,7 @@ export type UseReorderOptions = {
   onMove: (from: number, to: number) => void;
   /** The axis the items run along. Default 'vertical'. In a horizontal list, 'before' follows the text direction. */
   orientation?: 'vertical' | 'horizontal';
-  /** Turn dragging off. While it is on, a drag under way can't be dropped. */
+  /** Turn dragging off. While `disabled` is true, a drag under way can't be dropped. */
   disabled?: boolean;
 };
 
@@ -92,7 +92,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   // One type per list, so a drag from another list, or a file, is never this list's. Types are
   // lowercased, so the id goes in as hex char codes, which keeps ids that differ only in case apart.
   const id = useId();
-  const type = `application/x-todae-reorder-${[...id].map((c) => c.charCodeAt(0).toString(16)).join('')}`;
+  const type = `application/x-todae-reorder-${[...id].map((c) => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')}`;
   // The item a press on its handle may start dragging. Only that item is draggable, so text in the
   // others stays selectable and a drag of one can't start from anywhere else.
   const [armed, setArmed] = useState<number | null>(null);
@@ -100,10 +100,8 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const [drop, setDrop] = useState<ReorderDrop | null>(null);
   // Read by the drag events, which run between renders.
   const sourceRef = useRef<HTMLElement | null>(null);
-  // The armed item's element, and the dragged item's index at dragstart, for an item element the
-  // index attribute didn't reach.
+  // The armed item's element.
   const armedRef = useRef<HTMLElement | null>(null);
-  const startRef = useRef(0);
   const rtlRef = useRef(false);
   const dropRef = useRef<ReorderDrop | null>(null);
 
@@ -122,8 +120,8 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   }, []);
 
   // Items that move while armed or dragged keep their state: armed and dragging follow the element,
-  // and a removed one ends the drag. It runs after every render, since the items aren't an input; the
-  // setters bail out when nothing changed, so it settles in one pass.
+  // and a removed one ends the drag. It runs after every render, since the items aren't an input, and
+  // sets state only when an item moved.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const node = sourceRef.current ?? armedRef.current;
@@ -131,16 +129,16 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     if (!node.isConnected) return end();
     const index = indexOf(node);
     if (index === null) return;
-    setArmed((prev) => (prev === null ? prev : index));
-    if (sourceRef.current) setDragging(index);
+    if (armed !== null && armed !== index) setArmed(index);
+    if (sourceRef.current && dragging !== index) setDragging(index);
   });
 
   useEffect(() => {
     if (armed === null) return;
     // A press that starts no drag ends with pointerup. A drag that starts may send pointercancel,
     // which leaves the item armed once dragstart has run. While a drag runs the page gets no pointer
-    // events, so a later pointermove means it ended without a dragend this list saw, as when the
-    // dragged item was removed. The demo's drag was checked by hand with this in Chromium, Firefox
+    // events, so a later pointermove with the dragged item gone from the page means the drag ended
+    // without a dragend this list saw. The demo's drag was checked by hand with this in Chromium, Firefox
     // and WebKit.
     const disarm = () => {
       if (sourceRef.current === null) {
@@ -176,7 +174,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       end();
       return null;
     }
-    return disabled ? null : (indexOf(node) ?? startRef.current);
+    return disabled ? null : indexOf(node);
   };
 
   const over = (event: DragEvent<HTMLElement>, index: number) => {
@@ -200,7 +198,6 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         // Firefox starts a drag only when it carries data.
         event.dataTransfer.setData(type, String(index));
         sourceRef.current = event.currentTarget;
-        startRef.current = index;
         rtlRef.current = getComputedStyle(event.currentTarget).direction === 'rtl';
         setDragging(index);
       }),
@@ -241,7 +238,8 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         if (disabled || event.button !== 0) return;
         // A drag whose dragend never reached the list is over by now.
         if (sourceRef.current !== null) end();
-        armedRef.current = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+        const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+        armedRef.current = item && indexOf(item) === index ? item : null;
         setArmed(index);
       }),
     };

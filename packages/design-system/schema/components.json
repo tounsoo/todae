@@ -5698,7 +5698,7 @@
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Turn dragging off. While it is on, a drag under way can't be dropped.",
+          "description": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",
           "default": "false"
         }
       ]

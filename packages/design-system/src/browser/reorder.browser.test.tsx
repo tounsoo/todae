@@ -222,7 +222,7 @@ it('takes the side in a horizontal list from the text direction', () => {
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
 });
 
-it('starts no drag and stops one under way when disabled', () => {
+it('starts no drag when disabled, and refuses the drop of one under way', () => {
   const onMove = vi.fn();
   const { rerender } = render(<List onMove={onMove} />);
   const d = drag('A');
@@ -264,6 +264,40 @@ it('forgets a drag whose item was removed, and then ignores drags it did not sta
   expect(item('C')).not.toHaveAttribute('data-drop');
   d.drop('C', 'end');
   expect(onMove).not.toHaveBeenCalled();
+});
+
+it('ignores another type, or a file dropped, during its own drag', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const d = drag('B');
+  const rect = item('D').getBoundingClientRect();
+  fireDrag(item('D'), 'dragover', { dataTransfer: new DataTransfer(), clientX: rect.left + 5, clientY: rect.bottom - 2 });
+  expect(item('D')).not.toHaveAttribute('data-drop');
+  const file = new DataTransfer();
+  file.items.add(new File(['x'], 'x.txt', { type: 'text/plain' }));
+  fireDrag(item('D'), 'drop', { dataTransfer: file, clientX: rect.left + 5, clientY: rect.bottom - 2 });
+  expect(onMove).not.toHaveBeenCalled();
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  d.drop('D', 'end');
+  expect(onMove).toHaveBeenCalledWith(1, 3);
+});
+
+it('ends a drag whose item left the page without a render, on the next pointer move', () => {
+  render(<List />);
+  const d = drag('B');
+  item('B').remove();
+  d.over('C', 'end');
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
+  cleanup();
+
+  render(<List />);
+  drag('B');
+  item('B').remove();
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove'));
+  });
+  for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
 });
 
 it('runs the caller\'s own handlers with its own, and skips its own after one that prevents the default', () => {
