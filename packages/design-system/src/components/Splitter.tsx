@@ -67,6 +67,12 @@ export type SplitterRootProps = {
   step?: number;
   /** Lets the primary panel collapse to 0: Enter toggles it, and a drag below half of `min` snaps to 0. */
   collapsible?: boolean;
+  /**
+   * Which panels show. "start" or "end" shows that panel alone, across the whole root, and takes the other panel and
+   * the handle out of the layout with `display: none`. Both panels stay mounted, and the size is kept for when both
+   * show again.
+   */
+  show?: 'both' | SplitterPrimary;
 } & Omit<ComponentPropsWithRef<'div'>, 'defaultValue'>;
 
 /** One of the two panels. A `div`, hidden from the tab order and the accessibility tree while it is drawn at no size. */
@@ -92,6 +98,7 @@ type SplitterContextValue = {
   attachHandle: (el: HTMLDivElement | null) => void;
   drag: RefObject<Drag | null>;
   setDragging: (dragging: boolean) => void;
+  endDrag: () => void;
   commit: (size: number) => void;
   apply: (action: SplitterKeyAction) => void;
 };
@@ -160,6 +167,7 @@ function Root({
   max,
   step = 16,
   collapsible = false,
+  show = 'both',
   className,
   style,
   ref,
@@ -193,7 +201,9 @@ function Root({
     defaultValue ?? Math.min(Math.max(DEFAULT_SIZE, min), max ?? Number.POSITIVE_INFINITY),
   );
   const size = clampSize(stored, bounds);
-  const empty = emptySide(size, room, primary);
+  const alone = show !== 'both';
+  // One panel shown alone fills the root, whatever the size says.
+  const empty = alone ? undefined : emptySide(size, room, primary);
 
   // The size last asked for, which a render has not caught up with while moves queue in one frame. It is the
   // only dedupe, so a move back to the size on screen still counts after one away from it.
@@ -221,6 +231,7 @@ function Root({
     if (!dragging && stored > 0) lastOpen.current = stored;
   }, [dragging, stored]);
 
+  // `show` hides the handle and shows it again, which changes the room, so it re-measures in the same pass.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -233,7 +244,22 @@ function Root({
     // A token or font size that changes the handle's track moves the room without moving the root.
     if (handle) observer.observe(handle);
     return () => observer.disconnect();
-  }, [orientation, handle]);
+  }, [orientation, handle, alone]);
+
+  // Every way a drag ends: a release, a handle that unmounts, and one that `show` hides, which gets no release. A
+  // removed handle has lost its capture already, and its ref is null by then.
+  const endDrag = useCallback(() => {
+    const current = drag.current;
+    if (!current) return;
+    drag.current = null;
+    const el = handleRef.current;
+    if (el?.hasPointerCapture?.(current.pointerId)) el.releasePointerCapture(current.pointerId);
+    setDragging(false);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (alone) endDrag();
+  }, [alone, endDrag]);
 
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
@@ -297,6 +323,7 @@ function Root({
     attachHandle,
     drag,
     setDragging,
+    endDrag,
     commit,
     apply,
   };
@@ -311,6 +338,7 @@ function Root({
         data-primary={primary}
         data-dragging={dragging ? '' : undefined}
         data-empty={empty}
+        data-show={show}
         style={{ ...style, '--_size': `${size}px` } as CSSProperties}
       />
     </SplitterContext.Provider>
@@ -362,15 +390,8 @@ function Handle({
   });
 
   // A handle that leaves mid-drag gets no release.
-  const { setDragging } = ctx;
-  useEffect(
-    () => () => {
-      if (!drag.current) return;
-      drag.current = null;
-      setDragging(false);
-    },
-    [drag, setDragging],
-  );
+  const { setDragging, endDrag } = ctx;
+  useEffect(() => endDrag, [endDrag]);
 
   const name = ariaLabel || (ariaLabelledby ? undefined : resizePanel);
   // Until the container is measured, with no `max`, the range reaches the size it shows.
@@ -380,9 +401,7 @@ function Handle({
   const release =
     (theirs: ((event: PointerEvent<HTMLDivElement>) => void) | undefined) => (event: PointerEvent<HTMLDivElement>) => {
       theirs?.(event);
-      if (drag.current?.pointerId !== event.pointerId) return;
-      drag.current = null;
-      setDragging(false);
+      if (drag.current?.pointerId === event.pointerId) endDrag();
     };
 
   return (

@@ -1,8 +1,6 @@
 import { createHash } from 'node:crypto';
-import type { Node, Root } from 'mdast';
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { mdxFromMarkdown } from 'mdast-util-mdx';
-import { mdxjs } from 'micromark-extension-mdxjs';
+import type { Node } from 'mdast';
+import { parseMdx } from '../mdxAst.ts';
 
 /** One part of an MDX page: a heading and what follows it, up to the next heading. */
 export type Section = {
@@ -19,10 +17,6 @@ export const TOP = '(top)';
 /** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
 export const ORDER = '(section order)';
 
-function parse(mdx: string): Root {
-  return fromMarkdown(mdx, { extensions: [mdxjs()], mdastExtensions: [mdxFromMarkdown()] });
-}
-
 const start = (node: Node) => node.position!.start.offset!;
 const end = (node: Node) => node.position!.end.offset!;
 
@@ -30,7 +24,7 @@ const end = (node: Node) => node.position!.end.offset!;
 export function sections(mdx: string): Section[] {
   const parts: Section[] = [{ heading: TOP, level: 0, text: '', blocks: 0 }];
   const starts = [0];
-  for (const node of parse(mdx).children) {
+  for (const node of parseMdx(mdx).children) {
     if (node.type === 'heading') {
       parts.push({ heading: mdx.slice(start(node), end(node)).trim(), level: node.depth, text: '', blocks: 0 });
       starts.push(start(node));
@@ -40,24 +34,6 @@ export function sections(mdx: string): Section[] {
   }
   parts.forEach((part, index) => (part.text = mdx.slice(starts[index], starts[index + 1] ?? mdx.length)));
   return parts.filter((part) => part.level > 0 || part.text.trim() !== '');
-}
-
-/** The source of every code block in `mdx`, at any depth, and `mdx` with them removed. */
-export function codeBlocks(mdx: string): { code: string[]; rest: string } {
-  const code: string[] = [];
-  let rest = '';
-  let from = 0;
-  const visit = (node: Node) => {
-    if (node.type === 'code') {
-      code.push(mdx.slice(start(node), end(node)));
-      rest += mdx.slice(from, start(node));
-      from = end(node);
-    } else if ('children' in node) {
-      for (const child of node.children as Node[]) visit(child);
-    }
-  };
-  visit(parse(mdx));
-  return { code, rest: rest + mdx.slice(from) };
 }
 
 /**
@@ -77,7 +53,7 @@ export function links(mdx: string): string[] {
     }
     if ('children' in node) for (const child of node.children as Node[]) visit(child);
   };
-  visit(parse(mdx));
+  visit(parseMdx(mdx));
   return found.sort();
 }
 

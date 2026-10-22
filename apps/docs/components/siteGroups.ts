@@ -120,6 +120,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-mentions', 'useMentions'],
       ['/utilities/use-modal-layer', 'useModalLayer'],
       ['/utilities/use-popover', 'usePopover'],
+      ['/utilities/use-reorder', 'useReorder'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],
       ['/utilities/use-selection', 'useSelection'],
       ['/utilities/use-sheet-presentation', 'useSheetPresentation'],
@@ -130,6 +131,7 @@ export const SITE_GROUPS = [
     id: 'recipes',
     label: 'Recipes',
     links: [
+      ['/recipes/app-shell', 'App shell'],
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
@@ -140,6 +142,7 @@ export const SITE_GROUPS = [
       ['/recipes/inline-edit', 'Inline edit'],
       ['/recipes/message-actions', 'Message actions'],
       ['/recipes/reasoning', 'Reasoning'],
+      ['/recipes/reorder', 'Reorder'],
       ['/recipes/sign-in', 'Sign-in and sign-up'],
       ['/recipes/suggestions', 'Suggestions'],
       ['/recipes/tool-call', 'Tool call'],

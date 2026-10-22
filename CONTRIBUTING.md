@@ -139,21 +139,25 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 
 - Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
-- A GitHub App, so CI runs on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`. Install the app on this repository with read and write access to contents and pull requests, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`. Without them, the workflow opens the pull request with `GITHUB_TOKEN`.
+- A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment.
 
 ## Deploy the docs
 
 The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app.
 
+The production branch is `docs-stable`, so `todae.omsoo.design` and its MCP server match the latest release on npm. The docs job in `release.yml` runs on every push to `main` and moves `docs-stable` forward, never back: to that commit when its package version is on npm and no changeset that releases something is waiting, otherwise to the commit tagged with the latest version on npm. The first run creates the branch, so set Vercel's production branch to `docs-stable` only after it exists. It waits behind a release that waits for approval in the `npm` environment. If the job fails, re-run it; after a publish it fails when npm still doesn't serve the new version five minutes later. To see unreleased docs, open the Vercel preview of a pull request or of `main`.
+
 ## Docs MCP server
 
 The docs site serves a Streamable HTTP MCP server at `https://todae.omsoo.design/api/mcp`, from `apps/docs/app/api/[transport]`. The [MCP server](apps/docs/app/(en)/mcp/page.mdx) docs page shows how to connect each client. The tools live in `apps/docs/lib/docs-mcp`:
 
 - `list_components`, `get_component` and `when_to_use` read `@tounsoo/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+- `list_recipes` and `get_recipe` read the English pages under `apps/docs/app/(en)/recipes/`, so a new recipe page shows up with no change to the server.
 - `list_tokens` and `get_token` read the token catalog, `@tounsoo/todae/tokens.json`.
 - `get_contrast_pairs` runs `@tounsoo/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder; a server instance runs at most two builds at once. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
 - `get_guide` returns the English source of the pages in `GUIDES` (`lib/docs-mcp/guides.ts`).
+- `get_changes` reads `packages/design-system/CHANGELOG.md`, which `next.config.mjs` traces into the route, since the npm package doesn't ship it.
 
 ## Graft
 

@@ -47,7 +47,8 @@ jobs:
   browser:
     if: ${{ !github.event.pull_request.draft }}
     name: Browser tests
-    runs-on: ubuntu-latest
+    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup

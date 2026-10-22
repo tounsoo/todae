@@ -335,6 +335,39 @@ describe('Splitter on the server', () => {
   });
 });
 
+describe('Splitter with one panel shown', () => {
+  it('marks the root with the panel it shows, and no empty side, from the server on', () => {
+    const html = renderToString(<Layout defaultValue={0} collapsible show="end" />);
+    expect(html).toMatch(/<div[^>]*data-testid="root"[^>]*data-show="end"/);
+    expect(html).not.toContain('data-empty');
+  });
+
+  it('keeps the size it holds for when both panels show again', () => {
+    measured(300);
+    const { rerender } = render(<Layout value={400} show="end" />);
+    expect(empty()).toBeNull();
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+    // Showing the handle again measures the room afresh.
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(800);
+    rerender(<Layout value={400} />);
+    expect(root().getAttribute('data-show')).toBe('both');
+    expect(handle().getAttribute('aria-valuenow')).toBe('400');
+  });
+});
+
+describe('Splitter drag hidden by show', () => {
+  it('ends a drag when show hides the handle', () => {
+    const { rerender } = render(<Layout defaultValue={200} />);
+    down();
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    rerender(<Layout defaultValue={200} show="end" />);
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    rerender(<Layout defaultValue={200} />);
+    down();
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+  });
+});
+
 describe('Splitter range', () => {
   it('marks a panel at size 0 as empty whether or not it is collapsible', () => {
     render(<Layout defaultValue={0} />);

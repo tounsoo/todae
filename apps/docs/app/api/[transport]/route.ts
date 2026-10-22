@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { VERSION_RE, getChanges } from '../../../lib/docs-mcp/changes';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
+import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
 import { getComponent, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
+import { RELEASE } from '../../../lib/version';
 
 // Longer than build_tokens' own time limit, so a stopped build can still report it.
 export const maxDuration = 30;
@@ -54,6 +56,29 @@ const handler = createMcpHandler(
       async ({ name: componentName }) => {
         try {
           return ok(whenToUse(componentName));
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    );
+    server.tool(
+      'list_recipes',
+      "List Todae's recipes: copyable code on the docs site that puts Todae's exports together for a product flow, such as a data table, a wizard or a chat reply's reasoning. Recipes are not package exports. Each row has the recipe's summary and the exports its code uses.",
+      async () => {
+        try {
+          return ok(listRecipes());
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    );
+    server.tool(
+      'get_recipe',
+      'Read one recipe by name (such as "data-table") or title, as MDX source with absolute links: its code, how it behaves, its accessible composition, and its When to use and When not to use copy.',
+      { name },
+      async ({ name: recipe }) => {
+        try {
+          return ok(getRecipe(recipe));
         } catch (error) {
           return fail(error);
         }
@@ -153,7 +178,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  { serverInfo: { name: 'todae-docs', version: '0.0.0' } },
+  { serverInfo: { name: 'todae-docs', version: RELEASE.version } },
   { basePath: '/api', disableSse: true },
 );
 

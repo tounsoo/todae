@@ -1,6 +1,6 @@
 # MCP server
 
-Todae runs a Model Context Protocol (MCP) server at `https://todae.omsoo.design/api/mcp`. An AI agent connected to it can look up Todae's components and tokens, find what changed between two versions, check a company's token files with the same build `todae-tokens build` runs, and draft the starter files of a design system on Todae. It speaks Streamable HTTP and needs no sign-in or install.
+Todae runs a Model Context Protocol (MCP) server at `https://todae.omsoo.design/api/mcp`. An AI agent connected to it can look up Todae's components, recipes and tokens, find what changed between two versions, check a company's token files with the same build `todae-tokens build` runs, and draft the starter files of a design system on Todae. It speaks Streamable HTTP and needs no sign-in or install. It describes the latest version of `@tounsoo/todae` on npm and reports that version as its own, so a change on `main` reaches it with the next release.
 
 ## Connect
 
@@ -66,9 +66,14 @@ A client that supports Streamable HTTP takes the URL as it is. A client that onl
 
 Components:
 
-- `list_components`: every component and part, with its description and docs page.
+- `list_components`: every component, part, hook and helper, with its description and docs page.
 - `get_component`: one component or part, with its props and parts.
 - `when_to_use`: the "When to use" section of a component's docs page. A page without one returns `status: "missing"`; the server doesn't write the copy itself.
+
+Recipes:
+
+- `list_recipes`: every recipe, the docs code that puts Todae's exports together for a product flow such as a data table or a wizard, with its summary and the exports its code uses.
+- `get_recipe`: one recipe's page source, with its code, by name, such as `data-table`, or title.
 
 Tokens:
 

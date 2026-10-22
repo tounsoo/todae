@@ -518,14 +518,14 @@
     "(section order)": "0a8b0f340b98"
   },
   "mcp": {
-    "# MCP server": "665be01352f7",
+    "# MCP server": "eaf89d1168a7",
     "## Connect": "047ac15aa3f9",
     "### Claude Code": "f04346316cde",
     "### Claude Desktop and claude.ai": "a4b395854e3c",
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "3ee522ae3457",
+    "## Tools": "a77fc09b3e90",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",
@@ -534,7 +534,7 @@
   "menu": {
     "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
-    "## Keyboard": "9867469041ca",
+    "## Keyboard": "7a30a02ae4c8",
     "## Checkbox and radio items": "57a69df768cd",
     "## Links": "ede13f3623cf",
     "## Context menus": "395dce7d4954",
@@ -627,6 +627,17 @@
     "## When to use": "28bf43164b3d",
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
+  },
+  "recipes/app-shell": {
+    "(top)": "ead1bf85f7b3",
+    "# App shell": "931a2df39007",
+    "## Layout": "47eef9c988e0",
+    "## Sidebar": "6f65cf807545",
+    "## Narrow screens": "3331910a4c05",
+    "## Navigating": "20f4c31db8ff",
+    "## Accessible composition": "bcc69549e70f",
+    "## When to use": "dba76d62c249",
+    "(section order)": "cbe0ddccb14a"
   },
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
@@ -729,6 +740,16 @@
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
   },
+  "recipes/reorder": {
+    "(top)": "d54efa3b4b16",
+    "# Reorder": "d1929d1c6807",
+    "## The move menu": "2b1a2e471ebc",
+    "## Dragging": "d93c4f0447e5",
+    "## Saving the order": "ccbed730f477",
+    "## Accessible composition": "87e67664f2d5",
+    "## When to use": "38f06c41410c",
+    "(section order)": "21628fd2b383"
+  },
   "recipes/sign-in": {
     "(top)": "2b420b970fcd",
     "# Sign-in and sign-up": "7bcd6f83a06c",
@@ -795,17 +816,18 @@
     "(section order)": "87884b291211"
   },
   "splitter": {
-    "(top)": "94fe1aa137a7",
+    "(top)": "b7d84adf6b94",
     "# Splitter": "a7b395ca39f0",
     "## Pixel sizes": "66d8ad18e31a",
-    "## Collapse": "f8951d3085d6",
+    "## Collapse": "4cdedd125830",
+    "## One panel": "033891bfe5fb",
     "## Keys and pointer": "aae11bbea428",
     "## Vertical split": "51e279c7e4d9",
     "## Nested panes": "07f88271e786",
-    "## Accessible composition": "417479ea09ec",
-    "## When to use": "655f41ae87fb",
+    "## Accessible composition": "4e3c0eea6ebd",
+    "## When to use": "742071388726",
     "## Props": "c87cae53423e",
-    "(section order)": "d86244d0a99c"
+    "(section order)": "6d27abd98db6"
   },
   "stack": {
     "(top)": "3dde9f089aaf",
@@ -1100,6 +1122,14 @@
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
+  },
+  "utilities/use-reorder": {
+    "(top)": "d54efa3b4b16",
+    "# useReorder": "93c2a45ef23a",
+    "## Accessible composition": "21f593b786f9",
+    "## When to use": "096cd31b6ac9",
+    "## Props": "d782464e8b92",
+    "(section order)": "57bf99726801"
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",

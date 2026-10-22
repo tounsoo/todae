@@ -42,6 +42,18 @@
       min(var(--_size), calc(100% - var(--todae-splitter-handle-target)));
   }
 
+  /* One panel across the root. The other panel and the handle stay mounted, out of the layout, the tab order and the
+     accessibility tree. The orientation and primary attributes are here to outweigh the track rules above. */
+  .root:is([data-show='start'], [data-show='end'])[data-orientation][data-primary] {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  }
+
+  .root:is([data-show='start'], [data-show='end']) > .handle,
+  .root[data-show='start'] > .panel:last-child,
+  .root[data-show='end'] > .panel:first-child {
+    display: none;
+  }
+
   .root[data-dragging] {
     user-select: none;
   }
