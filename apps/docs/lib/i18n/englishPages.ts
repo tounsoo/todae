@@ -23,6 +23,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'color-picker': () => import('../../app/(en)/color-picker/page.mdx'),
   'composer': () => import('../../app/(en)/composer/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),
+  'contents': () => import('../../app/(en)/contents/page.mdx'),
   'conversation': () => import('../../app/(en)/conversation/page.mdx'),
   'data-list': () => import('../../app/(en)/data-list/page.mdx'),
   'description': () => import('../../app/(en)/description/page.mdx'),
