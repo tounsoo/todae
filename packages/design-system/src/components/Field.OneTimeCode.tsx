@@ -12,7 +12,7 @@ import {
   type RefObject,
 } from 'react';
 import { activeIn } from './activeElement.js';
-import { difference, editOf, reconcile, slotsOf, type CodeEdit, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
+import { applyEdit, editOf, reconcile, reconcileEdit, slotsOf, type CodeEdit, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
@@ -189,25 +189,23 @@ export function OneTimeCode({
     }
     function onCompositionEnd() {
       const saved = composition.current;
-      // Cleared first, so the edit below reaches onChange as an edit.
+      // Cleared first, so the write below reaches onChange as an edit.
       composition.current = null;
       const { characters, length, value, onValueChange } = latest.current;
       el!.setAttribute('maxlength', String(length));
-      if (!saved) return;
+      // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
+      setComposing(null);
+      // A value the product set while the person composed wins, and undo can't bring the dropped composition back.
+      if (!saved || (value !== saved.start && value !== saved.reported)) return;
       const live = el!.value;
-      if (value !== saved.start && value !== saved.reported) {
-        // A value the product set while the person composed wins. React writes it when the live text goes, which also clears the input's undo history, so undo can't bring the dropped composition back.
-        setComposing(null);
-        return;
-      }
-      const target = reconcile(saved.start, live, { characters, length }, saved.selection);
+      const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);
+      const target = edit ? applyEdit(saved.start, edit) : saved.start;
       if (live === target) {
         if (target !== value && target !== saved.reported) onValueChange?.(target);
       } else {
-        // The input already holds the commit, so the code is reached from it with one edit, which keeps the undo history that setting the value would clear.
-        put(el!, difference(live, target), inserting);
+        // Written, not put in with execCommand, which would leave the commit on the undo stack as a step that is no code.
+        write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start);
       }
-      setComposing(null);
     }
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);
@@ -237,9 +235,12 @@ export function OneTimeCode({
       return;
     }
     setComposing(null);
-    onChange?.(event);
-    // The input held `value` before this change, so the change is read by the rule: autofill that skips beforeinput, an insert the browser wouldn't let be cancelled, the edit that ends a composition.
+    // The input held `value` before this change, so the change is read by the rule: autofill that skips beforeinput, an insert the browser wouldn't let be cancelled, the code a composition ends on, undo.
     const next = reconcile(value, text, { characters, length });
+    const { inputType } = event.nativeEvent as InputEvent;
+    // Undo and redo can step to a text that is no code, such as a composition's commit before the code it made, so the code stays and React puts it back.
+    if ((inputType === 'historyUndo' || inputType === 'historyRedo') && next !== text) return;
+    onChange?.(event);
     // A change that leaves the code as it is, such as an edit that drops a refused composition, isn't reported, so a product that sends a full code doesn't send it twice.
     if (next !== value) onValueChange?.(next);
     sync();

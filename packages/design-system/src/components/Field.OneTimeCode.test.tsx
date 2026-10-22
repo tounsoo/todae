@@ -338,6 +338,33 @@ describe('Field.OneTimeCode', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('129456');
   });
 
+  it('keeps the code and reports nothing when undo or redo steps to a text that is no code', () => {
+    const onChange = vi.fn();
+    const onValueChange = vi.fn();
+    render(<Code initial="AxC123" characters="alphanumeric" onChange={onChange} onValueChange={onValueChange} />);
+    for (const inputType of ['historyUndo', 'historyRedo']) {
+      // Such as a composition's commit before Todae applied it.
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input(), 'AxBC123');
+      fireEvent(input(), new InputEvent('input', { inputType, bubbles: true }));
+      expect(input().value).toBe('AxC123');
+    }
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+    // An undo step that is a code is taken.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input(), 'ABC123');
+    fireEvent(input(), new InputEvent('input', { inputType: 'historyUndo', bubbles: true }));
+    expect(onValueChange).toHaveBeenLastCalledWith('ABC123');
+  });
+
+  it('puts the code back in the input when a composition ends that it never saw start', () => {
+    render(<Code initial="AB" characters="alphanumeric" />);
+    const code = input();
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(code, 'ABㅎ');
+    fireEvent(code, new InputEvent('input', { inputType: 'insertCompositionText', data: 'ㅎ', isComposing: true, bubbles: true }));
+    fireEvent.compositionEnd(code, { data: 'ㅎ' });
+    expect(code.value).toBe('AB');
+  });
+
   it('does not select a box for a click that is not a press', () => {
     render(<Code initial="123456" />);
     input().focus();

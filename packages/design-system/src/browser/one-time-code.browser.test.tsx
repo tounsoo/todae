@@ -382,19 +382,21 @@ describe('Field.OneTimeCode in a browser', () => {
 
   const undo = () => userEvent.keyboard('{Control>}z{/Control}');
 
-  // Undo through a composition is best effort: the browser's steps don't match the code's, but the input, the boxes and the code stay one code the rule allows.
-  it('keeps the input, the boxes and the code as one code when a finished composition is undone', async () => {
+  const redo = () => userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+
+  it('undoes a finished composition back to the code before it, or leaves the code, and reports no code the person did not see', async () => {
     const onValueChange = vi.fn();
-    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
-    await userEvent.keyboard('{End}C123{Home}{ArrowRight}');
+    await userEvent.keyboard('{Home}{ArrowRight}');
     await compose(['x']);
     await vi.waitFor(() => expect(input().value).toBe('AxC123'));
-    await undo();
-    const code = onValueChange.mock.lastCall![0] as string;
-    expect(code).toMatch(/^[A-Za-z0-9]{6}$/);
-    expect(input().value).toBe(code);
-    expect(boxes().map((box) => box.textContent).join('')).toBe(code);
+    for (const step of [undo, undo, redo]) {
+      await step();
+      expect(['ABC123', 'AxC123']).toContain(input().value);
+      expect(boxes().map((box) => box.textContent).join('')).toBe(input().value);
+    }
+    for (const [code] of onValueChange.mock.calls) expect(['ABC123', 'AxC123']).toContain(code);
   });
 
   it('leaves the code as it was when a composition the code refuses is undone', async () => {
@@ -463,6 +465,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await compose(['1']);
     await vi.waitFor(() => expect(input().value).toBe('AB1123'));
     expect(onValueChange).not.toHaveBeenCalled();
+    expect(active()).toEqual([3]);
     cleanup();
     render(<Code initial="ABAB12" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
