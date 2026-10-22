@@ -1337,6 +1337,16 @@
       "ko": "선택적 클래스."
     }
   },
+  "Menu.ContextTrigger": {
+    "render": {
+      "en": "Renders the region as another element, such as a table row or a list item. It receives every prop, ref included, and must pass them on.",
+      "ko": "영역을 표의 행이나 목록 항목 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
+    },
+    "children": {
+      "en": "The content a context request opens the menu from.",
+      "ko": "컨텍스트 요청으로 메뉴를 여는 콘텐츠."
+    }
+  },
   "Menu.Group": {
     "aria-label": {
       "en": "Group name. Exactly one of aria-label or aria-labelledby.",
@@ -1451,12 +1461,12 @@
       "ko": "비제어일 때의 초기 열림 상태."
     },
     "onOpenChange": {
-      "en": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto.",
-      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, escape, outside, select, tab 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
+      "en": "Fires on open and close. reason is trigger, context, escape, outside, select or tab. Leaving open unchanged is a veto.",
+      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, context, escape, outside, select, tab 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
     },
     "children": {
-      "en": "Menu.Trigger and Menu.Content.",
-      "ko": "Menu.Trigger와 Menu.Content."
+      "en": "Menu.Trigger, Menu.ContextTrigger and Menu.Content.",
+      "ko": "Menu.Trigger, Menu.ContextTrigger, Menu.Content."
     }
   },
   "Menu.Separator": {
@@ -3309,6 +3319,20 @@
     "aria-labelledby": {
       "en": "The id of the element that names the handle, such as the primary panel's heading.",
       "ko": "핸들의 이름이 되는 요소의 id. 기준 패널의 제목 등."
+    }
+  },
+  "useInlineEdit": {
+    "value": {
+      "en": "The saved value. Each edit starts from it.",
+      "ko": "저장된 값. 편집은 매번 이 값에서 시작합니다."
+    },
+    "onCommit": {
+      "en": "Called with the draft when the person saves: Enter, a Save button that calls commit, or focus leaving the edit. Return false to keep editing, such as for an empty name; when focus left the edit, false puts the value back and calls onCancel. Not called when the draft equals value; the edit just closes.",
+      "ko": "사람이 저장할 때 초안과 함께 불립니다. Enter, commit을 부르는 Save 버튼, 편집을 떠나는 포커스가 그렇습니다. 빈 이름처럼 편집을 이어 가려면 false를 반환하세요. 포커스가 편집을 떠난 뒤라면 false는 값을 되돌리고 onCancel을 부릅니다. 초안이 value와 같으면 불리지 않고 편집만 닫힙니다."
+    },
+    "onCancel": {
+      "en": "Called when the person cancels: Escape, or a Cancel button that calls cancel. Also called when focus leaves the edit with a draft onCommit turns down.",
+      "ko": "사람이 취소할 때 불립니다. Escape나 cancel을 부르는 Cancel 버튼이 그렇습니다. onCommit이 거절한 초안을 둔 채 포커스가 편집을 떠날 때도 불립니다."
     }
   }
 }

@@ -154,6 +154,8 @@ export {
   Menu,
   type MenuCheckboxItemProps,
   type MenuContentProps,
+  type MenuContextTriggerProps,
+  type MenuContextTriggerRenderProps,
   type MenuGroupProps,
   type MenuItemProps,
   type MenuItemRenderProps,
@@ -379,6 +381,14 @@ export {
   type UseSelectionResult,
 } from './hooks/useSelection.js';
 export { useFocusHandoff, type UseFocusHandoffOptions } from './hooks/useFocusHandoff.js';
+export {
+  useInlineEdit,
+  type UseInlineEditGroupProps,
+  type UseInlineEditInputProps,
+  type UseInlineEditOptions,
+  type UseInlineEditResult,
+  type UseInlineEditTriggerProps,
+} from './hooks/useInlineEdit.js';
 export {
   useClipboard,
   type ClipboardStatus,
