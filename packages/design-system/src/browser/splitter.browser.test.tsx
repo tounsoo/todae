@@ -88,7 +88,6 @@ describe('Splitter with one panel shown', () => {
     );
     const { rerender } = render(<Tall />);
     const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
-    first.scrollTop = 100;
     second.scrollTop = 100;
     rerender(<Tall only="end" />);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

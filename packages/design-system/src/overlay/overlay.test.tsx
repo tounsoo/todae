@@ -71,7 +71,7 @@ describe('useFocusRestore', () => {
     heading.current.remove();
   });
 
-    it('does not move focus when it mounts closed', async () => {
+  it('does not move focus when it mounts closed', async () => {
     const restore = { current: document.createElement('button') };
     document.body.appendChild(restore.current);
     const { rerender } = render(<Restore active={false} restore={restore} />);

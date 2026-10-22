@@ -51,14 +51,15 @@ export function AppShellExample() {
   const [width, setWidth] = useState(200);
   const [lastWidth, setLastWidth] = useState(200);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // Whether a link in the drawer was chosen, which sends focus to the new page's heading when the drawer closes.
-  const [chose, setChose] = useState(false);
+  // Whether the page changed while the drawer was open, which sends focus to the new page's heading as it closes.
+  const [navigated, setNavigated] = useState(false);
   // A window that widens shows the sidebar, so the drawer closes, and Drawer puts focus back on the button.
   if (wide && drawerOpen) setDrawerOpen(false);
-  // Any change of page closes the drawer, a link in it or Back alike, in the commit that shows the new page.
+  // Any change of page closes the drawer, a link in it or Back alike, in the render that shows the new page.
   const [shownPage, setShownPage] = useState(page);
   if (page !== shownPage) {
     setShownPage(page);
+    setNavigated(drawerOpen);
     setDrawerOpen(false);
   }
   // `only` takes the handle out of the layout, so focus on it moves to the button before the window narrows it away.
@@ -66,14 +67,14 @@ export function AppShellExample() {
     if (!wide && handle.current === handle.current?.ownerDocument.activeElement) navButton.current?.focus();
   }, [wide]);
 
-  // The button restores the last width the sidebar had, whoever collapsed it.
+  // The button keeps its own last width, from every change above 0.
   const resize = (next: number) => {
     if (next > 0) setLastWidth(next);
     setWidth(next);
   };
   const toggleSidebar = () => setWidth(width === 0 ? lastWidth : 0);
   const openDrawer = () => {
-    setChose(false);
+    setNavigated(false);
     setDrawerOpen(true);
   };
   const current = PAGES.find((p) => p.href === page) ?? PAGES[0];
@@ -87,7 +88,7 @@ export function AppShellExample() {
               href={href}
               aria-current={page === href ? 'page' : undefined}
               onClick={(event: MouseEvent) => {
-                // A modified click would open the link elsewhere; this demo's links go nowhere, so it does nothing.
+                // A modified click is left to the browser, which opens the link elsewhere.
                 if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
                 setPage(href);
@@ -187,21 +188,16 @@ export function AppShellExample() {
           </Stack.Root>
         </Splitter.Panel>
       </Splitter.Root>
-      <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={chose ? heading : navButton}>
+      <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} side="start" restoreFocusRef={navigated ? heading : navButton}>
         <Drawer.Header>
-          <Drawer.Title>Atlas</Drawer.Title>
+          <Drawer.Title>Navigation</Drawer.Title>
           <Drawer.Close />
         </Drawer.Header>
         <Drawer.Body
           onClick={(event) => {
-            // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
+            // The current page's link changes no page, so it closes the drawer itself. A modified click opens it elsewhere.
             const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-            const link = (event.target as Element).closest('a[href]');
-            if (elsewhere || !link) return;
-            // The link goes with the drawer, so focus goes to the new page's heading once the page changes.
-            setChose(true);
-            // The current page's link changes nothing, so it closes the drawer itself.
-            if (link.getAttribute('aria-current') === 'page') setDrawerOpen(false);
+            if (!elsewhere && (event.target as Element).closest('a[aria-current="page"]')) setDrawerOpen(false);
           }}
         >
           {navigation()}

@@ -355,6 +355,19 @@ describe('Splitter with one panel shown', () => {
   });
 });
 
+describe('Splitter drag hidden by only', () => {
+  it('ends a drag when only hides the handle', () => {
+    const { rerender } = render(<Layout defaultValue={200} />);
+    down();
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    rerender(<Layout defaultValue={200} only="end" />);
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    rerender(<Layout defaultValue={200} />);
+    down();
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+  });
+});
+
 describe('Splitter range', () => {
   it('marks a panel at size 0 as empty whether or not it is collapsible', () => {
     render(<Layout defaultValue={0} />);

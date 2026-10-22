@@ -65,13 +65,13 @@ it('sends focus to the new page heading when a drawer link is chosen, and back t
   await page.viewport(400, 700);
   setup();
   await userEvent.click(navButton());
-  const drawer = await screen.findByRole('dialog', { name: 'Atlas' });
+  const drawer = await screen.findByRole('dialog', { name: 'Navigation' });
   await userEvent.click(within(drawer).getByRole('link', { name: 'Billing' }));
   await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Billing' }));
   expect(screen.queryByRole('dialog')).toBeNull();
 
   await userEvent.click(navButton());
-  await screen.findByRole('dialog', { name: 'Atlas' });
+  await screen.findByRole('dialog', { name: 'Navigation' });
   await userEvent.keyboard('{Escape}');
   await expect.poll(() => document.activeElement).toBe(navButton());
 });
@@ -80,7 +80,7 @@ it('closes the drawer when the window widens, with focus on the header button', 
   await page.viewport(400, 700);
   setup();
   await userEvent.click(navButton());
-  await screen.findByRole('dialog', { name: 'Atlas' });
+  await screen.findByRole('dialog', { name: 'Navigation' });
   await page.viewport(1280, 800);
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
   await expect.poll(() => document.activeElement).toBe(navButton());
@@ -115,16 +115,16 @@ it('restores the width the sidebar last had when the handle collapsed it', async
   expect(separator).toHaveAttribute('aria-valuenow', '320');
 });
 
-it('keeps the drawer open for a modified click, and closes it from the current page link', async () => {
+it('keeps the drawer open for a modified click, and closes it from the current page link, back to the button', async () => {
   await page.viewport(400, 700);
   setup();
   await userEvent.click(navButton());
-  const drawer = await screen.findByRole('dialog', { name: 'Atlas' });
+  const drawer = await screen.findByRole('dialog', { name: 'Navigation' });
   const home = within(drawer).getByRole('link', { name: 'Home' });
   home.addEventListener('click', (event) => event.preventDefault(), { once: true });
   home.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
-  expect(screen.getByRole('dialog', { name: 'Atlas' })).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Navigation' })).toBeVisible();
   await userEvent.click(home);
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
-  await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Home' }));
+  await expect.poll(() => document.activeElement).toBe(navButton());
 });

@@ -228,6 +228,7 @@ function Root({
     if (!dragging && stored > 0) lastOpen.current = stored;
   }, [dragging, stored]);
 
+  // `only` hides the handle and shows it again, which changes the room, so it re-measures in the same pass.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -240,8 +241,14 @@ function Root({
     // A token or font size that changes the handle's track moves the room without moving the root.
     if (handle) observer.observe(handle);
     return () => observer.disconnect();
-    // `only` hides the handle and shows it again, which changes the room in the same pass.
   }, [orientation, handle, only]);
+
+  // A handle that `only` hides mid-drag gets no release.
+  useEffect(() => {
+    if (!only || !drag.current) return;
+    drag.current = null;
+    setDragging(false);
+  }, [only]);
 
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
