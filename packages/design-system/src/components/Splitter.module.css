@@ -3,6 +3,9 @@
     display: grid;
     min-inline-size: 0;
     min-block-size: 0;
+    /* The handle's hit area reaches past a root's edge when a panel is collapsed or the container is narrow; it must not widen the page. The margin keeps the focus ring whole. */
+    overflow: clip;
+    overflow-clip-margin: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   }
 
   /* The primary track is the size, held inside the container by the handle's own track. */

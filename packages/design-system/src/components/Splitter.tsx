@@ -348,7 +348,7 @@ function Handle({
         const current = drag.current;
         if (current?.pointerId !== event.pointerId) return;
         const pointer = orientation === 'horizontal' ? event.clientX : event.clientY;
-        ctx.setSize(snapSize(pointerSize(pointer, current.origin, current.sign, current.offset), bounds));
+        ctx.setSize(snapSize(Math.round(pointerSize(pointer, current.origin, current.sign, current.offset)), bounds));
       })}
       onPointerUp={composeHandlers(onPointerUp, end)}
       onPointerCancel={composeHandlers(onPointerCancel, end)}
