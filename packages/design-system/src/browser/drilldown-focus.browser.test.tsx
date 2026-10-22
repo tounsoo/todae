@@ -371,17 +371,21 @@ describe('Drilldown focus with a stack the product sets later', () => {
   });
 
   it("never returns focus to an earlier push's trigger when the product applies two pushes one after the other", async () => {
-    render(<Deferred apply={(update) => setTimeout(update, 50)} />);
+    // The product holds both pushes, then applies them in separate commits.
+    const held: (() => void)[] = [];
+    render(<Deferred apply={(update) => held.push(update)} />);
     try {
       const account = screen.getByRole('button', { name: 'Account' });
-      const about = screen.getByRole('button', { name: 'About details' });
       await userEvent.click(account);
-      await userEvent.click(about);
+      await userEvent.click(screen.getByRole('button', { name: 'About details' }));
+      expect(held).toHaveLength(2);
+      held[0]!();
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' })));
+      held[1]!();
       await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Version' })));
       await settled();
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
-      expect(document.activeElement).not.toBe(account);
-      expect([about, screen.getByRole('textbox', { name: 'Search' })]).toContain(document.activeElement);
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search' }));
     } finally {
       cleanupAll();
     }
