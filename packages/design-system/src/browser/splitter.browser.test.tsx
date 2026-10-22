@@ -262,6 +262,16 @@ describe('Splitter focus', () => {
     expect(now()).toBe(184);
   });
 
+  it('shows a ring when the keyboard focuses the handle, also with the panel collapsed at the edge', async () => {
+    render(<Layout value={0} collapsible />);
+    const ring = () => getComputedStyle(handle(), '::before').outlineStyle;
+    expect(ring()).toBe('none');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(handle());
+    expect(ring()).toBe('solid');
+    expect(Number.parseFloat(getComputedStyle(handle(), '::before').outlineWidth)).toBeGreaterThan(0);
+  });
+
   it('has a hit area at least 24px across around a thin line', () => {
     render(<Layout defaultValue={200} />);
     const line = handle().getBoundingClientRect();

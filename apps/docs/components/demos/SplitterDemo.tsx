@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Code, Link, Splitter, Stack, Text } from '@tounsoo/todae';
+import { Button, Code, Link, ScrollArea, Splitter, Stack, Text } from '@tounsoo/todae';
 import { PanelLeft } from 'lucide-react';
 import { useId, useState, type CSSProperties, type ReactNode } from 'react';
 
@@ -73,7 +73,7 @@ export function SplitterEditor() {
   const editorId = useId();
 
   return (
-    <Splitter.Root orientation="vertical" defaultValue={96} min={64} max={240} style={frame('18rem')}>
+    <Splitter.Root orientation="vertical" defaultValue={120} min={80} max={240} style={frame('18rem')}>
       <Splitter.Panel>
         <Pane>
           <Text.Root as="h2" size="m" id={editorId}>
@@ -84,18 +84,20 @@ export function SplitterEditor() {
       </Splitter.Panel>
       <Splitter.Handle aria-labelledby={editorId} />
       <Splitter.Panel>
-        <Pane>
-          <Text.Root as="h2" size="m">
-            Results
-          </Text.Root>
-          <Stack.Root as="ul" gap="none">
-            {ROWS.map((row) => (
-              <li key={row}>
-                <Code.Root>{row}</Code.Root>
-              </li>
-            ))}
-          </Stack.Root>
-        </Pane>
+        <ScrollArea.Root style={{ blockSize: '100%' }}>
+          <Pane>
+            <Text.Root as="h2" size="m">
+              Results
+            </Text.Root>
+            <Stack.Root as="ul" gap="none">
+              {ROWS.map((row) => (
+                <li key={row}>
+                  <Code.Root>{row}</Code.Root>
+                </li>
+              ))}
+            </Stack.Root>
+          </Pane>
+        </ScrollArea.Root>
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -103,7 +105,7 @@ export function SplitterEditor() {
 
 const MESSAGES = [
   ['Ana Ruiz', 'Launch checklist'],
-  ['Ben Okafor', 'Re: Token review'],
+  ['Ben Okafor', 'Token review'],
   ['Chen Wei', 'Lunch on Friday?'],
   ['Dara Singh', 'Invoice 2041'],
 ];
@@ -132,39 +134,43 @@ export function SplitterMail() {
       </Splitter.Panel>
       <Splitter.Handle aria-labelledby={mailboxesId} />
       <Splitter.Panel>
-        <Splitter.Root defaultValue={200} min={160} max={320} style={{ blockSize: '100%' }}>
+        <Splitter.Root defaultValue={190} min={150} max={320} style={{ blockSize: '100%' }}>
           <Splitter.Panel>
-            <Pane>
-              <Text.Root as="h2" size="m" id={inboxId}>
-                Inbox
-              </Text.Root>
-              <Stack.Root as="ul" gap="condensed">
-                {MESSAGES.map(([sender, title], index) => (
-                  <li key={title}>
-                    <Button.Root
-                      variant="ghost"
-                      aria-current={selected === index ? 'true' : undefined}
-                      onClick={() => setSelected(index)}
-                    >
-                      {sender}: {title}
-                    </Button.Root>
-                  </li>
-                ))}
-              </Stack.Root>
-            </Pane>
+            <ScrollArea.Root style={{ blockSize: '100%' }}>
+              <Pane>
+                <Text.Root as="h2" size="m" id={inboxId}>
+                  Inbox
+                </Text.Root>
+                <Stack.Root as="ul" gap="condensed">
+                  {MESSAGES.map(([, title], index) => (
+                    <li key={title}>
+                      <Button.Root
+                        variant="ghost"
+                        aria-current={selected === index ? 'true' : undefined}
+                        onClick={() => setSelected(index)}
+                      >
+                        {title}
+                      </Button.Root>
+                    </li>
+                  ))}
+                </Stack.Root>
+              </Pane>
+            </ScrollArea.Root>
           </Splitter.Panel>
           <Splitter.Handle aria-labelledby={inboxId} />
           <Splitter.Panel>
-            <Pane>
-              <Text.Root as="h2" size="m">
-                {subject}
-              </Text.Root>
-              <Text.Root tone="muted">From {from}</Text.Root>
-              <Text.Root>
-                Each pane is a splitter inside another: the mailboxes split from the rest, and the list splits from the
-                message.
-              </Text.Root>
-            </Pane>
+            <ScrollArea.Root style={{ blockSize: '100%' }}>
+              <Pane>
+                <Text.Root as="h2" size="m">
+                  {subject}
+                </Text.Root>
+                <Text.Root tone="muted">From {from}</Text.Root>
+                <Text.Root>
+                  Each pane is a splitter inside another: the mailboxes split from the rest, and the list splits from
+                  the message.
+                </Text.Root>
+              </Pane>
+            </ScrollArea.Root>
           </Splitter.Panel>
         </Splitter.Root>
       </Splitter.Panel>

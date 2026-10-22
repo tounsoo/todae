@@ -562,7 +562,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "ec12a721e8b6",
+    "# Native platform": "65f724b4a4a8",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -736,7 +736,7 @@
     "## Keys and pointer": "c6d08b2ee613",
     "## Vertical split": "51e279c7e4d9",
     "## Nested panes": "07f88271e786",
-    "## Accessible composition": "1637a3672cd9",
+    "## Accessible composition": "34667c0b8064",
     "## When to use": "655f41ae87fb",
     "## Props": "c87cae53423e",
     "(section order)": "d86244d0a99c"
