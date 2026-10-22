@@ -16,7 +16,7 @@ Todae is a pnpm workspace:
 
 You need:
 
-- Node 22. `nvm use` reads `.nvmrc`.
+- Node 24. `nvm use` reads `.nvmrc`. The docs app sets `engines.node` to `24.x`, which is what Vercel reads.
 - pnpm 10. The `packageManager` field in the root `package.json` pins the version.
 
 Install the dependencies:
