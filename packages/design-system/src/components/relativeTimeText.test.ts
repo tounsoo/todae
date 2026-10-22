@@ -54,7 +54,7 @@ describe('formatRelativeTime', () => {
     );
   });
 
-  it('counts weeks from 7 days and months from a whole calendar month', () => {
+  it('counts weeks from 7 dates apart, up to 4, and months from a whole calendar month', () => {
     const from = (value: string, base: string) => formatRelativeTime(at(value), at(base), { locale: 'en-US' });
     expect(from('2026-10-15T09:30', '2026-10-22T09:30')).toBe('last week');
     expect(from('2026-10-29T09:30', '2026-10-22T09:30')).toBe('next week');
@@ -66,6 +66,8 @@ describe('formatRelativeTime', () => {
     expect(from('2026-01-03T09:30', '2026-02-01T09:30')).toBe('4 weeks ago');
     expect(from('2026-02-01T09:30', '2026-01-03T09:30')).toBe('in 4 weeks');
     expect(from('2026-01-01T09:30', '2026-02-01T09:30')).toBe('last month');
+    // 29 days, but two calendar months apart.
+    expect(from('2026-01-31T09:30', '2026-03-01T09:30')).toBe('2 months ago');
     // 6 days and 10 hours, but 7 dates back.
     expect(from('2026-10-15T23:00', '2026-10-22T09:30')).toBe('last week');
     expect(from('2025-11-23T09:30', '2026-10-22T09:30')).toBe('11 months ago');
