@@ -1,4 +1,4 @@
-import { MenuActions, MenuOptions } from '../../../components/demos/MenuDemo';
+import { MenuActions, MenuContext, MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
@@ -31,7 +31,7 @@ An item's children are presentational to assistive technology, as ARIA defines f
   <MenuOptions />
 </Example>
 
-`onOpenChange(open, reason)` reports `trigger`, `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
+`onOpenChange(open, reason)` reports `trigger`, `context` (a `Menu.ContextTrigger`), `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
 
 ## Links
 
@@ -42,6 +42,46 @@ import NextLink from 'next/link';
 
 <Menu.Item render={(props) => <NextLink {...props} href="/settings" />}>Settings</Menu.Item>
 ```
+
+## Context menus
+
+`Menu.ContextTrigger` is a region, such as a row, a file or a message, that opens the menu on a right click, a long press on Android, Shift+F10 or the ContextMenu key. A pointer opens the menu at the pointer; a key opens it below the focused element. The menu flips to stay in the viewport, as from `Menu.Trigger`, and opens on its first item. Escape gives focus back to whatever had it when the menu opened. The region renders a `div`; pass `render` to make it a table row or a list item, and spread the props it is handed. While its menu is open, the region carries `data-open`, so a product can highlight the row that was clicked.
+
+Give each region a visible `Menu.Trigger` in the same `Menu.Root` as well. A context menu can't be seen, few people know Shift+F10, Mac keyboards have no ContextMenu key, and iOS Safari fires no `contextmenu` on a long press, so the button is how many people reach the same menu.
+
+```tsx
+import { Button, Menu } from '@tounsoo/todae';
+import { Ellipsis } from 'lucide-react';
+
+export function FileRow({ name }: { name: string }) {
+  return (
+    <Menu.Root>
+      <Menu.ContextTrigger
+        render={(props) => (
+          <li {...props}>
+            {name}
+            <Menu.Trigger variant="ghost" aria-label={`Actions for ${name}`}>
+              <Button.Icon>
+                <Ellipsis />
+              </Button.Icon>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Open</Menu.Item>
+              <Menu.Item>Delete</Menu.Item>
+            </Menu.Content>
+          </li>
+        )}
+      />
+    </Menu.Root>
+  );
+}
+```
+
+<Example>
+  <MenuContext />
+</Example>
+
+A right click or Shift+F10 in a text field inside the region leaves the browser's own menu, which holds the field's editing commands. A region inside another region takes the request first. A right click inside an open menu doesn't open the browser's menu over it.
 
 ## Icons
 
@@ -68,9 +108,9 @@ import { Check, Ellipsis } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above.
+**Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above. `Menu.ContextTrigger` handles the `contextmenu` event and Shift+F10 and the ContextMenu key, places the menu at the pointer or the focused element, and returns focus when it closes.
 
-**You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby`, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
+**You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code or from a `Menu.ContextTrigger` with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby` (without one, `Menu.Content` logs an error in development when it opens), a context menu needs a visible `Menu.Trigger` too, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -91,11 +131,11 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu.
+**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu. A context menu that is the only way to reach its actions: a long press on iOS doesn't open it, and few people know Shift+F10. A context menu over content whose browser menu people need, such as links and images, since it replaces Open in new tab and Save image.
 
 ## When to use
 
-**When:** A short list of commands or view settings behind one button, such as row actions or a toolbar overflow.
+**When:** A short list of commands or view settings behind one button, such as row actions or a toolbar overflow. The same commands on a right click or Shift+F10 over a row, file or message, with `Menu.ContextTrigger` beside the button.
 
 **When not:** Picking a value for a form → `Field.Select` or the Combobox recipe. Navigation between pages → links. Content with its own controls or text → Popover with `role="dialog"`.
 
@@ -104,6 +144,8 @@ export function RowActions({ label, children }: { label: string; children: React
 <PropsTable name="Menu.Root" />
 
 <PropsTable name="Menu.Trigger" />
+
+<PropsTable name="Menu.ContextTrigger" />
 
 <PropsTable name="Menu.Content" />
 

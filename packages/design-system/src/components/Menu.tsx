@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ComponentPropsWithRef,
+  type CSSProperties,
   type FocusEvent,
   type HTMLAttributes,
   type KeyboardEvent,
@@ -14,9 +15,11 @@ import {
   type PointerEvent,
   type ReactElement,
   type ReactNode,
+  type Ref,
   type RefCallback,
   type RefObject,
 } from 'react';
+import { isTextEntry } from '../hooks/hotkey.js';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
@@ -32,8 +35,11 @@ import styles from './Menu.module.css';
 import { ToolbarContext, useToolbar } from './toolbarContext.js';
 import { focusWithoutScroll } from './revealRing.js';
 
-/** Why the menu opened or closed. `select` is an item choice; `tab` is focus leaving with Tab. */
-export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab';
+/**
+ * Why the menu opened or closed. `select` is an item choice; `tab` is focus
+ * leaving with Tab; `context` is a Menu.ContextTrigger opening it.
+ */
+export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab' | 'context';
 
 export type MenuRootProps = {
   open?: boolean;
@@ -44,6 +50,19 @@ export type MenuRootProps = {
 
 /** The id is the menu's: the content is named by it. */
 export type MenuTriggerProps = Omit<ButtonActionProps, 'id'>;
+
+/** What Menu.ContextTrigger hands `render`: its handlers and state, to spread on the element it returns. */
+export type MenuContextTriggerRenderProps = HTMLAttributes<HTMLElement> & {
+  ref: RefCallback<HTMLElement>;
+  children?: ReactNode;
+  'data-open'?: string;
+};
+
+export type MenuContextTriggerProps = {
+  children?: ReactNode;
+  /** Renders the region as another element, such as a table row or a list item. */
+  render?: (props: MenuContextTriggerRenderProps) => ReactElement;
+} & ComponentPropsWithRef<'div'>;
 
 type MenuName =
   | { 'aria-label'?: undefined; 'aria-labelledby'?: string }
@@ -110,6 +129,15 @@ export type MenuSeparatorProps = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
+/** Where a context request put the menu: a box in viewport coordinates, and who asked. */
+type ContextOpen = {
+  box: { top: number; left: number; width: number; height: number };
+  /** Takes focus back when the menu closes. */
+  opener: HTMLElement;
+  /** The Menu.ContextTrigger that asked. */
+  source: string;
+};
+
 type MenuContextValue = {
   open: boolean;
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
@@ -122,6 +150,12 @@ type MenuContextValue = {
   /** The end a trigger key asked the next open to focus. Cleared when the trigger loses focus. */
   openEnd: RefObject<'first' | 'last' | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
+  /** The last context request, kept until a Menu.Trigger opens the menu. */
+  context: ContextOpen | null;
+  openAt: (context: ContextOpen) => void;
+  clearContext: () => void;
+  /** The anchor name of the box a context request put the menu at. */
+  pointName: string;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
 };
@@ -155,15 +189,41 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     },
     [setOpenValue],
   );
-  const triggerId = `${useDomId()}-trigger`;
+  const domId = useDomId();
+  const triggerId = `${domId}-trigger`;
+  const pointName = `--${domId}-point`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [context, setContextState] = useState<ContextOpen | null>(null);
+  const contextRef = useRef<ContextOpen | null>(null);
+  const setContext = useCallback((next: ContextOpen | null) => {
+    contextRef.current = next;
+    setContextState(next);
+  }, []);
+  const openAt = useCallback(
+    (next: ContextOpen) => {
+      setContext(next);
+      setOpen(true, 'context');
+    },
+    [setContext, setOpen],
+  );
+  const clearContext = useCallback(() => setContext(null), [setContext]);
+  // Focus goes back to whoever opened the menu: the trigger, or what had
+  // focus when a context request came.
+  const restoreFocusRef = useMemo<RefObject<HTMLElement | null>>(
+    () => ({
+      get current() {
+        return contextRef.current?.opener ?? triggerRef.current;
+      },
+    }),
+    [],
+  );
   const [triggers, setTriggers] = useState(0);
   const hasTrigger = triggers > 0;
   const countTrigger = useCallback((change: 1 | -1) => setTriggers((n) => n + change), []);
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const popover = usePopoverInternal(
-    { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
+    { open, onOpenChange: setOpen, restoreFocusRef, initialFocusRef, haspopup: 'menu' },
     true,
   );
   // The item chosen for one open never carries over to the next.
@@ -185,10 +245,14 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       countTrigger,
       openEnd,
       initialFocusRef,
+      context,
+      openAt,
+      clearContext,
+      pointName,
       popover,
       roving,
     }),
-    [open, setOpen, triggerId, hasTrigger, countTrigger, popover, roving],
+    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, clearContext, pointName, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -211,6 +275,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
     ref: refs,
     onClick: composeHandlers(onClick, () => {
       openEnd.current = null;
+      ctx.clearContext();
     }),
     // A key's request for an end lasts while the trigger has focus, so one
     // the owner refused does not carry over to a later open from code. This
@@ -250,8 +315,92 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
           return;
         }
         openEnd.current = end;
+        ctx.clearContext();
         ctx.setOpen(true, 'trigger');
       })}
+    />
+  );
+}
+
+function isContextKey(event: KeyboardEvent<HTMLElement>): boolean {
+  if (event.key === 'ContextMenu') return true;
+  return event.key === 'F10' && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+}
+
+function boxOf(el: Element): ContextOpen['box'] {
+  const { top, left, width, height } = el.getBoundingClientRect();
+  return { top, left, width, height };
+}
+
+function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: MenuContextTriggerProps) {
+  const ctx = useMenu('ContextTrigger');
+  // A callback, so it fits the ref of whatever element `render` returns.
+  const refs = useComposedRefs<HTMLElement>(ref as Ref<HTMLElement> | undefined);
+  const source = useDomId();
+  const { openAt, popover } = ctx;
+  // Requests from inside the menu are the menu's own, and a text field keeps
+  // the browser's menu, which holds its editing commands.
+  const claims = (target: EventTarget) =>
+    target instanceof Element && !popover.popoverRef.current?.contains(target) && !isTextEntry(target);
+  const request = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>, box: ContextOpen['box']) => {
+    const active = document.activeElement;
+    const opener = active instanceof HTMLElement && active !== document.body ? active : event.currentTarget;
+    openAt({ box, opener, source });
+  };
+  const wire: MenuContextTriggerRenderProps = {
+    ...props,
+    ref: refs,
+    'data-open': ctx.open && ctx.context?.source === source ? '' : undefined,
+    // A request a child already handled, such as an inner ContextTrigger's,
+    // is not this region's.
+    onContextMenu: composeHandlers(onContextMenu, (event: MouseEvent<HTMLElement>) => {
+      if (event.defaultPrevented || !claims(event.target)) return;
+      event.preventDefault();
+      const native = event.nativeEvent as globalThis.MouseEvent & { pointerType?: string };
+      // A right button, a long press or a pen opens at the point. A key or a
+      // screen reader's command opens at the element it came from.
+      const atPoint = event.button === 2 || native.pointerType === 'touch' || native.pointerType === 'pen';
+      const box = atPoint
+        ? { top: event.clientY, left: event.clientX, width: 0, height: 0 }
+        : boxOf(event.target as Element);
+      request(event, box);
+    }),
+    // Shift+F10 and the ContextMenu key open the menu from the keyboard where
+    // the browser fires no contextmenu for them, as on macOS. Handling the
+    // key stops the browser's own contextmenu where it would fire one.
+    onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
+      if (!isContextKey(event) || event.defaultPrevented || !claims(event.target)) return;
+      event.preventDefault();
+      if (event.repeat) return;
+      request(event, boxOf(event.target as Element));
+    }),
+  };
+  return render ? render(wire) : <div {...(wire as ComponentPropsWithRef<'div'>)} />;
+}
+
+/**
+ * The box a context request put the menu at, in the top layer so its
+ * viewport coordinates hold whatever transforms its ancestors have. It shows
+ * before the menu, which can only anchor to what is earlier in the top layer.
+ */
+function PointAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  usePopoverSync(ref, open);
+  return (
+    <span
+      ref={ref}
+      popover="manual"
+      aria-hidden="true"
+      className={styles.point}
+      style={
+        {
+          '--_top': `${box.top}px`,
+          '--_left': `${box.left}px`,
+          '--_width': `${box.width}px`,
+          '--_height': `${box.height}px`,
+          anchorName: name,
+        } as CSSProperties
+      }
     />
   );
 }
@@ -266,6 +415,7 @@ function Content({
   onClick,
   onFocus,
   onBlur,
+  onContextMenu,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
   ...props
@@ -307,6 +457,16 @@ function Content({
     }),
   });
   const refs = useComposedRefs(localRef, wireRef, container.ref, ref);
+  const named = Boolean(ariaLabel || ariaLabelledby || ctx.hasTrigger);
+  useLayoutEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && open && !named) {
+      console.error('Menu.Content needs aria-label or aria-labelledby when no Menu.Trigger names it.');
+    }
+  }, [named, open]);
+  const at = ctx.context;
+  const atStyle = at
+    ? ({ '--todae-popover-anchor': ctx.pointName, positionAnchor: ctx.pointName } as CSSProperties)
+    : undefined;
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
   // document never sees as a pointerdown. Focus dropped to the page, as when
@@ -321,35 +481,40 @@ function Content({
     () => ctx.closeAsked.current,
   );
   return (
-    <div
-      {...props}
-      ref={refs}
-      id={id}
-      popover="manual"
-      role="menu"
-      tabIndex={-1}
-      aria-label={ariaLabel}
-      // The trigger names the menu when there is one; a menu opened from code
-      // needs aria-label or aria-labelledby.
-      aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? (ctx.hasTrigger ? ctx.triggerId : undefined))}
-      className={cx(popoverStyles.content, styles.menu, className)}
-      style={{ ...wireStyle, ...style }}
-      onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
-      onClick={composeHandlers(onClick, wireClick)}
-      onFocus={(event: FocusEvent<HTMLDivElement>) => {
-        onFocus?.(event);
-        focusLeave.onFocus();
-      }}
-      // Focus leaving closes the menu whatever the consumer's handler does,
-      // as Tabs.List returns its tab stop.
-      onBlur={(event: FocusEvent<HTMLDivElement>) => {
-        onBlur?.(event);
-        focusLeave.onBlur(event);
-      }}
-      onKeyDown={container.onKeyDown}
-    >
-      <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
-    </div>
+    <>
+      {at && <PointAnchor box={at.box} name={ctx.pointName} open={open} />}
+      <div
+        {...props}
+        ref={refs}
+        id={id}
+        popover="manual"
+        role="menu"
+        tabIndex={-1}
+        aria-label={ariaLabel}
+        // The trigger names the menu when there is one; a menu opened from code
+        // needs aria-label or aria-labelledby.
+        aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? (ctx.hasTrigger ? ctx.triggerId : undefined))}
+        className={cx(popoverStyles.content, styles.menu, className)}
+        style={{ ...wireStyle, ...atStyle, ...style }}
+        onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
+        onClick={composeHandlers(onClick, wireClick)}
+        // The browser's own menu doesn't open over this one.
+        onContextMenu={composeHandlers(onContextMenu, (event: MouseEvent<HTMLDivElement>) => event.preventDefault())}
+        onFocus={(event: FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event);
+          focusLeave.onFocus();
+        }}
+        // Focus leaving closes the menu whatever the consumer's handler does,
+        // as Tabs.List returns its tab stop.
+        onBlur={(event: FocusEvent<HTMLDivElement>) => {
+          onBlur?.(event);
+          focusLeave.onBlur(event);
+        }}
+        onKeyDown={container.onKeyDown}
+      >
+        <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+      </div>
+    </>
   );
 }
 
@@ -531,6 +696,7 @@ function Separator({ className, ...props }: MenuSeparatorProps) {
 export const Menu = {
   Root,
   Trigger,
+  ContextTrigger,
   Content,
   Item,
   CheckboxItem,

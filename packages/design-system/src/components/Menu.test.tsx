@@ -893,3 +893,57 @@ describe('Menu', () => {
     spy.mockRestore();
   });
 });
+
+describe('Menu.ContextTrigger', () => {
+  it('logs an error when an open menu has no name', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.ContextTrigger>Row</Menu.ContextTrigger>
+        <Menu.Content>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Menu.Content needs aria-label or aria-labelledby'));
+    spy.mockRestore();
+  });
+
+  it('renders the region on the element render returns', () => {
+    render(
+      <table>
+        <tbody>
+          <Menu.Root>
+            <Menu.ContextTrigger
+              render={(props) => (
+                <tr {...props}>
+                  <td>report.pdf</td>
+                </tr>
+              )}
+            />
+          </Menu.Root>
+        </tbody>
+      </table>,
+    );
+    const row = screen.getByRole('row');
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    act(() => {
+      screen.getByRole('cell').dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(true);
+    expect(row.hasAttribute('data-open')).toBe(true);
+  });
+
+  it('keeps the browser menu from opening over an open menu', () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Content aria-label="File">
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    screen.getByRole('menuitem', { hidden: true }).dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+});

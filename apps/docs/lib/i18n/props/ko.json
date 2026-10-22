@@ -1337,6 +1337,16 @@
       "ko": "선택적 클래스."
     }
   },
+  "Menu.ContextTrigger": {
+    "render": {
+      "en": "Renders the region as another element, such as a table row or a list item. It receives every prop, ref included, and must pass them on.",
+      "ko": "영역을 표의 행이나 목록 항목 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
+    },
+    "children": {
+      "en": "The content a context request opens the menu from.",
+      "ko": "컨텍스트 요청으로 메뉴를 여는 콘텐츠."
+    }
+  },
   "Menu.Group": {
     "aria-label": {
       "en": "Group name. Exactly one of aria-label or aria-labelledby.",
@@ -1451,12 +1461,12 @@
       "ko": "비제어일 때의 초기 열림 상태."
     },
     "onOpenChange": {
-      "en": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto.",
-      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, escape, outside, select, tab 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
+      "en": "Fires on open and close. reason is trigger, context, escape, outside, select or tab. Leaving open unchanged is a veto.",
+      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, context, escape, outside, select, tab 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
     },
     "children": {
-      "en": "Menu.Trigger and Menu.Content.",
-      "ko": "Menu.Trigger와 Menu.Content."
+      "en": "Menu.Trigger, Menu.ContextTrigger and Menu.Content.",
+      "ko": "Menu.Trigger, Menu.ContextTrigger, Menu.Content."
     }
   },
   "Menu.Separator": {

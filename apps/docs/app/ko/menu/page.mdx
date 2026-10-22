@@ -1,4 +1,4 @@
-import { MenuActions, MenuOptions } from '../../../components/demos/MenuDemo';
+import { MenuActions, MenuContext, MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
@@ -31,7 +31,7 @@ ARIA가 `menuitem`에 대해 정의한 대로, 항목의 자식은 보조 기술
   <MenuOptions />
 </Example>
 
-`onOpenChange(open, reason)`은 `trigger`, `escape`, `outside`(밖을 누르거나 밖으로 포커스가 이동), `select`, `tab` 중 하나를 알립니다. 제어 `open`을 갱신하지 않으면 변경이 거부됩니다. 거부된 `outside`에서도 누른 동작은 그대로 전달되듯이, 거부된 `tab`에서도 포커스는 이동합니다. 하위 메뉴는 제공하지 않습니다.
+`onOpenChange(open, reason)`은 `trigger`, `context`(`Menu.ContextTrigger`), `escape`, `outside`(밖을 누르거나 밖으로 포커스가 이동), `select`, `tab` 중 하나를 알립니다. 제어 `open`을 갱신하지 않으면 변경이 거부됩니다. 거부된 `outside`에서도 누른 동작은 그대로 전달되듯이, 거부된 `tab`에서도 포커스는 이동합니다. 하위 메뉴는 제공하지 않습니다.
 
 ## 링크
 
@@ -42,6 +42,46 @@ import NextLink from 'next/link';
 
 <Menu.Item render={(props) => <NextLink {...props} href="/settings" />}>Settings</Menu.Item>
 ```
+
+## 컨텍스트 메뉴
+
+`Menu.ContextTrigger`는 행, 파일, 메시지 같은 영역으로, 오른쪽 클릭, Android의 길게 누르기, Shift+F10 또는 ContextMenu 키로 메뉴를 엽니다. 포인터로 열면 포인터 위치에, 키로 열면 포커스된 요소 아래에 메뉴가 열립니다. 메뉴는 `Menu.Trigger`에서 열 때처럼 뷰포트 안에 머물도록 뒤집히고, 첫 항목에서 열립니다. Escape는 메뉴가 열릴 때 포커스를 가졌던 요소에 포커스를 돌려줍니다. 영역은 `div`를 렌더링합니다. 표의 행이나 목록 항목으로 만들려면 `render`를 넘기고 받은 props를 펼치세요. 메뉴가 열려 있는 동안 영역에는 `data-open`이 붙으므로, 제품은 클릭한 행을 강조할 수 있습니다.
+
+각 영역에는 같은 `Menu.Root` 안에 보이는 `Menu.Trigger`도 두세요. 컨텍스트 메뉴는 눈에 보이지 않고, Shift+F10을 아는 사람은 적으며, Mac 키보드에는 ContextMenu 키가 없고, iOS Safari는 길게 누르기에 `contextmenu`를 보내지 않으므로, 많은 사람은 이 버튼으로 같은 메뉴에 닿습니다.
+
+```tsx
+import { Button, Menu } from '@tounsoo/todae';
+import { Ellipsis } from 'lucide-react';
+
+export function FileRow({ name }: { name: string }) {
+  return (
+    <Menu.Root>
+      <Menu.ContextTrigger
+        render={(props) => (
+          <li {...props}>
+            {name}
+            <Menu.Trigger variant="ghost" aria-label={`Actions for ${name}`}>
+              <Button.Icon>
+                <Ellipsis />
+              </Button.Icon>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Open</Menu.Item>
+              <Menu.Item>Delete</Menu.Item>
+            </Menu.Content>
+          </li>
+        )}
+      />
+    </Menu.Root>
+  );
+}
+```
+
+<Example>
+  <MenuContext />
+</Example>
+
+영역 안의 텍스트 필드에서 오른쪽 클릭이나 Shift+F10을 누르면 필드의 편집 명령이 담긴 브라우저 메뉴가 그대로 열립니다. 다른 영역 안에 있는 영역이 요청을 먼저 받습니다. 열린 메뉴 안에서 오른쪽 클릭해도 그 위에 브라우저 메뉴가 열리지 않습니다.
 
 ## 아이콘
 
@@ -68,9 +108,9 @@ import { Check, Ellipsis } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Menu.Trigger`는 `aria-haspopup="menu"`, `aria-expanded`, `aria-controls`를 설정하고, 그 id가 `aria-labelledby`로 `role="menu"` 콘텐츠의 이름이 됩니다. 항목은 `role="menuitem"`, `menuitemcheckbox`, `menuitemradio` 중 하나를 가지며, `aria-checked`와 `aria-disabled`는 상태에 맞춰 바뀝니다. `Menu.Group`과 `Menu.RadioGroup`은 `role="group"`이고, `Menu.Separator`는 `role="separator"`입니다. 메뉴가 열리면 포커스가 메뉴 안으로 들어가고, 위에서 설명한 키보드 모델을 따릅니다.
+**Todae가 맡는 것:** `Menu.Trigger`는 `aria-haspopup="menu"`, `aria-expanded`, `aria-controls`를 설정하고, 그 id가 `aria-labelledby`로 `role="menu"` 콘텐츠의 이름이 됩니다. 항목은 `role="menuitem"`, `menuitemcheckbox`, `menuitemradio` 중 하나를 가지며, `aria-checked`와 `aria-disabled`는 상태에 맞춰 바뀝니다. `Menu.Group`과 `Menu.RadioGroup`은 `role="group"`이고, `Menu.Separator`는 `role="separator"`입니다. 메뉴가 열리면 포커스가 메뉴 안으로 들어가고, 위에서 설명한 키보드 모델을 따릅니다. `Menu.ContextTrigger`는 `contextmenu` 이벤트와 Shift+F10, ContextMenu 키를 처리하고, 메뉴를 포인터나 포커스된 요소 위치에 두며, 닫힐 때 포커스를 돌려줍니다.
 
-**직접 제공할 것:** 트리거의 이름을 주세요. 이 이름이 메뉴의 이름도 됩니다. 텍스트 자식이면 충분합니다. 아이콘만 있는 트리거에는 `aria-label`이나 `aria-labelledby`가 필요하며, 없으면 개발 환경에서 `Button.Root`가 오류를 기록합니다. `Menu.Trigger` 없이 코드로 여는 메뉴에는 자체 `aria-label`이나 `aria-labelledby`가 필요하고, 모든 `Menu.Group`과 `Menu.RadioGroup`에도 타입이 요구하는 대로 하나가 필요합니다. 항목의 자식이 일반 텍스트가 아니면 타입어헤드가 찾을 수 있도록 `textValue`를 넘기세요.
+**직접 제공할 것:** 트리거의 이름을 주세요. 이 이름이 메뉴의 이름도 됩니다. 텍스트 자식이면 충분합니다. 아이콘만 있는 트리거에는 `aria-label`이나 `aria-labelledby`가 필요하며, 없으면 개발 환경에서 `Button.Root`가 오류를 기록합니다. `Menu.Trigger` 없이 코드나 `Menu.ContextTrigger`로 여는 메뉴에는 자체 `aria-label`이나 `aria-labelledby`가 필요하며(없으면 메뉴가 열릴 때 개발 환경에서 `Menu.Content`가 오류를 기록합니다), 컨텍스트 메뉴에는 보이는 `Menu.Trigger`도 필요하고, 모든 `Menu.Group`과 `Menu.RadioGroup`에도 타입이 요구하는 대로 하나가 필요합니다. 항목의 자식이 일반 텍스트가 아니면 타입어헤드가 찾을 수 있도록 `textValue`를 넘기세요.
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -91,11 +131,11 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**주의할 점:** `label` prop을 받고도 `Menu.Trigger`에 넘기지 않는 래퍼는 트리거와 메뉴 모두 이름이 없게 만듭니다. 항목 안의 링크, 입력, 버튼은 항목의 내용이 표현용이라 컨트롤로 알려지지 않습니다. 체크나 라디오 표시를 숨기고 상태를 색만으로 나타내지 마세요. `Menu.Trigger`의 `onClick`에서 `preventDefault()`를 호출하면 트리거가 메뉴를 열거나 닫지 않습니다.
+**주의할 점:** `label` prop을 받고도 `Menu.Trigger`에 넘기지 않는 래퍼는 트리거와 메뉴 모두 이름이 없게 만듭니다. 항목 안의 링크, 입력, 버튼은 항목의 내용이 표현용이라 컨트롤로 알려지지 않습니다. 체크나 라디오 표시를 숨기고 상태를 색만으로 나타내지 마세요. `Menu.Trigger`의 `onClick`에서 `preventDefault()`를 호출하면 트리거가 메뉴를 열거나 닫지 않습니다. 동작에 닿는 길이 컨텍스트 메뉴뿐이면 안 됩니다. iOS에서 길게 누르기로는 열리지 않고, Shift+F10을 아는 사람은 적습니다. 링크나 이미지처럼 사람들이 브라우저 메뉴를 쓰는 콘텐츠 위의 컨텍스트 메뉴는 새 탭에서 열기와 이미지 저장을 가립니다.
 
 ## 언제 쓰나요
 
-**언제:** 행 동작이나 툴바 오버플로처럼, 버튼 하나 뒤에 있는 짧은 명령 목록이나 보기 설정.
+**언제:** 행 동작이나 툴바 오버플로처럼, 버튼 하나 뒤에 있는 짧은 명령 목록이나 보기 설정. 버튼과 함께 `Menu.ContextTrigger`를 두어, 행, 파일, 메시지 위의 오른쪽 클릭이나 Shift+F10으로 같은 명령을 엽니다.
 
 **쓰지 않을 때:** 폼의 값 고르기 → `Field.Select` 또는 Combobox 레시피. 페이지 간 이동 → 링크. 자체 컨트롤이나 텍스트가 있는 콘텐츠 → `role="dialog"`를 쓴 Popover.
 
@@ -104,6 +144,8 @@ export function RowActions({ label, children }: { label: string; children: React
 <PropsTable name="Menu.Root" />
 
 <PropsTable name="Menu.Trigger" />
+
+<PropsTable name="Menu.ContextTrigger" />
 
 <PropsTable name="Menu.Content" />
 

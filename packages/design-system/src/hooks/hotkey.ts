@@ -7,6 +7,11 @@ export function typesIn(target: EventTarget | null, { key, modifiers }: Hotkey):
   // A function key types nothing anywhere, nor does a chord with Meta or
   // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
   if (/^f\d{1,2}$/.test(key) || modifiers.has('meta') || (modifiers.has('ctrl') && !modifiers.has('alt'))) return false;
+  return isTextEntry(target);
+}
+
+/** Whether `target` takes typed text: a text field, a select or editable content. */
+export function isTextEntry(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || target.matches(`textarea, select, input:not(${UNTYPED_INPUTS})`);
 }

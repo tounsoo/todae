@@ -2948,6 +2948,24 @@
       ]
     },
     {
+      "name": "Menu.ContextTrigger",
+      "description": "A region whose right click, long press on Android, Shift+F10 or ContextMenu key opens the menu: at the pointer, or below the focused element from the keyboard. Renders a div unless render returns another element.",
+      "props": [
+        {
+          "name": "render",
+          "type": "(props: MenuContextTriggerRenderProps) => ReactElement",
+          "required": false,
+          "description": "Renders the region as another element, such as a table row or a list item. It receives every prop, ref included, and must pass them on."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The content a context request opens the menu from."
+        }
+      ]
+    },
+    {
       "name": "Menu.Group",
       "description": "role=\"group\" inside a menu. Requires aria-label or aria-labelledby.",
       "props": [
@@ -3137,13 +3155,13 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: MenuOpenChangeReason) => void",
           "required": false,
-          "description": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto."
+          "description": "Fires on open and close. reason is trigger, context, escape, outside, select or tab. Leaving open unchanged is a veto."
         },
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Menu.Trigger and Menu.Content."
+          "description": "Menu.Trigger, Menu.ContextTrigger and Menu.Content."
         }
       ]
     },
