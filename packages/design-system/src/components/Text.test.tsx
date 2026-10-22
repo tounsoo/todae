@@ -74,7 +74,11 @@ describe('Text', () => {
   // Every class has one selector of the same weight, so source order decides which color and weight apply.
   it('orders the sheet so a role replaces the defaults and a given tone or weight wins', () => {
     const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
-    const at = (cls: string) => sheet.indexOf(`.${cls} {`);
+    const at = (cls: string) => {
+      const rules = sheet.split(`.${cls} {`);
+      expect(rules, `.${cls} has one rule`).toHaveLength(2);
+      return rules[0]!.length;
+    };
     expect(at('root')).toBeLessThan(at('heading'));
     expect(at('heading')).toBeLessThan(at('label'));
     for (const cls of ['default', 'muted', 'accent', 'regular', 'medium', 'bold']) expect(at('label')).toBeLessThan(at(cls));

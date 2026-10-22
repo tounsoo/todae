@@ -7,10 +7,7 @@ const srcDir = join(import.meta.dirname, '..');
 const generatedCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
 
 /** Component tokens Todae leaves for product code to apply, each with the reason. */
-const FOR_PRODUCTS: Record<string, string> = {
-  // The Text and Prose pages tell products to set font-family from it; Todae sets it only through text.label.font.family, which reads it.
-  '--todae-text-font-family': 'docs/text',
-};
+const FOR_PRODUCTS: Record<string, string> = {};
 
 /** Every non-test, non-generated source file under src: sheets, components and hooks. */
 function sources(dir: string): string[] {
