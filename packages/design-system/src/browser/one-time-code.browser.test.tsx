@@ -465,6 +465,67 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('AB'));
   });
 
+  it.each([['AB'], ['ABC12']])('takes a composition back to %s for a product that uppercases what it is told, and tells it', async (initial) => {
+    const events: string[] = [];
+    render(<Listening initial={initial} mode="upper" events={events} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    // `k` is a code, reported and answered in capitals; `か` is not, so the composition is cancelled on the code before it.
+    await compose(['k', 'か']);
+    await vi.waitFor(() => expect(input().value).toBe(initial));
+    expect(boxes().map((box) => box.textContent).join('')).toBe(initial);
+    expect(events.at(-1)).toBe(`value:${initial}`);
+  });
+
+  it('reports the code before a cancelled composition to a product whose value stays fixed', async () => {
+    const heard: string[] = [];
+    render(
+      <Field.Root aria-label="Verification code">
+        <Field.OneTimeCode characters="alphanumeric" value="AB" onValueChange={(next) => heard.push(next)} />
+      </Field.Root>,
+    );
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['k', 'か'], null);
+    await vi.waitFor(() => expect(heard).toEqual(['ABk', 'AB']));
+    expect(input().value).toBe('AB');
+  });
+
+  it('gives onChange an input event with an inputType for the code a composition is taken back to', async () => {
+    const types: Array<string | undefined> = [];
+    render(
+      <Field.Root aria-label="Verification code">
+        <Field.OneTimeCode
+          characters="alphanumeric"
+          value="AB"
+          onChange={(event) => types.push((event.nativeEvent as InputEvent).inputType)}
+        />
+      </Field.Root>,
+    );
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['k', 'か'], null);
+    await vi.waitFor(() => expect(types.length).toBeGreaterThan(1));
+    expect(types.at(-1)).toBe('insertText');
+  });
+
+  it('does not place a change that has no beforeinput by the selection of a deletion that was cancelled', async () => {
+    render(<Code initial="AAB123" characters="alphanumeric" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}');
+    // A product cancels the deletion, so no change event consumes the selection it began from.
+    input().addEventListener('beforeinput', (event) => event.preventDefault());
+    await userEvent.keyboard('{Delete}');
+    expect(input().value).toBe('AAB123');
+    // Autofill sends no beforeinput; the insert is read from the texts alone.
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    act(() => {
+      setter.call(input(), 'AAAB123');
+      input().dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await vi.waitFor(() => expect(input().value).toBe('AAA123'));
+  });
+
   it('takes a composition that rewrites the text before the caret', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);

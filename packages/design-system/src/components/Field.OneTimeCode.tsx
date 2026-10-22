@@ -73,12 +73,14 @@ function nearestBox(slots: HTMLCollection | undefined, clientX: number) {
   return nearest;
 }
 
-// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`.
-function write(input: HTMLInputElement, next: string, caret: number) {
+// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`. The event is an `InputEvent` like the browser's own, so a product reads `inputType` and `data` from it: `insertText` with the inserted text, or `deleteContentBackward` when nothing was inserted.
+function write(input: HTMLInputElement, next: string, caret: number, data: string) {
   // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
   input.setSelectionRange(caret, caret);
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(
+    new InputEvent('input', { bubbles: true, inputType: data ? 'insertText' : 'deleteContentBackward', data: data || null }),
+  );
 }
 
 // Puts `text` in place of the selection, and fires the input event that reaches `onChange`. It uses the input's own undo stack where the browser has one; elsewhere it writes the value itself.
@@ -93,7 +95,7 @@ function insert(input: HTMLInputElement, text: string) {
   }
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
-  write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length);
+  write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length, text);
 }
 
 // Makes `edit` as the person's own, with `inserting` set while it runs.
@@ -142,10 +144,12 @@ export function OneTimeCode({
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
   const inserting = useRef(false);
-  // The selection the last insert began from, kept from its beforeinput for the change event that follows when the browser makes the insert itself.
+  // The selection the last insert began from, kept from its beforeinput for the change event that follows when the browser makes the insert itself. Only an insert sets it: a deletion or a history step has no insert to place, and any other beforeinput or a blur drops it.
   const insertAt = useRef<CodeSelection | null>(null);
-  // The code and the selection a composition started from, and the last code it reported while it ran.
-  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null } | null>(null);
+  // The code and the selection a composition started from, the last code it reported while it ran (or null), and the `value` the product rendered after that report (undefined until it has).
+  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null; answered: string | undefined } | null>(null);
+  // Set while the end of a composition reports a code that the change event's own reading would not (a take-back to the value the product already holds).
+  const forceReport = useRef(false);
   // While composing, the input's own text, which React renders so it writes nothing that would end the IME, and the code the boxes show.
   const [composing, setComposing] = useState<{ live: string; shown: string } | null>(null);
   const refs = useComposedRefs(input, ref);
@@ -154,6 +158,9 @@ export function OneTimeCode({
   const latest = useRef({ characters, length, fixed, value });
   useLayoutEffect(() => {
     latest.current = { characters, length, fixed, value };
+    // The value the product rendered in answer to the composition's last report, which may differ from what it was told (an uppercased code).
+    const saved = composition.current;
+    if (saved && saved.reported !== null && saved.answered === undefined) saved.answered = value;
   });
 
   // The browser's own tooShort skips an edit a script makes, a cleaned paste among them, so the length is checked here.
@@ -176,7 +183,7 @@ export function OneTimeCode({
     // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
     function onBeforeInput(event: InputEvent) {
       const { inputType } = event;
-      insertAt.current = inserting.current ? null : { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 };
+      insertAt.current = !inserting.current && inputType.startsWith('insert') ? { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 } : null;
       // One the browser won't let be cancelled is read back by the change event instead, so its insert and this one don't both land.
       if (inserting.current || latest.current.fixed || event.isComposing || !event.cancelable || !inputType.startsWith('insert')) return;
       if (inputType === 'insertCompositionText' || inputType === 'insertFromComposition') return;
@@ -190,7 +197,7 @@ export function OneTimeCode({
       if (edit) put(el!, edit, inserting);
     }
     function onCompositionStart() {
-      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null };
+      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null, answered: undefined };
       // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
       el!.removeAttribute('maxlength');
     }
@@ -202,18 +209,28 @@ export function OneTimeCode({
       el!.setAttribute('maxlength', String(length));
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
-      // A value the product set while the person composed wins, and undo can't bring the dropped composition back.
-      if (!saved || (value !== saved.start && value !== saved.reported)) return;
+      if (!saved) return;
+      // The product overrode the composition only with a value that is neither the code it started from, a code Todae reported, nor what the product rendered in answer to one. Then its value wins, and undo can't bring the dropped composition back.
+      if (value !== saved.start && value !== saved.reported && value !== saved.answered) return;
       const live = el!.value;
       const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);
       const target = edit ? applyEdit(saved.start, edit) : saved.start;
-      if (live === target) {
-        if (target === value || target === saved.reported) return;
-        // The input already holds the code, so React would see no change; put the code the product has there first, so the write below reaches onChange as the edit it is, like every other path that reports.
-        el!.value = value;
+      const reported = saved.reported !== null;
+      // With a report made, the product has heard `reported`, so it hears the code the composition ended on unless that is the same; with none, it hears the code only when it differs from what it holds.
+      const report = reported ? target !== saved.reported : target !== value;
+      // The product already heard this code, and React puts the value it holds over the live text.
+      if (!report && (reported || live === target)) return;
+      if (report && live === target) {
+        // The input already holds the code, so React would see no change; give it another text first, so the write below reaches onChange as the edit it is, like every other path that reports.
+        el!.value = target + ' ';
       }
+      forceReport.current = report;
       // Written, not put in with execCommand, which would leave the commit on the undo stack as a step that is no code.
-      write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start);
+      try {
+        write(el!, target, edit ? edit.from + edit.insert.length : saved.selection.start, edit?.insert ?? '');
+      } finally {
+        forceReport.current = false;
+      }
     }
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);
@@ -237,7 +254,10 @@ export function OneTimeCode({
       setComposing({ live: text, shown: next });
       // A composed text that is already a valid code is reported as it is typed, as a phone keyboard may compose a whole alphanumeric code as one word; anything else waits for the end. A romaji or pinyin step such as `k` can be reported and then taken back.
       if (next === text && next !== value) {
-        if (saved) saved.reported = next;
+        if (saved) {
+          saved.reported = next;
+          saved.answered = undefined;
+        }
         onChange?.(event);
         onValueChange?.(next);
       }
@@ -255,7 +275,7 @@ export function OneTimeCode({
     if ((inputType === 'historyUndo' || inputType === 'historyRedo') && next !== text) return;
     onChange?.(event);
     // A change that leaves the code as it is, such as an edit that drops a refused composition, isn't reported, so a product that sends a full code doesn't send it twice.
-    if (next !== value) onValueChange?.(next);
+    if (next !== value || forceReport.current) onValueChange?.(next);
     sync();
   }
 
@@ -333,6 +353,7 @@ export function OneTimeCode({
         }}
         onBlur={(event) => {
           onBlurProp?.(event);
+          insertAt.current = null;
           setSelection(null);
         }}
       />
