@@ -55,4 +55,16 @@ describe('Tooltip.surface', () => {
       }
     }
   });
+
+  it('lists exactly the elements that make the HTML parser close a paragraph', () => {
+    // Every element in HTML's element index; the parser decides which of them end an open <p>.
+    const elements =
+      'a,abbr,address,area,article,aside,audio,b,bdi,bdo,blockquote,br,button,canvas,center,cite,code,data,datalist,dd,del,details,dfn,dialog,dir,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,i,iframe,img,input,ins,kbd,label,li,listing,main,map,mark,menu,meter,nav,object,ol,output,p,picture,plaintext,pre,progress,q,ruby,s,samp,search,section,select,slot,small,span,strong,sub,summary,sup,table,template,textarea,time,u,ul,var,video,wbr,xmp';
+    const listed = new Set(CLOSES_PARAGRAPH.split(','));
+    for (const tag of elements.split(',')) {
+      const doc = new DOMParser().parseFromString(`<!doctype html><p>a<${tag}>b</${tag}></p>`, 'text/html');
+      const closes = doc.querySelector(`p ${tag}`) === null;
+      expect({ tag, listed: listed.has(tag) }).toEqual({ tag, listed: closes });
+    }
+  });
 });

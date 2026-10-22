@@ -58,7 +58,8 @@ function contentNameOf(
 
 function useContentPolicy(surface: TipSurface | PanelSurface, contentRef: RefObject<HTMLElement | null>) {
   const reported = useRef<string | null>(null);
-  // Checks after every render, since the content can change, but logs a message only when it changes.
+  // Checks after each render of the tooltip and logs a message only when it differs from the last one.
+  // A text tip mounts only while open, so it checks again each time it opens.
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
