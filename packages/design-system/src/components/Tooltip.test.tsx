@@ -187,9 +187,9 @@ describe('Tooltip', () => {
     expect(paragraph?.textContent).toContain('in it.');
   });
 
-  it('logs a content error once across renders', () => {
+  it('logs a content error once across renders, and again when the content changes', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    function BlockTip({ count }: { count: number }) {
+    function PolicyTip({ block, count }: { block: boolean; count: number }) {
       const tooltip = useTooltip({ interactive: true });
       return (
         <>
@@ -197,15 +197,21 @@ describe('Tooltip', () => {
             Hint {count}
           </button>
           <Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
-            <div>Block</div>
+            {block ? <div>Block</div> : 'Text'}
           </Tooltip.Root>
         </>
       );
     }
-    const { rerender } = render(<BlockTip count={1} />);
-    rerender(<BlockTip count={2} />);
-    rerender(<BlockTip count={3} />);
-    expect(error.mock.calls.filter(([message]) => String(message).startsWith('Tooltip holds phrasing'))).toHaveLength(1);
+    const phrasingErrors = () =>
+      error.mock.calls.filter(([message]) => String(message).startsWith('Tooltip holds phrasing')).length;
+    const { rerender } = render(<PolicyTip block={false} count={1} />);
+    expect(phrasingErrors()).toBe(0);
+    rerender(<PolicyTip block count={2} />);
+    rerender(<PolicyTip block count={3} />);
+    expect(phrasingErrors()).toBe(1);
+    rerender(<PolicyTip block={false} count={4} />);
+    rerender(<PolicyTip block count={5} />);
+    expect(phrasingErrors()).toBe(2);
     error.mockRestore();
   });
 

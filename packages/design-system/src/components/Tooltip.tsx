@@ -1,6 +1,5 @@
 import {
   useLayoutEffect,
-  useMemo,
   useRef,
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -58,13 +57,16 @@ function contentNameOf(
 }
 
 function useContentPolicy(surface: TipSurface | PanelSurface, contentRef: RefObject<HTMLElement | null>) {
+  const reported = useRef<string | null>(null);
+  // Checks after every render, since the content can change, but logs a message only when it changes.
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
     if (process.env.NODE_ENV === 'production') return;
     const error = contentPolicyError(surface, el);
-    if (error) console.error(error);
-  }, [contentRef, surface]);
+    if (error && error !== reported.current) console.error(error);
+    reported.current = error;
+  });
 }
 
 function TooltipTip({
@@ -139,8 +141,7 @@ function TooltipPanel({
 }
 
 function TooltipRoot(props: TooltipRootProps) {
-  // Stable across renders, so the content check runs once rather than on every render.
-  const surface = useMemo(() => resolveSurface(props.interactive, props.id), [props.interactive, props.id]);
+  const surface = resolveSurface(props.interactive, props.id);
   if (!isMounted(surface, props.open)) return null;
   if (props.interactive) {
     const { id: _id, interactive: _interactive, 'aria-label': _label, 'aria-labelledby': _labelledby, ...rest } = props;
