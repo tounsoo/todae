@@ -9,8 +9,9 @@ import {
   type MouseEvent,
   type Ref,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { activeIn } from './activeElement.js';
-import { cleanCode, slotsOf, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
+import { applyEdit, cleanCode, editOf, slotsOf, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
 import { useField } from '../hooks/useField.js';
@@ -50,11 +51,15 @@ function sameSelection(a: CodeSelection | null, b: CodeSelection | null) {
   return a === b || (a !== null && b !== null && a.start === b.start && a.end === b.end);
 }
 
-/** The index of the box whose center is nearest `clientX`, or -1 without boxes. */
+/** The index of the box whose center is nearest `clientX`, the number of boxes when `clientX` is past the last one, or -1 without boxes. */
 function nearestBox(slots: HTMLCollection | undefined, clientX: number) {
+  const boxes = [...(slots ?? [])];
+  const last = boxes.at(-1)?.getBoundingClientRect();
+  // The input is always left to right, so the last box's inline end is its right.
+  if (last && clientX > last.right) return boxes.length;
   let nearest = -1;
   let best = Infinity;
-  for (const [i, slot] of [...(slots ?? [])].entries()) {
+  for (const [i, slot] of boxes.entries()) {
     const box = slot.getBoundingClientRect();
     const distance = Math.abs(clientX - (box.left + box.right) / 2);
     if (distance < best) {
@@ -65,7 +70,15 @@ function nearestBox(slots: HTMLCollection | undefined, clientX: number) {
   return nearest;
 }
 
-// Puts `text` in the input where the person's edit would, and fires the input event that reaches `onChange`. It uses the input's own undo stack where the browser has one; elsewhere it writes the value itself.
+// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`.
+function write(input: HTMLInputElement, next: string, caret: number) {
+  // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
+  input.setSelectionRange(caret, caret);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Puts `text` in place of the selection, and fires the input event that reaches `onChange`. It uses the input's own undo stack where the browser has one; elsewhere it writes the value itself.
 function insert(input: HTMLInputElement, text: string) {
   const doc = input.ownerDocument;
   if (activeIn(input) === input && typeof doc.execCommand === 'function') {
@@ -77,23 +90,17 @@ function insert(input: HTMLInputElement, text: string) {
   }
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
-  // As the browser does for a paste, keep what fits.
-  const room = Math.max(input.maxLength - (input.value.length - (end - start)), 0);
-  const kept = text.slice(0, room);
-  // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
-  const next = input.value.slice(0, start) + kept + input.value.slice(end);
-  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
-  input.setSelectionRange(start + kept.length, start + kept.length);
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  write(input, input.value.slice(0, start) + text + input.value.slice(end), start + text.length);
 }
 
 /**
  * A code for a sign-in or a verification, drawn as boxes over one native
  * input. The input keeps paste, undo, selection and the phone's code autofill
- * (`autocomplete="one-time-code"`), and the boxes are only drawn. Typing,
- * paste and autofill all keep the characters the code allows and cut it to
- * `length`; a pasted code replaces the whole value, a drop lands at the box it is dropped on, and a press on a box
- * selects its character so typing replaces it.
+ * (`autocomplete="one-time-code"`), and the boxes are only drawn. Every insert
+ * (typing, paste, a drop, a finished composition) follows one rule, `editOf`:
+ * a whole code replaces the value, and anything shorter replaces the selection
+ * and writes over what follows as far as it needs, so nothing typed moves out
+ * of its box. A press on a box selects its character so typing replaces it.
  */
 export function OneTimeCode({
   value,
@@ -116,7 +123,10 @@ export function OneTimeCode({
   const input = useRef<HTMLInputElement>(null);
   const slotsNode = useRef<HTMLSpanElement>(null);
   const inserting = useRef(false);
-  const dropBox = useRef<number | null>(null);
+  // The value and selection a composition started from, which it is applied to when it ends.
+  const composition = useRef<{ value: string; selection: CodeSelection } | null>(null);
+  // While composing, the input's own text, and the code the boxes show: the composition applied by the rule.
+  const [composing, setComposing] = useState<{ live: string; shown: string } | null>(null);
   const refs = useComposedRefs(input, ref);
   const fixed = readOnly ?? (!onChange && !onValueChange);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
@@ -142,85 +152,92 @@ export function OneTimeCode({
     const el = input.current;
     if (!el) return;
     const doc = el.ownerDocument;
-    function put(text: string) {
-      // A browser may fire beforeinput for the command below, which would come back here.
+    function apply(text: string, selection: CodeSelection) {
+      const { characters, length } = latest.current;
+      const edit = editOf(el!.value, selection, text, { characters, length });
+      if (!edit) return;
+      el!.setSelectionRange(edit.from, edit.to);
+      // A browser may fire beforeinput for the command insert uses, which would come back here.
       inserting.current = true;
       try {
-        insert(el!, text);
+        insert(el!, edit.insert);
       } finally {
         inserting.current = false;
       }
     }
+    // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
     function onBeforeInput(event: InputEvent) {
-      const { characters, length, fixed } = latest.current;
       const { inputType } = event;
-      const dropped = dropBox.current;
-      dropBox.current = null;
-      if (inserting.current || fixed || event.isComposing || !inputType.startsWith('insert') || inputType === 'insertCompositionText') return;
-      const data = event.data ?? event.dataTransfer?.getData('text/plain');
-      if (data == null) return;
-      const clean = cleanCode(data, characters, Infinity);
-      const typed = inputType === 'insertText' && data.length === 1;
-      if (typed ? clean !== data : !clean) {
-        event.preventDefault();
-        return;
-      }
-      const text = clean.slice(0, length);
-      const { value: current } = el!;
-      let from = el!.selectionStart ?? 0;
-      let to = el!.selectionEnd ?? from;
-      // A browser moves the caret to the drop point on the input's own text, which means nothing for boxes.
-      if (inputType === 'insertFromDrop' && dropped !== null) from = to = Math.min(dropped, current.length);
-      if (!typed && clean.length >= length) {
-        // A code that fills every box replaces the value.
-        from = 0;
-        to = current.length;
-      } else if (current.length >= length && from === to) {
-        // On a full code maxLength would refuse the insert, so it replaces the characters from the caret, or the last ones where they don't reach; nothing lands after the code.
-        if (from >= length) {
-          event.preventDefault();
-          return;
-        }
-        from = Math.min(from, length - text.length);
-        to = from + text.length;
-      } else if (typed) {
-        // The browser inserts a character that is allowed and replaces nothing.
-        return;
-      }
+      if (inserting.current || latest.current.fixed || event.isComposing || !inputType.startsWith('insert')) return;
+      if (inputType === 'insertCompositionText' || inputType === 'insertFromComposition') return;
+      const text = event.data ?? event.dataTransfer?.getData('text/plain');
+      if (text == null) return;
       event.preventDefault();
-      el!.setSelectionRange(from, to);
-      put(text);
-    }
-    // A full code has no room for a composition, so it replaces the box at the caret, as a typed character does.
-    function onCompositionStart() {
-      const { length, fixed } = latest.current;
-      const at = el!.selectionStart ?? 0;
-      if (!fixed && el!.value.length >= length && at === el!.selectionEnd && at < length) el!.setSelectionRange(at, at + 1);
+      apply(text, { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 });
     }
     function onDrop(event: DragEvent) {
+      if (latest.current.fixed) return;
+      // Cancelling the drop also cancels the drag's deleteByDrag, so text dragged inside the field is copied, not moved.
+      event.preventDefault();
       const box = nearestBox(slotsNode.current?.children, event.clientX);
-      dropBox.current = box < 0 ? null : box;
+      const at = box < 0 ? el!.value.length : box;
+      if (activeIn(el!) !== el) el!.focus();
+      apply(event.dataTransfer?.getData('text/plain') ?? '', { start: at, end: at });
+    }
+    function onCompositionStart() {
+      composition.current = { value: el!.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 } };
+    }
+    function onCompositionEnd(event: CompositionEvent) {
+      const saved = composition.current;
+      composition.current = null;
+      // Hands the input back to `value` now, which puts back the text from before the composition.
+      flushSync(() => setComposing(null));
+      const { characters, length, fixed } = latest.current;
+      const edit = saved && !fixed ? editOf(saved.value, saved.selection, event.data ?? '', { characters, length }) : null;
+      if (edit) {
+        write(el!, applyEdit(saved!.value, edit), edit.from + edit.insert.length);
+      } else if (saved && el!.value === saved.value) {
+        el!.setSelectionRange(saved.selection.start, saved.selection.end);
+      }
     }
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('compositionstart', onCompositionStart);
+    el.addEventListener('compositionend', onCompositionEnd);
     el.addEventListener('drop', onDrop, true);
     doc.addEventListener('selectionchange', sync);
     return () => {
       el.removeEventListener('beforeinput', onBeforeInput);
       el.removeEventListener('compositionstart', onCompositionStart);
+      el.removeEventListener('compositionend', onCompositionEnd);
       el.removeEventListener('drop', onDrop, true);
       doc.removeEventListener('selectionchange', sync);
     };
   }, []);
 
   function onChangeInput(event: ChangeEvent<HTMLInputElement>) {
+    const saved = composition.current;
+    if ((event.nativeEvent as InputEvent).isComposing) {
+      // React writes `value` back after a change event, and a write ends the composition, so the input keeps its own text until the composition ends and is applied.
+      const live = event.target.value;
+      let shown = saved?.value ?? value;
+      if (saved) {
+        const after = saved.value.length - saved.selection.end;
+        const text = live.slice(saved.selection.start, Math.max(live.length - after, saved.selection.start));
+        const edit = editOf(saved.value, saved.selection, text, { characters, length });
+        if (edit) shown = applyEdit(saved.value, edit);
+      }
+      setComposing({ live, shown });
+      sync();
+      return;
+    }
+    setComposing(null);
     onChange?.(event);
-    // Autofill that skips beforeinput, and a composition, can bring characters the code doesn't allow.
+    // Autofill that skips beforeinput can bring characters the code doesn't allow.
     onValueChange?.(cleanCode(event.target.value, characters, length));
     sync();
   }
 
-  // A press on a box selects its character, so typing replaces it; a press past the code puts the caret after it. Done on click rather than by cancelling the press, so a phone focuses natively and keeps its keyboard.
+  // A press on a box selects its character, so typing replaces it; a press on an empty box or past the last one puts the caret after the code. Done on click rather than by cancelling the press, so a phone focuses natively and keeps its keyboard.
   function onClick(event: MouseEvent<HTMLInputElement>) {
     const nearest = nearestBox(slotsNode.current?.children, event.clientX);
     // Only a press: a label's click and an assistive technology's carry no position of the person's.
@@ -234,7 +251,8 @@ export function OneTimeCode({
   }
 
   const control = field.getControlProps({ ...props, ref: refs });
-  const slots = slotsOf(value, selection, length);
+  const shown = composing?.shown ?? value;
+  const slots = slotsOf(shown, selection, length);
   // The caret after a full code is in no box, so the row itself shows the focus.
   const rowActive = selection !== null && !slots.some((slot) => slot.active);
   return (
@@ -251,7 +269,7 @@ export function OneTimeCode({
         autoCapitalize="off"
         dir="ltr"
         data-todae-one-time-code=""
-        value={value}
+        value={composing?.live ?? value}
         readOnly={fixed}
         className={styles.oneTimeCodeInput}
         onChange={onChangeInput}
@@ -274,7 +292,7 @@ export function OneTimeCode({
             data-filled={slot.filled ? '' : undefined}
             data-caret={slot.caret ? '' : undefined}
           >
-            {value.charAt(i)}
+            {shown.charAt(i)}
           </span>
         ))}
       </span>

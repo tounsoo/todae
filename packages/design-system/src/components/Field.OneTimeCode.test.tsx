@@ -71,15 +71,31 @@ describe('Field.OneTimeCode', () => {
   });
 
   it('refuses a letter typed into a digits code and lets a digit in', () => {
-    render(<Code />);
+    const onValueChange = vi.fn();
+    render(<Code onValueChange={onValueChange} />);
     expect(beforeInput('insertText', 'a').defaultPrevented).toBe(true);
-    expect(beforeInput('insertText', '7').defaultPrevented).toBe(false);
+    expect(onValueChange).not.toHaveBeenCalled();
+    beforeInput('insertText', '7');
+    expect(onValueChange).toHaveBeenLastCalledWith('7');
   });
 
   it('accepts letters in an alphanumeric code but not a symbol', () => {
-    render(<Code characters="alphanumeric" />);
-    expect(beforeInput('insertText', 'k').defaultPrevented).toBe(false);
-    expect(beforeInput('insertText', '-').defaultPrevented).toBe(true);
+    const onValueChange = vi.fn();
+    render(<Code characters="alphanumeric" onValueChange={onValueChange} />);
+    beforeInput('insertText', 'k');
+    expect(onValueChange).toHaveBeenLastCalledWith('k');
+    beforeInput('insertText', '-');
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('takes full-width digits as the digits they are, typed or pasted', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12" onValueChange={onValueChange} />);
+    input().setSelectionRange(2, 2);
+    beforeInput('insertText', '３');
+    expect(onValueChange).toHaveBeenLastCalledWith('123');
+    beforeInput('insertFromPaste', '４８２９１３');
+    expect(onValueChange).toHaveBeenLastCalledWith('482913');
   });
 
   it('treats a multi-character insert like a paste', () => {
@@ -244,12 +260,20 @@ describe('Field.OneTimeCode', () => {
     expect(code.selectionStart).toBe(3);
   });
 
-  it('keeps what fits of a paste where the browser has no insert command', () => {
+  it('writes a paste that needs room over what follows, and moves nothing out, where the browser has no insert command', () => {
     const onValueChange = vi.fn();
     render(<Code initial="12345" onValueChange={onValueChange} />);
     input().setSelectionRange(1, 1);
     beforeInput('insertFromPaste', '7 8');
-    expect(onValueChange).toHaveBeenLastCalledWith('172345');
+    expect(onValueChange).toHaveBeenLastCalledWith('178345');
+  });
+
+  it('cuts a short paste at the end of a partial code to the room left', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12345" onValueChange={onValueChange} />);
+    input().setSelectionRange(5, 5);
+    beforeInput('insertFromPaste', '78');
+    expect(onValueChange).toHaveBeenLastCalledWith('123457');
   });
 
   it('cleans a value that arrives by change, such as autofill', () => {

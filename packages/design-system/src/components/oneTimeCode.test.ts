@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanCode, editOf, type OneTimeCodeCharacters } from './oneTimeCode.js';
+import { applyEdit, cleanCode, editOf, type OneTimeCodeCharacters } from './oneTimeCode.js';
 
 describe('cleanCode', () => {
   it.each([
@@ -20,7 +20,7 @@ describe('editOf', () => {
   // The value after the edit, or null when nothing lands.
   function result(value: string, [start, end]: [number, number], text: string, length = 6, characters: OneTimeCodeCharacters = 'digits') {
     const edit = editOf(value, { start, end }, text, { characters, length });
-    return edit && value.slice(0, edit.from) + edit.insert + value.slice(edit.to);
+    return edit && applyEdit(value, edit);
   }
 
   it.each([
@@ -88,7 +88,7 @@ describe('editOf', () => {
             // Letters, so what was there and what went in can be told apart.
             const edit = editOf(value, { start, end }, text, { characters: 'alphanumeric', length: 6 });
             if (!edit) continue;
-            const next = value.slice(0, edit.from) + edit.insert + value.slice(edit.to);
+            const next = applyEdit(value, edit);
             expect(next.length).toBeLessThanOrEqual(6);
             expect(edit.from).toBe(start);
             expect(edit.to).toBeGreaterThanOrEqual(end);

@@ -15,6 +15,11 @@ export type CodeSelection = { start: number; end: number };
 /** Replace `value.slice(from, to)` with `insert`. */
 export type CodeEdit = { from: number; to: number; insert: string };
 
+/** `value` with `edit` made. */
+export function applyEdit(value: string, { from, to, insert }: CodeEdit): string {
+  return value.slice(0, from) + insert + value.slice(to);
+}
+
 /**
  * The one rule for every insert: typing, paste, drop and a finished composition.
  * A whole code replaces the value. Anything shorter replaces the selection and

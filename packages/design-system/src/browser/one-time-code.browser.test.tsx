@@ -12,11 +12,13 @@ function Code({
   onValueChange,
   style,
   characters,
+  codeStyle,
 }: {
   initial?: string;
   onValueChange?: (value: string) => void;
   style?: CSSProperties;
   characters?: 'digits' | 'alphanumeric';
+  codeStyle?: CSSProperties;
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -27,6 +29,7 @@ function Code({
           <Field.OneTimeCode
             value={value}
             characters={characters}
+            style={codeStyle}
             onValueChange={(next) => {
               setValue(next);
               onValueChange?.(next);
@@ -62,6 +65,16 @@ async function paste(text: string) {
   target.focus();
   await userEvent.keyboard('{Control>}v{/Control}');
 }
+
+// An IME composition through the browser's own IME path: each step's text, then the commit, or a cancel without one.
+async function compose(steps: string[], commit: string | null = steps.at(-1)!) {
+  for (const text of steps) await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
+  if (commit === null) await session().send('Input.imeSetComposition', { text: '', selectionStart: 0, selectionEnd: 0 });
+  else await session().send('Input.insertText', { text: commit });
+}
+
+// A wrapper style that leaves room past the last box, where a press or a drop is past the code.
+const roomAfter = { paddingInlineEnd: '48px' } as CSSProperties;
 
 function ShadowCode() {
   const [value, setValue] = useState('123456');
@@ -228,15 +241,15 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('482913'));
   });
 
-  // Drops a "9" on the middle of box `box`, with the browser's own drag events.
-  async function dropAt(box: number) {
+  // Drops a "9" on the middle of box `box`, or `x` pixels into the input, with the browser's own drag events.
+  async function dropAt(box: number | { x: number }) {
     const rect = input().getBoundingClientRect();
     const data = { items: [{ mimeType: 'text/plain', data: '9' }], dragOperationsMask: 1 };
     // The test page sits in a scaled frame, and the drag events take the top page's coordinates.
     const frame = window.frameElement?.getBoundingClientRect();
     const scale = frame ? frame.width / window.innerWidth : 1;
     const at = {
-      x: (frame?.left ?? 0) + (rect.left + boxPosition(box).x) * scale,
+      x: (frame?.left ?? 0) + (rect.left + (typeof box === 'number' ? boxPosition(box).x : box.x)) * scale,
       y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale,
     };
     for (const type of ['dragEnter', 'dragOver', 'drop']) await session().send('Input.dispatchDragEvent', { type, ...at, data });
@@ -262,19 +275,130 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('129456'));
   });
 
-  it('replaces the box at the caret when a composition starts on a full code, and none after it', async () => {
-    const compose = async (text: string) => {
-      await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
-      await session().send('Input.insertText', { text });
-    };
+  it('applies a composition on a full code over the box at the caret when it ends, as one edit, and lands none after the code', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['x']);
+    await vi.waitFor(() => expect(input().value).toBe('AxC123'));
+    expect(onValueChange.mock.calls).toEqual([['AxC123']]);
+    expect(active()).toEqual([2]);
+    await userEvent.keyboard('{End}');
+    await compose(['y']);
+    expect(input().value).toBe('AxC123');
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a composition in the boxes, by the rule, while it is composed', async () => {
     render(<Code initial="ABC123" characters="alphanumeric" />);
     await userEvent.click(input());
     await userEvent.keyboard('{Home}{ArrowRight}');
-    await compose('x');
+    await session().send('Input.imeSetComposition', { text: 'x', selectionStart: 1, selectionEnd: 1 });
+    await vi.waitFor(() => expect(boxes().map((box) => box.textContent).join('')).toBe('AxC123'));
+    await session().send('Input.insertText', { text: 'x' });
     await vi.waitFor(() => expect(input().value).toBe('AxC123'));
-    await userEvent.keyboard('{End}');
-    await compose('y');
+  });
+
+  it('leaves a full code as it was when a composition brings no character it allows', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['ㅎ']);
+    await vi.waitFor(() => expect([input().selectionStart, input().selectionEnd]).toEqual([1, 1]));
+    expect(input().value).toBe('ABC123');
+    expect(onValueChange).not.toHaveBeenCalled();
+    await userEvent.keyboard('x');
     expect(input().value).toBe('AxC123');
+  });
+
+  it('leaves a partial code as it was when a composition brings no character it allows, and keeps the IME working while it composes', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['ㅎ', '하']);
+    await vi.waitFor(() => expect(input().value).toBe('AB'));
+    expect(onValueChange).not.toHaveBeenCalled();
+    await compose(['c', 'cd']);
+    await vi.waitFor(() => expect(input().value).toBe('ABcd'));
+    expect(onValueChange.mock.calls).toEqual([['ABcd']]);
+  });
+
+  it('leaves a full code as it was when a composition is cancelled', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['x'], null);
+    await vi.waitFor(() => expect([input().selectionStart, input().selectionEnd]).toEqual([1, 1]));
+    expect(input().value).toBe('ABC123');
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it('takes a composed full-width digit as its ASCII one', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['１']);
+    await vi.waitFor(() => expect(input().value).toBe('113456'));
+  });
+
+  it('writes a composition of several steps over the boxes after the caret, and moves nothing out', async () => {
+    render(<Code initial="ABC123" characters="alphanumeric" />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await compose(['a', 'ab']);
+    await vi.waitFor(() => expect(input().value).toBe('Aab123'));
+  });
+
+  it('takes full-width digits typed or pasted as their ASCII ones', async () => {
+    render(<Code />);
+    await userEvent.click(input());
+    await session().send('Input.insertText', { text: '１' });
+    expect(input().value).toBe('1');
+    await paste('２３４５６');
+    expect(input().value).toBe('123456');
+  });
+
+  it('writes a short paste over a selected box of a full code, and moves nothing out', async () => {
+    render(<Code initial="123456" />);
+    await userEvent.click(input(), { position: boxPosition(2) });
+    expect([input().selectionStart, input().selectionEnd]).toEqual([2, 3]);
+    await paste('78');
+    expect(input().value).toBe('127856');
+  });
+
+  it('copies text dragged inside the field to the box it is dropped on', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="123456" onValueChange={onValueChange} />);
+    input().focus();
+    input().setSelectionRange(0, 2);
+    // The transparent input's own glyphs sit at its start, which is where a drag of its selection starts.
+    const y = input().getBoundingClientRect().height / 2;
+    await userEvent.dragAndDrop(input(), input(), { sourcePosition: { x: 4, y }, targetPosition: { x: boxPosition(4).x, y } });
+    await vi.waitFor(() => expect(input().value).toBe('123412'));
+    expect(onValueChange.mock.calls).toEqual([['123412']]);
+  });
+
+  it('refuses a drop past a full code, and lands one past a partial code after it', async () => {
+    render(<Code initial="123456" codeStyle={roomAfter} />);
+    const past = input().getBoundingClientRect().width - 4;
+    await dropAt({ x: past });
+    expect(input().value).toBe('123456');
+    cleanup();
+    render(<Code initial="12" codeStyle={roomAfter} />);
+    await dropAt({ x: past });
+    await vi.waitFor(() => expect(input().value).toBe('129'));
+  });
+
+  it('puts the caret after a full code when the press is past the last box', async () => {
+    render(<Code initial="123456" codeStyle={roomAfter} />);
+    const y = input().getBoundingClientRect().height / 2;
+    await userEvent.click(input(), { position: { x: input().getBoundingClientRect().width - 4, y } });
+    expect([input().selectionStart, input().selectionEnd]).toEqual([6, 6]);
+    expect(active()).toEqual([]);
   });
 
   it('warns of nothing when it takes focus as it mounts', () => {
