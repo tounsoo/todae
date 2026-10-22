@@ -21,6 +21,8 @@ type MotionState = {
   /** The last change, kept until a reset. */
   change: StackChange | null;
   entering: Moving | null;
+  /** Whether the entering view was sliding out, so on screen, before the change. */
+  reentering: boolean;
   /** Every view still sliding out, also those an earlier change moved. */
   leaving: readonly Moving[];
   /** A push's trigger, until the render that shows the stack it asked for, or keeps the stack. */
@@ -54,6 +56,7 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
         shown: action.stack,
         change: { from: state.shown, to: action.stack, direction, trigger },
         entering: top === undefined || top === left ? null : { view: top, direction },
+        reentering: leaving.some((moving) => moving.view === top),
         leaving: leaving.filter((moving) => moving.view !== top),
         pushing: null,
       };
@@ -64,7 +67,7 @@ function motionReducer(state: MotionState, action: MotionAction): MotionState {
       return entering === state.entering && leaving.length === state.leaving.length ? state : { ...state, entering, leaving };
     }
     case 'reset':
-      return { shown: action.stack, change: null, entering: null, leaving: [], pushing: null };
+      return { shown: action.stack, change: null, entering: null, reentering: false, leaving: [], pushing: null };
   }
 }
 
@@ -84,6 +87,19 @@ function topOf(viewport: HTMLElement, scroller: Element): number {
   if (scroller === viewport.ownerDocument.scrollingElement) return top;
   const { paddingTop } = getComputedStyle(scroller);
   return top - scroller.getBoundingClientRect().top - scroller.clientTop - Number.parseFloat(paddingTop);
+}
+
+// The viewport's height as the last frame drew it: the height animation's
+// while one plays, else the height of the views on screen before the change,
+// which leaves out an entering view that wasn't sliding out.
+function heightBefore(viewport: HTMLElement, entering: HTMLElement, reentering: boolean, animation: Animation | null): string {
+  const playing = animation?.playState === 'running' || animation?.playState === 'paused';
+  if (playing || reentering) return getComputedStyle(viewport).height;
+  const { display } = entering.style;
+  entering.style.display = 'none';
+  const height = getComputedStyle(viewport).height;
+  entering.style.display = display;
+  return height;
 }
 
 function enterEasing(viewport: HTMLElement): string | undefined {
@@ -132,10 +148,11 @@ type UseStackMotionResult = {
  * during a slide lets the views already moving finish theirs.
  */
 export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseStackMotionOptions): UseStackMotionResult {
-  const [{ shown, change, entering, leaving, pushing }, dispatch] = useReducer(motionReducer, {
+  const [{ shown, change, entering, reentering, leaving, pushing }, dispatch] = useReducer(motionReducer, {
     shown: stack,
     change: null,
     entering: null,
+    reentering: false,
     leaving: [],
     pushing: null,
   });
@@ -146,6 +163,7 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
   // An effect created again on a tree that already shows the change, as an
   // <Activity> that shows again does, must not move focus or scroll again.
   const applied = useRef<StackChange | null>(null);
+  const heightAnimation = useRef<Animation | null>(null);
 
   useLayoutEffect(() => {
     if (!change || applied.current === change) return;
@@ -161,17 +179,27 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     const scroller = viewport && scrollContainer(viewport);
     const restored = onChange(change, views, scroller?.scrollTop ?? 0);
     if (!viewport || !scroller) return;
-    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
     const duration = reducedMotion() ? 0 : tokenMs(viewport, '--todae-drilldown-motion-duration');
     // A restored offset needs the viewport's full height at once, or the
     // scroll container clamps it.
-    if (views.entering && views.leaving && duration && !restored) {
-      viewport.animate([{ height: `${views.leaving.offsetHeight}px` }, { height: `${views.entering.offsetHeight}px` }], {
-        duration,
+    const height =
+      views.entering && views.leaving && duration && restored === undefined
+        ? {
+            from: heightBefore(viewport, views.entering, reentering, heightAnimation.current),
+            to: `${views.entering.offsetHeight}px`,
+            duration,
+          }
+        : null;
+    heightAnimation.current?.cancel();
+    heightAnimation.current = null;
+    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
+    if (height) {
+      heightAnimation.current = viewport.animate([{ height: height.from }, { height: height.to }], {
+        duration: height.duration,
         easing: enterEasing(viewport),
       });
     }
-  }, [change, viewportRef]);
+  }, [change, reentering, viewportRef]);
 
   // Settles each moving view when its slide's transitions finish, so CSS that
   // changes them keeps it on screen as long as it moves. The entering view

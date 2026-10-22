@@ -733,24 +733,28 @@ describe('Drilldown in a browser', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('slides a view overtaken at the middle of its slide on from where it is', async () => {
+  it('slides a view overtaken during its slide on from where it is, and the height too on a push', async () => {
+    const viewport = () => screen.getByTestId('viewport');
     const offsets = (labels: readonly string[]) => {
-      const port = screen.getByTestId('viewport').getBoundingClientRect();
+      const port = viewport().getBoundingClientRect();
       return labels.map((label) => view(label).getBoundingClientRect().left - port.left);
     };
     for (const second of ['push', 'pop'] as const) {
-      await openDialog(<SettingsDialog />);
+      await openDialog(<SettingsDialog inAccount={<div style={{ blockSize: 200 }} />} />);
       screen.getByRole('button', { name: 'Account' }).click();
       await waitFor(() => expect(view('Account')).not.toBeNull());
-      for (const label of ['Settings', 'Account']) {
-        for (const animation of view(label).getAnimations()) {
+      // Early on, where the eased height is still well short of the view's.
+      for (const el of [view('Settings'), view('Account'), viewport()]) {
+        for (const animation of el.getAnimations()) {
           animation.pause();
-          animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 2;
+          animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 10;
         }
       }
       const watched = second === 'push' ? ['Account'] : ['Account', 'Settings'];
       const before = offsets(watched);
+      const heightBefore = viewport().getBoundingClientRect().height;
       expect(Math.abs(before[0]!)).toBeGreaterThan(10);
+      expect(view('Account').offsetHeight - heightBefore).toBeGreaterThan(50);
       if (second === 'push') screen.getByRole('button', { name: 'Email' }).click();
       else screen.getByRole('button', { name: 'Back to Settings' }).click();
       // Read as the change commits, before a frame moves the new slide on.
@@ -759,8 +763,30 @@ describe('Drilldown in a browser', () => {
         return offsets(watched);
       });
       after.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
+      // A pop brings back an offset, so its height is the views' own at once.
+      if (second === 'push') expect(Math.abs(viewport().getBoundingClientRect().height - heightBefore)).toBeLessThan(2);
       cleanupAll();
     }
+  });
+
+  it('brings back the offset of a pop that comes while the height of the push before it still moves', async () => {
+    await openDialog(<ScrollList />);
+    const body = screen.getByTestId('body');
+    await waitFor(() => expect(body.scrollHeight).toBeGreaterThan(body.clientHeight + 400));
+    const row = screen.getByRole('button', { name: 'Item 30' });
+    row.scrollIntoView({ block: 'center' });
+    const offset = body.scrollTop;
+    expect(offset).toBeGreaterThan(300);
+    row.click();
+    await waitFor(() => expect(view('Item 30')).not.toBeNull());
+    const [height] = screen.getByTestId('viewport').getAnimations();
+    height!.pause();
+    height!.currentTime = Number(height!.effect!.getComputedTiming().duration) * 0.9;
+    expect(body.scrollHeight - body.clientHeight).toBeLessThan(offset);
+    screen.getByRole('button', { name: 'Back to Items' }).click();
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Back to Items' })).toBeNull());
+    expect(body.scrollTop).toBe(offset);
+    cleanupAll();
   });
 
   it('applies a change once, so an Activity that shows the views again leaves focus memory alone', async () => {
