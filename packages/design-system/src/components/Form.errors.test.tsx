@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
-import { useContext, useEffect, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
@@ -332,6 +332,38 @@ describe('a reply while waiting', () => {
     await settle();
     expect(screen.getByText('Taken.')).toBeTruthy();
     expect(document.activeElement).toBe(input());
+  });
+
+  it('moves focus in the commit that brings it, before a microtask a parent queues from its layout effect', async () => {
+    // The Wizard recipe reads focus there, as the Form page promises, to decide whether the shown step's heading takes it.
+    let seen: Element | null = null;
+    let reply: (errors: Record<string, string>) => void = () => {};
+    function Parent() {
+      const [errors, setErrors] = useState<Record<string, string>>({});
+      reply = setErrors;
+      useLayoutEffect(() => {
+        if (errors.email) queueMicrotask(() => (seen = document.activeElement));
+      }, [errors]);
+      return <Sending errors={errors} />;
+    }
+    await mount(<Parent />);
+    await type(input(), 'ben@example.com');
+    await submit(screen.getByTestId('form'));
+    screen.getByLabelText('Other').focus();
+    // Outside act, so React schedules the reply as it would after a request: act would flush passive effects too.
+    const actEnvironment = (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT;
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
+    try {
+      await new Promise<void>((resolve) =>
+        setTimeout(() => {
+          reply({ email: 'Taken.' });
+          setTimeout(resolve, 20);
+        }),
+      );
+    } finally {
+      (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+    }
+    expect(seen).toBe(input());
   });
 
   it('is not an inline rebuild of the same content', async () => {

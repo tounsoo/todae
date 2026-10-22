@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Steps.Item',
   description:
-    'One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph and struck-through text, the current step a spinner, and a step with an error the error glyph. Takes native li attributes.',
+    'One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph, struck through in the plan variant, the current step a spinner in the plan variant and a still ring in the progress variant, and a step with an error the error glyph. Takes native li attributes.',
   props: [
     {
       name: 'status',
