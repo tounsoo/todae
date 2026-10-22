@@ -64,7 +64,7 @@ export function Reasoning({ thinking, seconds, children }: { thinking: boolean; 
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고 펼침 상태를 알립니다. 추론 안의 링크가 포커스를 가진 채로 블록이 닫히면 메인 진입점의 `Disclosure.Summary`가 포커스를 자기에게로 옮기므로, 포커스가 페이지로 빠지지 않습니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 이를 읽어 메시지가 도착하기 시작할 때와 다 도착했을 때 알립니다.
+**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고 펼침 상태를 알립니다. 추론 안의 링크가 포커스를 가진 채로 블록이 닫히면 메인 진입점의 `Disclosure.Summary`가 포커스를 자기에게로 옮기며, Chromium, Firefox, WebKit에서는 이 덕분에 포커스가 페이지로 빠지지 않습니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 이를 읽어 메시지가 도착하기 시작할 때와 다 도착했을 때 알립니다.
 
 **직접 제공할 것:** dots는 숨겨지므로 상태를 말로 알리는 summary 텍스트. 제품의 stream에서 얻는 단계와 걸린 시간.
 
