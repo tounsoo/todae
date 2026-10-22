@@ -99,6 +99,30 @@ describe('Drilldown focus and surface reset in a browser', () => {
     });
   }
 
+  it('reports the reset once a Dialog hidden during its exit shows again and finishes closing', async () => {
+    const onValueChange = vi.fn();
+    const ui = (open: boolean, mode: 'visible' | 'hidden' = 'visible') => (
+      <Activity mode={mode}>
+        <Surfaced kind="Dialog" open={open} onValueChange={onValueChange} />
+      </Activity>
+    );
+    const { rerender } = render(ui(true));
+    try {
+      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+      await settled();
+      rerender(ui(false));
+      rerender(ui(false, 'hidden'));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      rerender(ui(false));
+      await waitFor(() => expect(onValueChange).toHaveBeenCalledTimes(2));
+      expect(onValueChange).toHaveBeenLastCalledWith(['filters'], 'reset');
+    } finally {
+      cleanupAll();
+    }
+  });
+
   it('returns focus to the trigger when Escape goes back from focus on the dialog itself', async () => {
     await openDialog(<SettingsDialog />);
     const account = screen.getByRole('button', { name: 'Account' });
@@ -272,6 +296,7 @@ function Deferred({ apply }: { apply: (update: () => void) => void }) {
           <Drilldown.View value="settings" label="Settings">
             <input aria-label="Search" />
             <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+            <Drilldown.Trigger value="about">About details</Drilldown.Trigger>
             <button type="button" onClick={() => setStack(['settings', 'about'])}>
               About
             </button>
@@ -321,6 +346,11 @@ describe('Drilldown focus with a stack the product sets later', () => {
       await settled();
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search' }));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Open account' }));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search' }));
     } finally {
       cleanupAll();
     }
@@ -335,6 +365,23 @@ describe('Drilldown focus with a stack the product sets later', () => {
       await settled();
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(account);
+    } finally {
+      cleanupAll();
+    }
+  });
+
+  it("returns focus to a view's own trigger, not an earlier push's, when the product applies two pushes one after the other", async () => {
+    render(<Deferred apply={(update) => setTimeout(update, 50)} />);
+    try {
+      const account = screen.getByRole('button', { name: 'Account' });
+      const about = screen.getByRole('button', { name: 'About details' });
+      await userEvent.click(account);
+      await userEvent.click(about);
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Version' })));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      expect(document.activeElement).not.toBe(account);
+      expect([about, screen.getByRole('textbox', { name: 'Search' })]).toContain(document.activeElement);
     } finally {
       cleanupAll();
     }

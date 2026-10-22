@@ -86,7 +86,7 @@ type RadioStops = Map<HTMLFormElement | null, Map<string, HTMLInputElement | nul
 function radioTakesFocus(el: HTMLInputElement): boolean {
   // `hidden` is read too, for engines without checkVisibility.
   if (hasNegativeTabindex(el) || el.closest('[hidden]')) return false;
-  return !el.matches(':disabled') && isReachable(el);
+  return canFocusNow(el);
 }
 
 function radioStopsIn(root: HTMLElement): RadioStops {

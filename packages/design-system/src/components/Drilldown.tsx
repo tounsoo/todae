@@ -100,7 +100,7 @@ function handledOrComposing(event: KeyboardEvent): boolean {
   return event.defaultPrevented || isImeKeyEvent(event);
 }
 
-function canTakeFocus(el: HTMLElement | null | undefined, view: HTMLElement): el is HTMLElement {
+function focusableIn(el: HTMLElement | null | undefined, view: HTMLElement): el is HTMLElement {
   return Boolean(el?.isConnected && view.contains(el) && canFocusNow(el));
 }
 
@@ -123,7 +123,7 @@ function movesFocus(active: Element | null, viewport: HTMLElement | null, leavin
  */
 function focusTarget(view: HTMLElement, remembered: Covered | undefined, initialFocus: HTMLElement | null | undefined): HTMLElement {
   for (const el of [remembered?.trigger, initialFocus]) {
-    if (canTakeFocus(el, view)) return el;
+    if (focusableIn(el, view)) return el;
   }
   return firstTabbable(view) ?? view;
 }
@@ -160,7 +160,8 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
         }
         return;
       }
-      memory.pushed(next, trigger);
+      const holder = stack.at(-1);
+      if (holder !== undefined) memory.pushed(next, trigger, holder);
       change([...stack, next], 'push');
     },
     [change, memory, stack],
