@@ -5,7 +5,10 @@ import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
 import { FilterBarIssues } from './FilterBarDemo';
 
+const observers: MutationObserver[] = [];
+
 afterEach(() => {
+  for (const observer of observers.splice(0)) observer.disconnect();
   cleanup();
   // Drop writes still pending, so none lands in a later test.
   const pending = (globalThis as unknown as Record<symbol, Record<string, ReturnType<typeof setTimeout>> | undefined>)[
@@ -35,10 +38,18 @@ function recordAnnouncements() {
     }
   });
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  observers.push(observer);
   return said;
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Waits for the announcements, then long enough for a second one to land.
+async function expectSaid(said: string[], expected: string[]) {
+  await expect.poll(() => said, { timeout: 2000 }).toEqual(expected);
+  await wait(1000);
+  expect(said).toEqual(expected);
+}
 
 function setup() {
   render(
@@ -74,7 +85,7 @@ it('keeps a filter menu open while values are checked and names the count on its
   await expect.poll(() => menu.matches(':popover-open')).toBe(false);
   expect(document.activeElement).toBe(status());
   // The count is said once the menu closes.
-  await expect.poll(() => said, { timeout: 2000 }).toEqual(['6 issues shown']);
+  await expectSaid(said, ['6 issues shown']);
 });
 
 it('removes a chip from the keyboard and says the new count once', async () => {
@@ -83,14 +94,14 @@ it('removes a chip from the keyboard and says the new count once', async () => {
   await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Open' }));
   await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Closed' }));
   await userEvent.keyboard('{Escape}');
-  await wait(800);
+  await wait(1500);
   const said = recordAnnouncements();
   within(chips()!).getByRole('button', { name: 'Remove Status: Open' }).focus();
   await userEvent.keyboard('{Enter}');
   // Focus stays in the row, on the chip that took the removed one's place.
   await expect.poll(() => document.activeElement).toBe(within(chips()!).getByRole('button', { name: 'Remove Status: Closed' }));
   expect(rows()).toHaveLength(2);
-  await expect.poll(() => said, { timeout: 2000 }).toEqual(['2 issues shown']);
+  await expectSaid(said, ['2 issues shown']);
 });
 
 it('hands focus to the first filter button when the last chip is removed', async () => {
@@ -104,8 +115,19 @@ it('hands focus to the first filter button when the last chip is removed', async
   expect(rows()).toHaveLength(8);
 });
 
+it('says nothing when a menu opens and closes with no change', async () => {
+  setup();
+  const said = recordAnnouncements();
+  await userEvent.click(status());
+  await userEvent.keyboard('{Escape}');
+  await wait(1500);
+  expect(said).toEqual([]);
+});
+
 it('hands focus to the first filter button after Clear all and after Clear filters', async () => {
   setup();
+  // Changes made with no pause between menus say only where they end up.
+  const said = recordAnnouncements();
   await userEvent.click(status());
   await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Closed' }));
   await userEvent.keyboard('{Escape}');
@@ -114,8 +136,7 @@ it('hands focus to the first filter button after Clear all and after Clear filte
   await userEvent.keyboard('{Escape}');
   // No closed issue is high priority.
   expect(screen.getByRole('heading', { name: 'No issues match these filters' })).toBeVisible();
-  const said = recordAnnouncements();
-  await expect.poll(() => said, { timeout: 2000 }).toEqual(['No issues match these filters']);
+  await expectSaid(said, ['No issues match these filters']);
 
   await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
   await expect.poll(() => document.activeElement).toBe(status());
