@@ -123,9 +123,8 @@ it('hands focus on under StrictMode', async () => {
       <Decision />
     </StrictMode>,
   );
-  const approve = screen.getByRole('button', { name: 'Approve' });
-  approve.focus();
-  act(() => approve.click());
+  // A pointer click with no focus on the button, so the StrictMode-attached listener runs too.
+  fireEvent.click(screen.getByRole('button', { name: 'Approve' }), { detail: 1 });
   await flush();
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Summary' }));
 });
@@ -151,5 +150,6 @@ it('leaves focus alone when the element is hidden in an Activity rather than rem
   hide.focus();
   act(() => hide.click());
   await flush();
-  expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Summary' }));
+  // The browser decides where focus goes; jsdom keeps it on the hidden button.
+  expect(document.activeElement).toBe(hide);
 });
