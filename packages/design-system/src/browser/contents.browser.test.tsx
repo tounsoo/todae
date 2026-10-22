@@ -22,12 +22,16 @@ type PageProps = {
   more?: boolean;
   /** Renders the links through a router-like render that drops the ref. */
   refless?: boolean;
+  /** Leaves out the link to Three. */
+  noThree?: boolean;
+  /** Puts the first section in a wrapper, so the first heading's parent isn't the scroller. */
+  wrapped?: boolean;
   scroller?: CSSProperties;
 };
 
 const RefLess = ({ ref: _ref, ...props }: LinkRenderProps) => <a {...props} />;
 
-function Page({ dir, list = true, extra = false, more = false, refless = false, scroller }: PageProps) {
+function Page({ dir, list = true, extra = false, more = false, refless = false, noThree = false, wrapped = false, scroller }: PageProps) {
   const render = refless ? RefLess : undefined;
   const tall = { blockSize: '400px', margin: 0 };
   return (
@@ -51,11 +55,13 @@ function Page({ dir, list = true, extra = false, more = false, refless = false, 
               </Contents.Item>
             </Contents.List>
           </Contents.Item>
-          <Contents.Item>
-            <Contents.Link href="#three" render={render}>
-              Three
-            </Contents.Link>
-          </Contents.Item>
+          {noThree ? null : (
+            <Contents.Item>
+              <Contents.Link href="#three" render={render}>
+                Three
+              </Contents.Link>
+            </Contents.Item>
+          )}
           {more ? (
             <Contents.Item>
               <Contents.Link href="#nowhere">Nowhere</Contents.Link>
@@ -78,10 +84,21 @@ function Page({ dir, list = true, extra = false, more = false, refless = false, 
           ...scroller,
         }}
       >
-        <h2 id="one" style={{ margin: 0 }}>
-          One
-        </h2>
-        <p style={tall}>…</p>
+        {wrapped ? (
+          <div>
+            <h2 id="one" style={{ margin: 0 }}>
+              One
+            </h2>
+            <p style={tall}>…</p>
+          </div>
+        ) : (
+          <>
+            <h2 id="one" style={{ margin: 0 }}>
+              One
+            </h2>
+            <p style={tall}>…</p>
+          </>
+        )}
         <h2 id="two" style={{ margin: 0 }}>
           Two
         </h2>
@@ -188,7 +205,28 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('Three'));
   });
 
-  it('keeps releasing a pick after the links change', async () => {
+  it('drops a pick whose link goes, so it does not come back with the link', async () => {
+    const { rerender } = render(<Page />);
+    link('Three').click();
+    await waitFor(() => expect(current()).toBe('Three'));
+    rerender(<Page noThree />);
+    await waitFor(() => expect(current()).toBe('Two A'));
+    rerender(<Page />);
+    await frames(2);
+    expect(current()).toBe('Two A');
+  });
+
+  it('keeps a click pick through a smooth scroll that ends after the hash changes', async () => {
+    render(<Page scroller={{ scrollBehavior: 'smooth' }} />);
+    await waitFor(() => expect(current()).toBe('One'));
+    link('Three').click();
+    const scroller = screen.getByTestId('scroller');
+    await waitFor(() => expect(scroller.scrollTop).toBe(scroller.scrollHeight - scroller.clientHeight), { timeout: 3000 });
+    await frames(2);
+    expect(current()).toBe('Three');
+  });
+
+  it('keeps releasing a pick after a link is added', async () => {
     const { rerender } = render(<Page />);
     link('Two').click();
     await waitFor(() => expect(current()).toBe('Two'));
@@ -286,6 +324,28 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('Two A'));
   });
 
+  it('drops a pick on scroll keys in a focusable region, but not on keys a widget cancels', async () => {
+    render(
+      <>
+        <div role="listbox" aria-label="Choices" tabIndex={0} onKeyDown={(event) => event.preventDefault()} />
+        <Page />
+      </>,
+    );
+    link('Three').click();
+    await waitFor(() => expect(current()).toBe('Three'));
+    const listbox = screen.getByRole('listbox');
+    listbox.focus();
+    listbox.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    await frames(2);
+    expect(current()).toBe('Three');
+    const scroller = screen.getByTestId('scroller');
+    scroller.setAttribute('role', 'region');
+    scroller.tabIndex = 0;
+    scroller.focus();
+    scroller.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+    await waitFor(() => expect(current()).toBe('Two A'));
+  });
+
   it('reads a percentage scroll padding against the scroller, from inside its border', async () => {
     // 20% of the 300px box is 60px; the 10px border moves the padding edge down too.
     render(<Page scroller={{ scrollPaddingBlockStart: '20%', borderBlockStart: '10px solid' }} />);
@@ -301,15 +361,24 @@ describe('Contents in a browser', () => {
   });
 
   it('measures again when the scroller resizes', async () => {
-    const { rerender } = render(<Page />);
+    // A percentage padding moves the line with the box: 20% of 300px is 60px, of 100px is 20px.
+    const padding = { scrollPaddingBlockStart: '20%' };
+    const { rerender } = render(<Page wrapped scroller={padding} />);
     await waitFor(() => expect(current()).toBe('One'));
-    rerender(<Page scroller={{ blockSize: '100px' }} />);
+    await frames(4);
+    rerender(<Page wrapped scroller={{ ...padding, blockSize: '100px' }} />);
     await frames(2);
-    // Two sits 30px below the line, inside the shorter box: still not passed.
-    scrollTo('two', -30);
-    await waitFor(() => expect(current()).toBe('One'));
-    scrollTo('two', 5);
+    const scroller = screen.getByTestId('scroller');
+    const at = (offset: number) => {
+      scroller.scrollTop += document.getElementById('two')!.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 20 + offset;
+    };
+    at(0);
     await waitFor(() => expect(current()).toBe('Two'));
+    // Back from the end to 20px under the new line, which is still above the old 60px one.
+    scroller.scrollTop = scroller.scrollHeight;
+    await waitFor(() => expect(current()).toBe('Two A'));
+    at(-20);
+    await waitFor(() => expect(current()).toBe('One'));
   });
 
   it('follows a heading renamed to a section the list names', async () => {
@@ -317,6 +386,14 @@ describe('Contents in a browser', () => {
     await waitFor(() => expect(current()).toBe('One'));
     document.getElementById('one')!.id = 'nowhere';
     await waitFor(() => expect(current()).toBe('Nowhere'));
+  });
+
+  it('stops following a heading renamed to a section the list does not name', async () => {
+    render(<Page />);
+    scrollTo('two');
+    await waitFor(() => expect(current()).toBe('Two'));
+    document.getElementById('two')!.id = 'gone';
+    await waitFor(() => expect(current()).toBe('One'));
   });
 
   it('draws the marker on the rule beside the current link, and indents nested links', async () => {

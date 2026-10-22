@@ -97,9 +97,15 @@ function pixels(value: string, basis: number): number {
   return value.endsWith('%') ? (n * basis) / 100 : n;
 }
 
-/** Whether a key on `target` belongs to a control, such as a field, a button or a widget with a role, rather than to scrolling. */
-function ownsKeys(target: EventTarget | undefined): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName) || target.hasAttribute('role'));
+/**
+ * Whether `key` on `target` edits or presses a control rather than scrolling:
+ * any key in a field, or Space on a button. Widgets that take arrow keys for
+ * themselves cancel the key, which the listener checks instead.
+ */
+function ownsKey(target: EventTarget | undefined, key: string): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return true;
+  return key === ' ' && /^(BUTTON|SUMMARY)$/.test(target.tagName);
 }
 
 type FollowOptions = {
@@ -137,7 +143,8 @@ function followSections(
     .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   const missing = ids.filter((id) => !targets.some((target) => target.id === id));
   const followedIds = targets.map((target) => target.id);
-  if (picked.current !== null && !ids.includes(picked.current)) picked.current = null;
+  // A pick lapses when its link or its section goes, so it can't come back long after.
+  if (picked.current !== null && !followedIds.includes(picked.current)) picked.current = null;
 
   // Start again when a missing section mounts, or a followed one is replaced or renamed.
   const mutations = new MutationObserver(() => {
@@ -198,7 +205,8 @@ function followSections(
   // line, however far one scroll jumps.
   let passed: IntersectionObserver[] = [];
   const resizes = new ResizeObserver(() => measure());
-  resizes.observe(targets[0]!.parentElement ?? targets[0]!);
+  const parent = targets[0]!.parentElement ?? targets[0]!;
+  resizes.observe(parent);
   let watchedBox: Element | null = null;
   const measure = () => {
     for (const observer of passed) observer.disconnect();
@@ -207,7 +215,7 @@ function followSections(
     // The scroller's own size sets the lines' boxes, so watch it too; observing again only when it changes keeps the observer from calling itself.
     const watched = scroller ?? doc.documentElement;
     if (watched !== watchedBox) {
-      if (watchedBox) resizes.unobserve(watchedBox);
+      if (watchedBox && watchedBox !== parent) resizes.unobserve(watchedBox);
       resizes.observe(watched);
       watchedBox = watched;
     }
@@ -263,16 +271,19 @@ function followSections(
   };
 
   const onHashChange = () => {
+    // A click's own hash keeps its pick, even while a smooth scroll hasn't brought the section into view.
+    if (picked.current !== null && fragmentOf(doc.location.hash) === picked.current) return;
     if (!pickHash()) release();
   };
 
+  // Listens as the key bubbles, so a widget that cancels it has had its turn.
   const onKey = (event: KeyboardEvent) => {
-    if (SCROLL_KEYS.has(event.key) && !event.isComposing && !ownsKeys(event.composedPath()[0])) release();
+    if (SCROLL_KEYS.has(event.key) && !event.isComposing && !event.defaultPrevented && !ownsKey(event.composedPath()[0], event.key)) release();
   };
   const options = { capture: true, passive: true } as const;
   doc.addEventListener('wheel', release, options);
   doc.addEventListener('touchstart', release, options);
-  doc.addEventListener('keydown', onKey, options);
+  doc.addEventListener('keydown', onKey, { passive: true });
   win.addEventListener('hashchange', onHashChange);
 
   if (has(picked.current)) startPick();
@@ -289,7 +300,7 @@ function followSections(
       win.removeEventListener('resize', measure);
       doc.removeEventListener('wheel', release, options);
       doc.removeEventListener('touchstart', release, options);
-      doc.removeEventListener('keydown', onKey, options);
+      doc.removeEventListener('keydown', onKey);
       win.removeEventListener('hashchange', onHashChange);
     },
   };

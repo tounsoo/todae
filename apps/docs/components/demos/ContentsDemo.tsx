@@ -26,7 +26,7 @@ function BoxLink(props: LinkRenderProps) {
         const heading = document.getElementById(decodeURIComponent(props.href!.slice(1)));
         const box = heading?.closest<HTMLElement>('[data-axis]');
         if (!heading || !box) return;
-        // Land where a fragment link would: on the box's scroll padding, inside its border.
+        // Land on the box's scroll padding, inside its border, as a fragment link would for these headings, which have no scroll margin.
         const line = box.getBoundingClientRect().top + box.clientTop + (parseFloat(getComputedStyle(box).scrollPaddingBlockStart) || 0);
         box.scrollTop += heading.getBoundingClientRect().top - line;
       }}
