@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 const summary = (name: string) => screen.getByText(name).closest('summary')!;
 
-it('opens a call that waits for approval and names its buttons by the tool', () => {
+it('opens a call that waits for approval and groups its buttons under the tool\'s name', () => {
   render(
     <Providers>
       <ToolCallExample />
@@ -20,7 +20,7 @@ it('opens a call that waits for approval and names its buttons by the tool', () 
   expect(screen.getByRole('group', { name: 'create_branch' })).toContainElement(screen.getByRole('button', { name: 'Approve' }));
 });
 
-it('moves focus to the summary when a call is approved, then shows its output', async () => {
+it('moves focus to the summary when a call is approved, then fills in its output', async () => {
   render(
     <Providers>
       <ToolCallExample />
@@ -49,4 +49,19 @@ it('moves focus to the summary when a call is denied', async () => {
   expect(call).toHaveFocus();
   expect(call).toHaveTextContent('Denied');
   expect(screen.getByText(/didn't make the branch/)).toBeVisible();
+});
+
+it('keeps a call someone opened by hand open as it finishes', async () => {
+  render(
+    <Providers>
+      <ToolCallExample />
+    </Providers>,
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Approve' }));
+  const call = summary('create_branch');
+  await userEvent.click(call);
+  expect(call.parentElement).toHaveAttribute('open');
+  await expect.poll(() => call.textContent, { timeout: 3000 }).toContain('Done');
+  expect(call.parentElement).toHaveAttribute('open');
+  expect(screen.getByRole('region', { name: 'create_branch output' })).toBeVisible();
 });

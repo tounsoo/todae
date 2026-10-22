@@ -90,7 +90,7 @@ function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved:
               </CodeBlock.Root>
             </DataList.Details>
           </DataList.Item>
-          {call.status === 'done' && (
+          {call.status === 'done' && call.output !== undefined && (
             <DataList.Item>
               <DataList.Term>Output</DataList.Term>
               <DataList.Details>
@@ -145,9 +145,11 @@ export function ToolCallExample() {
   };
 
   const last = calls[calls.length - 1]!;
+  // The reply isn't finished while a call runs or waits for approval.
+  const streaming = calls.some((call) => call.status === 'pending' || call.status === 'running');
 
   return (
-    <Message.Root streaming={last.status === 'running'} aria-label="Assistant" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
+    <Message.Root streaming={streaming} aria-label="Assistant" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
       <Message.Content>
         <Prose.Root>
           <p>I'll find where the focus ring color is set, then make a branch for the change.</p>

@@ -510,7 +510,7 @@
   "message": {
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
-    "## Parts": "e83246e18e7d",
+    "## Parts": "b17d83409780",
     "## Time": "e262fbffa78a",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
@@ -657,9 +657,9 @@
   "recipes/tool-call": {
     "(top)": "5d279955457e",
     "# Tool call": "fff9ba9cd0f7",
-    "## The call": "a05c3f215070",
-    "## Approval": "d9c0228f1f77",
-    "## Accessible composition": "a95c6bb97da1",
+    "## The call": "b97042689053",
+    "## Approval": "a661f7176935",
+    "## Accessible composition": "69569ea2a10a",
     "## When to use": "125cdba98fc2",
     "(section order)": "e092ab2bb711"
   },
