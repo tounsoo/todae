@@ -43,6 +43,7 @@ export type FieldOneTimeCodeProps = {
   'value' | 'defaultValue' | 'type' | 'onChange' | 'className' | 'style' | 'disabled' | 'maxLength' | 'minLength' | 'pattern' | 'inputMode' | 'dir'
 >;
 
+// Read through activeIn, which looks into shadow roots, so the boxes follow the caret in one too.
 function readSelection(input: HTMLInputElement | null): CodeSelection | null {
   if (!input || activeIn(input) !== input) return null;
   return { start: input.selectionStart ?? 0, end: input.selectionEnd ?? 0 };
