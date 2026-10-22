@@ -239,6 +239,26 @@ describe('DataList in a browser', () => {
       expect(second.left - first.right).toBeCloseTo(gap, 1);
     });
 
+    it('keeps its rows together in a list taller than them', () => {
+      render(
+        <div data-appearance="light" data-density="comfortable" style={{ display: 'flex', inlineSize: '30rem', blockSize: '40rem' }}>
+          <DataList.Root aria-label="Tall" minItemSize="12rem" orientation="vertical" style={{ flex: 1 }}>
+            {['Seats', 'Storage', 'Support'].map((term) => (
+              <DataList.Item key={term}>
+                <DataList.Term>{term}</DataList.Term>
+                <DataList.Details>1</DataList.Details>
+              </DataList.Item>
+            ))}
+          </DataList.Root>
+        </div>,
+      );
+      const list = screen.getByLabelText('Tall');
+      expect(list.getBoundingClientRect().height).toBeGreaterThan(500);
+      const seats = screen.getAllByText('1')[0]!.getBoundingClientRect();
+      const support = screen.getByText('Support').getBoundingClientRect();
+      expect(support.top - seats.bottom).toBeCloseTo(parseFloat(getComputedStyle(list).rowGap), 0);
+    });
+
     it('keeps one column inside a list narrower than minItemSize', () => {
       render(columns('8rem'));
       const list = screen.getByLabelText('Plan').getBoundingClientRect();

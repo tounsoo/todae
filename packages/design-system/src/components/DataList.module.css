@@ -17,6 +17,9 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(var(--_min-item-size), 100%), 1fr));
     column-gap: var(--todae-datalist-gap-between-columns);
+    /* A list taller than its rows, such as a stretched flex item, keeps its
+       rows together at the top instead of spreading them out. */
+    align-content: start;
   }
 
   .item {
