@@ -5398,7 +5398,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+      "description": "An icon-only Button.Root in the line of a one-line Field.Root, such as a password's show button."
     },
     {
       "path": "field.bg.default",
