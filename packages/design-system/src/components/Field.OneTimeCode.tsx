@@ -73,7 +73,7 @@ function nearestBox(slots: HTMLCollection | undefined, clientX: number) {
   return nearest;
 }
 
-// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`. The event is an `InputEvent` of one fixed type, `insertReplacementText`, whose `data` is the whole new code, so a product reads the same thing from every write Todae makes.
+// Sets the value as the person's edit, with the caret at `caret`, and fires the input event that reaches `onChange`. The event is an `InputEvent` of one fixed type, `insertReplacementText`, whose `data` is the whole new code, so a product reads the same thing from every write Todae makes itself rather than through execCommand.
 function write(input: HTMLInputElement, next: string, caret: number) {
   // The prototype's setter, not the instance's, which React watches to tell its own writes from the person's.
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, next);
@@ -146,8 +146,8 @@ export function OneTimeCode({
   const inserting = useRef(false);
   // The selection the last insert began from, kept from its beforeinput for the change event that follows when the browser makes the insert itself. Only an insert sets it: a deletion or a history step has no insert to place, and any other beforeinput or a blur drops it.
   const insertAt = useRef<CodeSelection | null>(null);
-  // The code and the selection a composition started from, and the last code it reported while it ran (or null).
-  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null } | null>(null);
+  // The code and the selection a composition started from, the last code it reported while it ran (or null), and every code it reported, in lower case.
+  const composition = useRef<{ start: string; selection: CodeSelection; reported: string | null; heard: string[] } | null>(null);
   // Set while the end of a composition reports a code that the change event's own reading would not (a take-back to the value the product already holds).
   const forceReport = useRef(false);
   // While composing, the input's own text, which React renders so it writes nothing that would end the IME, and the code the boxes show.
@@ -194,7 +194,7 @@ export function OneTimeCode({
       if (edit) put(el!, edit, inserting);
     }
     function onCompositionStart() {
-      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null };
+      composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null, heard: [] };
       // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
       el!.removeAttribute('maxlength');
     }
@@ -207,8 +207,8 @@ export function OneTimeCode({
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
       if (!saved) return;
-      // Told apart by content, not by when the value arrived. `cleanCode` lets only digits and Latin letters through, so the one lossless change a product can make to a code it was told is its case: a `value` equal to the last reported code, ignoring case, is the product's answer to it (an uppercased code, however late). A `value` that is neither the code the composition started from nor that answer is an override, and it wins; undo can't bring the dropped composition back. Accepted limit: an override that equals the start code is indistinguishable from no change.
-      const answer = saved.reported !== null && value.toLowerCase() === saved.reported.toLowerCase();
+      // Told apart by content, not by when the value arrived. `cleanCode` lets only digits and Latin letters through, so the one lossless change a product can make to a code it was told is its case: a `value` equal to any code reported during the composition, ignoring case, is the product's answer to it (an uppercased code, however late, even to an earlier step). A `value` that is neither the code the composition started from nor that answer is an override, and it wins; undo can't bring the dropped composition back. Accepted limit: an override that equals the start code is indistinguishable from no change.
+      const answer = saved.heard.includes(value.toLowerCase());
       if (value !== saved.start && !answer) return;
       const live = el!.value;
       const edit = reconcileEdit(saved.start, live, { characters, length }, saved.selection);
@@ -254,6 +254,7 @@ export function OneTimeCode({
       if (next === text && next !== value) {
         if (saved) {
           saved.reported = next;
+          saved.heard.push(next.toLowerCase());
         }
         onChange?.(event);
         onValueChange?.(next);

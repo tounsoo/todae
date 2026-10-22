@@ -72,8 +72,12 @@ async function paste(text: string) {
 }
 
 // An IME composition through the browser's own IME path: each step's text, then the commit, or a cancel without one.
-async function compose(steps: string[], commit: string | null = steps.at(-1)!) {
-  for (const text of steps) await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
+// `pause` waits after each step, for a product that answers a report later than the next step.
+async function compose(steps: string[], commit: string | null = steps.at(-1)!, pause = 0) {
+  for (const text of steps) {
+    await session().send('Input.imeSetComposition', { text, selectionStart: text.length, selectionEnd: text.length });
+    if (pause) await new Promise((resolve) => setTimeout(resolve, pause));
+  }
   if (commit === null) await session().send('Input.imeSetComposition', { text: '', selectionStart: 0, selectionEnd: 0 });
   else await session().send('Input.insertText', { text: commit });
 }
@@ -516,12 +520,28 @@ describe('Field.OneTimeCode in a browser', () => {
       const view = render(<Answering initial={initial} mode={mode} calls={calls} />);
       await userEvent.click(input());
       await userEvent.keyboard('{End}');
-      await compose(['k', 'か']);
+      // Each step outlasts the timer's answer, so the composition ends on a `value` the product answered with.
+      await compose(['k', 'か'], 'か', 100);
       await new Promise((resolve) => setTimeout(resolve, 150));
       expect(input().value).toBe(initial);
       expect(calls.at(-1)).toBe(initial);
       view.unmount();
     }
+  });
+
+  it('takes a composition back for a product whose answer to an earlier step arrives after a later one', async () => {
+    const calls: string[] = [];
+    render(<Answering initial="AB" mode="timer" calls={calls} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await session().send('Input.imeSetComposition', { text: 'k', selectionStart: 1, selectionEnd: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await session().send('Input.imeSetComposition', { text: 'ka', selectionStart: 2, selectionEnd: 2 });
+    // Ends while the product's answer to `ABka` is pending and `value` holds its answer to `ABk`.
+    await session().send('Input.insertText', { text: 'か' });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(calls).toEqual(['ABk', 'ABka', 'AB']);
+    expect(input().value).toBe('AB');
   });
 
   it('reports the code before a cancelled composition to a product whose value stays fixed', async () => {

@@ -34,15 +34,17 @@ function paste(text: string) {
 }
 
 describe('Field.OneTimeCode', () => {
+  // A type check, which `pnpm typecheck` runs: the directive fails as unused if the props accept onBeforeInput.
   it('does not accept onBeforeInput, which would never see the text Todae takes itself', () => {
-    expect(() => (
+    const element = (
       <Field.OneTimeCode
         value=""
         onValueChange={() => {}}
         // @ts-expect-error Todae takes typed text in its own beforeinput listener.
         onBeforeInput={() => {}}
       />
-    )).toBeTypeOf('function');
+    );
+    expect(element).toBeTruthy();
   });
 
   it('is one text input the phone can fill from a message, named by its label', () => {
