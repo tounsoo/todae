@@ -5,6 +5,7 @@ type Entry = {
   handle: () => void;
   takes: (target: Element | null) => boolean;
   passesKey: (event: KeyboardEvent) => boolean;
+  /** Null while the layer's element isn't mounted, so every caller checks it. */
   element: () => Element | null;
   popup: boolean;
   closeRequests: boolean;
