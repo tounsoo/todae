@@ -590,7 +590,6 @@ describe('Menu', () => {
   });
 
   it('is named by its trigger only when one is mounted', async () => {
-    // The menu left unnamed is reported.
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { rerender } = render(
       <Menu.Root defaultOpen>
@@ -611,6 +610,7 @@ describe('Menu', () => {
     );
     expect(menu().hasAttribute('aria-labelledby')).toBe(false);
     await Promise.resolve();
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Menu.Content needs aria-label'));
     spy.mockRestore();
   });
 
@@ -929,7 +929,7 @@ describe('Menu.ContextTrigger', () => {
     spy.mockRestore();
   });
 
-  it('drops a request the owner turns down', async () => {
+  it('drops a request the owner turns down', () => {
     render(
       <Menu.Root open={false}>
         <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
@@ -941,8 +941,6 @@ describe('Menu.ContextTrigger', () => {
     act(() => {
       fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 10, clientY: 10 });
     });
-    expect(document.querySelector('span[popover]')).not.toBeNull();
-    await act(() => new Promise((resolve) => setTimeout(resolve)));
     expect(document.querySelector('span[popover]')).toBeNull();
   });
 

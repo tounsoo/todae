@@ -288,26 +288,42 @@ describe('Menu.ContextTrigger in a browser', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'More' })));
   });
 
-  it('keeps a keyboard menu below its element when the page scrolls', async () => {
+  it('keeps a keyboard menu in place when its element goes away or sits under a transform', async () => {
+    function Rows() {
+      const [shown, setShown] = useState(true);
+      return (
+        <div style={{ transform: 'translate(60px, 40px)' }}>
+          <Menu.Root>
+            <Menu.ContextTrigger>
+              {shown && <button type="button">Cell</button>}
+            </Menu.ContextTrigger>
+            <Menu.Content aria-label="File">
+              <Menu.Item closeOnSelect={false} onSelect={() => setShown(false)}>
+                Remove cell
+              </Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </div>
+      );
+    }
     render(
       <Themed>
-        <div data-testid="scroller" style={{ blockSize: 300, overflow: 'auto' }}>
-          <div style={{ blockSize: 40 }} />
-          <FileMenu />
-          <div style={{ blockSize: 800 }} />
-        </div>
+        <Rows />
       </Themed>,
     );
-    const region = screen.getByTestId('region');
-    region.focus();
+    const cell = screen.getByRole('button', { name: 'Cell' });
+    const c = cell.getBoundingClientRect();
+    cell.focus();
     await userEvent.keyboard('{Shift>}{F10}{/Shift}');
     await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
-    screen.getByTestId('scroller').scrollTop = 30;
-    await waitFor(() => {
-      const gap = menu().getBoundingClientRect().top - region.getBoundingClientRect().bottom;
-      expect(gap).toBeGreaterThanOrEqual(0);
-      expect(gap).toBeLessThan(16);
-    });
+    const before = menu().getBoundingClientRect();
+    expect(Math.abs(before.left - c.left)).toBeLessThanOrEqual(1);
+    expect(before.top).toBeGreaterThanOrEqual(c.bottom);
+    await userEvent.keyboard('{Enter}');
+    expect(screen.queryByRole('button', { name: 'Cell' })).toBeNull();
+    const after = menu().getBoundingClientRect();
+    expect(after.left).toBe(before.left);
+    expect(after.top).toBe(before.top);
   });
 
   it('keeps context keys inside an open menu from opening the region around it', async () => {
@@ -329,5 +345,19 @@ describe('Menu.ContextTrigger in a browser', () => {
     await waitFor(() => expect(screen.getByRole('menu', { name: 'File' }).matches(':popover-open')).toBe(true));
     await userEvent.keyboard('{Shift>}{F10}{/Shift}');
     expect(outer).not.toHaveBeenCalled();
+  });
+
+  it('opens from an icon inside the region', async () => {
+    render(
+      <Themed>
+        <FileMenu>
+          <svg data-testid="icon" width="24" height="24" aria-hidden="true">
+            <rect width="24" height="24" />
+          </svg>
+        </FileMenu>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByTestId('icon'), { button: 'right' });
+    await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
   });
 });

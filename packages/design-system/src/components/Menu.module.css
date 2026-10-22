@@ -11,15 +11,15 @@
     display: flex;
   }
 
-  /* The point a pointer's context request put the menu at, which anchors
-     to it. Viewport coordinates, so its sides are physical, not logical. */
+  /* The box a context request put the menu at, which anchors to it.
+     Viewport coordinates, so its sides are physical, not logical. */
   .point {
     position: fixed;
     inset: unset;
-    top: var(--_y);
-    left: var(--_x);
-    width: 0;
-    height: 0;
+    top: var(--_top);
+    left: var(--_left);
+    width: var(--_width);
+    height: var(--_height);
     margin: 0;
     padding: 0;
     border: 0;
