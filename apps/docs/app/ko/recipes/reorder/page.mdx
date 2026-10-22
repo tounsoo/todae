@@ -16,7 +16,7 @@ import { ReorderExample } from '../../../../components/demos/ReorderDemo';
 
 ```tsx
 import { Button, Menu, Stack, Text, useAnnouncer } from '@tounsoo/todae';
-import { ArrowUpDown } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { useId } from 'react';
 
 function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
@@ -62,7 +62,7 @@ export function PinnedChannels({
                 <Menu.Root>
                   <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
                     <Button.Icon>
-                      <ArrowUpDown />
+                      <EllipsisVertical />
                     </Button.Icon>
                   </Menu.Trigger>
                   <Menu.Content>

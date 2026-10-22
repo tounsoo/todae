@@ -77,7 +77,7 @@ it('keeps the moves a row at an end cannot make in the arrow-key order, unavaila
   expect(politeRegion()?.textContent ?? '').toBe(said);
 });
 
-it('keeps focus on a row the product moves back, as after a failed save', async () => {
+it('keeps focus on a focused row its props move, as a revert after a failed save does', async () => {
   const channels = [
     { id: 'design', name: 'Design' },
     { id: 'engineering', name: 'Engineering' },

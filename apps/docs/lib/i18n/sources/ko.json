@@ -511,7 +511,7 @@
   "menu": {
     "(top)": "eac8bba851e2",
     "# Menu": "e7f09e8bde16",
-    "## Keyboard": "8ac36b23a36a",
+    "## Keyboard": "7a30a02ae4c8",
     "## Checkbox and radio items": "3ee5d550ead1",
     "## Links": "ede13f3623cf",
     "## Icons": "5a8e880339a4",
@@ -688,9 +688,9 @@
   "recipes/reorder": {
     "(top)": "d54efa3b4b16",
     "# Reorder": "71bfc253035c",
-    "## The move menu": "53c5b6520bb7",
+    "## The move menu": "d2fe0fb4bae5",
     "## Saving the order": "ccbed730f477",
-    "## Dragging": "2c72a2abe245",
+    "## Dragging": "fb6b5b7bf6dc",
     "## Accessible composition": "2af14b1be5dc",
     "## When to use": "38f06c41410c",
     "(section order)": "7fe5b2e7daca"

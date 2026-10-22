@@ -16,7 +16,7 @@ Put the rows in an `ol`, since their order is the point, and give each row a `Me
 
 ```tsx
 import { Button, Menu, Stack, Text, useAnnouncer } from '@tounsoo/todae';
-import { ArrowUpDown } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { useId } from 'react';
 
 function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
@@ -62,7 +62,7 @@ export function PinnedChannels({
                 <Menu.Root>
                   <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
                     <Button.Icon>
-                      <ArrowUpDown />
+                      <EllipsisVertical />
                     </Button.Icon>
                   </Menu.Trigger>
                   <Menu.Content>
@@ -95,7 +95,7 @@ The example changes the list as soon as a move is chosen. If your product saves 
 
 ## Dragging
 
-This recipe has no drag. If you add one, keep the menu: WCAG 2.2 SC 2.5.7 asks for a way to move a row with a single pointer and no dragging, and SC 2.1.1 for a way from the keyboard, which HTML drag and drop doesn't give.
+This recipe has no drag. If you add one, keep the menu: WCAG 2.2 SC 2.5.7 asks for a way to move a row with a single pointer and no dragging, and SC 2.1.1 for a way from the keyboard, and HTML drag and drop gives no keyboard way.
 
 ## Accessible composition
 

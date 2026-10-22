@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Menu, Stack, Text, useAnnouncer } from '@tounsoo/todae';
-import { ArrowUpDown } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { useId, useState } from 'react';
 
 type Channel = { id: string; name: string };
@@ -57,7 +57,7 @@ export function PinnedChannels({
                 <Menu.Root>
                   <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
                     <Button.Icon>
-                      <ArrowUpDown />
+                      <EllipsisVertical />
                     </Button.Icon>
                   </Menu.Trigger>
                   <Menu.Content>
