@@ -678,6 +678,15 @@
     "## Accessible composition": "a51aedc3e4e1",
     "(section order)": "2ce6dd09df8f"
   },
+  "recipes/inline-edit": {
+    "(top)": "89db7894a8df",
+    "# Inline edit": "199d2e5da2df",
+    "## Saving and cancelling": "fde5c50a40f1",
+    "## Saving to a server": "671323387f41",
+    "## Accessible composition": "01e9d8e4fbc7",
+    "## When to use": "99b196ff7fc6",
+    "(section order)": "808446d2e9ad"
+  },
   "recipes/message-actions": {
     "(top)": "bbdcb5e29744",
     "# Message actions": "392d9e0335fc",
@@ -987,6 +996,14 @@
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
+  },
+  "utilities/use-inline-edit": {
+    "(top)": "89db7894a8df",
+    "# useInlineEdit": "e4701b67f349",
+    "## Accessible composition": "791953511028",
+    "## When to use": "6811b76102a1",
+    "## Props": "020d1345d4d7",
+    "(section order)": "428f0e0773ae"
   },
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",
