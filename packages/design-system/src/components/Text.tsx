@@ -35,16 +35,12 @@ function isHeading(tag: TextAs): tag is TextHeading {
 
 function Root({ as: Tag = 'p', size, tone, weight, className, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
-  // The label role reads its color and weight from text.label.* unless a tone or weight is given.
-  const label = size === 'label';
-  const toneClass = tone ?? (label ? undefined : 'default');
-  const weightClass = weight ?? (label ? undefined : heading ? 'bold' : 'regular');
   const classes = cx(
     styles.root,
     heading && styles.heading,
     styles[SIZE_CLASS[size ?? (heading ? HEADING_SIZE[Tag] : 'm')]],
-    toneClass && styles[toneClass],
-    weightClass && styles[weightClass],
+    tone && styles[tone],
+    weight && styles[weight],
     className,
   );
   // Each tag's element type extends HTMLElement; the ref is typed to the common base.

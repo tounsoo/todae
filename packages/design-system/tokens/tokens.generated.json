@@ -4810,7 +4810,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.default",
@@ -4824,7 +4824,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.muted",
@@ -4838,7 +4838,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.font.family",
@@ -4852,14 +4852,14 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.label.fg",
       "type": "color",
       "cssVar": "--todae-text-label-fg",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
+      "cssValue": "var(--todae-text-fg-muted)",
+      "ref": "text.fg.muted",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -4928,8 +4928,8 @@
       "path": "text.label.font.weight",
       "type": "fontWeight",
       "cssVar": "--todae-text-label-font-weight",
-      "cssValue": "var(--todae-font-weight-medium)",
-      "ref": "font.weight.medium",
+      "cssValue": "var(--todae-text-weight-medium)",
+      "ref": "text.weight.medium",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -4964,7 +4964,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.leading.tight",
@@ -4978,7 +4978,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.2",
@@ -4992,7 +4992,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.3",
@@ -5006,7 +5006,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.4",
@@ -5020,7 +5020,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.5",
@@ -5034,7 +5034,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.6",
@@ -5048,7 +5048,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.bold",
@@ -5062,7 +5062,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.medium",
@@ -5076,7 +5076,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.regular",
@@ -5090,7 +5090,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "prose.fg",

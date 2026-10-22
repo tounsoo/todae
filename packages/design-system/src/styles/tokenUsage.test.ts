@@ -8,7 +8,7 @@ const generatedCss = readFileSync(join(import.meta.dirname, 'tokens.generated.cs
 
 /** Component tokens Todae leaves for product code to apply, each with the reason. */
 const FOR_PRODUCTS: Record<string, string> = {
-  // The Text and Prose pages tell products to set font-family from it; Todae sets none.
+  // The Text and Prose pages tell products to set font-family from it; Todae sets it only through text.label.font.family, which reads it.
   '--todae-text-font-family': 'docs/text',
 };
 

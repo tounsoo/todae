@@ -16,7 +16,7 @@ export const meta = {
       type: '"s" | "m" | "l" | "xl" | "2xl" | "label"',
       required: false,
       default: '"m"; for headings h1 "2xl", h2 "xl", h3 "l", h4 and h5 "m", h6 "s"',
-      description: 'Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level. "label" is the role for eyebrows and metadata: it reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and a tone or weight you give wins.',
+      description: 'Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level. "label" is the role for eyebrows and metadata: it reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and a tone or weight you give wins. Unlike other sizes it sets font-family, from text.font.family by default.',
     },
     {
       name: 'tone',

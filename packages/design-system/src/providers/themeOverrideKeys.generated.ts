@@ -2081,4 +2081,5 @@ export const CONTRAST_PAIRS: readonly { fg: string; bg: string; min: number; ove
   { fg: 'text.label.fg', bg: 'color.bg.surface', min: 60 },
   { fg: 'text.label.fg', bg: 'color.bg.subtle', min: 60 },
   { fg: 'text.label.fg', bg: 'color.bg.elevated', min: 60 },
+  { fg: 'text.label.fg', bg: 'popover.bg', min: 60 },
 ];
