@@ -207,7 +207,7 @@
     "# Disclosure": "ddc841de1cf2",
     "## Accordion": "9b661bdebd9d",
     "## Icons": "90cd4835c3a3",
-    "## Accessible composition": "05aa8f7934a1",
+    "## Accessible composition": "b8c936aa784a",
     "## When to use": "e742af5b01d9",
     "## Props": "1ff9b4973419",
     "(section order)": "a6ce995bf6d0"
@@ -663,6 +663,15 @@
     "## Accessible composition": "b737b3facda9",
     "## When to use": "2320a958107a",
     "(section order)": "6486b947abab"
+  },
+  "recipes/reasoning": {
+    "(top)": "9fa20780fc44",
+    "# Reasoning": "10634b450405",
+    "## The block": "5e20fe67fa9c",
+    "## Open while it thinks": "521213ee7a21",
+    "## Accessible composition": "82c0fcbfdd70",
+    "## When to use": "b26ad7526faf",
+    "(section order)": "a801d5b444ff"
   },
   "scroll-area": {
     "(top)": "a2750334232a",
