@@ -1,8 +1,8 @@
-import { StepsExample } from '../../../components/demos/StepsDemo';
+import { StepsExample, StepsProgressExample } from '../../../components/demos/StepsDemo';
 
 # Steps
 
-`Steps.Root` shows a sequence of steps and where each one is, such as an agent's plan while it works or a checklist. Each `Steps.Item` takes a `status`: `done`, `current`, `pending` or `error`. The steps and their order are your data; Todae draws a marker for each status and the line that joins them.
+`Steps.Root` shows a sequence of steps and where each one is, such as an agent's plan while it works, a checklist, or the steps of a form. Each `Steps.Item` takes a `status`: `done`, `current`, `pending` or `error`. The steps and their order are your data; Todae draws a marker for each status and the line that joins them.
 
 ```tsx
 <Steps.Root aria-label="Plan">
@@ -21,9 +21,25 @@ import { StepsExample } from '../../../components/demos/StepsDemo';
 ## Parts
 
 - `Steps.Root` is an `ol` with `role="list"`, so Safari keeps it a list without its markers.
-- `Steps.Item` is an `li` with a marker, then its content. Its `status` sets `data-status` and the marker: a `done` step shows the `check` glyph on a filled circle and has its text struck through, the `current` step shows a [Loader](/loader) spinner and takes `aria-current="step"`, a `pending` step shows an empty circle, and a step with an `error` shows the `error` glyph in the critical colors. `pending` is the default.
+- `Steps.Item` is an `li` with a marker, then its content. Its `status` sets `data-status` and the marker: a `done` step shows the `check` glyph on a filled circle, the `current` step takes `aria-current="step"`, a `pending` step shows an empty circle, and a step with an `error` shows the `error` glyph in the critical colors. `pending` is the default.
 
-The markers and their colors come from the `steps.marker.*` tokens, the text colors from `steps.fg.*`, the line from `steps.line.*`, and the space between steps from `steps.gap`.
+The markers and their colors come from the `steps.marker.*` tokens, the progress variant's current marker from `steps.progress.*`, the text colors from `steps.fg.*`, the line from `steps.line.*`, and the space between steps from `steps.gap`.
+
+## Variants
+
+`variant` on `Steps.Root` sets how the steps are drawn. The default, `plan`, is work that runs, such as an agent's plan: the current step shows a [Loader](/loader) spinner and done steps have their text struck through. `progress` is where a person is in a form, such as the steps of a [Wizard](/recipes/wizard): the current step shows a still ring with a dot in it, and done steps keep their text. The statuses, status words and `aria-current` are the same in both.
+
+```tsx
+<Steps.Root variant="progress" aria-label="Sign-up steps">
+  <Steps.Item status="done">Account</Steps.Item>
+  <Steps.Item status="current">Workspace</Steps.Item>
+  <Steps.Item>Review</Steps.Item>
+</Steps.Root>
+```
+
+<Example>
+  <StepsProgressExample />
+</Example>
 
 ## Status words
 
@@ -31,15 +47,15 @@ The marker is hidden from screen readers. Each step starts with a visually hidde
 
 ## Accessible composition
 
-**Todae handles:** An ordered list, a status word read before each step, `aria-current="step"` on the running step, and markers kept out of the accessible name.
+**Todae handles:** An ordered list, a status word read before each step, `aria-current="step"` on the current step, and markers kept out of the accessible name.
 
 **You supply:** A name for the list with `aria-label` or `aria-labelledby` when the page has more than one. An announcement when a step finishes or fails, if the person should hear it without moving to the list, such as through [useAnnouncer](/utilities/use-announcer). A status word that fits when the default doesn't.
 
-**Watch for:** Showing a failure by color alone: say what went wrong in the step's text too. Putting a long step's details in the item, where the line-through of a done step crosses them all.
+**Watch for:** Showing a failure by color alone: say what went wrong in the step's text too. Putting a long step's details in the item, where the line-through of a done step in the `plan` variant crosses them all.
 
 ## When to use
 
-**When:** A plan or checklist whose steps run in order, each with a status.
+**When:** A plan or checklist whose steps run in order, each with a status. Where a person is in a form of several steps, with `variant="progress"`.
 
 **When not:** One running task → [Loader](/loader) or [Progress](/progress). A trail of pages → [Breadcrumbs](/breadcrumbs).
 

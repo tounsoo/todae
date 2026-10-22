@@ -703,6 +703,16 @@
     "## When to use": "125cdba98fc2",
     "(section order)": "e092ab2bb711"
   },
+  "recipes/wizard": {
+    "(top)": "8a3a55e1b1ed",
+    "# Wizard": "4a738459ed5d",
+    "## A form per step": "ee9b023dd2b2",
+    "## Focus on each step": "50bc0d772691",
+    "## Errors from the last step": "60f0d9d2c403",
+    "## Accessible composition": "fdd39999ae4c",
+    "## When to use": "e4c37a96dbb3",
+    "(section order)": "58e398659b7f"
+  },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",
@@ -739,14 +749,15 @@
     "(section order)": "d9525eb32a1a"
   },
   "steps": {
-    "(top)": "2ea27e601f9e",
-    "# Steps": "cc3c0b7c3b01",
-    "## Parts": "b9c0f0f6b5b3",
+    "(top)": "304501d1ad59",
+    "# Steps": "63aa09def506",
+    "## Parts": "0a3c5dc6483c",
+    "## Variants": "0eb6872fb66b",
     "## Status words": "5e1bbccafcfa",
-    "## Accessible composition": "ff32888d1c88",
-    "## When to use": "dc897768a123",
+    "## Accessible composition": "7166254b7e2d",
+    "## When to use": "0543c264e392",
     "## Props": "f0031e9635af",
-    "(section order)": "441fbe7ff385"
+    "(section order)": "e8ce99923fc1"
   },
   "switch": {
     "(top)": "5b6bda868294",

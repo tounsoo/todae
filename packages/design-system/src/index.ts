@@ -83,7 +83,7 @@ export {
   type AttachmentRootProps,
   type AttachmentStatus,
 } from './components/Attachment.js';
-export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus } from './components/Steps.js';
+export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus, type StepsVariant } from './components/Steps.js';
 export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer.js';
 export {
   Conversation,

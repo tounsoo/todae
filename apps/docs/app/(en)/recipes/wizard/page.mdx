@@ -1,0 +1,126 @@
+import { WizardExample } from '../../../../components/demos/WizardDemo';
+
+# Wizard
+
+A recipe, not a package namespace. A wizard splits one long form into steps: a [Steps](/steps) list says where the person is, each step is its own [Form](/form) with its own rules, and the last step sends everything. Which steps there are and what each asks for are up to your product. There is no `Wizard.*` export.
+
+Go through the steps, or use `ben@example.com`, an address the stand-in server knows, to see an error from the last step come back to the first.
+
+<Example block>
+  <WizardExample />
+</Example>
+
+## A form per step
+
+Give each step a `Form.Root`, so the browser checks only that step's controls when the person presses Next, and a step with a problem keeps focus on its first invalid control as any form does. Keep the answers in one state for the whole wizard, so Back keeps what the person typed and the last step can show it all.
+
+Keep every step's form mounted and hide the ones that aren't showing with `hidden`. A hidden form is out of the tab order and the accessibility tree, and it still holds its controls. A form that unmounts forgets that it is waiting on a reply, which the last step needs, as the section on its errors shows. Don't share one `Form.Root` across the steps: after one submit, a form shows the problems of every control it holds, so the next step would open with all its fields marked invalid.
+
+```tsx
+import { Button, ErrorMessage, Field, Form, Label, Stack, Text } from '@tounsoo/todae';
+
+<Form.Root hidden={step !== 0} aria-labelledby={headingIds[0]} errors={errors[0]} onSubmit={next(0)}>
+  <Stack.Root gap="normal">
+    <Text.Root as="h2" id={headingIds[0]} ref={(element) => (headings.current[0] = element)} tabIndex={-1}>
+      <Text.Root as="span" size="label" style={{ display: 'block' }}>
+        Step 1 of 3
+      </Text.Root>
+      Account
+    </Text.Root>
+    <Field.Group>
+      <Label.Root htmlFor={emailId}>Work email</Label.Root>
+      <Field.Root id={emailId} name="email">
+        <Field.TextInput type="email" required value={answers.email} onValueChange={set('email')} />
+      </Field.Root>
+      <ErrorMessage.Root />
+    </Field.Group>
+    <Button.Root type="submit">Next</Button.Root>
+  </Stack.Root>
+</Form.Root>
+```
+
+Next is the step's submit button, so Enter in a field moves on too. Back is `type="button"`: it goes back without checking the step, and the person's answers stay.
+
+## Focus on each step
+
+Move focus to the new step's heading on Next and Back. The button the person pressed is now hidden, so focus would otherwise drop to the page, and the heading tells a screen reader which step it is on. Give the heading `tabIndex={-1}`, so code can focus it but Tab skips it, and put the step's position in it, since the focused heading is what a screen reader reads.
+
+```tsx
+import { useRef, useState, type SubmitEvent } from 'react';
+import { flushSync } from 'react-dom';
+
+const [step, setStep] = useState(0);
+const headings = useRef<(HTMLElement | null)[]>([]);
+
+const show = (index: number) => {
+  // The heading is hidden until the step shows, so show it first.
+  flushSync(() => setStep(index));
+  headings.current[index]?.focus();
+};
+
+// Form.Root calls onSubmit only when every control of the step is valid.
+const next = (index: number) => (event: SubmitEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  // Moving on is a send: clear the step's server errors, as Form.Root asks.
+  setErrors((current) => current.map((each, at) => (at === index ? {} : each)));
+  show(index + 1);
+};
+```
+
+Mark the steps in a `Steps.Root variant="progress"`, done before the current one and pending after it. The progress variant draws the current step as a still marker and keeps the text of done steps, where the default `plan` variant spins and strikes them through. The current step takes `aria-current="step"`, and each reads its status word first.
+
+```tsx
+import { Steps, type StepsStatus } from '@tounsoo/todae';
+
+function statusOf(index: number, step: number): StepsStatus {
+  if (index < step) return 'done';
+  return index === step ? 'current' : 'pending';
+}
+
+<Steps.Root variant="progress" aria-label="Sign-up steps">
+  {STEPS.map((each, index) => (
+    <Steps.Item key={each.title} status={statusOf(index, step)}>
+      {each.title}
+    </Steps.Item>
+  ))}
+</Steps.Root>
+```
+
+## Errors from the last step
+
+The last step lists the answers in a [DataList](/data-list) and sends them. A server can still turn down an answer from an earlier step, such as an address that is taken. Keep a table of which step holds which control, give each step's form its own `errors`, and show the first step with an error.
+
+```tsx
+const STEPS = [
+  { title: 'Account', fields: ['name', 'email'] },
+  { title: 'Workspace', fields: ['workspace', 'plan'] },
+  { title: 'Review', fields: [] },
+] as const;
+
+const create = async (event: SubmitEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  setErrors(STEPS.map(() => ({})));
+  const reply = await createWorkspace(answers);
+  const first = STEPS.findIndex((each) => each.fields.some((name) => reply[name]));
+  if (first === -1) return done();
+  setErrors(STEPS.map((each) => Object.fromEntries(each.fields.filter((name) => reply[name]).map((name) => [name, reply[name]]))));
+  // No focus call: the step's form moves focus to the control with the error.
+  setStep(first);
+};
+```
+
+That step's form is still waiting on a reply from its own Next, since a form that sent keeps waiting until the person edits it or it resets. So when its `errors` arrive it takes them as the reply, as [Form](/form#server-errors) describes: it shows the message and moves focus to the control, which a screen reader reads with its error. This is why the steps stay mounted. Don't move focus to the heading here, which would take it away from the control.
+
+## Accessible composition
+
+**Todae handles:** `Form.Root` checks a step's controls on Next, words each problem in the page's language and moves focus to the first one. It shows a server error on its control, with `aria-invalid` and `aria-describedby`, and a form that sent moves focus to the control when the reply names it. `Steps.Root` is an ordered list whose items read their status word first, with `aria-current="step"` on the current step. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while the last step sends.
+
+**You supply:** A form per step, all mounted, with `hidden` on the ones not showing. Focus moved to the heading of the step you show on Next and Back, and to a heading that confirms the result at the end. The step's position in its heading. A table of which step holds which control, so a server's errors reach the right form. A name for the step list and labels in your product's language.
+
+**Watch for:** One `Form.Root` around every step, which marks a step invalid the moment it shows. Unmounting the steps that aren't showing, so a server error from the last step shows on its control but nobody moves focus there. Focus left on a hidden button after Next, which drops it to the page. Hiding a step with `display: none` on a styled wrapper such as `Stack.Root`, whose own `display` beats `hidden`: put `hidden` on the form. A disabled Next or Send button while a request runs, which drops focus; use `aria-disabled`. Steps that each have their own URL: the browser's back button then moves between steps too, so update the page's title and move focus the same way on each.
+
+## When to use
+
+**When:** A long form a person fills in once, such as sign-up, onboarding or checkout, where steps make it shorter to read and each step can be checked on its own.
+
+**When not:** A short form → one [Form](/form). Settings a person changes in any order → a page of [Fieldset](/fieldset)s, or [Tabs](/tabs) between sections. An agent's plan that runs by itself → [Steps](/steps) with the default `plan` variant.

@@ -4094,7 +4094,7 @@
     },
     {
       "name": "Steps.Item",
-      "description": "One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph and struck-through text, the current step a spinner, and a step with an error the error glyph. Takes native li attributes.",
+      "description": "One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph, struck through in the plan variant, the current step a spinner in the plan variant and a still ring in the progress variant, and a step with an error the error glyph. Takes native li attributes.",
       "props": [
         {
           "name": "status",
@@ -4113,8 +4113,16 @@
     },
     {
       "name": "Steps.Root",
-      "description": "An ordered list of steps, such as an agent's plan or a checklist, as an ol with role=\"list\". Name it with aria-label or aria-labelledby when the page has more than one. Takes native ol attributes.",
-      "props": []
+      "description": "An ordered list of steps, such as an agent's plan, a checklist or the steps of a form, as an ol with role=\"list\". Name it with aria-label or aria-labelledby when the page has more than one. Takes native ol attributes.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"plan\" | \"progress\"",
+          "required": false,
+          "description": "plan is work that runs: the current step shows a spinner and done steps are struck through. progress is where a person is in a form: the current step shows a still ring with a dot and done steps keep their text. Sets data-variant.",
+          "default": "\"plan\""
+        }
+      ]
     },
     {
       "name": "StringsProvider",

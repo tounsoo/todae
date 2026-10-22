@@ -1,6 +1,6 @@
 {
   "steps": {
-    "$description": "Steps.Root: a numbered list of steps, each done, current, pending or in error.",
+    "$description": "Steps.Root: a numbered list of steps, each done, current, pending or in error, drawn as a plan or as progress through a form.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
     "fg": {
@@ -34,6 +34,16 @@
     },
     "icon": {
       "size": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+    },
+    "progress": {
+      "$description": "Steps.Root variant=\"progress\": the still marker of the current step, a ring and a dot in it.",
+      "current": {
+        "border": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "dot": {
+          "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+          "size": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
+        }
+      }
     },
     "line": {
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },

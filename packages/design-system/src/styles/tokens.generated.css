@@ -1074,6 +1074,9 @@
   --todae-steps-marker-fg-pending: var(--_todae-steps-marker-fg-pending, var(--todae-color-fg-muted));
   --todae-steps-marker-gap: var(--_todae-steps-marker-gap, var(--todae-space-inline-gap));
   --todae-steps-marker-size: var(--_todae-steps-marker-size, 1.25rem);
+  --todae-steps-progress-current-border: var(--_todae-steps-progress-current-border, var(--todae-color-accent-default));
+  --todae-steps-progress-current-dot-color: var(--_todae-steps-progress-current-dot-color, var(--todae-color-accent-default));
+  --todae-steps-progress-current-dot-size: var(--_todae-steps-progress-current-dot-size, 0.5rem);
   --todae-breadcrumbs-current-fg: var(--_todae-breadcrumbs-current-fg, var(--todae-color-fg-default));
   --todae-breadcrumbs-current-font-weight: var(--_todae-breadcrumbs-current-font-weight, var(--todae-font-weight-medium));
   --todae-breadcrumbs-font-size: var(--_todae-breadcrumbs-font-size, var(--todae-font-size-2));
