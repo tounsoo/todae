@@ -853,11 +853,36 @@ describe('Disclosure', () => {
     );
   }
 
-  it('moves focus from its content to the summary when code closes it', async () => {
-    const { rerender } = render(<Reasoning open />);
-    screen.getByRole('link', { name: 'Source' }).focus();
+  it('moves focus from its content straight to the summary when code closes it', async () => {
+    const media = (features: { name: string; value: string }[]) =>
+      (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
+    // No fade, so the content hides as soon as it closes.
+    await media([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Reasoning open />);
+      const link = screen.getByRole('link', { name: 'Source' });
+      const moves: (EventTarget | null)[] = [];
+      link.addEventListener('focusout', (event) => moves.push(event.relatedTarget));
+      link.focus();
+      rerender(<Reasoning open={false} />);
+      const summary = screen.getByText('Reasoning');
+      await expect.poll(() => document.activeElement).toBe(summary);
+      // Focus never passed through the page.
+      expect(moves).toEqual([summary]);
+    } finally {
+      await media([]);
+    }
+  });
+
+  it('moves focus inside a shadow root', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const { rerender } = render(<Reasoning open />, { container: shadow as unknown as HTMLElement });
+    shadow.querySelector('a')!.focus();
     rerender(<Reasoning open={false} />);
-    await expect.poll(() => document.activeElement).toBe(screen.getByText('Reasoning'));
+    await expect.poll(() => shadow.activeElement).toBe(shadow.querySelector('summary'));
+    host.remove();
   });
 
   it('leaves focus alone when the content does not hold it', async () => {

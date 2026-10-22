@@ -42,9 +42,9 @@ export function Reasoning({ thinking, seconds, children }: { thinking: boolean; 
 
 A reply goes through three phases: `thinking` while the reasoning arrives, `answering` while the answer arrives, and `done`. `seconds` is how long the thinking phase took, from your stream's timestamps.
 
-`open={thinking}` opens the block when the reasoning starts and closes it when `thinking` turns false. React sets `open` only when the prop changes, so while the block stays mounted, a person who closes it while it streams keeps it closed, and one who opens it afterwards keeps it open. Keep each message's `key` stable, since a remounted block starts from `thinking` again. A reply loaded from history renders with `thinking` false, so its block starts closed.
+`open={thinking}` opens the block when the reasoning starts and closes it when `thinking` turns false. React sets `open` only when the prop changes, so while the block stays mounted, a person who closes it while it streams keeps it closed, and one who opens it afterwards keeps it open. Keep each message's `key` stable, since a remounted block starts from the current phase and drops the person's toggle. A reply loaded from history renders with `thinking` false, so its block starts closed.
 
-The message stays `streaming` through both the reasoning and the answer. Inside [Conversation.Content](/conversation), that is one announcement when the reply starts and one when it ends.
+The message stays `streaming` through both the reasoning and the answer. Inside [Conversation.Content](/conversation), that is one announcement when the reply ends, and one when it starts if the message mounted before it began streaming.
 
 ```tsx
 <Message.Root streaming={phase !== 'done'} aria-label="Assistant">
@@ -64,11 +64,11 @@ The message stays `streaming` through both the reasoning and the answer. Inside 
 
 ## Accessible composition
 
-**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard and announces the expanded state. When the block closes while a link in the reasoning has focus, `Disclosure.Summary` moves focus to itself, so focus doesn't fall to the page. `Message.Root` with `streaming` sets `aria-busy`, and [Conversation](/conversation) announces when that starts and clears.
+**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard and announces the expanded state. When the block closes while a link in the reasoning has focus, the main entry's `Disclosure.Summary` moves focus to itself, so focus doesn't fall to the page. `Message.Root` with `streaming` sets `aria-busy`, and [Conversation](/conversation) announces when that clears, and when it starts on a message already shown.
 
 **You supply:** Summary text that says the state in words, since the dots are hidden. The phase and the duration, from your product's stream.
 
-**Watch for:** Putting the reasoning in a live region: a screen reader would read every word as it arrives. A summary whose words don't change: "Thinking" and "Thought for 6 seconds" say whether the reasoning is done to someone who reaches the summary; the dots don't.
+**Watch for:** Putting the reasoning in a live region: a screen reader would read every word as it arrives. A summary that only changes its dots: "Thinking" and "Thought for 6 seconds" say whether the reasoning is done; the dots don't.
 
 ## When to use
 

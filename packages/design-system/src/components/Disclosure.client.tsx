@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { Root, Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
+import { activeIn } from './activeIn.js';
 import { hasGlyph } from './glyphs.js';
 import { useComposedRefs } from './props.js';
+import { focusWithoutScroll } from './revealRing.js';
 import styles from './Disclosure.module.css';
 
 export type { DisclosureRootProps, DisclosureSummaryProps } from './Disclosure.js';
@@ -17,15 +19,16 @@ function Summary({ children, ref, ...props }: DisclosureSummaryProps) {
   const refs = useComposedRefs(own, ref);
 
   // A disclosure closed by code, such as a prop change, hides the content that
-  // has focus, and the browser drops focus to the page. The observer runs
-  // before the browser does that, so focus moves to the summary instead.
+  // has focus, and the browser drops focus to the page. The observer's
+  // microtask runs before that in Chromium, so focus moves to the summary
+  // instead, without scrolling a container that follows its end.
   useEffect(() => {
     const summary = own.current;
     const details = summary?.parentElement;
-    if (!summary || !(details instanceof HTMLDetailsElement)) return;
+    if (!summary || details?.localName !== 'details') return;
     const observer = new MutationObserver(() => {
-      const active = details.ownerDocument.activeElement;
-      if (!details.open && active !== summary && details.contains(active)) summary.focus();
+      const active = activeIn(details);
+      if (!details.hasAttribute('open') && !summary.contains(active) && details.contains(active)) focusWithoutScroll(summary);
     });
     observer.observe(details, { attributes: true, attributeFilter: ['open'] });
     return () => observer.disconnect();

@@ -2,4 +2,4 @@
 "@tounsoo/todae": patch
 ---
 
-`Disclosure.Summary` takes focus when code closes its disclosure while the content holds focus.
+`Disclosure.Summary` from the main entry takes focus when code closes its disclosure while the content holds focus.
