@@ -269,6 +269,20 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('12349'));
   });
 
+  it('lands nothing when the product cancels the drop', async () => {
+    const onValueChange = vi.fn();
+    render(
+      <div onDropCapture={(event) => event.preventDefault()}>
+        <Code initial="1234" onValueChange={onValueChange} />
+      </div>,
+    );
+    await dropAt(1);
+    // A drop that landed would have reached onValueChange by the next frame.
+    await new Promise(requestAnimationFrame);
+    expect(input().value).toBe('1234');
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('lands a drop on a full code over the box it is dropped on', async () => {
     render(<Code initial="123456" />);
     await dropAt(2);

@@ -168,7 +168,8 @@ export function OneTimeCode({
     // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
     function onBeforeInput(event: InputEvent) {
       const { inputType } = event;
-      if (inserting.current || latest.current.fixed || event.isComposing || !inputType.startsWith('insert')) return;
+      // One the browser won't let be cancelled is cleaned by the change event instead, so its insert and this one don't both land.
+      if (inserting.current || latest.current.fixed || event.isComposing || !event.cancelable || !inputType.startsWith('insert')) return;
       if (inputType === 'insertCompositionText' || inputType === 'insertFromComposition') return;
       const text = event.data ?? event.dataTransfer?.getData('text/plain');
       if (text == null) return;
@@ -176,7 +177,7 @@ export function OneTimeCode({
       apply(text, { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 });
     }
     function onDrop(event: DragEvent) {
-      if (latest.current.fixed) return;
+      if (latest.current.fixed || event.defaultPrevented) return;
       // Cancelling the drop also cancels the drag's deleteByDrag, so text dragged inside the field is copied, not moved.
       event.preventDefault();
       const box = nearestBox(slotsNode.current?.children, event.clientX);

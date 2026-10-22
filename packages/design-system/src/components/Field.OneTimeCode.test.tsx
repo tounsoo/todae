@@ -114,6 +114,17 @@ describe('Field.OneTimeCode', () => {
     expect(beforeInput('insertCompositionText', 'ㅎ').defaultPrevented).toBe(false);
   });
 
+  it('leaves an insert the browser won\'t let be cancelled to the browser, and cleans what it lands', () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="12" onValueChange={onValueChange} />);
+    input().setSelectionRange(2, 2);
+    fireEvent(input(), new InputEvent('beforeinput', { inputType: 'insertText', data: '3', bubbles: true, cancelable: false }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(input().value).toBe('12');
+    fireEvent.change(input(), { target: { value: '12a3' } });
+    expect(onValueChange).toHaveBeenLastCalledWith('123');
+  });
+
   it('keeps only the allowed characters of a paste', () => {
     const onValueChange = vi.fn();
     render(<Code onValueChange={onValueChange} />);
