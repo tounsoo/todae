@@ -39,7 +39,7 @@ Every part but `Message.Time` is a `div`, and all of them are optional.
 
 - `Message.Avatar` holds an `Avatar.Root`. With one, the other parts sit in a column beside it: after it for an assistant or system message, before it for a user's.
 - `Message.Header` is a row for the author's name and a `Message.Time`. A heading or paragraph directly inside it has no margin.
-- `Message.Content` is the text. For a user's message it is the bubble. Put rendered markdown in a [Prose](/prose) root inside it.
+- `Message.Content` is the text. For a user's message it is the bubble. Put rendered markdown in a [Prose](/prose) root inside it. The [Citations](/recipes/citations) recipe adds numbered source markers and a sources list to it.
 - `Message.Time` is a `<time>` that says when the message was sent. It can sit in the header or in the actions row.
 - `Message.Actions` is a row for the message's actions, such as copy and retry. Put a [Toolbar](/toolbar) in it when there are several, so they take one tab stop. With `reveal="hover"`, the row shows only while the pointer is over the message or focus is inside it; on a screen with no hover, such as a phone, it always shows. The [Message actions](/recipes/message-actions) recipe puts copy, regenerate, rating and edit buttons in it.
 

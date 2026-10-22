@@ -42,12 +42,12 @@ function Citation({ number, source, href }: { number: number; source: Source; hr
   const titleId = useId();
   return (
     <>
-      <sup>
-        <Link.Root href={href} {...tooltip.getTriggerProps()}>
-          <VisuallyHidden.Root>Source </VisuallyHidden.Root>
-          {number}
-        </Link.Root>
-      </sup>
+      <Link.Root href={href} {...tooltip.getTriggerProps()}>
+        <VisuallyHidden.Root>Source </VisuallyHidden.Root>
+        <span aria-hidden>[</span>
+        {number}
+        <span aria-hidden>]</span>
+      </Link.Root>
       <Tooltip.Root {...tooltip.getTooltipProps()} aria-labelledby={titleId}>
         <Link.Root id={titleId} href={source.url}>
           {source.title}

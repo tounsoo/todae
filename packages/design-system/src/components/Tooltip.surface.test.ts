@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentPolicyError, resolveSurface } from './Tooltip.surface.js';
+import { CLOSES_PARAGRAPH, contentPolicyError, resolveSurface } from './Tooltip.surface.js';
 
 describe('Tooltip.surface', () => {
   it('rejects tabbables in tip content', () => {
@@ -49,10 +49,24 @@ describe('Tooltip.surface', () => {
       const el = document.createElement('span');
       el.innerHTML = '<strong>Popover API</strong><br><span>developer.mozilla.org</span>';
       expect(contentPolicyError(surface, el)).toBeNull();
-      for (const html of ['<p>Text</p>', '<div>Text</div>', '<ul><li>Text</li></ul>', '<dd>Text</dd>']) {
-        el.innerHTML = html;
+      for (const tag of CLOSES_PARAGRAPH.split(',')) {
+        el.replaceChildren(document.createElement(tag));
         expect(contentPolicyError(surface, el)).toBe(error);
       }
+    }
+  });
+
+  it('lists exactly the elements that make the HTML parser close a paragraph', () => {
+    // Most elements of HTML's element index; head-only and foreign elements, which never close a paragraph,
+    // and table parts, which the parser drops in body content, are left out. The parser decides which end an open <p>.
+    const elements =
+      'a,abbr,address,area,article,aside,audio,b,bdi,bdo,blockquote,br,button,canvas,center,cite,code,data,datalist,dd,del,details,dfn,dialog,dir,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,hr,i,iframe,img,input,ins,kbd,label,li,listing,main,map,mark,menu,meter,nav,object,ol,output,p,picture,plaintext,pre,progress,q,ruby,s,samp,search,section,select,slot,small,span,strong,sub,summary,sup,table,template,textarea,time,u,ul,var,video,wbr,xmp';
+    const listed = new Set(CLOSES_PARAGRAPH.split(','));
+    expect([...listed].filter((tag) => !elements.split(',').includes(tag))).toEqual([]);
+    for (const tag of elements.split(',')) {
+      const doc = new DOMParser().parseFromString(`<!doctype html><p>a<${tag}>b</${tag}></p>`, 'text/html');
+      const closes = doc.querySelector(`p ${tag}`) === null;
+      expect({ tag, listed: listed.has(tag) }).toEqual({ tag, listed: closes });
     }
   });
 });
