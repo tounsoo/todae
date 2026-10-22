@@ -1,0 +1,88 @@
+import { FieldOneTimeCode, FieldOneTimeCodeForm } from '../../../../components/demos/FieldDemo';
+
+# Field.OneTimeCode
+
+`Field.OneTimeCode`는 [Field](/field) 안에서 쓰는 로그인·인증 코드 입력으로, 문자마다 칸 하나를 그립니다. `value`는 최대 `length`자(기본 6)의 문자열입니다. `characters`는 기본값이 `"digits"`이고, 영문자와 숫자를 허용하려면 `"alphanumeric"`을 씁니다. 정리된 코드는 `onValueChange`로, 이벤트는 `onChange`로 받으며 둘 다 써도 됩니다. 둘 다 없으면 입력은 읽기 전용입니다. `onChange`는 정리 전의 원문이 담긴 네이티브 이벤트를 받으므로, `onChange`만 쓰는 제품은 직접 정리하거나 `onValueChange`를 씁니다. 코드를 저절로 전송하는 제품은 `value.length === length`가 된 뒤 잠시 기다렸다가 전송합니다. IME에서는 완전한 코드가 전달됐다가 되돌려질 수 있기 때문입니다(입력, 붙여넣기, 자동 완성 참고).
+
+```tsx
+const id = useId();
+const hintId = useId();
+const [code, setCode] = useState('');
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Verification code</Label.Root>
+  <Field.Root id={id} name="code" aria-describedby={hintId}>
+    <Field.OneTimeCode value={code} onValueChange={setCode} />
+  </Field.Root>
+  <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldOneTimeCode />
+</Example>
+
+칸은 문자마다 입력을 하나씩 두는 방식이 아니라, 하나의 네이티브 `<input>` 위에 그려집니다. 그래서 브라우저의 붙여넣기, 실행 취소, 선택, 스크린 리더 지원이 그대로 동작하고, 입력에 `autocomplete="one-time-code"`가 있으므로 휴대폰이 문자 메시지의 코드를 제안할 수 있습니다. 숫자마다 입력을 나누면 이 기능이 모두 깨집니다. 칸은 `aria-hidden`이고 포인터 이벤트를 받지 않으며, 컨트롤은 입력입니다.
+
+## 입력, 붙여넣기, 자동 완성
+
+하나의 규칙이 무엇을 받을지 정합니다. `characters`가 허용하는 문자만 남기며, 동아시아 키보드로 입력할 수 있는 전각 숫자와 영문자는 해당 ASCII 문자로 셉니다. `½`, `①`, `²`처럼 숫자나 영문자처럼 보이기만 하는 다른 문자는 거부됩니다. 입력, 붙여넣기, 끌어다 놓기, 자동 완성, IME 조합이 모두 이 규칙을 따릅니다.
+
+- `digits` 코드에 숫자가 아닌 문자를 입력하면 거부되며, `alphanumeric` 코드에서 영문자와 숫자 밖의 문자도 마찬가지입니다. `123 456`이나 `Your code: 482-913`을 붙여넣으면 각각 `123456`과 `482913`이 됩니다. 코드가 허용하지 않는 문자는 버리며, 허용하는 문자가 하나도 없는 붙여넣기는 아무 일도 하지 않으며, `onPaste`에서 `preventDefault`로 취소한 붙여넣기도 마찬가지입니다. 키보드의 코드 제안이나 음성 입력처럼 한 번에 여러 문자를 넣는 입력은 붙여넣기로 취급합니다.
+- 텍스트가 들어갈 위치도 하나의 규칙이 정합니다. 코드 전체는 값 전체를 바꾸므로, `12`에 `123456`을 붙여넣으면 `121234`가 아니라 `123456`이 됩니다. 그보다 짧은 텍스트는 선택 범위를 바꾸고, 자리가 필요한 만큼 그 뒤의 문자를 덮어쓰며, 그래도 들어가지 않는 부분은 잘라 냅니다. 그래서 이미 입력한 문자가 코드 끝으로 밀려나 사라지지 않습니다. 가득 차지 않은 코드에서는 여느 입력처럼 입력하면 나머지가 오른쪽으로 밀립니다. 가득 찬 코드에서는 칸에서 입력하면 그 칸이 바뀌고, `123456`의 세 번째 칸에 `78`을 붙여넣으면 `127856`이 됩니다. 캐럿이 가득 찬 코드의 끝 뒤에 있으면 아무것도 들어가지 않습니다. 빈 코드에 `12345678`을 입력해도 `123456`이 남으므로, 완전한 코드를 전송하는 제품이 여분의 키로 다른 코드를 또 받는 일이 없습니다.
+- 끌어다 놓은 텍스트는 놓은 칸에 들어가고, 마지막 칸 뒤에 놓으면 코드 끝 뒤에 들어갑니다. 브라우저가 보이지 않는 입력의 텍스트에서 고르는 위치는 쓰지 않습니다. 필드 안에서 끌어 온 텍스트는 옮겨지지 않고 복사되며, `onDrop`에서 `preventDefault`로 취소한 놓기는 아무것도 넣지 않습니다.
+- IME 조합은 조합하는 동안 브라우저에 맡기며, 칸에는 조합이 들어갈 모습이 보입니다. 조합한 텍스트가 이미 올바른 코드이면 입력하는 대로 `onChange`와 `onValueChange`에 전달됩니다. 휴대폰 키보드는 코드 전체를 한 단어로 조합하기도 하기 때문입니다. 그래서 로마자나 병음 IME는 `k` 같은 라틴 문자를 코드의 일부로 전달했다가, 다음 단계인 `か`가 그것을 대체하면 되돌릴 수 있습니다. 이때 조합 전의 코드는 조합이 끝날 때 다시 전달되며, 대소문자만 바꾸는 등(언제 도착하든) 정규화하는 제품이나 `value`를 고정해 두는 제품에도 마찬가지입니다. 따라서 IME에서는 완전한 코드가 조합 도중에 전달됐다가 되돌려질 수 있으므로, 저절로 전송하는 제품은 코드가 완성된 뒤 잠시 기다렸다가 전송하고, 전송 버튼도 두세요. 그 밖의 조합은 조합이 끝날 때 적용됩니다. 조합이 입력에 남긴 텍스트, 곧 칸에 보이던 텍스트를 같은 규칙이 적용합니다. 코드가 허용하지 않는 조합 문자나 취소한 조합은 코드를 조합 전 그대로 둡니다. 이때 `onValueChange`는 실행되지 않으며, 조합의 단계가 이미 전달되었다면 조합 전의 코드를 다시 받습니다. 조합하는 동안 코드에서 `value`를 설정하면 그 값이 우선하고 조합은 버려집니다. 다만 대소문자와 관계없이 Todae가 그 조합 중에 전달한 코드는 예외입니다. 삭제는 브라우저에 맡깁니다.
+- 각 편집은 `document.execCommand`로 넣으므로 입력의 실행 취소 기록에 한 단계로 남고, Ctrl+Z로 입력과 붙여넣기를 취소할 수 있습니다. 조합 뒤의 실행 취소는 조합 직전에 입력한 내용까지 함께 되돌리거나, 코드를 그대로 둘 수 있습니다. 코드가 아닌 실행 취소나 다시 실행 단계는 거부되므로, `onValueChange`는 사용자가 보지 못한 코드를 받지 않습니다. `execCommand`를 쓸 수 없을 때는 값을 직접 쓰고 `input` 이벤트를 발생시키므로, 입력할 때와 같이 `onChange`가 실행됩니다.
+- `onValueChange`는 언제나 정리된 코드를 받으며, 코드가 바뀔 때만 실행됩니다. 자동 완성이나 브라우저가 취소를 허용하지 않는 입력은 규칙이 보지 못한 텍스트를 입력에 넣을 수 있고, change 이벤트가 같은 규칙으로 그것을 읽습니다.
+
+## 칸 누르기
+
+칸을 누르면 그 칸의 문자가 선택되므로, 입력하면 그 문자가 바뀝니다. 빈 칸이나 마지막 칸 뒤의 어디를 누르든 캐럿이 코드 끝 뒤에 놓입니다. 코드는 필드의 줄을 채우고, 칸은 그 시작 쪽에 놓이며, 오른쪽에서 왼쪽으로 쓰는 페이지에서도 왼쪽에서 오른쪽으로 놓입니다. 마지막 칸 뒤의 공간은 필드의 줄이 칸보다 넓을 때만 있습니다. 아래 폼 예제처럼 `Stack.Root align="start"` 안에서는 줄이 칸만큼만 넓습니다. 끌기나 Shift+클릭으로 선택한 범위는 그대로 두며, 더블 클릭은 여전히 코드 전체를 선택합니다. 가득 찬 코드의 끝 뒤에 캐럿이 있으면 어느 칸도 아닌 칸 줄 전체에 포커스 링이 보입니다. 화살표 키, Home, End, Backspace는 입력 고유의 동작이며, 활성 칸은 캐럿을 따라갑니다. 캐럿이 있는 칸, 또는 선택된 범위의 칸들입니다. 다음 문자를 기다리는 빈 칸에는 깜박이는 캐럿이 보이고, `prefers-reduced-motion: reduce`에서는 깜박이지 않습니다. 포커스 링은 필드 전체가 아니라 활성 칸에 그려집니다.
+
+## 폼에서
+
+입력은 필드의 네이티브 검증 컨트롤이므로, 텍스트를 필드의 `name`으로 보내고 `required`와 다른 네이티브 속성을 받습니다. `maxLength`가 `length`와 같습니다. 비어 있지 않고 `length`보다 짧은 코드는 사용자가 입력했든 코드가 설정했든 너무 짧다고 표시되는데, 브라우저의 `tooShort`는 스크립트가 쓴 값을 건너뛰기 때문입니다. 빈 코드는 `required`의 몫입니다. 이 문제의 `kind`는 `'tooShort'`가 아니라 `'customError'`이고, 메시지는 `tooShort` 문자열입니다. 코드가 짧은 동안에는 이 메시지가 `Field.Root`의 `customValidity`보다 우선하는데, 가장 안쪽 소유자가 먼저이기 때문입니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지 언어로 표시되고("Use at least 8 characters" 같은 문구), 포커스는 입력으로 이동합니다.
+
+```tsx
+const id = useId();
+const [code, setCode] = useState('');
+
+<Form.Root onSubmit={verify}>
+  <Stack.Root align="start">
+    <Field.Group>
+      <Label.Root htmlFor={id}>Recovery code</Label.Root>
+      <Field.Root id={id} name="recovery">
+        <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
+      </Field.Root>
+      <ErrorMessage.Root />
+    </Field.Group>
+    <Button.Root type="submit">Verify</Button.Root>
+  </Stack.Root>
+</Form.Root>
+```
+
+<Example block>
+  <FieldOneTimeCodeForm />
+</Example>
+
+`pattern`은 `[0-9]*` 또는 `[A-Za-z0-9]*`입니다. 길이는 너무 짧음 검사에 맡기므로, 너무 짧은 코드는 "형식 오류"가 아니라 "너무 짧음"으로 표시됩니다.
+
+## 접근 가능한 구성
+
+**Todae가 처리하는 것:** 입력은 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 둘러싼 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `autocomplete="one-time-code"`가 있는 텍스트 입력이며, `digits`에는 숫자 키패드를 요청하고, 맞춤법 검사, 자동 수정, 자동 대문자를 끄고, 코드가 라틴 문자이므로 `dir="ltr"`입니다. 칸은 `aria-hidden`이므로 스크린 리더는 입력 자체의 텍스트를 읽습니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root의 `id`인 [Label](/label), 또는 Root의 `aria-label` / `aria-labelledby`로 제공합니다. [Description](/description)에 코드의 길이("Enter the 6-digit code we sent" 같은 문구). 코드를 전송하는 `Form.Root`나 `onValueChange`, 그리고 다시 보내기 컨트롤.
+
+**주의할 점:** `onComplete`는 없습니다. `value.length === length`가 된 뒤 잠시 기다렸다가 `onValueChange`에서 코드를 전송하되, 저절로 전송되리라 기대하지 않는 사람을 위해 제출 버튼을 두세요. 코드가 허용하지 않는 문자가 `value`에 있으면 그대로 보이므로, 설정하는 값은 직접 정리하세요. IME가 켜져 있으면(`alphanumeric` 코드처럼) 허용 집합 밖의 조합 문자는 코드를 그대로 두므로 라틴 문자 키보드로 바꿔야 합니다. 우편번호나 ID처럼 일회용 코드가 아닌 코드는 일반 입력이 낫습니다.
+
+## 사용 시점
+
+### Field.OneTimeCode
+
+**When:** 사람들이 입력하거나, 붙여넣거나, 메시지에서 자동 완성하는, 길이가 정해진 로그인·2단계 인증·확인 코드.
+
+**When not:** 길이가 정해지지 않은 코드나 일반 텍스트 → [Field.TextInput](/field/text-input). 단계로 바꾸거나 서식을 적용할 숫자 → [Field.NumberInput](/field/number-input). 숫자마다 입력을 따로 두는 방식은 붙여넣기, 자동 완성, 스크린 리더를 깨뜨립니다.
+
+## Props
+
+<PropsTable name="Field.OneTimeCode" />

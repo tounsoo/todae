@@ -227,6 +227,8 @@ export {
   type FieldIconProps,
   type FieldIncrementProps,
   type FieldNumberInputProps,
+  type FieldOneTimeCodeCharacters,
+  type FieldOneTimeCodeProps,
   type FieldRootProps,
   type FieldRowProps,
   type FieldSelectProps,

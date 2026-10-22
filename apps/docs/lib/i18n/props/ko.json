@@ -1105,6 +1105,40 @@
       "ko": "휴대전화가 보여 줄 키보드. 소수점 키패드의 구분 기호는 locale이 아니라 기기를 따릅니다."
     }
   },
+  "Field.OneTimeCode": {
+    "value": {
+      "en": "The code: at most length characters of the allowed set.",
+      "ko": "코드. 허용된 문자 집합에서 최대 length자입니다."
+    },
+    "onChange": {
+      "en": "Optional: onValueChange alone is enough when the event is not needed. The event holds the raw text; clean it, or use onValueChange.",
+      "ko": "선택 사항입니다. 이벤트가 필요 없으면 onValueChange만으로 충분합니다. 이벤트에는 정리 전의 원문이 담기므로, 직접 정리하거나 onValueChange를 쓰세요."
+    },
+    "onValueChange": {
+      "en": "Called with the code cleaned to the allowed characters and cut to length. Without it and onChange the input is read-only.",
+      "ko": "허용된 문자만 남기고 length로 자른 코드와 함께 호출됩니다. 이것과 onChange가 모두 없으면 입력은 읽기 전용입니다."
+    },
+    "length": {
+      "en": "How many characters the code has, and how many boxes are drawn.",
+      "ko": "코드의 문자 수이자 그려지는 칸의 수입니다."
+    },
+    "characters": {
+      "en": "digits asks the phone for a numeric keypad and refuses other characters as they are typed.",
+      "ko": "digits는 휴대폰에 숫자 키패드를 요청하고, 입력하는 동안 다른 문자를 거부합니다."
+    },
+    "className": {
+      "en": "On the element that draws the boxes, not on the input, which is transparent.",
+      "ko": "투명한 입력이 아니라 칸을 그리는 요소에 붙습니다."
+    },
+    "autoComplete": {
+      "en": "Lets the phone offer the code from a text message.",
+      "ko": "휴대폰이 문자 메시지의 코드를 제안할 수 있게 합니다."
+    },
+    "style": {
+      "en": "On the element that draws the boxes, like className.",
+      "ko": "className처럼 칸을 그리는 요소에 붙습니다."
+    }
+  },
   "Field.Increment": {
     "children": {
       "en": "Content that replaces the plus sign. Text in it names the button.",

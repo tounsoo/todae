@@ -27,6 +27,7 @@ import styles from './Field.module.css';
 import { createCountStore, pickerToggles } from './Field.shared.js';
 import { TextInput } from './Field.TextInput.js';
 import { NumberInput } from './Field.NumberInput.js';
+import { OneTimeCode } from './Field.OneTimeCode.js';
 import { Decrement, Increment } from './Field.StepButton.js';
 import { Textarea } from './Field.Textarea.js';
 import { ChipInput } from './Field.ChipInput.js';
@@ -247,6 +248,7 @@ function Root({
 
 export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput.js';
 export type { FieldNumberInputProps } from './Field.NumberInput.js';
+export type { FieldOneTimeCodeCharacters, FieldOneTimeCodeProps } from './Field.OneTimeCode.js';
 export type { FieldDecrementProps, FieldIncrementProps } from './Field.StepButton.js';
 export type { FieldTextareaHighlight } from './TextareaHighlights.js';
 export type { FieldTextareaProps } from './Field.Textarea.js';
@@ -299,6 +301,7 @@ export const Field = {
   Root,
   TextInput,
   NumberInput,
+  OneTimeCode,
   Textarea,
   ChipInput,
   Select,

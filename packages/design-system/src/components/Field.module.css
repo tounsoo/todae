@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input:not([data-todae-value-input], [data-todae-one-time-code]), textarea, .swatch, .picker, [data-todae-field-control]:not([data-todae-one-time-code]), [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input:not([data-todae-value-input]), textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input:not([data-todae-value-input], [data-todae-one-time-code]), textarea, .swatch, .picker, [data-todae-field-control]:not([data-todae-one-time-code]), [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -747,6 +747,170 @@
     .select option:is(:hover, :focus-visible):not(:disabled) {
       outline: var(--todae-focus-ring-width) solid Highlight;
       outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+  }
+
+  /* Field.OneTimeCode: the shell draws nothing around the code, since each box
+     draws its own border, background and focus ring. */
+  .shell:has(> .oneTimeCode) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* Fills the field's row, with the boxes at its start, so the transparent
+     input covers the room after the last box, where a press or a drop is past
+     the code. Left to right like the input, also in a right-to-left page, so
+     that room is after the code. */
+  .oneTimeCode {
+    position: relative;
+    display: flex;
+    direction: ltr;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  /* Transparent rather than hidden: it stays the focusable, clickable input,
+     and a browser's autofill color can't paint over the boxes. */
+  .oneTimeCodeInput {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    opacity: 0;
+    outline: none;
+  }
+
+  .oneTimeCodeInput:disabled {
+    cursor: not-allowed;
+  }
+
+  .slots {
+    --_ring: var(--todae-field-ring-focus);
+    display: flex;
+    min-inline-size: 0;
+    gap: var(--todae-field-code-gap);
+    pointer-events: none;
+  }
+
+  .slot {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 auto;
+    inline-size: var(--todae-field-code-slot-inline-size);
+    min-inline-size: 0;
+    block-size: var(--todae-field-code-slot-block-size);
+    border: var(--todae-field-border-width) solid var(--todae-field-border-default);
+    border-radius: var(--todae-field-code-slot-radius);
+    background: var(--todae-field-bg-default);
+    color: var(--todae-field-fg-default);
+    font-size: var(--todae-field-code-slot-font-size);
+    line-height: var(--todae-field-leading);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shell:hover:not([data-disabled]) .oneTimeCodeInput:not(:read-only) + .slots .slot {
+    border-color: var(--todae-field-border-hover);
+  }
+
+  .shell[data-invalid] .slots {
+    --_ring: var(--todae-field-ring-invalid);
+  }
+
+  .shell[data-invalid] .slot {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .shell[data-disabled] .slot {
+    background: var(--todae-field-bg-disabled);
+    color: var(--todae-field-fg-disabled);
+    border-color: var(--todae-field-border-disabled);
+  }
+
+  /* Transparent until the row is the active part: it gives revealRing the room
+     of a ring around any box, the moment focus lands, before the active box
+     renders. */
+  .oneTimeCodeInput:focus-visible + .slots {
+    outline: var(--todae-focus-ring-width) solid transparent;
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  /* The caret after a full code is in no box, so the row shows the ring. */
+  .oneTimeCodeInput:focus-visible + .slots[data-active] {
+    outline: var(--todae-focus-ring-width) solid var(--_ring);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+    border-color: var(--todae-field-border-focus);
+    outline: var(--todae-focus-ring-width) solid var(--_ring);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .shell[data-invalid] .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .oneTimeCodeInput:read-only + .slots .slot[data-caret]::after {
+    display: none;
+  }
+
+  .slot[data-caret]::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+    margin: auto;
+    inline-size: var(--todae-field-code-caret-width);
+    block-size: 1lh;
+    background: var(--todae-field-code-caret-color);
+    animation: todae-code-caret var(--todae-field-code-caret-blink-duration) steps(1) infinite;
+  }
+
+  @keyframes todae-code-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* A steady caret still shows where the next character goes. */
+  @media (prefers-reduced-motion: reduce) {
+    .slot[data-caret]::after {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    /* The row keeps its transparent outline, which revealRing measures, and
+       the boxes take the system colors. */
+    .slots {
+      forced-color-adjust: none;
+    }
+
+    .slot {
+      forced-color-adjust: auto;
+    }
+
+    .oneTimeCodeInput:focus-visible + .slots[data-active] {
+      outline-color: Highlight;
+    }
+
+    .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+      border-color: Highlight;
+    }
+
+    .slot[data-caret]::after {
+      background: CanvasText;
     }
   }
 }

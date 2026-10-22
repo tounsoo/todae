@@ -1,6 +1,6 @@
 {
   "field": {
-    "$description": "Field.Root and its parts: text and number inputs, step buttons, textarea, select, pickers, labels and messages.",
+    "$description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
@@ -112,6 +112,21 @@
     "token": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
       "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } }
+    },
+    "code": {
+      "$description": "Field.OneTimeCode: the boxes drawn over its input, and the caret in the box waiting for the next character. Box colors are the field's own.",
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
+      "slot": {
+        "inline-size": { "$type": "dimension", "$value": { "value": 2.75, "unit": "rem" } },
+        "block-size": { "$type": "dimension", "$value": { "value": 3.25, "unit": "rem" } },
+        "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+        "font-size": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } }
+      },
+      "caret": {
+        "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+        "color": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "blink-duration": { "$type": "duration", "$value": { "value": 1000, "unit": "ms" } }
+      }
     }
   }
 }

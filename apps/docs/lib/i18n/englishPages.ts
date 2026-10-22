@@ -40,6 +40,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'field/date-range-picker': () => import('../../app/(en)/field/date-range-picker/page.mdx'),
   'field/date-time-picker': () => import('../../app/(en)/field/date-time-picker/page.mdx'),
   'field/number-input': () => import('../../app/(en)/field/number-input/page.mdx'),
+  'field/one-time-code': () => import('../../app/(en)/field/one-time-code/page.mdx'),
   'field/select': () => import('../../app/(en)/field/select/page.mdx'),
   'field/text-input': () => import('../../app/(en)/field/text-input/page.mdx'),
   'field/textarea': () => import('../../app/(en)/field/textarea/page.mdx'),

@@ -222,6 +222,14 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
+  [
+    'Field.OneTimeCode',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.OneTimeCode {...p} value="" onValueChange={noop} />
+      </Field.Root>
+    ),
+  ],
   ...(['Increment', 'Decrement'] as const).map(
     (part): Case => [
       `Field.${part}`,
