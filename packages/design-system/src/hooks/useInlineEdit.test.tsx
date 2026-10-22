@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { StrictMode, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
 import { useInlineEdit } from './useInlineEdit.js';
@@ -252,7 +253,7 @@ it('keeps editing when the window loses focus', async () => {
   expect(field().value).toBe('Q4 report');
 });
 
-it('keeps focus in the input while anything but a field in the group is pressed, so Cancel cancels', async () => {
+it('keeps focus in the input while anything but a text field in the group is pressed, so Cancel cancels', async () => {
   const onCancel = vi.fn();
   const accept = vi.fn(() => true);
   render(<Rename onCancel={onCancel} accept={accept} />);
@@ -296,6 +297,7 @@ it('lets a press on another text field or select in the group through, but not o
         </select>
         <input type="checkbox" aria-label="Also rename the file" />
         <input type="button" value="Undo" />
+        <input type="range" aria-label="Size" />
       </div>
     ) : (
       <button {...edit.getTriggerProps()}>Rename</button>
@@ -307,6 +309,65 @@ it('lets a press on another text field or select in the group through, but not o
   // Safari doesn't focus a clicked checkbox, so it is kept from taking focus to the page.
   expect(fireEvent.mouseDown(screen.getByRole('checkbox'))).toBe(false);
   expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Undo' }))).toBe(false);
+  // A slider moves on the press itself.
+  expect(fireEvent.mouseDown(screen.getByRole('slider', { name: 'Size' }))).toBe(true);
+});
+
+it('keeps focus in the input on a press in a group inside an editable ancestor', async () => {
+  render(
+    <div contentEditable suppressContentEditableWarning>
+      <Rename />
+    </div>,
+  );
+  await open();
+  expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Cancel' }))).toBe(false);
+});
+
+it('keeps focus in the input on a press of a button inside an editable element in the group', async () => {
+  function WithNote() {
+    const edit = useInlineEdit({ value: 'Q3 report', onCommit: () => undefined });
+    return edit.editing ? (
+      <div {...edit.getGroupProps()}>
+        <input aria-label="Name" {...edit.getInputProps()} />
+        <div contentEditable suppressContentEditableWarning>
+          <button>Bold</button>
+        </div>
+      </div>
+    ) : (
+      <button {...edit.getTriggerProps()}>Rename</button>
+    );
+  }
+  render(<WithNote />);
+  await open();
+  expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Bold' }))).toBe(false);
+});
+
+it('commits when focus leaves to nothing while the document keeps focus', async () => {
+  render(<Rename />);
+  await open();
+  fireEvent.change(field(), { target: { value: 'Q4 report' } });
+  const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  fireEvent.blur(field(), { relatedTarget: null });
+  hasFocus.mockRestore();
+  await flush();
+  expect(screen.getByText('Q4 report')).toBeTruthy();
+});
+
+it("leaves a press in a portal rendered from the group to the portal", async () => {
+  function WithPortal() {
+    const edit = useInlineEdit({ value: 'Q3 report', onCommit: () => undefined });
+    return edit.editing ? (
+      <div {...edit.getGroupProps()}>
+        <input aria-label="Name" {...edit.getInputProps()} />
+        {createPortal(<button>Option</button>, document.body)}
+      </div>
+    ) : (
+      <button {...edit.getTriggerProps()}>Rename</button>
+    );
+  }
+  render(<WithPortal />);
+  await open();
+  expect(fireEvent.mouseDown(screen.getByRole('button', { name: 'Option' }))).toBe(true);
 });
 
 it('keeps the caret where the person put it as the parent renders again', async () => {
