@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
-import { useSurface } from '../overlay/surfaceContext.js';
+import { useSurfaceClosed } from '../overlay/surfaceContext.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { firstTabbable, isReachable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
@@ -32,7 +32,7 @@ import styles from './Drilldown.module.css';
 /**
  * Why the stack changed: a Drilldown.Trigger, Drilldown.Back, Escape and the
  * Android back gesture, or an uncontrolled stack starting over as the overlay
- * around it closes.
+ * around it finishes closing.
  */
 export type DrilldownChangeReason = 'push' | 'back' | 'escape' | 'reset';
 
@@ -191,28 +191,12 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     }
   }, [shown]);
 
-  // An uncontrolled stack starts over each time the surface around it
-  // closes: as Dialog, Drawer and Popover, which keep their content mounted,
-  // stop being present, and as BottomSheet, which doesn't, unmounts it.
-  const surface = useSurface();
-  const present = surface?.present;
-  const startsOver = value === undefined && !sameStack(stack, defaultValue);
-  const wasPresent = useRef(present);
-  useLayoutEffect(() => {
-    const was = wasPresent.current;
-    wasPresent.current = present;
-    if (!was || present !== false || !startsOver) return;
+  useSurfaceClosed(() => {
+    if (value !== undefined || sameStack(stack, defaultValue)) return;
     memory.clear();
     change(defaultValue, 'reset');
     reset(defaultValue);
-  }, [present, startsOver, defaultValue, change, memory, reset]);
-  const reportOnUnmount = useRef<() => void>(undefined);
-  useLayoutEffect(() => {
-    reportOnUnmount.current = () => {
-      if (surface?.open === false && startsOver) onValueChange?.(defaultValue, 'reset');
-    };
   });
-  useLayoutEffect(() => () => reportOnUnmount.current?.(), []);
 
   // Escape and a modal's close requests, such as the Android back gesture,
   // come through the overlays' Escape stack, which also stops the key's close

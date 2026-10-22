@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState, type ReactNode } from 'react';
+import { Activity, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
@@ -477,23 +477,60 @@ describe('Drilldown in a browser', () => {
     }
   });
 
-  it('starts an uncontrolled stack over when the Popover around it closes', async () => {
-    const onValueChange = vi.fn();
-    render(<InPopover defaultValue={['filters']} onValueChange={onValueChange} />);
-    const panel = document.querySelector<HTMLElement>('[popover]')!;
-    const trigger = screen.getByRole('button', { name: 'Filters' });
-    await userEvent.click(trigger);
-    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
-    await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
-    await settled();
-    await userEvent.click(trigger);
-    await waitFor(() => expect(panel.matches(':popover-open')).toBe(false));
-    await userEvent.click(trigger);
-    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
-    expect(view('Filters').hidden).toBe(false);
-    expect(view('Brand')).toBeNull();
-    expect(onValueChange).toHaveBeenLastCalledWith(['filters'], 'reset');
-  });
+  for (const kind of ['Dialog', 'BottomSheet', 'Popover'] as const) {
+    it(`starts an uncontrolled stack over with reason reset once the ${kind} around it finishes closing`, async () => {
+      const onValueChange = vi.fn();
+      const ui = (open: boolean) => <Surfaced kind={kind} open={open} onValueChange={onValueChange} />;
+      const { rerender } = render(ui(true));
+      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+      await settled();
+      rerender(ui(false));
+      await waitFor(() => expect(surfaceOpen()).toBe(false));
+      expect(onValueChange.mock.calls).toEqual([
+        [['filters', 'brand'], 'push'],
+        [['filters'], 'reset'],
+      ]);
+      rerender(ui(true));
+      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      expect(view('Filters').hidden).toBe(false);
+      expect(view('Brand')).toBeNull();
+      cleanupAll();
+    });
+  }
+
+  for (const kind of ['Dialog', 'BottomSheet'] as const) {
+    it(`keeps the stack when the ${kind} around it opens again during its exit`, async () => {
+      const onValueChange = vi.fn();
+      const ui = (open: boolean) => <Surfaced kind={kind} open={open} onValueChange={onValueChange} />;
+      const { rerender } = render(ui(true));
+      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+      await settled();
+      rerender(ui(false));
+      rerender(ui(true));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(surfaceOpen()).toBe(true);
+      expect(view('Brand').hidden).toBe(false);
+      expect(onValueChange.mock.calls).toEqual([[['filters', 'brand'], 'push']]);
+      cleanupAll();
+    });
+
+    it(`reports no reset for a Drilldown the product unmounts or hides during the ${kind}'s exit`, async () => {
+      for (const drilldown of ['gone', 'hidden'] as const) {
+        const onValueChange = vi.fn();
+        const { rerender } = render(<Surfaced kind={kind} open onValueChange={onValueChange} />);
+        await waitFor(() => expect(surfaceOpen()).toBe(true));
+        await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
+        await settled();
+        rerender(<Surfaced kind={kind} open={false} onValueChange={onValueChange} />);
+        rerender(<Surfaced kind={kind} open={false} drilldown={drilldown} onValueChange={onValueChange} />);
+        await waitFor(() => expect(surfaceOpen()).toBe(false));
+        expect(onValueChange.mock.calls).toEqual([[['filters', 'brand'], 'push']]);
+        cleanupAll();
+      }
+    });
+  }
 
   it('lets each view finish its own slide when a second push comes during the first', async () => {
     await openDialog(<SettingsDialog />);
@@ -726,47 +763,6 @@ describe('Drilldown in a browser', () => {
     }
   });
 
-  it('starts an uncontrolled stack over with reason reset when the BottomSheet around it closes', async () => {
-    const onValueChange = vi.fn();
-    function Sheet() {
-      const [open, setOpen] = useState(true);
-      return (
-        <Themed>
-          <button type="button" onClick={() => setOpen(true)}>
-            Open
-          </button>
-          <BottomSheet.Root open={open} onOpenChange={setOpen}>
-            <Drilldown.Root defaultValue={['filters']} onValueChange={onValueChange}>
-              <BottomSheet.Header>
-                <BottomSheet.Title>
-                  <Drilldown.Label />
-                </BottomSheet.Title>
-                <BottomSheet.Close>Done</BottomSheet.Close>
-              </BottomSheet.Header>
-              <BottomSheet.Body>
-                <Drilldown.Viewport data-testid="viewport">
-                  <Drilldown.View value="filters" label="Filters">
-                    <Drilldown.Trigger value="brand">Brand</Drilldown.Trigger>
-                  </Drilldown.View>
-                  <Drilldown.View value="brand" label="Brand" />
-                </Drilldown.Viewport>
-              </BottomSheet.Body>
-            </Drilldown.Root>
-          </BottomSheet.Root>
-        </Themed>
-      );
-    }
-    await openDialog(<Sheet />);
-    await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
-    await settled();
-    await userEvent.click(screen.getByRole('button', { name: 'Done' }));
-    await waitFor(() => expect(document.querySelector('dialog')).toBeNull());
-    expect(onValueChange.mock.calls).toEqual([
-      [['filters', 'brand'], 'push'],
-      [['filters'], 'reset'],
-    ]);
-  });
-
   it('scrolls a page that scrolls itself to the top of an inline Drilldown on push, and back on pop', async () => {
     const rows = Array.from({ length: 40 }, (_, i) => `Item ${i + 1}`);
     render(
@@ -887,6 +883,64 @@ function ScrollList({ controlled = false }: { controlled?: boolean }) {
         </Drilldown.Root>
       </Drawer.Root>
     </Themed>
+  );
+}
+
+const surfaceOpen = () => document.querySelector('dialog[open], [popover]:popover-open') !== null;
+
+function Surfaced({
+  kind,
+  open,
+  drilldown = 'shown',
+  onValueChange,
+}: {
+  kind: 'Dialog' | 'BottomSheet' | 'Popover';
+  open: boolean;
+  drilldown?: 'shown' | 'hidden' | 'gone';
+  onValueChange: (value: readonly string[], reason: DrilldownChangeReason) => void;
+}) {
+  const content =
+    drilldown === 'gone' ? null : (
+      <Activity mode={drilldown === 'hidden' ? 'hidden' : 'visible'}>
+        <Drilldown.Root defaultValue={['filters']} onValueChange={onValueChange}>
+          <Drilldown.Viewport data-testid="viewport">
+            <Drilldown.View value="filters" label="Filters">
+              <Drilldown.Trigger value="brand">Brand</Drilldown.Trigger>
+            </Drilldown.View>
+            <Drilldown.View value="brand" label="Brand">
+              <input aria-label="Search brands" />
+            </Drilldown.View>
+          </Drilldown.Viewport>
+        </Drilldown.Root>
+      </Activity>
+    );
+  const onOpenChange = () => undefined;
+  return (
+    <Themed>
+      {kind === 'Dialog' ? (
+        <Dialog.Root open={open} onOpenChange={onOpenChange} aria-label="Filters">
+          {content}
+        </Dialog.Root>
+      ) : kind === 'BottomSheet' ? (
+        <BottomSheet.Root open={open} onOpenChange={onOpenChange} aria-label="Filters">
+          {content}
+        </BottomSheet.Root>
+      ) : (
+        <PopoverSurface open={open}>{content}</PopoverSurface>
+      )}
+    </Themed>
+  );
+}
+
+function PopoverSurface({ open, children }: { open: boolean; children: ReactNode }) {
+  const popover = usePopover({ open, onOpenChange: () => undefined });
+  return (
+    <>
+      <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
+        {children}
+      </Popover.Root>
+    </>
   );
 }
 

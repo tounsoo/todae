@@ -15,13 +15,13 @@ export const meta = {
       name: 'defaultValue',
       type: 'readonly string[]',
       required: false,
-      description: 'Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer, BottomSheet or Popover closes, and onValueChange fires with reason reset.',
+      description: 'Initial stack when uncontrolled. The stack goes back to it each time an enclosing Dialog, Drawer, BottomSheet or Popover finishes closing, and onValueChange fires with reason reset.',
     },
     {
       name: 'onValueChange',
       type: '(value: readonly string[], reason: DrilldownChangeReason) => void',
       required: false,
-      description: 'Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back), escape (Escape, or the Android back gesture in a modal) or reset (an uncontrolled stack going back to defaultValue as its overlay closes).',
+      description: 'Fires with the next stack. reason is push (Drilldown.Trigger), back (Drilldown.Back), escape (Escape, or the Android back gesture in a modal) or reset (an uncontrolled stack going back to defaultValue as its overlay finishes closing).',
     },
     {
       name: 'escape',
