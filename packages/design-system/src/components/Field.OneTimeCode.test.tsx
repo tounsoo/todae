@@ -6,12 +6,12 @@ import type { FieldOneTimeCodeProps } from '../index.js';
 
 afterEach(cleanup);
 
-function Code({ initial = '', ...props }: { initial?: string } & Partial<FieldOneTimeCodeProps>) {
+function Code({ initial = '', disabled, ...props }: { initial?: string; disabled?: boolean } & Partial<FieldOneTimeCodeProps>) {
   const [value, setValue] = useState(initial);
   return (
     <Field.Group>
       <Label.Root htmlFor="code">Verification code</Label.Root>
-      <Field.Root id="code" name="code" disabled={props.disabled}>
+      <Field.Root id="code" name="code" disabled={disabled}>
         <Field.OneTimeCode value={value} onValueChange={setValue} {...props} />
       </Field.Root>
     </Field.Group>
