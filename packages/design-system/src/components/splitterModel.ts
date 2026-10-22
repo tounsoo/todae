@@ -1,10 +1,10 @@
 // The pure rules of Splitter: sizes, collapse and keys. No React, no DOM.
 
-export type SplitterOrientation = 'horizontal' | 'vertical';
-export type SplitterPrimary = 'start' | 'end';
+export type SplitterOrientation = "horizontal" | "vertical";
+export type SplitterPrimary = "start" | "end";
 
 /** What a key does to the primary panel's size. */
-export type SplitterKeyAction = 'grow' | 'shrink' | 'min' | 'max' | 'toggle';
+export type SplitterKeyAction = "grow" | "shrink" | "min" | "max" | "toggle";
 
 /** The sizes the primary panel may take, in pixels. `max` is already limited by the container, and may be infinite before it is measured. */
 export type Bounds = { min: number; max: number; collapsible: boolean };
@@ -42,13 +42,37 @@ export function snapSize(size: number, bounds: Bounds): number {
 }
 
 /**
+ * The panel drawn at no size, if any: the primary one at 0, or the other one
+ * when the primary leaves it less than a pixel of the measured `room` (null
+ * before it is measured). A sliver the eye cannot use counts as none.
+ */
+export function emptySide(
+  size: number,
+  room: number | null,
+  primary: SplitterPrimary,
+): SplitterPrimary | undefined {
+  if (size === 0) return primary;
+  if (room !== null && room - size < 1)
+    return primary === "start" ? "end" : "start";
+  return undefined;
+}
+
+/**
  * The size after one arrow key moves the handle toward (`shrink`) or away
  * from (`grow`) the primary panel. A collapsible panel leaves 0 for `min` and
  * goes to 0 from `min`, instead of stepping through sizes it may not take.
  */
-export function stepSize(direction: 'grow' | 'shrink', size: number, bounds: Bounds, step: number): number {
-  if (direction === 'grow') {
-    return clampSize(bounds.collapsible && size < bounds.min ? bounds.min : size + step, bounds);
+export function stepSize(
+  direction: "grow" | "shrink",
+  size: number,
+  bounds: Bounds,
+  step: number,
+): number {
+  if (direction === "grow") {
+    return clampSize(
+      bounds.collapsible && size < bounds.min ? bounds.min : size + step,
+      bounds,
+    );
   }
   const next = size - step;
   return bounds.collapsible && next < bounds.min ? 0 : clampSize(next, bounds);
@@ -59,7 +83,12 @@ export function stepSize(direction: 'grow' | 'shrink', size: number, bounds: Bou
  * the product held before, as it is (the room clamps what is drawn, not what
  * is held), or `min` (at least `step`) when it never had one.
  */
-export function toggledSize(size: number, restore: number, min: number, step: number): number {
+export function toggledSize(
+  size: number,
+  restore: number,
+  min: number,
+  step: number,
+): number {
   if (size > 0) return 0;
   return restore > 0 ? restore : Math.max(min, step);
 }
@@ -70,9 +99,13 @@ export function toggledSize(size: number, restore: number, min: number, step: nu
  * larger coordinates, a last one toward smaller, and in a horizontal layout
  * right-to-left text flips both. `orientation` is the axis the panels lie along.
  */
-export function growSign(orientation: SplitterOrientation, primary: SplitterPrimary, rtl: boolean): 1 | -1 {
-  const flipped = orientation === 'horizontal' && rtl;
-  return (primary === 'start') !== flipped ? 1 : -1;
+export function growSign(
+  orientation: SplitterOrientation,
+  primary: SplitterPrimary,
+  rtl: boolean,
+): 1 | -1 {
+  const flipped = orientation === "horizontal" && rtl;
+  return (primary === "start") !== flipped ? 1 : -1;
 }
 
 /**
@@ -88,19 +121,19 @@ export function keyAction(
   rtl: boolean,
 ): SplitterKeyAction | null {
   switch (key) {
-    case 'Home':
-      return 'min';
-    case 'End':
-      return 'max';
-    case 'Enter':
-      return 'toggle';
+    case "Home":
+      return "min";
+    case "End":
+      return "max";
+    case "Enter":
+      return "toggle";
   }
-  const horizontal = orientation === 'horizontal';
+  const horizontal = orientation === "horizontal";
   let direction: 1 | -1;
-  if (key === (horizontal ? 'ArrowRight' : 'ArrowDown')) direction = 1;
-  else if (key === (horizontal ? 'ArrowLeft' : 'ArrowUp')) direction = -1;
+  if (key === (horizontal ? "ArrowRight" : "ArrowDown")) direction = 1;
+  else if (key === (horizontal ? "ArrowLeft" : "ArrowUp")) direction = -1;
   else return null;
-  return direction === growSign(orientation, primary, rtl) ? 'grow' : 'shrink';
+  return direction === growSign(orientation, primary, rtl) ? "grow" : "shrink";
 }
 
 /**
@@ -109,6 +142,11 @@ export function keyAction(
  * {@link growSign}. Only the distance moved counts, so the handle never
  * jumps and a layout that shifts mid-drag changes nothing.
  */
-export function dragSize(pointer: number, startPointer: number, startSize: number, sign: 1 | -1): number {
+export function dragSize(
+  pointer: number,
+  startPointer: number,
+  startSize: number,
+  sign: 1 | -1,
+): number {
   return startSize + sign * (pointer - startPointer);
 }
