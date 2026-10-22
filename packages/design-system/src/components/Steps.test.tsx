@@ -64,6 +64,25 @@ describe('Steps', () => {
     expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['완료: A', 'Skipped: B', '완료: C']);
   });
 
+  it('draws a plan by default, and progress through a form with no spinner on the current step', () => {
+    const { unmount } = render(plan());
+    expect(screen.getByRole('list').dataset.variant).toBe('plan');
+    unmount();
+    render(
+      <Steps.Root variant="progress" aria-label="Sign-up steps">
+        <Steps.Item status="done">Account</Steps.Item>
+        <Steps.Item status="current">Workspace</Steps.Item>
+        <Steps.Item>Review</Steps.Item>
+      </Steps.Root>,
+    );
+    expect(screen.getByRole('list', { name: 'Sign-up steps' }).dataset.variant).toBe('progress');
+    const [done, current] = screen.getAllByRole('listitem');
+    expect(current!.querySelector('progress')).toBeNull();
+    expect(current!.getAttribute('aria-current')).toBe('step');
+    expect(current!.textContent).toBe('In progress: Workspace');
+    expect(done!.querySelector('[aria-hidden="true"] [data-todae-glyph] > svg')).not.toBeNull();
+  });
+
   it('throws when an item is rendered outside Steps.Root', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<Steps.Item>Alone</Steps.Item>)).toThrow('Steps.Item must be rendered inside Steps.Root');

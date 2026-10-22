@@ -96,6 +96,25 @@
     color: var(--todae-steps-marker-fg-current);
   }
 
+  /* Progress through a form: the current step is where the person is, not work
+     that runs, so its marker is a still ring with a dot, and done steps keep
+     their text. */
+  .root[data-variant='progress'] > .item[data-status='done'] > .content {
+    text-decoration-line: none;
+  }
+
+  .root[data-variant='progress'] > .item[data-status='current'] > .marker {
+    border-color: var(--todae-steps-marker-progress-border);
+  }
+
+  .root[data-variant='progress'] > .item[data-status='current'] > .marker::before {
+    content: '';
+    inline-size: var(--todae-steps-marker-progress-dot-size);
+    block-size: var(--todae-steps-marker-progress-dot-size);
+    border-radius: 50%;
+    background: var(--todae-steps-marker-progress-dot-color);
+  }
+
   .item[data-status='error'] {
     color: var(--todae-steps-fg-error);
   }
@@ -122,6 +141,10 @@
       border-color: Highlight;
       background: Highlight;
       color: HighlightText;
+    }
+
+    .root[data-variant='progress'] > .item[data-status='current'] > .marker::before {
+      background: CanvasText;
     }
 
     .item[data-status='error'] > .marker {

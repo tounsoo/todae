@@ -269,6 +269,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
   }, [state.focus]);
 
   // A reply is a commit whose `errors` differ in content from the commit before and have entries; the same content in a new object does not run this.
+  // Its focus moves in the update this dispatch flushes before the commit ends, so a parent's microtask sees it (the Wizard recipe relies on that).
   useLayoutEffect(() => {
     const form = formRef.current;
     if (!form || !awaiting.current || !keyHasErrors(key)) return;

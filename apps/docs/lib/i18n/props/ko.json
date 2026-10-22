@@ -3029,6 +3029,12 @@
       "ko": "listbox id의 기반."
     }
   },
+  "Steps.Root": {
+    "variant": {
+      "en": "plan is work that runs: the current step shows a spinner and done steps are struck through. progress is where a person is in a form: the current step shows a still ring with a dot and done steps keep their text. Sets data-variant.",
+      "ko": "plan은 실행되는 작업입니다. 현재 단계는 스피너를 보여 주고 끝난 단계에는 취소선을 긋습니다. progress는 사람이 폼의 어디까지 왔는지입니다. 현재 단계는 점이 든 멈춘 고리를 보여 주고 끝난 단계는 텍스트를 그대로 둡니다. data-variant를 설정합니다."
+    }
+  },
   "Steps.Item": {
     "status": {
       "en": "Sets data-status and the marker. A current step takes aria-current=\"step\".",

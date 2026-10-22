@@ -138,6 +138,7 @@ export const SITE_GROUPS = [
       ['/recipes/reasoning', 'Reasoning'],
       ['/recipes/suggestions', 'Suggestions'],
       ['/recipes/tool-call', 'Tool call'],
+      ['/recipes/wizard', 'Wizard'],
     ],
   },
   {
