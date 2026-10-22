@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { Activity, useRef, useState } from 'react';
+import { Activity, startTransition, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
 import { Drilldown } from '../components/Drilldown.js';
@@ -210,6 +210,68 @@ describe('Drilldown focus and surface reset in a browser', () => {
     try {
       await userEvent.click(screen.getByRole('button', { name: 'Notification settings' }));
       expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Frequency' }));
+    } finally {
+      cleanupAll();
+    }
+  });
+});
+
+function Deferred({ apply }: { apply: (update: () => void) => void }) {
+  const [stack, setStack] = useState<readonly string[]>(['settings']);
+  return (
+    <Themed>
+      <Drilldown.Root value={stack} onValueChange={(next, reason) => (reason === 'push' ? apply(() => setStack(next)) : setStack(next))}>
+        <Drilldown.Back />
+        <Drilldown.Viewport data-testid="viewport">
+          <Drilldown.View value="settings" label="Settings">
+            <input aria-label="Search" />
+            <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+            <button type="button" onClick={() => setStack(['settings', 'about'])}>
+              About
+            </button>
+          </Drilldown.View>
+          <Drilldown.View value="account" label="Account">
+            <input aria-label="Display name" />
+          </Drilldown.View>
+          <Drilldown.View value="about" label="About">
+            <input aria-label="Version" />
+          </Drilldown.View>
+        </Drilldown.Viewport>
+      </Drilldown.Root>
+    </Themed>
+  );
+}
+
+describe('Drilldown focus with a stack the product sets later', () => {
+  const later = {
+    timeout: (update: () => void) => setTimeout(update, 50),
+    transition: (update: () => void) => startTransition(update),
+  };
+  for (const [name, apply] of Object.entries(later)) {
+    it(`returns focus to the trigger on Back when the product applies the push in a ${name}`, async () => {
+      render(<Deferred apply={apply} />);
+      try {
+        const account = screen.getByRole('button', { name: 'Account' });
+        await userEvent.click(account);
+        await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' })));
+        await settled();
+        await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+        expect(document.activeElement).toBe(account);
+      } finally {
+        cleanupAll();
+      }
+    });
+  }
+
+  it('gives a push the product rejected no say in where focus returns after a later change', async () => {
+    render(<Deferred apply={() => undefined} />);
+    try {
+      await userEvent.click(screen.getByRole('button', { name: 'Account' }));
+      await userEvent.click(screen.getByRole('button', { name: 'About' }));
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Version' }));
+      await settled();
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search' }));
     } finally {
       cleanupAll();
     }

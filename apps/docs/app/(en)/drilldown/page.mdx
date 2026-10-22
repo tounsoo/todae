@@ -40,7 +40,7 @@ The value is the stack of view values, the first view first and the shown view l
 
 A view is mounted while its value is in the stack. Views lower in the stack stay mounted and hidden, so going back keeps their form input. A view that leaves the stack unmounts once its slide ends. An uncontrolled stack goes back to `defaultValue` each time the Dialog, Drawer, BottomSheet or Popover around it finishes closing, after its exit motion, and `onValueChange` gets reason `reset`. A controlled stack stays as you left it, and so does a surface opened again during its exit. A Drilldown you unmount, or hide with `<Activity>`, before the surface finishes closing gets no `reset`.
 
-`Drilldown.Trigger` is a [Button](/button) and takes Button's props, so it can be a primary Next button, a ghost row with a chevron, or a link through `render`. To push after async work, such as validating a step first, control `value` and set the stack when the work is done.
+`Drilldown.Trigger` is a [Button](/button) and takes Button's props, so it can be a primary Next button, a ghost row with a chevron, or a link through `render`. To push after async work, such as validating a step first, control `value` and set the stack when the work is done; Back still returns focus to the trigger.
 
 ```tsx
 import { ChevronRight } from 'lucide-react';

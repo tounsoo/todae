@@ -149,7 +149,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     return remembered?.offset;
   };
   const elementOf = (view: string) => views.current.get(view)?.element;
-  const { shown, direction, statusOf, reset, requestPush } = useStackMotion({ stack, viewportRef, elementOf, onChange });
+  const { shown, direction, statusOf, reset } = useStackMotion({ stack, viewportRef, elementOf, onChange });
 
   const push = useCallback(
     (next: string, trigger: HTMLElement) => {
@@ -159,11 +159,10 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
         }
         return;
       }
-      const to = [...stack, next];
-      requestPush(to, trigger);
-      change(to, 'push');
+      memory.pushed(next, trigger);
+      change([...stack, next], 'push');
     },
-    [change, requestPush, stack],
+    [change, memory, stack],
   );
   const pop = useCallback(
     (reason: 'back' | 'escape') => {
