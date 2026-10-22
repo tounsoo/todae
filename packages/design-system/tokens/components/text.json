@@ -1,6 +1,6 @@
 {
   "text": {
-    "$description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it.",
+    "$description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it.",
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/sans/$value" } }
     },
@@ -24,6 +24,18 @@
     "leading": {
       "default": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
       "tight": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
+    },
+    "label": {
+      "$description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
+      "font": {
+        "family": { "$type": "fontFamily", "$value": { "$ref": "#/text/font/family/$value" } },
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/text/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } },
+        "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/default/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/text/fg/muted/$value" } }
     }
   }
 }

@@ -173,14 +173,15 @@
     "(section order)": "ff11ef39ec84"
   },
   "data-list": {
-    "(top)": "8f15ed09a6e9",
+    "(top)": "13b4e53d2c15",
     "# DataList": "6d082816b5c1",
     "## Orientation": "88681956a8af",
+    "## Columns": "8f892c432833",
     "## Narrow widths": "aa96b583c5fc",
     "## Accessible composition": "561db38a366f",
     "## When to use": "12375f0bfe8a",
     "## Props": "eba21bde9683",
-    "(section order)": "6e8610a8c3fd"
+    "(section order)": "86d28c433327"
   },
   "description": {
     "(top)": "33dbf419d7e5",
@@ -602,6 +603,15 @@
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
   },
+  "recipes/citations": {
+    "(top)": "45f1fee3ae62",
+    "# Citations": "c1e97aef2ff3",
+    "## The marker": "260ef42d826c",
+    "## The sources list": "c939e8cf1d57",
+    "## Accessible composition": "4530405603cb",
+    "## When to use": "64d20eb01e2d",
+    "(section order)": "776f0285dccb"
+  },
   "recipes/combobox": {
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
@@ -737,13 +747,14 @@
     "(section order)": "6b5ab14cc7b5"
   },
   "text": {
-    "(top)": "3fc9ccef9d05",
-    "# Text": "e833057bfd25",
+    "(top)": "b1e17b5416f8",
+    "# Text": "7bbe9f5e1adf",
     "## Headings": "7ef059d65ca4",
-    "## Accessible composition": "60ba7e690e76",
-    "## When to use": "504f4a606802",
+    "## Label": "96df565d38ad",
+    "## Accessible composition": "2eb09d1d4351",
+    "## When to use": "5a57584d1a10",
     "## Props": "c29450776f88",
-    "(section order)": "a613cff43ca1"
+    "(section order)": "e63d148221ad"
   },
   "toast": {
     "(top)": "85a2f957060f",
@@ -775,9 +786,9 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "ada6a1a14d5f",
+    "## Contrast": "3e31a76527b8",
     "## References and opacity": "dbea45e0372e",
-    "## Letter case": "beaf90851101",
+    "## Letter case": "943aff38b55f",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
     "## Focus ring": "d4f6cb5c0687",
@@ -795,11 +806,11 @@
   },
   "tooltip": {
     "(top)": "c6ad05ceec66",
-    "# Tooltip": "5a6fad0ba2ee",
+    "# Tooltip": "3e0fd9fdfe39",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
-    "## Accessible composition": "1509f4e1cfc9",
+    "## Accessible composition": "da1671bee85f",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"

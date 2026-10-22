@@ -50,9 +50,12 @@ export function App() {
 
           <section className="hero">
             <Stack.Root>
-              <Text.Root as="h1" size="2xl" weight="bold">
-                A quiet cabin, a short drive away
-              </Text.Root>
+              <hgroup>
+                <Text.Root size="label">Cabins for the weekend</Text.Root>
+                <Text.Root as="h1" size="2xl" weight="bold">
+                  A quiet cabin, a short drive away
+                </Text.Root>
+              </hgroup>
               <Text.Root>Book a night in the woods, with the kettle already on.</Text.Root>
               <Stack.Root direction="row" wrap>
                 <Button.Root>Find a cabin</Button.Root>

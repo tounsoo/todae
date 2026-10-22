@@ -4810,7 +4810,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.default",
@@ -4824,7 +4824,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.muted",
@@ -4838,7 +4838,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.font.family",
@@ -4852,7 +4852,105 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.label.fg",
+      "type": "color",
+      "cssVar": "--todae-text-label-fg",
+      "cssValue": "var(--todae-text-fg-muted)",
+      "ref": "text.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.family",
+      "type": "fontFamily",
+      "cssVar": "--todae-text-label-font-family",
+      "cssValue": "var(--todae-text-font-family)",
+      "ref": "text.font.family",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-text-label-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-label-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-text-label-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-default)",
+      "ref": "font.text-transform.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-text-label-font-weight",
+      "cssValue": "var(--todae-text-weight-medium)",
+      "ref": "text.weight.medium",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+    },
+    {
+      "path": "text.label.leading",
+      "type": "number",
+      "cssVar": "--todae-text-label-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.leading.default",
@@ -4866,7 +4964,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.leading.tight",
@@ -4880,7 +4978,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.2",
@@ -4894,7 +4992,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.3",
@@ -4908,7 +5006,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.4",
@@ -4922,7 +5020,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.5",
@@ -4936,7 +5034,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.size.6",
@@ -4950,7 +5048,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.bold",
@@ -4964,7 +5062,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.medium",
@@ -4978,7 +5076,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.regular",
@@ -4992,7 +5090,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "prose.fg",
@@ -11811,6 +11909,20 @@
         "name": "contract"
       },
       "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
+    },
+    {
+      "path": "datalist.gap.between-columns",
+      "type": "dimension",
+      "cssVar": "--todae-datalist-gap-between-columns",
+      "cssValue": "var(--todae-space-stack-gap-spacious)",
+      "ref": "space.stack.gap-spacious",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The gap between columns of items when minItemSize lays the list out in columns."
     },
     {
       "path": "datalist.gap.column",
