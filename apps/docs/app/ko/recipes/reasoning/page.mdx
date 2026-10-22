@@ -1,0 +1,75 @@
+import { ReasoningExample } from '../../../../components/demos/ReasoningDemo';
+
+# Reasoning
+
+패키지 네임스페이스가 아니라 레시피입니다. 모델의 추론은 답의 [Message.Root](/message) 안에 넣은 [Disclosure](/disclosure)입니다. 추론이 도착하는 동안 열려 있고, 답이 시작되면 닫히며, 읽고 싶을 때 언제든 다시 열 수 있습니다. `Reasoning.*` export는 없습니다.
+
+Ask again을 눌러 추론이 도착하고, 끝나면 닫히고, 답이 이어지는 모습을 보세요.
+
+<Example block>
+  <ReasoningExample />
+</Example>
+
+## 블록
+
+summary는 블록에 무엇이 있는지 말로 알립니다. 추론이 도착하는 동안에는 "Thinking", 그 뒤에는 걸린 시간입니다. "Thinking" 옆의 Loader `dots`는 스크린 리더에서 숨깁니다. 단어가 이미 같은 것을 말하기 때문입니다. 블록은 `Message.Content` 앞에 두고, 추론이 markdown이면 [Prose](/prose)로 렌더링하세요.
+
+```tsx
+import { Disclosure, Loader, Text } from '@tounsoo/todae';
+import type { ReactNode } from 'react';
+
+const seconds = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+export function Reasoning({ thinking, duration, children }: { thinking: boolean; duration: number; children: ReactNode }) {
+  return (
+    <Disclosure.Root open={thinking}>
+      <Disclosure.Summary>
+        {thinking ? 'Thinking' : `Thought for ${seconds.format(duration)}`}
+        {thinking && (
+          <>
+            {' '}
+            <Loader.Root variant="dots" aria-hidden="true" />
+          </>
+        )}
+      </Disclosure.Summary>
+      <Text.Root size="s" tone="muted">
+        {children}
+      </Text.Root>
+    </Disclosure.Root>
+  );
+}
+```
+
+## 생각하는 동안 열기
+
+`open={thinking}`은 추론이 시작되면 블록을 열고, `thinking`이 false가 되면 닫습니다. React는 prop이 바뀔 때만 `open`을 설정하므로, streaming 중에 블록을 닫은 사람에게는 닫힌 채로, 끝난 뒤에 연 사람에게는 열린 채로 남습니다. 기록에서 불러온 답은 `thinking`이 false로 렌더링되므로 블록이 닫힌 채로 시작합니다.
+
+메시지는 추론과 답 내내 `streaming` 상태이므로, [Conversation](/conversation)은 답이 시작될 때 한 번, 끝날 때 한 번 알립니다.
+
+```tsx
+<Message.Root streaming={phase !== 'done'} aria-label="Assistant">
+  <Reasoning thinking={phase === 'thinking'} duration={duration}>
+    {reasoning}
+  </Reasoning>
+  <Message.Content>…</Message.Content>
+  {phase === 'answering' && (
+    <Message.Actions>
+      <Loader.Root variant="dots" aria-label="Writing" />
+    </Message.Actions>
+  )}
+</Message.Root>
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고, 펼침 상태를 알리고, 페이지 내 찾기가 닫힌 블록의 텍스트에 닿게 합니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 그것이 시작되고 풀릴 때 알립니다.
+
+**직접 제공할 것:** dots는 숨겨지므로 상태를 말로 알리는 summary 텍스트. 제품의 stream에서 얻는 `thinking` 플래그와 걸린 시간.
+
+**주의할 점:** 추론을 live region에 넣는 것. 스크린 리더가 도착하는 단어를 하나하나 읽습니다. 추론 안의 링크나 버튼. 하나가 포커스를 가진 채로 블록이 닫히면 포커스가 페이지로 빠지므로, 포커스가 안에 있는 동안 블록을 열어 두거나 추론에 컨트롤을 넣지 마세요. dots만 바뀌는 summary. 추론이 끝났다는 것은 dots가 아니라 "Thinking"과 "Thought for 6 seconds"가 알려 줍니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 채팅에서 답 옆에 보여 주는 모델의 추론이나 그 요약.
+
+**쓰지 않을 때:** 에이전트가 차례로 진행하는 계획 → [Steps](/steps). streaming 없이 요청할 때까지 숨겨 두는 텍스트 → 평범한 [Disclosure](/disclosure).

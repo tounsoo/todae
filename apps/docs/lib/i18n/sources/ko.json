@@ -654,6 +654,15 @@
     "## When to use": "2320a958107a",
     "(section order)": "6486b947abab"
   },
+  "recipes/reasoning": {
+    "(top)": "9fa20780fc44",
+    "# Reasoning": "10634b450405",
+    "## The block": "7aa60dc529a7",
+    "## Open while it thinks": "0d09b3134a10",
+    "## Accessible composition": "8e404d47ca0a",
+    "## When to use": "b26ad7526faf",
+    "(section order)": "a801d5b444ff"
+  },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",

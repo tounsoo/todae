@@ -1,0 +1,75 @@
+import { ReasoningExample } from '../../../../components/demos/ReasoningDemo';
+
+# Reasoning
+
+A recipe, not a package namespace. A model's reasoning is a [Disclosure](/disclosure) inside the reply's [Message.Root](/message): open while the reasoning arrives, closed once the answer starts, and open again whenever someone wants to read it. There is no `Reasoning.*` export.
+
+Ask again to watch the reasoning arrive, close up when it is done, and the answer follow.
+
+<Example block>
+  <ReasoningExample />
+</Example>
+
+## The block
+
+The summary says in words what the block holds: "Thinking" while the reasoning arrives, then how long it took. Loader's `dots` beside "Thinking" is hidden from screen readers, since the word already says it. Put the block before `Message.Content`, and render the reasoning with [Prose](/prose) when it is markdown.
+
+```tsx
+import { Disclosure, Loader, Text } from '@tounsoo/todae';
+import type { ReactNode } from 'react';
+
+const seconds = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+export function Reasoning({ thinking, duration, children }: { thinking: boolean; duration: number; children: ReactNode }) {
+  return (
+    <Disclosure.Root open={thinking}>
+      <Disclosure.Summary>
+        {thinking ? 'Thinking' : `Thought for ${seconds.format(duration)}`}
+        {thinking && (
+          <>
+            {' '}
+            <Loader.Root variant="dots" aria-hidden="true" />
+          </>
+        )}
+      </Disclosure.Summary>
+      <Text.Root size="s" tone="muted">
+        {children}
+      </Text.Root>
+    </Disclosure.Root>
+  );
+}
+```
+
+## Open while it thinks
+
+`open={thinking}` opens the block when the reasoning starts and closes it when `thinking` turns false. React sets `open` only when the prop changes, so a person who closes the block while it streams keeps it closed, and one who opens it afterwards keeps it open. A reply loaded from history renders with `thinking` false, so its block starts closed.
+
+The message stays `streaming` through both the reasoning and the answer, so [Conversation](/conversation) announces the reply once when it starts and once when it ends.
+
+```tsx
+<Message.Root streaming={phase !== 'done'} aria-label="Assistant">
+  <Reasoning thinking={phase === 'thinking'} duration={duration}>
+    {reasoning}
+  </Reasoning>
+  <Message.Content>…</Message.Content>
+  {phase === 'answering' && (
+    <Message.Actions>
+      <Loader.Root variant="dots" aria-label="Writing" />
+    </Message.Actions>
+  )}
+</Message.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** `Disclosure.Root` is a native `<details>`, so the browser handles the keyboard, announces the expanded state, and lets find-in-page reach text in a closed block. `Message.Root` with `streaming` sets `aria-busy`, and [Conversation](/conversation) announces when that starts and clears.
+
+**You supply:** Summary text that says the state in words, since the dots are hidden. The `thinking` flag and the duration, from your product's stream.
+
+**Watch for:** Putting the reasoning in a live region: a screen reader would read every word as it arrives. Links or buttons in the reasoning: closing the block while one has focus drops focus to the page, so keep the block open while focus is inside it, or leave controls out of the reasoning. A summary that only changes its dots: "Thinking" and "Thought for 6 seconds" tell people the reasoning is done, the dots don't.
+
+## When to use
+
+**When:** A model's reasoning, or a summary of it, shown beside its answer in a chat.
+
+**When not:** A plan of steps the agent works through → [Steps](/steps). Text that is always hidden until asked for, with no streaming → a plain [Disclosure](/disclosure).
