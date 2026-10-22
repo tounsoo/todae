@@ -17,14 +17,13 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
-import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDomId } from './domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { useReach } from './calendarReach.js';
-import { handledOrComposing } from './ime.js';
 import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
 

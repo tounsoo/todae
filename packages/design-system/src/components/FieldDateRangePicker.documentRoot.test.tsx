@@ -1,15 +1,19 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { Field, type DateRange } from '../index.js';
 
 // Next.js and Remix root React on the document, so React's listener and the
 // Escape stack's sit on the same node and stopping propagation reaches neither.
+let unmount = () => {};
+afterEach(() => act(() => unmount()));
+
 const date = (text: string) => Temporal.PlainDate.from(text);
 
 it('keeps the picker open on the Escape that drops a first pick, with React rooted on the document', () => {
   const onOpenChange = vi.fn();
   const root = createRoot(document);
+  unmount = () => root.unmount();
   act(() =>
     root.render(
       <html>
@@ -37,5 +41,4 @@ it('keeps the picker open on the Escape that drops a first pick, with React root
   expect(day().hasAttribute('data-selected')).toBe(false);
   escape();
   expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
-  act(() => root.unmount());
 });
