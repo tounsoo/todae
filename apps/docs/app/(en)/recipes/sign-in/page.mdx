@@ -116,15 +116,17 @@ When the password is right and the account asks for a second step, show a new fo
 The sign-in form and the button the person pressed are gone, so move focus to the code with `autoFocus`. The field's label and description tell a screen reader what to type, and a phone offers a code from a text message only while the code field has focus. Send a full code by itself a short pause after its last character, with `requestSubmit()` so `Form.Root` checks it first, and keep Verify for people who don't expect that. A wrong code comes back in `errors` under the code's `name`, as a wrong password does.
 
 ```tsx
+// Set to the code in the submit handler, so the end of a resend doesn't send the old code again.
+const sentCode = useRef('');
 useEffect(() => {
-  if (code.length !== 6) return;
+  if (code.length !== 6 || code === sentCode.current || resending) return;
   // An IME can still take a full code back, so wait a moment.
   const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
   return () => clearTimeout(timer);
-}, [code]);
+}, [code, resending]);
 ```
 
-When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced. How soon a person may ask again is your product's rule.
+When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced, and don't send by itself a code that was already sent, or the end of a resend checks the old code again. How soon a person may ask again is your product's rule.
 
 ## Sign-up
 
