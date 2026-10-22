@@ -55,7 +55,7 @@ import { ChevronDown } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** A focus ring on the summary, the marker's color, a chevron glyph hidden from screen readers, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
+**Todae handles:** A focus ring on the summary, the marker's color, a chevron glyph hidden from screen readers, a divider between named disclosures, and no fade when the user prefers reduced motion. When code closes a disclosure, such as an `open` prop turning false, while its content holds focus, the summary takes focus, so focus doesn't fall to the page; the server entry's summary doesn't. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
 
 **You supply:** A `Disclosure.Summary` as the first child of each `Disclosure.Root`, with text that names what opens. If you put an icon of your own in the summary instead of a chevron glyph, give it `aria-hidden="true"`; the open state is already announced.
 

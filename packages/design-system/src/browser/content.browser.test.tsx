@@ -842,3 +842,40 @@ describe('Prose.Root in a browser', () => {
     expect(style('empty-2').marginBlockStart).toBe('8px');
   });
 });
+
+describe('Disclosure', () => {
+  function Reasoning({ open }: { open: boolean }) {
+    return (
+      <Disclosure.Root open={open}>
+        <Disclosure.Summary>Reasoning</Disclosure.Summary>
+        <a href="#source">Source</a>
+      </Disclosure.Root>
+    );
+  }
+
+  it('moves focus from its content to the summary when code closes it', async () => {
+    const { rerender } = render(<Reasoning open />);
+    screen.getByRole('link', { name: 'Source' }).focus();
+    rerender(<Reasoning open={false} />);
+    await expect.poll(() => document.activeElement).toBe(screen.getByText('Reasoning'));
+  });
+
+  it('leaves focus alone when the content does not hold it', async () => {
+    const { rerender } = render(
+      <>
+        <button type="button">Elsewhere</button>
+        <Reasoning open />
+      </>,
+    );
+    const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+    elsewhere.focus();
+    rerender(
+      <>
+        <button type="button">Elsewhere</button>
+        <Reasoning open={false} />
+      </>,
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(document.activeElement).toBe(elsewhere);
+  });
+});

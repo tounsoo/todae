@@ -14,7 +14,7 @@ export const meta = {
       name: 'open',
       type: 'boolean',
       required: false,
-      description: 'Starts the disclosure open. The browser then owns the state; follow it with onToggle.',
+      description: 'Opens the disclosure. React sets it again only when the prop changes, and between changes the browser and the person own the state; follow it with onToggle.',
     },
     {
       name: 'onToggle',

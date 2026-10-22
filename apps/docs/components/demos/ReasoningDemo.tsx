@@ -11,15 +11,15 @@ const REASONING =
 const ANSWER =
   'Show it, but keep it out of the way. Open the block while the model thinks, so the wait has something to watch, then close it when the answer starts. Anyone who wants to check the reasoning can open it again.';
 
-const seconds = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
 
 type Phase = 'thinking' | 'answering' | 'done';
 
-function Reasoning({ thinking, duration, children }: { thinking: boolean; duration: number; children: ReactNode }) {
+function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds: number; children: ReactNode }) {
   return (
     <Disclosure.Root open={thinking}>
       <Disclosure.Summary>
-        {thinking ? 'Thinking' : `Thought for ${seconds.format(duration)}`}
+        {thinking ? 'Thinking' : `Thought for ${duration.format(seconds)}`}
         {thinking && (
           <>
             {' '}
@@ -27,9 +27,7 @@ function Reasoning({ thinking, duration, children }: { thinking: boolean; durati
           </>
         )}
       </Disclosure.Summary>
-      <Text.Root size="s" tone="muted">
-        {children}
-      </Text.Root>
+      {children}
     </Disclosure.Root>
   );
 }
@@ -38,7 +36,7 @@ export function ReasoningExample() {
   const [phase, setPhase] = useState<Phase>('done');
   const [reasoning, setReasoning] = useState(REASONING);
   const [answer, setAnswer] = useState(ANSWER);
-  const [duration, setDuration] = useState(6);
+  const [seconds, setSeconds] = useState(6);
   const timer = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => () => clearInterval(timer.current), []);
@@ -58,7 +56,7 @@ export function ReasoningExample() {
       if (shown <= thoughts.length) {
         setReasoning(thoughts.slice(0, shown).join(' '));
         if (shown === thoughts.length) {
-          setDuration(Math.max(1, Math.round((Date.now() - started) / 1000)));
+          setSeconds(Math.max(1, Math.round((Date.now() - started) / 1000)));
           setPhase('answering');
         }
         return;
@@ -78,8 +76,10 @@ export function ReasoningExample() {
         <Message.Content>{QUESTION}</Message.Content>
       </Message.Root>
       <Message.Root streaming={phase !== 'done'} aria-label="Assistant">
-        <Reasoning thinking={phase === 'thinking'} duration={duration}>
-          {reasoning}
+        <Reasoning thinking={phase === 'thinking'} seconds={seconds}>
+          <Text.Root size="s" tone="muted">
+            {reasoning}
+          </Text.Root>
         </Reasoning>
         {answer && (
           <Message.Content>

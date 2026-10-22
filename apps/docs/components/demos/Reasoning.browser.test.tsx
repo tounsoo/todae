@@ -34,10 +34,16 @@ it('opens while the reasoning arrives and closes when the answer starts', async 
 
   await userEvent.click(screen.getByRole('button', { name: 'Ask again' }));
   expect(block().open).toBe(true);
-  expect(summary()).toBe('Thinking ');
+  expect(summary()).toMatch(/^Thinking\s*$/);
+  // The word says the state, so the dots are hidden.
+  expect(document.querySelector('summary progress')!.getAttribute('aria-hidden')).toBe('true');
   expect(reply().getAttribute('aria-busy')).toBe('true');
 
-  advance(60 * 120);
+  advance(20 * 120);
+  await expect.poll(() => block().textContent).toContain('Showing it explains');
+  expect(block().open).toBe(true);
+
+  advance(40 * 120);
   await expect.poll(() => block().open).toBe(false);
   expect(summary()).toMatch(/^Thought for \d+ seconds?$/);
   expect(reply().getAttribute('aria-busy')).toBe('true');

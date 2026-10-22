@@ -12,19 +12,19 @@ Ask again을 눌러 추론이 도착하고, 끝나면 닫히고, 답이 이어�
 
 ## 블록
 
-summary는 블록에 무엇이 있는지 말로 알립니다. 추론이 도착하는 동안에는 "Thinking", 그 뒤에는 걸린 시간입니다. "Thinking" 옆의 Loader `dots`는 스크린 리더에서 숨깁니다. 단어가 이미 같은 것을 말하기 때문입니다. 블록은 `Message.Content` 앞에 두고, 추론이 markdown이면 [Prose](/prose)로 렌더링하세요.
+summary는 블록에 무엇이 있는지 말로 알립니다. 추론이 도착하는 동안에는 "Thinking", 그 뒤에는 걸린 시간입니다. "Thinking" 옆의 Loader `dots`는 스크린 리더에서 숨깁니다. 단어가 이미 같은 것을 말하기 때문입니다. 문구와 걸린 시간의 로케일은 제품의 것이므로 제품의 문자열에서 가져오세요. 블록은 `Message.Content` 앞에 두고, 추론은 [Text](/text)에 담아 넘기거나 markdown이면 [Prose](/prose)에 담아 넘기세요.
 
 ```tsx
-import { Disclosure, Loader, Text } from '@tounsoo/todae';
+import { Disclosure, Loader } from '@tounsoo/todae';
 import type { ReactNode } from 'react';
 
-const seconds = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
 
-export function Reasoning({ thinking, duration, children }: { thinking: boolean; duration: number; children: ReactNode }) {
+export function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds: number; children: ReactNode }) {
   return (
     <Disclosure.Root open={thinking}>
       <Disclosure.Summary>
-        {thinking ? 'Thinking' : `Thought for ${seconds.format(duration)}`}
+        {thinking ? 'Thinking' : `Thought for ${duration.format(seconds)}`}
         {thinking && (
           <>
             {' '}
@@ -32,9 +32,7 @@ export function Reasoning({ thinking, duration, children }: { thinking: boolean;
           </>
         )}
       </Disclosure.Summary>
-      <Text.Root size="s" tone="muted">
-        {children}
-      </Text.Root>
+      {children}
     </Disclosure.Root>
   );
 }
@@ -42,14 +40,18 @@ export function Reasoning({ thinking, duration, children }: { thinking: boolean;
 
 ## 생각하는 동안 열기
 
-`open={thinking}`은 추론이 시작되면 블록을 열고, `thinking`이 false가 되면 닫습니다. React는 prop이 바뀔 때만 `open`을 설정하므로, streaming 중에 블록을 닫은 사람에게는 닫힌 채로, 끝난 뒤에 연 사람에게는 열린 채로 남습니다. 기록에서 불러온 답은 `thinking`이 false로 렌더링되므로 블록이 닫힌 채로 시작합니다.
+답은 세 단계를 거칩니다. 추론이 도착하는 동안의 `thinking`, 답이 도착하는 동안의 `answering`, 그리고 `done`입니다. `seconds`는 thinking 단계에 걸린 시간으로, stream의 타임스탬프에서 구합니다.
 
-메시지는 추론과 답 내내 `streaming` 상태이므로, [Conversation](/conversation)은 답이 시작될 때 한 번, 끝날 때 한 번 알립니다.
+`open={thinking}`은 추론이 시작되면 블록을 열고, `thinking`이 false가 되면 닫습니다. React는 prop이 바뀔 때만 `open`을 설정하므로, 블록이 마운트되어 있는 동안에는 streaming 중에 블록을 닫은 사람에게는 닫힌 채로, 끝난 뒤에 연 사람에게는 열린 채로 남습니다. 다시 마운트된 블록은 `thinking`에서 다시 시작하므로 각 메시지의 `key`를 그대로 유지하세요. 기록에서 불러온 답은 `thinking`이 false로 렌더링되므로 블록이 닫힌 채로 시작합니다.
+
+메시지는 추론과 답 내내 `streaming` 상태입니다. [Conversation.Content](/conversation) 안에서는 답이 시작될 때 한 번, 끝날 때 한 번 알립니다.
 
 ```tsx
 <Message.Root streaming={phase !== 'done'} aria-label="Assistant">
-  <Reasoning thinking={phase === 'thinking'} duration={duration}>
-    {reasoning}
+  <Reasoning thinking={phase === 'thinking'} seconds={seconds}>
+    <Text.Root size="s" tone="muted">
+      {reasoning}
+    </Text.Root>
   </Reasoning>
   <Message.Content>…</Message.Content>
   {phase === 'answering' && (
@@ -62,11 +64,11 @@ export function Reasoning({ thinking, duration, children }: { thinking: boolean;
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고, 펼침 상태를 알리고, 페이지 내 찾기가 닫힌 블록의 텍스트에 닿게 합니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 그것이 시작되고 풀릴 때 알립니다.
+**Todae가 맡는 것:** `Disclosure.Root`는 네이티브 `<details>`이므로 브라우저가 키보드를 처리하고 펼침 상태를 알립니다. 추론 안의 링크가 포커스를 가진 채로 블록이 닫히면 `Disclosure.Summary`가 포커스를 자기에게로 옮기므로, 포커스가 페이지로 빠지지 않습니다. `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 그것이 시작되고 풀릴 때 알립니다.
 
-**직접 제공할 것:** dots는 숨겨지므로 상태를 말로 알리는 summary 텍스트. 제품의 stream에서 얻는 `thinking` 플래그와 걸린 시간.
+**직접 제공할 것:** dots는 숨겨지므로 상태를 말로 알리는 summary 텍스트. 제품의 stream에서 얻는 단계와 걸린 시간.
 
-**주의할 점:** 추론을 live region에 넣는 것. 스크린 리더가 도착하는 단어를 하나하나 읽습니다. 추론 안의 링크나 버튼. 하나가 포커스를 가진 채로 블록이 닫히면 포커스가 페이지로 빠지므로, 포커스가 안에 있는 동안 블록을 열어 두거나 추론에 컨트롤을 넣지 마세요. dots만 바뀌는 summary. 추론이 끝났다는 것은 dots가 아니라 "Thinking"과 "Thought for 6 seconds"가 알려 줍니다.
+**주의할 점:** 추론을 live region에 넣는 것. 스크린 리더가 도착하는 단어를 하나하나 읽습니다. 문구가 바뀌지 않는 summary. summary에 닿은 사람에게 추론이 끝났는지 알려 주는 것은 dots가 아니라 "Thinking"과 "Thought for 6 seconds"라는 단어입니다.
 
 ## 언제 쓰나요
 

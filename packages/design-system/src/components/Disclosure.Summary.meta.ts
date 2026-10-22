@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Disclosure.Summary',
-  description: 'A native summary: the toggle that stays visible. Takes native summary attributes.',
+  description: 'A native summary: the toggle that stays visible. When code closes the disclosure while its content holds focus, it takes focus. Takes native summary attributes.',
   props: [
     {
       name: 'children',

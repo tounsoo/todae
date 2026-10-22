@@ -593,8 +593,8 @@
       "ko": "같은 name을 가진 디스클로저는 하나만 열리는 아코디언이 됩니다. 브라우저가 최대 하나만 열어 두고, 선이 그 사이를 나눕니다."
     },
     "open": {
-      "en": "Starts the disclosure open. The browser then owns the state; follow it with onToggle.",
-      "ko": "디스클로저를 열린 채로 시작합니다. 그 뒤로는 브라우저가 상태를 맡으니, onToggle로 따라가세요."
+      "en": "Opens the disclosure. React sets it again only when the prop changes, and between changes the browser and the person own the state; follow it with onToggle.",
+      "ko": "디스클로저를 엽니다. React는 prop이 바뀔 때만 다시 설정하고, 그 사이에는 브라우저와 사용자가 상태를 맡으니, onToggle로 따라가세요."
     },
     "onToggle": {
       "en": "Called after the disclosure opens or closes.",
