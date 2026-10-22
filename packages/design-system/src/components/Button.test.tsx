@@ -76,7 +76,7 @@ describe('Button.Root toggle', () => {
     expect(button.getAttribute('aria-pressed')).toBe('false');
   });
 
-  it('does not flip while aria-disabled, and still calls onClick', () => {
+  it('does not flip or call onClick while aria-disabled', () => {
     const onPressedChange = vi.fn();
     const onClick = vi.fn();
     render(
@@ -86,9 +86,30 @@ describe('Button.Root toggle', () => {
     );
     const button = screen.getByRole('button', { name: 'Bold' });
     fireEvent.click(button);
-    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
     expect(onPressedChange).not.toHaveBeenCalled();
     expect(button.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('submits no form and follows no link while aria-disabled', () => {
+    const onSubmit = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button.Root type="submit" aria-disabled="true">
+          Send
+        </Button.Root>
+      </form>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    render(
+      <Button.Root aria-disabled={true} render={(props) => <a {...props} href="#next" />}>
+        Next
+      </Button.Root>,
+    );
+    const link = screen.getByRole('link', { name: 'Next' });
+    expect(fireEvent.click(link)).toBe(false);
   });
 
   it('does not flip a controlled toggle with aria-disabled={true}', () => {

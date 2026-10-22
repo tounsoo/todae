@@ -44,7 +44,8 @@ type ButtonOwnProps = {
  * another element takes {@link ButtonRenderedProps}.
  * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
  * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`
- * or the button is `aria-disabled`.
+ * or the button is `aria-disabled`. An `aria-disabled` button ignores clicks:
+ * `onClick` doesn't run, and it submits no form and follows no link.
  */
 export type ButtonRootProps = ButtonOwnProps & {
   pressed?: boolean;
@@ -170,12 +171,20 @@ function Root({
   const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
-  const handleClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
-    // aria-disabled keeps the button focusable, not usable: the product ignores the click, and the toggle doesn't flip.
-    if (!toggle || isAriaDisabled(props['aria-disabled'])) return;
+  const composedClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
+    if (!toggle) return;
     setPressed(!pressed);
     onPressedChange?.(!pressed);
   });
+  // aria-disabled keeps the button focusable, not usable: a click runs no
+  // onClick, flips no toggle, submits no form and follows no link.
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    if (isAriaDisabled(props['aria-disabled'])) {
+      event.preventDefault();
+      return;
+    }
+    composedClick(event);
+  };
   const [read, setRead] = useState<Content | null>(null);
   const direct = hint(children);
   const iconOnly = read ? isIconOnly(read) : direct.iconOnly;

@@ -119,8 +119,8 @@ function VersionSwitcher({
   const position = useId();
 
   const held = (to: number) => locked || to < 0 || to >= count;
+  // A click on an aria-disabled Button.Root runs no onClick, so show only sees steps that can happen.
   const show = (to: number) => {
-    if (held(to)) return;
     onShow(to);
     announce(`Reply ${to + 1} of ${count}`);
   };
@@ -195,7 +195,6 @@ export function SuggestionsExample() {
   // again cancels the one in flight.
   const regenerateHeld = (answer: Turn) => pending !== null && pending.reply !== answer.id;
   const regenerate = (answer: Turn) => {
-    if (regenerateHeld(answer)) return;
     clearTimeout(timer.current);
     const base = pending ? without(thread, pending.reply, pending.before) : thread;
     ask(base, turns[answer.parent!]!);

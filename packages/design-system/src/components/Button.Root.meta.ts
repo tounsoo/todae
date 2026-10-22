@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Button.Root',
-  description: 'Native button, or an a through render. Owns variant, type, and disabled. Default type is button. aria-disabled="true" draws it disabled and keeps it focusable; a toggle then does not flip.',
+  description: 'Native button, or an a through render. Owns variant, type, and disabled. Default type is button. aria-disabled="true" draws it disabled and keeps it focusable; a click then runs no onClick and flips no toggle.',
   props: [
     {
       name: 'variant',

@@ -1,5 +1,7 @@
 ---
-"@tounsoo/todae": patch
+"@tounsoo/todae": minor
 ---
 
-Button.Root with `aria-disabled="true"` now looks disabled, keeps focus, and doesn't flip as a toggle, so an `aria-disabled` ToggleGroup.Item isn't pressed by a click.
+Button.Root with `aria-disabled="true"` now looks disabled, keeps focus, and ignores clicks.
+
+- `Button.Root` with `aria-disabled="true"` no longer calls `onClick`, flips a toggle, submits a form or follows a link; drop guards in your own handlers.
