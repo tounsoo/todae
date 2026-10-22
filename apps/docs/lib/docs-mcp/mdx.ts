@@ -198,6 +198,10 @@ export function missingWhenNote(markdown: string, slug: string): string {
   return `No 'When to use' section on /${slug}. Not inferred.`;
 }
 
+export function listPages(): readonly PageDoc[] {
+  return pages;
+}
+
 export function pageBySlug(slug: string): PageDoc | null {
   return pages.find((page) => page.slug === slug) ?? null;
 }

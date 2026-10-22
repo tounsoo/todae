@@ -14,7 +14,8 @@ import { isTranslated } from './i18n/pages';
 import { coreColor, oklchToHex } from './og/colors';
 import { estimateEms, TEXT_WIDTH, TITLE_HEIGHT, titleSize } from './og/OgCard';
 import { ogPages } from './og/pages';
-import remarkPageMetadata, { DESCRIPTION_LIMIT, pageOf, pageSummary, summarize } from './remarkPageMetadata.mjs';
+import { DESCRIPTION_LIMIT, pageSummary, summarize } from './pageSummary.mjs';
+import remarkPageMetadata, { pageOf } from './remarkPageMetadata.mjs';
 
 const APP = join(process.cwd(), 'app');
 const LOCALE_DIRS = { en: '(en)', ko: 'ko' } as const;
