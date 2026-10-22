@@ -5544,8 +5544,8 @@
       "path": "field.code.gap",
       "type": "dimension",
       "cssVar": "--todae-field-code-gap",
-      "cssValue": "var(--todae-space-2)",
-      "ref": "space.2",
+      "cssValue": "var(--todae-space-field-gap)",
+      "ref": "space.field.gap",
       "layer": "contract",
       "context": null,
       "entry": {

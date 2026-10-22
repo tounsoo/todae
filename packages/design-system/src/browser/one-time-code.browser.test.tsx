@@ -174,6 +174,21 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(rects[1]!.left).toBeGreaterThan(rects[0]!.right);
   });
 
+  it('spaces its boxes by the density, as the field spaces its parts', () => {
+    const gap = (density: string) => {
+      cleanup();
+      render(
+        <main data-appearance="light" data-density={density}>
+          <Field.Root aria-label="Verification code">
+            <Field.OneTimeCode value="" onValueChange={() => undefined} />
+          </Field.Root>
+        </main>,
+      );
+      return boxes()[1]!.getBoundingClientRect().left - boxes()[0]!.getBoundingClientRect().right;
+    };
+    expect(gap('compact')).toBeLessThan(gap('comfortable'));
+  });
+
   it('shrinks its boxes to fit a narrow container', () => {
     render(
       <div style={{ inlineSize: '200px' }}>

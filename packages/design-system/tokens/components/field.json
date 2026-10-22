@@ -115,7 +115,7 @@
     },
     "code": {
       "$description": "Field.OneTimeCode: the boxes drawn over its input, and the caret in the box waiting for the next character. Box colors are the field's own.",
-      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
       "slot": {
         "inline-size": { "$type": "dimension", "$value": { "value": 2.75, "unit": "rem" } },
         "block-size": { "$type": "dimension", "$value": { "value": 3.25, "unit": "rem" } },
