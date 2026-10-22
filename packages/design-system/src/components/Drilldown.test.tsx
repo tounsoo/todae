@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Dialog, Drilldown, StringsProvider, type DrilldownChangeReason, type DrilldownRootProps } from '../index.js';
+import { resetWarnOnce } from './warnOnce.js';
 
 afterEach(cleanup);
 
@@ -271,6 +272,23 @@ describe('Drilldown', () => {
     error.mockClear();
     render(<Settings />);
     expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("animates the viewport's height with the motion tokens' defaults when it can't read them, and logs once naming each", () => {
+    resetWarnOnce();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const animate = vi.spyOn(Element.prototype, 'animate');
+    render(<Settings />);
+    click('Account');
+    click('Back to Settings');
+    expect(animate).toHaveBeenCalledTimes(2);
+    expect(animate).toHaveBeenLastCalledWith(expect.any(Array), expect.objectContaining({ duration: 240, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }));
+    expect(error.mock.calls.map(([message]) => String(message))).toEqual([
+      expect.stringContaining('--todae-drilldown-motion-duration'),
+      expect.stringContaining('--todae-drilldown-motion-easing-enter'),
+    ]);
+    animate.mockRestore();
     error.mockRestore();
   });
 

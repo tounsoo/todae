@@ -89,6 +89,7 @@ function polyfillRendering(): void {
   if (typeof Element === 'undefined') return;
   const proto = Element.prototype;
   proto.getAnimations ??= () => [];
+  proto.animate ??= () => ({ cancel() {} }) as Animation;
   proto.checkVisibility ??= function checkVisibility(this: Element) {
     return rendered(this);
   };

@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type RefObject } from 'react';
 import { tokenMs } from '../overlay/cssTime.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
+import { warnOnce } from './warnOnce.js';
 
 export type Stack = readonly string[];
 
@@ -79,12 +80,25 @@ function topOf(viewport: HTMLElement, scroller: Element): number {
   return top - scroller.getBoundingClientRect().top - scroller.clientTop - Number.parseFloat(paddingTop);
 }
 
-function enterEasing(viewport: HTMLElement): string | undefined {
-  const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
-  if (process.env.NODE_ENV !== 'production' && !easing) {
-    console.error("Drilldown: --todae-drilldown-motion-easing-enter reads empty, so the viewport's height changes at a constant speed. Load Todae's stylesheet or set the token.");
+// Defaults of drilldown.motion.duration and drilldown.motion.easing.enter,
+// for a viewport that can't read them.
+const DURATION_MS = 240;
+const ENTER_EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+function motionDuration(viewport: HTMLElement): number {
+  const ms = tokenMs(viewport, '--todae-drilldown-motion-duration');
+  if (ms === null) {
+    warnOnce('drilldown-motion-duration', `Drilldown: --todae-drilldown-motion-duration can't be read, so the viewport's height changes over ${DURATION_MS}ms. Load Todae's stylesheet or set the token.`, 'error');
   }
-  return easing || undefined;
+  return ms ?? DURATION_MS;
+}
+
+function enterEasing(viewport: HTMLElement): string {
+  const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
+  if (!easing) {
+    warnOnce('drilldown-motion-easing-enter', `Drilldown: --todae-drilldown-motion-easing-enter can't be read, so the viewport's height changes with ${ENTER_EASING}. Load Todae's stylesheet or set the token.`, 'error');
+  }
+  return easing || ENTER_EASING;
 }
 
 // The viewport's height for views of `height`, as its box-sizing reads it.
@@ -171,8 +185,8 @@ export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseS
     const before = heightAnimation.current ? getComputedStyle(viewport).height : null;
     heightAnimation.current?.cancel();
     heightAnimation.current = null;
-    const duration = reducedMotion() ? 0 : tokenMs(viewport, '--todae-drilldown-motion-duration');
-    if (views.entering && views.leaving && duration) {
+    const duration = reducedMotion() ? 0 : motionDuration(viewport);
+    if (views.entering && views.leaving && duration > 0) {
       const onScreen = leaving.flatMap(({ view }) => elementOf(view) ?? []);
       const from = before ?? heightFor(viewport, tallest(reentering ? [...onScreen, views.entering] : onScreen));
       const to = heightFor(viewport, views.entering.getBoundingClientRect().height);
