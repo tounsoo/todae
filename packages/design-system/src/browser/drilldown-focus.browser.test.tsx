@@ -184,32 +184,43 @@ describe('Drilldown focus and surface reset in a browser', () => {
     expect(document.activeElement).toBe(next);
   });
 
-  it('applies a change once, so an Activity that shows the views again leaves focus memory alone', async () => {
+  it('applies a change once, so an Activity that shows the views again moves neither focus nor the scroll', async () => {
     const ui = (mode: 'visible' | 'hidden') => (
       <Themed>
-        <Activity mode={mode}>
-          <Drilldown.Root defaultValue={['settings']}>
-            <Drilldown.Back />
-            <Drilldown.Viewport data-testid="viewport">
-              <Drilldown.View value="settings" label="Settings">
-                <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
-                <Drilldown.Trigger value="about">About</Drilldown.Trigger>
-              </Drilldown.View>
-              <Drilldown.View value="account" label="Account" />
-              <Drilldown.View value="about" label="About">
-                <input aria-label="Version" />
-              </Drilldown.View>
-            </Drilldown.Viewport>
-          </Drilldown.Root>
-        </Activity>
+        <div data-testid="scroller" style={{ blockSize: 200, overflowY: 'auto', overflowAnchor: 'none' }}>
+          <Activity mode={mode}>
+            <Drilldown.Root defaultValue={['settings']}>
+              <Drilldown.Back />
+              <Drilldown.Viewport data-testid="viewport">
+                <Drilldown.View value="settings" label="Settings">
+                  <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
+                  <Drilldown.Trigger value="about">About</Drilldown.Trigger>
+                </Drilldown.View>
+                <Drilldown.View value="account" label="Account" />
+                <Drilldown.View value="about" label="About">
+                  <input aria-label="Version" />
+                  <div style={{ blockSize: 600 }} />
+                </Drilldown.View>
+              </Drilldown.Viewport>
+            </Drilldown.Root>
+          </Activity>
+          <div style={{ blockSize: 1000 }} />
+        </div>
       </Themed>
     );
     const { rerender } = render(ui('visible'));
     try {
       await userEvent.click(screen.getByRole('button', { name: 'About' }));
+      const version = screen.getByRole('textbox', { name: 'Version' });
+      expect(document.activeElement).toBe(version);
       await settled();
+      const scroller = screen.getByTestId('scroller');
+      scroller.scrollTop = 150;
       rerender(ui('hidden'));
+      await waitFor(() => expect(document.activeElement).toBe(document.body));
       rerender(ui('visible'));
+      expect(document.activeElement).not.toBe(version);
+      expect(scroller.scrollTop).toBe(150);
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'About' }));
     } finally {
