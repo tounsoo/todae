@@ -82,6 +82,15 @@ describe('build_tokens', () => {
     expect(result.overrideTypes).toContain("'brand.logo.size': 'dimension'");
   });
 
+  it('passes scope on as --scope', async () => {
+    const result = await buildTokenFiles(readTree(ACME), { scope: '.acme' });
+    if (!result.ok) throw new Error(result.error);
+    expect(result.css).toContain('@scope (.acme) {');
+    const refused = await buildTokenFiles(readTree(ACME), { scope: '.acme { color: red' });
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.error).toMatch(/^--scope/);
+  });
+
   it('returns the build error, without the temporary folder', async () => {
     const files = readTree(ACME);
     files['appearance/light.json'] = {

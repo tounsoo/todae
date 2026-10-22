@@ -21,10 +21,10 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
+import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
-import { ToolbarContext } from './toolbarContext.js';
 
 // The modal machinery Dialog and Drawer share. Each component wraps these
 // parts with its own classes, so neither styles the other's parts.
@@ -173,7 +173,8 @@ export function DialogShellRoot({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
-  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
+  const [closedListeners, closed] = useSurfaceClosedSignal();
+  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty, closed);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
@@ -184,7 +185,7 @@ export function DialogShellRoot({
   // Records the focus to return to, before showModal moves it. Keyed on
   // present: the page behind stays inert until the exit motion ends.
   useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef, nativeReturn: true });
-  const closeOnFormSubmit = useModalDialog({
+  const { closeOnFormSubmit, closedby } = useModalDialog({
     dialogRef,
     node: dialogNode,
     present,
@@ -217,7 +218,7 @@ export function DialogShellRoot({
       <dialog
         {...props}
         role={role}
-        {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
+        {...{ closedby }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
@@ -256,7 +257,7 @@ export function DialogShellRoot({
           role="document"
           ref={panelRef}
         >
-          <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+          <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
         </div>
       </dialog>
     </ShellContext.Provider>

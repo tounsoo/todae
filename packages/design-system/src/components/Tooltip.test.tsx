@@ -187,6 +187,60 @@ describe('Tooltip', () => {
     expect(paragraph?.textContent).toContain('in it.');
   });
 
+  it('logs a content error once across renders, and again when the content changes', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    function PolicyTip({ block, count }: { block: boolean; count: number }) {
+      const tooltip = useTooltip({ interactive: true });
+      return (
+        <>
+          <button type="button" {...tooltip.getTriggerProps()}>
+            Hint {count}
+          </button>
+          <Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
+            {block ? <div>Block</div> : 'Text'}
+          </Tooltip.Root>
+        </>
+      );
+    }
+    const phrasingErrors = () =>
+      error.mock.calls.filter(([message]) => String(message).startsWith('Tooltip holds phrasing')).length;
+    const { rerender } = render(<PolicyTip block={false} count={1} />);
+    expect(phrasingErrors()).toBe(0);
+    rerender(<PolicyTip block count={2} />);
+    rerender(<PolicyTip block count={3} />);
+    expect(phrasingErrors()).toBe(1);
+    rerender(<PolicyTip block={false} count={4} />);
+    rerender(<PolicyTip block count={5} />);
+    expect(phrasingErrors()).toBe(2);
+    error.mockRestore();
+  });
+
+  it('checks a text tip each time it opens', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    function BlockTip({ open, count }: { open: boolean; count: number }) {
+      const tooltip = useTooltip({ open });
+      return (
+        <>
+          <button type="button" {...tooltip.getTriggerProps()}>
+            Hint {count}
+          </button>
+          <Tooltip.Root {...tooltip.getTooltipProps()}>
+            <div>Block</div>
+          </Tooltip.Root>
+        </>
+      );
+    }
+    const phrasingErrors = () =>
+      error.mock.calls.filter(([message]) => String(message).startsWith('Tooltip holds phrasing')).length;
+    const { rerender } = render(<BlockTip open count={1} />);
+    rerender(<BlockTip open count={2} />);
+    expect(phrasingErrors()).toBe(1);
+    rerender(<BlockTip open={false} count={3} />);
+    rerender(<BlockTip open count={4} />);
+    expect(phrasingErrors()).toBe(2);
+    error.mockRestore();
+  });
+
   it('names the dialog from aria-labelledby', () => {
     render(
       <>

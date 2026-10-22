@@ -241,7 +241,7 @@ describe('Toolbar', () => {
     render(
       <Toolbar.Root aria-label="t">
         <Button.Root>A</Button.Root>
-        <div popover="manual">
+        <div popover="manual" ref={(el) => el?.showPopover()}>
           <ToggleGroup.Root aria-label="Align" defaultValue="left">
             <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
             <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
@@ -423,7 +423,7 @@ describe('Toolbar', () => {
     render(
       <Toolbar.Root aria-label="t">
         <Button.Root>A</Button.Root>
-        <div popover="manual" data-testid="layer">
+        <div popover="manual" data-testid="layer" ref={(el) => el?.showPopover()}>
           <button type="button">Save</button>
         </div>
         <Button.Root>B</Button.Root>
@@ -431,7 +431,6 @@ describe('Toolbar', () => {
     );
     button('A').focus();
     fireEvent.keyDown(button('A'), { key: 'Tab' });
-    // jsdom renders the layer, so it counts as open.
     expect(document.activeElement).toBe(button('A'));
   });
 

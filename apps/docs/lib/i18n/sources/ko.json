@@ -161,17 +161,6 @@
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
   },
-  "contents": {
-    "(top)": "7d370e419676",
-    "# Contents": "9a027578bec4",
-    "## The section being read": "f9f26855e260",
-    "## Look": "3469783dc314",
-    "## On a narrow screen": "10ea55bff04c",
-    "## Accessible composition": "3771ec920ea0",
-    "## When to use": "cab3f77f5fbb",
-    "## Props": "4c5ddfb1ffe2",
-    "(section order)": "a2cf673374a6"
-  },
   "conversation": {
     "(top)": "b40257a47356",
     "# Conversation": "f1637b098891",
@@ -230,6 +219,17 @@
     "## When to use": "63f4ee717695",
     "## Props": "0d9ea25d5717",
     "(section order)": "d183e3412ad2"
+  },
+  "drilldown": {
+    "(top)": "4bf419843b89",
+    "# Drilldown": "d127a7d67b81",
+    "## The stack": "83d5b267f06b",
+    "## Escape and the back gesture": "4b5508144b49",
+    "## Motion": "6b8d6acb585c",
+    "## Accessible composition": "11f6dae2074f",
+    "## When to use": "2cc0c220f4a0",
+    "## Props": "f77bad6de1f3",
+    "(section order)": "d4e507781061"
   },
   "empty-state": {
     "(top)": "c1f6dbabd661",
@@ -435,12 +435,13 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "f61835f0b401",
+    "## A company resolver": "23b228dee217",
+    "## Several themes on one page": "a81e42a147ff",
     "## Overrides: CSS or ThemeProvider": "dcd97c20d2b9",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
     "## Wrapping a component": "60f88028be57",
-    "(section order)": "e61ac1427c00"
+    "(section order)": "9fe9aab4b317"
   },
   "guides/css-layers": {
     "# CSS layers": "d902980d0122",
@@ -501,7 +502,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "c55af8e91795",
+    "## Tools": "3ee522ae3457",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "09fbdacf6bf0",
@@ -522,7 +523,7 @@
   "message": {
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
-    "## Parts": "c2fb157f7424",
+    "## Parts": "1dc2b7bbaefb",
     "## Time": "e262fbffa78a",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
@@ -561,7 +562,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "c754a826df60",
+    "# Native platform": "e597278aa6ab",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -606,9 +607,9 @@
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
     "# Citations": "c1e97aef2ff3",
-    "## The marker": "260ef42d826c",
+    "## The marker": "2c9750d72f95",
     "## The sources list": "c939e8cf1d57",
-    "## Accessible composition": "4530405603cb",
+    "## Accessible composition": "88e29406f3af",
     "## When to use": "64d20eb01e2d",
     "(section order)": "776f0285dccb"
   },
@@ -804,7 +805,7 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "3e31a76527b8",
+    "## Contrast": "44eaedc60d4a",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "943aff38b55f",
     "## Status tones": "9db538465fa4",
@@ -850,7 +851,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "0da9c9a1b2a2",
+    "## Glyphs": "79786a87f258",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -861,7 +862,7 @@
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "df7ca105b8f8",
+    "## Strings": "18a0fe3319f7",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

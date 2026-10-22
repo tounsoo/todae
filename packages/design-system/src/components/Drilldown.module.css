@@ -1,0 +1,92 @@
+@layer todae.components {
+  /* The views share one grid cell, so the leaving and entering views overlap
+     while they slide. Each keeps its own height; the root animates the
+     viewport's. */
+  .viewport {
+    display: grid;
+    align-items: start;
+  }
+
+  .viewport[data-direction] {
+    overflow: clip;
+  }
+
+  /* Slid by a logical offset, not a transform, so it flips with the text and
+     a tooltip anchored inside stays on its trigger. The offset at rest is a
+     length, so the slide interpolates instead of jumping from or to auto. */
+  .view {
+    position: relative;
+    inset-inline-start: 0;
+    grid-area: 1 / 1;
+    min-inline-size: 0;
+  }
+
+  /* `display` on a consumer class must not reveal a view lower in the stack.
+     A layered rule loses to any unlayered one, so only !important holds here. */
+  .view[hidden] {
+    display: none !important;
+  }
+
+  .view:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-drilldown-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  /* Forward: the new view comes in from the inline end over the old one,
+     which shifts toward the inline start and fades. Back runs the reverse.
+     Transitions, not animations, so a view a later change overtakes goes on
+     from where it is to its new end. */
+  .view[data-entering] {
+    transition-property: inset-inline-start, opacity;
+    transition-duration: var(--todae-drilldown-motion-duration);
+    transition-timing-function: var(--todae-drilldown-motion-easing-enter);
+  }
+
+  .view[data-leaving] {
+    inset-inline-start: var(--_shift);
+    opacity: var(--_fade);
+    transition-property: inset-inline-start, opacity;
+    transition-duration: var(--todae-drilldown-motion-duration);
+    transition-timing-function: var(--todae-drilldown-motion-easing-exit);
+  }
+
+  @starting-style {
+    .view[data-entering] {
+      inset-inline-start: var(--_shift);
+      opacity: var(--_fade);
+    }
+  }
+
+  .view:is([data-entering='forward'], [data-leaving='back']) {
+    --_shift: 100%;
+    --_fade: 1;
+    z-index: 1;
+  }
+
+  .view:is([data-leaving='forward'], [data-entering='back']) {
+    --_shift: -30%;
+    --_fade: 0;
+  }
+
+  .glyph {
+    display: inline-flex;
+    inline-size: var(--todae-drilldown-back-icon-size);
+    block-size: var(--todae-drilldown-back-icon-size);
+  }
+
+  .glyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Points toward the start of the line, so it flips with the text. */
+  .backIcon > [data-todae-glyph]:dir(rtl) {
+    scale: -1 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view:is([data-entering], [data-leaving]) {
+      transition: none;
+    }
+  }
+}

@@ -75,6 +75,8 @@ const FRENCH: Strings = {
   stepCurrent: 'En cours',
   stepPending: 'À faire',
   stepError: 'Échec',
+  back: 'Retour',
+  backTo: (label) => `Retour à ${label}`,
   required: 'Obligatoire',
   valueMissing: 'Ce champ est obligatoire',
   typeMismatchEmail: 'Saisissez une adresse e-mail',

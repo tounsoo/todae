@@ -1,22 +1,25 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { useRef } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
-import { useEscapeKey } from './useEscapeKey.js';
+import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
 afterEach(cleanup);
 
 function Layer({
   active = true,
   enabled = true,
+  rendered = true,
   onEscape,
 }: {
   active?: boolean;
   enabled?: boolean;
+  rendered?: boolean;
   onEscape: () => void;
 }) {
-  useEscapeKey(active, enabled, onEscape);
-  return null;
+  const ref = useRef<HTMLDivElement>(null);
+  useEscapeKey(active, enabled, onEscape, ref);
+  return rendered ? <div ref={ref} /> : null;
 }
 
 describe('useEscapeKey', () => {
@@ -185,5 +188,134 @@ describe('useEscapeKey', () => {
     );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(outer).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the key to a layer inside another first, even when the outer one activated later', () => {
+    function Element({ active = true, onEscape, children }: { active?: boolean; onEscape: () => void; children?: ReactNode }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(active, true, onEscape, ref);
+      return <div ref={ref}>{children}</div>;
+    }
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const beside = vi.fn();
+    const tree = (outerActive: boolean) => (
+      <>
+        <Element active={outerActive} onEscape={outer}>
+          <Element onEscape={inner} />
+        </Element>
+        <Element onEscape={beside} />
+      </>
+    );
+    const { rerender } = render(tree(false));
+    rerender(tree(true));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    expect(beside).not.toHaveBeenCalled();
+  });
+
+  it('lets a layer turn down Escape by where focus is, or by the key alone, passing it to the next one', () => {
+    function Picky({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLButtonElement>(null);
+      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, ref, {
+        passesKey: (event) => event.shiftKey,
+      });
+      return (
+        <button type="button" ref={ref}>
+          Picky
+        </button>
+      );
+    }
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const { getByRole } = render(
+      <>
+        <Layer onEscape={outer} />
+        <Picky onEscape={inner} />
+        <button type="button">Elsewhere</button>
+      </>,
+    );
+    fireEvent.keyDown(getByRole('button', { name: 'Elsewhere' }), { key: 'Escape' });
+    expect(outer).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(getByRole('button', { name: 'Picky' }), { key: 'Escape', shiftKey: true });
+    expect(outer).toHaveBeenCalledTimes(2);
+    fireEvent.keyDown(getByRole('button', { name: 'Picky' }), { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks a layer about a close request with the element that has focus', () => {
+    function Picky({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLButtonElement>(null);
+      useEscapeKey(true, (target) => ref.current?.contains(target) === true, onEscape, ref);
+      return (
+        <button type="button" ref={ref}>
+          Picky
+        </button>
+      );
+    }
+    const onEscape = vi.fn();
+    const { getByRole } = render(
+      <dialog aria-label="surface">
+        <Picky onEscape={onEscape} />
+        <button type="button">Elsewhere</button>
+      </dialog>,
+    );
+    const dialog = getByRole('dialog', { hidden: true });
+    getByRole('button', { name: 'Elsewhere', hidden: true }).focus();
+    expect(takeCloseRequest(dialog)).toBe(false);
+    getByRole('button', { name: 'Picky', hidden: true }).focus();
+    expect(takeCloseRequest(dialog)).toBe(true);
+    expect(onEscape).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes a layer that is not a popup over for a popup beside it, but not for one around it', () => {
+    function Element({ popup = true, onEscape, children }: { popup?: boolean; onEscape: () => void; children?: ReactNode }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref, { popup });
+      return <div ref={ref}>{children}</div>;
+    }
+    const around = vi.fn();
+    const stack = vi.fn();
+    const beside = vi.fn();
+    const tree = (withBeside: boolean) => (
+      <dialog aria-label="surface">
+        <Element onEscape={around}>
+          {withBeside ? <Element onEscape={beside} /> : null}
+          <Element popup={false} onEscape={stack} />
+        </Element>
+      </dialog>
+    );
+    const { rerender, getByRole } = render(tree(true));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(beside).toHaveBeenCalledTimes(1);
+    expect(takeCloseRequest(getByRole('dialog', { hidden: true }))).toBe(true);
+    expect(beside).toHaveBeenCalledTimes(2);
+    expect(stack).not.toHaveBeenCalled();
+    rerender(tree(false));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(takeCloseRequest(getByRole('dialog', { hidden: true }))).toBe(true);
+    expect(stack).toHaveBeenCalledTimes(2);
+    expect(around).not.toHaveBeenCalled();
+  });
+
+  it('does not pass a layer over for a popup that has no element', () => {
+    function Element({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref, { popup: false });
+      return <div ref={ref} />;
+    }
+    const popup = vi.fn();
+    const stack = vi.fn();
+    render(
+      <>
+        <Layer rendered={false} onEscape={popup} />
+        <Element onEscape={stack} />
+      </>,
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(stack).toHaveBeenCalledTimes(1);
+    expect(popup).not.toHaveBeenCalled();
   });
 });

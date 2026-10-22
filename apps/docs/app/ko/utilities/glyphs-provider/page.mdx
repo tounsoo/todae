@@ -93,6 +93,11 @@ import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
       <Table.Cell>느낌표</Table.Cell>
     </Table.Row>
     <Table.Row>
+      <Table.HeaderCell scope="row">`back`</Table.HeaderCell>
+      <Table.Cell>내용이 없는 `Drilldown.Back`</Table.Cell>
+      <Table.Cell>줄의 시작 쪽을 가리키는 chevron</Table.Cell>
+    </Table.Row>
+    <Table.Row>
       <Table.HeaderCell scope="row">`calendar`</Table.HeaderCell>
       <Table.Cell>`Field.DatePicker`, `Field.DateRangePicker`, `Field.DateTimePicker`의 버튼</Table.Cell>
       <Table.Cell>달력</Table.Cell>
@@ -116,9 +121,9 @@ import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
 </Table.Root>
 </ScrollRegion>
 
-`chevron`은 아래쪽을 가리키게 그리세요. 닫힌 디스클로저나 트리 항목은 이를 텍스트 쪽으로, 닫힌 nav 가지는 행의 끝 쪽으로, 달 버튼은 그 달 쪽으로 돌립니다. `sort`는 위쪽을 가리키게 그리세요. 내림차순 열은 이를 돌립니다. `separator`는 왼쪽에서 오른쪽으로 읽는 페이지에서 다음 항목을 가리키게 그리세요. 오른쪽에서 왼쪽으로 읽는 페이지에서는 좌우가 뒤집힙니다. `Field.Select`에서 chevron은 브라우저가 `::picker-icon`을 지원하고 select가 필드의 마지막 파트일 때 브라우저의 선택기 아이콘 위에 놓입니다. 그렇지 않으면 브라우저의 아이콘이 그대로 남습니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다.
+`chevron`은 아래쪽을 가리키게 그리세요. 닫힌 디스클로저나 트리 항목은 이를 텍스트 쪽으로, 닫힌 nav 가지는 행의 끝 쪽으로, 달 버튼은 그 달 쪽으로 돌립니다. `sort`는 위쪽을 가리키게 그리세요. 내림차순 열은 이를 돌립니다. `separator`는 왼쪽에서 오른쪽으로 읽는 페이지에서 다음 항목을 가리키게, `back`은 왼쪽에서 오른쪽으로 읽는 줄의 시작 쪽인 왼쪽을 가리키게 그리세요. 오른쪽에서 왼쪽으로 읽는 페이지에서는 둘 다 좌우가 뒤집힙니다. `Field.Select`에서 chevron은 브라우저가 `::picker-icon`을 지원하고 select가 필드의 마지막 파트일 때 브라우저의 선택기 아이콘 위에 놓입니다. 그렇지 않으면 브라우저의 아이콘이 그대로 남습니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다.
 
-아이콘 라이브러리가 렌더링하는 것처럼 `svg`나 `img`인 글리프는 아이콘 자체의 `size`나 `width`와 상관없이 파트가 주는 상자의 크기를 따릅니다. 닫기 파트, `Attachment.Remove`, `Conversation.ScrollButton`, `Composer.Submit`에서는 `button.icon.size`, 칩에서는 `chip.icon.size`, select와 날짜·시각 선택기에서는 `field.icon.size`, 달력의 달 버튼에서는 `calendar.nav.icon.size`, 연월에서는 `calendar.heading.icon.size`, 트리에서는 `tree.chevron.size`, nav 가지에서는 `nav.chevron.size`, 단계 표시에서는 `steps.icon.size`, 정렬 버튼에서는 `table.sort.icon.size`, 체크박스에서는 상자 전체, 그 밖에서는 텍스트와 비슷한 크기의 상자입니다. `currentColor`로 그린 아이콘은 파트의 텍스트 색을 따릅니다.
+아이콘 라이브러리가 렌더링하는 것처럼 `svg`나 `img`인 글리프는 아이콘 자체의 `size`나 `width`와 상관없이 파트가 주는 상자의 크기를 따릅니다. 닫기 파트, `Attachment.Remove`, `Conversation.ScrollButton`, `Composer.Submit`에서는 `button.icon.size`, 칩에서는 `chip.icon.size`, select와 날짜·시각 선택기에서는 `field.icon.size`, 달력의 달 버튼에서는 `calendar.nav.icon.size`, `Drilldown.Back`에서는 `drilldown.back.icon.size`, 연월에서는 `calendar.heading.icon.size`, 트리에서는 `tree.chevron.size`, nav 가지에서는 `nav.chevron.size`, 단계 표시에서는 `steps.icon.size`, 정렬 버튼에서는 `table.sort.icon.size`, 체크박스에서는 상자 전체, 그 밖에서는 텍스트와 비슷한 크기의 상자입니다. `currentColor`로 그린 아이콘은 파트의 텍스트 색을 따릅니다.
 
 라디오의 점, 스위치의 손잡이, 스피너, 선택된 탭의 막대는 글리프가 아니라 토큰으로 그리는 모양이므로 여기에 없습니다.
 

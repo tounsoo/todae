@@ -1,0 +1,253 @@
+import { useCallback, useLayoutEffect, useReducer, useRef, type RefObject } from 'react';
+import { tokenMs } from '../overlay/cssTime.js';
+import { reducedMotion } from '../overlay/useOverlayPresence.js';
+import { warnOnce } from './warnOnce.js';
+
+export type Stack = readonly string[];
+
+export type StackDirection = 'forward' | 'back';
+
+/** A change of the shown stack, as its slide starts. */
+export type StackChange = { from: Stack; to: Stack; direction: StackDirection };
+
+/** A view sliding in or out, in the direction of the change that moved it. */
+type Moving = { view: string; direction: StackDirection };
+
+export type ViewStatus =
+  | { kind: 'current' | 'below' }
+  | { kind: 'entering' | 'leaving'; direction: StackDirection };
+
+type MotionState = {
+  shown: Stack;
+  /** The last change, kept until a reset. */
+  change: StackChange | null;
+  entering: Moving | null;
+  /** Whether the entering view was sliding out, so on screen, before the change. */
+  reentering: boolean;
+  /** Every view still sliding out, also those an earlier change moved. */
+  leaving: readonly Moving[];
+};
+
+type MotionAction =
+  | { type: 'show'; stack: Stack }
+  | { type: 'settle'; views: readonly string[] }
+  | { type: 'reset'; stack: Stack };
+
+export function sameStack(a: Stack, b: Stack): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
+function motionReducer(state: MotionState, action: MotionAction): MotionState {
+  switch (action.type) {
+    case 'show': {
+      const direction: StackDirection = action.stack.length >= state.shown.length ? 'forward' : 'back';
+      const top = action.stack.at(-1);
+      const left = state.shown.at(-1);
+      const leaving = left === undefined || left === top ? state.leaving : [...state.leaving, { view: left, direction }];
+      return {
+        shown: action.stack,
+        change: { from: state.shown, to: action.stack, direction },
+        entering: top === undefined || top === left ? null : { view: top, direction },
+        reentering: leaving.some((moving) => moving.view === top),
+        leaving: leaving.filter((moving) => moving.view !== top),
+      };
+    }
+    case 'settle': {
+      const entering = state.entering && action.views.includes(state.entering.view) ? null : state.entering;
+      const leaving = state.leaving.filter((moving) => !action.views.includes(moving.view));
+      return entering === state.entering && leaving.length === state.leaving.length ? state : { ...state, entering, leaving };
+    }
+    case 'reset':
+      return { shown: action.stack, change: null, entering: null, reentering: false, leaving: [] };
+  }
+}
+
+function scrollContainer(el: HTMLElement): Element {
+  for (let node = el.parentElement; node && node !== el.ownerDocument.body; node = node.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(node).overflowY)) return node;
+  }
+  return el.ownerDocument.scrollingElement ?? el.ownerDocument.documentElement;
+}
+
+// The offset that brings the viewport's top to the top of `scroller`, inside
+// its padding: 0 for a viewport that starts an overlay body, and the
+// viewport's place for one further down a page. The page scrolls the
+// viewport's own box to the top of the window, past the root's padding.
+function topOf(viewport: HTMLElement, scroller: Element): number {
+  const top = viewport.getBoundingClientRect().top + scroller.scrollTop;
+  if (scroller === viewport.ownerDocument.scrollingElement) return top;
+  const { paddingTop } = getComputedStyle(scroller);
+  return top - scroller.getBoundingClientRect().top - scroller.clientTop - Number.parseFloat(paddingTop);
+}
+
+// Defaults of drilldown.motion.duration and drilldown.motion.easing.enter,
+// for a viewport that can't read them.
+const DURATION_MS = 240;
+const ENTER_EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+function motionDuration(viewport: HTMLElement): number {
+  const ms = tokenMs(viewport, '--todae-drilldown-motion-duration');
+  if (ms === null) {
+    warnOnce('drilldown-motion-duration', `Drilldown: --todae-drilldown-motion-duration can't be read, so the viewport's height changes over ${DURATION_MS}ms. Load Todae's stylesheet or set the token.`);
+  }
+  return ms ?? DURATION_MS;
+}
+
+function enterEasing(viewport: HTMLElement): string {
+  const easing = getComputedStyle(viewport).getPropertyValue('--todae-drilldown-motion-easing-enter').trim();
+  if (!easing) {
+    warnOnce('drilldown-motion-easing-enter', `Drilldown: --todae-drilldown-motion-easing-enter can't be read, so the viewport's height changes with ${ENTER_EASING}. Load Todae's stylesheet or set the token.`);
+  }
+  return easing || ENTER_EASING;
+}
+
+// The viewport's height for views of `height`, as its box-sizing reads it.
+function heightFor(viewport: HTMLElement, height: number): string {
+  const style = getComputedStyle(viewport);
+  if (style.boxSizing !== 'border-box') return `${height}px`;
+  const frame = [style.paddingTop, style.paddingBottom, style.borderTopWidth, style.borderBottomWidth];
+  return `${frame.reduce((sum, value) => sum + Number.parseFloat(value), height)}px`;
+}
+
+// The views share one grid cell, so the viewport is as tall as the tallest
+// view on screen.
+function tallest(views: readonly HTMLElement[]): number {
+  return Math.max(0, ...views.map((view) => view.getBoundingClientRect().height));
+}
+
+// The animations on the elements themselves, as getAnimations() leaves out
+// their content's, without endless ones, which never finish.
+function slideAnimations(elements: readonly (HTMLElement | null | undefined)[]): Animation[] {
+  return elements.flatMap((el) => el?.getAnimations() ?? []).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
+}
+
+export type StackViews = { entering: HTMLElement | undefined; leaving: HTMLElement | undefined };
+
+type UseStackMotionOptions = {
+  stack: Stack;
+  viewportRef: RefObject<HTMLElement | null>;
+  elementOf: (view: string) => HTMLElement | undefined;
+  /**
+   * Runs as each change starts, before the views move, given the scroll
+   * offset before it. Returns the offset to bring back, or none to show the
+   * new view from its top.
+   */
+  onChange: (change: StackChange, views: StackViews, offset: number) => number | undefined;
+};
+
+type UseStackMotionResult = {
+  shown: Stack;
+  /** The last change's, while a view still moves. */
+  direction: StackDirection | undefined;
+  statusOf: (view: string) => ViewStatus | null;
+  /** Shows `stack` at once, with no slide. */
+  reset: (stack: Stack) => void;
+};
+
+/**
+ * The stack on screen as it follows `stack`: which view enters, which leave
+ * and which wait below, the scroll, and the viewport's height. Each moving
+ * view settles when its own transitions and animations finish, so a change
+ * during a slide lets the views already moving finish theirs.
+ */
+export function useStackMotion({ stack, viewportRef, elementOf, onChange }: UseStackMotionOptions): UseStackMotionResult {
+  const [{ shown, change, entering, reentering, leaving }, dispatch] = useReducer(motionReducer, {
+    shown: stack,
+    change: null,
+    entering: null,
+    reentering: false,
+    leaving: [],
+  });
+  if (!sameStack(stack, shown)) dispatch({ type: 'show', stack });
+  const latest = useRef({ elementOf, onChange });
+  latest.current = { elementOf, onChange };
+  // An effect created again on a tree that already shows the change, as an
+  // <Activity> that shows again does, must not move focus or scroll again.
+  const applied = useRef<StackChange | null>(null);
+  const heightAnimation = useRef<Animation | null>(null);
+
+  useLayoutEffect(() => {
+    if (!change || applied.current === change) return;
+    applied.current = change;
+    const { elementOf, onChange } = latest.current;
+    const viewport = viewportRef.current;
+    const top = change.to.at(-1);
+    const left = change.from.at(-1);
+    const views: StackViews = {
+      entering: top === undefined ? undefined : elementOf(top),
+      leaving: left === undefined || left === top ? undefined : elementOf(left),
+    };
+    const scroller = viewport && scrollContainer(viewport);
+    const restored = onChange(change, views, scroller?.scrollTop ?? 0);
+    if (!viewport || !scroller) return;
+    // The height on screen: the height animation's while it holds one, else
+    // the tallest of the views on screen before the change.
+    const before = heightAnimation.current ? getComputedStyle(viewport).height : null;
+    heightAnimation.current?.cancel();
+    heightAnimation.current = null;
+    const duration = reducedMotion() ? 0 : motionDuration(viewport);
+    if (views.entering && views.leaving && duration > 0) {
+      const onScreen = leaving.flatMap(({ view }) => elementOf(view) ?? []);
+      const from = before ?? heightFor(viewport, tallest(reentering ? [...onScreen, views.entering] : onScreen));
+      const to = heightFor(viewport, views.entering.getBoundingClientRect().height);
+      // Held at the end until the last view settles, so a slide that CSS
+      // makes longer doesn't hand the height back to the taller views.
+      heightAnimation.current = viewport.animate([{ height: from }, { height: to }], {
+        duration,
+        easing: enterEasing(viewport),
+        fill: 'forwards',
+      });
+    }
+    scroller.scrollTop = restored ?? Math.min(scroller.scrollTop, topOf(viewport, scroller));
+    // An offset the height on screen can't reach needs the views' full height at once.
+    if (restored !== undefined && heightAnimation.current && scroller.scrollTop < restored) {
+      heightAnimation.current.cancel();
+      heightAnimation.current = null;
+      scroller.scrollTop = restored;
+    }
+  }, [change, leaving, reentering, viewportRef]);
+
+  // Settles each moving view when its slide's transitions finish, so CSS that
+  // changes them keeps it on screen as long as it moves. The entering view
+  // waits for the viewport's height too.
+  useLayoutEffect(() => {
+    const moving = entering ? [entering, ...leaving] : leaving;
+    if (moving.length === 0) {
+      heightAnimation.current?.cancel();
+      heightAnimation.current = null;
+      return;
+    }
+    let current = true;
+    const idle: string[] = [];
+    for (const { view } of moving) {
+      const own = latest.current.elementOf(view);
+      const animations = slideAnimations(view === entering?.view ? [own, viewportRef.current] : [own]);
+      if (animations.length === 0) {
+        idle.push(view);
+        continue;
+      }
+      void Promise.allSettled(animations.map((a) => a.finished)).then(() => {
+        if (current) dispatch({ type: 'settle', views: [view] });
+      });
+    }
+    if (idle.length > 0) dispatch({ type: 'settle', views: idle });
+    return () => {
+      current = false;
+    };
+  }, [entering, leaving, viewportRef]);
+
+  const statusOf = useCallback(
+    (view: string): ViewStatus | null => {
+      if (entering?.view === view) return { kind: 'entering', direction: entering.direction };
+      const out = leaving.find((moving) => moving.view === view);
+      if (out) return { kind: 'leaving', direction: out.direction };
+      if (view === shown.at(-1)) return { kind: 'current' };
+      return shown.includes(view) ? { kind: 'below' } : null;
+    },
+    [entering, leaving, shown],
+  );
+
+  const reset = useCallback((next: Stack) => dispatch({ type: 'reset', stack: next }), []);
+
+  return { shown, direction: entering || leaving.length > 0 ? change?.direction : undefined, statusOf, reset };
+}

@@ -108,7 +108,7 @@ function runCli(cli: string, args: string[], cwd: string, timeout: number): Prom
 /**
  * Runs `todae-tokens build` on a company's token files, given as contents by
  * path relative to the folder they sit in, with `resolver` naming the
- * resolver among them. The build runs in a child process with a time and
+ * resolver among them and `scope`, when given, passed as `--scope`. The build runs in a child process with a time and
  * memory limit, in a temporary folder that is removed when it ends.
  */
 export async function buildTokenFiles(
@@ -118,7 +118,8 @@ export async function buildTokenFiles(
     base = todaeTokensDir(),
     cli = todaeTokensCli(),
     timeout = BUILD_TIMEOUT_MS,
-  }: { resolver?: string; base?: string; cli?: string; timeout?: number } = {},
+    scope,
+  }: { resolver?: string; base?: string; cli?: string; timeout?: number; scope?: string } = {},
 ): Promise<BuildResult> {
   const contents = checkFiles(files, resolver);
   if (running >= MAX_CONCURRENT_BUILDS) {
@@ -151,6 +152,7 @@ export async function buildTokenFiles(
         join(out, 'catalog.json'),
         '--types',
         join(out, 'types.ts'),
+        ...(scope === undefined ? [] : ['--scope', scope]),
       ],
       root,
       timeout,

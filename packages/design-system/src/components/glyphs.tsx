@@ -128,3 +128,12 @@ export function ErrorGlyph() {
     </svg>
   );
 }
+
+/** Points left, toward the start of a left-to-right line, as a back glyph from GlyphsProvider should. */
+export function BackGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M10 4l-4 4 4 4" />
+    </svg>
+  );
+}

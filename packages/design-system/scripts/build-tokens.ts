@@ -4,8 +4,54 @@ import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { clearedInputs, parseScope, scopeFallbacks } from './tokens/scope.ts';
+import { validateContrast } from './tokens/contrast.ts';
+import {
+  LAYER_RANK,
+  PATH_RE,
+  RULES,
+  block,
+  didYouMean,
+  fail,
+  indent,
+  isRecord,
+  isRef,
+  parseComponentPointer,
+  pathToPointer,
+  pointerToPath,
+  type ContrastPair,
+  type EntryToken,
+  type FlatToken,
+  type Layer,
+  type ResolvedEntry,
+  type Rule,
+  type SlotRules,
+  type TodaeExtension,
+  type TokenEntry,
+  type TokenNode,
+  type TokenRef,
+  type TokenTree,
+} from './tokens/shared.ts';
 
-export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
+export { PATH_RE, RULES, didYouMean, fail, isRecord, parseComponentPointer, pathToPointer, pointerToPath } from './tokens/shared.ts';
+export type {
+  ContrastPair,
+  EntryToken,
+  FlatToken,
+  Layer,
+  ResolvedEntry,
+  Rule,
+  SlotRules,
+  TodaeExtension,
+  TokenEntry,
+  TokenNode,
+  TokenRef,
+  TokenTree,
+} from './tokens/shared.ts';
+export { parseScope } from './tokens/scope.ts';
+export { apcaContrast, composite, contrastOf, contrastResults, oklchToSrgb, validateContrast } from './tokens/contrast.ts';
+export type { ContrastResult } from './tokens/contrast.ts';
+
 export const RESERVED_ROOTS = [
   'color',
   'space',
@@ -65,6 +111,7 @@ export const RESERVED_ROOTS = [
   'contents',
   'picker',
   'calendar',
+  'drilldown',
   'opacity',
   'shadow',
 ] as const;
@@ -85,74 +132,7 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.text-transform',
 ] as const;
 
-const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
-
-/**
- * Todae-specific checks a set or modifier opts into with
- * `$extensions["dev.todae"].rules`. Every set always gets the generic checks:
- * path format, a $type per token, value shapes, ref existence, cycles, layer
- * order, resolution order, and context parity.
- */
-export const RULES = ['reserved-roots', 'density-space', 'button'] as const;
-export type Rule = (typeof RULES)[number];
-
-/** Token groups (`*` matches one segment) mapped to the exact leaves each must have. */
-export type SlotRules = Record<string, string[]>;
-
-export type Layer = keyof typeof LAYER_RANK;
-
-export type TokenNode = {
-  $type?: string;
-  $value: unknown;
-  /** The token's own `$description`, or the nearest group's. */
-  $description?: string;
-};
-
-export type TokenTree = { [key: string]: TokenNode | TokenTree };
-
-/**
- * A token another token's value reads: the whole value (`value`), the OKLCH
- * channels of a color (`component`), or a color's alpha (`alpha`). `type` is
- * the $type the target must have.
- */
-export type TokenRef = { path: string; type: string; role: 'value' | 'component' | 'alpha' };
-
-/** A set or modifier, and for a variant modifier (`alias`) the context, since a variant's tokens belong to its context. */
-export type TokenEntry = { kind: 'set' | 'modifier'; name: string; context?: string };
-
-export type FlatToken = {
-  path: string;
-  type: string;
-  value: unknown;
-  /** The aliased token, or the color whose channels this color reads; shown in the catalog. */
-  ref: string | null;
-  /** Every token the value reads, `ref` included. */
-  refs: TokenRef[];
-  cssVar: string;
-  cssValue: string;
-  layer: Layer;
-  context?: string;
-  /**
-   * The token's `$description`, or the nearest enclosing group's in the same
-   * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
-   * row of a path.
-   */
-  description?: string;
-};
-
-/** A token as a resolver loads it. */
-export type EntryToken = FlatToken & {
-  /** The set or modifier that declares it, named in the catalog so a company knows where to override it. */
-  entry: TokenEntry;
-};
-
-export function fail(message: string): never {
-  throw new Error(message);
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const LAYER_ORDER = Object.keys(LAYER_RANK).join(' < ');
 
 export function cssVarName(path: string): string {
   return `--todae-${path.replaceAll('.', '-')}`;
@@ -160,10 +140,6 @@ export function cssVarName(path: string): string {
 
 function isToken(value: unknown): value is TokenNode {
   return isRecord(value) && '$value' in value;
-}
-
-function isRef(value: unknown): value is { $ref: string } {
-  return isRecord(value) && typeof value.$ref === 'string';
 }
 
 function sortKeys(keys: string[]): string[] {
@@ -223,13 +199,26 @@ export function validateReservedRoots(paths: Iterable<string>, loc: string): voi
 export function validateParity(
   light: Map<string, TokenNode>,
   dark: Map<string, TokenNode>,
-  label = 'appearance light/dark',
+  label = 'appearance',
+  [first, second]: [string, string] = ['light', 'dark'],
 ): void {
-  const lightKeys = [...light.keys()].sort();
-  const darkKeys = [...dark.keys()].sort();
-  if (lightKeys.length !== darkKeys.length || lightKeys.some((key, i) => key !== darkKeys[i])) {
-    fail(`${label} key trees differ`);
-  }
+  const differences = keyDifferences(light.keys(), dark.keys(), first, second);
+  if (differences) fail(`${label} ${first}/${second} key trees differ: ${differences}`);
+}
+
+/**
+ * Names the keys only one of two lists has, at most five, as
+ * `"a" only in light, "b" only in dark`; empty when the lists match.
+ */
+function keyDifferences(a: Iterable<string>, b: Iterable<string>, aName: string, bName: string): string {
+  const left = new Set(a);
+  const right = new Set(b);
+  const missing = [
+    ...[...left].filter((key) => !right.has(key)).map((key) => `"${key}" only in ${aName}`),
+    ...[...right].filter((key) => !left.has(key)).map((key) => `"${key}" only in ${bName}`),
+  ];
+  if (missing.length === 0) return '';
+  return missing.length > 5 ? `${missing.slice(0, 5).join(', ')} and ${missing.length - 5} more` : missing.join(', ');
 }
 
 export function validateDensitySpaceOnly(tokens: Map<string, TokenNode>, loc: string): void {
@@ -273,10 +262,8 @@ export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>
   if (expected.length === 0) fail(`button.${defaultPaint} paint pack is empty`);
   for (const name of Object.keys(packs)) {
     if (name === defaultPaint) continue;
-    const keys = paintSuffixes(name, packs[name] ?? new Map());
-    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-      fail(`variant "${name}" paint keys must match button.${defaultPaint}`);
-    }
+    const differences = keyDifferences(expected, paintSuffixes(name, packs[name] ?? new Map()), defaultPaint, name);
+    if (differences) fail(`variant "${name}" paint keys must match button.${defaultPaint}: ${differences}`);
   }
 }
 
@@ -317,10 +304,8 @@ export function validateAliasParity(contexts: Map<string, Iterable<string>>, def
       .sort();
   const expected = shape(defaultContext, contexts.get(defaultContext) ?? []);
   for (const [context, paths] of contexts) {
-    const keys = shape(context, paths);
-    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-      fail(`${loc} context "${context}" must declare the same tokens as "${defaultContext}"`);
-    }
+    const differences = keyDifferences(expected, shape(context, paths), `"${defaultContext}"`, `"${context}"`);
+    if (differences) fail(`${loc} context "${context}" must declare the same tokens as "${defaultContext}": ${differences}`);
   }
 }
 
@@ -375,50 +360,6 @@ export function consumeCssVar(path: string, aliases: readonly AliasGroup[] = [BU
     }
   }
   return null;
-}
-
-export function pathToPointer(path: string): string {
-  return `#/${path.split('.').join('/')}/$value`;
-}
-
-/**
- * Parses a DTCG 2025.10 JSON Pointer alias (`#/color/gray/50/$value`) into the
- * dot path of the token it names. Only whole-value aliases are supported here;
- * color channels use {@link parseComponentPointer}.
- */
-export function pointerToPath(pointer: string, loc: string): string {
-  if (!pointer.startsWith('#/')) {
-    const hint = PATH_RE.test(pointer) ? `; write "${pathToPointer(pointer)}"` : '';
-    fail(`${loc} $ref "${pointer}" must be a JSON Pointer like "#/color/gray/50/$value"${hint}`);
-  }
-  const segments = pointer
-    .slice(2)
-    .split('/')
-    .map((segment) => segment.replaceAll('~1', '/').replaceAll('~0', '~'));
-  if (segments.at(-1) !== '$value') {
-    fail(`${loc} $ref "${pointer}" must end at a token's /$value`);
-  }
-  const tokenSegments = segments.slice(0, -1);
-  if (tokenSegments.includes('$value')) {
-    fail(`${loc} $ref "${pointer}" points inside a value; only whole-value aliases are supported`);
-  }
-  const path = tokenSegments.join('.');
-  if (tokenSegments.some((segment) => segment === '' || segment.includes('.')) || !PATH_RE.test(path)) {
-    fail(`${loc} $ref "${pointer}" must name a token with lowercase segments`);
-  }
-  return path;
-}
-
-const OKLCH_CHANNELS = ['l', 'c', 'h'] as const;
-
-/**
- * Parses a property-level pointer to one OKLCH channel of another color token,
- * `#/color/accent/default/$value/components/0`, into its token path and channel.
- */
-export function parseComponentPointer(pointer: string, loc: string): { path: string; channel: 'l' | 'c' | 'h' } {
-  const match = typeof pointer === 'string' ? pointer.match(/^(#\/.+\/\$value)\/components\/([0-2])$/) : null;
-  if (!match) fail(`${loc} component $ref "${String(pointer)}" must point at "#/<token>/$value/components/0|1|2"`);
-  return { path: pointerToPath(match[1]!, loc), channel: OKLCH_CHANNELS[Number(match[2])]! };
 }
 
 type Serialized = { ref: string | null; refs: TokenRef[]; cssValue: string };
@@ -616,9 +557,12 @@ export function validateRefs(
   // alias the other way round without forming a cycle.
   function resolveLayer(path: string, from: Layer, fromPath: string, context: string | undefined): void {
     const targetLayer = layerPaths.get(path);
-    if (!targetLayer) fail(`$ref "${path}" does not exist`);
+    if (!targetLayer) fail(`token "${fromPath}" reads $ref "${path}", which does not exist${didYouMean(path, layerPaths.keys())}`);
     if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !inScope(fromPath, path)) {
-      fail(`$ref "${path}" must point at a lower layer than ${from}`);
+      fail(
+        `token "${fromPath}" reads $ref "${path}" from the ${targetLayer} layer, but a $ref must point at a lower layer than ${from}` +
+          ` (${LAYER_ORDER}), at a token in its own set or context, or at an earlier set or modifier of its own layer`,
+      );
     }
     const key = `${path}\u0000${context ?? ''}`;
     if (onStack.has(key)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
@@ -714,11 +658,6 @@ function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string
     .join('\n');
 }
 
-function block(selector: string, lines: string[]): string[] {
-  const body = lines.filter((line) => line !== '');
-  return body.length === 0 ? [] : [`${selector} {\n${body.join('\n')}\n}`];
-}
-
 /**
  * Emits one CSS layer from the resolved entries, in resolutionOrder:
  * - sets before the first scoped modifier are declared on `:root`;
@@ -744,14 +683,25 @@ export type EmitCssOptions = {
    * own variant blocks.
    */
   inherited?: ReadonlySet<string>;
+  /**
+   * A selector (see `parseScope`) whose elements get the whole graph instead of
+   * `:root`. `entries` must then be the whole graph, so a scope holds every
+   * token and an outer scope's values never leak into it.
+   */
+  scope?: string;
 };
 
 export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}): string {
   const aliases = options.aliases ?? aliasGroups(entries);
   const inherited = options.inherited ?? new Set<string>();
+  const scope = options.scope === undefined ? undefined : parseScope(options.scope);
   // In a later layer, a bare :root default would beat an earlier layer's
   // other contexts on the root element itself.
   const layered = options.inherited !== undefined;
+  // Inside `@scope (S)` a bare selector matches only below S, so each one is
+  // also written on `:scope`. Scope proximity then lets a nested scope win.
+  const at = (selector: string) => (scope ? `:scope${selector},\n${selector}` : selector);
+  const fallbacks: string[] = [];
   const root: FlatToken[] = [];
   const rootAliases: FlatToken[] = [];
   const scopedBlocks: string[] = [];
@@ -779,37 +729,48 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
         rescoped.push(...tokens);
         const own = tokens.filter((token) => !inherited.has(token.path));
         if (context === entry.defaultContext) defaults.push(...own);
-        aliasBlocks.push(...block(selector, [aliasDecls(own, aliases)]));
+        aliasBlocks.push(...block(at(selector), [aliasDecls(own, aliases)]));
         continue;
       }
-      const rootDefault = entry.extension.root && context === entry.defaultContext;
+      const rootDefault = entry.extension.root === true && context === entry.defaultContext;
       if (tokens.length === 0) continue;
       // Only a root without the attribute: a bare :root would tie with an
       // earlier context's selector on the root element and win by source order.
       const rootSelector = `:root:not([${attribute}])`;
       const lines = [decls(tokens), colorScheme ? `  color-scheme: ${context};` : ''];
-      scopedBlocks.push(...block(rootDefault ? `${rootSelector},\n${selector}` : selector, lines));
+      scopedBlocks.push(...block(rootDefault && !scope ? `${rootSelector},\n${selector}` : at(selector), lines));
       // A color-scheme modifier also takes "system", which follows the
       // user's prefers-color-scheme in CSS, so no script picks it first.
       // Each context's system rule has its own media condition, so it never
       // competes with the other context's, whatever their order or layer.
-      if (colorScheme) {
-        const media = context === 'dark' ? '(prefers-color-scheme: dark)' : 'not (prefers-color-scheme: dark)';
-        const system = block(`[${attribute}="system"]`, lines).map((rule) => rule.replace(/^/gm, '  '));
-        scopedBlocks.push(...block(`@media ${media}`, system));
-      }
+      const media = context === 'dark' ? '(prefers-color-scheme: dark)' : 'not (prefers-color-scheme: dark)';
+      if (colorScheme) scopedBlocks.push(...block(`@media ${media}`, indent(block(at(`[${attribute}="system"]`), lines))));
+      if (scope) fallbacks.push(...scopeFallbacks(scope, attribute, context, lines, { rootDefault, media: colorScheme ? media : null }));
     }
     if (!alias) attributes.push(`[${attribute}]`);
   }
   // The root element gets the re-declared sets too, so components work with no provider above them.
-  const rescopedRoot = layered ? `:root${attributes.map((attribute) => `:not(${attribute})`).join('')}` : ':root';
+  // A scope's root selector carries the same :not()s as :root's, so on the
+  // root element it matches an unscoped build's specificity and wins by proximity.
+  const unset = attributes.map((attribute) => `:not(${attribute})`).join('');
+  const rescopedRoot = scope ? [`:scope${unset}`, ...attributes.map(at)] : [layered ? `:root${unset}` : ':root', ...attributes];
   const blocks = [
-    ...block(':root', [decls(root), aliasDecls(rootAliases, aliases)]),
+    // A scope also clears the override inputs an outer ThemeProvider set, so
+    // they don't reach its tokens; a provider on or inside it sets them again.
+    ...block(scope ? ':scope' : ':root', [decls(root), aliasDecls(rootAliases, aliases), scope ? clearedInputs(rescoped) : '']),
     ...scopedBlocks,
-    ...block([rescopedRoot, ...attributes].join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
+    // Alias defaults keep a bare :scope's or :root's lower specificity, so an
+    // alias attribute on that element itself still wins over them.
+    ...(scope || layered
+      ? [
+          ...block(rescopedRoot.join(',\n'), [overridableDecls(rescoped)]),
+          ...block([scope ? ':scope' : ':root', ...attributes.map(at)].join(',\n'), [aliasDecls(defaults, aliases)]),
+        ]
+      : block(rescopedRoot.join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)])),
     ...aliasBlocks,
   ];
-  return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;
+  const body = scope ? [`@scope (${scope}) {\n${indent(blocks).join('\n\n')}\n}`, ...fallbacks] : blocks;
+  return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${body.join('\n\n')}\n}\n`;
 }
 
 /**
@@ -970,36 +931,6 @@ export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPa
 }
 
 export const TODAE_EXTENSION = 'dev.todae';
-
-/**
- * A text color and the background it sits on, checked with APCA in every
- * context of the set or modifier that declares it. `min` is the lowest
- * absolute Lc allowed. `over` lists the opaque surfaces a translucent `bg`
- * may sit on; the pair is checked over each one. Without it, `bg` must be
- * opaque.
- */
-export type ContrastPair = { fg: string; bg: string; min: number; over?: string[] };
-
-export type TodaeExtension = {
-  layer: Layer;
-  rules?: Rule[];
-  slots?: SlotRules;
-  contrast?: ContrastPair[];
-  attribute?: string;
-  root?: boolean;
-  colorScheme?: boolean;
-  alias?: boolean;
-};
-
-export type ResolvedEntry =
-  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: EntryToken[] }
-  | {
-      kind: 'modifier';
-      name: string;
-      extension: TodaeExtension;
-      defaultContext: string;
-      contexts: Map<string, EntryToken[]>;
-    };
 
 const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const CONTEXT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -1255,7 +1186,10 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
     const base = upstreamOf(kind, name);
     if (base) {
       const changed = MATCHED_EXTENSION_KEYS.find((key) => extension[key] !== base.extension[key]);
-      if (changed) fail(`${loc} extends Todae's ${kind} "${name}", so its ${changed} must match`);
+      if (changed) {
+        const want = base.extension[changed];
+        fail(`${loc} extends Todae's ${kind} "${name}", so ${want === undefined ? `leave out ${changed}` : `its ${changed} must be ${JSON.stringify(want)}`}`);
+      }
       // An extension keeps Todae's structural rules and slot shapes, plus its
       // own. reserved-roots guards Todae's own namespace, so a company's
       // brand.* tokens are not held to it.
@@ -1277,7 +1211,9 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
   for (const { kind, name, extension } of order) {
     if (kind !== 'modifier') continue;
     const owner = attributes.get(extension.attribute!);
-    if (owner !== undefined && owner !== name) fail(`modifier "${name}" reuses attribute ${extension.attribute}`);
+    if (owner !== undefined && owner !== name) {
+      fail(`modifier "${name}" reuses attribute ${extension.attribute}, which modifier "${owner}" sets; give it its own data-* attribute`);
+    }
     attributes.set(extension.attribute!, name);
   }
 
@@ -1386,7 +1322,7 @@ export function validateEntries(entries: ResolvedEntry[]): void {
     for (const [context, tokens] of contexts) {
       if (context === defaultContext) continue;
       const label = extension.layer === 'appearance' ? 'appearance' : loc;
-      validateParity(tokenMapOf(defaults), tokenMapOf(tokens), `${label} ${defaultContext}/${context}`);
+      validateParity(tokenMapOf(defaults), tokenMapOf(tokens), label, [defaultContext, context]);
     }
   }
 }
@@ -1514,7 +1450,7 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
           : entry.contexts.get(entry.defaultContext)!;
     for (const token of declared) {
       const previous = owner.get(token.path);
-      if (previous) fail(`token "${token.path}" is declared by both ${previous} and ${entry.kind} "${entry.name}"`);
+      if (previous) fail(`token "${token.path}" is declared by both ${previous} and ${entry.kind} "${entry.name}"; declare it in one of them`);
       owner.set(token.path, `${entry.kind} "${entry.name}"`);
       position.set(token.path, index);
       known.set(token.path, token.layer);
@@ -1547,7 +1483,10 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
   // provider or a [data-*] element, would never reach it.
   const rootAlias = rootOnly.find((token) => token.refs.length > 0);
   if (rootAlias) {
-    fail(`token "${rootAlias.path}" is declared only on :root, so it can't reference "${rootAlias.refs[0]!.path}"`);
+    fail(
+      `token "${rootAlias.path}" is declared only on :root, so it can't reference "${rootAlias.refs[0]!.path}";` +
+        ' give it a literal value, or move it to a set listed after the first modifier in resolutionOrder',
+    );
   }
   const byPath = new Map<string, FlatToken[]>();
   for (const token of all) {
@@ -1643,189 +1582,22 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
       for (const { path: ref } of token.refs) {
         const target = position.get(ref) ?? -1;
         if (target > index) {
-          fail(`token "${token.path}" references "${ref}" from ${owner.get(ref)}, which must come earlier in resolutionOrder`);
+          fail(
+            `token "${token.path}" references "${ref}" from ${owner.get(ref)}, which must come earlier in resolutionOrder;` +
+              ` list ${owner.get(ref)} before ${entry.kind} "${entry.name}"`,
+          );
         }
         const dependency = scoped(entry) ? scopedDependency(ref, index) : null;
         if (dependency) {
           fail(
-            `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,
+            `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other,` +
+              ' so give it a literal value or a $ref to a token that reads no scoped modifier\'s tokens, such as a core token',
           );
         }
       }
     }
   }
   return all;
-}
-
-// APCA lightness contrast (Lc), with the APCA-W3 0.0.98G-4g constants the
-// WCAG 3 drafts reference. Lc is positive for dark text on a light
-// background and negative for light on dark; checks compare its magnitude.
-type Oklch = { l: number; c: number; h: number; alpha: number };
-type Rgb = [r: number, g: number, b: number];
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-function encodeSrgb(linear: number): number {
-  const v = clamp01(linear);
-  return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
-}
-
-/** OKLCH to gamma-encoded sRGB in [0, 1], clipped to the sRGB gamut. */
-export function oklchToSrgb({ l, c, h }: Pick<Oklch, 'l' | 'c' | 'h'>): Rgb {
-  const rad = (h * Math.PI) / 180;
-  const a = c * Math.cos(rad);
-  const b = c * Math.sin(rad);
-  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
-  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
-  return [
-    encodeSrgb(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
-    encodeSrgb(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
-    encodeSrgb(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
-  ];
-}
-
-/** Paints `top` with its alpha over an opaque `bottom`, in gamma-encoded sRGB as browsers composite. */
-export function composite(top: Oklch, bottom: Rgb): Rgb {
-  const rgb = oklchToSrgb(top);
-  return rgb.map((channel, i) => channel * top.alpha + bottom[i]! * (1 - top.alpha)) as Rgb;
-}
-
-function screenLuminance([r, g, b]: Rgb): number {
-  const y = 0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4;
-  return y > 0.022 ? y : y + (0.022 - y) ** 1.414;
-}
-
-/** APCA Lc of `text` on `background`, both gamma-encoded sRGB. */
-export function apcaContrast(text: Rgb, background: Rgb): number {
-  const yt = screenLuminance(text);
-  const yb = screenLuminance(background);
-  if (Math.abs(yb - yt) < 0.0005) return 0;
-  if (yb > yt) {
-    const sapc = (yb ** 0.56 - yt ** 0.57) * 1.14;
-    return sapc < 0.1 ? 0 : (sapc - 0.027) * 100;
-  }
-  const sapc = (yb ** 0.65 - yt ** 0.62) * 1.14;
-  return sapc > -0.1 ? 0 : (sapc + 0.027) * 100;
-}
-
-const CHANNEL_INDEX = { l: 0, c: 1, h: 2 } as const;
-
-/** The literal OKLCH a color token resolves to in one view of the graph. */
-function resolveOklch(path: string, view: Map<string, FlatToken>, stack: string[] = []): Oklch {
-  if (stack.includes(path)) fail(`contrast: color "${path}" refers to itself through ${stack.join(' → ')}`);
-  const token = view.get(path);
-  if (!token) fail(`contrast: token "${path}" does not exist`);
-  if (token.type !== 'color') fail(`contrast: token "${path}" is a ${token.type}, not a color`);
-  const value = token.value;
-  if (isRef(value)) return resolveOklch(pointerToPath(value.$ref, `Token "${path}"`), view, [...stack, path]);
-  const record = value as { components: unknown[]; alpha?: unknown };
-  const channels = record.components.map((component) => {
-    if (typeof component === 'number') return component;
-    const ref = parseComponentPointer((component as { $ref: string }).$ref, `Token "${path}"`);
-    const origin = resolveOklch(ref.path, view, [...stack, path]);
-    return [origin.l, origin.c, origin.h][CHANNEL_INDEX[ref.channel]]!;
-  });
-  const alpha = isRef(record.alpha)
-    ? resolveNumber(pointerToPath(record.alpha.$ref, `Token "${path}" alpha`), view, [...stack, path])
-    : ((record.alpha as number | undefined) ?? 1);
-  return { l: channels[0]!, c: channels[1]!, h: channels[2]!, alpha };
-}
-
-/** The literal a number token resolves to in one view of the graph. */
-function resolveNumber(path: string, view: Map<string, FlatToken>, stack: string[]): number {
-  if (stack.includes(path)) fail(`contrast: number "${path}" refers to itself through ${stack.join(' → ')}`);
-  const token = view.get(path);
-  if (!token) fail(`contrast: token "${path}" does not exist`);
-  if (token.type !== 'number') fail(`contrast: token "${path}" is a ${token.type}, not a number`);
-  if (isRef(token.value)) return resolveNumber(pointerToPath(token.value.$ref, `Token "${path}"`), view, [...stack, path]);
-  return token.value as number;
-}
-
-/**
- * APCA Lc of `fg` painted on `bg`. A translucent `fg` is composited over the
- * background. `bg` must be opaque, unless `over` names the opaque surface it
- * is composited over first.
- */
-export function contrastOf(fg: string, bg: string, view: Map<string, FlatToken>, over?: string): number {
-  const back = resolveOklch(bg, view);
-  let base: Rgb;
-  if (over === undefined) {
-    if (back.alpha !== 1) fail(`contrast: background "${bg}" must be opaque, or list the surfaces it sits on in "over"`);
-    base = oklchToSrgb(back);
-  } else {
-    const surface = resolveOklch(over, view);
-    if (surface.alpha !== 1) fail(`contrast: surface "${over}" under "${bg}" must be opaque`);
-    base = composite(back, oklchToSrgb(surface));
-  }
-  return apcaContrast(composite(resolveOklch(fg, view), base), base);
-}
-
-export type ContrastResult = Omit<ContrastPair, 'over'> & {
-  /** The surface under a translucent `bg`, one result per `over` entry. */
-  over?: string;
-  /** The declaring set, or the modifier and context, e.g. `appearance "dark"`. */
-  where: string;
-  /** Absolute APCA Lc. */
-  lc: number;
-};
-
-/**
- * Measures every declared contrast pair. Each pair runs once per combination
- * of the declaring modifier's contexts and every color-scheme modifier's
- * contexts, so a set's pairs are checked in light and dark too, and once per
- * `over` surface in each. Other modifiers stay at their defaults.
- */
-export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
-  const results: ContrastResult[] = [];
-  for (const declaring of entries) {
-    const pairs = declaring.extension.contrast;
-    if (!pairs) continue;
-    const varied = entries.filter(
-      (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
-        entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
-    );
-    let combos: Map<ResolvedEntry, string>[] = [new Map()];
-    for (const modifier of varied) {
-      combos = combos.flatMap((combo) => [...modifier.contexts.keys()].map((context) => new Map([...combo, [modifier, context]])));
-    }
-    for (const combo of combos) {
-      const view = new Map<string, FlatToken>();
-      for (const entry of entries) {
-        const tokens =
-          entry.kind === 'set'
-            ? entry.tokens
-            : entry.extension.alias
-              ? [...entry.contexts.values()].flat()
-              : (entry.contexts.get(combo.get(entry) ?? entry.defaultContext) ?? []);
-        for (const token of tokens) view.set(token.path, token);
-      }
-      const where =
-        combo.size > 0
-          ? [...combo].map(([entry, context]) => `${entry.name} "${context}"`).join(', ')
-          : `${declaring.kind} "${declaring.name}"`;
-      for (const { over, ...pair } of pairs) {
-        for (const surface of over ?? [undefined]) {
-          const lc = Math.abs(contrastOf(pair.fg, pair.bg, view, surface));
-          results.push(surface === undefined ? { ...pair, where, lc } : { ...pair, over: surface, where, lc });
-        }
-      }
-    }
-  }
-  return results;
-}
-
-/** Fails with every contrast pair below its minimum. */
-export function validateContrast(entries: ResolvedEntry[]): void {
-  const failures = contrastResults(entries)
-    .filter((result) => result.lc < result.min)
-    .map(
-      ({ fg, bg, over, where, lc, min }) =>
-        `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} in ${where} is Lc ${lc.toFixed(1)}, below ${min}`,
-    );
-  if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
 }
 
 export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
@@ -1867,22 +1639,24 @@ export type CompanyTokensResult = {
 
 /**
  * Builds a company token package layered on Todae's: `resolver` is the
- * company's resolver.json, `base` Todae's tokens directory.
+ * company's resolver.json, `base` Todae's tokens directory. Without `scope`
+ * the CSS holds the company's tokens for the whole page; with it, Todae's and
+ * the company's tokens for the elements `scope` matches, so several themes can
+ * share a page.
  */
-export async function buildCompanyTokens(options: { resolver: string; base?: string }): Promise<CompanyTokensResult> {
+export async function buildCompanyTokens(options: { resolver: string; base?: string; scope?: string }): Promise<CompanyTokensResult> {
+  if (options.scope !== undefined) parseScope(options.scope);
   const upstream = await resolveEntries(options.base ?? todaeTokensRoot());
   const extra = await loadResolver(options.resolver, upstream);
   const { merged, company, inherited } = mergeEntries(upstream, extra);
   validateEntries(merged);
   const own = company.flatMap(entryTokens);
   const all = settleDescriptions(checkGraph(merged), [own, upstream.flatMap(entryTokens)]);
-  validateContrast(merged);
-  const css = emitCss(company, {
-    layer: COMPANY_LAYER,
-    preamble: COMPANY_PREAMBLE,
-    aliases: aliasGroups(merged),
-    inherited,
-  });
+  validateContrast(merged, new Set(upstream.flatMap(entryTokens)));
+  const { scope } = options;
+  const css = scope !== undefined
+    ? emitCss(merged, { layer: COMPANY_LAYER, preamble: COMPANY_PREAMBLE, scope })
+    : emitCss(company, { layer: COMPANY_LAYER, preamble: COMPANY_PREAMBLE, aliases: aliasGroups(merged), inherited });
   const types = new Map(own.map((token) => [token.path, token.type]));
   const overrideTypes = [
     '// Generated by todae-tokens. Do not edit.',
@@ -1953,6 +1727,8 @@ Options:
   --catalog <file>   Merged token catalog (default: tokens.catalog.json)
   --types <file>     ThemeProvider overrideTypes module (default: todae-theme.types.ts)
   --base <dir>       Todae tokens directory (default: the installed package's)
+  --scope <selector> Apply the theme only inside elements that match the
+                     selector, such as ".brand-acme", instead of the whole page
   --check            Fail if the outputs are missing or out of date instead of writing
 `;
 
@@ -1966,6 +1742,7 @@ export async function cli(argv: string[]): Promise<void> {
       catalog: { type: 'string', default: 'tokens.catalog.json' },
       types: { type: 'string', default: 'todae-theme.types.ts' },
       base: { type: 'string' },
+      scope: { type: 'string' },
       check: { type: 'boolean', default: false },
       help: { type: 'boolean', default: false },
     },
@@ -1978,6 +1755,7 @@ export async function cli(argv: string[]): Promise<void> {
   const result = await buildCompanyTokens({
     resolver: values.resolver,
     ...(values.base ? { base: resolve(values.base) } : {}),
+    ...(values.scope === undefined ? {} : { scope: values.scope }),
   });
   const outputs: [string, string][] = [
     [resolve(values.css), result.css],

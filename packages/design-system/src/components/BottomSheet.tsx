@@ -23,12 +23,12 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus.js';
+import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { revealRing } from './revealRing.js';
 import styles from './BottomSheet.module.css';
-import { ToolbarContext } from './toolbarContext.js';
 
 export type { SheetSnap };
 /**
@@ -268,7 +268,8 @@ function BottomSheetRoot({
     return () => setGrabbers((n) => n - 1);
   }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
-  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom');
+  const [closedListeners, closed] = useSurfaceClosedSignal();
+  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom', closed);
   const entered = useEntered(present, exiting);
   const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
     sheetRef.current = node;
@@ -283,7 +284,7 @@ function BottomSheetRoot({
   // A modal <dialog> puts the sheet in the top layer, makes the rest of the
   // page inert and keeps focus inside, so no portal or focus trap is needed.
   // closedby="none" turns Escape off natively when dismissOnEscape is false.
-  const closeOnFormSubmit = useModalDialog({
+  const { closeOnFormSubmit, closedby } = useModalDialog({
     dialogRef: sheetRef,
     node: sheetNode,
     present,
@@ -338,7 +339,7 @@ function BottomSheetRoot({
     <SheetContext.Provider value={ctx}>
       <dialog
         {...props}
-        {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
+        {...{ closedby }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
@@ -365,7 +366,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+        <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
       </dialog>
     </SheetContext.Provider>
   );

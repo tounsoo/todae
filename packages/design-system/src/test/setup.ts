@@ -74,6 +74,27 @@ function polyfillPopover(): void {
   };
 }
 
+// jsdom runs no animations and has no layout, so a Drilldown view settles
+// as soon as it moves; its slide and settle are tested in the browser only.
+// A hidden ancestor, an inline display:none, a closed dialog or a popover
+// that isn't showing stands in for an element that isn't rendered.
+function rendered(el: Element | null): boolean {
+  if (!el) return true;
+  if (el.matches('[hidden], dialog:not([open]), [popover]:not([data-popover-open])')) return false;
+  if (el instanceof HTMLElement && el.style.display === 'none') return false;
+  return rendered(el.parentElement);
+}
+
+function polyfillRendering(): void {
+  if (typeof Element === 'undefined') return;
+  const proto = Element.prototype;
+  proto.getAnimations ??= () => [];
+  proto.animate ??= () => ({ cancel() {} }) as Animation;
+  proto.checkVisibility ??= function checkVisibility(this: Element) {
+    return rendered(this);
+  };
+}
+
 function polyfillCssSupports(): void {
   const css = globalThis.CSS ?? {};
   if (typeof css.supports === 'function') return;
@@ -138,5 +159,6 @@ polyfillDialog();
 polyfillInert();
 polyfillPointerEvent();
 polyfillPopover();
+polyfillRendering();
 polyfillCssSupports();
 polyfillMatchMedia();
