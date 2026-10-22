@@ -415,6 +415,16 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it('reports the code before a cancelled composition back when its steps were reported', async () => {
+    const onValueChange = vi.fn();
+    render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
+    await userEvent.click(input());
+    await userEvent.keyboard('{End}');
+    await compose(['c', 'cd'], null);
+    await vi.waitFor(() => expect(onValueChange.mock.calls).toEqual([['ABc'], ['ABcd'], ['AB']]));
+    expect(input().value).toBe('AB');
+  });
+
   const undo = () => userEvent.keyboard('{Control>}z{/Control}');
 
   const redo = () => userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
