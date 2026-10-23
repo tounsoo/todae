@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HTML_APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
@@ -18,7 +21,10 @@ beforeEach(() => {
   }));
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  document.documentElement.removeAttribute('data-appearance');
+});
 
 function renderSite() {
   const { container } = render(
@@ -40,6 +46,7 @@ describe('ThemeSwitcher', () => {
     expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
     expect(window.localStorage.getItem('todae-docs-appearance')).toBe('dark');
     cleanup();
+    document.documentElement.removeAttribute('data-appearance');
     expect(renderSite()()).toBe('dark');
     expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
   });
@@ -50,6 +57,39 @@ describe('ThemeSwitcher', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Light' }));
     expect(appearance()).toBe('light');
     expect(screen.getByRole('button', { name: 'Light' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('keeps a stored pick on the document element through hydration', async () => {
+    window.localStorage.setItem('todae-docs-appearance', 'dark');
+    document.documentElement.setAttribute('data-appearance', 'system');
+    const script = document.createElement('script');
+    script.textContent = HTML_APPEARANCE_SCRIPT;
+    document.head.append(script);
+    script.remove();
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
+
+    const element = (
+      <Providers>
+        <span>mark</span>
+      </Providers>
+    );
+    const host = document.createElement('div');
+    host.innerHTML = renderToString(element);
+    document.body.append(host);
+    const writes: string[] = [];
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        writes.push((record.target as Element).getAttribute('data-appearance') ?? '');
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-appearance'] });
+    const root = hydrateRoot(host, element);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    observer.disconnect();
+    root.unmount();
+
+    expect(writes).not.toContain('system');
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
   });
 
   it('ignores a stored value it does not know', () => {

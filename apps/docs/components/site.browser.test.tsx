@@ -635,4 +635,28 @@ describe('appearance before hydration', () => {
     run();
     expect(document.documentElement.getAttribute('data-appearance')).toBe('light');
   });
+
+  it('paints the document element with the canvas token for the appearance', () => {
+    const painted = (appearance: 'light' | 'dark') => {
+      document.documentElement.setAttribute('data-appearance', appearance);
+      const probe = document.createElement('div');
+      probe.style.background = 'var(--todae-color-bg-canvas)';
+      document.body.append(probe);
+      const html = getComputedStyle(document.documentElement);
+      const read = {
+        background: html.backgroundColor,
+        canvas: getComputedStyle(probe).backgroundColor,
+        scheme: html.colorScheme,
+      };
+      probe.remove();
+      return read;
+    };
+    const dark = painted('dark');
+    const light = painted('light');
+    expect(dark.background).toBe(dark.canvas);
+    expect(dark.scheme).toBe('dark');
+    expect(light.background).toBe(light.canvas);
+    expect(light.scheme).toBe('light');
+    expect(dark.background).not.toBe(light.background);
+  });
 });
