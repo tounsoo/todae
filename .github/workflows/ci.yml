@@ -137,11 +137,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - uses: actions/cache@v4
-        with:
-          path: apps/docs/.next/cache
-          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**', '!apps/docs/visual/**') }}
-          restore-keys: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       - run: pnpm --filter docs test:visual
