@@ -5,7 +5,7 @@ import axe from 'axe-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import '../app/globals.css';
-import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
+import { APPEARANCE_KEY, HTML_APPEARANCE_SCRIPT, SHELL_APPEARANCE_SCRIPT } from './appearanceScript';
 import { HomeContent } from './HomeContent';
 import { MobileNav } from './MobileNav';
 import { Playground } from './Playground';
@@ -596,7 +596,7 @@ describe('appearance before hydration', () => {
     shell.append(density);
     document.body.append(shell);
     const script = document.createElement('script');
-    script.textContent = APPEARANCE_SCRIPT;
+    script.textContent = SHELL_APPEARANCE_SCRIPT;
     density.append(script);
     return shell;
   }
@@ -604,6 +604,7 @@ describe('appearance before hydration', () => {
   afterEach(() => {
     window.localStorage.removeItem(APPEARANCE_KEY);
     document.body.replaceChildren();
+    document.documentElement.removeAttribute('data-appearance');
   });
 
   it('applies a stored pick before React runs', () => {
@@ -615,5 +616,23 @@ describe('appearance before hydration', () => {
     expect(serverShell().getAttribute('data-appearance')).toBe('system');
     window.localStorage.setItem(APPEARANCE_KEY, 'sepia');
     expect(serverShell().getAttribute('data-appearance')).toBe('system');
+  });
+
+  it('puts a stored pick on the document element before React runs', () => {
+    document.documentElement.setAttribute('data-appearance', 'system');
+    const run = () => {
+      const script = document.createElement('script');
+      script.textContent = HTML_APPEARANCE_SCRIPT;
+      document.head.append(script);
+    };
+    window.localStorage.setItem(APPEARANCE_KEY, 'dark');
+    run();
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
+    window.localStorage.setItem(APPEARANCE_KEY, 'light');
+    run();
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('light');
+    window.localStorage.setItem(APPEARANCE_KEY, 'sepia');
+    run();
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('light');
   });
 });

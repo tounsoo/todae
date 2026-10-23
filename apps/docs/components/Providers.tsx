@@ -4,7 +4,7 @@
 // installs only where Temporal is missing.
 import 'temporal-polyfill/global';
 import { DensityProvider, ThemeProvider, type Appearance } from '@tounsoo/todae';
-import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { APPEARANCE_KEY as KEY } from './appearanceScript';
 const CHANGE = 'todae-docs-appearance-change';
 
@@ -59,6 +59,9 @@ export function useAppearanceChoice() {
 
 export function Providers({ children }: { children: ReactNode }) {
   const appearance = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-appearance', appearance);
+  }, [appearance]);
   return (
     <AppearanceChoice.Provider value={{ appearance, setAppearance }}>
       {/* SiteShell's inline script may set data-appearance before hydration. */}
