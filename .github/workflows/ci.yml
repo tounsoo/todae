@@ -59,9 +59,18 @@ jobs:
             exit 0
           fi
           # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
-          class=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}" | bash .github/scripts/change-class.sh)
+          # A diff that cannot be read, such as two histories with no merge base, runs every check.
+          if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
+            echo "class=all" >> "$GITHUB_OUTPUT"
+            echo "class=all (diff failed)"
+            exit 0
+          fi
+          class=$(printf '%s\n' "$files" | bash .github/scripts/change-class.sh)
           echo "class=$class" >> "$GITHUB_OUTPUT"
           echo "class=$class"
+          if [ "$class" = prose ]; then
+            printf '%s\n' "$files"
+          fi
 
       - uses: ./.github/actions/setup
 
