@@ -77,14 +77,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - uses: actions/cache@v4
-        with:
-          path: apps/docs/.next/cache
-          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**', '!apps/docs/visual/**') }}
-          restore-keys: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm build:ds
       - run: pnpm --filter docs build
-      - run: pnpm --filter docs test:visual
+      # This runner has 4 cores. Playwright's default is half of them.
+      - run: pnpm --filter docs test:visual -- --workers=4
       # The report shows each changed shot; test-results holds its new image as `<name>-actual.png`.
       - if: failure()
         uses: actions/upload-artifact@v4
