@@ -33,12 +33,15 @@ describe('ThemeSwitcher', () => {
   it('follows the system until the reader picks, then keeps the pick', () => {
     const appearance = renderSite();
     expect(appearance()).toBe('system');
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('system');
     expect(screen.getByRole('button', { name: 'System' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
     expect(appearance()).toBe('dark');
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
     expect(window.localStorage.getItem('todae-docs-appearance')).toBe('dark');
     cleanup();
     expect(renderSite()()).toBe('dark');
+    expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
   });
 
   it('keeps a choice when the pressed item is pressed again', () => {
