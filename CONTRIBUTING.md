@@ -87,7 +87,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 ## Check your change
 
-Run these before you open a pull request. CI runs them too, and builds the docs.
+Run these before you open a pull request. CI runs them when the change is code, and builds the docs. A pull request that only edits docs pages runs the unit tests and the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
 pnpm typecheck
@@ -131,7 +131,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 
 - Keep a pull request to one change.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips draft pull requests. Mark yours ready for review when you want CI to run.
+- CI skips draft pull requests, and a Markdown-only pull request as described above. Mark a draft ready for review when you want CI to run.
 
 ## Releases
 

@@ -21,21 +21,6 @@ classify() {
 	printf '%s\n' "$class"
 }
 
-# A rename counts both paths. Git only emits R when --find-renames is on.
-from_name_status() {
-	local status old new
-	while IFS=$'\t' read -r status old new || [ -n "${status:-}" ]; do
-		[ -z "${status:-}" ] && continue
-		case "$status" in
-			R*)
-				printf '%s\n' "$old"
-				[ -n "${new:-}" ] && printf '%s\n' "$new"
-				;;
-			*) printf '%s\n' "$old" ;;
-		esac
-	done
-}
-
 self_test() {
 	check() {
 		local name="$1" expected="$2"
@@ -46,15 +31,6 @@ self_test() {
 		else
 			got=$(printf '%s\n' "$@" | classify)
 		fi
-		if [ "$got" != "$expected" ]; then
-			printf 'change-class: %s expected %s, got %s\n' "$name" "$expected" "$got" >&2
-			exit 1
-		fi
-	}
-
-	check_status() {
-		local name="$1" expected="$2" input="$3" got
-		got=$(printf '%s\n' "$input" | from_name_status | classify)
 		if [ "$got" != "$expected" ]; then
 			printf 'change-class: %s expected %s, got %s\n' "$name" "$expected" "$got" >&2
 			exit 1
@@ -76,19 +52,11 @@ self_test() {
 	check 'deep page' prose 'apps/docs/app/(en)/a/b/c/page.mdx'
 	check changeset all '.changeset/brave-lions-sing.md'
 	check changelog all 'packages/design-system/CHANGELOG.md'
-
-	check_status 'renamed pages' prose $'R100\tapps/docs/app/(en)/a/page.mdx\tapps/docs/app/ko/b/page.mdx'
-	check_status 'rename into source' all $'R100\tapps/docs/app/(en)/a/page.mdx\tpackages/design-system/src/a.ts'
-	check_status 'deleted page' prose $'D\tapps/docs/app/(en)/a/page.mdx'
+	check 'package readme' all 'packages/design-system/README.md'
 }
 
 if [ "${1:-}" = "--self-test" ]; then
 	self_test
-	exit 0
-fi
-
-if [ "${1:-}" = "--name-status" ]; then
-	from_name_status | classify
 	exit 0
 fi
 
