@@ -88,7 +88,7 @@ describe('ThemeSwitcher', () => {
     observer.disconnect();
     root.unmount();
 
-    expect(writes).not.toContain('system');
+    expect(writes).toEqual(['dark']);
     expect(document.documentElement.getAttribute('data-appearance')).toBe('dark');
   });
 
