@@ -17,6 +17,8 @@ export default defineConfig({
   testMatch: '*.visual.ts',
   snapshotPathTemplate: '{testDir}/baselines/{projectName}/{arg}{ext}',
   fullyParallel: true,
+  // The docs CI runner has 4 cores. Playwright's default is half of them.
+  workers: process.env.CI ? 4 : undefined,
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   expect: { toHaveScreenshot: { animations: 'disabled', caret: 'hide', scale: 'css' } },
