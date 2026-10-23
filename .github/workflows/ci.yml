@@ -80,7 +80,7 @@ jobs:
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       # This runner has 4 cores. Playwright's default is half of them.
-      - run: pnpm --filter docs test:visual -- --workers=4
+      - run: pnpm --filter docs test:visual --workers=4
       # The report shows each changed shot; test-results holds its new image as `<name>-actual.png`.
       - if: failure()
         uses: actions/upload-artifact@v4
