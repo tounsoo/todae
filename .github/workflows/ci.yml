@@ -3,28 +3,34 @@ name: CI
 on:
   push:
     branches: [main]
-    # A push whose every file is markdown never starts a job. Docs pages are MDX, so they still run.
-    paths-ignore:
-      - '**.md'
+    # Markdown never starts a job. A changeset and the published changelog are
+    # markdown a tool reads, so they still run. Docs pages are MDX, so a page edit does too.
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/CHANGELOG.md'
   # Drafts skip CI; marking one ready for review runs it.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore:
-      - '**.md'
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/CHANGELOG.md'
 
 # A new push to a pull request cancels its older run; runs on main always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Package checks share one runner, so setup and the package build happen once and
-# GitHub's per-job minute applies once. The docs job stays in its own container.
 jobs:
   checks:
     if: ${{ !github.event.pull_request.draft }}
     name: Checks
     # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,49 +51,40 @@ jobs:
             head="${{ github.sha }}"
             diff_args=("$base" "$head")
           fi
-          # A missing commit (a new history, or a checkout that does not have it) runs every check.
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
             echo "class=all" >> "$GITHUB_OUTPUT"
             echo "class=all (commits not in the checkout)"
             exit 0
           fi
-          paths=()
-          while IFS=$'\t' read -r status old new; do
-            [ -z "${status:-}" ] && continue
-            case "$status" in
-              R*|C*) paths+=("$old" "$new") ;;
-              *) paths+=("$old") ;;
-            esac
-          done < <(git -c core.quotePath=false diff --name-status --find-renames "${diff_args[@]}")
-          if [ "${#paths[@]}" -eq 0 ]; then
-            class=all
-          else
-            class=$(printf '%s\n' "${paths[@]}" | bash .github/scripts/change-class.sh)
-          fi
+          class=$(git -c core.quotePath=false diff --name-status --find-renames "${diff_args[@]}" | bash .github/scripts/change-class.sh --name-status)
           echo "class=$class" >> "$GITHUB_OUTPUT"
-          echo "class=$class files=${#paths[@]}"
-          if [ "$class" = prose ]; then
-            printf '%s\n' "${paths[@]}"
-          fi
+          echo "class=$class"
 
       - uses: ./.github/actions/setup
 
       # Fails when the package changed outside its tests and no changeset was added.
       # The Version Packages pull request deletes the changesets, so it skips the check.
-      - if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
+      - name: Changeset
+        if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
         run: pnpm changeset status --since=origin/${{ github.base_ref }}
-      - if: steps.change.outputs.class == 'all'
+      - name: Tokens
+        if: steps.change.outputs.class == 'all'
         run: pnpm tokens:check
-      - if: steps.change.outputs.class == 'all'
+      - name: Schema
+        if: steps.change.outputs.class == 'all'
         run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
-      - if: steps.change.outputs.class == 'all'
+      - name: Typecheck
+        if: steps.change.outputs.class == 'all'
         run: pnpm typecheck
-      - if: steps.change.outputs.class == 'all'
+      - name: Lint
+        if: steps.change.outputs.class == 'all'
         run: pnpm lint
 
-      # The docs tests import the package from dist. Unit tests run for page prose too.
-      - run: pnpm build:ds
-      - run: pnpm test
+      # The docs tests import the package from dist.
+      - name: Build the package
+        run: pnpm build:ds
+      - name: Unit tests
+        run: pnpm test
 
       # Keyed on the lockfile, which pins Playwright and so its Chromium build.
       - if: steps.change.outputs.class == 'all'
@@ -100,8 +97,8 @@ jobs:
         run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
       - if: steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
-      # Some docs demos import the package's subpath entries, which only exist in dist.
-      - if: steps.change.outputs.class == 'all'
+      - name: Browser tests
+        if: steps.change.outputs.class == 'all'
         run: pnpm test:browser
 
       # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
