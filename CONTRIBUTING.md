@@ -87,7 +87,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 ## Check your change
 
-Run these before you open a pull request. CI runs them, and builds the docs, unless the pull request only edits docs pages or their translation stamp. That runs the unit tests and the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
+Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
 pnpm typecheck
