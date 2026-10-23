@@ -1,5 +1,9 @@
 name: CI
 
+# Checkout reads the repo. Cache and artifact upload use the run's own tokens, not this one.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -80,43 +84,45 @@ jobs:
         if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
         run: pnpm changeset status --since=origin/${{ github.base_ref }}
       - name: Tokens
-        if: steps.change.outputs.class == 'all'
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm tokens:check
       - name: Schema
-        if: steps.change.outputs.class == 'all'
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
       - name: Typecheck
-        if: steps.change.outputs.class == 'all'
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm typecheck
       - name: Lint
-        if: steps.change.outputs.class == 'all'
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm lint
 
       # The docs tests import the package from dist, and some browser demos import its subpath entries.
       - name: Build the package
+        if: ${{ !cancelled() }}
         run: pnpm build:ds
       - name: Unit tests
+        if: ${{ !cancelled() }}
         run: pnpm test
 
       # Keyed on the lockfile, which pins Playwright and so its Chromium build.
-      - if: steps.change.outputs.class == 'all'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - if: steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
-      - if: steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
       - name: Browser tests
-        if: steps.change.outputs.class == 'all'
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm test:browser
 
       # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
-      - if: steps.change.outputs.class == 'all'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm install --frozen-lockfile --offline
-      - if: steps.change.outputs.class == 'all'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         name: Second-brand example
         run: pnpm --filter fernway-example build
 
