@@ -71,3 +71,5 @@ A test fails when a prop a page shows has no translation, or when its English ha
 List its slug in `lib/i18n/englishPages.ts` as well as in `components/siteGroups.ts`. A test fails until both list it, so every language can show the page before anyone translates it.
 
 Korean is in `COMPLETE_LOCALES`, so the same pull request also adds the Korean page, and stamps it when it is a `page.mdx`. A locale that is still being translated falls back to the English page instead.
+
+Editing only this file does not start CI. It is Markdown, and it is not a changeset, the package README, or the changelog.
