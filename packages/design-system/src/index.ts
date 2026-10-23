@@ -474,3 +474,5 @@ export {
 } from './providers/DensityProvider.js';
 export { StringsProvider, useStrings, type Strings, type StringsProviderProps } from './providers/StringsProvider.js';
 export { GlyphsProvider, useGlyphs, type Glyphs, type GlyphsProviderProps } from './providers/GlyphsProvider.js';
+
+const lintFailProof = true;
