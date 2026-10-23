@@ -60,7 +60,7 @@ export function useAppearanceChoice() {
 export function Providers({ children }: { children: ReactNode }) {
   const appearance = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   useLayoutEffect(() => {
-    document.documentElement.setAttribute('data-appearance', appearance);
+    document.documentElement.setAttribute('data-appearance', getSnapshot());
   }, [appearance]);
   return (
     <AppearanceChoice.Provider value={{ appearance, setAppearance }}>
