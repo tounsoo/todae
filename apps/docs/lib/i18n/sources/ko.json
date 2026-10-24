@@ -547,7 +547,7 @@
   "message": {
     "(top)": "826be7492f3a",
     "# Message": "00447d9a6c07",
-    "## Parts": "6bffffd777b1",
+    "## Parts": "ea18f7497f64",
     "## Time": "819983498d7c",
     "## Streaming": "221b92871fd3",
     "## Accessible composition": "465fea223a1d",
@@ -735,7 +735,7 @@
   },
   "recipes/message-parts": {
     "(top)": "bd1a8a13d324",
-    "# Message parts": "df2e2381510c",
+    "# Message parts": "b5ab2ae71e64",
     "## The map": "c758e4138e32",
     "## In the message": "83db27d04037",
     "## While it streams": "61ed3670b470",

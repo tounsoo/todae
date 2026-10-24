@@ -5,7 +5,7 @@ import { Table } from '@tounsoo/todae/table';
 
 A recipe, not a package namespace. Todae knows no agent SDK's message shape. Your product maps each part of a reply onto the parts Todae already has. There is no `MessageParts` export. Nothing in `@tounsoo/todae` maps one SDK's parts for you.
 
-The message below is one assistant reply. Its parts come from a local array, and the part types in that array are this page's. Use your SDK's names in their place.
+The message below is one assistant reply inside `Message.Root`. Its pieces come from a local array, and the part types in that array are this page's. Use your SDK's names in their place. `Message.Avatar`, `Message.Header`, `Message.Content`, `Message.Time` and `Message.Actions` are the slots on the [Message](/message) page. A message can hold more than one `Message.Content`, with these pieces between them.
 
 <Example block>
   <MessagePartsExample />
