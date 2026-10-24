@@ -121,11 +121,11 @@ const busy = sending || resending;
 // Set to the code on submit and on resend: the code that doesn't send itself.
 const skipCode = useRef('');
 useEffect(() => {
-  if (code.length !== 6 || code === skipCode.current || busy) return;
+  if (step !== 'code' || code.length !== 6 || code === skipCode.current || busy) return;
   // An IME can still take a full code back, so wait a moment.
   const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
   return () => clearTimeout(timer);
-}, [code, busy]);
+}, [code, step, busy]);
 ```
 
 When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced. Don't send by itself a code that was already sent or one that was in the field when a new code was asked for. Otherwise a wrong code sends itself again after every check, and the end of a resend checks the old code again. How soon a person may ask again is your product's rule.
