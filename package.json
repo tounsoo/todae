@@ -3,6 +3,16 @@
   "private": true,
   "license": "MIT",
   "packageManager": "pnpm@10.33.3",
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.5.18": "8.5.31"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "mcp-handler>@modelcontextprotocol/sdk": "1.32.1"
+      }
+    }
+  },
   "scripts": {
     "build": "pnpm -r --if-present build",
     "build:ds": "pnpm --filter @tounsoo/todae build",
