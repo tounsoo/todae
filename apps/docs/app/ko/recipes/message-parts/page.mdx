@@ -1,0 +1,196 @@
+import { MessagePartsExample } from '../../../../components/demos/MessagePartsDemo';
+import { Table } from '@tounsoo/todae/table';
+
+# Message parts
+
+패키지 네임스페이스가 아니라 레시피입니다. Todae는 어떤 에이전트 SDK의 메시지 모양도 알지 못합니다. 제품이 답의 각 파트를 Todae에 이미 있는 파트로 옮깁니다. `MessageParts` export는 없습니다. `@tounsoo/todae`에는 어떤 SDK의 파트를 옮겨 주는 함수도 없습니다.
+
+아래 메시지는 `Message.Root` 안의 어시스턴트 답 하나입니다. 조각은 이 페이지의 배열에서 오고, 그 배열의 파트 타입도 이 페이지의 것입니다. 그 자리에 SDK가 쓰는 이름을 두세요. `Message.Avatar`, `Message.Header`, `Message.Content`, `Message.Time`, `Message.Actions`는 [Message](/message) 페이지의 슬롯입니다. 한 메시지에 `Message.Content`를 여러 개 두고, 그 사이에 이 조각들을 넣어도 됩니다.
+
+<Example block>
+  <MessagePartsExample />
+</Example>
+
+## 대응
+
+<Table.Root>
+  <Table.Caption>이 페이지의 파트 타입</Table.Caption>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">파트</Table.HeaderCell>
+      <Table.HeaderCell scope="col">그리는 부품</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.Cell>
+        <code>text</code>
+      </Table.Cell>
+      <Table.Cell>Message.Content와 Prose</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>reasoning</code>
+      </Table.Cell>
+      <Table.Cell>Disclosure</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>tool-call</code>
+      </Table.Cell>
+      <Table.Cell>Disclosure, Badge, DataList, CodeBlock</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>attachment</code>
+      </Table.Cell>
+      <Table.Cell>Attachment</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+
+첫 열의 이름은 이 페이지의 것입니다. 제품의 이름과 달라도 됩니다. text는 [Message.Content](/message)와 [Prose](/prose)입니다. reasoning은 [Disclosure](/disclosure)이고, [Reasoning](/recipes/reasoning)이 그 조합을 보여 줍니다. tool call은 [Disclosure](/disclosure), [Badge](/badge), [DataList](/data-list), [CodeBlock](/code)이고, [Tool call](/recipes/tool-call)이 그 조합을 보여 줍니다. 파일은 [Attachment](/attachment)입니다. 인용은 텍스트 안의 표시이고, [Citations](/recipes/citations)가 그 조합을 보여 줍니다. 메시지 아래의 버튼은 이 배열의 파트가 아니라 [Message actions](/recipes/message-actions)입니다.
+
+## 메시지 안
+
+답은 파트의 배열로 두세요. 순서는 스트림이 주는 순서입니다. `Message.Root`가 다음 자식과의 사이를 띄우므로, 파트 자체에는 여백이 필요 없습니다.
+
+```tsx
+type Part =
+  | { type: 'text'; id: string; text: string }
+  | { type: 'reasoning'; id: string; text: string; thinking: boolean; seconds: number }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      input: Record<string, unknown>;
+      status: 'done';
+      output: unknown;
+    }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      input: Record<string, unknown>;
+      status: 'error';
+      error: string;
+    }
+  | { type: 'attachment'; id: string; name: string; size: string };
+```
+
+이 switch가 매퍼입니다. 앱 안에 둡니다. 끝난 호출은 [Tool call](/recipes/tool-call)과 같은 상태 말을 하나의 대응표에서 씁니다. Done과 Failed입니다. 아직 실행 중이거나 승인을 기다리는 호출은 그 레시피입니다. 아래 예는 끝난 호출입니다. 시간은 [Reasoning](/recipes/reasoning)과 같은 포매터를 씁니다. 말과 로케일은 제품의 것입니다. 이 switch에 없는 파트 타입은 그리지 않습니다.
+
+```tsx
+import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text, type BadgeTone } from '@tounsoo/todae';
+import { FileText } from 'lucide-react';
+
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+const FINISHED: Record<'done' | 'error', { label: string; tone: BadgeTone }> = {
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+};
+
+function PartView({ part }: { part: Part }) {
+  switch (part.type) {
+    case 'text':
+      return (
+        <Message.Content>
+          <Prose.Root>
+            <p>{part.text}</p>
+          </Prose.Root>
+        </Message.Content>
+      );
+    case 'reasoning':
+      return (
+        <Disclosure.Root open={part.thinking}>
+          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${duration.format(part.seconds)}`}</Disclosure.Summary>
+          <Text.Root size="s" tone="muted">
+            {part.text}
+          </Text.Root>
+        </Disclosure.Root>
+      );
+    case 'tool-call': {
+      const status = FINISHED[part.status];
+      return (
+        <Disclosure.Root>
+          <Disclosure.Summary>
+            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
+          </Disclosure.Summary>
+          <DataList.Root orientation="vertical">
+            <DataList.Item>
+              <DataList.Term>Input</DataList.Term>
+              <DataList.Details>
+                <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} input`}>
+                  {JSON.stringify(part.input, null, 2)}
+                </CodeBlock.Root>
+              </DataList.Details>
+            </DataList.Item>
+            {part.status === 'done' && (
+              <DataList.Item>
+                <DataList.Term>Output</DataList.Term>
+                <DataList.Details>
+                  <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} output`} style={{ maxBlockSize: '16rem' }}>
+                    {JSON.stringify(part.output, null, 2)}
+                  </CodeBlock.Root>
+                </DataList.Details>
+              </DataList.Item>
+            )}
+            {part.status === 'error' && (
+              <DataList.Item>
+                <DataList.Term>Error</DataList.Term>
+                <DataList.Details>{part.error}</DataList.Details>
+              </DataList.Item>
+            )}
+          </DataList.Root>
+        </Disclosure.Root>
+      );
+    }
+    case 'attachment':
+      return (
+        <Attachment.Root status="ready">
+          <Attachment.Preview>
+            <FileText aria-hidden />
+          </Attachment.Preview>
+          <Attachment.Name>{part.name}</Attachment.Name>
+          <Attachment.Meta>{part.size}</Attachment.Meta>
+        </Attachment.Root>
+      );
+    default: {
+      const _exhaustive: never = part;
+      void _exhaustive;
+      return null;
+    }
+  }
+}
+```
+
+배열을 메시지 안에 그립니다. 이미 답에 있는 파일에는 `Attachment.Remove`를 빼세요.
+
+```tsx
+<Message.Root streaming={streaming} aria-label="Assistant">
+  {parts.map((part) => (
+    <PartView key={part.id} part={part} />
+  ))}
+</Message.Root>
+```
+
+## 스트리밍 중
+
+`streaming`은 에이전트의 턴에서 정하세요. [Tool call](/recipes/tool-call)과 같습니다. 답을 쓰는 동안, 도구가 실행되는 동안에도 켜 둡니다. 턴이 끝나면 끄고, 도구가 결정을 기다리는 동안에도 끄세요. 그러면 그 레시피의 Approve와 Deny 버튼이 바쁜 메시지 안에 있지 않습니다.
+
+reasoning 파트가 도착하는 동안 그 블록을 열고, 답이 시작되면 닫으세요. 사람이 블록을 직접 열고 닫을 때 `open`이 어떻게 동작하는지는 [Reasoning](/recipes/reasoning)이 말합니다. 단어가 도착하면 배열의 그 파트를 바꾸고 `id`는 유지하세요. 그러면 읽어 둔 블록이 마운트된 채로 남습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `streaming`을 준 `Message.Root`는 `aria-busy`를 설정하고, [Conversation](/conversation)은 이를 읽어 답이 시작될 때와 끝날 때 알립니다. `Disclosure.Root`는 네이티브 `<details>`이므로 열고 닫기와 펼침 상태는 브라우저가 맡습니다. `Attachment.Root`는 `Attachment.Name`이 이름을 붙인 그룹입니다.
+
+**직접 제공할 것:** 메시지의 `aria-label`. 예를 들어 "Assistant"입니다. reasoning이 아직 도착 중인지 말로 알리는 summary. 도구 badge에 붙는 상태 단어. Done이나 Failed 같은 말입니다. `Attachment.Name` 안의 파일 이름. 각 CodeBlock의 탭 정지, role, 이름. [Code](/code) 페이지와 같습니다.
+
+**주의할 점:** 파트 주위의 live region. Conversation이 메시지를 이미 알리고, 파트에 region을 두면 도착하는 단어를 하나하나 읽습니다. 색으로만 보여 주는 도구 상태.
+
+## 언제 쓰나요
+
+**쓸 때:** 답의 텍스트를 두 종류 이상의 다른 파트와 한 어시스턴트 메시지에 함께 보여 줄 때. reasoning과 tool call, 또는 tool call과 파일처럼요.
+
+**쓰지 않을 때:** 다른 종류 없이 텍스트와 reasoning만 → [Reasoning](/recipes/reasoning). 다른 종류 없이 텍스트와 tool call만 → [Tool call](/recipes/tool-call). 보내기 전, 컴포저 안의 파일 → [Attachment](/attachment). 메시지 아래의 버튼 → [Message actions](/recipes/message-actions).
