@@ -265,7 +265,7 @@
     "(top)": "4995db135d8d",
     "# Field": "6664ca3c53ae",
     "## Inputs": "aa36fb340c21",
-    "## Label": "7d0c50d3c651",
+    "## Label": "215e3cc94f24",
     "## Messages": "34bda9e4b60a",
     "## Counter": "ca3bd330d359",
     "## Row": "c753eb292752",
@@ -274,7 +274,7 @@
     "## Accessible composition": "421616bf383e",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
-    "### Field.Icon": "d229fcf9502c",
+    "### Field.Icon": "870d5559e3e1",
     "### Field.Row": "93ba826baf7c",
     "### Field.Group": "d0a3a0abb2d5",
     "### Field.Affix": "c7c545a7e130",
@@ -387,7 +387,7 @@
   },
   "field/text-input": {
     "(top)": "8ae5e158e6c5",
-    "# Field.TextInput": "9f9709ca9cd6",
+    "# Field.TextInput": "f56228cfb34d",
     "## Accessible composition": "8aa58c41f117",
     "## When to use": "d57fe8233a0b",
     "### Field.TextInput": "6c7769378088",
@@ -751,6 +751,18 @@
     "## Accessible composition": "87e67664f2d5",
     "## When to use": "38f06c41410c",
     "(section order)": "21628fd2b383"
+  },
+  "recipes/sign-in": {
+    "(top)": "2b420b970fcd",
+    "# Sign-in and sign-up": "7bcd6f83a06c",
+    "## What the browser fills in": "3dbf9be1164d",
+    "## Showing the password": "f51997618847",
+    "## A wrong email or password": "86e4f421e270",
+    "## The code step": "fac60beda3a2",
+    "## Sign-up": "72ef85887913",
+    "## Accessible composition": "7b77ef03410e",
+    "## When to use": "380bfe85e2f2",
+    "(section order)": "c83469f63441"
   },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",

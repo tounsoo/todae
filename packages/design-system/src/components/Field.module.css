@@ -243,6 +243,23 @@
     block-size: var(--todae-field-icon-size);
   }
 
+  /* An icon-only Button.Root in a field's line, such as a password's show
+     button: one line of field text tall, so the field keeps its height. Beside
+     chips that wrap it stays on the first line (the shell aligns to the start),
+     as an icon does. Not beside a textarea, whose shell has no padding and no
+     single line. The selector outweighs Button's own icon-only padding
+     (.root[data-icon-only]) whatever order the sheets load in. The press
+     rule for these buttons is lineButtonOf in Field.tsx. */
+  .shell:not(:has(> .textarea)) > :is(button, a)[data-icon-only] {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: var(--todae-field-action-size);
+    block-size: var(--todae-field-action-size);
+    /* Centered on the field's line, which is the input's, not the button's own. */
+    margin-block: calc((var(--todae-field-font-size) * var(--todae-field-leading) - var(--todae-field-action-size)) / 2);
+    padding: 0;
+  }
+
   .adornment {
     display: inline-flex;
     align-items: center;
@@ -482,6 +499,12 @@
      Affix beside it keeps the shell's padding on its own side. */
   .shell:has(> .select) {
     padding-block: 0;
+  }
+
+  /* With no block padding on the shell, an Icon, Affix or line button beside
+     the select is centered on it, not set at the shell's top edge. */
+  .shell:has(> .select) > :is(.adornment, :is(button, a)[data-icon-only]) {
+    align-self: center;
   }
 
   .shell:has(> .select:first-child) {

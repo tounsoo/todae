@@ -2,7 +2,7 @@ import { FieldLabelStates } from '../../../../components/demos/FieldDemo';
 
 # Field.TextInput
 
-`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the input is read-only. `type` takes `text`, `search`, `email`, `url`, `tel` or `password`. A number is [Field.NumberInput](/field/number-input). For a typed date, range of dates, time, or date and time, read the text with `parseDate`, `parseDateRange`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string. Pass `onChange` for the event or `onValueChange` for the new string, or both; without either, the input is read-only. `type` takes `text`, `search`, `email`, `url`, `tel` or `password`. When `type` changes while the input has focus, as a password's show button switches it to `text`, the caret stays where it was. A number is [Field.NumberInput](/field/number-input). For a typed date, range of dates, time, or date and time, read the text with `parseDate`, `parseDateRange`, `parseTime` or `parseDateTime`, beside a [Field.DatePicker](/field/date-picker), [Field.DateRangePicker](/field/date-range-picker), [Field.TimePicker](/field/time-picker) or [Field.DateTimePicker](/field/date-time-picker). Put `id` on `Field.Root`.
 
 ```tsx
 const id = useId();

@@ -531,6 +531,7 @@
   --todae-prose-quote-fg: var(--_todae-prose-quote-fg, var(--todae-color-fg-muted));
   --todae-prose-quote-padding: var(--_todae-prose-quote-padding, var(--todae-space-4));
   --todae-prose-size: var(--_todae-prose-size, var(--todae-font-size-3));
+  --todae-field-action-size: var(--_todae-field-action-size, 1.5rem);
   --todae-field-bg-default: var(--_todae-field-bg-default, var(--todae-color-bg-surface));
   --todae-field-bg-disabled: var(--_todae-field-bg-disabled, var(--todae-color-bg-subtle));
   --todae-field-border-default: var(--_todae-field-border-default, var(--todae-color-border-default));
