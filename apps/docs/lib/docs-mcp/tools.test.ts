@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { loadPages, missingWhenNote, parseWhen } from './mdx';
+import { listPages, loadPages, missingWhenNote, parseWhen } from './mdx';
 import { getComponent, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
@@ -412,6 +412,29 @@ describe('docs mcp tools', () => {
     expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n', 'Tooltip')).toBeNull();
     // An opener whose info string has a backtick is inline code, not a fence.
     expect(parseWhen('``` a ` b\n\n## When to use\n\n**When:** Real.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Real.' });
+  });
+
+  it('reads When headings with CRLF and extra space after the hashes', () => {
+    const crlf = ['## When to use', '', '**When:** Real.', '', '**When not:** Real not.'].join('\r\n');
+    expect(parseWhen(crlf, 'Tooltip')).toMatchObject({ whenToUse: 'Real.', whenNotToUse: 'Real not.' });
+    expect(parseWhen('##  When to use\n\n**When:** Spaced.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Spaced.' });
+    expect(parseWhen('##\tWhen to use\n\n**When:** Tabbed.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Tabbed.' });
+  });
+
+  it('lists the other components when one page does not parse', () => {
+    const page = listPages().find((item) => item.slug === 'dialog');
+    if (page == null) throw new Error('missing dialog page');
+    const markdown = page.markdown;
+    page.markdown = '<Button>';
+    try {
+      const listed = listComponents();
+      expect(listed.components.map((row) => row.name)).toEqual(jsonNames);
+      expect(listed.count).toBe(jsonNames.length);
+      expect(listed.components.find((row) => row.name === 'Dialog.Root')?.hasWhenToUse).toBe(false);
+      expect(listed.components.find((row) => row.name === 'Tooltip.Root')?.hasWhenToUse).toBe(true);
+    } finally {
+      page.markdown = markdown;
+    }
   });
 
   it('errors on an unknown name', () => {
