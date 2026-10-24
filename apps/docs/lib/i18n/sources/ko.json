@@ -733,6 +733,16 @@
     "## When to use": "2320a958107a",
     "(section order)": "6486b947abab"
   },
+  "recipes/message-parts": {
+    "(top)": "bd1a8a13d324",
+    "# Message parts": "df2e2381510c",
+    "## The map": "e280335cc2ab",
+    "## In the message": "86d33222e8d5",
+    "## While it streams": "df9abcf3d922",
+    "## Accessible composition": "d1afeb5d572d",
+    "## When to use": "b217b9c61b48",
+    "(section order)": "5d35f792f9bf"
+  },
   "recipes/reasoning": {
     "(top)": "9fa20780fc44",
     "# Reasoning": "10634b450405",

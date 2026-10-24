@@ -1,0 +1,179 @@
+import { MessagePartsExample } from '../../../../components/demos/MessagePartsDemo';
+import { Table } from '@tounsoo/todae/table';
+
+# Message parts
+
+A recipe, not a package namespace. Todae knows no agent SDK's message shape. Your product maps each part of a reply onto the parts Todae already has. There is no `MessageParts` export. Nothing in `@tounsoo/todae` maps one SDK's parts for you.
+
+The message below is one assistant reply. Its parts come from a local array, and the part types in that array are this page's. Use your SDK's names in their place.
+
+<Example block>
+  <MessagePartsExample />
+</Example>
+
+## The map
+
+<Table.Root>
+  <Table.Caption>Part types on this page</Table.Caption>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Part</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Draw with</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.Cell>
+        <code>text</code>
+      </Table.Cell>
+      <Table.Cell>Message.Content and Prose</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>reasoning</code>
+      </Table.Cell>
+      <Table.Cell>Disclosure</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>tool-call</code>
+      </Table.Cell>
+      <Table.Cell>Disclosure, Badge, DataList, CodeBlock</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.Cell>
+        <code>attachment</code>
+      </Table.Cell>
+      <Table.Cell>Attachment</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+
+Each name in the first column is this page's. Yours can differ. Text is [Message.Content](/message) and [Prose](/prose). Reasoning is a [Disclosure](/disclosure), as [Reasoning](/recipes/reasoning) shows. A tool call is a [Disclosure](/disclosure), a [Badge](/badge), a [DataList](/data-list) and a [CodeBlock](/code), as [Tool call](/recipes/tool-call) shows. A file is an [Attachment](/attachment). A citation is the same kind of row, and so are the buttons under a message. See [Citations](/recipes/citations) and [Message actions](/recipes/message-actions).
+
+## In the message
+
+Keep the reply as an array of parts, in the order your stream gives them. `Message.Root` spaces each child from the next, so a part needs no margin of its own.
+
+```tsx
+type Part =
+  | { type: 'text'; id: string; text: string }
+  | { type: 'reasoning'; id: string; text: string; thinking: boolean; seconds: number }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      status: 'done' | 'failed';
+      input: Record<string, unknown>;
+      output?: unknown;
+      error?: string;
+    }
+  | { type: 'attachment'; id: string; name: string; size: string };
+```
+
+The switch is the mapper. It stays in your app. A call that is still running, or waiting for approval, is the [Tool call](/recipes/tool-call) recipe. The sample below is a call that has finished.
+
+```tsx
+import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text } from '@tounsoo/todae';
+import { FileText } from 'lucide-react';
+
+function PartView({ part }: { part: Part }) {
+  switch (part.type) {
+    case 'text':
+      return (
+        <Message.Content>
+          <Prose.Root>
+            <p>{part.text}</p>
+          </Prose.Root>
+        </Message.Content>
+      );
+    case 'reasoning':
+      return (
+        <Disclosure.Root open={part.thinking}>
+          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${part.seconds} seconds`}</Disclosure.Summary>
+          <Text.Root size="s" tone="muted">
+            {part.text}
+          </Text.Root>
+        </Disclosure.Root>
+      );
+    case 'tool-call':
+      return (
+        <Disclosure.Root>
+          <Disclosure.Summary>
+            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={part.status === 'done' ? 'success' : 'critical'}>{part.status === 'done' ? 'Done' : 'Failed'}</Badge.Root>
+          </Disclosure.Summary>
+          <DataList.Root orientation="vertical">
+            <DataList.Item>
+              <DataList.Term>Input</DataList.Term>
+              <DataList.Details>
+                <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} input`}>
+                  {JSON.stringify(part.input, null, 2)}
+                </CodeBlock.Root>
+              </DataList.Details>
+            </DataList.Item>
+            {part.status === 'done' && part.output !== undefined && (
+              <DataList.Item>
+                <DataList.Term>Output</DataList.Term>
+                <DataList.Details>
+                  <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} output`} style={{ maxBlockSize: '16rem' }}>
+                    {JSON.stringify(part.output, null, 2)}
+                  </CodeBlock.Root>
+                </DataList.Details>
+              </DataList.Item>
+            )}
+            {part.status === 'failed' && (
+              <DataList.Item>
+                <DataList.Term>Error</DataList.Term>
+                <DataList.Details>{part.error}</DataList.Details>
+              </DataList.Item>
+            )}
+          </DataList.Root>
+        </Disclosure.Root>
+      );
+    case 'attachment':
+      return (
+        <Attachment.Root status="ready">
+          <Attachment.Preview>
+            <FileText aria-hidden />
+          </Attachment.Preview>
+          <Attachment.Name>{part.name}</Attachment.Name>
+          <Attachment.Meta>{part.size}</Attachment.Meta>
+        </Attachment.Root>
+      );
+    default: {
+      const unreachable: never = part;
+      return unreachable;
+    }
+  }
+}
+```
+
+Render the array inside the message. Leave out `Attachment.Remove` for a file that is already in the reply.
+
+```tsx
+<Message.Root streaming={streaming} aria-label="Assistant">
+  {parts.map((part) => (
+    <PartView key={part.id} part={part} />
+  ))}
+</Message.Root>
+```
+
+## While it streams
+
+Set `streaming` from the agent's turn, as [Tool call](/recipes/tool-call) does. Leave it on while the reply is being written, including while a tool runs. Turn it off when the turn ends, and while a tool waits for a decision, so those buttons do not sit in a busy message.
+
+Open the reasoning block while that part is still arriving, and close it when the answer starts. [Reasoning](/recipes/reasoning) says how `open` behaves when someone toggles the block. Replace the part in the array as words arrive, and keep its `id`, so the block the reader opened stays mounted.
+
+## Accessible composition
+
+**Todae handles:** `Message.Root` with `streaming` sets `aria-busy`, which [Conversation](/conversation) reads to announce the reply as it starts and as it finishes. `Disclosure.Root` is a native `<details>`, so the browser handles the toggle and the expanded state. An `Attachment.Root` is a group named by `Attachment.Name`.
+
+**You supply:** An `aria-label` on the message, such as "Assistant". Summary text that says whether the reasoning is still arriving. A status word on the tool's badge, such as Done or Failed. The file name in `Attachment.Name`. A Tab stop, role and name on each CodeBlock, as on the [Code](/code) page.
+
+**Watch for:** A live region around the parts. Conversation already announces the message, and a region on the parts would read every word as it arrives. A tool status shown only by color.
+
+## When to use
+
+**When:** One assistant message that mixes the text of a reply with its other parts, such as reasoning, a tool call, or a file.
+
+**When not:** Reasoning with no other parts in the reply → [Reasoning](/recipes/reasoning). One tool call → [Tool call](/recipes/tool-call). A file in the composer, before it is sent → [Attachment](/attachment). Buttons under the message → [Message actions](/recipes/message-actions).

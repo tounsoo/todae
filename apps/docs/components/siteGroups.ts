@@ -141,6 +141,7 @@ export const SITE_GROUPS = [
       ['/recipes/filter-bar', 'Filter bar'],
       ['/recipes/inline-edit', 'Inline edit'],
       ['/recipes/message-actions', 'Message actions'],
+      ['/recipes/message-parts', 'Message parts'],
       ['/recipes/reasoning', 'Reasoning'],
       ['/recipes/reorder', 'Reorder'],
       ['/recipes/suggestions', 'Suggestions'],
