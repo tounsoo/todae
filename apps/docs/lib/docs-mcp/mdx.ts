@@ -70,7 +70,13 @@ function outline(markdown: string): Outline {
   if (!found) {
     const headings: Outline['headings'] = [];
     const paragraphs: Range[] = [];
-    for (const node of parseMdx(markdown).children) {
+    let children: ReturnType<typeof parseMdx>['children'];
+    try {
+      children = parseMdx(markdown).children;
+    } catch {
+      children = [];
+    }
+    for (const node of children) {
       const range = { from: node.position!.start.offset!, to: node.position!.end.offset! };
       if (node.type === 'heading') {
         headings.push({ ...range, depth: node.depth, text: markdown.slice(range.from, range.to).replace(/^#+[ \t]+/, '').trim() });
