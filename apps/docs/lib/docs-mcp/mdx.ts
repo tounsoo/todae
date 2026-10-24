@@ -74,8 +74,10 @@ function outline(markdown: string): Outline {
     try {
       children = parseMdx(markdown).children;
     } catch (error) {
-      // VFileMessage sets `name` to a source position, such as `1:1`.
-      if (!(error instanceof Error) || error.constructor.name !== 'VFileMessage') throw error;
+      // The server bundle renames the class, so the message field is the check that survives.
+      if (!(error instanceof Error) || !('reason' in error) || typeof error.reason !== 'string' || error.reason === '') {
+        throw error;
+      }
       children = [];
     }
     for (const node of children) {
