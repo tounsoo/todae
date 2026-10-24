@@ -149,7 +149,11 @@ function followSections(
   // Start again when a missing section mounts, or a followed one is replaced or renamed.
   const mutations = new MutationObserver(() => {
     const changed = targets.some((target, i) => !target.isConnected || target.id !== followedIds[i]);
-    if (changed || missing.some((id) => root.getElementById(id))) onTargetsChange();
+    const arrived = missing.some((id) => root.getElementById(id));
+    if (!changed && !arrived) return;
+    // The follow restarts on the next effect. By then the section may be back, so the pick has to lapse now.
+    if (picked.current !== null && root.getElementById(picked.current) === null) picked.current = null;
+    onTargetsChange();
   });
   mutations.observe(root, {
     childList: true,

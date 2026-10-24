@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -224,10 +224,12 @@ describe('Contents in a browser', () => {
     await hashChanged;
     await waitFor(() => expect(current()).toBe('Three'));
     const three = document.getElementById('three')!;
-    three.id = 'gone';
-    await waitFor(() => expect(current()).toBe('Two A'));
-    three.id = 'three';
-    await frames(3);
+    // The observer runs in the gap, before React follows the page again.
+    await act(async () => {
+      three.id = 'gone';
+      await Promise.resolve();
+      three.id = 'three';
+    });
     expect(current()).toBe('Two A');
   });
 
