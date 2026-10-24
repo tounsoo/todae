@@ -425,13 +425,15 @@ describe('docs mcp tools', () => {
     const page = listPages().find((item) => item.slug === 'dialog');
     if (page == null) throw new Error('missing dialog page');
     const markdown = page.markdown;
-    page.markdown = '<Button>';
+    expect(listComponents().components.find((row) => row.name === 'Dialog.Root')?.hasWhenToUse).toBe(true);
+    page.markdown = `${markdown}\n<Button>`;
     try {
       const listed = listComponents();
       expect(listed.components.map((row) => row.name)).toEqual(jsonNames);
       expect(listed.count).toBe(jsonNames.length);
       expect(listed.components.find((row) => row.name === 'Dialog.Root')?.hasWhenToUse).toBe(false);
       expect(listed.components.find((row) => row.name === 'Tooltip.Root')?.hasWhenToUse).toBe(true);
+      expect(whenToUse('Dialog.Root')).toMatchObject({ status: 'missing', whenToUse: null, whenNotToUse: null });
     } finally {
       page.markdown = markdown;
     }

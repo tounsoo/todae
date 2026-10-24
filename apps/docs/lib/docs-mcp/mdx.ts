@@ -73,7 +73,9 @@ function outline(markdown: string): Outline {
     let children: ReturnType<typeof parseMdx>['children'];
     try {
       children = parseMdx(markdown).children;
-    } catch {
+    } catch (error) {
+      // VFileMessage sets `name` to a source position, such as `1:1`.
+      if (!(error instanceof Error) || error.constructor.name !== 'VFileMessage') throw error;
       children = [];
     }
     for (const node of children) {
