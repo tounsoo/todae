@@ -110,7 +110,13 @@ pnpm test:browser
 pnpm changeset
 ```
 
-Pick the bump and write the changelog entry. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+Pick the bump and write the changelog entry. Until 1.0.0, changeset bumps stay on 0.x. A breaking change is `minor` and everything else is `patch`. From 1.0.0, pick the bump this way.
+
+- Use `major` when a change removes, renames, or narrows the public API, or when it changes what a token or a `--todae-*` variable means.
+- Use `minor` when a change adds to the public API, or when it deprecates an API.
+- Use `patch` for a token value change or a change to product copy, and name that change in the changelog.
+
+From 1.0.0, remove a deprecated API only in a later `major`. See [Versioning](README.md#versioning). The changeset is a Markdown file in `.changeset/`; commit it with the change.
 
 Keep the entry short. The first line says what changed for people who use Todae, in one sentence that names the component, hook or token. Leave out why, how and edge cases: the pull request and the docs have those. A breaking change adds one bullet per break, saying what to change in your code:
 
