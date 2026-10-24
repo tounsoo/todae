@@ -30,13 +30,17 @@ function fail(error: unknown) {
 }
 
 const MIN_JSON_ELEMENT_BYTES = 2;
-// files, resolver, and scope are counted as well as each file name.
-const BUILD_TOKENS_ARGUMENT_KEYS = 3;
+
+const buildTokensArguments = {
+  files: z.record(z.string().max(200), z.unknown()),
+  resolver: z.string().max(200).optional(),
+  scope: z.string().max(200).optional(),
+};
 
 // createMcpHandler's parameter type omits maxToolInputElements and still forwards it to McpServer.
 const mcpServer = {
   serverInfo: { name: 'todae-docs', version: RELEASE.version },
-  maxToolInputElements: MAX_BYTES / MIN_JSON_ELEMENT_BYTES + MAX_FILES + BUILD_TOKENS_ARGUMENT_KEYS,
+  maxToolInputElements: MAX_BYTES / MIN_JSON_ELEMENT_BYTES + MAX_FILES + Object.keys(buildTokensArguments).length,
 } satisfies McpServerOptions & {
   serverInfo: { name: string; version: string };
   maxToolInputElements: number;
@@ -141,7 +145,7 @@ const handler = createMcpHandler(
     server.tool(
       'build_tokens',
       `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. \`scope\`, a CSS selector such as ".brand-acme", builds a theme that applies only inside the elements it matches, so several themes can share a page. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped, and a call that arrives while the server is busy with other builds is refused; try it again a few seconds later. Nothing is stored.`,
-      { files: z.record(z.string().max(200), z.unknown()), resolver: z.string().max(200).optional(), scope: z.string().max(200).optional() },
+      buildTokensArguments,
       async ({ files, resolver, scope }) => {
         try {
           return ok(await buildTokenFiles(files, { ...(resolver ? { resolver } : {}), ...(scope === undefined ? {} : { scope }) }));
