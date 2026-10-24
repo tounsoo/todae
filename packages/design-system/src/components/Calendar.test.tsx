@@ -354,6 +354,7 @@ describe('Calendar', () => {
       expect(within(grid()).getAllByRole('columnheader')[0]!.getAttribute('abbr')).toBe('Montag');
     } finally {
       if (original) Object.defineProperty(proto, 'getWeekInfo', original);
+      else delete proto.getWeekInfo;
     }
   });
 
