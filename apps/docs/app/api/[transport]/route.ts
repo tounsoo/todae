@@ -1,3 +1,4 @@
+import type { McpServerOptions } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
@@ -27,6 +28,19 @@ function fail(error: unknown) {
   const message = error instanceof Error ? error.message : 'Tool failed';
   return { isError: true as const, content: [{ type: 'text' as const, text: message }] };
 }
+
+const MIN_JSON_ELEMENT_BYTES = 2;
+// files, resolver, and scope are counted as well as each file name.
+const BUILD_TOKENS_ARGUMENT_KEYS = 3;
+
+// createMcpHandler's parameter type omits maxToolInputElements and still forwards it to McpServer.
+const mcpServer = {
+  serverInfo: { name: 'todae-docs', version: RELEASE.version },
+  maxToolInputElements: MAX_BYTES / MIN_JSON_ELEMENT_BYTES + MAX_FILES + BUILD_TOKENS_ARGUMENT_KEYS,
+} satisfies McpServerOptions & {
+  serverInfo: { name: string; version: string };
+  maxToolInputElements: number;
+};
 
 const handler = createMcpHandler(
   (server) => {
@@ -178,7 +192,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  { serverInfo: { name: 'todae-docs', version: RELEASE.version } },
+  mcpServer,
   { basePath: '/api', disableSse: true },
 );
 
