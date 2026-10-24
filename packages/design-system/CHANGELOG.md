@@ -1,5 +1,33 @@
 # @tounsoo/todae
 
+## 0.5.0
+
+### Minor Changes
+
+- Add Splitter.Root, Splitter.Panel and Splitter.Handle for resizable panes. ([#227](https://github.com/tounsoo/todae/pull/227))
+  
+  - `Strings` has a new `resizePanel` key; add it to a `StringsProvider` `strings` object you type as a full `Strings`.
+
+### Patch Changes
+
+- Add `formatRelativeTime`, which writes a time relative to a `now` you pass, such as "3 minutes ago". ([#222](https://github.com/tounsoo/todae/pull/222))
+
+- Add `lines` to `Text.Root`, which clamps text to that many lines and shows the whole text in a tooltip when it is cut. ([#226](https://github.com/tounsoo/todae/pull/226))
+
+- Add useInlineEdit for editing a value in place. ([#225](https://github.com/tounsoo/todae/pull/225))
+
+- Add `useReorder`, a hook that lets a list be reordered by dragging a handle. ([#221](https://github.com/tounsoo/todae/pull/221))
+
+- Fix focus on close when `restoreFocusRef` changes while an overlay that takes it is open, such as `Dialog.Root`, `Drawer.Root`, `BottomSheet.Root` or `usePopover`. ([#231](https://github.com/tounsoo/todae/pull/231))
+
+- Add Field.OneTimeCode, one input drawn as boxes for sign-in and verification codes. ([#229](https://github.com/tounsoo/todae/pull/229))
+
+- Add `show` to `Splitter.Root`, which can show one panel across the root and keep the other panel mounted. ([#231](https://github.com/tounsoo/todae/pull/231))
+
+- Add Steps.Root variant="progress" for where a person is in a form of several steps. ([#223](https://github.com/tounsoo/todae/pull/223))
+
+- Add `Menu.ContextTrigger`, which opens a menu at the pointer on a right click or an Android long press, or below the focused element on Shift+F10 or the ContextMenu key. ([#224](https://github.com/tounsoo/todae/pull/224))
+
 ## 0.4.0
 
 ### Minor Changes
