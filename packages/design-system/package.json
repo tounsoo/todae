@@ -186,7 +186,7 @@
     "react-dom": "^19.0.0",
     "temporal-polyfill": "^1.0.5",
     "typescript": "^6.0.2",
-    "vite": "^6.2.2",
+    "vite": "^6.4.4",
     "vitest": "^3.0.9"
   }
 }
