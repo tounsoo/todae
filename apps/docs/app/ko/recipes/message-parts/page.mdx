@@ -26,7 +26,7 @@ import { Table } from '@tounsoo/todae/table';
       <Table.Cell>
         <code>text</code>
       </Table.Cell>
-      <Table.Cell>Message.Content and Prose</Table.Cell>
+      <Table.Cell>Message.Content와 Prose</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.Cell>
@@ -49,7 +49,7 @@ import { Table } from '@tounsoo/todae/table';
   </Table.Body>
 </Table.Root>
 
-첫 열의 이름은 이 페이지의 것입니다. 제품의 이름과 달라도 됩니다. text는 [Message.Content](/message)와 [Prose](/prose)입니다. reasoning은 [Disclosure](/disclosure)이고, [Reasoning](/recipes/reasoning)이 그 조합을 보여 줍니다. tool call은 [Disclosure](/disclosure), [Badge](/badge), [DataList](/data-list), [CodeBlock](/code)이고, [Tool call](/recipes/tool-call)이 그 조합을 보여 줍니다. 파일은 [Attachment](/attachment)입니다. 인용이나 메시지 아래의 버튼도 같은 종류의 행입니다. [Citations](/recipes/citations)와 [Message actions](/recipes/message-actions)를 보세요.
+첫 열의 이름은 이 페이지의 것입니다. 제품의 이름과 달라도 됩니다. text는 [Message.Content](/message)와 [Prose](/prose)입니다. reasoning은 [Disclosure](/disclosure)이고, [Reasoning](/recipes/reasoning)이 그 조합을 보여 줍니다. tool call은 [Disclosure](/disclosure), [Badge](/badge), [DataList](/data-list), [CodeBlock](/code)이고, [Tool call](/recipes/tool-call)이 그 조합을 보여 줍니다. 파일은 [Attachment](/attachment)입니다. 인용은 텍스트 안의 표시이고, [Citations](/recipes/citations)가 그 조합을 보여 줍니다. 메시지 아래의 버튼은 이 배열의 파트가 아니라 [Message actions](/recipes/message-actions)입니다.
 
 ## 메시지 안
 
@@ -63,19 +63,33 @@ type Part =
       type: 'tool-call';
       id: string;
       name: string;
-      status: 'done' | 'failed';
       input: Record<string, unknown>;
-      output?: unknown;
-      error?: string;
+      status: 'done';
+      output: unknown;
+    }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      input: Record<string, unknown>;
+      status: 'error';
+      error: string;
     }
   | { type: 'attachment'; id: string; name: string; size: string };
 ```
 
-이 switch가 매퍼입니다. 앱 안에 둡니다. 아직 실행 중이거나 승인을 기다리는 호출은 [Tool call](/recipes/tool-call) 레시피입니다. 아래 예는 끝난 호출입니다.
+이 switch가 매퍼입니다. 앱 안에 둡니다. 끝난 호출은 [Tool call](/recipes/tool-call)과 같은 상태 말을 하나의 대응표에서 씁니다. Done과 Failed입니다. 아직 실행 중이거나 승인을 기다리는 호출은 그 레시피입니다. 아래 예는 끝난 호출입니다. 시간은 [Reasoning](/recipes/reasoning)과 같은 포매터를 씁니다. 말과 로케일은 제품의 것입니다. 이 switch에 없는 파트 타입은 그리지 않습니다.
 
 ```tsx
-import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text } from '@tounsoo/todae';
+import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text, type BadgeTone } from '@tounsoo/todae';
 import { FileText } from 'lucide-react';
+
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+const FINISHED: Record<'done' | 'error', { label: string; tone: BadgeTone }> = {
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+};
 
 function PartView({ part }: { part: Part }) {
   switch (part.type) {
@@ -90,17 +104,18 @@ function PartView({ part }: { part: Part }) {
     case 'reasoning':
       return (
         <Disclosure.Root open={part.thinking}>
-          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${part.seconds} seconds`}</Disclosure.Summary>
+          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${duration.format(part.seconds)}`}</Disclosure.Summary>
           <Text.Root size="s" tone="muted">
             {part.text}
           </Text.Root>
         </Disclosure.Root>
       );
-    case 'tool-call':
+    case 'tool-call': {
+      const status = FINISHED[part.status];
       return (
         <Disclosure.Root>
           <Disclosure.Summary>
-            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={part.status === 'done' ? 'success' : 'critical'}>{part.status === 'done' ? 'Done' : 'Failed'}</Badge.Root>
+            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
           </Disclosure.Summary>
           <DataList.Root orientation="vertical">
             <DataList.Item>
@@ -111,7 +126,7 @@ function PartView({ part }: { part: Part }) {
                 </CodeBlock.Root>
               </DataList.Details>
             </DataList.Item>
-            {part.status === 'done' && part.output !== undefined && (
+            {part.status === 'done' && (
               <DataList.Item>
                 <DataList.Term>Output</DataList.Term>
                 <DataList.Details>
@@ -121,7 +136,7 @@ function PartView({ part }: { part: Part }) {
                 </DataList.Details>
               </DataList.Item>
             )}
-            {part.status === 'failed' && (
+            {part.status === 'error' && (
               <DataList.Item>
                 <DataList.Term>Error</DataList.Term>
                 <DataList.Details>{part.error}</DataList.Details>
@@ -130,6 +145,7 @@ function PartView({ part }: { part: Part }) {
           </DataList.Root>
         </Disclosure.Root>
       );
+    }
     case 'attachment':
       return (
         <Attachment.Root status="ready">
@@ -141,8 +157,9 @@ function PartView({ part }: { part: Part }) {
         </Attachment.Root>
       );
     default: {
-      const unreachable: never = part;
-      return unreachable;
+      const _exhaustive: never = part;
+      void _exhaustive;
+      return null;
     }
   }
 }
@@ -160,7 +177,7 @@ function PartView({ part }: { part: Part }) {
 
 ## 스트리밍 중
 
-`streaming`은 에이전트의 턴에서 정하세요. [Tool call](/recipes/tool-call)과 같습니다. 답을 쓰는 동안, 도구가 실행되는 동안에도 켜 둡니다. 턴이 끝나면 끄고, 도구가 결정을 기다리는 동안에도 끄세요. 그러면 그 버튼이 바쁜 메시지 안에 있지 않습니다.
+`streaming`은 에이전트의 턴에서 정하세요. [Tool call](/recipes/tool-call)과 같습니다. 답을 쓰는 동안, 도구가 실행되는 동안에도 켜 둡니다. 턴이 끝나면 끄고, 도구가 결정을 기다리는 동안에도 끄세요. 그러면 그 레시피의 Approve와 Deny 버튼이 바쁜 메시지 안에 있지 않습니다.
 
 reasoning 파트가 도착하는 동안 그 블록을 열고, 답이 시작되면 닫으세요. 사람이 블록을 직접 열고 닫을 때 `open`이 어떻게 동작하는지는 [Reasoning](/recipes/reasoning)이 말합니다. 단어가 도착하면 배열의 그 파트를 바꾸고 `id`는 유지하세요. 그러면 읽어 둔 블록이 마운트된 채로 남습니다.
 
@@ -174,6 +191,6 @@ reasoning 파트가 도착하는 동안 그 블록을 열고, 답이 시작되�
 
 ## 언제 쓰나요
 
-**쓸 때:** 답의 텍스트를 reasoning, tool call, 파일 같은 다른 파트와 한 어시스턴트 메시지에 함께 보여 줄 때.
+**쓸 때:** 답의 텍스트를 두 종류 이상의 다른 파트와 한 어시스턴트 메시지에 함께 보여 줄 때. reasoning과 tool call, 또는 tool call과 파일처럼요.
 
-**쓰지 않을 때:** 답에 다른 파트가 없는 reasoning → [Reasoning](/recipes/reasoning). tool call 하나 → [Tool call](/recipes/tool-call). 보내기 전, 컴포저 안의 파일 → [Attachment](/attachment). 메시지 아래의 버튼 → [Message actions](/recipes/message-actions).
+**쓰지 않을 때:** 다른 종류 없이 텍스트와 reasoning만 → [Reasoning](/recipes/reasoning). 다른 종류 없이 텍스트와 tool call만 → [Tool call](/recipes/tool-call). 보내기 전, 컴포저 안의 파일 → [Attachment](/attachment). 메시지 아래의 버튼 → [Message actions](/recipes/message-actions).

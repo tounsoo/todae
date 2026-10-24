@@ -49,7 +49,7 @@ The message below is one assistant reply. Its parts come from a local array, and
   </Table.Body>
 </Table.Root>
 
-Each name in the first column is this page's. Yours can differ. Text is [Message.Content](/message) and [Prose](/prose). Reasoning is a [Disclosure](/disclosure), as [Reasoning](/recipes/reasoning) shows. A tool call is a [Disclosure](/disclosure), a [Badge](/badge), a [DataList](/data-list) and a [CodeBlock](/code), as [Tool call](/recipes/tool-call) shows. A file is an [Attachment](/attachment). A citation is the same kind of row, and so are the buttons under a message. See [Citations](/recipes/citations) and [Message actions](/recipes/message-actions).
+Each name in the first column is this page's. Yours can differ. Text is [Message.Content](/message) and [Prose](/prose). Reasoning is a [Disclosure](/disclosure), as [Reasoning](/recipes/reasoning) shows. A tool call is a [Disclosure](/disclosure), a [Badge](/badge), a [DataList](/data-list) and a [CodeBlock](/code), as [Tool call](/recipes/tool-call) shows. A file is an [Attachment](/attachment). A citation is a marker inside the text, as [Citations](/recipes/citations) shows. Buttons under the message are [Message actions](/recipes/message-actions), not a part in this array.
 
 ## In the message
 
@@ -63,19 +63,33 @@ type Part =
       type: 'tool-call';
       id: string;
       name: string;
-      status: 'done' | 'failed';
       input: Record<string, unknown>;
-      output?: unknown;
-      error?: string;
+      status: 'done';
+      output: unknown;
+    }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      input: Record<string, unknown>;
+      status: 'error';
+      error: string;
     }
   | { type: 'attachment'; id: string; name: string; size: string };
 ```
 
-The switch is the mapper. It stays in your app. A call that is still running, or waiting for approval, is the [Tool call](/recipes/tool-call) recipe. The sample below is a call that has finished.
+The switch is the mapper. It stays in your app. A finished call uses the same status words as [Tool call](/recipes/tool-call), Done and Failed, from one map. A call that is still running, or waiting for approval, is that recipe. The sample below is a call that has finished. The duration uses the same formatter as [Reasoning](/recipes/reasoning). The words and the locale stay yours. A part type this switch does not list renders nothing.
 
 ```tsx
-import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text } from '@tounsoo/todae';
+import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text, type BadgeTone } from '@tounsoo/todae';
 import { FileText } from 'lucide-react';
+
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+const FINISHED: Record<'done' | 'error', { label: string; tone: BadgeTone }> = {
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+};
 
 function PartView({ part }: { part: Part }) {
   switch (part.type) {
@@ -90,17 +104,18 @@ function PartView({ part }: { part: Part }) {
     case 'reasoning':
       return (
         <Disclosure.Root open={part.thinking}>
-          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${part.seconds} seconds`}</Disclosure.Summary>
+          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${duration.format(part.seconds)}`}</Disclosure.Summary>
           <Text.Root size="s" tone="muted">
             {part.text}
           </Text.Root>
         </Disclosure.Root>
       );
-    case 'tool-call':
+    case 'tool-call': {
+      const status = FINISHED[part.status];
       return (
         <Disclosure.Root>
           <Disclosure.Summary>
-            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={part.status === 'done' ? 'success' : 'critical'}>{part.status === 'done' ? 'Done' : 'Failed'}</Badge.Root>
+            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
           </Disclosure.Summary>
           <DataList.Root orientation="vertical">
             <DataList.Item>
@@ -111,7 +126,7 @@ function PartView({ part }: { part: Part }) {
                 </CodeBlock.Root>
               </DataList.Details>
             </DataList.Item>
-            {part.status === 'done' && part.output !== undefined && (
+            {part.status === 'done' && (
               <DataList.Item>
                 <DataList.Term>Output</DataList.Term>
                 <DataList.Details>
@@ -121,7 +136,7 @@ function PartView({ part }: { part: Part }) {
                 </DataList.Details>
               </DataList.Item>
             )}
-            {part.status === 'failed' && (
+            {part.status === 'error' && (
               <DataList.Item>
                 <DataList.Term>Error</DataList.Term>
                 <DataList.Details>{part.error}</DataList.Details>
@@ -130,6 +145,7 @@ function PartView({ part }: { part: Part }) {
           </DataList.Root>
         </Disclosure.Root>
       );
+    }
     case 'attachment':
       return (
         <Attachment.Root status="ready">
@@ -141,8 +157,9 @@ function PartView({ part }: { part: Part }) {
         </Attachment.Root>
       );
     default: {
-      const unreachable: never = part;
-      return unreachable;
+      const _exhaustive: never = part;
+      void _exhaustive;
+      return null;
     }
   }
 }
@@ -160,7 +177,7 @@ Render the array inside the message. Leave out `Attachment.Remove` for a file th
 
 ## While it streams
 
-Set `streaming` from the agent's turn, as [Tool call](/recipes/tool-call) does. Leave it on while the reply is being written, including while a tool runs. Turn it off when the turn ends, and while a tool waits for a decision, so those buttons do not sit in a busy message.
+Set `streaming` from the agent's turn, as [Tool call](/recipes/tool-call) does. Leave it on while the reply is being written, including while a tool runs. Turn it off when the turn ends, and while a tool waits for a decision, so the Approve and Deny buttons on that recipe do not sit in a busy message.
 
 Open the reasoning block while that part is still arriving, and close it when the answer starts. [Reasoning](/recipes/reasoning) says how `open` behaves when someone toggles the block. Replace the part in the array as words arrive, and keep its `id`, so the block the reader opened stays mounted.
 
@@ -174,6 +191,6 @@ Open the reasoning block while that part is still arriving, and close it when th
 
 ## When to use
 
-**When:** One assistant message that mixes the text of a reply with its other parts, such as reasoning, a tool call, or a file.
+**When:** One assistant message that mixes the reply's text with more than one other kind of part, such as reasoning and a tool call, or a tool call and a file.
 
-**When not:** Reasoning with no other parts in the reply → [Reasoning](/recipes/reasoning). One tool call → [Tool call](/recipes/tool-call). A file in the composer, before it is sent → [Attachment](/attachment). Buttons under the message → [Message actions](/recipes/message-actions).
+**When not:** Text and reasoning, with no other kind → [Reasoning](/recipes/reasoning). Text and tool calls, with no other kind → [Tool call](/recipes/tool-call). A file in the composer, before it is sent → [Attachment](/attachment). Buttons under the message → [Message actions](/recipes/message-actions).

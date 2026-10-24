@@ -736,11 +736,11 @@
   "recipes/message-parts": {
     "(top)": "bd1a8a13d324",
     "# Message parts": "df2e2381510c",
-    "## The map": "e280335cc2ab",
-    "## In the message": "86d33222e8d5",
-    "## While it streams": "df9abcf3d922",
+    "## The map": "c758e4138e32",
+    "## In the message": "83db27d04037",
+    "## While it streams": "61ed3670b470",
     "## Accessible composition": "d1afeb5d572d",
-    "## When to use": "b217b9c61b48",
+    "## When to use": "148d25ddb4dd",
     "(section order)": "5d35f792f9bf"
   },
   "recipes/reasoning": {

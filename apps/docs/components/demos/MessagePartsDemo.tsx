@@ -1,6 +1,6 @@
 'use client';
 
-import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text } from '@tounsoo/todae';
+import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text, type BadgeTone } from '@tounsoo/todae';
 import { FileText } from 'lucide-react';
 
 type Part =
@@ -10,12 +10,26 @@ type Part =
       type: 'tool-call';
       id: string;
       name: string;
-      status: 'done' | 'failed';
       input: Record<string, unknown>;
-      output?: unknown;
-      error?: string;
+      status: 'done';
+      output: unknown;
+    }
+  | {
+      type: 'tool-call';
+      id: string;
+      name: string;
+      input: Record<string, unknown>;
+      status: 'error';
+      error: string;
     }
   | { type: 'attachment'; id: string; name: string; size: string };
+
+const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
+
+const FINISHED: Record<'done' | 'error', { label: string; tone: BadgeTone }> = {
+  done: { label: 'Done', tone: 'success' },
+  error: { label: 'Failed', tone: 'critical' },
+};
 
 const PARTS: Part[] = [
   {
@@ -59,17 +73,18 @@ function PartView({ part }: { part: Part }) {
     case 'reasoning':
       return (
         <Disclosure.Root open={part.thinking}>
-          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${part.seconds} seconds`}</Disclosure.Summary>
+          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${duration.format(part.seconds)}`}</Disclosure.Summary>
           <Text.Root size="s" tone="muted">
             {part.text}
           </Text.Root>
         </Disclosure.Root>
       );
-    case 'tool-call':
+    case 'tool-call': {
+      const status = FINISHED[part.status];
       return (
         <Disclosure.Root>
           <Disclosure.Summary>
-            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={part.status === 'done' ? 'success' : 'critical'}>{part.status === 'done' ? 'Done' : 'Failed'}</Badge.Root>
+            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
           </Disclosure.Summary>
           <DataList.Root orientation="vertical">
             <DataList.Item>
@@ -80,7 +95,7 @@ function PartView({ part }: { part: Part }) {
                 </CodeBlock.Root>
               </DataList.Details>
             </DataList.Item>
-            {part.status === 'done' && part.output !== undefined && (
+            {part.status === 'done' && (
               <DataList.Item>
                 <DataList.Term>Output</DataList.Term>
                 <DataList.Details>
@@ -90,7 +105,7 @@ function PartView({ part }: { part: Part }) {
                 </DataList.Details>
               </DataList.Item>
             )}
-            {part.status === 'failed' && (
+            {part.status === 'error' && (
               <DataList.Item>
                 <DataList.Term>Error</DataList.Term>
                 <DataList.Details>{part.error}</DataList.Details>
@@ -99,6 +114,7 @@ function PartView({ part }: { part: Part }) {
           </DataList.Root>
         </Disclosure.Root>
       );
+    }
     case 'attachment':
       return (
         <Attachment.Root status="ready">
@@ -110,8 +126,9 @@ function PartView({ part }: { part: Part }) {
         </Attachment.Root>
       );
     default: {
-      const unreachable: never = part;
-      return unreachable;
+      const _exhaustive: never = part;
+      void _exhaustive;
+      return null;
     }
   }
 }
