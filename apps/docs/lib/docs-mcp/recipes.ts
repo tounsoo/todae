@@ -25,7 +25,7 @@ function readRecipe(page: PageDoc) {
     row: {
       name,
       title: page.title,
-      // The first paragraph after the title, as the page's link preview reads it but not cut short.
+      // The intro paragraph, between the title and the first section, as the page's link preview reads it but not cut short.
       description: pageSummary(tree, Infinity)?.description || null,
       uses: exportsIn(codeBlocks(page.markdown, tree).code.join('\n')),
       docsUrl,

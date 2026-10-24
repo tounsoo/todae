@@ -661,8 +661,9 @@
     "## Highlight matches": "30c2e008f88e",
     "## Composition rules": "6eb89b3bf8e3",
     "## Accessible composition": "adce8796fd84",
+    "## When to use": "b78de5e656e3",
     "## Hooks": "3218ba8110b3",
-    "(section order)": "b8b8a3257e63"
+    "(section order)": "fde5bd9f01d3"
   },
   "recipes/command-palette": {
     "(top)": "b133afb40440",
@@ -699,7 +700,8 @@
     "## Images": "4b5a68d12763",
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "a51aedc3e4e1",
-    "(section order)": "2ce6dd09df8f"
+    "## When to use": "239c65308c01",
+    "(section order)": "4bf10e81c190"
   },
   "recipes/filter-bar": {
     "(top)": "231c49c8f664",

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { loadPages, missingWhenNote, parseWhen } from './mdx';
+import { listPages, loadPages, missingWhenNote, parseWhen } from './mdx';
 import { getComponent, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
@@ -373,6 +373,70 @@ describe('docs mcp tools', () => {
       whenToUse: 'Stay.',
       whenNotToUse: 'Leave.',
     });
+  });
+
+  it('ignores headings and markers inside code fences', () => {
+    const fenced = [
+      '# Tooltip',
+      '',
+      '```md',
+      '## When to use',
+      '',
+      '**When:** Fenced.',
+      '```',
+      '',
+      '## When to use',
+      '',
+      '**When:** Real.',
+      '',
+      '~~~~mdx',
+      '## Props',
+      '### Tooltip',
+      '~~~',
+      '**When not:** Still fenced.',
+      '~~~~',
+      '',
+      '**When not:** Real not.',
+      '',
+      '## Props',
+    ].join('\n');
+    expect(parseWhen(fenced, 'Tooltip')).toEqual({ whenToUse: 'Real.', whenNotToUse: 'Real not.', shared: true });
+    expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n```\n', 'Tooltip')).toBeNull();
+    // A heading inside a JSX element is the element's content, not a section.
+    expect(parseWhen('<Example>\n\n## When to use\n\n**When:** Demo.\n\n</Example>\n', 'Tooltip')).toBeNull();
+    // MDX has no indented code, so a fence indented four spaces still opens one.
+    expect(parseWhen('Intro.\n\n    ```md\n## When to use\n\n**When:** Fenced.\n    ```\n\n## Props\n', 'Tooltip')).toBeNull();
+    // Adjacent marker lines of one paragraph each give their own line.
+    expect(parseWhen('## When to use\n\n**When:** A.\n**When not:** B.\n', 'Tooltip')).toMatchObject({ whenToUse: 'A.', whenNotToUse: 'B.' });
+    // A fence left open runs to the end of the page.
+    expect(parseWhen('```\n## When to use\n\n**When:** Fenced.\n', 'Tooltip')).toBeNull();
+    // An opener whose info string has a backtick is inline code, not a fence.
+    expect(parseWhen('``` a ` b\n\n## When to use\n\n**When:** Real.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Real.' });
+  });
+
+  it('reads When headings with CRLF and extra space after the hashes', () => {
+    const crlf = ['## When to use', '', '**When:** Real.', '', '**When not:** Real not.'].join('\r\n');
+    expect(parseWhen(crlf, 'Tooltip')).toMatchObject({ whenToUse: 'Real.', whenNotToUse: 'Real not.' });
+    expect(parseWhen('##  When to use\n\n**When:** Spaced.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Spaced.' });
+    expect(parseWhen('##\tWhen to use\n\n**When:** Tabbed.\n', 'Tooltip')).toMatchObject({ whenToUse: 'Tabbed.' });
+  });
+
+  it('lists the other components when one page does not parse', () => {
+    const page = listPages().find((item) => item.slug === 'dialog');
+    if (page == null) throw new Error('missing dialog page');
+    const markdown = page.markdown;
+    expect(listComponents().components.find((row) => row.name === 'Dialog.Root')?.hasWhenToUse).toBe(true);
+    page.markdown = `${markdown}\n<Button>`;
+    try {
+      const listed = listComponents();
+      expect(listed.components.map((row) => row.name)).toEqual(jsonNames);
+      expect(listed.count).toBe(jsonNames.length);
+      expect(listed.components.find((row) => row.name === 'Dialog.Root')?.hasWhenToUse).toBe(false);
+      expect(listed.components.find((row) => row.name === 'Tooltip.Root')?.hasWhenToUse).toBe(true);
+      expect(whenToUse('Dialog.Root')).toMatchObject({ status: 'missing', whenToUse: null, whenNotToUse: null });
+    } finally {
+      page.markdown = markdown;
+    }
   });
 
   it('errors on an unknown name', () => {
