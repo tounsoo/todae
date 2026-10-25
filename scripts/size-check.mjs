@@ -8,6 +8,7 @@ const pkgDir = resolve(repo, 'packages/design-system')
 const pkg = JSON.parse(readFileSync(resolve(pkgDir, 'package.json'), 'utf8'))
 const budget = JSON.parse(readFileSync(resolve(pkgDir, 'size-budget.json'), 'utf8'))
 
+// Side-effect `import "./file.js"` is walked. A specifier that does not already end in .js is skipped. Dynamic import() is not walked.
 const relativeImport = /(?:from\s+|import\s*)["'](\.[^"']+)["']/g
 
 function walkJs(file, seen) {
@@ -16,8 +17,8 @@ function walkJs(file, seen) {
   seen.add(abs)
   const code = readFileSync(abs, 'utf8')
   for (const match of code.matchAll(relativeImport)) {
-    let spec = match[1]
-    if (!spec.endsWith('.js')) spec += '.js'
+    const spec = match[1]
+    if (!spec.endsWith('.js')) continue
     walkJs(resolve(dirname(abs), spec), seen)
   }
 }
