@@ -2,7 +2,9 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 
 # Field.Select
 
-`Field.Select`는 [Field](/field) 안의 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label.Root htmlFor`로 이름을 붙입니다.
+`Field.Select`는 [Field](/field) 안의 네이티브 `<select>`입니다. JavaScript listbox가 아닙니다.
+
+브라우저가 `appearance: base-select`를 지원하면 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 같은 키보드로 브라우저 자체 선택 창이 나타납니다. 자식은 `<option>` 또는 `<optgroup>` 요소입니다. 다른 필드처럼 `Label.Root htmlFor`로 select의 이름을 붙입니다.
 
 ```tsx
 const id = useId();
@@ -50,7 +52,7 @@ import { ChevronDown } from 'lucide-react';
 
 ### Field.Select
 
-**언제:** 폼 안에서 짧고 고정된 목록 중 값 하나를 네이티브 선택 창과 키보드로 고를 때.
+**언제:** 폼 안에서 짧고 고정된 목록 중 값 하나를 고를 때. 컨트롤은 JavaScript listbox가 아니라 네이티브 `<select>`와 그 키보드입니다.
 
 **쓰지 않을 때:** 긴 목록을 필터링하거나 검색 → Combobox 레시피. 여러 값 → Checkbox 또는 `Field.ChipInput`. 값이 아닌 명령 → Menu.
 

@@ -1,6 +1,14 @@
 # 네이티브 플랫폼
 
-Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니다. 아래 기능을 JavaScript 대체 구현 없이 사용하므로, 이 기능들이 있는 브라우저가 곧 Todae가 지원하는 브라우저입니다. 별도의 지원 매트릭스는 없습니다.
+Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니다. 아래 기능을 JavaScript 대체 구현 없이 사용하므로, 이 기능들이 있는 브라우저가 곧 Todae가 지원하는 브라우저입니다. 이 페이지는 그 기능을 나열합니다. 버전 하한은 저장소 README의 [Browser support](https://github.com/tounsoo/todae/blob/main/README.md#browser-support) 표이며, 2026-10-16에 확인했습니다.
+
+| 브라우저 | Temporal을 뺀 나머지 | Temporal을 포함한 전체 |
+| --- | --- | --- |
+| Chrome과 Edge | 128 | 144 |
+| Firefox | 147 | 147 |
+| Safari와 iOS Safari | 26 | 미출시. 폴리필을 불러오세요. |
+
+CSS 앵커 포지셔닝이 모든 브라우저에서 하한을 정합니다. Chrome과 Edge의 하한은 `position-try-fallbacks`이며, 128에서 들어왔습니다. iOS와 iPadOS에서는 모든 브라우저가 Safari 엔진을 쓰므로, 그곳의 Chrome과 Edge는 Safari 행을 따릅니다. 버전은 코드에 고정되어 있지 않고, 브라우저 테스트는 Chromium에서만 돕니다.
 
 - **[CSS 앵커 포지셔닝](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: 팝오버와 툴팁을 트리거 옆에 배치하고, `position-try-fallbacks`로 뷰포트 가장자리에서 뒤집고, `Field.Textarea`의 하이라이트를 textarea 위에 배치합니다. 없으면: 표면이 트리거 옆에 배치되지 않고 뷰포트 왼쪽 위 모서리 근처에 놓이며, 하이라이트는 그려지지 않습니다.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: `Popover.Root`와 `Tooltip.Root`를 최상위 레이어에 표시합니다. Todae에 필수입니다.

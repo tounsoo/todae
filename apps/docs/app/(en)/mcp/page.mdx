@@ -85,7 +85,7 @@ Building a design system:
 
 - `build_tokens`: runs `todae-tokens build` on a company token package. Pass each `.json` file by its path inside the token folder, and name the resolver among them with `resolver` if it isn't `resolver.json`. `scope`, a CSS selector, builds a theme for part of a page, as `--scope` does. It returns the theme CSS and the `THEME_OVERRIDE_TYPES` module, or the build's error, which lists any contrast pairs that fall short.
 - `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It returns the token files by path inside a `tokens` folder, in the shape `build_tokens` takes, and `src/todae.d.ts` declaring the new variant and density names, with the result of building the token files.
-- `get_guide`: the source of a docs page about building on Todae: `get-started`, `build-on-todae`, `tokens`, `css-layers`, `composition`, `platform` or `mcp`.
+- `get_guide`: the source of a docs page about building on Todae: `get-started`, `build-on-todae`, `tokens`, `css-layers`, `migration`, `composition`, `platform` or `mcp`.
 
 Upgrading:
 

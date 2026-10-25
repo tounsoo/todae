@@ -157,6 +157,18 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 
 The publish job already released `@tounsoo/todae@0.4.0` this way. It sets `id-token: write` in `.github/workflows/release.yml`. npm trusted publishing checks that GitHub OIDC token. The [0.4.0 attestations](https://registry.npmjs.org/-/npm/v1/attestations/@tounsoo%2ftodae@0.4.0) include SLSA provenance for that workflow.
 
+### Deprecate the placeholder version
+
+`@tounsoo/todae@0.0.0-stage` is a stub version published on 2026-10-16 so the package name existed before trusted publishing. npm describes it as "Temporary package placeholder for staged publishing". It is not a dist-tag. `latest` is the only dist-tag, and it points at the current release. `npm dist-tag ls @tounsoo/todae` shows that.
+
+A maintainer with publish access to `@tounsoo/todae` runs `npm deprecate` by hand, once. The release workflow does not run it. Do not add an npm token to the repository, and do not run the command from CI.
+
+```sh
+npm deprecate @tounsoo/todae@0.0.0-stage "Placeholder for staged publishing. Do not install this version. Install @tounsoo/todae@latest."
+```
+
+`npm view @tounsoo/todae@0.0.0-stage deprecated` then prints that message.
+
 ## Deploy the docs
 
 The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app.

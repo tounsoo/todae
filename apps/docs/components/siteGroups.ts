@@ -14,6 +14,7 @@ export const SITE_GROUPS = [
       ['/tokens', 'Tokens'],
       ['/guides/css-layers', 'CSS layers'],
       ['/platform', 'Native platform'],
+      ['/guides/migration', 'Migrate'],
     ],
   },
   {

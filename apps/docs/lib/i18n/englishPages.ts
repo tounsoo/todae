@@ -51,6 +51,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'guides/get-started': () => import('../../app/(en)/guides/get-started/page.mdx'),
   'guides/build-on-todae': () => import('../../app/(en)/guides/build-on-todae/page.mdx'),
   'guides/css-layers': () => import('../../app/(en)/guides/css-layers/page.mdx'),
+  'guides/migration': () => import('../../app/(en)/guides/migration/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),
   'link': () => import('../../app/(en)/link/page.mdx'),
   'mcp': () => import('../../app/(en)/mcp/page.mdx'),
