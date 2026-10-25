@@ -42,11 +42,8 @@ function Three({ dir }: { dir?: 'ltr' | 'rtl' }) {
   );
 }
 
-/** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
-    features,
-  });
+  return cdp().send('Emulation.setEmulatedMedia', { features });
 }
 
 const STACK_SIZE = 40;

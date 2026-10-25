@@ -1,5 +1,3 @@
-/* The overlap reads the stack's size, not each avatar's, so it holds for any
-   direct child: an avatar, or one wrapped in a tooltip trigger or a link. */
 .avatarGroup {
   --_stack-size: var(--todae-avatar-size-md);
 
