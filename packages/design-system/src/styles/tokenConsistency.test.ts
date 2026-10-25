@@ -36,8 +36,7 @@ function outsideForcedColors(css: string): string {
 const CORE_READS: Record<string, string[]> = {
   ChipList: ['space'],
   Field: ['space'],
-  // Text and Prose read foundation font.size after the component type-scale strip.
-  Text: ['font'],
+  // Prose still reads foundation font.size. Text headings read text.hN.font.size.
   Prose: ['font'],
 };
 // Contract groups every component shares.

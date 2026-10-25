@@ -4810,7 +4810,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.default",
@@ -4824,7 +4824,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.muted",
@@ -4838,7 +4838,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.font.family",
@@ -4852,7 +4852,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.font.size",
@@ -4866,7 +4866,91 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h1.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h1-font-size",
+      "cssValue": "var(--todae-font-size-6)",
+      "ref": "font.size.6",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h2.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h2-font-size",
+      "cssValue": "var(--todae-font-size-5)",
+      "ref": "font.size.5",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h3.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h3-font-size",
+      "cssValue": "var(--todae-font-size-4)",
+      "ref": "font.size.4",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h4.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h4-font-size",
+      "cssValue": "var(--todae-text-font-size)",
+      "ref": "text.font.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h5.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h5-font-size",
+      "cssValue": "var(--todae-text-font-size)",
+      "ref": "text.font.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h6.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h6-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.label.fg",
@@ -4978,7 +5062,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.leading.tight",
@@ -4992,7 +5076,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.bold",
@@ -5006,7 +5090,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.medium",
@@ -5020,7 +5104,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.regular",
@@ -5034,7 +5118,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "prose.fg",

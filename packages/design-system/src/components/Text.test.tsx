@@ -19,31 +19,24 @@ describe('Text', () => {
     render(<Text.Root data-testid="t">Hi</Text.Root>);
     const el = screen.getByTestId('t');
     expect(el.tagName).toBe('P');
-    expect(classesOf(el)).toEqual([styles.root, styles.m]);
+    expect(classesOf(el)).toEqual([styles.root]);
   });
 
-  it.each<[TextAs, string]>([
-    ['h1', 'xxl'],
-    ['h2', 'xl'],
-    ['h3', 'l'],
-    ['h4', 'm'],
-    ['h5', 'm'],
-    ['h6', 's'],
-  ])('renders %s as a heading at its default size', (tag, size) => {
+  it.each<TextAs>(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])('renders %s as a heading with no scale class', (tag) => {
     render(<Text.Root as={tag}>Title</Text.Root>);
     const el = screen.getByRole('heading', { level: Number(tag.slice(1)) });
     expect(el.tagName).toBe(tag.toUpperCase());
-    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles[size]]);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading]);
   });
 
-  it('lets a heading take another weight and keeps the scale its level picks', () => {
+  it('lets a heading take another weight and keeps the heading class', () => {
     render(
       <Text.Root as="h2" weight="medium">
         Quiet
       </Text.Root>,
     );
     const el = screen.getByRole('heading', { level: 2 });
-    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.xl, styles.medium]);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.medium]);
   });
 
   it('drops a leftover size instead of painting it on the element', () => {
@@ -53,7 +46,7 @@ describe('Text', () => {
     const el = screen.getByTestId('t');
     expect(el.hasAttribute('size')).toBe(false);
     expect(el.classList.contains(styles.label!)).toBe(false);
-    expect(el.classList.contains(styles.m!)).toBe(true);
+    expect(classesOf(el)).toEqual([styles.root]);
     expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
     expect(error).toHaveBeenCalledWith(expect.stringContaining('variant="label"'));
     expect(error).toHaveBeenCalledWith(expect.stringContaining('text.font.size'));
@@ -65,7 +58,7 @@ describe('Text', () => {
     render(createElement(Text.Root, small));
     const smallEl = screen.getByTestId('s');
     expect(smallEl.hasAttribute('size')).toBe(false);
-    expect(smallEl.classList.contains(styles.m!)).toBe(true);
+    expect(classesOf(smallEl)).toEqual([styles.root]);
     expect(error).toHaveBeenCalledTimes(2);
     error.mockRestore();
   });
@@ -105,18 +98,18 @@ describe('Text', () => {
     for (const cls of ['default', 'muted', 'accent', 'regular', 'medium', 'bold']) expect(at('label')).toBeLessThan(at(cls));
   });
 
-  it('points body at text.font.size and the other scale classes at foundation font-size steps', () => {
+  it('sizes body and each heading element from a component token, with no scale class', () => {
     const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
-    const rule = (cls: string) => {
-      const rules = sheet.split(`.${cls} {`);
-      expect(rules, `.${cls} has one rule`).toHaveLength(2);
-      return rules[1]!.split('}')[0]!;
-    };
-    expect(rule('s')).toContain('var(--todae-font-size-2)');
-    expect(rule('m')).toContain('var(--todae-text-font-size)');
-    expect(rule('l')).toContain('var(--todae-font-size-4)');
-    expect(rule('xl')).toContain('var(--todae-font-size-5)');
-    expect(rule('xxl')).toContain('var(--todae-font-size-6)');
+    for (const cls of ['s', 'm', 'l', 'xl', 'xxl']) expect(sheet.includes(`.${cls} {`)).toBe(false);
+    expect(sheet).not.toContain('var(--todae-font-size-');
+    expect(sheet).toContain('font-size: var(--todae-text-font-size)');
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      expect(sheet).toContain(`.root:is(h${level})`);
+      expect(sheet).toContain(`var(--todae-text-h${level}-font-size)`);
+    }
+    const labelRoot = sheet.indexOf('.root:is(.label)');
+    const h1 = sheet.indexOf('.root:is(h1)');
+    expect(labelRoot).toBeGreaterThan(h1);
   });
 
   it('clamps to lines through a class and --_lines, keeping the given style', () => {
@@ -126,7 +119,7 @@ describe('Text', () => {
       </Text.Root>,
     );
     const el = screen.getByTestId('t');
-    expect(classesOf(el)).toEqual([styles.root, styles.m, styles.clamp]);
+    expect(classesOf(el)).toEqual([styles.root, styles.clamp]);
     expect(el.style.getPropertyValue('--_lines')).toBe('2');
     expect(el.style.color).toBe('red');
   });
@@ -164,7 +157,7 @@ describe('Text from the main entry', () => {
   it('renders the same element, with an anchor for its tip only while it clamps with one', () => {
     const { rerender } = render(<ClientText.Root data-testid="t">Long</ClientText.Root>);
     const el = screen.getByTestId('t');
-    expect(classesOf(el)).toEqual([styles.root, styles.m]);
+    expect(classesOf(el)).toEqual([styles.root]);
     expect(el.style.getPropertyValue('anchor-name')).toBe('');
     rerender(
       <ClientText.Root lines={1} data-testid="t">

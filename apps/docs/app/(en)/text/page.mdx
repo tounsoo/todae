@@ -8,7 +8,7 @@ Body text draws at `text.font.size`. The default equals foundation `font.size.3`
 
 To change one text, set `--todae-text-font-size` on the element or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. To change body text across a product, set `text.font.size` in your theme or in `ThemeProvider` overrides. For a one-off size, set `font-size` from a `font.size.*` variable (`--todae-font-size-*`) in your own CSS. A rule outside the `todae.components` layer wins over the size Text sets.
 
-A heading's `as` picks a foundation step. h1 reads `font.size.6`, h2 `font.size.5`, h3 `font.size.4`, and h6 `font.size.2`. h4 and h5 use the body size. `variant="label"` is the role for eyebrows and metadata, described under Label below.
+A heading's `as` renders that element, and the element draws at `text.h1.font.size` through `text.h6.font.size`. The defaults follow foundation `font.size.6`, `font.size.5`, `font.size.4`, body `text.font.size`, body `text.font.size`, and `font.size.2`. h4 and h5 follow the body token, and a theme can set either one on its own. `variant="label"` is the role for eyebrows and metadata, described under Label below.
 
 The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae does not set `font-family` from it on body text and headings; apply `var(--todae-text-font-family)` where you want it. The label role sets its own, as Label below says.
 
@@ -34,7 +34,7 @@ Server Components can import it from `@tounsoo/todae/text`. That entry has no `'
 
 ## Headings
 
-`as="h1"` through `as="h6"` render a heading. The level picks the scale above, bold weight and `text.leading.tight`, and balances its line breaks. Pick the level for the outline. An h2 keeps the h2 scale. To draw that heading smaller, set `font-size` on the element. Do not pick a lower level for the look.
+`as="h1"` through `as="h6"` render a heading. The element draws at `text.hN.font.size`, with bold weight and `text.leading.tight`, and balances its line breaks. Pick the level for the outline. An h2 keeps `text.h2.font.size`. To draw that heading smaller, set `font-size` on the element, or override that level's token. Do not pick a lower level for the look.
 
 ```tsx
 <Text.Root as="h2" className="section-title">
@@ -110,7 +110,7 @@ When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in 
 
 ## Accessible composition
 
-**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `weight` changes only the look, and a heading's level picks its scale: an `h2` is still an h2. `ref`, `id` and other attributes reach the element. With `lines`, the tooltip of cut text, on hover and on keyboard focus, hidden from screen readers, which read the whole text.
+**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `weight` changes only the look, and a heading's level picks `text.hN.font.size`. An `h2` is still an h2. `ref`, `id` and other attributes reach the element. With `lines`, the tooltip of cut text, on hover and on keyboard focus, hidden from screen readers, which read the whole text.
 
 **You supply:** The outline. Pick each heading's level from where it sits on the page. A wrapper such as a section title should take the level as a prop, or render one level only where that level is always right. Give a heading an `id` when a region names itself with `aria-labelledby`.
 
@@ -118,7 +118,7 @@ When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in 
 
 ## When to use
 
-**When:** Body text and headings. Tone default / muted / accent, weight, and `as` p / span / strong / h1–h6. The level picks the heading's scale. Eyebrows, kickers and metadata with `variant="label"`. Names and titles cut to a number of lines with `lines`.
+**When:** Body text and headings. Tone default / muted / accent, weight, and `as` p / span / strong / h1–h6. The level picks `text.hN.font.size`. Eyebrows, kickers and metadata with `variant="label"`. Names and titles cut to a number of lines with `lines`.
 
 **When not:** Field names → Label, not `variant="label"`. A group of controls' name → Fieldset.Legend. Hints and errors → Description / ErrorMessage. Dialog heading → `Dialog.Title`.
 
