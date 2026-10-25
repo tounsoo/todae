@@ -46,7 +46,7 @@
     },
     "./badge": {
       "types": "./dist/server/badge.d.ts",
-      "import": "./dist/badge.js"
+      "import": "./dist/badge-missing.js"
     },
     "./empty-state": {
       "types": "./dist/server/empty-state.d.ts",
