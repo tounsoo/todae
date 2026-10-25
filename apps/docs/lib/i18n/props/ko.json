@@ -89,24 +89,6 @@
       "ko": "이니셜이나 아이콘."
     }
   },
-  "Avatar.Group": {
-    "aria-label": {
-      "en": "Accessible name for the group, such as \"Assignees\".",
-      "ko": "그룹의 접근 가능한 이름입니다. 예를 들어 \"담당자\"."
-    },
-    "aria-labelledby": {
-      "en": "Id of the element that names the group, in place of aria-label.",
-      "ko": "aria-label 대신 그룹의 이름이 되는 요소의 id입니다."
-    },
-    "size": {
-      "en": "Size for the avatars inside that set no size of their own. The overlap is a fraction of it, from avatar.group.overlap.",
-      "ko": "자체 size가 없는 안쪽 Avatar의 크기입니다. 겹치는 정도는 이 크기에 avatar.group.overlap을 곱한 값입니다."
-    },
-    "children": {
-      "en": "Avatar.Root elements. The last one can be a +N count.",
-      "ko": "Avatar.Root 요소. 마지막 요소를 +N 개수로 쓸 수 있습니다."
-    }
-  },
   "Avatar.Image": {
     "src": {
       "en": "The image, or srcSet in its place. Without either, or when it fails to load, the fallback stays.",
@@ -117,10 +99,6 @@
     "label": {
       "en": "Names the avatar, whichever of the image and the fallback shows. Leave it out when the name is written next to the avatar.",
       "ko": "이미지와 대체 표시 중 무엇이 보이든 Avatar의 이름입니다. 이름이 Avatar 옆에 적혀 있으면 빼세요."
-    },
-    "size": {
-      "en": "Size from the avatar.size contract tokens. Left out, it is the size of the Avatar.Group around it, or \"md\".",
-      "ko": "avatar.size contract 토큰의 크기입니다. 생략하면 둘러싼 Avatar.Group의 크기이고, 그룹 밖에서는 \"md\"입니다."
     },
     "tone": {
       "en": "Colors behind the fallback. neutral reads avatar.bg and avatar.fg; other tones read the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.",

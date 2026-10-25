@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { CSSProperties } from 'react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
@@ -10,6 +11,8 @@ const session = () => cdp() as unknown as { send(method: string, params: object)
 function emulateMedia(features: { name: string; value: string }[]) {
   return session().send('Emulation.setEmulatedMedia', { features });
 }
+
+const LARGE = { '--todae-avatar-size-md': 'var(--todae-avatar-size-lg)' } as CSSProperties;
 
 describe('Message.Root in a browser', () => {
   it('puts a user message at the end side in a bubble, with the avatar after it', () => {
@@ -148,7 +151,7 @@ describe('Message.Root in a browser', () => {
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
         <Message.Root data-testid="message" from={from}>
           <Message.Avatar data-testid="avatar">
-            <Avatar.Root size="lg">
+            <Avatar.Root style={LARGE}>
               <Avatar.Fallback>A</Avatar.Fallback>
             </Avatar.Root>
           </Message.Avatar>
@@ -275,7 +278,7 @@ describe('Message.Root in a browser', () => {
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
         <Message.Root data-testid="hidden-header">
           <Message.Avatar data-testid="avatar">
-            <Avatar.Root size="lg">
+            <Avatar.Root style={LARGE}>
               <Avatar.Fallback>A</Avatar.Fallback>
             </Avatar.Root>
           </Message.Avatar>
@@ -302,7 +305,7 @@ describe('Message.Root in a browser', () => {
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
         <Message.Root>
           <Message.Avatar>
-            <Avatar.Root size="lg">
+            <Avatar.Root style={LARGE}>
               <Avatar.Fallback>A</Avatar.Fallback>
             </Avatar.Root>
           </Message.Avatar>
@@ -326,7 +329,7 @@ describe('Message.Root in a browser', () => {
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
         <Message.Root>
           <Message.Avatar>
-            <Avatar.Root size="lg">
+            <Avatar.Root style={LARGE}>
               <Avatar.Fallback>A</Avatar.Fallback>
             </Avatar.Root>
           </Message.Avatar>

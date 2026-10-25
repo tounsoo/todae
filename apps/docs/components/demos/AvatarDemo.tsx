@@ -1,6 +1,7 @@
 'use client';
 
 import { Avatar, categoryTone, Stack, Text } from '@tounsoo/todae';
+import type { CSSProperties } from 'react';
 
 // A drawn portrait, inline so the demo needs no network.
 const PORTRAIT =
@@ -27,16 +28,18 @@ export function AvatarStates() {
   );
 }
 
+const step = (name: 'sm' | 'lg'): CSSProperties => ({ '--todae-avatar-size-md': `var(--todae-avatar-size-${name})` }) as CSSProperties;
+
 export function AvatarSizes() {
   return (
     <Stack.Root direction="row">
-      <Avatar.Root size="sm" label="Ada Lovelace">
+      <Avatar.Root style={step('sm')} label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
       <Avatar.Root label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
-      <Avatar.Root size="lg" label="Ada Lovelace">
+      <Avatar.Root style={step('lg')} label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
     </Stack.Root>
@@ -70,40 +73,6 @@ export function AvatarTones() {
         <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
           <Avatar.Fallback>{person.initials}</Avatar.Fallback>
         </Avatar.Root>
-      ))}
-    </Stack.Root>
-  );
-}
-
-export function AvatarGroupExample() {
-  const rest = PEOPLE.length - 4;
-  return (
-    <Avatar.Group aria-label="Assignees">
-      {PEOPLE.slice(0, 4).map((person) => (
-        <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
-          <Avatar.Fallback>{person.initials}</Avatar.Fallback>
-        </Avatar.Root>
-      ))}
-      {rest > 0 && (
-        <Avatar.Root label={`${rest} more`}>
-          <Avatar.Fallback>+{rest}</Avatar.Fallback>
-        </Avatar.Root>
-      )}
-    </Avatar.Group>
-  );
-}
-
-export function AvatarGroupSizes() {
-  return (
-    <Stack.Root direction="row" style={{ alignItems: 'center' }}>
-      {(['sm', 'md', 'lg'] as const).map((size) => (
-        <Avatar.Group key={size} size={size} aria-label={`Assignees, ${size}`}>
-          {PEOPLE.slice(0, 3).map((person) => (
-            <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
-              <Avatar.Fallback>{person.initials}</Avatar.Fallback>
-            </Avatar.Root>
-          ))}
-        </Avatar.Group>
       ))}
     </Stack.Root>
   );

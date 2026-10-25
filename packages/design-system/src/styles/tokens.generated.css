@@ -1162,9 +1162,6 @@
   --todae-avatar-fg: var(--_todae-avatar-fg, var(--todae-color-fg-default));
   --todae-avatar-font-scale: var(--_todae-avatar-font-scale, 0.4);
   --todae-avatar-font-weight: var(--_todae-avatar-font-weight, var(--todae-font-weight-medium));
-  --todae-avatar-group-overlap: var(--_todae-avatar-group-overlap, 0.25);
-  --todae-avatar-group-ring-color: var(--_todae-avatar-group-ring-color, var(--todae-color-bg-surface));
-  --todae-avatar-group-ring-width: var(--_todae-avatar-group-ring-width, var(--todae-border-width));
   --todae-avatar-radius: var(--_todae-avatar-radius, var(--todae-radius-full));
   --todae-avatar-size-lg: var(--_todae-avatar-size-lg, 2.5rem);
   --todae-avatar-size-md: var(--_todae-avatar-size-md, 2rem);
