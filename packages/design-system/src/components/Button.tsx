@@ -323,7 +323,6 @@ function Root({
 
   // One shape whether or not a tip shows, so gaining a tip never remounts
   // the button and its children.
-  if (globalThis.window == null) throw new Error('window is not defined')
   return (
     <>
       {button}
