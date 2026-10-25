@@ -2,6 +2,7 @@
   /* Default color and weight sit on .root and .heading, so the label role can replace them and a given tone or weight still wins. */
   .root {
     margin: 0;
+    font-size: var(--todae-text-font-size);
     line-height: var(--todae-text-leading-default);
     color: var(--todae-text-fg-default);
     font-weight: var(--todae-text-weight-regular);
@@ -41,7 +42,7 @@
   }
 
   .m {
-    font-size: var(--todae-font-size-3);
+    font-size: var(--todae-text-font-size);
   }
 
   .l {

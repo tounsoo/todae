@@ -4,7 +4,11 @@ import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
-Body text uses the medium scale, `font.size.3`. A heading's `as` picks its scale: h1 reads `font.size.6`, h2 `font.size.5`, h3 `font.size.4`, h4 and h5 `font.size.3`, and h6 `font.size.2`. Text has no `size` prop. To size one element, set `font-size` from a `font.size.*` variable (`--todae-font-size-*`) in your own CSS. A rule outside the `todae.components` layer wins over the scale Text sets. Changing a `font.size.*` token resizes every use of that step. `variant="label"` is the role for eyebrows and metadata, described under Label below.
+Body text draws at `text.font.size`. The default equals foundation `font.size.3`. Text has no `size` prop. Todae does not ship a text size scale.
+
+To change one text, set `--todae-text-font-size` on the element or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. To change body text across a product, set `text.font.size` in your theme or in `ThemeProvider` overrides. For a one-off size, set `font-size` from a `font.size.*` variable (`--todae-font-size-*`) in your own CSS. A rule outside the `todae.components` layer wins over the size Text sets.
+
+A heading's `as` picks a foundation step. h1 reads `font.size.6`, h2 `font.size.5`, h3 `font.size.4`, and h6 `font.size.2`. h4 and h5 use the body size. `variant="label"` is the role for eyebrows and metadata, described under Label below.
 
 The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae does not set `font-family` from it on body text and headings; apply `var(--todae-text-font-family)` where you want it. The label role sets its own, as Label below says.
 

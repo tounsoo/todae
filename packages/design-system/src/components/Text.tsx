@@ -77,7 +77,7 @@ function omitLegacySize(props: TextRootProps): TextRootProps {
   if (process.env.NODE_ENV !== 'production' && size != null && !reportedSizes.has(String(size))) {
     reportedSizes.add(String(size));
     console.error(
-      `Text.Root no longer takes size; got ${String(size)}. Use variant="label" for the label role, or set font-size from a font.size.* variable (--todae-font-size-*) in your CSS.`,
+      `Text.Root no longer takes size; got ${String(size)}. Use variant="label" for the label role. Body draws at text.font.size (--todae-text-font-size). Set that variable on the element or an ancestor, or override text.font.size in the theme. An appearance or density attribute, or a scoped theme root, between that ancestor and the text declares the size token again. For a one-off size, set font-size from a font.size.* variable (--todae-font-size-*) in your CSS.`,
     );
   }
   return rest;
