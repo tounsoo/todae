@@ -1,3 +1,4 @@
+import { ShotNudge } from '../../../../components/ShotNudge';
 import { AvatarGroupExample, AvatarGroupSizes } from '../../../../components/demos/AvatarGroupDemo';
 
 # Avatar group
@@ -5,6 +6,8 @@ import { AvatarGroupExample, AvatarGroupSizes } from '../../../../components/dem
 A recipe, not a package namespace. Todae has no `Avatar.Group` export. A stack of avatars is a `div` with `role="group"`, some `Avatar.Root`s, and a few lines of CSS that your product copies. The CSS reads public tokens, and `--avatar-group-ring` for the ring color, so the ring and the theme stay with your product. Nothing in `@tounsoo/todae` stacks avatars for you.
 
 The stack below is the people on a task. Four of them show with a category tone each, and the rest shows as a "+1" avatar. The [Avatar](/avatar) page covers the avatar itself, its image and fallback, and its size.
+
+<ShotNudge px={0.2} />
 
 <Example>
   <AvatarGroupExample />
@@ -119,6 +122,8 @@ An avatar has no `size` prop, so the stack has none either. The avatars draw at 
   …
 </div>
 ```
+
+<ShotNudge px={0.3} />
 
 <Example>
   <AvatarGroupSizes />

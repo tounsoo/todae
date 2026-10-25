@@ -1,3 +1,4 @@
+import { ShotNudge } from '../../../../components/ShotNudge';
 import { AvatarGroupExample, AvatarGroupSizes } from '../../../../components/demos/AvatarGroupDemo';
 
 # Avatar group
@@ -5,6 +6,8 @@ import { AvatarGroupExample, AvatarGroupSizes } from '../../../../components/dem
 패키지 네임스페이스가 아니라 레시피입니다. Todae에는 `Avatar.Group` export가 없습니다. Avatar를 쌓은 모양은 `role="group"`을 단 `div`, 몇 개의 `Avatar.Root`, 그리고 제품이 복사해 쓰는 몇 줄의 CSS입니다. 이 CSS는 공개 토큰과 테두리 색 `--avatar-group-ring`을 읽으므로, 테마와 테두리 색은 제품이 정합니다. `@tounsoo/todae`에는 Avatar를 쌓아 주는 코드가 없습니다.
 
 아래 스택은 한 작업에 붙은 사람들입니다. 네 명은 각자 카테고리 톤으로 보이고, 나머지는 "+1" Avatar로 보입니다. Avatar 자체와 이미지, 대체 표시, 크기는 [Avatar](/avatar) 페이지에서 다룹니다.
+
+<ShotNudge px={0.2} />
 
 <Example>
   <AvatarGroupExample />
@@ -119,6 +122,8 @@ Avatar에는 `size` prop이 없으므로 스택에도 없습니다. Avatar는 `-
   …
 </div>
 ```
+
+<ShotNudge px={0.3} />
 
 <Example>
   <AvatarGroupSizes />
