@@ -18,6 +18,7 @@
     "build:ds": "pnpm --filter @tounsoo/todae build",
     "publish:check": "bash scripts/publish-check.sh",
     "size:check": "node scripts/size-check.mjs",
+    "ssr:smoke": "pnpm --filter ssr-smoke build && pnpm --filter ssr-smoke smoke",
     "dev:ds": "pnpm --filter @tounsoo/todae dev",
     "dev:docs": "pnpm --filter docs dev",
     "dev": "pnpm dev:docs",
