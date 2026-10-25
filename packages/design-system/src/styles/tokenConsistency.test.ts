@@ -36,6 +36,9 @@ function outsideForcedColors(css: string): string {
 const CORE_READS: Record<string, string[]> = {
   ChipList: ['space'],
   Field: ['space'],
+  // Text and Prose read foundation font.size after the component type-scale strip.
+  Text: ['font'],
+  Prose: ['font'],
 };
 // Contract groups every component shares.
 const SHARED_ROOTS = ['overlay', 'focus'];
