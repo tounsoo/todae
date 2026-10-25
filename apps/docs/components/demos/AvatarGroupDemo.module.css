@@ -1,6 +1,5 @@
 .avatarGroup {
   --_stack-size: var(--todae-avatar-size-md);
-  --_ring: var(--todae-color-bg-surface);
 
   display: inline-flex;
   align-items: center;
@@ -14,9 +13,10 @@
   flex: none;
 }
 
-/* A button or a link keeps the browser's padding, border and fill, which
-   would sit outside the avatar and throw the overlap off. */
+/* A button or a link keeps the browser's padding, border, fill and line box,
+   which would sit outside the avatar and throw the overlap off. */
 .avatarGroup > :is(button, a) {
+  display: flex;
   padding: 0;
   border: 0;
   background: none;
@@ -32,7 +32,7 @@
 /* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
    paint over earlier ones in DOM order. */
 .avatarGroup .avatar {
-  box-shadow: 0 0 0 var(--todae-border-width) var(--_ring);
+  box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));
 }
 
 /* A focused child rises above its neighbors' rings, so its focus ring shows

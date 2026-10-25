@@ -25,9 +25,9 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
  * `label` (`role="img"`), whichever of the two shows. Without `label` it is
  * decorative and hidden from assistive technology: use that when the name is
  * already written next to it. It draws at `--todae-avatar-size-md`. Set that
- * on the avatar, or on an ancestor with no appearance or density element
- * between them. A ThemeProvider or DensityProvider in between declares the
- * token again and drops the ancestor's value.
+ * on the avatar, or on an ancestor inside the nearest theme. A ThemeProvider,
+ * a DensityProvider, or a scoped theme root in between declares the token
+ * again and drops the ancestor's value.
  */
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
@@ -67,7 +67,7 @@ function omitLegacySize(props: AvatarRootProps): AvatarRootProps {
   if (size != null) {
     warnOnce(
       'avatar-size',
-      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size-md on the avatar, or on an ancestor with no appearance or density element between them.`,
+      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size-md on the avatar, or on an ancestor inside the nearest theme. A provider or a scoped theme root in between declares the token again. Point it at the avatar.size.sm or avatar.size.lg step.`,
       'error',
     );
   }

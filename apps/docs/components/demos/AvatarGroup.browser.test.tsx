@@ -99,6 +99,24 @@ describe('Avatar group recipe in a browser', () => {
     expect(a.right - b.left).toBeCloseTo(OVERLAP, 0);
   });
 
+  it('keeps a button wrapper the same size as the avatar', () => {
+    render(
+      <Themed>
+        <div role="group" aria-label="Assignees" className={`${styles.avatarGroup} ${styles.small}`} style={{ fontSize: '20px', lineHeight: 2 }}>
+          <button type="button" data-testid="button" aria-label="Ada">
+            <Avatar.Root className={styles.avatar} data-testid="avatar">
+              <Avatar.Fallback>AL</Avatar.Fallback>
+            </Avatar.Root>
+          </button>
+        </div>
+      </Themed>,
+    );
+    const button = screen.getByTestId('button').getBoundingClientRect();
+    const avatar = screen.getByTestId('avatar').getBoundingClientRect();
+    expect(avatar.width).toBe(24);
+    expect([button.width, button.height]).toEqual([avatar.width, avatar.height]);
+  });
+
   it('lifts a focused interactive wrapper above the avatar after it', async () => {
     render(
       <Themed>
