@@ -4,7 +4,11 @@ import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
-본문 텍스트는 중간 스케일인 `font.size.3`을 씁니다. 제목의 `as`가 스케일을 고릅니다. h1은 `font.size.6`, h2는 `font.size.5`, h3는 `font.size.4`, h4와 h5는 `font.size.3`, h6는 `font.size.2`를 읽습니다. Text에는 `size` prop이 없습니다. 한 요소만 크기를 바꾸려면 자기 CSS에서 `font.size.*` 변수(`--todae-font-size-*`)로 `font-size`를 지정합니다. `todae.components` 레이어 밖의 규칙이 Text가 정한 스케일보다 우선합니다. `font.size.*` 토큰을 바꾸면 그 단계를 쓰는 곳이 모두 바뀝니다. `variant="label"`은 아이브로와 메타데이터를 위한 역할이며, 아래 레이블에서 설명합니다.
+본문 텍스트는 `text.font.size`로 그려집니다. 기본값은 foundation `font.size.3`과 같습니다. Text에는 `size` prop이 없습니다. Todae는 텍스트 크기 단계를 제공하지 않습니다.
+
+텍스트 하나만 바꾸려면 그 요소나, 사이에 `[data-appearance]`나 `[data-density]` 요소와 스코프 테마의 루트가 없는 조상에 `--todae-text-font-size`를 지정하세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 사이에 그런 요소나 스코프 테마의 루트가 있으면 토큰을 다시 선언해서 조상의 값을 없앱니다. 제품의 본문 텍스트를 모두 바꾸려면 테마나 `ThemeProvider`의 overrides에서 `text.font.size`를 지정하세요. 한 요소만 다른 크기로 그리려면 자기 CSS에서 `font.size.*` 변수(`--todae-font-size-*`)로 `font-size`를 지정하세요. `todae.components` 레이어 밖의 규칙이 Text가 정한 크기보다 우선합니다.
+
+제목의 `as`가 foundation 단계를 고릅니다. h1은 `font.size.6`, h2는 `font.size.5`, h3는 `font.size.4`, h6는 `font.size.2`를 읽습니다. h4와 h5는 본문 크기를 씁니다. `variant="label"`은 아이브로와 메타데이터를 위한 역할이며, 아래 레이블에서 설명합니다.
 
 글꼴은 `font.family.sans`를 읽는 `text.font.family`에 있습니다. Todae는 본문 텍스트와 제목에 이 값으로 `font-family`를 지정하지 않으니, 원하는 곳에 `var(--todae-text-font-family)`를 적용하세요. 레이블 역할은 아래 레이블에서 설명하듯 자체 글꼴을 지정합니다.
 

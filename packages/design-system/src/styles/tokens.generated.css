@@ -493,6 +493,7 @@
   --todae-text-fg-default: var(--_todae-text-fg-default, var(--todae-color-fg-default));
   --todae-text-fg-muted: var(--_todae-text-fg-muted, var(--todae-color-fg-muted));
   --todae-text-font-family: var(--_todae-text-font-family, var(--todae-font-family-sans));
+  --todae-text-font-size: var(--_todae-text-font-size, var(--todae-font-size-3));
   --todae-text-label-fg: var(--_todae-text-label-fg, var(--todae-text-fg-muted));
   --todae-text-label-font-family: var(--_todae-text-label-font-family, var(--todae-text-font-family));
   --todae-text-label-font-letter-spacing: var(--_todae-text-label-font-letter-spacing, var(--todae-font-letter-spacing-default));

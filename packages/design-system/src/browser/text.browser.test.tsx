@@ -1,7 +1,8 @@
+import type { CSSProperties } from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Tabs, Text, Tree } from '../index.js';
+import { Tabs, Text, ThemeProvider, Tree } from '../index.js';
 
 afterEach(cleanup);
 
@@ -414,5 +415,33 @@ describe('Text.Root lines', () => {
     await userEvent.hover(screen.getByTestId('cut'));
     await new Promise((resolve) => setTimeout(resolve, 600));
     expect(openTip()).toBeNull();
+  });
+});
+
+describe('Text body size', () => {
+  it('draws at the text.font.size a ThemeProvider overrides', () => {
+    render(
+      <ThemeProvider overrides={{ 'text.font.size': { value: 1.5, unit: 'rem' } }}>
+        <Text.Root data-testid="themed">Body</Text.Root>
+      </ThemeProvider>,
+    );
+    expect(getComputedStyle(screen.getByTestId('themed')).fontSize).toBe('24px');
+  });
+
+  it('draws at a length set on the element or an ancestor', () => {
+    render(
+      <>
+        <Text.Root data-testid="bare">Body</Text.Root>
+        <div style={{ '--todae-text-font-size': '1.25rem' } as CSSProperties}>
+          <Text.Root data-testid="around">Body</Text.Root>
+        </div>
+        <Text.Root data-testid="on" style={{ '--todae-text-font-size': '2rem' } as CSSProperties}>
+          Body
+        </Text.Root>
+      </>,
+    );
+    expect(getComputedStyle(screen.getByTestId('bare')).fontSize).toBe('16px');
+    expect(getComputedStyle(screen.getByTestId('around')).fontSize).toBe('20px');
+    expect(getComputedStyle(screen.getByTestId('on')).fontSize).toBe('32px');
   });
 });

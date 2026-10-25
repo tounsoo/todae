@@ -2045,8 +2045,8 @@
   },
   "Text.Root": {
     "as": {
-      "en": "Rendered element. A heading level sets the outline and picks that level's scale, bold weight and tight leading: h1 font.size.6, h2 font.size.5, h3 font.size.4, h4 and h5 font.size.3, h6 font.size.2. With no heading, the scale is font.size.3.",
-      "ko": "렌더링할 요소. 제목 수준은 문서 개요를 정하고, 그 수준의 스케일, 굵은 두께, 좁은 행간도 정합니다. h1은 font.size.6, h2는 font.size.5, h3는 font.size.4, h4와 h5는 font.size.3, h6는 font.size.2입니다. 제목이 아니면 스케일은 font.size.3입니다."
+      "en": "Rendered element. A heading level sets the outline and picks that level's scale, bold weight and tight leading. h1 reads font.size.6, h2 font.size.5, h3 font.size.4, and h6 font.size.2. h4 and h5 use the body size. With no heading, body draws at text.font.size, whose default is font.size.3.",
+      "ko": "렌더링할 요소. 제목 수준은 문서 개요를 정하고, 그 수준의 스케일, 굵은 두께, 좁은 행간도 정합니다. h1은 font.size.6, h2는 font.size.5, h3는 font.size.4, h6는 font.size.2입니다. h4와 h5는 본문 크기를 씁니다. 제목이 아니면 본문은 text.font.size로 그려지고, 기본값은 font.size.3입니다."
     },
     "variant": {
       "en": "The label role for eyebrows, kickers and metadata. It reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and sets font-family, from text.font.family by default. A tone or weight you give wins.",
