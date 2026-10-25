@@ -47,7 +47,7 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 
 ```css
 .avatarGroup {
-  --_stack-size: var(--todae-avatar-size-md);
+  --_stack-size: var(--todae-avatar-size);
 
   display: inline-flex;
   align-items: center;
@@ -105,15 +105,15 @@ The overlap reads the stack's size, not each avatar's, so it holds for any direc
 
 ## Sizes
 
-An avatar has no `size` prop, so the stack has none either. The avatars draw at `--todae-avatar-size-md`, and the stack captures that same variable for its overlap. Set the variable on the stack element, and every avatar inside and the overlap follow it. Do not put an element with `data-appearance` or `data-density`, or a scoped theme root, inside that element. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, declares the size token again, so the avatars return to `avatar.size.md` while the overlap stays at the size the stack captured. The two classes below point it at the `avatar.size.sm` and `avatar.size.lg` steps. Add them to the stack beside `avatarGroup`.
+An avatar has no `size` prop, and Todae does not ship a size scale, so the stack has none either. The avatars draw at `--todae-avatar-size`, and the stack captures that same variable for its overlap. Set the variable to a length on the stack element, and every avatar inside and the overlap follow it. Do not put an element with `data-appearance` or `data-density`, or a scoped theme root, inside that element. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, declares the size token again, so the avatars return to `avatar.size` while the overlap stays at the size the stack captured. The two classes below set explicit lengths. Add them to the stack beside `avatarGroup`.
 
 ```css
 .small {
-  --todae-avatar-size-md: var(--todae-avatar-size-sm);
+  --todae-avatar-size: 1.5rem;
 }
 
 .large {
-  --todae-avatar-size-md: var(--todae-avatar-size-lg);
+  --todae-avatar-size: 2.5rem;
 }
 ```
 

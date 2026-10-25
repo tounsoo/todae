@@ -36,7 +36,7 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 
 ## Sizes
 
-Avatar has no `size` prop. Your design system owns the sizes. An avatar draws at `avatar.size.md`, 2rem. To change one, set `--todae-avatar-size-md` on the avatar, or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. `avatar.size.sm` (1.5rem) and `avatar.size.lg` (2.5rem) are two more steps for a theme to change, and for your CSS to pick from. The fallback text scales with the box through `avatar.font.scale`.
+Avatar has no `size` prop. Todae does not ship a size scale. An avatar draws at `avatar.size`, 2rem. To change one, set `--todae-avatar-size`, or `inline-size` and `block-size`, on the avatar or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. The fallback text scales with `--todae-avatar-size` through `avatar.font.scale`.
 
 ```tsx
 <Avatar.Root className={styles.small} label="Ada Lovelace">
@@ -46,7 +46,7 @@ Avatar has no `size` prop. Your design system owns the sizes. An avatar draws at
 
 ```css
 .small {
-  --todae-avatar-size-md: var(--todae-avatar-size-sm);
+  --todae-avatar-size: 1.5rem;
 }
 ```
 
@@ -56,7 +56,7 @@ Avatar has no `size` prop. Your design system owns the sizes. An avatar draws at
   <AvatarSizes />
 </Example>
 
-To change every avatar in a product, set `avatar.size.md` in your theme or in `ThemeProvider` overrides.
+To change every avatar in a product, set `avatar.size` in your theme or in `ThemeProvider` overrides.
 
 Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape through `avatar.radius`.
 

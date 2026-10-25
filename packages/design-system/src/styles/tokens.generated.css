@@ -1163,9 +1163,7 @@
   --todae-avatar-font-scale: var(--_todae-avatar-font-scale, 0.4);
   --todae-avatar-font-weight: var(--_todae-avatar-font-weight, var(--todae-font-weight-medium));
   --todae-avatar-radius: var(--_todae-avatar-radius, var(--todae-radius-full));
-  --todae-avatar-size-lg: var(--_todae-avatar-size-lg, 2.5rem);
-  --todae-avatar-size-md: var(--_todae-avatar-size-md, 2rem);
-  --todae-avatar-size-sm: var(--_todae-avatar-size-sm, 1.5rem);
+  --todae-avatar-size: var(--_todae-avatar-size, 2rem);
   --todae-grid-gap: var(--_todae-grid-gap, var(--todae-space-stack-gap));
   --todae-pagination-bg-hover: var(--_todae-pagination-bg-hover, var(--todae-color-bg-highlight));
   --todae-pagination-border-width: var(--_todae-pagination-border-width, var(--todae-border-width));

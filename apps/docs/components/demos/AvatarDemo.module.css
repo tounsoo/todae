@@ -1,7 +1,7 @@
 .small {
-  --todae-avatar-size-md: var(--todae-avatar-size-sm);
+  --todae-avatar-size: 1.5rem;
 }
 
 .large {
-  --todae-avatar-size-md: var(--todae-avatar-size-lg);
+  --todae-avatar-size: 2.5rem;
 }

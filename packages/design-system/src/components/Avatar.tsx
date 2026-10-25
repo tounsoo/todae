@@ -24,11 +24,11 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
  * fails, or when there is none. With `label` the avatar is one image named by
  * `label` (`role="img"`), whichever of the two shows. Without `label` it is
  * decorative and hidden from assistive technology: use that when the name is
- * already written next to it. It draws at `--todae-avatar-size-md`. Set that
- * on the avatar, or on an ancestor with no appearance or density attribute
- * and no scoped theme root between them. A ThemeProvider or a DensityProvider
- * carries one of those attributes. Such an element, or a scoped theme root,
- * in between declares the token again and drops the ancestor's value.
+ * already written next to it. It draws at `--todae-avatar-size`. Set that
+ * variable, or `inline-size` and `block-size`, on the avatar or an ancestor.
+ * An appearance or density attribute, or a scoped theme root, between that
+ * ancestor and the avatar declares the size token again and drops the
+ * ancestor's value.
  */
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
@@ -68,7 +68,7 @@ function omitLegacySize(props: AvatarRootProps): AvatarRootProps {
   if (size != null) {
     warnOnce(
       'avatar-size',
-      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size-md on the avatar, or on an ancestor with no appearance or density attribute and no scoped theme root between them. The value is a length, or the sm or lg step.`,
+      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size, or inline-size and block-size, on the avatar or an ancestor. An appearance or density attribute, or a scoped theme root, between that ancestor and the avatar declares the size token again. Todae ships no size scale.`,
       'error',
     );
   }

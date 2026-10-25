@@ -10,7 +10,7 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    --_size: var(--todae-avatar-size-md);
+    --_size: var(--todae-avatar-size);
     inline-size: var(--_size);
     block-size: var(--_size);
     overflow: hidden;

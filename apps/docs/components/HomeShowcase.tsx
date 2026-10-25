@@ -3,7 +3,7 @@
 import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@tounsoo/todae';
 import { useId, useState, type CSSProperties } from 'react';
 
-const smallAvatar = { '--todae-avatar-size-md': 'var(--todae-avatar-size-sm)' } as CSSProperties;
+const smallAvatar = { '--todae-avatar-size': '1.5rem' } as CSSProperties;
 
 const MEMBERS = [
   { id: 'ada', name: 'Ada Lovelace', initials: 'AL', team: 'Design', teamTone: 'category-7' },

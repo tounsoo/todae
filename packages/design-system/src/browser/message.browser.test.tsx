@@ -12,7 +12,7 @@ function emulateMedia(features: { name: string; value: string }[]) {
   return session().send('Emulation.setEmulatedMedia', { features });
 }
 
-const LARGE = { '--todae-avatar-size-md': 'var(--todae-avatar-size-lg)' } as CSSProperties;
+const LARGE = { '--todae-avatar-size': '2.5rem' } as CSSProperties;
 
 describe('Message.Root in a browser', () => {
   it('puts a user message at the end side in a bubble, with the avatar after it', () => {

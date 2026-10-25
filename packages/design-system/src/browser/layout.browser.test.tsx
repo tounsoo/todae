@@ -112,13 +112,13 @@ describe('Avatar in a browser', () => {
     }
   });
 
-  it('draws at avatar.size.md, and at the step a product sets on it or around it', () => {
+  it('draws at avatar.size, and at a length a product sets on it or around it', () => {
     render(
       <Themed>
         <Avatar.Root data-testid="bare">
           <Avatar.Fallback data-testid="bare-fallback">AL</Avatar.Fallback>
         </Avatar.Root>
-        <div style={{ '--todae-avatar-size-md': 'var(--todae-avatar-size-lg)' } as CSSProperties}>
+        <div style={{ '--todae-avatar-size': '2.5rem' } as CSSProperties}>
           <Avatar.Root data-testid="large">
             <Avatar.Fallback data-testid="large-fallback">AL</Avatar.Fallback>
           </Avatar.Root>
@@ -131,9 +131,9 @@ describe('Avatar in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('large-fallback')).fontSize).toBe('16px');
   });
 
-  it('draws at the avatar.size.md a ThemeProvider overrides', () => {
+  it('draws at the avatar.size a ThemeProvider overrides', () => {
     render(
-      <ThemeProvider overrides={{ 'avatar.size.md': { value: 1.5, unit: 'rem' } }}>
+      <ThemeProvider overrides={{ 'avatar.size': { value: 1.5, unit: 'rem' } }}>
         <Avatar.Root data-testid="themed" />
       </ThemeProvider>,
     );
@@ -143,7 +143,7 @@ describe('Avatar in a browser', () => {
   it('drops a size set on an ancestor when a density element sits between them', () => {
     render(
       <Themed>
-        <div style={{ '--todae-avatar-size-md': 'var(--todae-avatar-size-sm)' } as CSSProperties}>
+        <div style={{ '--todae-avatar-size': '1.5rem' } as CSSProperties}>
           <DensityProvider density="compact">
             <Avatar.Root data-testid="nested" />
           </DensityProvider>

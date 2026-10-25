@@ -80,7 +80,7 @@ describe('Avatar group recipe in a browser', () => {
   });
 
   it('overlaps an avatar with its own size by the stack size', () => {
-    const small = { '--todae-avatar-size-md': 'var(--todae-avatar-size-sm)' } as CSSProperties;
+    const small = { '--todae-avatar-size': '1.5rem' } as CSSProperties;
     render(
       <Themed>
         <Assignees>

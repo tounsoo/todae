@@ -126,7 +126,7 @@ describe('Avatar', () => {
     expect(el.hasAttribute('size')).toBe(false);
     expect(el.hasAttribute('data-size')).toBe(false);
     expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('--todae-avatar-size-md'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('--todae-avatar-size'));
     // @ts-expect-error size is no longer a prop
     view.rerender(<Avatar.Root size="lg" data-testid="a" />);
     expect(error).toHaveBeenCalledTimes(1);
