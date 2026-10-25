@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Avatar.Root',
   description:
-    'A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role="img"); without label it is hidden from assistive technology. It draws at --todae-avatar-size-md, which a product sets on the avatar or around it. Takes native span attributes except role, aria-label and aria-labelledby.',
+    'A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role="img"); without label it is hidden from assistive technology. It draws at --todae-avatar-size-md, set on the avatar or on an ancestor with no appearance or density element between them. Takes native span attributes except role, aria-label and aria-labelledby.',
   props: [
     {
       name: 'label',

@@ -45,6 +45,7 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 ```css
 .avatarGroup {
   --_stack-size: var(--todae-avatar-size-md);
+  --_ring: var(--todae-color-bg-surface);
 
   display: inline-flex;
   align-items: center;
@@ -58,6 +59,17 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
   flex: none;
 }
 
+/* A button or a link keeps the browser's padding, border and fill, which
+   would sit outside the avatar and throw the overlap off. */
+.avatarGroup > :is(button, a) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--todae-avatar-radius);
+}
+
 .avatarGroup > :not([popover], dialog) ~ :not([popover], dialog) {
   margin-inline-start: calc(-0.25 * var(--_stack-size));
 }
@@ -65,7 +77,7 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 /* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
    paint over earlier ones in DOM order. */
 .avatarGroup .avatar {
-  box-shadow: 0 0 0 var(--todae-border-width) var(--todae-color-bg-surface);
+  box-shadow: 0 0 0 var(--todae-border-width) var(--_ring);
 }
 
 /* A focused child rises above its neighbors' rings, so its focus ring shows
@@ -82,11 +94,11 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 }
 ```
 
-The overlap reads the stack's size, not each avatar's, so it holds for any direct child: an avatar, or one wrapped in a tooltip trigger or a link. An avatar given its own size is still pulled back by the stack's size. The margin is logical, so the stack mirrors in right-to-left text. The ring is a `box-shadow` in the surface color, so set `--todae-color-bg-surface` where the stack sits on another background. A focused child rises above its neighbors, so its focus ring shows whole. In forced colors the ring is dropped and each avatar gets a border in the system text color instead.
+The overlap reads the stack's size, not each avatar's, so it holds for any direct child: an avatar, or one wrapped in a tooltip trigger or a link. An avatar given its own size is still pulled back by the stack's size. The margin is logical, so the stack mirrors in right-to-left text. The ring is a `box-shadow` in `--_ring`, which starts as the surface color. Set `--_ring` on the stack when it sits on another background. A focused child rises above its neighbors, so its focus ring shows whole. In forced colors the ring is dropped and each avatar gets a border in the system text color instead. A button or a link around an avatar loses the browser's padding, border and fill, so the overlap stays on the avatar.
 
 ## Sizes
 
-An avatar has no `size` prop, so the stack has none either. The avatars draw at `--todae-avatar-size-md`, and the stack captures that same variable for its overlap. Set the variable on the stack element, and every avatar inside and the overlap follow it. The two classes below point it at the `avatar.size.sm` and `avatar.size.lg` steps. Add them to the stack beside `avatarGroup`.
+An avatar has no `size` prop, so the stack has none either. The avatars draw at `--todae-avatar-size-md`, and the stack captures that same variable for its overlap. Set the variable on the stack element, and every avatar inside and the overlap follow it. Do not put a ThemeProvider or DensityProvider inside that element. Either one declares the size token again, so the avatars return to `avatar.size.md` while the overlap stays at the size the stack captured. The two classes below point it at the `avatar.size.sm` and `avatar.size.lg` steps. Add them to the stack beside `avatarGroup`.
 
 ```css
 .small {
@@ -130,18 +142,22 @@ function AssigneeTip({ person }: { person: Person }) {
   );
 }
 
-<div role="group" aria-label="Assignees" className={styles.avatarGroup}>
-  {people.map((person) => (
-    <AssigneeTip key={person.id} person={person} />
-  ))}
-</div>
+function Assignees({ people }: { people: Person[] }) {
+  return (
+    <div role="group" aria-label="Assignees" className={styles.avatarGroup}>
+      {people.map((person) => (
+        <AssigneeTip key={person.id} person={person} />
+      ))}
+    </div>
+  );
+}
 ```
 
 ## Accessible composition
 
-**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name. The copied CSS keeps the overlap logical so it mirrors in right-to-left text, lifts a focused child so its focus ring shows whole, and swaps the ring for a text-color border in forced colors.
+**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name.
 
-**You supply:** The `role="group"` and an `aria-label` on the stack, such as "Assignees", so the avatars inside read as one named set. A `label` on each avatar, and on the "+1" avatar a label such as "1 more", so the count is read too. When the names are written next to the stack, leave the avatars unnamed.
+**You supply:** The `role="group"` and an `aria-label` on the stack, such as "Assignees", so the avatars inside read as one named set. A `label` on each avatar, and on the "+1" avatar a label such as "1 more", so the count is read too. When the names are written next to the stack, leave the avatars unnamed. The copied CSS, which overlaps by the stack size, lifts a focused child, clears the browser box on a button or a link, and swaps the ring for a text-color border in forced colors.
 
 **Watch for:** An avatar with no `label` as the only content of a button or a link: the avatar is hidden, so the control has no name. Give the control `aria-label`. A stack so tight that initials hide each other: show fewer avatars and put the rest in the count.
 

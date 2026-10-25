@@ -5,7 +5,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Button, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, ThemeProvider, paginationRange } from '../index.js';
+import { Avatar, Button, DensityProvider, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, ThemeProvider, paginationRange } from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -138,6 +138,19 @@ describe('Avatar in a browser', () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId('themed').getBoundingClientRect().width).toBe(24);
+  });
+
+  it('drops a size set on an ancestor when a density element sits between them', () => {
+    render(
+      <Themed>
+        <div style={{ '--todae-avatar-size-md': 'var(--todae-avatar-size-sm)' } as CSSProperties}>
+          <DensityProvider density="compact">
+            <Avatar.Root data-testid="nested" />
+          </DensityProvider>
+        </div>
+      </Themed>,
+    );
+    expect(screen.getByTestId('nested').getBoundingClientRect().width).toBe(32);
   });
 });
 

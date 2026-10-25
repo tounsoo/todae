@@ -1,0 +1,7 @@
+.small {
+  --todae-avatar-size-md: var(--todae-avatar-size-sm);
+}
+
+.large {
+  --todae-avatar-size-md: var(--todae-avatar-size-lg);
+}

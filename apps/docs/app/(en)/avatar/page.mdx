@@ -35,7 +35,7 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 
 ## Sizes
 
-Avatar has no `size` prop. Your design system owns the sizes. An avatar draws at `avatar.size.md`, 2rem. To change one, set `--todae-avatar-size-md` on the avatar or on an element around it. `avatar.size.sm` (1.5rem) and `avatar.size.lg` (2.5rem) are two more steps for a theme to change, and for your CSS to pick from. The fallback text scales with the box through `avatar.font.scale`.
+Avatar has no `size` prop. Your design system owns the sizes. An avatar draws at `avatar.size.md`, 2rem. To change one, set `--todae-avatar-size-md` on the avatar, or on an ancestor with no `[data-appearance]` or `[data-density]` element between them. A ThemeProvider or DensityProvider in between declares the token again and drops the ancestor's value. `avatar.size.sm` (1.5rem) and `avatar.size.lg` (2.5rem) are two more steps for a theme to change, and for your CSS to pick from. The fallback text scales with the box through `avatar.font.scale`.
 
 ```tsx
 <Avatar.Root className={styles.small} label="Ada Lovelace">

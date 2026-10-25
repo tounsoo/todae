@@ -23,9 +23,9 @@ export function HomeShowcase() {
             Workspace
           </Text.Root>
           <Stack.Root className="showcase-meta" direction="row" align="center">
-            <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members">
+            <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members" style={smallAvatar}>
               {MEMBERS.map((member) => (
-                <Avatar.Root key={member.id} style={smallAvatar} label={member.name} tone={member.tone}>
+                <Avatar.Root key={member.id} label={member.name} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
               ))}
@@ -53,8 +53,8 @@ export function HomeShowcase() {
           </Tabs.Panel>
           <Tabs.Panel value="members" className="showcase-panel">
             {MEMBERS.map((member) => (
-              <div key={member.id} className="showcase-member">
-                <Avatar.Root style={smallAvatar} tone={member.tone}>
+              <div key={member.id} className="showcase-member" style={smallAvatar}>
+                <Avatar.Root tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
                 <Text.Root as="span">{member.name}</Text.Root>

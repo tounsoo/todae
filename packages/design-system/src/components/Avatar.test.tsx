@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar.js';
+import { resetWarnOnce } from './warnOnce.js';
 import { StrictMode } from 'react';
 
 afterEach(cleanup);
@@ -117,6 +118,7 @@ describe('Avatar', () => {
   });
 
   it('drops a leftover size instead of painting it on the element', () => {
+    resetWarnOnce();
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     // @ts-expect-error size is no longer a prop, and a JS caller can still pass one
     const view = render(<Avatar.Root size="lg" data-testid="a" />);

@@ -12,19 +12,20 @@ function cssFences(path: string): string[] {
   });
 }
 
-const MODULE = read('components/demos/AvatarGroupDemo.module.css');
+const STACK = read('components/demos/AvatarGroupDemo.module.css');
+const SIZES = read('components/demos/AvatarDemo.module.css');
 
 describe('avatar group recipe css', () => {
   it.each(['app/(en)/recipes/avatar-group/page.mdx', 'app/ko/recipes/avatar-group/page.mdx'])(
     'shows, on %s, the stylesheet the demo imports',
     (page) => {
-      expect(cssFences(page).join('\n\n') + '\n').toBe(MODULE);
+      expect(cssFences(page).join('\n\n') + '\n').toBe(STACK);
     },
   );
 
   it.each(['app/(en)/avatar/page.mdx', 'app/ko/avatar/page.mdx'])('shows, on %s, a rule the stylesheet has', (page) => {
     const fences = cssFences(page);
     expect(fences).toHaveLength(1);
-    expect(MODULE.split('\n\n')).toContain(fences[0]);
+    expect(SIZES.split('\n\n')).toContain(fences[0]);
   });
 });

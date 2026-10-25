@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
+import { warnOnce } from './warnOnce.js';
 import styles from './Avatar.module.css';
 import type { CategoryTone } from './tone.js';
 
@@ -23,8 +24,10 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
  * fails, or when there is none. With `label` the avatar is one image named by
  * `label` (`role="img"`), whichever of the two shows. Without `label` it is
  * decorative and hidden from assistive technology: use that when the name is
- * already written next to it. It draws at `--todae-avatar-size-md`, which a
- * product sets on the avatar or around it.
+ * already written next to it. It draws at `--todae-avatar-size-md`. Set that
+ * on the avatar, or on an ancestor with no appearance or density element
+ * between them. A ThemeProvider or DensityProvider in between declares the
+ * token again and drops the ancestor's value.
  */
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
@@ -52,8 +55,6 @@ type AvatarContextValue = {
 
 const AvatarContext = /* @__PURE__ */ createContext<AvatarContextValue | null>(null);
 
-const reportedSizes = /* @__PURE__ */ new Set<string>();
-
 function useAvatar(part: string): AvatarContextValue {
   const ctx = useContext(AvatarContext);
   if (!ctx) throw new Error(`Avatar.${part} must render inside Avatar.Root`);
@@ -63,10 +64,11 @@ function useAvatar(part: string): AvatarContextValue {
 function omitLegacySize(props: AvatarRootProps): AvatarRootProps {
   if (!('size' in props)) return props;
   const { size, ...rest } = props as AvatarRootProps & { size?: unknown };
-  if (process.env.NODE_ENV !== 'production' && size != null && !reportedSizes.has(String(size))) {
-    reportedSizes.add(String(size));
-    console.error(
-      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size-md on the avatar or around it, for example to var(--todae-avatar-size-sm).`,
+  if (size != null) {
+    warnOnce(
+      'avatar-size',
+      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size-md on the avatar, or on an ancestor with no appearance or density element between them.`,
+      'error',
     );
   }
   return rest;

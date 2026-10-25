@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, categoryTone, Stack, Text } from '@tounsoo/todae';
-import type { CSSProperties } from 'react';
+import styles from './AvatarDemo.module.css';
 
 // A drawn portrait, inline so the demo needs no network.
 const PORTRAIT =
@@ -28,18 +28,16 @@ export function AvatarStates() {
   );
 }
 
-const step = (name: 'sm' | 'lg'): CSSProperties => ({ '--todae-avatar-size-md': `var(--todae-avatar-size-${name})` }) as CSSProperties;
-
 export function AvatarSizes() {
   return (
     <Stack.Root direction="row">
-      <Avatar.Root style={step('sm')} label="Ada Lovelace">
+      <Avatar.Root className={styles.small} label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
       <Avatar.Root label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
-      <Avatar.Root style={step('lg')} label="Ada Lovelace">
+      <Avatar.Root className={styles.large} label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
     </Stack.Root>
