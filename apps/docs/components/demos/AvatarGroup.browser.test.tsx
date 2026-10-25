@@ -172,7 +172,7 @@ describe('Avatar group recipe in a browser', () => {
         </div>
       </Themed>,
     );
-    expect(getComputedStyle(screen.getByTestId('button', { hidden: true })).display).toBe('none');
+    expect(getComputedStyle(screen.getByTestId('button')).display).toBe('none');
   });
 
   it('lifts a focused interactive wrapper above the avatar after it', async () => {
