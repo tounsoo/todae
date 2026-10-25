@@ -9,7 +9,6 @@ export const GUIDES = {
   'build-on-todae': 'guides/build-on-todae',
   tokens: 'tokens',
   'css-layers': 'guides/css-layers',
-  migration: 'guides/migration',
   composition: 'composition',
   platform: 'platform',
   mcp: 'mcp',
