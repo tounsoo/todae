@@ -21,7 +21,7 @@ body {
 
 .wordmark,
 .cabin-name {
-  font-size: var(--todae-text-size-4);
+  font-size: var(--todae-font-size-4);
 }
 
 .hero {

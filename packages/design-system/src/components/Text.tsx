@@ -77,7 +77,7 @@ function omitLegacySize(props: TextRootProps): TextRootProps {
   if (process.env.NODE_ENV !== 'production' && size != null && !reportedSizes.has(String(size))) {
     reportedSizes.add(String(size));
     console.error(
-      `Text.Root no longer takes size; got ${String(size)}. Use variant="label" for the label role, or set font-size from a text.size.* variable in your CSS.`,
+      `Text.Root no longer takes size; got ${String(size)}. Use variant="label" for the label role, or set font-size from a font.size.* variable (--todae-font-size-*) in your CSS.`,
     );
   }
   return rest;

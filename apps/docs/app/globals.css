@@ -246,9 +246,9 @@ body {
   padding: 1.5rem 1.25rem;
 }
 
-/* Text.Root sets its scale inside @layer todae.components, so this unlayered rule keeps the footer on text.size.2. */
+/* Text.Root sets its scale inside @layer todae.components, so this unlayered rule keeps the footer on font.size.2. */
 .site-footer-inner > * {
-  font-size: var(--todae-text-size-2);
+  font-size: var(--todae-font-size-2);
 }
 
 /* The copyright ends the line it shares with the release line, and starts its own line when it wraps. */

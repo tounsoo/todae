@@ -4,7 +4,7 @@ import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
-Body text uses the medium scale, `text.size.3`. A heading's `as` picks its scale: h1 reads `text.size.6`, h2 `text.size.5`, h3 `text.size.4`, h4 and h5 `text.size.3`, and h6 `text.size.2`. Text has no `size` prop. To size one element, set `font-size` from one of those variables in your own CSS. A rule outside the `todae.components` layer wins over the scale Text sets. Changing a `text.size.*` token resizes every use of that step. `variant="label"` is the role for eyebrows and metadata, described under Label below.
+Body text uses the medium scale, `font.size.3`. A heading's `as` picks its scale: h1 reads `font.size.6`, h2 `font.size.5`, h3 `font.size.4`, h4 and h5 `font.size.3`, and h6 `font.size.2`. Text has no `size` prop. To size one element, set `font-size` from a `font.size.*` variable (`--todae-font-size-*`) in your own CSS. A rule outside the `todae.components` layer wins over the scale Text sets. Changing a `font.size.*` token resizes every use of that step. `variant="label"` is the role for eyebrows and metadata, described under Label below.
 
 The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae does not set `font-family` from it on body text and headings; apply `var(--todae-text-font-family)` where you want it. The label role sets its own, as Label below says.
 
@@ -40,7 +40,7 @@ Server Components can import it from `@tounsoo/todae/text`. That entry has no `'
 
 ```css
 .section-title {
-  font-size: var(--todae-text-size-3);
+  font-size: var(--todae-font-size-3);
 }
 ```
 

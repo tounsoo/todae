@@ -206,7 +206,7 @@ describe('docs mcp tools', () => {
       status: 'present',
       whenToUse:
         "Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`; a nested provider with none keeps the enclosing one's. Spacing only.",
-      whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → the `text.size.*` tokens.',
+      whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → the `font.size.*` tokens.',
       docsUrl: `${DOCS_ORIGIN}/tokens`,
     });
     const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));

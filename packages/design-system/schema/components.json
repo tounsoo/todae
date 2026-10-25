@@ -4744,7 +4744,7 @@
           "name": "as",
           "type": "\"p\" | \"span\" | \"strong\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
           "required": false,
-          "description": "Rendered element. A heading level sets the outline and picks that level's scale, bold weight and tight leading: h1 text.size.6, h2 text.size.5, h3 text.size.4, h4 and h5 text.size.3, h6 text.size.2. With no heading, the scale is text.size.3.",
+          "description": "Rendered element. A heading level sets the outline and picks that level's scale, bold weight and tight leading: h1 font.size.6, h2 font.size.5, h3 font.size.4, h4 and h5 font.size.3, h6 font.size.2. With no heading, the scale is font.size.3.",
           "default": "\"p\""
         },
         {
