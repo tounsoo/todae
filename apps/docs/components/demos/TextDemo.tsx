@@ -13,22 +13,11 @@ export function TextHeadings() {
   );
 }
 
-export function TextHeadingSize() {
-  return (
-    <>
-      <Text.Root as="h2" size="m" tone="muted" weight="medium">
-        A level 2 heading set small
-      </Text.Root>
-      <Text.Root>The outline says h2; the size says it is a quiet section label.</Text.Root>
-    </>
-  );
-}
-
 export function TextLabel() {
   return (
     <hgroup>
-      <Text.Root size="label">Release notes</Text.Root>
-      <Text.Root as="h2" size="l">
+      <Text.Root variant="label">Release notes</Text.Root>
+      <Text.Root as="h2">
         What changed in 0.4
       </Text.Root>
     </hgroup>

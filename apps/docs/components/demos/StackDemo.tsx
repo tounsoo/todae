@@ -17,7 +17,7 @@ export function StackGaps() {
     <Stack.Root gap="spacious">
       {(['none', 'condensed', 'normal', 'spacious'] as const).map((gap) => (
         <Stack.Root key={gap} gap="condensed">
-          <Text.Root size="s">{gap}</Text.Root>
+          <Text.Root>{gap}</Text.Root>
           <Stack.Root direction="row" gap={gap}>
             <Badge.Root>One</Badge.Root>
             <Badge.Root>Two</Badge.Root>

@@ -53,7 +53,7 @@ function Citation({ number, source, href }: { number: number; source: Source; hr
           {source.title}
         </Link.Root>
         <br />
-        <Text.Root as="span" size="s" tone="muted">
+        <Text.Root as="span" tone="muted">
           {source.site}
         </Text.Root>
       </Tooltip.Root>
@@ -84,14 +84,14 @@ export function CitationsExample() {
               )}
             </p>
           ))}
-          <Text.Root id={`${id}-sources`} size="s" weight="bold">
+          <Text.Root id={`${id}-sources`} weight="bold">
             Sources
           </Text.Root>
           <ol aria-labelledby={`${id}-sources`}>
             {SOURCES.map((source) => (
               <li key={source.url} id={sourceId(source)}>
                 <Link.Root href={source.url}>{source.title}</Link.Root>{' '}
-                <Text.Root as="span" size="s" tone="muted">
+                <Text.Root as="span" tone="muted">
                   {source.site}
                 </Text.Root>
               </li>

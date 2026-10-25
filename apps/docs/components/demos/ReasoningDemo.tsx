@@ -77,7 +77,7 @@ export function ReasoningExample() {
       </Message.Root>
       <Message.Root streaming={phase !== 'done'} aria-label="Assistant">
         <Reasoning thinking={phase === 'thinking'} seconds={seconds}>
-          <Text.Root size="s" tone="muted">
+          <Text.Root tone="muted">
             {reasoning}
           </Text.Root>
         </Reasoning>

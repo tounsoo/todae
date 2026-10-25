@@ -33,7 +33,7 @@ export function SplitterSidebar() {
     <Splitter.Root value={width} onValueChange={resize} min={160} max={360} collapsible style={frame('16rem')}>
       <Splitter.Panel id={sidebarId}>
         <Pane>
-          <Text.Root as="h2" size="m" id={navId}>
+          <Text.Root as="h2" id={navId}>
             Projects
           </Text.Root>
           <Stack.Root as="ul" gap="condensed">
@@ -60,7 +60,7 @@ export function SplitterSidebar() {
                 <PanelLeft />
               </Button.Icon>
             </Button.Root>
-            <Text.Root as="h2" size="m">
+            <Text.Root as="h2">
               Atlas
             </Text.Root>
           </Stack.Root>
@@ -83,7 +83,7 @@ export function SplitterEditor() {
     <Splitter.Root orientation="vertical" defaultValue={120} min={80} max={240} style={frame('18rem')}>
       <Splitter.Panel>
         <Pane>
-          <Text.Root as="h2" size="m" id={editorId}>
+          <Text.Root as="h2" id={editorId}>
             Query
           </Text.Root>
           <Code.Root>select id, name from projects order by id;</Code.Root>
@@ -93,7 +93,7 @@ export function SplitterEditor() {
       <Splitter.Panel>
         <ScrollArea.Root style={{ blockSize: '100%' }}>
           <Pane>
-            <Text.Root as="h2" size="m">
+            <Text.Root as="h2">
               Results
             </Text.Root>
             <Stack.Root as="ul" gap="none">
@@ -127,7 +127,7 @@ export function SplitterMail() {
     <Splitter.Root defaultValue={160} min={120} max={240} collapsible style={frame('18rem')}>
       <Splitter.Panel>
         <Pane>
-          <Text.Root as="h2" size="m" id={mailboxesId}>
+          <Text.Root as="h2" id={mailboxesId}>
             Mailboxes
           </Text.Root>
           <Stack.Root as="ul" gap="condensed">
@@ -145,7 +145,7 @@ export function SplitterMail() {
           <Splitter.Panel>
             <ScrollArea.Root style={{ blockSize: '100%' }}>
               <Pane>
-                <Text.Root as="h2" size="m" id={inboxId}>
+                <Text.Root as="h2" id={inboxId}>
                   Inbox
                 </Text.Root>
                 <Stack.Root as="ul" gap="condensed">
@@ -168,7 +168,7 @@ export function SplitterMail() {
           <Splitter.Panel>
             <ScrollArea.Root style={{ blockSize: '100%' }}>
               <Pane>
-                <Text.Root as="h2" size="m">
+                <Text.Root as="h2">
                   {subject}
                 </Text.Root>
                 <Text.Root tone="muted">From {from}</Text.Root>
@@ -207,7 +207,7 @@ export function SplitterShow() {
       <Splitter.Root show={show} defaultValue={200} min={140} max={320} style={frame('14rem')}>
         <Splitter.Panel>
           <Pane>
-            <Text.Root as="h2" size="m" id={listId}>
+            <Text.Root as="h2" id={listId}>
               Inbox
             </Text.Root>
             <Stack.Root as="ul" gap="condensed">
@@ -222,7 +222,7 @@ export function SplitterShow() {
         <Splitter.Handle aria-labelledby={listId} />
         <Splitter.Panel>
           <Pane>
-            <Text.Root as="h2" size="m">
+            <Text.Root as="h2">
               Launch checklist
             </Text.Root>
             <Text.Root tone="muted">

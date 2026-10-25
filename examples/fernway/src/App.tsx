@@ -37,7 +37,7 @@ export function App() {
       <div className="shell">
         <Stack.Root gap="spacious">
           <Stack.Root direction="row" justify="between" align="center" as="header">
-            <Text.Root as="span" size="l" weight="bold" tone="accent">
+            <Text.Root as="span" weight="bold" tone="accent">
               Fernway
             </Text.Root>
             <Switch.Root
@@ -51,8 +51,8 @@ export function App() {
           <section className="hero">
             <Stack.Root>
               <hgroup>
-                <Text.Root size="label">Cabins for the weekend</Text.Root>
-                <Text.Root as="h1" size="2xl" weight="bold">
+                <Text.Root variant="label">Cabins for the weekend</Text.Root>
+                <Text.Root as="h1" weight="bold">
                   A quiet cabin, a short drive away
                 </Text.Root>
               </hgroup>
@@ -98,7 +98,7 @@ export function App() {
                   <Card.Root key={cabin.name}>
                     <Card.Header>
                       <Stack.Root direction="row" justify="between" align="center">
-                        <Text.Root as="h2" size="l" weight="bold">
+                        <Text.Root as="h2" weight="bold">
                           {cabin.name}
                         </Text.Root>
                         {cabin.tag ? <Badge.Root tone="category-4">{cabin.tag}</Badge.Root> : null}
@@ -157,7 +157,7 @@ function PartnerStays() {
     >
       <section className="hero">
         <Stack.Root>
-          <Text.Root as="h2" size="xl" weight="bold">
+          <Text.Root as="h2" weight="bold">
             Lakeview Lodge, a Fernway partner
           </Text.Root>
           <Text.Root>Partner pages keep Fernway's layout and take the partner's colors.</Text.Root>
@@ -174,7 +174,7 @@ function BusinessStays() {
   return (
     <section className="business hero">
       <Stack.Root>
-        <Text.Root as="h2" size="xl" weight="bold">
+        <Text.Root as="h2" weight="bold">
           Fernway for business
         </Text.Root>
         <Text.Root>Team offsites in cabins near you, billed to one account.</Text.Root>

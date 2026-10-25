@@ -1,32 +1,28 @@
 import { Text } from '@tounsoo/todae/text';
-import { TextHeadingSize, TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
+import { TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
 import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
-크기 `s` / `m` / `l` / `xl` / `2xl`은 `text.size.2`부터 `text.size.6`까지에 대응합니다. `label`은 아이브로(eyebrow)와 메타데이터를 위한 별도의 역할로, 아래 레이블에서 설명합니다.
+본문 텍스트는 중간 스케일인 `text.size.3`을 씁니다. 제목의 `as`가 스케일을 고릅니다. h1은 `text.size.6`, h2는 `text.size.5`, h3는 `text.size.4`, h4와 h5는 `text.size.3`, h6는 `text.size.2`를 읽습니다. Text에는 `size` prop이 없습니다. 다른 스케일은 이 토큰을 통해 사용하는 디자인 시스템이 스타일합니다. `variant="label"`은 아이브로와 메타데이터를 위한 역할이며, 아래 레이블에서 설명합니다.
 
 글꼴은 `font.family.sans`를 읽는 `text.font.family`에 있습니다. Todae는 본문 텍스트와 제목에 이 값으로 `font-family`를 지정하지 않으니, 원하는 곳에 `var(--todae-text-font-family)`를 적용하세요. 레이블 역할은 아래 레이블에서 설명하듯 자체 글꼴을 지정합니다.
 
 Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이 진입점에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 진입점은 클라이언트 모듈입니다.
 
 ```tsx
-<Text.Root size="s" tone="muted">
-  Small muted
-</Text.Root>
+<Text.Root tone="muted">Muted body</Text.Root>
 <Text.Root>Medium default</Text.Root>
-<Text.Root size="l" tone="accent" weight="bold">
-  Large accent
+<Text.Root tone="accent" weight="bold">
+  Accent, bold
 </Text.Root>
 ```
 
 <Example>
-  <Text.Root size="s" tone="muted">
-    Small muted
-  </Text.Root>
+  <Text.Root tone="muted">Muted body</Text.Root>
   <Text.Root>Medium default</Text.Root>
-  <Text.Root size="l" tone="accent" weight="bold">
-    Large accent
+  <Text.Root tone="accent" weight="bold">
+    Accent, bold
   </Text.Root>
 </Example>
 
@@ -34,27 +30,15 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 
 ## 제목
 
-`as="h1"`부터 `as="h6"`까지는 제목을 렌더링합니다. 제목 수준에 따라 스케일을 내려가는 기본 크기, 굵은 두께, `text.leading.tight`가 정해지고, 줄바꿈이 균형 있게 맞춰집니다.
+`as="h1"`부터 `as="h6"`까지는 제목을 렌더링합니다. 수준이 위의 스케일, 굵은 두께, `text.leading.tight`를 고르고, 줄바꿈을 균형 있게 맞춥니다. 문서 개요에 맞는 수준을 고르세요. Text는 크기를 받지 않으므로 h2는 h2 스케일을 유지합니다.
 
 <Example block>
   <TextHeadings />
 </Example>
 
-문서 개요에 맞는 수준을 고르고, 보이는 크기는 `size`로 정하세요. h1 아래에 있는 제목은 작게 보여야 할 때도 h2로 남습니다.
-
-```tsx
-<Text.Root as="h2" size="m" tone="muted" weight="medium">
-  A level 2 heading set small
-</Text.Root>
-```
-
-<Example block>
-  <TextHeadingSize />
-</Example>
-
 ## 레이블
 
-`size="label"`은 다른 텍스트 위나 옆에 붙는 짧은 텍스트를 위한 역할입니다. 제목 위의 아이브로, 키커, 섹션 번호, 날짜 등이 해당합니다. 글꼴, 크기, 굵기, 행간, 자간, 대소문자, 색을 `text.label.*`에서 읽으므로, 모노스페이스에 대문자와 넓은 자간처럼 레이블의 모양은 각 회사가 정합니다. Graphite는 레이블을 담백하게 둡니다. `font.size.1`, `text.weight.medium`, 좁은 행간, `text.fg.muted`이고, 자간을 더하지 않으며 대소문자도 바꾸지 않습니다.
+`variant="label"`은 다른 텍스트 위나 옆에 붙는 짧은 텍스트를 위한 역할입니다. 제목 위의 아이브로, 키커, 섹션 번호, 날짜 등이 해당합니다. 글꼴, 크기, 굵기, 행간, 자간, 대소문자, 색을 `text.label.*`에서 읽으므로, 모노스페이스에 대문자와 넓은 자간처럼 레이블의 모양은 각 회사가 정합니다. Graphite는 레이블을 담백하게 둡니다. `font.size.1`, `text.weight.medium`, 좁은 행간, `text.fg.muted`이고, 자간을 더하지 않으며 대소문자도 바꾸지 않습니다.
 
 `text.font.family`와 달리 Todae는 `text.label.font.family`를 적용합니다. 이 토큰은 `text.font.family`를 읽으므로, 텍스트에 서체 하나를 지정한 테마는 레이블의 서체도 함께 지정하게 되고, `text.label.font.family`를 `font.family.mono`로 지정한 테마는 레이블만 바꿉니다. 텍스트 글꼴을 `var(--todae-text-font-family)`가 아닌 자체 CSS로 정하는 제품은 `text.label.font.family`도 그 글꼴로 지정하세요. 그러지 않으면 레이블이 `font.family.sans`로 보입니다.
 
@@ -62,8 +46,8 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 
 ```tsx
 <hgroup>
-  <Text.Root size="label">Release notes</Text.Root>
-  <Text.Root as="h2" size="l">
+  <Text.Root variant="label">Release notes</Text.Root>
+  <Text.Root as="h2">
     What changed in 0.4
   </Text.Root>
 </hgroup>
@@ -99,7 +83,7 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 <Text.Root lines={1} weight="medium">
   quarterly-revenue-report-northern-region-final.pdf
 </Text.Root>
-<Text.Root lines={2} size="s" tone="muted">
+<Text.Root lines={2} tone="muted">
   Every branch office's numbers for July through September, with notes from each regional lead and the forecast for the next quarter.
 </Text.Root>
 ```
@@ -110,17 +94,17 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 요소를 맡습니다. `as`는 `p`(기본값), `span`, `strong`, `h1`부터 `h6` 중 하나를 고르고, 요소는 네이티브 의미를 그대로 가집니다. `size`와 `weight`는 모양만 바꿉니다. 큰 `p`도 문단이고, `size="s"`인 `h2`도 h2입니다. `ref`, `id` 등 다른 속성은 요소에 전달됩니다. `lines`를 주면 잘린 텍스트의 툴팁을 맡습니다. 툴팁은 포인터를 올렸을 때와 키보드 포커스를 받았을 때 보이며, 텍스트 전체를 읽는 스크린 리더에서는 숨겨집니다.
+**Todae가 맡는 것:** 요소를 맡습니다. `as`는 `p`(기본값), `span`, `strong`, `h1`부터 `h6` 중 하나를 고르고, 요소는 네이티브 의미를 그대로 가집니다. `weight`는 모양만 바꾸고, 제목의 수준이 스케일을 고릅니다. `h2`는 여전히 h2입니다. `ref`, `id` 등 다른 속성은 요소에 전달됩니다. `lines`를 주면 잘린 텍스트의 툴팁을 맡습니다. 툴팁은 포인터를 올렸을 때와 키보드 포커스를 받았을 때 보이며, 텍스트 전체를 읽는 스크린 리더에서는 숨겨집니다.
 
-**직접 제공할 것:** 문서 구조를 정하세요. 각 제목의 레벨은 원하는 크기가 아니라 페이지에서 놓인 위치로 고르세요. 섹션 제목 같은 래퍼는 레벨을 prop으로 받거나, 그 레벨이 항상 맞는 곳에서만 한 레벨로 렌더링하세요. 영역이 `aria-labelledby`로 이름을 가져온다면 제목에 `id`를 주세요.
+**직접 제공할 것:** 문서 구조를 정하세요. 각 제목의 레벨은 페이지에서 놓인 위치로 고르세요. 섹션 제목 같은 래퍼는 레벨을 prop으로 받거나, 그 레벨이 항상 맞는 곳에서만 한 레벨로 렌더링하세요. 영역이 `aria-labelledby`로 이름을 가져온다면 제목에 `id`를 주세요.
 
 **주의할 점:** 카드 안의 굵은 한 줄처럼 섹션을 시작하지 않는 텍스트에 제목 태그를 쓰면 페이지의 제목 목록에 항목이 하나 더 생깁니다. 대신 `weight="bold"`를 쓰세요. `as="strong"`은 중요함을 나타냅니다. 굵은 모양만 필요하면 `weight`를 쓰세요. 오류나 선택된 상태처럼 텍스트의 의미를 `tone`만으로 나타내지 마세요. 레이블은 그 아래 제목의 일부가 아니므로, 제목 사이를 이동할 때 건너뜁니다. 제목에 필요한 말은 제목에 넣으세요. 레이블은 문장형 대소문자로 쓰고, 테마가 바꿀 수 있도록 대소문자는 `text.label.font.text-transform`으로 정하세요. 오류나 가격처럼 끝까지 읽어야 하는 텍스트를 `lines`로 자르지 마세요. 툴팁에는 포인터를 올리거나 포커스가 있어야 하는데, 터치 화면의 일반 텍스트에는 둘 다 없습니다. `lines`는 다음 화면에서 전체가 보이는 이름과 제목에 쓰세요. 잘린 텍스트 안의 링크는 포커스 링이 텍스트 가장자리에서 잘리니, 반대로 잘린 텍스트를 링크 안에 넣으세요.
 
 ## 언제 쓰나요
 
-**언제:** 토큰 스케일을 따르는 본문 텍스트와 제목. 크기 s부터 2xl까지, 톤 default / muted / accent, 굵기, `as` p / span / strong / h1–h6. 아이브로, 키커, 메타데이터에는 `size="label"`. 정해진 줄 수로 자르는 이름과 제목에는 `lines`.
+**언제:** 본문 텍스트와 제목. 톤 default / muted / accent, 굵기, `as` p / span / strong / h1–h6. 수준이 제목의 스케일을 고릅니다. 아이브로, 키커, 메타데이터에는 `variant="label"`. 정해진 줄 수로 자르는 이름과 제목에는 `lines`.
 
-**쓰지 않을 때:** 필드 이름 → `size="label"`이 아니라 Label. 컨트롤 그룹의 이름 → Fieldset.Legend. 힌트와 오류 → Description / ErrorMessage. 다이얼로그 제목 → `Dialog.Title`.
+**쓰지 않을 때:** 필드 이름 → `variant="label"`이 아니라 Label. 컨트롤 그룹의 이름 → Fieldset.Legend. 힌트와 오류 → Description / ErrorMessage. 다이얼로그 제목 → `Dialog.Title`.
 
 ## Props
 

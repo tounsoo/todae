@@ -756,8 +756,8 @@ describe('Prose.Root in a browser', () => {
             <h3 data-testid="demo-h3">Demo heading</h3>
             <p data-testid="demo-p">Demo text</p>
           </div>
-          <Text.Root as="h2" size="s" data-testid="text">
-            Small heading
+          <Text.Root as="h2" variant="label" data-testid="text">
+            Label heading
           </Text.Root>
           <Text.Root data-testid="text-p">After</Text.Root>
         </Prose.Root>
@@ -768,7 +768,7 @@ describe('Prose.Root in a browser', () => {
     expect(style('demo-h3').fontSize).not.toBe('20px');
     expect(style('demo-p').marginBlockStart).toBe('16px');
     expect(style('demo-p').marginBlockEnd).toBe('16px');
-    expect(style('text').fontSize).toBe('14px');
+    expect(style('text').fontSize).toBe('12px');
     // Text.Root resets its own margin, and the rhythm still spaces it.
     expect(style('text').marginBlockStart).toBe('32px');
     expect(style('text-p').marginBlockStart).toBe('12px');

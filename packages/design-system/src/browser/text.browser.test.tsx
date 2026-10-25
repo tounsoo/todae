@@ -91,7 +91,7 @@ describe('Text.Root lines', () => {
           <Text.Root lines={1} as="span">
             {LONG}
           </Text.Root>
-          <Text.Root lines={1} as="span" size="s">
+          <Text.Root lines={1} as="span">
             {`Second ${LONG}`}
           </Text.Root>
         </a>
@@ -153,22 +153,39 @@ describe('Text.Root lines', () => {
   });
 
   it('measures again when a prop change cuts the text without changing its box', async () => {
-    const { rerender } = render(
-      <div style={{ inlineSize: '20rem' }}>
-        <Text.Root lines={1} size="s" data-testid="t">
-          Revenue report for the north
+    const phrase = 'Revenue report for the northern region, final copy';
+    const textWidth = (el: HTMLElement) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().width;
+    };
+    const wide = (weight?: 'bold') => (
+      <div style={{ inlineSize: '40rem' }}>
+        <Text.Root lines={1} weight={weight} data-testid="probe">
+          {phrase}
         </Text.Root>
-      </div>,
+      </div>
     );
+    const probe = render(wide());
+    const regularEl = screen.getByTestId('probe');
+    const regularWidth = textWidth(regularEl);
+    probe.rerender(wide('bold'));
+    const boldEl = screen.getByTestId('probe');
+    const boldWidth = textWidth(boldEl);
+    probe.unmount();
+    const room = Math.ceil((regularWidth + boldWidth) / 2);
+    const box = (weight?: 'bold') => (
+      <div style={{ inlineSize: room }}>
+        <Text.Root lines={1} weight={weight} data-testid="t">
+          {phrase}
+        </Text.Root>
+      </div>
+    );
+    const { rerender } = render(box());
     const el = screen.getByTestId('t');
+    expect(regularWidth).toBeLessThan(boldWidth);
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
-    rerender(
-      <div style={{ inlineSize: '20rem' }}>
-        <Text.Root lines={1} size="2xl" data-testid="t">
-          Revenue report for the north
-        </Text.Root>
-      </div>,
-    );
+    rerender(box('bold'));
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 

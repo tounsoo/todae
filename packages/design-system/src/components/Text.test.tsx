@@ -35,41 +35,33 @@ describe('Text', () => {
     expect(classesOf(el)).toEqual([styles.root, styles.heading, styles[size]]);
   });
 
-  it('lets a heading take another size and weight', () => {
+  it('lets a heading take another weight and keeps the scale its level picks', () => {
     render(
-      <Text.Root as="h2" size="s" weight="medium">
-        Small
+      <Text.Root as="h2" weight="medium">
+        Quiet
       </Text.Root>,
     );
     const el = screen.getByRole('heading', { level: 2 });
-    expect(el.classList.contains(styles.s!)).toBe(true);
-    expect(el.classList.contains(styles.xl!)).toBe(false);
-    expect(el.classList.contains(styles.medium!)).toBe(true);
-    expect(el.classList.contains(styles.bold!)).toBe(false);
-  });
-
-  it('maps 2xl to a class that CSS can select', () => {
-    render(
-      <Text.Root size="2xl" data-testid="t">
-        Big
-      </Text.Root>,
-    );
-    expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.xl, styles.medium]);
   });
 
   it('gives the label role its own class, and adds a tone or weight only when given', () => {
     render(
       <>
-        <Text.Root size="label" data-testid="plain">
+        <Text.Root variant="label" data-testid="plain">
           Eyebrow
         </Text.Root>
-        <Text.Root size="label" tone="accent" weight="bold" data-testid="set">
+        <Text.Root variant="label" tone="accent" weight="bold" data-testid="set">
+          Eyebrow
+        </Text.Root>
+        <Text.Root as="h2" variant="label" data-testid="heading">
           Eyebrow
         </Text.Root>
       </>,
     );
     expect(classesOf(screen.getByTestId('plain'))).toEqual([styles.root, styles.label]);
     expect(classesOf(screen.getByTestId('set'))).toEqual([styles.root, styles.label, styles.accent, styles.bold]);
+    expect(classesOf(screen.getByTestId('heading'))).toEqual([styles.root, styles.heading, styles.label]);
   });
 
   // Every class has one selector of the same weight, so source order decides which color and weight apply.

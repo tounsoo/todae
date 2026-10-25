@@ -47,7 +47,7 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
           {cb.isEmpty ? 'No matching commands.' : ''}
         </Text.Root>
       </Dialog.Root>
-      <Text.Root size="s" tone="muted" role="status">
+      <Text.Root tone="muted" role="status">
         {ran ? `Ran: ${ran}` : 'Press Ctrl+K or ⌘K, or use the button.'}
       </Text.Root>
     </Stack.Root>

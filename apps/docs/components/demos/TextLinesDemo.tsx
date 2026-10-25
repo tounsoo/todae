@@ -9,7 +9,7 @@ export function TextLines() {
       <Text.Root lines={1} weight="medium">
         quarterly-revenue-report-northern-region-final.pdf
       </Text.Root>
-      <Text.Root lines={2} size="s" tone="muted">
+      <Text.Root lines={2} tone="muted">
         Every branch office&apos;s numbers for July through September, with notes from each regional lead and the
         forecast for the next quarter.
       </Text.Root>

@@ -176,7 +176,7 @@ export function AppShellExample() {
         <Splitter.Handle ref={handle} aria-label="Resize navigation" />
         <Splitter.Panel>
           <Stack.Root as="section" id={mainId} tabIndex={-1} aria-labelledby={headingId} style={pad}>
-            <Text.Root as="h2" size="l" id={headingId} ref={heading} tabIndex={-1}>
+            <Text.Root as="h2" id={headingId} ref={heading} tabIndex={-1}>
               {current.label}
             </Text.Root>
             <Text.Root tone="muted">

@@ -14,7 +14,7 @@ import { composeHandlers, useComposedRefs } from './props.js';
 import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
 
-export type { TextAs, TextHeading, TextSize, TextTone, TextWeight } from './Text.js';
+export type { TextAs, TextHeading, TextTone, TextVariant, TextWeight } from './Text.js';
 
 export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 
@@ -89,7 +89,7 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
     setText(isCut(el) ? fullText(el) || null : null);
   }, [target]);
 
-  // Every render, since a size, weight or lines change can cut the text
+  // Every render, since a variant, weight or lines change can cut the text
   // without changing its box.
   useLayoutEffect(check);
 

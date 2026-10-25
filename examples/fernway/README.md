@@ -6,7 +6,7 @@ Fernway is a made-up cabin-booking company. This app themes Todae for it with to
 
 - `tokens/core.json` extends Todae's `core` set: warm stone grays in place of Todae's cool ones, rounder radii, a humanist font stack and a heavier bold.
 - `tokens/appearance/*.json` adds to Todae's `appearance` modifier: a forest green accent for light and dark, and Fernway's own `fernway.hero.*` colors.
-- `tokens/button.json` extends Todae's `button` set to make every button a pill, and `tokens/contract.json` extends the `contract` set to give cards a shadow and to set `Text.Root size="label"` in mono capitals with wider letter spacing.
+- `tokens/button.json` extends Todae's `button` set to make every button a pill, and `tokens/contract.json` extends the `contract` set to give cards a shadow and to set `Text.Root variant="label"` in mono capitals with wider letter spacing.
 - `tokens/button.soft.json` adds a `soft` button variant, declared to TypeScript in `src/todae.d.ts`.
 - `tokens/fernway.json` is a set of Fernway's own tokens, which `src/app.css` reads.
 - `vite.config.ts` uses `@vitejs/plugin-react`, which also hides the warning a plain Vite build prints about the `"use client"` line at the top of Todae's bundle. The line is there for React Server Components and is safe to ignore.
