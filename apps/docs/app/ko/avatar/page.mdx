@@ -35,7 +35,7 @@ import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../
 
 ## 크기
 
-Avatar에는 `size` prop이 없습니다. 크기는 디자인 시스템이 정합니다. Avatar는 `avatar.size.md`, 즉 2rem으로 그려집니다. 하나만 바꾸려면 그 Avatar에 `--todae-avatar-size-md`를 지정하거나, 가장 가까운 테마 안의 조상에 지정하세요. 사이의 ThemeProvider, DensityProvider, 범위 테마 루트는 토큰을 다시 선언해서 조상의 값을 없앱니다. `avatar.size.sm`(1.5rem)과 `avatar.size.lg`(2.5rem)는 테마가 바꿀 수 있고 CSS가 골라 쓸 수 있는 두 단계입니다. 대체 표시의 텍스트는 `avatar.font.scale`로 상자 크기에 맞춰 커집니다.
+Avatar에는 `size` prop이 없습니다. 크기는 디자인 시스템이 정합니다. Avatar는 `avatar.size.md`, 즉 2rem으로 그려집니다. 하나만 바꾸려면 그 Avatar에 `--todae-avatar-size-md`를 지정하거나, 사이에 `[data-appearance]`나 `[data-density]` 요소와 스코프 테마의 루트가 없는 조상에 지정하세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 사이에 그런 요소가 있으면 토큰을 다시 선언해서 조상의 값을 없앱니다. `avatar.size.sm`(1.5rem)과 `avatar.size.lg`(2.5rem)는 테마가 바꿀 수 있고 CSS가 골라 쓸 수 있는 두 단계입니다. 대체 표시의 텍스트는 `avatar.font.scale`로 상자 크기에 맞춰 커집니다.
 
 ```tsx
 <Avatar.Root className={styles.small} label="Ada Lovelace">

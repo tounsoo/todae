@@ -117,6 +117,64 @@ describe('Avatar group recipe in a browser', () => {
     expect([button.width, button.height]).toEqual([avatar.width, avatar.height]);
   });
 
+  it('keeps a link wrapper, and a link nested in a stack child, the same size as the avatar', () => {
+    render(
+      <Themed>
+        <div role="group" aria-label="Assignees" className={`${styles.avatarGroup} ${styles.small}`} style={{ fontSize: '20px', lineHeight: 2 }}>
+          <a href="#ada" data-testid="link">
+            <Avatar.Root className={styles.avatar} data-testid="avatar">
+              <Avatar.Fallback>AL</Avatar.Fallback>
+            </Avatar.Root>
+          </a>
+          <span data-testid="child">
+            <a href="#grace">
+              <Avatar.Root className={styles.avatar} data-testid="nested">
+                <Avatar.Fallback>GH</Avatar.Fallback>
+              </Avatar.Root>
+            </a>
+          </span>
+        </div>
+      </Themed>,
+    );
+    const link = screen.getByTestId('link').getBoundingClientRect();
+    const avatar = screen.getByTestId('avatar').getBoundingClientRect();
+    const child = screen.getByTestId('child').getBoundingClientRect();
+    const nested = screen.getByTestId('nested').getBoundingClientRect();
+    expect(avatar.width).toBe(24);
+    expect([link.width, link.height]).toEqual([avatar.width, avatar.height]);
+    expect([child.width, child.height, nested.width, nested.height]).toEqual([24, 24, 24, 24]);
+  });
+
+  it('takes a ring color set on an ancestor', () => {
+    render(
+      <Themed>
+        <div style={{ '--avatar-group-ring': 'rgb(255, 0, 0)' } as CSSProperties}>
+          <div role="group" aria-label="Assignees" className={styles.avatarGroup}>
+            <Avatar.Root className={styles.avatar} data-testid="avatar">
+              <Avatar.Fallback>AL</Avatar.Fallback>
+            </Avatar.Root>
+          </div>
+        </div>
+      </Themed>,
+    );
+    expect(getComputedStyle(screen.getByTestId('avatar')).boxShadow).toContain('rgb(255, 0, 0)');
+  });
+
+  it('leaves a hidden wrapper hidden', () => {
+    render(
+      <Themed>
+        <div role="group" aria-label="Assignees" className={styles.avatarGroup}>
+          <button type="button" hidden data-testid="button">
+            <Avatar.Root className={styles.avatar}>
+              <Avatar.Fallback>AL</Avatar.Fallback>
+            </Avatar.Root>
+          </button>
+        </div>
+      </Themed>,
+    );
+    expect(getComputedStyle(screen.getByTestId('button', { hidden: true })).display).toBe('none');
+  });
+
   it('lifts a focused interactive wrapper above the avatar after it', async () => {
     render(
       <Themed>

@@ -8,8 +8,8 @@ const generatedCss = readFileSync(join(import.meta.dirname, 'tokens.generated.cs
 
 /** Component tokens Todae leaves for product code to apply, each with the reason. */
 const FOR_PRODUCTS: Record<string, string> = {
-  '--todae-avatar-size-sm': 'A smaller avatar step. A product sets --todae-avatar-size-md to it on an avatar, or on an ancestor inside the nearest theme.',
-  '--todae-avatar-size-lg': 'A larger avatar step. A product sets --todae-avatar-size-md to it on an avatar, or on an ancestor inside the nearest theme.',
+  '--todae-avatar-size-sm': 'A smaller avatar step. A product sets --todae-avatar-size-md to it on an avatar, or on an ancestor with no data-appearance or data-density element and no scoped theme root between them.',
+  '--todae-avatar-size-lg': 'A larger avatar step. A product sets --todae-avatar-size-md to it on an avatar, or on an ancestor with no data-appearance or data-density element and no scoped theme root between them.',
 };
 
 /** Every non-test, non-generated source file under src: sheets, components and hooks. */
