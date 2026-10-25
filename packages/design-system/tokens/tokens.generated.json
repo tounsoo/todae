@@ -5135,11 +5135,109 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
+      "path": "prose.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
       "path": "prose.gap",
       "type": "dimension",
       "cssVar": "--todae-prose-gap",
       "cssValue": "var(--todae-space-prose-gap)",
       "ref": "space.prose.gap",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h1.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h1-font-size",
+      "cssValue": "var(--todae-font-size-6)",
+      "ref": "font.size.6",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h2.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h2-font-size",
+      "cssValue": "var(--todae-font-size-5)",
+      "ref": "font.size.5",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h3.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h3-font-size",
+      "cssValue": "var(--todae-font-size-4)",
+      "ref": "font.size.4",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h4.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h4-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h5.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h5-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.h6.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-h6-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
       "layer": "contract",
       "context": null,
       "entry": {

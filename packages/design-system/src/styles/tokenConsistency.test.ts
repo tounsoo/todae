@@ -36,8 +36,6 @@ function outsideForcedColors(css: string): string {
 const CORE_READS: Record<string, string[]> = {
   ChipList: ['space'],
   Field: ['space'],
-  // Prose still reads foundation font.size. Text headings read text.hN.font.size.
-  Prose: ['font'],
 };
 // Contract groups every component shares.
 const SHARED_ROOTS = ['overlay', 'focus'];
@@ -68,6 +66,15 @@ describe('token consistency across component styles', () => {
       const roots = new Set([...css.matchAll(/var\(--todae-([a-z0-9]+)-/g)].map((match) => match[1] ?? ''));
       const foreign = [...roots].filter((root) => !own.includes(root) && !SHARED_ROOTS.includes(root));
       expect({ name, foreign }).toEqual({ name, foreign: [] });
+    }
+  });
+
+  it('draws Prose type from prose font-size tokens', () => {
+    const css = sheets.Prose ?? '';
+    expect(css).not.toMatch(/--todae-font-size-/);
+    expect(css).toContain('font-size: var(--todae-prose-font-size)');
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      expect(css).toContain(`font-size: var(--todae-prose-h${level}-font-size)`);
     }
   });
 
