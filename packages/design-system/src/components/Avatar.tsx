@@ -27,8 +27,9 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
  * already written next to it. It draws at `--todae-avatar-size-md`. Set that
  * on the avatar, or on an ancestor with no `[data-appearance]` or
  * `[data-density]` element and no scoped theme root between them. A
- * ThemeProvider or a DensityProvider carries one of those attributes. One of
- * these in between declares the token again and drops the ancestor's value.
+ * ThemeProvider or a DensityProvider carries one of those attributes. Such an
+ * element, or a scoped theme root, in between declares the token again and
+ * drops the ancestor's value.
  */
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */

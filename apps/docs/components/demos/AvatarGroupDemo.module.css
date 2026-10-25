@@ -14,10 +14,8 @@
 }
 
 /* A button or a link keeps the browser's padding, border and fill, which
-   would sit outside the avatar and throw the overlap off. [hidden] and
-   [popover] keep the browser's display, so a closed one stays closed. */
-.avatarGroup > :is(button, a):not([hidden], [popover]) {
-  display: flex;
+   would sit outside the avatar and throw the overlap off. */
+.avatarGroup > :is(button, a) {
   padding: 0;
   border: 0;
   background: none;
@@ -31,9 +29,9 @@
 }
 
 /* The avatar is inline-flex, so a wrapper builds a line box around it and
-   grows past the avatar. Flex takes the avatar out of that line. */
-/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
-   paint over earlier ones in DOM order. */
+   grows past the avatar. Flex takes the avatar out of that line. A box-shadow
+   is not clipped by the avatar's overflow: hidden. Later avatars paint over
+   earlier ones in DOM order. */
 .avatarGroup .avatar {
   display: flex;
   box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));

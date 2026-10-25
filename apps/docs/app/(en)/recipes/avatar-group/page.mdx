@@ -59,10 +59,8 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 }
 
 /* A button or a link keeps the browser's padding, border and fill, which
-   would sit outside the avatar and throw the overlap off. [hidden] and
-   [popover] keep the browser's display, so a closed one stays closed. */
-.avatarGroup > :is(button, a):not([hidden], [popover]) {
-  display: flex;
+   would sit outside the avatar and throw the overlap off. */
+.avatarGroup > :is(button, a) {
   padding: 0;
   border: 0;
   background: none;
@@ -76,9 +74,9 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 }
 
 /* The avatar is inline-flex, so a wrapper builds a line box around it and
-   grows past the avatar. Flex takes the avatar out of that line. */
-/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
-   paint over earlier ones in DOM order. */
+   grows past the avatar. Flex takes the avatar out of that line. A box-shadow
+   is not clipped by the avatar's overflow: hidden. Later avatars paint over
+   earlier ones in DOM order. */
 .avatarGroup .avatar {
   display: flex;
   box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));
@@ -98,11 +96,11 @@ Save this next to the component as `AvatarGroup.module.css`. The rules are the s
 }
 ```
 
-The overlap reads the stack's size, not each avatar's, so it holds for any direct child: an avatar, or one wrapped in a tooltip trigger or a link. An avatar given its own size is still pulled back by the stack's size. The margin is logical, so the stack mirrors in right-to-left text. The ring is a `box-shadow` in `--avatar-group-ring`, which falls back to the surface color. Set `--avatar-group-ring` on the stack. Set on an ancestor, a token in its value resolves there, so a theme between that ancestor and the stack does not change it. A focused child rises above its neighbors, so its focus ring shows whole. In forced colors the ring is dropped and each avatar gets a border in the system text color instead. The avatar in the stack is a flex box, and a button or a link around it has no padding, border or fill, so the wrapper stays the avatar's size.
+The overlap reads the stack's size, not each avatar's, so it holds for any direct child: an avatar, or one wrapped in a tooltip trigger or a link. An avatar given its own size is still pulled back by the stack's size. The margin is logical, so the stack mirrors in right-to-left text. The ring is a `box-shadow` in `--avatar-group-ring`, which falls back to the surface color. Set `--avatar-group-ring` on the stack. Set on an ancestor, a token in its value resolves there, so a theme between that ancestor and the stack does not change it. A focused child rises above its neighbors, so its focus ring shows whole. In forced colors the ring is dropped and each avatar gets a border in the system text color instead. The avatar in the stack is a flex box, so a wrapper does not grow a line box around it. A button or a link that is a direct child has no padding, border or fill, so that child stays the avatar's size.
 
 ## Sizes
 
-An avatar has no `size` prop, so the stack has none either. The avatars draw at `--todae-avatar-size-md`, and the stack captures that same variable for its overlap. Set the variable on the stack element, and every avatar inside and the overlap follow it. Do not put an element with `data-appearance` or `data-density`, or a scoped theme root, inside that element. A ThemeProvider or a DensityProvider carries one of those attributes. Any of these declares the size token again, so the avatars return to `avatar.size.md` while the overlap stays at the size the stack captured. The two classes below point it at the `avatar.size.sm` and `avatar.size.lg` steps. Add them to the stack beside `avatarGroup`.
+An avatar has no `size` prop, so the stack has none either. The avatars draw at `--todae-avatar-size-md`, and the stack captures that same variable for its overlap. Set the variable on the stack element, and every avatar inside and the overlap follow it. Do not put an element with `data-appearance` or `data-density`, or a scoped theme root, inside that element. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, declares the size token again, so the avatars return to `avatar.size.md` while the overlap stays at the size the stack captured. The two classes below point it at the `avatar.size.sm` and `avatar.size.lg` steps. Add them to the stack beside `avatarGroup`.
 
 ```css
 .small {
