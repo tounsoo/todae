@@ -55,6 +55,7 @@ describe('Text', () => {
     expect(el.classList.contains(styles.label!)).toBe(false);
     expect(el.classList.contains(styles.m!)).toBe(true);
     expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('font.size.*'));
     view.rerender(createElement(Text.Root, legacy));
     expect(error).toHaveBeenCalledTimes(1);
     const small = { size: 's', children: 'Caption', 'data-testid': 's' };
@@ -99,6 +100,20 @@ describe('Text', () => {
     expect(at('root')).toBeLessThan(at('heading'));
     expect(at('heading')).toBeLessThan(at('label'));
     for (const cls of ['default', 'muted', 'accent', 'regular', 'medium', 'bold']) expect(at('label')).toBeLessThan(at(cls));
+  });
+
+  it('points each scale class at its foundation font-size step', () => {
+    const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
+    const rule = (cls: string) => {
+      const rules = sheet.split(`.${cls} {`);
+      expect(rules, `.${cls} has one rule`).toHaveLength(2);
+      return rules[1]!.split('}')[0]!;
+    };
+    expect(rule('s')).toContain('var(--todae-font-size-2)');
+    expect(rule('m')).toContain('var(--todae-font-size-3)');
+    expect(rule('l')).toContain('var(--todae-font-size-4)');
+    expect(rule('xl')).toContain('var(--todae-font-size-5)');
+    expect(rule('xxl')).toContain('var(--todae-font-size-6)');
   });
 
   it('clamps to lines through a class and --_lines, keeping the given style', () => {

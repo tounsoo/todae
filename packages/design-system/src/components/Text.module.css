@@ -37,23 +37,23 @@
   }
 
   .s {
-    font-size: var(--todae-text-size-2);
+    font-size: var(--todae-font-size-2);
   }
 
   .m {
-    font-size: var(--todae-text-size-3);
+    font-size: var(--todae-font-size-3);
   }
 
   .l {
-    font-size: var(--todae-text-size-4);
+    font-size: var(--todae-font-size-4);
   }
 
   .xl {
-    font-size: var(--todae-text-size-5);
+    font-size: var(--todae-font-size-5);
   }
 
   .xxl {
-    font-size: var(--todae-text-size-6);
+    font-size: var(--todae-font-size-6);
   }
 
   .regular {

@@ -4981,76 +4981,6 @@
       "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
-      "path": "text.size.2",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-2",
-      "cssValue": "var(--todae-font-size-2)",
-      "ref": "font.size.2",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.3",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-3",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.4",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-4",
-      "cssValue": "var(--todae-font-size-4)",
-      "ref": "font.size.4",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.5",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-5",
-      "cssValue": "var(--todae-font-size-5)",
-      "ref": "font.size.5",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.6",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-6",
-      "cssValue": "var(--todae-font-size-6)",
-      "ref": "font.size.6",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
       "path": "text.weight.bold",
       "type": "fontWeight",
       "cssVar": "--todae-text-weight-bold",
@@ -5112,90 +5042,6 @@
       "cssVar": "--todae-prose-gap",
       "cssValue": "var(--todae-space-prose-gap)",
       "ref": "space.prose.gap",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h1.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h1-size",
-      "cssValue": "var(--todae-font-size-6)",
-      "ref": "font.size.6",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h2.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h2-size",
-      "cssValue": "var(--todae-font-size-5)",
-      "ref": "font.size.5",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h3.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h3-size",
-      "cssValue": "var(--todae-font-size-4)",
-      "ref": "font.size.4",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h4.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h4-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h5.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h5-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.h6.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-h6-size",
-      "cssValue": "var(--todae-font-size-2)",
-      "ref": "font.size.2",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -5364,20 +5210,6 @@
       "cssVar": "--todae-prose-quote-padding",
       "cssValue": "var(--todae-space-4)",
       "ref": "space.4",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
-    },
-    {
-      "path": "prose.size",
-      "type": "dimension",
-      "cssVar": "--todae-prose-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
       "layer": "contract",
       "context": null,
       "entry": {
