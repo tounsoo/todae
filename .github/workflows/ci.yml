@@ -106,6 +106,9 @@ jobs:
       - name: Publish checks
         if: ${{ !cancelled() }}
         run: pnpm publish:check
+      - name: SSR smoke
+        if: ${{ !cancelled() }}
+        run: pnpm ssr:smoke
       - name: Unit tests
         if: ${{ !cancelled() }}
         run: pnpm test

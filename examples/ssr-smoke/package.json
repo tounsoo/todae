@@ -1,0 +1,23 @@
+{
+  "name": "ssr-smoke",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "start": "next start",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "@tounsoo/todae": "workspace:*",
+    "next": "^15.5.28",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^6.0.2"
+  }
+}

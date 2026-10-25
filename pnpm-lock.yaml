@@ -116,7 +116,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitest/browser':
         specifier: 3.2.7
-        version: 3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
+        version: 3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
       axe-core:
         specifier: ^4.13.0
         version: 4.13.0
@@ -160,6 +160,31 @@ importers:
       vite:
         specifier: ^6.4.4
         version: 6.4.4(@types/node@22.20.3)(yaml@2.9.1)
+
+  examples/ssr-smoke:
+    dependencies:
+      '@tounsoo/todae':
+        specifier: workspace:*
+        version: link:../../packages/design-system
+      next:
+        specifier: ^15.5.28
+        version: 15.5.28(@babel/core@7.29.7)(@playwright/test@1.56.1)(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.12
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.4
+        version: 19.3.0(@types/react@19.3.0)
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
 
   packages/design-system:
     devDependencies:
@@ -4124,6 +4149,25 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@vitest/browser@3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)':
+    dependencies:
+      '@testing-library/dom': 10.4.2
+      '@testing-library/user-event': 14.6.7(@testing-library/dom@10.4.2)
+      '@vitest/mocker': 3.2.7(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))
+      '@vitest/utils': 3.2.7
+      magic-string: 0.30.21
+      sirv: 3.0.2
+      tinyrainbow: 2.0.0
+      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.3)(@vitest/browser@3.2.7)(jsdom@26.1.0)(yaml@2.9.1)
+      ws: 8.21.3
+    optionalDependencies:
+      playwright: 1.56.1
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
   '@vitest/browser@3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)':
     dependencies:
       '@testing-library/dom': 10.4.2
@@ -6087,7 +6131,7 @@ snapshots:
     optionalDependencies:
       '@types/debug': 4.1.13
       '@types/node': 22.20.3
-      '@vitest/browser': 3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
+      '@vitest/browser': 3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
       jsdom: 26.1.0
     transitivePeerDependencies:
       - jiti
