@@ -17,6 +17,7 @@
     "build": "pnpm -r --if-present build",
     "build:ds": "pnpm --filter @tounsoo/todae build",
     "publish:check": "bash scripts/publish-check.sh",
+    "size:check": "node scripts/size-check.mjs",
     "dev:ds": "pnpm --filter @tounsoo/todae dev",
     "dev:docs": "pnpm --filter docs dev",
     "dev": "pnpm dev:docs",
