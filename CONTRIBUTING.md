@@ -94,10 +94,13 @@ pnpm typecheck
 pnpm lint
 pnpm tokens:check
 pnpm schema
+pnpm build:ds
+pnpm publish:check
 pnpm test
 pnpm test:browser
 ```
 
+- `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
 - `pnpm --filter docs test:visual:docker` compares screenshots of the built docs site with the baselines in `apps/docs/visual/baselines`: every example in light and dark, and the home, Button and playground pages in English and Korean on desktop and phone. It runs in Playwright's Docker image, the one CI uses, since fonts and rendering differ between machines, so build the package and the docs first and have Docker running. It needs a Linux x64 host. When a change is meant to look different, add `--update-snapshots` and commit the new images; when you rename a heading or remove an example, delete its old images too. A failing CI run uploads a `screenshots` artifact: open `playwright-report/index.html` to see each change, and copy a shot's `test-results/**/<name>-actual.png` over its baseline to accept it, which is the way to update baselines without a Linux x64 host.
@@ -147,6 +150,8 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
 - A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment.
+
+The publish job already released `@tounsoo/todae@0.4.0` this way. It sets `id-token: write` in `.github/workflows/release.yml`. npm trusted publishing checks that GitHub OIDC token. The [0.4.0 attestations](https://registry.npmjs.org/-/npm/v1/attestations/@tounsoo%2ftodae@0.4.0) include SLSA provenance for that workflow.
 
 ## Deploy the docs
 
