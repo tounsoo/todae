@@ -934,7 +934,7 @@
     "(top)": "9f7f155f1290",
     "# Tokens": "411f78a001fd",
     "## When to use": "d57fe8233a0b",
-    "### ThemeProvider": "1ea9f3eacf30",
+    "### ThemeProvider": "c3c46ab35be6",
     "### DensityProvider": "8cb2c9729048",
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
@@ -944,10 +944,11 @@
     "## Letter case": "943aff38b55f",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
+    "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "d4f6cb5c0687",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "e004f4cd2cc4"
+    "(section order)": "e8311a9e6fc8"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",

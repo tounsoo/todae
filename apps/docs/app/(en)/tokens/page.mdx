@@ -30,6 +30,14 @@ function Panel() {
 
 `THEME_OVERRIDE_KEYS` is the list of token paths `overrides` accepts. Import it from `@tounsoo/todae`. The list joins the raw keys, the semantic keys, and the component keys. A path outside that list is rejected unless you pass `overrideTypes` from a company token build. [Build on Todae](/guides/build-on-todae) shows that build. [`themeOverrideStyle`](/utilities/theme-override-style) writes the same overrides as `--todae-*` custom properties without rendering `ThemeProvider`.
 
+```ts
+import { THEME_OVERRIDE_KEYS, type ThemeOverrideKey } from '@tounsoo/todae';
+
+function listed(key: ThemeOverrideKey) {
+  return THEME_OVERRIDE_KEYS.includes(key);
+}
+```
+
 ### DensityProvider
 
 **When:** Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`; a nested provider with none keeps the enclosing one's. Spacing only.
@@ -79,6 +87,18 @@ Four tones carry status: `info`, `success`, `warning` and `critical`. Each is th
 ## Category tones
 
 Eight tones label categories such as tags or people: `color.category.1` to `color.category.8`, each with `fg`, `bg` and `border` per appearance. They are numbered rather than named after hues, so a company can change a hue in its token package without renaming anything. The build checks `fg` on `bg` at Lc 75. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take them as the tones `category-1` to `category-8`, and `categoryTone(key)` picks one from a string.
+
+### CATEGORY_TONES
+
+`CATEGORY_TONES` is the tuple of those eight names, `category-1` through `category-8`. `CategoryTone` is one member of that tuple. `categoryTone(key)` returns the member for a string. The same key returns the same tone on the server and in the browser. The tuple stops at `category-8`.
+
+```tsx
+import { CATEGORY_TONES, categoryTone, type CategoryTone } from '@tounsoo/todae';
+
+const tones: readonly CategoryTone[] = CATEGORY_TONES;
+
+<Avatar.Root label={name} tone={categoryTone(userId)} />
+```
 
 ## Focus ring
 
