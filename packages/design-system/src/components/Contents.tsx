@@ -151,8 +151,12 @@ function followSections(
     const changed = targets.some((target, i) => !target.isConnected || target.id !== followedIds[i]);
     const arrived = missing.some((id) => root.getElementById(id));
     if (!changed && !arrived) return;
-    // The follow restarts on the next effect. By then the section may be back, so the pick has to lapse now.
-    if (picked.current !== null && root.getElementById(picked.current) === null) picked.current = null;
+    // The follow restarts on the next effect. By then a remounted heading may be back
+    // under the same id, so the pick lapses from the element this follow watched.
+    if (picked.current !== null) {
+      const followed = targets[followedIds.indexOf(picked.current)];
+      if (followed === undefined || !followed.isConnected || followed.id !== picked.current) picked.current = null;
+    }
     onTargetsChange();
   });
   mutations.observe(root, {
