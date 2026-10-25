@@ -212,7 +212,7 @@ Code on a docs page is copied into products, so write it in the package's own st
 - **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Inside a slot such as `Button.Icon`, put the icon element on its own line.
 - **Imports.** A block with an `export function` imports everything it uses: Todae from `'@tounsoo/todae'`, or from a server entry such as `'@tounsoo/todae/code'` when a Server Component should render it.
 - **The site renders code with Todae's own parts.** MDX maps fenced blocks to `CodeBlock.Root` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The site doesn't override the code block's tokens, padding, type or colors.
-- **The site shows Todae as it ships.** `apps/docs` sets no Todae token in the site's own chrome, and its pages load no font of their own (the link-preview images draw with their own fonts); the site's own chrome reads Todae's tokens as they are. An example may set `--todae-avatar-size-md` on the example itself to show a product override. Themes appear only inside the Playground, through `ThemeProvider` overrides. *Why:* people judge Todae's base theme by the site itself.
+- **The site shows Todae as it ships.** `apps/docs` sets no Todae token in the site's own chrome, and its pages load no font of their own (the link-preview images draw with their own fonts); the site's own chrome reads Todae's tokens as they are. A demo may set `--todae-avatar-size-md` on the avatars it draws to show a product override. Themes appear only inside the Playground, through `ThemeProvider` overrides. *Why:* people judge Todae's base theme by the site itself.
 
 ## Releases
 

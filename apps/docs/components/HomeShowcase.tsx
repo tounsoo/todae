@@ -1,7 +1,9 @@
 'use client';
 
 import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@tounsoo/todae';
-import { useId, useState } from 'react';
+import { useId, useState, type CSSProperties } from 'react';
+
+const smallAvatar = { '--todae-avatar-size-md': 'var(--todae-avatar-size-sm)' } as CSSProperties;
 
 const MEMBERS = [
   { id: 'ada', name: 'Ada Lovelace', initials: 'AL', team: 'Design', teamTone: 'category-7' },
@@ -23,7 +25,7 @@ export function HomeShowcase() {
           <Stack.Root className="showcase-meta" direction="row" align="center">
             <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members">
               {MEMBERS.map((member) => (
-                <Avatar.Root key={member.id} className="showcase-avatar" label={member.name} tone={member.tone}>
+                <Avatar.Root key={member.id} style={smallAvatar} label={member.name} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
               ))}
@@ -52,7 +54,7 @@ export function HomeShowcase() {
           <Tabs.Panel value="members" className="showcase-panel">
             {MEMBERS.map((member) => (
               <div key={member.id} className="showcase-member">
-                <Avatar.Root className="showcase-avatar" tone={member.tone}>
+                <Avatar.Root style={smallAvatar} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
                 <Text.Root as="span">{member.name}</Text.Root>

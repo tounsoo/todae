@@ -37,7 +37,7 @@ const STACKS = [
 
 export function AvatarGroupSizes() {
   return (
-    <Stack.Root direction="row" style={{ alignItems: 'center' }}>
+    <Stack.Root direction="row" align="center">
       {STACKS.map(({ size, className }) => (
         <div key={size} role="group" aria-label={`Assignees, ${size}`} className={className}>
           {PEOPLE.slice(0, 3).map((person) => (
