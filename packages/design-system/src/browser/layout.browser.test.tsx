@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Button, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index.js';
+import { Avatar, Button, DensityProvider, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, ThemeProvider, paginationRange } from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -112,16 +112,45 @@ describe('Avatar in a browser', () => {
     }
   });
 
-  it('sizes from the size tokens', () => {
+  it('draws at avatar.size, and at a length a product sets on it or around it', () => {
     render(
       <Themed>
-        <Avatar.Root size="sm" data-testid="sm" />
-        <Avatar.Root size="lg" data-testid="lg" />
+        <Avatar.Root data-testid="bare">
+          <Avatar.Fallback data-testid="bare-fallback">AL</Avatar.Fallback>
+        </Avatar.Root>
+        <div style={{ '--todae-avatar-size': '2.5rem' } as CSSProperties}>
+          <Avatar.Root data-testid="large">
+            <Avatar.Fallback data-testid="large-fallback">AL</Avatar.Fallback>
+          </Avatar.Root>
+        </div>
       </Themed>,
     );
-    expect(screen.getByTestId('sm').getBoundingClientRect().width).toBeLessThan(
-      screen.getByTestId('lg').getBoundingClientRect().width,
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect([box('bare').width, box('bare').height]).toEqual([32, 32]);
+    expect([box('large').width, box('large').height]).toEqual([40, 40]);
+    expect(getComputedStyle(screen.getByTestId('large-fallback')).fontSize).toBe('16px');
+  });
+
+  it('draws at the avatar.size a ThemeProvider overrides', () => {
+    render(
+      <ThemeProvider overrides={{ 'avatar.size': { value: 1.5, unit: 'rem' } }}>
+        <Avatar.Root data-testid="themed" />
+      </ThemeProvider>,
     );
+    expect(screen.getByTestId('themed').getBoundingClientRect().width).toBe(24);
+  });
+
+  it('drops a size set on an ancestor when a density element sits between them', () => {
+    render(
+      <Themed>
+        <div style={{ '--todae-avatar-size': '1.5rem' } as CSSProperties}>
+          <DensityProvider density="compact">
+            <Avatar.Root data-testid="nested" />
+          </DensityProvider>
+        </div>
+      </Themed>,
+    );
+    expect(screen.getByTestId('nested').getBoundingClientRect().width).toBe(32);
   });
 });
 

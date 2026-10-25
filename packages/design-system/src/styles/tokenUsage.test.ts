@@ -22,10 +22,8 @@ function sources(dir: string): string[] {
 describe('token usage', () => {
   it('reads every component token, from a source file or another token', () => {
     const code = sources(srcDir).join('\n');
-    const read = (cssVar: string) => {
-      const name = cssVar.replace(/[-]/g, '\\-');
-      return new RegExp(`${name}(?![-\\w])`).test(code) || new RegExp(`var\\(${name}(?![-\\w])`).test(generatedCss);
-    };
+    const inSource = (cssVar: string) => new RegExp(`${cssVar.replace(/[-]/g, '\\-')}(?![-\\w])`).test(code);
+    const read = (cssVar: string) => inSource(cssVar) || new RegExp(`var\\(${cssVar.replace(/[-]/g, '\\-')}(?![-\\w])`).test(generatedCss);
     // Core and appearance tokens are public API for product code; a component token is only there for its component.
     const unread = [...new Set(catalog.tokens.filter((token) => token.layer === 'contract').map((token) => token.cssVar))].filter(
       (cssVar) => !read(cssVar) && !(cssVar in FOR_PRODUCTS),
@@ -33,6 +31,7 @@ describe('token usage', () => {
     expect(unread).toEqual([]);
     for (const cssVar of Object.keys(FOR_PRODUCTS)) {
       expect(catalog.tokens.some((token) => token.cssVar === cssVar && token.layer === 'contract'), cssVar).toBe(true);
+      expect(inSource(cssVar), cssVar).toBe(false);
     }
   });
 });

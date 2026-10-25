@@ -1,24 +1,13 @@
 {
   "avatar": {
-    "$description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color.",
-    "size": {
-      "sm": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } },
-      "md": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
-      "lg": { "$type": "dimension", "$value": { "value": 2.5, "unit": "rem" } }
-    },
+    "$description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale.",
+    "size": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } },
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "font": {
       "scale": { "$type": "number", "$value": 0.4 },
       "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
-    },
-    "group": {
-      "overlap": { "$type": "number", "$value": 0.25 },
-      "ring": {
-        "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
-        "color": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
-      }
     },
     "category-1": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/category/1/fg/$value" } },

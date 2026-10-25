@@ -1,0 +1,177 @@
+import { ShotNudge } from '../../../../components/ShotNudge';
+import { AvatarGroupExample, AvatarGroupSizes } from '../../../../components/demos/AvatarGroupDemo';
+
+# Avatar group
+
+패키지 네임스페이스가 아니라 레시피입니다. Todae에는 `Avatar.Group` export가 없습니다. Avatar를 쌓은 모양은 `role="group"`을 단 `div`, 몇 개의 `Avatar.Root`, 그리고 제품이 복사해 쓰는 몇 줄의 CSS입니다. 이 CSS는 공개 토큰과 테두리 색 `--avatar-group-ring`을 읽으므로, 테마와 테두리 색은 제품이 정합니다. `@tounsoo/todae`에는 Avatar를 쌓아 주는 코드가 없습니다.
+
+아래 스택은 한 작업에 붙은 사람들입니다. 네 명은 각자 카테고리 톤으로 보이고, 나머지는 "+1" Avatar로 보입니다. Avatar 자체와 이미지, 대체 표시, 크기는 [Avatar](/avatar) 페이지에서 다룹니다.
+
+<ShotNudge px={0.2} />
+
+<Example>
+  <AvatarGroupExample />
+</Example>
+
+## 스택
+
+스택은 자식이 Avatar 크기의 4분의 1만큼 겹치는 flex 행입니다. 각 `Avatar.Root`에는 `avatar` 클래스를 주며, 이 클래스가 겹치는 가장자리를 구분하는 테두리를 그립니다. `max`나 개수는 없습니다. 배열은 직접 잘라 쓰고, 나머지는 자기만의 label을 가진 평범한 `Avatar.Root`로 보여 주세요.
+
+```tsx
+import { Avatar, categoryTone } from '@tounsoo/todae';
+import styles from './AvatarGroup.module.css';
+
+type Person = { id: string; name: string; initials: string };
+
+export function Assignees({ people }: { people: Person[] }) {
+  const shown = people.slice(0, 4);
+  const rest = people.length - shown.length;
+  return (
+    <div role="group" aria-label="Assignees" className={styles.avatarGroup}>
+      {shown.map((person) => (
+        <Avatar.Root key={person.id} className={styles.avatar} label={person.name} tone={categoryTone(person.id)}>
+          <Avatar.Fallback>{person.initials}</Avatar.Fallback>
+        </Avatar.Root>
+      ))}
+      {rest > 0 && (
+        <Avatar.Root className={styles.avatar} label={`${rest} more`}>
+          <Avatar.Fallback>+{rest}</Avatar.Fallback>
+        </Avatar.Root>
+      )}
+    </div>
+  );
+}
+```
+
+이 CSS는 컴포넌트 옆에 `AvatarGroup.module.css`로 저장하세요. 이 페이지의 예시가 쓰는 규칙과 같습니다.
+
+```css
+.avatarGroup {
+  --_stack-size: var(--todae-avatar-size);
+
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  isolation: isolate;
+}
+
+/* Tooltip and Popover content carries [popover], and a dialog places itself:
+   they take no part in the stack. */
+.avatarGroup > :not([popover], dialog) {
+  flex: none;
+}
+
+/* A button or a link keeps the browser's padding, border and fill, which
+   would sit outside the avatar and throw the overlap off. */
+.avatarGroup > :is(button, a) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--todae-avatar-radius);
+}
+
+.avatarGroup > :not([popover], dialog) ~ :not([popover], dialog) {
+  margin-inline-start: calc(-0.25 * var(--_stack-size));
+}
+
+/* The avatar is inline-flex, so a button or a link builds a line box around
+   it and grows past the avatar. Flex takes that avatar out of the line. A
+   bare avatar stays inline-flex. */
+.avatarGroup :is(button, a) .avatar {
+  display: flex;
+}
+
+/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
+   paint over earlier ones in DOM order. */
+.avatarGroup .avatar {
+  box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));
+}
+
+.avatarGroup > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
+  z-index: 1;
+}
+
+/* Forced colors drop box-shadow, so the edge becomes a border in CanvasText. */
+@media (forced-colors: active) {
+  .avatarGroup .avatar {
+    border: var(--todae-border-width) solid CanvasText;
+  }
+}
+```
+
+겹치는 정도는 각 Avatar가 아니라 스택의 크기에서 가져오므로, Avatar든 툴팁 트리거나 링크로 감싼 Avatar든 직계 자식이면 똑같이 동작합니다. 자체 크기를 준 Avatar도 스택의 크기만큼 당겨집니다. 마진은 논리 속성이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 테두리는 `--avatar-group-ring`의 `box-shadow`이고, 값이 없으면 표면 색입니다. `--avatar-group-ring`은 스택에 지정하세요. 조상에 지정하면 그 값 안의 토큰은 그 자리에서 계산되므로, 그 조상과 스택 사이의 테마는 테두리 색을 바꾸지 못합니다. 포커스를 받은 자식은 이웃보다 위로 올라와 포커스 링이 온전히 보입니다. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 border가 생깁니다. 버튼이나 링크 안의 Avatar는 flex 상자라 스스로 줄 상자를 만들지 않습니다. 직계 자식인 버튼이나 링크는 여백, 테두리, 채움이 없어서 그 자식이 Avatar와 같은 크기를 유지합니다.
+
+## 크기
+
+Avatar에는 `size` prop이 없고 Todae는 크기 단계를 제공하지 않으므로 스택에도 없습니다. Avatar는 `--todae-avatar-size`로 그려지고, 스택은 같은 변수를 겹침 계산에 씁니다. 스택 요소에 이 변수를 길이로 지정하면 안쪽의 모든 Avatar와 겹침이 함께 따라옵니다. 그 요소 안에 `data-appearance`나 `data-density`를 가진 요소, 또는 스코프 테마의 루트를 넣지 마세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 그런 요소나 스코프 테마의 루트는 크기 토큰을 다시 선언해서 Avatar는 `avatar.size`로 돌아가고, 겹침은 스택이 잡아 둔 크기에 남습니다. 아래 두 클래스는 명시적인 길이를 지정합니다. 스택에 `avatarGroup`과 함께 더하세요.
+
+```css
+.small {
+  --todae-avatar-size: 1.5rem;
+}
+
+.large {
+  --todae-avatar-size: 2.5rem;
+}
+```
+
+```tsx
+<div role="group" aria-label="Assignees" className={`${styles.avatarGroup} ${styles.large}`}>
+  …
+</div>
+```
+
+<ShotNudge px={0.3} />
+
+<Example>
+  <AvatarGroupSizes />
+</Example>
+
+## 감싼 Avatar
+
+사람마다 누를 수 있어야 한다면 Avatar를 툴팁 트리거, 링크, 버튼으로 감싸세요. 겹침과 포커스 상승은 스택의 직계 자식에 적용되므로, 감싼 요소가 Avatar의 자리를 차지합니다. Tooltip과 Popover의 내용은 트리거의 형제이고 `popover`를 지니며, `dialog`는 스스로 자리를 잡으므로, 규칙은 둘 다 스택에서 뺍니다. 스택 전체 목록을 호버로 보여 주는 일은 스택을 감싸는 [Tooltip](/tooltip)이나 [Popover](/popover)로, 직접 만듭니다.
+
+```tsx
+import { Avatar, Tooltip, useTooltip } from '@tounsoo/todae';
+import styles from './AvatarGroup.module.css';
+
+function AssigneeTip({ person }: { person: Person }) {
+  const tooltip = useTooltip();
+  return (
+    <>
+      <button type="button" aria-label={person.name} {...tooltip.getTriggerProps()}>
+        <Avatar.Root className={styles.avatar}>
+          <Avatar.Fallback>{person.initials}</Avatar.Fallback>
+        </Avatar.Root>
+      </button>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>{person.name}</Tooltip.Root>
+    </>
+  );
+}
+
+function Assignees({ people }: { people: Person[] }) {
+  return (
+    <div role="group" aria-label="Assignees" className={styles.avatarGroup}>
+      {people.map((person) => (
+        <AssigneeTip key={person.id} person={person} />
+      ))}
+    </div>
+  );
+}
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `label`이 있으면 `Avatar.Root`는 `aria-label`로 이름 붙은 `role="img"`이고, `Avatar.Image`는 `alt=""`를 렌더링합니다. 그래서 이미지와 이니셜이 이름 하나를 함께 씁니다.
+
+**직접 제공할 것:** 스택의 `role="group"`과 "담당자"처럼 이름을 주는 `aria-label`. 그래야 안쪽 Avatar가 이름 붙은 한 묶음으로 읽힙니다. 각 Avatar의 `label`, 그리고 "+1" Avatar에는 개수도 읽히도록 "1 more" 같은 label. 이름이 스택 옆에 적혀 있으면 Avatar에는 이름을 주지 마세요. 복사한 CSS는 스택 크기만큼 겹치고, 포커스를 받은 자식을 올리고, 버튼과 링크의 브라우저 상자를 지우며, 강제 색상 모드에서는 테두리를 텍스트 색의 border로 바꿉니다.
+
+**주의할 점:** `label` 없는 Avatar를 버튼이나 링크의 유일한 내용으로 넣는 것. Avatar가 숨겨지므로 컨트롤에 이름이 없습니다. 컨트롤에 `aria-label`을 주세요. 이니셜이 서로 가릴 만큼 빽빽한 스택. Avatar를 줄이고 나머지는 개수에 넣으세요.
+
+## 언제 쓰나요
+
+**쓸 때:** 담당자, 참여자, 팀 구성원처럼 몇 사람을 한 줄로 쌓아 보여 줄 때.
+
+**쓰지 않을 때:** 이름 옆에 놓인 한 사람이나 한 팀 → [Avatar](/avatar). 이름이 필요한 모든 사람 → 이름을 옆에 적은 Avatar 목록. 사람 없이 상태나 개수만 → [Badge](/badge).
