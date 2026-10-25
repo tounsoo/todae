@@ -28,17 +28,19 @@
   margin-inline-start: calc(-0.25 * var(--_stack-size));
 }
 
-/* The avatar is inline-flex, so a wrapper builds a line box around it and
-   grows past the avatar. Flex takes the avatar out of that line. A box-shadow
-   is not clipped by the avatar's overflow: hidden. Later avatars paint over
-   earlier ones in DOM order. */
-.avatarGroup .avatar {
+/* The avatar is inline-flex, so a button or a link builds a line box around
+   it and grows past the avatar. Flex takes that avatar out of the line. A
+   bare avatar stays inline-flex. */
+.avatarGroup :is(button, a) .avatar {
   display: flex;
+}
+
+/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
+   paint over earlier ones in DOM order. */
+.avatarGroup .avatar {
   box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));
 }
 
-/* A focused child rises above its neighbors' rings, so its focus ring shows
-   whole. The stack isolates that z-index from the page. */
 .avatarGroup > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
   z-index: 1;
 }
