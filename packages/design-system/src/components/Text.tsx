@@ -17,7 +17,6 @@ export type TextRootProps = {
   ref?: Ref<HTMLElement>;
 } & HTMLAttributes<HTMLElement>;
 
-/** The element Text.Root renders without `as`. */
 export const DEFAULT_AS: TextAs = 'p';
 
 type TextScale = 's' | 'm' | 'l' | 'xl' | '2xl' | 'label';
@@ -43,7 +42,6 @@ export function clampLines(lines: number | undefined): number | undefined {
   return lines !== undefined && Number.isInteger(lines) && lines >= 1 ? lines : undefined;
 }
 
-// Each invalid value is reported once, since this logs while rendering.
 const reported = /* @__PURE__ */ new Set<number>();
 const reportedSizes = /* @__PURE__ */ new Set<string>();
 
@@ -56,7 +54,6 @@ function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, s
   const heading = isHeading(Tag);
   const clamp = clampLines(lines);
   const domProps = omitLegacySize(props);
-  // Logged while rendering, since a server render runs no effects.
   if (process.env.NODE_ENV !== 'production' && lines !== undefined && clamp === undefined && !reported.has(lines)) {
     reported.add(lines);
     console.error(`Text.Root lines must be a whole number of 1 or more; got ${String(lines)}`);
@@ -71,11 +68,9 @@ function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, s
     className,
   );
   const ownStyle = clamp === undefined ? style : ({ ...style, '--_lines': clamp } as CSSProperties);
-  // Each tag's element type extends HTMLElement; the ref is typed to the common base.
   return <Tag {...domProps} ref={ref as Ref<HTMLParagraphElement>} className={classes} style={ownStyle} />;
 }
 
-/** `size` is no longer a prop. Drop it so a JS or MDX caller does not paint it onto the element. */
 function omitLegacySize(props: TextRootProps): TextRootProps {
   if (!('size' in props)) return props;
   const { size, ...rest } = props as TextRootProps & { size?: unknown };

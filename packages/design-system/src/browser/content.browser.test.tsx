@@ -769,7 +769,6 @@ describe('Prose.Root in a browser', () => {
     expect(style('demo-p').marginBlockStart).toBe('16px');
     expect(style('demo-p').marginBlockEnd).toBe('16px');
     expect(style('text').fontSize).toBe('12px');
-    // Text.Root resets its own margin, and the rhythm still spaces it.
     expect(style('text').marginBlockStart).toBe('32px');
     expect(style('text-p').marginBlockStart).toBe('12px');
   });

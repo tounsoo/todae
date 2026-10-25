@@ -16,7 +16,6 @@ export function HomeShowcase() {
   return (
     <Card.Root className="showcase-card">
       <Card.Header>
-        {/* On a phone the avatars and badge drop below the title. */}
         <Stack.Root className="showcase-title" direction="row" wrap align="center" justify="between">
           <Text.Root as="span" weight="bold">
             Workspace

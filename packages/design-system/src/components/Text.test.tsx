@@ -79,7 +79,6 @@ describe('Text', () => {
     expect(classesOf(screen.getByTestId('heading'))).toEqual([styles.root, styles.heading, styles.label]);
   });
 
-  // Every class has one selector of the same weight, so source order decides which color and weight apply.
   it('orders the sheet so a role replaces the defaults and a given tone or weight wins', () => {
     const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
     const at = (cls: string) => {
