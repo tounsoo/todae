@@ -2,7 +2,9 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 
 # Field.Select
 
-`Field.Select` is a native `<select>` inside a [Field](/field). In browsers with `appearance: base-select` the button and its picker are drawn from field and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label.Root htmlFor` names it like any other field.
+`Field.Select` is the native `<select>` inside a [Field](/field). It is not a JavaScript listbox.
+
+When the browser supports `appearance: base-select`, the button and its picker are drawn from field and option tokens. Elsewhere the browser's own picker shows, with the same value and the same keyboard. Children are `<option>` or `<optgroup>` elements. A `Label.Root htmlFor` names the select like any other field.
 
 ```tsx
 const id = useId();
@@ -50,7 +52,7 @@ import { ChevronDown } from 'lucide-react';
 
 ### Field.Select
 
-**When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
+**When:** Pick one value from a short, fixed list inside a form. The control is the native `<select>` and its keyboard, not a JavaScript listbox.
 
 **When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
 

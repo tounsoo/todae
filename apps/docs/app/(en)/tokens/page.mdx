@@ -28,6 +28,8 @@ function Panel() {
 
 **When not:** Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).
 
+`THEME_OVERRIDE_KEYS` is the list of token paths `overrides` accepts. Import it from `@tounsoo/todae`. The list joins the raw keys, the semantic keys, and the component keys. A path outside that list is rejected unless you pass `overrideTypes` from a company token build. [Build on Todae](/guides/build-on-todae) shows that build. [`themeOverrideStyle`](/utilities/theme-override-style) writes the same overrides as `--todae-*` custom properties without rendering `ThemeProvider`.
+
 ### DensityProvider
 
 **When:** Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`; a nested provider with none keeps the enclosing one's. Spacing only.
