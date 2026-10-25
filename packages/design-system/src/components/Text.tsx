@@ -4,7 +4,6 @@ import styles from './Text.module.css';
 
 export type TextHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 export type TextAs = 'p' | 'span' | 'strong' | TextHeading;
-/** The only public typography role. Body text and headings leave it unset. */
 export type TextVariant = 'label';
 export type TextTone = 'default' | 'muted' | 'accent';
 export type TextWeight = 'regular' | 'medium' | 'bold';
@@ -21,10 +20,8 @@ export type TextRootProps = {
 /** The element Text.Root renders without `as`. */
 export const DEFAULT_AS: TextAs = 'p';
 
-/** Internal scale. Headings use HEADING_SIZE, body text uses `m`, and the label role uses `label`. */
 type TextScale = 's' | 'm' | 'l' | 'xl' | '2xl' | 'label';
 
-/** The scale a heading takes from its level. */
 const HEADING_SIZE: Record<TextHeading, Exclude<TextScale, 'label'>> = {
   h1: '2xl',
   h2: 'xl',
