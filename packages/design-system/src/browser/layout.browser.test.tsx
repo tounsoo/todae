@@ -512,8 +512,8 @@ describe('A password shown and hidden in a browser', () => {
     await userEvent.keyboard('secret');
     input.setSelectionRange(3, 3);
     await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
-    // Chromium moves the caret when it next renders the focused input, and the field puts it back on that frame.
-    await new Promise(requestAnimationFrame);
+    const afterCaretRestoreFrame = () => new Promise(requestAnimationFrame);
+    await afterCaretRestoreFrame();
     expect(document.activeElement).toBe(input);
     expect(input.selectionStart).toBe(3);
     expect(input.selectionEnd).toBe(3);

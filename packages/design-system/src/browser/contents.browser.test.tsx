@@ -26,7 +26,6 @@ type PageProps = {
   noThree?: boolean;
   /** Puts the first section in a wrapper, so the first heading's parent isn't the scroller. */
   wrapped?: boolean;
-  /** Remounts the Three heading when it changes, keeping the same id and link. */
   threeKey?: number;
   scroller?: CSSProperties;
 };
@@ -239,7 +238,6 @@ describe('Contents in a browser', () => {
     const { rerender } = render(<Page threeKey={0} scroller={{ scrollBehavior: 'smooth' }} />);
     await waitFor(() => expect(current()).toBe('One'));
     const scroller = screen.getByTestId('scroller');
-    // Remount while the click's smooth scroll is still on its way, so the pick is the only reason Three would be current.
     link('Three').click();
     rerender(<Page threeKey={1} scroller={{ scrollBehavior: 'smooth' }} />);
     await waitFor(() => expect(current()).toBe('One'));
