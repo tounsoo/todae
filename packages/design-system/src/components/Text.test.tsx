@@ -3,9 +3,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
-import { Text, type TextAs } from './Text.js';
+import { Text, type TextAs, type TextRootProps } from './Text.js';
 import styles from './Text.module.css';
 
 afterEach(cleanup);
@@ -57,7 +57,17 @@ describe('Text', () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
     view.rerender(createElement(Text.Root, legacy));
     expect(error).toHaveBeenCalledTimes(1);
+    const small = { size: 's', children: 'Caption', 'data-testid': 's' };
+    render(createElement(Text.Root, small));
+    const smallEl = screen.getByTestId('s');
+    expect(smallEl.hasAttribute('size')).toBe(false);
+    expect(smallEl.classList.contains(styles.m!)).toBe(true);
+    expect(error).toHaveBeenCalledTimes(2);
     error.mockRestore();
+  });
+
+  it('rejects size on TextRootProps', () => {
+    expectTypeOf<TextRootProps>().not.toHaveProperty('size');
   });
 
   it('gives the label role its own class, and adds a tone or weight only when given', () => {
