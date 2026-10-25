@@ -1,0 +1,47 @@
+/* The overlap reads the stack's size, not each avatar's, so it holds for any
+   direct child: an avatar, or one wrapped in a tooltip trigger or a link. */
+.avatarGroup {
+  --_stack-size: var(--todae-avatar-size-md);
+
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  isolation: isolate;
+}
+
+/* Tooltip and Popover content carries [popover], and a dialog places itself:
+   they take no part in the stack. */
+.avatarGroup > :not([popover], dialog) {
+  flex: none;
+}
+
+.avatarGroup > :not([popover], dialog) ~ :not([popover], dialog) {
+  margin-inline-start: calc(-0.25 * var(--_stack-size));
+}
+
+/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
+   paint over earlier ones in DOM order. */
+.avatarGroup .avatar {
+  box-shadow: 0 0 0 var(--todae-border-width) var(--todae-color-bg-surface);
+}
+
+/* A focused child rises above its neighbors' rings, so its focus ring shows
+   whole. The stack isolates that z-index from the page. */
+.avatarGroup > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
+  z-index: 1;
+}
+
+/* Forced colors drop box-shadow, so the edge becomes a border in CanvasText. */
+@media (forced-colors: active) {
+  .avatarGroup .avatar {
+    border: var(--todae-border-width) solid CanvasText;
+  }
+}
+
+.small {
+  --todae-avatar-size-md: var(--todae-avatar-size-sm);
+}
+
+.large {
+  --todae-avatar-size-md: var(--todae-avatar-size-lg);
+}
