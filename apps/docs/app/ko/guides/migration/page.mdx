@@ -33,7 +33,7 @@ npm install @tounsoo/todae@latest
 | 이전 `size` | 대체 |
 | --- | --- |
 | `s` | `var(--todae-font-size-2)` |
-| `m` | `size`를 빼세요. 본문은 이미 `font.size.3`입니다. |
+| `m` | 본문에서는 `size`를 빼세요. 본문은 이미 `font.size.3`입니다. 제목에서는 `font-size: var(--todae-font-size-3)`로 설정하세요. |
 | `l` | `var(--todae-font-size-4)` |
 | `xl` | `var(--todae-font-size-5)` |
 | `2xl` | `var(--todae-font-size-6)` |
@@ -93,5 +93,5 @@ foundation 토큰 `font.size.1`부터 `font.size.6`까지는 두세요. 경로�
 앱에서 제거된 이름을 찾으세요.
 
 ```sh
-rg -n 'text\.size\.|prose\.size|prose\.h[1-6]\.size|--todae-text-size-|--todae-prose-' .
+rg -n 'text\.size\.|prose\.size|prose\.h[1-6]\.size|--todae-text-size-|--todae-prose-size|--todae-prose-h[1-6]-size' .
 ```

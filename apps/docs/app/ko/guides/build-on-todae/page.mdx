@@ -163,7 +163,7 @@ npx --no todae-tokens build --resolver ./tokens/business.resolver.json --scope .
 </ThemeProvider>
 ```
 
-`@tounsoo/todae`가 export하는 `THEME_OVERRIDE_KEYS`는 `overrides`가 받는 경로의 목록입니다. raw 키, semantic 키, component 키를 잇습니다. 도구가 `overrides`가 받는 경로를 알아야 할 때 이 목록을 읽으세요. [토큰](/tokens) 페이지가 `ThemeProvider` 옆에 같은 목록을 보여 줍니다. 프로바이더 없이 커스텀 프로퍼티가 필요하면 같은 값으로 [`themeOverrideStyle`](/utilities/theme-override-style)을 호출하세요.
+`@tounsoo/todae`가 export하는 `THEME_OVERRIDE_KEYS`는 `overrides`가 받는 경로의 목록입니다. raw 키, semantic 키, component 키를 잇습니다. 도구가 `overrides`가 받는 경로를 알아야 할 때 이 목록을 읽으세요. [토큰](/tokens) 페이지는 `ThemeProvider` 옆에서 `THEME_OVERRIDE_KEYS`의 이름을 적습니다. 프로바이더 없이 커스텀 프로퍼티가 필요하면 같은 값으로 [`themeOverrideStyle`](/utilities/theme-override-style)을 호출하세요.
 
 `appearance`가 없는 `ThemeProvider`는 바깥 프로바이더의 appearance를 따르고, 가장 바깥 프로바이더의 기본값은 `system`입니다. 그래서 오버라이드만 설정하는 중첩 프로바이더는 페이지의 라이트나 다크를 그대로 유지합니다. 프로바이더마다 appearance 토큰을 다시 선언하므로, 바깥 프로바이더가 `color.accent.default` 같은 appearance 토큰을 오버라이드해도 중첩 프로바이더 안에는 닿지 않습니다. 그 프로바이더에서 다시 설정하세요. `card.shadow` 같은 컴포넌트 토큰의 오버라이드는 그대로 이어집니다. 오버라이드는 그것을 설정한 프로바이더의 모든 appearance에 적용됩니다. 라이트와 다크에 다른 값을 주려면, 프로바이더 안의 컴포넌트에서 `useAppearance()`로 고르세요. `system`에서는 페이지가 하이드레이션될 때까지 서버가 라이트 값을 렌더링하므로, 미리 알 수 있는 값은 라이트와 다크 컨텍스트를 둔 회사 토큰 패키지에 넣으세요.
 

@@ -33,7 +33,7 @@ Replace any other `size` by setting `font-size` from the foundation step that si
 | Old `size` | Replacement |
 | --- | --- |
 | `s` | `var(--todae-font-size-2)` |
-| `m` | Omit `size`. Body is already `font.size.3`. |
+| `m` | On body text, omit `size`. It is already `font.size.3`. On a heading, set `font-size: var(--todae-font-size-3)`. |
 | `l` | `var(--todae-font-size-4)` |
 | `xl` | `var(--todae-font-size-5)` |
 | `2xl` | `var(--todae-font-size-6)` |
@@ -93,5 +93,5 @@ Keep the foundation tokens `font.size.1` through `font.size.6`. Keep component t
 Search the app for the removed names.
 
 ```sh
-rg -n 'text\.size\.|prose\.size|prose\.h[1-6]\.size|--todae-text-size-|--todae-prose-' .
+rg -n 'text\.size\.|prose\.size|prose\.h[1-6]\.size|--todae-text-size-|--todae-prose-size|--todae-prose-h[1-6]-size' .
 ```

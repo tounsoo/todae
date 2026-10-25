@@ -460,7 +460,7 @@
     "## Token layers": "9ec5daf020a5",
     "## A company resolver": "23b228dee217",
     "## Several themes on one page": "a81e42a147ff",
-    "## Overrides: CSS or ThemeProvider": "8aeb3582d57e",
+    "## Overrides: CSS or ThemeProvider": "81bfc0b31cda",
     "## A worked example": "d64b3c5ea00e",
     "## Adding a variant or a density": "6ef889d9ec6e",
     "## Wrapping a component": "60f88028be57",
@@ -489,9 +489,9 @@
   "guides/migration": {
     "# Migrate an existing app": "b27e29d8d233",
     "## Install the current release": "e6a77b73e34d",
-    "## Replace Text `size`": "183a97fbb6ad",
+    "## Replace Text `size`": "5d49c63be65f",
     "## Replace Avatar `size` and `Avatar.Group`": "1e91ac39edb1",
-    "## Replace the component type scale": "bcbbf96a1f65",
+    "## Replace the component type scale": "a6ec40b99d0a",
     "(section order)": "a81177f05527"
   },
   "label": {
