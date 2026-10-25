@@ -96,11 +96,11 @@ export function Assignees({ people }: { people: Person[] }) {
 }
 ```
 
-겹치는 정도는 각 Avatar가 아니라 스택의 크기에서 가져오므로, Avatar든 툴팁 트리거나 링크로 감싼 Avatar든 직계 자식이면 똑같이 동작합니다. 자체 크기를 준 Avatar도 스택의 크기만큼 당겨집니다. 마진은 논리 속성이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 테두리는 `--avatar-group-ring`의 `box-shadow`이고, 값이 없으면 표면 색입니다. `--avatar-group-ring`은 스택에 지정하세요. 조상에 지정하면 그 값 안의 토큰은 그 자리에서 계산되므로, 그 조상과 스택 사이의 테마는 테두리 색을 바꾸지 못합니다. 포커스를 받은 자식은 이웃보다 위로 올라와 포커스 링이 온전히 보입니다. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 border가 생깁니다. 스택 안의 Avatar는 flex 상자라 감싼 요소가 줄 상자로 커지지 않습니다. 직계 자식인 버튼이나 링크는 여백, 테두리, 채움이 없어서 그 자식이 Avatar와 같은 크기를 유지합니다.
+겹치는 정도는 각 Avatar가 아니라 스택의 크기에서 가져오므로, Avatar든 툴팁 트리거나 링크로 감싼 Avatar든 직계 자식이면 똑같이 동작합니다. 자체 크기를 준 Avatar도 스택의 크기만큼 당겨집니다. 마진은 논리 속성이라 오른쪽에서 왼쪽으로 쓰는 글에서는 방향이 뒤집힙니다. 테두리는 `--avatar-group-ring`의 `box-shadow`이고, 값이 없으면 표면 색입니다. `--avatar-group-ring`은 스택에 지정하세요. 조상에 지정하면 그 값 안의 토큰은 그 자리에서 계산되므로, 그 조상과 스택 사이의 테마는 테두리 색을 바꾸지 못합니다. 포커스를 받은 자식은 이웃보다 위로 올라와 포커스 링이 온전히 보입니다. 강제 색상 모드에서는 테두리 대신 각 Avatar에 시스템 텍스트 색의 border가 생깁니다. 스택 안의 Avatar는 flex 상자라 스스로 줄 상자를 만들지 않습니다. 직계 자식인 버튼이나 링크는 여백, 테두리, 채움이 없어서 그 자식이 Avatar와 같은 크기를 유지합니다.
 
 ## 크기
 
-Avatar에는 `size` prop이 없으므로 스택에도 없습니다. Avatar는 `--todae-avatar-size-md`로 그려지고, 스택은 같은 변수를 겹침 계산에 씁니다. 스택 요소에 이 변수를 지정하면 안쪽의 모든 Avatar와 겹침이 함께 따라옵니다. 그 요소 안에 `data-appearance`나 `data-density`를 가진 요소, 또는 스코프 테마의 루트를 넣지 마세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 그런 요소는 크기 토큰을 다시 선언해서 Avatar는 `avatar.size.md`로 돌아가고, 겹침은 스택이 잡아 둔 크기에 남습니다. 아래 두 클래스는 이 변수를 `avatar.size.sm`과 `avatar.size.lg` 단계로 향하게 합니다. 스택에 `avatarGroup`과 함께 더하세요.
+Avatar에는 `size` prop이 없으므로 스택에도 없습니다. Avatar는 `--todae-avatar-size-md`로 그려지고, 스택은 같은 변수를 겹침 계산에 씁니다. 스택 요소에 이 변수를 지정하면 안쪽의 모든 Avatar와 겹침이 함께 따라옵니다. 그 요소 안에 `data-appearance`나 `data-density`를 가진 요소, 또는 스코프 테마의 루트를 넣지 마세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 그런 요소나 스코프 테마의 루트는 크기 토큰을 다시 선언해서 Avatar는 `avatar.size.md`로 돌아가고, 겹침은 스택이 잡아 둔 크기에 남습니다. 아래 두 클래스는 이 변수를 `avatar.size.sm`과 `avatar.size.lg` 단계로 향하게 합니다. 스택에 `avatarGroup`과 함께 더하세요.
 
 ```css
 .small {
