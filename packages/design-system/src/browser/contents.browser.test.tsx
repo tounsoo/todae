@@ -26,12 +26,14 @@ type PageProps = {
   noThree?: boolean;
   /** Puts the first section in a wrapper, so the first heading's parent isn't the scroller. */
   wrapped?: boolean;
+  /** Remounts the Three heading when it changes, keeping the same id and link. */
+  threeKey?: number;
   scroller?: CSSProperties;
 };
 
 const RefLess = ({ ref: _ref, ...props }: LinkRenderProps) => <a {...props} />;
 
-function Page({ dir, list = true, extra = false, more = false, refless = false, noThree = false, wrapped = false, scroller }: PageProps) {
+function Page({ dir, list = true, extra = false, more = false, refless = false, noThree = false, wrapped = false, threeKey, scroller }: PageProps) {
   const render = refless ? RefLess : undefined;
   const tall = { blockSize: '400px', margin: 0 };
   return (
@@ -107,7 +109,7 @@ function Page({ dir, list = true, extra = false, more = false, refless = false, 
           Two A
         </h3>
         <p style={tall}>…</p>
-        <h2 id="three" style={{ margin: 0 }}>
+        <h2 key={threeKey} id="three" style={{ margin: 0 }}>
           Three
         </h2>
         <p style={{ margin: 0 }}>…</p>
@@ -231,6 +233,17 @@ describe('Contents in a browser', () => {
       three.id = 'three';
     });
     expect(current()).toBe('Two A');
+  });
+
+  it('drops a pick whose heading remounts with the same id, so the section the scroll shows is current', async () => {
+    const { rerender } = render(<Page threeKey={0} scroller={{ scrollBehavior: 'smooth' }} />);
+    await waitFor(() => expect(current()).toBe('One'));
+    const scroller = screen.getByTestId('scroller');
+    // Remount while the click's smooth scroll is still on its way, so the pick is the only reason Three would be current.
+    link('Three').click();
+    rerender(<Page threeKey={1} scroller={{ scrollBehavior: 'smooth' }} />);
+    await waitFor(() => expect(current()).toBe('One'));
+    expect(scroller.scrollTop).toBeLessThan(LINE);
   });
 
   it('drops a pick of a section the page lacks, so it does not hold when the section mounts', async () => {
