@@ -2,6 +2,39 @@
   "prose": {
     "$description": "Prose.Root: long-form text such as rendered markdown, with headings and lists.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
+    },
+    "h1": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/6/$value" } }
+      }
+    },
+    "h2": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } }
+      }
+    },
+    "h3": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } }
+      }
+    },
+    "h4": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
+      }
+    },
+    "h5": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
+      }
+    },
+    "h6": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+      }
+    },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/prose/gap/$value" } },
     "heading": {

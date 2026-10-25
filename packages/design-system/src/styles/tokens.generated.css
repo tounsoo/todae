@@ -513,7 +513,14 @@
   --todae-text-weight-medium: var(--_todae-text-weight-medium, var(--todae-font-weight-medium));
   --todae-text-weight-regular: var(--_todae-text-weight-regular, var(--todae-font-weight-regular));
   --todae-prose-fg: var(--_todae-prose-fg, var(--todae-color-fg-default));
+  --todae-prose-font-size: var(--_todae-prose-font-size, var(--todae-font-size-3));
   --todae-prose-gap: var(--_todae-prose-gap, var(--todae-space-prose-gap));
+  --todae-prose-h1-font-size: var(--_todae-prose-h1-font-size, var(--todae-font-size-6));
+  --todae-prose-h2-font-size: var(--_todae-prose-h2-font-size, var(--todae-font-size-5));
+  --todae-prose-h3-font-size: var(--_todae-prose-h3-font-size, var(--todae-font-size-4));
+  --todae-prose-h4-font-size: var(--_todae-prose-h4-font-size, var(--todae-font-size-3));
+  --todae-prose-h5-font-size: var(--_todae-prose-h5-font-size, var(--todae-font-size-3));
+  --todae-prose-h6-font-size: var(--_todae-prose-h6-font-size, var(--todae-font-size-2));
   --todae-prose-heading-fg: var(--_todae-prose-heading-fg, var(--todae-color-fg-default));
   --todae-prose-heading-leading: var(--_todae-prose-heading-leading, var(--todae-font-leading-tight));
   --todae-prose-heading-space-after: var(--_todae-prose-heading-space-after, var(--todae-space-prose-heading-after));

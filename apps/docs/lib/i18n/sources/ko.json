@@ -612,13 +612,14 @@
   "prose": {
     "(top)": "3b30d99936ef",
     "# Prose": "694aeebda72e",
+    "## Type": "3e974d448f81",
     "## Spacing": "d473ef50d913",
     "## Where the styles stop": "73997c31ee6c",
     "## Map markdown onto Todae": "926fc809af39",
     "## Accessible composition": "ead52f9648b2",
     "## When to use": "4a1c3e03570d",
     "## Props": "7fd923db90b6",
-    "(section order)": "9d2339ea57e1"
+    "(section order)": "6c20c6a3b49f"
   },
   "radio": {
     "(top)": "44e2b511c2eb",

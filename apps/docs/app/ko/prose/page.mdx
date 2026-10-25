@@ -20,6 +20,14 @@ import { ProseArticle } from '../../../components/demos/ProseDemo';
 
 Server Component에서는 `@tounsoo/todae/prose`에서 가져올 수 있습니다. 이 사이트의 MDX 페이지는 모두 이것으로 조판합니다.
 
+## 글자 크기
+
+본문은 `prose.font.size`로 그립니다. 기본값은 `font.size.3`을 가리킵니다. 커스텀 속성은 `--todae-prose-font-size`입니다.
+
+제목 수준마다 크기 토큰이 있습니다. `prose.h1.font.size`는 `font.size.6`을 가리킵니다. `prose.h2.font.size`는 `font.size.5`를 가리킵니다. `prose.h3.font.size`는 `font.size.4`를 가리킵니다. `prose.h4.font.size`는 `font.size.3`을 가리킵니다. `prose.h5.font.size`는 `font.size.3`을 가리킵니다. `prose.h6.font.size`는 `font.size.2`를 가리킵니다. 커스텀 속성은 `--todae-prose-h1-font-size`, `--todae-prose-h2-font-size`, `--todae-prose-h3-font-size`, `--todae-prose-h4-font-size`, `--todae-prose-h5-font-size`, `--todae-prose-h6-font-size`입니다.
+
+테마나 `ThemeProvider` override로 이 경로를 바꾸면 Prose만 바뀝니다. 같은 `font.size` 단계를 쓰는 다른 곳은 바뀌지 않습니다.
+
 ## 간격
 
 각 자식은 앞의 자식에서 `prose.gap`만큼 아래에 놓입니다. 제목은 제목이 아닌 앞 요소에서 `prose.heading.space-before`만큼 아래에 놓이고, 제목 다음에 오는 요소는 다른 제목이라도 제목에서 `prose.heading.space-after`만큼 아래에 놓입니다. 첫 자식과 마지막 자식은 `Prose.Root`의 가장자리에 붙으므로, 카드나 메시지 말풍선이 고른 안쪽 여백으로 감쌀 수 있습니다. 이 간격은 자식인 Todae 컴포넌트(`CodeBlock.Root`, `Separator.Root`, `Text.Root` 등)의 여백을 대신합니다.
