@@ -19,22 +19,10 @@ export type TextRootProps = {
 
 export const DEFAULT_AS: TextAs = 'p';
 
-type TextScale = 's' | 'm' | 'l' | 'xl' | '2xl' | 'label';
-
-const HEADING_SIZE: Record<TextHeading, Exclude<TextScale, 'label'>> = {
-  h1: '2xl',
-  h2: 'xl',
-  h3: 'l',
-  h4: 'm',
-  h5: 'm',
-  h6: 's',
-};
-
-// A class name can't start with a digit.
-const SCALE_CLASS: Record<TextScale, string> = { s: 's', m: 'm', l: 'l', xl: 'xl', '2xl': 'xxl', label: 'label' };
+const HEADINGS: ReadonlySet<string> = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 
 function isHeading(tag: TextAs): tag is TextHeading {
-  return Object.hasOwn(HEADING_SIZE, tag);
+  return HEADINGS.has(tag);
 }
 
 /** `lines` when it can clamp: a whole number of one or more. Anything else clamps nothing. */
@@ -44,11 +32,6 @@ export function clampLines(lines: number | undefined): number | undefined {
 
 const reported = /* @__PURE__ */ new Set<number>();
 const reportedSizes = /* @__PURE__ */ new Set<string>();
-
-function scaleOf(tag: TextAs, variant: TextVariant | undefined): TextScale {
-  if (variant === 'label') return 'label';
-  return isHeading(tag) ? HEADING_SIZE[tag] : 'm';
-}
 
 function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
@@ -61,7 +44,7 @@ function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, s
   const classes = cx(
     styles.root,
     heading && styles.heading,
-    styles[SCALE_CLASS[scaleOf(Tag, variant)]],
+    variant === 'label' && styles.label,
     tone && styles[tone],
     weight && styles[weight],
     clamp !== undefined && styles.clamp,

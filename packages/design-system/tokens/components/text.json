@@ -1,10 +1,16 @@
 {
   "text": {
-    "$description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. Headings pick foundation font.size steps from as. text.font.family is not applied by Todae on body text and headings; products set it where they want it.",
+    "$description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it.",
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/sans/$value" } },
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },
+    "h1": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/6/$value" } } } },
+    "h2": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } } } },
+    "h3": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } } } },
+    "h4": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/text/font/size/$value" } } } },
+    "h5": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/text/font/size/$value" } } } },
+    "h6": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } } } },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "muted": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },

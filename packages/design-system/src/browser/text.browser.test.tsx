@@ -444,4 +444,32 @@ describe('Text body size', () => {
     expect(getComputedStyle(screen.getByTestId('around')).fontSize).toBe('20px');
     expect(getComputedStyle(screen.getByTestId('on')).fontSize).toBe('32px');
   });
+
+  it('draws each heading at text.hN.font.size, and a ThemeProvider can override one level', () => {
+    render(
+      <>
+        <Text.Root as="h1" data-testid="h1">A</Text.Root>
+        <Text.Root as="h2" data-testid="h2">A</Text.Root>
+        <Text.Root as="h3" data-testid="h3">A</Text.Root>
+        <Text.Root as="h4" data-testid="h4">A</Text.Root>
+        <Text.Root as="h5" data-testid="h5">A</Text.Root>
+        <Text.Root as="h6" data-testid="h6">A</Text.Root>
+        <Text.Root as="h2" variant="label" data-testid="label">A</Text.Root>
+        <ThemeProvider overrides={{ 'text.h2.font.size': { value: 2, unit: 'rem' } }}>
+          <Text.Root as="h2" data-testid="h2-set">A</Text.Root>
+          <Text.Root as="h1" data-testid="h1-same">A</Text.Root>
+        </ThemeProvider>
+      </>,
+    );
+    const px = (id: string) => getComputedStyle(screen.getByTestId(id)).fontSize;
+    expect(px('h1')).toBe('30px');
+    expect(px('h2')).toBe('24px');
+    expect(px('h3')).toBe('20px');
+    expect(px('h4')).toBe('16px');
+    expect(px('h5')).toBe('16px');
+    expect(px('h6')).toBe('14px');
+    expect(px('label')).toBe('12px');
+    expect(px('h2-set')).toBe('32px');
+    expect(px('h1-same')).toBe('30px');
+  });
 });
