@@ -887,7 +887,7 @@ export function FieldUseField() {
   const [stars, setStars] = useState(3);
   return (
     <Field.Group>
-      <Text.Root as="span" id={captionId} size="s" weight="medium">
+      <Text.Root as="span" id={captionId} weight="medium">
         Rating
       </Text.Root>
       <Field.Root aria-labelledby={captionId} aria-describedby={hintId}>

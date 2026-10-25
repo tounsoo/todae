@@ -18,7 +18,7 @@ export function MenuActions() {
           <Menu.Item onSelect={() => setLast('Delete')}>Delete</Menu.Item>
         </Menu.Content>
       </Menu.Root>
-      <Text.Root size="s" tone="muted">
+      <Text.Root tone="muted">
         Last action: {last}
       </Text.Root>
     </Stack.Root>
@@ -84,7 +84,7 @@ export function MenuContext() {
           </Menu.Root>
         ))}
       </Stack.Root>
-      <Text.Root size="s" tone="muted">
+      <Text.Root tone="muted">
         Last action: {last}
       </Text.Root>
     </Stack.Root>

@@ -26,7 +26,7 @@
       "tight": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
     },
     "label": {
-      "$description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
+      "$description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
       "font": {
         "family": { "$type": "fontFamily", "$value": { "$ref": "#/text/font/family/$value" } },
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },

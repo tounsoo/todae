@@ -9,7 +9,7 @@ export function RadioPlan() {
   const [plan, setPlan] = useState('free');
   return (
     <Field.Group>
-      <Text.Root as="span" id={captionId} size="s" weight="medium">
+      <Text.Root as="span" id={captionId} weight="medium">
         Plan
       </Text.Root>
       <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>

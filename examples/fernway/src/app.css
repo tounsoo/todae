@@ -19,6 +19,11 @@ body {
   padding: var(--todae-space-6) var(--todae-space-4);
 }
 
+.wordmark,
+.cabin-name {
+  font-size: var(--todae-text-size-4);
+}
+
 .hero {
   background: var(--todae-fernway-hero-bg);
   color: var(--todae-fernway-hero-fg);

@@ -112,10 +112,10 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                 </Breadcrumbs.Item>
                 <Breadcrumbs.Item current>{copy.page}</Breadcrumbs.Item>
               </Breadcrumbs.Root>
-              <Text.Root as="h2" size="l">
+              <Text.Root as="h2">
                 {copy.greeting}
               </Text.Root>
-              <Text.Root tone="muted" size="s">
+              <Text.Root tone="muted">
                 {copy.searchHint}
               </Text.Root>
             </div>
@@ -161,28 +161,28 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
             <Card.Body>
               <div className="preview-stats">
                 <div>
-                  <Text.Root tone="muted" size="s">
+                  <Text.Root tone="muted">
                     {copy.booked}
                   </Text.Root>
-                  <Text.Root size="2xl" weight="bold">
+                  <Text.Root weight="bold">
                     {copy.bookedAmount}
                   </Text.Root>
                   <Badge.Root tone="success">+12.4%</Badge.Root>
                 </div>
                 <div>
-                  <Text.Root tone="muted" size="s">
+                  <Text.Root tone="muted">
                     {copy.churned}
                   </Text.Root>
-                  <Text.Root size="2xl" weight="bold">
+                  <Text.Root weight="bold">
                     {copy.churnedAmount}
                   </Text.Root>
                   <Badge.Root tone="critical">+3.1%</Badge.Root>
                 </div>
                 <div>
-                  <Text.Root tone="muted" size="s">
+                  <Text.Root tone="muted">
                     {copy.quota}
                   </Text.Root>
-                  <Text.Root size="2xl" weight="bold">
+                  <Text.Root weight="bold">
                     72%
                   </Text.Root>
                   <Progress.Root value={72} max={100} aria-label={copy.quotaUsed} />
@@ -225,7 +225,7 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                   <Slider.Root id={ids.seats} min={1} max={50} defaultValue={12} />
                 </Field.Group>
                 <Field.Group>
-                  <Text.Root as="span" id={ids.billing} size="s" weight="medium">
+                  <Text.Root as="span" id={ids.billing} weight="medium">
                     {copy.billing}
                   </Text.Root>
                   <RadioGroup.Root aria-labelledby={ids.billing} defaultValue="yearly">

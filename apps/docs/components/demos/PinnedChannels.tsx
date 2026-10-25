@@ -62,7 +62,7 @@ export function PinnedChannels({
 
   return (
     <>
-      <Text.Root id={labelId} size="label">
+      <Text.Root id={labelId} variant="label">
         Pinned channels
       </Text.Root>
       <Stack.Root as="ol" gap="none" aria-labelledby={labelId}>

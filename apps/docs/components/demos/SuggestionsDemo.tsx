@@ -147,7 +147,7 @@ function VersionSwitcher({
           <ChevronLeft />
         </Button.Icon>
       </Button.Root>
-      <Text.Root as="span" id={position} size="s" tone="muted" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <Text.Root as="span" id={position} tone="muted" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {index + 1} of {count}
       </Text.Root>
       <Button.Root

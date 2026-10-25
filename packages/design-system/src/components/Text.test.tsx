@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createElement } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
-import { Text, type TextAs } from './Text.js';
+import { Text, type TextAs, type TextRootProps } from './Text.js';
 import styles from './Text.module.css';
 
 afterEach(cleanup);
@@ -35,44 +36,59 @@ describe('Text', () => {
     expect(classesOf(el)).toEqual([styles.root, styles.heading, styles[size]]);
   });
 
-  it('lets a heading take another size and weight', () => {
+  it('lets a heading take another weight and keeps the scale its level picks', () => {
     render(
-      <Text.Root as="h2" size="s" weight="medium">
-        Small
+      <Text.Root as="h2" weight="medium">
+        Quiet
       </Text.Root>,
     );
     const el = screen.getByRole('heading', { level: 2 });
-    expect(el.classList.contains(styles.s!)).toBe(true);
-    expect(el.classList.contains(styles.xl!)).toBe(false);
-    expect(el.classList.contains(styles.medium!)).toBe(true);
-    expect(el.classList.contains(styles.bold!)).toBe(false);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.xl, styles.medium]);
   });
 
-  it('maps 2xl to a class that CSS can select', () => {
-    render(
-      <Text.Root size="2xl" data-testid="t">
-        Big
-      </Text.Root>,
-    );
-    expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
+  it('drops a leftover size instead of painting it on the element', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const legacy = { size: 'label', children: 'Eyebrow', 'data-testid': 't' };
+    const view = render(createElement(Text.Root, legacy));
+    const el = screen.getByTestId('t');
+    expect(el.hasAttribute('size')).toBe(false);
+    expect(el.classList.contains(styles.label!)).toBe(false);
+    expect(el.classList.contains(styles.m!)).toBe(true);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
+    view.rerender(createElement(Text.Root, legacy));
+    expect(error).toHaveBeenCalledTimes(1);
+    const small = { size: 's', children: 'Caption', 'data-testid': 's' };
+    render(createElement(Text.Root, small));
+    const smallEl = screen.getByTestId('s');
+    expect(smallEl.hasAttribute('size')).toBe(false);
+    expect(smallEl.classList.contains(styles.m!)).toBe(true);
+    expect(error).toHaveBeenCalledTimes(2);
+    error.mockRestore();
+  });
+
+  it('rejects size on TextRootProps', () => {
+    expectTypeOf<TextRootProps>().not.toHaveProperty('size');
   });
 
   it('gives the label role its own class, and adds a tone or weight only when given', () => {
     render(
       <>
-        <Text.Root size="label" data-testid="plain">
+        <Text.Root variant="label" data-testid="plain">
           Eyebrow
         </Text.Root>
-        <Text.Root size="label" tone="accent" weight="bold" data-testid="set">
+        <Text.Root variant="label" tone="accent" weight="bold" data-testid="set">
+          Eyebrow
+        </Text.Root>
+        <Text.Root as="h2" variant="label" data-testid="heading">
           Eyebrow
         </Text.Root>
       </>,
     );
     expect(classesOf(screen.getByTestId('plain'))).toEqual([styles.root, styles.label]);
     expect(classesOf(screen.getByTestId('set'))).toEqual([styles.root, styles.label, styles.accent, styles.bold]);
+    expect(classesOf(screen.getByTestId('heading'))).toEqual([styles.root, styles.heading, styles.label]);
   });
 
-  // Every class has one selector of the same weight, so source order decides which color and weight apply.
   it('orders the sheet so a role replaces the defaults and a given tone or weight wins', () => {
     const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
     const at = (cls: string) => {

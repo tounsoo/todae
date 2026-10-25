@@ -4866,7 +4866,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.family",
@@ -4880,7 +4880,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.letter-spacing",
@@ -4894,7 +4894,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.size",
@@ -4908,7 +4908,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.text-transform",
@@ -4922,7 +4922,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.weight",
@@ -4936,7 +4936,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.leading",
@@ -4950,7 +4950,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.leading.default",

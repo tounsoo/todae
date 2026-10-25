@@ -325,7 +325,7 @@ export {
   type TextRootProps,
   type TextAs,
   type TextHeading,
-  type TextSize,
+  type TextVariant,
   type TextTone,
   type TextWeight,
 } from './components/Text.client.js';

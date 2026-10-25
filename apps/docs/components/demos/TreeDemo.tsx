@@ -65,7 +65,7 @@ export function TreeFiles() {
       >
         <Items nodes={FILES} path="" expanded={expanded} />
       </Tree.Root>
-      <Text.Root size="s" tone="muted">
+      <Text.Root tone="muted">
         Selected: {value ?? 'nothing'}
       </Text.Root>
     </Stack.Root>
