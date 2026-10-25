@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createElement } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
@@ -43,6 +44,20 @@ describe('Text', () => {
     );
     const el = screen.getByRole('heading', { level: 2 });
     expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.xl, styles.medium]);
+  });
+
+  it('drops a leftover size instead of painting it on the element', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const legacy = { size: 'label', children: 'Eyebrow', 'data-testid': 't' };
+    const view = render(createElement(Text.Root, legacy));
+    const el = screen.getByTestId('t');
+    expect(el.hasAttribute('size')).toBe(false);
+    expect(el.classList.contains(styles.label!)).toBe(false);
+    expect(el.classList.contains(styles.m!)).toBe(true);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
+    view.rerender(createElement(Text.Root, legacy));
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
   });
 
   it('gives the label role its own class, and adds a tone or weight only when given', () => {

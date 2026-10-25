@@ -45,6 +45,7 @@ export function clampLines(lines: number | undefined): number | undefined {
 
 // Each invalid value is reported once, since this logs while rendering.
 const reported = /* @__PURE__ */ new Set<number>();
+const reportedSizes = /* @__PURE__ */ new Set<string>();
 
 function scaleOf(tag: TextAs, variant: TextVariant | undefined): TextScale {
   if (variant === 'label') return 'label';
@@ -54,6 +55,7 @@ function scaleOf(tag: TextAs, variant: TextVariant | undefined): TextScale {
 function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, style, ref, ...props }: TextRootProps) {
   const heading = isHeading(Tag);
   const clamp = clampLines(lines);
+  const domProps = omitLegacySize(props);
   // Logged while rendering, since a server render runs no effects.
   if (process.env.NODE_ENV !== 'production' && lines !== undefined && clamp === undefined && !reported.has(lines)) {
     reported.add(lines);
@@ -70,7 +72,20 @@ function Root({ as: Tag = DEFAULT_AS, variant, tone, weight, lines, className, s
   );
   const ownStyle = clamp === undefined ? style : ({ ...style, '--_lines': clamp } as CSSProperties);
   // Each tag's element type extends HTMLElement; the ref is typed to the common base.
-  return <Tag {...props} ref={ref as Ref<HTMLParagraphElement>} className={classes} style={ownStyle} />;
+  return <Tag {...domProps} ref={ref as Ref<HTMLParagraphElement>} className={classes} style={ownStyle} />;
+}
+
+/** `size` is no longer a prop. Drop it so a JS or MDX caller does not paint it onto the element. */
+function omitLegacySize(props: TextRootProps): TextRootProps {
+  if (!('size' in props)) return props;
+  const { size, ...rest } = props as TextRootProps & { size?: unknown };
+  if (process.env.NODE_ENV !== 'production' && size != null && !reportedSizes.has(String(size))) {
+    reportedSizes.add(String(size));
+    console.error(
+      `Text.Root no longer takes size; got ${String(size)}. Use variant="label" for the label role, or set font-size from a text.size.* variable in your CSS.`,
+    );
+  }
+  return rest;
 }
 
 export const Text = { Root } as const;

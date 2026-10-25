@@ -37,7 +37,7 @@ export function App() {
       <div className="shell">
         <Stack.Root gap="spacious">
           <Stack.Root direction="row" justify="between" align="center" as="header">
-            <Text.Root as="span" weight="bold" tone="accent">
+            <Text.Root as="span" className="wordmark" weight="bold" tone="accent">
               Fernway
             </Text.Root>
             <Switch.Root
@@ -98,7 +98,7 @@ export function App() {
                   <Card.Root key={cabin.name}>
                     <Card.Header>
                       <Stack.Root direction="row" justify="between" align="center">
-                        <Text.Root as="h2" weight="bold">
+                        <Text.Root as="h2" className="cabin-name" weight="bold">
                           {cabin.name}
                         </Text.Root>
                         {cabin.tag ? <Badge.Root tone="category-4">{cabin.tag}</Badge.Root> : null}
