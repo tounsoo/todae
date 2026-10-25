@@ -146,13 +146,14 @@ function followSections(
   // A pick lapses when its link or its section goes, so it can't come back long after.
   if (picked.current !== null && !followedIds.includes(picked.current)) picked.current = null;
 
+  const watchedLeft = (target: HTMLElement | undefined, id: string | undefined) =>
+    target === undefined || !target.isConnected || target.id !== id;
   // Start again when a missing section mounts, or a followed one is replaced or renamed.
   const mutations = new MutationObserver(() => {
-    const changed = targets.some((target, i) => !target.isConnected || target.id !== followedIds[i]);
+    const changed = targets.some((target, i) => watchedLeft(target, followedIds[i]));
     const arrived = missing.some((id) => root.getElementById(id));
     if (!changed && !arrived) return;
-    // The follow restarts on the next effect. By then the section may be back, so the pick has to lapse now.
-    if (picked.current !== null && root.getElementById(picked.current) === null) picked.current = null;
+    if (picked.current !== null && watchedLeft(targets[followedIds.indexOf(picked.current)], picked.current)) picked.current = null;
     onTargetsChange();
   });
   mutations.observe(root, {
