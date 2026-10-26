@@ -34,6 +34,8 @@ A section is current once its heading has scrolled past its line: the place a fr
 
 A short last section may never reach its line, because the page can't scroll that far. So a click on a link, or a hash that names a section the page shows, when the list mounts or the hash changes, picks that section. A hash change that names the picked section keeps the pick, so a click holds while a smooth scroll is still on its way. The pick stays current until the person scrolls with the wheel, a touch or a scroll key that no field takes and no widget stops or cancels (Space on a button presses it), until it has been in view and leaves it, or until the hash changes to name something else.
 
+Chromium paints the current link with native CSS scrollspy as a progressive enhancement. The script still sets `aria-current="location"`. That attribute stays the source of truth until Firefox and Safari support the feature.
+
 ## Look
 
 The links sit beside one rule, from `contents.rule.color` and `contents.rule.width`, and the current link draws a marker on it, from `contents.marker.color` and `contents.marker.width`, with the `contents.link.fg.current` color and `contents.link.font.current-weight`. A nested list indents its links' text by `contents.indent` per level, so every marker lands on the same rule. In forced colors the marker is `Highlight`.
