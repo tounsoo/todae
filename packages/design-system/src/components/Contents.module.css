@@ -121,5 +121,14 @@
         background: Highlight;
       }
     }
+
+    .root:has(.link:where([aria-current]:not([aria-current='false' i], [aria-current='']))) .link:where(:target-current):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))) {
+      color: var(--todae-contents-link-fg-default);
+      font-weight: var(--todae-contents-link-font-weight);
+    }
+
+    .root:has(.link:where([aria-current]:not([aria-current='false' i], [aria-current='']))) .link:where(:target-current):not(:where([aria-current]:not([aria-current='false' i], [aria-current=''])))::before {
+      background: transparent;
+    }
   }
 }

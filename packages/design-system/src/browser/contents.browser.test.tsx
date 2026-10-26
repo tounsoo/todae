@@ -539,14 +539,12 @@ describe('Contents in a browser', () => {
     const nav = screen.getByRole('navigation');
     const supported = CSS.supports('scroll-target-group', 'auto') && CSS.supports('selector(:target-current)');
     if (!supported) {
-      expect(CSS.supports('scroll-target-group', 'auto')).toBe(false);
       scrollTo('two');
       await waitFor(() => expect(current()).toBe('Two'));
       expect(link('Two').getAttribute('aria-current')).toBe('location');
       expect(link('One').hasAttribute('aria-current')).toBe(false);
       expect(getComputedStyle(link('Two'), '::before').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
       expect(getComputedStyle(link('One'), '::before').backgroundColor).toBe('rgba(0, 0, 0, 0)');
-      expect(getComputedStyle(nav).getPropertyValue('scroll-target-group')).not.toBe('auto');
       return;
     }
 
@@ -591,6 +589,7 @@ describe('Contents in a browser', () => {
     };
     const ariaDecl = declared("[aria-current]");
     const targetDecl = declared(':target-current');
+    expect(ariaDecl).not.toBeNull();
     expect(targetDecl).toBe(ariaDecl);
     expect(declared(':target-current', true)).toBe(declared("[aria-current]", true));
 
@@ -616,6 +615,15 @@ describe('Contents in a browser', () => {
     expect(link('Two A').getAttribute('aria-current')).toBe('location');
     expect(link('Two').hasAttribute('aria-current')).toBe(false);
     expect(paint('Two A')).toEqual(before);
+
+    scrollTo('two', -80);
+    await frames(3);
+    expect(current()).toBe('One');
+    expect(link('One').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').matches(':target-current')).toBe(true);
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two')).toEqual(paint('Three'));
+    expect(paint('One').marker).not.toBe(paint('Three').marker);
   });
 
   it('has no axe violations', async () => {
