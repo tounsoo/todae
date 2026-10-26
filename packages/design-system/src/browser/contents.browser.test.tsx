@@ -546,13 +546,13 @@ describe('Contents in a browser', () => {
       expect(link('One').hasAttribute('aria-current')).toBe(false);
       expect(getComputedStyle(link('Two'), '::before').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
       expect(getComputedStyle(link('One'), '::before').backgroundColor).toBe('rgba(0, 0, 0, 0)');
-      expect(getComputedStyle(nav).scrollTargetGroup).not.toBe('auto');
+      expect(getComputedStyle(nav).getPropertyValue('scroll-target-group')).not.toBe('auto');
       return;
     }
 
-    expect(getComputedStyle(nav).scrollTargetGroup).toBe('auto');
+    expect(getComputedStyle(nav).getPropertyValue('scroll-target-group')).toBe('auto');
     for (const list of screen.getAllByRole('list')) {
-      expect(getComputedStyle(list).scrollTargetGroup).not.toBe('auto');
+      expect(getComputedStyle(list).getPropertyValue('scroll-target-group')).not.toBe('auto');
     }
     expect(link('One').matches(':target-current')).toBe(true);
 
@@ -569,7 +569,7 @@ describe('Contents in a browser', () => {
           ) {
             return rule.style.cssText;
           }
-          if ('cssRules' in rule) {
+          if (rule instanceof CSSGroupingRule) {
             const nested = visit(rule.cssRules);
             if (nested) return nested;
           }
