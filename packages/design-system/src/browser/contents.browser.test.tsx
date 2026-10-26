@@ -533,6 +533,100 @@ describe('Contents in a browser', () => {
     }
   });
 
+  it('paints :target-current with the same tokens as aria-current, and leaves the attribute to the script', async () => {
+    render(<Page />);
+    await waitFor(() => expect(current()).toBe('One'));
+    const nav = screen.getByRole('navigation');
+    const supported = CSS.supports('scroll-target-group', 'auto') && CSS.supports('selector(:target-current)');
+    if (!supported) {
+      scrollTo('two');
+      await waitFor(() => expect(current()).toBe('Two'));
+      expect(link('Two').getAttribute('aria-current')).toBe('location');
+      expect(link('One').hasAttribute('aria-current')).toBe(false);
+      expect(getComputedStyle(link('Two'), '::before').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(link('One'), '::before').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      return;
+    }
+
+    expect(getComputedStyle(nav).getPropertyValue('scroll-target-group')).toBe('auto');
+    for (const list of screen.getAllByRole('list')) {
+      expect(getComputedStyle(list).getPropertyValue('scroll-target-group')).not.toBe('auto');
+    }
+    expect(link('One').matches(':target-current')).toBe(true);
+
+    const linkClass = [...link('One').classList].find((name) => name.includes('link'));
+    if (!linkClass) throw new Error('Contents link class missing');
+    const declared = (part: string, pseudo = false) => {
+      const visit = (rules: CSSRuleList): string | null => {
+        for (const rule of rules) {
+          if (
+            rule instanceof CSSStyleRule &&
+            rule.selectorText.includes(`.${linkClass}`) &&
+            rule.selectorText.includes(part) &&
+            !rule.selectorText.includes(':has(') &&
+            rule.selectorText.includes('::') === pseudo
+          ) {
+            return rule.style.cssText;
+          }
+          if (rule instanceof CSSGroupingRule) {
+            const nested = visit(rule.cssRules);
+            if (nested) return nested;
+          }
+        }
+        return null;
+      };
+      for (const sheet of document.styleSheets) {
+        let rules: CSSRuleList;
+        try {
+          rules = sheet.cssRules;
+        } catch (error) {
+          if (!(error instanceof DOMException) || error.name !== 'SecurityError') throw error;
+          continue;
+        }
+        const found = visit(rules);
+        if (found) return found;
+      }
+      return null;
+    };
+    const ariaDecl = declared("[aria-current]");
+    const targetDecl = declared(':target-current');
+    expect(ariaDecl).not.toBeNull();
+    expect(targetDecl).toBe(ariaDecl);
+    expect(declared(':target-current', true)).toBe(declared("[aria-current]", true));
+
+    const paint = (name: string) => {
+      const el = link(name);
+      const style = getComputedStyle(el);
+      const marker = getComputedStyle(el, '::before');
+      return { color: style.color, weight: style.fontWeight, marker: marker.backgroundColor };
+    };
+    const before = paint('One');
+
+    scrollTo('two');
+    await waitFor(() => expect(current()).toBe('Two'));
+    await waitFor(() => expect(link('Two').matches(':target-current')).toBe(true));
+    expect(link('Two').getAttribute('aria-current')).toBe('location');
+    expect(link('One').hasAttribute('aria-current')).toBe(false);
+    expect(link('One').matches(':target-current')).toBe(false);
+    expect(paint('Two')).toEqual(before);
+
+    scrollTo('two-a');
+    await waitFor(() => expect(current()).toBe('Two A'));
+    await waitFor(() => expect(link('Two A').matches(':target-current')).toBe(true));
+    expect(link('Two A').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two A')).toEqual(before);
+
+    scrollTo('two', -80);
+    await frames(3);
+    expect(current()).toBe('One');
+    expect(link('One').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').matches(':target-current')).toBe(true);
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two')).toEqual(paint('Three'));
+    expect(paint('One').marker).not.toBe(paint('Three').marker);
+  });
+
   it('has no axe violations', async () => {
     render(<Page />);
     await waitFor(() => expect(current()).toBe('One'));

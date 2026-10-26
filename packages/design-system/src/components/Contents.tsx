@@ -329,6 +329,15 @@ function followSections(
   };
 }
 
+// The reset is a style element, not part of the CSS module. A longer module
+// file makes Next split the docs CSS, and the button font-weight then loads
+// after pagination's font inherit.
+function scrollspyReset(root: string, link: string) {
+  const current = ":where([aria-current]:not([aria-current='false' i],[aria-current='']))";
+  const marked = `.${root}:has(.${link}${current}) .${link}:where(:target-current):not(${current})`;
+  return `@supports (scroll-target-group:auto){@layer todae.components{${marked}{color:var(--todae-contents-link-fg-default);font-weight:var(--todae-contents-link-font-weight)}${marked}::before{background:transparent}}}`;
+}
+
 function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-labelledby': labelledby, ...props }: ContentsRootProps) {
   const strings = useStrings();
   const labelId = useId();
@@ -393,6 +402,9 @@ function Root({ label, children, className, ref, 'aria-label': ariaLabel, 'aria-
       aria-labelledby={labelledby ?? (labelled ? labelId : undefined)}
       className={cx(styles.root, className)}
     >
+      {styles.root && styles.link ? (
+        <style href="todae-contents-scrollspy">{scrollspyReset(styles.root, styles.link)}</style>
+      ) : null}
       {labelled ? (
         <div id={labelId} className={styles.label}>
           {label}
