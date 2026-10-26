@@ -563,6 +563,7 @@ describe('Contents in a browser', () => {
             rule instanceof CSSStyleRule &&
             rule.selectorText.includes(`.${linkClass}`) &&
             rule.selectorText.includes(part) &&
+            !rule.selectorText.includes(':has(') &&
             rule.selectorText.includes('::') === pseudo
           ) {
             return rule.style.cssText;
@@ -615,6 +616,15 @@ describe('Contents in a browser', () => {
     expect(link('Two A').getAttribute('aria-current')).toBe('location');
     expect(link('Two').hasAttribute('aria-current')).toBe(false);
     expect(paint('Two A')).toEqual(before);
+
+    scrollTo('two', -80);
+    await frames(3);
+    expect(current()).toBe('One');
+    expect(link('One').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').matches(':target-current')).toBe(true);
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two')).toEqual(paint('Three'));
+    expect(paint('One').marker).not.toBe(paint('Three').marker);
   });
 
   it('has no axe violations', async () => {

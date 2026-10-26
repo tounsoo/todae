@@ -484,7 +484,7 @@ describe('props table', () => {
     }
     expect(overflowing).toEqual([]);
     // Every table in the schema at 57 widths: its time grows with the schema.
-  }, 60_000);
+  }, 120_000);
 
   it('stacks each prop on a phone, keeping table semantics and no horizontal scroll', async () => {
     const table = renderTable('22rem');
