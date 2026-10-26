@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.5.1
+
+### Patch Changes
+
+- Contents paints the current link with native CSS scrollspy in Chromium. ([#269](https://github.com/tounsoo/todae/pull/269))
+
 ## 0.5.0
 
 ### Minor Changes
