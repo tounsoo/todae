@@ -180,7 +180,7 @@ export function WizardExample() {
       }}
       tabIndex={-1}
     >
-      <Text.Root as="span" size="label" style={{ display: 'block' }}>
+      <Text.Root as="span" variant="label" style={{ display: 'block' }}>
         Step {index + 1} of {STEPS.length}
       </Text.Root>
       {STEPS[index]!.title}

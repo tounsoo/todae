@@ -20,6 +20,14 @@ import { ProseArticle } from '../../../components/demos/ProseDemo';
 
 Server Components can import it from `@tounsoo/todae/prose`. The MDX pages of this site are set in it.
 
+## Type
+
+Body text draws at `prose.font.size`. The default refs `font.size.3`. The custom property is `--todae-prose-font-size`.
+
+Each heading level has its own size token. `prose.h1.font.size` refs `font.size.6`. `prose.h2.font.size` refs `font.size.5`. `prose.h3.font.size` refs `font.size.4`. `prose.h4.font.size` refs `font.size.3`. `prose.h5.font.size` refs `font.size.3`. `prose.h6.font.size` refs `font.size.2`. The custom properties are `--todae-prose-h1-font-size`, `--todae-prose-h2-font-size`, `--todae-prose-h3-font-size`, `--todae-prose-h4-font-size`, `--todae-prose-h5-font-size` and `--todae-prose-h6-font-size`.
+
+A theme or a `ThemeProvider` override sets these paths. That changes Prose only. It does not change other uses of the same `font.size` step.
+
 ## Spacing
 
 Each child sits `prose.gap` below the one before it. A heading sits `prose.heading.space-before` below anything but a heading, and whatever follows a heading, another heading included, sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding. These spaces replace the margins of a Todae component that is a child, such as `CodeBlock.Root`, `Separator.Root` or `Text.Root`.
@@ -30,7 +38,7 @@ These gaps and `prose.list.item-gap` read density tokens, so they follow `data-d
 
 `Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table` or `pre`, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type. A list with a `role`, such as `Stack.Root as="ul"` or `Tree.Root`, keeps its own indent and the space between its items.
 
-A class on one of those elements wins over the type `Prose.Root` sets, so `<Text.Root as="h2" size="s">` inside it keeps its small size.
+A class on one of those elements wins over the type `Prose.Root` sets, so `<Text.Root as="h2" variant="label">` inside it keeps the label role's size.
 
 ## Map markdown onto Todae
 

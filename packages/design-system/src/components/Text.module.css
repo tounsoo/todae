@@ -2,6 +2,7 @@
   /* Default color and weight sit on .root and .heading, so the label role can replace them and a given tone or weight still wins. */
   .root {
     margin: 0;
+    font-size: var(--todae-text-font-size);
     line-height: var(--todae-text-leading-default);
     color: var(--todae-text-fg-default);
     font-weight: var(--todae-text-weight-regular);
@@ -13,7 +14,31 @@
     text-wrap: balance;
   }
 
-  /* The label role sets its own type. It comes before the tone and weight classes, so a given tone or weight wins. */
+  .root:is(h1) {
+    font-size: var(--todae-text-h1-font-size);
+  }
+
+  .root:is(h2) {
+    font-size: var(--todae-text-h2-font-size);
+  }
+
+  .root:is(h3) {
+    font-size: var(--todae-text-h3-font-size);
+  }
+
+  .root:is(h4) {
+    font-size: var(--todae-text-h4-font-size);
+  }
+
+  .root:is(h5) {
+    font-size: var(--todae-text-h5-font-size);
+  }
+
+  .root:is(h6) {
+    font-size: var(--todae-text-h6-font-size);
+  }
+
+  /* The label role sets its own type. It comes before the tone and weight classes, so a given tone or weight wins. The second size rule beats `.root:is(h1)` through `.root:is(h6)`. */
   .label {
     font-family: var(--todae-text-label-font-family);
     font-size: var(--todae-text-label-font-size);
@@ -22,6 +47,10 @@
     letter-spacing: var(--todae-text-label-font-letter-spacing);
     text-transform: var(--todae-text-label-font-text-transform);
     color: var(--todae-text-label-fg);
+  }
+
+  .root:is(.label) {
+    font-size: var(--todae-text-label-font-size);
   }
 
   .default {
@@ -34,26 +63,6 @@
 
   .accent {
     color: var(--todae-text-fg-accent);
-  }
-
-  .s {
-    font-size: var(--todae-text-size-2);
-  }
-
-  .m {
-    font-size: var(--todae-text-size-3);
-  }
-
-  .l {
-    font-size: var(--todae-text-size-4);
-  }
-
-  .xl {
-    font-size: var(--todae-text-size-5);
-  }
-
-  .xxl {
-    font-size: var(--todae-text-size-6);
   }
 
   .regular {

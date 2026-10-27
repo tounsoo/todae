@@ -1,5 +1,6 @@
 import { lstatSync, readdirSync, readFileSync, type Dirent } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { parseMdx } from '../mdxAst';
 import { DOCS_ORIGIN } from '../origin';
 import { listComponentMeta } from './meta';
 
@@ -48,71 +49,108 @@ export function absolutize(markdown: string): string {
   });
 }
 
-function section(markdown: string, heading: string): string | null {
-  const lines = markdown.split('\n');
-  const start = lines.findIndex((line) => line === `## ${heading}`);
-  if (start < 0) return null;
-  let end = lines.length;
-  for (let i = start + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (line !== undefined && /^#{1,2} /.test(line)) {
-      end = i;
-      break;
+type Range = { from: number; to: number };
+
+type Outline = {
+  markdown: string;
+  /** Top-level headings, with their text as written after the `#`s. */
+  headings: (Range & { depth: number; text: string })[];
+  /** Top-level paragraphs. */
+  paragraphs: Range[];
+};
+
+const outlines = new Map<string, Outline>();
+
+/**
+ * The page's top-level headings and paragraphs as the MDX compiler parses them, so a `## heading`
+ * or `**When:**` line inside a code fence or a JSX element is none. Pages load once, so each is parsed once.
+ */
+function outline(markdown: string): Outline {
+  let found = outlines.get(markdown);
+  if (!found) {
+    const headings: Outline['headings'] = [];
+    const paragraphs: Range[] = [];
+    let children: ReturnType<typeof parseMdx>['children'];
+    try {
+      children = parseMdx(markdown).children;
+    } catch (error) {
+      // The server bundle renames the class, so the message field is the check that survives.
+      if (!(error instanceof Error) || !('reason' in error) || typeof error.reason !== 'string' || error.reason === '') {
+        throw error;
+      }
+      children = [];
     }
-  }
-  return absolutize(lines.slice(start + 1, end).join('\n').trim());
-}
-
-function marker(body: string, prefix: string): string | null {
-  const line = body.split('\n').find((item) => item.startsWith(prefix));
-  return line ? line.slice(prefix.length).trim() : null;
-}
-
-function h3Blocks(body: string): { preamble: string; blocks: Map<string, string> } {
-  const blocks = new Map<string, string>();
-  const preamble: string[] = [];
-  let current: string | null = null;
-  let buf: string[] = [];
-  const flush = () => {
-    const text = buf.join('\n').trim();
-    if (current === null) preamble.push(text);
-    else blocks.set(current, text);
-    buf = [];
-  };
-  for (const line of body.split('\n')) {
-    const heading = /^### (.+)$/.exec(line);
-    if (heading?.[1]) {
-      flush();
-      current = heading[1];
-      continue;
+    for (const node of children) {
+      const range = { from: node.position!.start.offset!, to: node.position!.end.offset! };
+      if (node.type === 'heading') {
+        headings.push({ ...range, depth: node.depth, text: markdown.slice(range.from, range.to).replace(/^#+[ \t]+/, '').trim() });
+      } else if (node.type === 'paragraph') {
+        paragraphs.push(range);
+      }
     }
-    buf.push(line);
+    found = { markdown, headings, paragraphs };
+    outlines.set(markdown, found);
   }
-  flush();
-  return { preamble: preamble.join('\n').trim(), blocks };
+  return found;
 }
 
-function labeled(body: string, separate: string | null): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
-  const when = marker(body, '**When:**');
-  const inlineNot = marker(body, '**When not:**');
+function text(page: Outline, range: Range): string {
+  return absolutize(page.markdown.slice(range.from, range.to).trim());
+}
+
+/** The body of the `## heading` section, up to the next heading of level 1 or 2. */
+function section(page: Outline, heading: string): Range | null {
+  const index = page.headings.findIndex((item) => item.depth === 2 && item.text === heading);
+  if (index < 0) return null;
+  const next = page.headings.slice(index + 1).find((item) => item.depth <= 2);
+  return { from: page.headings[index]!.to, to: next?.from ?? page.markdown.length };
+}
+
+/** The rest of the first paragraph line in `range` that starts with `prefix`. A line, since pages write `**When:**` and `**When not:**` on adjacent lines of one paragraph. */
+function marker(page: Outline, range: Range, prefix: string): string | null {
+  for (const paragraph of page.paragraphs) {
+    if (paragraph.from < range.from || paragraph.to > range.to) continue;
+    const line = page.markdown
+      .slice(paragraph.from, paragraph.to)
+      .split('\n')
+      .find((item) => item.trimStart().startsWith(prefix));
+    if (line != null) return absolutize(line.trimStart().slice(prefix.length).trim());
+  }
+  return null;
+}
+
+/** `range` split at its `### name` headings: the part before the first one, and each one's body by name. */
+function h3Blocks(page: Outline, range: Range): { preamble: Range; blocks: Map<string, Range> } {
+  const h3s = page.headings.filter((item) => item.depth === 3 && item.from >= range.from && item.to <= range.to);
+  const blocks = new Map<string, Range>();
+  h3s.forEach((item, index) => blocks.set(item.text, { from: item.to, to: h3s[index + 1]?.from ?? range.to }));
+  return { preamble: { from: range.from, to: h3s[0]?.from ?? range.to }, blocks };
+}
+
+function labeled(page: Outline, body: Range, separate: string | null): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
+  const when = marker(page, body, '**When:**');
+  const inlineNot = marker(page, body, '**When not:**');
   if (when != null || inlineNot != null) {
-    return { whenToUse: when, whenNotToUse: inlineNot ?? (separate?.trim() || null) };
+    return { whenToUse: when, whenNotToUse: inlineNot ?? (separate || null) };
   }
-  return { whenToUse: body.trim() || null, whenNotToUse: separate?.trim() || null };
+  return { whenToUse: text(page, body) || null, whenNotToUse: separate || null };
 }
 
 /** Page section, or only the `### name` subsection. A dotted name or token provider with no h3 is missing. */
 export function parseWhen(markdown: string, name: string): WhenCopy | null {
-  const sectionBody = section(markdown, WHEN_TO_USE);
-  const separate = section(markdown, WHEN_NOT_TO_USE);
-  if (sectionBody == null && separate == null) return null;
-  const { preamble, blocks } = h3Blocks(sectionBody ?? '');
+  const page = outline(markdown);
+  const sectionBody = section(page, WHEN_TO_USE);
+  const separateRange = section(page, WHEN_NOT_TO_USE);
+  if (sectionBody == null && separateRange == null) return null;
+  const separate = separateRange ? text(page, separateRange) : null;
+  const empty = { from: 0, to: 0 };
+  const { preamble, blocks } = h3Blocks(page, sectionBody ?? empty);
   const own = blocks.get(name);
-  if (own != null) return { ...labeled(own, null), shared: false };
+  if (own != null) return { ...labeled(page, own, null), shared: false };
   if (name in PART_PAGE || (blocks.size > 0 && name.includes('.'))) return null;
-  const body = blocks.size > 0 ? preamble : (sectionBody ?? '');
-  if (!body.trim() && !separate?.trim()) return null;
-  return { ...labeled(body, separate), shared: true };
+  const body = blocks.size > 0 ? preamble : (sectionBody ?? empty);
+  if (!text(page, body) && !separate) return null;
+  return { ...labeled(page, body, separate), shared: true };
 }
 
 function staysInside(root: string, full: string): boolean {
@@ -192,7 +230,8 @@ function readPages(): PageDoc[] {
 const pages = readPages();
 
 export function missingWhenNote(markdown: string, slug: string): string {
-  if (section(markdown, WHEN_TO_USE) != null || section(markdown, WHEN_NOT_TO_USE) != null) {
+  const page = outline(markdown);
+  if (section(page, WHEN_TO_USE) != null || section(page, WHEN_NOT_TO_USE) != null) {
     return `'When to use' on /${slug} has no page-level copy; see its parts`;
   }
   return `No 'When to use' section on /${slug}. Not inferred.`;

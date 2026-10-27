@@ -1,0 +1,153 @@
+import { SignInExample, SignUpExample } from '../../../../components/demos/SignInDemo';
+
+# Sign-in and sign-up
+
+A recipe, not a package namespace. A sign-in form is a [Form](/form) with an email and a password [Field](/field), a button that shows the password, and a second step that asks for a [Field.OneTimeCode](/field/one-time-code). A sign-up form is the same parts with a new password. Which accounts exist, how a password is checked and where a code is sent are up to your product. There is no `SignIn.*` export.
+
+Sign in with `ben@example.com` and `correct horse`, the account the stand-in server knows, then enter `123456`. Any other password or code shows how a wrong one comes back.
+
+<Example block>
+  <SignInExample />
+</Example>
+
+## What the browser fills in
+
+Password managers and the browser's own autofill read `autoComplete` to know which field is which. Give the email `autoComplete="username"`, since it is the name of the account, the password `current-password` on sign-in and `new-password` on sign-up, and the code field nothing: `Field.OneTimeCode` sets `one-time-code` itself. With `new-password`, a browser offers a strong password and saves it with the username next to it. Leave paste on in every field, so a password manager's copy works.
+
+```tsx
+<Field.Root id={emailId} name="email">
+  <Field.TextInput type="email" required autoComplete="username" value={email} onValueChange={setEmail} />
+</Field.Root>
+```
+
+## Showing the password
+
+Put an icon-only `Button.Root` after the input in the password's `Field.Root`. An icon-only button in the line of a one-line field is as tall as a line of field text, so the field keeps its height. Make it a toggle with `pressed`, and switch the input's `type` between `password` and `text`. Keep one label, "Show password", in both states: `aria-pressed` tells a screen reader whether it is on, and an icon-only button shows its label as a tooltip. Change the icon instead, as the demo does with a crossed-out eye while the password shows, so the state is plain to see.
+
+```tsx
+import { Button, Field } from '@tounsoo/todae';
+import { Eye, EyeOff } from 'lucide-react';
+
+const [shown, setShown] = useState(false);
+
+<Field.Root id={passwordId} name="password">
+  <Field.TextInput
+    type={shown ? 'text' : 'password'}
+    required
+    autoComplete="current-password"
+    spellCheck={false}
+    autoCapitalize="none"
+    autoCorrect="off"
+    value={password}
+    onValueChange={setPassword}
+  />
+  <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={setShown}>
+    <Button.Icon>{shown ? <EyeOff /> : <Eye />}</Button.Icon>
+  </Button.Root>
+</Field.Root>
+```
+
+A password in a text input is text to the browser, so turn spell checking, capitalization and autocorrect off: a browser may send the words of a text input to a spell-check service. Set `shown` back to `false` in `onSubmit`, before the request goes, so the browser offers to save a password and not a line of typed text. A press on the button leaves focus in the input when the input has it, so the caret stays and the person goes on typing; Tab still reaches the button. The button is not the field's control, and `Field.Root`'s `disabled` doesn't reach it, so give it `disabled` too when the field has one, or a disabled field still shows its password.
+
+## A wrong email or password
+
+Send the email and password together, and when the server turns them down, put one message on the password, such as "The email or password is wrong." Don't say which one is wrong, since that tells anyone which addresses have accounts. Pass it in the form's `errors` under the password's `name`, and `Form.Root` shows it under the field and moves focus to the password, ready to type again. A request that fails shows an [Alert](/alert) beside the button.
+
+```tsx
+const [errors, setErrors] = useState<FormErrors>({});
+
+const submit = async (event: SubmitEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  if (sending) return;
+  setShown(false);
+  // Hold the button with aria-disabled while this is true.
+  setSending(true);
+  setFailed(null);
+  setErrors({});
+  let reply: FormErrors;
+  try {
+    reply = await checkPassword(email, password);
+  } catch {
+    // Shown in an Alert.Root tone="critical" beside the button, which is announced.
+    setFailed("We couldn't reach the server. Try again.");
+    return;
+  } finally {
+    setSending(false);
+  }
+  // Errors the person can fix, or none: the password is right.
+  if (Object.values(reply).some(Boolean)) setErrors(reply);
+  else setStep('code');
+};
+
+<Form.Root key="password" errors={errors} onSubmit={submit} aria-label="Sign in">
+  …
+</Form.Root>
+```
+
+Hold the button with `aria-disabled` while the request runs, not `disabled`, so it keeps focus. Put the link to reset a password beside the button, outside the fields, so Tab goes from the password to the toggle and then to Sign in.
+
+## The code step
+
+When the password is right and the account asks for a second step, show a new form with a `Field.OneTimeCode`. Give each step's `Form.Root` its own `key`: React would otherwise keep the sign-in form's instance, which has been submitted, and the code field would open marked as missing. Put the code's length and where it went in a [Description](/description).
+
+```tsx
+<Form.Root key="code" ref={codeForm} errors={errors} onSubmit={verify} aria-labelledby={headingId}>
+  <Text.Root as="h3" id={headingId}>
+    Check your phone
+  </Text.Root>
+  <Field.Group>
+    <Label.Root htmlFor={codeId}>Verification code</Label.Root>
+    <Field.Root id={codeId} name="code" aria-describedby={hintId}>
+      <Field.OneTimeCode autoFocus required value={code} onValueChange={setCode} />
+    </Field.Root>
+    <Description.Root id={hintId}>Enter the 6-digit code we sent to the phone ending in 42.</Description.Root>
+    <ErrorMessage.Root />
+  </Field.Group>
+  {/* One request at a time: hold both while either runs. */}
+  <Button.Root type="submit" aria-disabled={busy || undefined}>
+    Verify
+  </Button.Root>
+  <Button.Root variant="ghost" aria-disabled={busy || undefined} onClick={resend}>
+    Send a new code
+  </Button.Root>
+</Form.Root>
+```
+
+The sign-in form and the button the person pressed are gone, so move focus to the code with `autoFocus`. The field's label and description tell a screen reader what to type, and a phone offers a code from a text message only while the code field has focus. Send a full code by itself a short pause after its last character, with `requestSubmit()` so `Form.Root` checks it first, and keep Verify for people who don't expect that. A wrong code comes back in `errors` under the code's `name`, as a wrong password does.
+
+```tsx
+// One request at a time.
+const busy = sending || resending;
+// Set to the code on submit and on resend: the code that doesn't send itself.
+const skipCode = useRef('');
+useEffect(() => {
+  if (step !== 'code' || code.length !== 6 || code === skipCode.current || busy) return;
+  // An IME can still take a full code back, so wait a moment.
+  const timer = setTimeout(() => codeForm.current?.requestSubmit(), 500);
+  return () => clearTimeout(timer);
+}, [code, step, busy]);
+```
+
+When the person asks for a new code, say that it went in words they can see and in words a screen reader hears. The demo changes the description and calls [useAnnouncer](/utilities/use-announcer), since a description that changes isn't read out, and clears the wrong code's error, which no longer applies. Hold it and Verify with `aria-disabled` while either request runs, so a code's check never answers after a new code is announced. Don't send by itself a code that was already sent or one that was in the field when a new code was asked for. Otherwise a wrong code sends itself again after every check, and the end of a resend checks the old code again. How soon a person may ask again is your product's rule.
+
+## Sign-up
+
+A sign-up form takes a name, the email with `autoComplete="username"`, and a password with `autoComplete="new-password"` and the same show button. Put the password's rules in a `Description.Root` before the person types, and set the one the browser can check, such as `minLength`, so `Form.Root` words a short password in the page's language. The error joins the description, so word the rule differently from the error, or a screen reader hears the same sentence twice. Rules the browser can't check, such as a password found in a breach, come back from the server in `errors`. Ask for the password once: the show button lets a person check what they typed, so a second field to type it again adds work and no safety. The demo turns down an email that already has an account with an error on the email. If your product must not tell anyone which addresses have accounts, show the same confirmation either way and send the email to the address instead.
+
+<Example block>
+  <SignUpExample />
+</Example>
+
+## Accessible composition
+
+**Todae handles:** `Form.Root` checks the fields on submit, words each problem in the page's language and moves focus to the first one. It shows a server's error on its field, with `aria-invalid` and `aria-describedby`, and moves focus to that field when the reply names it. An icon-only `Button.Root` in a one-line `Field.Root` is one field line tall, and a press on it leaves focus in the input when the input has it; with `pressed` it is a toggle with `aria-pressed`, and its label shows as a tooltip. `Field.OneTimeCode` sets `autocomplete="one-time-code"`, a numeric keypad and a too-short check. A `Button.Root` with `aria-disabled` keeps focus and ignores clicks while a request runs.
+
+**You supply:** The `autoComplete` of each field. The input's `type` switched by the show button, its label in your product's language, its icon for each state, `disabled` when the field has it, spell checking and autocorrect off, and the password hidden again on submit. One message for a wrong email or password, on the password. A `key` on each step's form, and focus moved to the code when its step shows, and to a heading that confirms the result at the end. The code's length and where it went in a description. Sending a full code a short pause after its last character, and a visible and announced message when a new code goes out.
+
+**Watch for:** A label that flips from "Show password" to "Hide password" as `aria-pressed` changes: a screen reader then hears "Hide password, pressed", which reads as the opposite. A password left showing when the form is sent. A message that says which of the email or the password was wrong. `disabled` on Sign in while a request runs, which drops focus; use `aria-disabled`. One `Form.Root` element reused from step to step without a `key`. A "confirm password" field, or blocking paste, which gets in the way of password managers. Splitting the email and password into two steps without a username field in the second, which password managers need to save the pair: add the email there as a read-only `Field.TextInput` with `autoComplete="username"`.
+
+## When to use
+
+**When:** The first screen of a product: signing in with an email and password, a second step with a code from a text message, an email or an authenticator app, or creating an account.
+
+**When not:** Signing in with a code only, or a magic link → a form with one `Field.OneTimeCode` or one email field. A sign-up that asks for more than an account, such as a workspace and a plan → [Wizard](/recipes/wizard). Signing in through another provider's page → a link or `Button.Root` to it, with nothing to fill in here.

@@ -1,6 +1,14 @@
 # Native platform
 
-Todae builds on the browser instead of reimplementing it. It uses the features below with no JavaScript fallbacks, so a browser that has them is a browser Todae supports. There is no separate support matrix.
+Todae builds on the browser instead of reimplementing it. It uses the features below with no JavaScript fallbacks, so a browser that has them is a browser Todae supports. This page lists those features. The version floor is the [Browser support](https://github.com/tounsoo/todae/blob/main/README.md#browser-support) table in the repository README, checked on 2026-10-16.
+
+| Browser | All but the Temporal parts | Everything, Temporal included |
+| --- | --- | --- |
+| Chrome and Edge | 128 | 144 |
+| Firefox | 147 | 147 |
+| Safari and iOS Safari | 26 | Not shipped; load a polyfill |
+
+CSS anchor positioning sets the floor in every browser. In Chrome and Edge the floor is `position-try-fallbacks`, which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code, and browser tests run in Chromium only.
 
 - **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`, and placing `Field.Textarea`'s highlights over the textarea. Without it: the surface is not placed next to its trigger and sits near the top-left corner of the viewport, and the highlights are not drawn.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: showing `Popover.Root` and `Tooltip.Root` in the top layer. Todae needs it.

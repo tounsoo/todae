@@ -33,7 +33,7 @@ import {
 - [Field.OneTimeCode](/field/one-time-code): 하나의 입력 위에 칸으로 그려지는 로그인·인증 코드.
 - [Field.Textarea](/field/textarea): 여러 줄 텍스트.
 - [Field.ChipInput](/field/chip-input): 칩과 입력.
-- [Field.Select](/field/select): 네이티브 `<select>`.
+- [Field.Select](/field/select): 네이티브 `<select>`입니다. JavaScript listbox는 없습니다. 자식은 `<option>` 또는 `<optgroup>`이고, 브라우저가 지원하면 `appearance: base-select`로 컨트롤을 그립니다.
 - [Field.ColorPicker](/field/color-picker): 색 선택기를 여는 견본.
 - [Field.DatePicker](/field/date-picker): 단독으로, 또는 날짜를 입력하는 텍스트 입력 옆에서 달력을 여는 버튼.
 - [Field.DateRangePicker](/field/date-range-picker): 시작일과 종료일을 고르는 달력을 여는 버튼. 단독으로 쓰거나, 범위를 입력하는 텍스트 입력 옆에 둡니다.
@@ -65,7 +65,7 @@ Label은 Icon, Affix, ChipInput과 함께 동작합니다.
   <FieldLabelAdornments />
 </Example>
 
-`Affix`는 컨트롤이 아니라 텍스트입니다. 장식용 `Icon`은 `aria-hidden`입니다. 인터랙티브 `Icon`은 이름을 유지합니다. 지우기는 내장 prop이 아닙니다.
+`Affix`는 컨트롤이 아니라 텍스트입니다. 장식용 `Icon`은 `aria-hidden`입니다. 인터랙티브 `Icon`은 이름을 유지합니다. 지우기는 내장 prop이 아닙니다. 지우기 버튼이나 비밀번호 보기 버튼처럼 필드의 줄 안에 버튼을 두려면 입력 앞이나 뒤에 아이콘만 있는 `Button.Root`를 넣으세요. 한 줄 필드에서는 필드 글자 한 줄 높이라서 필드의 높이가 그대로입니다. 포커스가 필드 안에 있으면 버튼을 눌러도 포커스가 그 자리에 남아 입력의 캐럿도 그대로이고, Tab으로는 여전히 버튼에 갈 수 있습니다. 필드의 컨트롤이 아니라 따로인 버튼이라 `Field.Root`의 `disabled`가 닿지 않으니, 버튼에도 `disabled`를 넘기세요. [Sign-in and sign-up](/recipes/sign-in)에 비밀번호 보기 토글이 있습니다.
 
 <Example block>
   <FieldAdornments />
@@ -195,7 +195,7 @@ import { Search } from 'lucide-react';
 
 **언제:** Root 안의 앞쪽/뒤쪽 아이콘이나 아이콘 컨트롤. 위치 = DOM 순서. 장식용 → `interactive={false}`(aria-hidden).
 
-**쓰지 않을 때:** 텍스트 장식 → Affix. 클릭 가능한 지우기/보기는 전용 Action으로(제공하지 않음).
+**쓰지 않을 때:** 텍스트 장식 → Affix. 지우기나 비밀번호 보기 버튼 → Root 안의 아이콘만 있는 `Button.Root`.
 
 ### Field.Row
 

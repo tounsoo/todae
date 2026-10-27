@@ -4,7 +4,17 @@ Todae is a low-level React design system that companies build their own design s
 
 Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.omsoo.design)
 
-Todae is published on npm as [`@tounsoo/todae`](https://www.npmjs.com/package/@tounsoo/todae), starting with 0.1.0. Before 1.0, a minor version can change the API.
+Todae is published on npm as [`@tounsoo/todae`](https://www.npmjs.com/package/@tounsoo/todae), starting with 0.1.0.
+
+## Versioning
+
+The public API is the exported props and types, the design tokens, the emitted `--todae-*` CSS variables, the documented HTML attributes, and the documented `todae-tokens` CLI.
+
+From 1.0.0, semver follows that API. Removing, renaming, or narrowing part of the public API is a major change. Changing what a token or a `--todae-*` variable means is a major change. Adding to the public API is a minor change. A token value change, or a change to product copy, is a patch, and the changelog names the change.
+
+From 1.0.0, a deprecation ships in a minor release. It includes a warning in the runtime or in the docs, and it names the replacement. Only a later major release removes a deprecated API. Todae announces that deprecation at least about 30 days before that major release, and at least one minor release before it.
+
+Until 1.0.0 ships, changeset bumps stay on 0.x, with a breaking change as a minor bump and every other change as a patch.
 
 ## Install
 

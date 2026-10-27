@@ -36,7 +36,7 @@ export function Citation({ number, source, href }: { number: number; source: Sou
           {source.title}
         </Link.Root>
         <br />
-        <Text.Root as="span" size="s" tone="muted">
+        <Text.Root as="span" tone="muted">
           {source.site}
         </Text.Root>
       </Tooltip.Root>
@@ -59,14 +59,14 @@ const id = useId();
         A tooltip is drawn in the top layer through the Popover API
         <Citation number={1} source={sources[0]} href={`#${id}-source-1`} />.
       </p>
-      <Text.Root id={`${id}-sources`} size="s" weight="bold">
+      <Text.Root id={`${id}-sources`} weight="bold">
         Sources
       </Text.Root>
       <ol aria-labelledby={`${id}-sources`}>
         {sources.map((source, index) => (
           <li key={source.url} id={`${id}-source-${index + 1}`}>
             <Link.Root href={source.url}>{source.title}</Link.Root>{' '}
-            <Text.Root as="span" size="s" tone="muted">
+            <Text.Root as="span" tone="muted">
               {source.site}
             </Text.Root>
           </li>

@@ -1,5 +1,74 @@
 # @tounsoo/todae
 
+## 0.5.1
+
+### Patch Changes
+
+- Contents paints the current link with native CSS scrollspy in Chromium. ([#269](https://github.com/tounsoo/todae/pull/269))
+
+## 0.5.0
+
+### Minor Changes
+
+- Avatar drops `size` and `Avatar.Group`; stacked avatars are the Avatar group recipe. ([#258](https://github.com/tounsoo/todae/pull/258))
+  
+  - `Avatar.Group` is removed, along with `AvatarGroupProps` and the `avatar.group.overlap`, `avatar.group.ring.width` and `avatar.group.ring.color` tokens. The ring color is now `--avatar-group-ring` in the recipe's CSS, set on the stack and falling back to the surface color. Build the stack from `Avatar.Root` and the Avatar group recipe.
+  - Remove `size` and `AvatarSize` from `Avatar.Root`, and remove the `avatar.size.sm`, `avatar.size.md` and `avatar.size.lg` scale. The avatar draws at `avatar.size` (2rem). Set `--todae-avatar-size`, or `inline-size` and `block-size`, on the avatar or an ancestor. A ThemeProvider or a DensityProvider between that ancestor and the avatar declares the token again, as does a scoped theme root. Or override `avatar.size` in the theme.
+  - `data-size` is no longer rendered.
+
+- Add Splitter.Root, Splitter.Panel and Splitter.Handle for resizable panes. ([#227](https://github.com/tounsoo/todae/pull/227))
+  
+  - `Strings` has a new `resizePanel` key; add it to a `StringsProvider` `strings` object you type as a full `Strings`.
+
+- Text and Prose drop their component type-scale size tokens and use `font.size.*`. ([#261](https://github.com/tounsoo/todae/pull/261))
+  
+  - Remove `text.size.2` through `text.size.6` and `--todae-text-size-*`. Set the size from `font.size.*` (`--todae-font-size-*`). Body stays step 3. Headings stay h1 on 6, h2 on 5, h3 on 4, h4 and h5 on 3, and h6 on 2.
+  - Remove `prose.size` and `prose.h1.size` through `prose.h6.size`, plus `--todae-prose-size` and `--todae-prose-h1-size` through `--todae-prose-h6-size`. Prose uses the same steps.
+
+- Text.Root drops `size` and takes `variant="label"` for the label role. ([#257](https://github.com/tounsoo/todae/pull/257))
+  
+  - Remove `size`. Body text stays the medium scale, and a heading's `as` still picks its scale.
+  - Use `variant="label"` where you passed `size="label"`.
+  - Set `font-size` from a `font.size.*` variable (`--todae-font-size-*`) in your own CSS for any other scale. Changing the token resizes every use of that step.
+
+### Patch Changes
+
+- Add `formatRelativeTime`, which writes a time relative to a `now` you pass, such as "3 minutes ago". ([#222](https://github.com/tounsoo/todae/pull/222))
+
+- Add `lines` to `Text.Root`, which clamps text to that many lines and shows the whole text in a tooltip when it is cut. ([#226](https://github.com/tounsoo/todae/pull/226))
+
+- Add useInlineEdit for editing a value in place. ([#225](https://github.com/tounsoo/todae/pull/225))
+
+- Docs name `CATEGORY_TONES`, `CategoryTone`, and `THEME_OVERRIDE_KEYS`. ([#265](https://github.com/tounsoo/todae/pull/265))
+
+- A Contents pick lapses when its heading remounts with the same id. ([#256](https://github.com/tounsoo/todae/pull/256))
+
+- CI checks the shipped JavaScript and CSS size. ([#260](https://github.com/tounsoo/todae/pull/260))
+
+- Add `useReorder`, a hook that lets a list be reordered by dragging a handle. ([#221](https://github.com/tounsoo/todae/pull/221))
+
+- Fix focus on close when `restoreFocusRef` changes while an overlay that takes it is open, such as `Dialog.Root`, `Drawer.Root`, `BottomSheet.Root` or `usePopover`. ([#231](https://github.com/tounsoo/todae/pull/231))
+
+- Add Field.OneTimeCode, one input drawn as boxes for sign-in and verification codes. ([#229](https://github.com/tounsoo/todae/pull/229))
+
+- Prose body and headings draw at `prose.font.size` and `prose.h1.font.size` through `prose.h6.font.size`. ([#268](https://github.com/tounsoo/todae/pull/268))
+
+- CI checks the published tarball. ([#259](https://github.com/tounsoo/todae/pull/259))
+
+- A Contents pick lapses when its section leaves the page. ([#233](https://github.com/tounsoo/todae/pull/233))
+
+- Add `show` to `Splitter.Root`, which can show one panel across the root and keep the other panel mounted. ([#231](https://github.com/tounsoo/todae/pull/231))
+
+- An icon-only Button.Root in a Field.Root (not a Field.Textarea) is one field line tall on its first line (new field.action.size token) and a press on it leaves focus where it is in the field; an Icon, Affix or icon-only button beside a Field.Select is centered on it; and Field.TextInput keeps its caret when its type changes. ([#233](https://github.com/tounsoo/todae/pull/233))
+
+- Add Steps.Root variant="progress" for where a person is in a form of several steps. ([#223](https://github.com/tounsoo/todae/pull/223))
+
+- Add `Menu.ContextTrigger`, which opens a menu at the pointer on a right click or an Android long press, or below the focused element on Shift+F10 or the ContextMenu key. ([#224](https://github.com/tounsoo/todae/pull/224))
+
+- Text body draws at `text.font.size`. ([#264](https://github.com/tounsoo/todae/pull/264))
+
+- Text headings draw at `text.h1.font.size` through `text.h6.font.size`. ([#266](https://github.com/tounsoo/todae/pull/266))
+
 ## 0.4.0
 
 ### Minor Changes

@@ -163,6 +163,8 @@ Set it on an element that carries `data-appearance` or `data-density`. Contract 
 </ThemeProvider>
 ```
 
+`THEME_OVERRIDE_KEYS`, exported from `@tounsoo/todae`, lists the paths `overrides` accepts. It joins the raw keys, the semantic keys, and the component keys. Read it when a tool must know which paths `overrides` accepts. The [Tokens](/tokens) page names `THEME_OVERRIDE_KEYS` beside `ThemeProvider`. For the custom properties without a provider, call [`themeOverrideStyle`](/utilities/theme-override-style) with the same value.
+
 A `ThemeProvider` with no `appearance` takes the enclosing provider's, and the outermost defaults to `system`, so a nested provider that only sets overrides keeps the page light or dark. Each provider declares the appearance tokens again, so an outer provider's override of one, such as `color.accent.default`, doesn't reach inside a nested provider: repeat it there. Component token overrides, such as `card.shadow`, do carry through. An override holds in every appearance of the provider that sets it. To give one a light and a dark value, pick it with `useAppearance()` in a component inside a provider. Under `system` the server renders the light value until the page hydrates, so a value known in advance belongs in a company token package, with a light and a dark context.
 
 ```tsx

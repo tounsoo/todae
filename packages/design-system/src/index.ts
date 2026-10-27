@@ -13,11 +13,9 @@ export {
 export {
   Avatar,
   type AvatarFallbackProps,
-  type AvatarGroupProps,
   type AvatarImageProps,
   type AvatarImageStatus,
   type AvatarRootProps,
-  type AvatarSize,
   type AvatarTone,
 } from './components/Avatar.js';
 export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/tone.js';
@@ -325,7 +323,7 @@ export {
   type TextRootProps,
   type TextAs,
   type TextHeading,
-  type TextSize,
+  type TextVariant,
   type TextTone,
   type TextWeight,
 } from './components/Text.client.js';

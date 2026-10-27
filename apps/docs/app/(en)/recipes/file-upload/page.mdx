@@ -53,3 +53,9 @@ Send the files from `onFiles`, or leave them in the input and let the form submi
 **You supply:** What the recipe's markup does: the `<label>` text that names the input, a hint joined with `aria-describedby`, rejection reasons written out in words, `aria-invalid` and the `ErrorMessage.Root` id added to `aria-describedby` when files are rejected, and a labelled list of the accepted files. An announcement of rejections, if they must be heard. Upload progress and results in text, such as a `<progress>` with a label.
 
 **Watch for:** Hiding the input with `display: none` or `hidden` to style the drop target: dragging is pointer-only, so keyboard and screen reader users lose the only way in. Keep it focusable and show its focus. An `aria-describedby` that still points at an `ErrorMessage.Root` you no longer render. Errors shown by a red border alone.
+
+## When to use
+
+**When:** A form that takes files, picked or dropped, with checks on type, size and count.
+
+**When not:** Files attached to a chat message → [Composer](/composer) and [Attachment](/attachment). A picker with no drop target and no checks → `<input type="file">` alone.

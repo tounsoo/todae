@@ -1,70 +1,139 @@
 name: CI
 
+# Checkout reads the repo. Cache and artifact upload use the run's own tokens, not this one.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
+    # Markdown never starts a job. A changeset, the package README and the published
+    # changelog are markdown a tool or npm reads, so they still run. Docs pages are MDX.
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/README.md'
+      - 'packages/design-system/CHANGELOG.md'
   # Drafts skip CI; marking one ready for review runs it.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/README.md'
+      - 'packages/design-system/CHANGELOG.md'
 
 # A new push to a pull request cancels its older run; runs on main always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# The jobs run side by side, so a pull request waits for the slowest one.
 jobs:
-  static:
+  checks:
     if: ${{ !github.event.pull_request.draft }}
-    name: Typecheck, lint and generated files
-    runs-on: ubuntu-latest
+    name: Checks
+    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           # The changeset check compares the pull request with its base branch.
           fetch-depth: 0
+
+      - id: change
+        name: Classify the diff
+        run: |
+          set -euo pipefail
+          bash .github/scripts/change-class.sh --self-test
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+            diff_args=("$base...$head")
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            diff_args=("$base" "$head")
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
+            echo "class=all" >> "$GITHUB_OUTPUT"
+            echo "class=all (commits not in the checkout)"
+            exit 0
+          fi
+          # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
+          # A diff that cannot be read, such as two histories with no merge base, runs every check.
+          if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
+            echo "class=all" >> "$GITHUB_OUTPUT"
+            echo "class=all (diff failed)"
+            exit 0
+          fi
+          class=$(printf '%s\n' "$files" | bash .github/scripts/change-class.sh)
+          echo "class=$class" >> "$GITHUB_OUTPUT"
+          echo "class=$class"
+          if [ "$class" = prose ]; then
+            printf '%s\n' "$files"
+          fi
+
       - uses: ./.github/actions/setup
+
       # Fails when the package changed outside its tests and no changeset was added.
       # The Version Packages pull request deletes the changesets, so it skips the check.
-      - if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
+      - name: Changeset
+        if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
         run: pnpm changeset status --since=origin/${{ github.base_ref }}
-      - run: pnpm tokens:check
-      - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
-      - run: pnpm typecheck
-      - run: pnpm lint
+      - name: Tokens
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm tokens:check
+      - name: Schema
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
+      - name: Typecheck
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm typecheck
+      - name: Lint
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm lint
 
-  unit:
-    if: ${{ !github.event.pull_request.draft }}
-    name: Unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      # The docs tests import the package from dist.
-      - run: pnpm build:ds
-      - run: pnpm test
+      # The docs tests import the package from dist, and some browser demos import its subpath entries.
+      - name: Build the package
+        if: ${{ !cancelled() }}
+        run: pnpm build:ds
+      - name: Bundle size
+        if: ${{ !cancelled() }}
+        run: pnpm size:check
+      - name: Publish checks
+        if: ${{ !cancelled() }}
+        run: pnpm publish:check
+      - name: SSR smoke
+        if: ${{ !cancelled() }}
+        run: pnpm ssr:smoke
+      - name: Unit tests
+        if: ${{ !cancelled() }}
+        run: pnpm test
 
-  browser:
-    if: ${{ !github.event.pull_request.draft }}
-    name: Browser tests
-    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
       # Keyed on the lockfile, which pins Playwright and so its Chromium build.
-      - id: playwright-cache
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
-      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
-      # Some docs demos import the package's subpath entries, which only exist in dist.
-      - run: pnpm build:ds
-      - run: pnpm test:browser
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm test:browser
+
+      # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm install --frozen-lockfile --offline
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        name: Second-brand example
+        run: pnpm --filter fernway-example build
 
   docs:
     if: ${{ !github.event.pull_request.draft }}
@@ -77,11 +146,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - uses: actions/cache@v4
-        with:
-          path: apps/docs/.next/cache
-          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**', '!apps/docs/visual/**') }}
-          restore-keys: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       - run: pnpm --filter docs test:visual
@@ -94,16 +158,3 @@ jobs:
             apps/docs/playwright-report
             apps/docs/test-results
           retention-days: 7
-
-  example:
-    if: ${{ !github.event.pull_request.draft }}
-    name: Second-brand example
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      # Builds the example's tokens with todae-tokens, typechecks it and bundles it, against the package's dist.
-      - run: pnpm build:ds
-      # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
-      - run: pnpm install --frozen-lockfile --offline
-      - run: pnpm --filter fernway-example build

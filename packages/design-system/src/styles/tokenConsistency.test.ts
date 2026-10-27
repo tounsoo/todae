@@ -69,6 +69,15 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  it('draws Prose type from prose font-size tokens', () => {
+    const css = sheets.Prose ?? '';
+    expect(css).not.toMatch(/--todae-font-size-/);
+    expect(css).toContain('font-size: var(--todae-prose-font-size)');
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      expect(css).toContain(`font-size: var(--todae-prose-h${level}-font-size)`);
+    }
+  });
+
   it('names the custom properties a sheet sets for itself --_<name>, not like a token', () => {
     for (const [name, css] of Object.entries(sheets)) {
       const declared = [...css.matchAll(/(?:^|[{;\s])(--todae-[a-z0-9-]+)\s*:/g)].map((match) => match[1]);

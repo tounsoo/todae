@@ -180,37 +180,6 @@
       ]
     },
     {
-      "name": "Avatar.Group",
-      "description": "A div with role=\"group\" that stacks several Avatar.Root, each over the one before, with a ring in the surface color. Name it with aria-label or aria-labelledby. Takes native div attributes except role.",
-      "props": [
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Accessible name for the group, such as \"Assignees\"."
-        },
-        {
-          "name": "aria-labelledby",
-          "type": "string",
-          "required": false,
-          "description": "Id of the element that names the group, in place of aria-label."
-        },
-        {
-          "name": "size",
-          "type": "\"sm\" | \"md\" | \"lg\"",
-          "required": false,
-          "description": "Size for the avatars inside that set no size of their own. The overlap is a fraction of it, from avatar.group.overlap.",
-          "default": "\"md\""
-        },
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Avatar.Root elements. The last one can be a +N count."
-        }
-      ]
-    },
-    {
       "name": "Avatar.Image",
       "description": "An img drawn over the fallback, which is removed once the image loads and stays when it fails. Its alt is always empty, because Avatar.Root carries the name. Takes native img attributes except alt.",
       "props": [
@@ -224,19 +193,13 @@
     },
     {
       "name": "Avatar.Root",
-      "description": "A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role=\"img\"); without label it is hidden from assistive technology. Takes native span attributes except role, aria-label and aria-labelledby.",
+      "description": "A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role=\"img\"); without label it is hidden from assistive technology. It draws at --todae-avatar-size. Set that variable, or inline-size and block-size, on the avatar or on an ancestor with no appearance or density attribute and no scoped theme root between them. Takes native span attributes except role, aria-label and aria-labelledby.",
       "props": [
         {
           "name": "label",
           "type": "string",
           "required": false,
           "description": "Names the avatar, whichever of the image and the fallback shows. Leave it out when the name is written next to the avatar."
-        },
-        {
-          "name": "size",
-          "type": "\"sm\" | \"md\" | \"lg\"",
-          "required": false,
-          "description": "Size from the avatar.size contract tokens. Left out, it is the size of the Avatar.Group around it, or \"md\"."
         },
         {
           "name": "tone",
@@ -4781,29 +4744,28 @@
           "name": "as",
           "type": "\"p\" | \"span\" | \"strong\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
           "required": false,
-          "description": "Rendered element. A heading level sets the outline; it also picks a default size, bold weight and tight leading.",
+          "description": "Rendered element. A heading level sets the outline, bold weight and tight leading, and draws at text.h1.font.size through text.h6.font.size. Defaults follow font.size.6, font.size.5, font.size.4, text.font.size, text.font.size and font.size.2. With no heading, body draws at text.font.size, whose default is font.size.3.",
           "default": "\"p\""
         },
         {
-          "name": "size",
-          "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"2xl\" | \"label\"",
+          "name": "variant",
+          "type": "\"label\"",
           "required": false,
-          "description": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level. \"label\" is the role for eyebrows and metadata: it reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and a tone or weight you give wins. Unlike other sizes it sets font-family, from text.font.family by default.",
-          "default": "\"m\"; for headings h1 \"2xl\", h2 \"xl\", h3 \"l\", h4 and h5 \"m\", h6 \"s\""
+          "description": "The label role for eyebrows, kickers and metadata. It reads text.label.* for its family, size, weight, leading, letter spacing, case and color, and sets font-family, from text.font.family by default. A tone or weight you give wins."
         },
         {
           "name": "tone",
           "type": "\"default\" | \"muted\" | \"accent\"",
           "required": false,
           "description": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",
-          "default": "\"default\"; text.label.fg with size \"label\""
+          "default": "\"default\"; text.label.fg with variant \"label\""
         },
         {
           "name": "weight",
           "type": "\"regular\" | \"medium\" | \"bold\"",
           "required": false,
           "description": "Font weight.",
-          "default": "\"regular\"; \"bold\" for headings; text.label.font.weight with size \"label\""
+          "default": "\"regular\"; \"bold\" for headings; text.label.font.weight with variant \"label\""
         },
         {
           "name": "lines",

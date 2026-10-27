@@ -3,19 +3,13 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Avatar.Root',
   description:
-    'A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role="img"); without label it is hidden from assistive technology. Takes native span attributes except role, aria-label and aria-labelledby.',
+    'A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role="img"); without label it is hidden from assistive technology. It draws at --todae-avatar-size. Set that variable, or inline-size and block-size, on the avatar or on an ancestor with no appearance or density attribute and no scoped theme root between them. Takes native span attributes except role, aria-label and aria-labelledby.',
   props: [
     {
       name: 'label',
       type: 'string',
       required: false,
       description: 'Names the avatar, whichever of the image and the fallback shows. Leave it out when the name is written next to the avatar.',
-    },
-    {
-      name: 'size',
-      type: '"sm" | "md" | "lg"',
-      required: false,
-      description: 'Size from the avatar.size contract tokens. Left out, it is the size of the Avatar.Group around it, or "md".',
     },
     {
       name: 'tone',

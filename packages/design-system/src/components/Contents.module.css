@@ -100,4 +100,26 @@
       background: Highlight;
     }
   }
+
+  @supports (scroll-target-group: auto) {
+    .root {
+      scroll-target-group: auto;
+    }
+
+    .link:where(:target-current) {
+      color: var(--todae-contents-link-fg-current);
+      font-weight: var(--todae-contents-link-font-current-weight);
+    }
+
+    .link:where(:target-current)::before {
+      background: var(--todae-contents-marker-color);
+    }
+
+    @media (forced-colors: active) {
+      .link:where(:target-current)::before {
+        forced-color-adjust: none;
+        background: Highlight;
+      }
+    }
+  }
 }

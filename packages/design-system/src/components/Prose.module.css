@@ -4,7 +4,7 @@
 @layer todae.components {
   .root {
     color: var(--todae-prose-fg);
-    font-size: var(--todae-prose-size);
+    font-size: var(--todae-prose-font-size);
     line-height: var(--todae-prose-leading);
     overflow-wrap: break-word;
   }
@@ -58,27 +58,27 @@
     }
 
     h1 {
-      font-size: var(--todae-prose-h1-size);
+      font-size: var(--todae-prose-h1-font-size);
     }
 
     h2 {
-      font-size: var(--todae-prose-h2-size);
+      font-size: var(--todae-prose-h2-font-size);
     }
 
     h3 {
-      font-size: var(--todae-prose-h3-size);
+      font-size: var(--todae-prose-h3-font-size);
     }
 
     h4 {
-      font-size: var(--todae-prose-h4-size);
+      font-size: var(--todae-prose-h4-font-size);
     }
 
     h5 {
-      font-size: var(--todae-prose-h5-size);
+      font-size: var(--todae-prose-h5-font-size);
     }
 
     h6 {
-      font-size: var(--todae-prose-h6-size);
+      font-size: var(--todae-prose-h6-font-size);
     }
 
     /* Markdown puts no role on a list. A list with one, such as

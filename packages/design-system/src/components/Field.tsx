@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
+import { activeIn } from './activeElement.js';
 import { useDomId } from './domId.js';
 import {
   FIELD_CONTROL_SELECTOR,
@@ -122,6 +123,12 @@ function inOwnPopover(target: EventTarget | null, shell: HTMLElement): boolean {
   return popover != null && shell.contains(popover);
 }
 
+// An icon-only Button.Root placed straight in the shell, beside the input.
+function lineButtonOf(target: EventTarget | null, shell: HTMLElement): HTMLElement | null {
+  const button = target instanceof Element ? target.closest<HTMLElement>(':is(button, a)[data-icon-only]') : null;
+  return button?.parentElement === shell ? button : null;
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(
@@ -183,7 +190,20 @@ function Root({
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     // Only a primary press: a right or middle click keeps its own meaning.
-    if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
+    if (event.button !== 0 || disabled) return;
+    // A press on a button in the field's line, such as a password's show button, keeps focus where
+    // it is when it is in the field, so the caret stays and Safari, which doesn't focus a pressed
+    // button, doesn't blur the field. Elsewhere it is a press on a button. This holds in any field;
+    // the line button's size in Field.module.css applies only beside a one-line input.
+    const action = lineButtonOf(event.target, event.currentTarget);
+    if (action) {
+      const focused = activeIn(event.currentTarget);
+      if (focused !== action && focused && event.currentTarget.contains(focused) && !action.matches(':disabled')) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (isInteractiveTarget(event.target)) return;
     if (inOwnPopover(event.target, event.currentTarget)) return;
     event.preventDefault();
     // The ref is the last control to mount. If that one has gone, a control

@@ -191,6 +191,12 @@ const found = useHighlight({ name: 'search', query: cb.query });
 
 **Watch for:** Unmounting `OptionList.Root` when it is empty or loading; set `hidden` so `aria-controls` still points at it. Your own `onKeyDown`, `onFocus` or `onBlur` after the getter's spread, which replaces the hook's handlers. The match highlight as the only cue: it is visual only.
 
+## When to use
+
+**When:** Picking one or more values from a list long enough that people type to find one, such as a country, an assignee or tags.
+
+**When not:** A few options that fit on the page → [Radio](/radio) or [Checkbox](/checkbox). One value from a short list in a form → [Field.Select](/field/select). A short overlay list with no typing → [usePopover](/utilities/use-popover) and [OptionList](/optionlist). Running actions → [Menu](/menu), or the [Command palette](/recipes/command-palette) recipe to search them. Free text with no list → a [Field](/field) text input.
+
 ## Hooks
 
 When to use them, and their props, are on [useCombobox](/utilities/use-combobox) and [useSheetPresentation](/utilities/use-sheet-presentation).

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -26,12 +26,13 @@ type PageProps = {
   noThree?: boolean;
   /** Puts the first section in a wrapper, so the first heading's parent isn't the scroller. */
   wrapped?: boolean;
+  threeKey?: number;
   scroller?: CSSProperties;
 };
 
 const RefLess = ({ ref: _ref, ...props }: LinkRenderProps) => <a {...props} />;
 
-function Page({ dir, list = true, extra = false, more = false, refless = false, noThree = false, wrapped = false, scroller }: PageProps) {
+function Page({ dir, list = true, extra = false, more = false, refless = false, noThree = false, wrapped = false, threeKey, scroller }: PageProps) {
   const render = refless ? RefLess : undefined;
   const tall = { blockSize: '400px', margin: 0 };
   return (
@@ -107,7 +108,7 @@ function Page({ dir, list = true, extra = false, more = false, refless = false, 
           Two A
         </h3>
         <p style={tall}>…</p>
-        <h2 id="three" style={{ margin: 0 }}>
+        <h2 key={threeKey} id="three" style={{ margin: 0 }}>
           Three
         </h2>
         <p style={{ margin: 0 }}>…</p>
@@ -224,11 +225,23 @@ describe('Contents in a browser', () => {
     await hashChanged;
     await waitFor(() => expect(current()).toBe('Three'));
     const three = document.getElementById('three')!;
-    three.id = 'gone';
-    await waitFor(() => expect(current()).toBe('Two A'));
-    three.id = 'three';
-    await frames(3);
+    // The observer runs in the gap, before React follows the page again.
+    await act(async () => {
+      three.id = 'gone';
+      await Promise.resolve();
+      three.id = 'three';
+    });
     expect(current()).toBe('Two A');
+  });
+
+  it('drops a pick whose heading remounts with the same id, so the section the scroll shows is current', async () => {
+    const { rerender } = render(<Page threeKey={0} scroller={{ scrollBehavior: 'smooth' }} />);
+    await waitFor(() => expect(current()).toBe('One'));
+    const scroller = screen.getByTestId('scroller');
+    link('Three').click();
+    rerender(<Page threeKey={1} scroller={{ scrollBehavior: 'smooth' }} />);
+    await waitFor(() => expect(current()).toBe('One'));
+    expect(scroller.scrollTop).toBeLessThan(LINE);
   });
 
   it('drops a pick of a section the page lacks, so it does not hold when the section mounts', async () => {
@@ -518,6 +531,100 @@ describe('Contents in a browser', () => {
       expect(pad(nested)).toBeGreaterThan(pad(link('Two')));
       cleanup();
     }
+  });
+
+  it('paints :target-current with the same tokens as aria-current, and leaves the attribute to the script', async () => {
+    render(<Page />);
+    await waitFor(() => expect(current()).toBe('One'));
+    const nav = screen.getByRole('navigation');
+    const supported = CSS.supports('scroll-target-group', 'auto') && CSS.supports('selector(:target-current)');
+    if (!supported) {
+      scrollTo('two');
+      await waitFor(() => expect(current()).toBe('Two'));
+      expect(link('Two').getAttribute('aria-current')).toBe('location');
+      expect(link('One').hasAttribute('aria-current')).toBe(false);
+      expect(getComputedStyle(link('Two'), '::before').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(link('One'), '::before').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      return;
+    }
+
+    expect(getComputedStyle(nav).getPropertyValue('scroll-target-group')).toBe('auto');
+    for (const list of screen.getAllByRole('list')) {
+      expect(getComputedStyle(list).getPropertyValue('scroll-target-group')).not.toBe('auto');
+    }
+    expect(link('One').matches(':target-current')).toBe(true);
+
+    const linkClass = [...link('One').classList].find((name) => name.includes('link'));
+    if (!linkClass) throw new Error('Contents link class missing');
+    const declared = (part: string, pseudo = false) => {
+      const visit = (rules: CSSRuleList): string | null => {
+        for (const rule of rules) {
+          if (
+            rule instanceof CSSStyleRule &&
+            rule.selectorText.includes(`.${linkClass}`) &&
+            rule.selectorText.includes(part) &&
+            !rule.selectorText.includes(':has(') &&
+            rule.selectorText.includes('::') === pseudo
+          ) {
+            return rule.style.cssText;
+          }
+          if (rule instanceof CSSGroupingRule) {
+            const nested = visit(rule.cssRules);
+            if (nested) return nested;
+          }
+        }
+        return null;
+      };
+      for (const sheet of document.styleSheets) {
+        let rules: CSSRuleList;
+        try {
+          rules = sheet.cssRules;
+        } catch (error) {
+          if (!(error instanceof DOMException) || error.name !== 'SecurityError') throw error;
+          continue;
+        }
+        const found = visit(rules);
+        if (found) return found;
+      }
+      return null;
+    };
+    const ariaDecl = declared("[aria-current]");
+    const targetDecl = declared(':target-current');
+    expect(ariaDecl).not.toBeNull();
+    expect(targetDecl).toBe(ariaDecl);
+    expect(declared(':target-current', true)).toBe(declared("[aria-current]", true));
+
+    const paint = (name: string) => {
+      const el = link(name);
+      const style = getComputedStyle(el);
+      const marker = getComputedStyle(el, '::before');
+      return { color: style.color, weight: style.fontWeight, marker: marker.backgroundColor };
+    };
+    const before = paint('One');
+
+    scrollTo('two');
+    await waitFor(() => expect(current()).toBe('Two'));
+    await waitFor(() => expect(link('Two').matches(':target-current')).toBe(true));
+    expect(link('Two').getAttribute('aria-current')).toBe('location');
+    expect(link('One').hasAttribute('aria-current')).toBe(false);
+    expect(link('One').matches(':target-current')).toBe(false);
+    expect(paint('Two')).toEqual(before);
+
+    scrollTo('two-a');
+    await waitFor(() => expect(current()).toBe('Two A'));
+    await waitFor(() => expect(link('Two A').matches(':target-current')).toBe(true));
+    expect(link('Two A').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two A')).toEqual(before);
+
+    scrollTo('two', -80);
+    await frames(3);
+    expect(current()).toBe('One');
+    expect(link('One').getAttribute('aria-current')).toBe('location');
+    expect(link('Two').matches(':target-current')).toBe(true);
+    expect(link('Two').hasAttribute('aria-current')).toBe(false);
+    expect(paint('Two')).toEqual(paint('Three'));
+    expect(paint('One').marker).not.toBe(paint('Three').marker);
   });
 
   it('has no axe violations', async () => {

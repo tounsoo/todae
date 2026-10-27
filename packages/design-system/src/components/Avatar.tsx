@@ -9,10 +9,9 @@ import {
 } from 'react';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
+import { warnOnce } from './warnOnce.js';
 import styles from './Avatar.module.css';
 import type { CategoryTone } from './tone.js';
-
-export type AvatarSize = 'sm' | 'md' | 'lg';
 
 /** `neutral`, or a category hue. `categoryTone(id)` picks a stable one per person. */
 export type AvatarTone = 'neutral' | CategoryTone;
@@ -25,30 +24,21 @@ export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
  * fails, or when there is none. With `label` the avatar is one image named by
  * `label` (`role="img"`), whichever of the two shows. Without `label` it is
  * decorative and hidden from assistive technology: use that when the name is
- * already written next to it.
+ * already written next to it. It draws at `--todae-avatar-size`. Set that
+ * variable, or `inline-size` and `block-size`, on the avatar or an ancestor.
+ * An appearance or density attribute, or a scoped theme root, between that
+ * ancestor and the avatar declares the size token again and drops the
+ * ancestor's value.
  */
 export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
-  /** Size from the avatar.size contract tokens. Left out, it is the size of the `Avatar.Group` around it, or "md". */
-  size?: AvatarSize;
   /**
    * Colors behind the fallback. `neutral` reads avatar.bg and avatar.fg; other
    * tones read the avatar.<tone> contract tokens.
    */
   tone?: AvatarTone;
 } & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
-
-/**
- * A `div` with `role="group"` that stacks several `Avatar.Root`s, each over the
- * one before. Name it with `aria-label` or `aria-labelledby`.
- */
-export type AvatarGroupProps = {
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
-  /** Size for the avatars inside that set no `size` of their own. */
-  size?: AvatarSize;
-} & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
 /**
  * An `img` drawn over the fallback, which goes once it loads. It takes no `alt`: the avatar's
@@ -66,19 +56,29 @@ type AvatarContextValue = {
 
 const AvatarContext = /* @__PURE__ */ createContext<AvatarContextValue | null>(null);
 
-const AvatarGroupContext = /* @__PURE__ */ createContext<AvatarSize | null>(null);
-
 function useAvatar(part: string): AvatarContextValue {
   const ctx = useContext(AvatarContext);
   if (!ctx) throw new Error(`Avatar.${part} must render inside Avatar.Root`);
   return ctx;
 }
 
-function Root({ label, size: ownSize, tone = 'neutral', className, 'aria-hidden': ariaHidden, ...props }: AvatarRootProps) {
+function omitLegacySize(props: AvatarRootProps): AvatarRootProps {
+  if (!('size' in props)) return props;
+  const { size, ...rest } = props as AvatarRootProps & { size?: unknown };
+  if (size != null) {
+    warnOnce(
+      'avatar-size',
+      `Avatar.Root no longer takes size; got ${String(size)}. Set --todae-avatar-size, or inline-size and block-size, on the avatar or an ancestor. An appearance or density attribute, or a scoped theme root, between that ancestor and the avatar declares the size token again. Todae ships no size scale.`,
+      'error',
+    );
+  }
+  return rest;
+}
+
+function Root(allProps: AvatarRootProps) {
+  const { label, tone = 'neutral', className, 'aria-hidden': ariaHidden, ...props } = omitLegacySize(allProps);
   const [status, setStatus] = useState<AvatarImageStatus>('idle');
   const value = useMemo(() => ({ status, setStatus }), [status]);
-  const groupSize = useContext(AvatarGroupContext);
-  const size = ownSize ?? groupSize ?? 'md';
   const named = Boolean(label);
   return (
     <AvatarContext.Provider value={value}>
@@ -87,7 +87,6 @@ function Root({ label, size: ownSize, tone = 'neutral', className, 'aria-hidden'
         role={named ? 'img' : undefined}
         aria-label={named ? label : undefined}
         aria-hidden={named ? ariaHidden : (ariaHidden ?? true)}
-        data-size={size}
         data-tone={tone}
         data-status={status}
         className={cx(styles.root, className)}
@@ -155,12 +154,4 @@ function Fallback({ className, ...props }: AvatarFallbackProps) {
   return <span {...props} className={cx(styles.fallback, className)} />;
 }
 
-function Group({ size = 'md', className, ...props }: AvatarGroupProps) {
-  return (
-    <AvatarGroupContext.Provider value={size}>
-      <div {...props} role="group" data-size={size} className={cx(styles.group, className)} />
-    </AvatarGroupContext.Provider>
-  );
-}
-
-export const Avatar = { Root, Image, Fallback, Group } as const;
+export const Avatar = { Root, Image, Fallback } as const;

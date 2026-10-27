@@ -16,7 +16,7 @@ Todae is a pnpm workspace:
 
 You need:
 
-- Node 22. `nvm use` reads `.nvmrc`.
+- Node 24. `nvm use` reads `.nvmrc`. The docs app sets `engines.node` to `24.x`, which is what Vercel reads.
 - pnpm 10. The `packageManager` field in the root `package.json` pins the version.
 
 Install the dependencies:
@@ -87,17 +87,24 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 ## Check your change
 
-Run these before you open a pull request. CI runs them too, and builds the docs.
+Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
 pnpm typecheck
 pnpm lint
 pnpm tokens:check
 pnpm schema
+pnpm build:ds
+pnpm publish:check
+pnpm size:check
+pnpm ssr:smoke
 pnpm test
 pnpm test:browser
 ```
 
+- `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
+- `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
+- `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
 - `pnpm --filter docs test:visual:docker` compares screenshots of the built docs site with the baselines in `apps/docs/visual/baselines`: every example in light and dark, and the home, Button and playground pages in English and Korean on desktop and phone. It runs in Playwright's Docker image, the one CI uses, since fonts and rendering differ between machines, so build the package and the docs first and have Docker running. It needs a Linux x64 host. When a change is meant to look different, add `--update-snapshots` and commit the new images; when you rename a heading or remove an example, delete its old images too. A failing CI run uploads a `screenshots` artifact: open `playwright-report/index.html` to see each change, and copy a shot's `test-results/**/<name>-actual.png` over its baseline to accept it, which is the way to update baselines without a Linux x64 host.
@@ -110,7 +117,13 @@ pnpm test:browser
 pnpm changeset
 ```
 
-Pick the bump and write the changelog entry. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+Pick the bump and write the changelog entry. Until 1.0.0, changeset bumps stay on 0.x. A breaking change is `minor` and everything else is `patch`. From 1.0.0, pick the bump this way.
+
+- Use `major` when a change removes, renames, or narrows the public API, or when it changes what a token or a `--todae-*` variable means.
+- Use `minor` when a change adds to the public API, or when it deprecates an API.
+- Use `patch` for a token value change or a change to product copy, and name that change in the changelog.
+
+From 1.0.0, remove a deprecated API only in a later `major`. See [Versioning](README.md#versioning). The changeset is a Markdown file in `.changeset/`; commit it with the change.
 
 Keep the entry short. The first line says what changed for people who use Todae, in one sentence that names the component, hook or token. Leave out why, how and edge cases: the pull request and the docs have those. A breaking change adds one bullet per break, saying what to change in your code:
 
@@ -131,7 +144,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 
 - Keep a pull request to one change.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips draft pull requests. Mark yours ready for review when you want CI to run.
+- CI skips draft pull requests, and a Markdown-only pull request as described above. Mark a draft ready for review when you want CI to run.
 
 ## Releases
 
@@ -141,6 +154,20 @@ Merging a pull request with changesets doesn't publish. `.github/workflows/relea
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
 - A GitHub App, which moves `docs-stable` (see [Deploy the docs](#deploy-the-docs)) and lets CI run on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`, and refuses it any ref update that adds or changes a workflow file. Install the app on this repository with read and write access to contents, pull requests and workflows, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment.
+
+The publish job already released `@tounsoo/todae@0.4.0` this way. It sets `id-token: write` in `.github/workflows/release.yml`. npm trusted publishing checks that GitHub OIDC token. The [0.4.0 attestations](https://registry.npmjs.org/-/npm/v1/attestations/@tounsoo%2ftodae@0.4.0) include SLSA provenance for that workflow.
+
+### Deprecate the placeholder version
+
+`@tounsoo/todae@0.0.0-stage` is a stub version published on 2026-10-16 so the package name existed before trusted publishing. npm describes it as "Temporary package placeholder for staged publishing". It is not a dist-tag. `latest` is the only dist-tag, and it points at the current release. `npm dist-tag ls @tounsoo/todae` shows that.
+
+A maintainer with publish access to `@tounsoo/todae` runs `npm deprecate` by hand, once. The release workflow does not run it. Do not add an npm token to the repository, and do not run the command from CI.
+
+```sh
+npm deprecate @tounsoo/todae@0.0.0-stage "Placeholder for staged publishing. Do not install this version. Install @tounsoo/todae@latest."
+```
+
+`npm view @tounsoo/todae@0.0.0-stage deprecated` then prints that message.
 
 ## Deploy the docs
 

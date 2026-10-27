@@ -1,20 +1,20 @@
 {
   "text": {
-    "$description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it.",
+    "$description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it.",
     "font": {
-      "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/sans/$value" } }
+      "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/sans/$value" } },
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },
+    "h1": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/6/$value" } } } },
+    "h2": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } } } },
+    "h3": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } } } },
+    "h4": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/text/font/size/$value" } } } },
+    "h5": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/text/font/size/$value" } } } },
+    "h6": { "font": { "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } } } },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "muted": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
       "accent": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
-    },
-    "size": {
-      "2": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
-      "3": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
-      "4": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } },
-      "5": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } },
-      "6": { "$type": "dimension", "$value": { "$ref": "#/font/size/6/$value" } }
     },
     "weight": {
       "regular": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } },
@@ -26,7 +26,7 @@
       "tight": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
     },
     "label": {
-      "$description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
+      "$description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied.",
       "font": {
         "family": { "$type": "fontFamily", "$value": { "$ref": "#/text/font/family/$value" } },
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },

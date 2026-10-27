@@ -50,7 +50,7 @@ export function TabsManualVertical() {
           <Text.Root>Failed requests.</Text.Root>
         </Tabs.Panel>
       </Tabs.Root>
-      <Text.Root size="s" tone="muted">
+      <Text.Root tone="muted">
         Selected: {value}
       </Text.Root>
     </Stack.Root>

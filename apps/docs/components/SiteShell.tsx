@@ -12,7 +12,7 @@ import { HashHistoryGuard } from './HashHistoryGuard';
 import { LanguageAlternates } from './LanguageAlternates';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileNav } from './MobileNav';
-import { APPEARANCE_SCRIPT } from './appearanceScript';
+import { HTML_APPEARANCE_SCRIPT, SHELL_APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
@@ -43,13 +43,16 @@ export function SiteShell({
     ['/playground', dict.topLinks.playground],
   ] as const;
   return (
-    <html lang={locale}>
+    <html lang={locale} data-appearance="system" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: HTML_APPEARANCE_SCRIPT }} />
+      </head>
       <body>
         {/* A 404 is prerendered once, so its path is Next's internal one: no page to pair. */}
         {!notFound && <LanguageAlternates untranslated={untranslatedByLocale()} />}
         <HashHistoryGuard />
         <Providers>
-          <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
+          <script dangerouslySetInnerHTML={{ __html: SHELL_APPEARANCE_SCRIPT }} />
           <VisuallyHidden.Root focusable>
             <a className="skip-link" href="#content">
               {dict.skipToContent}

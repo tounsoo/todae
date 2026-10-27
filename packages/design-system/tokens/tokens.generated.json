@@ -4810,7 +4810,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.default",
@@ -4824,7 +4824,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.fg.muted",
@@ -4838,7 +4838,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.font.family",
@@ -4852,7 +4852,105 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h1.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h1-font-size",
+      "cssValue": "var(--todae-font-size-6)",
+      "ref": "font.size.6",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h2.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h2-font-size",
+      "cssValue": "var(--todae-font-size-5)",
+      "ref": "font.size.5",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h3.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h3-font-size",
+      "cssValue": "var(--todae-font-size-4)",
+      "ref": "font.size.4",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h4.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h4-font-size",
+      "cssValue": "var(--todae-text-font-size)",
+      "ref": "text.font.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h5.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h5-font-size",
+      "cssValue": "var(--todae-text-font-size)",
+      "ref": "text.font.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+    },
+    {
+      "path": "text.h6.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-text-h6-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.label.fg",
@@ -4866,7 +4964,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.family",
@@ -4880,7 +4978,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.letter-spacing",
@@ -4894,7 +4992,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.size",
@@ -4908,7 +5006,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.text-transform",
@@ -4922,7 +5020,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.font.weight",
@@ -4936,7 +5034,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.label.leading",
@@ -4950,7 +5048,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root size=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
+      "description": "Text.Root variant=\"label\": short labels such as eyebrows, kickers and metadata over or beside other text. Unlike text.font.family, text.label.font.family is applied."
     },
     {
       "path": "text.leading.default",
@@ -4964,7 +5062,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.leading.tight",
@@ -4978,77 +5076,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.2",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-2",
-      "cssValue": "var(--todae-font-size-2)",
-      "ref": "font.size.2",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.3",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-3",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.4",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-4",
-      "cssValue": "var(--todae-font-size-4)",
-      "ref": "font.size.4",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.5",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-5",
-      "cssValue": "var(--todae-font-size-5)",
-      "ref": "font.size.5",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
-    },
-    {
-      "path": "text.size.6",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-6",
-      "cssValue": "var(--todae-font-size-6)",
-      "ref": "font.size.6",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.bold",
@@ -5062,7 +5090,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.medium",
@@ -5076,7 +5104,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "text.weight.regular",
@@ -5090,7 +5118,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Text.Root: body text, headings and the label role. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
+      "description": "Text.Root: body text, headings and the label role. Body draws at text.font.size, which reads font.size.3. A heading draws at text.h1.font.size through text.h6.font.size from its element. text.font.family is not applied by Todae on body text and headings; products set it where they want it."
     },
     {
       "path": "prose.fg",
@@ -5098,6 +5126,20 @@
       "cssVar": "--todae-prose-fg",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+    },
+    {
+      "path": "prose.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-prose-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -5121,9 +5163,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h1.size",
+      "path": "prose.h1.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h1-size",
+      "cssVar": "--todae-prose-h1-font-size",
       "cssValue": "var(--todae-font-size-6)",
       "ref": "font.size.6",
       "layer": "contract",
@@ -5135,9 +5177,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h2.size",
+      "path": "prose.h2.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h2-size",
+      "cssVar": "--todae-prose-h2-font-size",
       "cssValue": "var(--todae-font-size-5)",
       "ref": "font.size.5",
       "layer": "contract",
@@ -5149,9 +5191,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h3.size",
+      "path": "prose.h3.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h3-size",
+      "cssVar": "--todae-prose-h3-font-size",
       "cssValue": "var(--todae-font-size-4)",
       "ref": "font.size.4",
       "layer": "contract",
@@ -5163,9 +5205,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h4.size",
+      "path": "prose.h4.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h4-size",
+      "cssVar": "--todae-prose-h4-font-size",
       "cssValue": "var(--todae-font-size-3)",
       "ref": "font.size.3",
       "layer": "contract",
@@ -5177,9 +5219,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h5.size",
+      "path": "prose.h5.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h5-size",
+      "cssVar": "--todae-prose-h5-font-size",
       "cssValue": "var(--todae-font-size-3)",
       "ref": "font.size.3",
       "layer": "contract",
@@ -5191,9 +5233,9 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.h6.size",
+      "path": "prose.h6.font.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-h6-size",
+      "cssVar": "--todae-prose-h6-font-size",
       "cssValue": "var(--todae-font-size-2)",
       "ref": "font.size.2",
       "layer": "contract",
@@ -5373,18 +5415,18 @@
       "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
     },
     {
-      "path": "prose.size",
+      "path": "field.action.size",
       "type": "dimension",
-      "cssVar": "--todae-prose-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
+      "cssVar": "--todae-field-action-size",
+      "cssValue": "1.5rem",
+      "ref": null,
       "layer": "contract",
       "context": null,
       "entry": {
         "kind": "set",
         "name": "contract"
       },
-      "description": "Prose.Root: long-form text such as rendered markdown, with headings and lists."
+      "description": "An icon-only Button.Root in the line of a one-line Field.Root, such as a password's show button."
     },
     {
       "path": "field.bg.default",
@@ -13938,7 +13980,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-1.bg",
@@ -13952,7 +13994,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-1.fg",
@@ -13966,7 +14008,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-2.bg",
@@ -13980,7 +14022,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-2.fg",
@@ -13994,7 +14036,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-3.bg",
@@ -14008,7 +14050,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-3.fg",
@@ -14022,7 +14064,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-4.bg",
@@ -14036,7 +14078,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-4.fg",
@@ -14050,7 +14092,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-5.bg",
@@ -14064,7 +14106,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-5.fg",
@@ -14078,7 +14120,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-6.bg",
@@ -14092,7 +14134,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-6.fg",
@@ -14106,7 +14148,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-7.bg",
@@ -14120,7 +14162,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-7.fg",
@@ -14134,7 +14176,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-8.bg",
@@ -14148,7 +14190,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.category-8.fg",
@@ -14162,7 +14204,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.fg",
@@ -14176,7 +14218,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.font.scale",
@@ -14190,7 +14232,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.font.weight",
@@ -14204,49 +14246,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
-    },
-    {
-      "path": "avatar.group.overlap",
-      "type": "number",
-      "cssVar": "--todae-avatar-group-overlap",
-      "cssValue": "0.25",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
-    },
-    {
-      "path": "avatar.group.ring.color",
-      "type": "color",
-      "cssVar": "--todae-avatar-group-ring-color",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
-    },
-    {
-      "path": "avatar.group.ring.width",
-      "type": "dimension",
-      "cssVar": "--todae-avatar-group-ring-width",
-      "cssValue": "var(--todae-border-width)",
-      "ref": "border.width",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "avatar.radius",
@@ -14260,26 +14260,12 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
-      "path": "avatar.size.lg",
+      "path": "avatar.size",
       "type": "dimension",
-      "cssVar": "--todae-avatar-size-lg",
-      "cssValue": "2.5rem",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
-    },
-    {
-      "path": "avatar.size.md",
-      "type": "dimension",
-      "cssVar": "--todae-avatar-size-md",
+      "cssVar": "--todae-avatar-size",
       "cssValue": "2rem",
       "ref": null,
       "layer": "contract",
@@ -14288,21 +14274,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
-    },
-    {
-      "path": "avatar.size.sm",
-      "type": "dimension",
-      "cssVar": "--todae-avatar-size-sm",
-      "cssValue": "1.5rem",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. Avatar.Group: avatars stacked over one another, each with a ring in the surface color."
+      "description": "Avatar.Root: a round image or initials, with category tones for its fallback colors. It draws at avatar.size, one length. Todae does not ship a size scale."
     },
     {
       "path": "grid.gap",

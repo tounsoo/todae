@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createElement } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
-import { Text, type TextAs } from './Text.js';
+import { Text, type TextAs, type TextRootProps } from './Text.js';
 import styles from './Text.module.css';
 
 afterEach(cleanup);
@@ -18,61 +19,73 @@ describe('Text', () => {
     render(<Text.Root data-testid="t">Hi</Text.Root>);
     const el = screen.getByTestId('t');
     expect(el.tagName).toBe('P');
-    expect(classesOf(el)).toEqual([styles.root, styles.m]);
+    expect(classesOf(el)).toEqual([styles.root]);
   });
 
-  it.each<[TextAs, string]>([
-    ['h1', 'xxl'],
-    ['h2', 'xl'],
-    ['h3', 'l'],
-    ['h4', 'm'],
-    ['h5', 'm'],
-    ['h6', 's'],
-  ])('renders %s as a heading at its default size', (tag, size) => {
+  it.each<TextAs>(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])('renders %s as a heading with no scale class', (tag) => {
     render(<Text.Root as={tag}>Title</Text.Root>);
     const el = screen.getByRole('heading', { level: Number(tag.slice(1)) });
     expect(el.tagName).toBe(tag.toUpperCase());
-    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles[size]]);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading]);
   });
 
-  it('lets a heading take another size and weight', () => {
+  it('lets a heading take another weight and keeps the heading class', () => {
     render(
-      <Text.Root as="h2" size="s" weight="medium">
-        Small
+      <Text.Root as="h2" weight="medium">
+        Quiet
       </Text.Root>,
     );
     const el = screen.getByRole('heading', { level: 2 });
-    expect(el.classList.contains(styles.s!)).toBe(true);
-    expect(el.classList.contains(styles.xl!)).toBe(false);
-    expect(el.classList.contains(styles.medium!)).toBe(true);
-    expect(el.classList.contains(styles.bold!)).toBe(false);
+    expect(classesOf(el)).toEqual([styles.root, styles.heading, styles.medium]);
   });
 
-  it('maps 2xl to a class that CSS can select', () => {
-    render(
-      <Text.Root size="2xl" data-testid="t">
-        Big
-      </Text.Root>,
-    );
-    expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
+  it('drops a leftover size instead of painting it on the element', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const legacy = { size: 'label', children: 'Eyebrow', 'data-testid': 't' };
+    const view = render(createElement(Text.Root, legacy));
+    const el = screen.getByTestId('t');
+    expect(el.hasAttribute('size')).toBe(false);
+    expect(el.classList.contains(styles.label!)).toBe(false);
+    expect(classesOf(el)).toEqual([styles.root]);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('variant="label"'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('text.font.size'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('--todae-text-font-size'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('font.size.*'));
+    view.rerender(createElement(Text.Root, legacy));
+    expect(error).toHaveBeenCalledTimes(1);
+    const small = { size: 's', children: 'Caption', 'data-testid': 's' };
+    render(createElement(Text.Root, small));
+    const smallEl = screen.getByTestId('s');
+    expect(smallEl.hasAttribute('size')).toBe(false);
+    expect(classesOf(smallEl)).toEqual([styles.root]);
+    expect(error).toHaveBeenCalledTimes(2);
+    error.mockRestore();
+  });
+
+  it('rejects size on TextRootProps', () => {
+    expectTypeOf<TextRootProps>().not.toHaveProperty('size');
   });
 
   it('gives the label role its own class, and adds a tone or weight only when given', () => {
     render(
       <>
-        <Text.Root size="label" data-testid="plain">
+        <Text.Root variant="label" data-testid="plain">
           Eyebrow
         </Text.Root>
-        <Text.Root size="label" tone="accent" weight="bold" data-testid="set">
+        <Text.Root variant="label" tone="accent" weight="bold" data-testid="set">
+          Eyebrow
+        </Text.Root>
+        <Text.Root as="h2" variant="label" data-testid="heading">
           Eyebrow
         </Text.Root>
       </>,
     );
     expect(classesOf(screen.getByTestId('plain'))).toEqual([styles.root, styles.label]);
     expect(classesOf(screen.getByTestId('set'))).toEqual([styles.root, styles.label, styles.accent, styles.bold]);
+    expect(classesOf(screen.getByTestId('heading'))).toEqual([styles.root, styles.heading, styles.label]);
   });
 
-  // Every class has one selector of the same weight, so source order decides which color and weight apply.
   it('orders the sheet so a role replaces the defaults and a given tone or weight wins', () => {
     const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
     const at = (cls: string) => {
@@ -85,6 +98,20 @@ describe('Text', () => {
     for (const cls of ['default', 'muted', 'accent', 'regular', 'medium', 'bold']) expect(at('label')).toBeLessThan(at(cls));
   });
 
+  it('sizes body and each heading element from a component token, with no scale class', () => {
+    const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Text.module.css'), 'utf8');
+    for (const cls of ['s', 'm', 'l', 'xl', 'xxl']) expect(sheet.includes(`.${cls} {`)).toBe(false);
+    expect(sheet).not.toContain('var(--todae-font-size-');
+    expect(sheet).toContain('font-size: var(--todae-text-font-size)');
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      expect(sheet).toContain(`.root:is(h${level})`);
+      expect(sheet).toContain(`var(--todae-text-h${level}-font-size)`);
+    }
+    const labelRoot = sheet.indexOf('.root:is(.label)');
+    const h1 = sheet.indexOf('.root:is(h1)');
+    expect(labelRoot).toBeGreaterThan(h1);
+  });
+
   it('clamps to lines through a class and --_lines, keeping the given style', () => {
     render(
       <Text.Root lines={2} style={{ color: 'red' }} data-testid="t">
@@ -92,7 +119,7 @@ describe('Text', () => {
       </Text.Root>,
     );
     const el = screen.getByTestId('t');
-    expect(classesOf(el)).toEqual([styles.root, styles.m, styles.clamp]);
+    expect(classesOf(el)).toEqual([styles.root, styles.clamp]);
     expect(el.style.getPropertyValue('--_lines')).toBe('2');
     expect(el.style.color).toBe('red');
   });
@@ -130,7 +157,7 @@ describe('Text from the main entry', () => {
   it('renders the same element, with an anchor for its tip only while it clamps with one', () => {
     const { rerender } = render(<ClientText.Root data-testid="t">Long</ClientText.Root>);
     const el = screen.getByTestId('t');
-    expect(classesOf(el)).toEqual([styles.root, styles.m]);
+    expect(classesOf(el)).toEqual([styles.root]);
     expect(el.style.getPropertyValue('anchor-name')).toBe('');
     rerender(
       <ClientText.Root lines={1} data-testid="t">

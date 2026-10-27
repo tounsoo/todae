@@ -66,7 +66,7 @@ function metadataExport(fields) {
 
 /**
  * Gives every docs page its own `metadata` export, built by `pageMetadata` from
- * the page's own title and first paragraph, so a link to it previews with what
+ * the page's own title and intro paragraph, so a link to it previews with what
  * it says. A page that exports `metadata` itself keeps its own.
  */
 export default function remarkPageMetadata() {

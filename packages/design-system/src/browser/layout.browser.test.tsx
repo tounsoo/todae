@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index.js';
+import { Avatar, Button, DensityProvider, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, ThemeProvider, paginationRange } from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -112,16 +112,45 @@ describe('Avatar in a browser', () => {
     }
   });
 
-  it('sizes from the size tokens', () => {
+  it('draws at avatar.size, and at a length a product sets on it or around it', () => {
     render(
       <Themed>
-        <Avatar.Root size="sm" data-testid="sm" />
-        <Avatar.Root size="lg" data-testid="lg" />
+        <Avatar.Root data-testid="bare">
+          <Avatar.Fallback data-testid="bare-fallback">AL</Avatar.Fallback>
+        </Avatar.Root>
+        <div style={{ '--todae-avatar-size': '2.5rem' } as CSSProperties}>
+          <Avatar.Root data-testid="large">
+            <Avatar.Fallback data-testid="large-fallback">AL</Avatar.Fallback>
+          </Avatar.Root>
+        </div>
       </Themed>,
     );
-    expect(screen.getByTestId('sm').getBoundingClientRect().width).toBeLessThan(
-      screen.getByTestId('lg').getBoundingClientRect().width,
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect([box('bare').width, box('bare').height]).toEqual([32, 32]);
+    expect([box('large').width, box('large').height]).toEqual([40, 40]);
+    expect(getComputedStyle(screen.getByTestId('large-fallback')).fontSize).toBe('16px');
+  });
+
+  it('draws at the avatar.size a ThemeProvider overrides', () => {
+    render(
+      <ThemeProvider overrides={{ 'avatar.size': { value: 1.5, unit: 'rem' } }}>
+        <Avatar.Root data-testid="themed" />
+      </ThemeProvider>,
     );
+    expect(screen.getByTestId('themed').getBoundingClientRect().width).toBe(24);
+  });
+
+  it('drops a size set on an ancestor when a density element sits between them', () => {
+    render(
+      <Themed>
+        <div style={{ '--todae-avatar-size': '1.5rem' } as CSSProperties}>
+          <DensityProvider density="compact">
+            <Avatar.Root data-testid="nested" />
+          </DensityProvider>
+        </div>
+      </Themed>,
+    );
+    expect(screen.getByTestId('nested').getBoundingClientRect().width).toBe(32);
   });
 });
 
@@ -298,6 +327,236 @@ describe('Pagination in a browser', () => {
     expect(screen.getByTestId('ordered').getAttribute('role')).toBe('list');
     expect(screen.getByTestId('plain').getAttribute('role')).toBe('none');
     expect(screen.getByTestId('nav').hasAttribute('role')).toBe(false);
+  });
+});
+
+describe('A button in a Field.Root', () => {
+  const icon = (
+    <Button.Icon>
+      <svg viewBox="0 0 16 16" />
+    </Button.Icon>
+  );
+
+  it.each(['comfortable', 'compact', 'spacious'])(
+    'keeps a %s field one line tall, with an icon-only Button.Root before or after the input',
+    (density) => {
+      render(
+        <main data-appearance="light" data-density={density}>
+          <Field.Root aria-label="Plain" data-testid="plain">
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+          <Field.Root aria-label="Password" data-testid="after">
+            <Field.TextInput type="password" value="" onChange={() => {}} />
+            <Button.Root variant="ghost" aria-label="Show password" pressed={false}>
+              {icon}
+            </Button.Root>
+          </Field.Root>
+          <Field.Root aria-label="Search" data-testid="before">
+            <Button.Root variant="ghost" aria-label="Clear search">
+              {icon}
+            </Button.Root>
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+        </main>,
+      );
+      const plain = screen.getByTestId('plain').getBoundingClientRect();
+      for (const [id, name] of [
+        ['after', 'Show password'],
+        ['before', 'Clear search'],
+      ] as const) {
+        const shell = screen.getByTestId(id).getBoundingClientRect();
+        const button = screen.getByRole('button', { name }).getBoundingClientRect();
+        const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.5;
+        expect(shell.height).toBe(plain.height);
+        // field.action.size is 1.5rem, and Button's own icon-only padding doesn't apply.
+        expect([button.width, button.height]).toEqual([size, size]);
+        expect(getComputedStyle(screen.getByRole('button', { name })).paddingInlineStart).toBe('0px');
+        expect(Math.abs(button.top + button.height / 2 - (shell.top + shell.height / 2))).toBeLessThan(0.5);
+      }
+    },
+  );
+});
+
+describe('An Icon and a button beside a Field.Select', () => {
+  it.each(['comfortable', 'compact', 'spacious'])('are centered on a %s select, which keeps its height', (density) => {
+    const select = (
+      <Field.Select value="a" onValueChange={() => {}}>
+        <option value="a">Apple</option>
+      </Field.Select>
+    );
+    render(
+      <main data-appearance="light" data-density={density}>
+        <Field.Root aria-label="Plain" data-testid="plain">
+          {select}
+        </Field.Root>
+        <Field.Root aria-label="Fruit" data-testid="fruit">
+          <Field.Icon data-testid="icon">
+            <svg viewBox="0 0 16 16" />
+          </Field.Icon>
+          {select}
+          <Button.Root variant="ghost" aria-label="Clear fruit">
+            <Button.Icon>
+              <svg viewBox="0 0 16 16" />
+            </Button.Icon>
+          </Button.Root>
+        </Field.Root>
+      </main>,
+    );
+    const shell = screen.getByTestId('fruit').getBoundingClientRect();
+    expect(shell.height).toBe(screen.getByTestId('plain').getBoundingClientRect().height);
+    const middle = shell.top + shell.height / 2;
+    for (const part of [screen.getByTestId('icon'), screen.getByRole('button', { name: 'Clear fruit' })]) {
+      const box = part.getBoundingClientRect();
+      expect(Math.abs(box.top + box.height / 2 - middle)).toBeLessThan(0.5);
+    }
+  });
+});
+
+describe('A button beside a Field.Textarea', () => {
+  it("keeps Button's own icon-only size, since the field has no single line", () => {
+    render(
+      <main data-appearance="light" data-density="comfortable">
+        <Field.Root aria-label="Note">
+          <Field.Textarea value="" onChange={() => {}} />
+          <Button.Root variant="ghost" aria-label="Clear note">
+            <Button.Icon>
+              <svg viewBox="0 0 16 16" />
+            </Button.Icon>
+          </Button.Root>
+        </Field.Root>
+        <Button.Root variant="ghost" aria-label="Alone">
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </main>,
+    );
+    const inField = screen.getByRole('button', { name: 'Clear note' });
+    const alone = screen.getByRole('button', { name: 'Alone' });
+    expect(getComputedStyle(inField).paddingInlineStart).toBe(getComputedStyle(alone).paddingInlineStart);
+    expect(inField.getBoundingClientRect().height).toBe(alone.getBoundingClientRect().height);
+  });
+});
+
+describe('A button beside a Field.ChipInput', () => {
+  function Chips({ chips, testId }: { chips: string[]; testId: string }) {
+    return (
+      <Field.Root aria-label={testId} data-testid={testId}>
+        <Field.ChipInput
+          chips={chips}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={() => undefined}
+        />
+        <Button.Root variant="ghost" aria-label={`Clear ${testId}`}>
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </Field.Root>
+    );
+  }
+
+  it.each(['comfortable', 'compact', 'spacious'])(
+    'keeps a %s field one line tall, and stays the same size on the first line when chips wrap',
+    (density) => {
+      render(
+        <main data-appearance="light" data-density={density} style={{ inlineSize: '16rem' }}>
+          <Field.Root aria-label="Plain" data-testid="plain">
+            <Field.ChipInput
+              chips={[]}
+              inputValue=""
+              onInputValueChange={() => undefined}
+              onCommit={() => undefined}
+              onChipRemove={() => undefined}
+            />
+          </Field.Root>
+          <Chips chips={[]} testId="empty" />
+          <Chips chips={['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot']} testId="wrapped" />
+        </main>,
+      );
+      const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.5;
+      expect(screen.getByTestId('empty').getBoundingClientRect().height).toBe(screen.getByTestId('plain').getBoundingClientRect().height);
+      const wrapped = screen.getByTestId('wrapped').getBoundingClientRect();
+      expect(wrapped.height).toBeGreaterThan(screen.getByTestId('plain').getBoundingClientRect().height);
+      for (const name of ['Clear empty', 'Clear wrapped']) {
+        const button = screen.getByRole('button', { name }).getBoundingClientRect();
+        expect([button.width, button.height]).toEqual([size, size]);
+      }
+      // On the first line, centered on the first chip.
+      const chip = screen.getByText('alpha').closest('span')!.getBoundingClientRect();
+      const button = screen.getByRole('button', { name: 'Clear wrapped' }).getBoundingClientRect();
+      expect(Math.abs(button.top + button.height / 2 - (chip.top + chip.height / 2))).toBeLessThan(0.5);
+    },
+  );
+});
+
+describe('A password shown and hidden in a browser', () => {
+  function Password() {
+    const [shown, setShown] = useState(false);
+    const [value, setValue] = useState('');
+    return (
+      <Field.Root aria-label="Password">
+        <Field.TextInput type={shown ? 'text' : 'password'} value={value} onValueChange={setValue} />
+        <Button.Root variant="ghost" aria-label="Show password" pressed={shown} onPressedChange={setShown}>
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+        <Button.Root
+          variant="ghost"
+          aria-label="Suggest a password"
+          onClick={() => {
+            setValue('generated');
+            setShown(true);
+          }}
+        >
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" />
+          </Button.Icon>
+        </Button.Root>
+      </Field.Root>
+    );
+  }
+
+  it('keeps focus and the caret in the input when the show button switches its type', async () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard('wrong{ArrowLeft}{ArrowLeft}{ArrowLeft}');
+    for (const typed of ['X', 'Y']) {
+      await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+      expect(document.activeElement).toBe(input);
+      await userEvent.keyboard(typed);
+    }
+    expect(input.type).toBe('password');
+    expect(input.value).toBe('wrXYong');
+  });
+
+  it('restores a mid-value caret after the password is shown', async () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard('secret');
+    input.setSelectionRange(3, 3);
+    await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    const afterCaretRestoreFrame = () => new Promise(requestAnimationFrame);
+    await afterCaretRestoreFrame();
+    expect(document.activeElement).toBe(input);
+    expect(input.selectionStart).toBe(3);
+    expect(input.selectionEnd).toBe(3);
+  });
+
+  it('keeps the caret a new value put, when the value and the type change together', async () => {
+    const { container } = render(<Password />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard('ab{ArrowLeft}');
+    await userEvent.click(screen.getByRole('button', { name: 'Suggest a password' }));
+    expect(document.activeElement).toBe(input);
+    await userEvent.keyboard('!');
+    expect(input.value).toBe('generated!');
   });
 });
 

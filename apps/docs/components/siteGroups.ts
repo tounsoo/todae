@@ -132,6 +132,7 @@ export const SITE_GROUPS = [
     label: 'Recipes',
     links: [
       ['/recipes/app-shell', 'App shell'],
+      ['/recipes/avatar-group', 'Avatar group'],
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
@@ -141,8 +142,10 @@ export const SITE_GROUPS = [
       ['/recipes/filter-bar', 'Filter bar'],
       ['/recipes/inline-edit', 'Inline edit'],
       ['/recipes/message-actions', 'Message actions'],
+      ['/recipes/message-parts', 'Message parts'],
       ['/recipes/reasoning', 'Reasoning'],
       ['/recipes/reorder', 'Reorder'],
+      ['/recipes/sign-in', 'Sign-in and sign-up'],
       ['/recipes/suggestions', 'Suggestions'],
       ['/recipes/tool-call', 'Tool call'],
       ['/recipes/wizard', 'Wizard'],

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar.js';
+import { resetWarnOnce } from './warnOnce.js';
 import { StrictMode } from 'react';
 
 afterEach(cleanup);
@@ -105,16 +106,31 @@ describe('Avatar', () => {
     expect(screen.getByText('AL')).toBeTruthy();
   });
 
-  it('calls the caller handlers too, and takes a size', () => {
+  it('calls the caller handlers too', () => {
     let loaded = 0;
     render(
-      <Avatar.Root size="lg" data-testid="a">
+      <Avatar.Root data-testid="a">
         <Avatar.Image src="ada.png" data-testid="img" onLoad={() => loaded++} />
       </Avatar.Root>,
     );
     fireEvent.load(screen.getByTestId('img'));
     expect(loaded).toBe(1);
-    expect(screen.getByTestId('a').getAttribute('data-size')).toBe('lg');
+  });
+
+  it('drops a leftover size instead of painting it on the element', () => {
+    resetWarnOnce();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // @ts-expect-error size is no longer a prop, and a JS caller can still pass one
+    const view = render(<Avatar.Root size="lg" data-testid="a" />);
+    const el = screen.getByTestId('a');
+    expect(el.hasAttribute('size')).toBe(false);
+    expect(el.hasAttribute('data-size')).toBe(false);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('no longer takes size'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('--todae-avatar-size'));
+    // @ts-expect-error size is no longer a prop
+    view.rerender(<Avatar.Root size="lg" data-testid="a" />);
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
   });
 
   describe('an image already complete when its effect runs', () => {
@@ -227,39 +243,5 @@ describe('Avatar', () => {
 
   it('throws outside Avatar.Root', () => {
     expect(() => render(<Avatar.Fallback>AL</Avatar.Fallback>)).toThrow(/inside Avatar.Root/);
-  });
-
-  describe('Group', () => {
-    it('is a group named by aria-label and renders data-size', () => {
-      render(
-        <Avatar.Group aria-label="Assignees" size="lg">
-          <Avatar.Root label="Ada Lovelace" />
-        </Avatar.Group>,
-      );
-      const group = screen.getByRole('group', { name: 'Assignees' });
-      expect(group.getAttribute('data-size')).toBe('lg');
-      expect(screen.getByRole('img', { name: 'Ada Lovelace' }).parentElement).toBe(group);
-    });
-
-    it('is md by default', () => {
-      render(<Avatar.Group aria-label="Assignees" />);
-      expect(screen.getByRole('group').getAttribute('data-size')).toBe('md');
-    });
-
-    it('gives its size to avatars with none of their own, and yields to their own', () => {
-      render(
-        <Avatar.Group aria-label="Assignees" size="sm">
-          <Avatar.Root data-testid="a" />
-          <Avatar.Root data-testid="b" size="lg" />
-        </Avatar.Group>,
-      );
-      expect(screen.getByTestId('a').getAttribute('data-size')).toBe('sm');
-      expect(screen.getByTestId('b').getAttribute('data-size')).toBe('lg');
-    });
-
-    it('leaves an avatar outside a group at md', () => {
-      render(<Avatar.Root data-testid="a" />);
-      expect(screen.getByTestId('a').getAttribute('data-size')).toBe('md');
-    });
   });
 });

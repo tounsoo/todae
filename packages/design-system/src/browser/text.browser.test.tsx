@@ -1,7 +1,8 @@
+import type { CSSProperties } from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Tabs, Text, Tree } from '../index.js';
+import { Tabs, Text, ThemeProvider, Tree } from '../index.js';
 
 afterEach(cleanup);
 
@@ -91,7 +92,7 @@ describe('Text.Root lines', () => {
           <Text.Root lines={1} as="span">
             {LONG}
           </Text.Root>
-          <Text.Root lines={1} as="span" size="s">
+          <Text.Root lines={1} as="span">
             {`Second ${LONG}`}
           </Text.Root>
         </a>
@@ -153,22 +154,39 @@ describe('Text.Root lines', () => {
   });
 
   it('measures again when a prop change cuts the text without changing its box', async () => {
-    const { rerender } = render(
-      <div style={{ inlineSize: '20rem' }}>
-        <Text.Root lines={1} size="s" data-testid="t">
-          Revenue report for the north
+    const phrase = 'Revenue report for the northern region, final copy';
+    const textWidth = (el: HTMLElement) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().width;
+    };
+    const wide = (weight?: 'bold') => (
+      <div style={{ inlineSize: '40rem' }}>
+        <Text.Root lines={1} weight={weight} data-testid="probe">
+          {phrase}
         </Text.Root>
-      </div>,
+      </div>
     );
+    const probe = render(wide());
+    const regularEl = screen.getByTestId('probe');
+    const regularWidth = textWidth(regularEl);
+    probe.rerender(wide('bold'));
+    const boldEl = screen.getByTestId('probe');
+    const boldWidth = textWidth(boldEl);
+    probe.unmount();
+    const room = Math.ceil((regularWidth + boldWidth) / 2);
+    const box = (weight?: 'bold') => (
+      <div style={{ inlineSize: room }}>
+        <Text.Root lines={1} weight={weight} data-testid="t">
+          {phrase}
+        </Text.Root>
+      </div>
+    );
+    const { rerender } = render(box());
     const el = screen.getByTestId('t');
+    expect(regularWidth).toBeLessThan(boldWidth);
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
-    rerender(
-      <div style={{ inlineSize: '20rem' }}>
-        <Text.Root lines={1} size="2xl" data-testid="t">
-          Revenue report for the north
-        </Text.Root>
-      </div>,
-    );
+    rerender(box('bold'));
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
@@ -397,5 +415,61 @@ describe('Text.Root lines', () => {
     await userEvent.hover(screen.getByTestId('cut'));
     await new Promise((resolve) => setTimeout(resolve, 600));
     expect(openTip()).toBeNull();
+  });
+});
+
+describe('Text body size', () => {
+  it('draws at the text.font.size a ThemeProvider overrides', () => {
+    render(
+      <ThemeProvider overrides={{ 'text.font.size': { value: 1.5, unit: 'rem' } }}>
+        <Text.Root data-testid="themed">Body</Text.Root>
+      </ThemeProvider>,
+    );
+    expect(getComputedStyle(screen.getByTestId('themed')).fontSize).toBe('24px');
+  });
+
+  it('draws at a length set on the element or an ancestor', () => {
+    render(
+      <>
+        <Text.Root data-testid="bare">Body</Text.Root>
+        <div style={{ '--todae-text-font-size': '1.25rem' } as CSSProperties}>
+          <Text.Root data-testid="around">Body</Text.Root>
+        </div>
+        <Text.Root data-testid="on" style={{ '--todae-text-font-size': '2rem' } as CSSProperties}>
+          Body
+        </Text.Root>
+      </>,
+    );
+    expect(getComputedStyle(screen.getByTestId('bare')).fontSize).toBe('16px');
+    expect(getComputedStyle(screen.getByTestId('around')).fontSize).toBe('20px');
+    expect(getComputedStyle(screen.getByTestId('on')).fontSize).toBe('32px');
+  });
+
+  it('draws each heading at text.hN.font.size, and a ThemeProvider can override one level', () => {
+    render(
+      <>
+        <Text.Root as="h1" data-testid="h1">A</Text.Root>
+        <Text.Root as="h2" data-testid="h2">A</Text.Root>
+        <Text.Root as="h3" data-testid="h3">A</Text.Root>
+        <Text.Root as="h4" data-testid="h4">A</Text.Root>
+        <Text.Root as="h5" data-testid="h5">A</Text.Root>
+        <Text.Root as="h6" data-testid="h6">A</Text.Root>
+        <Text.Root as="h2" variant="label" data-testid="label">A</Text.Root>
+        <ThemeProvider overrides={{ 'text.h2.font.size': { value: 2, unit: 'rem' } }}>
+          <Text.Root as="h2" data-testid="h2-set">A</Text.Root>
+          <Text.Root as="h1" data-testid="h1-same">A</Text.Root>
+        </ThemeProvider>
+      </>,
+    );
+    const px = (id: string) => getComputedStyle(screen.getByTestId(id)).fontSize;
+    expect(px('h1')).toBe('30px');
+    expect(px('h2')).toBe('24px');
+    expect(px('h3')).toBe('20px');
+    expect(px('h4')).toBe('16px');
+    expect(px('h5')).toBe('16px');
+    expect(px('h6')).toBe('14px');
+    expect(px('label')).toBe('12px');
+    expect(px('h2-set')).toBe('32px');
+    expect(px('h1-same')).toBe('30px');
   });
 });

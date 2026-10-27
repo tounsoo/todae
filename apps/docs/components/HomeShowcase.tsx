@@ -1,7 +1,9 @@
 'use client';
 
 import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@tounsoo/todae';
-import { useId, useState } from 'react';
+import { useId, useState, type CSSProperties } from 'react';
+
+const smallAvatar = { '--todae-avatar-size': '1.5rem' } as CSSProperties;
 
 const MEMBERS = [
   { id: 'ada', name: 'Ada Lovelace', initials: 'AL', team: 'Design', teamTone: 'category-7' },
@@ -16,15 +18,14 @@ export function HomeShowcase() {
   return (
     <Card.Root className="showcase-card">
       <Card.Header>
-        {/* On a phone the avatars and badge drop below the title. */}
         <Stack.Root className="showcase-title" direction="row" wrap align="center" justify="between">
-          <Text.Root as="span" size="l" weight="bold">
+          <Text.Root as="span" weight="bold">
             Workspace
           </Text.Root>
           <Stack.Root className="showcase-meta" direction="row" align="center">
-            <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members">
+            <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members" style={smallAvatar}>
               {MEMBERS.map((member) => (
-                <Avatar.Root key={member.id} size="sm" label={member.name} tone={member.tone}>
+                <Avatar.Root key={member.id} label={member.name} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
               ))}
@@ -52,8 +53,8 @@ export function HomeShowcase() {
           </Tabs.Panel>
           <Tabs.Panel value="members" className="showcase-panel">
             {MEMBERS.map((member) => (
-              <div key={member.id} className="showcase-member">
-                <Avatar.Root size="sm" tone={member.tone}>
+              <div key={member.id} className="showcase-member" style={smallAvatar}>
+                <Avatar.Root tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
                 <Text.Root as="span">{member.name}</Text.Root>

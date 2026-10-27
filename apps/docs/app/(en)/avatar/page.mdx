@@ -1,4 +1,5 @@
-import { AvatarBesideName, AvatarGroupExample, AvatarGroupSizes, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
+import { ShotNudge } from '../../../components/ShotNudge';
+import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
 
 # Avatar
 
@@ -35,11 +36,27 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 
 ## Sizes
 
-`size` is `sm`, `md` (the default) or `lg`, from the `avatar.size` tokens. The fallback text scales with the size through `avatar.font.scale`.
+Avatar has no `size` prop. Todae does not ship a size scale. An avatar draws at `avatar.size`, 2rem. To change one, set `--todae-avatar-size`, or `inline-size` and `block-size`, on the avatar or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. The fallback text scales with `--todae-avatar-size` through `avatar.font.scale`.
+
+```tsx
+<Avatar.Root className={styles.small} label="Ada Lovelace">
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+```
+
+```css
+.small {
+  --todae-avatar-size: 1.5rem;
+}
+```
+
+<ShotNudge px={0.1} />
 
 <Example>
   <AvatarSizes />
 </Example>
+
+To change every avatar in a product, set `avatar.size` in your theme or in `ThemeProvider` overrides.
 
 Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape through `avatar.radius`.
 
@@ -57,50 +74,21 @@ Initials are yours to choose: how to shorten a name depends on the language and 
   <AvatarTones />
 </Example>
 
-## Group
+## Stacked avatars
 
-`Avatar.Group` stacks several avatars, each over the one before, for assignees or the participants of a thread. It arranges `Avatar.Root`s the way [Button](/button)'s `Button.Group` arranges buttons. Each avatar gets a ring in the surface color, so their edges stay apart where they overlap, and later avatars sit on top.
-
-A "+3" is an avatar too, the last one, with a fallback of its own. The group has no `max` or count: slice your own array and show the rest as a plain `Avatar.Root`.
-
-```tsx
-<Avatar.Group aria-label="Assignees">
-  {assignees.slice(0, 4).map((person) => (
-    <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
-      <Avatar.Fallback>{person.initials}</Avatar.Fallback>
-    </Avatar.Root>
-  ))}
-  {assignees.length > 4 && (
-    <Avatar.Root label={`${assignees.length - 4} more`}>
-      <Avatar.Fallback>+{assignees.length - 4}</Avatar.Fallback>
-    </Avatar.Root>
-  )}
-</Avatar.Group>
-```
-
-<Example>
-  <AvatarGroupExample />
-</Example>
-
-`size` on the group is the size of every avatar inside that sets none of its own. An avatar's own `size` still wins.
-
-<Example>
-  <AvatarGroupSizes />
-</Example>
-
-The overlap is `avatar.group.overlap` times the group's size, as a negative inline-start margin, so it flips in right-to-left text. It is taken from the group, not from each avatar, and applies to the group's direct children, except a `[popover]` or `dialog` child. That keeps it working when a product wraps an avatar in a tooltip trigger or a link. An avatar given its own `size` is still pulled back by the group's size. The ring is `avatar.group.ring.width` in `avatar.group.ring.color`, which is the surface color; set it to the background the group sits on. In forced colors the ring is dropped and each avatar gets an inset border in the system text color instead. A hover list of everyone in the group is a [Tooltip](/tooltip) or [Popover](/popover) around the group, which you write.
+A few avatars stacked, such as assignees, are the [Avatar group](/recipes/avatar-group) recipe: a `div` with `role="group"`, some `Avatar.Root`s, and CSS you copy.
 
 ## Accessible composition
 
-**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name. Without `label`, the root is `aria-hidden`. The types leave out `role`, `aria-label` and `aria-labelledby` on the root and `alt` on the image, so a wrapper cannot add a second name by mistake. `Avatar.Group` is always `role="group"`; the avatars inside it with a `label` are images in that group, read one by one.
+**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name. Without `label`, the root is `aria-hidden`. The types leave out `role`, `aria-label` and `aria-labelledby` on the root and `alt` on the image, so a wrapper cannot add a second name by mistake.
 
-**You supply:** The choice between the two. A wrapper that shows a person should pass `label` when the avatar stands alone, such as in a row of participants, and leave it out when the name is written next to it. The name comes from your data; Todae does not read it from the fallback. Name each `Avatar.Group` with `aria-label`, such as "Assignees", and give a "+3" avatar its own `label`, such as "3 more", so the count is read too. When the names are written next to the group, leave the avatars unnamed.
+**You supply:** The choice between the two. A wrapper that shows a person should pass `label` when the avatar stands alone, such as in a row of participants, and leave it out when the name is written next to it. The name comes from your data; Todae does not read it from the fallback.
 
 **Watch for:** An avatar with no `label` as the only content of a button, a link or a [Menu](/menu) trigger: the avatar is hidden, so the control has no name. Give the control `aria-label`, or the avatar `label`. A presence dot or ring the wrapper adds shows status by color alone; put the status in text as well.
 
 ## When to use
 
-**When:** A person, team or workspace shown in a list, a header or next to a message, or a few of them stacked: assignees, participants.
+**When:** A person, team or workspace shown in a list, a header or next to a message.
 
 **When not:** A picture with content of its own → `<img>` with real `alt` text. A status or count → [Badge](/badge). A control that opens a profile menu → put the avatar inside a [Menu](/menu) trigger, which carries the name.
 
@@ -111,5 +99,3 @@ The overlap is `avatar.group.overlap` times the group's size, as a negative inli
 <PropsTable name="Avatar.Image" />
 
 <PropsTable name="Avatar.Fallback" />
-
-<PropsTable name="Avatar.Group" />

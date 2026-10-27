@@ -171,7 +171,7 @@ export function ComboboxAuto() {
   });
   return (
     <Stack.Root>
-      <Text.Root size="s" tone="muted">
+      <Text.Root tone="muted">
         presentation: {cb.presentation}
       </Text.Root>
       {cb.isSheet ? (
@@ -377,7 +377,7 @@ export function ComboboxCreateMulti() {
 export function PresentationBadge() {
   const sheet = useSheetPresentation();
   return (
-    <Text.Root size="s">
+    <Text.Root>
       {sheet.presentation} · isSheet={String(sheet.isSheet)}
     </Text.Root>
   );

@@ -61,6 +61,11 @@ describe('page metadata', () => {
     expect(pageSummary(tree)).toEqual({ title: 'useThing', description: 'useThing() reads the tokens with care.' });
   });
 
+  it('takes the description only from before the first section heading', () => {
+    expect(pageSummary(parse('# Page\n\n<Demo />\n\n## Usage\n\nSection text.\n'))).toEqual({ title: 'Page', description: '' });
+    expect(pageSummary(parse('# Page\n\n<Demo />\n\nIntro.\n\n## Usage\n\nSection text.\n'))).toEqual({ title: 'Page', description: 'Intro.' });
+  });
+
   it.each(LOCALES)('gives every %s page a title and description from its own text', (locale) => {
     const dir = join(APP, LOCALE_DIRS[locale]);
     const pages = loadPages(dir);

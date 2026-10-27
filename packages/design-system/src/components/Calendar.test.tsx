@@ -336,14 +336,26 @@ describe('Calendar', () => {
     expect(heading.textContent).not.toBe(Temporal.PlainDate.from('2026-10-13').toLocaleString('fa-IR', { month: 'long', year: 'numeric' }));
   });
 
-  it("starts on the locale's first day, read from either form of Intl.Locale's week info", () => {
-    // Node 22 has only the weekInfo accessor; browsers have getWeekInfo().
-    render(
+  it("starts a German week on Monday from getWeekInfo, and from the weekInfo accessor when that method is missing", () => {
+    const german = (
       <Calendar.Root aria-label="Start" locale="de-DE" defaultValue={date('2026-10-13')}>
         <Calendar.Grid />
-      </Calendar.Root>,
+      </Calendar.Root>
     );
+    const { unmount } = render(german);
     expect(within(grid()).getAllByRole('columnheader')[0]!.getAttribute('abbr')).toBe('Montag');
+    unmount();
+
+    const proto = Intl.Locale.prototype as Intl.Locale & { getWeekInfo?: () => { firstDay: number } };
+    const original = Object.getOwnPropertyDescriptor(proto, 'getWeekInfo');
+    Object.defineProperty(proto, 'getWeekInfo', { configurable: true, value: undefined });
+    try {
+      render(german);
+      expect(within(grid()).getAllByRole('columnheader')[0]!.getAttribute('abbr')).toBe('Montag');
+    } finally {
+      if (original) Object.defineProperty(proto, 'getWeekInfo', original);
+      else delete proto.getWeekInfo;
+    }
   });
 
   it('labels the grid by the header only while a header is rendered', () => {
