@@ -105,6 +105,10 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   // The armed item's element.
   const armedRef = useRef<HTMLElement | null>(null);
   const rtlRef = useRef(false);
+  // Whether the browser has sent drag or dragover since dragstart, which shows the drag is running.
+  const liveRef = useRef(false);
+  // The pointer type of the last press on a handle, so a touch tap's later mousedown doesn't arm.
+  const pressRef = useRef<string | null>(null);
   const dropRef = useRef<ReorderDrop | null>(null);
 
   const show = (next: ReorderDrop | null) => {
@@ -138,10 +142,12 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   useEffect(() => {
     if (armed === null) return;
     // A press that starts no drag ends with pointerup, or mouseup for one armed by mousedown. A drag
-    // that starts may send pointercancel, which leaves the item armed once dragstart has run. While a
-    // drag runs the page gets no pointer events (checked in Chromium, Firefox and WebKit), so a
-    // pointerup, a pointermove with no button down, or one with the dragged item gone from the page
-    // means the drag ended without a dragend this list saw, as a touch drag in Chromium can.
+    // that starts may send pointercancel, which leaves the item armed once dragstart has run. A
+    // running drag fires drag on its item and dragover where it is, every few hundred milliseconds or
+    // sooner (Playwright's Firefox sends only dragover). A drag that has had neither since dragstart
+    // isn't running, so a pointerup or a pointermove with no button down ends it, as a Chromium touch
+    // drag that starts with no drag session needs. A pointermove with the dragged item gone from the
+    // page ends any drag, since a removed item gets no dragend.
     const disarm = () => {
       if (sourceRef.current === null) {
         armedRef.current = null;
@@ -149,21 +155,29 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       }
     };
     const up = () => {
-      if (sourceRef.current) end();
-      else disarm();
+      if (sourceRef.current === null) disarm();
+      else if (!liveRef.current) end();
     };
     const lost = (event: globalThis.PointerEvent) => {
-      if (sourceRef.current && (event.buttons === 0 || !sourceRef.current.isConnected)) end();
+      const node = sourceRef.current;
+      if (node && (!node.isConnected || (!liveRef.current && event.buttons === 0))) end();
+    };
+    const live = () => {
+      if (sourceRef.current) liveRef.current = true;
     };
     window.addEventListener('pointerup', up);
     window.addEventListener('mouseup', disarm);
     window.addEventListener('pointercancel', disarm);
     window.addEventListener('pointermove', lost);
+    window.addEventListener('drag', live, true);
+    window.addEventListener('dragover', live, true);
     return () => {
       window.removeEventListener('pointerup', up);
       window.removeEventListener('mouseup', disarm);
       window.removeEventListener('pointercancel', disarm);
       window.removeEventListener('pointermove', lost);
+      window.removeEventListener('drag', live, true);
+      window.removeEventListener('dragover', live, true);
     };
   }, [armed, end]);
 
@@ -206,6 +220,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         // Firefox starts a drag only when it carries data.
         event.dataTransfer.setData(type, String(index));
         sourceRef.current = event.currentTarget;
+        liveRef.current = false;
         rtlRef.current = getComputedStyle(event.currentTarget).direction === 'rtl';
         setDragging(index);
       }),
@@ -250,11 +265,16 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
     return {
       ...user,
-      onPointerDown: composeHandlers(user.onPointerDown, arm),
+      onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
+        pressRef.current = event.pointerType;
+        arm(event);
+      }),
       // WebKit sends no pointerdown for the first press after a drop, only mousedown, so that press
-      // arms the item too. A pointerdown that is prevented sends no mousedown.
+      // arms the item too. A pointerdown that is prevented sends no mousedown, and the mousedown a
+      // touch tap sends after its pointerup arms nothing.
       onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
-        if (armed !== index) arm(event);
+        if (pressRef.current === 'touch') pressRef.current = null;
+        else arm(event);
       }),
     };
   };

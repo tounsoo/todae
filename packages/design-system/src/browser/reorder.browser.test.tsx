@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useState, type PointerEvent } from 'react';
+import { useState, type MouseEvent, type PointerEvent } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { useReorder } from '../index.js';
 
@@ -62,12 +62,12 @@ function Controlled({ items, onMove }: { items: string[]; onMove: (from: number,
   );
 }
 
-function Grip({ onPointerDown }: { onPointerDown: (event: PointerEvent<HTMLElement>) => void }) {
+function Grip({ onPointerDown, onMouseDown }: { onPointerDown?: (event: PointerEvent<HTMLElement>) => void; onMouseDown?: (event: MouseEvent<HTMLElement>) => void }) {
   const reorder = useReorder({ onMove: () => {} });
   return (
     <ul>
       <li data-testid="item" {...reorder.getItemProps(0)}>
-        <span data-testid="grip" {...reorder.getHandleProps(0, { onPointerDown })}>
+        <span data-testid="grip" {...reorder.getHandleProps(0, { onPointerDown, onMouseDown })}>
           ::
         </span>
       </li>
@@ -292,15 +292,16 @@ it('ends a drag whose item left the page without a render, on the next pointer m
   cleanup();
 
   render(<List />);
-  drag('B');
+  const live = drag('B');
+  fireDrag(item('B'), 'drag', { dataTransfer: live.dataTransfer });
   item('B').remove();
   act(() => {
-    window.dispatchEvent(new PointerEvent('pointermove'));
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1 }));
   });
   for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
 });
 
-it('ends a drag whose dragend never came, on a pointerup or a pointer move with no button down', () => {
+it('ends a drag that never ran, with no drag event since dragstart, on a pointerup or a pointer move with no button down', () => {
   render(<List />);
   drag('B');
   act(() => {
@@ -322,15 +323,73 @@ it('ends a drag whose dragend never came, on a pointerup or a pointer move with 
   expect(item('B')).not.toHaveAttribute('data-dragging');
 });
 
-it('arms an item on a mousedown with no pointerdown, as WebKit sends for the first press after a drop', () => {
+it('keeps a running drag through a pointerup, so a drop after it still moves the item', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const d = drag('B');
+  fireDrag(item('B'), 'drag', { dataTransfer: d.dataTransfer });
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0 }));
+    window.dispatchEvent(new PointerEvent('pointerup'));
+  });
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  d.over('D', 'end');
+  d.drop('D', 'end');
+  expect(onMove).toHaveBeenCalledWith(1, 3);
+  expect(order()).toEqual(['A', 'C', 'D', 'B']);
+  cleanup();
+
+  // A dragover alone shows the drag runs, as Playwright's Firefox sends no drag events.
   render(<List />);
+  const e = drag('B');
+  e.over('C', 'end');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup'));
+  });
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  e.end();
+});
+
+it('moves an item a mousedown with no pointerdown armed, as WebKit sends for the first press after a drop', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   expect(item('B')).toHaveAttribute('draggable', 'true');
+  const dataTransfer = new DataTransfer();
+  fireDrag(item('B'), 'dragstart', { dataTransfer });
+  const rect = item('D').getBoundingClientRect();
+  const at = { dataTransfer, clientX: rect.left + 5, clientY: rect.bottom - 2 };
+  fireDrag(item('D'), 'dragover', at);
+  fireDrag(item('D'), 'drop', at);
+  expect(onMove).toHaveBeenCalledWith(1, 3);
+  cleanup();
+
+  render(<List />);
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   fireEvent.mouseUp(window);
   expect(item('B')).not.toHaveAttribute('draggable');
-
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 2 });
   expect(item('B')).not.toHaveAttribute('draggable');
+});
+
+it('arms nothing on the mousedown a touch tap sends after its pointerup', () => {
+  render(<List />);
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'touch' });
+  fireEvent.pointerUp(window);
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).not.toHaveAttribute('draggable');
+});
+
+it('starts a new drag after one that ends with no drop, as Escape does', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const first = drag('A');
+  first.over('C', 'end');
+  first.end();
+  expect(onMove).not.toHaveBeenCalled();
+  for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
+  drag('A').drop('C', 'end');
+  expect(onMove).toHaveBeenCalledWith(0, 2);
 });
 
 it('runs the caller\'s own handlers with its own, and skips its own after one that prevents the default', () => {
@@ -344,6 +403,19 @@ it('runs the caller\'s own handlers with its own, and skips its own after one th
 
   render(<Grip onPointerDown={(event) => event.preventDefault()} />);
   fireEvent.pointerDown(screen.getByTestId('grip'), { button: 0 });
+  expect(screen.getByTestId('item')).not.toHaveAttribute('draggable');
+  cleanup();
+
+  const onMouseDown = vi.fn();
+  render(<Grip onMouseDown={onMouseDown} />);
+  fireEvent.mouseDown(screen.getByTestId('grip'), { button: 0 });
+  expect(onMouseDown).toHaveBeenCalled();
+  expect(screen.getByTestId('item')).toHaveAttribute('draggable', 'true');
+  fireEvent.mouseUp(window);
+  cleanup();
+
+  render(<Grip onMouseDown={(event) => event.preventDefault()} />);
+  fireEvent.mouseDown(screen.getByTestId('grip'), { button: 0 });
   expect(screen.getByTestId('item')).not.toHaveAttribute('draggable');
   cleanup();
 
