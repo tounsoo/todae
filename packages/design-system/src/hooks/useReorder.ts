@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type PointerEvent } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from 'react';
 import { composeHandlers } from '../components/props.js';
 
 export type ReorderDropPosition = 'before' | 'after';
@@ -45,10 +45,12 @@ export type UseReorderItemProps = {
 
 export type UseReorderHandleUserProps = {
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
+  onMouseDown?: (event: MouseEvent<HTMLElement>) => void;
 };
 
 export type UseReorderHandleProps = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  onMouseDown: (event: MouseEvent<HTMLElement>) => void;
 };
 
 export type UseReorderResult = {
@@ -135,25 +137,31 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
 
   useEffect(() => {
     if (armed === null) return;
-    // A press that starts no drag ends with pointerup. A drag that starts may send pointercancel,
-    // which leaves the item armed once dragstart has run. While a drag runs the page gets no pointer
-    // events, so a later pointermove with the dragged item gone from the page means the drag ended
-    // without a dragend this list saw. The demo's drag was checked by hand with this in Chromium, Firefox
-    // and WebKit.
+    // A press that starts no drag ends with pointerup, or mouseup for one armed by mousedown. A drag
+    // that starts may send pointercancel, which leaves the item armed once dragstart has run. While a
+    // drag runs the page gets no pointer events (checked in Chromium, Firefox and WebKit), so a
+    // pointerup, a pointermove with no button down, or one with the dragged item gone from the page
+    // means the drag ended without a dragend this list saw, as a touch drag in Chromium can.
     const disarm = () => {
       if (sourceRef.current === null) {
         armedRef.current = null;
         setArmed(null);
       }
     };
-    const lost = () => {
-      if (sourceRef.current && !sourceRef.current.isConnected) end();
+    const up = () => {
+      if (sourceRef.current) end();
+      else disarm();
     };
-    window.addEventListener('pointerup', disarm);
+    const lost = (event: globalThis.PointerEvent) => {
+      if (sourceRef.current && (event.buttons === 0 || !sourceRef.current.isConnected)) end();
+    };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('mouseup', disarm);
     window.addEventListener('pointercancel', disarm);
     window.addEventListener('pointermove', lost);
     return () => {
-      window.removeEventListener('pointerup', disarm);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('mouseup', disarm);
       window.removeEventListener('pointercancel', disarm);
       window.removeEventListener('pointermove', lost);
     };
@@ -232,15 +240,21 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
 
   const getHandleProps = <P extends UseReorderHandleUserProps>(index: number, props?: P) => {
     const user = (props ?? {}) as P;
+    const arm = (event: MouseEvent<HTMLElement>) => {
+      if (disabled || event.button !== 0) return;
+      // A drag whose dragend never reached the list is over by now.
+      if (sourceRef.current !== null) end();
+      const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+      armedRef.current = item && indexOf(item) === index ? item : null;
+      setArmed(index);
+    };
     return {
       ...user,
-      onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
-        if (disabled || event.button !== 0) return;
-        // A drag whose dragend never reached the list is over by now.
-        if (sourceRef.current !== null) end();
-        const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
-        armedRef.current = item && indexOf(item) === index ? item : null;
-        setArmed(index);
+      onPointerDown: composeHandlers(user.onPointerDown, arm),
+      // WebKit sends no pointerdown for the first press after a drop, only mousedown, so that press
+      // arms the item too. A pointerdown that is prevented sends no mousedown.
+      onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
+        if (armed !== index) arm(event);
       }),
     };
   };

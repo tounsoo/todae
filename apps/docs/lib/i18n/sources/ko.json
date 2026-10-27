@@ -767,7 +767,7 @@
     "(top)": "d54efa3b4b16",
     "# Reorder": "d1929d1c6807",
     "## The move menu": "984f7932fd1c",
-    "## Dragging": "d93c4f0447e5",
+    "## Dragging": "6666073fcea9",
     "## Saving the order": "ccbed730f477",
     "## Accessible composition": "87e67664f2d5",
     "## When to use": "38f06c41410c",
@@ -1149,8 +1149,8 @@
   },
   "utilities/use-reorder": {
     "(top)": "d54efa3b4b16",
-    "# useReorder": "93c2a45ef23a",
-    "## Accessible composition": "21f593b786f9",
+    "# useReorder": "ca19615f418d",
+    "## Accessible composition": "dd64568f8413",
     "## When to use": "096cd31b6ac9",
     "## Props": "d782464e8b92",
     "(section order)": "57bf99726801"

@@ -300,6 +300,39 @@ it('ends a drag whose item left the page without a render, on the next pointer m
   for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
 });
 
+it('ends a drag whose dragend never came, on a pointerup or a pointer move with no button down', () => {
+  render(<List />);
+  drag('B');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1 }));
+  });
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup'));
+  });
+  expect(item('B')).not.toHaveAttribute('data-dragging');
+  expect(item('B')).not.toHaveAttribute('draggable');
+  cleanup();
+
+  render(<List />);
+  drag('B');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0 }));
+  });
+  expect(item('B')).not.toHaveAttribute('data-dragging');
+});
+
+it('arms an item on a mousedown with no pointerdown, as WebKit sends for the first press after a drop', () => {
+  render(<List />);
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).toHaveAttribute('draggable', 'true');
+  fireEvent.mouseUp(window);
+  expect(item('B')).not.toHaveAttribute('draggable');
+
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 2 });
+  expect(item('B')).not.toHaveAttribute('draggable');
+});
+
 it('runs the caller\'s own handlers with its own, and skips its own after one that prevents the default', () => {
   const onPointerDown = vi.fn();
   render(<Grip onPointerDown={onPointerDown} />);
