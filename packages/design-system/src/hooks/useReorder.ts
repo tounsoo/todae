@@ -79,6 +79,8 @@ function reorderTarget(from: number, index: number, position: ReorderDropPositio
 const INDEX = 'data-todae-reorder-index';
 // How long a drag may go without a drag or dragover after a release before it counts as never run.
 const SETTLE_MS = 500;
+// How soon after a mouse or pen pointerdown its mousedown comes, as part of the same press.
+const SAME_PRESS_MS = 50;
 // How long after a touch lifts its compat mousedown can come.
 const TAP_MOUSEDOWN_MS = 1000;
 
@@ -111,14 +113,19 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const rtlRef = useRef(false);
   // Whether the browser has sent drag or dragover since dragstart, which shows the drag is running.
   const liveRef = useRef(false);
-  // The pointer type of the press that armed the item.
-  const pressRef = useRef<'mouse' | 'pen' | 'touch' | ''>('');
+  // Whether a mouse armed the item.
+  const mousePressRef = useRef(false);
   // When the last touch on an armed item lifted, so the mousedown a tap sends after it doesn't arm.
   const touchUpRef = useRef(-Infinity);
-  // Whether a pointerdown armed this press, so its mousedown leaves the press's pointer type alone.
-  const downRef = useRef(false);
+  // When a mouse or pen pointerdown last armed an item, so the mousedown that follows it at once
+  // leaves the press's pointer type alone.
+  const downAtRef = useRef(-Infinity);
   // The check that ends a drag that never ran, and the drag it is for.
-  const settleRef = useRef<{ timer: ReturnType<typeof setTimeout>; node: HTMLElement; ran: boolean } | null>(null);
+  const settleRef = useRef<{ timer: ReturnType<typeof setTimeout>; node: HTMLElement; force: boolean } | null>(null);
+  const clearSettle = () => {
+    if (settleRef.current) clearTimeout(settleRef.current.timer);
+    settleRef.current = null;
+  };
   const dropRef = useRef<ReorderDrop | null>(null);
 
   const show = (next: ReorderDrop | null) => {
@@ -127,8 +134,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   };
 
   const end = useCallback(() => {
-    if (settleRef.current) clearTimeout(settleRef.current.timer);
-    settleRef.current = null;
+    clearSettle();
     sourceRef.current = null;
     armedRef.current = null;
     dropRef.current = null;
@@ -139,7 +145,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
 
   useEffect(
     () => () => {
-      if (settleRef.current) clearTimeout(settleRef.current.timer);
+      clearSettle();
     },
     [],
   );
@@ -172,21 +178,24 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     // ends any drag, since a removed item gets no dragend.
     // The check outlives this effect, which runs again when the armed index changes, and dragstart
     // and end() clear it, so it only ever ends the drag it was set for.
-    // `ran` ends the drag even if it ran.
-    const settle = (ran = false) => {
+    // `force` ends the drag even if it ran. A check already set for this drag keeps its time, unless
+    // this one forces: then the drag gets its own half second for a drop or dragend.
+    const settle = (force = false) => {
       const node = sourceRef.current;
       if (node === null) return;
       const pending = settleRef.current;
-      if (pending?.node === node) {
-        pending.ran ||= ran;
-        return;
-      }
-      const timer = setTimeout(() => {
-        const check = settleRef.current;
-        settleRef.current = null;
-        if (sourceRef.current === node && (check?.ran || !liveRef.current)) end();
-      }, SETTLE_MS);
-      settleRef.current = { timer, node, ran };
+      if (pending?.node === node && (pending.force || !force)) return;
+      clearSettle();
+      const entry = {
+        node,
+        force,
+        timer: setTimeout(() => {
+          if (settleRef.current !== entry) return;
+          settleRef.current = null;
+          if (sourceRef.current === node && (force || !liveRef.current)) end();
+        }, SETTLE_MS),
+      };
+      settleRef.current = entry;
     };
     const disarm = () => {
       if (sourceRef.current === null) {
@@ -203,24 +212,23 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       const node = sourceRef.current;
       if (node === null) return;
       if (!node.isConnected) end();
-      else if (event.buttons === 0) settle(pressRef.current === 'mouse');
+      else if (event.buttons === 0) settle(mousePressRef.current);
     };
+    // A drag event after a forced check shows the drag still runs, so it drops that check.
     const live = () => {
-      if (sourceRef.current) liveRef.current = true;
+      if (sourceRef.current === null) return;
+      liveRef.current = true;
+      if (settleRef.current?.force) clearSettle();
     };
     window.addEventListener('pointerup', up);
-    const mouseUp = () => {
-      downRef.current = false;
-      disarm();
-    };
-    window.addEventListener('mouseup', mouseUp);
+    window.addEventListener('mouseup', disarm);
     window.addEventListener('pointercancel', disarm);
     window.addEventListener('pointermove', lost);
     window.addEventListener('drag', live, true);
     window.addEventListener('dragover', live, true);
     return () => {
       window.removeEventListener('pointerup', up);
-      window.removeEventListener('mouseup', mouseUp);
+      window.removeEventListener('mouseup', disarm);
       window.removeEventListener('pointercancel', disarm);
       window.removeEventListener('pointermove', lost);
       window.removeEventListener('drag', live, true);
@@ -268,8 +276,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         event.dataTransfer.setData(type, String(index));
         sourceRef.current = event.currentTarget;
         liveRef.current = false;
-        if (settleRef.current) clearTimeout(settleRef.current.timer);
-        settleRef.current = null;
+        clearSettle();
         rtlRef.current = getComputedStyle(event.currentTarget).direction === 'rtl';
         setDragging(index);
       }),
@@ -306,7 +313,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     const user = (props ?? {}) as P;
     const arm = (event: MouseEvent<HTMLElement>, pointerType: string) => {
       if (disabled || event.button !== 0) return false;
-      pressRef.current = pointerType === 'mouse' || pointerType === 'pen' || pointerType === 'touch' ? pointerType : '';
+      mousePressRef.current = pointerType === 'mouse';
       // A drag whose dragend never reached the list is over by now.
       if (sourceRef.current !== null) end();
       const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
@@ -318,15 +325,15 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       ...user,
       onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
         // A touch sends its mousedown after pointerup, which the lift's time below tells apart.
-        downRef.current = arm(event, event.pointerType) && event.pointerType !== 'touch';
+        if (arm(event, event.pointerType) && event.pointerType !== 'touch') downAtRef.current = event.timeStamp;
       }),
       // WebKit sends no pointerdown for the first press after a drop, only mousedown, so that press
       // arms the item too. The mousedown of a press a pointerdown armed changes nothing, a pointerdown
       // that is prevented sends no mousedown, and the mousedown a touch tap sends after its pointerup,
       // within a second of the lift, arms nothing.
       onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
-        if (downRef.current) downRef.current = false;
-        else if (event.timeStamp - touchUpRef.current >= TAP_MOUSEDOWN_MS) arm(event, 'mouse');
+        if (event.timeStamp - downAtRef.current < SAME_PRESS_MS) return;
+        if (event.timeStamp - touchUpRef.current >= TAP_MOUSEDOWN_MS) arm(event, 'mouse');
       }),
     };
   };

@@ -126,6 +126,8 @@ function fireDrag(node: Element, type: string, init: DragEventInit) {
 function drag(handle: string, pointerType = 'mouse') {
   const dataTransfer = new DataTransfer();
   fireEvent.pointerDown(screen.getByTestId(`handle-${handle}`), { button: 0, pointerType });
+  // A mouse or pen sends its mousedown right after pointerdown; a touch sends one only after a tap.
+  if (pointerType !== 'touch') fireEvent.mouseDown(screen.getByTestId(`handle-${handle}`), { button: 0 });
   const source = screen.getByTestId(`handle-${handle}`).closest('li')!;
   fireDrag(source, 'dragstart', { dataTransfer });
   const at = (name: string, side: 'start' | 'end', axis: 'x' | 'y' = 'y') => {
@@ -387,10 +389,22 @@ it('ends a mouse drag that ran half a second after a pointer move with no button
   expect(onMove).toHaveBeenCalledWith(1, 3);
   cleanup();
 
+  // A dragover after the move shows the drag still runs.
+  render(<List />);
+  const running = drag('B');
+  running.over('C', 'end');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
+  });
+  running.over('D', 'end');
+  await wait(600);
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  running.end();
+  cleanup();
+
   // A pen press sends its mousedown right after its pointerdown, which keeps the press a pen's.
   render(<List />);
   const pen = drag('B', 'pen');
-  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   pen.over('C', 'end');
   act(() => {
     window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'pen' }));
@@ -400,6 +414,29 @@ it('ends a mouse drag that ran half a second after a pointer move with no button
   pen.end();
 });
 
+it('still ends a drag that never ran when the list changes after the lift', async () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<Controlled items={['A', 'B', 'C']} onMove={onMove} />);
+  drag('B', 'touch');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
+  });
+  rerender(<Controlled items={['B', 'A', 'C']} onMove={onMove} />);
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  await wait(600);
+  expect(item('B')).not.toHaveAttribute('data-dragging');
+});
+
+it('arms on a later mousedown after a pen press that ended in pointercancel', async () => {
+  render(<List />);
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'pen' });
+  fireEvent.pointerCancel(window, { pointerType: 'pen' });
+  expect(item('B')).not.toHaveAttribute('draggable');
+  await wait(100);
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).toHaveAttribute('draggable', 'true');
+});
+
 it('leaves a new drag alone when the check for an earlier one that never ran comes due', async () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
@@ -407,7 +444,8 @@ it('leaves a new drag alone when the check for an earlier one that never ran com
   act(() => {
     window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
   });
-  first.end();
+  // No dragend, as for a drag that never ran: the next press on the handle ends it.
+  void first;
   const second = drag('B');
   await wait(600);
   expect(item('B')).toHaveAttribute('data-dragging', '');
