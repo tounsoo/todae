@@ -501,7 +501,7 @@ it('lets a mouse press end a touch drag whose pointerup never came, and leaves t
   expect(item('A')).not.toHaveAttribute('data-dragging');
   expect(item('C')).not.toHaveAttribute('data-drop');
   expect(item('D')).toHaveAttribute('draggable', 'true');
-  // The lost pointerup, if it comes late, changes nothing, and a finger drags again.
+  // The lost pointerup, if it comes late, starts and drops nothing, and a finger drags again.
   act(() => {
     window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, pointerType: 'touch' }));
   });
