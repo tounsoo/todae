@@ -123,7 +123,9 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   // A finger or pen on a handle: its pointer and where it went down. A touch drag runs on pointer
   // events, so it never arms the item for the browser's drag.
   const touchRef = useRef<{ id: number; x: number; y: number } | null>(null);
-  const [touching, setTouching] = useState(false);
+  // The same pointer as state, so a new touch drag that replaces a stale one in one render still
+  // listens for its own pointer.
+  const [touch, setTouch] = useState<{ id: number; x: number; y: number } | null>(null);
   // Whether the last press on a handle was a finger or pen, whose mousedown, sent after the tap, arms nothing.
   const fingerRef = useRef(false);
   // Read by the touch drag's window listeners.
@@ -143,7 +145,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     setDragging(null);
     setArmed(null);
     setDrop(null);
-    setTouching(false);
+    setTouch(null);
   }, []);
 
   // Items that move while armed or dragged keep their state: armed and dragging follow the element,
@@ -176,16 +178,17 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     const lost = () => {
       if (sourceRef.current && !sourceRef.current.isConnected) end();
     };
-    window.addEventListener('pointerup', disarm);
-    window.addEventListener('pointercancel', disarm);
+    // Capture, as in the touch drag, so a product's handler that stops these can't leave it armed.
+    window.addEventListener('pointerup', disarm, true);
+    window.addEventListener('pointercancel', disarm, true);
     // WebKit's press after a drag, which arms on mousedown, also ends with mouseup.
-    window.addEventListener('mouseup', disarm);
-    window.addEventListener('pointermove', lost);
+    window.addEventListener('mouseup', disarm, true);
+    window.addEventListener('pointermove', lost, true);
     return () => {
-      window.removeEventListener('pointerup', disarm);
-      window.removeEventListener('pointercancel', disarm);
-      window.removeEventListener('mouseup', disarm);
-      window.removeEventListener('pointermove', lost);
+      window.removeEventListener('pointerup', disarm, true);
+      window.removeEventListener('pointercancel', disarm, true);
+      window.removeEventListener('mouseup', disarm, true);
+      window.removeEventListener('pointermove', lost, true);
     };
   }, [armed, end]);
 
@@ -193,8 +196,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   // and drops where the finger lifts. A pointercancel, such as the browser taking the touch to scroll
   // a handle without `touch-action: none`, ends it without a move.
   useEffect(() => {
-    if (!touching) return;
-    const pointer = touchRef.current;
+    const pointer = touch;
     if (pointer === null) return;
     /** Where a drop at x, y lands, or null where it would not move the item. */
     const target = (x: number, y: number): ReorderDrop | null => {
@@ -243,11 +245,11 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', cancel, true);
     };
-  }, [touching, end]);
+  }, [touch, end]);
 
   // The browser's drag takes Escape itself and ends with dragend. A touch drag gets it here, before a
   // dialog around the list, as does a modal's close request, such as the Android back gesture.
-  useEscapeKey(touching && dragging !== null, true, end, sourceRef);
+  useEscapeKey(touch !== null && dragging !== null, true, end, sourceRef);
 
   const positionOf = (event: DragEvent<HTMLElement>): ReorderDropPosition =>
     sideOf(event.currentTarget, event.clientX, event.clientY, orientation, rtlRef.current);
@@ -324,10 +326,11 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
         if (disabled || event.button !== 0) return;
         const finger = event.pointerType === 'touch' || event.pointerType === 'pen';
-        // Another finger during a touch drag starts nothing. A mouse press means the touch drag's
-        // pointerup never came, so that drag is over.
+        // Another finger during a touch drag starts nothing. A primary press, a mouse's, a pen's or a
+        // first finger's, means the touch drag's pointerup never came, so that drag is over. A pen and
+        // a finger are each primary for their own type, so a palm on a handle ends a pen's drag.
         if (touchRef.current !== null) {
-          if (finger) return;
+          if (finger && !event.isPrimary) return;
           end();
         }
         fingerRef.current = finger;
@@ -338,8 +341,10 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         if (fingerRef.current) {
           setArmed(null);
           if (armedRef.current === null) return;
+          // No mouse events follow, so a pen dragging across the rows doesn't select their text.
+          event.preventDefault();
           touchRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-          setTouching(true);
+          setTouch(touchRef.current);
           return;
         }
         setArmed(index);

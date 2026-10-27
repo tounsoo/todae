@@ -371,6 +371,8 @@ it.runIf(server.browser === 'chromium')('leaves the order alone when Chromium ca
   });
   await s.send('Input.setInterceptDrags', { enabled: true });
   s.on('Input.dragIntercepted', listener);
+  // Awaited below; a failure before then must not leave the timeout's rejection unhandled.
+  intercepted.catch(() => {});
   try {
     const from = centre(screen.getByTestId('handle-A'));
     const to = centre(item('C'));
@@ -395,11 +397,11 @@ it.runIf(server.browser === 'chromium')('leaves the order alone when Chromium ca
 });
 
 // A finger on a handle, stepped with pointer events as a touch screen sends them.
-function touch(handle: string, pointerId = 7, pointerType = 'touch') {
+function touch(handle: string, pointerId = 7, pointerType = 'touch', isPrimary = true) {
   const grip = screen.getByTestId(`handle-${handle}`);
   const fire = (target: EventTarget, type: string, x: number, y: number) =>
     act(() => {
-      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId, pointerType, isPrimary: true, button: type === 'pointermove' ? -1 : 0, clientX: x, clientY: y }));
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId, pointerType, isPrimary, button: type === 'pointermove' ? -1 : 0, clientX: x, clientY: y }));
     });
   const point = (name: string, side: 'start' | 'end') => {
     const rect = item(name).getBoundingClientRect();
@@ -425,6 +427,9 @@ it('arms an item on a mousedown with no pointerdown, as WebKit sends the press a
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   expect(item('B')).toHaveAttribute('draggable', 'true');
   fireEvent.mouseUp(window);
+  expect(item('B')).not.toHaveAttribute('draggable');
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  fireEvent.pointerUp(window);
   expect(item('B')).not.toHaveAttribute('draggable');
 
   // A tap sends its mousedown after pointerup.
@@ -454,6 +459,16 @@ it('moves an item a finger drags by its handle, without the browser\'s drag', ()
 it('drags a pen as it drags a finger', () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
+  const grip = screen.getByTestId('handle-A');
+  const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 3, pointerType: 'pen', isPrimary: true, button: 0 });
+  act(() => {
+    grip.dispatchEvent(down);
+  });
+  // No mouse events follow, so the drag selects no text.
+  expect(down.defaultPrevented).toBe(true);
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 3, pointerType: 'pen' }));
+  });
   const t = touch('A', 3, 'pen');
   expect(item('A')).not.toHaveAttribute('draggable');
   t.move('C', 'end');
@@ -486,6 +501,28 @@ it('lets a mouse press end a touch drag whose pointerup never came, and leaves t
   expect(item('A')).not.toHaveAttribute('data-dragging');
   expect(item('C')).not.toHaveAttribute('data-drop');
   expect(item('D')).toHaveAttribute('draggable', 'true');
+  // The lost pointerup, if it comes late, changes nothing, and a finger drags again.
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, pointerType: 'touch' }));
+  });
+  fireEvent.pointerUp(window);
+  const again = touch('B', 8);
+  again.move('D', 'end');
+  expect(item('D')).toHaveAttribute('data-drop', 'after');
+  again.up('D', 'end');
+  expect(order()).toEqual(['A', 'C', 'D', 'B']);
+});
+
+it('lets a new first finger end a touch drag whose pointerup never came', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  touch('A').move('C', 'end');
+  const t = touch('B', 8);
+  expect(item('A')).not.toHaveAttribute('data-dragging');
+  t.move('D', 'end');
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  t.up('D', 'end');
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(1, 3);
 });
 
 it('drops nothing for a tap, a lift outside the list, or a touch the browser cancels', () => {
@@ -517,7 +554,7 @@ it('ignores another finger, and refuses a touch drop once disabled', () => {
   const t = touch('A');
   t.move('C', 'end');
   // A second finger on another handle starts nothing.
-  touch('D', 9).up('B', 'start');
+  touch('D', 9, 'touch', false).up('B', 'start');
   expect(onMove).not.toHaveBeenCalled();
   expect(item('A')).toHaveAttribute('data-dragging', '');
   rerender(<List onMove={onMove} disabled />);

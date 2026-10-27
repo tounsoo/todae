@@ -36,7 +36,7 @@ Escape cancels a drag and leaves the order as it was. During a mouse drag the br
 
 ## Touch
 
-Browsers on touch screens differ: some start the browser's drag after a long press and some never do. So a finger or a pen on a handle drags with pointer events instead, the same way everywhere: the item drags once the finger moves, `drop` follows the item under the finger, and lifting the finger drops it. A tap drags nothing. The handle needs `touch-action: none`: without it the browser takes the touch to scroll the page, which cancels the drag. The page doesn't scroll during a touch drag, so in a list taller than the screen the menu is the way to move an item far.
+Browsers on touch screens differ: some start the browser's drag after a long press and some never do. So a finger or a pen on a handle drags with pointer events instead, the same way everywhere: the item drags once the finger or pen moves, `drop` follows the item under it, and lifting it drops the item. A tap drags nothing, and a pen drag selects no text. The handle needs `touch-action: none`: without it the browser takes a finger or a pen to scroll the page, which cancels the drag. The page doesn't scroll during a touch drag, so in a list taller than the screen the menu is the way to move an item far.
 
 ## Accessible composition
 
