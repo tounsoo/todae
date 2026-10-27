@@ -357,14 +357,62 @@ it('keeps a drag that runs through a pointerup, so a drop after it still moves t
   e.end();
 });
 
-it('ends a mouse drag that ran on a pointer move with no button down, as its button is up', () => {
-  render(<List />);
+it('ends a mouse drag that ran half a second after a pointer move with no button down, unless it drops, but not a pen drag', async () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
   const d = drag('B');
   d.over('C', 'end');
   act(() => {
     window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
   });
+  await wait(300);
+  for (let i = 0; i < 5; i++) {
+    act(() => {
+      window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
+    });
+  }
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  // Further moves don't push the end back.
+  await wait(300);
   expect(item('B')).not.toHaveAttribute('data-dragging');
+  cleanup();
+
+  render(<List onMove={onMove} />);
+  const dropped = drag('B');
+  dropped.over('D', 'end');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
+  });
+  dropped.drop('D', 'end');
+  expect(onMove).toHaveBeenCalledWith(1, 3);
+  cleanup();
+
+  // A pen press sends its mousedown right after its pointerdown, which keeps the press a pen's.
+  render(<List />);
+  const pen = drag('B', 'pen');
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  pen.over('C', 'end');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'pen' }));
+  });
+  await wait(600);
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  pen.end();
+});
+
+it('leaves a new drag alone when the check for an earlier one that never ran comes due', async () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const first = drag('B', 'touch');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
+  });
+  first.end();
+  const second = drag('B');
+  await wait(600);
+  expect(item('B')).toHaveAttribute('data-dragging', '');
+  second.drop('D', 'end');
+  expect(onMove).toHaveBeenCalledWith(1, 3);
 });
 
 it('moves an item a mousedown with no pointerdown armed, as WebKit sends for the first press after a drop', () => {
@@ -399,9 +447,11 @@ it('arms nothing on the mousedown a touch tap sends after its pointerup, and arm
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   expect(item('B')).toHaveAttribute('draggable', 'true');
   fireEvent.mouseUp(window);
+  cleanup();
 
-  // A touch press that ends in pointercancel, such as a scroll or a drag, sends no mousedown, so
-  // the next mousedown arms at once.
+  // A touch press that ends in pointercancel, such as a scroll or a drag, sends no mousedown, and
+  // the next mousedown arms.
+  render(<List />);
   fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'touch' });
   fireEvent.pointerCancel(window, { pointerType: 'touch' });
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
