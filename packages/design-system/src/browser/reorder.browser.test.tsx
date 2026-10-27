@@ -333,6 +333,8 @@ it('leaves the order alone when the browser cancels a drag, as it does on Escape
   // then dragend, and no drop.
   const rect = item('C').getBoundingClientRect();
   fireDrag(item('C'), 'dragleave', { dataTransfer: d.dataTransfer, clientX: rect.left + 5, clientY: rect.bottom - 2 });
+  // The pointer is still on C, so the line stays until dragend.
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
   d.end();
   expect(onMove).not.toHaveBeenCalled();
   expect(item('C')).not.toHaveAttribute('data-drop');
@@ -358,17 +360,18 @@ const centre = (node: Element, side: 'start' | 'end' = 'end') => {
   return onPage(rect.left + rect.width / 2, side === 'start' ? rect.top + 4 : rect.bottom - 4);
 };
 
-it.runIf(server.browser === 'chromium')('leaves the order alone when Chromium cancels a real drag, as Escape does', async () => {
+it.runIf(server.browser === 'chromium')('leaves the order alone when Chromium cancels a real drag', async () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
   const s = session();
+  let listener: (params: { data: object }) => void = () => {};
+  const intercepted = new Promise<{ data: object }>((resolve, reject) => {
+    listener = resolve;
+    setTimeout(() => reject(new Error('Chromium intercepted no drag')), 2000);
+  });
   await s.send('Input.setInterceptDrags', { enabled: true });
+  s.on('Input.dragIntercepted', listener);
   try {
-    let listener: (params: { data: object }) => void = () => {};
-    const intercepted = new Promise<{ data: object }>((resolve) => {
-      listener = resolve;
-      s.on('Input.dragIntercepted', listener);
-    });
     const from = centre(screen.getByTestId('handle-A'));
     const to = centre(item('C'));
     await s.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...from, button: 'left', buttons: 1, clickCount: 1 });
@@ -380,23 +383,23 @@ it.runIf(server.browser === 'chromium')('leaves the order alone when Chromium ca
     await expect.poll(() => item('C').getAttribute('data-drop')).toBe('after');
     // What the browser does on Escape during a drag.
     await s.send('Input.dispatchDragEvent', { type: 'dragCancel', ...to, data });
-    await s.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...to, button: 'left', buttons: 0, clickCount: 1 });
     await expect.poll(() => item('A').hasAttribute('data-dragging')).toBe(false);
     expect(item('C')).not.toHaveAttribute('data-drop');
     expect(onMove).not.toHaveBeenCalled();
     expect(order()).toEqual(['A', 'B', 'C', 'D']);
-    s.off('Input.dragIntercepted', listener);
   } finally {
+    s.off('Input.dragIntercepted', listener);
+    await s.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 0, y: 0, button: 'left', buttons: 0, clickCount: 1 });
     await s.send('Input.setInterceptDrags', { enabled: false });
   }
 });
 
 // A finger on a handle, stepped with pointer events as a touch screen sends them.
-function touch(handle: string, pointerId = 7) {
+function touch(handle: string, pointerId = 7, pointerType = 'touch') {
   const grip = screen.getByTestId(`handle-${handle}`);
   const fire = (target: EventTarget, type: string, x: number, y: number) =>
     act(() => {
-      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId, pointerType: 'touch', isPrimary: true, button: type === 'pointermove' ? -1 : 0, clientX: x, clientY: y }));
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId, pointerType, isPrimary: true, button: type === 'pointermove' ? -1 : 0, clientX: x, clientY: y }));
     });
   const point = (name: string, side: 'start' | 'end') => {
     const rect = item(name).getBoundingClientRect();
@@ -421,7 +424,7 @@ it('arms an item on a mousedown with no pointerdown, as WebKit sends the press a
   render(<List />);
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   expect(item('B')).toHaveAttribute('draggable', 'true');
-  fireEvent.pointerUp(window);
+  fireEvent.mouseUp(window);
   expect(item('B')).not.toHaveAttribute('draggable');
 
   // A tap sends its mousedown after pointerup.
@@ -446,6 +449,43 @@ it('moves an item a finger drags by its handle, without the browser\'s drag', ()
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
   expect(item('A')).not.toHaveAttribute('data-dragging');
+});
+
+it('drags a pen as it drags a finger', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const t = touch('A', 3, 'pen');
+  expect(item('A')).not.toHaveAttribute('draggable');
+  t.move('C', 'end');
+  expect(item('C')).toHaveAttribute('data-drop', 'after');
+  t.up('C', 'end');
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
+});
+
+it('starts no touch drag when disabled before the finger moves', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<List onMove={onMove} />);
+  const t = touch('A');
+  rerender(<List onMove={onMove} disabled />);
+  t.move('C', 'end');
+  expect(item('A')).not.toHaveAttribute('data-dragging');
+  t.up('C', 'end');
+  expect(onMove).not.toHaveBeenCalled();
+});
+
+it('lets a mouse press end a touch drag whose pointerup never came, and leaves the touched item unarmed', () => {
+  render(<List />);
+  // A mouse press that left B armed, as a press with no release can.
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'mouse' });
+  const t = touch('A');
+  expect(item('A')).not.toHaveAttribute('draggable');
+  expect(item('B')).not.toHaveAttribute('draggable');
+  t.move('C', 'end');
+  expect(item('A')).toHaveAttribute('data-dragging', '');
+  fireEvent.pointerDown(screen.getByTestId('handle-D'), { button: 0, pointerType: 'mouse' });
+  expect(item('A')).not.toHaveAttribute('data-dragging');
+  expect(item('C')).not.toHaveAttribute('data-drop');
+  expect(item('D')).toHaveAttribute('draggable', 'true');
 });
 
 it('drops nothing for a tap, a lift outside the list, or a touch the browser cancels', () => {
@@ -549,10 +589,11 @@ it('takes a touch drop only from its own list, not a list nested in an item', ()
   }
   render(<Nested />);
   const t = touch('A');
-  // Y sits inside B, so a drop on it lands beside B, its own list's item.
-  t.move('Y', 'end');
+  // X sits inside B, so a drop on it lands beside B, its own list's item. Read as the inner list's
+  // index 0, it would be A's own place and land nowhere.
+  t.move('X', 'end');
   expect(screen.getByText('B').closest('li')).toHaveAttribute('data-drop', 'after');
-  t.up('Y', 'end');
+  t.up('X', 'end');
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 1);
   expect(inner).not.toHaveBeenCalled();
 });
@@ -567,11 +608,14 @@ it.runIf(server.browser === 'chromium')('moves an item a real touch drags in Chr
   const s = session();
   const from = centre(screen.getByTestId('handle-A'), 'start');
   const to = centre(item('C'));
-  await s.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...from, id: 1 }] });
-  await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: from.x, y: from.y + 20, id: 1 }] });
-  await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...to, id: 1 }] });
-  await expect.poll(() => item('C').getAttribute('data-drop')).toBe('after');
-  await s.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  try {
+    await s.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...from, id: 1 }] });
+    await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: from.x, y: from.y + 20, id: 1 }] });
+    await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...to, id: 1 }] });
+    await expect.poll(() => item('C').getAttribute('data-drop')).toBe('after');
+  } finally {
+    await s.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  }
   await expect.poll(() => onMove.mock.calls).toEqual([[0, 2]]);
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
 });

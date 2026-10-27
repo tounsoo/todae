@@ -1149,9 +1149,9 @@
   },
   "utilities/use-reorder": {
     "(top)": "d54efa3b4b16",
-    "# useReorder": "d75839ccbd6e",
-    "## Touch": "2eb66b780d20",
-    "## Accessible composition": "b277a840fe64",
+    "# useReorder": "147c5ba5818f",
+    "## Touch": "a4ab9d8b0cc8",
+    "## Accessible composition": "b7931bd53749",
     "## When to use": "096cd31b6ac9",
     "## Props": "d782464e8b92",
     "(section order)": "26fdfe644b20"

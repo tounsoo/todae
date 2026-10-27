@@ -88,7 +88,7 @@ function sideOf(item: Element, x: number, y: number, orientation: 'vertical' | '
 
 const INDEX = 'data-todae-reorder-index';
 const LIST = 'data-todae-reorder-list';
-// How far a finger moves on a handle before its item drags, so a tap doesn't flash a drag.
+// How far a finger or pen moves on a handle before its item drags, so a tap doesn't flash a drag.
 const SLOP = 4;
 
 /** An item's index now, read from its element, so a list that changes during a drag still moves that item. */
@@ -99,9 +99,9 @@ function indexOf(node: HTMLElement): number | null {
 
 /**
  * `useReorder({ onMove })` returns `{ dragging, drop, getItemProps, getHandleProps }`, which let a
- * person reorder a list by dragging an item's handle: with the browser's drag and drop for a mouse or
- * a pen, and with pointer events for a finger, since browsers on touch screens differ in whether they
- * drag at all. A drop that changes the order calls `onMove(from, to)`, and Escape cancels a drag. It
+ * person reorder a list by dragging an item's handle: with the browser's drag and drop for a mouse,
+ * and with pointer events for a finger or a pen, since browsers on touch screens differ in whether
+ * they drag at all. A drop that changes the order calls `onMove(from, to)`, and Escape cancels a drag. It
  * has no keyboard path: pair it with a way to move an item without dragging, such as a menu.
  */
 export function useReorder({ onMove, orientation = 'vertical', disabled = false }: UseReorderOptions): UseReorderResult {
@@ -120,11 +120,11 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const armedRef = useRef<HTMLElement | null>(null);
   const rtlRef = useRef(false);
   const dropRef = useRef<ReorderDrop | null>(null);
-  // A finger on a handle: its pointer and where it went down. A touch drag runs on pointer events, so
-  // it never arms the item for the browser's drag.
+  // A finger or pen on a handle: its pointer and where it went down. A touch drag runs on pointer
+  // events, so it never arms the item for the browser's drag.
   const touchRef = useRef<{ id: number; x: number; y: number } | null>(null);
   const [touching, setTouching] = useState(false);
-  // Whether the last press on a handle was a finger, whose mousedown, sent after the tap, arms nothing.
+  // Whether the last press on a handle was a finger or pen, whose mousedown, sent after the tap, arms nothing.
   const fingerRef = useRef(false);
   // Read by the touch drag's window listeners.
   const latest = useRef({ onMove, orientation, disabled });
@@ -178,10 +178,13 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
     window.addEventListener('pointerup', disarm);
     window.addEventListener('pointercancel', disarm);
+    // WebKit's press after a drag, which arms on mousedown, also ends with mouseup.
+    window.addEventListener('mouseup', disarm);
     window.addEventListener('pointermove', lost);
     return () => {
       window.removeEventListener('pointerup', disarm);
       window.removeEventListener('pointercancel', disarm);
+      window.removeEventListener('mouseup', disarm);
       window.removeEventListener('pointermove', lost);
     };
   }, [armed, end]);
@@ -198,7 +201,8 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       const node = sourceRef.current;
       const from = node && !latest.current.disabled ? indexOf(node) : null;
       if (from === null) return null;
-      let item = document.elementFromPoint(x, y)?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
+      const root = node!.getRootNode() as Document | ShadowRoot;
+      let item = root.elementFromPoint(x, y)?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
       // An item of a list nested in this one's item isn't this list's.
       while (item && item.getAttribute(LIST) !== node!.getAttribute(LIST)) item = item.parentElement?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
       const index = item ? indexOf(item) : null;
@@ -211,6 +215,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       const node = sourceRef.current ?? armedRef.current;
       if (node === null || !node.isConnected) return end();
       if (sourceRef.current === null) {
+        if (latest.current.disabled) return end();
         if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) < SLOP) return;
         sourceRef.current = node;
         rtlRef.current = getComputedStyle(node).direction === 'rtl';
@@ -229,13 +234,14 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     const cancel = (event: globalThis.PointerEvent) => {
       if (event.pointerId === pointer.id) end();
     };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', cancel);
+    // Capture, so a product's handler that stops these events can't leave the drag running.
+    window.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', cancel, true);
     return () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', cancel, true);
     };
   }, [touching, end]);
 
@@ -316,13 +322,21 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     return {
       ...user,
       onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
-        if (disabled || event.button !== 0 || touchRef.current !== null) return;
-        fingerRef.current = event.pointerType === 'touch';
+        if (disabled || event.button !== 0) return;
+        const finger = event.pointerType === 'touch' || event.pointerType === 'pen';
+        // Another finger during a touch drag starts nothing. A mouse press means the touch drag's
+        // pointerup never came, so that drag is over.
+        if (touchRef.current !== null) {
+          if (finger) return;
+          end();
+        }
+        fingerRef.current = finger;
         // A drag whose dragend never reached the list is over by now.
         if (sourceRef.current !== null) end();
         const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
         armedRef.current = item && indexOf(item) === index ? item : null;
         if (fingerRef.current) {
+          setArmed(null);
           if (armedRef.current === null) return;
           touchRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
           setTouching(true);
