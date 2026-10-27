@@ -123,9 +123,9 @@ function fireDrag(node: Element, type: string, init: DragEventInit) {
 
 // Steps a drag by hand, for what userEvent.dragAndDrop can't stop between: a press on the handle,
 // dragstart, then dragover and drop at a point of the target.
-function drag(handle: string) {
+function drag(handle: string, pointerType = 'mouse') {
   const dataTransfer = new DataTransfer();
-  fireEvent.pointerDown(screen.getByTestId(`handle-${handle}`), { button: 0 });
+  fireEvent.pointerDown(screen.getByTestId(`handle-${handle}`), { button: 0, pointerType });
   const source = screen.getByTestId(`handle-${handle}`).closest('li')!;
   fireDrag(source, 'dragstart', { dataTransfer });
   const at = (name: string, side: 'start' | 'end', axis: 'x' | 'y' = 'y') => {
@@ -301,16 +301,17 @@ it('ends a drag whose item left the page without a render, on the next pointer m
   for (const node of screen.getAllByRole('listitem')) expect(node).not.toHaveAttribute('data-dragging');
 });
 
-it('ends a drag that never ran, with no drag event since dragstart, on a pointerup or a pointer move with no button down', () => {
+const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+
+it('ends a drag that never ran, with no drag event half a second after a pointerup or a pointer move with no button down', async () => {
   render(<List />);
-  drag('B');
+  drag('B', 'touch');
   act(() => {
-    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, pointerType: 'touch' }));
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
   });
   expect(item('B')).toHaveAttribute('data-dragging', '');
-  act(() => {
-    window.dispatchEvent(new PointerEvent('pointerup'));
-  });
+  await wait(600);
   expect(item('B')).not.toHaveAttribute('data-dragging');
   expect(item('B')).not.toHaveAttribute('draggable');
   cleanup();
@@ -318,20 +319,25 @@ it('ends a drag that never ran, with no drag event since dragstart, on a pointer
   render(<List />);
   drag('B');
   act(() => {
-    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
   });
+  await wait(600);
   expect(item('B')).not.toHaveAttribute('data-dragging');
 });
 
-it('keeps a running drag through a pointerup, so a drop after it still moves the item', () => {
+it('keeps a drag that runs through a pointerup, so a drop after it still moves the item', async () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
-  const d = drag('B');
+  const d = drag('B', 'touch');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
+  });
+  // The first drag event can come after the lift.
   fireDrag(item('B'), 'drag', { dataTransfer: d.dataTransfer });
   act(() => {
-    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0 }));
-    window.dispatchEvent(new PointerEvent('pointerup'));
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'touch' }));
   });
+  await wait(600);
   expect(item('B')).toHaveAttribute('data-dragging', '');
   d.over('D', 'end');
   d.drop('D', 'end');
@@ -341,13 +347,24 @@ it('keeps a running drag through a pointerup, so a drop after it still moves the
 
   // A dragover alone shows the drag runs, as Playwright's Firefox sends no drag events.
   render(<List />);
-  const e = drag('B');
+  const e = drag('B', 'touch');
   e.over('C', 'end');
   act(() => {
-    window.dispatchEvent(new PointerEvent('pointerup'));
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
   });
+  await wait(600);
   expect(item('B')).toHaveAttribute('data-dragging', '');
   e.end();
+});
+
+it('ends a mouse drag that ran on a pointer move with no button down, as its button is up', () => {
+  render(<List />);
+  const d = drag('B');
+  d.over('C', 'end');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { buttons: 0, pointerType: 'mouse' }));
+  });
+  expect(item('B')).not.toHaveAttribute('data-dragging');
 });
 
 it('moves an item a mousedown with no pointerdown armed, as WebKit sends for the first press after a drop', () => {
@@ -372,12 +389,23 @@ it('moves an item a mousedown with no pointerdown armed, as WebKit sends for the
   expect(item('B')).not.toHaveAttribute('draggable');
 });
 
-it('arms nothing on the mousedown a touch tap sends after its pointerup', () => {
+it('arms nothing on the mousedown a touch tap sends after its pointerup, and arms on a later one', async () => {
   render(<List />);
   fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'touch' });
-  fireEvent.pointerUp(window);
+  fireEvent.pointerUp(window, { pointerType: 'touch' });
   fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
   expect(item('B')).not.toHaveAttribute('draggable');
+  await wait(1100);
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).toHaveAttribute('draggable', 'true');
+  fireEvent.mouseUp(window);
+
+  // A touch press that ends in pointercancel, such as a scroll or a drag, sends no mousedown, so
+  // the next mousedown arms at once.
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'touch' });
+  fireEvent.pointerCancel(window, { pointerType: 'touch' });
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  expect(item('B')).toHaveAttribute('draggable', 'true');
 });
 
 it('starts a new drag after one that ends with no drop, as Escape does', () => {

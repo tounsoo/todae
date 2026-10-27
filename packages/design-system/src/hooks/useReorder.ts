@@ -107,8 +107,10 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const rtlRef = useRef(false);
   // Whether the browser has sent drag or dragover since dragstart, which shows the drag is running.
   const liveRef = useRef(false);
-  // The pointer type of the last press on a handle, so a touch tap's later mousedown doesn't arm.
-  const pressRef = useRef<string | null>(null);
+  // The pointer type of the press that armed the item.
+  const pressRef = useRef('');
+  // When the last touch on an armed item lifted, so the mousedown a tap sends after it doesn't arm.
+  const touchUpRef = useRef(-Infinity);
   const dropRef = useRef<ReorderDrop | null>(null);
 
   const show = (next: ReorderDrop | null) => {
@@ -143,24 +145,37 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     if (armed === null) return;
     // A press that starts no drag ends with pointerup, or mouseup for one armed by mousedown. A drag
     // that starts may send pointercancel, which leaves the item armed once dragstart has run. A
-    // running drag fires drag on its item and dragover where it is, every few hundred milliseconds or
-    // sooner (Playwright's Firefox sends only dragover). A drag that has had neither since dragstart
-    // isn't running, so a pointerup or a pointermove with no button down ends it, as a Chromium touch
-    // drag that starts with no drag session needs. A pointermove with the dragged item gone from the
-    // page ends any drag, since a removed item gets no dragend.
+    // running drag fires drag on its item or dragover where it is, every few hundred milliseconds or
+    // sooner, and the page gets no pointer events while it runs (checked in Chromium, Firefox and
+    // WebKit). So a pointerup, or a pointermove with no button down, ends a drag that has had
+    // neither event within half a second, as a Chromium touch drag that starts with no drag session
+    // needs; a running drag goes on, so a drop after a lift still lands. A mouse drag that ran ends
+    // on a pointermove with no button down, since its button is up. A pointermove with the dragged
+    // item gone from the page ends any drag, since a removed item gets no dragend.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const settle = () => {
+      const node = sourceRef.current;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (sourceRef.current === node && !liveRef.current) end();
+      }, 500);
+    };
     const disarm = () => {
       if (sourceRef.current === null) {
         armedRef.current = null;
         setArmed(null);
       }
     };
-    const up = () => {
+    const up = (event: globalThis.PointerEvent) => {
+      if (event.pointerType === 'touch') touchUpRef.current = event.timeStamp;
       if (sourceRef.current === null) disarm();
-      else if (!liveRef.current) end();
+      else if (!liveRef.current) settle();
     };
     const lost = (event: globalThis.PointerEvent) => {
       const node = sourceRef.current;
-      if (node && (!node.isConnected || (!liveRef.current && event.buttons === 0))) end();
+      if (node === null) return;
+      if (!node.isConnected || (liveRef.current && event.buttons === 0 && pressRef.current === 'mouse')) end();
+      else if (!liveRef.current && event.buttons === 0) settle();
     };
     const live = () => {
       if (sourceRef.current) liveRef.current = true;
@@ -172,6 +187,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     window.addEventListener('drag', live, true);
     window.addEventListener('dragover', live, true);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('mouseup', disarm);
       window.removeEventListener('pointercancel', disarm);
@@ -255,8 +271,9 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
 
   const getHandleProps = <P extends UseReorderHandleUserProps>(index: number, props?: P) => {
     const user = (props ?? {}) as P;
-    const arm = (event: MouseEvent<HTMLElement>) => {
+    const arm = (event: MouseEvent<HTMLElement>, pointerType: string) => {
       if (disabled || event.button !== 0) return;
+      pressRef.current = pointerType;
       // A drag whose dragend never reached the list is over by now.
       if (sourceRef.current !== null) end();
       const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
@@ -265,16 +282,12 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
     return {
       ...user,
-      onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
-        pressRef.current = event.pointerType;
-        arm(event);
-      }),
+      onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => arm(event, event.pointerType)),
       // WebKit sends no pointerdown for the first press after a drop, only mousedown, so that press
       // arms the item too. A pointerdown that is prevented sends no mousedown, and the mousedown a
-      // touch tap sends after its pointerup arms nothing.
+      // touch tap sends after its pointerup, within a second of the lift, arms nothing.
       onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
-        if (pressRef.current === 'touch') pressRef.current = null;
-        else arm(event);
+        if (event.timeStamp - touchUpRef.current >= 1000) arm(event, 'mouse');
       }),
     };
   };
