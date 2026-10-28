@@ -149,14 +149,14 @@ export const PRESETS: readonly ThemePreset[] = [
       ...capsLabels(0.04),
     },
     {
-      // Chartreuse can't carry a checkbox or a tab line on a light canvas, so
-      // the accent stays ink and only the primary button turns chartreuse.
       ...accent(oklch(0.15, 0.028, 110), oklch(0.26, 0.028, 110), oklch(0.1, 0.028, 110), oklch(0.9, 0.2, 122)),
       ...chartreuseButton(oklch(0.15, 0.028, 110)),
       ...hardShadows(oklch(0.15, 0.028, 110)),
       'color.bg.canvas': oklch(0.96, 0.02, 110),
       'color.border.default': oklch(0.15, 0.028, 110),
       'color.border.subtle': oklch(0.2, 0.024, 110),
+      'progress.fill': oklch(0.9, 0.2, 122),
+      'progress.track': oklch(0.9, 0.012, 120),
       'focus.ring.color': oklch(0.6, 0.25, 330),
     },
     {
