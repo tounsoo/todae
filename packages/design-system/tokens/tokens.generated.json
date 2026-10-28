@@ -13381,6 +13381,356 @@
       "description": "Toolbar.Root: a row of controls with separators between groups. ToggleGroup also reads its gap."
     },
     {
+      "path": "togglegroup.bg",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-bg",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.border",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-border",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-border-width",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.gap",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-gap",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.bg.active",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-active",
+      "cssValue": "var(--todae-button-secondary-bg-active)",
+      "ref": "button.secondary.bg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.bg.default",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-default",
+      "cssValue": "var(--todae-button-secondary-bg-default)",
+      "ref": "button.secondary.bg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-focus",
+      "cssValue": "var(--todae-button-secondary-bg-focus)",
+      "ref": "button.secondary.bg.focus",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-hover",
+      "cssValue": "var(--todae-button-secondary-bg-hover)",
+      "ref": "button.secondary.bg.hover",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-pressed",
+      "cssValue": "var(--todae-button-secondary-bg-active)",
+      "ref": "button.secondary.bg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.border.active",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-active",
+      "cssValue": "var(--todae-button-secondary-border-active)",
+      "ref": "button.secondary.border.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.border.default",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-default",
+      "cssValue": "var(--todae-button-secondary-border-default)",
+      "ref": "button.secondary.border.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.border.focus",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-focus",
+      "cssValue": "var(--todae-button-secondary-border-focus)",
+      "ref": "button.secondary.border.focus",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.border.hover",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-hover",
+      "cssValue": "var(--todae-button-secondary-border-hover)",
+      "ref": "button.secondary.border.hover",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.border.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-pressed",
+      "cssValue": "var(--todae-button-secondary-border-active)",
+      "ref": "button.secondary.border.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.fg.active",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-active",
+      "cssValue": "var(--todae-button-secondary-fg-active)",
+      "ref": "button.secondary.fg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.fg.default",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-default",
+      "cssValue": "var(--todae-button-secondary-fg-default)",
+      "ref": "button.secondary.fg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-focus",
+      "cssValue": "var(--todae-button-secondary-fg-focus)",
+      "ref": "button.secondary.fg.focus",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-hover",
+      "cssValue": "var(--todae-button-secondary-fg-hover)",
+      "ref": "button.secondary.fg.hover",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.fg.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-pressed",
+      "cssValue": "var(--todae-button-secondary-fg-active)",
+      "ref": "button.secondary.fg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.join-radius",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-join-radius",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.pressed-ring-width",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-pressed-ring-width",
+      "cssValue": "var(--todae-button-base-pressed-ring-width)",
+      "ref": "button.base.pressed-ring-width",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.radius",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-radius",
+      "cssValue": "var(--todae-button-base-radius)",
+      "ref": "button.base.radius",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.item.shadow.pressed",
+      "type": "shadow",
+      "cssVar": "--todae-togglegroup-item-shadow-pressed",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.padding",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-padding",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
+      "path": "togglegroup.radius",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-radius",
+      "cssValue": "var(--todae-button-base-radius)",
+      "ref": "button.base.radius",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track."
+    },
+    {
       "path": "drawer.bg",
       "type": "color",
       "cssVar": "--todae-drawer-bg",

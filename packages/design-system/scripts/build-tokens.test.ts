@@ -703,9 +703,9 @@ describe('resolver-driven build', () => {
         { $ref: '#/modifiers/appearance' },
         { $ref: '#/sets/button' },
         { $ref: '#/sets/focus' },
+        { $ref: '#/modifiers/buttonVariant' },
         { $ref: '#/sets/contract' },
         { $ref: '#/modifiers/density' },
-        { $ref: '#/modifiers/buttonVariant' },
       ];
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(

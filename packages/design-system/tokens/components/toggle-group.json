@@ -1,0 +1,40 @@
+{
+  "togglegroup": {
+    "$description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track.",
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "padding": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "gap": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/button/base/radius/$value" } },
+    "item": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/button/base/radius/$value" } },
+      "join-radius": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/hover/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/active/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/focus/$value" } },
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/active/$value" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/hover/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/active/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/focus/$value" } },
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/active/$value" } }
+      },
+      "border": {
+        "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/hover/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/active/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/focus/$value" } },
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/active/$value" } }
+      },
+      "pressed-ring-width": { "$type": "dimension", "$value": { "$ref": "#/button/base/pressed-ring-width/$value" } },
+      "shadow": {
+        "pressed": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
+      }
+    }
+  }
+}

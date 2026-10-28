@@ -139,6 +139,8 @@ function anvilAppearance(c: {
   danger: ThemeColorValue;
   /** The secondary button's ink wash at rest; hover and pressed add to it. */
   tint1: number;
+  /** The gray that hover and press wash over transparent controls. */
+  wash: ThemeColorValue;
   shadow: ThemeColorValue;
   status: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue, fg: ThemeColorValue]>;
   alert: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue]>;
@@ -200,6 +202,22 @@ function anvilAppearance(c: {
     // The current step is an accent ring; pending steps a gray one.
     'steps.marker.border.current': c.accent[0],
     'steps.marker.border.pending': c.control,
+    // Toggle groups are Anvil's segmented control: a filled, outlined track
+    // with transparent segments and a raised, shadowed selected one.
+    'togglegroup.bg': c.fill,
+    'togglegroup.border': c.rule,
+    'togglegroup.item.bg.default': alpha(c.wash, 0),
+    'togglegroup.item.bg.focus': alpha(c.wash, 0),
+    'togglegroup.item.bg.hover': alpha(c.wash, 0.08),
+    'togglegroup.item.bg.active': alpha(c.wash, 0.16),
+    'togglegroup.item.bg.pressed': c.canvas,
+    'togglegroup.item.fg.pressed': c.ink,
+    'togglegroup.item.border.default': alpha(c.wash, 0),
+    'togglegroup.item.border.hover': alpha(c.wash, 0),
+    'togglegroup.item.border.active': alpha(c.wash, 0),
+    'togglegroup.item.border.focus': alpha(c.wash, 0),
+    'togglegroup.item.border.pressed': c.rule,
+    'togglegroup.item.shadow.pressed': shadow(0, 2, 8, 0, c.shadow),
     'progress.track': c.fill,
     'progress.radius': rem(0.375),
   };
@@ -358,6 +376,12 @@ export const PRESETS: readonly ThemePreset[] = [
       'alert.padding.y': rem(1),
       'alert.title.font.weight': 700,
       'tabs.font.size': rem(1),
+      'togglegroup.border-width': rem(0.0625),
+      'togglegroup.padding': rem(0.25),
+      'togglegroup.radius': rem(0.375),
+      'togglegroup.item.radius': rem(0.1875),
+      'togglegroup.item.join-radius': rem(0.1875),
+      'togglegroup.item.pressed-ring-width': rem(0),
     },
     anvilAppearance({
       ink: oklch(0.107, 0, 0),
@@ -375,6 +399,7 @@ export const PRESETS: readonly ThemePreset[] = [
       tintStrong: oklch(0.908, 0.046, 253),
       danger: oklch(0.561, 0.215, 32),
       tint1: 0.06,
+      wash: oklch(0.637, 0, 0),
       shadow: alpha(oklch(0.218, 0, 0), 0.08),
       // Anvil's subdued chips: [bg, border, fg].
       status: {
@@ -416,6 +441,7 @@ export const PRESETS: readonly ThemePreset[] = [
         tintStrong: alpha(oklch(0.749, 0.132, 254), 0.3),
         danger: oklch(0.686, 0.205, 33),
         tint1: 0.08,
+        wash: oklch(1, 0, 0),
         shadow: alpha(oklch(0, 0, 0), 0.4),
         status: {
           info: [oklch(0.248, 0.082, 255), oklch(0.336, 0.118, 257), oklch(0.99, 0.005, 258)],

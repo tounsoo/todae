@@ -49,8 +49,9 @@ const OWN_ROOTS: Record<string, string[]> = {
   ChipList: ['chip'],
   // Native <select> options take the OptionList look.
   Field: ['field', 'option'],
-  // A toggle group is a toolbar segment and spaces its items like one.
-  ToggleGroup: ['toolbar'],
+  // A toggle group is a toolbar segment and spaces its items like one, and
+  // overlaps its items by Button's border width.
+  ToggleGroup: ['togglegroup', 'toolbar', 'button'],
   // Progress and meter share one sheet.
   Progress: ['progress', 'meter'],
   ScrollArea: ['scroll'],

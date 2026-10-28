@@ -926,10 +926,11 @@
   "toggle-group": {
     "(top)": "00e70da2439c",
     "# ToggleGroup": "810663a76d34",
+    "## Segmented look": "dbd140f361a5",
     "## Accessible composition": "dc7693b6a613",
     "## When to use": "7f754185d7b0",
     "## Props": "862a7b077e89",
-    "(section order)": "7412678d2b51"
+    "(section order)": "f6fd9093add0"
   },
   "tokens": {
     "(top)": "9f7f155f1290",
