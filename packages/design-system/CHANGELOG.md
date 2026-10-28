@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.5.2
+
+### Patch Changes
+
+- useReorder drags with a finger or a pen through pointer events, Escape cancels that drag, and a handle also arms on mousedown, which WebKit sends without pointerdown after a drag. ([#272](https://github.com/tounsoo/todae/pull/272))
+
 ## 0.5.1
 
 ### Patch Changes
