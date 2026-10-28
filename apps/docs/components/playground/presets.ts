@@ -235,4 +235,36 @@ export const PRESETS: readonly ThemePreset[] = [
       'focus.ring.color': oklch(0.82, 0.12, 305),
     },
   ),
+  preset(
+    'anvil',
+    'Anvil',
+    {
+      // ServiceTitan's Anvil: pure neutral grays, a working blue, Nunito Sans
+      // where it's installed, 3/6/12px corners, semibold labels, pill chips.
+      ...grays(0, 0),
+      ...radii(0.1875, 0.375, 0.75),
+      'chip.radius': rem(99),
+      'badge.radius': rem(99),
+      'font.family.sans': ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+      'font.weight.medium': 600,
+      'font.weight.bold': 700,
+    },
+    {
+      'color.gray.200': oklch(0.925, 0, 0),
+      'popover.shadow': shadow(0, 2, 8, 0, alpha(oklch(0.218, 0, 0), 0.08)),
+      ...accent(oklch(0.532, 0.198, 258), oklch(0.438, 0.15, 261), oklch(0.336, 0.118, 257), oklch(1, 0, 0)),
+    },
+    {
+      // Anvil's dark surfaces sit higher than Todae's: #1a1a1a, #292929, #404040.
+      // Its #1a1a1a text on the blue reaches Lc 58, under Todae's 60, so text
+      // on the accent is Anvil's darkest neutral instead.
+      'color.gray.950': oklch(0.218, 0, 0),
+      'color.gray.900': oklch(0.281, 0, 0),
+      'color.gray.850': oklch(0.32, 0, 0),
+      'color.gray.800': oklch(0.371, 0, 0),
+      'color.gray.700': oklch(0.446, 0, 0),
+      'popover.shadow': shadow(0, 2, 8, 0, alpha(oklch(0, 0, 0), 0.4)),
+      ...accent(oklch(0.749, 0.132, 254), oklch(0.827, 0.088, 253), oklch(0.908, 0.046, 253), oklch(0.13, 0, 0)),
+    },
+  ),
 ];
