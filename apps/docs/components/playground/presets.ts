@@ -149,6 +149,9 @@ export const PRESETS: readonly ThemePreset[] = [
       ...capsLabels(0.04),
     },
     {
+      // Chartreuse can't carry a checkbox or a tab line on a light canvas, so
+      // the accent stays ink. Progress aliases that accent and the subtle border,
+      // which are both ink here, so the bar sets its own fill and track.
       ...accent(oklch(0.15, 0.028, 110), oklch(0.26, 0.028, 110), oklch(0.1, 0.028, 110), oklch(0.9, 0.2, 122)),
       ...chartreuseButton(oklch(0.15, 0.028, 110)),
       ...hardShadows(oklch(0.15, 0.028, 110)),
