@@ -12,6 +12,7 @@ import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
+import buttonStyles from './Button.module.css';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
 import { useToolbar } from './toolbarContext.js';
@@ -130,7 +131,10 @@ function Root(props: ToggleGroupRootProps) {
         }}
         role="group"
         data-orientation={orientation}
-        className={cx(orientation === 'horizontal' ? styles.horizontal : styles.vertical, className)}
+        className={cx(
+          orientation === 'horizontal' ? cx(buttonStyles.group, styles.horizontal) : styles.vertical,
+          className,
+        )}
       >
         {children}
       </div>

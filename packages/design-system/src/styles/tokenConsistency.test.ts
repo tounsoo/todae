@@ -70,6 +70,16 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  it('keeps a pressed button on its pressed fill while hovered', () => {
+    const css = sheets.Button ?? '';
+    const hover = css.indexOf('.root:hover:not(:disabled, [aria-disabled=\'true\'], a:not(:any-link))');
+    const pressedHover = css.indexOf(".root[aria-pressed='true']:hover:not(:disabled, [aria-disabled='true'])");
+    expect(pressedHover).toBeGreaterThan(hover);
+    const rule = css.slice(pressedHover, css.indexOf('}', pressedHover));
+    expect(rule).toContain('var(--_button-bg-pressed, var(--todae-button-bg-active))');
+    expect(rule).not.toContain('--_button-bg-hover');
+  });
+
   it('draws Prose type from prose font-size tokens', () => {
     const css = sheets.Prose ?? '';
     expect(css).not.toMatch(/--todae-font-size-/);

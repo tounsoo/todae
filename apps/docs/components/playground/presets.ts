@@ -114,34 +114,26 @@ function capsLabels(value: number): ThemeOverride {
 
 type Tone = 'info' | 'success' | 'warning' | 'critical';
 
-/** One appearance of Anvil, matched component by component to its published component tokens. */
 function anvilAppearance(c: {
-  /** Text, the tab indicator and the unchecked checkbox and radio. */
   ink: ThemeColorValue;
   muted: ThemeColorValue;
-  /** The page, cards and fields. */
   canvas: ThemeColorValue;
-  /** Popovers, menus and disabled buttons and fields. */
   raised: ThemeColorValue;
-  /** Neutral chips and badges, the progress track. */
   fill: ThemeColorValue;
   fillHover: ThemeColorValue;
   rule: ThemeColorValue;
-  /** Field and pending-step borders. */
   control: ThemeColorValue;
-  /** The switch's off track and its thumb. */
   track: ThemeColorValue;
   thumb: ThemeColorValue;
   accent: [ThemeColorValue, ThemeColorValue, ThemeColorValue, ThemeColorValue];
-  /** The selected option and calendar range. */
   tint: ThemeColorValue;
   tintStrong: ThemeColorValue;
   danger: ThemeColorValue;
-  /** The secondary button's ink wash at rest; hover and pressed add to it. */
   tint1: number;
-  /** The gray that hover and press wash over transparent controls. */
   wash: ThemeColorValue;
-  /** The circle behind a chip's dismiss button on hover. */
+  /** Focus ring. Anvil's blue, 2px, independent of a later accent edit. */
+  focus: ThemeColorValue;
+  segmentShadow: ThemeColorValue;
   dismissHover: ThemeColorValue;
   shadow: ThemeColorValue;
   status: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue, fg: ThemeColorValue]>;
@@ -154,8 +146,8 @@ function anvilAppearance(c: {
     'color.fg.default': c.ink,
     'color.fg.muted': c.muted,
     'color.danger.default': c.danger,
+    'focus.ring.color': c.focus,
     'color.border.subtle': c.rule,
-    // Secondary buttons are a light ink wash with no border.
     'button.secondary.bg.default': alpha(c.ink, c.tint1),
     'button.secondary.bg.focus': alpha(c.ink, c.tint1),
     'button.secondary.bg.hover': alpha(c.ink, c.tint1 + 0.04),
@@ -164,7 +156,6 @@ function anvilAppearance(c: {
     'button.secondary.border.hover': alpha(c.ink, 0),
     'button.secondary.border.active': alpha(c.ink, 0),
     'button.secondary.border.focus': alpha(c.ink, 0),
-    // Disabled buttons sit on the raised gray, with muted text.
     'button.primary.bg.disabled': c.raised,
     'button.primary.border.disabled': c.raised,
     'button.primary.fg.disabled': c.muted,
@@ -174,11 +165,9 @@ function anvilAppearance(c: {
     'field.border.default': c.control,
     'field.border.hover': c.control,
     'field.bg.disabled': c.raised,
-    // Checkboxes and radios are outlined in ink; the switch's off track is a mid gray.
     'selection.border.default': c.ink,
     'selection.track.bg': c.track,
     'selection.thumb.bg': c.thumb,
-    // Tabs: every label in ink, and an ink indicator under the selected one.
     'tabs.fg.default': c.ink,
     'tabs.indicator.color': c.ink,
     'chip.bg.default': c.fill,
@@ -191,7 +180,6 @@ function anvilAppearance(c: {
     'chip.dismiss.bg.hover': c.dismissHover,
     'badge.neutral.bg': c.fill,
     'badge.neutral.border': c.rule,
-    // Tooltips are inverted.
     'tooltip.bg': c.ink,
     'tooltip.border': c.ink,
     'tooltip.fg': c.canvas,
@@ -204,25 +192,19 @@ function anvilAppearance(c: {
     'option.fg.selected': c.accent[0],
     'calendar.day.bg.range': c.tint,
     'calendar.day.fg.range': c.accent[0],
-    // The current step is an accent ring; pending steps a gray one.
     'steps.marker.border.current': c.accent[0],
     'steps.marker.border.pending': c.control,
-    // Toggle groups are Anvil's segmented control: a filled, outlined track
-    // with transparent segments and a raised, shadowed selected one.
+    // Toggle groups are Anvil's segmented control. Segments that match Button
+    // inherit it. These are the fills that do not.
     'togglegroup.bg': c.fill,
     'togglegroup.border': c.rule,
     'togglegroup.item.bg.default': alpha(c.wash, 0),
-    'togglegroup.item.bg.focus': alpha(c.wash, 0),
     'togglegroup.item.bg.hover': alpha(c.wash, 0.08),
     'togglegroup.item.bg.active': alpha(c.wash, 0.16),
     'togglegroup.item.bg.pressed': c.canvas,
     'togglegroup.item.fg.pressed': c.ink,
-    'togglegroup.item.border.default': alpha(c.wash, 0),
-    'togglegroup.item.border.hover': alpha(c.wash, 0),
-    'togglegroup.item.border.active': alpha(c.wash, 0),
-    'togglegroup.item.border.focus': alpha(c.wash, 0),
-    'togglegroup.item.border.pressed': c.rule,
-    'togglegroup.item.shadow.pressed': shadow(0, 2, 8, 0, c.shadow),
+    'togglegroup.item.border.pressed': alpha(c.wash, 0),
+    'togglegroup.item.shadow.pressed': shadow(0, 2, 8, 0, c.segmentShadow),
     'progress.track': c.fill,
     'progress.radius': rem(0.375),
   };
@@ -366,17 +348,18 @@ export const PRESETS: readonly ThemePreset[] = [
     'anvil',
     'Anvil',
     {
-      // ServiceTitan's Anvil, from its published tokens: pure neutral grays, a
-      // working blue, Nunito Sans where it's installed, 3/6/12px corners,
-      // semibold labels, pill chips and badges, and 2px alert borders.
       ...grays(0, 0),
       ...radii(0.1875, 0.375, 0.75),
       'chip.radius': rem(99),
       'badge.radius': rem(99),
-      // Sizes from Anvil's component CSS: 40px buttons and fields (Todae's
-      // labels keep the page's line height, so the padding makes up the rest),
-      // 48px tabs, 26px chips whose round dismiss button fills the end, 18px
-      // badges, and 16px card and popover padding.
+      // Sizes from Anvil's component CSS. Buttons, fields and tabs are 16px.
+      // Chips are 14px. A button is 40px on the page's 1.6 line height:
+      // (40 - 16*1.6 - 2) / 2 = 6.2px of vertical padding. 48px tabs, 26px
+      // chips whose round dismiss button fills the end, 18px badges, and 16px
+      // card and popover padding.
+      'button.base.font.size': rem(1),
+      'field.font.size': rem(1),
+      'chip.font.size': rem(0.875),
       'button.base.padding.x': rem(1),
       'button.base.padding.y': rem(0.3875),
       'field.padding.y': rem(0.4375),
@@ -422,15 +405,17 @@ export const PRESETS: readonly ThemePreset[] = [
       'alert.padding.y': rem(1),
       'alert.title.font.weight': 700,
       'tabs.font.size': rem(1),
+      // Track: 1px border, 4px padding, 6px radius, 8px gap, 40px tall.
+      // Segment radius is 3px, not the button's 6px. Horizontal padding is the
+      // button's 16px. The segment is 30px inside the track, so with a 25.6px
+      // line the vertical padding is (30 - 25.6) / 2.
       'togglegroup.border-width': rem(0.0625),
       'togglegroup.padding': rem(0.25),
       'togglegroup.radius': rem(0.375),
+      'togglegroup.gap': rem(0.5),
       'togglegroup.item.radius': rem(0.1875),
-      'togglegroup.item.join-radius': rem(0.1875),
       'togglegroup.item.pressed-ring-width': rem(0),
-      // Anvil's segments: 30px tall inside a 4px inset, 16px from each side.
-      'togglegroup.item.padding.x': rem(0.9375),
-      'togglegroup.item.padding.y': rem(0.075),
+      'togglegroup.item.padding.y': rem(0.1375),
     },
     anvilAppearance({
       ink: oklch(0.107, 0, 0),
@@ -449,16 +434,16 @@ export const PRESETS: readonly ThemePreset[] = [
       danger: oklch(0.561, 0.215, 32),
       tint1: 0.06,
       wash: oklch(0.637, 0, 0),
+      focus: oklch(0.532, 0.198, 258),
+      segmentShadow: alpha(oklch(0.218, 0, 0), 0.08),
       dismissHover: alpha(oklch(0, 0, 0), 0.29),
       shadow: alpha(oklch(0.218, 0, 0), 0.08),
-      // Anvil's subdued chips: [bg, border, fg].
       status: {
         info: [oklch(0.908, 0.046, 253), oklch(0.827, 0.088, 253), oklch(0.248, 0.082, 255)],
         success: [oklch(0.922, 0.07, 169), oklch(0.857, 0.13, 166), oklch(0.26, 0.055, 163)],
         warning: [oklch(0.981, 0.031, 95), oklch(0.916, 0.13, 94), oklch(0.281, 0.058, 80)],
         critical: [oklch(0.951, 0.025, 30), oklch(0.821, 0.1, 30), oklch(0.261, 0.092, 35)],
       },
-      // Anvil's alerts: a faint fill under a strong 2px edge.
       alert: {
         info: [oklch(0.99, 0.005, 258), oklch(0.532, 0.198, 258)],
         success: [oklch(0.989, 0.01, 174), oklch(0.524, 0.119, 159)],
@@ -492,6 +477,8 @@ export const PRESETS: readonly ThemePreset[] = [
         danger: oklch(0.686, 0.205, 33),
         tint1: 0.08,
         wash: oklch(1, 0, 0),
+        focus: oklch(0.749, 0.132, 254),
+        segmentShadow: alpha(oklch(1, 0, 0), 0.08),
         dismissHover: alpha(oklch(1, 0, 0), 0.39),
         shadow: alpha(oklch(0, 0, 0), 0.4),
         status: {

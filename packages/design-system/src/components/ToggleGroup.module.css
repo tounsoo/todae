@@ -1,53 +1,29 @@
 @layer todae.components {
-  /* A horizontal group's items join like Button.Group's: neighbors share a
-     border and the corners where they meet take togglegroup.item.join-radius.
-     A theme draws a segmented control by giving the track a fill, a border and
-     padding, and the items a gap, their own radius and pressed colors. */
-  .horizontal {
-    display: inline-flex;
-    align-items: stretch;
-    gap: var(--todae-togglegroup-gap);
-  }
-
-  /* The track, like the item colors below, belongs to a group of secondary
-     items, the default; a row of ghost icon toggles stays bare. */
+  /* Horizontal items join through Button's group rules. The track, the gap
+     and the segment hooks apply only while a secondary item is in the group,
+     so a row of ghost icon toggles stays a bare joined row. */
   .horizontal:has(> .item[data-button-variant='secondary']) {
+    --_button-join-gap: var(--todae-togglegroup-gap);
+    gap: var(--todae-togglegroup-gap);
     padding: var(--todae-togglegroup-padding);
     background: var(--todae-togglegroup-bg);
     border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
     border-radius: var(--todae-togglegroup-radius);
   }
 
-  /* Neighbors overlap by one border while the gap is narrower than it. */
-  .horizontal > .item ~ .item {
-    margin-inline-start: min(0px, calc(var(--todae-togglegroup-gap) - var(--todae-button-border-width)));
+  /* A zero gap stays joined (no grow, the shared border). A wider gap drops
+     that border and, where the group is stretched, shares the width.
+     tan(atan2(gap, 1px)) is 0 at a zero gap and the gap in px otherwise. */
+  .horizontal:has(> .item[data-button-variant='secondary']) > .item[data-button-variant='secondary'] {
+    flex-grow: tan(atan2(var(--todae-togglegroup-gap), 1px));
+    border-width: min(
+      var(--todae-button-border-width),
+      max(0px, calc(var(--todae-button-border-width) - var(--todae-togglegroup-gap)))
+    );
   }
 
-  .horizontal > .item {
-    border-radius: var(--todae-togglegroup-item-radius);
-  }
-
-  /* Counted among the group's items, past the tooltips they render beside them. */
-  .horizontal > .item:nth-child(1 of .item):not(:nth-last-child(1 of .item)) {
-    border-start-end-radius: var(--todae-togglegroup-item-join-radius);
-    border-end-end-radius: var(--todae-togglegroup-item-join-radius);
-  }
-
-  .horizontal > .item:nth-last-child(1 of .item):not(:nth-child(1 of .item)) {
-    border-start-start-radius: var(--todae-togglegroup-item-join-radius);
-    border-end-start-radius: var(--todae-togglegroup-item-join-radius);
-  }
-
-  .horizontal > .item:not(:nth-child(1 of .item)):not(:nth-last-child(1 of .item)) {
-    border-radius: var(--todae-togglegroup-item-join-radius);
-  }
-
-  .horizontal > .item:focus-visible {
-    z-index: 1;
-  }
-
-  /* Vertical groups stack with a gap. A toggle group is a toolbar segment, so
-     it spaces its items like Toolbar and changes with toolbar.gap. */
+  /* Vertical groups do not draw the track. Anvil's segmented control is a row.
+     A vertical group stacks with the toolbar gap, as a toolbar segment. */
   .vertical {
     display: inline-flex;
     flex-direction: column;
@@ -55,39 +31,20 @@
     gap: var(--todae-toolbar-gap);
   }
 
-  /* Button reads these inputs before its variant's tokens. Secondary items, the
-     default, take the group's colors, and every item its padding and pressed ring. In a
-     horizontal group an item drops its resting shadow, which would paint over
-     a neighbor, and takes the group's pressed shadow. */
   .item[data-button-variant='secondary'] {
-    --_bg-default: var(--todae-togglegroup-item-bg-default);
-    --_bg-hover: var(--todae-togglegroup-item-bg-hover);
-    --_bg-active: var(--todae-togglegroup-item-bg-active);
-    --_bg-focus: var(--todae-togglegroup-item-bg-focus);
-    --_bg-pressed: var(--todae-togglegroup-item-bg-pressed);
-    --_fg-default: var(--todae-togglegroup-item-fg-default);
-    --_fg-hover: var(--todae-togglegroup-item-fg-hover);
-    --_fg-active: var(--todae-togglegroup-item-fg-active);
-    --_fg-focus: var(--todae-togglegroup-item-fg-focus);
-    --_fg-pressed: var(--todae-togglegroup-item-fg-pressed);
-    --_border-default: var(--todae-togglegroup-item-border-default);
-    --_border-hover: var(--todae-togglegroup-item-border-hover);
-    --_border-active: var(--todae-togglegroup-item-border-active);
-    --_border-focus: var(--todae-togglegroup-item-border-focus);
-    --_border-pressed: var(--todae-togglegroup-item-border-pressed);
+    --_button-radius: var(--todae-togglegroup-item-radius);
+    --_button-padding-y: var(--todae-togglegroup-item-padding-y);
+    --_button-bg-default: var(--todae-togglegroup-item-bg-default);
+    --_button-bg-hover: var(--todae-togglegroup-item-bg-hover);
+    --_button-bg-active: var(--todae-togglegroup-item-bg-active);
+    --_button-bg-focus: var(--todae-togglegroup-item-bg-default);
+    --_button-bg-pressed: var(--todae-togglegroup-item-bg-pressed);
+    --_button-fg-pressed: var(--todae-togglegroup-item-fg-pressed);
+    --_button-border-pressed: var(--todae-togglegroup-item-border-pressed);
+    --_button-pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
   }
 
-  .item {
-    --_padding-x: var(--todae-togglegroup-item-padding-x);
-    --_padding-y: var(--todae-togglegroup-item-padding-y);
-    --_pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
-  }
-
-  .horizontal > .item:not(:disabled, [aria-disabled='true']) {
-    --_lift: 0 0 transparent;
-  }
-
-  .horizontal > .item[aria-pressed='true']:not(:disabled, [aria-disabled='true']) {
+  .horizontal > .item[data-button-variant='secondary'][aria-pressed='true']:not(:disabled, [aria-disabled='true']) {
     --_lift: var(--todae-togglegroup-item-shadow-pressed);
   }
 }

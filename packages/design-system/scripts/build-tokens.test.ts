@@ -698,6 +698,11 @@ describe('resolver-driven build', () => {
 
   it('rejects an alias to a token from a later resolution entry', async () => {
     const root = await fixture((resolver) => {
+      // togglegroup lives in contract and $refs button.secondary.*, so
+      // buttonVariant has to come before contract or the build fails on that
+      // alias first. Density stays last. That later alias is what this test
+      // rejects. Those secondary refs stay the secondary tokens under a
+      // primary or ghost scope. See the next test.
       resolver.resolutionOrder = [
         { $ref: '#/sets/core' },
         { $ref: '#/modifiers/appearance' },
@@ -711,6 +716,27 @@ describe('resolver-driven build', () => {
     await expect(buildTokensGraph(root)).rejects.toThrow(
       /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier in resolutionOrder; list modifier "density" before set "button"/,
     );
+  });
+
+  it('resolves togglegroup refs to secondary button tokens under a non-secondary variant scope', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const primary = graph.css.slice(
+      graph.css.indexOf('[data-button-variant="primary"]'),
+      graph.css.indexOf('[data-button-variant="secondary"]'),
+    );
+    const ghost = graph.css.slice(graph.css.indexOf('[data-button-variant="ghost"]'));
+    expect(graph.css).toContain(
+      '--todae-togglegroup-item-bg-pressed: var(--_todae-togglegroup-item-bg-pressed, var(--todae-button-secondary-bg-active));',
+    );
+    expect(graph.css).toContain(
+      '--todae-togglegroup-border: var(--_todae-togglegroup-border, var(--todae-color-border-subtle));',
+    );
+    for (const block of [primary, ghost]) {
+      expect(block).not.toContain('--todae-togglegroup-');
+      expect(block).toContain('--todae-button-bg-default:');
+    }
+    expect(primary).toContain('--todae-button-bg-default: var(--todae-button-primary-bg-default);');
+    expect(ghost).toContain('--todae-button-bg-default: var(--todae-button-ghost-bg-default);');
   });
 
   it('rejects an alias in a set declared only on :root', async () => {
