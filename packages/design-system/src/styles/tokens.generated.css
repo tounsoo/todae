@@ -366,6 +366,7 @@
   --todae-space-inline-gap: var(--todae-space-1);
   --todae-space-overlay-gap: var(--todae-space-2);
   --todae-space-overlay-padding: var(--todae-space-4);
+  --todae-space-popover-padding: var(--todae-space-3);
   --todae-space-prose-gap: var(--todae-space-3);
   --todae-space-prose-heading-after: var(--todae-space-2);
   --todae-space-prose-heading-before: var(--todae-space-6);
@@ -387,6 +388,7 @@
   --todae-space-inline-gap: var(--todae-space-2);
   --todae-space-overlay-gap: var(--todae-space-3);
   --todae-space-overlay-padding: var(--todae-space-5);
+  --todae-space-popover-padding: var(--todae-space-4);
   --todae-space-prose-gap: var(--todae-space-4);
   --todae-space-prose-heading-after: var(--todae-space-3);
   --todae-space-prose-heading-before: var(--todae-space-8);
@@ -407,6 +409,7 @@
   --todae-space-inline-gap: var(--todae-space-3);
   --todae-space-overlay-gap: var(--todae-space-4);
   --todae-space-overlay-padding: var(--todae-space-6);
+  --todae-space-popover-padding: var(--todae-space-5);
   --todae-space-prose-gap: var(--todae-space-5);
   --todae-space-prose-heading-after: var(--todae-space-4);
   --todae-space-prose-heading-before: var(--todae-space-10);
@@ -717,8 +720,8 @@
   --todae-popover-fg: var(--_todae-popover-fg, var(--todae-color-fg-default));
   --todae-popover-max-height: var(--_todae-popover-max-height, 20rem);
   --todae-popover-offset: var(--_todae-popover-offset, var(--todae-space-1));
-  --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-overlay-padding));
-  --todae-popover-padding-y: var(--_todae-popover-padding-y, var(--todae-space-overlay-padding));
+  --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-popover-padding));
+  --todae-popover-padding-y: var(--_todae-popover-padding-y, var(--todae-space-popover-padding));
   --todae-popover-radius: var(--_todae-popover-radius, var(--todae-radius-md));
   --todae-popover-shadow: var(--_todae-popover-shadow, var(--todae-shadow-none));
   --todae-tooltip-bg: var(--_todae-tooltip-bg, var(--todae-color-bg-elevated));

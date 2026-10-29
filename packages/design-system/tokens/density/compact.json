@@ -29,6 +29,9 @@
       "size": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
+    "popover": {
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
+    },
     "overlay": {
       "padding": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
