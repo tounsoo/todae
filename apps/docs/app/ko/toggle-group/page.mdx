@@ -34,6 +34,10 @@ import { ToggleGroupAlign, ToggleGroupStyles } from '../../../components/demos/T
 
 묶음에는 `aria-label`이나 `aria-labelledby`로 이름을 붙이세요. 가로 항목은 [Button.Group](/button)처럼 붙습니다. [Toolbar](/toolbar) 안에서는 툴바가 화살표 키와 탭 위치를 맡습니다.
 
+## 세그먼트 모양
+
+기본값인 secondary 항목으로 된 가로 묶음은 prop 없이 토큰만으로 세그먼트 컨트롤 모양으로 바꿀 수 있습니다. `togglegroup.bg`, `togglegroup.border`, `togglegroup.border-width`, `togglegroup.padding`, `togglegroup.radius`, `togglegroup.gap`이 트랙을 그립니다. 세그먼트는 Button과 다른 곳만 자기 토큰을 갖고, 나머지는 `button.*`을 그대로 씁니다. `togglegroup.item.radius`와 `togglegroup.item.padding.y`가 크기를 정하고, `togglegroup.item.bg.default`, `hover`, `active`가 평소 색을 정하며, `togglegroup.item.bg.pressed`, `fg.pressed`, `border.pressed`, `shadow.pressed`가 눌린 항목의 색을 정합니다. `togglegroup.item.pressed-ring-width`는 안쪽 링입니다. 포커스는 평소 채우기를 유지하고 Button의 포커스 링을 씁니다. 기본값에서는 트랙이 비어 있고 항목은 한 줄로 붙은 secondary 버튼처럼 보입니다. 트랙과 이 색은 secondary 항목에만 적용되므로 ghost 아이콘 토글 줄은 그대로입니다. 세로 묶음은 트랙을 그리지 않고 `toolbar.gap`으로 쌓습니다. [Playground](/playground)의 Anvil 프리셋이 세그먼트 토큰을 씁니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** `ToggleGroup.Root`는 `role="group"`입니다. 각 `ToggleGroup.Item`은 그룹의 값에서 `aria-pressed`를 가져오는 `Button.Root`이며, 항목이나 그룹이 비활성이면 네이티브 `disabled`를 가집니다. 단독으로 쓸 때 그룹은 탭 정지를 하나 두고 방향 키로 포커스를 옮깁니다. Toolbar 안에서는 둘 다 툴바에 맡깁니다. 눌린 항목은 색과 함께 안쪽 테두리도 유지합니다.

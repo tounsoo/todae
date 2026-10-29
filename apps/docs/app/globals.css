@@ -15,12 +15,27 @@
   text-size-adjust: 100%;
 }
 
+/* Nunito Sans, so the Anvil preset's font.family.sans name resolves. Sofia Pro
+   is not shipped. Headings in that preset name it and fall back here. */
+@font-face {
+  font-family: 'Nunito Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/nunito-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Todae ships the typeface token but doesn't apply it; the docs opt in, as a
    company would. Every themed subtree re-reads it, so a preset's
    font.family.sans override changes the type inside its ThemeProvider. */
 :root,
 [data-appearance] {
   font-family: var(--todae-text-font-family);
+}
+
+[data-preset='anvil'] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: 'Sofia Pro', SofiaPro, 'Nunito Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 * {

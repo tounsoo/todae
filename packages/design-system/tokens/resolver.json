@@ -55,6 +55,7 @@
         { "$ref": "./components/steps.json" },
         { "$ref": "./components/breadcrumbs.json" },
         { "$ref": "./components/toolbar.json" },
+        { "$ref": "./components/toggle-group.json" },
         { "$ref": "./components/drawer.json" },
         { "$ref": "./components/loader.json" },
         { "$ref": "./components/skeleton.json" },

@@ -98,6 +98,7 @@ export const RESERVED_ROOTS = [
   'splitter',
   'breadcrumbs',
   'toolbar',
+  'togglegroup',
   'drawer',
   'loader',
   'skeleton',

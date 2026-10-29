@@ -112,6 +112,115 @@ function capsLabels(value: number): ThemeOverride {
   };
 }
 
+type Tone = 'info' | 'success' | 'warning' | 'critical';
+
+function anvilAppearance(c: {
+  ink: ThemeColorValue;
+  muted: ThemeColorValue;
+  canvas: ThemeColorValue;
+  raised: ThemeColorValue;
+  fill: ThemeColorValue;
+  fillHover: ThemeColorValue;
+  rule: ThemeColorValue;
+  control: ThemeColorValue;
+  track: ThemeColorValue;
+  thumb: ThemeColorValue;
+  accent: [ThemeColorValue, ThemeColorValue, ThemeColorValue, ThemeColorValue];
+  tint: ThemeColorValue;
+  tintStrong: ThemeColorValue;
+  danger: ThemeColorValue;
+  tint1: number;
+  wash: ThemeColorValue;
+  /** Focus ring. Anvil's blue, 2px, independent of a later accent edit. */
+  focus: ThemeColorValue;
+  segmentShadow: ThemeColorValue;
+  dismissHover: ThemeColorValue;
+  shadow: ThemeColorValue;
+  status: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue, fg: ThemeColorValue]>;
+  alert: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue]>;
+}): ThemeOverride {
+  const out: ThemeOverride = {
+    ...accent(...c.accent),
+    'color.bg.canvas': c.canvas,
+    'color.bg.elevated': c.raised,
+    'color.fg.default': c.ink,
+    'color.fg.muted': c.muted,
+    'color.danger.default': c.danger,
+    'focus.ring.color': c.focus,
+    'color.border.subtle': c.rule,
+    'button.secondary.bg.default': alpha(c.ink, c.tint1),
+    'button.secondary.bg.focus': alpha(c.ink, c.tint1),
+    'button.secondary.bg.hover': alpha(c.ink, c.tint1 + 0.04),
+    'button.secondary.bg.active': alpha(c.ink, c.tint1 + 0.1),
+    'button.secondary.border.default': alpha(c.ink, 0),
+    'button.secondary.border.hover': alpha(c.ink, 0),
+    'button.secondary.border.active': alpha(c.ink, 0),
+    'button.secondary.border.focus': alpha(c.ink, 0),
+    'button.primary.bg.disabled': c.raised,
+    'button.primary.border.disabled': c.raised,
+    'button.primary.fg.disabled': c.muted,
+    'button.secondary.bg.disabled': c.raised,
+    'button.secondary.border.disabled': c.raised,
+    'button.secondary.fg.disabled': c.muted,
+    'field.border.default': c.control,
+    'field.border.hover': c.control,
+    'field.bg.disabled': c.raised,
+    'selection.border.default': c.ink,
+    'selection.track.bg': c.track,
+    'selection.thumb.bg': c.thumb,
+    'tabs.fg.default': c.ink,
+    'tabs.indicator.color': c.ink,
+    'chip.bg.default': c.fill,
+    'chip.bg.focus': c.fill,
+    'chip.bg.hover': c.fillHover,
+    'chip.border.default': c.rule,
+    'chip.border.hover': c.rule,
+    'chip.dismiss.fg.default': c.ink,
+    'chip.dismiss.fg.hover': c.ink,
+    'chip.dismiss.bg.hover': c.dismissHover,
+    'badge.neutral.bg': c.fill,
+    'badge.neutral.border': c.rule,
+    'tooltip.bg': c.ink,
+    'tooltip.border': c.ink,
+    'tooltip.fg': c.canvas,
+    'tooltip.radius': rem(0.375),
+    'tooltip.shadow': shadow(0, 2, 8, 0, c.shadow),
+    'popover.shadow': shadow(0, 2, 8, 0, c.shadow),
+    'toast.shadow': shadow(0, 8, 24, 0, c.shadow),
+    'option.bg.selected': c.tint,
+    'option.bg.selected-highlighted': c.tintStrong,
+    'option.fg.selected': c.accent[0],
+    'calendar.day.bg.range': c.tint,
+    'calendar.day.fg.range': c.accent[0],
+    'steps.marker.border.current': c.accent[0],
+    'steps.marker.border.pending': c.control,
+    // Toggle groups are Anvil's segmented control. Segments that match Button
+    // inherit it. These are the fills that do not.
+    'togglegroup.bg': c.fill,
+    'togglegroup.border': c.rule,
+    'togglegroup.item.bg.default': alpha(c.wash, 0),
+    'togglegroup.item.bg.hover': alpha(c.wash, 0.08),
+    'togglegroup.item.bg.active': alpha(c.wash, 0.16),
+    'togglegroup.item.bg.pressed': c.canvas,
+    'togglegroup.item.fg.pressed': c.ink,
+    'togglegroup.item.border.pressed': alpha(c.wash, 0),
+    'togglegroup.item.shadow.pressed': shadow(0, 2, 8, 0, c.segmentShadow),
+    'progress.track': c.fill,
+    'progress.radius': rem(0.375),
+  };
+  for (const tone of ['info', 'success', 'warning', 'critical'] as const) {
+    const [bg, border, fg] = c.status[tone];
+    const [alertBg, alertBorder] = c.alert[tone];
+    out[`color.status.${tone}.bg` as keyof ThemeOverride] = bg;
+    out[`color.status.${tone}.border` as keyof ThemeOverride] = border;
+    out[`color.status.${tone}.fg` as keyof ThemeOverride] = fg;
+    out[`alert.${tone}.bg` as keyof ThemeOverride] = alertBg;
+    out[`alert.${tone}.border` as keyof ThemeOverride] = alertBorder;
+    out[`alert.${tone}.fg` as keyof ThemeOverride] = c.ink;
+  }
+  return out;
+}
+
 const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
 
 export const PRESETS: readonly ThemePreset[] = [
@@ -233,6 +342,159 @@ export const PRESETS: readonly ThemePreset[] = [
       ...accent(oklch(0.82, 0.12, 305), oklch(0.86, 0.1, 305), oklch(0.78, 0.13, 305), oklch(0.17, 0.04, 300)),
       ...gloss(alpha(oklch(1, 0, 0), 0.35), alpha(oklch(0, 0, 0), 0.4)),
       'focus.ring.color': oklch(0.82, 0.12, 305),
+    },
+  ),
+  preset(
+    'anvil',
+    'Anvil',
+    {
+      ...grays(0, 0),
+      ...radii(0.1875, 0.375, 0.75),
+      'chip.radius': rem(99),
+      'badge.radius': rem(99),
+      // Sizes from Anvil's component CSS. Buttons, fields and tabs are 16px.
+      // Chips are 14px. A button is 40px on the page's 1.6 line height:
+      // (40 - 16*1.6 - 2) / 2 = 6.2px of vertical padding. 48px tabs, 26px
+      // chips whose round dismiss button fills the end, 18px badges, and 16px
+      // card and popover padding.
+      'button.base.font.size': rem(1),
+      'field.font.size': rem(1),
+      'chip.font.size': rem(0.875),
+      'button.base.padding.x': rem(1),
+      'button.base.padding.y': rem(0.3875),
+      'field.padding.y': rem(0.4375),
+      'tabs.padding.y': rem(0.875),
+      'card.padding': rem(1),
+      'popover.padding.x': rem(1),
+      'popover.padding.y': rem(1),
+      'field.picker.padding.x': rem(0.5),
+      'field.picker.padding.y': rem(0.5),
+      'option.radius': rem(0.375),
+      'option.padding.x': rem(1),
+      'option.leading': 1.2857,
+      'option.list.gap': rem(0.25),
+      'menu.item.radius': rem(0.375),
+      'menu.item.padding.x': rem(0.5),
+      'menu.item.leading': 1.2857,
+      'dialog.padding.x': rem(1.5),
+      'dialog.padding.y': rem(1.5),
+      'calendar.day.size': rem(2.125),
+      'chip.min-height': rem(1.625),
+      'chip.padding.y': rem(0),
+      'chip.gap': rem(0.25),
+      'chip.leading': 1,
+      'chip.font.weight': 600,
+      'chip.icon.size': rem(1),
+      'chip.dismiss.size': rem(1.5),
+      'chip.dismiss.inset': rem(0),
+      'badge.padding.x': rem(0.375),
+      'badge.padding.y': rem(0.125),
+      'badge.leading': 1,
+      'alert.font.size': rem(1),
+      'alert.leading': 1.5,
+      'disclosure.summary.font.weight': 700,
+      'breadcrumbs.current.font.weight': 700,
+      'breadcrumbs.gap': rem(0.25),
+      'avatar.font.weight': 700,
+      'selection.font.size': rem(1),
+      'font.family.sans': ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+      'font.weight.medium': 600,
+      'font.weight.bold': 700,
+      'alert.border-width': rem(0.125),
+      'alert.padding.x': rem(1),
+      'alert.padding.y': rem(1),
+      'alert.title.font.weight': 700,
+      'tabs.font.size': rem(1),
+      // Track: 1px border, 4px padding, 6px radius, 8px gap.
+      // Segment radius is 3px, not the button's 6px. Horizontal padding is the
+      // button's 16px. The segment is 30px on the page's 1.6 line and a 1px
+      // border: (30 - 16*1.6 - 2) / 2 = 1.2px. The track is that segment plus
+      // the 4px padding and 1px border on each side.
+      'togglegroup.border-width': rem(0.0625),
+      'togglegroup.padding': rem(0.25),
+      'togglegroup.radius': rem(0.375),
+      'togglegroup.gap': rem(0.5),
+      'togglegroup.item.radius': rem(0.1875),
+      'togglegroup.item.pressed-ring-width': rem(0),
+      'togglegroup.item.padding.y': rem(0.075),
+    },
+    anvilAppearance({
+      ink: oklch(0.107, 0, 0),
+      muted: oklch(0.545, 0, 0),
+      canvas: oklch(1, 0, 0),
+      raised: oklch(0.982, 0, 0),
+      fill: oklch(0.949, 0, 0),
+      fillHover: oklch(0.922, 0, 0),
+      rule: oklch(0.925, 0, 0),
+      control: oklch(0.637, 0, 0),
+      track: oklch(0.82, 0, 0),
+      thumb: oklch(1, 0, 0),
+      accent: [oklch(0.532, 0.198, 258), oklch(0.438, 0.15, 261), oklch(0.336, 0.118, 257), oklch(1, 0, 0)],
+      tint: oklch(0.954, 0.022, 254),
+      tintStrong: oklch(0.908, 0.046, 253),
+      danger: oklch(0.561, 0.215, 32),
+      tint1: 0.06,
+      wash: oklch(0.637, 0, 0),
+      focus: oklch(0.532, 0.198, 258),
+      segmentShadow: alpha(oklch(0.218, 0, 0), 0.08),
+      dismissHover: alpha(oklch(0, 0, 0), 0.29),
+      shadow: alpha(oklch(0.218, 0, 0), 0.08),
+      status: {
+        info: [oklch(0.908, 0.046, 253), oklch(0.827, 0.088, 253), oklch(0.248, 0.082, 255)],
+        success: [oklch(0.922, 0.07, 169), oklch(0.857, 0.13, 166), oklch(0.26, 0.055, 163)],
+        warning: [oklch(0.981, 0.031, 95), oklch(0.916, 0.13, 94), oklch(0.281, 0.058, 80)],
+        critical: [oklch(0.951, 0.025, 30), oklch(0.821, 0.1, 30), oklch(0.261, 0.092, 35)],
+      },
+      alert: {
+        info: [oklch(0.99, 0.005, 258), oklch(0.532, 0.198, 258)],
+        success: [oklch(0.989, 0.01, 174), oklch(0.524, 0.119, 159)],
+        warning: [oklch(0.996, 0.008, 99), oklch(0.672, 0.142, 74)],
+        critical: [oklch(0.991, 0.004, 34), oklch(0.561, 0.215, 32)],
+      },
+    }),
+    {
+      // Anvil's dark surfaces sit higher than Todae's: #1a1a1a, #292929, #404040.
+      'color.gray.950': oklch(0.218, 0, 0),
+      'color.gray.900': oklch(0.218, 0, 0),
+      'color.gray.850': oklch(0.281, 0, 0),
+      'color.gray.800': oklch(0.371, 0, 0),
+      'color.gray.700': oklch(0.446, 0, 0),
+      ...anvilAppearance({
+        ink: oklch(1, 0, 0),
+        muted: oklch(0.82, 0, 0),
+        canvas: oklch(0.218, 0, 0),
+        raised: oklch(0.281, 0, 0),
+        fill: oklch(0.371, 0, 0),
+        fillHover: oklch(0.446, 0, 0),
+        rule: oklch(0.371, 0, 0),
+        control: oklch(0.446, 0, 0),
+        track: oklch(0.545, 0, 0),
+        thumb: oklch(0.218, 0, 0),
+        // Anvil's #1a1a1a text on the blue reaches Lc 58, under Todae's 60, so
+        // text on the accent is Anvil's darkest neutral instead.
+        accent: [oklch(0.749, 0.132, 254), oklch(0.827, 0.088, 253), oklch(0.908, 0.046, 253), oklch(0.13, 0, 0)],
+        tint: alpha(oklch(0.749, 0.132, 254), 0.2),
+        tintStrong: alpha(oklch(0.749, 0.132, 254), 0.3),
+        danger: oklch(0.686, 0.205, 33),
+        tint1: 0.08,
+        wash: oklch(1, 0, 0),
+        focus: oklch(0.749, 0.132, 254),
+        segmentShadow: alpha(oklch(1, 0, 0), 0.08),
+        dismissHover: alpha(oklch(1, 0, 0), 0.39),
+        shadow: alpha(oklch(0, 0, 0), 0.4),
+        status: {
+          info: [oklch(0.248, 0.082, 255), oklch(0.336, 0.118, 257), oklch(0.99, 0.005, 258)],
+          success: [oklch(0.356, 0.077, 161), oklch(0.356, 0.077, 161), oklch(0.989, 0.01, 174)],
+          warning: [oklch(0.281, 0.058, 80), oklch(0.443, 0.093, 76), oklch(0.996, 0.008, 99)],
+          critical: [oklch(0.261, 0.092, 35), oklch(0.359, 0.134, 33), oklch(0.991, 0.004, 34)],
+        },
+        alert: {
+          info: [oklch(0.145, 0.038, 247), oklch(0.827, 0.088, 253)],
+          success: [oklch(0.151, 0.027, 172), oklch(0.857, 0.13, 166)],
+          warning: [oklch(0.183, 0.037, 88), oklch(0.952, 0.082, 96)],
+          critical: [oklch(0.105, 0.027, 51), oklch(0.821, 0.1, 30)],
+        },
+      }),
     },
   ),
 ];

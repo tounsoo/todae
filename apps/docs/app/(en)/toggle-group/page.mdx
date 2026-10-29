@@ -34,6 +34,10 @@ With `selectionMode="multiple"`, any number can be pressed, and the value is an 
 
 Name the group with `aria-label` or `aria-labelledby`. Horizontal items join like [Button.Group](/button). Inside a [Toolbar](/toolbar), the toolbar owns the arrow keys and the tab stop.
 
+## Segmented look
+
+A horizontal group of secondary items, the default, can be restyled as a segmented control with tokens alone, with no prop. `togglegroup.bg`, `togglegroup.border`, `togglegroup.border-width`, `togglegroup.padding`, `togglegroup.radius` and `togglegroup.gap` draw the track. A segment inherits `button.*` except where it differs. `togglegroup.item.radius` and `togglegroup.item.padding.y` size it, `togglegroup.item.bg.default`, `hover` and `active` color the resting segment, and `togglegroup.item.bg.pressed`, `fg.pressed`, `border.pressed` and `shadow.pressed` color the pressed one. `togglegroup.item.pressed-ring-width` is the inset ring. Focus keeps the resting fill and uses Button's focus ring. By default the track is empty and the items look like secondary buttons joined into one row. The track and these colors apply only to secondary items, so a row of ghost icon toggles stays bare. A vertical group does not draw the track. It stacks with `toolbar.gap`. The [Playground](/playground)'s Anvil preset sets the segmented tokens.
+
 ## Accessible composition
 
 **Todae handles:** `ToggleGroup.Root` is a `role="group"`. Each `ToggleGroup.Item` is a `Button.Root` whose `aria-pressed` comes from the group's value, with a native `disabled` when the item or the group is disabled. On its own, the group keeps one tab stop and moves focus with the arrow keys; inside a Toolbar, it leaves both to the toolbar. A pressed item keeps an inset ring as well as its colors.

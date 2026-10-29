@@ -1,0 +1,33 @@
+{
+  "togglegroup": {
+    "$description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track.",
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "padding": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "gap": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/button/base/radius/$value" } },
+    "item": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/button/base/radius/$value" } },
+      "padding": {
+        "y": { "$type": "dimension", "$value": { "$ref": "#/button/base/padding/y/$value" } }
+      },
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/hover/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/active/$value" } },
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/active/$value" } }
+      },
+      "fg": {
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/active/$value" } }
+      },
+      "border": {
+        "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/active/$value" } }
+      },
+      "pressed-ring-width": { "$type": "dimension", "$value": { "$ref": "#/button/base/pressed-ring-width/$value" } },
+      "shadow": {
+        "pressed": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
+      }
+    }
+  }
+}

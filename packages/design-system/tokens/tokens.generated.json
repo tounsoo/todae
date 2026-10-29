@@ -6392,7 +6392,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.bg.disabled",
@@ -6406,7 +6406,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.bg.focus",
@@ -6420,7 +6420,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.bg.hover",
@@ -6434,7 +6434,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.border.default",
@@ -6448,7 +6448,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.border.disabled",
@@ -6462,7 +6462,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.border.focus",
@@ -6476,7 +6476,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.border.hover",
@@ -6490,7 +6490,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.border-width",
@@ -6504,7 +6504,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-1.bg",
@@ -6518,7 +6518,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-1.border",
@@ -6532,7 +6532,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-1.fg",
@@ -6546,7 +6546,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-2.bg",
@@ -6560,7 +6560,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-2.border",
@@ -6574,7 +6574,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-2.fg",
@@ -6588,7 +6588,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-3.bg",
@@ -6602,7 +6602,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-3.border",
@@ -6616,7 +6616,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-3.fg",
@@ -6630,7 +6630,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-4.bg",
@@ -6644,7 +6644,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-4.border",
@@ -6658,7 +6658,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-4.fg",
@@ -6672,7 +6672,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-5.bg",
@@ -6686,7 +6686,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-5.border",
@@ -6700,7 +6700,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-5.fg",
@@ -6714,7 +6714,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-6.bg",
@@ -6728,7 +6728,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-6.border",
@@ -6742,7 +6742,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-6.fg",
@@ -6756,7 +6756,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-7.bg",
@@ -6770,7 +6770,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-7.border",
@@ -6784,7 +6784,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-7.fg",
@@ -6798,7 +6798,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-8.bg",
@@ -6812,7 +6812,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-8.border",
@@ -6826,7 +6826,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.category-8.fg",
@@ -6840,7 +6840,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.critical.bg",
@@ -6854,7 +6854,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.critical.border",
@@ -6868,7 +6868,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.critical.fg",
@@ -6882,7 +6882,35 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.dismiss.bg.default",
+      "type": "color",
+      "cssVar": "--todae-chip-dismiss-bg-default",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.dismiss.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-chip-dismiss-bg-hover",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.dismiss.fg.default",
@@ -6896,7 +6924,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.dismiss.fg.hover",
@@ -6910,7 +6938,49 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.dismiss.inset",
+      "type": "dimension",
+      "cssVar": "--todae-chip-dismiss-inset",
+      "cssValue": "var(--todae-chip-padding-x)",
+      "ref": "chip.padding.x",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.dismiss.radius",
+      "type": "dimension",
+      "cssVar": "--todae-chip-dismiss-radius",
+      "cssValue": "var(--todae-radius-full)",
+      "ref": "radius.full",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.dismiss.size",
+      "type": "dimension",
+      "cssVar": "--todae-chip-dismiss-size",
+      "cssValue": "var(--todae-chip-icon-size)",
+      "ref": "chip.icon.size",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.fg.default",
@@ -6924,7 +6994,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.fg.disabled",
@@ -6938,7 +7008,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.fg.focus",
@@ -6952,7 +7022,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.fg.hover",
@@ -6966,7 +7036,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.font.size",
@@ -6980,7 +7050,21 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-chip-font-weight",
+      "cssValue": "var(--todae-font-weight-regular)",
+      "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.gap",
@@ -6994,7 +7078,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.icon.size",
@@ -7008,7 +7092,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.info.bg",
@@ -7022,7 +7106,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.info.border",
@@ -7036,7 +7120,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.info.fg",
@@ -7050,7 +7134,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.leading",
@@ -7064,7 +7148,21 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
+    },
+    {
+      "path": "chip.min-height",
+      "type": "dimension",
+      "cssVar": "--todae-chip-min-height",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.padding.x",
@@ -7078,7 +7176,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.padding.y",
@@ -7092,7 +7190,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.panel.max-width",
@@ -7106,7 +7204,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.panel.viewport-inset",
@@ -7120,7 +7218,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.radius",
@@ -7134,7 +7232,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.ring.focus",
@@ -7148,7 +7246,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.ring-offset",
@@ -7162,7 +7260,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.ring-width",
@@ -7176,7 +7274,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.success.bg",
@@ -7190,7 +7288,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.success.border",
@@ -7204,7 +7302,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.success.fg",
@@ -7218,7 +7316,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.warning.bg",
@@ -7232,7 +7330,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.warning.border",
@@ -7246,7 +7344,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "chip.warning.fg",
@@ -7260,7 +7358,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
       "path": "overlay.motion.easing.enter",
@@ -8204,8 +8302,8 @@
       "path": "option.check.fg",
       "type": "color",
       "cssVar": "--todae-option-check-fg",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
+      "cssValue": "var(--todae-option-fg-selected)",
+      "ref": "option.fg.selected",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -13379,6 +13477,230 @@
         "name": "contract"
       },
       "description": "Toolbar.Root: a row of controls with separators between groups. ToggleGroup also reads its gap."
+    },
+    {
+      "path": "togglegroup.bg",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-bg",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.border",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-border",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-border-width",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.gap",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-gap",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.bg.active",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-active",
+      "cssValue": "var(--todae-button-secondary-bg-active)",
+      "ref": "button.secondary.bg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.bg.default",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-default",
+      "cssValue": "var(--todae-button-secondary-bg-default)",
+      "ref": "button.secondary.bg.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-hover",
+      "cssValue": "var(--todae-button-secondary-bg-hover)",
+      "ref": "button.secondary.bg.hover",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-bg-pressed",
+      "cssValue": "var(--todae-button-secondary-bg-active)",
+      "ref": "button.secondary.bg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.border.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-pressed",
+      "cssValue": "var(--todae-button-secondary-border-active)",
+      "ref": "button.secondary.border.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.fg.pressed",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-fg-pressed",
+      "cssValue": "var(--todae-button-secondary-fg-active)",
+      "ref": "button.secondary.fg.active",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-padding-y",
+      "cssValue": "var(--todae-button-base-padding-y)",
+      "ref": "button.base.padding.y",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.pressed-ring-width",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-pressed-ring-width",
+      "cssValue": "var(--todae-button-base-pressed-ring-width)",
+      "ref": "button.base.pressed-ring-width",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.radius",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-item-radius",
+      "cssValue": "var(--todae-button-base-radius)",
+      "ref": "button.base.radius",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.item.shadow.pressed",
+      "type": "shadow",
+      "cssVar": "--todae-togglegroup-item-shadow-pressed",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.padding",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-padding",
+      "cssValue": "0px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
+      "path": "togglegroup.radius",
+      "type": "dimension",
+      "cssVar": "--todae-togglegroup-radius",
+      "cssValue": "var(--todae-button-base-radius)",
+      "ref": "button.base.radius",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
     },
     {
       "path": "drawer.bg",

@@ -29,7 +29,7 @@
       "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     },
     "check": {
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/option/fg/selected/$value" } },
       "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
       "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
       "scale": { "$type": "number", "$value": 0.85 },

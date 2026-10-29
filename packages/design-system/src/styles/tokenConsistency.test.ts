@@ -49,8 +49,9 @@ const OWN_ROOTS: Record<string, string[]> = {
   ChipList: ['chip'],
   // Native <select> options take the OptionList look.
   Field: ['field', 'option'],
-  // A toggle group is a toolbar segment and spaces its items like one.
-  ToggleGroup: ['toolbar'],
+  // A toggle group is a toolbar segment and spaces its items like one, and
+  // overlaps its items by Button's border width.
+  ToggleGroup: ['togglegroup', 'toolbar', 'button'],
   // Progress and meter share one sheet.
   Progress: ['progress', 'meter'],
   ScrollArea: ['scroll'],
@@ -67,6 +68,16 @@ describe('token consistency across component styles', () => {
       const foreign = [...roots].filter((root) => !own.includes(root) && !SHARED_ROOTS.includes(root));
       expect({ name, foreign }).toEqual({ name, foreign: [] });
     }
+  });
+
+  it('keeps a pressed button on its pressed fill while hovered', () => {
+    const css = sheets.Button ?? '';
+    const hover = css.indexOf('.root:hover:not(:disabled, [aria-disabled=\'true\'], a:not(:any-link))');
+    const pressedHover = css.indexOf(".root[aria-pressed='true']:hover:not(:disabled, [aria-disabled='true'])");
+    expect(pressedHover).toBeGreaterThan(hover);
+    const rule = css.slice(pressedHover, css.indexOf('}', pressedHover));
+    expect(rule).toContain('var(--_button-bg-pressed, var(--todae-button-bg-active))');
+    expect(rule).not.toContain('--_button-bg-hover');
   });
 
   it('draws Prose type from prose font-size tokens', () => {

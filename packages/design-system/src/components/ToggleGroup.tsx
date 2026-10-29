@@ -131,7 +131,10 @@ function Root(props: ToggleGroupRootProps) {
         }}
         role="group"
         data-orientation={orientation}
-        className={cx(orientation === 'horizontal' ? buttonStyles.group : styles.vertical, className)}
+        className={cx(
+          orientation === 'horizontal' ? cx(buttonStyles.group, styles.horizontal) : styles.vertical,
+          className,
+        )}
       >
         {children}
       </div>
@@ -139,7 +142,7 @@ function Root(props: ToggleGroupRootProps) {
   );
 }
 
-function Item({ value, disabled, onFocus, ...props }: ToggleGroupItemProps) {
+function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItemProps) {
   const ctx = useContext(ToggleGroupContext);
   if (!ctx) throw new Error('ToggleGroup.Item must render inside ToggleGroup.Root');
   const off = disabled || ctx.disabled;
@@ -148,6 +151,7 @@ function Item({ value, disabled, onFocus, ...props }: ToggleGroupItemProps) {
     <Button.Root
       variant="secondary"
       {...props}
+      className={cx(styles.item, className)}
       {...roving}
       disabled={off}
       pressed={ctx.pressed.has(value)}

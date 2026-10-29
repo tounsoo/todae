@@ -463,6 +463,7 @@ export function Playground({ locale }: { locale: Locale }) {
           appearance={appearance}
           overrides={overrides}
           data-density={density}
+          data-preset={presetId}
         >
           {/* The preview is a product in the reader's language, so Todae's own text is too. */}
           <StringsProvider strings={TODAE_STRINGS[locale]}>

@@ -10,6 +10,7 @@
     display: inline-flex;
     align-items: center;
     max-width: 100%;
+    min-height: var(--todae-chip-min-height);
     gap: var(--todae-chip-gap);
     padding: var(--todae-chip-padding-y) var(--todae-chip-padding-x);
     border: var(--todae-chip-border-width) solid var(--_tone-border, var(--todae-chip-border-default));
@@ -17,7 +18,12 @@
     background: var(--_tone-bg, var(--todae-chip-bg-default));
     color: var(--_tone-fg, var(--todae-chip-fg-default));
     font-size: var(--todae-chip-font-size);
+    font-weight: var(--todae-chip-font-weight);
     line-height: var(--todae-chip-leading);
+  }
+
+  .root:has(> .dismiss) {
+    padding-inline-end: var(--todae-chip-dismiss-inset);
   }
 
   /* The +N of ChipList and Field.ChipInput (data-overflow) is no control by
@@ -134,10 +140,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    inline-size: var(--todae-chip-dismiss-size);
+    block-size: var(--todae-chip-dismiss-size);
     margin: 0;
     padding: 0;
     border: 0;
-    background: transparent;
+    border-radius: var(--todae-chip-dismiss-radius);
+    background: var(--todae-chip-dismiss-bg-default);
     /* On a tone, the cross takes the label's color. */
     color: var(--_tone-fg, var(--todae-chip-dismiss-fg-default));
     font: inherit;
@@ -153,6 +162,7 @@
   }
 
   .dismiss:hover:not(:disabled) {
+    background: var(--todae-chip-dismiss-bg-hover);
     color: var(--_tone-fg, var(--todae-chip-dismiss-fg-hover));
   }
 

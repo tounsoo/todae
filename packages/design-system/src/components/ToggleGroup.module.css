@@ -1,11 +1,40 @@
 @layer todae.components {
-  /* Horizontal groups join like Button.Group; a vertical one stacks with a gap.
-     A toggle group is a toolbar segment, so it spaces its items like Toolbar
-     and changes with toolbar.gap. */
+  /* Horizontal items join through Button's group rules. The track, the gap
+     and the segment hooks apply only while a secondary item is in the group,
+     so a row of ghost icon toggles stays a bare joined row. */
+  .horizontal:has(> .item[data-button-variant='secondary']) {
+    --_button-join-gap: var(--todae-togglegroup-gap);
+    box-sizing: border-box;
+    gap: var(--todae-togglegroup-gap);
+    padding: var(--todae-togglegroup-padding);
+    background: var(--todae-togglegroup-bg);
+    border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
+    border-radius: var(--todae-togglegroup-radius);
+  }
+
+  /* Vertical groups do not draw the track. Anvil's segmented control is a row.
+     A vertical group stacks with the toolbar gap, as a toolbar segment. */
   .vertical {
     display: inline-flex;
     flex-direction: column;
     align-items: stretch;
     gap: var(--todae-toolbar-gap);
+  }
+
+  .item[data-button-variant='secondary'] {
+    --_button-radius: var(--todae-togglegroup-item-radius);
+    --_button-padding-y: var(--todae-togglegroup-item-padding-y);
+    --_button-bg-default: var(--todae-togglegroup-item-bg-default);
+    --_button-bg-hover: var(--todae-togglegroup-item-bg-hover);
+    --_button-bg-active: var(--todae-togglegroup-item-bg-active);
+    --_button-bg-focus: var(--todae-togglegroup-item-bg-default);
+    --_button-bg-pressed: var(--todae-togglegroup-item-bg-pressed);
+    --_button-fg-pressed: var(--todae-togglegroup-item-fg-pressed);
+    --_button-border-pressed: var(--todae-togglegroup-item-border-pressed);
+    --_button-pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
+  }
+
+  .horizontal > .item[data-button-variant='secondary'][aria-pressed='true']:not(:disabled, [aria-disabled='true']) {
+    --_lift: var(--todae-togglegroup-item-shadow-pressed);
   }
 }
