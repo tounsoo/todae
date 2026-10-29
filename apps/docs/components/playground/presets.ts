@@ -407,15 +407,14 @@ export const PRESETS: readonly ThemePreset[] = [
       'tabs.font.size': rem(1),
       // Track: 1px border, 4px padding, 6px radius, 8px gap, 40px tall.
       // Segment radius is 3px, not the button's 6px. Horizontal padding is the
-      // button's 16px. The segment is 30px inside the track, so with a 25.6px
-      // line the vertical padding is (30 - 25.6) / 2.
+      // button's 16px. The segment fills the track, so its vertical padding is 0.
       'togglegroup.border-width': rem(0.0625),
       'togglegroup.padding': rem(0.25),
       'togglegroup.radius': rem(0.375),
       'togglegroup.gap': rem(0.5),
       'togglegroup.item.radius': rem(0.1875),
       'togglegroup.item.pressed-ring-width': rem(0),
-      'togglegroup.item.padding.y': rem(0.1375),
+      'togglegroup.item.padding.y': rem(0),
     },
     anvilAppearance({
       ink: oklch(0.107, 0, 0),
