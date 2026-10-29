@@ -135,6 +135,23 @@ jobs:
         name: Second-brand example
         run: pnpm --filter fernway-example build
 
+  # Drafts skip Checks. This job still runs so a removed, renamed, or retyped token path fails before review.
+  # The prose-only skip does not apply. This job is the only token API gate, so a docs-only pull request still runs it.
+  token-api:
+    name: Token API
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Snapshot matches the build
+        run: pnpm tokens:check
+      - name: No public token was removed or renamed
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
   docs:
     if: ${{ !github.event.pull_request.draft }}
     name: Docs build and screenshots
