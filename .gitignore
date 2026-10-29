@@ -16,3 +16,4 @@ apps/*/.vercel
 __screenshots__/
 apps/docs/test-results
 apps/docs/playwright-report
+.audit/
