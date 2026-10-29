@@ -19,9 +19,10 @@
   }
 
   /* While the scroll button shows, focus lands clear of it. Its height,
-     --_button-size, is set on the root from script. */
+     --_conversation-scroll-size, is set on the root from script. The name is
+     not --_button-*, which Button uses as its container hook. */
   .root:has(> .scrollButton:not([hidden])) > .viewport {
-    scroll-padding-block-end: calc(var(--_room) + var(--todae-conversation-scroll-button-inset) + var(--_button-size, 0px));
+    scroll-padding-block-end: calc(var(--_room) + var(--todae-conversation-scroll-button-inset) + var(--_conversation-scroll-size, 0px));
   }
 
   /* Scroll anchoring is off while it follows the end, set from script with

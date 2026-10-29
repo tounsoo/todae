@@ -93,4 +93,25 @@ describe('theme tokens for case, spacing and shadows in a browser', () => {
     expect(shadow('Week')).toContain('inset');
     expect(shadow('Week')).not.toContain('3px 3px');
   });
+
+  it('draws a non-transparent pressed segment border', () => {
+    render(
+      <ThemeProvider
+        appearance="light"
+        overrides={{
+          'togglegroup.gap': { value: 0.5, unit: 'rem' },
+          'togglegroup.item.border.pressed': { colorSpace: 'oklch', components: [0.55, 0.22, 30] },
+        }}
+      >
+        <ToggleGroup.Root aria-label="Range" defaultValue="week">
+          <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
+          <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
+        </ToggleGroup.Root>
+      </ThemeProvider>,
+    );
+    const week = screen.getByRole('button', { name: 'Week' });
+    const style = getComputedStyle(week);
+    expect(parseFloat(style.borderTopWidth)).toBeGreaterThan(0);
+    expect(style.borderTopColor).not.toMatch(/transparent|rgba\(0,\s*0,\s*0,\s*0\)/);
+  });
 });

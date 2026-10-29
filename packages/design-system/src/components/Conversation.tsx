@@ -309,12 +309,12 @@ function ScrollButton({ 'aria-label': ariaLabel, onClick, className, children, r
     if (!own || !root || typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(([entry]) => {
       const size = entry?.borderBoxSize?.[0]?.blockSize ?? own.offsetHeight;
-      if (size > 0) root.style.setProperty('--_button-size', `${size}px`);
+      if (size > 0) root.style.setProperty('--_conversation-scroll-size', `${size}px`);
     });
     resize.observe(own, { box: 'border-box' });
     return () => {
       resize.disconnect();
-      root.style.removeProperty('--_button-size');
+      root.style.removeProperty('--_conversation-scroll-size');
     };
   }, [context.button]);
   // What React would render: no nodes, or only empty text.

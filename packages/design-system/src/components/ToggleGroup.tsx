@@ -115,33 +115,29 @@ function Root(props: ToggleGroupRootProps) {
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
-  const group = (
-    <div
-      {...rest}
-      {...container}
-      ref={refs}
-      onFocus={(event: FocusEvent<HTMLDivElement>) => {
-        onFocus?.(event);
-        focusLeave.onFocus();
-      }}
-      onBlur={(event: FocusEvent<HTMLDivElement>) => {
-        onBlur?.(event);
-        focusLeave.onBlur(event);
-      }}
-      role="group"
-      data-orientation={orientation}
-      className={cx(
-        orientation === 'horizontal' ? cx(buttonStyles.group, styles.horizontal) : styles.vertical,
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-
   return (
     <ToggleGroupContext.Provider value={{ pressed, toggle, disabled, roving: toolbar ? null : roving }}>
-      {orientation === 'horizontal' ? <div className={styles.frame}>{group}</div> : group}
+      <div
+        {...rest}
+        {...container}
+        ref={refs}
+        onFocus={(event: FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event);
+          focusLeave.onFocus();
+        }}
+        onBlur={(event: FocusEvent<HTMLDivElement>) => {
+          onBlur?.(event);
+          focusLeave.onBlur(event);
+        }}
+        role="group"
+        data-orientation={orientation}
+        className={cx(
+          orientation === 'horizontal' ? cx(buttonStyles.group, styles.horizontal) : styles.vertical,
+          className,
+        )}
+      >
+        {children}
+      </div>
     </ToggleGroupContext.Provider>
   );
 }

@@ -405,16 +405,18 @@ export const PRESETS: readonly ThemePreset[] = [
       'alert.padding.y': rem(1),
       'alert.title.font.weight': 700,
       'tabs.font.size': rem(1),
-      // Track: 1px border, 4px padding, 6px radius, 8px gap, 40px tall.
+      // Track: 1px border, 4px padding, 6px radius, 8px gap.
       // Segment radius is 3px, not the button's 6px. Horizontal padding is the
-      // button's 16px. The segment fills the track, so its vertical padding is 0.
+      // button's 16px. The segment is 30px on the page's 1.6 line and a 1px
+      // border: (30 - 16*1.6 - 2) / 2 = 1.2px. The track is that segment plus
+      // the 4px padding and 1px border on each side.
       'togglegroup.border-width': rem(0.0625),
       'togglegroup.padding': rem(0.25),
       'togglegroup.radius': rem(0.375),
       'togglegroup.gap': rem(0.5),
       'togglegroup.item.radius': rem(0.1875),
       'togglegroup.item.pressed-ring-width': rem(0),
-      'togglegroup.item.padding.y': rem(0),
+      'togglegroup.item.padding.y': rem(0.075),
     },
     anvilAppearance({
       ink: oklch(0.107, 0, 0),

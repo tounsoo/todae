@@ -1,12 +1,4 @@
 @layer todae.components {
-  /* The frame is a style container so a separated track can change layout
-     without restyling a joined group, whose gap is 0px. */
-  .frame {
-    display: inline-flex;
-    max-inline-size: 100%;
-    container-name: togglegroup;
-  }
-
   /* Horizontal items join through Button's group rules. The track, the gap
      and the segment hooks apply only while a secondary item is in the group,
      so a row of ghost icon toggles stays a bare joined row. */
@@ -18,32 +10,6 @@
     background: var(--todae-togglegroup-bg);
     border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
     border-radius: var(--todae-togglegroup-radius);
-  }
-
-  /* A wider gap than the border drops the shared edge. At 0 the items stay joined. */
-  .horizontal:has(> .item[data-button-variant='secondary']) > .item[data-button-variant='secondary'] {
-    border-width: min(
-      var(--todae-button-border-width),
-      max(0px, calc(var(--todae-button-border-width) - var(--todae-togglegroup-gap)))
-    );
-  }
-
-  /* Anvil's track is 2.5rem, border box. Columns share one width, so a short
-     label matches a long one. The segment fills that box. Its vertical padding
-     stays the token, which Anvil sets to 0. */
-  @container togglegroup style(not (--todae-togglegroup-gap: 0px)) {
-    .horizontal:has(> .item[data-button-variant='secondary']) {
-      display: inline-grid;
-      grid-auto-flow: column;
-      grid-auto-columns: 1fr;
-      block-size: 2.5rem;
-    }
-
-    .horizontal:has(> .item[data-button-variant='secondary']) > .item[data-button-variant='secondary'] {
-      box-sizing: border-box;
-      min-inline-size: 0;
-      block-size: 100%;
-    }
   }
 
   /* Vertical groups do not draw the track. Anvil's segmented control is a row.
