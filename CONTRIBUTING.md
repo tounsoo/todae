@@ -85,6 +85,14 @@ pnpm schema
 
 The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packages/design-system/schema/components.json`. Commit that file. Running `pnpm schema` again must leave no diff.
 
+## Lint
+
+`pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
+
+Stylelint warns when a component sheet uses a raw color, a raw spacing value, a raw radius, or a raw font size. `var(--…)` is allowed. Other allowed literals are `0`, `100%`, `currentColor`, `transparent`, `inherit`, and `auto`. `1px` is allowed only on a border or outline width, and only while `stylelint/raw-value-allowlist.mjs` lists it with a reason. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
+
+Warnings do not fail `pnpm check` or CI. Leave the rule at warning.
+
 ## Check your change
 
 Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
@@ -101,7 +109,7 @@ pnpm test
 pnpm test:browser
 ```
 
-- `pnpm check` runs `pnpm lint` and `pnpm typecheck`.
+- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. Stylelint warnings do not fail the command. The Checks job and the draft Check job both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
