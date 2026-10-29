@@ -95,12 +95,9 @@ jobs:
       - name: Schema
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
-      - name: Typecheck
+      - name: Check
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        run: pnpm typecheck
-      - name: Lint
-        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        run: pnpm lint
+        run: pnpm check
 
       # The docs tests import the package from dist, and some browser demos import its subpath entries.
       - name: Build the package
@@ -140,6 +137,18 @@ jobs:
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         name: Second-brand example
         run: pnpm --filter fernway-example build
+
+  # Drafts skip Checks. This job still runs, as Token API does, so a lint or type error fails before review.
+  check:
+    name: Check
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Lint and types
+        run: pnpm check
 
   # Drafts skip Checks. This job still runs so a removed, renamed, or retyped token path fails before review.
   # The prose-only skip does not apply. This job is the only token API gate, so a docs-only pull request still runs it.
