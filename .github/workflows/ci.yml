@@ -188,12 +188,9 @@ jobs:
             echo "forbidden-paths: could not read the base or head commit"
             exit 1
           fi
-          # name-status distinguishes a new .claude file from an edit. --no-renames lists the new path of a rename.
-          if ! files=$(git -c core.quotePath=false diff --name-status --diff-filter=AM --no-renames "${diff_args[@]}"); then
-            echo "forbidden-paths: could not read the diff"
-            exit 1
-          fi
-          printf '%s\n' "$files" | bash .github/scripts/forbidden-paths.sh
+          # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
+          # Do not store this output in a variable. Bash drops bytes at the first NUL.
+          git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
 
   docs:
     if: ${{ !github.event.pull_request.draft }}
