@@ -3197,15 +3197,15 @@
       "path": "space.popover.padding",
       "type": "dimension",
       "cssVar": "--todae-space-popover-padding",
-      "cssValue": "var(--todae-space-3)",
-      "ref": "space.3",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
       "layer": "density",
       "context": "compact",
       "entry": {
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding inside anchored floating panels, such as popovers and field pickers, one step below overlay; changes with density."
+      "description": "Padding inside anchored floating panels, such as popovers and field pickers, two steps below overlay; changes with density."
     },
     {
       "path": "space.prose.gap",
@@ -3449,15 +3449,15 @@
       "path": "space.popover.padding",
       "type": "dimension",
       "cssVar": "--todae-space-popover-padding",
-      "cssValue": "var(--todae-space-4)",
-      "ref": "space.4",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
       "entry": {
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding inside anchored floating panels, such as popovers and field pickers, one step below overlay; changes with density."
+      "description": "Padding inside anchored floating panels, such as popovers and field pickers, two steps below overlay; changes with density."
     },
     {
       "path": "space.prose.gap",
@@ -3701,15 +3701,15 @@
       "path": "space.popover.padding",
       "type": "dimension",
       "cssVar": "--todae-space-popover-padding",
-      "cssValue": "var(--todae-space-5)",
-      "ref": "space.5",
+      "cssValue": "var(--todae-space-4)",
+      "ref": "space.4",
       "layer": "density",
       "context": "spacious",
       "entry": {
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding inside anchored floating panels, such as popovers and field pickers, one step below overlay; changes with density."
+      "description": "Padding inside anchored floating panels, such as popovers and field pickers, two steps below overlay; changes with density."
     },
     {
       "path": "space.prose.gap",
