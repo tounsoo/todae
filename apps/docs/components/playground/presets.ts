@@ -141,6 +141,8 @@ function anvilAppearance(c: {
   tint1: number;
   /** The gray that hover and press wash over transparent controls. */
   wash: ThemeColorValue;
+  /** The circle behind a chip's dismiss button on hover. */
+  dismissHover: ThemeColorValue;
   shadow: ThemeColorValue;
   status: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue, fg: ThemeColorValue]>;
   alert: Record<Tone, [bg: ThemeColorValue, border: ThemeColorValue]>;
@@ -184,6 +186,9 @@ function anvilAppearance(c: {
     'chip.bg.hover': c.fillHover,
     'chip.border.default': c.rule,
     'chip.border.hover': c.rule,
+    'chip.dismiss.fg.default': c.ink,
+    'chip.dismiss.fg.hover': c.ink,
+    'chip.dismiss.bg.hover': c.dismissHover,
     'badge.neutral.bg': c.fill,
     'badge.neutral.border': c.rule,
     // Tooltips are inverted.
@@ -368,6 +373,47 @@ export const PRESETS: readonly ThemePreset[] = [
       ...radii(0.1875, 0.375, 0.75),
       'chip.radius': rem(99),
       'badge.radius': rem(99),
+      // Sizes from Anvil's component CSS: 40px buttons and fields (Todae's
+      // labels keep the page's line height, so the padding makes up the rest),
+      // 48px tabs, 26px chips whose round dismiss button fills the end, 18px
+      // badges, and 16px card and popover padding.
+      'button.base.padding.x': rem(1),
+      'button.base.padding.y': rem(0.3875),
+      'field.padding.y': rem(0.4375),
+      'tabs.padding.y': rem(0.875),
+      'card.padding': rem(1),
+      'popover.padding.x': rem(1),
+      'popover.padding.y': rem(1),
+      'field.picker.padding.x': rem(0.5),
+      'field.picker.padding.y': rem(0.5),
+      'option.radius': rem(0.375),
+      'option.padding.x': rem(1),
+      'option.leading': 1.2857,
+      'option.list.gap': rem(0.25),
+      'menu.item.radius': rem(0.375),
+      'menu.item.padding.x': rem(0.5),
+      'menu.item.leading': 1.2857,
+      'dialog.padding.x': rem(1.5),
+      'dialog.padding.y': rem(1.5),
+      'calendar.day.size': rem(2.125),
+      'chip.min-height': rem(1.625),
+      'chip.padding.y': rem(0),
+      'chip.gap': rem(0.25),
+      'chip.leading': 1,
+      'chip.font.weight': 600,
+      'chip.icon.size': rem(1),
+      'chip.dismiss.size': rem(1.5),
+      'chip.dismiss.inset': rem(0),
+      'badge.padding.x': rem(0.375),
+      'badge.padding.y': rem(0.125),
+      'badge.leading': 1,
+      'alert.font.size': rem(1),
+      'alert.leading': 1.5,
+      'disclosure.summary.font.weight': 700,
+      'breadcrumbs.current.font.weight': 700,
+      'breadcrumbs.gap': rem(0.25),
+      'avatar.font.weight': 700,
+      'selection.font.size': rem(1),
       'font.family.sans': ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
       'font.weight.medium': 600,
       'font.weight.bold': 700,
@@ -382,6 +428,9 @@ export const PRESETS: readonly ThemePreset[] = [
       'togglegroup.item.radius': rem(0.1875),
       'togglegroup.item.join-radius': rem(0.1875),
       'togglegroup.item.pressed-ring-width': rem(0),
+      // Anvil's segments: 30px tall inside a 4px inset, 16px from each side.
+      'togglegroup.item.padding.x': rem(0.9375),
+      'togglegroup.item.padding.y': rem(0.075),
     },
     anvilAppearance({
       ink: oklch(0.107, 0, 0),
@@ -400,6 +449,7 @@ export const PRESETS: readonly ThemePreset[] = [
       danger: oklch(0.561, 0.215, 32),
       tint1: 0.06,
       wash: oklch(0.637, 0, 0),
+      dismissHover: alpha(oklch(0, 0, 0), 0.29),
       shadow: alpha(oklch(0.218, 0, 0), 0.08),
       // Anvil's subdued chips: [bg, border, fg].
       status: {
@@ -442,6 +492,7 @@ export const PRESETS: readonly ThemePreset[] = [
         danger: oklch(0.686, 0.205, 33),
         tint1: 0.08,
         wash: oklch(1, 0, 0),
+        dismissHover: alpha(oklch(1, 0, 0), 0.39),
         shadow: alpha(oklch(0, 0, 0), 0.4),
         status: {
           info: [oklch(0.248, 0.082, 255), oklch(0.336, 0.118, 257), oklch(0.99, 0.005, 258)],

@@ -1,7 +1,8 @@
 {
   "chip": {
-    "$description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput.",
+    "$description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "min-height": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/chip/y/$value" } }
@@ -11,7 +12,8 @@
       "size": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
     },
     "font": {
-      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
     },
     "bg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
@@ -43,6 +45,13 @@
     "ring-width": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/width/$value" } },
     "ring-offset": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/offset/$value" } },
     "dismiss": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/chip/icon/size/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } },
+      "inset": { "$type": "dimension", "$value": { "$ref": "#/chip/padding/x/$value" } },
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
+      },
       "fg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } },
         "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }

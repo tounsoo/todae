@@ -1,6 +1,6 @@
 {
   "togglegroup": {
-    "$description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track.",
+    "$description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, how its items join and are padded, and its secondary items' colors at rest and pressed. Defaults draw joined secondary buttons on no track.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
     "border-width": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
@@ -10,6 +10,10 @@
     "item": {
       "radius": { "$type": "dimension", "$value": { "$ref": "#/button/base/radius/$value" } },
       "join-radius": { "$type": "dimension", "$value": { "value": 0, "unit": "px" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/button/base/padding/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/button/base/padding/y/$value" } }
+      },
       "bg": {
         "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/default/$value" } },
         "hover": { "$type": "color", "$value": { "$ref": "#/button/secondary/bg/hover/$value" } },

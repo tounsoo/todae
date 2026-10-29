@@ -6,13 +6,13 @@
     font: inherit;
     cursor: pointer;
     /* A container that restyles its buttons, such as ToggleGroup, sets the
-       --_bg-*, --_fg-* and --_border-* inputs; unset, they fall back to the
-       variant's tokens. */
+       --_bg-*, --_fg-*, --_border-* and --_padding-* inputs; unset, they fall
+       back to the variant's tokens. */
     background: var(--_bg-default, var(--todae-button-bg-default));
     color: var(--_fg-default, var(--todae-button-fg-default));
     border: var(--todae-button-border-width) solid var(--_border-default, var(--todae-button-border-default));
     border-radius: var(--todae-button-radius);
-    padding: var(--todae-button-padding-y) var(--todae-button-padding-x);
+    padding: var(--_padding-y, var(--todae-button-padding-y)) var(--_padding-x, var(--todae-button-padding-x));
     font-size: var(--todae-button-font-size);
     font-weight: var(--todae-button-font-weight);
     letter-spacing: var(--todae-button-font-letter-spacing);
@@ -112,7 +112,7 @@
   /* Icon-only: a square as tall as a labeled button, its icon centered in a
      box one line high. */
   .root[data-icon-only] {
-    padding-inline: var(--todae-button-padding-y);
+    padding-inline: var(--_padding-y, var(--todae-button-padding-y));
   }
 
   .root[data-icon-only] > .icon {

@@ -56,7 +56,7 @@
   }
 
   /* Button reads these inputs before its variant's tokens. Secondary items, the
-     default, take the group's colors, and every item its pressed ring. In a
+     default, take the group's colors, and every item its padding and pressed ring. In a
      horizontal group an item drops its resting shadow, which would paint over
      a neighbor, and takes the group's pressed shadow. */
   .item[data-button-variant='secondary'] {
@@ -78,6 +78,8 @@
   }
 
   .item {
+    --_padding-x: var(--todae-togglegroup-item-padding-x);
+    --_padding-y: var(--todae-togglegroup-item-padding-y);
     --_pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
   }
 

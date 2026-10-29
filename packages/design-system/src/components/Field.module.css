@@ -744,6 +744,8 @@
     background: var(--todae-option-bg-default);
     color: var(--todae-option-fg-default);
     font-size: var(--todae-option-font-size);
+    font-weight: var(--todae-option-font-weight);
+    line-height: var(--todae-option-leading);
   }
 
   .select option:is(:hover, :focus-visible):not(:disabled) {
