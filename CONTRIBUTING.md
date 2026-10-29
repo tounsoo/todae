@@ -90,8 +90,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
-pnpm typecheck
-pnpm lint
+pnpm check
 pnpm tokens:check
 pnpm schema
 pnpm build:ds
@@ -102,6 +101,7 @@ pnpm test
 pnpm test:browser
 ```
 
+- `pnpm check` runs `pnpm lint` and `pnpm typecheck`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
@@ -144,7 +144,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 
 - Keep a pull request to one change.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips Checks and Docs on a draft pull request. Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
+- CI skips Checks and Docs on a draft pull request. Check, Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
 
 ## Releases
 

@@ -151,7 +151,7 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   // Items that move while armed or dragged keep their state: armed and dragging follow the element,
   // and a removed one ends the drag. It runs after every render, since the items aren't an input, and
   // sets state only when an item moved.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs after every render, since the items are not an input
   useLayoutEffect(() => {
     const node = sourceRef.current ?? armedRef.current;
     if (node === null) return;

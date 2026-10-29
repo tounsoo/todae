@@ -99,7 +99,7 @@ function Legend({ className, ref, ...props }: FieldsetLegendProps) {
   const refs = useComposedRefs(legendRef, ref);
   // Every commit: a legend added before this one takes the exemption from it.
   // The same value bails out, so this settles after one pass.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- a legend added before this one takes the exemption, and the same value bails out
   useLayoutEffect(() => {
     const node = legendRef.current;
     const parent = node?.parentElement;

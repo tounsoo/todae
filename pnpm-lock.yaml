@@ -20,6 +20,9 @@ importers:
       '@changesets/cli':
         specifier: ^3.0.3
         version: 3.0.3
+      '@eslint-community/eslint-plugin-eslint-comments':
+        specifier: 4.8.1
+        version: 4.8.1(eslint@10.12.0)
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.12.0)
@@ -116,7 +119,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitest/browser':
         specifier: 3.2.7
-        version: 3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
+        version: 3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
       axe-core:
         specifier: ^4.13.0
         version: 4.13.0
@@ -617,6 +620,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@eslint-community/eslint-plugin-eslint-comments@4.8.1':
+    resolution: {integrity: sha512-vafrdi15JHBFh1qWOAucyJwlEEuhdoMof28jOdKdgnwZ7bXwd6v4wzHYSmAVLwnx0yc7bqAtfJ0EZQV1WAzV/Q==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
 
   '@eslint-community/eslint-utils@4.10.1':
     resolution: {integrity: sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg==}
@@ -3506,6 +3515,12 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
+  '@eslint-community/eslint-plugin-eslint-comments@4.8.1(eslint@10.12.0)':
+    dependencies:
+      escape-string-regexp: 4.0.0
+      eslint: 10.12.0
+      ignore: 7.0.12
+
   '@eslint-community/eslint-utils@4.10.1(eslint@10.12.0)':
     dependencies:
       eslint: 10.12.0
@@ -4148,25 +4163,6 @@ snapshots:
       vite: 6.4.4(@types/node@22.20.3)(yaml@2.9.1)
     transitivePeerDependencies:
       - supports-color
-
-  '@vitest/browser@3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)':
-    dependencies:
-      '@testing-library/dom': 10.4.2
-      '@testing-library/user-event': 14.6.7(@testing-library/dom@10.4.2)
-      '@vitest/mocker': 3.2.7(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))
-      '@vitest/utils': 3.2.7
-      magic-string: 0.30.21
-      sirv: 3.0.2
-      tinyrainbow: 2.0.0
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.3)(@vitest/browser@3.2.7)(jsdom@26.1.0)(yaml@2.9.1)
-      ws: 8.21.3
-    optionalDependencies:
-      playwright: 1.56.1
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
 
   '@vitest/browser@3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)':
     dependencies:
@@ -6131,7 +6127,7 @@ snapshots:
     optionalDependencies:
       '@types/debug': 4.1.13
       '@types/node': 22.20.3
-      '@vitest/browser': 3.2.7(playwright@1.56.1)(vite@6.4.3(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
+      '@vitest/browser': 3.2.7(playwright@1.56.1)(vite@6.4.4(@types/node@22.20.3)(yaml@2.9.1))(vitest@3.2.7)
       jsdom: 26.1.0
     transitivePeerDependencies:
       - jiti

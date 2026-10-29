@@ -201,7 +201,7 @@ function Root({
   // else +N, else the list. A chip that leaves the panel as it closes
   // leaves to the last chip in the row.
   // Runs after every commit, and after useChipListInternal's own effect.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs after every commit, and after useChipListInternal's own effect
   useLayoutEffect(() => {
     const spot = parked.current;
     const list = listRef.current;
