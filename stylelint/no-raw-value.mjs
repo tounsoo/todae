@@ -51,10 +51,13 @@ const SYSTEM_COLORS = new Set(
     .split(/\s+/),
 );
 
-const ANYWHERE = new Set(allowlist.filter((entry) => !entry.where).map((entry) => entry.value));
+const ANYWHERE = new Set(
+  allowlist.filter((entry) => !entry.where && !entry.files).map((entry) => entry.value),
+);
 const HAIRLINE = new Set(allowlist.filter((entry) => entry.where === 'hairline').map((entry) => entry.value));
 const CIRCLE = new Set(allowlist.filter((entry) => entry.where === 'circle').map((entry) => entry.value));
 const HUE = new Set(allowlist.filter((entry) => entry.where === 'hue').map((entry) => entry.value));
+const SCOPED = allowlist.filter((entry) => entry.files);
 
 function isHairline(prop) {
   if (BORDER_SHORTHANDS.has(prop)) return true;
@@ -106,12 +109,26 @@ function isHex(word) {
   return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(word);
 }
 
-function isAllowed(word, prop, value) {
+function sheetName(node) {
+  const file = node.root().source?.input?.file ?? '';
+  const slash = Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\'));
+  return slash < 0 ? file : file.slice(slash + 1);
+}
+
+function scopedWhere(entry, prop) {
+  if (entry.where === 'font-size') return prop === 'font-size' || prop === 'font';
+  if (entry.where === 'spacing') return isSpacing(prop);
+  if (entry.where === 'background') return prop === 'background' || prop === 'background-image';
+  return !entry.where;
+}
+
+function isAllowed(word, prop, value, file) {
   const lower = word.toLowerCase();
   if (ANYWHERE.has(lower)) return true;
   if (isHairline(prop) && HAIRLINE.has(lower)) return true;
   if (isRadius(prop) && CIRCLE.has(lower)) return true;
-  return HUE.has(lower) && /\blonger\s+hue\b/i.test(value);
+  if (HUE.has(lower) && /\blonger\s+hue\b/i.test(value)) return true;
+  return SCOPED.some((entry) => entry.value === lower && entry.files.includes(file) && scopedWhere(entry, prop));
 }
 
 function forcesColors(params) {
@@ -146,6 +163,7 @@ const rule = (primary) => (root, result) => {
   root.walkDecls((decl) => {
     const mode = modeOf(decl.prop);
     if (!mode || insideForcedColors(decl)) return;
+    const sheet = sheetName(decl);
 
     const valueOffset = decl.prop.length + (decl.raws.between?.length ?? 0);
     const flag = (raw, colorish, sourceIndex) => {
@@ -174,7 +192,7 @@ const rule = (primary) => (root, result) => {
         }
         if (node.type !== 'word') continue;
         const raw = node.value;
-        if (isAllowed(raw, decl.prop, decl.value)) continue;
+        if (isAllowed(raw, decl.prop, decl.value, sheet)) continue;
         const lower = raw.toLowerCase();
         if (SYSTEM_COLORS.has(lower)) continue;
         const colorish = isHex(raw) || NAMED_COLORS.has(lower);

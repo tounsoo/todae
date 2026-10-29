@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import stylelint from 'stylelint';
+import projectConfig from '../stylelint.config.mjs';
 
 const config = {
   plugins: ['./stylelint/no-raw-value.mjs'],
@@ -108,4 +109,58 @@ test('shadows report their colors and leave the lengths', async () => {
     await lint('@media (forced-colors: active) { .a { box-shadow: 0 0 0 1px red; } }'),
     [],
   );
+});
+
+async function lintIn(code, file) {
+  const result = await stylelint.lint({
+    code,
+    codeFilename: `packages/design-system/src/components/${file}`,
+    config,
+  });
+  const report = result.results[0];
+  assert.equal(report.errored, false);
+  return report.warnings.map((warning) => {
+    const match = warning.text.match(/Unexpected raw (\S+) "([^"]+)"/);
+    assert.ok(match, warning.text);
+    return `${match[1]} ${match[2]}`;
+  });
+}
+
+test('0px is allowed everywhere, and the other leftovers only in their sheets', async () => {
+  assert.deepEqual(await lint('.a { margin: 0px; border-radius: 0px; }'), []);
+  assert.deepEqual(await lint('.a { color: black; background: white; margin: 1em; }'), [
+    'color black',
+    'color white',
+    'spacing 1em',
+  ]);
+  assert.deepEqual(await lintIn('.a { font-size: calc(1em * var(--scale)); }', 'Code.module.css'), []);
+  assert.deepEqual(await lintIn('.a { font-size: 1em; }', 'Button.module.css'), ['font-size 1em']);
+  assert.deepEqual(await lintIn('.a { margin-inline-end: calc(var(--gap) * 1em); }', 'Disclosure.module.css'), []);
+  assert.deepEqual(await lintIn('.a { margin: 1em; }', 'Button.module.css'), ['spacing 1em']);
+  assert.deepEqual(await lintIn('.a { margin-block: calc((1lh - var(--size)) / 2); }', 'Field.module.css'), []);
+  assert.deepEqual(await lintIn('.a { padding: 1lh; }', 'Button.module.css'), ['spacing 1lh']);
+  assert.deepEqual(await lintIn('.a { margin: -1px; }', 'VisuallyHidden.module.css'), []);
+  assert.deepEqual(await lintIn('.a { margin: -1px; }', 'Button.module.css'), ['spacing -1px']);
+  assert.deepEqual(
+    await lintIn('.a { background: linear-gradient(to top, black, white); }', 'ColorPicker.module.css'),
+    [],
+  );
+  assert.deepEqual(await lintIn('.a { background: black; }', 'Button.module.css'), ['color black']);
+  assert.deepEqual(await lintIn('.a { margin-inline: calc(var(--i) * 2.5%); }', 'Toast.module.css'), []);
+  assert.deepEqual(await lintIn('.a { margin: 2.5%; }', 'Button.module.css'), ['spacing 2.5%']);
+  assert.deepEqual(await lintIn('.a { margin: 30% auto 0; }', 'selection.module.css'), []);
+  assert.deepEqual(await lintIn('.a { margin: 30%; }', 'Button.module.css'), ['spacing 30%']);
+});
+
+test('the project config fails on a raw hex', async () => {
+  const result = await stylelint.lint({
+    code: '.a { color: #fff; }',
+    codeFilename: 'packages/design-system/src/components/Button.module.css',
+    config: projectConfig,
+  });
+  const report = result.results[0];
+  assert.equal(report.errored, true);
+  assert.equal(report.warnings.length, 1);
+  assert.equal(report.warnings[0].severity, 'error');
+  assert.match(report.warnings[0].text, /Unexpected raw color "#fff"/);
 });
