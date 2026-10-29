@@ -59,26 +59,90 @@ export function removedPublicTokenPaths(base: TokenApiSnapshot, head: TokenApiSn
   return base.tokens.map((token) => token.path).filter((path) => !headPaths.has(path)).sort(byCodePoint);
 }
 
+/** A path that disappeared, or a path whose type changed. A changeset is not an input. */
+export type TokenApiBreak = { kind: 'removed'; path: string } | { kind: 'retyped'; path: string; from: string; to: string };
+
+export type TokenApiApproval = { path: string; approved: string };
+
+/** Paths Ben approved for removal or retype. `version` is 1. */
+export type TokenApiApprovals = { version: 1; removals: readonly TokenApiApproval[] };
+
+const EMPTY_APPROVALS: TokenApiApprovals = { version: 1, removals: [] };
+
+export const APPROVAL_HINT =
+  'If Ben approved this removal, add the path to tokens/api-approved-removals.json with his approval note. Otherwise restore the path.';
+
+function typesOf(snapshot: TokenApiSnapshot): Map<string, string> {
+  return new Map(snapshot.tokens.map((token) => [token.path, token.type]));
+}
+
+/** Removals and type changes from `before` to `after`. An added path is neither. */
+export function tokenApiBreaks(before: TokenApiSnapshot, after: TokenApiSnapshot): TokenApiBreak[] {
+  const afterTypes = typesOf(after);
+  const breaks: TokenApiBreak[] = [];
+  for (const token of before.tokens) {
+    const next = afterTypes.get(token.path);
+    if (next === undefined) breaks.push({ kind: 'removed', path: token.path });
+    else if (next !== token.type) breaks.push({ kind: 'retyped', path: token.path, from: token.type, to: next });
+  }
+  return breaks;
+}
+
+function breakKey(item: TokenApiBreak): string {
+  return item.kind === 'removed' ? `removed\u0000${item.path}` : `retyped\u0000${item.path}\u0000${item.from}\u0000${item.to}`;
+}
+
 /**
- * Paths dropped between any two successive snapshots. Putting a path back
- * later does not clear it. The check has no changeset input.
+ * Removals and type changes between successive snapshots. Putting a path or
+ * its old type back later does not clear the break. The check has no changeset input.
  */
-export function auditTokenApiHistory(snapshots: readonly TokenApiSnapshot[]): string[] {
-  const removed = new Set<string>();
+export function auditTokenApiHistory(snapshots: readonly TokenApiSnapshot[]): TokenApiBreak[] {
+  const found = new Map<string, TokenApiBreak>();
   for (let index = 1; index < snapshots.length; index += 1) {
     const before = snapshots[index - 1];
     const after = snapshots[index];
     if (before === undefined || after === undefined) continue;
-    for (const path of removedPublicTokenPaths(before, after)) removed.add(path);
+    for (const item of tokenApiBreaks(before, after)) found.set(breakKey(item), item);
   }
-  return [...removed].sort(byCodePoint);
+  return [...found.values()].sort((left, right) => byCodePoint(formatTokenApiBreak(left), formatTokenApiBreak(right)));
 }
 
-export function removalFailure(paths: readonly string[]): string {
-  const lines = paths.map((path) => `- ${path}`);
-  return [
-    'Public token API removed or renamed:',
-    ...lines,
-    'A changeset does not waive this. A removal needs Ben\'s approval.',
-  ].join('\n');
+export function formatTokenApiBreak(item: TokenApiBreak): string {
+  if (item.kind === 'removed') return `- ${item.path}`;
+  return `- ${item.path} (${item.from} → ${item.to})`;
+}
+
+export function emptyTokenApiApprovals(): TokenApiApprovals {
+  return EMPTY_APPROVALS;
+}
+
+/** Parses `tokens/api-approved-removals.json`. An empty `approved` note fails. */
+export function parseTokenApiApprovals(input: unknown): TokenApiApprovals {
+  if (!isRecord(input)) fail('tokens/api-approved-removals.json must be a JSON object.');
+  if (input.version !== 1) fail('tokens/api-approved-removals.json version must be 1.');
+  if (!Array.isArray(input.removals)) fail('tokens/api-approved-removals.json removals must be an array.');
+  const removals: TokenApiApproval[] = [];
+  const seen = new Set<string>();
+  for (const entry of input.removals) {
+    if (!isRecord(entry) || typeof entry.path !== 'string' || entry.path === '') {
+      fail('Each tokens/api-approved-removals.json entry needs a path.');
+    }
+    if (typeof entry.approved !== 'string' || entry.approved.trim() === '') {
+      fail(`tokens/api-approved-removals.json has an empty approval for "${entry.path}". ${APPROVAL_HINT}`);
+    }
+    if (seen.has(entry.path)) fail(`tokens/api-approved-removals.json lists "${entry.path}" more than once.`);
+    seen.add(entry.path);
+    removals.push({ path: entry.path, approved: entry.approved });
+  }
+  return { version: 1, removals };
+}
+
+/** Drops breaks whose path Ben approved. Other breaks stay, changeset or not. */
+export function withoutApprovals(breaks: readonly TokenApiBreak[], approvals: TokenApiApprovals): TokenApiBreak[] {
+  const allowed = new Set(approvals.removals.map((entry) => entry.path));
+  return breaks.filter((item) => !allowed.has(item.path));
+}
+
+export function removalFailure(breaks: readonly TokenApiBreak[]): string {
+  return ['Public token API removed or renamed:', ...breaks.map(formatTokenApiBreak), APPROVAL_HINT].join('\n');
 }

@@ -25,7 +25,7 @@
     "schema": "pnpm --filter @tounsoo/todae schema",
     "tokens": "pnpm --filter @tounsoo/todae tokens",
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
-    "tokens:api": "pnpm --filter @tounsoo/todae tokens:api",
+    "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
     "test": "pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",

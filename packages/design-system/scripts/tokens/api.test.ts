@@ -5,7 +5,9 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   auditTokenApiHistory,
+  formatTokenApiBreak,
   formatTokenApiSnapshot,
+  parseTokenApiApprovals,
   parseTokenApiSnapshot,
   removedPublicTokenPaths,
   tokenApiSnapshot,
@@ -15,6 +17,7 @@ import {
 
 const script = join(import.meta.dirname, '../check-token-api.ts');
 const snapshotPath = join('packages', 'design-system', 'tokens', 'api.json');
+const approvalsPath = join('packages', 'design-system', 'tokens', 'api-approved-removals.json');
 const gitEnv = {
   ...process.env,
   GIT_AUTHOR_NAME: 'Todae Test',
@@ -34,7 +37,12 @@ function snapshot(tokens: TokenApiEntry[]): TokenApiSnapshot {
 }
 
 function git(cwd: string, args: string[]): string {
-  return execFileSync('git', args, { cwd, env: gitEnv, encoding: 'utf8' });
+  return execFileSync('git', ['-c', 'commit.gpgsign=false', ...args], {
+    cwd,
+    env: { ...gitEnv, GIT_EDITOR: 'true', GIT_MERGE_AUTOEDIT: 'no' },
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 }
 
 async function repo(): Promise<string> {
@@ -114,7 +122,20 @@ describe('public token API snapshot', () => {
     ]);
     expect(removedPublicTokenPaths(base, added)).toEqual([]);
     expect(removedPublicTokenPaths(base, renamed)).toEqual(['separator.color']);
-    expect(auditTokenApiHistory([base, renamed, restored])).toEqual(['separator.color']);
+    expect(auditTokenApiHistory([base, renamed, restored])).toEqual([{ kind: 'removed', path: 'separator.color' }]);
+  });
+
+  it('flags a type change between snapshots', () => {
+    const before = snapshot([{ path: 'separator.thickness', type: 'dimension' }]);
+    const after = snapshot([{ path: 'separator.thickness', type: 'color' }]);
+    const change = { kind: 'retyped' as const, path: 'separator.thickness', from: 'dimension', to: 'color' };
+    expect(auditTokenApiHistory([before, after])).toEqual([change]);
+    expect(formatTokenApiBreak(change)).toBe('- separator.thickness (dimension → color)');
+  });
+
+  it('rejects an approval note that is empty', () => {
+    expect(() => parseTokenApiApprovals({ version: 1, removals: [{ path: 'separator.thickness', approved: '' }] })).toThrow(/empty approval/);
+    expect(parseTokenApiApprovals({ version: 1, removals: [] })).toEqual({ version: 1, removals: [] });
   });
 
   it('rejects a snapshot that is not the committed shape', () => {
@@ -163,9 +184,87 @@ describe('check-token-api', () => {
     const withChangeset = git(root, ['rev-parse', 'HEAD']).trim();
     const result = check(root, base, withChangeset);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('separator.thickness');
-    expect(result.stderr).toContain('A changeset does not waive this.');
+    expect(result.stderr).toContain('- separator.thickness');
+    expect(result.stderr).toContain('api-approved-removals.json');
     expect(result.stderr).not.toContain('separator.color');
+  });
+
+  it('fails a type change even when the commit includes a breaking changeset', async () => {
+    const root = await repo();
+    const base = await commitSnapshot(root, [{ path: 'separator.thickness', type: 'dimension' }], 'base');
+    await commitSnapshot(root, [{ path: 'separator.thickness', type: 'color' }], 'retype separator.thickness');
+    await mkdir(join(root, '.changeset'), { recursive: true });
+    await writeFile(
+      join(root, '.changeset', 'retype-thickness.md'),
+      '---\n"@tounsoo/todae": minor\n---\n\nRetype separator.thickness.\n\n- separator.thickness is a color.\n',
+    );
+    git(root, ['add', '.changeset/retype-thickness.md']);
+    git(root, ['commit', '-m', 'mark the retype breaking']);
+    const head = git(root, ['rev-parse', 'HEAD']).trim();
+    const result = check(root, base, head);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('- separator.thickness (dimension → color)');
+    expect(result.stderr).toContain('Otherwise restore the path.');
+  });
+
+  it('skips a removed path listed with a filled approval note', async () => {
+    const root = await repo();
+    const base = await commitSnapshot(
+      root,
+      [
+        { path: 'separator.color', type: 'color' },
+        { path: 'separator.thickness', type: 'dimension' },
+      ],
+      'base',
+    );
+    await commitSnapshot(root, [{ path: 'separator.color', type: 'color' }], 'remove separator.thickness');
+    const file = join(root, approvalsPath);
+    await writeFile(
+      file,
+      `${JSON.stringify({ version: 1, removals: [{ path: 'separator.thickness', approved: 'Ben, 2026-10-29, https://github.com/tounsoo/todae/pull/279' }] }, null, 2)}\n`,
+    );
+    git(root, ['add', approvalsPath]);
+    git(root, ['commit', '-m', 'approve the removal']);
+    const head = git(root, ['rev-parse', 'HEAD']).trim();
+    const result = check(root, base, head);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('no removals or renames');
+  });
+
+  it('fails when an approval note is empty', async () => {
+    const root = await repo();
+    const base = await commitSnapshot(root, [{ path: 'separator.color', type: 'color' }], 'base');
+    const file = join(root, approvalsPath);
+    await writeFile(file, `${JSON.stringify({ version: 1, removals: [{ path: 'separator.thickness', approved: '  ' }] }, null, 2)}\n`);
+    git(root, ['add', approvalsPath]);
+    git(root, ['commit', '-m', 'empty approval']);
+    const head = git(root, ['rev-parse', 'HEAD']).trim();
+    const result = check(root, base, head);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('empty approval for "separator.thickness"');
+  });
+
+  it('ignores a main commit merged in that lacks a path added on the branch', async () => {
+    const root = await repo();
+    const base = await commitSnapshot(root, [{ path: 'separator.color', type: 'color' }], 'base');
+    git(root, ['checkout', '-b', 'feature']);
+    await commitSnapshot(
+      root,
+      [
+        { path: 'separator.color', type: 'color' },
+        { path: 'separator.thickness', type: 'dimension' },
+      ],
+      'add separator.thickness',
+    );
+    git(root, ['checkout', 'main']);
+    await writeFile(join(root, 'note.txt'), 'main moved\n');
+    git(root, ['add', 'note.txt']);
+    git(root, ['commit', '-m', 'main moves']);
+    git(root, ['checkout', 'feature']);
+    git(root, ['merge', '--no-edit', '-m', 'merge main', 'main']);
+    const head = git(root, ['rev-parse', 'HEAD']).trim();
+    const result = check(root, base, head);
+    expect(result.status).toBe(0);
   });
 
   it('fails when a later commit restores a path an earlier commit removed', async () => {
