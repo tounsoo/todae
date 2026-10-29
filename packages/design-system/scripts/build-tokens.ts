@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { formatTokenApiSnapshot, tokenApiSnapshot } from './tokens/api.ts';
 import { clearedInputs, parseScope, scopeFallbacks } from './tokens/scope.ts';
 import { validateContrast } from './tokens/contrast.ts';
 import {
@@ -893,6 +894,8 @@ async function atomicWrite(file: string, contents: string): Promise<void> {
 export type BuildTokensResult = {
   css: string;
   json: string;
+  /** `tokens/api.json`: one entry per public path and its type. */
+  api: string;
   overrideKeys: string;
   tokens: EntryToken[];
 };
@@ -1613,7 +1616,13 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   const all = settleDescriptions(checkGraph(entries));
   validateContrast(entries);
   const pairs = entries.flatMap((entry) => entry.extension.contrast ?? []);
-  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all, pairs), tokens: all };
+  return {
+    css: emitCss(entries),
+    json: emitCatalog(all),
+    api: formatTokenApiSnapshot(tokenApiSnapshot(all)),
+    overrideKeys: emitOverrideKeys(all, pairs),
+    tokens: all,
+  };
 }
 
 /** Walks up from this file to the package that ships Todae's `tokens/resolver.json`. */
@@ -1677,29 +1686,37 @@ export async function buildTokens(options: { check?: boolean; root?: string } = 
   const result = await buildTokensGraph(tokensRoot);
   const cssFile = join(pkgRoot, 'src/styles/tokens.generated.css');
   const jsonFile = join(tokensRoot, 'tokens.generated.json');
+  const apiFile = join(tokensRoot, 'api.json');
   const keysFile = join(pkgRoot, 'src/providers/themeOverrideKeys.generated.ts');
+  const outputs: [string, string][] = [
+    [cssFile, result.css],
+    [jsonFile, result.json],
+    [apiFile, result.api],
+    [keysFile, result.overrideKeys],
+  ];
   if (options.check) {
-    let css: string;
-    let json: string;
-    let keys: string;
-    try {
-      css = await readFile(cssFile, 'utf8');
-      json = await readFile(jsonFile, 'utf8');
-      keys = await readFile(keysFile, 'utf8');
-    } catch {
-      fail('tokens:check failed: generated files are missing');
+    const missing: string[] = [];
+    const drifted: string[] = [];
+    for (const [file, contents] of outputs) {
+      let current: string;
+      try {
+        current = await readFile(file, 'utf8');
+      } catch {
+        missing.push(relative(pkgRoot, file));
+        continue;
+      }
+      if (current !== contents) drifted.push(relative(pkgRoot, file));
     }
-    if (css !== result.css || json !== result.json || keys !== result.overrideKeys) {
-      fail('tokens:check failed: generated tokens drifted');
+    if (missing.length > 0) {
+      fail(`tokens:check failed: generated files are missing (${missing.join(', ')}). Run pnpm tokens and commit the result.`);
+    }
+    if (drifted.length > 0) {
+      fail(`tokens:check failed: generated tokens drifted (${drifted.join(', ')}). Run pnpm tokens and commit the result.`);
     }
     return result;
   }
-  await atomicWrite(cssFile, result.css);
-  await atomicWrite(jsonFile, result.json);
-  await atomicWrite(keysFile, result.overrideKeys);
-  process.stdout.write(
-    `Wrote ${relative(pkgRoot, cssFile)}, ${relative(pkgRoot, jsonFile)} and ${relative(pkgRoot, keysFile)} (${result.tokens.length} tokens)\n`,
-  );
+  for (const [file, contents] of outputs) await atomicWrite(file, contents);
+  process.stdout.write(`Wrote ${outputs.map(([file]) => relative(pkgRoot, file)).join(', ')} (${result.tokens.length} tokens)\n`);
   return result;
 }
 

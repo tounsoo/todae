@@ -89,6 +89,9 @@ jobs:
       - name: Schema
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
+      - name: Token API
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && github.event_name == 'pull_request' }}
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
       - name: Typecheck
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm typecheck
@@ -134,6 +137,22 @@ jobs:
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         name: Second-brand example
         run: pnpm --filter fernway-example build
+
+  # Drafts skip Checks. This job still runs so a removed or renamed token path fails before review.
+  token-api:
+    name: Token API
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Snapshot matches the build
+        run: pnpm tokens:check
+      - name: No public token was removed or renamed
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
 
   docs:
     if: ${{ !github.event.pull_request.draft }}
