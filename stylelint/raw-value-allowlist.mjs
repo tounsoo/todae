@@ -1,9 +1,3 @@
-/**
- * Literals a component sheet may use without a token.
- * `var(--…)` is allowed in the rule. It is a token reference, not a literal.
- * Every entry has a reason.
- */
-
 export const allowlist = [
   // Unitless zero. It is no length, not a chosen size.
   { value: '0' },
