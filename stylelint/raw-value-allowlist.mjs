@@ -13,4 +13,8 @@ export const allowlist = [
   { value: 'auto' },
   // Hairline border and outline widths only. Button floors a border at 1px, and forced-colors rings use a 1px border or outline. This check adds no token.
   { value: '1px', where: 'hairline' },
+  // Circle and ellipse radii. Half of each side is the shape, not a chosen corner size. This check adds no token.
+  { value: '50%', where: 'circle' },
+  // End stop of a longer-hue gradient. hsl(360) is the same hue as hsl(0). This check adds no token.
+  { value: '360', where: 'hue' },
 ];

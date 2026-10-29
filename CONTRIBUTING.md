@@ -89,7 +89,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 `pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
 
-Stylelint warns when a component sheet uses a raw color, a raw spacing value, a raw radius, or a raw font size. `var(--…)` is allowed. Other allowed literals are `0`, `100%`, `currentColor`, `transparent`, `inherit`, and `auto`. `1px` is allowed only on a border or outline width, and only while `stylelint/raw-value-allowlist.mjs` lists it with a reason. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
+Stylelint warns when a component sheet uses a raw color, a raw spacing value, a raw radius, a raw font size, or a raw color in `box-shadow` or `text-shadow`. `var(--…)` is allowed. Other allowed literals are `0`, `100%`, `currentColor`, `transparent`, `inherit`, and `auto`. `1px` is allowed only on a border or outline width. `50%` is allowed only on a circle radius. `360` is allowed only at the end of a longer-hue gradient. Each of those stays allowed only while `stylelint/raw-value-allowlist.mjs` lists it with a reason. System colors are allowed, and so is every value inside `@media (forced-colors: active)`. A plain number inside `calc`, `min`, `max`, or `clamp` is a factor, not a length. A percentage inside a color function is a channel, not a length. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
 
 Warnings do not fail `pnpm check` or CI. Leave the rule at warning.
 
