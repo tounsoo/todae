@@ -355,8 +355,9 @@ export const PRESETS: readonly ThemePreset[] = [
       // Sizes from Anvil's component CSS. Buttons, fields and tabs are 16px.
       // Chips are 14px. A button is 40px on the page's 1.6 line height:
       // (40 - 16*1.6 - 2) / 2 = 6.2px of vertical padding. 48px tabs, 26px
-      // chips whose round dismiss button fills the end, 18px badges, and 16px
-      // card and popover padding.
+      // chips whose round dismiss button fills the end, 18px badges and 16px
+      // card padding. Popover padding is two steps below Anvil's 16px, as
+      // Todae's popover is two steps below its dialog and card padding.
       'button.base.font.size': rem(1),
       'field.font.size': rem(1),
       'chip.font.size': rem(0.875),
@@ -365,8 +366,8 @@ export const PRESETS: readonly ThemePreset[] = [
       'field.padding.y': rem(0.4375),
       'tabs.padding.y': rem(0.875),
       'card.padding': rem(1),
-      'popover.padding.x': rem(1),
-      'popover.padding.y': rem(1),
+      'popover.padding.x': rem(0.5),
+      'popover.padding.y': rem(0.5),
       'field.picker.padding.x': rem(0.5),
       'field.picker.padding.y': rem(0.5),
       'option.radius': rem(0.375),
