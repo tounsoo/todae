@@ -15,7 +15,10 @@ on:
       - '.changeset/**'
       - 'packages/design-system/README.md'
       - 'packages/design-system/CHANGELOG.md'
-  # Drafts skip CI; marking one ready for review runs it.
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
+  # Drafts skip Checks and Docs. Token API and Forbidden paths still run.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -24,6 +27,9 @@ on:
       - '.changeset/**'
       - 'packages/design-system/README.md'
       - 'packages/design-system/CHANGELOG.md'
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
 
 # A new push to a pull request cancels its older run; runs on main always finish.
 concurrency:
@@ -149,8 +155,42 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Snapshot matches the build
         run: pnpm tokens:check
-      - name: No public token was removed or renamed
+      - name: No public token was removed, renamed or retyped
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
+  # Drafts skip Checks and Docs. This job still runs, as Token API does, so a scratch file fails before review.
+  forbidden-paths:
+    name: Forbidden paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: No forbidden paths
+        run: |
+          set -euo pipefail
+          bash .github/scripts/forbidden-paths.sh --self-test
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+            diff_args=("$base...$head")
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            diff_args=("$base" "$head")
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "forbidden-paths: skipped because this push has no base commit"
+            exit 0
+          fi
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
+            echo "forbidden-paths: could not read the base or head commit"
+            exit 1
+          fi
+          # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
+          # Do not store this output in a variable. Bash drops bytes at the first NUL.
+          git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
 
   docs:
     if: ${{ !github.event.pull_request.draft }}

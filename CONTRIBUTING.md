@@ -144,7 +144,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 
 - Keep a pull request to one change.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips draft pull requests, and a Markdown-only pull request as described above. Mark a draft ready for review when you want CI to run.
+- CI skips Checks and Docs on a draft pull request. Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
 
 ## Releases
 
