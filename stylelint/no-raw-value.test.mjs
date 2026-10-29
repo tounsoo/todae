@@ -22,22 +22,35 @@ async function lint(code) {
   });
 }
 
-test('system colors and forced-colors blocks stay quiet', async () => {
+test('system colors stay quiet, and forced-colors still rejects raw values', async () => {
   assert.deepEqual(await lint('.a { color: CanvasText; background: Highlight; border-color: GrayText; }'), []);
   assert.deepEqual(await lint('.a { color: canvastext; fill: mark; stroke: LinkText; }'), []);
   assert.deepEqual(
-    await lint('@media (forced-colors: active) { .a { color: red; margin: 4px; border: 2px solid black; } }'),
+    await lint('@media (forced-colors: active) { .a { color: CanvasText; background: Highlight; } }'),
     [],
   );
   assert.deepEqual(
+    await lint('@media (forced-colors: active) { .a { color: red; margin: 4px; border: 2px solid black; } }'),
+    ['color red', 'spacing 4px', 'line-width 2px', 'color black'],
+  );
+  assert.deepEqual(
+    await lint('@media (forced-colors: active) { .a { color: #ff0000; padding: 13px; } }'),
+    ['color #ff0000', 'spacing 13px'],
+  );
+  assert.deepEqual(await lint('@media (forced-colors: active){color:#ff0000;padding:13px}'), [
+    'color #ff0000',
+    'spacing 13px',
+  ]);
+  assert.deepEqual(
     await lint('@media (min-width: 1px) { @media (forced-colors: active) { .a { outline: 3px solid red; } } }'),
-    [],
+    ['line-width 3px', 'color red'],
   );
   assert.deepEqual(
     await lint('@media (forced-colors: active) and (prefers-contrast: more) { .a { color: red; } }'),
-    [],
+    ['color red'],
   );
   assert.deepEqual(await lint('@media (forced-colors: active) { .a { color: red; } } .b { color: blue; }'), [
+    'color red',
     'color blue',
   ]);
   assert.deepEqual(await lint('@media (forced-colors: active), (min-width: 1px) { .a { color: red; } }'), [
@@ -65,18 +78,30 @@ test('percentages inside color functions stay quiet, and the hue gradient is lis
   ]);
   assert.deepEqual(await lint('.a { background: rgb(10 20 30 / 40%); }'), ['color 10', 'color 20', 'color 30']);
   assert.deepEqual(
-    await lint(
+    await lintIn(
       '.a { background: linear-gradient(to right in hsl longer hue, hsl(0 100% 50%), hsl(360 100% 50%)); }',
+      'ColorPicker.module.css',
     ),
     [],
+  );
+  assert.deepEqual(
+    await lintIn(
+      '.a { background: linear-gradient(to right in hsl longer hue, hsl(360 100% 50%)); }',
+      'Button.module.css',
+    ),
+    ['color 360'],
   );
   assert.deepEqual(await lint('.a { background: hsl(360 100% 50%); }'), ['color 360']);
   assert.deepEqual(await lint('.a { margin: 30%; }'), ['spacing 30%']);
 });
 
 test('50% circle radii are listed, and other 50% values are not', async () => {
-  assert.deepEqual(await lint('.a { border-radius: 50%; border-top-left-radius: 50%; }'), []);
-  assert.deepEqual(await lint('.a { border-radius: 10px 50%; padding: 50%; }'), ['radius 10px', 'spacing 50%']);
+  assert.deepEqual(await lintIn('.a { border-radius: 50%; border-top-left-radius: 50%; }', 'Loader.module.css'), []);
+  assert.deepEqual(await lintIn('.a { border-radius: 50%; }', 'Button.module.css'), ['radius 50%']);
+  assert.deepEqual(await lintIn('.a { border-radius: 10px 50%; padding: 50%; }', 'Loader.module.css'), [
+    'radius 10px',
+    'spacing 50%',
+  ]);
 });
 
 test('a plain number in a border shorthand is a line width', async () => {
@@ -92,7 +117,10 @@ test('a plain number in a border shorthand is a line width', async () => {
     'color black',
     'line-width 4',
   ]);
-  assert.deepEqual(await lint('.a { border: 1px solid var(--todae-field-border-default); }'), []);
+  assert.deepEqual(await lintIn('.a { border: 1px solid var(--todae-field-border-default); }', 'Progress.module.css'), []);
+  assert.deepEqual(await lintIn('.a { border: 1px solid var(--todae-field-border-default); }', 'Code.module.css'), [
+    'line-width 1px',
+  ]);
 });
 
 test('shadows report their colors and leave the lengths', async () => {
@@ -107,7 +135,7 @@ test('shadows report their colors and leave the lengths', async () => {
   assert.deepEqual(await lint('.a { box-shadow: 0 0 0 1px CanvasText; text-shadow: none; }'), []);
   assert.deepEqual(
     await lint('@media (forced-colors: active) { .a { box-shadow: 0 0 0 1px red; } }'),
-    [],
+    ['color red'],
   );
 });
 

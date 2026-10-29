@@ -54,10 +54,6 @@ const SYSTEM_COLORS = new Set(
 const ANYWHERE = new Set(
   allowlist.filter((entry) => !entry.where && !entry.files).map((entry) => entry.value),
 );
-const HAIRLINE = new Set(allowlist.filter((entry) => entry.where === 'hairline').map((entry) => entry.value));
-const CIRCLE = new Set(allowlist.filter((entry) => entry.where === 'circle').map((entry) => entry.value));
-const HUE = new Set(allowlist.filter((entry) => entry.where === 'hue').map((entry) => entry.value));
-const SCOPED = allowlist.filter((entry) => entry.files);
 
 function isHairline(prop) {
   if (BORDER_SHORTHANDS.has(prop)) return true;
@@ -115,7 +111,10 @@ function sheetName(node) {
   return slash < 0 ? file : file.slice(slash + 1);
 }
 
-function scopedWhere(entry, prop) {
+function matchesWhere(entry, prop, value) {
+  if (entry.where === 'hairline') return isHairline(prop);
+  if (entry.where === 'circle') return isRadius(prop);
+  if (entry.where === 'hue') return /\blonger\s+hue\b/i.test(value);
   if (entry.where === 'font-size') return prop === 'font-size' || prop === 'font';
   if (entry.where === 'spacing') return isSpacing(prop);
   if (entry.where === 'background') return prop === 'background' || prop === 'background-image';
@@ -125,21 +124,12 @@ function scopedWhere(entry, prop) {
 function isAllowed(word, prop, value, file) {
   const lower = word.toLowerCase();
   if (ANYWHERE.has(lower)) return true;
-  if (isHairline(prop) && HAIRLINE.has(lower)) return true;
-  if (isRadius(prop) && CIRCLE.has(lower)) return true;
-  if (HUE.has(lower) && /\blonger\s+hue\b/i.test(value)) return true;
-  return SCOPED.some((entry) => entry.value === lower && entry.files.includes(file) && scopedWhere(entry, prop));
-}
-
-function forcesColors(params) {
-  return params.split(',').every((query) => /\(\s*forced-colors\s*:\s*active\s*\)/i.test(query));
-}
-
-function insideForcedColors(node) {
-  for (let parent = node.parent; parent; parent = parent.parent) {
-    if (parent.type === 'atrule' && parent.name === 'media' && forcesColors(parent.params)) return true;
-  }
-  return false;
+  return allowlist.some(
+    (entry) =>
+      entry.value === lower &&
+      (!entry.files || entry.files.includes(file)) &&
+      matchesWhere(entry, prop, value),
+  );
 }
 
 function varFallback(nodes) {
@@ -162,7 +152,7 @@ const rule = (primary) => (root, result) => {
 
   root.walkDecls((decl) => {
     const mode = modeOf(decl.prop);
-    if (!mode || insideForcedColors(decl)) return;
+    if (!mode) return;
     const sheet = sheetName(decl);
 
     const valueOffset = decl.prop.length + (decl.raws.between?.length ?? 0);
