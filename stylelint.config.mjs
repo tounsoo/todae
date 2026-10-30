@@ -36,9 +36,8 @@ export default {
           ChipList: ['chip'],
           // Native <select> options take the OptionList look.
           Field: ['field', 'option'],
-          // A toggle group is a toolbar segment and spaces its items like one, and
-          // overlaps its items by Button's border width.
-          ToggleGroup: ['togglegroup', 'toolbar', 'button'],
+          // A vertical group stacks with the toolbar gap, as a toolbar segment.
+          ToggleGroup: ['togglegroup', 'toolbar'],
           // Progress and meter share one sheet.
           Progress: ['progress', 'meter'],
           ScrollArea: ['scroll'],
