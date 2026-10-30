@@ -23,6 +23,8 @@ const COLOR_FNS = new Set([
   'color-mix',
 ]);
 
+const MATH_FNS = new Set(['calc', 'min', 'max', 'clamp']);
+
 const BORDER_SHORTHANDS = new Set([
   'border',
   'border-top',
@@ -49,8 +51,9 @@ const SYSTEM_COLORS = new Set(
     .split(/\s+/),
 );
 
-const ANYWHERE = new Set(allowlist.filter((entry) => !entry.where).map((entry) => entry.value));
-const HAIRLINE = new Set(allowlist.filter((entry) => entry.where === 'hairline').map((entry) => entry.value));
+const ANYWHERE = new Set(
+  allowlist.filter((entry) => !entry.where && !entry.files).map((entry) => entry.value),
+);
 
 function isHairline(prop) {
   if (BORDER_SHORTHANDS.has(prop)) return true;
@@ -62,16 +65,25 @@ function isSpacing(prop) {
   return /^(margin|padding|inset|gap|row-gap|column-gap|scroll-margin|scroll-padding)(-|$)/.test(prop);
 }
 
+function isRadius(prop) {
+  return prop === 'border-radius' || prop.endsWith('-radius');
+}
+
 function isColorProperty(prop) {
   return prop === 'color' || prop === 'fill' || prop === 'stroke' || prop.endsWith('-color');
+}
+
+function isShadow(prop) {
+  return prop === 'box-shadow' || prop === 'text-shadow';
 }
 
 function modeOf(prop) {
   if (prop.startsWith('--')) return null;
   if (prop === 'font-size' || prop === 'font') return 'font-size';
-  if (prop === 'border-radius' || prop.endsWith('-radius')) return 'radius';
+  if (isRadius(prop)) return 'radius';
   if (isSpacing(prop)) return 'spacing';
-  if (isHairline(prop)) return 'both';
+  if (isHairline(prop)) return 'line-width';
+  if (isShadow(prop)) return 'shadow';
   if (prop === 'background' || prop === 'background-image') return 'background';
   if (isColorProperty(prop)) return 'color';
   return null;
@@ -81,14 +93,43 @@ function isNumeric(word) {
   return /^[+-]?(?:\d+|\d*\.\d+)(?:[a-z%]+)?$/i.test(word);
 }
 
+function isPlainNumber(word) {
+  return /^[+-]?(?:\d+|\d*\.\d+)$/.test(word);
+}
+
+function isPercent(word) {
+  return /^[+-]?(?:\d+|\d*\.\d+)%$/i.test(word);
+}
+
 function isHex(word) {
   return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(word);
 }
 
-function isAllowed(word, prop) {
+function sheetName(node) {
+  const file = node.root().source?.input?.file ?? '';
+  const slash = Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\'));
+  return slash < 0 ? file : file.slice(slash + 1);
+}
+
+function matchesWhere(entry, prop, value) {
+  if (entry.where === 'hairline') return isHairline(prop);
+  if (entry.where === 'circle') return isRadius(prop);
+  if (entry.where === 'hue') return /\blonger\s+hue\b/i.test(value);
+  if (entry.where === 'font-size') return prop === 'font-size' || prop === 'font';
+  if (entry.where === 'spacing') return isSpacing(prop);
+  if (entry.where === 'background') return prop === 'background' || prop === 'background-image';
+  return !entry.where;
+}
+
+function isAllowed(word, prop, value, file) {
   const lower = word.toLowerCase();
   if (ANYWHERE.has(lower)) return true;
-  return isHairline(prop) && HAIRLINE.has(lower);
+  return allowlist.some(
+    (entry) =>
+      entry.value === lower &&
+      (!entry.files || entry.files.includes(file)) &&
+      matchesWhere(entry, prop, value),
+  );
 }
 
 function varFallback(nodes) {
@@ -99,7 +140,6 @@ function varFallback(nodes) {
 
 function kindFor(mode, colorish) {
   if (colorish) return 'color';
-  if (mode === 'both') return 'spacing';
   return mode;
 }
 
@@ -113,6 +153,7 @@ const rule = (primary) => (root, result) => {
   root.walkDecls((decl) => {
     const mode = modeOf(decl.prop);
     if (!mode) return;
+    const sheet = sheetName(decl);
 
     const valueOffset = decl.prop.length + (decl.raws.between?.length ?? 0);
     const flag = (raw, colorish, sourceIndex) => {
@@ -127,25 +168,30 @@ const rule = (primary) => (root, result) => {
       });
     };
 
-    const walk = (nodes, inColorFn) => {
+    const walk = (nodes, inColorFn, inMath) => {
       for (const node of nodes) {
         if (node.type === 'function') {
           const name = node.value.toLowerCase();
           if (name === 'url') continue;
           if (name === 'var') {
-            walk(varFallback(node.nodes), inColorFn);
+            walk(varFallback(node.nodes), inColorFn, inMath);
             continue;
           }
-          walk(node.nodes, inColorFn || COLOR_FNS.has(name));
+          walk(node.nodes, inColorFn || COLOR_FNS.has(name), inMath || MATH_FNS.has(name));
           continue;
         }
         if (node.type !== 'word') continue;
         const raw = node.value;
-        if (isAllowed(raw, decl.prop)) continue;
+        if (isAllowed(raw, decl.prop, decl.value, sheet)) continue;
         const lower = raw.toLowerCase();
-        const colorish = isHex(raw) || NAMED_COLORS.has(lower) || SYSTEM_COLORS.has(lower);
+        if (SYSTEM_COLORS.has(lower)) continue;
+        const colorish = isHex(raw) || NAMED_COLORS.has(lower);
         const numeric = isNumeric(raw);
-        if (colorish && (mode === 'color' || mode === 'background' || mode === 'both' || inColorFn)) {
+        if (numeric && inMath && isPlainNumber(raw)) continue;
+        if (numeric && inColorFn && isPercent(raw)) continue;
+        const colorContext =
+          mode === 'color' || mode === 'background' || mode === 'line-width' || mode === 'shadow' || inColorFn;
+        if (colorish && colorContext) {
           flag(raw, true, node.sourceIndex);
           continue;
         }
@@ -154,13 +200,13 @@ const rule = (primary) => (root, result) => {
           flag(raw, true, node.sourceIndex);
           continue;
         }
-        if (mode === 'background') continue;
+        if (mode === 'background' || mode === 'shadow') continue;
         if (mode === 'color' && !inColorFn) continue;
         flag(raw, false, node.sourceIndex);
       }
     };
 
-    walk(valueParser(decl.value).nodes, false);
+    walk(valueParser(decl.value).nodes, false, false);
   });
 };
 

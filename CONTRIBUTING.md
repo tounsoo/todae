@@ -89,9 +89,9 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 `pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
 
-Stylelint warns when a component sheet uses a raw color, a raw spacing value, a raw radius, or a raw font size. `var(--…)` is allowed. Other allowed literals are `0`, `100%`, `currentColor`, `transparent`, `inherit`, and `auto`. `1px` is allowed only on a border or outline width, and only while `stylelint/raw-value-allowlist.mjs` lists it with a reason. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
+Stylelint rejects a raw color, a raw spacing value, a raw radius, a raw font size, or a raw color in `box-shadow` or `text-shadow`. `var(--…)` is allowed. `0` and `0px` are allowed everywhere. They are the same length. `100%`, `currentColor`, `transparent`, `inherit`, and `auto` are allowed everywhere. `1px` is allowed only on a border or outline width, and only in the sheets the allowlist names. `50%` is allowed only on a circle radius in those sheets. `360` is allowed only as the end stop of ColorPicker's longer-hue gradient. Other literals are allowed only in the sheets `stylelint/raw-value-allowlist.mjs` names, and only while that file lists each one with a reason. System colors, `currentColor`, and `transparent` are allowed inside `@media (forced-colors: active)`. A hex, a named color, or a raw length there still fails. A plain number inside `calc`, `min`, `max`, or `clamp` is a factor, not a length. A percentage inside a color function is a channel, not a length. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
 
-Warnings do not fail `pnpm check` or CI. Leave the rule at warning.
+A raw value fails `pnpm check` and CI.
 
 ## Check your change
 
@@ -109,7 +109,7 @@ pnpm test
 pnpm test:browser
 ```
 
-- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. Stylelint warnings do not fail the command. The Checks job and the draft Check job both run `pnpm check`.
+- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Checks job and the draft Check job both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
