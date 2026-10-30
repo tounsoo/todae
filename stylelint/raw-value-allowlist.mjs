@@ -13,11 +13,14 @@ export const allowlist = [
   { value: 'inherit' },
   // The property's automatic value.
   { value: 'auto' },
-  // Hairline edge in forced colors. Button floors its border, and Pagination and Progress keep a 1px outline or border.
+  // Hairline edge inside @media (forced-colors: active). Button floors its border,
+  // and Pagination and Progress keep a 1px outline or border. Outside that block
+  // the same 1px is a raw hairline.
   {
     value: '1px',
     where: 'hairline',
     files: ['Button.module.css', 'Pagination.module.css', 'Progress.module.css'],
+    forcedColors: true,
   },
   // Circle and ellipse radii. Half of each side is the shape, not a chosen corner size.
   {

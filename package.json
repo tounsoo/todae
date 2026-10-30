@@ -26,7 +26,7 @@
     "tokens": "pnpm --filter @tounsoo/todae tokens",
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
-    "test": "node --test stylelint/no-raw-value.test.mjs && pnpm -r --if-present test",
+    "test": "node --test stylelint/*.test.mjs && pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
