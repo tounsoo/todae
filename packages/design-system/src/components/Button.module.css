@@ -91,6 +91,7 @@
 
   .root:is(:disabled, [aria-disabled='true'], a:not(:any-link)) {
     cursor: not-allowed;
+    opacity: 1;
     background: var(--todae-button-bg-disabled);
     color: var(--todae-button-fg-disabled);
     border-color: var(--todae-button-border-disabled);
