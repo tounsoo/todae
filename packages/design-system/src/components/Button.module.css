@@ -8,7 +8,6 @@
     align-items: center;
     justify-content: center;
     font: inherit;
-    line-height: 1.5;
     cursor: pointer;
     background: var(--_button-bg-default, var(--todae-button-bg-default));
     color: var(--_button-fg-default, var(--todae-button-fg-default));
