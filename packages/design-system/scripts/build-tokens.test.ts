@@ -1310,7 +1310,15 @@ describe('company token build', () => {
         $extensions: { 'dev.todae': { layer: 'contract' } },
       };
       r.modifiers.buttonVariant.contexts.primary = [
-        { button: { primary: { bg: { default: { $type: 'color', $value: { $ref: '#/color/red/500/$value' } } } } } },
+        {
+          button: {
+            primary: {
+              bg: { default: { $type: 'color', $value: { $ref: '#/color/red/500/$value' } } },
+              // Red 500 is too close to the dark primary text. Near-white clears it.
+              fg: { default: { $type: 'color', $value: { colorSpace: 'oklch', components: [0.99, 0, 0] } } },
+            },
+          },
+        },
       ];
       r.resolutionOrder.splice(2, 0, { $ref: '#/sets/button' });
     });
@@ -1468,6 +1476,12 @@ describe('company token build', () => {
       r.modifiers.appearance.$extensions['dev.todae'].contrast = [
         { fg: 'color.on-accent', bg: 'color.accent.default', min: 20 },
         { fg: 'color.accent.default', bg: 'color.bg.canvas', min: 20 },
+      ];
+      // The same accent still misses the button text and progress floors.
+      r.sets.brand.$extensions['dev.todae'].contrast = [
+        { fg: 'progress.fill', bg: 'progress.track', min: 20 },
+        { fg: 'button.primary.fg.default', bg: 'button.primary.bg.default', min: 20 },
+        { fg: 'button.primary.fg.focus', bg: 'button.primary.bg.focus', min: 20 },
       ];
     });
     await expect(buildCompanyTokens({ resolver: retuned, base: tokensDir })).resolves.toBeDefined();
