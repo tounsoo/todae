@@ -1,6 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
+
+// This file replaces `test`, so the unit config's env does not carry over.
+if (process.env.VITEST) pinTestLocale();
 
 const src = (path: string) => fileURLToPath(new URL(`../../packages/design-system/src/${path}`, import.meta.url));
 
@@ -26,6 +30,7 @@ export default defineConfig({
   },
   css: { modules: { generateScopedName: 'todae_[local]_[hash:hex:6]' } },
   test: {
+    env: testLocaleEnv,
     include: ['**/*.browser.test.tsx'],
     exclude: ['**/node_modules/**', '.next/**'],
     browser: {
