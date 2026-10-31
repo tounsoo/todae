@@ -153,13 +153,15 @@
   },
   "composition": {
     "(top)": "daa9c66a4c98",
-    "# Composition": "5df38cfb773f",
+    "# Composition": "654c6a27af86",
     "## Placing something new": "7535f6400597",
+    "## Composer": "2611ce61a420",
     "## Components": "9db230c231a6",
     "## Recipes": "0ccacf69fdb0",
     "## Hook": "4c2a5e2fd3a4",
     "## Never": "683d91a3b1f8",
-    "(section order)": "5f36e5fc4a2e"
+    "## Audit": "460a8df57e2f",
+    "(section order)": "00afe69544f0"
   },
   "contents": {
     "(top)": "7d370e419676",
