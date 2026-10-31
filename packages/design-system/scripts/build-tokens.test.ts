@@ -35,6 +35,7 @@ import {
   type TokenNode,
   type TokenTree,
 } from './build-tokens';
+import { buildPackageTokens } from './package-tokens.ts';
 
 const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: pathToPointer(ref) } });
 
@@ -1835,7 +1836,7 @@ describe('token name ratchet', () => {
       [
         '--experimental-strip-types',
         '--no-warnings=ExperimentalWarning',
-        join(import.meta.dirname, 'build-tokens.ts'),
+        join(import.meta.dirname, 'package-tokens.ts'),
         'self',
         '--check',
         '--',
@@ -1849,7 +1850,7 @@ describe('token name ratchet', () => {
   });
 
   it('passes on the repo and skips the shrink check when the base commit has no list', async () => {
-    const stdout = await capture(() => buildTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
+    const stdout = await capture(() => buildPackageTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
     expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
   });
@@ -1872,7 +1873,7 @@ describe('token name ratchet', () => {
       'tabs.bg.selected: unknown state "selected". States are default, hover, active, pressed, focus, disabled. Rename to one of them, or if "selected" is a variant, move it before the property (e.g. option.selected.bg).';
     let message = '';
     try {
-      await buildTokens({ check: true, root });
+      await buildPackageTokens({ check: true, root });
     } catch (error) {
       message = error instanceof Error ? error.message : String(error);
     }
