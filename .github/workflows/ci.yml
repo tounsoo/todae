@@ -18,7 +18,7 @@ on:
       - '*-body.md'
       - '**/*-body.md'
       - '.audit/**'
-  # Drafts skip Checks and Docs. Token API and Forbidden paths still run.
+  # Drafts skip Checks and Docs. Token API, Token consumers, and Forbidden paths still run.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -166,6 +166,21 @@ jobs:
         run: pnpm tokens:check
       - name: No public token was removed, renamed or retyped
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
+  # Informational. Lists components that read a changed token. Never fails the build.
+  token-consumers:
+    name: Token consumers
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Report
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/token-consumers.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}" --summary "$GITHUB_STEP_SUMMARY"
 
   # Drafts skip Checks and Docs. This job still runs, as Token API does, so a scratch file fails before review.
   forbidden-paths:

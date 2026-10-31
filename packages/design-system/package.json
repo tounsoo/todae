@@ -153,6 +153,7 @@
     "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self --check",
     "tokens:api:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts",
+    "tokens:consumers": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/token-consumers.ts",
     "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json && tsc -p tsconfig.scripts.json",
     "prepack": "pnpm build",
     "dev": "vite build --watch",
