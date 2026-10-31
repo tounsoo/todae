@@ -45,11 +45,11 @@ describe('parseTime', () => {
   });
 
   it('reads an hour alone, and hours and minutes without a separator', () => {
-    expect(read('9')).toBe('09:00:00');
-    expect(read('21')).toBe('21:00:00');
-    expect(read('930')).toBe('09:30:00');
-    expect(read('0930')).toBe('09:30:00');
-    expect(read('2130')).toBe('21:30:00');
+    expect(read('9', 'en-US')).toBe('09:00:00');
+    expect(read('21', 'en-US')).toBe('21:00:00');
+    expect(read('930', 'en-US')).toBe('09:30:00');
+    expect(read('0930', 'en-US')).toBe('09:30:00');
+    expect(read('2130', 'en-US')).toBe('21:30:00');
   });
 
   it('reads a 0 to 11 clock, as ja may write one', () => {
@@ -92,10 +92,10 @@ describe('parseTime', () => {
   });
 
   it('reads any separator and any script’s digits', () => {
-    expect(read('21.30')).toBe('21:30:00');
+    expect(read('21.30', 'en-US')).toBe('21:30:00');
     expect(read('21h30', 'fr-CA')).toBe('21:30:00');
     expect(read('٢١:٣٠', 'ar')).toBe('21:30:00');
-    expect(read('２１：３０')).toBe('21:30:00');
+    expect(read('２１：３０', 'en-US')).toBe('21:30:00');
   });
 
   it('reads a time with a format character or a compatibility form between its parts', () => {

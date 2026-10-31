@@ -1,7 +1,10 @@
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { defineConfig, type Plugin } from 'vitest/config';
-import { testLocaleEnv } from '../../vitest.locale';
+import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
+
+// ICU reads LANG when the worker process starts, before Vitest applies test.env.
+if (process.env.VITEST) pinTestLocale();
 
 // Forward slashes on every platform, as in Vite's module ids.
 const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));
