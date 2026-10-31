@@ -1503,8 +1503,8 @@
       "path": "color.accent.default",
       "type": "color",
       "cssVar": "--todae-color-accent-default",
-      "cssValue": "var(--todae-color-gray-900)",
-      "ref": "color.gray.900",
+      "cssValue": "var(--todae-color-gray-800)",
+      "ref": "color.gray.800",
       "layer": "appearance",
       "context": "light",
       "entry": {

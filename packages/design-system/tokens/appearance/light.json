@@ -24,7 +24,7 @@
       "default": { "$description": "Error text and invalid borders.", "$type": "color", "$value": { "$ref": "#/color/red/600/$value" } }
     },
     "accent": {
-      "default": { "$description": "The brand accent: primary buttons, checked controls and the focus ring. Set with hover, active and on-accent.", "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
+      "default": { "$description": "The brand accent: primary buttons, checked controls and the focus ring. Set with hover, active and on-accent.", "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
       "hover": { "$description": "The accent while hovered.", "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
       "active": { "$description": "The accent while pressed.", "$type": "color", "$value": { "$ref": "#/color/gray/950/$value" } },
       "soft": { "$description": "A light accent tint, for soft-toned surfaces in product code.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/12/$value" } } },
