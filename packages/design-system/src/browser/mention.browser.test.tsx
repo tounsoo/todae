@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Composer, Mention, MentionText, defineMentionSource, type MentionDraft } from '../index.js';
+import { Field, Mention, MentionText, OptionList, Popover, defineMentionSource, useMentions, type MentionDraft, type MentionSource } from '../index.js';
+import { useMentionPeek } from '../hooks/useMentionPeek.js';
+import { tokenAtCaret } from '../hooks/useMentions.js';
 
 afterEach(cleanup);
 
@@ -34,6 +36,68 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function MentionField({
+  mentions,
+  value,
+  onValueChange,
+  onSubmit,
+}: {
+  mentions: readonly MentionSource<Person>[];
+  value?: MentionDraft;
+  onValueChange?: (next: MentionDraft) => void;
+  onSubmit?: () => void;
+}) {
+  const api = useMentions({ triggers: mentions, value, onValueChange });
+  const el = api.textareaRef.current;
+  const caret = el && el.selectionStart === el.selectionEnd ? el.selectionStart : null;
+  const token = !api.open && caret !== null ? tokenAtCaret(api.value.tokens, caret) : null;
+  const source = token ? (mentions.find((item) => item.char === token.char) ?? null) : null;
+  const peek = useMentionPeek({
+    source,
+    id: token?.value ?? null,
+    mode: 'caret',
+    active: token !== null && !api.open,
+    text: token?.text ?? '',
+    focusRef: api.textareaRef,
+    anchorName: api.caretPeekAnchorName,
+  });
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit?.();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.shiftKey || event.defaultPrevented) return;
+        if (!(event.target instanceof HTMLTextAreaElement)) return;
+        event.preventDefault();
+        event.currentTarget.requestSubmit();
+      }}
+    >
+      <Field.Root aria-label="Message">
+        <Field.Textarea
+          {...api.getTextareaProps({
+            'aria-describedby': peek.open ? peek.triggerProps['aria-describedby'] : undefined,
+          })}
+        />
+      </Field.Root>
+      <Popover.Root {...api.getPopoverProps()}>
+        <OptionList.Root {...api.getListboxProps()}>
+          {api.items.map((item) => (
+            <OptionList.Option key={item.id} {...api.getOptionProps(item)} />
+          ))}
+        </OptionList.Root>
+      </Popover.Root>
+      {source?.renderPeek ? (
+        <Popover.Root {...peek.peekProps} inert={peek.inert ? true : undefined}>
+          {peek.entity !== undefined ? source.renderPeek(peek.entity, peek.context) : null}
+        </Popover.Root>
+      ) : null}
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+
 function openPopover() {
   const el = document.querySelector<HTMLElement>('[popover][data-popover-open], [popover]:popover-open');
   if (!el) throw new Error('no open popover');
@@ -62,19 +126,11 @@ describe('mention peek in a browser', () => {
     const sent: string[] = [];
     function Chat() {
       const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
-      const send = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+      const send = () => {
         sent.push(draft.text);
         setDraft({ text: '', tokens: [] });
       };
-      return (
-        <Composer.Root onSubmit={send}>
-          <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
-          <Composer.Toolbar>
-            <Composer.Submit disabled={draft.text.trim() === ''} />
-          </Composer.Toolbar>
-        </Composer.Root>
-      );
+      return <MentionField mentions={[people]} value={draft} onValueChange={setDraft} onSubmit={send} />;
     }
     render(<Chat />);
     const field = screen.getByRole('textbox', { name: 'Message' });
@@ -117,13 +173,7 @@ describe('mention peek in a browser', () => {
       const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
       return (
         <div style={drop ? { paddingTop: '80vh' } : undefined}>
-          <Composer.Root
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
-            <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
-          </Composer.Root>
+          <MentionField mentions={[people]} value={draft} onValueChange={setDraft} />
           <Mention.Root source={people} id="mina">
             @Mina Park
           </Mention.Root>
@@ -178,13 +228,7 @@ describe('mention peek in a browser', () => {
       const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
       return (
         <div style={{ position: 'fixed', bottom: 8, left: 40, inlineSize: '24rem' }}>
-          <Composer.Root
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
-            <Composer.Input aria-label="Message" mentions={[many]} value={draft} onValueChange={setDraft} />
-          </Composer.Root>
+          <MentionField mentions={[many]} value={draft} onValueChange={setDraft} />
         </div>
       );
     }
@@ -210,12 +254,7 @@ describe('mention peek in a browser', () => {
     render(
       <main>
         <MentionText value={value} sources={[people]} />
-        <Composer.Root>
-          <Composer.Input aria-label="Message" mentions={[people]} defaultValue={{ text: '', tokens: [] }} />
-          <Composer.Toolbar>
-            <Composer.Submit />
-          </Composer.Toolbar>
-        </Composer.Root>
+        <MentionField mentions={[people]} />
       </main>,
     );
     const results = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });

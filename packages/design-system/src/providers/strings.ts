@@ -94,10 +94,6 @@ export interface Strings {
   messageStarted: string;
   /** Conversation's message when a message finishes arriving. */
   messageFinished: string;
-  /** Name of Composer.Submit when its own text does not name it. */
-  send: string;
-  /** Name of Composer.Submit while the composer is busy, when its own text does not name it. */
-  stop: string;
   /** Steps.Item's hidden status word for a `done` step, read before the step's text. */
   stepDone: string;
   /** Steps.Item's hidden status word for the `current` step. */
@@ -188,8 +184,6 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   scrollToLatest: 'Scroll to latest message',
   messageStarted: 'New message',
   messageFinished: 'Message complete',
-  send: 'Send',
-  stop: 'Stop',
   stepDone: 'Done',
   stepCurrent: 'In progress',
   stepPending: 'Not started',

@@ -23,7 +23,6 @@ export default {
         coreReads: {
           ChipList: ['space'],
           Field: ['space'],
-          Composer: ['space'],
         },
         // Contract groups every component shares.
         sharedRoots: ['overlay', 'focus'],

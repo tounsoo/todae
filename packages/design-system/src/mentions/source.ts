@@ -6,7 +6,7 @@ import type { MentionTrigger } from '../hooks/useMentions.js';
 export type MentionPeekContext = {
   /** The token value the source resolves. */
   id: string;
-  /** `caret` is the peek inside Composer.Input. It never takes focus. */
+  /** `caret` is the peek while the caret rests in a token. It never takes focus. */
   mode: 'interactive' | 'caret';
   /** Closes the peek. Focus returns to the mention, or stays on the textarea. */
   close: () => void;

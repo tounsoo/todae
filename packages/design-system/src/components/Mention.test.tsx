@@ -1,10 +1,12 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tokenAtCaret, useMentions, type MentionDraft } from '../hooks/useMentions.js';
+import { useMentionPeek } from '../hooks/useMentionPeek.js';
+import { OptionList } from './OptionList.js';
+import { Popover } from './Popover.js';
 import { defineMentionSource, type MentionSource } from '../mentions/source.js';
-import { Composer } from './Composer.Input.js';
 import { Field } from './Field.js';
 import { Mention } from './Mention.js';
 import { MentionText } from './MentionText.js';
@@ -28,115 +30,9 @@ function peopleSource(extra: Partial<MentionSource<Person>> = {}): MentionSource
   });
 }
 
-function Chat({
-  source = peopleSource(),
-  onSend = () => {},
-  busy = false,
-  onStop,
-}: {
-  source?: MentionSource<Person>;
-  onSend?: () => void;
-  busy?: boolean;
-  onStop?: () => void;
-}) {
-  const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
-  const send = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    onSend();
-  };
-  return (
-    <Composer.Root busy={busy} onSubmit={send}>
-      <Composer.Input aria-label="Message" mentions={[source]} value={draft} onValueChange={setDraft} />
-      <Composer.Toolbar>
-        <Composer.Submit disabled={draft.text.trim() === ''} onStop={onStop} />
-      </Composer.Toolbar>
-    </Composer.Root>
-  );
-}
-
 function type(el: HTMLTextAreaElement, text: string) {
   fireEvent.change(el, { target: { value: text, selectionStart: text.length, selectionEnd: text.length } });
 }
-
-describe('Composer.Input', () => {
-  it('picks a mention with Enter and sends on the next Enter', () => {
-    const onSend = vi.fn();
-    render(<Chat onSend={onSend} />);
-    const field = screen.getByRole('textbox', { name: 'Message' });
-    fireEvent.focus(field);
-    type(field as HTMLTextAreaElement, '@mi');
-    const list = screen.getByRole('listbox', { name: 'People' });
-    expect(list).toBeTruthy();
-    fireEvent.keyDown(field, { key: 'ArrowDown' });
-    const options = [...list.querySelectorAll('[role="option"]')];
-    expect(field.getAttribute('aria-activedescendant')).toBe(options[1]?.id);
-    expect(fireEvent.keyDown(field, { key: 'Enter' })).toBe(false);
-    expect(onSend).not.toHaveBeenCalled();
-    expect((field as HTMLTextAreaElement).value).toContain('Min-jun Choi');
-    expect(fireEvent.keyDown(field, { key: 'Enter' })).toBe(false);
-    expect(onSend).toHaveBeenCalledTimes(1);
-  });
-
-  it('closes the list on Escape without clearing the text, and ignores an IME Enter', () => {
-    const onSend = vi.fn();
-    render(<Chat onSend={onSend} />);
-    const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
-    fireEvent.focus(field);
-    type(field, '@mi');
-    expect(screen.getByRole('listbox')).toBeTruthy();
-    fireEvent.keyDown(field, { key: 'Escape' });
-    expect(screen.getByRole('listbox').closest('[popover]')?.hasAttribute('data-popover-open')).toBe(false);
-    expect(field.value).toBe('@mi');
-    type(field, '@mi');
-    fireEvent.keyDown(field, { key: 'Enter', isComposing: true });
-    fireEvent.keyDown(field, { key: 'Enter', keyCode: 229 });
-    expect(onSend).not.toHaveBeenCalled();
-    expect(field.value).toBe('@mi');
-  });
-
-  it('does not send while busy, Stop calls onStop, and the handoff textarea is Composer.Input', () => {
-    const onSend = vi.fn();
-    const onStop = vi.fn();
-    render(<Chat onSend={onSend} busy onStop={onStop} />);
-    const field = screen.getByRole('textbox', { name: 'Message' });
-    fireEvent.keyDown(field, { key: 'Enter' });
-    expect(onSend).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    expect(onStop).toHaveBeenCalledTimes(1);
-    const form = field.closest('form');
-    const areas = [...(form?.elements ?? [])].filter((el) => el instanceof HTMLTextAreaElement);
-    expect(areas[0]).toBe(field);
-  });
-});
-
-describe('caret peek', () => {
-  it('describes the textarea from the token, hides while the list is open, and Escape leaves focus on the textarea', () => {
-    render(<Chat />);
-    const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
-    fireEvent.focus(field);
-    type(field, '@mi');
-    fireEvent.keyDown(field, { key: 'Enter' });
-    const end = field.value.length;
-    field.setSelectionRange(end - 2, end - 2);
-    fireEvent.select(field);
-    const describedBy = field.getAttribute('aria-describedby');
-    const peek = describedBy ? document.getElementById(describedBy) : null;
-    expect(peek?.textContent).toContain('Mina Park');
-    expect(document.activeElement).toBe(field);
-    type(field, `${field.value} @mi`);
-    const list = screen.getByRole('listbox');
-    expect(list.closest('[popover]')?.hasAttribute('data-popover-open')).toBe(true);
-    expect(field.getAttribute('aria-describedby')).toBeNull();
-    fireEvent.keyDown(field, { key: 'Escape' });
-    expect(list.closest('[popover]')?.hasAttribute('data-popover-open')).toBe(false);
-    field.setSelectionRange(4, 4);
-    fireEvent.select(field);
-    expect(field.getAttribute('aria-describedby')).toBeTruthy();
-    fireEvent.keyDown(field, { key: 'Escape' });
-    expect(field.getAttribute('aria-describedby')).toBeNull();
-    expect(document.activeElement).toBe(field);
-  });
-});
 
 describe('Mention.Root', () => {
   it('is a button without href and a link with one', () => {
@@ -229,15 +125,41 @@ describe('Mention.Root', () => {
   });
 
   it('passes mode caret to the caret peek', () => {
-    render(<Chat source={peopleSource({ renderPeek: (_person, peek) => <span>{peek.mode}</span> })} />);
+    const source = peopleSource({ renderPeek: (_person, peek) => <span>{peek.mode}</span> });
+    function Harness() {
+      const [draft, setDraft] = useState<MentionDraft>({
+        text: '@Mina Park',
+        tokens: [{ start: 0, end: 10, char: '@', value: 'mina', text: '@Mina Park' }],
+      });
+      const api = useMentions({ triggers: [source], value: draft, onValueChange: setDraft });
+      const token = tokenAtCaret(api.value.tokens, 2);
+      const peek = useMentionPeek({
+        source,
+        id: token?.value ?? null,
+        mode: 'caret',
+        active: token !== null,
+        text: token?.text ?? '',
+        focusRef: api.textareaRef,
+        anchorName: api.caretPeekAnchorName,
+      });
+      return (
+        <>
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...api.getTextareaProps()} />
+          </Field.Root>
+          <Popover.Root {...api.getPopoverProps()}>
+            <OptionList.Root {...api.getListboxProps()}>{null}</OptionList.Root>
+          </Popover.Root>
+          {peek.entity !== undefined ? source.renderPeek?.(peek.entity, peek.context) : null}
+        </>
+      );
+    }
+    render(<Harness />);
     const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
     fireEvent.focus(field);
-    type(field, '@mi');
-    fireEvent.keyDown(field, { key: 'Enter' });
     field.setSelectionRange(2, 2);
     fireEvent.select(field);
-    const described = field.getAttribute('aria-describedby');
-    expect(described ? document.getElementById(described)?.textContent : '').toBe('caret');
+    expect(document.body.textContent).toContain('caret');
   });
 });
 
@@ -357,7 +279,7 @@ describe('caret anchor', () => {
 });
 
 describe('server render', () => {
-  it('renders MentionText and Composer.Input without touching window', () => {
+  it('renders MentionText without touching window', () => {
     const source = peopleSource();
     const html = renderToString(
       <MentionText
@@ -366,11 +288,5 @@ describe('server render', () => {
       />,
     );
     expect(html).toContain('@Mina Park');
-    const input = renderToString(
-      <Composer.Root>
-        <Composer.Input aria-label="Message" mentions={[source]} defaultValue={{ text: '', tokens: [] }} />
-      </Composer.Root>,
-    );
-    expect(input).toContain('<textarea');
   });
 });

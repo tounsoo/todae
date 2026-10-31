@@ -2,7 +2,7 @@ import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
 
-`defineMentionSource`는 멘션을 한 번 설명합니다. 그 객체를 `Composer.Input`에 넘기면 제안과 캐럿 피크에 쓰이고, `MentionText`에 넘기면 보낸 메시지에 쓰입니다. `renderPeek`가 피크의 유일한 내용입니다. Todae는 그것을 [Popover](/popover) 안에 그립니다.
+`defineMentionSource`는 멘션을 한 번 설명합니다. 그 객체를 `useMentions`에 넘기면 제안과 캐럿 피크에 쓰이고, `MentionText`에 넘기면 보낸 메시지에 쓰입니다. `renderPeek`가 피크의 유일한 내용입니다. Todae는 그것을 [Popover](/popover) 안에 그립니다. 이 소스를 쓰는 채팅 카드는 [채팅 작성창 멘션](/recipes/chat-composer-mentions) 레시피입니다.
 
 ```tsx
 const people = defineMentionSource({

@@ -60,6 +60,7 @@ export type PreviewCopy = {
   rateReply: string;
   goodReply: string;
   badReply: string;
+  send: string;
   messageLabel: string;
   askPlaceholder: string;
   notifications: string;
@@ -166,6 +167,7 @@ const EN: PreviewCopy = {
   rateReply: 'Rate this reply',
   goodReply: 'Good reply',
   badReply: 'Bad reply',
+  send: 'Send',
   messageLabel: 'Message',
   askPlaceholder: 'Ask about your billing',
   notifications: 'Notifications',
@@ -269,6 +271,7 @@ const KO: PreviewCopy = {
   rateReply: '답변 평가',
   goodReply: '좋은 답변',
   badReply: '아쉬운 답변',
+  send: '보내기',
   messageLabel: '메시지',
   askPlaceholder: '결제에 대해 물어보세요',
   notifications: '알림',

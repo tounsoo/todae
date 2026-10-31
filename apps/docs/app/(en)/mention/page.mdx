@@ -2,7 +2,7 @@ import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
 
-`defineMentionSource` describes a mention once. Pass that object to `Composer.Input` for suggestions and the caret peek, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover).
+`defineMentionSource` describes a mention once. Pass that object to `useMentions` for suggestions and the caret peek, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover). The chat card that uses it is the [chat composer mentions](/recipes/chat-composer-mentions) recipe.
 
 ```tsx
 const people = defineMentionSource({

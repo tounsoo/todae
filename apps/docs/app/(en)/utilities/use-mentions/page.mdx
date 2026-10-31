@@ -14,14 +14,14 @@ const mentions = useMentions({
   onValueChange: setDraft,
 });
 
-<Composer.Root onSubmit={send}>
+<form onSubmit={send}>
   <Field.Root aria-label="Message">
     <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
     <Field.Row>
-      <Composer.Submit disabled={draft.text.trim() === ''} />
+      <Button.Root type="submit" disabled={draft.text.trim() === ''} aria-label="Send">Send</Button.Root>
     </Field.Row>
   </Field.Root>
-</Composer.Root>
+</form>
 <Popover.Root {...mentions.getPopoverProps()}>
   <OptionList.Root {...mentions.getListboxProps()}>
     {mentions.items.map((item) => (
@@ -43,7 +43,7 @@ A trigger takes `options`, filtered by `filter` against the word, or `loadOption
 
 ## Picking and editing
 
-While the list is open, ArrowDown and ArrowUp move through its options, and Enter or Tab picks the active option. Enter while the word's options are still loading does nothing, so a [Composer](/composer) does not send a half-typed mention. Enter with no option it can pick closes the list and is left to the textarea. Escape, or a press outside the textarea and the list, closes it for that word; it opens again for the next trigger.
+While the list is open, ArrowDown and ArrowUp move through its options, and Enter or Tab picks the active option. Enter while the word's options are still loading does nothing, so a [Composer](/recipes/chat-composer-mentions) does not send a half-typed mention. Enter with no option it can pick closes the list and is left to the textarea. Escape, or a press outside the textarea and the list, closes it for that word; it opens again for the next trigger.
 
 A pick replaces the word through `document.execCommand('insertText')`, so it is one step on the textarea's own undo stack, and adds a space unless whitespace follows. Undo and redo bring back the tokens the restored text last had. Any edit to a token's text, including Backspace or Delete on one of its characters, turns it back into plain text.
 

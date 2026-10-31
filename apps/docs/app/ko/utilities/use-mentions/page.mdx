@@ -14,14 +14,14 @@ const mentions = useMentions({
   onValueChange: setDraft,
 });
 
-<Composer.Root onSubmit={send}>
+<form onSubmit={send}>
   <Field.Root aria-label="Message">
     <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
     <Field.Row>
-      <Composer.Submit disabled={draft.text.trim() === ''} />
+      <Button.Root type="submit" disabled={draft.text.trim() === ''} aria-label="Send">Send</Button.Root>
     </Field.Row>
   </Field.Root>
-</Composer.Root>
+</form>
 <Popover.Root {...mentions.getPopoverProps()}>
   <OptionList.Root {...mentions.getListboxProps()}>
     {mentions.items.map((item) => (
@@ -43,7 +43,7 @@ const mentions = useMentions({
 
 ## 고르기와 편집
 
-목록이 열려 있는 동안 ArrowDown과 ArrowUp은 목록의 옵션 사이를 움직이고, Enter나 Tab은 활성 옵션을 고릅니다. 단어의 옵션을 아직 불러오는 중에 누른 Enter는 아무것도 하지 않으므로, [Composer](/composer)가 덜 입력한 멘션을 보내지 않습니다. 고를 수 있는 옵션이 없을 때 누른 Enter는 목록을 닫고 textarea에 맡깁니다. Escape나 textarea와 목록 바깥을 누르면 그 단어에 대해 목록이 닫히고, 다음 트리거에서 다시 열립니다.
+목록이 열려 있는 동안 ArrowDown과 ArrowUp은 목록의 옵션 사이를 움직이고, Enter나 Tab은 활성 옵션을 고릅니다. 단어의 옵션을 아직 불러오는 중에 누른 Enter는 아무것도 하지 않으므로, [Composer](/recipes/chat-composer-mentions)가 덜 입력한 멘션을 보내지 않습니다. 고를 수 있는 옵션이 없을 때 누른 Enter는 목록을 닫고 textarea에 맡깁니다. Escape나 textarea와 목록 바깥을 누르면 그 단어에 대해 목록이 닫히고, 다음 트리거에서 다시 열립니다.
 
 고르기는 `document.execCommand('insertText')`로 단어를 바꾸므로 textarea 자체의 실행 취소 기록에 한 단계로 남고, 뒤에 공백이 없으면 공백을 하나 더합니다. 실행 취소와 다시 실행은 되돌린 텍스트가 마지막으로 가졌던 토큰을 되살립니다. 토큰의 글자 하나에 Backspace나 Delete를 누르는 것을 포함해 토큰의 텍스트를 편집하면 그 토큰은 일반 텍스트로 돌아갑니다.
 

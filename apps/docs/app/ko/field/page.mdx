@@ -140,7 +140,7 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 ## Row
 
-`Field.Row`는 전체 너비 줄입니다. 입력 앞에 쓰면 위에, 뒤에 쓰면 아래에 놓입니다. 필드에 아래쪽 줄이 있으면 `Field.Counter`를 Row 안에 두세요. 채팅의 프롬프트 입력창이라면 예시처럼 필드를 [Composer](/composer)로 감싸고 `autoGrow`를 쓰세요. Row에 텍스트를 그대로 넣지 말고 `Field.Affix`로 감싸세요. 뒤쪽 항목은 그 첫 항목에 `style={{ marginInlineStart: 'auto' }}`를 주어 끝으로 밀어 냅니다. `Composer.Submit`은 이미 끝에 놓입니다. 칩에는 `chipLayout="row"`를 설정하세요. ChipInput이 자체 칩 줄을 그립니다. `Field.Row` 안에서 칩을 직접 만들지 마세요.
+`Field.Row`는 전체 너비 줄입니다. 입력 앞에 쓰면 위에, 뒤에 쓰면 아래에 놓입니다. 필드에 아래쪽 줄이 있으면 `Field.Counter`를 Row 안에 두세요. 채팅의 프롬프트 입력창이라면 예시처럼 필드를 [Composer](/recipes/chat-composer-mentions)로 감싸고 `autoGrow`를 쓰세요. Row에 텍스트를 그대로 넣지 말고 `Field.Affix`로 감싸세요. 뒤쪽 항목은 그 첫 항목에 `style={{ marginInlineStart: 'auto' }}`를 주어 끝으로 밀어 냅니다. 칩에는 `chipLayout="row"`를 설정하세요. ChipInput이 자체 칩 줄을 그립니다. `Field.Row` 안에서 칩을 직접 만들지 마세요.
 
 <Example block>
   <RowComposer />

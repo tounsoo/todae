@@ -140,7 +140,7 @@ With `maxLength`, the Counter also tells screen readers the limit and, from 20 c
 
 ## Row
 
-A `Field.Row` is a full-width line. Write it before the input to sit above, or after to sit below. Put `Field.Counter` inside the Row when the field has a bottom row. For the prompt input of a chat, wrap the field in [Composer](/composer), as the example does, and use `autoGrow`. Don't put bare text in a Row; wrap it in `Field.Affix`. Push trailing items to the end with `style={{ marginInlineStart: 'auto' }}` on the first of them; `Composer.Submit` already sits at the end. For chips, set `chipLayout="row"`; ChipInput draws its own chip line. Don't hand-roll chips in a `Field.Row`.
+A `Field.Row` is a full-width line. Write it before the input to sit above, or after to sit below. Put `Field.Counter` inside the Row when the field has a bottom row. For the prompt input of a chat, wrap the field in [Composer](/recipes/chat-composer-mentions), as the example does, and use `autoGrow`. Don't put bare text in a Row; wrap it in `Field.Affix`. Push trailing items to the end with `style={{ marginInlineStart: 'auto' }}` on the first of them. For chips, set `chipLayout="row"`; ChipInput draws its own chip line. Don't hand-roll chips in a `Field.Row`.
 
 <Example block>
   <RowComposer />

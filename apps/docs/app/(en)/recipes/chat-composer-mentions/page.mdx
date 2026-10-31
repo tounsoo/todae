@@ -1,24 +1,24 @@
-import { MentionExample } from '../../../../components/demos/MentionDemo';
+import { ChatComposerCard } from '../../../../components/demos/ChatComposer';
 
 # Chat composer mentions
 
-A recipe, not a package namespace. One `people` source drives `Composer.Input` and `MentionText`. The demo imports nothing from Field.
+A recipe, not a package namespace. Build the card with [Field](/field), [Button](/button), [Attachment](/attachment), and the same `people` source for `useMentions` and [MentionText](/mention). The card frame is this page, not a package part.
 
 ```tsx
 const people = defineMentionSource({ char: '@', options, resolve, renderPeek });
 
-<Composer.Root onSubmit={send}>
-  <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
-  <Composer.Toolbar>
-    <Composer.Submit disabled={draft.text.trim() === ''} />
-  </Composer.Toolbar>
-</Composer.Root>
+<form className={card} onSubmit={send}>
+  <Field.Root>
+    <Field.Textarea {...mentions.getTextareaProps()} />
+  </Field.Root>
+  <Button.Root type="submit" aria-label="Send">↑</Button.Root>
+</form>
 
 <MentionText value={sent} sources={[people]} />
 ```
 
 <Example>
-  <MentionExample />
+  <ChatComposerCard />
 </Example>
 
 ## When to use
@@ -27,4 +27,4 @@ A chat box where someone types `@` to mention a person, and the sent message sho
 
 ## When not to use
 
-A composer with no mentions → `Composer.Input` without `mentions`. A suggestion list that does not become a token → [Combobox](/recipes/combobox).
+A suggestion list that does not become a token → [Combobox](/recipes/combobox).

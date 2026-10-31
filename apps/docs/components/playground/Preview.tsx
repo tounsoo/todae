@@ -11,7 +11,6 @@ import {
   categoryTone,
   Checkbox,
   Chip,
-  Composer,
   Disclosure,
   Field,
   GlyphsProvider,
@@ -351,7 +350,7 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                     <Message.Content>{text}</Message.Content>
                   </Message.Root>
                 ))}
-                <Composer.Root onSubmit={ask}>
+                <form onSubmit={ask}>
                   <Field.Root aria-label={copy.messageLabel}>
                     <Field.Textarea
                       value={draft}
@@ -361,10 +360,12 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                       maxRows={4}
                     />
                     <Field.Row>
-                      <Composer.Submit disabled={draft.trim() === ''} />
+                      <Button.Root type="submit" variant="primary" disabled={draft.trim() === ''} aria-label={copy.send}>
+                        {copy.send}
+                      </Button.Root>
                     </Field.Row>
                   </Field.Root>
-                </Composer.Root>
+                </form>
               </div>
             </Card.Body>
           </Card.Root>

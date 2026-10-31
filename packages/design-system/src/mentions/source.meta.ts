@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'defineMentionSource',
   description:
-    'Returns the source unchanged. In development, warns when char is not a single character. Pass the same object to Composer.Input and MentionText.',
+    'Returns the source unchanged. In development, warns when char is not a single character. Pass the same object to useMentions and MentionText.',
   props: [
     {
       name: 'source',

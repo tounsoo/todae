@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  Composer,
+  Button,
   Field,
   Message,
   OptionList,
@@ -55,14 +55,24 @@ export function MentionsExample() {
           </Message.Content>
         </Message.Root>
       ))}
-      <Composer.Root onSubmit={send}>
+      <form
+        onSubmit={send}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' || event.shiftKey || event.defaultPrevented) return;
+          if (!(event.target instanceof HTMLTextAreaElement)) return;
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }}
+      >
         <Field.Root aria-label="Message">
           <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} placeholder="Type @ or /" />
           <Field.Row>
-            <Composer.Submit disabled={draft.text.trim() === ''} />
+            <Button.Root type="submit" variant="primary" disabled={draft.text.trim() === ''} aria-label="Send">
+              Send
+            </Button.Root>
           </Field.Row>
         </Field.Root>
-      </Composer.Root>
+      </form>
       <Popover.Root {...mentions.getPopoverProps()}>
         <OptionList.Root {...mentions.getListboxProps()}>
           {mentions.items.map((item) => (

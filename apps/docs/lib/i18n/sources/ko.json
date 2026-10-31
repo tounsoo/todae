@@ -140,19 +140,6 @@
     "## Props": "e964cb5c505c",
     "(section order)": "5b4b04f4c6fa"
   },
-  "composer": {
-    "(top)": "8b1c09e2edc7",
-    "# Composer": "d9048ed43a08",
-    "## Named parts": "52e96ef5d2c8",
-    "## Custom layouts": "4f2da3bb2ed3",
-    "## Parts": "941377e532cb",
-    "## Sending and stopping": "05349db7894a",
-    "## Attachments": "dc80e94ef4d1",
-    "## Accessible composition": "4955edaafb67",
-    "## When to use": "facc46d850a1",
-    "## Props": "1d66d97cff3e",
-    "(section order)": "c383f4bb8e52"
-  },
   "composition": {
     "(top)": "daa9c66a4c98",
     "# Composition": "5df38cfb773f",
@@ -270,7 +257,7 @@
     "## Label": "215e3cc94f24",
     "## Messages": "34bda9e4b60a",
     "## Counter": "ca3bd330d359",
-    "## Row": "c753eb292752",
+    "## Row": "460d9f0b8129",
     "## Custom controls": "edafb0ec7ed8",
     "## Icons": "4a52c267d4a7",
     "## Accessible composition": "421616bf383e",
@@ -442,7 +429,7 @@
     "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
     "## When to use": "d57fe8233a0b",
-    "### Form.Root": "40c89002b3da",
+    "### Form.Root": "c453061ade05",
     "### Form.Summary": "54922167d07e",
     "## Props": "ca664955bde2",
     "(section order)": "19f58fcd5e5d"
@@ -535,7 +522,7 @@
   },
   "mention": {
     "(top)": "ce8a5835538a",
-    "# Mention": "8e8a43c7763f",
+    "# Mention": "1e28ab336144",
     "## Keyboard": "9e1eb0158d02",
     "## Peek": "233f9efb0fbc",
     "## When to use": "0d368d8f5054",
@@ -663,10 +650,10 @@
     "(section order)": "4737a88ef46b"
   },
   "recipes/chat-composer-mentions": {
-    "(top)": "7521e96a5c77",
-    "# Chat composer mentions": "08b889f351e8",
+    "(top)": "abc231058c55",
+    "# Chat composer mentions": "9d98290f9b69",
     "## When to use": "6e644b8ce597",
-    "## When not to use": "b109486066d7",
+    "## When not to use": "9d0c3e164258",
     "(section order)": "9be1d599de1e"
   },
   "recipes/citations": {
@@ -730,7 +717,7 @@
     "## Images": "4b5a68d12763",
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "a51aedc3e4e1",
-    "## When to use": "239c65308c01",
+    "## When to use": "0f2627b8b100",
     "(section order)": "4bf10e81c190"
   },
   "recipes/filter-bar": {
@@ -760,7 +747,7 @@
     "## Regenerate and rate": "88352ed724ed",
     "## Edit": "ebcd46bb2db8",
     "## Accessible composition": "b737b3facda9",
-    "## When to use": "2320a958107a",
+    "## When to use": "94a72392f4d1",
     "(section order)": "6486b947abab"
   },
   "recipes/message-parts": {
@@ -806,10 +793,10 @@
   },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
-    "# Suggestions": "1f16320c7c36",
-    "## Suggested prompts": "f32fcd4e4a57",
+    "# Suggestions": "512827f3ead4",
+    "## Suggested prompts": "18a738f51298",
     "## Versions of a reply": "201d818cbf71",
-    "## Accessible composition": "bac05d860697",
+    "## Accessible composition": "68a64f2a9155",
     "## When to use": "712b903230ea",
     "(section order)": "d07108b52651"
   },
@@ -1017,7 +1004,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "79786a87f258",
+    "## Glyphs": "0b475ed62a9e",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -1027,8 +1014,8 @@
   },
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
-    "# StringsProvider": "a18713b4e742",
-    "## Strings": "c7d82e0dd44a",
+    "# StringsProvider": "f839eb817fff",
+    "## Strings": "e618124a5933",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",
@@ -1143,9 +1130,9 @@
   },
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",
-    "# useMentions": "35b74ad67fc5",
+    "# useMentions": "44fea2b6d5d3",
     "## Triggers": "f8479853365c",
-    "## Picking and editing": "a1e352f8fb40",
+    "## Picking and editing": "75a15b0ef307",
     "## Drawing tokens": "01c86baed977",
     "## Accessible composition": "6052007a7a2e",
     "## When to use": "9ec50166c73a",

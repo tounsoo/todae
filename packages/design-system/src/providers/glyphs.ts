@@ -29,10 +29,6 @@ export interface Glyphs {
   minus?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
-  /** Composer.Submit with no content. Todae draws an arrow pointing up. */
-  send?: ReactNode;
-  /** Composer.Submit with no content while the composer is busy. Todae draws a square. */
-  stop?: ReactNode;
   /** A Steps.Item with an error. Todae draws an exclamation mark. */
   error?: ReactNode;
   /** Drilldown.Back with no content. Point it toward the start of a left-to-right line: it is mirrored in right-to-left. Todae draws a chevron. */

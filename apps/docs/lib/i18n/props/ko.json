@@ -2995,68 +2995,6 @@
       "ko": "복사가 실패하면 스크린 리더로 assertive하게 읽을 텍스트. 기본값은 StringsProvider의 copyFailed 문자열입니다. 빈 문자열이면 아무것도 읽지 않습니다."
     }
   },
-  "Composer.Attachments": {
-    "children": {
-      "en": "The attachments, usually a labelled list of Attachment.Root.",
-      "ko": "첨부입니다. 보통 이름이 붙은 Attachment.Root 목록입니다."
-    }
-  },
-  "Composer.Input": {
-    "mentions": {
-      "en": "Mention sources. Each one is also a useMentions trigger, and renderPeek fills the caret peek.",
-      "ko": "멘션 소스입니다. 각각 useMentions 트리거이기도 하고, renderPeek가 캐럿 피크를 채웁니다."
-    },
-    "value": {
-      "en": "Controlled draft, the text and its tokens together.",
-      "ko": "제어되는 초안입니다. 텍스트와 토큰을 함께 둡니다."
-    },
-    "defaultValue": {
-      "en": "Starting draft when uncontrolled.",
-      "ko": "비제어일 때의 시작 초안입니다."
-    },
-    "onValueChange": {
-      "en": "Called with the next text and its tokens on every edit, including a pick.",
-      "ko": "고르기를 포함해 편집할 때마다 다음 텍스트와 토큰을 받아 호출됩니다."
-    },
-    "aria-label": {
-      "en": "Names the field. One of aria-label or aria-labelledby is required.",
-      "ko": "필드의 이름입니다. aria-label과 aria-labelledby 중 하나가 필요합니다."
-    },
-    "aria-labelledby": {
-      "en": "Ids of the elements that name the field. One of aria-label or aria-labelledby is required.",
-      "ko": "필드의 이름이 되는 요소의 id입니다. aria-label과 aria-labelledby 중 하나가 필요합니다."
-    }
-  },
-  "Composer.Root": {
-    "onSubmit": {
-      "en": "Called for this form's own submits, not those of a form rendered inside it with createPortal.",
-      "ko": "이 폼 자체의 제출에만 호출되고, createPortal로 그 안에 렌더링한 폼의 제출에는 호출되지 않습니다."
-    },
-    "busy": {
-      "en": "A response is running: no submit of this form goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.",
-      "ko": "응답이 진행 중입니다. Enter로든 제출 버튼이나 requestSubmit으로든 이 폼의 제출은 통과하지 않고, Composer.Submit은 Stop이 됩니다. data-busy를 설정합니다."
-    }
-  },
-  "Composer.Submit": {
-    "onStop": {
-      "en": "Called when Stop is pressed. Without it, Stop is disabled while the composer is busy.",
-      "ko": "Stop을 누르면 호출됩니다. 없으면 작성창이 busy인 동안 Stop이 비활성화됩니다."
-    },
-    "disabled": {
-      "en": "Disables Send, such as while nothing is typed. Stop ignores it.",
-      "ko": "아무것도 입력하지 않았을 때처럼 Send를 비활성화합니다. Stop에는 적용되지 않습니다."
-    },
-    "children": {
-      "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
-      "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
-    }
-  },
-  "Composer.Toolbar": {
-    "children": {
-      "en": "The buttons in the row, including Composer.Submit.",
-      "ko": "Composer.Submit을 포함한 행의 버튼입니다."
-    }
-  },
   "defineMentionSource": {
     "source": {
       "en": "A useMentions trigger plus resolve, renderPeek, peekLabel, and href. renderPeek(entity, { id, mode, close }) is the only content of the peek.",
