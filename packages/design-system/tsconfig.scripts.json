@@ -9,5 +9,5 @@
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["scripts/build-tokens.ts"]
+  "include": ["scripts/build-tokens.ts", "scripts/token-consumers.ts", "scripts/tokens/consumers.ts"]
 }
