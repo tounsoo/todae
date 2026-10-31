@@ -1,6 +1,7 @@
 import stylelint from 'stylelint';
 import valueParser from 'postcss-value-parser';
 import { allowlist } from './raw-value-allowlist.mjs';
+import { insideForcedColors } from './forced-colors.mjs';
 
 const ruleName = 'todae/no-raw-value';
 
@@ -121,13 +122,14 @@ function matchesWhere(entry, prop, value) {
   return !entry.where;
 }
 
-function isAllowed(word, prop, value, file) {
+function isAllowed(word, prop, value, file, inForcedColors) {
   const lower = word.toLowerCase();
   if (ANYWHERE.has(lower)) return true;
   return allowlist.some(
     (entry) =>
       entry.value === lower &&
       (!entry.files || entry.files.includes(file)) &&
+      (!entry.forcedColors || inForcedColors) &&
       matchesWhere(entry, prop, value),
   );
 }
@@ -154,6 +156,7 @@ const rule = (primary) => (root, result) => {
     const mode = modeOf(decl.prop);
     if (!mode) return;
     const sheet = sheetName(decl);
+    const inForcedColors = insideForcedColors(decl);
 
     const valueOffset = decl.prop.length + (decl.raws.between?.length ?? 0);
     const flag = (raw, colorish, sourceIndex) => {
@@ -182,7 +185,7 @@ const rule = (primary) => (root, result) => {
         }
         if (node.type !== 'word') continue;
         const raw = node.value;
-        if (isAllowed(raw, decl.prop, decl.value, sheet)) continue;
+        if (isAllowed(raw, decl.prop, decl.value, sheet, inForcedColors)) continue;
         const lower = raw.toLowerCase();
         if (SYSTEM_COLORS.has(lower)) continue;
         const colorish = isHex(raw) || NAMED_COLORS.has(lower);

@@ -117,7 +117,6 @@ test('a plain number in a border shorthand is a line width', async () => {
     'color black',
     'line-width 4',
   ]);
-  assert.deepEqual(await lintIn('.a { border: 1px solid var(--todae-field-border-default); }', 'Progress.module.css'), []);
   assert.deepEqual(await lintIn('.a { border: 1px solid var(--todae-field-border-default); }', 'Code.module.css'), [
     'line-width 1px',
   ]);
@@ -178,6 +177,25 @@ test('0px is allowed everywhere, and the other leftovers only in their sheets', 
   assert.deepEqual(await lintIn('.a { margin: 2.5%; }', 'Button.module.css'), ['spacing 2.5%']);
   assert.deepEqual(await lintIn('.a { margin: 30% auto 0; }', 'selection.module.css'), []);
   assert.deepEqual(await lintIn('.a { margin: 30%; }', 'Button.module.css'), ['spacing 30%']);
+});
+
+test('1px hairline is listed only inside forced-colors for the named sheets', async () => {
+  const border = '.a { border: 1px solid var(--todae-field-border-default); }';
+  const inside = '@media (forced-colors: active) { .a { border: 1px solid CanvasText; outline: 1px solid CanvasText; } }';
+  assert.deepEqual(await lintIn(border, 'Progress.module.css'), ['line-width 1px']);
+  assert.deepEqual(await lintIn(border, 'Button.module.css'), ['line-width 1px']);
+  assert.deepEqual(await lintIn(border, 'Pagination.module.css'), ['line-width 1px']);
+  assert.deepEqual(await lintIn(inside, 'Progress.module.css'), []);
+  assert.deepEqual(await lintIn(inside, 'Button.module.css'), []);
+  assert.deepEqual(await lintIn(inside, 'Pagination.module.css'), []);
+  assert.deepEqual(await lintIn(inside, 'Code.module.css'), ['line-width 1px', 'line-width 1px']);
+  assert.deepEqual(
+    await lintIn(
+      '@media (forced-colors: active) { .a { border-width: max(1px, var(--todae-button-border-width)); } }',
+      'Button.module.css',
+    ),
+    [],
+  );
 });
 
 test('the project config fails on a raw hex', async () => {

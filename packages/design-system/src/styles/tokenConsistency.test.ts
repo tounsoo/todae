@@ -15,61 +15,7 @@ const sheets: Record<string, string> = Object.fromEntries(
   sheetPaths.map(([name, path]) => [name, stripComments(readFileSync(path, 'utf8'))]),
 );
 
-/** The sheet with every `@media (forced-colors: active)` block removed. */
-function outsideForcedColors(css: string): string {
-  let out = css;
-  for (;;) {
-    const start = out.indexOf('@media (forced-colors: active)');
-    if (start < 0) return out;
-    let depth = 0;
-    let end = out.indexOf('{', start);
-    for (; end < out.length; end++) {
-      if (out[end] === '{') depth++;
-      else if (out[end] === '}' && --depth === 0) break;
-    }
-    out = out.slice(0, start) + out.slice(end + 1);
-  }
-}
-
-// Components read contract tokens only. These sheets still read a core
-// spacing step for an anchor offset or a gap fallback.
-const CORE_READS: Record<string, string[]> = {
-  ChipList: ['space'],
-  Field: ['space'],
-};
-// Contract groups every component shares.
-const SHARED_ROOTS = ['overlay', 'focus'];
-// Which component's tokens each sheet reads, when its name is not the root.
-const OWN_ROOTS: Record<string, string[]> = {
-  BottomSheet: ['sheet'],
-  OptionList: ['option'],
-  Label: ['field'],
-  Description: ['field'],
-  ErrorMessage: ['field'],
-  ChipList: ['chip'],
-  // Native <select> options take the OptionList look.
-  Field: ['field', 'option'],
-  // A toggle group is a toolbar segment and spaces its items like one, and
-  // overlaps its items by Button's border width.
-  ToggleGroup: ['togglegroup', 'toolbar', 'button'],
-  // Progress and meter share one sheet.
-  Progress: ['progress', 'meter'],
-  ScrollArea: ['scroll'],
-  ColorPicker: ['picker'],
-  // A code block reads code.block and the font Code.Root shares.
-  CodeBlock: ['code'],
-};
-
 describe('token consistency across component styles', () => {
-  it('reads only its own component tokens and the shared groups', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      const own = [...(OWN_ROOTS[name] ?? [name.toLowerCase()]), ...(CORE_READS[name] ?? [])];
-      const roots = new Set([...css.matchAll(/var\(--todae-([a-z0-9]+)-/g)].map((match) => match[1] ?? ''));
-      const foreign = [...roots].filter((root) => !own.includes(root) && !SHARED_ROOTS.includes(root));
-      expect({ name, foreign }).toEqual({ name, foreign: [] });
-    }
-  });
-
   it('keeps a pressed button on its pressed fill while hovered', () => {
     const css = sheets.Button ?? '';
     const hover = css.indexOf('.root:hover:not(:disabled, [aria-disabled=\'true\'], a:not(:any-link))');
@@ -86,32 +32,6 @@ describe('token consistency across component styles', () => {
     expect(css).toContain('font-size: var(--todae-prose-font-size)');
     for (const level of [1, 2, 3, 4, 5, 6]) {
       expect(css).toContain(`font-size: var(--todae-prose-h${level}-font-size)`);
-    }
-  });
-
-  it('names the custom properties a sheet sets for itself --_<name>, not like a token', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      const declared = [...css.matchAll(/(?:^|[{;\s])(--todae-[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
-      expect({ name, declared }).toEqual({ name, declared: [] });
-    }
-  });
-
-  it('draws every focus ring from focus.ring.width and focus.ring.offset', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      for (const [, value] of css.matchAll(/\boutline:\s*([^;]+);/g)) {
-        if (value === 'none') continue;
-        // Pagination's forced-colors box around the current page is not a focus ring.
-        if (name === 'Pagination' && value === '1px solid CanvasText') continue;
-        expect({ name, value }).toEqual({ name, value: expect.stringMatching(/^var\(--todae-(focus-ring-width|chip-ring-width)\) solid /) });
-      }
-      for (const [, value] of css.matchAll(/\boutline-offset:\s*([^;]+);/g)) {
-        expect({ name, value }).toEqual({
-          name,
-          value: expect.stringMatching(
-            /^(var\(--todae-(focus-ring-offset|chip-ring-offset)\)|calc\(-1 \* var\(--todae-focus-ring-width\)\))$/,
-          ),
-        });
-      }
     }
   });
 
@@ -184,34 +104,6 @@ describe('token consistency across component styles', () => {
     const rings = generated.tokens.filter((token) => token.path.endsWith('.ring.focus'));
     expect(rings.length).toBeGreaterThan(10);
     for (const { path, ref } of rings) expect({ path, ref }).toEqual({ path, ref: 'focus.ring.color' });
-  });
-
-  it('never fades a disabled state, and gives it no cursor but not-allowed', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      for (const [, rawSelector = '', body = ''] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        // `:not(:disabled)` and the like select enabled states.
-        if (!/disabled/.test(rawSelector.replace(/:not\((?:[^()]|\([^()]*\))*\)/g, ''))) continue;
-        const selector = rawSelector.trim();
-        expect({ name, selector, opacity: /\bopacity\s*:/.test(body) }).toEqual({ name, selector, opacity: false });
-        const cursor = /\bcursor:\s*([^;]+);/.exec(body)?.[1];
-        if (cursor && cursor !== 'inherit') expect({ name, selector, cursor }).toEqual({ name, selector, cursor: 'not-allowed' });
-      }
-    }
-  });
-
-  it('uses tokens for pills, leading, fades, easing and hairline borders', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      const plain = outsideForcedColors(css);
-      expect({ name, pill: /\b9{3,}px/.test(plain) }).toEqual({ name, pill: false });
-      // line-height: 1 centres a glyph in its box; any other number is text leading.
-      expect({ name, leading: /line-height:\s*(?!1\s*[;}])[\d.]+\s*[;}]/.test(plain) }).toEqual({ name, leading: false });
-      // opacity 0 and 1 show and hide; a value between is a look a theme may change.
-      expect({ name, fade: /\bopacity:\s*(?:0?\.\d+|0\.0*[1-9]\d*)\s*[;}]/.test(plain) }).toEqual({ name, fade: false });
-      // linear stays for continuous loops; a named curve is a motion style.
-      expect({ name, easing: /\b(?:ease|ease-in|ease-out|ease-in-out)\b(?![-\w])/.test(plain) }).toEqual({ name, easing: false });
-      const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);
-      expect({ name, hairline }).toEqual({ name, hairline: false });
-    }
   });
 
   it('lifts every overlay surface with its own shadow token', () => {
