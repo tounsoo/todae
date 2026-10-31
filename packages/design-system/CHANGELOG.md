@@ -1,5 +1,17 @@
 # @tounsoo/todae
 
+## 0.6.0
+
+### Minor Changes
+
+- Add `chip.min-height`, `chip.font.weight` and `chip.dismiss.*` tokens, apply `option.leading` and `option.font.weight` to Field.Select options, and recolor the option check from `option.fg.selected`, so overriding `option.fg.selected` recolors the check in existing themes. ([#276](https://github.com/tounsoo/todae/pull/276))
+
+- Add `togglegroup.*` tokens for the track and for the segment properties that differ from Button, so a theme can restyle ToggleGroup as a segmented control. ([#276](https://github.com/tounsoo/todae/pull/276))
+
+### Patch Changes
+
+- Publish `tokens/api.json`, a list of every public token path and its type, and an empty `tokens/api-approved-removals.json`. ([#279](https://github.com/tounsoo/todae/pull/279))
+
 ## 0.5.2
 
 ### Patch Changes
