@@ -6,7 +6,6 @@ import {
   Field,
   Mention,
   MentionText,
-  OptionList,
   Popover,
   defineMentionSource,
   useMentions,
@@ -19,6 +18,12 @@ import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import styles from './chat-composer.module.css';
 
 type Person = { name: string; role: string; place: string };
+
+const FACES: Record<string, { initials: string; tone: string }> = {
+  mina: { initials: 'MP', tone: '5' },
+  minjun: { initials: 'MC', tone: '2' },
+  mira: { initials: 'MS', tone: '7' },
+};
 
 export const people = defineMentionSource<Person>({
   char: '@',
@@ -52,12 +57,12 @@ export const people = defineMentionSource<Person>({
         <>
           <div className={styles.muted}>Local time 3:02 PM KST · Active now</div>
           <div className={styles.actions}>
-            <Button.Root type="button" variant="primary">
+            <Button.Root type="button" variant="primary" className={styles.message}>
               Message
             </Button.Root>
-            <Button.Root type="button" variant="secondary" onClick={peek.close}>
+            <button type="button" className={styles.view} onClick={peek.close}>
               View profile
-            </Button.Root>
+            </button>
           </div>
         </>
       ) : null}
@@ -140,16 +145,55 @@ function MentionField({
         <Field.Textarea
           {...api.getTextareaProps({
             rows: 1,
-            className: bare ? styles.input : undefined,
+            spellCheck: false,
+            className: bare ? `${styles.area} ${styles.input}` : styles.area,
           })}
         />
       </Field.Root>
       <Popover.Root {...api.getPopoverProps()}>
-        <OptionList.Root {...api.getListboxProps()}>
-          {api.items.map((item) => (
-            <OptionList.Option key={item.id} {...api.getOptionProps(item)} />
-          ))}
-        </OptionList.Root>
+        <div
+          id={api.ids.listbox}
+          role="listbox"
+          aria-label={api.trigger?.label ?? 'Suggestions'}
+          tabIndex={-1}
+          className={styles.list}
+        >
+          {api.open && api.trigger?.label ? <div className={styles.lbl}>{api.trigger.label}</div> : null}
+          {api.open
+            ? api.items.map((item) => {
+                const face = FACES[item.option.value];
+                const on = item.option.value === api.activeValue;
+                return (
+                  <div
+                    key={item.id}
+                    id={item.id}
+                    role="option"
+                    aria-selected={on}
+                    className={on ? `${styles.opt} ${styles.on}` : styles.opt}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => api.highlight(item.option.value)}
+                    onClick={() => api.select(item.option.value)}
+                  >
+                    <span
+                      className={styles.face}
+                      style={
+                        face
+                          ? {
+                              background: `var(--todae-avatar-category-${face.tone}-bg)`,
+                              color: `var(--todae-avatar-category-${face.tone}-fg)`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {face?.initials ?? item.option.label.slice(0, 1)}
+                    </span>
+                    <span>{item.option.label}</span>
+                    <span className={styles.handle}>@{item.option.value}</span>
+                  </div>
+                );
+              })
+            : null}
+        </div>
       </Popover.Root>
       {source?.renderPeek && token ? (
         <Popover.Root
@@ -181,16 +225,16 @@ export function ChatComposerCard() {
     <form className={styles.card} onSubmit={send} onKeyDown={onEnter}>
       <div className={styles.attachments}>
         <Attachment.Root>
-          <Attachment.Preview>PNG</Attachment.Preview>
+          <Attachment.Preview className={styles.badge}>PNG</Attachment.Preview>
           <Attachment.Name>peek-card.png</Attachment.Name>
           <Attachment.Meta>248 KB</Attachment.Meta>
-          <Attachment.Remove />
+          <Attachment.Remove className={styles.dismiss}>✕</Attachment.Remove>
         </Attachment.Root>
         <Attachment.Root>
-          <Attachment.Preview>PDF</Attachment.Preview>
+          <Attachment.Preview className={styles.badge}>PDF</Attachment.Preview>
           <Attachment.Name>m8-contrast.pdf</Attachment.Name>
           <Attachment.Meta>1.2 MB</Attachment.Meta>
-          <Attachment.Remove />
+          <Attachment.Remove className={styles.dismiss}>✕</Attachment.Remove>
         </Attachment.Root>
       </div>
       <MentionField mentions={[people]} label="Message" value={draft} onValueChange={setDraft} bare />

@@ -22,9 +22,41 @@
   padding: 10px 10px 0;
 }
 
+.area {
+  resize: none;
+  font-size: var(--todae-font-size-2);
+  line-height: var(--todae-field-leading);
+}
+
 .input {
+  box-sizing: border-box;
+  height: auto;
+  min-height: calc(48px + 20px);
   padding: 10px 12px;
-  min-height: 48px;
+  overflow: hidden;
+  field-sizing: fixed;
+}
+
+.badge {
+  inline-size: 32px;
+  block-size: 32px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.dismiss {
+  inline-size: 30px;
+  block-size: 30px;
+  min-inline-size: 30px;
+  min-block-size: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--todae-color-fg-muted);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .toolbar {
@@ -64,6 +96,7 @@
 }
 
 .frame {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -143,7 +176,73 @@
 
 .actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+.message {
+  padding: 4px 10px;
+  font-size: var(--todae-font-size-1);
+  line-height: 1.4;
+}
+
+.view {
+  margin: 0;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: var(--todae-color-fg-default);
+  font: inherit;
+  font-size: var(--todae-font-size-1);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-option-list-gap);
+  width: 260px;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+.lbl {
+  padding: 4px 8px;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+  border-radius: var(--todae-option-radius);
+  color: var(--todae-option-fg-default);
+  cursor: default;
+}
+
+.on {
+  background: var(--todae-option-bg-hover);
+}
+
+.face {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--todae-radius-full);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.handle {
+  margin-inline-start: auto;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
 }
 
 .ref {

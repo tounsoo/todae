@@ -122,7 +122,7 @@ function expectBeside(popover: HTMLElement, anchor: HTMLElement) {
 }
 
 describe('mention peek in a browser', () => {
-  it('picks from Composer.Input with the keyboard and does not send', async () => {
+  it('picks from MentionField with the keyboard and does not send', async () => {
     const sent: string[] = [];
     function Chat() {
       const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
