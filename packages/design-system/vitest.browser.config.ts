@@ -5,7 +5,10 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { BrowserCommand } from 'vitest/node';
 import { defineConfig } from 'vitest/config';
+import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 import base from './vite.config';
+
+if (process.env.VITEST) pinTestLocale();
 
 /**
  * Runs `todae-tokens build --scope` on the acme fixture, or on a company layer
@@ -50,6 +53,7 @@ export default defineConfig({
   // Found mid-run, these would make Vite reload the page and load a second React.
   optimizeDeps: { include: ['react/jsx-dev-runtime', 'react-dom/client', 'react-dom/server'] },
   test: {
+    env: testLocaleEnv,
     include: ['src/**/*.browser.test.tsx'],
     setupFiles: ['./src/test/browser-setup.ts'],
     browser: {
