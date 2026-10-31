@@ -19,6 +19,30 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
   <ComposerExample />
 </Example>
 
+## Named parts
+
+`Composer.Attachments` is the row above the input. `Composer.Input` is the textarea: pass `mentions` and it draws the suggestion list and the caret peek. `Composer.Toolbar` is the row `Composer.Submit` sits in. The same source object can go to [MentionText](/mention) for the sent message.
+
+```tsx
+<Composer.Root busy={replying} onSubmit={send}>
+  <Composer.Attachments>{files}</Composer.Attachments>
+  <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
+  <Composer.Toolbar>
+    <Composer.Submit disabled={draft.text.trim() === ''} onStop={stop} />
+  </Composer.Toolbar>
+</Composer.Root>
+```
+
+<PropsTable name="Composer.Input" />
+
+<PropsTable name="Composer.Toolbar" />
+
+<PropsTable name="Composer.Attachments" />
+
+## Custom layouts
+
+The Field tree in the example above still works. Build the inside from `Field.Root` and `Field.Textarea` when the named rows are not the layout you want. There is no warning for that layout.
+
 ## Parts
 
 - `Composer.Root` is a `form`. Enter in one of its textareas sends it through `requestSubmit`, with the form's first submit button as the submitter, and sends nothing while that button is disabled. Shift+Enter, Enter with Alt, Ctrl or Meta, and Enter that ends an IME composition, such as a Korean word, are left to the textarea. `busy` means a reply is running: no submit of this form goes through, from Enter, a submit button or `requestSubmit`, and the root sets `data-busy`.

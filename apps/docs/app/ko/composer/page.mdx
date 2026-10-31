@@ -19,6 +19,30 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
   <ComposerExample />
 </Example>
 
+## 이름 있는 파트
+
+`Composer.Attachments`는 입력창 위의 행입니다. `Composer.Input`은 텍스트 영역입니다. `mentions`를 넘기면 제안 목록과 캐럿 피크를 그립니다. `Composer.Toolbar`는 `Composer.Submit`이 놓이는 행입니다. 같은 소스 객체를 보낸 메시지의 [MentionText](/mention)에도 넘길 수 있습니다.
+
+```tsx
+<Composer.Root busy={replying} onSubmit={send}>
+  <Composer.Attachments>{files}</Composer.Attachments>
+  <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
+  <Composer.Toolbar>
+    <Composer.Submit disabled={draft.text.trim() === ''} onStop={stop} />
+  </Composer.Toolbar>
+</Composer.Root>
+```
+
+<PropsTable name="Composer.Input" />
+
+<PropsTable name="Composer.Toolbar" />
+
+<PropsTable name="Composer.Attachments" />
+
+## 직접 배치
+
+위 예시의 Field 트리는 그대로 동작합니다. 이름 있는 행이 원하는 배치가 아니면 `Field.Root`와 `Field.Textarea`로 안을 만드세요. 그 배치에는 경고가 없습니다.
+
 ## 파트
 
 - `Composer.Root`는 `form`입니다. 그 안의 텍스트 영역에서 Enter를 누르면 폼의 첫 제출 버튼을 submitter로 `requestSubmit`을 불러 폼을 보내고, 그 버튼이 비활성화되어 있으면 아무것도 보내지 않습니다. Shift+Enter, Alt나 Ctrl, Meta와 함께 누른 Enter, 그리고 한국어 단어처럼 IME 조합을 끝내는 Enter는 텍스트 영역에 맡깁니다. `busy`는 답이 진행 중이라는 뜻입니다. Enter로든 제출 버튼이나 `requestSubmit`으로든 이 폼의 제출은 통과하지 않고, 루트에 `data-busy`를 설정합니다.

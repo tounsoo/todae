@@ -92,6 +92,7 @@ export const RESERVED_ROOTS = [
   'card',
   'datalist',
   'message',
+  'mention',
   'conversation',
   'attachment',
   'steps',

@@ -17,6 +17,7 @@ import {
   type TooltipCommand,
   type TooltipEvent,
   type TooltipOpenReason,
+  type TooltipPolicy,
 } from '../components/Tooltip.intent.js';
 import type { TooltipWire } from '../components/Tooltip.wire.js';
 import { firstTabbable } from '../overlay/tabbables.js';
@@ -63,6 +64,8 @@ export type UseTooltipOptions<I extends boolean = false> = {
 export type TooltipInternalOptions = {
   anchorName?: string;
   holdsFocus?: (focused: Element) => boolean;
+  /** Focus waits for the show delay. Tooltips leave this off. */
+  delayFocus?: boolean;
 };
 
 /** Hover holds for a trigger that wires its own pointer handlers. */
@@ -84,6 +87,59 @@ export type UseTooltipResult<I extends boolean = false> = {
 // For when the delay tokens can't be read, such as without Todae's stylesheet.
 const SHOW_DELAY_MS = 300;
 const HIDE_DELAY_MS = 100;
+
+/** The delay policy a tooltip or a mention peek reads from the trigger. */
+export function readTooltipPolicy(
+  node: Element | null,
+  options: { showDelay?: number; hideDelay?: number; delayFocus?: boolean } = {},
+): TooltipPolicy {
+  const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  return {
+    fidelity: coarse ? 'coarse' : 'fine',
+    showDelayMs: options.showDelay ?? tokenMs(node, '--todae-tooltip-delay-show') ?? SHOW_DELAY_MS,
+    hideDelayMs: options.hideDelay ?? tokenMs(node, '--todae-tooltip-delay-hide') ?? HIDE_DELAY_MS,
+    delayFocus: options.delayFocus,
+  };
+}
+
+/** Runs one step's commands. The delay timer lives here so a peek does not keep its own. */
+export function applyTooltipCommands(
+  commands: readonly TooltipCommand[],
+  timerRef: { current: number | null },
+  effects: {
+    onElapsed: (token: number) => void;
+    commit: (open: boolean, reason: TooltipOpenReason) => void;
+    restore: () => void;
+  },
+): void {
+  for (const command of commands) {
+    switch (command.kind) {
+      case 'clear-delay':
+        if (timerRef.current != null) {
+          window.clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        break;
+      case 'start-delay':
+        if (timerRef.current != null) window.clearTimeout(timerRef.current);
+        timerRef.current = window.setTimeout(() => {
+          timerRef.current = null;
+          effects.onElapsed(command.token);
+        }, command.ms);
+        break;
+      case 'commit':
+        effects.commit(command.open, command.reason);
+        break;
+      case 'restore-trigger-focus':
+        effects.restore();
+        break;
+      default: {
+        const _exhaustive: never = command;
+        void _exhaustive;
+      }
+    }
+  }
+}
 
 /** `ids` with `id` added at the end, unless it already lists it. */
 function joinId(ids: string | undefined, id: string): string {
@@ -111,7 +167,7 @@ export function useTooltipInternal<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
   internal: TooltipInternalOptions = {},
 ): UseTooltipResult<I> & TooltipInternalResult {
-  const { anchorName: anchorNameOption, holdsFocus } = internal;
+  const { anchorName: anchorNameOption, holdsFocus, delayFocus = false } = internal;
   const {
     interactive = false as I,
     showDelay,
@@ -135,6 +191,7 @@ export function useTooltipInternal<I extends boolean = false>(
   const onOpenChangeRef = useRef(onOpenChange);
   const showDelayRef = useRef(showDelay);
   const hideDelayRef = useRef(hideDelay);
+  const delayFocusRef = useRef(delayFocus);
   const enabledRef = useRef(enabled);
   const holdsFocusRef = useRef(holdsFocus);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
@@ -142,39 +199,20 @@ export function useTooltipInternal<I extends boolean = false>(
   onOpenChangeRef.current = onOpenChange;
   showDelayRef.current = showDelay;
   hideDelayRef.current = hideDelay;
+  delayFocusRef.current = delayFocus;
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
 
   const applyCommands = useCallback(
     (commands: readonly TooltipCommand[]) => {
-      for (const command of commands) {
-        switch (command.kind) {
-          case 'clear-delay':
-            if (timerRef.current != null) {
-              window.clearTimeout(timerRef.current);
-              timerRef.current = null;
-            }
-            break;
-          case 'start-delay':
-            if (timerRef.current != null) window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-              timerRef.current = null;
-              dispatchRef.current({ kind: 'delay-elapsed', token: command.token });
-            }, command.ms);
-            break;
-          case 'commit':
-            setValue(command.open);
-            onOpenChangeRef.current?.(command.open, command.reason);
-            break;
-          case 'restore-trigger-focus':
-            setRestoreEpoch((epoch) => epoch + 1);
-            break;
-          default: {
-            const _exhaustive: never = command;
-            void _exhaustive;
-          }
-        }
-      }
+      applyTooltipCommands(commands, timerRef, {
+        onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
+        commit: (open, reason) => {
+          setValue(open);
+          onOpenChangeRef.current?.(open, reason);
+        },
+        restore: () => setRestoreEpoch((epoch) => epoch + 1),
+      });
     },
     [setValue],
   );
@@ -182,14 +220,12 @@ export function useTooltipInternal<I extends boolean = false>(
   const dispatch = useCallback(
     (event: TooltipEvent, restoreFocus = false) => {
       if (!enabledRef.current && event.kind !== 'delay-elapsed') return;
-      const fidelity = window.matchMedia('(pointer: coarse)').matches ? 'coarse' : 'fine';
       const result = step({
-        policy: {
-          fidelity,
-          // Read when used, so a token set in CSS or by ThemeProvider takes effect.
-          showDelayMs: showDelayRef.current ?? tokenMs(triggerRef.current, '--todae-tooltip-delay-show') ?? SHOW_DELAY_MS,
-          hideDelayMs: hideDelayRef.current ?? tokenMs(triggerRef.current, '--todae-tooltip-delay-hide') ?? HIDE_DELAY_MS,
-        },
+        policy: readTooltipPolicy(triggerRef.current, {
+          showDelay: showDelayRef.current,
+          hideDelay: hideDelayRef.current,
+          delayFocus: delayFocusRef.current,
+        }),
         state: intentRef.current,
         open: openRef.current,
         event,

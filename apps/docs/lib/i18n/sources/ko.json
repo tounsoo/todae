@@ -143,13 +143,15 @@
   "composer": {
     "(top)": "8b1c09e2edc7",
     "# Composer": "d9048ed43a08",
+    "## Named parts": "52e96ef5d2c8",
+    "## Custom layouts": "4f2da3bb2ed3",
     "## Parts": "941377e532cb",
     "## Sending and stopping": "05349db7894a",
     "## Attachments": "dc80e94ef4d1",
     "## Accessible composition": "4955edaafb67",
     "## When to use": "facc46d850a1",
     "## Props": "1d66d97cff3e",
-    "(section order)": "75139535fcad"
+    "(section order)": "c383f4bb8e52"
   },
   "composition": {
     "(top)": "daa9c66a4c98",
@@ -531,6 +533,16 @@
     "## Limits": "09fbdacf6bf0",
     "(section order)": "e12b559a1ab2"
   },
+  "mention": {
+    "(top)": "ce8a5835538a",
+    "# Mention": "8e8a43c7763f",
+    "## Keyboard": "9e1eb0158d02",
+    "## Peek": "233f9efb0fbc",
+    "## When to use": "0d368d8f5054",
+    "## When not": "e95dcd9fd900",
+    "## Props": "005978ba96cd",
+    "(section order)": "18b56400fd30"
+  },
   "menu": {
     "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
@@ -649,6 +661,13 @@
     "## Accessible composition": "0189b65fcffe",
     "## When to use": "763e187b5f3a",
     "(section order)": "4737a88ef46b"
+  },
+  "recipes/chat-composer-mentions": {
+    "(top)": "7521e96a5c77",
+    "# Chat composer mentions": "08b889f351e8",
+    "## When to use": "6e644b8ce597",
+    "## When not to use": "b109486066d7",
+    "(section order)": "9be1d599de1e"
   },
   "recipes/citations": {
     "(top)": "45f1fee3ae62",

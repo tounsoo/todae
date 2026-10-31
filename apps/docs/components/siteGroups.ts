@@ -68,6 +68,7 @@ export const SITE_GROUPS = [
       ['/label', 'Label'],
       ['/link', 'Link'],
       ['/loader', 'Loader and Skeleton'],
+      ['/mention', 'Mention'],
       ['/menu', 'Menu'],
       ['/message', 'Message'],
       ['/nav', 'Nav'],
@@ -133,6 +134,7 @@ export const SITE_GROUPS = [
     links: [
       ['/recipes/app-shell', 'App shell'],
       ['/recipes/avatar-group', 'Avatar group'],
+      ['/recipes/chat-composer-mentions', 'Chat composer mentions'],
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],

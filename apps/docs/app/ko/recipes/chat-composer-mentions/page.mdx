@@ -1,0 +1,30 @@
+import { MentionExample } from '../../../../components/demos/MentionDemo';
+
+# Chat composer mentions
+
+패키지 네임스페이스가 아닌 레시피입니다. `people` 소스 하나가 `Composer.Input`과 `MentionText`를 모두 구동합니다. 데모는 Field를 import하지 않습니다.
+
+```tsx
+const people = defineMentionSource({ char: '@', options, resolve, renderPeek });
+
+<Composer.Root onSubmit={send}>
+  <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
+  <Composer.Toolbar>
+    <Composer.Submit disabled={draft.text.trim() === ''} />
+  </Composer.Toolbar>
+</Composer.Root>
+
+<MentionText value={sent} sources={[people]} />
+```
+
+<Example>
+  <MentionExample />
+</Example>
+
+## 쓸 때
+
+사람이 `@`로 누군가를 멘션하고, 보낸 메시지가 같은 피크와 함께 그 멘션을 보여 주는 채팅 입력창입니다.
+
+## 쓰지 않을 때
+
+멘션이 없는 작성창은 `mentions` 없는 `Composer.Input`입니다. 토큰이 되지 않는 제안 목록은 [Combobox](/recipes/combobox)입니다.

@@ -1,0 +1,30 @@
+import { MentionExample } from '../../../../components/demos/MentionDemo';
+
+# Chat composer mentions
+
+A recipe, not a package namespace. One `people` source drives `Composer.Input` and `MentionText`. The demo imports nothing from Field.
+
+```tsx
+const people = defineMentionSource({ char: '@', options, resolve, renderPeek });
+
+<Composer.Root onSubmit={send}>
+  <Composer.Input aria-label="Message" mentions={[people]} value={draft} onValueChange={setDraft} />
+  <Composer.Toolbar>
+    <Composer.Submit disabled={draft.text.trim() === ''} />
+  </Composer.Toolbar>
+</Composer.Root>
+
+<MentionText value={sent} sources={[people]} />
+```
+
+<Example>
+  <MentionExample />
+</Example>
+
+## When to use
+
+A chat box where someone types `@` to mention a person, and the sent message shows that mention with the same peek.
+
+## When not to use
+
+A composer with no mentions → `Composer.Input` without `mentions`. A suggestion list that does not become a token → [Combobox](/recipes/combobox).

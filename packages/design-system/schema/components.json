@@ -928,6 +928,60 @@
       ]
     },
     {
+      "name": "Composer.Attachments",
+      "description": "The row above the input that holds Attachment.Root items.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The attachments, usually a labelled list of Attachment.Root."
+        }
+      ]
+    },
+    {
+      "name": "Composer.Input",
+      "description": "The textarea of a composer, with optional mention suggestions and a peek while the caret rests in a token. Enter while the suggestion list is open picks a mention and does not send. Enter with the list closed sends through Composer.Root.",
+      "props": [
+        {
+          "name": "mentions",
+          "type": "readonly MentionSource[]",
+          "required": false,
+          "description": "Mention sources. Each one is also a useMentions trigger, and renderPeek fills the caret peek."
+        },
+        {
+          "name": "value",
+          "type": "MentionDraft",
+          "required": false,
+          "description": "Controlled draft, the text and its tokens together."
+        },
+        {
+          "name": "defaultValue",
+          "type": "MentionDraft",
+          "required": false,
+          "description": "Starting draft when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: MentionDraft) => void",
+          "required": false,
+          "description": "Called with the next text and its tokens on every edit, including a pick."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the field. One of aria-label or aria-labelledby is required."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Ids of the elements that name the field. One of aria-label or aria-labelledby is required."
+        }
+      ]
+    },
+    {
       "name": "Composer.Root",
       "description": "The prompt input of a chat, as a form around a Field.Root with a Field.Textarea. Enter in a textarea of the form sends it, as the form's default button would; Shift+Enter, and Enter that ends an IME composition, do not. Takes native form attributes, such as onSubmit.",
       "props": [
@@ -967,6 +1021,18 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy."
+        }
+      ]
+    },
+    {
+      "name": "Composer.Toolbar",
+      "description": "The row Composer.Submit sits in, under the input.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The buttons in the row, including Composer.Submit."
         }
       ]
     },
@@ -1198,6 +1264,18 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "The term, as text."
+        }
+      ]
+    },
+    {
+      "name": "defineMentionSource",
+      "description": "Returns the source unchanged. In development, warns when char is not a single character. Pass the same object to Composer.Input and MentionText.",
+      "props": [
+        {
+          "name": "source",
+          "type": "MentionSource",
+          "required": true,
+          "description": "A useMentions trigger plus resolve, renderPeek, peekLabel, and href. renderPeek(entity, { id, mode, close }) is the only content of the peek."
         }
       ]
     },
@@ -2999,6 +3077,54 @@
           "type": "string",
           "required": false,
           "description": "Names the indicator when it is not inside a label with text. It keeps the progressbar role, so it needs a name."
+        }
+      ]
+    },
+    {
+      "name": "Mention.Root",
+      "description": "A mention in sent text. A link when source.href returns a string, otherwise a button. Hover, focus, or click opens a Popover filled only by source.renderPeek.",
+      "props": [
+        {
+          "name": "source",
+          "type": "MentionSource",
+          "required": true,
+          "description": "The source that resolves this mention and renders its peek."
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "The token value, passed to source.resolve and source.href."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The mention text, such as @Mina Park."
+        }
+      ]
+    },
+    {
+      "name": "MentionText",
+      "description": "Renders a mention draft. A token whose character matches a source becomes Mention.Root. Any other token, and the text around them, stays plain text.",
+      "props": [
+        {
+          "name": "value",
+          "type": "MentionDraft",
+          "required": true,
+          "description": "The text and its tokens."
+        },
+        {
+          "name": "sources",
+          "type": "readonly MentionSource[]",
+          "required": true,
+          "description": "Sources used to turn matching tokens into Mention.Root."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Class on the wrapping span."
         }
       ]
     },

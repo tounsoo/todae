@@ -3,10 +3,6 @@
   "entries": [
     {
       "rule": "dead",
-      "path": "color.accent.soft"
-    },
-    {
-      "rule": "dead",
       "path": "color.bg.canvas"
     },
     {
@@ -20,10 +16,6 @@
     {
       "rule": "dead",
       "path": "color.red.500"
-    },
-    {
-      "rule": "dead",
-      "path": "opacity.12"
     },
     {
       "rule": "dead",

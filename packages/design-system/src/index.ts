@@ -82,7 +82,17 @@ export {
   type AttachmentStatus,
 } from './components/Attachment.js';
 export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus, type StepsVariant } from './components/Steps.js';
-export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer.js';
+export {
+  Composer,
+  type ComposerAttachmentsProps,
+  type ComposerInputProps,
+  type ComposerRootProps,
+  type ComposerSubmitProps,
+  type ComposerToolbarProps,
+} from './components/Composer.Input.js';
+export { Mention, type MentionRootProps } from './components/Mention.js';
+export { MentionText, type MentionTextProps } from './components/MentionText.js';
+export { defineMentionSource, type MentionPeekContext, type MentionSource } from './mentions/source.js';
 export {
   Conversation,
   type ConversationContentProps,

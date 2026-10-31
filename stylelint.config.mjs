@@ -23,6 +23,7 @@ export default {
         coreReads: {
           ChipList: ['space'],
           Field: ['space'],
+          Composer: ['space', 'radius'],
         },
         // Contract groups every component shares.
         sharedRoots: ['overlay', 'focus'],
@@ -35,7 +36,8 @@ export default {
           ErrorMessage: ['field'],
           ChipList: ['chip'],
           // Native <select> options take the OptionList look.
-          Field: ['field', 'option'],
+          Field: ['field', 'option', 'mention'],
+          Composer: ['field'],
           // A vertical group stacks with the toolbar gap, as a toolbar segment.
           ToggleGroup: ['togglegroup', 'toolbar'],
           // Progress and meter share one sheet.

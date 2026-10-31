@@ -1049,6 +1049,16 @@
   --todae-message-user-padding-x: var(--_todae-message-user-padding-x, var(--todae-space-control-x));
   --todae-message-user-padding-y: var(--_todae-message-user-padding-y, var(--todae-space-control-y));
   --todae-message-user-radius: var(--_todae-message-user-radius, var(--todae-radius-lg));
+  --todae-mention-bg-default: var(--_todae-mention-bg-default, var(--todae-color-accent-soft));
+  --todae-mention-bg-hover: var(--_todae-mention-bg-hover, var(--todae-color-accent-soft-strong));
+  --todae-mention-bg-pressed: var(--_todae-mention-bg-pressed, var(--todae-color-bg-pressed));
+  --todae-mention-composing-bg: var(--_todae-mention-composing-bg, var(--todae-field-token-bg));
+  --todae-mention-fg-default: var(--_todae-mention-fg-default, var(--todae-color-fg-default));
+  --todae-mention-fg-hover: var(--_todae-mention-fg-hover, var(--todae-color-fg-default));
+  --todae-mention-font-weight: var(--_todae-mention-font-weight, var(--todae-text-weight-medium));
+  --todae-mention-padding-x: var(--_todae-mention-padding-x, 2px);
+  --todae-mention-radius: var(--_todae-mention-radius, var(--todae-radius-sm));
+  --todae-mention-ring-focus: var(--_todae-mention-ring-focus, var(--todae-focus-ring-color));
   --todae-conversation-gap: var(--_todae-conversation-gap, var(--todae-space-stack-gap-spacious));
   --todae-conversation-ring-focus: var(--_todae-conversation-ring-focus, var(--todae-focus-ring-color));
   --todae-conversation-scroll-button-inset: var(--_todae-conversation-scroll-button-inset, var(--todae-space-stack-gap));

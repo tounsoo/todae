@@ -1860,13 +1860,13 @@ describe('token name ratchet', () => {
       { cwd: join(import.meta.dirname, '..'), encoding: 'utf8' },
     );
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
-    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
+    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 
   it('passes on the repo and skips the shrink check when the base commit has no list', async () => {
     const stdout = await capture(() => buildPackageTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
-    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
+    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 
   it('throws the state hint after a fixture token is renamed to .selected', async () => {

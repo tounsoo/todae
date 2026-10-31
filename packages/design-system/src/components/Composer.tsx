@@ -63,7 +63,7 @@ function defaultButton(form: HTMLFormElement): HTMLButtonElement | HTMLInputElem
   return undefined;
 }
 
-function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: ComposerRootProps) {
+export function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: ComposerRootProps) {
   const context = useMemo(() => ({ busy }), [busy]);
   const handleKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     const target = event.target;
@@ -100,13 +100,13 @@ function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: Compos
         onKeyDown={composeHandlers(onKeyDown, handleKeyDown)}
         onSubmit={handleSubmit}
         data-busy={busy ? '' : undefined}
-        className={className}
+        className={cx(styles.root, className)}
       />
     </Context.Provider>
   );
 }
 
-function Submit({
+export function Submit({
   'aria-label': ariaLabel,
   className,
   children,
@@ -193,4 +193,18 @@ function Submit({
   );
 }
 
-export const Composer = { Root, Submit } as const;
+/** The row above the input that holds Attachment.Root items. */
+export type ComposerAttachmentsProps = ComponentPropsWithRef<'div'>;
+
+export function Attachments({ className, ...props }: ComposerAttachmentsProps) {
+  return <div {...props} className={cx(styles.attachments, className)} />;
+}
+
+/** The row Composer.Submit sits in. */
+export type ComposerToolbarProps = ComponentPropsWithRef<'div'>;
+
+export function Toolbar({ className, ...props }: ComposerToolbarProps) {
+  return <div {...props} className={cx(styles.toolbar, className)} />;
+}
+
+export const Composer = { Root, Attachments, Toolbar, Submit } as const;

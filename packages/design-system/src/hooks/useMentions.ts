@@ -116,6 +116,11 @@ export type UseMentionsResult = {
   getPopoverProps: () => PopoverWire;
   getListboxProps: () => Omit<OptionListSingleProps, 'children'>;
   getOptionProps: (item: MentionItem) => OptionListOptionProps;
+  /**
+   * Internal. CSS anchor name of the token the caret is inside, while the
+   * suggestion list is closed. Null otherwise.
+   */
+  caretPeekAnchorName: string | null;
 };
 
 const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
@@ -148,6 +153,15 @@ type Dismissal = {
 function caretOf(el: HTMLTextAreaElement): number | null {
   if (el.readOnly || el.disabled) return null;
   return el.selectionStart === el.selectionEnd ? el.selectionStart : null;
+}
+
+/** The token whose text the caret sits in. A boundary belongs to the token that ends there. */
+export function tokenAtCaret(tokens: readonly MentionToken[], caret: number): MentionToken | null {
+  let match: MentionToken | null = null;
+  for (const token of tokens) {
+    if (caret > token.start && caret <= token.end) match = token;
+  }
+  return match;
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsResult {
@@ -519,18 +533,24 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // The word's range is what the anchor follows; the query object changes every render.
   const queryStart = query?.start;
   const queryEnd = query?.end;
+  const caretToken = !open && caret !== null ? tokenAtCaret(tokens, caret) : null;
+  const caretPeekAnchorName = caretToken ? `--todae-mention-peek-${autoId}` : null;
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
     const list: FieldTextareaHighlight[] = tokens.map((token) => ({
       start: token.start,
       end: token.end,
       kind: token.char,
+      anchorName:
+        caretToken && token.start === caretToken.start && token.end === caretToken.end && token.value === caretToken.value
+          ? caretPeekAnchorName ?? undefined
+          : undefined,
     }));
     // The word being typed carries the anchor the list sits at, and is not drawn.
     if (queryStart !== undefined && queryEnd !== undefined) {
       list.push({ start: queryStart, end: Math.max(queryEnd, queryStart + 1), anchorName, draw: false });
     }
     return list.sort((a, b) => a.start - b.start);
-  }, [anchorName, queryEnd, queryStart, tokens]);
+  }, [anchorName, caretPeekAnchorName, caretToken, queryEnd, queryStart, tokens]);
 
   const getTextareaProps = <P extends UseMentionsTextareaProps>(props?: P): Omit<P, keyof TextareaWire> & TextareaWire => {
     const user = (props ?? {}) as P;
@@ -601,5 +621,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     getPopoverProps,
     getListboxProps,
     getOptionProps,
+    caretPeekAnchorName,
   };
 }
