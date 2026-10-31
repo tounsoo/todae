@@ -11,9 +11,10 @@ describe('pinned test locale', () => {
     expect(new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(Date.UTC(1970, 0, 1, 21, 30))).toBe('9:30 PM');
   });
 
-  it('requires Korean locale data from a full ICU build', () => {
-    const text = new Intl.DateTimeFormat('ko', { timeStyle: 'short', timeZone: 'UTC' }).format(Date.UTC(2026, 9, 14, 12, 41));
-    const detail = `${process.version}, ICU ${process.versions.icu}, wrote ${JSON.stringify(text)}`;
-    expect(text, `Korean ICU data is missing (${detail}). The suite needs Node built with full ICU.`).toContain('오후');
+  it('needs Node from .nvmrc when ICU writes the Korean day period as PM', () => {
+    const format = new Intl.DateTimeFormat('ko', { timeStyle: 'short', timeZone: 'UTC' });
+    const at = Date.UTC(2026, 9, 14, 12, 41);
+    const dayPeriod = format.formatToParts(at).find((part) => part.type === 'dayPeriod')?.value;
+    expect(format.format(at), `ICU ${process.versions.icu} formats ko dayPeriod as ${JSON.stringify(dayPeriod)}; use Node from .nvmrc (24)`).toContain('오후');
   });
 });
