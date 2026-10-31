@@ -974,6 +974,11 @@
     },
     {
       "rule": "state",
+      "path": "tabs.bg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
       "path": "tabs.fg.selected",
       "word": "selected"
     },
