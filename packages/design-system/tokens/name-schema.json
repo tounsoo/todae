@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "states": ["default", "hover", "active", "pressed", "focus", "disabled"],
+  "statefulProperties": ["bg", "border", "color", "decoration", "fg", "leading", "ring", "shadow"]
+}

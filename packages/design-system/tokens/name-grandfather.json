@@ -1,0 +1,1006 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "rule": "dead",
+      "path": "color.accent.soft"
+    },
+    {
+      "rule": "dead",
+      "path": "color.bg.canvas"
+    },
+    {
+      "rule": "dead",
+      "path": "color.gray.50"
+    },
+    {
+      "rule": "dead",
+      "path": "color.red.400"
+    },
+    {
+      "rule": "dead",
+      "path": "color.red.500"
+    },
+    {
+      "rule": "dead",
+      "path": "opacity.12"
+    },
+    {
+      "rule": "dead",
+      "path": "space.7"
+    },
+    {
+      "rule": "depth",
+      "path": "alert.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "attachment.meta.fg.error"
+    },
+    {
+      "rule": "depth",
+      "path": "attachment.meta.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "attachment.name.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "attachment.name.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "breadcrumbs.current.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.font.letter-spacing"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.font.text-transform"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.icon.size"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "button.base.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.day.bg.range"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.day.bg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.day.border.current"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.day.fg.range"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.day.fg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.heading.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.heading.icon.size"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.heading.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.nav.icon.size"
+    },
+    {
+      "rule": "depth",
+      "path": "calendar.weekday.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.label.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.label.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.fg.current"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.font.current-weight"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "contents.link.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "datalist.term.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "dialog.title.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "dialog.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "disclosure.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "disclosure.motion.easing.exit"
+    },
+    {
+      "rule": "depth",
+      "path": "disclosure.summary.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "drawer.title.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "drawer.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "drilldown.back.icon.size"
+    },
+    {
+      "rule": "depth",
+      "path": "drilldown.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "drilldown.motion.easing.exit"
+    },
+    {
+      "rule": "depth",
+      "path": "emptystate.title.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "emptystate.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.caret.blink-duration"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.caret.color"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.caret.width"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.slot.block-size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.slot.font-size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.slot.inline-size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.code.slot.radius"
+    },
+    {
+      "rule": "depth",
+      "path": "field.counter.emphasis.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "field.date-time.list.max-height"
+    },
+    {
+      "rule": "depth",
+      "path": "field.description.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.description.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "field.error.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.error.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "field.label.font.letter-spacing"
+    },
+    {
+      "rule": "depth",
+      "path": "field.label.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "field.label.font.text-transform"
+    },
+    {
+      "rule": "depth",
+      "path": "field.label.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "field.picker.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "field.picker.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "field.row.control.size"
+    },
+    {
+      "rule": "depth",
+      "path": "fieldset.legend.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "fieldset.legend.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.decoration.default"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.decoration.hover"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.decoration.offset"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.decoration.thickness"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.fg.default"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.fg.hover"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.ring.focus"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.link.ring.radius"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "form.summary.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.bg.highlight"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.check.fg"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.indicator.dot-inset"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.indicator.scale"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "menu.item.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "message.actions.motion.duration"
+    },
+    {
+      "rule": "depth",
+      "path": "message.actions.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "message.actions.motion.easing.exit"
+    },
+    {
+      "rule": "depth",
+      "path": "message.header.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "message.system.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "message.time.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "message.user.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "message.user.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.group.label.fg"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.group.label.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.group.label.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.group.label.gap"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.bg.current"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.fg.current"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.font.current-weight"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.item.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "nav.motion.easing.exit"
+    },
+    {
+      "rule": "depth",
+      "path": "overlay.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "overlay.motion.easing.exit"
+    },
+    {
+      "rule": "depth",
+      "path": "pagination.current.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "picker.thumb.border.color"
+    },
+    {
+      "rule": "depth",
+      "path": "picker.thumb.border.width"
+    },
+    {
+      "rule": "depth",
+      "path": "picker.thumb.edge.color"
+    },
+    {
+      "rule": "depth",
+      "path": "picker.thumb.edge.width"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h1.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h2.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h3.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h4.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h5.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "prose.h6.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "sheet.title.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "sheet.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.bg.current"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.bg.done"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.bg.error"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.bg.pending"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.border.current"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.border.done"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.border.error"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.border.pending"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.fg.current"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.fg.done"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.fg.error"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.fg.pending"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.progress.border"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.progress.dot.color"
+    },
+    {
+      "rule": "depth",
+      "path": "steps.marker.progress.dot.size"
+    },
+    {
+      "rule": "depth",
+      "path": "table.cell.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "table.cell.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "table.header.font.letter-spacing"
+    },
+    {
+      "rule": "depth",
+      "path": "table.header.font.text-transform"
+    },
+    {
+      "rule": "depth",
+      "path": "table.header.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "table.row.bg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "table.sort.icon.fg.default"
+    },
+    {
+      "rule": "depth",
+      "path": "table.sort.icon.fg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "table.sort.icon.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h1.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h2.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h3.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h4.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h5.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.h6.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.label.font.family"
+    },
+    {
+      "rule": "depth",
+      "path": "text.label.font.letter-spacing"
+    },
+    {
+      "rule": "depth",
+      "path": "text.label.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "text.label.font.text-transform"
+    },
+    {
+      "rule": "depth",
+      "path": "text.label.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "toast.title.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "togglegroup.item.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.bg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.fg.selected"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.font.size"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.font.weight"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.padding.x"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.item.padding.y"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.motion.easing.enter"
+    },
+    {
+      "rule": "depth",
+      "path": "tree.motion.easing.exit"
+    },
+    {
+      "rule": "state",
+      "path": "attachment.border.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "attachment.meta.fg.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "calendar.day.bg.range",
+      "word": "range"
+    },
+    {
+      "rule": "state",
+      "path": "calendar.day.bg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "calendar.day.border.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "calendar.day.fg.range",
+      "word": "range"
+    },
+    {
+      "rule": "state",
+      "path": "calendar.day.fg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "contents.link.fg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "disclosure.ring.radius",
+      "word": "radius"
+    },
+    {
+      "rule": "state",
+      "path": "field.border.invalid",
+      "word": "invalid"
+    },
+    {
+      "rule": "state",
+      "path": "field.fg.adornment",
+      "word": "adornment"
+    },
+    {
+      "rule": "state",
+      "path": "field.fg.placeholder",
+      "word": "placeholder"
+    },
+    {
+      "rule": "state",
+      "path": "field.ring.invalid",
+      "word": "invalid"
+    },
+    {
+      "rule": "state",
+      "path": "focus.ring.color",
+      "word": "color"
+    },
+    {
+      "rule": "state",
+      "path": "focus.ring.offset",
+      "word": "offset"
+    },
+    {
+      "rule": "state",
+      "path": "focus.ring.width",
+      "word": "width"
+    },
+    {
+      "rule": "state",
+      "path": "form.summary.link.decoration.offset",
+      "word": "offset"
+    },
+    {
+      "rule": "state",
+      "path": "form.summary.link.decoration.thickness",
+      "word": "thickness"
+    },
+    {
+      "rule": "state",
+      "path": "form.summary.link.ring.radius",
+      "word": "radius"
+    },
+    {
+      "rule": "state",
+      "path": "link.decoration.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "link.decoration.current-thickness",
+      "word": "current-thickness"
+    },
+    {
+      "rule": "state",
+      "path": "link.decoration.offset",
+      "word": "offset"
+    },
+    {
+      "rule": "state",
+      "path": "link.decoration.thickness",
+      "word": "thickness"
+    },
+    {
+      "rule": "state",
+      "path": "link.fg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "link.ring.radius",
+      "word": "radius"
+    },
+    {
+      "rule": "state",
+      "path": "menu.item.bg.highlight",
+      "word": "highlight"
+    },
+    {
+      "rule": "state",
+      "path": "nav.item.bg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "nav.item.fg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "option.bg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "option.bg.selected-highlighted",
+      "word": "selected-highlighted"
+    },
+    {
+      "rule": "state",
+      "path": "option.fg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "picker.thumb.border.color",
+      "word": "color"
+    },
+    {
+      "rule": "state",
+      "path": "picker.thumb.border.width",
+      "word": "width"
+    },
+    {
+      "rule": "state",
+      "path": "selection.bg.checked",
+      "word": "checked"
+    },
+    {
+      "rule": "state",
+      "path": "selection.border.checked",
+      "word": "checked"
+    },
+    {
+      "rule": "state",
+      "path": "selection.border.invalid",
+      "word": "invalid"
+    },
+    {
+      "rule": "state",
+      "path": "selection.ring.invalid",
+      "word": "invalid"
+    },
+    {
+      "rule": "state",
+      "path": "steps.fg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "steps.fg.done",
+      "word": "done"
+    },
+    {
+      "rule": "state",
+      "path": "steps.fg.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "steps.fg.pending",
+      "word": "pending"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.bg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.bg.done",
+      "word": "done"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.bg.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.bg.pending",
+      "word": "pending"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.border.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.border.done",
+      "word": "done"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.border.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.border.pending",
+      "word": "pending"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.fg.current",
+      "word": "current"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.fg.done",
+      "word": "done"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.fg.error",
+      "word": "error"
+    },
+    {
+      "rule": "state",
+      "path": "steps.marker.fg.pending",
+      "word": "pending"
+    },
+    {
+      "rule": "state",
+      "path": "table.row.bg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "table.sort.icon.fg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "tabs.fg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "text.fg.accent",
+      "word": "accent"
+    },
+    {
+      "rule": "state",
+      "path": "text.fg.muted",
+      "word": "muted"
+    },
+    {
+      "rule": "state",
+      "path": "text.leading.tight",
+      "word": "tight"
+    },
+    {
+      "rule": "state",
+      "path": "tree.item.bg.selected",
+      "word": "selected"
+    },
+    {
+      "rule": "state",
+      "path": "tree.item.fg.selected",
+      "word": "selected"
+    }
+  ]
+}

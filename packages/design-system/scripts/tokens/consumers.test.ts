@@ -26,6 +26,7 @@ type FixtureRow = {
   cssValue: string;
   context?: string | null;
   type?: string;
+  layer?: 'core' | 'appearance' | 'density' | 'contract';
 };
 
 function cssVar(path: string): string {
@@ -41,6 +42,7 @@ function catalog(rows: FixtureRow[]) {
       cssVar: cssVar(row.path),
       cssValue: row.cssValue,
       context: row.context ?? null,
+      layer: row.layer ?? 'contract',
       description: 'ignored',
     })),
   };
@@ -206,7 +208,7 @@ describe('token consumers', () => {
   });
 
   it('prints a single line when no token value or type changed', () => {
-    const row = { path: 'color.fg', type: 'color', cssVar: '--todae-color-fg', cssValue: 'oklch(0.2 0 0)', context: null };
+    const row = { path: 'color.fg', type: 'color', cssVar: '--todae-color-fg', cssValue: 'oklch(0.2 0 0)', context: null, layer: 'core' as const };
     const base = parseSnapshot({ version: 1, tokens: [{ ...row, description: 'before', layer: 'core' }] });
     const head = parseSnapshot({ version: 1, tokens: [{ ...row, description: 'after', entry: { kind: 'set' } }] });
     expect(renderMarkdown(buildReport({ base, head, files: [] }), { base: 'abc1234aaa', head: 'def5678bbb' })).toBe('No token values changed.');
@@ -249,6 +251,12 @@ describe('token consumers', () => {
   it('rejects a snapshot that is not version 1 or a row without cssVar', () => {
     expect(() => parseSnapshot({ version: 2, tokens: [] })).toThrow(/version must be 1/);
     expect(() => parseSnapshot({ version: 1, tokens: [{ path: 'color.fg', type: 'color', cssValue: 'oklch(0.2 0 0)', context: null }] })).toThrow(/cssVar/);
+    expect(() =>
+      parseSnapshot({
+        version: 1,
+        tokens: [{ path: 'color.fg', type: 'color', cssVar: '--todae-color-fg', cssValue: 'oklch(0.2 0 0)', context: null }],
+      }),
+    ).toThrow(/layer/);
   });
 });
 
@@ -279,7 +287,7 @@ describe('token-consumers', () => {
       `${JSON.stringify(
         {
           version: 1,
-          tokens: [{ path: 'progress.height', type: 'dimension', cssVar: '--todae-progress-height', cssValue: height, context: null }],
+          tokens: [{ path: 'progress.height', type: 'dimension', cssVar: '--todae-progress-height', cssValue: height, context: null, layer: 'contract' }],
         },
         null,
         2,
