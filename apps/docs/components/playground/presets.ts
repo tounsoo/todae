@@ -268,7 +268,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.border.default': oklch(0.15, 0.028, 110),
       'color.border.subtle': oklch(0.2, 0.024, 110),
       'progress.fill': oklch(0.9, 0.2, 122),
-      'progress.track': oklch(0.9, 0.012, 120),
+      'progress.track': oklch(0.68, 0.024, 110),
       'focus.ring.color': oklch(0.6, 0.25, 330),
     },
     {
@@ -276,6 +276,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.border.default': oklch(0.92, 0.014, 120),
       ...hardShadows(oklch(0.92, 0.014, 120)),
       'color.border.subtle': oklch(0.9, 0.012, 120),
+      'progress.track': oklch(0.35, 0.012, 120),
       'focus.ring.color': oklch(0.72, 0.22, 330),
     },
   ),
