@@ -17,7 +17,8 @@
     },
     "bg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
-      "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } }
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+      "selected": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } }
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },

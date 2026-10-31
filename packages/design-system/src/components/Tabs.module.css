@@ -60,6 +60,7 @@
   }
 
   .tab[data-selected] {
+    background: var(--todae-tabs-bg-selected);
     color: var(--todae-tabs-fg-selected);
   }
 

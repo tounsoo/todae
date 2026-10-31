@@ -8789,6 +8789,20 @@
       "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
+      "path": "tabs.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-tabs-bg-selected",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
+    },
+    {
       "path": "tabs.border",
       "type": "color",
       "cssVar": "--todae-tabs-border",

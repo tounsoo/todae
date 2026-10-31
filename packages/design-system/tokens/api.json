@@ -3806,6 +3806,10 @@
       "type": "color"
     },
     {
+      "path": "tabs.bg.selected",
+      "type": "color"
+    },
+    {
       "path": "tabs.border",
       "type": "color"
     },

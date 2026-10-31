@@ -774,6 +774,7 @@
   --todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, 1px);
   --todae-tabs-bg-default: var(--_todae-tabs-bg-default, var(--todae-color-bg-transparent));
   --todae-tabs-bg-hover: var(--_todae-tabs-bg-hover, var(--todae-color-bg-highlight));
+  --todae-tabs-bg-selected: var(--_todae-tabs-bg-selected, var(--todae-color-bg-highlight));
   --todae-tabs-border: var(--_todae-tabs-border, var(--todae-color-border-subtle));
   --todae-tabs-border-width: var(--_todae-tabs-border-width, var(--todae-border-width));
   --todae-tabs-fg-default: var(--_todae-tabs-fg-default, var(--todae-color-fg-muted));
