@@ -136,7 +136,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 **언제:** 네이티브 규칙이 있는 폼에서 각 필드가 페이지의 언어로 문제를 보여 주고, 포커스와 ARIA가 연결되길 원할 때. 값은 갖지 않고 컨트롤에 남습니다.
 
-**쓰지 않을 때:** 검사할 규칙이 없는 폼 → 일반 `<form>`. Enter로 보내는 컴포저 → 자체가 폼인 [Composer](/recipes/chat-composer-mentions). 스키마나 서버가 정하는 규칙 → `onSubmit`에서 실행하고 결과를 `errors`로 넘기세요.
+**쓰지 않을 때:** 검사할 규칙이 없는 폼 → 일반 `<form>`. Enter로 보내는 컴포저 → [채팅 작성창 멘션](/recipes/chat-composer-mentions) 레시피. 스키마나 서버가 정하는 규칙 → `onSubmit`에서 실행하고 결과를 `errors`로 넘기세요.
 
 ### Form.Summary
 
