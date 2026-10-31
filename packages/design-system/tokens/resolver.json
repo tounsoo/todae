@@ -101,7 +101,17 @@
             { "fg": "text.label.fg", "bg": "color.bg.surface", "min": 60 },
             { "fg": "text.label.fg", "bg": "color.bg.subtle", "min": 60 },
             { "fg": "text.label.fg", "bg": "color.bg.elevated", "min": 60 },
-            { "fg": "text.label.fg", "bg": "popover.bg", "min": 60 }
+            { "fg": "text.label.fg", "bg": "popover.bg", "min": 60 },
+            { "fg": "progress.fill", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.optimum", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.suboptimum", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.critical", "bg": "progress.track", "min": 30 },
+            { "fg": "selection.thumb.bg", "bg": "selection.bg.checked", "min": 30 },
+            { "fg": "selection.indicator.fg", "bg": "selection.bg.checked", "min": 30 },
+            { "fg": "button.primary.fg.default", "bg": "button.primary.bg.default", "min": 60 },
+            { "fg": "button.primary.fg.hover", "bg": "button.primary.bg.hover", "min": 60 },
+            { "fg": "button.primary.fg.active", "bg": "button.primary.bg.active", "min": 60 },
+            { "fg": "button.primary.fg.focus", "bg": "button.primary.bg.focus", "min": 60 }
           ]
         }
       }
