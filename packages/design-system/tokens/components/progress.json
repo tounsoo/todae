@@ -3,6 +3,7 @@
     "$description": "Progress.Root: a determinate or indeterminate progress bar.",
     "track": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+    "inset": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
     "height": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "motion": {

@@ -959,6 +959,7 @@
   --todae-meter-fill-suboptimum: var(--_todae-meter-fill-suboptimum, var(--todae-color-status-warning-fg));
   --todae-progress-fill: var(--_todae-progress-fill, var(--todae-color-accent-default));
   --todae-progress-height: var(--_todae-progress-height, 0.5rem);
+  --todae-progress-inset: var(--_todae-progress-inset, 1px);
   --todae-progress-motion-duration: var(--_todae-progress-motion-duration, 1200ms);
   --todae-progress-radius: var(--_todae-progress-radius, var(--todae-radius-sm));
   --todae-progress-track: var(--_todae-progress-track, var(--todae-color-border-subtle));

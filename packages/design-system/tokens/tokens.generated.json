@@ -11379,6 +11379,20 @@
       "description": "Progress.Root: a determinate or indeterminate progress bar."
     },
     {
+      "path": "progress.inset",
+      "type": "dimension",
+      "cssVar": "--todae-progress-inset",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Progress.Root: a determinate or indeterminate progress bar."
+    },
+    {
       "path": "progress.motion.duration",
       "type": "duration",
       "cssVar": "--todae-progress-motion-duration",

@@ -3134,6 +3134,10 @@
       "type": "dimension"
     },
     {
+      "path": "progress.inset",
+      "type": "dimension"
+    },
+    {
       "path": "progress.motion.duration",
       "type": "duration"
     },
