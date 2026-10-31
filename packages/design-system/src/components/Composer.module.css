@@ -1,43 +1,9 @@
 @layer todae.components {
-  /* One field around attachments, the input, and the toolbar. The legacy Field
-     tree has no .field, so it keeps its own shell. */
-  .root:has(.field) {
-    display: flex;
-    flex-direction: column;
-    border: var(--todae-field-border-width) solid var(--todae-field-border-default);
-    border-radius: var(--todae-radius-lg);
-    background: var(--todae-field-bg-default);
-  }
-
-  .root:has(.field):focus-within {
-    border-color: var(--todae-field-border-focus);
-    outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
-    outline-offset: var(--todae-focus-ring-offset);
-  }
-
-  .root:has(.field) > .field,
-  .root:has(.field) > .field.field:is(:hover, :focus-within) {
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    outline: none;
-  }
-
   .attachments,
   .toolbar {
     display: flex;
     flex-wrap: wrap;
-  }
-
-  .attachments {
     gap: var(--todae-space-2);
-    padding: var(--todae-space-2) var(--todae-space-2) 0;
-  }
-
-  .toolbar {
-    align-items: center;
-    gap: var(--todae-space-1);
-    padding: var(--todae-space-1) var(--todae-space-2) var(--todae-space-2);
   }
 
   .submit {

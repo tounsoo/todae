@@ -7,8 +7,6 @@ import { tokenAtCaret, useMentions, type MentionDraft } from '../hooks/useMentio
 import { useMentionPeek } from '../hooks/useMentionPeek.js';
 import type { MentionSource } from '../mentions/source.js';
 import { Attachments, Root, Submit, Toolbar } from './Composer.js';
-import styles from './Composer.module.css';
-import { cx } from './props.js';
 export type { ComposerAttachmentsProps, ComposerRootProps, ComposerSubmitProps, ComposerToolbarProps } from './Composer.js';
 
 type MentionFieldProps = Omit<FieldTextareaProps, 'value' | 'defaultValue' | 'onChange' | 'onValueChange'>;
@@ -71,7 +69,7 @@ function Input({
   const described = mergeDescribedBy(describedBy, peek.open ? peek.triggerProps['aria-describedby'] : undefined);
   return (
     <>
-      <Field.Root aria-label={ariaLabel} aria-labelledby={ariaLabelledBy} className={cx(styles.field, className)}>
+      <Field.Root aria-label={ariaLabel} aria-labelledby={ariaLabelledBy} className={className}>
         <Field.Textarea
           {...mentionsApi.getTextareaProps({
             ...props,

@@ -7,8 +7,6 @@
     border: 0;
     border-radius: var(--todae-mention-radius);
     padding: 0 var(--todae-mention-padding-x);
-    cursor: pointer;
-    line-height: inherit;
   }
 
   .root:hover {

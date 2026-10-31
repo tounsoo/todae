@@ -100,7 +100,7 @@ export function Root({ busy = false, className, onKeyDown, onSubmit, ...props }:
         onKeyDown={composeHandlers(onKeyDown, handleKeyDown)}
         onSubmit={handleSubmit}
         data-busy={busy ? '' : undefined}
-        className={cx(styles.root, className)}
+        className={className}
       />
     </Context.Provider>
   );
