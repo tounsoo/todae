@@ -1,10 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { defineConfig, type Plugin } from 'vitest/config';
-import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
-
-// Vitest sets VITEST before loading this file. A production build does not, so the host zone stays.
-if (process.env.VITEST) pinTestLocale();
+import { testLocaleEnv } from '../../vitest.locale';
 
 // Forward slashes on every platform, as in Vite's module ids.
 const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));

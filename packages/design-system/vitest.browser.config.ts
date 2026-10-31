@@ -8,7 +8,6 @@ import { defineConfig } from 'vitest/config';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 import base from './vite.config';
 
-// This file replaces `test`, so the unit config's env does not carry over.
 if (process.env.VITEST) pinTestLocale();
 
 /**
