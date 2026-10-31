@@ -1934,6 +1934,7 @@ function selfFlags(args: readonly string[]): { check: boolean; base?: string; wr
   let base: string | undefined;
   for (let index = 1; index < args.length; index += 1) {
     const arg = args[index];
+    if (arg === '--') continue;
     if (arg === '--check') check = true;
     else if (arg === '--write-grandfather') writeGrandfather = true;
     else if (arg === '--base') {

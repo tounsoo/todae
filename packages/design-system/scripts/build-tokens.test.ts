@@ -1829,6 +1829,25 @@ describe('token name ratchet', () => {
     return text;
   }
 
+  it('accepts --base after the double dash pnpm inserts', () => {
+    const stdout = execFileSync(
+      process.execPath,
+      [
+        '--experimental-strip-types',
+        '--no-warnings=ExperimentalWarning',
+        join(import.meta.dirname, 'build-tokens.ts'),
+        'self',
+        '--check',
+        '--',
+        '--base',
+        'adc3772c3c509663e7103900b67dd80e323978d3',
+      ],
+      { cwd: join(import.meta.dirname, '..'), encoding: 'utf8' },
+    );
+    expect(stdout).toContain('no grandfather list at base; skipping shrink check');
+    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
+  });
+
   it('passes on the repo and skips the shrink check when the base commit has no list', async () => {
     const stdout = await capture(() => buildTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
