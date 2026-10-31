@@ -38,7 +38,7 @@ export type StillRead = {
 
 export type Report = {
   changes: Change[];
-  affected: Map<CssVar, { via: CssVar[] }>;
+  affected: Map<CssVar, { via: CssVar[]; sources: CssVar[] }>;
   consumers: Map<string, { component: string | null; file: string; vars: CssVar[] }>;
   paths: Map<CssVar, string>;
   stillRead: StillRead[];
@@ -193,12 +193,13 @@ export function dependents(head: Snapshot, base: Snapshot): Map<CssVar, CssVar[]
   return new Map([...reverse].map(([cssVar, next]) => [cssVar, [...next]]));
 }
 
-export function affectedVars(changes: Change[], reverse: Map<CssVar, CssVar[]>): Map<CssVar, { via: CssVar[] }> {
-  const affected = new Map<CssVar, { via: CssVar[] }>();
+export function affectedVars(changes: Change[], reverse: Map<CssVar, CssVar[]>): Map<CssVar, { via: CssVar[]; sources: CssVar[] }> {
+  const nodes = new Map<CssVar, { via: CssVar[]; sources: Set<CssVar> }>();
   const queue: CssVar[] = [];
   for (const change of changes) {
-    if (affected.has(change.cssVar)) continue;
-    affected.set(change.cssVar, { via: [change.cssVar] });
+    const existing = nodes.get(change.cssVar);
+    if (existing) existing.sources.add(change.cssVar);
+    else nodes.set(change.cssVar, { via: [change.cssVar], sources: new Set([change.cssVar]) });
     queue.push(change.cssVar);
   }
   let index = 0;
@@ -206,14 +207,24 @@ export function affectedVars(changes: Change[], reverse: Map<CssVar, CssVar[]>):
     const current = queue[index];
     index += 1;
     if (current === undefined) continue;
-    const via = affected.get(current)?.via ?? [current];
+    const from = nodes.get(current);
+    if (!from) continue;
     for (const next of reverse.get(current) ?? []) {
-      if (affected.has(next)) continue;
-      affected.set(next, { via: [...via, next] });
-      queue.push(next);
+      let node = nodes.get(next);
+      if (!node) {
+        node = { via: [...from.via, next], sources: new Set() };
+        nodes.set(next, node);
+      }
+      let grew = false;
+      for (const source of from.sources) {
+        if (node.sources.has(source)) continue;
+        node.sources.add(source);
+        grew = true;
+      }
+      if (grew) queue.push(next);
     }
   }
-  return affected;
+  return new Map([...nodes].map(([cssVar, node]) => [cssVar, { via: node.via, sources: [...node.sources].sort() }]));
 }
 
 function componentName(file: string): string | null {
@@ -263,7 +274,7 @@ function indexPaths(base: Snapshot, head: Snapshot): Map<CssVar, string> {
 
 type Hit = { component: string | null; file: string; vars: Set<CssVar> };
 
-function collectHits(files: ConsumerFile[], affected: Map<CssVar, { via: CssVar[] }>, include: (cssVar: CssVar) => boolean): Map<string, Hit> {
+function collectHits(files: ConsumerFile[], affected: Report['affected'], include: (cssVar: CssVar) => boolean): Map<string, Hit> {
   const hits = new Map<string, Hit>();
   for (const file of files) {
     const component = componentName(file.path);
@@ -339,7 +350,7 @@ function formatReads(vars: CssVar[]): string {
 function reachableFrom(change: Change, report: Report): Set<CssVar> {
   const reached = new Set<CssVar>();
   for (const [cssVar, entry] of report.affected) {
-    if (entry.via[0] === change.cssVar) reached.add(cssVar);
+    if (entry.sources.includes(change.cssVar)) reached.add(cssVar);
   }
   reached.add(change.cssVar);
   return reached;

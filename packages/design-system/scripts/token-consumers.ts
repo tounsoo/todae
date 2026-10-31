@@ -26,12 +26,17 @@ function emit(text: string, summary: string | undefined): void {
   const body = text.endsWith('\n') ? text : `${text}\n`;
   process.stdout.write(body);
   if (!summary) return;
-  appendFileSync(summary, body);
+  try {
+    appendFileSync(summary, body);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    process.stdout.write(`Token consumer report unavailable: ${reason}\n`);
+  }
 }
 
 function git(args: string[]): string {
   try {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (error) {
     const stderr = typeof error === 'object' && error !== null && 'stderr' in error && typeof error.stderr === 'string' ? error.stderr.trim() : '';
     const message = error instanceof Error ? error.message : String(error);
@@ -45,16 +50,17 @@ function resolveSha(rev: string): string {
 
 function fileAt(sha: string, path: string): string | null {
   try {
-    return git(['show', `${sha}:${path}`]);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes('does not exist') || message.includes('exists on disk, but not')) return null;
-    throw error;
+    git(['cat-file', '-e', `${sha}:${path}`]);
+  } catch {
+    return null;
   }
+  return git(['show', `${sha}:${path}`]);
 }
 
 function filesAt(sha: string): string[] {
-  return git(['ls-tree', '-r', '--name-only', sha]).split('\n').filter((line) => line.length > 0);
+  // --full-tree keeps paths from the repository root. pnpm exec runs this
+  // script in the package directory, where a plain ls-tree would drop the prefix.
+  return git(['ls-tree', '-r', '--full-tree', '--name-only', sha]).split('\n').filter((line) => line.length > 0);
 }
 
 function isConsumerPath(file: string): boolean {

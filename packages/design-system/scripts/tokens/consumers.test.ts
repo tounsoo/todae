@@ -159,6 +159,21 @@ describe('token consumers', () => {
     expect(fromAlpha).toContain('`opacity.12` → `color.accent.soft`');
     expect(fromColor).toContain('Badge');
     expect(fromAlpha).toContain('Badge');
+    const both = markdown(
+      [
+        { path: 'color.accent.default', cssValue: 'oklch(0.2 0 0)' },
+        { path: 'opacity.12', cssValue: '0.12', type: 'number' },
+        { path: 'color.accent.soft', cssValue: soft },
+      ],
+      [
+        { path: 'color.accent.default', cssValue: 'oklch(0.3 0 0)' },
+        { path: 'opacity.12', cssValue: '0.2', type: 'number' },
+        { path: 'color.accent.soft', cssValue: soft },
+      ],
+      file,
+    );
+    expect(both).toContain('Badge');
+    expect(both).not.toContain('(no component reads this)');
   });
 
   it('reports an added token with no reader, a removed token still read, and a type-only change', () => {
@@ -276,10 +291,10 @@ describe('token-consumers', () => {
     return git(root, ['rev-parse', 'HEAD']).trim();
   }
 
-  function run(root: string, args: string[]): { status: number; stdout: string; stderr: string } {
+  function run(root: string, args: string[], cwd = root): { status: number; stdout: string; stderr: string } {
     try {
       const stdout = execFileSync(process.execPath, ['--experimental-strip-types', '--no-warnings=ExperimentalWarning', script, ...args], {
-        cwd: root,
+        cwd,
         encoding: 'utf8',
       });
       return { status: 0, stdout, stderr: '' };
@@ -300,6 +315,9 @@ describe('token-consumers', () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('| Progress | `--todae-progress-height` | `progress.height` |');
     expect(await readFile(summary, 'utf8')).toContain('| Component | Reads | Via |');
+    const fromPackage = run(root, ['--base', base, '--head', head], join(root, 'packages', 'design-system'));
+    expect(fromPackage.status).toBe(0);
+    expect(fromPackage.stdout).toContain('| Progress | `--todae-progress-height` | `progress.height` |');
     const missing = run(root, ['--base', 'does-not-exist', '--head', head, '--summary', summary]);
     expect(missing.status).toBe(0);
     expect(missing.stdout).toContain('Token consumer report unavailable:');
