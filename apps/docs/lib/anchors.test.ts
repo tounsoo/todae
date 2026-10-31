@@ -3,17 +3,13 @@ import { join } from 'node:path';
 import type { Node, Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
 import config from '../next.config.mjs';
-import { LOCALES, localizePath, localeOf, stripLocale, type Locale } from './i18n/config';
+import { isDocsPagePath, LOCALES, localizePath, localeOf, stripLocale, type Locale } from './i18n/config';
 import { isTranslated } from './i18n/pages';
 import { parseMdx } from './mdxAst';
 import { pageSections } from './remarkPageContents.mjs';
 import { pageOf } from './remarkPageMetadata.mjs';
 
 const APP = join(process.cwd(), 'app');
-
-// Same-site files and routes LocalizedLink does not treat as docs pages.
-const NOT_A_PAGE = /\.(css|gif|ico|jpe?g|js|json|pdf|png|svg|txt|webmanifest|webp|woff2?|xml)$/i;
-const NON_PAGE_PATH = /^\/(api|_next)(\/|$)/;
 
 type Section = { id: string; children: Section[] };
 type Page = { locale: Locale; slug: string; file: string };
@@ -55,7 +51,6 @@ function expressionText(value: unknown): string | null {
   return value.value;
 }
 
-/** A static href, or a dynamic expression the check cannot resolve. */
 function hrefOf(value: unknown): { href: string } | { dynamic: string } | null {
   if (typeof value === 'string') return { href: value };
   const raw = expressionText(value);
@@ -119,16 +114,11 @@ function pathSlug(path: string): string {
   return stripLocale(path).replace(/^\/|\/$/g, '');
 }
 
-/** The page a reader of `page` opens for `path` (empty means this page), after one exact redirect. */
 function openedPath(path: string, page: Page, redirects: ReadonlyMap<string, string>): string {
   const localized = path === '' ? localizePath(page.slug ? `/${page.slug}` : '/', page.locale) : localizePath(path, page.locale);
   return redirects.get(localized) ?? localized;
 }
 
-/**
- * Same-site hashes whose fragment is not a heading id on the page a reader of that
- * locale opens. Link targets stay in the reader's language, as `LocalizedLink` does.
- */
 function brokenAnchors(redirects: ReadonlyMap<string, string>): { pages: number; broken: string[] } {
   const listed = pages(APP);
   const ids = new Map<string, Set<string> | null>();
@@ -158,7 +148,7 @@ function brokenAnchors(redirects: ReadonlyMap<string, string>): { pages: number;
       if (mark < 0) continue;
       const fragment = decodeURIComponent(link.href.slice(mark + 1));
       const [path = ''] = link.href.slice(0, mark).split('?');
-      if (!fragment || external(path) || NOT_A_PAGE.test(path) || NON_PAGE_PATH.test(path)) continue;
+      if (!fragment || external(path) || (path !== '' && !isDocsPagePath(path))) continue;
       const where = `${page.locale}/${page.slug}`;
       if (path !== '' && !path.startsWith('/')) {
         broken.push({ page: where, line: link.line, href: link.href, detail: 'is not a same-site path' });

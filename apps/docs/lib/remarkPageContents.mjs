@@ -26,12 +26,9 @@ export function slugOf(text, seen) {
   return slug;
 }
 
-// A heading may end in `{/*#id*/}` to keep one id in every language. Translations copy
-// link targets, and a slug of the heading's own words would not match.
 const EXPLICIT_ID = /^#([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
-/** The id a heading names for itself, removed so it is not part of the heading. */
-function explicitId(node) {
+function takeExplicitId(node) {
   const last = node.children?.at(-1);
   if (last?.type !== 'mdxTextExpression') return null;
   const comment = /^\s*\/\*([\s\S]*?)\*\/\s*$/.exec(last.value);
@@ -47,7 +44,7 @@ function explicitId(node) {
 }
 
 function headingId(node, seen) {
-  const declared = explicitId(node);
+  const declared = takeExplicitId(node);
   const text = plainText(node).replace(/\s+/g, ' ').trim();
   if (!declared) return { id: slugOf(text, seen), text };
   if (seen.has(declared)) throw new Error(`Heading "${text}" asks for #${declared}, which an earlier heading already uses`);
