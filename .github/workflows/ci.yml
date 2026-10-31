@@ -163,7 +163,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
       - name: Snapshot matches the build
-        run: pnpm tokens:check
+        run: pnpm --filter @tounsoo/todae tokens:check -- --base "${{ github.event.pull_request.base.sha }}"
       - name: No public token was removed, renamed or retyped
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
 

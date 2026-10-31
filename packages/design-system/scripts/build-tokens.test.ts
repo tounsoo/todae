@@ -9,6 +9,7 @@ import {
   contrastResults,
   resolveEntries,
   buildCompanyTokens,
+  buildTokens,
   buildTokensGraph,
   cli,
   todaeTokensRoot,
@@ -1804,4 +1805,58 @@ describe('company token build', () => {
     await expect(cli(['buld', '--resolver', join(acme, 'resolver.json')])).rejects.toThrow(/Usage: todae-tokens build/);
     await expect(cli([])).rejects.toThrow(/Usage: todae-tokens build/);
   });
+});
+
+describe('token name ratchet', () => {
+  const temps: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(temps.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  async function capture(run: () => Promise<unknown>): Promise<string> {
+    let text = '';
+    const write = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      text += typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      await run();
+    } finally {
+      process.stdout.write = write;
+    }
+    return text;
+  }
+
+  it('passes on the repo and skips the shrink check when the base commit has no list', async () => {
+    const stdout = await capture(() => buildTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
+    expect(stdout).toContain('no grandfather list at base; skipping shrink check');
+    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
+  });
+
+  it('throws the state hint after a fixture token is renamed to .selected', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'todae-names-'));
+    temps.push(root);
+    await cp(join(import.meta.dirname, '../tokens'), join(root, 'tokens'), { recursive: true });
+    await cp(join(import.meta.dirname, '../src'), join(root, 'src'), { recursive: true });
+    const tabsFile = join(root, 'tokens/components/tabs.json');
+    const tabs = JSON.parse(await readFile(tabsFile, 'utf8')) as { tabs: { bg: Record<string, unknown> } };
+    tabs.tabs.bg.selected = tabs.tabs.bg.hover;
+    delete tabs.tabs.bg.hover;
+    await writeFile(tabsFile, `${JSON.stringify(tabs, null, 2)}\n`);
+    const sheet = join(root, 'src/components/Tabs.module.css');
+    const css = await readFile(sheet, 'utf8');
+    await writeFile(sheet, css.replaceAll('--todae-tabs-bg-hover', '--todae-tabs-bg-selected'));
+    await buildTokens({ root });
+    const hint =
+      'tabs.bg.selected: unknown state "selected". States are default, hover, active, pressed, focus, disabled. Rename to one of them, or if "selected" is a variant, move it before the property (e.g. option.selected.bg).';
+    let message = '';
+    try {
+      await buildTokens({ check: true, root });
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).toBe(hint);
+  }, 120_000);
 });
