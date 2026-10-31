@@ -1,4 +1,5 @@
 import { consumeCssVar, cssVarName } from '../build-tokens.ts';
+import type { Layer } from './shared.ts';
 
 const CSS_VAR_RE = /^--todae-[a-z0-9-]+$/;
 const CONTEXT_ORDER = ['light', 'dark', 'compact', 'comfortable', 'spacious', 'primary', 'secondary', 'ghost'];
@@ -13,6 +14,7 @@ export type Row = {
   cssVar: CssVar;
   cssValue: string;
   context: string | null;
+  layer: Layer;
 };
 
 export type Snapshot = Map<`${string}@${string}`, Row>;
@@ -89,12 +91,17 @@ export function parseSnapshot(json: unknown): Snapshot {
     if (typeof context !== 'string' && context !== null) {
       throw new Error(`tokens.generated.json row ${path} is missing context`);
     }
+    const layer = entry.layer;
+    if (layer !== 'core' && layer !== 'appearance' && layer !== 'density' && layer !== 'contract') {
+      throw new Error(`tokens.generated.json row ${path} is missing layer`);
+    }
     const row: Row = {
       path,
       type: requireString(entry, 'type'),
       cssVar: cssVarOf(entry.cssVar),
       cssValue: requireString(entry, 'cssValue'),
       context,
+      layer,
     };
     const key = snapshotKey(row.path, row.context);
     if (snapshot.has(key)) throw new Error(`tokens.generated.json repeats ${row.path} in context ${row.context ?? 'default'}`);
