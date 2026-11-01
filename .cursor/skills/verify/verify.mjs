@@ -356,10 +356,16 @@ async function pathsOf(flags) {
 
 async function assertSha(flags, origin) {
   const expectSha = fullSha(flags['expect-sha']);
-  if (new URL(origin).hostname === 'todae.omsoo.design') {
+  const originUrl = new URL(origin);
+  if (originUrl.hostname === 'todae.omsoo.design') {
     throw new Error('todae.omsoo.design tracks docs-stable. Pass the preview deployment URL.');
   }
-  if (origin.startsWith('http://127.0.0.1:') || origin.startsWith('http://localhost:')) {
+  if (process.env.VERIFY_URL && flags.url && new URL(process.env.VERIFY_URL).origin !== new URL(flags.url).origin) {
+    throw new Error('VERIFY_URL origin does not match --url');
+  }
+  const loopback = ['127.0.0.1', 'localhost', '::1', '0.0.0.0'].includes(originUrl.hostname);
+  if (loopback) {
+    if (originUrl.port !== String(PORT)) throw new Error(`local verify only drives port ${PORT}`);
     const record = await readPid();
     if (!(await ownedServer(record))) throw new Error(`refusing ${origin} because this run does not own the docs server on port ${PORT}`);
     const head = fullSha(await git(['rev-parse', 'HEAD']));
@@ -497,6 +503,7 @@ async function drive(flags, browser) {
   const stamp = new Date().toISOString().replaceAll(':', '').replaceAll('.', '');
   const dir = path.join(evidenceRoot, stamp);
   await mkdir(dir, { recursive: true });
+  await rm(path.join(evidenceRoot, 'latest'), { force: true });
   const lines = [];
   const note = (line) => {
     const safe = redact(line);
@@ -506,8 +513,8 @@ async function drive(flags, browser) {
   let failed = null;
   try {
     const sha = await assertSha(flags, origin);
-    note(`doctor mode=${sha.mode} source=${sha.source} sha=${sha.expectSha} deployment=${sha.deploymentSha}`);
-    note(`doctor url=${publicUrl(flags.url || openUrl(flags))}`);
+    note(`doctor mode=${sha.mode} source=${sha.source} expect-sha=${sha.expectSha} compared-sha=${sha.deploymentSha}`);
+    note(`doctor url=${publicUrl(openUrl(flags))}`);
     for (const pathname of await pathsOf(flags)) {
       for (const width of [WIDE, NARROW]) {
         const target = pageUrl(pathname, flags);
