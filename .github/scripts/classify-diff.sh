@@ -20,6 +20,7 @@ if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] ||
 fi
 
 # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
+# A diff that cannot be read, such as two histories with no merge base, runs every check.
 if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
 	echo "class=all" >> "$GITHUB_OUTPUT"
 	echo "class=all (diff failed)"

@@ -92,6 +92,7 @@ jobs:
         id: package-build
         if: ${{ !cancelled() }}
         run: pnpm build:ds
+      # Fernway restores this copy. A failed save does not fail the job, because a miss makes Fernway build dist itself.
       - name: Share the package build
         if: ${{ steps.package-build.outcome == 'success' }}
         continue-on-error: true
