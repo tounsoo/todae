@@ -20,6 +20,27 @@ One에서 Three까지 이어서 지나가면 첫 팁 다음부터는 바로 열�
   <TooltipWarmup />
 </Example>
 
+```tsx
+function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; skipDelay?: number }) {
+  const tooltip = useTooltip({ showDelay: 300, hideDelay: 0, skipDelay });
+  return (
+    <>
+      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
+        {label}
+      </Button.Root>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>{tip}</Tooltip.Root>
+    </>
+  );
+}
+
+<Stack.Root direction="row" gap="none">
+  <WarmButton label="One" tip="Opens after a pause" />
+  <WarmButton label="Two" tip="Opens at once" />
+  <WarmButton label="Three" tip="Opens at once" />
+  <WarmButton label="Waits" tip="Waits again" skipDelay={0} />
+</Stack.Root>
+```
+
 ## 예시
 
 오버플로 칩과 버튼이 아닌 다른 트리거는 [useTooltip](/utilities/use-tooltip)을 씁니다. 이 데모의 코드도 그곳에 있습니다. 탭으로 이동할 수 없는 래퍼에는 `tabIndex={0}`을 지정하세요.

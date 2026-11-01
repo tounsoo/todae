@@ -20,6 +20,27 @@ Slide from One to Three and each tip after the first opens at once, then land on
   <TooltipWarmup />
 </Example>
 
+```tsx
+function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; skipDelay?: number }) {
+  const tooltip = useTooltip({ showDelay: 300, hideDelay: 0, skipDelay });
+  return (
+    <>
+      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
+        {label}
+      </Button.Root>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>{tip}</Tooltip.Root>
+    </>
+  );
+}
+
+<Stack.Root direction="row" gap="none">
+  <WarmButton label="One" tip="Opens after a pause" />
+  <WarmButton label="Two" tip="Opens at once" />
+  <WarmButton label="Three" tip="Opens at once" />
+  <WarmButton label="Waits" tip="Waits again" skipDelay={0} />
+</Stack.Root>
+```
+
 ## Examples
 
 Overflow chips and other non-button triggers use [useTooltip](/utilities/use-tooltip), which has this demo's code. Mark a non-tabbable wrap with `tabIndex={0}`.
