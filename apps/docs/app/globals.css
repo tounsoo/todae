@@ -440,6 +440,13 @@ main:focus {
   font-size: 0.875rem;
 }
 
+/* Prose.Root sets overflow-wrap: break-word, and Korean sets overflow-wrap: anywhere.
+   Either one lets a narrow column split a key name such as ArrowDown. A row header
+   in these tables is that name. Props tables nest their scroller and set their own wrap. */
+.docs-prose > .scroll-x th[scope="row"] {
+  white-space: nowrap;
+}
+
 .scroll-x caption {
   padding: 0.75rem 1rem 0;
   text-align: start;
