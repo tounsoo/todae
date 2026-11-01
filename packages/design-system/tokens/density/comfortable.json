@@ -36,6 +36,10 @@
       "size": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
+    "popover": {
+      "$description": "Padding inside anchored floating panels, such as popovers and field pickers, two steps below overlay; changes with density.",
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
+    },
     "overlay": {
       "$description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density.",
       "padding": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
