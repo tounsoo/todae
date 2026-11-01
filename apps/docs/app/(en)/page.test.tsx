@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { flatLinks, HOME_FEATURED, INDEX_GROUPS, SITE_GROUPS } from '../../components/siteGroups';
 import { PAGE_FILES } from '../../lib/i18n/pages';
@@ -34,10 +34,33 @@ describe('HomePage', () => {
     }
   });
 
-  it('leaves the catalog routes off the home page', () => {
-    const { container } = render(<HomePage />);
-    const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href'));
-    for (const id of INDEX_GROUPS) expect(hrefs, id).not.toContain(`/${id}`);
+  it('features eight items per catalog and links the whole catalog', () => {
+    render(<HomePage />);
+    const region = (name: string) => within(screen.getByRole('region', { name }));
+    const items = (name: string) => region(name).getAllByRole('listitem').map((item) => item.textContent);
+    const featured = {
+      Components: {
+        items: ['Button', 'TextInput', 'Select', 'Dialog', 'Menu', 'Tooltip', 'Mention', 'Conversation'],
+        all: ['See all 57', '/components'],
+      },
+      Utilities: {
+        items: ['useField', 'usePopover', 'useTooltip', 'useMentions', 'useRovingFocus', 'useCombobox', 'useHotkey', 'useDropzone'],
+        all: ['See all 26', '/utilities'],
+      },
+      Recipes: {
+        items: ['App shell', 'Sign-in and sign-up', 'Data table', 'Command palette', 'Chat composer mentions', 'Tool call', 'Reasoning', 'File upload'],
+        all: ['See all 19', '/recipes'],
+      },
+    };
+    for (const [name, { items: expected, all }] of Object.entries(featured)) {
+      expect(items(name), name).toEqual(expected);
+      expect(region(name).getByRole('link', { name: all[0] }).getAttribute('href'), name).toBe(all[1]);
+    }
+    for (const name of ['Foundations', 'Tools']) {
+      expect(region(name).queryAllByRole('link', { name: /^See all/ }), name).toEqual([]);
+    }
+    expect(screen.queryByRole('link', { name: 'Alert' })).toBeNull();
+    expect(region('Foundations').getByRole('link', { name: 'Get started' })).toBeTruthy();
   });
 
   it('features only hrefs that belong to the group, once each', () => {

@@ -1,6 +1,6 @@
 import { Stack } from '@tounsoo/todae/stack';
 import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
-import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
+import { DICTIONARIES, homeGroups } from '../lib/i18n/dictionaries';
 import { HomeShowcase } from './HomeShowcase';
 import { ArrowIcon } from './icons';
 import { SiteButtonLink } from './SiteButtonLink';
@@ -32,17 +32,13 @@ export function HomeContent({ locale }: { locale: Locale }) {
         </div>
       </section>
       <div className="home-groups">
-        {localizedGroups(locale).map((group) => (
+        {homeGroups(locale).map((group) => (
           <section key={group.id} className="home-group" aria-labelledby={`home-${group.id}`}>
             <Stack.Root direction="row" justify="between" align="baseline">
               <h2 id={`home-${group.id}`}>{group.label}</h2>
-              <span className="home-group-count">
-                {group.links.length === 1
-                  ? dict.groupCountOne
-                  : dict.groupCount.replace('{count}', String(group.links.length))}
-              </span>
+              <span className="home-group-count">{group.countLabel}</span>
             </Stack.Root>
-            <p>{dict.groupBlurbs[group.id]}</p>
+            <p>{group.blurb}</p>
             <Stack.Root as="ul" direction="row" wrap gap="condensed">
               {group.links.map(([href, label]) => (
                 <li key={href}>
@@ -50,6 +46,11 @@ export function HomeContent({ locale }: { locale: Locale }) {
                 </li>
               ))}
             </Stack.Root>
+            {group.seeAll ? (
+              <SiteLink className="home-group-all" href={group.seeAll[0]} aria-describedby={`home-${group.id}`}>
+                {group.seeAll[1]}
+              </SiteLink>
+            ) : null}
           </section>
         ))}
       </div>

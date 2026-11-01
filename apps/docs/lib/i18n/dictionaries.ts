@@ -1,4 +1,4 @@
-import { childLinks, SITE_GROUPS, type IndexGroupId, type SiteHref } from '../../components/siteGroups';
+import { childLinks, flatLinks, HOME_FEATURED, INDEX_GROUPS, SITE_GROUPS, type IndexGroupId, type SiteHref } from '../../components/siteGroups';
 import { localizePath, type Locale } from './config';
 
 type GroupId = (typeof SITE_GROUPS)[number]['id'];
@@ -37,6 +37,8 @@ export type Dictionary = {
   /** Pages in a section; `{count}` is the number. */
   groupCount: string;
   groupCountOne: string;
+  /** The home page's link to a section's catalog; `{count}` is the number of pages the catalog lists. */
+  seeAll: string;
   /** Accessible name of the language switcher. */
   languageNav: string;
   /** Shown above a page that has no translation yet. */
@@ -117,6 +119,7 @@ const en: Dictionary = {
   },
   groupCount: '{count} pages',
   groupCountOne: '1 page',
+  seeAll: 'See all {count}',
   languageNav: 'Language',
   untranslated: 'This page is not translated yet, so it is shown in English.',
   contribute: 'Help translate it',
@@ -193,6 +196,7 @@ const ko: Dictionary = {
   },
   groupCount: '{count}개 페이지',
   groupCountOne: '1개 페이지',
+  seeAll: '전체 {count}개 보기',
   languageNav: '언어',
   untranslated: '이 페이지는 아직 한국어로 번역되지 않아 영어 원문으로 보여 드립니다.',
   contribute: '번역에 참여하기',
@@ -269,4 +273,34 @@ export function catalog(locale: Locale, id: IndexGroupId) {
   const group = localizedGroups(locale).find((item) => item.id === id);
   if (!group) throw new Error(`SITE_GROUPS has no ${id} group`);
   return { title: group.label, description: DICTIONARIES[locale].groupBlurbs[id], links: group.links };
+}
+
+function isIndexGroup(id: string): id is IndexGroupId {
+  return INDEX_GROUPS.some((indexId) => indexId === id);
+}
+
+/** One card per section for the home page. A catalog section shows its featured items and a link to the catalog; any other shows its parent links. */
+export function homeGroups(locale: Locale) {
+  const dict = DICTIONARIES[locale];
+  return SITE_GROUPS.map((group) => {
+    const count: number = group.links.length;
+    const card = {
+      id: group.id,
+      label: dict.groups[group.id] ?? group.label,
+      blurb: dict.groupBlurbs[group.id],
+      countLabel: count === 1 ? dict.groupCountOne : dict.groupCount.replace('{count}', String(count)),
+    };
+    if (!isIndexGroup(group.id)) {
+      const links = group.links.map(([href, label]): [string, string] => [localizePath(href, locale), dict.links[href] ?? label]);
+      return { ...card, links, seeAll: null };
+    }
+    const english = new Map<string, string>(flatLinks(group.links));
+    const links = HOME_FEATURED[group.id].map((href): [string, string] => {
+      const label = dict.links[href] ?? english.get(href);
+      if (label === undefined) throw new Error(`${href} is featured on the home page but has no link text`);
+      return [localizePath(href, locale), label];
+    });
+    const seeAll: [string, string] = [localizePath(`/${group.id}`, locale), dict.seeAll.replace('{count}', String(count))];
+    return { ...card, links, seeAll };
+  });
 }

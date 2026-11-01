@@ -647,8 +647,14 @@ table {
 
 .home-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .home-groups {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .home-group {
@@ -656,13 +662,6 @@ table {
   border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-lg);
   background: var(--todae-color-bg-surface);
-}
-
-@media (min-width: 48rem) {
-  /* The long lists, components and utilities, get the room. */
-  .home-group:has(li:nth-child(10)) {
-    grid-column: span 2;
-  }
 }
 
 .home-group h2 {
@@ -684,7 +683,7 @@ table {
   font-size: 0.9375rem;
 }
 
-.home-group a {
+.home-group li a {
   display: block;
   padding: 0.1875rem 0.625rem;
   border: 1px solid var(--todae-color-border-subtle);
@@ -694,9 +693,21 @@ table {
   text-decoration: none;
 }
 
-.home-group a:hover {
+.home-group li a:hover {
   border-color: var(--todae-color-border-default);
   background: var(--todae-color-bg-highlight);
+}
+
+.home-group-all {
+  display: inline-block;
+  margin-block-start: 1rem;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.home-group-all:hover {
+  color: var(--todae-color-fg-default);
 }
 
 /* ---------- Group index ---------- */

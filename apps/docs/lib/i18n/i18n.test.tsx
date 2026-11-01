@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { useInsertionEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -336,6 +336,26 @@ describe('docs locales', () => {
     const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? '');
     const pages = new Set([...Object.keys(ENGLISH_PAGES)].map((slug) => `/ko/${slug}`));
     for (const href of hrefs) expect(pages.has(href), href).toBe(true);
+  });
+
+  it('features eight items in the Korean home page with Korean see-all links', () => {
+    render(<HomeContent locale="ko" />);
+    const region = (name: string) => within(screen.getByRole('region', { name }));
+    expect(region('컴포넌트').getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Button',
+      'TextInput',
+      'Select',
+      'Dialog',
+      'Menu',
+      'Tooltip',
+      'Mention',
+      'Conversation',
+    ]);
+    expect(region('기초').getAllByRole('listitem').map((item) => item.textContent)).toContain('시작하기');
+    const all = (name: string, text: string) => region(name).getByRole('link', { name: text }).getAttribute('href');
+    expect(all('컴포넌트', '전체 57개 보기')).toBe('/ko/components');
+    expect(all('유틸리티', '전체 26개 보기')).toBe('/ko/utilities');
+    expect(all('레시피', '전체 19개 보기')).toBe('/ko/recipes');
   });
 
   it('keeps MDX links in the reader’s language', () => {
