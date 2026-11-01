@@ -341,7 +341,9 @@ describe('docs locales', () => {
   it('translates the Korean mention keyboard table and keeps the key names', () => {
     const page = readFileSync(join(APP, 'ko/mention/page.mdx'), 'utf8');
     const table = page.slice(page.indexOf('## 키보드'), page.indexOf('## 피크'));
-    expect(table).toContain('| 키 | 제안 목록 | 멘션 |');
+    expect(table).toContain('<Table.HeaderCell scope="col">키</Table.HeaderCell>');
+    expect(table).toContain('<Table.HeaderCell scope="col">제안 목록</Table.HeaderCell>');
+    expect(table).toContain('<Table.HeaderCell scope="col">멘션</Table.HeaderCell>');
     expect(table).toContain('Enter 또는 Tab');
     expect(table).not.toMatch(/\bor\b/);
     expect(table).toContain('활성 옵션을 옮깁니다');
