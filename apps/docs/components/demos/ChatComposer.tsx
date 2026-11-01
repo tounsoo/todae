@@ -158,9 +158,11 @@ function MentionField({
             rows: 1,
             spellCheck: false,
             className: bare ? `${styles.area} ${styles.input}` : styles.area,
+            onPointerDown: () => {
+              setDismissedKey(null);
+            },
             onFocus: () => {
               setFocused(true);
-              setDismissedKey(null);
             },
             onBlur: () => {
               setFocused(false);
