@@ -1,0 +1,17 @@
+# 0005. Docs changes are checked with the verify procedure
+
+- **Date:** 2026-11-01
+- **Status:** Active
+- **Source:** The verify skill added for the docs site.
+
+## Decision
+
+A docs change is checked with the verify skill at `.cursor/skills/verify/SKILL.md`. The procedure has five steps. LAUNCH starts the docs app on port 3321, or opens the Vercel preview whose deployment SHA is the pull request head. DOCTOR checks that the preview is ready, that the deployment SHA matches, and that the routes return 200. DRIVE opens the touched pages in English and Korean at 1280 and 390 CSS pixels wide, and checks the header links and the home group counts from `SITE_GROUPS`. EVIDENCE matches the change. A UI change needs screenshots at both widths in both languages. A docs or text change needs the rendered text. A logic change needs test output. A CI or config change needs the run link. CLEANUP stops the server the run started and leaves the evidence in `.verify/evidence`.
+
+The skill lives under `.cursor/skills/` because `.claude/` and `.agents/` stay unchanged. `.claude/skills/` is the pstack port.
+
+Every pull request body has a Verification section, an Unverified checks section, and a Remaining risks section. `None` is allowed only when that is true. A pull request missing any of the three is not ready for review.
+
+## Why
+
+The docs site is the reader-facing check for a docs change, and a unit test does not show the header, the locale, or the preview SHA. One procedure keeps that check the same from one pull request to the next.
