@@ -45,7 +45,7 @@ That runs `pnpm --filter docs exec next dev --port 3321` and waits until `http:/
 Run doctor before trusting a page. `run` does this first and stops before it writes a passing report.
 
 - Read the preview deployment yourself. Its state is `READY`, and `meta.githubCommitSha` equals the pull request head, full 40 characters. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper compares the two flags and labels the report line `source=caller-asserted`. It does not call the Vercel API. A caller-asserted line is proof only together with the deployment id you read.
-- Do not pass `https://todae.omsoo.design`. The helper rejects that host.
+- The helper accepts a local URL on port 3321, or an `https` URL on `*.vercel.app`. Other hosts, including `https://todae.omsoo.design`, are rejected.
 - A local URL is `http://127.0.0.1:3321` or `http://localhost:3321`. The pid file is `.verify/scratch/server.json`, the process command contains `next` and `3321`, `git rev-parse HEAD` equals `--expect-sha`, and `apps/docs` plus `packages/design-system` are clean.
 - Each path in `--paths` returns 200 and the HTML contains `data-appearance`. A login wall fails this check.
 

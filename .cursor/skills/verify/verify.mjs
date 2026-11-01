@@ -354,17 +354,20 @@ async function pathsOf(flags) {
   return out;
 }
 
+function isLoopback(hostname) {
+  if (hostname === 'localhost' || hostname === 'localhost.' || hostname === '0.0.0.0' || hostname === '[::1]') return true;
+  if (hostname.startsWith('127.')) return true;
+  if (hostname.startsWith('[::ffff:127.') || hostname === '[::ffff:7f00:1]') return true;
+  return false;
+}
+
 async function assertSha(flags, origin) {
   const expectSha = fullSha(flags['expect-sha']);
   const originUrl = new URL(origin);
-  if (originUrl.hostname === 'todae.omsoo.design') {
-    throw new Error('todae.omsoo.design tracks docs-stable. Pass the preview deployment URL.');
-  }
   if (process.env.VERIFY_URL && flags.url && new URL(process.env.VERIFY_URL).origin !== new URL(flags.url).origin) {
     throw new Error('VERIFY_URL origin does not match --url');
   }
-  const loopback = ['127.0.0.1', 'localhost', '::1', '0.0.0.0'].includes(originUrl.hostname);
-  if (loopback) {
+  if (isLoopback(originUrl.hostname)) {
     if (originUrl.port !== String(PORT)) throw new Error(`local verify only drives port ${PORT}`);
     const record = await readPid();
     if (!(await ownedServer(record))) throw new Error(`refusing ${origin} because this run does not own the docs server on port ${PORT}`);
@@ -373,6 +376,9 @@ async function assertSha(flags, origin) {
     const dirty = await git(['status', '--porcelain', '--', 'apps/docs', 'packages/design-system']);
     if (dirty) throw new Error('local docs or package tree is dirty, so the server is not that sha');
     return { expectSha, deploymentSha: head, mode: 'local', source: 'git-head' };
+  }
+  if (originUrl.protocol !== 'https:' || !originUrl.hostname.endsWith('.vercel.app')) {
+    throw new Error('pass http://127.0.0.1:3321 or an https://*.vercel.app deployment URL');
   }
   if (!flags['deployment-sha']) throw new Error('pass --deployment-sha from the preview deployment meta.githubCommitSha');
   const deploymentSha = fullSha(flags['deployment-sha']);
