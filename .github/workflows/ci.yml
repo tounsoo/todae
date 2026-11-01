@@ -48,38 +48,16 @@ jobs:
           # The changeset check compares the pull request with its base branch.
           fetch-depth: 0
 
-      - id: change
+      - &classify-diff
+        id: change
         name: Classify the diff
-        run: |
-          set -euo pipefail
-          bash .github/scripts/change-class.sh --self-test
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.event.pull_request.base.sha }}"
-            head="${{ github.event.pull_request.head.sha }}"
-            diff_args=("$base...$head")
-          else
-            base="${{ github.event.before }}"
-            head="${{ github.sha }}"
-            diff_args=("$base" "$head")
-          fi
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (commits not in the checkout)"
-            exit 0
-          fi
-          # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
-          # A diff that cannot be read, such as two histories with no merge base, runs every check.
-          if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (diff failed)"
-            exit 0
-          fi
-          class=$(printf '%s\n' "$files" | bash .github/scripts/change-class.sh)
-          echo "class=$class" >> "$GITHUB_OUTPUT"
-          echo "class=$class"
-          if [ "$class" = prose ]; then
-            printf '%s\n' "$files"
-          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: bash .github/scripts/classify-diff.sh
 
       - uses: ./.github/actions/setup
 
@@ -110,19 +88,17 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
-      # The docs tests import the package from dist, and some browser demos import its subpath entries.
       - name: Build the package
         id: package-build
         if: ${{ !cancelled() }}
         run: pnpm build:ds
-      # Fernway restores this copy. A failed save does not fail the job, because a miss makes Fernway build dist itself.
       - name: Share the package build
         if: ${{ steps.package-build.outcome == 'success' }}
         continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: packages/design-system/dist
-          key: ds-dist-${{ github.run_id }}
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Bundle size
         if: ${{ !cancelled() }}
         run: pnpm size:check
@@ -147,38 +123,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - id: change
-        name: Classify the diff
-        run: |
-          set -euo pipefail
-          bash .github/scripts/change-class.sh --self-test
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.event.pull_request.base.sha }}"
-            head="${{ github.event.pull_request.head.sha }}"
-            diff_args=("$base...$head")
-          else
-            base="${{ github.event.before }}"
-            head="${{ github.sha }}"
-            diff_args=("$base" "$head")
-          fi
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (commits not in the checkout)"
-            exit 0
-          fi
-          # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
-          # A diff that cannot be read, such as two histories with no merge base, runs every check.
-          if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (diff failed)"
-            exit 0
-          fi
-          class=$(printf '%s\n' "$files" | bash .github/scripts/change-class.sh)
-          echo "class=$class" >> "$GITHUB_OUTPUT"
-          echo "class=$class"
-          if [ "$class" = prose ]; then
-            printf '%s\n' "$files"
-          fi
+      - *classify-diff
 
       - uses: ./.github/actions/setup
 
@@ -194,14 +139,13 @@ jobs:
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
 
-      # Browser tests import the built package. Restoring here overlaps the unit tests instead of waiting for them.
       - name: Restore the package build
         id: package-dist
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         uses: actions/cache/restore@v4
         with:
           path: packages/design-system/dist
-          key: ds-dist-${{ github.run_id }}
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Build the package
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
         run: pnpm build:ds
@@ -227,20 +171,9 @@ jobs:
       - name: Require static, build, and fernway
         run: |
           set -euo pipefail
-          fail=0
-          for pair in \
-            "static:${{ needs.static.result }}" \
-            "build:${{ needs.build.result }}" \
-            "fernway:${{ needs.fernway.result }}"
-          do
-            name="${pair%%:*}"
-            result="${pair#*:}"
-            printf '%s %s\n' "$name" "$result"
-            if [ "$result" != "success" ]; then
-              fail=1
-            fi
-          done
-          exit "$fail"
+          needs='${{ toJSON(needs) }}'
+          printf '%s\n' "$needs" | jq -r 'to_entries[] | "\(.key) \(.value.result)"'
+          printf '%s\n' "$needs" | jq -e '[.[].result] | all(. == "success")' >/dev/null
 
   # Drafts skip Checks. This job still runs, as Token API does, so a lint or type error fails before review.
   check:
