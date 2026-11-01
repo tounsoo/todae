@@ -230,7 +230,7 @@ jobs:
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       - run: pnpm --filter docs test:visual
-      - run: pnpm --filter docs exec playwright install --with-deps webkit
+      - run: pnpm --filter docs exec playwright install --with-deps webkit firefox
       - run: pnpm --filter docs test:peek
       # The report shows each changed shot; test-results holds its new image as `<name>-actual.png`.
       - if: failure()

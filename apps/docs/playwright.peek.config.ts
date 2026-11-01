@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: 'peek',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  reporter: process.env.CI ? 'list' : 'list',
+  reporter: 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
     locale: 'en-US',
@@ -16,6 +16,7 @@ export default defineConfig({
   projects: [
     { name: 'iphone', use: { ...devices['iPhone 13'] } },
     { name: 'chrome', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox-touch', use: { ...devices['Desktop Firefox'], hasTouch: true } },
   ],
   webServer: {
     command: `npx next start --port ${PORT}`,

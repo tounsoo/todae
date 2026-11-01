@@ -4,14 +4,45 @@ const PEEK = 'Design systems · Active now';
 
 async function mentionPoint(page: Page) {
   const word = page.locator('[data-kind="@"]').filter({ hasText: '@Mina Park' }).first();
-  await word.scrollIntoViewIfNeeded();
-  const box = await word.boundingBox();
-  if (!box) throw new Error('no on-screen box for @Mina Park');
-  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const field = page.getByRole('textbox', { name: 'Message' });
+  await field.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'center' }));
+  const fromHighlight = await word.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, width: rect.width, height: rect.height };
+  }).catch(() => null);
+  if (fromHighlight && fromHighlight.width > 0 && fromHighlight.height > 0) {
+    return { x: fromHighlight.x, y: fromHighlight.y };
+  }
+  // Firefox hides the highlight layer, so the word's place is measured on the textarea.
+  return field.evaluate((el) => {
+    const node = el as HTMLTextAreaElement;
+    const value = node.value;
+    const at = value.indexOf('@Mina Park');
+    const word = '@Mina Park';
+    if (at < 0) throw new Error('no @Mina Park in the field');
+    const style = getComputedStyle(node);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('no canvas');
+    ctx.font = style.font;
+    const before = ctx.measureText(value.slice(0, at)).width;
+    const mid = ctx.measureText(word).width / 2;
+    const rect = node.getBoundingClientRect();
+    const line = Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.2;
+    return {
+      x: rect.x + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft) + before + mid,
+      y: rect.y + Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.paddingTop) + line / 2,
+    };
+  });
+}
+
+function touchProject() {
+  const name = test.info().project.name;
+  return name === 'iphone' || name === 'firefox-touch';
 }
 
 async function tap(page: Page, x: number, y: number) {
-  if (test.info().project.name === 'iphone') await page.touchscreen.tap(x, y);
+  if (touchProject()) await page.touchscreen.tap(x, y);
   else await page.mouse.click(x, y);
 }
 
@@ -43,4 +74,8 @@ test('an outside tap closes the mention peek', async ({ page }) => {
   });
   await tap(page, blank.x, blank.y);
   await expect(peek).toHaveCount(0);
+
+  const again = await mentionPoint(page);
+  await tap(page, again.x, again.y);
+  await expect(peek).toBeVisible();
 });
