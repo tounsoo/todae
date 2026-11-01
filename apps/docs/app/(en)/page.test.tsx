@@ -34,6 +34,12 @@ describe('HomePage', () => {
     }
   });
 
+  it('leaves the catalog routes off the home page', () => {
+    const { container } = render(<HomePage />);
+    const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href'));
+    for (const id of INDEX_GROUPS) expect(hrefs, id).not.toContain(`/${id}`);
+  });
+
   it('lists every docs page in a section', () => {
     const listed = new Set<string>(SITE_GROUPS.flatMap((group) => flatLinks(group.links).map(([href]) => href)));
     const catalogs = new Set(INDEX_GROUPS.map((id) => `/${id}`));

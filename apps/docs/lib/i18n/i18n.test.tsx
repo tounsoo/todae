@@ -387,8 +387,11 @@ describe('docs locales', () => {
 
   it('keeps catalog routes off content pages of the same slug', () => {
     for (const id of INDEX_GROUPS) {
-      expect(existsSync(join(APP, '(en)', id, 'page.mdx')), id).toBe(false);
-      expect(existsSync(join(APP, 'ko', id, 'page.mdx')), id).toBe(false);
+      for (const localeDir of ['(en)', 'ko']) {
+        for (const file of PAGE_FILES) {
+          expect(existsSync(join(APP, localeDir, id, file)), `${localeDir}/${id}/${file}`).toBe(file === 'page.tsx');
+        }
+      }
       const group = SITE_GROUPS.find((item) => item.id === id);
       if (!group) throw new Error(`SITE_GROUPS has no ${id} group`);
       const hrefs = flatLinks(group.links).map(([href]) => href);

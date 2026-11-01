@@ -17,10 +17,12 @@ import { Providers } from './Providers';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
 import { SiteLink } from './SiteLink';
+import type { IndexGroupId } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
 
 const REPO = 'https://github.com/tounsoo/todae';
+const COMPONENTS_CATALOG = '/components' satisfies `/${IndexGroupId}`;
 
 /** The document for one locale. Each locale's root layout renders it, so `<html lang>` is right from the server. */
 export function SiteShell({
@@ -36,7 +38,7 @@ export function SiteShell({
   const dict = DICTIONARIES[locale];
   const top = [
     ['/guides/get-started', dict.topLinks.start],
-    ['/components', dict.topLinks.components],
+    [COMPONENTS_CATALOG, dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
   return (

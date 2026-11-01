@@ -6,7 +6,7 @@
 
 ## Decision
 
-The docs site has a catalog page for Components, Utilities and Recipes, in English and Korean. The header Components link opens `/components`, and `/ko/components` in Korean. The home page lists stay as they are.
+The docs site has a catalog page for Components, Utilities and Recipes, in English and Korean. The header Components link opens `/components`, and `/ko/components` in Korean. The utilities and recipes catalogs have no link from the header or the home page in this change. The home page lists stay as they are.
 
 This ships as two pull requests. The first adds the catalog pages and the header link. The second adds a featured set on the home page. That set waits for Ben's approval and is not part of this change.
 
