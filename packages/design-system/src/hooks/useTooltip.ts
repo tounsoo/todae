@@ -89,11 +89,6 @@ export type UseTooltipResult<I extends boolean = false> = {
 // For when the delay tokens can't be read, such as without Todae's stylesheet.
 const SHOW_DELAY_MS = 300;
 const HIDE_DELAY_MS = 100;
-const SKIP_DELAY_MS = 300;
-
-function openedFromHover(reason: TooltipOpenReason): boolean {
-  return reason === 'hover' || reason === 'hover-bridge';
-}
 
 /** The delay policy a tooltip or a mention peek reads from the trigger. */
 export function readTooltipPolicy(
@@ -202,7 +197,6 @@ export function useTooltipInternal<I extends boolean = false>(
   const hideDelayRef = useRef(hideDelay);
   const skipDelayRef = useRef(skipDelay);
   const delayFocusRef = useRef(delayFocus);
-  const controlledRef = useRef(openProp !== undefined);
   const requestedHoverOpenRef = useRef(false);
   const countedHoverRef = useRef(false);
   const enabledRef = useRef(enabled);
@@ -214,7 +208,6 @@ export function useTooltipInternal<I extends boolean = false>(
   hideDelayRef.current = hideDelay;
   skipDelayRef.current = skipDelay;
   delayFocusRef.current = delayFocus;
-  controlledRef.current = openProp !== undefined;
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
 
@@ -223,15 +216,15 @@ export function useTooltipInternal<I extends boolean = false>(
       applyTooltipCommands(commands, timerRef, {
         onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
         commit: (next, reason) => {
-          requestedHoverOpenRef.current = next && openedFromHover(reason);
+          requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
           setValue(next);
           onOpenChangeRef.current?.(next, reason);
-          if (controlledRef.current) setControlledEpoch((epoch) => epoch + 1);
+          if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
       });
     },
-    [setValue],
+    [openProp, setValue],
   );
 
   const dispatch = useCallback(
@@ -242,12 +235,12 @@ export function useTooltipInternal<I extends boolean = false>(
         hideDelay: hideDelayRef.current,
         delayFocus: delayFocusRef.current,
       });
-      const skipHoverShowDelay =
+      const warm =
         event.kind === 'acquire' &&
         event.hold === 'hover' &&
-        hoverShowSkipsDelay(Date.now(), skipDelayRef.current ?? SKIP_DELAY_MS);
+        hoverShowSkipsDelay(Date.now(), skipDelayRef.current ?? SHOW_DELAY_MS);
       const result = step({
-        policy: skipHoverShowDelay ? { ...policy, skipHoverShowDelay: true } : policy,
+        policy: warm ? { ...policy, skipHoverShowDelay: true } : policy,
         state: intentRef.current,
         open: openRef.current,
         event,
@@ -300,18 +293,12 @@ export function useTooltipInternal<I extends boolean = false>(
   }, [open, restoreEpoch]);
 
   useLayoutEffect(() => {
-    if (open && requestedHoverOpenRef.current && !countedHoverRef.current) {
-      countedHoverRef.current = true;
-      retainHoverTip();
-      return;
-    }
-    if (!open && countedHoverRef.current) {
-      countedHoverRef.current = false;
-      requestedHoverOpenRef.current = false;
-      releaseHoverTip(Date.now());
-      return;
-    }
+    const count = open && requestedHoverOpenRef.current;
     if (!open) requestedHoverOpenRef.current = false;
+    if (count === countedHoverRef.current) return;
+    countedHoverRef.current = count;
+    if (count) retainHoverTip();
+    else releaseHoverTip(Date.now());
   }, [open, controlledEpoch]);
 
   useEffect(() => {

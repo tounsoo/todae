@@ -122,9 +122,8 @@ function hold(
   const token = state.seq + 1;
   if (after) {
     const reason = showReason(event);
-    const hoverShow = reason === 'hover' || reason === 'hover-bridge';
-    const immediate = (reason === 'focus' && !policy.delayFocus) || (policy.skipHoverShowDelay === true && hoverShow);
-    if (immediate) {
+    const warmHover = policy.skipHoverShowDelay === true && (reason === 'hover' || reason === 'hover-bridge');
+    if ((reason === 'focus' && !policy.delayFocus) || warmHover) {
       return {
         state: { ...next, pending: null, seq: token },
         commands: [{ kind: 'commit', open: true, reason }],
