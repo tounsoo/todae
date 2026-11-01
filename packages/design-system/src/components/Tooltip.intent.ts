@@ -16,6 +16,7 @@ export type TooltipPolicy = {
   readonly hideDelayMs: number;
   /** Focus uses the show delay. Tooltips omit it and show on focus at once. */
   readonly delayFocus?: boolean;
+  readonly skipHoverShowDelay?: boolean;
 };
 
 export type TooltipEvent =
@@ -121,10 +122,11 @@ function hold(
   const token = state.seq + 1;
   if (after) {
     const reason = showReason(event);
-    if (reason === 'focus' && !policy.delayFocus) {
+    const warmHover = policy.skipHoverShowDelay === true && (reason === 'hover' || reason === 'hover-bridge');
+    if ((reason === 'focus' && !policy.delayFocus) || warmHover) {
       return {
         state: { ...next, pending: null, seq: token },
-        commands: [{ kind: 'commit', open: true, reason: 'focus' }],
+        commands: [{ kind: 'commit', open: true, reason }],
       };
     }
     return {

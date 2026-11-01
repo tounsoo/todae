@@ -45,6 +45,14 @@ export const meta = {
       description: 'Hide delay in milliseconds. Without it, the tooltip.delay.hide token as the trigger computes it.',
     },
     {
+      name: 'skipDelay',
+      type: 'number',
+      required: false,
+      default: '300',
+      description:
+        'Milliseconds this tip skips its show delay after a hover tip closes. While a hover tip is open, this tip skips that delay too. Focus does not start it.',
+    },
+    {
       name: 'enabled',
       type: 'boolean',
       required: false,

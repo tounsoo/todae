@@ -967,15 +967,16 @@
     "(section order)": "26fee290bbab"
   },
   "tooltip": {
-    "(top)": "c6ad05ceec66",
-    "# Tooltip": "3e0fd9fdfe39",
+    "(top)": "d6905641ee72",
+    "# Tooltip": "a6dda7750684",
+    "## Warm-up": "a5a722229b03",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
     "## Accessible composition": "da1671bee85f",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
-    "(section order)": "28600b829282"
+    "(section order)": "21c10c21c07e"
   },
   "tree": {
     "(top)": "3fd9d6322503",
@@ -1190,7 +1191,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "01b4c07ef8fa",
+    "# useTooltip": "a19a17a88bfb",
     "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",

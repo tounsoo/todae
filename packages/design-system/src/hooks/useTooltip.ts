@@ -19,6 +19,7 @@ import {
   type TooltipOpenReason,
   type TooltipPolicy,
 } from '../components/Tooltip.intent.js';
+import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from '../components/Tooltip.warmth.js';
 import type { TooltipWire } from '../components/Tooltip.wire.js';
 import { firstTabbable } from '../overlay/tabbables.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -48,6 +49,7 @@ export type UseTooltipOptions<I extends boolean = false> = {
   interactive?: I;
   showDelay?: number;
   hideDelay?: number;
+  skipDelay?: number;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: TooltipOpenReason) => void;
@@ -172,6 +174,7 @@ export function useTooltipInternal<I extends boolean = false>(
     interactive = false as I,
     showDelay,
     hideDelay,
+    skipDelay,
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -180,6 +183,7 @@ export function useTooltipInternal<I extends boolean = false>(
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
+  const [controlledEpoch, setControlledEpoch] = useState(0);
   const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
   const anchorName = anchorNameOption ?? `--todae-tooltip-${uid}`;
@@ -191,7 +195,10 @@ export function useTooltipInternal<I extends boolean = false>(
   const onOpenChangeRef = useRef(onOpenChange);
   const showDelayRef = useRef(showDelay);
   const hideDelayRef = useRef(hideDelay);
+  const skipDelayRef = useRef(skipDelay);
   const delayFocusRef = useRef(delayFocus);
+  const requestedHoverOpenRef = useRef(false);
+  const countedHoverRef = useRef(false);
   const enabledRef = useRef(enabled);
   const holdsFocusRef = useRef(holdsFocus);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
@@ -199,6 +206,7 @@ export function useTooltipInternal<I extends boolean = false>(
   onOpenChangeRef.current = onOpenChange;
   showDelayRef.current = showDelay;
   hideDelayRef.current = hideDelay;
+  skipDelayRef.current = skipDelay;
   delayFocusRef.current = delayFocus;
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
@@ -207,25 +215,32 @@ export function useTooltipInternal<I extends boolean = false>(
     (commands: readonly TooltipCommand[]) => {
       applyTooltipCommands(commands, timerRef, {
         onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
-        commit: (open, reason) => {
-          setValue(open);
-          onOpenChangeRef.current?.(open, reason);
+        commit: (next, reason) => {
+          requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
+          setValue(next);
+          onOpenChangeRef.current?.(next, reason);
+          if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
       });
     },
-    [setValue],
+    [openProp, setValue],
   );
 
   const dispatch = useCallback(
     (event: TooltipEvent, restoreFocus = false) => {
       if (!enabledRef.current && event.kind !== 'delay-elapsed') return;
+      const policy = readTooltipPolicy(triggerRef.current, {
+        showDelay: showDelayRef.current,
+        hideDelay: hideDelayRef.current,
+        delayFocus: delayFocusRef.current,
+      });
+      const warm =
+        event.kind === 'acquire' &&
+        event.hold === 'hover' &&
+        hoverShowSkipsDelay(Date.now(), skipDelayRef.current ?? SHOW_DELAY_MS);
       const result = step({
-        policy: readTooltipPolicy(triggerRef.current, {
-          showDelay: showDelayRef.current,
-          hideDelay: hideDelayRef.current,
-          delayFocus: delayFocusRef.current,
-        }),
+        policy: warm ? { ...policy, skipHoverShowDelay: true } : policy,
         state: intentRef.current,
         open: openRef.current,
         event,
@@ -276,6 +291,15 @@ export function useTooltipInternal<I extends boolean = false>(
     if (!trigger) return;
     (firstTabbable(trigger) ?? trigger).focus();
   }, [open, restoreEpoch]);
+
+  useLayoutEffect(() => {
+    const count = open && requestedHoverOpenRef.current;
+    if (!open) requestedHoverOpenRef.current = false;
+    if (count === countedHoverRef.current) return;
+    countedHoverRef.current = count;
+    if (count) retainHoverTip();
+    else releaseHoverTip(Date.now());
+  }, [open, controlledEpoch]);
 
   useEffect(() => {
     if (!open || !enabled) return;
@@ -329,6 +353,9 @@ export function useTooltipInternal<I extends boolean = false>(
   useEffect(
     () => () => {
       if (timerRef.current != null) window.clearTimeout(timerRef.current);
+      if (!countedHoverRef.current) return;
+      countedHoverRef.current = false;
+      releaseHoverTip(Date.now());
     },
     [],
   );
