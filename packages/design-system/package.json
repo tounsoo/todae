@@ -1,6 +1,6 @@
 {
   "name": "@tounsoo/todae",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "A low-level React design system to build a company design system on: components, headless hooks and DTCG design tokens.",
   "keywords": [
     "design-system",
