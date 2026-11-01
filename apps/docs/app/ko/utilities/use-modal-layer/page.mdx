@@ -20,6 +20,8 @@ function YourDialog({ open, onClose, labelledBy, children }: YourDialogProps) {
 
 대화 상자는 `open`이 true이고 `showModal()`로 열리면 스택에 들어가고, `open`이 false가 된 뒤에도 `close()`까지 남습니다. 둘의 순서는 상관없습니다. 훅은 자신을 호출하는 컴포넌트가 렌더링될 때마다 `ref`를 읽으므로, `<dialog>`는 그 컴포넌트에서 렌더링하세요. 모달 `<dialog>`는 자기 바깥의 모든 것을 inert로 만들므로, [Toast.Region](/toast)은 맨 앞의 모달 안으로 토스트를 옮겨 계속 쓸 수 있게 합니다. 이 훅이 없으면 토스트는 직접 만든 대화 상자 아래에서 inert로 남습니다.
 
+동작하는 모달은 [Dialog](/dialog)에 있습니다. [BottomSheet](/bottomsheet)도 같은 스택에 스스로 들어갑니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 모달 스택에 들어가는 것뿐입니다. 대화 상자가 스택에 있는 동안 [Toast.Region](/toast)은 토스트를 그 안으로 옮기고, [useAnnouncer](/utilities/use-announcer)는 그 안의 라이브 영역에 메시지를 씁니다. 그래서 뒤의 페이지가 inert인 동안에도 둘 다 닿을 수 있습니다. 훅은 `<dialog>`에 속성을 더하지 않습니다.

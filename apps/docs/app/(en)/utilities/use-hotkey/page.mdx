@@ -1,6 +1,33 @@
+import { SearchShortcut } from '../../../../components/demos/HotkeyDemo';
+
 # useHotkey
 
 `useHotkey(hotkey, handler, options)` runs `handler` when a key pressed anywhere on the page matches `hotkey`. It listens for `keydown` on the document and prevents the default of a key it matches, so the browser's own shortcut does not also run.
+
+Press Alt+T. The hook listens on the document, so the shortcut runs with focus anywhere on the page, and the button names it for assistive technology.
+
+```tsx
+import { Button, Stack, Text, useHotkey } from '@tounsoo/todae';
+import { useState } from 'react';
+
+export function SearchShortcut() {
+  const [open, setOpen] = useState(false);
+  const keys = ['Alt+T'];
+  useHotkey(keys, () => setOpen(true));
+  return (
+    <Stack.Root gap="condensed" align="start">
+      <Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
+        Search
+      </Button.Root>
+      <Text.Root>{open ? 'Search is open' : 'Press Alt+T'}</Text.Root>
+    </Stack.Root>
+  );
+}
+```
+
+<Example>
+  <SearchShortcut />
+</Example>
 
 ```tsx
 useHotkey(['Control+K', 'Meta+K'], () => setOpen(true));

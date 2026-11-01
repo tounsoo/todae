@@ -15,6 +15,8 @@ function Mute({ pressed, defaultPressed = false, onPressedChange }: MuteProps) {
 
 `undefined` means uncontrolled, so a controlled empty value is `null`. `setValue` takes a value, not an updater function, and never calls a change callback: call yours, as above, or use [useControlledValue](/utilities/use-controlled-value). Keep one mode for a component's life: going from controlled to uncontrolled shows the hook's own state, not the last controlled value.
 
+[Checkbox](/checkbox) keeps `checked` when you pass it and its own state when you do not, and its live example shows that. The component calls `onCheckedChange`. This hook does not.
+
 ## When to use
 
 **When:** A component of your own with a value prop and a default, where you call the change callback yourself.
