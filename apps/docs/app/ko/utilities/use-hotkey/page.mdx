@@ -1,6 +1,33 @@
+import { SearchShortcut } from '../../../../components/demos/HotkeyDemo';
+
 # useHotkey
 
 `useHotkey(hotkey, handler, options)`는 페이지 어디에서든 누른 키가 `hotkey`와 일치하면 `handler`를 실행합니다. 문서에서 `keydown`을 듣고, 일치한 키의 기본 동작을 막아 브라우저 자체 단축키가 함께 실행되지 않게 합니다.
+
+Alt+T를 누르세요. 훅은 문서에서 듣습니다. 페이지의 어디에 포커스가 있든 단축키가 실행되고, 버튼은 보조 기술에 그 단축키를 알립니다.
+
+```tsx
+import { Button, Stack, Text, useHotkey } from '@tounsoo/todae';
+import { useState } from 'react';
+
+export function SearchShortcut() {
+  const [open, setOpen] = useState(false);
+  const keys = ['Alt+T'];
+  useHotkey(keys, () => setOpen(true));
+  return (
+    <Stack.Root gap="condensed" align="start">
+      <Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
+        Search
+      </Button.Root>
+      <Text.Root>{open ? 'Search is open' : 'Press Alt+T'}</Text.Root>
+    </Stack.Root>
+  );
+}
+```
+
+<Example>
+  <SearchShortcut />
+</Example>
 
 ```tsx
 useHotkey(['Control+K', 'Meta+K'], () => setOpen(true));

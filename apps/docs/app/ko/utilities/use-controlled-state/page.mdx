@@ -15,6 +15,8 @@ function Mute({ pressed, defaultPressed = false, onPressedChange }: MuteProps) {
 
 `undefined`는 비제어를 뜻하므로, 제어 상태의 빈 값은 `null`입니다. `setValue`는 업데이터 함수가 아닌 값을 받고, 변경 콜백을 호출하지 않습니다. 위처럼 직접 호출하거나 [useControlledValue](/utilities/use-controlled-value)를 쓰세요. 컴포넌트가 사는 동안 한 가지 모드를 유지하세요. 제어에서 비제어로 바뀌면 마지막 제어 값이 아니라 훅 자체의 상태가 보입니다.
 
+[Checkbox](/checkbox)는 `checked`를 넘기면 그 값을 유지하고, 넘기지 않으면 자신의 상태를 유지합니다. 동작하는 예시가 그 차이를 보여 줍니다. `onCheckedChange`는 컴포넌트가 호출하며, 이 훅은 호출하지 않습니다.
+
 ## 언제 쓰나요
 
 **언제:** 값 prop과 기본값을 받고 변경 콜백은 직접 호출하는 자체 컴포넌트.

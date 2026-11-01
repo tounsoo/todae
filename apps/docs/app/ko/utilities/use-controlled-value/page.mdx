@@ -1,3 +1,5 @@
+import { StatusFilter } from '../../../../components/demos/ControlledValueDemo';
+
 # useControlledValue
 
 `useControlledValue(controlled, defaultValue, onChange)`는 변경 콜백이 들어간 [useControlledState](/utilities/use-controlled-state)입니다. `[value, change]`를 반환합니다. `change(next, ...args)`는 `next`가 마지막 렌더링의 값과 같으면(`Object.is`) 아무것도 하지 않으므로, 한 이벤트 안에서 같은 새 값으로 두 번 호출하면 `onChange`도 두 번 호출됩니다. 그렇지 않으면 비제어일 때 `next`를 저장한 다음, 제어 여부와 관계없이 `onChange(next, ...args)`를 호출합니다.
@@ -13,6 +15,64 @@ function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
   );
 }
 ```
+
+Set open을 두 번 누르세요. 두 번째는 이미 화면에 있는 값이라 `onChange`가 실행되지 않습니다. Reset parent는 훅 밖에서 제어 값을 씁니다.
+
+```tsx
+import { Button, RadioGroup, Stack, Text, useControlledValue } from '@tounsoo/todae';
+import { useState } from 'react';
+
+function Filter({
+  label,
+  value,
+  defaultValue = 'all',
+  onValueChange,
+}: {
+  label: string;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (next: string) => void;
+}) {
+  const [current, change] = useControlledValue(value, defaultValue, onValueChange);
+  return (
+    <Stack.Root gap="condensed" align="start">
+      <RadioGroup.Root aria-label={label} value={current} onValueChange={change}>
+        <RadioGroup.Item value="all">All</RadioGroup.Item>
+        <RadioGroup.Item value="open">Open</RadioGroup.Item>
+      </RadioGroup.Root>
+      <Button.Root onClick={() => change('open')}>Set open</Button.Root>
+    </Stack.Root>
+  );
+}
+
+export function StatusFilter() {
+  const [freeChanges, setFreeChanges] = useState(0);
+  const [held, setHeld] = useState('all');
+  const [heldChanges, setHeldChanges] = useState(0);
+  return (
+    <Stack.Root gap="normal" align="start">
+      <Text.Root>Uncontrolled. Changes {freeChanges}.</Text.Root>
+      <Filter label="Uncontrolled status" onValueChange={() => setFreeChanges((count) => count + 1)} />
+      <Text.Root>Controlled. Parent holds {held}. Changes {heldChanges}.</Text.Root>
+      <Filter
+        label="Controlled status"
+        value={held}
+        onValueChange={(next) => {
+          setHeld(next);
+          setHeldChanges((count) => count + 1);
+        }}
+      />
+      <Button.Root variant="secondary" onClick={() => setHeld('all')}>
+        Reset parent
+      </Button.Root>
+    </Stack.Root>
+  );
+}
+```
+
+<Example>
+  <StatusFilter />
+</Example>
 
 이유(reason) 같은 추가 인자는 `onChange`로 그대로 전달됩니다. `useControlledValue<boolean, [reason: string]>(…)`처럼 두 번째 타입 매개변수로 타입을 지정하세요. useControlledState와 마찬가지로 `undefined`는 비제어를 뜻하고, `change`는 업데이터 함수가 아닌 값을 받습니다.
 
