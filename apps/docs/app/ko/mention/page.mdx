@@ -1,3 +1,5 @@
+import { Table } from '@tounsoo/todae/table';
+import { ScrollRegion } from '../../../components/ScrollRegion';
 import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
@@ -24,12 +26,39 @@ const people = defineMentionSource({
 
 ## 키보드
 
-| 키 | 제안 목록 | 멘션 |
-| --- | --- | --- |
-| ArrowDown / ArrowUp | 활성 옵션을 옮깁니다 |  |
-| Enter 또는 Tab | 옵션을 고릅니다. Enter는 보내지 않습니다 | 링크 위에서는 Enter가 그 링크로 이동합니다 |
-| Escape | 목록을 닫습니다 | 피크를 닫습니다. 포커스는 멘션에 남습니다 |
-| Space |  | 피크를 열거나 닫습니다 |
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">키</Table.HeaderCell>
+      <Table.HeaderCell scope="col">제안 목록</Table.HeaderCell>
+      <Table.HeaderCell scope="col">멘션</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">ArrowDown / ArrowUp</Table.HeaderCell>
+      <Table.Cell>활성 옵션을 옮깁니다</Table.Cell>
+      <Table.Cell />
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Enter 또는 Tab</Table.HeaderCell>
+      <Table.Cell>옵션을 고릅니다. Enter는 보내지 않습니다</Table.Cell>
+      <Table.Cell>링크 위에서는 Enter가 그 링크로 이동합니다</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Escape</Table.HeaderCell>
+      <Table.Cell>목록을 닫습니다</Table.Cell>
+      <Table.Cell>피크를 닫습니다. 포커스는 멘션에 남습니다</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Space</Table.HeaderCell>
+      <Table.Cell />
+      <Table.Cell>피크를 열거나 닫습니다</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
 
 캐럿이 토큰 안에 있고 목록이 닫혀 있으면, 텍스트 영역의 설명은 캐럿 피크입니다. 그 피크는 포커스를 받지 않습니다. Escape는 목록을 먼저 닫고, 그다음 피크를 닫습니다.
 

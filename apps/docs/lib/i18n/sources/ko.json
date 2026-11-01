@@ -521,9 +521,9 @@
     "(section order)": "e12b559a1ab2"
   },
   "mention": {
-    "(top)": "ce8a5835538a",
+    "(top)": "a6444b7f1ffd",
     "# Mention": "1e28ab336144",
-    "## Keyboard": "9e1eb0158d02",
+    "## Keyboard": "85c57b097eb7",
     "## Peek": "233f9efb0fbc",
     "## When to use": "0d368d8f5054",
     "## When not": "e95dcd9fd900",
@@ -585,8 +585,9 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "e57894201f80",
-    "(section order)": "d16f4890fdc5"
+    "(top)": "37a947c8e5fd",
+    "# Native platform": "2769f31c1878",
+    "(section order)": "4d06dc5f1974"
   },
   "popover": {
     "(top)": "8ca54dadf076",
