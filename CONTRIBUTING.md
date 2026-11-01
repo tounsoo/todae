@@ -111,7 +111,7 @@ pnpm test
 pnpm test:browser
 ```
 
-- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Checks job and the draft Check job both run `pnpm check`.
+- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The static job in Checks, and the draft Check job, both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
