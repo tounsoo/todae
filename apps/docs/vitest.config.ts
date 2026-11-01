@@ -9,6 +9,6 @@ export default defineConfig({
     env: testLocaleEnv,
     setupFiles: ['./test/setup.ts'],
     // Browser tests run under vitest.browser.config.ts.
-    exclude: [...configDefaults.exclude, '**/*.browser.test.tsx'],
+    exclude: [...configDefaults.exclude, '**/*.browser.test.tsx', 'peek/**'],
   },
 });
