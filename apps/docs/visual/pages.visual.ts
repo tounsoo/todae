@@ -1,10 +1,10 @@
+import { INDEX_GROUPS } from '../components/siteGroups.ts';
 import { AXE_OPTIONS, describeViolations } from '../test/axe.ts';
 import { expect, settle, test } from './setup.ts';
 
-// The site's own chrome in both languages: the home page, a component page, the playground
-// and the three catalog pages. Only the first screen is shot, so editing a page's prose
-// below it doesn't change the baseline.
-const PAGES = ['', 'button', 'playground', 'components', 'utilities', 'recipes'];
+// Home, Button and the playground show their own first screen. A catalog's first
+// screen includes the first items' summaries, so those intros are part of its baseline.
+const PAGES = ['', 'button', 'playground', ...INDEX_GROUPS];
 
 for (const locale of ['en', 'ko']) {
   for (const slug of PAGES) {

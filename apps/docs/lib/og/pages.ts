@@ -34,7 +34,7 @@ export function ogPages(appDir = join(process.cwd(), 'app')): OgPage[] {
     const playground: OgPage = { locale, slug: 'playground', eyebrow: sectionOf(locale, 'playground'), title: dict.playground.title };
     const indexes: OgPage[] = INDEX_GROUPS.map((id) => {
       const page = catalog(locale, id);
-      return { locale, slug: id, eyebrow: page.label, title: page.title };
+      return { locale, slug: id, eyebrow: page.title, title: page.title };
     });
     const mdx = loadPages(join(appDir, LOCALE_DIRS[locale])).map((page) => ({
       locale,

@@ -34,8 +34,6 @@ export type Dictionary = {
   hero: Record<'eyebrow' | 'title' | 'lead' | 'start' | 'playground' | 'showcase', string>;
   /** One line under each section on the home page. */
   groupBlurbs: Record<GroupId, string>;
-  /** Catalog pages for Components, Utilities and Recipes. */
-  indexes: Record<IndexGroupId, { title: string; description: string }>;
   /** Pages in a section; `{count}` is the number. */
   groupCount: string;
   groupCountOne: string;
@@ -117,20 +115,6 @@ const en: Dictionary = {
     recipes: 'Copyable glue for flows that depend on your product data.',
     tools: 'Try a theme on live components before you write one.',
   },
-  indexes: {
-    components: {
-      title: 'Components',
-      description: 'Accessible parts with one root each, styled from tokens.',
-    },
-    utilities: {
-      title: 'Utilities',
-      description: 'The behavior under the components, for your own markup.',
-    },
-    recipes: {
-      title: 'Recipes',
-      description: 'Copyable glue for flows that depend on your product data.',
-    },
-  },
   groupCount: '{count} pages',
   groupCountOne: '1 page',
   languageNav: 'Language',
@@ -207,20 +191,6 @@ const ko: Dictionary = {
     recipes: '제품 데이터에 따라 달라지는 흐름을 위한 복사용 코드.',
     tools: '코드를 쓰기 전에 실제 컴포넌트에 테마를 입혀 보세요.',
   },
-  indexes: {
-    components: {
-      title: '컴포넌트',
-      description: '토큰으로 스타일을 입힌, 루트가 하나인 접근성 있는 부품.',
-    },
-    utilities: {
-      title: '유틸리티',
-      description: '컴포넌트 아래의 동작을 직접 만든 마크업에 쓰는 훅.',
-    },
-    recipes: {
-      title: '레시피',
-      description: '제품 데이터에 따라 달라지는 흐름을 위한 복사용 코드.',
-    },
-  },
   groupCount: '{count}개 페이지',
   groupCountOne: '1개 페이지',
   languageNav: '언어',
@@ -295,10 +265,8 @@ export function localizedGroups(locale: Locale) {
   }));
 }
 
-/** One catalog page. The title and description come from the dictionary. The links are that group in `localizedGroups`. */
 export function catalog(locale: Locale, id: IndexGroupId) {
   const group = localizedGroups(locale).find((item) => item.id === id);
   if (!group) throw new Error(`SITE_GROUPS has no ${id} group`);
-  const page = DICTIONARIES[locale].indexes[id];
-  return { title: page.title, description: page.description, label: group.label, links: group.links };
+  return { title: group.label, description: DICTIONARIES[locale].groupBlurbs[id], links: group.links };
 }
