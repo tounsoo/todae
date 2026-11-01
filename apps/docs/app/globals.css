@@ -206,8 +206,8 @@ body {
   }
 }
 
-/* The five labels need about 58rem on one line. Below that, the menu carries them. */
-@media (max-width: 58rem) {
+/* English labels plus the tools need about 60rem. Below that, the menu carries them. */
+@media (max-width: 60rem) {
   .topbar-inner > .top-links {
     display: none;
   }
@@ -699,6 +699,16 @@ table {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
   gap: 1rem;
+  container-type: inline-size;
+  container-name: home-groups;
+}
+
+/* Five sections on two tracks leave Tools alone. Span that last card for the whole row.
+   Three tracks fit once the grid is 62rem, so the span stops there. */
+@container home-groups (min-width: 41rem) and (max-width: 61.99rem) {
+  .home-group:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
 .home-group {
