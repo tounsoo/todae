@@ -928,49 +928,6 @@
       ]
     },
     {
-      "name": "Composer.Root",
-      "description": "The prompt input of a chat, as a form around a Field.Root with a Field.Textarea. Enter in a textarea of the form sends it, as the form's default button would; Shift+Enter, and Enter that ends an IME composition, do not. Takes native form attributes, such as onSubmit.",
-      "props": [
-        {
-          "name": "onSubmit",
-          "type": "(event: React.SubmitEvent<HTMLFormElement>) => void",
-          "required": false,
-          "description": "Called for this form's own submits, not those of a form rendered inside it with createPortal."
-        },
-        {
-          "name": "busy",
-          "type": "boolean",
-          "required": false,
-          "description": "A response is running: no submit of this form goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "Composer.Submit",
-      "description": "A Button.Root that sends the form, at the end of a Field.Row. While the composer is busy it is a Stop button instead. Takes Button.Root props but pressed and type: it is a submit button, or a plain button while busy.",
-      "props": [
-        {
-          "name": "onStop",
-          "type": "() => void",
-          "required": false,
-          "description": "Called when Stop is pressed. Without it, Stop is disabled while the composer is busy."
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "required": false,
-          "description": "Disables Send, such as while nothing is typed. Stop ignores it."
-        },
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy."
-        }
-      ]
-    },
-    {
       "name": "composeRefs",
       "description": "composeRefs(...refs) returns one callback ref that sets every given ref, such as your own ref and the one a hook's prop getter returns. It returns a new callback on each call.",
       "props": [
@@ -1198,6 +1155,18 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "The term, as text."
+        }
+      ]
+    },
+    {
+      "name": "defineMentionSource",
+      "description": "Returns the source unchanged. In development, warns when char is not a single character. Pass the same object to useMentions and MentionText.",
+      "props": [
+        {
+          "name": "source",
+          "type": "MentionSource",
+          "required": true,
+          "description": "A useMentions trigger plus resolve, renderPeek, peekLabel, and href. renderPeek(entity, { id, mode, close }) is the only content of the peek."
         }
       ]
     },
@@ -2999,6 +2968,54 @@
           "type": "string",
           "required": false,
           "description": "Names the indicator when it is not inside a label with text. It keeps the progressbar role, so it needs a name."
+        }
+      ]
+    },
+    {
+      "name": "Mention.Root",
+      "description": "A mention in sent text. A link when source.href returns a string, otherwise a button. Hover, focus, or click opens a Popover filled only by source.renderPeek.",
+      "props": [
+        {
+          "name": "source",
+          "type": "MentionSource",
+          "required": true,
+          "description": "The source that resolves this mention and renders its peek."
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "The token value, passed to source.resolve and source.href."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The mention text, such as @Mina Park."
+        }
+      ]
+    },
+    {
+      "name": "MentionText",
+      "description": "Renders a mention draft. A token whose character matches a source becomes Mention.Root. Any other token, and the text around them, stays plain text.",
+      "props": [
+        {
+          "name": "value",
+          "type": "MentionDraft",
+          "required": true,
+          "description": "The text and its tokens."
+        },
+        {
+          "name": "sources",
+          "type": "readonly MentionSource[]",
+          "required": true,
+          "description": "Sources used to turn matching tokens into Mention.Root."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Class on the wrapping span."
         }
       ]
     },

@@ -1,0 +1,54 @@
+import { MentionExample } from '../../../components/demos/MentionDemo';
+
+# Mention
+
+`defineMentionSource` describes a mention once. Pass that object to `useMentions` for suggestions and the caret peek, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover). The chat card that uses it is the [chat composer mentions](/recipes/chat-composer-mentions) recipe.
+
+```tsx
+const people = defineMentionSource({
+  char: '@',
+  options,
+  resolve: (id, signal) => loadPerson(id, signal),
+  peekLabel: (person) => person.name,
+  renderPeek: (person, peek) => (
+    <button type="button" onClick={peek.close}>
+      {person.name}
+    </button>
+  ),
+});
+```
+
+<Example>
+  <MentionExample />
+</Example>
+
+## Keyboard
+
+| Key | Suggestion list | Mention |
+| --- | --- | --- |
+| ArrowDown / ArrowUp | Move the active option |  |
+| Enter or Tab | Pick the option. Enter does not send | On a link, Enter follows the link |
+| Escape | Close the list | Close the peek. Focus stays on the mention |
+| Space |  | Toggle the peek |
+
+While the caret is inside a token and the list is closed, the textarea's description is the caret peek. That peek does not take focus. Escape closes the list first, then the peek.
+
+## Peek
+
+A peek with a focusable control is a dialog named by `peekLabel`, or by the mention text. A text-only peek is the trigger's description and has no role. `peek.mode` is `interactive` on a sent mention and `caret` in the composer. `peek.close()` closes it and returns focus.
+
+## When to use
+
+A sent message should show a mention as a real button or link, with the same peek the composer shows while the caret is in that mention.
+
+## When not
+
+A suggestion list that is not a mention → [useCombobox](/utilities/use-combobox). Painted tokens with no peek → [useMentions](/utilities/use-mentions) and `Field.Textarea`.
+
+## Props
+
+<PropsTable name="defineMentionSource" />
+
+<PropsTable name="Mention.Root" />
+
+<PropsTable name="MentionText" />

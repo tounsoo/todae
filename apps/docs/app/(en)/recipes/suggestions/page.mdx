@@ -2,7 +2,7 @@ import { SuggestionsExample } from '../../../../components/demos/SuggestionsDemo
 
 # Suggestions
 
-A recipe, not a package namespace. Suggested prompts above the [Composer](/composer) are [Button](/button)s in a labelled list, and the "2 of 3" switcher between versions of a reply is two Buttons and a count in the reply's [Toolbar](/toolbar). Which prompts to suggest and how replies branch are up to your product. There is no `Suggestions.*` export.
+A recipe, not a package namespace. Suggested prompts above the [Composer](/recipes/chat-composer-mentions) are [Button](/button)s in a labelled list, and the "2 of 3" switcher between versions of a reply is two Buttons and a count in the reply's [Toolbar](/toolbar). Which prompts to suggest and how replies branch are up to your product. There is no `Suggestions.*` export.
 
 Pick a suggestion to put it in the field, then send it. Regenerate a reply to add a version, and step between versions with the arrows.
 
@@ -15,7 +15,7 @@ Pick a suggestion to put it in the field, then send it. Regenerate a reply to ad
 Show starter prompts in an empty conversation and follow-ups after a reply, in the same list; the example shows follow-ups. A suggestion puts its text in the field and moves focus there, so the person can change it before sending, and Enter sends it. Hide the list while a reply runs and while the field has text other than spaces, so a suggestion never replaces a draft. Cap each item at the row's width, so a suggestion that doesn't fit is cut off and shows its full text as a tooltip, as any Button whose label is cut off does.
 
 ```tsx
-import { Button, Composer, Field, Stack } from '@tounsoo/todae';
+import { Button, Field, Stack } from '@tounsoo/todae';
 
 const pick = (text: string) => {
   setValue(text);
@@ -33,14 +33,14 @@ const pick = (text: string) => {
     ))}
   </Stack.Root>
 )}
-<Composer.Root busy={busy} onSubmit={send}>
+<form onSubmit={send}>
   <Field.Root aria-label="Message">
     <Field.Textarea ref={field} value={value} onChange={(event) => setValue(event.target.value)} autoGrow />
     <Field.Row>
-      <Composer.Submit disabled={value.trim() === ''} onStop={stop} />
+      <Button.Root type="submit" disabled={value.trim() === '' || busy} aria-label="Send">Send</Button.Root>
     </Field.Row>
   </Field.Root>
-</Composer.Root>
+</form>
 ```
 
 To send a suggestion at once instead, pass its text to the function that sends a message, not through the field's state, which the submit handler would still read as empty. The list goes away as the reply starts, so move focus to the field first.
@@ -132,7 +132,7 @@ const regenerateHeld = (reply: { id: string }) => pendingReply !== null && pendi
 
 ## Accessible composition
 
-**Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys. A `Button.Root` with `aria-disabled` is drawn disabled, keeps focus, and ignores clicks. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. `Composer.Root` sends on Enter and leaves an IME composition alone. With the messages in a [Conversation](/conversation), it announces when a reply starts and ends.
+**Todae handles:** `Toolbar.Root` gives the reply's buttons one tab stop and arrow keys. A `Button.Root` with `aria-disabled` is drawn disabled, keeps focus, and ignores clicks. An icon-only `Button.Root` shows its `aria-label` as a tooltip, and a Button whose label is cut off shows its full text. The chat field is a form. Enter in its textarea sends, and an IME composition is left alone. With the messages in a [Conversation](/conversation), it announces when a reply starts and ends.
 
 **You supply:** A name for the list of suggestions and for each icon-only button. Focus moved to the field when a suggestion fills it. `aria-disabled` at the switcher's ends and on Regenerate for other replies while one runs. The count as the description of the switcher's buttons, and the announcement of the new version. All the names and the count in your product's language.
 

@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:visual": "playwright test",
+    "test:peek": "playwright test --config playwright.peek.config.ts",
     "test:visual:docker": "sh scripts/visual.sh",
     "i18n:stamp": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/stamp-translations.ts",
     "clean": "rm -rf .next"

@@ -35,7 +35,7 @@ export default {
           ErrorMessage: ['field'],
           ChipList: ['chip'],
           // Native <select> options take the OptionList look.
-          Field: ['field', 'option'],
+          Field: ['field', 'option', 'mention'],
           // A vertical group stacks with the toolbar gap, as a toolbar segment.
           ToggleGroup: ['togglegroup', 'toolbar'],
           // Progress and meter share one sheet.

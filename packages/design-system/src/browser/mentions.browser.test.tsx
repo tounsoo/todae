@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Composer, Field, OptionList, Popover, useMentions, type MentionDraft, type MentionToken, type MentionTrigger } from '../index.js';
+import { Field, OptionList, Popover, useMentions, type MentionDraft, type MentionToken, type MentionTrigger } from '../index.js';
 
 afterEach(cleanup);
 
@@ -47,14 +47,22 @@ function Chat({
   };
   return (
     <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }} dir={dir}>
-      <Composer.Root onSubmit={submit}>
+      <form
+        onSubmit={submit}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' || event.shiftKey || event.defaultPrevented) return;
+          if (!(event.target instanceof HTMLTextAreaElement)) return;
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }}
+      >
         <Field.Root aria-label="Message">
           <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={4} />
-          <Field.Row>
-            <Composer.Submit disabled={draft.text.trim() === ''} />
-          </Field.Row>
         </Field.Root>
-      </Composer.Root>
+        <button type="submit" disabled={draft.text.trim() === ''}>
+          Send
+        </button>
+      </form>
       <Popover.Root {...mentions.getPopoverProps()}>
         <OptionList.Root {...mentions.getListboxProps()}>
           {mentions.items.map((item) => (

@@ -14,6 +14,8 @@ export type TooltipPolicy = {
   readonly fidelity: 'fine' | 'coarse';
   readonly showDelayMs: number;
   readonly hideDelayMs: number;
+  /** Focus uses the show delay. Tooltips omit it and show on focus at once. */
+  readonly delayFocus?: boolean;
 };
 
 export type TooltipEvent =
@@ -119,7 +121,7 @@ function hold(
   const token = state.seq + 1;
   if (after) {
     const reason = showReason(event);
-    if (reason === 'focus') {
+    if (reason === 'focus' && !policy.delayFocus) {
       return {
         state: { ...next, pending: null, seq: token },
         commands: [{ kind: 'commit', open: true, reason: 'focus' }],

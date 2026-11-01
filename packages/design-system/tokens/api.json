@@ -2542,6 +2542,46 @@
       "type": "number"
     },
     {
+      "path": "mention.bg.default",
+      "type": "color"
+    },
+    {
+      "path": "mention.bg.hover",
+      "type": "color"
+    },
+    {
+      "path": "mention.bg.pressed",
+      "type": "color"
+    },
+    {
+      "path": "mention.composing.bg",
+      "type": "color"
+    },
+    {
+      "path": "mention.fg.default",
+      "type": "color"
+    },
+    {
+      "path": "mention.fg.hover",
+      "type": "color"
+    },
+    {
+      "path": "mention.font.weight",
+      "type": "fontWeight"
+    },
+    {
+      "path": "mention.padding.x",
+      "type": "dimension"
+    },
+    {
+      "path": "mention.radius",
+      "type": "dimension"
+    },
+    {
+      "path": "mention.ring.focus",
+      "type": "color"
+    },
+    {
       "path": "menu.gap",
       "type": "dimension"
     },

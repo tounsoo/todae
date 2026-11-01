@@ -34,7 +34,6 @@ export const SITE_GROUPS = [
       ['/chip-list', 'ChipList'],
       ['/code', 'Code and Kbd'],
       ['/color-picker', 'ColorPicker'],
-      ['/composer', 'Composer'],
       ['/contents', 'Contents'],
       ['/conversation', 'Conversation'],
       ['/data-list', 'DataList'],
@@ -68,6 +67,7 @@ export const SITE_GROUPS = [
       ['/label', 'Label'],
       ['/link', 'Link'],
       ['/loader', 'Loader and Skeleton'],
+      ['/mention', 'Mention'],
       ['/menu', 'Menu'],
       ['/message', 'Message'],
       ['/nav', 'Nav'],
@@ -133,6 +133,7 @@ export const SITE_GROUPS = [
     links: [
       ['/recipes/app-shell', 'App shell'],
       ['/recipes/avatar-group', 'Avatar group'],
+      ['/recipes/chat-composer-mentions', 'Chat composer mentions'],
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],

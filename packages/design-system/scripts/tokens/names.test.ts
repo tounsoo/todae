@@ -198,12 +198,10 @@ describe('main baseline', () => {
     expect(names.filter((violation) => violation.rule === 'state')).toHaveLength(61);
     expect(new Set(names.map((violation) => violation.path)).size).toBe(197);
     expect(dead.map((violation) => violation.path)).toEqual([
-      'color.accent.soft',
       'color.bg.canvas',
       'color.gray.50',
       'color.red.400',
       'color.red.500',
-      'opacity.12',
       'space.7',
     ]);
     expect(dead.filter((violation) => contract.has(violation.path))).toEqual([]);
@@ -211,7 +209,7 @@ describe('main baseline', () => {
     const result = ratchet({ found, list });
     expect(result.unlisted).toEqual([]);
     expect(result.stale).toEqual([]);
-    expect(list.size).toBe(235);
-    expect(tallyLine(found, result.unlisted)).toBe('names: 197 grandfathered, 0 new; dead: 7 grandfathered, 0 new');
+    expect(list.size).toBe(233);
+    expect(tallyLine(found, result.unlisted)).toBe('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Form, Label, Stack, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Form, Label, Stack, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -388,7 +388,7 @@ function attachIcon() {
 function PromptComposer() {
   const [value, setValue] = useState('');
   return (
-    <Composer.Root
+    <form
       onSubmit={(event) => {
         event.preventDefault();
         setValue('');
@@ -407,10 +407,12 @@ function PromptComposer() {
             <Button.Icon>{attachIcon()}</Button.Icon>
           </Button.Root>
           <Field.Counter />
-          <Composer.Submit disabled={value.trim() === ''} />
+          <Button.Root type="submit" variant="primary" disabled={value.trim() === ''} aria-label="Send">
+            Send
+          </Button.Root>
         </Field.Row>
       </Field.Root>
-    </Composer.Root>
+    </form>
   );
 }
 

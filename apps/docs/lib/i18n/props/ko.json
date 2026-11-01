@@ -2995,28 +2995,38 @@
       "ko": "복사가 실패하면 스크린 리더로 assertive하게 읽을 텍스트. 기본값은 StringsProvider의 copyFailed 문자열입니다. 빈 문자열이면 아무것도 읽지 않습니다."
     }
   },
-  "Composer.Root": {
-    "onSubmit": {
-      "en": "Called for this form's own submits, not those of a form rendered inside it with createPortal.",
-      "ko": "이 폼 자체의 제출에만 호출되고, createPortal로 그 안에 렌더링한 폼의 제출에는 호출되지 않습니다."
-    },
-    "busy": {
-      "en": "A response is running: no submit of this form goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.",
-      "ko": "응답이 진행 중입니다. Enter로든 제출 버튼이나 requestSubmit으로든 이 폼의 제출은 통과하지 않고, Composer.Submit은 Stop이 됩니다. data-busy를 설정합니다."
+  "defineMentionSource": {
+    "source": {
+      "en": "A useMentions trigger plus resolve, renderPeek, peekLabel, and href. renderPeek(entity, { id, mode, close }) is the only content of the peek.",
+      "ko": "useMentions 트리거에 resolve, renderPeek, peekLabel, href를 더한 값입니다. renderPeek(entity, { id, mode, close })가 피크의 유일한 내용입니다."
     }
   },
-  "Composer.Submit": {
-    "onStop": {
-      "en": "Called when Stop is pressed. Without it, Stop is disabled while the composer is busy.",
-      "ko": "Stop을 누르면 호출됩니다. 없으면 작성창이 busy인 동안 Stop이 비활성화됩니다."
+  "Mention.Root": {
+    "source": {
+      "en": "The source that resolves this mention and renders its peek.",
+      "ko": "이 멘션을 찾고 피크를 그리는 소스입니다."
     },
-    "disabled": {
-      "en": "Disables Send, such as while nothing is typed. Stop ignores it.",
-      "ko": "아무것도 입력하지 않았을 때처럼 Send를 비활성화합니다. Stop에는 적용되지 않습니다."
+    "id": {
+      "en": "The token value, passed to source.resolve and source.href.",
+      "ko": "토큰 값입니다. source.resolve와 source.href에 전달됩니다."
     },
     "children": {
-      "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
-      "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+      "en": "The mention text, such as @Mina Park.",
+      "ko": "@Mina Park 같은 멘션 텍스트입니다."
+    }
+  },
+  "MentionText": {
+    "value": {
+      "en": "The text and its tokens.",
+      "ko": "텍스트와 그 토큰입니다."
+    },
+    "sources": {
+      "en": "Sources used to turn matching tokens into Mention.Root.",
+      "ko": "맞는 토큰을 Mention.Root로 바꿀 때 쓰는 소스입니다."
+    },
+    "className": {
+      "en": "Class on the wrapping span.",
+      "ko": "감싸는 span의 class입니다."
     }
   },
   "useMentions": {

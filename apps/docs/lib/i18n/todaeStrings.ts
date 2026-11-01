@@ -54,8 +54,6 @@ const KOREAN: Strings = {
   scrollToLatest: '최신 메시지로 이동',
   messageStarted: '새 메시지',
   messageFinished: '메시지 완료',
-  send: '보내기',
-  stop: '중지',
   stepDone: '완료',
   stepCurrent: '진행 중',
   stepPending: '시작 전',

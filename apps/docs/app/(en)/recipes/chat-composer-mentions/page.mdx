@@ -1,0 +1,30 @@
+import { ChatComposerCard } from '../../../../components/demos/ChatComposer';
+
+# Chat composer mentions
+
+A recipe, not a package namespace. Build the card with [Field](/field), [Button](/button), [Attachment](/attachment), and the same `people` source for `useMentions` and [MentionText](/mention). The card frame is this page, not a package part.
+
+```tsx
+const people = defineMentionSource({ char: '@', options, resolve, renderPeek });
+
+<form className={card} onSubmit={send}>
+  <Field.Root>
+    <Field.Textarea {...mentions.getTextareaProps()} />
+  </Field.Root>
+  <Button.Root type="submit" aria-label="Send">↑</Button.Root>
+</form>
+
+<MentionText value={sent} sources={[people]} />
+```
+
+<Example>
+  <ChatComposerCard />
+</Example>
+
+## When to use
+
+A chat box where someone types `@` to mention a person, and the sent message shows that mention with the same peek.
+
+## When not to use
+
+A suggestion list that does not become a token → [Combobox](/recipes/combobox).
