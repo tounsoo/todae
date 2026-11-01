@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { flatLinks, INDEX_GROUPS, SITE_GROUPS } from '../../components/siteGroups';
+import { flatLinks, HOME_FEATURED, INDEX_GROUPS, SITE_GROUPS } from '../../components/siteGroups';
 import { PAGE_FILES } from '../../lib/i18n/pages';
 import HomePage from './page';
 
@@ -38,6 +38,19 @@ describe('HomePage', () => {
     const { container } = render(<HomePage />);
     const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href'));
     for (const id of INDEX_GROUPS) expect(hrefs, id).not.toContain(`/${id}`);
+  });
+
+  it('features only hrefs that belong to the group, once each', () => {
+    const misses = INDEX_GROUPS.flatMap((id) => {
+      const group = SITE_GROUPS.find((item) => item.id === id);
+      const own = new Set<string>(flatLinks(group?.links ?? []).map(([href]) => href));
+      const featured: readonly string[] = HOME_FEATURED[id];
+      return [
+        ...featured.filter((href) => !own.has(href)).map((href) => `${id}: ${href} is not in the group`),
+        ...featured.filter((href, index) => featured.indexOf(href) !== index).map((href) => `${id}: ${href} is listed twice`),
+      ];
+    });
+    expect(misses).toEqual([]);
   });
 
   it('lists every docs page in a section', () => {

@@ -166,6 +166,37 @@ export const INDEX_GROUPS = ['components', 'utilities', 'recipes'] as const sati
 
 export type IndexGroupId = (typeof INDEX_GROUPS)[number];
 
+type GroupFor<Id extends IndexGroupId> = Extract<(typeof SITE_GROUPS)[number], { id: Id }>;
+type LinkOf<Id extends IndexGroupId> = GroupFor<Id>['links'][number];
+type GroupHref<Id extends IndexGroupId> =
+  | LinkOf<Id>[0]
+  | Extract<LinkOf<Id>, readonly [string, string, readonly (readonly [string, string])[]]>[2][number][0];
+
+/** The eight items each catalog group shows on the home page, in order. */
+export const HOME_FEATURED = {
+  components: ['/button', '/field/text-input', '/field/select', '/dialog', '/menu', '/tooltip', '/mention', '/conversation'],
+  utilities: [
+    '/utilities/use-field',
+    '/utilities/use-popover',
+    '/utilities/use-tooltip',
+    '/utilities/use-mentions',
+    '/utilities/use-roving-focus',
+    '/utilities/use-combobox',
+    '/utilities/use-hotkey',
+    '/utilities/use-dropzone',
+  ],
+  recipes: [
+    '/recipes/app-shell',
+    '/recipes/sign-in',
+    '/recipes/data-table',
+    '/recipes/command-palette',
+    '/recipes/chat-composer-mentions',
+    '/recipes/tool-call',
+    '/recipes/reasoning',
+    '/recipes/file-upload',
+  ],
+} as const satisfies { [Id in IndexGroupId]: readonly GroupHref<Id>[] };
+
 type SiteGroupLink = (typeof SITE_GROUPS)[number]['links'][number];
 type ParentLink = Extract<SiteGroupLink, readonly [string, string, unknown]>;
 
