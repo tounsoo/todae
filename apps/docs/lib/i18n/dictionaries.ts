@@ -37,7 +37,7 @@ export type Dictionary = {
   /** Pages in a section; `{count}` is the number. */
   groupCount: string;
   groupCountOne: string;
-  /** The home page's link to a section's catalog; `{count}` is the number of pages the catalog lists. */
+  /** Link from a featured home section to its catalog. `{count}` is the group's length. */
   seeAll: string;
   /** Accessible name of the language switcher. */
   languageNav: string;
