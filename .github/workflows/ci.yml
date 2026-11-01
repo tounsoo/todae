@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [main, cursor/split-checks-8bf2]
+    branches: [main]
     # Markdown never starts a job. A changeset, the package README and the published
     # changelog are markdown a tool or npm reads, so they still run. Docs pages are MDX.
     paths:
