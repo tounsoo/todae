@@ -172,7 +172,6 @@ type GroupHref<Id extends IndexGroupId> =
   | LinkOf<Id>[0]
   | Extract<LinkOf<Id>, readonly [string, string, readonly (readonly [string, string])[]]>[2][number][0];
 
-/** The eight items each catalog group shows on the home page, in order. */
 export const HOME_FEATURED = {
   components: ['/button', '/field/text-input', '/field/select', '/dialog', '/menu', '/tooltip', '/mention', '/conversation'],
   utilities: [

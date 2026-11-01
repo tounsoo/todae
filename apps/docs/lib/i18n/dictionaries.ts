@@ -37,7 +37,6 @@ export type Dictionary = {
   /** Pages in a section; `{count}` is the number. */
   groupCount: string;
   groupCountOne: string;
-  /** Link from a featured home section to its catalog. `{count}` is the group's length. */
   seeAll: string;
   /** Accessible name of the language switcher. */
   languageNav: string;
@@ -279,7 +278,6 @@ function isIndexGroup(id: string): id is IndexGroupId {
   return INDEX_GROUPS.some((indexId) => indexId === id);
 }
 
-/** One card per section for the home page. A catalog section shows its featured items and a link to the catalog; any other shows its parent links. */
 export function homeGroups(locale: Locale) {
   const dict = DICTIONARIES[locale];
   return SITE_GROUPS.map((group) => {
