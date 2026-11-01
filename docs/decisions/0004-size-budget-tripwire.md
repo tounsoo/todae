@@ -10,4 +10,4 @@ The bundle size budget is a tripwire, not a hard cap. A pull request may raise t
 
 ## Why
 
-Reason not recorded.
+A hard byte cap pushes agents toward cramped or degraded code to save bytes, so the limit flags growth and the PR has to explain it.
