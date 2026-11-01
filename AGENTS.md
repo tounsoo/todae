@@ -28,7 +28,7 @@ The bundle size budget is a tripwire, not a hard cap. A pull request may raise t
 - A user-facing change carries a changeset. [Changesets](CONTRIBUTING.md#changesets) says how to add one, and when a change that ships nothing still needs `pnpm changeset --empty`.
 - Every pull request body has a Verification section, an Unverified checks section, and a Remaining risks section. Write "None" only when that is actually true. A pull request missing any of the three is not ready for review.
 - After each fix, run reflect and correct. When the same correction comes up again, enforce it in this order: architecture, then types, then lint or CI, then a test. A written rule is the last resort.
-- Drive the docs site with the verify skill at `.cursor/skills/verify/SKILL.md`. [0005](docs/decisions/0005-verify-procedure.md) records the procedure.
+- Drive the docs site with the verify skill at `.cursor/skills/verify/SKILL.md`. [0006](docs/decisions/0006-verify-procedure.md) records the procedure.
 - Do not change a design token unless Ben approves the change.
 - Do not release 1.0.0. [Versioning](README.md#versioning) says how bumps work until then.
 - Do not force-push or rebase unless Ben agrees.

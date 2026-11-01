@@ -1,4 +1,4 @@
-# 0005. Docs changes are checked with the verify procedure
+# 0006. Docs changes are checked with the verify procedure
 
 - **Date:** 2026-11-01
 - **Status:** Active
