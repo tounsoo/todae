@@ -1,5 +1,7 @@
 # Todae
 
+**Status (2026-11-01):** 0.5.0 is published; 0.6.0 is in progress (release PR #277 on hold until the tooltip warm-up PR #299 merges); 1.0.0 is not planned yet.
+
 Todae is a low-level React design system that companies build their own design systems on. It ships accessible components, headless hooks, design tokens in the [DTCG](https://www.designtokens.org/) format and a token build. A company adds its own token package, a few TypeScript declarations and thin wrappers around Todae's parts, without forking Todae.
 
 Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.omsoo.design)
