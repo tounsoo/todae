@@ -79,6 +79,7 @@ const SHIP_AT = SHIP.indexOf('@Mina Park');
 
 function onEnter(event: KeyboardEvent<HTMLFormElement>) {
   if (event.key !== 'Enter' || event.shiftKey || event.defaultPrevented) return;
+  if (event.nativeEvent.isComposing || event.keyCode === 229) return;
   if (!(event.target instanceof HTMLTextAreaElement)) return;
   event.preventDefault();
   event.currentTarget.requestSubmit();
