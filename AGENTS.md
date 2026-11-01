@@ -33,5 +33,5 @@ The bundle size budget is a tripwire, not a hard cap. A pull request may raise t
 - Do not release 1.0.0. [Versioning](README.md#versioning) says how bumps work until then.
 - Do not force-push or rebase unless Ben agrees.
 - Agents do not merge. A merge waits until Ben approves it.
-- Leave `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` unchanged.
+- Leave `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` unchanged. The one exception is the verify pointer at `.claude/skills/verify/SKILL.md`, which [0005](docs/decisions/0005-verify-procedure.md) records. Keep it a pointer.
 - A pull request that changes a decision or a spec also edits that decision's file in `docs/decisions/` in the same pull request. A design-system rule still belongs in [ARCHITECTURE.md](ARCHITECTURE.md), updated in that same pull request.
