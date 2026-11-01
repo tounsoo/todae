@@ -84,6 +84,47 @@ export type PreviewCopy = {
   faq: readonly { question: string; answer: string }[];
   maintenance: { title: string; body: string };
   cardExpiry: { title: string; body: string };
+  /** Parts added so a theme edit shows on them. Overlays stay closed until their trigger. */
+  samples: {
+    plan: string;
+    steps: string;
+    stepReview: string;
+    stepPay: string;
+    stepDone: string;
+    tips: string;
+    tipOne: string;
+    tipOneBody: string;
+    tipTwo: string;
+    tipTwoBody: string;
+    tipThree: string;
+    tipThreeBody: string;
+    tipWaits: string;
+    tipWaitsBody: string;
+    openPopover: string;
+    noteTitle: string;
+    popoverBody: string;
+    openDialog: string;
+    dialogTitle: string;
+    dialogBody: string;
+    showToast: string;
+    toastTitle: string;
+    toastBody: string;
+    mentionMessage: string;
+    mentionLead: string;
+    mentionName: string;
+    mentionRole: string;
+    mentionTail: string;
+    people: string;
+    calendar: string;
+    tune: string;
+    color: string;
+    quantity: string;
+    tags: string;
+    tagLong: string;
+    layout: string;
+    sidebar: string;
+    main: string;
+  };
 };
 
 const searchKeys = (
@@ -194,6 +235,46 @@ const EN: PreviewCopy = {
   ],
   maintenance: { title: 'Scheduled maintenance', body: 'Billing is read-only on Sunday from 02:00 to 03:00 UTC.' },
   cardExpiry: { title: 'Card expires soon', body: 'Update it before 2026-11-01 to keep your plan.' },
+  samples: {
+    plan: 'Plan',
+    steps: 'Steps',
+    stepReview: 'Review',
+    stepPay: 'Pay',
+    stepDone: 'Done',
+    tips: 'Tips',
+    tipOne: 'One',
+    tipOneBody: 'Opens after a pause',
+    tipTwo: 'Two',
+    tipTwoBody: 'Opens at once',
+    tipThree: 'Three',
+    tipThreeBody: 'Opens at once',
+    tipWaits: 'Waits',
+    tipWaitsBody: 'Waits again',
+    openPopover: 'Note',
+    noteTitle: 'Invoice note',
+    popoverBody: 'A short note about this invoice.',
+    openDialog: 'Details',
+    dialogTitle: 'Invoice details',
+    dialogBody: 'The October invoice is ready to send.',
+    showToast: 'Notify',
+    toastTitle: 'Invoice sent',
+    toastBody: 'Ada gets a copy by email.',
+    mentionMessage: 'Mention',
+    mentionLead: 'Ask ',
+    mentionName: 'Mina Park',
+    mentionRole: 'Billing',
+    mentionTail: ' to check the total.',
+    people: 'People',
+    calendar: 'Billing month',
+    tune: 'Tune',
+    color: 'Sample color',
+    quantity: 'Seats',
+    tags: 'Tags',
+    tagLong: 'Accessibility review',
+    layout: 'Layout',
+    sidebar: 'Sidebar',
+    main: 'Invoices',
+  },
 };
 
 const KO: PreviewCopy = {
@@ -298,6 +379,46 @@ const KO: PreviewCopy = {
   ],
   maintenance: { title: '정기 점검', body: '일요일 02:00부터 03:00(UTC)까지 결제는 읽기 전용입니다.' },
   cardExpiry: { title: '카드 만료 예정', body: '요금제를 유지하려면 2026년 11월 1일 전에 카드를 바꾸세요.' },
+  samples: {
+    plan: '진행',
+    steps: '단계',
+    stepReview: '검토',
+    stepPay: '결제',
+    stepDone: '완료',
+    tips: '도움말',
+    tipOne: '첫째',
+    tipOneBody: '잠시 후 열립니다',
+    tipTwo: '둘째',
+    tipTwoBody: '바로 열립니다',
+    tipThree: '셋째',
+    tipThreeBody: '바로 열립니다',
+    tipWaits: '대기',
+    tipWaitsBody: '다시 기다립니다',
+    openPopover: '메모',
+    noteTitle: '청구서 메모',
+    popoverBody: '이 청구서에 대한 짧은 메모입니다.',
+    openDialog: '자세히',
+    dialogTitle: '청구서 상세',
+    dialogBody: '10월 청구서를 보낼 준비가 되었습니다.',
+    showToast: '알림 보내기',
+    toastTitle: '청구서를 보냈습니다',
+    toastBody: '하나 님에게 이메일로 사본이 갑니다.',
+    mentionMessage: '멘션',
+    mentionLead: '합계 확인을 ',
+    mentionName: '박미나',
+    mentionRole: '결제',
+    mentionTail: '님에게 요청하세요.',
+    people: '사람',
+    calendar: '청구 월',
+    tune: '조정',
+    color: '예시 색',
+    quantity: '좌석',
+    tags: '태그',
+    tagLong: '접근성 검토',
+    layout: '레이아웃',
+    sidebar: '사이드바',
+    main: '청구서',
+  },
 };
 
 export const PREVIEW_COPY: Record<Locale, PreviewCopy> = { en: EN, ko: KO };
