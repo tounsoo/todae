@@ -162,6 +162,11 @@ export const SITE_GROUPS = [
   },
 ] as const;
 
+/** Groups with a catalog page at `/<id>`. Foundations and tools have none. */
+export const INDEX_GROUPS = ['components', 'utilities', 'recipes'] as const satisfies readonly (typeof SITE_GROUPS)[number]['id'][];
+
+export type IndexGroupId = (typeof INDEX_GROUPS)[number];
+
 type SiteGroupLink = (typeof SITE_GROUPS)[number]['links'][number];
 type ParentLink = Extract<SiteGroupLink, readonly [string, string, unknown]>;
 

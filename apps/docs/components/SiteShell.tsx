@@ -17,13 +17,10 @@ import { Providers } from './Providers';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
 import { SiteLink } from './SiteLink';
-import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
 
 const REPO = 'https://github.com/tounsoo/todae';
-// The top bar's Components link opens the first page the sidebar lists under Components.
-const FIRST_COMPONENT = SITE_GROUPS.find((group) => group.id === 'components')?.links[0]?.[0] ?? '/';
 
 /** The document for one locale. Each locale's root layout renders it, so `<html lang>` is right from the server. */
 export function SiteShell({
@@ -39,7 +36,7 @@ export function SiteShell({
   const dict = DICTIONARIES[locale];
   const top = [
     ['/guides/get-started', dict.topLinks.start],
-    [FIRST_COMPONENT, dict.topLinks.components],
+    ['/components', dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
   return (

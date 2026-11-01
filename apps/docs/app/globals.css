@@ -699,6 +699,42 @@ table {
   background: var(--todae-color-bg-highlight);
 }
 
+/* ---------- Group index ---------- */
+
+.docs-prose > .group-index {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-index > li {
+  padding-block: 0.875rem 1rem;
+  border-block-end: 1px solid var(--todae-color-border-subtle);
+}
+
+.group-index a {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.group-index li p {
+  margin: 0.25rem 0 0;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.group-index ul {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-index ul li {
+  padding-block: 0.5rem;
+  padding-inline-start: 1rem;
+}
+
 /* ---------- Playground ---------- */
 
 .playground {

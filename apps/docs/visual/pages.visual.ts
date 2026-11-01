@@ -1,9 +1,10 @@
 import { AXE_OPTIONS, describeViolations } from '../test/axe.ts';
 import { expect, settle, test } from './setup.ts';
 
-// The site's own chrome in both languages: the home page, a component page and the playground.
-// Only the first screen is shot, so editing a page's prose below it doesn't change the baseline.
-const PAGES = ['', 'button', 'playground'];
+// The site's own chrome in both languages: the home page, a component page, the playground
+// and the three catalog pages. Only the first screen is shot, so editing a page's prose
+// below it doesn't change the baseline.
+const PAGES = ['', 'button', 'playground', 'components', 'utilities', 'recipes'];
 
 for (const locale of ['en', 'ko']) {
   for (const slug of PAGES) {

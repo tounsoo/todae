@@ -15,9 +15,9 @@ import { PropsTable } from '../../components/PropsTable';
 import { TokensCatalog } from '../../components/TokensCatalog';
 import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
-import { childLinks, flatLinks, SITE_GROUPS } from '../../components/siteGroups';
+import { childLinks, flatLinks, INDEX_GROUPS, SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
-import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
+import { COMPLETE_LOCALES, LOCALES, localizePath, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { LICENSE } from '../license';
 import { codeBlocks } from '../mdxAst';
@@ -385,13 +385,23 @@ describe('docs locales', () => {
     expect([...document.head.querySelectorAll('link[rel="alternate"]')].map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'ko', 'x-default']);
   });
 
-  it('opens the first component in the sidebar from the top bar, in each language', () => {
-    const first = SITE_GROUPS.find((group) => group.id === 'components')?.links[0]?.[0];
+  it('keeps catalog routes off content pages of the same slug', () => {
+    for (const id of INDEX_GROUPS) {
+      expect(existsSync(join(APP, '(en)', id, 'page.mdx')), id).toBe(false);
+      expect(existsSync(join(APP, 'ko', id, 'page.mdx')), id).toBe(false);
+      const group = SITE_GROUPS.find((item) => item.id === id);
+      if (!group) throw new Error(`SITE_GROUPS has no ${id} group`);
+      const hrefs = flatLinks(group.links).map(([href]) => href);
+      expect(hrefs, id).not.toContain(`/${id}`);
+    }
+  });
+
+  it('opens the components catalog from the top bar, in each language', () => {
     for (const locale of LOCALES) {
       const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
       const top = /<nav class="top-links"[^>]*>(.*?)<\/nav>/.exec(markup)?.[1] ?? '';
       const label = DICTIONARIES[locale].topLinks.components;
-      expect(top, locale).toContain(`href="${locale === 'en' ? '' : `/${locale}`}${first}">${label}<`);
+      expect(top, locale).toContain(`href="${localizePath('/components', locale)}">${label}<`);
     }
   });
 

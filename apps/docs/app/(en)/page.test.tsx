@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { flatLinks, SITE_GROUPS } from '../../components/siteGroups';
+import { flatLinks, INDEX_GROUPS, SITE_GROUPS } from '../../components/siteGroups';
 import { PAGE_FILES } from '../../lib/i18n/pages';
 import HomePage from './page';
 
@@ -36,7 +36,8 @@ describe('HomePage', () => {
 
   it('lists every docs page in a section', () => {
     const listed = new Set<string>(SITE_GROUPS.flatMap((group) => flatLinks(group.links).map(([href]) => href)));
-    expect(pagePaths(__dirname).filter((path) => !listed.has(path))).toEqual([]);
+    const catalogs = new Set(INDEX_GROUPS.map((id) => `/${id}`));
+    expect(pagePaths(__dirname).filter((path) => !listed.has(path) && !catalogs.has(path))).toEqual([]);
   });
 
   it('lists a page under Components only when it documents an exported component', () => {

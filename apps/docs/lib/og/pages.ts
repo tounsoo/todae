@@ -1,7 +1,8 @@
 import { join } from 'node:path';
+import { INDEX_GROUPS } from '../../components/siteGroups';
 import { loadPages } from '../docs-mcp/mdx';
 import { LOCALES, type Locale } from '../i18n/config';
-import { DICTIONARIES, localizedGroups } from '../i18n/dictionaries';
+import { catalog, DICTIONARIES, localizedGroups } from '../i18n/dictionaries';
 
 export type OgPage = {
   locale: Locale;
@@ -31,12 +32,16 @@ export function ogPages(appDir = join(process.cwd(), 'app')): OgPage[] {
     const dict = DICTIONARIES[locale];
     const home: OgPage = { locale, slug: '', eyebrow: dict.hero.eyebrow, title: dict.hero.title };
     const playground: OgPage = { locale, slug: 'playground', eyebrow: sectionOf(locale, 'playground'), title: dict.playground.title };
+    const indexes: OgPage[] = INDEX_GROUPS.map((id) => {
+      const page = catalog(locale, id);
+      return { locale, slug: id, eyebrow: page.label, title: page.title };
+    });
     const mdx = loadPages(join(appDir, LOCALE_DIRS[locale])).map((page) => ({
       locale,
       slug: page.slug,
       eyebrow: sectionOf(locale, page.slug),
       title: page.title,
     }));
-    return [home, playground, ...mdx];
+    return [home, playground, ...indexes, ...mdx];
   });
 }

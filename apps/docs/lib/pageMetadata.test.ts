@@ -138,6 +138,14 @@ describe('social images', () => {
   it('labels every page but the home page with its sidebar section, in its language', () => {
     for (const page of pages) expect(page.eyebrow, `${page.locale} ${page.slug}`).not.toBe('');
     expect(pages.find((page) => page.locale === 'ko' && page.slug === 'utilities/use-modal-layer')?.eyebrow).toBe('유틸리티');
+    expect(pages.find((page) => page.locale === 'ko' && page.slug === 'components')).toMatchObject({
+      eyebrow: '컴포넌트',
+      title: '컴포넌트',
+    });
+    expect(pages.find((page) => page.locale === 'en' && page.slug === 'recipes')).toMatchObject({
+      eyebrow: 'Recipes',
+      title: 'Recipes',
+    });
   });
 
   it('sizes every title to fit the text block', () => {
