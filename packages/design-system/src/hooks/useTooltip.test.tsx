@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
@@ -401,7 +402,135 @@ describe('useTooltip', () => {
     fireEvent.pointerLeave(first);
     expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
     expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+    advance(40);
+    expect(screen.queryByRole('tooltip', { name: 'Tip A' })).toBeNull();
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it("uses the opening tip's skipDelay", () => {
+    function Harness() {
+      const slow = useTooltip({ showDelay: 200, hideDelay: 40, skipDelay: 1000 });
+      const quick = useTooltip({ showDelay: 200, hideDelay: 40, skipDelay: 50 });
+      const slowWire = slow.getTooltipProps();
+      const quickWire = quick.getTooltipProps();
+      return (
+        <>
+          <button type="button" {...slow.getTriggerProps()}>
+            Slow
+          </button>
+          {slow.open ? (
+            <div role="tooltip" ref={slowWire.ref}>
+              Slow tip
+            </div>
+          ) : null}
+          <button type="button" {...quick.getTriggerProps()}>
+            Quick
+          </button>
+          {quick.open ? (
+            <div role="tooltip" ref={quickWire.ref}>
+              Quick tip
+            </div>
+          ) : null}
+        </>
+      );
+    }
+    render(<Harness />);
+    const slow = screen.getByRole('button', { name: 'Slow' });
+    const quick = screen.getByRole('button', { name: 'Quick' });
+    fireEvent.pointerEnter(slow);
+    advance(200);
+    fireEvent.pointerLeave(slow);
+    advance(40);
+    fireEvent.pointerEnter(quick);
+    expect(screen.getByRole('tooltip', { name: 'Quick tip' })).toBeTruthy();
+    fireEvent.pointerLeave(quick);
+    advance(40);
+    advance(50);
+    fireEvent.pointerEnter(slow);
+    expect(screen.getByRole('tooltip', { name: 'Slow tip' })).toBeTruthy();
+  });
+
+  it('does not warm other tips when a controlled tooltip rejects the hover open', () => {
+    function Harness() {
+      const rejected = useTooltip({ open: false, showDelay: 200, hideDelay: 40, skipDelay: 80 });
+      const next = useTooltip({ showDelay: 200, hideDelay: 40, skipDelay: 80 });
+      const wire = next.getTooltipProps();
+      return (
+        <>
+          <button type="button" {...rejected.getTriggerProps()}>
+            Rejected
+          </button>
+          <button type="button" {...next.getTriggerProps()}>
+            Next
+          </button>
+          {next.open ? (
+            <div role="tooltip" ref={wire.ref}>
+              Next tip
+            </div>
+          ) : null}
+        </>
+      );
+    }
+    render(<Harness />);
+    const rejected = screen.getByRole('button', { name: 'Rejected' });
+    fireEvent.pointerEnter(rejected);
+    advance(200);
+    fireEvent.pointerLeave(rejected);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(199);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Next tip' })).toBeTruthy();
+  });
+
+  it('starts the warm window when the parent closes a controlled hover tip', () => {
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      const controlled = useTooltip({
+        open,
+        onOpenChange: setOpen,
+        showDelay: 200,
+        hideDelay: 40,
+        skipDelay: 80,
+      });
+      const next = useTooltip({ showDelay: 200, hideDelay: 40, skipDelay: 80 });
+      const controlledWire = controlled.getTooltipProps();
+      const nextWire = next.getTooltipProps();
+      return (
+        <>
+          <button type="button" {...controlled.getTriggerProps()}>
+            Controlled
+          </button>
+          {controlled.open ? (
+            <div role="tooltip" ref={controlledWire.ref}>
+              Controlled tip
+            </div>
+          ) : null}
+          <button type="button" onClick={() => setOpen(false)}>
+            Dismiss
+          </button>
+          <button type="button" {...next.getTriggerProps()}>
+            Next
+          </button>
+          {next.open ? (
+            <div role="tooltip" ref={nextWire.ref}>
+              Next tip
+            </div>
+          ) : null}
+        </>
+      );
+    }
+    render(<Harness />);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Controlled' }));
+    advance(200);
+    expect(screen.getByRole('tooltip', { name: 'Controlled tip' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('tooltip', { name: 'Controlled tip' })).toBeNull();
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('tooltip', { name: 'Next tip' })).toBeTruthy();
   });
 
   it('waits the show delay after close when skipDelay is 0', () => {

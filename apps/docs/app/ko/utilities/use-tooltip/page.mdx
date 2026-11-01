@@ -2,7 +2,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 
 # useTooltip
 
-`useTooltip`은 [Tooltip](/tooltip)의 열림 상태를 다루는 머신입니다. 트리거에는 `getTriggerProps`를, 팁의 외형만 담당하는 `Tooltip.Root`에는 `getTooltipProps`를 펼치세요. 호버는 `showDelay`만큼, 없으면 `tooltip.delay.show` 토큰(기본 300ms)만큼 기다리고, 포커스는 바로 열며, coarse 포인터는 포커스만 씁니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 `skipDelay` 밀리초 동안에는 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 포커스는 그 창을 시작하지 않습니다. 링크가 있는 팁에는 `interactive: true`를 넘기세요. Tab으로 들어갈 수 있는 비모달 팁 dialog가 되며, 이때 `Tooltip.Root`에는 `aria-label`과 `aria-labelledby` 중 정확히 하나가 필요합니다.
+`useTooltip`은 [Tooltip](/tooltip)의 열림 상태를 다루는 머신입니다. 트리거에는 `getTriggerProps`를, 팁의 외형만 담당하는 `Tooltip.Root`에는 `getTooltipProps`를 펼치세요. 호버는 `showDelay`만큼, 없으면 `tooltip.delay.show` 토큰(기본 300ms)만큼 기다리고, 포커스는 바로 열며, coarse 포인터는 포커스만 씁니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 다음 팁의 `skipDelay` 밀리초 동안에는 그 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 포커스는 그 창을 시작하지 않습니다. 링크가 있는 팁에는 `interactive: true`를 넘기세요. Tab으로 들어갈 수 있는 비모달 팁 dialog가 되며, 이때 `Tooltip.Root`에는 `aria-label`과 `aria-labelledby` 중 정확히 하나가 필요합니다.
 
 `+N` 개수 칩과 버튼이 아닌 다른 트리거는 훅을 직접 씁니다. 탭으로 갈 수 없는 감싸는 요소에는 `tabIndex={0}`을 붙이세요. `Button.Root`는 이미 자신의 레이블을 팁으로 보여 주므로, 훅이 팁을 담당할 때는 그 버튼에 `tooltip={false}`를 설정하세요.
 

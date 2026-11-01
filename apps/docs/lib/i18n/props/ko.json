@@ -2617,8 +2617,8 @@
       "ko": "숨김 지연(밀리초). 없으면 트리거에서 계산된 tooltip.delay.hide 토큰을 씁니다."
     },
     "skipDelay": {
-      "en": "Milliseconds after the last hover tip closes during which the next hover tip opens with no show delay. A hover tip that is still open skips that delay too. Focus does not start it.",
-      "ko": "마지막 호버 팁이 닫힌 뒤, 다음 호버 팁이 표시 지연 없이 열리는 시간(밀리초)입니다. 호버 팁이 아직 열려 있어도 그 지연을 건너뜁니다. 포커스는 이 시간을 시작하지 않습니다."
+      "en": "Milliseconds this tip skips its show delay after a hover tip closes. While a hover tip is open, this tip skips that delay too. Focus does not start it.",
+      "ko": "호버 팁이 닫힌 뒤 이 팁이 표시 지연을 건너뛰는 시간(밀리초)입니다. 호버 팁이 열려 있는 동안에도 이 팁은 그 지연을 건너뜁니다. 포커스는 이 시간을 시작하지 않습니다."
     },
     "enabled": {
       "en": "False resets intent and commits close.",

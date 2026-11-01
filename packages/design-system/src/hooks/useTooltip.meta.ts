@@ -50,7 +50,7 @@ export const meta = {
       required: false,
       default: '300',
       description:
-        'Milliseconds after the last hover tip closes during which the next hover tip opens with no show delay. A hover tip that is still open skips that delay too. Focus does not start it.',
+        'Milliseconds this tip skips its show delay after a hover tip closes. While a hover tip is open, this tip skips that delay too. Focus does not start it.',
     },
     {
       name: 'enabled',

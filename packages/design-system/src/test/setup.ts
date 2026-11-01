@@ -1,4 +1,10 @@
 import './temporal.js';
+import { afterEach } from 'vitest';
+import { resetTooltipWarmth } from '../components/Tooltip.warmth.js';
+
+afterEach(() => {
+  resetTooltipWarmth();
+});
 function polyfillDialog(): void {
   const proto = globalThis.HTMLDialogElement?.prototype;
   if (!proto) return;

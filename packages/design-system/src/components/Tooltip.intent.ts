@@ -122,7 +122,8 @@ function hold(
   const token = state.seq + 1;
   if (after) {
     const reason = showReason(event);
-    const immediate = (reason === 'focus' && !policy.delayFocus) || (policy.skipHoverShowDelay === true && reason !== 'focus');
+    const hoverShow = reason === 'hover' || reason === 'hover-bridge';
+    const immediate = (reason === 'focus' && !policy.delayFocus) || (policy.skipHoverShowDelay === true && hoverShow);
     if (immediate) {
       return {
         state: { ...next, pending: null, seq: token },
