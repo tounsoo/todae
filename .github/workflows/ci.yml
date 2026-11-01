@@ -105,6 +105,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          # presets.contrast.test.ts runs git merge-base HEAD origin/main.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
 
       # The docs tests import the package from dist, and some browser demos import its subpath entries.
