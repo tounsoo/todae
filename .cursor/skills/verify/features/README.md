@@ -6,8 +6,8 @@ This directory is the source for driving the docs site. Read it before a run, th
 
 - Node 24, from `.nvmrc`.
 - For a preview, a `READY` deployment whose `meta.githubCommitSha` equals the pull request head. Project `todae`, id `prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm`.
-- For a local run, `node .cursor/skills/verify/verify.mjs launch` and a clean `apps/docs` tree.
-- `node .cursor/skills/verify/verify.mjs self-test` passes.
+- For a local run, `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs launch` and a clean `apps/docs` tree.
+- `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test` passes. `pnpm check` runs it.
 - Do not drive a docs server on port 3321 that this helper did not start.
 - Do not treat `https://todae.omsoo.design` as a pull request preview. It tracks `docs-stable`.
 

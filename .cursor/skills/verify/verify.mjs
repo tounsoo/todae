@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { execFile, spawn } from 'node:child_process';
+import { openSync, readFileSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
+
+const exec = promisify(execFile);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const scratchDir = path.join(root, '.verify/scratch');
@@ -49,21 +51,17 @@ function redact(text) {
   return String(text).replaceAll(/_vercel_share=[^&\s)"']+/g, '_vercel_share=redacted');
 }
 
-function localeOf(pathname) {
-  if (pathname === '/ko' || pathname.startsWith('/ko/')) return 'ko';
-  return 'en';
-}
+let localeOf = () => {
+  throw new Error('docs config is not loaded');
+};
+let stripLocale = localeOf;
+let localizePath = localeOf;
 
-function stripLocale(pathname) {
-  if (localeOf(pathname) === 'en') return pathname;
-  const rest = pathname.slice(3);
-  return rest === '' ? '/' : rest;
-}
-
-function localizePath(href, locale) {
-  if (locale === 'en') return href;
-  if (href === '/') return '/ko';
-  return `/ko${href}`;
+async function ensureConfig() {
+  const config = await loadConfig();
+  localeOf = config.localeOf;
+  stripLocale = config.stripLocale;
+  localizePath = config.localizePath;
 }
 
 function countText(template, one, count) {
@@ -71,17 +69,21 @@ function countText(template, one, count) {
   return template.replaceAll('{count}', String(count));
 }
 
-function loadSiteGroups() {
-  const source = readFileSync(path.join(root, 'apps/docs/components/siteGroups.ts'), 'utf8');
-  const cut = source.indexOf('type SiteGroupLink');
-  if (cut < 0) throw new Error('siteGroups.ts has no SiteGroupLink marker');
-  let js = source.slice(0, cut).replace('export const SITE_GROUPS', 'const SITE_GROUPS');
-  if (!js.includes('const SITE_GROUPS')) throw new Error('SITE_GROUPS export missing');
-  js = js.replace(/\]\s*as const\s*;\s*$/, '];');
-  // The file's imports omit `.ts`, so Node cannot load it. Evaluate the array instead.
-  const groups = new Function(`${js}\nreturn SITE_GROUPS;`)();
-  if (!Array.isArray(groups) || groups.length !== 5) throw new Error('SITE_GROUPS did not evaluate to 5 groups');
-  return groups;
+async function loadSiteGroups() {
+  const file = pathToFileURL(path.join(root, 'apps/docs/components/siteGroups.ts')).href;
+  const { SITE_GROUPS } = await import(file);
+  if (!Array.isArray(SITE_GROUPS) || SITE_GROUPS.length === 0) throw new Error('SITE_GROUPS is empty');
+  for (const group of SITE_GROUPS) {
+    if (!group.id || !Array.isArray(group.links) || group.links.length === 0) {
+      throw new Error(`SITE_GROUPS group ${group.id || '(missing id)'} has no links`);
+    }
+  }
+  return SITE_GROUPS;
+}
+
+async function loadConfig() {
+  const file = pathToFileURL(path.join(root, 'apps/docs/lib/i18n/config.ts')).href;
+  return import(file);
 }
 
 function scanBlock(source, openIndex) {
@@ -189,21 +191,22 @@ function copyFor(copy, locale) {
   };
 }
 
-function selfTest() {
-  const groups = loadSiteGroups();
+async function selfTest() {
+  const groups = await loadSiteGroups();
+  const { localizePath: localize } = await loadConfig();
   const copy = loadCopy();
   const tools = groups.find((group) => group.id === 'tools');
   const components = groups.find((group) => group.id === 'components');
-  if (!tools || tools.links.length < 1) throw new Error('tools group missing');
-  if (!components || components.links[0][0] !== '/alert') throw new Error('first component is not /alert');
+  if (!tools) throw new Error('tools group missing');
+  if (!components?.links[0]?.[0]) throw new Error('components group has no first link');
   const ko = copyFor(copy, 'ko');
   const en = copyFor(copy, 'en');
-  if (ko.groupNames.components === en.top.components) throw new Error('Korean group label matched the English top link');
+  if (!ko.groupNames.components || ko.groupNames.components === en.top.components) {
+    throw new Error('Korean components label missing');
+  }
   if (en.heroTitle.length < 8 || ko.heroTitle.length < 8) throw new Error('hero title missing');
-  if (localizePath('/', 'ko') !== '/ko' || localizePath('/alert', 'ko') !== '/ko/alert') throw new Error('localizePath drifted');
-  console.log(
-    `self-test ok groups=${groups.map((group) => `${group.id}:${group.links.length}`).join(',')}`,
-  );
+  if (localize('/', 'ko') !== '/ko' || localize('/alert', 'ko') !== '/ko/alert') throw new Error('localizePath drifted');
+  console.log(`self-test ok groups=${groups.map((group) => `${group.id}:${group.links.length}`).join(',')}`);
 }
 
 function fullSha(value) {
@@ -212,10 +215,7 @@ function fullSha(value) {
 }
 
 async function git(argsList) {
-  const { execFile } = await import('node:child_process');
-  const { promisify } = await import('node:util');
-  const run = promisify(execFile);
-  const { stdout } = await run('git', argsList, { cwd: root });
+  const { stdout } = await exec('git', argsList, { cwd: root });
   return stdout.trim();
 }
 
@@ -239,8 +239,8 @@ function alive(pid) {
 
 async function cmdline(pid) {
   try {
-    const raw = await readFile(`/proc/${pid}/cmdline`);
-    return raw.toString('utf8').replaceAll('\0', ' ');
+    const { stdout } = await exec('ps', ['-o', 'args=', '-p', String(pid)]);
+    return stdout.trim();
   } catch {
     return '';
   }
@@ -266,13 +266,12 @@ async function launch() {
   const existing = await readPid();
   if (await ownedServer(existing)) {
     console.log(`launch reuse http://127.0.0.1:${PORT} pid=${existing.pid}`);
-    return `http://127.0.0.1:${PORT}`;
+    return { url: `http://127.0.0.1:${PORT}`, spawned: false };
   }
   if (await portAnswers()) {
     throw new Error(`port ${PORT} is in use by a process this run did not start`);
   }
   const logPath = path.join(scratchDir, 'server.log');
-  const { openSync } = await import('node:fs');
   const log = openSync(logPath, 'a');
   const child = spawn('pnpm', ['--filter', 'docs', 'exec', 'next', 'dev', '--port', String(PORT)], {
     cwd: root,
@@ -281,23 +280,28 @@ async function launch() {
   });
   child.unref();
   const record = { pid: child.pid, port: PORT };
-  const temporary = path.join(tmpdir(), `todae-verify-${child.pid}.json`);
+  const temporary = path.join(scratchDir, 'server.json.tmp');
   await writeFile(temporary, JSON.stringify(record));
   await rename(temporary, pidPath);
   const deadline = Date.now() + 90_000;
-  while (Date.now() < deadline) {
-    const status = await portAnswers();
-    if (status === 200) {
-      const body = await (await fetch(`http://127.0.0.1:${PORT}/`)).text();
-      if (body.includes('data-appearance')) {
-        console.log(`launch ready http://127.0.0.1:${PORT} pid=${child.pid}`);
-        return `http://127.0.0.1:${PORT}`;
+  try {
+    while (Date.now() < deadline) {
+      const status = await portAnswers();
+      if (status === 200) {
+        const body = await (await fetch(`http://127.0.0.1:${PORT}/`)).text();
+        if (body.includes('data-appearance')) {
+          console.log(`launch ready http://127.0.0.1:${PORT} pid=${child.pid}`);
+          return { url: `http://127.0.0.1:${PORT}`, spawned: true };
+        }
       }
+      if (!alive(child.pid)) throw new Error(`docs server exited before it was ready. See ${logPath}`);
+      await delay(500);
     }
-    if (!alive(child.pid)) throw new Error(`docs server exited before it was ready. See ${logPath}`);
-    await delay(500);
+    throw new Error(`docs server was not ready within 90s. See ${logPath}`);
+  } catch (error) {
+    await cleanup();
+    throw error;
   }
-  throw new Error(`docs server was not ready within 90s. See ${logPath}`);
 }
 
 async function cleanup() {
@@ -335,18 +339,26 @@ function pageUrl(pathname, flags) {
   return target.toString();
 }
 
-function authHeaders() {
-  if (!process.env.VERCEL_OIDC_TOKEN) return {};
-  return { 'x-vercel-trusted-oidc-idp-token': process.env.VERCEL_OIDC_TOKEN };
-}
-
-function pathsOf(flags) {
+async function pathsOf(flags) {
+  await ensureConfig();
   const raw = flags.paths ?? '/,/ko';
-  return raw.split(',').map((item) => item.trim()).filter(Boolean);
+  const given = raw.split(',').map((item) => item.trim()).filter(Boolean);
+  const out = [];
+  for (const pathname of given) {
+    const bare = stripLocale(pathname);
+    for (const locale of ['en', 'ko']) {
+      const next = localizePath(bare, locale);
+      if (!out.includes(next)) out.push(next);
+    }
+  }
+  return out;
 }
 
 async function assertSha(flags, origin) {
   const expectSha = fullSha(flags['expect-sha']);
+  if (new URL(origin).hostname === 'todae.omsoo.design') {
+    throw new Error('todae.omsoo.design tracks docs-stable. Pass the preview deployment URL.');
+  }
   if (origin.startsWith('http://127.0.0.1:') || origin.startsWith('http://localhost:')) {
     const record = await readPid();
     if (!(await ownedServer(record))) throw new Error(`refusing ${origin} because this run does not own the docs server on port ${PORT}`);
@@ -354,12 +366,12 @@ async function assertSha(flags, origin) {
     if (head !== expectSha) throw new Error(`local HEAD ${head} does not match ${expectSha}`);
     const dirty = await git(['status', '--porcelain', '--', 'apps/docs', 'packages/design-system']);
     if (dirty) throw new Error('local docs or package tree is dirty, so the server is not that sha');
-    return { expectSha, deploymentSha: head, mode: 'local' };
+    return { expectSha, deploymentSha: head, mode: 'local', source: 'git-head' };
   }
   if (!flags['deployment-sha']) throw new Error('pass --deployment-sha from the preview deployment meta.githubCommitSha');
   const deploymentSha = fullSha(flags['deployment-sha']);
   if (deploymentSha !== expectSha) throw new Error(`deployment ${deploymentSha} does not match ${expectSha}`);
-  return { expectSha, deploymentSha, mode: 'preview' };
+    return { expectSha, deploymentSha, mode: 'preview', source: 'caller-asserted' };
 }
 
 async function withBrowser(callback) {
@@ -374,22 +386,37 @@ async function withBrowser(callback) {
 
 async function openPage(browser, width, target) {
   const height = width === NARROW ? 844 : 800;
+  const origin = new URL(target).origin;
   const context = await browser.newContext({
     viewport: { width, height },
-    extraHTTPHeaders: authHeaders(),
     reducedMotion: 'reduce',
   });
-  const page = await context.newPage();
-  page.setDefaultTimeout(20_000);
-  const response = await page.goto(target, { waitUntil: 'domcontentloaded' });
-  const status = response?.status() ?? 0;
-  const html = await page.content();
-  if (!response || status !== 200 || !html.includes('data-appearance')) {
-    throw new Error(`${publicUrl(target)} returned ${status} and was not the docs site`);
+  try {
+    const token = process.env.VERCEL_OIDC_TOKEN;
+    if (token) {
+      await context.route('**/*', async (route) => {
+        const headers = { ...route.request().headers() };
+        if (new URL(route.request().url()).origin === origin) {
+          headers['x-vercel-trusted-oidc-idp-token'] = token;
+        }
+        await route.continue({ headers });
+      });
+    }
+    const page = await context.newPage();
+    page.setDefaultTimeout(20_000);
+    const response = await page.goto(target, { waitUntil: 'domcontentloaded' });
+    const status = response?.status() ?? 0;
+    const html = await page.content();
+    if (!response || status !== 200 || !html.includes('data-appearance')) {
+      throw new Error(`${publicUrl(target)} returned ${status} and was not the docs site`);
+    }
+    await page.getByRole('heading', { level: 1 }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    return { context, page, status };
+  } catch (error) {
+    await context.close();
+    throw error;
   }
-  await page.getByRole('heading', { level: 1 }).waitFor();
-  await page.evaluate(() => document.fonts.ready);
-  return { context, page, status };
 }
 
 async function headerCheck(page, copy, groups, pathname, width) {
@@ -423,14 +450,15 @@ async function headerCheck(page, copy, groups, pathname, width) {
     const link = main.locator('a', { hasText: label });
     if ((await link.count()) !== 1) throw new Error(`top link ${label} count ${await link.count()}`);
     const shown = await link.isVisible();
-    if (width >= 768 && !shown) throw new Error(`${label} hidden at ${width}`);
-    if (width < 768 && shown) throw new Error(`${label} visible at ${width}`);
+    if (width > 768 && !shown) throw new Error(`${label} hidden at ${width}`);
+    if (width <= 768 && shown) throw new Error(`${label} visible at ${width}`);
     if ((await link.getAttribute('href')) !== href) throw new Error(`${label} href mismatch`);
   }
   const menu = page.getByRole('button', { name: copy.openMenu, exact: true });
   const playground = bare === '/playground';
-  if (width >= 1024 && !playground && (await menu.isVisible())) throw new Error('menu button visible on a wide page');
-  if (width < 768) {
+  if (width > 768 && playground && !(await menu.isVisible())) throw new Error('playground menu button hidden on a wide page');
+  if (width > 768 && !playground && (await menu.isVisible())) throw new Error('menu button visible on a wide page');
+  if (width <= 768) {
     if (!(await menu.isVisible())) throw new Error('menu button hidden on a narrow page');
     await menu.click();
     const dialog = page.getByRole('dialog');
@@ -446,7 +474,8 @@ async function homeCheck(page, copy, groups) {
   const title = (await page.getByRole('heading', { level: 1 }).innerText()).trim();
   if (title !== copy.heroTitle) throw new Error(`h1 ${JSON.stringify(title)} !== ${JSON.stringify(copy.heroTitle)}`);
   const lines = [`h1 ${title}`];
-  if ((await page.locator('.home-group').count()) === 0) return lines;
+  const found = await page.locator('.home-group').count();
+  if (found !== groups.length) throw new Error(`home groups ${found} !== ${groups.length}`);
   for (const group of groups) {
     const label = copy.groupNames[group.id] ?? group.label;
     const section = page.locator(`section[aria-labelledby="home-${group.id}"]`);
@@ -461,7 +490,8 @@ async function homeCheck(page, copy, groups) {
 }
 
 async function drive(flags, browser) {
-  const groups = loadSiteGroups();
+  await ensureConfig();
+  const groups = await loadSiteGroups();
   const copy = loadCopy();
   const origin = new URL(openUrl(flags)).origin;
   const stamp = new Date().toISOString().replaceAll(':', '').replaceAll('.', '');
@@ -476,13 +506,15 @@ async function drive(flags, browser) {
   let failed = null;
   try {
     const sha = await assertSha(flags, origin);
-    note(`doctor mode=${sha.mode} sha=${sha.expectSha} deployment=${sha.deploymentSha}`);
+    note(`doctor mode=${sha.mode} source=${sha.source} sha=${sha.expectSha} deployment=${sha.deploymentSha}`);
     note(`doctor url=${publicUrl(flags.url || openUrl(flags))}`);
-    for (const pathname of pathsOf(flags)) {
+    for (const pathname of await pathsOf(flags)) {
       for (const width of [WIDE, NARROW]) {
         const target = pageUrl(pathname, flags);
-        const { context, page, status } = await openPage(browser, width, target);
+        let opened;
         try {
+          opened = await openPage(browser, width, target);
+          const { page, status } = opened;
           const locale = localeOf(pathname);
           const words = copyFor(copy, locale);
           note(`route ${status} ${pathname} ${locale} ${width}`);
@@ -498,19 +530,22 @@ async function drive(flags, browser) {
           const shot = path.join(dir, `${localeOf(pathname)}-${width}-${slug}.png`);
           await page.screenshot({ path: shot, fullPage: true });
           note(`screenshot ${shot}`);
+        } catch (error) {
+          failed = error;
+          note(`FAIL ${pathname} ${width} ${error.message}`);
         } finally {
-          await context.close();
+          if (opened) await opened.context.close();
         }
       }
     }
-    note('drive ok');
+    if (!failed) note('drive ok');
   } catch (error) {
     failed = error;
     note(`FAIL ${error.message}`);
   }
   const report = path.join(dir, 'report.txt');
   await writeFile(report, `${lines.join('\n')}\n`);
-  await writeFile(path.join(evidenceRoot, 'latest'), `${dir}\n`);
+  if (!failed) await writeFile(path.join(evidenceRoot, 'latest'), `${dir}\n`);
   if (failed) process.exitCode = 1;
   return dir;
 }
@@ -519,7 +554,7 @@ async function main() {
   const flags = args(process.argv.slice(2));
   const command = flags._[0];
   if (command === 'self-test') {
-    selfTest();
+    await selfTest();
     return;
   }
   if (command === 'launch') {
@@ -531,16 +566,28 @@ async function main() {
     return;
   }
   if (command === 'doctor' || command === 'drive' || command === 'run') {
-    if (flags.launch) await launch();
-    if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
     if (!flags['expect-sha']) throw new Error('pass --expect-sha');
+    let spawned = false;
     try {
+      if (flags.launch) {
+        const started = await launch();
+        spawned = started.spawned;
+        if (!flags.url && !process.env.VERIFY_URL) flags.url = started.url;
+      }
+      if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
       await assertSha(flags, new URL(openUrl(flags)).origin);
       await withBrowser(async (browser) => {
         await drive(flags, browser);
       });
     } finally {
-      if (flags.launch) await cleanup();
+      if (spawned) {
+        try {
+          await cleanup();
+        } catch (error) {
+          console.error(redact(error.message));
+          process.exitCode = 1;
+        }
+      }
     }
     return;
   }

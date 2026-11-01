@@ -19,7 +19,7 @@ Preconditions:
 
 - Doctor passed for `/playground` and `/ko/playground`.
 
-- **Both languages.** Run `node .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --paths /playground,/ko/playground`. The report contains `heading en 1280 /playground Playground` and `heading ko 1280 /ko/playground 플레이그라운드`.
+- **Both languages.** Run `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --paths /playground`. The helper also opens `/ko/playground`. The report contains `heading en 1280 /playground Playground` and `heading ko 1280 /ko/playground 플레이그라운드`.
 - **Wide menu.** At 1280 the menu button stays visible. The helper must not fail the header check for that button on this page.
 - **Proof.** Heading lines for a text change. `en-1280-playground.png`, `en-390-playground.png`, `ko-1280-ko_playground.png`, and `ko-390-ko_playground.png` for a UI change.
 
