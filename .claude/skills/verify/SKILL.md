@@ -7,4 +7,4 @@ description: "Drive the Todae docs site in English and Korean, locally or on its
 
 Read `.cursor/skills/verify/SKILL.md` and follow it. The helper and the feature map are in `.cursor/skills/verify/`.
 
-Keep this file a pointer. `maintain-verification-skill` works on `.cursor/skills/verify/`, and `create-verification-skill` does not write a skill here. [0005](../../../docs/decisions/0005-verify-procedure.md) records why.
+Keep this file a pointer. The verify skill already exists, so don't run `create-verification-skill` here or in `.cursor/skills/verify/`. Run `maintain-verification-skill` against `.cursor/skills/verify/`, not this file. [0005](../../../docs/decisions/0005-verify-procedure.md) records why.
