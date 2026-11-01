@@ -1,12 +1,35 @@
+import { Table } from '@tounsoo/todae/table';
+
 # Native platform
 
 Todae builds on the browser instead of reimplementing it. It uses the features below with no JavaScript fallbacks, so a browser that has them is a browser Todae supports. This page lists those features. The version floor is the [Browser support](https://github.com/tounsoo/todae/blob/main/README.md#browser-support) table in the repository README, checked on 2026-10-16.
 
-| Browser | All but the Temporal parts | Everything, Temporal included |
-| --- | --- | --- |
-| Chrome and Edge | 128 | 144 |
-| Firefox | 147 | 147 |
-| Safari and iOS Safari | 26 | Not shipped; load a polyfill |
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Browser</Table.HeaderCell>
+      <Table.HeaderCell scope="col">All but the Temporal parts</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Everything, Temporal included</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Chrome and Edge</Table.HeaderCell>
+      <Table.Cell>128</Table.Cell>
+      <Table.Cell>144</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Firefox</Table.HeaderCell>
+      <Table.Cell>147</Table.Cell>
+      <Table.Cell>147</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Safari and iOS Safari</Table.HeaderCell>
+      <Table.Cell>26</Table.Cell>
+      <Table.Cell>Not shipped; load a polyfill</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
 
 CSS anchor positioning sets the floor in every browser. In Chrome and Edge the floor is `position-try-fallbacks`, which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code, and browser tests run in Chromium only.
 

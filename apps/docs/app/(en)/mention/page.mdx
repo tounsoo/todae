@@ -1,3 +1,5 @@
+import { Table } from '@tounsoo/todae/table';
+import { ScrollRegion } from '../../../components/ScrollRegion';
 import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
@@ -24,12 +26,39 @@ const people = defineMentionSource({
 
 ## Keyboard
 
-| Key | Suggestion list | Mention |
-| --- | --- | --- |
-| ArrowDown / ArrowUp | Move the active option |  |
-| Enter or Tab | Pick the option. Enter does not send | On a link, Enter follows the link |
-| Escape | Close the list | Close the peek. Focus stays on the mention |
-| Space |  | Toggle the peek |
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Key</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Suggestion list</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Mention</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">ArrowDown / ArrowUp</Table.HeaderCell>
+      <Table.Cell>Move the active option</Table.Cell>
+      <Table.Cell />
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Enter or Tab</Table.HeaderCell>
+      <Table.Cell>Pick the option. Enter does not send</Table.Cell>
+      <Table.Cell>On a link, Enter follows the link</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Escape</Table.HeaderCell>
+      <Table.Cell>Close the list</Table.Cell>
+      <Table.Cell>Close the peek. Focus stays on the mention</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Space</Table.HeaderCell>
+      <Table.Cell />
+      <Table.Cell>Toggle the peek</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
 
 While the caret is inside a token and the list is closed, the textarea's description is the caret peek. That peek does not take focus. Escape closes the list first, then the peek.
 
