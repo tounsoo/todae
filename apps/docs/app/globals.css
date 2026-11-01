@@ -647,7 +647,7 @@ table {
 
 .home-groups {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -701,13 +701,6 @@ table {
 .home-group-all {
   display: inline-block;
   margin-block-start: 1rem;
-  color: var(--todae-color-fg-muted);
-  font-size: 0.875rem;
-  text-decoration: none;
-}
-
-.home-group-all:hover {
-  color: var(--todae-color-fg-default);
 }
 
 /* ---------- Group index ---------- */

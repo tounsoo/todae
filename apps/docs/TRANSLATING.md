@@ -70,6 +70,6 @@ A test fails when a prop a page shows has no translation, or when its English ha
 
 List its slug in `lib/i18n/englishPages.ts` as well as in `components/siteGroups.ts`. A test fails until both list it, so every language can show the page before anyone translates it.
 
-A catalog page is the exception. It is a `page.tsx` for a group in `INDEX_GROUPS`, listed in `englishPages.ts`, and it is not a link in `siteGroups.ts`. The home page does not list it.
+A catalog page is the exception. It is a `page.tsx` for a group in `INDEX_GROUPS`, listed in `englishPages.ts`, and it is not a link in `siteGroups.ts`. The home page links to it from that group's featured section.
 
 Korean is in `COMPLETE_LOCALES`, so the same pull request also adds the Korean page, and stamps it when it is a `page.mdx`. A locale that is still being translated falls back to the English page instead.
