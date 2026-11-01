@@ -1,10 +1,12 @@
 #!/bin/sh
 # Copies the pstack Claude Code port into .claude/skills and .claude/agents,
 # and its session-start routing text into .claude, at one pinned commit. Cloud sessions don't load plugins, so the skills live in
-# the repo instead. Usage: sh .claude/update-pstack.sh [commit]
-# `sh .claude/update-pstack.sh --check` changes nothing. It prints the pinned
-# commit, upstream's latest, and the upstream commits since the pin that touch
-# the files this script copies.
+# the repo instead.
+# Usage: sh .claude/update-pstack.sh [commit]   copy the port at a full SHA, the pin by default
+#        sh .claude/update-pstack.sh --check    compare the pin with upstream and write nothing
+# --check exits 0 when up to date, 10 when behind and 11 when the pin is not
+# on upstream's default branch or upstream no longer has it. Any other status
+# is an error.
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
@@ -13,38 +15,63 @@ pin=49b68501b075ec1eb2755dd0d22fbf2492d67e97
 # Our CLAUDE.md and the session's GitHub tools already drive PRs, CI and
 # conflicts; setup-pstack writes a model sheet the container doesn't keep.
 skip='babysit fix-ci fix-merge-conflicts get-pr-comments setup-pstack'
+# What gets copied, under plugins/pstack: every skill directory, *.md in each
+# agent directory, and the hook text. The copy and --check both read these.
+agent_dirs='agents effort-agents'
+hook=hooks/session-start-context.md
 
-root=$(git rev-parse --show-toplevel)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 git -C "$tmp" init -q
 
-if [ "${1:-}" = --check ]; then
-  latest=$(git ls-remote "$repo" HEAD | cut -f1)
+check() {
+  latest=$(git ls-remote "$repo" HEAD | awk '$2 == "HEAD" { print $1 }')
   [ -n "$latest" ] || { echo "could not read upstream's HEAD" >&2; exit 1; }
   # Without blobs the fetch has the history and trees but no file contents.
-  git -C "$tmp" fetch -q --filter=blob:none "$repo" "$latest" "$pin"
-  echo "pinned:   $(git -C "$tmp" log -1 --format='%h %cs %s' "$pin")"
-  echo "upstream: $(git -C "$tmp" log -1 --format='%h %cs %s' "$latest")"
+  git -C "$tmp" fetch -q --filter=blob:none "$repo" "$latest"
+  echo "pinned:   $pin"
+  echo "upstream: $(git -C "$tmp" log -1 --format='%H %cs %s' "$latest")"
   if [ "$latest" = "$pin" ]; then
     echo "up to date"
     exit 0
   fi
-  if ! git -C "$tmp" merge-base --is-ancestor "$pin" "$latest"; then
-    echo "diverged: the pin is not on upstream's default branch"
-    exit 0
+  if ! git -C "$tmp" fetch -q --filter=blob:none "$repo" "$pin" 2>/dev/null; then
+    echo "diverged: upstream no longer has the pinned commit"
+    exit 11
   fi
-  set -- plugins/pstack/skills plugins/pstack/agents plugins/pstack/effort-agents \
-    plugins/pstack/hooks/session-start-context.md
+  status=0
+  git -C "$tmp" merge-base --is-ancestor "$pin" "$latest" || status=$?
+  case $status in
+    0) ;;
+    1)
+      if git -C "$tmp" merge-base --is-ancestor "$latest" "$pin"; then
+        echo "diverged: the pin is ahead of upstream's default branch"
+      else
+        echo "diverged: the pin is not on upstream's default branch"
+      fi
+      exit 11 ;;
+    *) exit "$status" ;;
+  esac
+  set -- ":(glob)plugins/pstack/skills/*/**" "plugins/pstack/$hook"
+  for dir in $agent_dirs; do
+    set -- "$@" ":(glob)plugins/pstack/$dir/*.md"
+  done
   for name in $skip; do
     set -- "$@" ":(exclude)plugins/pstack/skills/$name"
   done
-  echo "behind by $(git -C "$tmp" rev-list --count "$pin..$latest") commits," \
-    "$(git -C "$tmp" rev-list --count "$pin..$latest" -- "$@") touch the copied files:"
+  touched=$(git -C "$tmp" rev-list --count "$pin..$latest" -- "$@")
+  echo "behind by $(git -C "$tmp" rev-list --count "$pin..$latest") commits, $touched in the copied files"
   git -C "$tmp" log --format='  %h %cs %s' "$pin..$latest" -- "$@"
-  exit 0
-fi
+  exit 10
+}
+
+case ${1:-} in
+  --check) check ;;
+  -*) echo "usage: sh .claude/update-pstack.sh [commit | --check]" >&2; exit 2 ;;
+esac
+
+root=$(git rev-parse --show-toplevel)
 
 git -C "$tmp" fetch -q --depth 1 "$repo" "${1:-$pin}"
 git -C "$tmp" checkout -q FETCH_HEAD
@@ -73,9 +100,11 @@ for dir in "$src"/skills/*/; do
   cp -R "$dir" "$root/.claude/skills/$name"
   echo ".claude/skills/$name" >> "$manifest"
 done
-for file in "$src"/agents/*.md "$src"/effort-agents/*.md; do
-  cp "$file" "$root/.claude/agents/"
-  echo ".claude/agents/$(basename "$file")" >> "$manifest"
+for dir in $agent_dirs; do
+  for file in "$src/$dir"/*.md; do
+    cp "$file" "$root/.claude/agents/"
+    echo ".claude/agents/$(basename "$file")" >> "$manifest"
+  done
 done
 # Fable runs only where pstack-models.md names it or the user approves it in
 # the run, so no skill default may name it, even when a sheet line is missing.
@@ -86,8 +115,10 @@ done
 grep -rnio '.\{0,30\}fable.\{0,30\}' "$root/.claude/skills" "$root/.claude/agents" |
   sed "s|^$root/|check for a Fable default: |" || true
 # The plugin's SessionStart hook prints this; .claude/settings.json does the same.
-cp "$src/hooks/session-start-context.md" "$root/.claude/pstack-session-start.md"
+cp "$src/$hook" "$root/.claude/pstack-session-start.md"
 commit=$(git -C "$tmp" rev-parse HEAD)
-sed -i.bak "s/^pin=.*/pin=$commit/" "$root/.claude/update-pstack.sh" &&
-  rm "$root/.claude/update-pstack.sh.bak"
+self="$root/.claude/update-pstack.sh"
+sed -i.bak "s/^pin=.*/pin=$commit/" "$self"
+rm "$self.bak"
+grep -qx "pin=$commit" "$self" || { echo "could not record pin=$commit in $self" >&2; exit 1; }
 echo "pstack-claude $commit"
