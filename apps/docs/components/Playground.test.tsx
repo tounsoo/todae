@@ -69,7 +69,9 @@ describe('Playground', { timeout: 15_000 }, () => {
   it('copies one flat set when light and dark agree, and both sets when they differ', async () => {
     // Queries stay in the container, so the announcer's live region in body doesn't match the status text.
     const page = within(render(<Playground locale="en" />).container);
-    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    const overrides = screen.getByRole('region', { name: 'Overrides' });
+    expect(JSON.parse(overrides.textContent ?? '')).toEqual({});
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy overrides' })));
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
     expect(await page.findByText('Copied theme override JSON.')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Porcelain'));
@@ -80,6 +82,7 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(Object.keys(copied)).toEqual(['light', 'dark']);
     expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.5, 0.09, 165] });
     expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.077, 165] });
+    expect(JSON.parse(screen.getByRole('region', { name: 'Overrides' }).textContent ?? '')).toEqual(copied);
   });
 
   it('keeps an edit to the appearance it was made in', async () => {
@@ -121,12 +124,42 @@ describe('Playground', { timeout: 15_000 }, () => {
     render(<Playground locale="ko" />);
     const preview = within(screen.getByRole('region', { name: '미리보기' }));
     expect(preview.getByRole('button', { name: 'Pro로 업그레이드' })).toBeTruthy();
+    expect(preview.getByRole('button', { name: '대기' })).toBeTruthy();
+    expect(preview.getByRole('button', { name: '자세히' })).toBeTruthy();
+    expect(preview.queryByRole('dialog', { name: '청구서 상세' })).toBeNull();
+    expect(screen.getByRole('region', { name: '오버라이드' })).toBeTruthy();
     // Names Todae writes itself come from StringsProvider.
     expect(preview.getByRole('navigation', { name: '이동 경로' })).toBeTruthy();
     expect(preview.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
     expect(preview.getByRole('button', { name: '보내기' })).toBeTruthy();
     expect(preview.queryByText('Good morning, Ada')).toBeNull();
   });
+
+  it('opens a dialog, a note and a toast only from their buttons', async () => {
+    render(<Playground locale="en" />);
+    const preview = within(stage());
+    expect(preview.queryByRole('dialog', { name: 'Invoice details' })).toBeNull();
+    const note = preview.getByRole('dialog', { name: 'Invoice note' });
+    expect(note.hasAttribute('data-popover-open')).toBe(false);
+    expect(screen.queryByText('Invoice sent')).toBeNull();
+
+    // The toast region waits one task before it will show one, so a toast is not on screen at load.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.queryByText('Invoice sent')).toBeNull();
+
+    fireEvent.click(preview.getByRole('button', { name: 'Notify' }));
+    expect(screen.getByText('Invoice sent')).toBeTruthy();
+
+    fireEvent.click(preview.getByRole('button', { name: 'Details' }));
+    expect(screen.getByRole('dialog', { name: 'Invoice details' })).toBeTruthy();
+
+    fireEvent.click(preview.getByRole('button', { name: 'Note' }));
+    expect(note.hasAttribute('data-popover-open')).toBe(true);
+    expect(screen.getByText('A short note about this invoice.')).toBeTruthy();
+  });
+
   it("copies the shown reply's markdown, and Regenerate clears the copied mark and the rating", async () => {
     render(<Playground locale="en" />);
     const reply = within(stage()).getByRole('toolbar', { name: 'Reply' });

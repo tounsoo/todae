@@ -89,6 +89,8 @@ export type Dictionary = {
     | 'reset'
     | 'export'
     | 'exportHint'
+    | 'code'
+    | 'copyCode'
     | 'copied'
     | 'copyFailed'
     | 'stage',
@@ -185,6 +187,8 @@ const en: Dictionary = {
     reset: 'Reset',
     export: 'Copy JSON',
     exportHint: 'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance.',
+    code: 'Overrides',
+    copyCode: 'Copy overrides',
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     stage: 'Preview',
@@ -284,6 +288,8 @@ const ko: Dictionary = {
     reset: '초기화',
     export: 'JSON 복사',
     exportHint: '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요.',
+    code: '오버라이드',
+    copyCode: '오버라이드 복사',
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     stage: '미리보기',
