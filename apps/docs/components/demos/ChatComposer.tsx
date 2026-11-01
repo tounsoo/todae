@@ -102,10 +102,20 @@ function MentionField({
 }) {
   const api = useMentions({ triggers: mentions, value, defaultValue, onValueChange });
   const [caret, setCaret] = useState<number | null>(null);
+  const [focused, setFocused] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
+  const [entity, setEntity] = useState<Person | undefined>(undefined);
   const token = !api.open && caret !== null ? tokenAtCaret(api.value.tokens, caret) : null;
   const source = token ? (mentions.find((item) => item.char === token.char) ?? null) : null;
-  const [entity, setEntity] = useState<Person | undefined>(undefined);
-  const peek = usePopover({ open: token !== null && entity !== undefined, onOpenChange: () => undefined });
+  const tokenKey = token ? `${token.start}:${token.end}:${token.value}` : null;
+  if (dismissedKey !== null && dismissedKey !== tokenKey) setDismissedKey(null);
+  const dismissed = tokenKey !== null && dismissedKey === tokenKey;
+  const peek = usePopover({
+    open: focused && token !== null && entity !== undefined && !dismissed,
+    onOpenChange: (next) => {
+      if (!next && tokenKey) setDismissedKey(tokenKey);
+    },
+  });
   useEffect(() => {
     const node = api.textareaRef.current;
     if (!node) return;
@@ -148,6 +158,14 @@ function MentionField({
             rows: 1,
             spellCheck: false,
             className: bare ? `${styles.area} ${styles.input}` : styles.area,
+            onFocus: () => {
+              setFocused(true);
+              setDismissedKey(null);
+            },
+            onBlur: () => {
+              setFocused(false);
+              if (tokenKey) setDismissedKey(tokenKey);
+            },
           })}
         />
       </Field.Root>
