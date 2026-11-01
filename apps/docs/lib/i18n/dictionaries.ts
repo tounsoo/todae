@@ -12,7 +12,7 @@ export type Dictionary = {
   /** Accessible name of the top bar's links. */
   mainNav: string;
   /** The top bar's links. */
-  topLinks: Record<'start' | 'components' | 'playground', string>;
+  topLinks: Record<'start' | IndexGroupId | 'playground', string>;
   /** First link on every page, shown on focus. */
   skipToContent: string;
   /** Title and accessible name of a page's list of its own sections. */
@@ -89,7 +89,7 @@ const en: Dictionary = {
   siteNav: 'Site',
   subpages: '{name} pages',
   mainNav: 'Main',
-  topLinks: { start: 'Get started', components: 'Components', playground: 'Playground' },
+  topLinks: { start: 'Get started', components: 'Components', utilities: 'Utilities', recipes: 'Recipes', playground: 'Playground' },
   skipToContent: 'Skip to content',
   onThisPage: 'On this page',
   openMenu: 'Open navigation',
@@ -165,7 +165,7 @@ const ko: Dictionary = {
   siteNav: '사이트',
   subpages: '{name} 하위 페이지',
   mainNav: '주요 메뉴',
-  topLinks: { start: '시작하기', components: '컴포넌트', playground: '플레이그라운드' },
+  topLinks: { start: '시작하기', components: '컴포넌트', utilities: '유틸리티', recipes: '레시피', playground: '플레이그라운드' },
   skipToContent: '본문으로 건너뛰기',
   onThisPage: '이 페이지의 내용',
   openMenu: '탐색 메뉴 열기',

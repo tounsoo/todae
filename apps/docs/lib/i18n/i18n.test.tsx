@@ -402,10 +402,26 @@ describe('docs locales', () => {
   it('opens the components catalog from the top bar, in each language', () => {
     for (const locale of LOCALES) {
       const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
-      const top = /<nav class="top-links"[^>]*>(.*?)<\/nav>/.exec(markup)?.[1] ?? '';
-      const label = DICTIONARIES[locale].topLinks.components;
-      expect(top, locale).toContain(`href="${localizePath('/components', locale)}">${label}<`);
+      const top = /<nav class="top-links"[\s\S]*?<\/nav>/.exec(markup)?.[0] ?? '';
+      for (const id of INDEX_GROUPS) {
+        const label = DICTIONARIES[locale].topLinks[id];
+        expect(top, `${locale} ${id}`).toContain(`href="${localizePath(`/${id}`, locale)}">${label}<`);
+      }
     }
+  });
+
+  it('marks the open catalog in the header, in each language', () => {
+    for (const locale of LOCALES) {
+      for (const id of INDEX_GROUPS) {
+        path.current = localizePath(`/${id}`, locale);
+        const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
+        const top = /<nav class="top-links"[\s\S]*?<\/nav>/.exec(markup)?.[0] ?? '';
+        const current = [...top.matchAll(/<a[^>]*aria-current="page"[^>]*>/g)].map((hit) => hit[0]);
+        expect(current, `${locale} ${id}`).toHaveLength(1);
+        expect(current[0], `${locale} ${id}`).toContain(`href="${path.current}"`);
+      }
+    }
+    path.current = '/ko/button';
   });
 
   it('names the license in the footer, in each language', () => {

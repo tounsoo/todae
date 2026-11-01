@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import '@tounsoo/todae/todae.css';
-import { Stack } from '@tounsoo/todae/stack';
 import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { BrandMark } from '../lib/brand';
 import { localizePath, type Locale } from '../lib/i18n/config';
@@ -8,6 +7,7 @@ import { DICTIONARIES } from '../lib/i18n/dictionaries';
 // Reads the file system, so SiteShell renders on the server only.
 import { untranslatedByLocale } from '../lib/i18n/pages';
 import { GitHubIcon } from './icons';
+import { HeaderLinks } from './HeaderLinks';
 import { HashHistoryGuard } from './HashHistoryGuard';
 import { LanguageAlternates } from './LanguageAlternates';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -17,12 +17,10 @@ import { Providers } from './Providers';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
 import { SiteLink } from './SiteLink';
-import type { IndexGroupId } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
 
 const REPO = 'https://github.com/tounsoo/todae';
-const COMPONENTS_CATALOG = '/components' satisfies `/${IndexGroupId}`;
 
 /** The document for one locale. Each locale's root layout renders it, so `<html lang>` is right from the server. */
 export function SiteShell({
@@ -36,11 +34,6 @@ export function SiteShell({
   children: ReactNode;
 }) {
   const dict = DICTIONARIES[locale];
-  const top = [
-    ['/guides/get-started', dict.topLinks.start],
-    [COMPONENTS_CATALOG, dict.topLinks.components],
-    ['/playground', dict.topLinks.playground],
-  ] as const;
   return (
     <html lang={locale} data-appearance="system" suppressHydrationWarning>
       <head>
@@ -64,15 +57,7 @@ export function SiteShell({
                 <BrandMark className="brand-mark" size={22} aria-hidden="true" />
                 Todae
               </SiteLink>
-              <nav className="top-links" aria-label={dict.mainNav}>
-                <Stack.Root as="ul" direction="row" gap="condensed">
-                  {top.map(([href, label]) => (
-                    <li key={href}>
-                      <SiteLink href={localizePath(href, locale)}>{label}</SiteLink>
-                    </li>
-                  ))}
-                </Stack.Root>
-              </nav>
+              <HeaderLinks locale={locale} />
               <div className="topbar-tools">
                 <ThemeSwitcher locale={locale} />
                 <LanguageSwitcher locale={locale} toHome={notFound} />

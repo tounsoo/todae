@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { HeaderLinks } from './HeaderLinks';
 import { MenuIcon } from './icons';
 import { SiteNav } from './SiteNav';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -47,6 +48,7 @@ export function MobileNav({ locale }: { locale: Locale }) {
             if (!elsewhere && (event.target as Element).closest('a[href]')) setOpen(false);
           }}
         >
+          <HeaderLinks locale={locale} menu />
           <SiteNav locale={locale} />
         </Drawer.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
