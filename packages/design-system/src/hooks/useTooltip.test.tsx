@@ -5,6 +5,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-li
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
+import { resetTooltipWarmth } from '../components/Tooltip.warmth.js';
 import {
   useTooltip,
   useTooltipInternal,
@@ -19,6 +20,7 @@ const source = readFileSync(join(here, 'useTooltip.ts'), 'utf8');
 
 afterEach(() => {
   cleanup();
+  resetTooltipWarmth();
   vi.useRealTimers();
   resetMatchMedia();
 });
@@ -52,6 +54,47 @@ function TipHarness({
       ) : null}
     </>
   );
+}
+
+function Pair(options: UseTooltipOptions) {
+  const first = useTooltip(options);
+  const second = useTooltip(options);
+  const firstWire = first.getTooltipProps();
+  const secondWire = second.getTooltipProps();
+  return (
+    <>
+      <button type="button" {...first.getTriggerProps()}>
+        A
+      </button>
+      {first.open ? (
+        <div role="tooltip" id={firstWire.id} ref={firstWire.ref} style={firstWire.style}>
+          Tip A
+        </div>
+      ) : null}
+      <button type="button" {...second.getTriggerProps()}>
+        B
+      </button>
+      {second.open ? (
+        <div role="tooltip" id={secondWire.id} ref={secondWire.ref} style={secondWire.style}>
+          Tip B
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function openHover(name: string, showDelay: number) {
+  const trigger = screen.getByRole('button', { name });
+  fireEvent.pointerEnter(trigger);
+  advance(showDelay);
+  expect(screen.getByRole('tooltip', { name: `Tip ${name}` })).toBeTruthy();
+  return trigger;
+}
+
+function closeHover(trigger: HTMLElement, hideDelay: number) {
+  fireEvent.pointerLeave(trigger);
+  advance(hideDelay);
+  expect(screen.queryByRole('tooltip', { name: `Tip ${trigger.textContent}` })).toBeNull();
 }
 
 function PanelHarness(options: UseTooltipOptions<true> = { interactive: true }) {
@@ -99,6 +142,7 @@ describe('useTooltip exports', () => {
         '../overlay/anchorName.js',
         '../overlay/cssTime.js',
         '../components/Tooltip.intent.js',
+        '../components/Tooltip.warmth.js',
         '../components/Tooltip.wire.js',
         '../overlay/tabbables.js',
         '../overlay/useEscapeKey.js',
@@ -155,6 +199,7 @@ describe('useTooltip', () => {
     advance(1);
     expect(screen.queryByRole('tooltip')).toBeNull();
     unmount();
+    resetTooltipWarmth();
 
     render(<Tokened showDelay={200} hideDelay={60} />);
     const passed = screen.getByRole('button', { name: 'Hint' });
@@ -310,6 +355,99 @@ describe('useTooltip', () => {
     const wire = panel.result.current.getTooltipProps();
     expect(typeof wire.onPointerEnter).toBe('function');
     expectTypeOf(wire).toMatchTypeOf<TooltipWire<true>>();
+  });
+
+  it('opens the next hover tip with no show delay inside the warm window', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('waits the show delay once the warm window has passed', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    advance(80);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(199);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('uses a 300ms warm window when skipDelay is omitted', () => {
+    render(<Pair showDelay={200} hideDelay={40} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    advance(299);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+    const second = screen.getByRole('button', { name: 'B' });
+    fireEvent.pointerLeave(second);
+    advance(40);
+    advance(300);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'A' }));
+    expect(screen.queryByRole('tooltip', { name: 'Tip A' })).toBeNull();
+    advance(200);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
+  });
+
+  it('opens the next hover tip immediately while a hover tip is still within its hide delay', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={0} />);
+    const first = openHover('A', 200);
+    fireEvent.pointerLeave(first);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('waits the show delay after close when skipDelay is 0', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={0} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(199);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('does not start the warm window from keyboard focus', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = screen.getByRole('button', { name: 'A' });
+    const second = screen.getByRole('button', { name: 'B' });
+    fireEvent.focus(first);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
+    fireEvent.pointerEnter(second);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    fireEvent.pointerLeave(second);
+    fireEvent.blur(first);
+    advance(40);
+    expect(screen.queryByRole('tooltip', { name: 'Tip A' })).toBeNull();
+    fireEvent.pointerEnter(second);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(199);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('does not warm the next tip when the pointer leaves before the first tip opens', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = screen.getByRole('button', { name: 'A' });
+    fireEvent.pointerEnter(first);
+    advance(199);
+    fireEvent.pointerLeave(first);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(199);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
   });
 
   it('keeps the panel open across the hover bridge', () => {

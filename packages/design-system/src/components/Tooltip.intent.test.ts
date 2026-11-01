@@ -114,6 +114,26 @@ describe('Tooltip.intent', () => {
       },
     },
     {
+      name: 'warm hover show commits immediately and still hides on the hide delay',
+      run() {
+        const warm: TooltipPolicy = { ...fine, skipHoverShowDelay: true };
+        const opened = run(acquireHover, { policy: warm });
+        expect(opened.commands).toEqual([{ kind: 'commit', open: true, reason: 'hover' }]);
+        expect(delaysOf(opened.commands)).toEqual([]);
+        const hiding = run(releaseHover, { state: opened.state, open: true, policy: warm });
+        expect(delaysOf(hiding.commands)).toEqual([{ kind: 'start-delay', ms: 100, token: 2 }]);
+      },
+    },
+    {
+      name: 'warm hover does not skip a delayed focus show',
+      run() {
+        const warm: TooltipPolicy = { ...fine, skipHoverShowDelay: true, delayFocus: true };
+        const focused = run(acquireFocus, { policy: warm });
+        expect(delaysOf(focused.commands)).toEqual([{ kind: 'start-delay', ms: 300, token: 1 }]);
+        expect(commitsOf(focused.commands)).toEqual([]);
+      },
+    },
+    {
       name: 'escape spends holds, acquire while spent is inert, release then acquire reopens',
       run() {
         const opened = run({ kind: 'delay-elapsed', token: 1 }, { state: run(acquireHover).state });

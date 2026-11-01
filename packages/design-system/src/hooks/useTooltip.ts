@@ -19,6 +19,7 @@ import {
   type TooltipOpenReason,
   type TooltipPolicy,
 } from '../components/Tooltip.intent.js';
+import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from '../components/Tooltip.warmth.js';
 import type { TooltipWire } from '../components/Tooltip.wire.js';
 import { firstTabbable } from '../overlay/tabbables.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -48,6 +49,7 @@ export type UseTooltipOptions<I extends boolean = false> = {
   interactive?: I;
   showDelay?: number;
   hideDelay?: number;
+  skipDelay?: number;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: TooltipOpenReason) => void;
@@ -87,6 +89,11 @@ export type UseTooltipResult<I extends boolean = false> = {
 // For when the delay tokens can't be read, such as without Todae's stylesheet.
 const SHOW_DELAY_MS = 300;
 const HIDE_DELAY_MS = 100;
+const SKIP_DELAY_MS = 300;
+
+function openedFromHover(reason: TooltipOpenReason): boolean {
+  return reason === 'hover' || reason === 'hover-bridge';
+}
 
 /** The delay policy a tooltip or a mention peek reads from the trigger. */
 export function readTooltipPolicy(
@@ -172,6 +179,7 @@ export function useTooltipInternal<I extends boolean = false>(
     interactive = false as I,
     showDelay,
     hideDelay,
+    skipDelay,
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -191,7 +199,9 @@ export function useTooltipInternal<I extends boolean = false>(
   const onOpenChangeRef = useRef(onOpenChange);
   const showDelayRef = useRef(showDelay);
   const hideDelayRef = useRef(hideDelay);
+  const skipDelayRef = useRef(skipDelay);
   const delayFocusRef = useRef(delayFocus);
+  const countedHoverRef = useRef(false);
   const enabledRef = useRef(enabled);
   const holdsFocusRef = useRef(holdsFocus);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
@@ -199,33 +209,48 @@ export function useTooltipInternal<I extends boolean = false>(
   onOpenChangeRef.current = onOpenChange;
   showDelayRef.current = showDelay;
   hideDelayRef.current = hideDelay;
+  skipDelayRef.current = skipDelay;
   delayFocusRef.current = delayFocus;
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
+
+  const releaseCountedHover = useCallback(() => {
+    if (!countedHoverRef.current) return;
+    countedHoverRef.current = false;
+    releaseHoverTip(Date.now(), skipDelayRef.current ?? SKIP_DELAY_MS);
+  }, []);
 
   const applyCommands = useCallback(
     (commands: readonly TooltipCommand[]) => {
       applyTooltipCommands(commands, timerRef, {
         onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
         commit: (open, reason) => {
+          if (open && openedFromHover(reason) && !countedHoverRef.current) {
+            countedHoverRef.current = true;
+            retainHoverTip();
+          } else if (!open) {
+            releaseCountedHover();
+          }
           setValue(open);
           onOpenChangeRef.current?.(open, reason);
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
       });
     },
-    [setValue],
+    [releaseCountedHover, setValue],
   );
 
   const dispatch = useCallback(
     (event: TooltipEvent, restoreFocus = false) => {
       if (!enabledRef.current && event.kind !== 'delay-elapsed') return;
+      const policy = readTooltipPolicy(triggerRef.current, {
+        showDelay: showDelayRef.current,
+        hideDelay: hideDelayRef.current,
+        delayFocus: delayFocusRef.current,
+      });
+      const skipHoverShowDelay = event.kind === 'acquire' && event.hold === 'hover' && hoverShowSkipsDelay(Date.now());
       const result = step({
-        policy: readTooltipPolicy(triggerRef.current, {
-          showDelay: showDelayRef.current,
-          hideDelay: hideDelayRef.current,
-          delayFocus: delayFocusRef.current,
-        }),
+        policy: skipHoverShowDelay ? { ...policy, skipHoverShowDelay: true } : policy,
         state: intentRef.current,
         open: openRef.current,
         event,
@@ -256,10 +281,11 @@ export function useTooltipInternal<I extends boolean = false>(
     intentRef.current = createIntent();
     applyCommands([{ kind: 'clear-delay' }]);
     if (openRef.current) {
+      releaseCountedHover();
       setValue(false);
       onOpenChangeRef.current?.(false, 'escape');
     }
-  }, [applyCommands, enabled, setValue]);
+  }, [applyCommands, enabled, releaseCountedHover, setValue]);
 
   const onEscape = useCallback(() => {
     const tooltip = tooltipRef.current;
@@ -329,8 +355,9 @@ export function useTooltipInternal<I extends boolean = false>(
   useEffect(
     () => () => {
       if (timerRef.current != null) window.clearTimeout(timerRef.current);
+      releaseCountedHover();
     },
-    [],
+    [releaseCountedHover],
   );
 
   const setTrigger = useComposedRefs(triggerRef);

@@ -6086,6 +6086,13 @@
           "default": "tooltip.delay.hide (100ms)"
         },
         {
+          "name": "skipDelay",
+          "type": "number",
+          "required": false,
+          "description": "Milliseconds after the last hover tip closes during which the next hover tip opens with no show delay. A hover tip that is still open skips that delay too. Focus does not start it.",
+          "default": "300"
+        },
+        {
           "name": "enabled",
           "type": "boolean",
           "required": false,

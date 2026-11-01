@@ -6,7 +6,7 @@ import { Table } from '@tounsoo/todae/table';
 
 [useTooltip](/utilities/use-tooltip) is the open machine. Spread `getTriggerProps` on the trigger. Spread `getTooltipProps` on `Tooltip.Root`. `Tooltip.Root` is tip chrome only: `children`, `className`, `style`, and a dialog name when interactive. There is no `Tooltip.Trigger` or `Tooltip.Content`. Do not set `interactive` on `Tooltip.Root`.
 
-Default is text-only `role="tooltip"`. Hover waits for the `tooltip.delay.show` token, 300ms by default. Focus opens at once. A coarse pointer uses focus only.
+Default is text-only `role="tooltip"`. Hover waits for the `tooltip.delay.show` token, 300ms by default. Focus opens at once. A coarse pointer uses focus only. While a hover tip is open, and for `skipDelay` milliseconds after the last one closes, the next hover tip opens at once. `skipDelay` defaults to 300. The hide delay still runs before that window starts. Focus does not start the window.
 
 Pass `interactive: true` to [useTooltip](/utilities/use-tooltip). The surface is a non-modal tip dialog. It uses `popover="manual"` and `role="dialog"`. React Aria PreviewTrigger with Popover also forces `role="dialog"` on a hover tip that is not a modal. It never uses `role="tooltip"`. Set exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
 
