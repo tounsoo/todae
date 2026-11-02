@@ -9,8 +9,9 @@
 # files, 10 when one does, and 11 when the pin is ahead of upstream's default
 # branch, off it, or gone. 2 is a usage error; any other status is an error.
 # --brief prints one line on 10 or 11 and nothing otherwise, and always exits 0.
-# It gives up after 5 seconds, and stays silent without `timeout`, so an offline
-# or stalled network never holds up a session. It prints no upstream text.
+# It gives up within 7 seconds, never asks for credentials, and stays silent
+# without GNU `timeout` (stock macOS has none), so an offline or stalled network
+# never holds up a session. It prints no upstream text.
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
@@ -28,7 +29,9 @@ if [ "${1:-}" = --brief ]; then
   {
     command -v timeout >/dev/null || exit 0
     status=0
-    out=$(GIT_TERMINAL_PROMPT=0 GIT_ALLOW_PROTOCOL=https timeout -k 2 5 sh "$0" --check) ||
+    # No terminal prompt, askpass dialog or credential helper, and https only.
+    out=$(GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=false GIT_CONFIG_PARAMETERS="'credential.helper='" \
+      GIT_ALLOW_PROTOCOL=https timeout -k 2 5 sh "$0" --check) ||
       status=$?
     case $status in
       10)
