@@ -6,7 +6,7 @@
 
 ## Decision
 
-A Claude Duet thread reads `CLAUDE.md`, then `.claude/thread-start.md`. That page installs the latest pstack-claude skills with the skills CLI into a temp folder outside the repository, fetches the pstack agent files at the same commit, and checks the quoted anchors in `.agents/playbooks/` against that commit's playbooks. The thread then reads `poteto-mode` from the temp folder by hand.
+A Claude Duet thread reads `CLAUDE.md`, then `.claude/thread-start.md`. That page installs the latest pstack-claude skills with the skills CLI into a temp folder outside the repository, fetches the pstack agent files at the same commit, and checks the quoted anchors in `.agents/playbooks/` against that commit's playbooks. The page then gives the todae adaptations for reading pstack from the temp folder, says when to follow `poteto-mode`, and sends every pull request task through the todae playbooks.
 
 The repository keeps no copy of pstack. `.claude/` holds `thread-start.md` and the model sheet, `models.md`. Todae's own process rules are project playbooks in `.agents/playbooks/`. Agents change `.claude/`, `.agents/` and `CLAUDE.md` only with Ben's yes.
 
