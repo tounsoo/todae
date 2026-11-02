@@ -4,9 +4,12 @@
 # the repo instead.
 # Usage: sh .claude/update-pstack.sh [commit]   copy the port at a full SHA, the pin by default
 #        sh .claude/update-pstack.sh --check    compare the pin with upstream and write nothing
+#        sh .claude/update-pstack.sh --brief    run --check for the SessionStart hook
 # --check exits 0 when no upstream commit since the pin touches the copied
 # files, 10 when one does, and 11 when the pin is ahead of upstream's default
 # branch, off it, or gone. 2 is a usage error; any other status is an error.
+# --brief prints one line on 10 or 11 and nothing otherwise, and always exits 0,
+# so an offline or failed check never holds up a session.
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
@@ -22,6 +25,7 @@ hook=hooks/session-start-context.md
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
 
 git -C "$tmp" init -q
 
@@ -71,6 +75,17 @@ check() {
 
 case ${1:-} in
   --check) check ;;
+  --brief)
+    limit=
+    command -v timeout >/dev/null && limit='timeout 10'
+    status=0
+    out=$(GIT_TERMINAL_PROMPT=0 $limit sh "$0" --check 2>/dev/null) || status=$?
+    case $status in
+      10) echo "pstack-claude check: the pinned port is $(echo "$out" | grep '^behind by ')." \
+        "\`sh .claude/update-pstack.sh --check\` lists them. Bump only when Ben asks." ;;
+      11) echo "pstack-claude check: $(echo "$out" | grep '^diverged: ')." ;;
+    esac
+    exit 0 ;;
   -*) echo "usage: sh .claude/update-pstack.sh [commit | --check]" >&2; exit 2 ;;
 esac
 

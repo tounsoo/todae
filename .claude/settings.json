@@ -9,6 +9,16 @@
             "command": "cd \"$CLAUDE_PROJECT_DIR/.claude\" && { grep -qx 'session hook: off' pstack-models.md || cat pstack-session-start.md; }"
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && sh .claude/update-pstack.sh --brief",
+            "timeout": 15
+          }
+        ]
       }
     ]
   }
