@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -9,9 +9,11 @@ import { fileURLToPath } from 'node:url';
 
 import {
   CHANGE_TYPES,
+  SHARED_ROUTES,
   STEPS,
   UsageError,
   checkPage,
+  childEnv,
   checkPath,
   classify,
   driveSite,
@@ -76,7 +78,7 @@ describe('planFor', () => {
   test('build-ds precedes size and fernway, and steps are de-duplicated across types', () => {
     const { types, steps } = planFor(['examples/fernway/a.ts', 'packages/design-system/src/a.ts', 'apps/docs/lib/a.ts']);
     assert.deepEqual(types, ['component', 'docs', 'example']);
-    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'size', 'docs-unit', 'drive', 'fernway']);
+    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'size', 'publish-check', 'docs-unit', 'docs-build', 'drive', 'fernway']);
     assert.equal(new Set(steps).size, steps.length);
   });
 
@@ -119,16 +121,25 @@ describe('routesFor', () => {
     assert.deepEqual(routesFor(['apps/docs/app/(en)/(guides)/guides/start/page.mdx']), ['/guides/start', '/ko/guides/start']);
   });
 
-  test('a dynamic segment or a non-page docs file falls back to the root', () => {
-    assert.deepEqual(routesFor(['apps/docs/app/ko/[...slug]/page.tsx']), ['/', '/ko']);
-    assert.deepEqual(routesFor(['apps/docs/components/Header.tsx']), ['/', '/ko']);
-    assert.deepEqual(routesFor(['apps/docs/app/(en)/button/layout.tsx']), ['/', '/ko']);
+  const shared = ['/', '/ko', '/button', '/ko/button', '/field/select', '/ko/field/select', '/playground', '/ko/playground'];
+
+  test('a dynamic segment or a shared docs file drives the shared set, since it can break any page', () => {
+    assert.deepEqual(routesFor(['apps/docs/app/ko/[...slug]/page.tsx']), shared);
+    assert.deepEqual(routesFor(['apps/docs/components/PropsTable.tsx']), shared);
+    assert.deepEqual(routesFor(['apps/docs/app/(en)/button/layout.tsx']), shared);
   });
 
-  test('a deleted page falls back to the root, and duplicates collapse after pairing', () => {
-    assert.deepEqual(routesFor(['apps/docs/app/(en)/gone/page.mdx'], () => false), ['/', '/ko']);
+  test('each shared route is a real docs page', () => {
+    for (const route of SHARED_ROUTES) {
+      const dir = path.join(repoRoot, 'apps/docs/app/(en)', route);
+      assert.ok(['page.mdx', 'page.tsx'].some((name) => existsSync(path.join(dir, name))), route);
+    }
+  });
+
+  test('a deleted page drives the shared set, and duplicates collapse after pairing', () => {
+    assert.deepEqual(routesFor(['apps/docs/app/(en)/gone/page.mdx'], () => false), shared);
     const files = ['apps/docs/app/(en)/button/page.mdx', 'apps/docs/app/ko/button/page.mdx', 'apps/docs/lib/a.ts'];
-    assert.deepEqual(routesFor(files), ['/button', '/ko/button', '/', '/ko']);
+    assert.deepEqual(routesFor(files), ['/button', '/ko/button', '/', '/ko', '/field/select', '/ko/field/select', '/playground', '/ko/playground']);
   });
 
   test('files outside the docs app add no routes', () => {
@@ -217,6 +228,22 @@ describe('a partial run', () => {
     ]);
     assert.equal(verdictOf([{ status: 'passed' }, ...skipped]), 'BLOCKED');
     assert.equal(verdictOf(skippedResults(['check'], [])), 'BLOCKED');
+  });
+});
+
+describe('childEnv', () => {
+  test('steps and the docs server never inherit the Vercel tokens', () => {
+    process.env.VERCEL_AUTOMATION_BYPASS_SECRET = 'bypass-for-test';
+    process.env.VERCEL_OIDC_TOKEN = 'oidc-for-test';
+    try {
+      const env = childEnv();
+      assert.equal(env.VERCEL_AUTOMATION_BYPASS_SECRET, undefined);
+      assert.equal(env.VERCEL_OIDC_TOKEN, undefined);
+      assert.equal(env.PATH, process.env.PATH);
+    } finally {
+      delete process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+      delete process.env.VERCEL_OIDC_TOKEN;
+    }
   });
 });
 
@@ -422,6 +449,19 @@ describe('sameSiteFetch', () => {
     assert.equal((await checkPage(base.origin, '/trailing')).ok, true);
   });
 
+  test('a preview that answers 401 or sends the reader to sign in elsewhere is blocked, not failed', async () => {
+    const other = await start((_request, response) => response.end('sign in'));
+    const base = await start((request, response) => {
+      if (request.url === '/sso') return response.writeHead(307, { location: `${other.origin}/login` }).end();
+      response.writeHead(401).end('Authentication Required');
+    });
+    const driven = await driveSite(base.origin, ['/x'], {}, { remote: true });
+    assert.match(driven.blocked, /the preview answered 401/);
+    assert.match((await checkPage(base.origin, '/sso', {}, { remote: true })).blocked, /likely the Vercel sign-in/);
+    assert.equal(other.seen.length, 0);
+    assert.match((await checkPage(base.origin, '/x')).reason, /returned 401/);
+  });
+
   test('driveSite drives English then Korean and reports an unreachable server as blocked', async () => {
     const base = await start((request, response) => response.end(page(request.url.startsWith('/ko') ? 'ko' : 'en')));
     const driven = await driveSite(base.origin, ['/button']);
@@ -454,6 +494,11 @@ describe('command line', () => {
       cwd: repoRoot,
       encoding: 'utf8',
     });
+    assert.equal(run.status, 64);
+  });
+
+  test('run --only with no step is a usage error', () => {
+    const run = spawnSync(process.execPath, [path.join(here, 'verify.mjs'), 'run', '--only', ','], { cwd: repoRoot, encoding: 'utf8' });
     assert.equal(run.status, 64);
   });
 

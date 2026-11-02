@@ -32,15 +32,15 @@ A run ends in one of three verdicts. The exit code carries it.
 | Type | Files | Proof |
 | --- | --- | --- |
 | `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check` and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
-| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and the size check. |
-| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, and a drive of the touched routes in English and Korean. |
+| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build, the size check and `pnpm publish:check`. |
+| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, and a drive of the touched routes in English and Korean. |
 | `example` | `examples/` | the package build and the Fernway example build. |
 | `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test and `verify.test.mjs`. Review covers the rest. |
 | `ci` | `.github/`, root config, `scripts/` | `pnpm check` and the unit tests. The CI run on the pull request head is the rest of the proof, so cite its link. |
 | `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
 | `other` | anything else | `pnpm check` and the unit tests. |
 
-The unit, docs and browser tests import the built package, as CI's Build job does, so the plan runs `pnpm build:ds` before them.
+The unit, docs and browser tests, the size and publish checks and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
 
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
 
@@ -52,7 +52,7 @@ A passing step for one type does not prove another. A unit test does not show a 
 node .claude/skills/verify/verify.mjs launch
 ```
 
-That runs `next dev` for `apps/docs` on port 3322 and writes its pid to `.verify/scratch/claude-server.json`. Port 3321 belongs to the Cursor helper. Ready means `/` returned 200 and its HTML has `data-appearance`, not only that a process started. The launch refuses a port that something else already answers on. If the app never answers, the result is `BLOCKED` with the last lines of `.verify/scratch/claude-docs.log`. Build the package with `pnpm build:ds` first if the log says the docs app can't resolve `@tounsoo/todae`.
+That runs `next dev` for `apps/docs` on port 3322 and writes its pid to `.verify/scratch/claude-server.json`. Port 3321 belongs to the Cursor helper. Ready means the server answered `/`, not only that a process started. When `/` answers with an error page, launch says so, and the drive of `/` then fails, so a change that breaks the home page is `FAIL`, not `BLOCKED`. The launch refuses a port that something else already answers on. If the app never answers, or exits, the result is `BLOCKED` with the last lines of `.verify/scratch/claude-docs.log`. Build the package with `pnpm build:ds` first if the log says the docs app can't resolve `@tounsoo/todae`.
 
 ## DOCTOR
 
@@ -78,13 +78,13 @@ Each path is driven in both languages. `/button` also opens `/ko/button`, and `/
 
 A local `--url` must be the server `launch` started from this checkout, on the port in its pid file, and the tree must be clean. Any other local server is `BLOCKED`, because nothing ties what it serves to HEAD.
 
-`run` derives the paths from the diff. A changed `page.mdx` or `page.tsx` under `apps/docs/app/(en)/` or `apps/docs/app/ko/` gives its route. Any other docs file gives `/`.
+`run` derives the paths from the diff. A changed `page.mdx` or `page.tsx` under `apps/docs/app/(en)/` or `apps/docs/app/ko/` gives its route. Any other docs file, such as a component, a layout or the Korean catch-all page, can break any page, so it gives the shared set in `SHARED_ROUTES`: `/`, `/button`, `/field/select` and `/playground`.
 
 ### A Vercel preview
 
 The helper accepts only todae's own preview hosts, `https://todae-<id>-ben-eunsoo-hos-projects.vercel.app`, on the default port. Any other `*.vercel.app` host is refused, so no other Vercel project gets a token. A preview needs `--expect-sha` and `--deployment-sha`. Read the deployment yourself with the Vercel tools. Its state is `READY` and its `meta.githubCommitSha` is the pull request head. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper requires the two to match each other and HEAD, and labels the line caller-asserted. It does not call the Vercel API, so cite the deployment id you read next to that line.
 
-Previews ask for Vercel SSO. When `VERCEL_AUTOMATION_BYPASS_SECRET` or `VERCEL_OIDC_TOKEN` is set, the helper sends it as a header, but only to the preview's own origin. It follows redirects itself and refuses one that leaves that origin, so the token never goes to another host. A path must start with one `/`. A path such as `//other.example` or a full URL is refused. The helper never prints or writes a token. With neither variable set, drive the local app instead, or read the preview with the Vercel MCP `web_fetch_vercel_url` tool and cite that read.
+Previews ask for Vercel SSO. When `VERCEL_AUTOMATION_BYPASS_SECRET` or `VERCEL_OIDC_TOKEN` is set, the helper sends it as a header, but only to the preview's own origin. It follows redirects itself and refuses one that leaves that origin, so the token never goes to another host. A path must start with one `/`. A path such as `//other.example` or a full URL is refused. The helper never prints or writes a token, and the steps and the docs server it starts don't inherit either variable. A preview that answers 401 or 403, or redirects to a sign-in on another host, is `BLOCKED`, since the drive could not read the page. With neither variable set, drive the local app instead, or read the preview with the Vercel MCP `web_fetch_vercel_url` tool and cite that read.
 
 ## EVIDENCE
 

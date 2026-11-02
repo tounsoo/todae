@@ -1,8 +1,8 @@
 # Task prompt template
 
-Use this template for every brief that starts work on todae: the brief that starts a Duet thread, and the brief a thread gives a subagent. The reader knows only what the brief says, so fill each part or write "None". Delete the comments.
+Use this template for every brief that starts work on todae: the brief that starts a Duet thread, and the brief a thread gives a subagent. The reader knows only what the brief says, so fill each part or write "None". Delete the comments, and keep every line that is not a comment.
 
-A subagent brief keeps the Rules part word for word, because a subagent doesn't read `CLAUDE.md` or `.claude/thread-start.md`.
+A thread brief keeps the Rules part and drops Subagent rules. A subagent brief keeps both parts word for word, because a subagent doesn't read `CLAUDE.md` or `.claude/thread-start.md`, and its Subagent rules win where the two differ.
 
 ```md
 ## Goal
@@ -36,7 +36,12 @@ or that each BLOCKED step is listed under Unverified checks.
 - No force-push or rebase without Ben's yes.
 - Don't change a design token without Ben's approval.
 - Use the GitHub MCP tools, not `gh`.
-<!-- For a subagent, add: Don't open, push to, comment on, or mark a pull request. Commit on your own branch and return. -->
+
+## Subagent rules
+
+- Don't open, push to, comment on, or mark a pull request, and don't subscribe to one. The thread that started you does every write to the pull request.
+- Commit on your own worktree branch and return. Don't reset or rewrite any other branch.
+- Report your commit SHA, not a pull request link.
 
 ## Report
 

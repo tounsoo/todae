@@ -24,6 +24,7 @@ const MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const STAMP_PATTERN = /^claude-\d{8}T\d{6}Z$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
+const TOKEN_NAMES = ['VERCEL_AUTOMATION_BYPASS_SECRET', 'VERCEL_OIDC_TOKEN'];
 const PREVIEW_HOST = /^todae-[a-z0-9-]+-ben-eunsoo-hos-projects\.vercel\.app$/;
 
 export const EXIT = { PASS: 0, FAIL: 1, BLOCKED: 2, USAGE: 64 };
@@ -47,15 +48,15 @@ export const CHANGE_TYPES = [
     id: 'component',
     label: 'Design system package',
     match: under('packages/design-system/'),
-    steps: ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'size'],
-    proof: 'unit and browser tests, schema with no diff, build and size',
+    steps: ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'size', 'publish-check'],
+    proof: 'unit and browser tests, schema with no diff, build, size and publish checks',
   },
   {
     id: 'docs',
     label: 'Docs app',
     match: under('apps/docs/'),
-    steps: ['typecheck', 'lint', 'docs-unit', 'drive'],
-    proof: 'docs typecheck and tests, and the touched routes driven in English and Korean',
+    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'drive'],
+    proof: 'docs typecheck, tests and build, and the touched routes driven in English and Korean',
   },
   {
     id: 'example',
@@ -137,6 +138,8 @@ export const STEPS = {
   },
   'build-ds': { id: 'build-ds', label: 'Build the design system', cmd: ['pnpm', 'build:ds'] },
   size: { id: 'size', label: 'Bundle size budget', cmd: ['pnpm', 'size:check'], needs: ['build-ds'] },
+  'publish-check': { id: 'publish-check', label: 'Publish checks', cmd: ['pnpm', 'publish:check'], needs: ['build-ds'] },
+  'docs-build': { id: 'docs-build', label: 'Build the docs site', cmd: ['pnpm', '--filter', 'docs', 'build'], needs: ['build-ds'] },
   fernway: {
     id: 'fernway',
     label: 'Build the Fernway example',
@@ -207,11 +210,14 @@ function routeOf(file) {
   return `${prefix}/${segments.join('/')}`.replace(/\/$/, '') || '/';
 }
 
+export const SHARED_ROUTES = ['/', '/button', '/field/select', '/playground'];
+
 export function routesFor(files, exists = () => true) {
   const routes = [];
   for (const file of files) {
     if (!file.startsWith('apps/docs/')) continue;
-    routes.push((exists(file) && routeOf(file)) || '/');
+    const route = exists(file) && routeOf(file);
+    routes.push(...(route ? [route] : SHARED_ROUTES));
   }
   return pairLocales(routes);
 }
@@ -224,7 +230,7 @@ export function verdictOf(results) {
 
 export function redact(text, env = process.env) {
   let out = String(text);
-  for (const name of ['VERCEL_AUTOMATION_BYPASS_SECRET', 'VERCEL_OIDC_TOKEN']) {
+  for (const name of TOKEN_NAMES) {
     const secret = env[name];
     if (!secret) continue;
     for (const form of new Set([secret, JSON.stringify(secret).slice(1, -1)])) {
@@ -317,7 +323,10 @@ export async function checkPage(base, value, headers = {}, options = {}) {
   const record = { path: value, locale, status: 0, lang: null, h1: '', ok: false };
   const response = await sameSiteFetch(base, url, headers, options);
   record.status = response.status;
-  if (response.reason) return { ...record, reason: response.reason };
+  if (response.reason) {
+    const wall = options.remote && /^redirected off the site/.test(response.reason);
+    return wall ? { ...record, blocked: `${response.reason}, likely the Vercel sign-in; set VERCEL_AUTOMATION_BYPASS_SECRET or drive the local app` } : { ...record, reason: response.reason };
+  }
   const html = response.body;
   const landed = new URL(response.url).pathname.replace(/(.)\/$/, '$1');
   const asked = url.pathname.replace(/(.)\/$/, '$1');
@@ -326,6 +335,9 @@ export async function checkPage(base, value, headers = {}, options = {}) {
   const reasons = [];
   if (landed !== asked) reasons.push(`redirected to ${landed}, so ${asked} itself was not shown`);
   if (response.status !== 200) reasons.push(`returned ${response.status}, expected 200`);
+  if (options.remote && [401, 403].includes(response.status)) {
+    return { ...record, blocked: `the preview answered ${response.status}; set VERCEL_AUTOMATION_BYPASS_SECRET or drive the local app` };
+  }
   if (!html.includes('data-appearance')) reasons.push('no data-appearance, so this is not the docs site (login wall?)');
   if (record.lang !== locale) reasons.push(`html lang is ${record.lang ?? 'missing'}, expected ${locale}`);
   if (!record.h1) reasons.push('no non-empty h1');
@@ -348,7 +360,8 @@ export async function driveSite(base, paths, headers = {}, options = {}) {
       return { pages, blocked: `could not reach ${new URL(base).origin}: ${describeNetworkError(error)}` };
     }
   }
-  return { pages, blocked: null };
+  const wall = pages.find((page) => page.blocked);
+  return { pages, blocked: wall ? `${wall.path}: ${wall.blocked}` : null };
 }
 
 const oneLine = (value) => String(value).replace(/\s+/g, ' ').trim();
@@ -400,10 +413,16 @@ async function gitTry(argv) {
   }
 }
 
+export function childEnv() {
+  const env = { ...process.env };
+  for (const name of TOKEN_NAMES) delete env[name];
+  return env;
+}
+
 function capture(cmd) {
   return new Promise((resolve) => {
     let output = '';
-    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, env: childEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
     for (const stream of [child.stdout, child.stderr]) {
       stream.setEncoding('utf8');
       stream.on('data', (chunk) => {
@@ -577,12 +596,13 @@ async function logTail(lines = 15) {
   }
 }
 
-async function ready(port) {
+async function answer(port) {
   try {
-    const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(5000) });
-    return response.status === 200 && (await response.text()).includes('data-appearance');
+    const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(120_000) });
+    const html = await response.text();
+    return { status: response.status, home: response.status === 200 && html.includes('data-appearance') };
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -600,6 +620,7 @@ async function launch(port = DEFAULT_PORT, { onSpawn } = {}) {
   try {
     child = spawn('pnpm', ['--filter', 'docs', 'exec', 'next', 'dev', '--port', String(port)], {
       cwd: root,
+      env: childEnv(),
       detached: true,
       stdio: ['ignore', fd, fd],
     });
@@ -623,7 +644,8 @@ async function launch(port = DEFAULT_PORT, { onSpawn } = {}) {
   const deadline = Date.now() + LAUNCH_TIMEOUT_MS;
   try {
     while (Date.now() < deadline) {
-      if (await ready(port)) return { url: `http://127.0.0.1:${port}`, port, pid: child.pid };
+      const reply = await answer(port);
+      if (reply) return { url: `http://127.0.0.1:${port}`, port, pid: child.pid, home: reply };
       if (!alive(child.pid)) throw new Blocked(`the docs server exited before it was ready. Log tail:\n${await logTail()}`);
       await delay(1000);
     }
@@ -696,7 +718,7 @@ async function driveCommand(flags, routes) {
   if (!head || !SHA_PATTERN.test(head)) throw new Blocked('HEAD does not resolve to a commit');
   const commit = await testedCommit(baseInfo, flags, head);
   const headers = baseInfo.remote ? bypassHeaders() : {};
-  const outcome = await driveSite(baseInfo.url.origin, routes, headers);
+  const outcome = await driveSite(baseInfo.url.origin, routes, headers, { remote: baseInfo.remote });
   return { base: baseInfo.url.origin, ...commit, ...outcome };
 }
 
@@ -840,6 +862,7 @@ export function skippedResults(planned, ran) {
 
 async function run(flags) {
   if (flags.url) parseBase(flags.url);
+  if (flags.only !== undefined && !String(flags.only).split(',').some((item) => item.trim())) throw new UsageError('--only names no step');
   const startedAt = new Date().toISOString();
   const stamp = `claude-${stampNow()}`;
   const dir = path.join(evidenceRoot, stamp);
@@ -865,6 +888,7 @@ async function run(flags) {
       let steps = plan.steps;
       if (flags.only) {
         const only = flags.only.split(',').map((item) => item.trim()).filter(Boolean);
+        for (const id of [...only]) for (const need of STEPS[id]?.needs ?? []) if (!only.includes(need)) only.push(need);
         const unknown = only.filter((id) => !steps.includes(id));
         if (unknown.length) throw new UsageError(`--only names steps that are not in the plan: ${unknown.join(', ')}`);
         steps = steps.filter((id) => only.includes(id));
@@ -1091,6 +1115,7 @@ async function main(argv) {
     if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new UsageError('--port must be an integer from 1024 to 65535');
     const server = await launch(port);
     say(`launch ready ${server.url} pid=${server.pid}`);
+    if (!server.home.home) say(`warning: / returned ${server.home.status} without the docs page, so a drive of it will fail`);
     return 0;
   }
   if (command === 'doctor') {
