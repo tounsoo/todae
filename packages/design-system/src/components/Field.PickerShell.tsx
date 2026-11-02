@@ -1,13 +1,161 @@
-import type { ComponentPropsWithRef, ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useDomId } from '../internal/domId.js';
-import { mergeDescribedBy } from './Field.context.js';
+import { mergeDescribedBy, useFieldContext } from './Field.context.js';
+import { hasControl, serverNo, useRegistryValue } from './fieldRegistry.js';
+import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from './useField.js';
 import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
-import type { PopoverCloseReason, PopoverHaspopup } from '../hooks/usePopover.js';
+import { useControlledState } from '../hooks/useControlledState.js';
+import {
+  usePopover,
+  type PopoverCloseReason,
+  type PopoverHaspopup,
+  type PopoverTriggerUserProps,
+} from '../hooks/usePopover.js';
 import { Popover, type PopoverChrome } from './Popover.js';
-import { useFieldPicker } from './Field.shared.js';
 import { FieldValueInput } from './Field.ValueInput.js';
-import type { ValueInputOptions } from './valueInput.js';
+import type { ControlBrand, ValueInputOptions } from './valueInput.js';
+
+type PickerOwnProps = {
+  name?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: FieldControlUserProps['aria-invalid'];
+};
+
+/**
+ * A picker's control props. Alone, it is the field's control. Beside another
+ * control, that control takes the field's id and description, and the button
+ * keeps the ref that tracks it, `disabled` and `aria-invalid`, and is named
+ * `label`. Either way the button has no name: the picker's value input takes it.
+ */
+function pickerControl<P extends PickerOwnProps>(
+  beside: boolean,
+  field: UseFieldResult,
+  props: P,
+  label: string,
+) {
+  // The button never sends: its value input takes the name.
+  const control = field.getControlProps(props, { sendsName: false });
+  if (!beside) return control;
+  const { name: _own, ...own } = props;
+  return {
+    ...own,
+    ref: control.ref,
+    disabled: control.disabled,
+    'aria-invalid': control['aria-invalid'],
+    'aria-label': props['aria-label'] ?? label,
+  } as typeof own & Pick<typeof control, 'ref' | 'disabled' | 'aria-invalid'> & ControlBrand;
+}
+
+/**
+ * What the Field pickers share: Field.ColorPicker, Field.DatePicker,
+ * Field.DateRangePicker, Field.TimePicker and Field.DateTimePicker. It gives
+ * the button's control props, the open state, which closes when the field is
+ * disabled, and the popover, which focuses the element `focusSelector` finds
+ * when it opens, or without one its first tabbable.
+ */
+export function useFieldPicker<Reason extends string>({
+  props,
+  label,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  style,
+  focusSelector,
+  haspopup,
+  required,
+}: {
+  props: PickerOwnProps & Record<string, unknown>;
+  label: string;
+  /** The picker is required: its value input says so, and the button is described as required. */
+  required?: boolean;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean, reason: Reason | PopoverCloseReason | 'disabled') => void;
+  style?: CSSProperties;
+  focusSelector?: string;
+  /** What the popover holds, for the button's aria-haspopup: a dialog by default. */
+  haspopup?: PopoverHaspopup;
+}) {
+  // A press on the shell beside the button toggles it, through the field's registry.
+  const toggleRef = useRef(() => {});
+  const toggle = useCallback(() => toggleRef.current(), []);
+  // A picker, not a control: it leaves the field to any control beside it.
+  const field = useFieldControl({ role: 'picker', toggle });
+  const { shellRef, registry } = useFieldContext();
+  const beside = useRegistryValue(registry, hasControl, serverNo);
+  // A button cannot say `aria-required`, so a required picker is described as required.
+  const requiredId = useDomId();
+  const describedBy = mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined);
+  // Another control in the field takes its id and description.
+  const control = pickerControl(beside, field, { ...props, 'aria-describedby': describedBy }, label);
+  const [open, setOpen] = useControlledState<boolean, [Reason | PopoverCloseReason | 'disabled']>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
+  // A disabled field shows no popover, and one open when the field is
+  // disabled closes, so it does not come back when the field is enabled again.
+  const shown = open && !control.disabled;
+  const close = useRef(setOpen);
+  close.current = setOpen;
+  useEffect(() => {
+    if (open && control.disabled) close.current(false, 'disabled');
+  }, [control.disabled, open]);
+  const popoverRef = useRef<RefObject<HTMLElement | null> | null>(null);
+  const initialFocusRef = useMemo(
+    () =>
+      focusSelector === undefined
+        ? undefined
+        : {
+            get current() {
+              return popoverRef.current?.current?.querySelector<HTMLElement>(focusSelector) ?? null;
+            },
+          },
+    [focusSelector],
+  );
+  const popover = usePopover({
+    open: shown,
+    // A read-only open has no one to ask, so the popover asks no one either.
+    onOpenChange: openProp === undefined || onOpenChange ? setOpen : undefined,
+    // For the outside-press check: a press anywhere in the field is not outside.
+    anchorRef: shellRef,
+    initialFocusRef,
+    enabled: !control.disabled,
+    haspopup,
+  });
+  popoverRef.current = popover.popoverRef;
+  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  toggleRef.current = () => {
+    if (!control.disabled) setOpen(!shown, 'trigger');
+  };
+  // A button sends nothing and the browser can't validate it, so the value goes in a value input, which follows the button; and a required picker says so.
+  const valueInput = (options: Omit<ValueInputOptions, 'name' | 'required'>) => ({
+    input: field.getValueInputProps({ name: props.name, required, ...options }, control),
+    requiredId: required ? requiredId : undefined,
+  });
+  return {
+    valueInput,
+    notifyValueChange: field.notifyValueChange,
+    shown,
+    setOpen,
+    popover,
+    // The popover exists only while open, so only then does the button control it.
+    triggerProps: { ...(trigger as ComponentPropsWithRef<'button'>), 'aria-controls': shown ? trigger['aria-controls'] : undefined },
+  };
+}
+
 
 /** Why a picker's popover closed: a popover's reasons, a pick, or the field became disabled. */
 export type PickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -57,9 +205,8 @@ export type PickerShellProps<Value> = {
 } & PickerButtonProps;
 
 /**
- * The button, value input and popover that Field.DatePicker,
- * Field.DateRangePicker, Field.TimePicker and Field.DateTimePicker render
- * around useFieldPicker: the value's text, or the placeholder, beside a glyph,
+ * The button, value input and popover that every picker but Field.ColorPicker
+ * renders around useFieldPicker: the value's text, or the placeholder, beside a glyph,
  * with `showValue={false}` the glyph only.
  */
 export function PickerShell<Value>({
@@ -102,7 +249,6 @@ export function PickerShell<Value>({
       <button
         {...picker.triggerProps}
         type="button"
-        data-todae-field-picker=""
         data-glyph-only={showValue ? undefined : ''}
         className={cx(styles.picker, className)}
       >

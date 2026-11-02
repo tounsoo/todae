@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type Ref } from 'react';
 import { activeIn } from '../internal/activeElement.js';
-import { mergeDescribedBy, useFieldContext } from './Field.context.js';
 import { cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useField } from './useField.js';
-import { useTextEntry, valueChangeHandler } from './Field.shared.js';
+import { useTextControl } from './useTextControl.js';
 import { warnOnce } from '../internal/warnOnce.js';
 
 /**
@@ -65,7 +64,6 @@ export function TextInput({
     });
     return () => cancelAnimationFrame(frame);
   }, [type]);
-  const ctx = useFieldContext();
   // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
   const legacyNumber = (type as string) === 'number';
   if (legacyNumber) {
@@ -73,17 +71,16 @@ export function TextInput({
   }
   // Browsers ignore maxLength on a native number input, so that path shows and announces no limit, as it always did.
   const limit = typeof maxLength === 'number' && !legacyNumber ? maxLength : undefined;
-  const counterMounted = useTextEntry(ctx.store, value, limit);
-  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
+  const text = useTextControl({ value, limit, describedBy, onChange, onValueChange, readOnly });
   return (
     <input
-      {...field.getControlProps({ ...props, ref: composedRef, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
+      {...field.getControlProps({ ...props, ref: composedRef, 'aria-describedby': text.describedBy })}
       maxLength={maxLength}
       value={value}
       type={type}
       className={cx(styles.input, className)}
-      onChange={valueChangeHandler(onChange, onValueChange)}
-      readOnly={readOnly ?? (!onChange && !onValueChange)}
+      onChange={text.onChange}
+      readOnly={text.readOnly}
     />
   );
 }

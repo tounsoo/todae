@@ -7,7 +7,8 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { useFieldContext, useStepper } from './Field.context.js';
+import { useFieldContext } from './Field.context.js';
+import { readStepper, useRegistryValue } from './fieldRegistry.js';
 import { useButtonName } from './buttonName.js';
 import { MinusGlyph, PlusGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
@@ -43,8 +44,8 @@ function StepButton({
   ref,
   ...props
 }: FieldStepButtonProps & { direction: 1 | -1; label: (field: string) => string; glyph: ReactNode }) {
-  const { store } = useFieldContext();
-  const stepper = useStepper(store);
+  const { registry } = useFieldContext();
+  const stepper = useRegistryValue(registry, readStepper, () => null);
   // Several number fields have the same two buttons, so the name Todae gives them says whose.
   const [name, labelRefs] = useButtonName(children, ariaLabel, ref, label(stepper?.label ?? ''));
   const node = useRef<HTMLButtonElement>(null);
@@ -64,8 +65,8 @@ function StepButton({
   useEffect(() => stop, [stop]);
   // Once on mount, after the layout effects in which a Field.NumberInput registers, even one that follows this button.
   useEffect(() => {
-    if (!store.stepper) warnOnce('step-button', 'Field.Increment and Field.Decrement have no Field.NumberInput in their Field.Root');
-  }, [store]);
+    if (!registry.stepper()) warnOnce('step-button', 'Field.Increment and Field.Decrement have no Field.NumberInput in their Field.Root');
+  }, [registry]);
 
   function press(event: PointerEvent<HTMLButtonElement>) {
     if (event.button !== 0 || disabled || !stepper) return;
@@ -76,7 +77,7 @@ function StepButton({
     const delay = tokenMs(node.current, '--todae-field-stepper-repeat-delay') ?? REPEAT_DELAY_MS;
     const interval = tokenMs(node.current, '--todae-field-stepper-repeat-interval') ?? REPEAT_INTERVAL_MS;
     timers.current.delay = window.setTimeout(() => {
-      timers.current.repeat = window.setInterval(() => store.stepper?.step(direction), interval);
+      timers.current.repeat = window.setInterval(() => registry.stepper()?.step(direction), interval);
     }, delay);
   }
 
