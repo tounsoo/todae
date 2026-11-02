@@ -261,7 +261,10 @@ export function routesFor(files, exists = () => true, importers = new Map()) {
           found.push(parentRoute);
           continue;
         }
-        if (SHARED_ENTRY.test(parent) && !/\.test\.[cm]?[jt]sx?$/.test(parent)) shared = true;
+        const test = /\.test\.[cm]?[jt]sx?$/.test(parent);
+        // A file under app/ that is not a page, such as a layout, or a non-test file nothing imports,
+        // such as mdx-components.tsx, is an entry Next loads for many pages.
+        if (!test && (SHARED_ENTRY.test(parent) || !importers.get(parent)?.length)) shared = true;
         queue.push(parent);
       }
     }
