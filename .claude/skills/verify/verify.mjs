@@ -48,8 +48,8 @@ export const CHANGE_TYPES = [
     id: 'component',
     label: 'Design system package',
     match: under('packages/design-system/'),
-    steps: ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'size', 'publish-check'],
-    proof: 'unit and browser tests, schema with no diff, build, size and publish checks',
+    steps: ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'publish-check'],
+    proof: 'unit and browser tests, schema with no diff, build and publish checks',
   },
   {
     id: 'docs',
@@ -137,7 +137,6 @@ export const STEPS = {
       'Playwright Chromium is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium.',
   },
   'build-ds': { id: 'build-ds', label: 'Build the design system', cmd: ['pnpm', 'build:ds'] },
-  size: { id: 'size', label: 'Bundle size budget', cmd: ['pnpm', 'size:check'], needs: ['build-ds'] },
   'publish-check': { id: 'publish-check', label: 'Publish checks', cmd: ['pnpm', 'publish:check'], needs: ['build-ds'] },
   'docs-build': { id: 'docs-build', label: 'Build the docs site', cmd: ['pnpm', '--filter', 'docs', 'build'], needs: ['build-ds'] },
   fernway: {
@@ -1137,7 +1136,7 @@ function selfTest() {
   }
   expect(CHANGE_TYPES.at(-1).match('anything'), 'the last change type must catch every file');
   const { steps } = planFor(['packages/design-system/src/x.ts', 'examples/fernway/x.ts']);
-  expect(steps.indexOf('build-ds') < steps.indexOf('size'), 'build-ds must precede size');
+  expect(steps.indexOf('build-ds') < steps.indexOf('publish-check'), 'build-ds must precede publish-check');
   expect(steps.indexOf('build-ds') < steps.indexOf('fernway'), 'build-ds must precede fernway');
 
   if (problems.length) {

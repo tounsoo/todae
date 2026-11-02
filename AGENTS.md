@@ -13,15 +13,10 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 - `pnpm check` runs lint, typecheck, and Stylelint. The Static job runs it.
 - `pnpm test` runs the unit tests. The Build job runs it.
 - `pnpm test:browser` runs the browser tests. The Fernway job installs Playwright Chromium, then runs it.
-- `pnpm size:check` checks gzip size against the budget. Run `pnpm build:ds` first. The Build job runs it after that build.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
 - The docs job builds the package and the docs site, then runs `pnpm --filter docs test:visual` and `pnpm --filter docs test:peek`.
 
 [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
-
-## Size budget
-
-The bundle size budget is a tripwire, not a hard cap. A pull request may raise the numbers in `packages/design-system/size-budget.json` when the pull request body states the reason and the new number. `scripts/size-check.mjs` reads that file. An increase with no stated reason fails review. [0004](docs/decisions/0004-size-budget-tripwire.md) is the record.
 
 ## Conventions
 

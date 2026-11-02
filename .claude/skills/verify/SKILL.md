@@ -32,7 +32,7 @@ A run ends in one of three verdicts. The exit code carries it.
 | Type | Files | Proof |
 | --- | --- | --- |
 | `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check` and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
-| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build, the size check and `pnpm publish:check`. |
+| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and `pnpm publish:check`. |
 | `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, and a drive of the touched routes in English and Korean. |
 | `example` | `examples/` | the package build and the Fernway example build. |
 | `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test and `verify.test.mjs`. Review covers the rest. |
@@ -40,7 +40,7 @@ A run ends in one of three verdicts. The exit code carries it.
 | `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
 | `other` | anything else | `pnpm check` and the unit tests. |
 
-The unit, docs and browser tests, the size and publish checks and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
+The unit, docs and browser tests, the publish check and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
 
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
 

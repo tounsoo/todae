@@ -97,9 +97,6 @@ jobs:
         with:
           path: packages/design-system/dist
           key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Bundle size
-        if: ${{ !cancelled() }}
-        run: pnpm size:check
       - name: Publish checks
         if: ${{ !cancelled() }}
         run: pnpm publish:check

@@ -47,7 +47,7 @@ describe('classification', () => {
     assert.deepEqual(ids(['.claude/skills/verify/verify.mjs']), ['agent']);
     assert.deepEqual(ids(['.agents/x.md']), ['agent']);
     assert.deepEqual(ids(['.github/workflows/ci.yml']), ['ci']);
-    assert.deepEqual(ids(['scripts/size-check.mjs']), ['ci']);
+    assert.deepEqual(ids(['scripts/publish-check.sh']), ['ci']);
     assert.deepEqual(ids(['.changeset/config.json']), ['ci']);
     assert.deepEqual(ids(['LICENSE']), ['other']);
   });
@@ -76,14 +76,14 @@ describe('classification', () => {
 });
 
 describe('planFor', () => {
-  test('build-ds precedes size and fernway, and steps are de-duplicated across types', () => {
+  test('build-ds precedes publish-check and fernway, and steps are de-duplicated across types', () => {
     const { types, steps } = planFor(['examples/fernway/a.ts', 'packages/design-system/src/a.ts', 'apps/docs/lib/a.ts']);
     assert.deepEqual(types, ['component', 'docs', 'example']);
-    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'size', 'publish-check', 'docs-unit', 'docs-build', 'drive', 'fernway']);
+    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'publish-check', 'docs-unit', 'docs-build', 'drive', 'fernway']);
     assert.equal(new Set(steps).size, steps.length);
   });
 
-  test('a lone size need is still ordered after the build it needs', () => {
+  test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
     assert.deepEqual(steps, ['build-ds', 'fernway']);
   });
