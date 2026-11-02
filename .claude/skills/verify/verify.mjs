@@ -17,6 +17,9 @@ const pidPath = path.join(scratchDir, 'server.json');
 const PORT = 3321;
 const WIDE = 1280;
 const NARROW = 390;
+// apps/docs/app/globals.css hides .top-links at max-width 48rem and the menu trigger at min-width 64rem.
+const TOP_LINKS_HIDE_AT = 768;
+const MENU_HIDES_FROM = 1024;
 const REPO = 'https://github.com/tounsoo/todae';
 
 const docsRequire = createRequire(path.join(root, 'apps/docs/package.json'));
@@ -369,6 +372,9 @@ function openUrl(flags) {
 function pageUrl(pathname, flags) {
   const base = new URL(openUrl(flags));
   const target = new URL(pathname, `${base.origin}/`);
+  if (target.origin !== base.origin) {
+    throw new Error(`--paths takes site paths such as /button, and ${JSON.stringify(pathname)} leaves ${base.origin}`);
+  }
   const share = base.searchParams.get('_vercel_share');
   if (share) target.searchParams.set('_vercel_share', share);
   return target.toString();
@@ -390,10 +396,8 @@ async function pathsOf(flags) {
 }
 
 function isLoopback(hostname) {
-  if (hostname === 'localhost' || hostname === 'localhost.' || hostname === '0.0.0.0' || hostname === '[::1]') return true;
-  if (hostname.startsWith('127.')) return true;
-  if (hostname.startsWith('[::ffff:127.') || hostname === '[::ffff:7f00:1]') return true;
-  return false;
+  if (['localhost', 'localhost.', '0.0.0.0', '[::1]', '[::ffff:7f00:1]'].includes(hostname)) return true;
+  return /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
 }
 
 async function assertSha(flags, origin) {
@@ -418,7 +422,11 @@ async function assertSha(flags, origin) {
   if (!flags['deployment-sha']) throw new Error('pass --deployment-sha from the preview deployment meta.githubCommitSha');
   const deploymentSha = fullSha(flags['deployment-sha']);
   if (deploymentSha !== expectSha) throw new Error(`deployment ${deploymentSha} does not match ${expectSha}`);
-    return { expectSha, deploymentSha, mode: 'preview', source: 'caller-asserted' };
+  const deploymentId = flags['deployment-id'];
+  if (typeof deploymentId !== 'string' || !/^dpl_[A-Za-z0-9]+$/.test(deploymentId)) {
+    throw new Error('pass --deployment-id, the dpl_ id of the READY deployment you read');
+  }
+  return { expectSha, deploymentSha, deploymentId, mode: 'preview', source: 'caller-asserted' };
 }
 
 async function withBrowser(callback) {
@@ -497,16 +505,14 @@ async function headerCheck(page, copy, groups, pathname, width) {
     const link = main.locator('a', { hasText: label });
     if ((await link.count()) !== 1) throw new Error(`top link ${label} count ${await link.count()}`);
     const shown = await link.isVisible();
-    if (width > 768 && !shown) throw new Error(`${label} hidden at ${width}`);
-    if (width <= 768 && shown) throw new Error(`${label} visible at ${width}`);
+    if (width > TOP_LINKS_HIDE_AT && !shown) throw new Error(`${label} hidden at ${width}`);
+    if (width <= TOP_LINKS_HIDE_AT && shown) throw new Error(`${label} visible at ${width}`);
     if ((await link.getAttribute('href')) !== href) throw new Error(`${label} href mismatch`);
   }
   const menu = page.getByRole('button', { name: copy.openMenu, exact: true });
-  const playground = bare === '/playground';
-  if (width > 768 && playground && !(await menu.isVisible())) throw new Error('playground menu button hidden on a wide page');
-  if (width > 768 && !playground && (await menu.isVisible())) throw new Error('menu button visible on a wide page');
-  if (width <= 768) {
-    if (!(await menu.isVisible())) throw new Error('menu button hidden on a narrow page');
+  const menuShown = width < MENU_HIDES_FROM || bare === '/playground';
+  if ((await menu.isVisible()) !== menuShown) throw new Error(`menu button ${menuShown ? 'hidden' : 'visible'} at ${width} on ${pathname}`);
+  if (width <= TOP_LINKS_HIDE_AT) {
     await menu.click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor({ state: 'visible' });
@@ -554,7 +560,8 @@ async function drive(flags, browser) {
   let failed = null;
   try {
     const sha = await assertSha(flags, origin);
-    note(`doctor mode=${sha.mode} source=${sha.source} expect-sha=${sha.expectSha} compared-sha=${sha.deploymentSha}`);
+    const deployment = sha.deploymentId ? ` deployment-id=${sha.deploymentId}` : '';
+    note(`doctor mode=${sha.mode} source=${sha.source}${deployment} expect-sha=${sha.expectSha} compared-sha=${sha.deploymentSha}`);
     note(`doctor url=${publicUrl(openUrl(flags))}`);
     for (const pathname of await pathsOf(flags)) {
       for (const width of [WIDE, NARROW]) {
@@ -593,7 +600,7 @@ async function drive(flags, browser) {
   }
   const report = path.join(dir, 'report.txt');
   await writeFile(report, `${lines.join('\n')}\n`);
-  if (!failed) await writeFile(path.join(evidenceRoot, 'latest'), `${dir}\n`);
+  await writeFile(path.join(evidenceRoot, 'latest'), `${dir}\n`);
   if (failed) process.exitCode = 1;
   return dir;
 }
@@ -639,7 +646,7 @@ async function main() {
     }
     return;
   }
-  throw new Error('usage: verify.mjs self-test|launch|cleanup|doctor|drive|run [--launch] [--url URL] --expect-sha SHA [--deployment-sha SHA] [--paths /,/ko]');
+  throw new Error('usage: verify.mjs self-test|launch|cleanup|doctor|drive|run [--launch] [--url URL] --expect-sha SHA [--deployment-sha SHA --deployment-id ID] [--paths /,/ko]');
 }
 
 main().catch((error) => {

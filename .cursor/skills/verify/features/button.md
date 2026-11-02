@@ -20,7 +20,7 @@ Preconditions:
 - Doctor passed for `/button` and `/ko/button`.
 - Both pages return 200.
 
-- **English page.** Run `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --paths /button`. The helper also opens `/ko/button`. The report contains `heading en 1280 /button Button`.
+- **English page.** Run `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --deployment-id <id> --paths /button`. The helper also opens `/ko/button`. The report contains `heading en 1280 /button Button`.
 - **Korean page.** The same command reports `heading ko 1280 /ko/button Button`.
 - **Header.** Both widths report `header ok` for `/button` and `/ko/button`.
 - **Proof.** For a text change, quote the heading lines. For a UI change, attach `en-1280-button.png`, `en-390-button.png`, `ko-1280-ko_button.png`, and `ko-390-ko_button.png`.
