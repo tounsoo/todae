@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, HTMLAttributes, Ref } from 'react';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './EmptyState.module.css';
 
 /** The element a title renders: a heading level that fits the page, or `p` for a title that should stay out of the outline. */

@@ -3,7 +3,7 @@ import { Button, type ButtonActionProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Alert.module.css';
 
 export type AlertTone = 'info' | 'success' | 'warning' | 'critical';

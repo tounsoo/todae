@@ -8,7 +8,7 @@ import {
   type RefObject,
   type UIEvent,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import styles from './Field.module.css';
 
 export type FieldTextareaHighlight = {

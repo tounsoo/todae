@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { optionDomId } from './OptionList.ids.js';
+import { optionDomId } from './optionDomId.js';
 import { domSafe, useDomId } from './domId.js';
 
 describe('domSafe', () => {

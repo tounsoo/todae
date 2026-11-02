@@ -12,11 +12,11 @@ import {
   type Ref,
   type RefObject,
 } from 'react';
-import { activeIn } from './activeElement.js';
+import { activeIn } from '../internal/activeElement.js';
 import { applyEdit, editOf, reconcile, reconcileEdit, slotsOf, type CodeEdit, type CodeSelection, type OneTimeCodeCharacters } from './oneTimeCode.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
-import { useField } from '../hooks/useField.js';
+import { useField } from './useField.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useCustomValidity } from './customValidity.js';
 

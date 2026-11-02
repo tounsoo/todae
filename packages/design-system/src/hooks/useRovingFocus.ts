@@ -8,8 +8,8 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { useDomId } from '../components/domId.js';
-import { useStableComposedRef } from '../components/props.js';
+import { useDomId } from '../internal/domId.js';
+import { useStableComposedRef } from '../internal/props.js';
 import { isReachable } from '../overlay/tabbables.js';
 import { useControlledState } from './useControlledState.js';
 

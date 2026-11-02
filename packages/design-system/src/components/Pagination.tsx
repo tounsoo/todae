@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
 import { DEFAULT_STRINGS } from '../providers/strings.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Pagination.module.css';
 
 export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions } from './paginationRange.js';

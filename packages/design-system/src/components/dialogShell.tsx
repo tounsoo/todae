@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -23,8 +23,8 @@ import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { revealRing } from './revealRing.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { revealRing } from '../internal/revealRing.js';
 
 // The modal machinery Dialog and Drawer share. Each component wraps these
 // parts with its own classes, so neither styles the other's parts.

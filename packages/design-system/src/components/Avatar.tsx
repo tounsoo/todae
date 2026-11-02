@@ -7,9 +7,9 @@ import {
   useState,
   type ComponentPropsWithRef,
 } from 'react';
-import { cx } from './cx.js';
-import { useComposedRefs } from './props.js';
-import { warnOnce } from './warnOnce.js';
+import { cx } from '../internal/cx.js';
+import { useComposedRefs } from '../internal/props.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import styles from './Avatar.module.css';
 import type { CategoryTone } from './tone.js';
 

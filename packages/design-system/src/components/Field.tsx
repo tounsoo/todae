@@ -10,8 +10,8 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { activeIn } from './activeElement.js';
-import { useDomId } from './domId.js';
+import { activeIn } from '../internal/activeElement.js';
+import { useDomId } from '../internal/domId.js';
 import {
   FIELD_CONTROL_SELECTOR,
   FOCUSABLE_FIELD_CONTROL_SELECTOR,
@@ -23,7 +23,7 @@ import { ValidationScopeContext } from './Form.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { useValidationScope } from './ValidationScope.js';
 import { isValidityCarrier, valueInputOf } from './validity.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
 import { createCountStore, pickerToggles } from './Field.shared.js';
 import { TextInput } from './Field.TextInput.js';

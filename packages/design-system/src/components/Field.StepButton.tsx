@@ -10,9 +10,9 @@ import {
 import { useFieldContext, useStepper } from './Field.context.js';
 import { useButtonName } from './buttonName.js';
 import { MinusGlyph, PlusGlyph, glyphOr } from './glyphs.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { tokenMs } from '../overlay/cssTime.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';

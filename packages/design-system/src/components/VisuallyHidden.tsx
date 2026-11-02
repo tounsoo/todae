@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './VisuallyHidden.module.css';
 
 /** The class that hides an element the way `VisuallyHidden.Root` does, for an element that is not a span, such as a value input. */

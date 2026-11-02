@@ -1,7 +1,7 @@
 import { useContext, useEffect, useLayoutEffect, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import { ValidationScopeContext } from './Form.context.js';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import type { FormFieldError } from './validity.js';
 import styles from './ErrorMessage.module.css';
 

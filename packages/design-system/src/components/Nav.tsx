@@ -1,7 +1,7 @@
 import { useId, type ComponentPropsWithRef, type ReactElement, type ReactNode } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr, hasGlyph } from './glyphs.js';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import type { LinkRenderProps } from './Link.js';
 import styles from './Nav.module.css';
 

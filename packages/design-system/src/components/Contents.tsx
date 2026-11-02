@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { useStrings } from '../providers/StringsProvider.js';
 import { hasGlyph } from './glyphs.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import type { LinkRenderProps } from './Link.js';
 import styles from './Contents.module.css';
 

@@ -1,11 +1,11 @@
 import { useMemo, useRef, type ChangeEvent, type CSSProperties, type Ref, type TextareaHTMLAttributes } from 'react';
 import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows.js';
 import { TextareaHighlights, useTextareaHighlights, type FieldTextareaHighlight } from './TextareaHighlights.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
-import { useField } from '../hooks/useField.js';
+import { useField } from './useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
 
 export type FieldTextareaProps = {

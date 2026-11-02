@@ -5,16 +5,16 @@ import {
   useControlPresence,
   useControlSetter,
   useFieldContext,
-} from '../components/Field.context.js';
-import { useRevalidate } from '../components/Form.context.js';
-import { useStableComposedRef } from '../components/props.js';
+} from './Field.context.js';
+import { useRevalidate } from './Form.context.js';
+import { useStableComposedRef } from '../internal/props.js';
 import {
   useValueInput,
   type ControlBrand,
   type ValueInputControl,
   type ValueInputOptions,
   type ValueInputProps,
-} from '../components/valueInput.js';
+} from './valueInput.js';
 
 export type { ValueInputControl, ValueInputOptions, ValueInputProps };
 

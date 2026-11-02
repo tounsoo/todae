@@ -2,7 +2,7 @@ import { useEffect, useRef, type ComponentPropsWithRef, type MouseEvent } from '
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import { glyphOr, SortGlyph } from './glyphs.js';
 import { Body, Caption, Cell, Foot, HeaderCell, Head, Root, Row } from './Table.js';
 import styles from './Table.module.css';

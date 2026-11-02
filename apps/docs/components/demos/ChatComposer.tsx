@@ -112,6 +112,7 @@ function MentionField({
   const dismissed = tokenKey !== null && dismissedKey === tokenKey;
   const peek = usePopover({
     open: focused && token !== null && entity !== undefined && !dismissed,
+    anchorName: api.caretPeekAnchorName,
     onOpenChange: (next) => {
       if (!next && tokenKey) setDismissedKey(tokenKey);
     },
@@ -217,15 +218,7 @@ function MentionField({
         </div>
       </Popover.Root>
       {source?.renderPeek && token ? (
-        <Popover.Root
-          {...wire}
-          inert
-          style={{
-            ...wire.style,
-            ['--todae-popover-anchor' as string]: api.caretPeekAnchorName ?? undefined,
-            positionAnchor: api.caretPeekAnchorName ?? undefined,
-          }}
-        >
+        <Popover.Root {...wire} inert>
           {entity !== undefined ? source.renderPeek(entity, { id: token.value, mode: 'caret', close: () => setCaret(null) }) : null}
         </Popover.Root>
       ) : null}

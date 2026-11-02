@@ -4,7 +4,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -12,10 +11,10 @@ import {
   type RefObject,
 } from 'react';
 import type { MentionPeekContext, MentionSource } from '../mentions/source.js';
-import { createIntent, step, type TooltipEvent, type TooltipIntentState } from '../components/Tooltip.intent.js';
-import type { PopoverWire } from '../components/Popover.wire.js';
+import { createIntent, step, type TooltipEvent, type TooltipIntentState } from '../overlay/tooltipIntent.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
 import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
-import { applyTooltipCommands, readTooltipPolicy } from './useTooltip.js';
+import { applyTooltipCommands, readTooltipPolicy } from '../overlay/tooltip.js';
 import { usePopover } from './usePopover.js';
 
 type Phase<T> =
@@ -175,6 +174,7 @@ export function useMentionPeek<T>({
     anchorRef: mode === 'interactive' ? triggerRef : undefined,
     initialFocusRef: keepFocus,
     restoreFocusRef: restoreTo,
+    anchorName: mode === 'caret' ? anchorName : null,
     onOpenChange: (next) => {
       if (!next) close();
     },
@@ -220,19 +220,8 @@ export function useMentionPeek<T>({
         : triggerRef.current;
   };
 
-  const wire = popover.getPopoverProps();
-  const peekStyle: CSSProperties =
-    mode === 'caret' && anchorName
-      ? ({
-          ...wire.style,
-          ['--todae-popover-anchor' as string]: anchorName,
-          positionAnchor: anchorName,
-        } as CSSProperties)
-      : wire.style;
-
   const peekProps: PeekProps = {
-    ...wire,
-    style: peekStyle,
+    ...popover.getPopoverProps(),
     onPointerEnter:
       mode === 'interactive'
         ? () => dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover-bridge' })

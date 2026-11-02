@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../index.js';
 import { Quantity, input, valueInput, type, key, button } from '../test/number.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(() => {
   cleanup();

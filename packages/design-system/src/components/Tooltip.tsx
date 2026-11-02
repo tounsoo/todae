@@ -14,10 +14,10 @@ import {
   type PanelSurface,
   type TipSurface,
 } from './Tooltip.surface.js';
-import type { TooltipWire } from './Tooltip.wire.js';
-import { cx } from './cx.js';
+import type { TooltipWire } from '../overlay/tooltipWire.js';
+import { cx } from '../internal/cx.js';
 import styles from './Tooltip.module.css';
-import { useComposedRefs } from './props.js';
+import { useComposedRefs } from '../internal/props.js';
 
 export type TooltipContentName =
   | { 'aria-label': string; 'aria-labelledby'?: never }

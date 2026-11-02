@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
-import { focusWithoutScroll } from '../components/revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 export function isPopoverOpen(el: HTMLElement): boolean {
   return el.matches(':popover-open') || el.hasAttribute('data-popover-open');

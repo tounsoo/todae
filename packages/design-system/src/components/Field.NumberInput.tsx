@@ -15,7 +15,7 @@ import { FieldValueInput } from './Field.ValueInput.js';
 import { valueBounds } from './Field.shared.js';
 import { watchLabel } from './labelText.js';
 import { useFormSubmitHold } from './useFormSubmitHold.js';
-import { isImeKeyEvent } from './ime.js';
+import { isImeKeyEvent } from '../internal/ime.js';
 import {
   boundsOf,
   canStep,
@@ -31,10 +31,10 @@ import {
   UNSUPPORTED_FORMAT_OPTIONS,
   type NumberFormatOptions,
 } from './numberText.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
-import { warnOnce } from './warnOnce.js';
-import { useField } from '../hooks/useField.js';
+import { warnOnce } from '../internal/warnOnce.js';
+import { useField } from './useField.js';
 import { useStrings } from '../providers/StringsProvider.js';
 
 export type FieldNumberInputProps = {

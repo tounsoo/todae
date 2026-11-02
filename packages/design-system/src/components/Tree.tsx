@@ -19,8 +19,8 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { useDomId } from './domId.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { useDomId } from '../internal/domId.js';
 import styles from './Tree.module.css';
 
 export type TreeRootProps = {

@@ -9,8 +9,8 @@ import {
   type MouseEvent,
   type RefCallback,
 } from 'react';
-import { activeIn, focusLost } from '../components/activeElement.js';
-import { isImeKeyEvent } from '../components/ime.js';
+import { activeIn, focusLost } from '../internal/activeElement.js';
+import { isImeKeyEvent } from '../internal/ime.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 
 export type UseInlineEditOptions = {

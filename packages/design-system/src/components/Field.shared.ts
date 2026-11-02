@@ -11,10 +11,10 @@ import {
   type RefObject,
 } from 'react';
 import { mergeDescribedBy, useBesideControl, useFieldContext, type CountStore } from './Field.context.js';
-import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from './useField.js';
 import type { ControlBrand, ValueInputOptions } from './valueInput.js';
-import { useDomId } from './domId.js';
-import { warnOnce } from './warnOnce.js';
+import { useDomId } from '../internal/domId.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import {
   usePopover,

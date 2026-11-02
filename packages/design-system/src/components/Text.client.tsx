@@ -6,11 +6,11 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { useTooltipInternal, type TooltipInternalResult } from '../hooks/useTooltip.js';
+import { useTooltipInternal, type TooltipInternalResult } from '../overlay/tooltip.js';
 import { canFocusNow } from '../overlay/tabbables.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
-import { useDomId } from './domId.js';
-import { composeHandlers, useComposedRefs } from './props.js';
+import { useDomId } from '../internal/domId.js';
+import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
 

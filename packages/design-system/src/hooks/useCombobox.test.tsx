@@ -4,7 +4,7 @@ import { Button } from '../components/Button.js';
 import { Field } from '../components/Field.js';
 import { OptionList } from '../components/OptionList.js';
 import { Popover } from '../components/Popover.js';
-import { optionDomId } from '../components/OptionList.ids.js';
+import { optionDomId } from '../internal/optionDomId.js';
 import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';

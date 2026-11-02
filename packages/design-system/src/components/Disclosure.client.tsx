@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { Root, Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
-import { activeIn } from './activeElement.js';
+import { activeIn } from '../internal/activeElement.js';
 import { hasGlyph } from './glyphs.js';
-import { useComposedRefs } from './props.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { useComposedRefs } from '../internal/props.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 import styles from './Disclosure.module.css';
 
 export type { DisclosureRootProps, DisclosureSummaryProps } from './Disclosure.js';

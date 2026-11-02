@@ -2,7 +2,7 @@ import { createElement, type ComponentPropsWithRef, type ReactNode } from 'react
 import { useMentionPeek } from '../hooks/useMentionPeek.js';
 import type { MentionSource } from '../mentions/source.js';
 import { Popover } from './Popover.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Mention.module.css';
 
 export type MentionRootProps<T = unknown> = Omit<ComponentPropsWithRef<'button'>, 'type' | 'children'> & {

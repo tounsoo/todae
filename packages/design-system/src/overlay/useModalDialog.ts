@@ -1,10 +1,10 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { dropModal } from './modalStack.js';
-import { inToastHostWithin } from './tabbables.js';
+import { inGuestLayerWithin } from './tabbables.js';
 import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 import { reshowHeldInside } from './usePopoverSync.js';
-import { focusWithoutScroll } from '../components/revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -88,11 +88,11 @@ export function useModalDialog({
 
   // Closes the element at the end of the exit motion, declared before
   // useModalLayerElement so it runs before the element leaves the stack.
-  // close() sends focus back to the opener, also from a toast that
-  // Toast.Region moved in; leaving the stack moves the toasts out, and focus
-  // goes back to the toast once the page is no longer inert. An owner that
+  // close() sends focus back to the opener, also from a guest layer moved
+  // in (Toast.Region's host); leaving the stack moves the guest out, and
+  // focus goes back to it once the page is no longer inert. An owner that
   // unmounts the element as it leaves, as BottomSheet does, has it removed
-  // first; Toast.Region puts focus back then.
+  // first; the guest's owner puts focus back then.
   const presentRef = useRef(present);
   // Updated at commit, not during render, so a render React throws away
   // can't make the cleanup below close the element. An insertion effect runs
@@ -108,16 +108,16 @@ export function useModalDialog({
       // StrictMode's pretend unmount.
       if (presentRef.current || !el.open) return;
       const active = el.ownerDocument.activeElement;
-      const toast = active instanceof HTMLElement && inToastHostWithin(active, el) ? active : null;
+      const guest = active instanceof HTMLElement && inGuestLayerWithin(active, el) ? active : null;
       el.close();
-      if (!toast) return;
+      if (!guest) return;
       dropModal(el);
-      focusWithoutScroll(toast);
+      focusWithoutScroll(guest);
     };
   }, [dialogRef, present, node]);
 
   // In the stack from showModal() until close() at the end of the exit
-  // motion, while the page is still inert. Toasts moved in stay usable, and
+  // motion, while the page is still inert. Guest layers moved in stay usable, and
   // as their own top layer boxes they don't fade with the element.
   useModalLayerElement(node, present, true);
 
@@ -151,9 +151,9 @@ export function useModalDialog({
     }
     function onFocusIn(event: FocusEvent) {
       // Only this element's own controls, not those of a modal written inside
-      // it, nor a toast that Toast.Region moved in.
+      // it, nor a guest layer moved in.
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest('dialog') === el && !inToastHostWithin(target, el)) {
+      if (target instanceof HTMLElement && target.closest('dialog') === el && !inGuestLayerWithin(target, el)) {
         lastFocus.current = target;
       }
     }

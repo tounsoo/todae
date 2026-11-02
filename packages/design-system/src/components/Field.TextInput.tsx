@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type Ref } from 'react';
-import { activeIn } from './activeElement.js';
+import { activeIn } from '../internal/activeElement.js';
 import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { cx, useComposedRefs } from './props.js';
+import { cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
-import { useField } from '../hooks/useField.js';
+import { useField } from './useField.js';
 import { useTextEntry, valueChangeHandler } from './Field.shared.js';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 
 /**
  * Input types that take a string value. A number is `Field.NumberInput`, a

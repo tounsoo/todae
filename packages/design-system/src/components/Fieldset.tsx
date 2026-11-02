@@ -3,7 +3,7 @@ import { useCustomValidity } from './customValidity.js';
 import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context.js';
 import { ValidationScopeContext } from './Form.context.js';
 import { mergeDescribedBy } from './Field.context.js';
-import { cx, useComposedRefs } from './props.js';
+import { cx, useComposedRefs } from '../internal/props.js';
 import { carriersIn } from './Form.model.js';
 import { useValidationScope } from './ValidationScope.js';
 import styles from './Fieldset.module.css';

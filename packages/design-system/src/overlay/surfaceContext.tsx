@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ToolbarContext } from '../components/toolbarContext.js';
+import { ToolbarContext } from '../internal/toolbarContext.js';
 
 /** The calls an overlay surface's content adds with useSurfaceClosed. */
 export type SurfaceListeners = Set<() => void>;

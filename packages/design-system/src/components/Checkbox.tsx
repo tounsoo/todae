@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { SelectionControl } from './SelectionControl.js';
 
 export type CheckboxRootProps = {

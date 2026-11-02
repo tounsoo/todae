@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
-import { useComposedRefs } from '../components/props.js';
+import { useComposedRefs } from '../internal/props.js';
 import { failureKey, overrideContrastFailures, overrideContrastMessage } from './overrideContrast.js';
 import {
   themeOverrideStyle,

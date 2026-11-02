@@ -6,20 +6,19 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type Ref,
   type RefObject,
   type SyntheticEvent,
 } from 'react';
-import { useDomId } from '../components/domId.js';
-import { isImeKeyEvent } from '../components/ime.js';
+import { useDomId } from '../internal/domId.js';
+import { isImeKeyEvent } from '../internal/ime.js';
 import type { FieldTextareaHighlight, FieldTextareaProps } from '../components/Field.js';
 import type { OptionListOptionProps, OptionListSingleProps } from '../components/OptionList.js';
-import { optionDomId } from '../components/OptionList.ids.js';
-import type { PopoverWire } from '../components/Popover.wire.js';
-import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { optionDomId } from '../internal/optionDomId.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useAnnouncer } from './useAnnouncer.js';
 import { createAsyncGate } from './useCombobox.async.js';
@@ -36,7 +35,7 @@ import {
   type MentionToken,
   type MentionTriggerPosition,
 } from './useMentions.detect.js';
-import { usePopoverInternal } from './usePopover.js';
+import { usePopoverInternal } from '../overlay/popover.js';
 
 export type { MentionToken, MentionTriggerPosition } from './useMentions.detect.js';
 
@@ -117,8 +116,9 @@ export type UseMentionsResult = {
   getListboxProps: () => Omit<OptionListSingleProps, 'children'>;
   getOptionProps: (item: MentionItem) => OptionListOptionProps;
   /**
-   * Internal. CSS anchor name of the token the caret is inside, while the
-   * suggestion list is closed. Null otherwise.
+   * CSS anchor name on the token the caret is inside, while the suggestion
+   * list is closed, and null otherwise. Pass it as `usePopover`'s
+   * `anchorName` to show a peek at that token.
    */
   caretPeekAnchorName: string | null;
 };
@@ -502,6 +502,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       anchorRef: textareaRef,
       initialFocusRef: textareaRef,
       restoreFocusRef: textareaRef,
+      anchorName,
     },
     false,
   );
@@ -571,17 +572,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     };
   };
 
-  const getPopoverProps = (): PopoverWire => {
-    const wire = popover.getPopoverProps();
-    return {
-      ...wire,
-      style: {
-        ...wire.style,
-        ['--todae-popover-anchor' as string]: anchorName,
-        positionAnchor: anchorName,
-      } as CSSProperties,
-    };
-  };
 
   const getListboxProps = (): Omit<OptionListSingleProps, 'children'> => ({
     id: ids.listbox,
@@ -618,7 +608,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     highlight,
     dismiss,
     getTextareaProps,
-    getPopoverProps,
+    getPopoverProps: popover.getPopoverProps,
     getListboxProps,
     getOptionProps,
     caretPeekAnchorName,

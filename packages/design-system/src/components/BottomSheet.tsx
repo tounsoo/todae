@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -26,8 +26,8 @@ import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus.
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { useModalDialog } from '../overlay/useModalDialog.js';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { revealRing } from './revealRing.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { revealRing } from '../internal/revealRing.js';
 import styles from './BottomSheet.module.css';
 
 export type { SheetSnap };

@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 const FORBIDDEN_PROP_NAMES = new Set(['isDisabled', 'isInvalid', 'isOpen', 'error', 'hasError']);
 const CONSOLE_METHODS = new Set(['warn', 'error', 'log', 'info', 'debug']);
 
@@ -331,6 +333,88 @@ const devOnlyDiagnostics = {
   },
 };
 
+const SELF = '@tounsoo/todae';
+
+/** The top-level entry under src/ a specifier lands on, or null when it leaves src/. */
+function layerOf(specifier, filename, src) {
+  if (specifier === SELF || specifier.startsWith(`${SELF}/`)) return 'index';
+  if (!specifier.startsWith('.')) return null;
+  const rel = path.relative(src, path.resolve(path.dirname(filename), specifier));
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  const top = rel.split(path.sep)[0];
+  return top === '' ? 'index' : top.replace(/\.(js|mjs|ts|tsx)$/, '');
+}
+
+const layerImports = {
+  meta: {
+    type: 'problem',
+    docs: { description: 'Package layers import only the layers below them.' },
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          src: { type: 'string' },
+          allow: { type: 'array', items: { type: 'string' } },
+          deny: { type: 'array', items: { type: 'string' } },
+          allowTypeImports: { type: 'boolean' },
+          message: { type: 'string' },
+        },
+        required: ['src', 'message'],
+        additionalProperties: false,
+      },
+    ],
+    messages: {
+      banned: '{{message}} ({{specifier}})',
+      unknown: 'Import with a plain string path, so the layer rule can check it.',
+    },
+  },
+  create(context) {
+    const options = context.options[0];
+    // Relative to the repository root, whatever directory ESLint runs from.
+    const src = path.resolve(import.meta.dirname, '..', options.src);
+    const filename = context.filename;
+    const self = layerOf('.', filename, src);
+    const allow = options.allow && new Set([...options.allow, self]);
+    const deny = options.deny && new Set(options.deny);
+
+    function check(node, specifier, typeOnly) {
+      const layer = layerOf(specifier, filename, src);
+      if (layer === null) return;
+      if (typeOnly && options.allowTypeImports) return;
+      const banned = (allow && !allow.has(layer)) || (deny && deny.has(layer));
+      if (banned) context.report({ node, messageId: 'banned', data: { message: options.message, specifier } });
+    }
+
+    // Under verbatimModuleSyntax, `import { type X }` and `export { type X } from`
+    // still load the module, so only a whole-statement `type` counts as type-only.
+    return {
+      ImportDeclaration(node) {
+        check(node.source, node.source.value, node.importKind === 'type');
+      },
+      ExportNamedDeclaration(node) {
+        if (node.source) check(node.source, node.source.value, node.exportKind === 'type');
+      },
+      ExportAllDeclaration(node) {
+        check(node.source, node.source.value, node.exportKind === 'type');
+      },
+      TSImportType(node) {
+        const arg = node.argument?.type === 'TSLiteralType' ? node.argument.literal : node.source ?? node.argument;
+        if (arg?.type === 'Literal' && typeof arg.value === 'string') check(arg, arg.value, true);
+      },
+      ImportExpression(node) {
+        const source = node.source;
+        if (source.type === 'Literal' && typeof source.value === 'string') {
+          check(source, source.value, false);
+        } else if (source.type === 'TemplateLiteral' && source.expressions.length === 0) {
+          check(source, source.quasis[0].value.cooked, false);
+        } else {
+          context.report({ node: source, messageId: 'unknown' });
+        }
+      },
+    };
+  },
+};
+
 /** @type {import('eslint').ESLint.Plugin} */
 const plugin = {
   meta: { name: 'todae', version: '0.0.0' },
@@ -340,6 +424,7 @@ const plugin = {
     'no-hidden-type': noHiddenType,
     'prop-naming': propNaming,
     'dev-only-diagnostics': devOnlyDiagnostics,
+    'layer-imports': layerImports,
   },
 };
 

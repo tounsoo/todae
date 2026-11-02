@@ -14,11 +14,11 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useCloseGlyph } from './closeGlyph.js';
 import { useButtonName } from './buttonName.js';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { Progress, type ProgressRootProps } from './Progress.js';
-import { cx, useComposedRefs } from './props.js';
-import { activeIn, focusLost } from './activeElement.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { cx, useComposedRefs } from '../internal/props.js';
+import { activeIn, focusLost } from '../internal/activeElement.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 import styles from './Attachment.module.css';
 
 /** Where the file is: `ready` to send or open, `uploading`, or failed with an `error`. */

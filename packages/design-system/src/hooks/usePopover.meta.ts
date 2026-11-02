@@ -56,6 +56,12 @@ export const meta = {
       description: 'aria-haspopup on the trigger. Use "listbox" for an OptionList in a role-less popover.',
     },
     {
+      name: 'anchorName',
+      type: 'string | null',
+      required: false,
+      description: 'CSS anchor name the popover sits at, set on an element other than the trigger, such as useMentions caretPeekAnchorName. Default is the trigger.',
+    },
+    {
       name: 'id',
       type: 'string',
       required: false,

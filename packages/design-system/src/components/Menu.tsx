@@ -23,19 +23,20 @@ import {
 import { isTextEntry } from '../hooks/hotkey.js';
 import { canFocusNow } from '../overlay/tabbables.js';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
+import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../overlay/popover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
+import { anchoredContentStyle } from '../overlay/anchorName.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
-import { ToolbarContext, useToolbar } from './toolbarContext.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { ToolbarContext, useToolbar } from '../internal/toolbarContext.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 /**
  * Why the menu opened or closed. `select` is an item choice; `tab` is focus
@@ -551,9 +552,7 @@ function Content({
       }
     });
   }, [open, ctx.hasTrigger, ariaLabel, ariaLabelledby]);
-  const atStyle = at
-    ? ({ '--todae-popover-anchor': ctx.boxName, positionAnchor: ctx.boxName } as CSSProperties)
-    : undefined;
+  const atStyle = at ? anchoredContentStyle('--todae-popover-anchor', ctx.boxName) : undefined;
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
   // document never sees as a pointerdown. Focus dropped to the page, as when

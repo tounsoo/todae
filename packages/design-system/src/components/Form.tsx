@@ -12,7 +12,7 @@ import {
   type SubmitEvent,
 } from 'react';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import {
   FormContext,
   type Dismissal,
@@ -22,8 +22,8 @@ import {
 } from './Form.context.js';
 import { errorsKey, FORM_ROOTS, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
 import { Link } from './Link.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { warnOnce } from './warnOnce.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { isValidityCarrier, reachTarget, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 

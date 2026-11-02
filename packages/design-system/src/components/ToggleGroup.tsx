@@ -13,9 +13,9 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
 import buttonStyles from './Button.module.css';
-import { cx } from './cx.js';
-import { useComposedRefs } from './props.js';
-import { useToolbar } from './toolbarContext.js';
+import { cx } from '../internal/cx.js';
+import { useComposedRefs } from '../internal/props.js';
+import { useToolbar } from '../internal/toolbarContext.js';
 import styles from './ToggleGroup.module.css';
 
 export type ToggleGroupOrientation = 'horizontal' | 'vertical';
