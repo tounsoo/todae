@@ -4,7 +4,7 @@ import styles from './Field.module.css';
 import { useField } from './useField.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { hasGlyph } from './glyphs.js';
-import { valueChangeHandler } from './Field.shared.js';
+import { valueChangeHandler } from './useTextControl.js';
 
 /**
  * A native `<select>`. Browsers with `appearance: base-select` draw the picker

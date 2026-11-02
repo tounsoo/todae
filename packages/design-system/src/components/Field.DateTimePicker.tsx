@@ -11,7 +11,7 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { htmlDateTime, valueBounds } from './Field.shared.js';
+import { htmlDateTime, valueBounds } from './htmlValue.js';
 import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
 

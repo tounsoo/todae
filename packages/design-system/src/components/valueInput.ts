@@ -1,5 +1,6 @@
-import { useCallback, useContext, useMemo, useRef, type InputHTMLAttributes, type RefCallback } from 'react';
-import { useBesideNamed, type FieldContextValue } from './Field.context.js';
+import { useCallback, useContext, useMemo, useRef, type InputHTMLAttributes, type RefCallback, type RefObject } from 'react';
+import type { FieldContextValue } from './Field.context.js';
+import { useRegistryValue } from './fieldRegistry.js';
 import { FormContext, ValidationScopeContext } from './Form.context.js';
 import { registerValueInput, type ValueInputBound } from './validity.js';
 import { visuallyHiddenClass } from './VisuallyHidden.js';
@@ -45,23 +46,20 @@ export type ValueInputProps = InputHTMLAttributes<HTMLInputElement> & {
 const noop = () => {};
 
 /**
- * The value input half of useField. `track` is called by the control's ref with
- * its node: the control the input speaks for, which the input sends focus to.
+ * The value input half of useField. `self` is the control's key in the field's
+ * registry, and `controlNode` holds its node: the control the input speaks for,
+ * which the input sends focus to.
  * Everything the getter decides, it decides here, from the control's props and
  * what the field holds: the name, `disabled` and `form`.
  */
-export function useValueInput(ctx: FieldContextValue, ownNamed: () => number) {
+export function useValueInput(ctx: FieldContextValue, self: object, controlNode: RefObject<HTMLElement | null>) {
+  const { disabled, name: fieldName, registry } = ctx;
   // The one fact the name decision needs: a control re-renders when it flips, not each time another control mounts, and not for the name its own control took.
-  const named = useBesideNamed(ctx.store, ownNamed);
+  const named = useRegistryValue(registry, (current) => current.namedBy(self));
   const form = useContext(FormContext);
   const scope = useContext(ValidationScopeContext);
-  const own = useRef<HTMLElement | null>(null);
   const input = useRef<HTMLInputElement | null>(null);
-  const track = useCallback((node: HTMLElement | null) => {
-    own.current = node;
-  }, []);
-  const owner = useCallback(() => own.current, []);
-  const { disabled, name: fieldName, store } = ctx;
+  const owner = useCallback(() => controlNode.current, [controlNode]);
   // The ref changes only when a bound does, so React does not detach and attach it on every render. A memo of the last one, not state.
   const lastRef = useRef<{ key: string; ref: RefCallback<HTMLInputElement> } | null>(null);
   const refFor = useCallback(
@@ -72,13 +70,19 @@ export function useValueInput(ctx: FieldContextValue, ownNamed: () => number) {
           key,
           ref: (node) => {
             input.current = node;
-            if (node) registerValueInput(node, { field: store, owner, bound });
+            if (!node) return;
+            registerValueInput(node, { owner, bound });
+            const remove = registry.addValueInput(node);
+            return () => {
+              remove();
+              if (input.current === node) input.current = null;
+            };
           },
         };
       }
       return lastRef.current.ref;
     },
-    [owner, store],
+    [owner, registry],
   );
   const getValueInputProps = useCallback(
     (options: ValueInputOptions, control: ValueInputControl): ValueInputProps => ({
@@ -102,17 +106,21 @@ export function useValueInput(ctx: FieldContextValue, ownNamed: () => number) {
       'data-todae-value-input': '',
       className: visuallyHiddenClass(),
       // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs, and a field with none keeps no focus here.
-      onFocus: (event) => (own.current ? own.current.focus() : event.currentTarget.blur()),
+      onFocus: (event) => {
+        const target = owner();
+        if (target) target.focus();
+        else event.currentTarget.blur();
+      },
     }),
-    [disabled, fieldName, named, refFor],
+    [disabled, fieldName, named, owner, refFor],
   );
   const formEdited = form?.edited;
   const touch = scope?.touch;
   const notifyValueChange = useCallback(() => {
     // The names a server error may be filed under: what the control and the value input send, else the field's, which a control beside it sends.
-    const sent = [(own.current as Partial<HTMLInputElement> | null)?.name, input.current?.name].filter((name): name is string => Boolean(name));
+    const sent = [(owner() as Partial<HTMLInputElement> | null)?.name, input.current?.name].filter((name): name is string => Boolean(name));
     formEdited?.(sent.length ? [...new Set(sent)] : fieldName ? [fieldName] : []);
     touch?.();
-  }, [fieldName, formEdited, touch]);
-  return useMemo(() => ({ track, getValueInputProps, notifyValueChange }), [track, getValueInputProps, notifyValueChange]);
+  }, [fieldName, formEdited, owner, touch]);
+  return useMemo(() => ({ getValueInputProps, notifyValueChange }), [getValueInputProps, notifyValueChange]);
 }

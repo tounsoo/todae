@@ -1,41 +1,35 @@
-import { useContext, useEffect, useSyncExternalStore, type ComponentPropsWithRef, type CSSProperties } from 'react';
-import { FieldContext, type FieldContextValue } from './Field.context.js';
+import { useEffect, useLayoutEffect, type ComponentPropsWithRef, type CSSProperties } from 'react';
+import { useFieldContext } from './Field.context.js';
+import { useRegistryValue } from './fieldRegistry.js';
 import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useStrings, type Strings } from '../providers/StringsProvider.js';
-import { subscribeCount } from './Field.shared.js';
 import { VisuallyHidden } from './VisuallyHidden.js';
+import { warnOnce } from '../internal/warnOnce.js';
 
 export type FieldCounterProps = {
   className?: string;
   style?: CSSProperties;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
-let warnedNoInput = false;
-
 function liveCopy(remaining: number, strings: Strings) {
   return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
 }
 
-function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
+export function Counter({ className, ...props }: FieldCounterProps) {
+  const ctx = useFieldContext();
+  const { registry } = ctx;
   const strings = useStrings();
-  const entry = useSyncExternalStore(
-    (listener) => subscribeCount(ctx.store, listener),
-    () => ctx.store.entry,
-    () => ctx.store.entry,
+  const entry = useRegistryValue(
+    registry,
+    (current) => current.text(),
+    (current) => current.serverText(),
   );
+  // Counted on commit, so a text control points at the limit before the first paint.
+  useLayoutEffect(() => registry.addCounter(), [registry]);
+  // After mount, once every text control's layout effect has published.
   useEffect(() => {
-    ctx.store.counters += 1;
-    for (const listener of ctx.store.presence) listener();
-    return () => {
-      ctx.store.counters -= 1;
-      for (const listener of ctx.store.presence) listener();
-    };
-  }, [ctx.store]);
-  useEffect(() => {
-    if (ctx.store.entry || process.env.NODE_ENV === 'production' || warnedNoInput) return;
-    warnedNoInput = true;
-    console.warn('Field.Counter has no Field.TextInput or Field.Textarea');
+    if (!registry.text()) warnOnce('counter-no-input', 'Field.Counter has no Field.TextInput or Field.Textarea');
   });
   if (!entry) return null;
   const count = entry.value.length;
@@ -64,10 +58,4 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
       )}
     </span>
   );
-}
-
-export function Counter(props: FieldCounterProps) {
-  const ctx = useContext(FieldContext);
-  if (!ctx) throw new Error('Field.Counter must render inside Field.Root');
-  return <CounterInner {...props} ctx={ctx} />;
 }

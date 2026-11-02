@@ -5,7 +5,7 @@ import { ClockGlyph, glyphOr } from './glyphs.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { OptionList } from './OptionList.js';
 import { formatTime } from './timeText.js';
-import { htmlTime, valueBounds } from './Field.shared.js';
+import { htmlTime, valueBounds } from './htmlValue.js';
 import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */

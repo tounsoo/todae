@@ -22,10 +22,10 @@ import { FieldsetContext, useFieldsetState } from './Fieldset.context.js';
 import { ValidationScopeContext } from './Form.context.js';
 import { useCustomValidity } from './customValidity.js';
 import { useValidationScope } from './ValidationScope.js';
-import { isValidityCarrier, valueInputOf } from './validity.js';
+import { isValidityCarrier } from './validity.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
-import { createCountStore, pickerToggles } from './Field.shared.js';
+import { createFieldRegistry, type FieldRegistry } from './fieldRegistry.js';
 import { TextInput } from './Field.TextInput.js';
 import { NumberInput } from './Field.NumberInput.js';
 import { OneTimeCode } from './Field.OneTimeCode.js';
@@ -89,14 +89,10 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-type PickerControl = HTMLSelectElement | HTMLButtonElement;
-
-// A control whose picker a press beside it opens: a select or a picker that useFieldPicker drives.
-function hasPicker(control: Element | null | undefined): control is PickerControl {
-  return (
-    control instanceof HTMLSelectElement ||
-    (control instanceof HTMLButtonElement && control.hasAttribute('data-todae-field-picker'))
-  );
+// The control whose picker a press beside it opens: a closed select, or a picker part, which registered a toggle.
+function pickerOf(control: HTMLElement | undefined, registry: FieldRegistry): HTMLElement | null {
+  if (control instanceof HTMLSelectElement) return isOpen(control) ? null : control;
+  return control && registry.toggleFor(control) ? control : null;
 }
 
 // Whether a select's picker is showing. A browser without `:open` throws,
@@ -157,16 +153,15 @@ function Root({
   const { disabled, invalid, errorId } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   const autoId = useDomId();
   const hintId = useDomId();
-  const inputRef = useRef<HTMLElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const shellComposed = useComposedRefs(shellRef, props.ref);
-  const pendingPicker = useRef<PickerControl | null>(null);
-  const [store] = useState(createCountStore);
+  const pendingPicker = useRef<HTMLElement | null>(null);
+  const [registry] = useState(createFieldRegistry);
   const inputId = id ?? autoId;
   // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
   useCustomValidity(shellRef, () => {
-    const control = inputRef.current;
-    return control && isValidityCarrier(control) ? control : shellRef.current && valueInputOf(store, shellRef.current);
+    const control = registry.focusTarget();
+    return control && isValidityCarrier(control) ? control : registry.firstValueInput();
   }, customValidity);
   const describedByWithError = mergeDescribedBy(describedBy, errorId);
 
@@ -181,11 +176,10 @@ function Root({
       describedBy: describedByWithError,
       labelledBy,
       ariaLabel,
-      inputRef,
       shellRef,
-      store,
+      registry,
     }),
-    [ariaLabel, describedByWithError, disabled, hintId, inputId, invalid, labelledBy, name, store],
+    [ariaLabel, describedByWithError, disabled, hintId, inputId, invalid, labelledBy, name, registry],
   );
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -206,9 +200,9 @@ function Root({
     if (isInteractiveTarget(event.target)) return;
     if (inOwnPopover(event.target, event.currentTarget)) return;
     event.preventDefault();
-    // The ref is the last control to mount. If that one has gone, a control
+    // The field's focus target is the last control to mount. If it is not usable, a control
     // still in the shell takes the press, never one inside an Icon or Affix.
-    const current = inputRef.current;
+    const current = registry.focusTarget();
     const usable = (node: HTMLElement) =>
       node.matches(FOCUSABLE_FIELD_CONTROL_SELECTOR) && !inAdornment(node, event.currentTarget);
     const control = current?.isConnected && usable(current)
@@ -219,8 +213,7 @@ function Root({
     // would. The picker opens on click: one opened now would close again as
     // the press goes on. A select's open picker closes on this press, which
     // must not open it again; Field.ColorPicker's toggles on the click.
-    pendingPicker.current =
-      hasPicker(control) && (control instanceof HTMLButtonElement || !isOpen(control)) ? control : null;
+    pendingPicker.current = pickerOf(control, registry);
   }
 
   function onClick(event: MouseEvent<HTMLDivElement>) {
@@ -229,8 +222,8 @@ function Root({
     // Only the click that ends this press: one from the keyboard or from
     // assistive technology has no press (detail 0) and opens nothing.
     if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
-    if (picker instanceof HTMLButtonElement) {
-      pickerToggles.get(picker)?.();
+    if (!(picker instanceof HTMLSelectElement)) {
+      registry.toggleFor(picker)?.();
       return;
     }
     try {

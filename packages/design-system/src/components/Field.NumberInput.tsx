@@ -9,10 +9,11 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { useFieldContext, usePublishStepper, type StepperEntry } from './Field.context.js';
+import { useFieldContext } from './Field.context.js';
+import { usePublishStepper, type StepperEntry } from './fieldRegistry.js';
 import { useCustomValidity } from './customValidity.js';
 import { FieldValueInput } from './Field.ValueInput.js';
-import { valueBounds } from './Field.shared.js';
+import { valueBounds } from './htmlValue.js';
 import { watchLabel } from './labelText.js';
 import { useFormSubmitHold } from './useFormSubmitHold.js';
 import { isImeKeyEvent } from '../internal/ime.js';
@@ -241,7 +242,7 @@ export function NumberInput({
     }),
     [atMax, atMin, ctx.inputId, field.disabled, fixed, label],
   );
-  usePublishStepper(ctx.store, stepper);
+  usePublishStepper(ctx.registry, stepper);
 
   const refs = useComposedRefs(node, ref);
   // A typed character that could not become a number never reaches the input, so the caret stays where it was. Nothing else is filtered: a deletion, a paste or an IME's text lands, and is read or flagged on commit. The character is judged by what it does: it is refused when it spoils a text that was on its way to a number, or is no part of a number itself, so text that is already no number (a paste) does not keep digits out.

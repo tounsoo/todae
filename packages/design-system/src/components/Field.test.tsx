@@ -1479,6 +1479,24 @@ describe('Field.Counter', () => {
     error.mockRestore();
   });
 
+  it('stops counting when its text control goes away, and counts the one that replaces it', () => {
+    function Harness({ shown }: { shown: 'input' | 'area' | 'none' }) {
+      return (
+        <Field.Root>
+          {shown === 'input' ? <Field.TextInput value="hello" maxLength={10} onChange={() => undefined} /> : null}
+          {shown === 'area' ? <Field.Textarea value="hi" onChange={() => undefined} /> : null}
+          <Field.Counter />
+        </Field.Root>
+      );
+    }
+    const view = render(<Harness shown="input" />);
+    expect(view.container.textContent).toContain('5 / 10');
+    view.rerender(<Harness shown="none" />);
+    expect(view.container.querySelector('[data-todae-counter]')).toBeNull();
+    view.rerender(<Harness shown="area" />);
+    expect(view.container.querySelector('[data-todae-counter]')?.textContent).toBe('2');
+  });
+
   it('re-renders only the counter while typing', () => {
     const counts = { root: 0, icon: 0, affix: 0, counter: 0 };
     function Value() {
@@ -1651,7 +1669,7 @@ describe('Field.Counter', () => {
 
   it('throws outside Root, naming the part and its Root', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(() => render(<Field.Counter />)).toThrow('Field.Counter must render inside Field.Root');
+    expect(() => render(<Field.Counter />)).toThrow('Field parts must be rendered inside Field.Root');
     error.mockRestore();
   });
 

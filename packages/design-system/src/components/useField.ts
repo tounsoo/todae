@@ -1,11 +1,6 @@
-import { useCallback, useMemo, type Ref } from 'react';
-import {
-  inputLabel,
-  mergeDescribedBy,
-  useControlPresence,
-  useControlSetter,
-  useFieldContext,
-} from './Field.context.js';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
+import { inputLabel, mergeDescribedBy, useFieldContext } from './Field.context.js';
+import type { FieldControlRole } from './fieldRegistry.js';
 import { useRevalidate } from './Form.context.js';
 import { useStableComposedRef } from '../internal/props.js';
 import {
@@ -60,8 +55,8 @@ export type FieldControlWire = {
   'aria-describedby': string | undefined;
   'aria-label': string | undefined;
   'aria-labelledby': string | undefined;
-  /** `name` when the control took the field's name, so a Field.ColorPicker beside it leaves the name to it. */
-  'data-todae-field-control': '' | 'name';
+  /** Marks the element as the field's control, for the shell's press and focus ring. */
+  'data-todae-field-control': '';
 };
 
 export type UseFieldResult = {
@@ -109,29 +104,37 @@ export type UseFieldResult = {
  * joins it. Throws outside `Field.Root`.
  */
 export function useField(): UseFieldResult {
-  return useFieldControl(true);
+  return useFieldControl({ role: 'control' });
 }
 
 /**
- * useField, with `counted` false for a control that leaves the field to any
- * other control beside it, as Field.ColorPicker, Field.DatePicker,
- * Field.DateRangePicker, Field.TimePicker and Field.DateTimePicker do. Not exported from the package.
+ * useField for a part with its own `role` in the field, as the pickers have,
+ * and a picker's `toggle`, which a press on the shell calls. Not exported from
+ * the package.
  */
-export function useFieldControl(counted: boolean): UseFieldResult {
+export function useFieldControl({ role, toggle }: { role: FieldControlRole; toggle?: () => void }): UseFieldResult {
   const ctx = useFieldContext();
-  const setFocusTarget = useControlSetter(ctx.inputRef, ctx.store, counted);
-  const { setPresence, ownNamed } = useControlPresence(ctx.store, counted);
-  const valueInput = useValueInput(ctx, ownNamed);
-  const { track } = valueInput;
+  const { registry } = ctx;
+  // This control's key in the registry.
+  const [self] = useState(() => ({}));
+  const node = useRef<HTMLElement | null>(null);
+  const valueInput = useValueInput(ctx, self, node);
   useRevalidate();
+  // Whether the props getControlProps last gave out send the field's name. The registry hears it on attach and after each commit, never during render.
+  const takesName = useRef(false);
+  const register = useCallback(() => {
+    const el = node.current;
+    registry.setControl(self, el && { node: el, role, takesName: takesName.current, toggle });
+  }, [registry, role, self, toggle]);
   const setControl = useCallback(
-    (node: HTMLElement | null) => {
-      setFocusTarget(node);
-      setPresence(node);
-      track(node);
+    (el: HTMLElement | null) => {
+      node.current = el;
+      register();
     },
-    [setFocusTarget, setPresence, track],
+    [register],
   );
+  // After each commit: whether the control took the field's name can change without a new node.
+  useLayoutEffect(() => register());
   const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(
@@ -141,6 +144,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
       const user = (props ?? {}) as P;
       const disabled = ctx.disabled || Boolean(user.disabled);
       const name = native && sendsName ? (user.name ?? ctx.name) : undefined;
+      takesName.current = name !== undefined && name === ctx.name;
       return {
         ...user,
         ref: composedRef(user.ref),
@@ -153,7 +157,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
         'aria-invalid': ctx.invalid ? true : user['aria-invalid'],
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),
-        'data-todae-field-control': name !== undefined && name === ctx.name ? 'name' : '',
+        'data-todae-field-control': '',
       } as unknown as Omit<P, keyof FieldControlWire> & FieldControlWire & ControlBrand;
     },
     [composedRef, ctx],

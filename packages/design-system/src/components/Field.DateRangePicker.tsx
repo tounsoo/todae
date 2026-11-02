@@ -10,7 +10,7 @@ import {
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
 import { spanOf, type DateRange } from './dateRange.js';
-import { htmlDateText } from './Field.shared.js';
+import { htmlDateText } from './htmlValue.js';
 import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.DateRangePicker's calendar closed: a popover's reasons, a picked range, or the field became disabled. */
