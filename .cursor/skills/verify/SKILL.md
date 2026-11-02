@@ -44,13 +44,13 @@ That runs `pnpm --filter docs exec next dev --port 3321` and waits until `http:/
 
 Run doctor before trusting a page. `run` does this first and stops before it writes a passing report.
 
-- Read the preview deployment yourself. Its state is `READY`, and `meta.githubCommitSha` equals the pull request head, full 40 characters. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper compares the two flags and labels the report line `source=caller-asserted`. It does not call the Vercel API. Pass the deployment's `dpl_` id as `--deployment-id`. The helper refuses a preview without it and writes it on the doctor line. It does not look the id up, so the id is caller-asserted too. The helper trusts `--url` and sends the OIDC header to the host it names, so pass the URL of that same deployment.
+- Read the preview deployment yourself. Its state is `READY`, and `meta.githubCommitSha` equals the pull request head, full 40 characters. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper compares the two flags and labels the report line `source=caller-asserted`. It does not call the Vercel API. Pass the deployment's `dpl_` id as `--deployment-id`. The helper refuses a preview without it and writes it on the doctor line. It does not look the id up, so the id is caller-asserted too. The helper trusts `VERIFY_URL` or `--url` and sends the OIDC header to the host it names, so pass the URL of that same deployment.
 - The helper accepts a local URL on port 3321, or an `https` URL on `*.vercel.app`. Other hosts, including `https://todae.omsoo.design`, are rejected. So is a host name that only starts with `127.`, such as `127.example.com`.
 - A local URL is `http://127.0.0.1:3321` or `http://localhost:3321`. The pid file is `.verify/scratch/server.json`, the process command contains `next` and `3321`, `git rev-parse HEAD` equals `--expect-sha`, and `apps/docs` plus `packages/design-system` are clean.
-- Each path in `--paths` is a site path such as `/button`. The helper refuses one that would leave the `--url` origin, before it starts the browser. A redirect can still carry the OIDC header off that origin, as LAUNCH says.
+- Each path in `--paths` is a site path such as `/button`. The helper refuses one that would leave the origin of `VERIFY_URL` or `--url`, before it starts the browser. A redirect can still carry the OIDC header off that origin, as LAUNCH says.
 - Each path returns 200 and the HTML contains `data-appearance`. A login wall fails this check.
 
-`pnpm check` runs `self-test`. That command checks that the helper still imports `SITE_GROUPS` and reads the dictionaries. It also checks the guards: a path that leaves the deployment, a host that only starts with `127.`, and a preview with no deployment id are refused. It does not open the site.
+`pnpm check` runs `self-test`. That command checks that the helper still imports `SITE_GROUPS` and reads the dictionaries. It also checks the guards: an empty `--paths`, a path that leaves the deployment, a page off the verified origin, a host that only starts with `127.`, and a preview with no deployment id are refused. It does not open the site.
 
 ## DRIVE
 
@@ -71,7 +71,7 @@ Prefer these roles over coordinates. The feature files name the extra checks for
 
 ## EVIDENCE
 
-Save proof under `.verify/evidence/<stamp>/`. `report.txt` is the log. `latest` in `.verify/evidence` names the newest stamp from the moment that run starts, whether it passes or fails, so read its `report.txt` before you cite it. Screenshots are full-page PNGs named `<locale>-<width>-<slug>.png`.
+Save proof under `.verify/evidence/<stamp>/`. `report.txt` is the log. `latest` in `.verify/evidence` names the newest stamp from the moment that run starts, whether it passes or fails, a refused `--launch` or a missing `--expect-sha` included, so read its `report.txt` before you cite it. Screenshots are full-page PNGs named `<locale>-<width>-<slug>.png`.
 
 Cite the proof that matches the change.
 

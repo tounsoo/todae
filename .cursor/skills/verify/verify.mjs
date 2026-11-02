@@ -551,7 +551,7 @@ async function drive(flags) {
   const stamp = new Date().toISOString().replaceAll(':', '').replaceAll('.', '');
   const dir = path.join(evidenceRoot, stamp);
   await mkdir(dir, { recursive: true });
-  const pointer = path.join(evidenceRoot, 'latest.tmp');
+  const pointer = path.join(evidenceRoot, `latest.${stamp}.tmp`);
   await writeFile(pointer, `${dir}\n`);
   await rename(pointer, path.join(evidenceRoot, 'latest'));
   const lines = [];
@@ -562,7 +562,15 @@ async function drive(flags) {
   };
   let failed = null;
   let browser;
+  let spawned = false;
   try {
+    if (!flags['expect-sha']) throw new Error('pass --expect-sha');
+    if (flags.launch) {
+      const started = await launch();
+      spawned = started.spawned;
+      if (!flags.url && !process.env.VERIFY_URL) flags.url = started.url;
+    }
+    if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
     await ensureConfig();
     const groups = await loadSiteGroups();
     const copy = loadCopy();
@@ -607,7 +615,17 @@ async function drive(flags) {
     failed = error;
     note(`FAIL ${error.message}`);
   } finally {
-    if (browser) await browser.close();
+    const stops = [];
+    if (browser) stops.push(['browser close', () => browser.close()]);
+    if (spawned) stops.push(['cleanup', cleanup]);
+    for (const [label, stop] of stops) {
+      try {
+        await stop();
+      } catch (error) {
+        failed = error;
+        note(`FAIL ${label} ${error.message}`);
+      }
+    }
   }
   const report = path.join(dir, 'report.txt');
   await writeFile(report, `${lines.join('\n')}\n`);
@@ -631,26 +649,7 @@ async function main() {
     return;
   }
   if (command === 'doctor' || command === 'drive' || command === 'run') {
-    if (!flags['expect-sha']) throw new Error('pass --expect-sha');
-    let spawned = false;
-    try {
-      if (flags.launch) {
-        const started = await launch();
-        spawned = started.spawned;
-        if (!flags.url && !process.env.VERIFY_URL) flags.url = started.url;
-      }
-      if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
-      await drive(flags);
-    } finally {
-      if (spawned) {
-        try {
-          await cleanup();
-        } catch (error) {
-          console.error(redact(error.message));
-          process.exitCode = 1;
-        }
-      }
-    }
+    await drive(flags);
     return;
   }
   throw new Error('usage: verify.mjs self-test|launch|cleanup|doctor|drive|run [--launch] [--url URL] --expect-sha SHA [--deployment-sha SHA --deployment-id ID] [--paths /,/ko]');
