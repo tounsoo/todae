@@ -170,9 +170,9 @@ function Root({
 }: ButtonRootProps | ButtonRenderedProps) {
   const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
-  const [pressed, setPressed] = useControllableState(pressedProp, defaultPressed ?? false, onPressedChange);
+  const [pressed, setPressed, latestPressed] = useControllableState(pressedProp, defaultPressed ?? false, onPressedChange);
   const composedClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
-    if (toggle) setPressed(!pressed);
+    if (toggle) setPressed(!latestPressed());
   });
   // aria-disabled keeps the button focusable, not usable: a click runs no
   // onClick, flips no toggle, submits no form and follows no link.

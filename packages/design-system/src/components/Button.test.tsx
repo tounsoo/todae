@@ -457,3 +457,21 @@ describe('Button auto-tip', () => {
     expectTypeOf<api.MenuItemRenderProps>().toHaveProperty('ref');
   });
 });
+
+describe('Button toggle writes', () => {
+  it('builds a second press in one event on the first', () => {
+    const onPressedChange = vi.fn();
+    render(
+      <Button.Root defaultPressed={false} onPressedChange={onPressedChange}>
+        Bold
+      </Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Bold' });
+    act(() => {
+      button.click();
+      button.click();
+    });
+    expect(onPressedChange.mock.calls).toEqual([[true], [false]]);
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+  });
+});

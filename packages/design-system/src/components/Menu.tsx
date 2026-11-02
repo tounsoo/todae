@@ -701,13 +701,13 @@ function CheckboxItem({
 }: MenuCheckboxItemProps) {
   const ctx = useMenu('CheckboxItem');
   const { check } = useGlyphs();
-  const [checked, setChecked] = useControllableState(checkedProp, defaultChecked ?? false, onCheckedChange);
+  const [checked, setChecked, latestChecked] = useControllableState(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
     ctx,
     'menuitemcheckbox',
     props,
     () => {
-      setChecked(!checked);
+      setChecked(!latestChecked());
       if (closeOnSelect) ctx.setOpen(false, 'select');
     },
     checked,
