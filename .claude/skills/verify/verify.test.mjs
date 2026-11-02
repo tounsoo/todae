@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -130,6 +130,17 @@ describe('routesFor', () => {
     assert.deepEqual(routesFor(['apps/docs/app/(en)/button/layout.tsx']), shared);
   });
 
+  test('the shared MDX pages render what mdx-components.tsx registers, so a change there shows on them', () => {
+    const button = readFileSync(path.join(repoRoot, 'apps/docs/app/(en)/button/page.mdx'), 'utf8');
+    const select = readFileSync(path.join(repoRoot, 'apps/docs/app/(en)/field/select/page.mdx'), 'utf8');
+    for (const text of [button, select]) {
+      assert.match(text, /<Example[\s>]/);
+      assert.match(text, /<PropsTable[\s>/]/);
+      assert.match(text, /^```/m);
+      assert.match(text, /\]\(/);
+    }
+  });
+
   test('each shared route is a real docs page', () => {
     for (const route of SHARED_ROUTES) {
       const dir = path.join(repoRoot, 'apps/docs/app/(en)', route);
@@ -176,7 +187,6 @@ describe('routesFor', () => {
 
   test('in this repo, the badge demo drives only the badge pages', async () => {
     const { execFileSync: run } = await import('node:child_process');
-    const { readFileSync } = await import('node:fs');
     const files = run('git', ['-c', 'core.quotePath=false', 'ls-files', '--', 'apps/docs'], { cwd: repoRoot, encoding: 'utf8' })
       .split('\n')
       .filter((file) => /\.(?:mdx?|[cm]?[jt]sx?|css)$/.test(file));
@@ -643,6 +653,13 @@ describe('command line', () => {
       assert.equal(out.base, mergeBase);
       assert.ok(!out.files.includes('later.md'));
       assert.equal(JSON.parse(plan().stdout).base, mergeBase);
+    });
+
+    test('a base with no shared history is BLOCKED, not a crash', () => {
+      const lone = execFileSync('git', ['commit-tree', git('rev-parse', 'HEAD^{tree}').trim(), '-m', 'lone'], { cwd: dir, encoding: 'utf8' }).trim();
+      const run = plan('--base', lone);
+      assert.equal(run.status, 2, run.stderr);
+      assert.match(run.stdout, /shares no history with HEAD/);
     });
 
     test('plan is BLOCKED when origin/main is missing', () => {

@@ -511,7 +511,9 @@ async function resolveBase(ref) {
     const sha = await gitTry(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
     if (!sha) throw new Blocked(`base ${ref} does not resolve to a commit; fetch it first`);
     // The plan diffs base...HEAD, which starts at their merge base, so that is the real base.
-    return (await gitTry(['merge-base', sha, 'HEAD'])) ?? sha;
+    const merge = await gitTry(['merge-base', sha, 'HEAD']);
+    if (!merge) throw new Blocked(`base ${ref} shares no history with HEAD, so there is no diff to plan`);
+    return merge;
   }
   if (!(await gitTry(['rev-parse', '--verify', '--quiet', 'origin/main^{commit}']))) {
     throw new Blocked('origin/main is missing: fetch origin main first');
