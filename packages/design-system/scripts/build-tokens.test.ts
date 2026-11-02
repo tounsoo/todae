@@ -80,7 +80,7 @@ describe('build-tokens validations', () => {
     );
   });
 
-  it('requires declared slot groups to have exactly their leaves', () => {
+  it('requires declared slot groups to have exactly their children', () => {
     const chip = { 'chip.bg': ['default', 'hover', 'focus', 'disabled'] };
     const field = { 'field.border': ['default', 'hover', 'focus', 'disabled', 'invalid'] };
     const card = { 'card.*.bg': ['default', 'hover'] };
@@ -101,8 +101,20 @@ describe('build-tokens validations', () => {
     expect(() => validateSlots(cards(['default', 'hover']), card, 'contract')).not.toThrow();
     expect(() => validateSlots(cards(['default']), card, 'contract')).toThrow(/"card\.raised\.bg" must have exactly/);
     expect(() => validateSlots(flattenTokens({ chip: { gap: color('color.bg.subtle') } }), chip, 'contract')).toThrow(
+      /contract "chip\.bg" is missing; it must have default\|hover\|focus\|disabled/,
+    );
+    expect(() => validateSlots(flattenTokens({ card: { gap: color('color.bg.subtle') } }), chip, 'contract')).toThrow(
       /slot group "chip\.bg" matches no tokens/,
     );
+  });
+
+  it('closes a slot group to subgroups it does not list', () => {
+    const states = Object.fromEntries(['default', 'hover', 'focus', 'disabled'].map((state) => [state, color('color.bg.subtle')]));
+    const chip = { 'chip.bg': ['default', 'hover', 'focus', 'disabled'] };
+    expect(() => validateSlots(flattenTokens({ chip: { bg: states } }), chip, 'contract')).not.toThrow();
+    expect(() =>
+      validateSlots(flattenTokens({ chip: { bg: { ...states, glow: { default: color('color.bg.subtle') } } } }), chip, 'contract'),
+    ).toThrow(/"chip\.bg" must have exactly default\|hover\|focus\|disabled: "chip\.bg\.glow" is not one of them/);
   });
 
   it('rejects same-or-higher-layer refs and cycles', () => {
@@ -932,8 +944,11 @@ describe('resolver-driven build', () => {
     const cases: [(resolver: Resolver, dir: string) => Promise<void> | void, RegExp][] = [
       [edit('button.ghost.json', (button) => delete button.ghost!.bg!.hover), /"button\.ghost\.bg" must have exactly default\|hover\|active\|focus\|disabled/],
       [edit('button.primary.json', (button) => void (button.primary!.ring!.default = button.primary!.ring!.focus!)), /"button\.primary\.ring" must have exactly focus/],
-      [edit('button.base.json', (button) => delete button.base!.gap), /"button\.base" must have exactly radius\|gap\|border-width\|pressed-ring-width/],
+      [edit('button.base.json', (button) => delete button.base!.gap), /"button\.base" must have exactly radius\|gap\|border-width\|pressed-ring-width\|padding\|font\|icon: "button\.base\.gap" is missing/],
       [edit('button.base.json', (button) => delete button.base!.padding!.y), /"button\.base\.padding" must have exactly x\|y/],
+      [edit('button.base.json', (button) => void (button.base!.shadow = { color: button.base!.gap! })), /"button\.base\.shadow" is not one of them/],
+      [edit('button.ghost.json', (button) => void (button.ghost!.bg!.glow = { default: button.ghost!.bg!.hover! })), /"button\.ghost\.bg\.glow" is not one of them/],
+      [edit('button.primary.json', (button) => delete button.primary!.ring), /"button\.primary\.ring" is missing; it must have focus/],
     ];
     for (const [change, error] of cases) {
       await expect(buildTokensGraph(await fixture(change))).rejects.toThrow(error);
@@ -958,8 +973,17 @@ describe('resolver-driven build', () => {
       }
     });
     await expect(buildTokensGraph(geometry)).rejects.toThrow(
-      /token "button\.primary\.radius" and "button\.base\.radius" both feed --todae-button-radius; declare it on button\.base only/,
+      /context "primary" token "button\.primary\.radius" sets "radius", which button\.base also sets; declare radius on button\.base or in every context, not both/,
     );
+    const font = await fixture(async (_resolver, dir) => {
+      for (const paint of ['primary', 'secondary', 'ghost']) {
+        const path = join(dir, `components/button.${paint}.json`);
+        const tokens = JSON.parse(await readFile(path, 'utf8'));
+        tokens.button[paint].font = { family: { $type: 'fontFamily', $value: 'serif' } };
+        await writeFile(path, JSON.stringify(tokens));
+      }
+    });
+    await expect(buildTokensGraph(font)).rejects.toThrow(/token "button\.primary\.font\.family" sets "font", which button\.base also sets/);
   });
 
   it('lets a company opt its own components into slot rules', async () => {
@@ -1672,7 +1696,7 @@ describe('company token build', () => {
       await writeFile(file, JSON.stringify(tokens));
     });
     await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
-      /contract\/outline slot group "button\.\*\.ring" matches no tokens/,
+      /contract\/outline "button\.outline\.ring" is missing; it must have focus/,
     );
   });
 

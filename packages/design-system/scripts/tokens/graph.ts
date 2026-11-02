@@ -261,30 +261,20 @@ function checkOrder(entries: ResolvedEntry[], all: EntryToken[], { owner, positi
  * Each context of an alias modifier, and `<root>.base`, feed the consume vars
  * components read (`button.primary.bg.default` and `button.base.radius` feed
  * `--todae-button-bg-default` and `--todae-button-radius`). A token whose own
- * var is one of those, or a context token feeding the var a base token feeds,
- * would fight it.
+ * var is one of those would fight it. A context and the base feeding the same
+ * var is caught earlier, in `validateEntries`.
  */
 function checkConsumeVars(entries: ResolvedEntry[], all: EntryToken[]): void {
   const groups = aliasGroups(entries);
   if (groups.length === 0) return;
   const fedBy = new Map<string, string>();
-  const fedByBase = new Map<string, string>();
   for (const token of all) {
     const consume = consumeCssVar(token.path, groups);
-    if (consume === null) continue;
-    if (!fedBy.has(consume)) fedBy.set(consume, token.path);
-    if (groups.some(({ root }) => token.path.startsWith(`${root}.base.`))) fedByBase.set(consume, token.path);
+    if (consume !== null && !fedBy.has(consume)) fedBy.set(consume, token.path);
   }
   for (const token of all) {
-    const consume = consumeCssVar(token.path, groups);
-    if (consume === null) {
-      const feeder = fedBy.get(token.cssVar);
-      if (feeder) fail(`token "${token.path}" declares ${token.cssVar}, which "${feeder}" feeds; declare it in a context of that modifier or under its base`);
-      continue;
-    }
-    const base = fedByBase.get(consume);
-    if (base !== undefined && base !== token.path) {
-      fail(`token "${token.path}" and "${base}" both feed ${consume}; declare it on ${base.slice(0, base.indexOf('.base.') + 5)} only`);
-    }
+    if (consumeCssVar(token.path, groups) !== null) continue;
+    const feeder = fedBy.get(token.cssVar);
+    if (feeder) fail(`token "${token.path}" declares ${token.cssVar}, which "${feeder}" feeds; declare it in a context of that modifier or under its base`);
   }
 }

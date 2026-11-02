@@ -1,5 +1,5 @@
 import { aliasGroups, cssVarName, serializeValue } from './serialize.ts';
-import { PATH_RE, fail, type FlatToken, type Layer, type ResolvedEntry, type Rule, type SlotRules, type TokenNode } from './shared.ts';
+import { PATH_RE, entryTokens, fail, type FlatToken, type Layer, type ResolvedEntry, type Rule, type SlotRules, type TokenNode } from './shared.ts';
 
 export const RESERVED_ROOTS = [
   'color',
@@ -114,16 +114,17 @@ export function validateDensitySpaceOnly(tokens: Map<string, TokenNode>, loc: st
   }
 }
 
-function collectGroups(paths: Iterable<string>): Map<string, string[]> {
-  const groups = new Map<string, string[]>();
+/** Maps every group to the names of its children, tokens and subgroups alike. */
+function collectGroups(paths: Iterable<string>): Map<string, Set<string>> {
+  const groups = new Map<string, Set<string>>();
   for (const path of paths) {
-    const i = path.lastIndexOf('.');
-    if (i === -1) continue;
-    const group = path.slice(0, i);
-    const leaf = path.slice(i + 1);
-    const list = groups.get(group) ?? [];
-    list.push(leaf);
-    groups.set(group, list);
+    const parts = path.split('.');
+    for (let i = 1; i < parts.length; i++) {
+      const group = parts.slice(0, i).join('.');
+      const children = groups.get(group) ?? new Set<string>();
+      children.add(parts[i]!);
+      groups.set(group, children);
+    }
   }
   return groups;
 }
@@ -134,20 +135,31 @@ function matchesGroup(pattern: string, group: string): boolean {
   return want.length === have.length && want.every((segment, i) => segment === '*' || segment === have[i]);
 }
 
+/**
+ * Each group a slot pattern matches has exactly the listed children, so a
+ * slot closes its group: a token or subgroup it doesn't list is an error.
+ */
 export function validateSlots(tokens: Map<string, TokenNode>, slots: SlotRules, loc: string): void {
   const groups = collectGroups(tokens.keys());
   for (const [pattern, expected] of Object.entries(slots)) {
-    const want = [...expected].sort();
     let matched = false;
-    for (const [group, leaves] of groups) {
+    for (const [group, children] of groups) {
       if (!matchesGroup(pattern, group)) continue;
       matched = true;
-      const have = [...leaves].sort();
-      if (have.length !== want.length || have.some((leaf, i) => leaf !== want[i])) {
-        fail(`${loc} "${group}" must have exactly ${expected.join('|')}`);
-      }
+      const missing = expected.filter((key) => !children.has(key));
+      const extra = [...children].filter((key) => !expected.includes(key));
+      if (missing.length === 0 && extra.length === 0) continue;
+      const parts = [
+        ...missing.map((key) => `"${group}.${key}" is missing`),
+        ...extra.map((key) => `"${group}.${key}" is not one of them`),
+      ];
+      fail(`${loc} "${group}" must have exactly ${expected.join('|')}: ${parts.join(', ')}`);
     }
-    if (!matched) fail(`${loc} slot group "${pattern}" matches no tokens`);
+    if (matched) continue;
+    const cut = pattern.lastIndexOf('.');
+    const parent = cut === -1 ? undefined : [...groups.keys()].find((group) => matchesGroup(pattern.slice(0, cut), group));
+    if (parent) fail(`${loc} "${parent}${pattern.slice(cut)}" is missing; it must have ${expected.join('|')}`);
+    fail(`${loc} slot group "${pattern}" matches no tokens`);
   }
 }
 
@@ -223,16 +235,29 @@ export function validateEntries(entries: ResolvedEntry[]): void {
     const defaults = contexts.get(defaultContext);
     if (!defaults) fail(`${loc} default must name one of its contexts`);
     if (extension.alias) {
+      const root = aliasGroups([entry])[0]!.root;
+      // A context and `<root>.base` both feed `--todae-<root>-*`, so each
+      // name under the root belongs to one of them.
+      const shared = new Set(
+        entries
+          .flatMap(entryTokens)
+          .filter((t) => t.path.startsWith(`${root}.base.`))
+          .map((t) => t.path.split('.')[2]!),
+      );
+      for (const [context, tokens] of contexts) {
+        const stray = tokens.find((t) => !t.path.startsWith(`${root}.${context}.`));
+        if (stray) fail(`${loc} context "${context}" token "${stray.path}" must be under ${root}.${context}.*`);
+        const base = tokens.find((t) => shared.has(t.path.split('.')[2]!));
+        if (base) {
+          const name = base.path.split('.')[2]!;
+          fail(`${loc} context "${context}" token "${base.path}" sets "${name}", which ${root}.base also sets; declare ${name} on ${root}.base or in every context, not both`);
+        }
+      }
       validateAliasParity(
         new Map([...contexts].map(([context, tokens]) => [context, tokens.map((t) => t.path)])),
         defaultContext,
         loc,
       );
-      const root = aliasGroups([entry])[0]!.root;
-      for (const [context, tokens] of contexts) {
-        const stray = tokens.find((t) => !t.path.startsWith(`${root}.${context}.`));
-        if (stray) fail(`${loc} context "${context}" token "${stray.path}" must be under ${root}.${context}.*`);
-      }
       continue;
     }
     for (const [context, tokens] of contexts) {
