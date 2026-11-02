@@ -22,12 +22,14 @@ echo "pstack $sha is in $pstack/.claude"
 playbooks="$pstack/.claude/skills/poteto-mode/playbooks"
 bad=0
 bom=$(printf '\357\273\277')
-for file in .agents/playbooks/*.md; do
+for file in .agents/playbooks/*.md .agents/playbooks/.[!.]*.md; do
+  [ -f "$file" ] || continue
   body=$(tr -d '\r' < "$file" | sed "1s/^$bom//")
-  front=$(printf '%s\n' "$body" | awk 'NR == 1 && /^---$/ { inside = 1; next } inside && /^---$/ { exit } inside { print }')
+  front=$(printf '%s\n' "$body" | awk 'NR == 1 && /^---$/ { inside = 1; next } inside && /^---$/ { closed = 1; exit } inside { kept = kept $0 "\n" } END { if (closed) printf "%s", kept }')
   printf '%s\n' "$front" | grep -q '^when:[[:space:]]*[^[:space:]]' || { echo "$file: its frontmatter needs a when: line"; bad=1; }
-  bases=$(printf '%s\n' "$front" | sed -n 's/^extends:[[:space:]]*//p' | tr ',' ' ')
+  bases=$(printf '%s\n' "$front" | sed -n 's/^extends:[[:space:]]*//p' | head -n 1 | tr ',' ' ')
   text=""
+  set -f
   for base in $bases; do
     if [ "${base#*/}" = "$base" ] && [ -f "$playbooks/$base.md" ]; then
       text="$text $(tr -s '[:space:]' ' ' < "$playbooks/$base.md")"
@@ -35,6 +37,7 @@ for file in .agents/playbooks/*.md; do
       echo "$file: extends $base, which this pstack has no playbook for"; bad=1
     fi
   done
+  set +f
   changes=$(printf '%s\n' "$body" | grep -E '^[[:space:]]*([-*]|[0-9]+\.)[[:space:]]+\*\*(After|Before|Replace|In)\*\*')
   while IFS= read -r line; do
     [ -n "$line" ] || continue
