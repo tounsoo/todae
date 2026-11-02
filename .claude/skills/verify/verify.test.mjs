@@ -134,7 +134,7 @@ describe('routesFor', () => {
     const registry = readFileSync(path.join(repoRoot, 'apps/docs/mdx-components.tsx'), 'utf8');
     const local = new Set();
     // Every local name bound by an import from ./components/, whatever the import's shape.
-    for (const match of registry.matchAll(/^import\s+(?!type\b)(.+?)\s+from\s+['"]\.\/components\//gm)) {
+    for (const match of registry.matchAll(/^import\s+(?!type\b)([^;'"]+?)\s+from\s+['"]\.\/components\//gm)) {
       for (const part of match[1].replace(/[{}]/g, ',').split(',')) {
         const name = part.trim().split(/\s+as\s+/).pop().replace(/^\*\s*/, '').trim();
         if (name) local.add(name);
@@ -146,15 +146,30 @@ describe('routesFor', () => {
       return { key, value: value.split('.')[0] };
     });
     const remark = readFileSync(path.join(repoRoot, 'apps/docs/lib/remarkPageContents.mjs'), 'utf8');
+    // The page text outside fenced code samples, which render as code, not as components.
     const pages = ['apps/docs/app/(en)/button/page.mdx', 'apps/docs/app/(en)/field/select/page.mdx']
-      .map((file) => readFileSync(path.join(repoRoot, file), 'utf8'));
+      .map((file) => readFileSync(path.join(repoRoot, file), 'utf8'))
+      .map((text) => ({ fenced: /^```/m.test(text), prose: text.replace(/^```[\s\S]*?^```/gm, '') }));
+    const ELEMENTS = {
+      a: /\]\(/,
+      code: /`[^`\n]+`/,
+      h2: /^## /m,
+      h3: /^### /m,
+      hr: /^---$/m,
+      p: /^[A-Za-z]/m,
+    };
     const shows = (key) => {
-      if (key === 'a') return pages.every((text) => /\]\(/.test(text));
-      if (key === 'pre') return pages.every((text) => /^```/m.test(text));
-      if (/^[A-Z]/.test(key)) return pages.every((text) => new RegExp(`<${key}[\\s>/]`).test(text)) || remark.includes(`jsx('${key}'`);
-      return false;
+      if (key === 'pre') return pages.every((page) => page.fenced);
+      if (ELEMENTS[key]) return pages.every((page) => ELEMENTS[key].test(page.prose));
+      if (!/^[A-Z]/.test(key)) return false;
+      if (pages.every((page) => new RegExp(`<${key}[\\s>/]`).test(page.prose))) return true;
+      // remarkPageContents wraps every MDX page in DocsPage, and adds PageContentsFold
+      // when the page has two sections or more.
+      if (!remark.includes(`jsx('${key}'`)) return false;
+      return key === 'DocsPage' || pages.every((page) => (page.prose.match(/^## /gm) ?? []).length >= 2);
     };
     assert.ok(local.size > 0);
+    assert.ok(!local.has(''));
     for (const name of local) {
       const keys = entries.filter((entry) => entry.value === name).map((entry) => entry.key);
       assert.ok(keys.some(shows), `${name} (registered as ${keys.join(', ')}) is not shown on /button and /field/select`);
