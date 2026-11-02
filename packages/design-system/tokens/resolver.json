@@ -16,7 +16,18 @@
     "button": {
       "description": "Button geometry shared by every variant",
       "sources": [{ "$ref": "./components/button.base.json" }],
-      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots", "button"] } }
+      "$extensions": {
+        "dev.todae": {
+          "layer": "contract",
+          "rules": ["reserved-roots"],
+          "slots": {
+            "button.base": ["radius", "gap", "border-width", "pressed-ring-width"],
+            "button.base.padding": ["x", "y"],
+            "button.base.font": ["size", "weight", "letter-spacing", "text-transform"],
+            "button.base.icon": ["size"]
+          }
+        }
+      }
     },
     "contract": {
       "sources": [
@@ -75,7 +86,7 @@
       "$extensions": {
         "dev.todae": {
           "layer": "contract",
-          "rules": ["reserved-roots", "button"],
+          "rules": ["reserved-roots"],
           "slots": {
             "chip.bg": ["default", "hover", "focus", "disabled"],
             "chip.fg": ["default", "hover", "focus", "disabled"],
@@ -193,7 +204,13 @@
       "$extensions": {
         "dev.todae": {
           "layer": "contract",
-          "rules": ["reserved-roots", "button"],
+          "rules": ["reserved-roots"],
+          "slots": {
+            "button.*.bg": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.fg": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.border": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.ring": ["focus"]
+          },
           "attribute": "data-button-variant",
           "alias": true
         }

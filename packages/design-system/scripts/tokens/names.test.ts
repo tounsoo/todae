@@ -29,7 +29,7 @@ function schema(): Schema {
   });
 }
 
-function snap(rows: { path: string; cssValue: string; layer?: 'core' | 'appearance' | 'density' | 'contract' }[]): Snapshot {
+function snap(rows: { path: string; cssValue: string; layer?: 'core' | 'appearance' | 'density' | 'contract'; alias?: string }[]): Snapshot {
   return parseSnapshot({
     version: 1,
     tokens: rows.map((row) => ({
@@ -39,6 +39,7 @@ function snap(rows: { path: string; cssValue: string; layer?: 'core' | 'appearan
       cssValue: row.cssValue,
       context: null,
       layer: row.layer ?? 'contract',
+      ...(row.alias ? { entry: { kind: 'modifier', name: 'buttonVariant', context: row.alias } } : {}),
     })),
   });
 }
@@ -108,7 +109,7 @@ describe('dead tokens', () => {
   });
 
   it('keeps a button pack token live when its consume var is read', () => {
-    const pack = snap([{ path: 'button.primary.bg.default', cssValue: 'oklch(0.5 0.1 250)' }]);
+    const pack = snap([{ path: 'button.primary.bg.default', cssValue: 'oklch(0.5 0.1 250)', alias: 'primary' }]);
     expect(deadTokens(pack, [])).toEqual([
       { rule: 'dead', path: 'button.primary.bg.default', cssVar: cssVarOf('--todae-button-primary-bg-default') },
     ]);

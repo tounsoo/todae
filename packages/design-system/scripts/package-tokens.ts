@@ -3,7 +3,7 @@ import { realpathSync } from 'node:fs';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildTokens, buildTokensGraph, type BuildTokensResult } from './build-tokens.ts';
+import { buildTokens, buildTokensGraph, type BuildTokensResult } from './tokens/build.ts';
 import { parseSnapshot, type ConsumerFile } from './tokens/consumers.ts';
 import {
   addedLine,

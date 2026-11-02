@@ -3,39 +3,54 @@ import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { buildCompanyTokens, buildTokens, buildTokensGraph, todaeTokensRoot } from './tokens/build.ts';
+import { cli } from './tokens/cli.ts';
+import { apcaContrast, contrastResults } from './tokens/contrast.ts';
+import { validateRefs } from './tokens/graph.ts';
+import { flattenTokens, parseExtension, resolveEntries } from './tokens/resolver.ts';
 import {
-  PATH_RE,
-  apcaContrast,
-  contrastResults,
-  resolveEntries,
-  buildCompanyTokens,
-  buildTokens,
-  buildTokensGraph,
-  cli,
-  todaeTokensRoot,
-  catalogSelectors,
-  flattenTokens,
-  pathToPointer,
-  parseComponentPointer,
-  parseExtension,
-  parseScope,
-  pointerToPath,
-  serializeValue,
+  validateAliasParity,
   validateDensitySpaceOnly,
-  validateInteractive,
   validateParity,
   validatePaths,
-  validateRefs,
   validateReservedRoots,
   validateSlots,
-  validateAliasParity,
-  validatePaintPacks,
+} from './tokens/rules.ts';
+import { parseScope } from './tokens/scope.ts';
+import { serializeValue } from './tokens/serialize.ts';
+import {
+  PATH_RE,
+  parseComponentPointer,
+  pathToPointer,
+  pointerToPath,
   type FlatToken,
   type TokenEntry,
   type TokenNode,
   type TokenTree,
-} from './build-tokens';
+} from './tokens/shared.ts';
 import { buildPackageTokens } from './package-tokens.ts';
+
+/** The selectors of a build's top-level and once-nested CSS blocks, in order. */
+function catalogSelectors(css: string): string[] {
+  const selectors: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < css.length; i++) {
+    const ch = css[i];
+    if (ch === '{') {
+      if (depth <= 1) {
+        const sel = css.slice(start, i).replace(/\s+/g, ' ').trim();
+        if (sel) selectors.push(sel);
+      }
+      depth += 1;
+      start = i + 1;
+    } else if (ch === '}') {
+      depth -= 1;
+      start = i + 1;
+    }
+  }
+  return selectors;
+}
 
 const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: pathToPointer(ref) } });
 
@@ -88,48 +103,6 @@ describe('build-tokens validations', () => {
     expect(() => validateSlots(flattenTokens({ chip: { gap: color('color.bg.subtle') } }), chip, 'contract')).toThrow(
       /slot group "chip\.bg" matches no tokens/,
     );
-  });
-
-  it('requires interactive slots and ring.focus only', () => {
-    expect(() =>
-      validateInteractive(
-        flattenTokens({
-          button: { primary: { bg: { default: color('color.accent.default') } } },
-        }),
-        'contract',
-      ),
-    ).toThrow(/default\|hover\|active\|focus\|disabled/);
-    expect(() =>
-      validateInteractive(
-        flattenTokens({
-          button: {
-            primary: { ring: { default: color('color.accent.default'), focus: color('color.accent.default') } },
-          },
-        }),
-        'contract',
-      ),
-    ).toThrow(/ring\.focus only/);
-    expect(() =>
-      validateInteractive(
-        flattenTokens({
-          button: { bg: { default: color('color.accent.default') } },
-        }),
-        'contract',
-      ),
-    ).toThrow(/button\.primary\|secondary\|ghost/);
-  });
-
-  it('requires paint packs to match primary keys', () => {
-    const primary = flattenTokens({
-      button: { primary: { bg: { default: color('color.accent.default') } } },
-    });
-    const secondary = flattenTokens({
-      button: { secondary: { bg: { default: color('color.bg.surface') } } },
-    });
-    const ghost = flattenTokens({
-      button: { ghost: { fg: { default: color('color.fg.default') } } },
-    });
-    expect(() => validatePaintPacks({ primary, secondary, ghost })).toThrow(/ghost/);
   });
 
   it('rejects same-or-higher-layer refs and cycles', () => {
@@ -924,7 +897,7 @@ describe('resolver-driven build', () => {
     await expect(buildTokensGraph(strict)).rejects.toThrow(/token "brand\.ink" uses reserved-root-violating category "brand"/);
   });
 
-  it('checks alias contexts against the default even without the button rule', () => {
+  it('checks alias contexts against the default', () => {
     const contexts = new Map([
       ['solid', ['badge.solid.bg', 'badge.solid.fg']],
       ['soft', ['badge.soft.bg']],
@@ -936,16 +909,57 @@ describe('resolver-driven build', () => {
     expect(() => validateAliasParity(contexts, 'solid', 'modifier "badge"')).not.toThrow();
   });
 
-  it('rejects a ghost variant missing a token when the button rule is off', async () => {
+  it('rejects a ghost variant missing a token without its slots', async () => {
     const root = await fixture(async (resolver, dir) => {
       const ext = (resolver.modifiers.buttonVariant!.$extensions as Record<string, Record<string, unknown>>)['dev.todae']!;
-      ext.rules = ['reserved-roots'];
+      delete ext.slots;
       const file = join(dir, 'components/button.ghost.json');
       const ghost = JSON.parse(await readFile(file, 'utf8'));
       delete ghost.button.ghost.bg.hover;
       await writeFile(file, JSON.stringify(ghost));
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(/context "ghost" must declare the same tokens as "primary"/);
+  });
+
+  it('holds button tokens to the slots in resolver.json', async () => {
+    type Json = { [key: string]: Json };
+    const edit = (file: string, change: (tokens: Json) => void) => async (_resolver: Resolver, dir: string) => {
+      const path = join(dir, 'components', file);
+      const tokens = JSON.parse(await readFile(path, 'utf8'));
+      change(tokens.button);
+      await writeFile(path, JSON.stringify(tokens));
+    };
+    const cases: [(resolver: Resolver, dir: string) => Promise<void> | void, RegExp][] = [
+      [edit('button.ghost.json', (button) => delete button.ghost!.bg!.hover), /"button\.ghost\.bg" must have exactly default\|hover\|active\|focus\|disabled/],
+      [edit('button.primary.json', (button) => void (button.primary!.ring!.default = button.primary!.ring!.focus!)), /"button\.primary\.ring" must have exactly focus/],
+      [edit('button.base.json', (button) => delete button.base!.gap), /"button\.base" must have exactly radius\|gap\|border-width\|pressed-ring-width/],
+      [edit('button.base.json', (button) => delete button.base!.padding!.y), /"button\.base\.padding" must have exactly x\|y/],
+    ];
+    for (const [change, error] of cases) {
+      await expect(buildTokensGraph(await fixture(change))).rejects.toThrow(error);
+    }
+  });
+
+  it('keeps tokens off the consume vars a button variant or button.base feeds', async () => {
+    const stray = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        button: { bg: { default: { $type: 'color', $value: { $ref: '#/color/bg/surface/$value' } } } },
+      });
+    });
+    await expect(buildTokensGraph(stray)).rejects.toThrow(
+      /token "button\.bg\.default" declares --todae-button-bg-default, which "button\.primary\.bg\.default" feeds/,
+    );
+    const geometry = await fixture(async (_resolver, dir) => {
+      for (const paint of ['primary', 'secondary', 'ghost']) {
+        const path = join(dir, `components/button.${paint}.json`);
+        const tokens = JSON.parse(await readFile(path, 'utf8'));
+        tokens.button[paint].radius = { $type: 'dimension', $value: { $ref: '#/radius/sm/$value' } };
+        await writeFile(path, JSON.stringify(tokens));
+      }
+    });
+    await expect(buildTokensGraph(geometry)).rejects.toThrow(
+      /token "button\.primary\.radius" and "button\.base\.radius" both feed --todae-button-radius; declare it on button\.base only/,
+    );
   });
 
   it('lets a company opt its own components into slot rules', async () => {
@@ -1010,9 +1024,9 @@ describe('resolver-driven build', () => {
     );
     expect(() => parseExtension(ext({ layer: 'core', rule: ['button'] }), 'set', 'set "x"')).toThrow(/unknown dev\.todae key "rule"/);
     expect(() => parseExtension(ext({ layer: 'core', rules: ['slots'] }), 'set', 'set "x"')).toThrow(
-      /rule "slots" must be one of reserved-roots\|density-space\|button/,
+      /rule "slots" must be one of reserved-roots\|density-space/,
     );
-    expect(() => parseExtension(ext({ layer: 'core', rules: ['button', 'button'] }), 'set', 'set "x"')).toThrow(
+    expect(() => parseExtension(ext({ layer: 'core', rules: ['reserved-roots', 'reserved-roots'] }), 'set', 'set "x"')).toThrow(
       /must not repeat/,
     );
     expect(() => parseExtension(ext({ layer: 'core', slots: { 'Chip.bg': ['default'] } }), 'set', 'set "x"')).toThrow(
@@ -1022,8 +1036,8 @@ describe('resolver-driven build', () => {
       /distinct lowercase leaf names/,
     );
     expect(
-      parseExtension(ext({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } }), 'set', 'set "x"'),
-    ).toEqual({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } });
+      parseExtension(ext({ layer: 'contract', rules: ['reserved-roots'], slots: { 'card.*.bg': ['default'] } }), 'set', 'set "x"'),
+    ).toEqual({ layer: 'contract', rules: ['reserved-roots'], slots: { 'card.*.bg': ['default'] } });
     const pair = { fg: 'color.fg.default', bg: 'color.bg.canvas', min: 75 };
     expect(parseExtension(ext({ layer: 'core', contrast: [pair] }), 'set', 'set "x"')).toEqual({ layer: 'core', contrast: [pair] });
     expect(() => parseExtension(ext({ layer: 'core', contrast: [] }), 'set', 'set "x"')).toThrow(/non-empty array/);
@@ -1658,7 +1672,7 @@ describe('company token build', () => {
       await writeFile(file, JSON.stringify(tokens));
     });
     await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
-      /variant "outline" paint keys must match button\.primary: "ring\.focus" only in primary/,
+      /contract\/outline slot group "button\.\*\.ring" matches no tokens/,
     );
   });
 
@@ -1734,7 +1748,7 @@ describe('company token build', () => {
           };
           r.resolutionOrder.push({ $ref: '#/sets/button' });
         },
-        /button\.base must be radius, padding\.x\/y, font\.size\/weight\/letter-spacing\/text-transform, gap/,
+        /"button\.base" must have exactly radius\|gap\|border-width\|pressed-ring-width/,
       ],
       [
         (r) => {
@@ -1783,7 +1797,7 @@ describe('company token build', () => {
         '--no-warnings',
         '--input-type=module',
         '-e',
-        `await import(${JSON.stringify(join(import.meta.dirname, 'build-tokens.ts'))}); process.stdout.write('ok');`,
+        `await import(${JSON.stringify(join(import.meta.dirname, 'tokens-builder.ts'))}); process.stdout.write('ok');`,
         'not-a-file',
       ],
       { encoding: 'utf8' },

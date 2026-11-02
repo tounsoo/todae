@@ -158,7 +158,7 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     }
     modifiers.buttonVariant = {
       contexts: Object.fromEntries(buttonVariants.map((variant) => [variant, [{ $ref: `./button.${variant}.json` }]])),
-      $extensions: { 'dev.todae': { layer: 'contract', rules: ['button'], attribute: 'data-button-variant', alias: true } },
+      $extensions: { 'dev.todae': { layer: 'contract', attribute: 'data-button-variant', alias: true } },
     };
     order.push({ $ref: '#/modifiers/buttonVariant' });
   }

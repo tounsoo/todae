@@ -27,6 +27,8 @@ type FixtureRow = {
   context?: string | null;
   type?: string;
   layer?: 'core' | 'appearance' | 'density' | 'contract';
+  /** The button variant context that declares it. */
+  alias?: string;
 };
 
 function cssVar(path: string): string {
@@ -44,6 +46,7 @@ function catalog(rows: FixtureRow[]) {
       context: row.context ?? null,
       layer: row.layer ?? 'contract',
       description: 'ignored',
+      ...(row.alias ? { entry: { kind: 'modifier', name: 'buttonVariant', context: row.alias } } : {}),
     })),
   };
 }
@@ -121,8 +124,8 @@ describe('token consumers', () => {
 
   it('reaches Button through the pack consume alias', () => {
     const text = markdown(
-      [{ path: 'button.primary.bg-default', cssValue: 'oklch(0.2 0 0)' }],
-      [{ path: 'button.primary.bg-default', cssValue: 'oklch(0.4 0 0)' }],
+      [{ path: 'button.primary.bg-default', cssValue: 'oklch(0.2 0 0)', alias: 'primary' }],
+      [{ path: 'button.primary.bg-default', cssValue: 'oklch(0.4 0 0)', alias: 'primary' }],
       [{ path: 'src/components/Button.module.css', source: '.btn { background: var(--_button-bg-default, var(--todae-button-bg-default)); }' }],
     );
     expect(text).toContain('| Button | `--todae-button-bg-default` | `button.primary.bg-default` → `button.bg-default` |');
