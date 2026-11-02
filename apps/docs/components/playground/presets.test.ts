@@ -1,6 +1,6 @@
 import { THEME_OVERRIDE_KEYS, themeOverrideStyle, type ThemeColorValue, type ThemeOverride } from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
-import { apcaContrast, oklchToSrgb } from '../../../../packages/design-system/scripts/build-tokens';
+import { apcaContrast, oklchToSrgb } from '../../../../packages/design-system/src/color/apca';
 import core from '../../../../packages/design-system/tokens/core.json';
 import { PRESETS } from './presets';
 
