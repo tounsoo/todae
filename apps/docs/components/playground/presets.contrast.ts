@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ThemeColorValue, ThemeOverride } from '@tounsoo/todae';
-import { apcaContrast, composite, oklchToSrgb } from '../../../../packages/design-system/scripts/build-tokens';
+import { apcaContrast, compositeSrgb, oklchToSrgb, type Rgba } from '../../../../packages/design-system/src/color/apca';
 import { PRESETS } from './presets';
 
 export const PRESET_PAIRS = [
@@ -24,8 +24,6 @@ type Mode = (typeof MODES)[number];
 type Oklch = { l: number; c: number; h: number; alpha: number };
 type Row = { path: string; context: string | null; ref: string | null; cssValue: string };
 type Pair = { fg: string; bg: string; min: number };
-
-export type ContrastHit = { key: string; line: string };
 
 type Fix = { path: string; from: number; to: number; lc: number };
 
@@ -107,10 +105,14 @@ function toTheme(color: Oklch): ThemeColorValue {
   return value;
 }
 
+function rgba(color: Oklch): Rgba {
+  return [...oklchToSrgb(color), color.alpha];
+}
+
 function pairLc(pair: Pair, mode: Mode, overrides: ThemeOverride, rows: readonly Row[]): number {
   const canvas = oklchToSrgb(resolveColor('color.bg.canvas', mode, overrides, rows));
-  const bg = composite(resolveColor(pair.bg, mode, overrides, rows), canvas);
-  const fg = composite(resolveColor(pair.fg, mode, overrides, rows), bg);
+  const bg = compositeSrgb(rgba(resolveColor(pair.bg, mode, overrides, rows)), canvas);
+  const fg = compositeSrgb(rgba(resolveColor(pair.fg, mode, overrides, rows)), bg);
   return Math.abs(apcaContrast(fg, bg));
 }
 
@@ -149,11 +151,12 @@ function failureLine(preset: string, mode: Mode, pair: Pair, lc: number, overrid
   return `${head}\n    fix: set preset override "${fix.path}" lightness from ${formatLightness(fix.from)} to ${formatLightness(fix.to)} (Lc ${fix.lc.toFixed(1)})`;
 }
 
-export function contrastHits(): { count: number; hits: ContrastHit[] } {
+/** Every preset pair below its contract minimum, in light and dark, with the nearest lightness that passes. */
+export function contrastFailures(): { count: number; lines: string[] } {
   const dir = join(import.meta.dirname, '../../../../packages/design-system/tokens');
   const pairs = contractPairs(JSON.parse(readFileSync(join(dir, 'resolver.json'), 'utf8')) as unknown);
   const rows = tokenRows(JSON.parse(readFileSync(join(dir, 'tokens.generated.json'), 'utf8')) as unknown);
-  const hits: ContrastHit[] = [];
+  const lines: string[] = [];
   let count = 0;
   for (const preset of PRESETS) {
     for (const mode of MODES) {
@@ -162,44 +165,9 @@ export function contrastHits(): { count: number; hits: ContrastHit[] } {
         count += 1;
         const lc = pairLc(pair, mode, overrides, rows);
         if (lc >= pair.min) continue;
-        const key = `${preset.id} ${mode} ${pair.fg} ${pair.bg}`;
-        hits.push({ key, line: failureLine(preset.id, mode, pair, lc, overrides, rows) });
+        lines.push(failureLine(preset.id, mode, pair, lc, overrides, rows));
       }
     }
   }
-  return { count, hits };
-}
-
-export function ratchet(
-  found: readonly string[],
-  list: readonly string[],
-  base?: ReadonlySet<string> | 'missing',
-): { unlisted: string[]; stale: string[]; added: string[] } {
-  const allowed = new Set(list);
-  const failing = new Set(found);
-  const unlisted = found.filter((key) => !allowed.has(key));
-  const stale = list.filter((key) => !failing.has(key));
-  const added: string[] = [];
-  if (base && base !== 'missing') {
-    for (const key of list) if (!base.has(key)) added.push(key);
-  }
-  return { unlisted, stale, added };
-}
-
-export function problemLines(hits: readonly ContrastHit[], list: readonly string[], base?: ReadonlySet<string> | 'missing'): string[] {
-  const { unlisted, stale, added } = ratchet(
-    hits.map((hit) => hit.key),
-    list,
-    base,
-  );
-  const byKey = new Map(hits.map((hit) => [hit.key, hit.line]));
-  return [
-    ...unlisted.map((key) => {
-      const line = byKey.get(key);
-      if (line === undefined) throw new Error(`missing contrast line for ${key}`);
-      return line;
-    }),
-    ...stale.map((key) => `${key}: remove it, the list only shrinks`),
-    ...added.map((key) => `grandfather list can only shrink; ${key} is new`),
-  ];
+  return { count, lines };
 }
