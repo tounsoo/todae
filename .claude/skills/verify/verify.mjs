@@ -418,13 +418,17 @@ function describeNetworkError(error) {
 export async function driveSite(base, paths, headers = {}, options = {}) {
   for (const value of paths) checkPath(base, value);
   const pages = [];
-  for (const value of pairLocales(paths)) {
+  const all = pairLocales(paths);
+  for (const [index, value] of all.entries()) {
     try {
       pages.push(await checkPage(base, value, headers, options));
     } catch (error) {
       if (error instanceof UsageError) throw error;
-      if (pages.some((page) => !page.ok && !page.blocked)) return { pages, blocked: null };
-      return { pages, blocked: `could not reach ${new URL(base).origin}: ${describeNetworkError(error)}` };
+      const reason = `could not reach ${new URL(base).origin}: ${describeNetworkError(error)}`;
+      const unreached = { paths: all.slice(index), reason };
+      // A page that already answered and failed still proves a failure.
+      const failed = pages.some((page) => !page.ok && !page.blocked);
+      return { pages, unreached, blocked: failed ? null : reason };
     }
   }
   // A page that answered and failed proves a failure, so a wall on another page doesn't hide it.
@@ -463,6 +467,10 @@ function driveLines(result, drive) {
   for (const page of pages.filter((item) => !item.ok)) {
     const status = page.blocked ? 'blocked' : 'failed';
     lines.push(`- Drive: \`${page.path}\` ${status}. ${oneLine(page.blocked ?? page.reason ?? 'unknown')}`);
+  }
+  if (drive?.unreached) {
+    lines.push(`- Drive: ${drive.unreached.paths.map((item) => `\`${item}\``).join(', ')} not reached. ${oneLine(drive.unreached.reason)}`);
+    return lines;
   }
   if (!pages.length || (result.status !== 'passed' && !pages.some((page) => !page.ok))) {
     lines.push(`- Drive: ${result.status}. ${oneLine(result.reason ?? '')}`.trimEnd());
@@ -515,7 +523,7 @@ async function resolveBase(ref) {
     if (!sha) throw new Blocked(`base ${ref} does not resolve to a commit; fetch it first`);
     // The plan diffs base...HEAD, which starts at their merge base, so that is the real base.
     const merge = await gitTry(['merge-base', sha, 'HEAD']);
-    if (!merge) throw new Blocked(`base ${ref} shares no history with HEAD, so there is no diff to plan`);
+    if (!merge) throw new Blocked(`no merge base between ${ref} and HEAD in this clone; fetch more history (git fetch --unshallow origin), or pick a base that shares history with HEAD`);
     return merge;
   }
   if (!(await gitTry(['rev-parse', '--verify', '--quiet', 'origin/main^{commit}']))) {
@@ -797,10 +805,11 @@ async function driveCommand(flags, routes) {
 }
 
 function driveSummary(drive) {
-  return drive.pages.map(
+  const unreached = drive.unreached ? [`NOT REACHED ${drive.unreached.paths.join(' ')} ${drive.unreached.reason}`] : [];
+  return [...drive.pages.map(
     (page) =>
       `${page.ok ? 'ok  ' : page.blocked ? 'BLKD' : 'FAIL'} ${page.path} status=${page.status} lang=${page.lang ?? '-'} h1=${JSON.stringify(page.h1)}${page.reason ? ` ${page.reason}` : ''}${page.blocked ? ` ${page.blocked}` : ''}`,
-  );
+  ), ...unreached];
 }
 
 function stampNow() {

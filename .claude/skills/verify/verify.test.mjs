@@ -538,6 +538,9 @@ describe('sameSiteFetch', () => {
     const driven = await driveSite(base.origin, ['/'], {}, { remote: true });
     assert.equal(driven.blocked, null);
     assert.equal(driven.pages[0].ok, false);
+    assert.deepEqual(driven.unreached.paths, ['/ko']);
+    const body = renderBody({ verdict: 'FAIL', head: SHA, base: BASE, results: [{ id: 'drive', status: 'failed' }], drive: driven }, SHA);
+    assert.match(body, /- Drive: `\/ko` not reached\. could not reach http:\/\/127\.0\.0\.1:\d+/);
   });
 
   test('driveSite drives English then Korean and reports an unreachable server as blocked', async () => {
@@ -659,7 +662,7 @@ describe('command line', () => {
       const lone = execFileSync('git', ['commit-tree', git('rev-parse', 'HEAD^{tree}').trim(), '-m', 'lone'], { cwd: dir, encoding: 'utf8' }).trim();
       const run = plan('--base', lone);
       assert.equal(run.status, 2, run.stderr);
-      assert.match(run.stdout, /shares no history with HEAD/);
+      assert.match(run.stdout, /no merge base between .* and HEAD in this clone; fetch more history/);
     });
 
     test('plan is BLOCKED when origin/main is missing', () => {
