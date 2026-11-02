@@ -4,9 +4,9 @@
 # the repo instead.
 # Usage: sh .claude/update-pstack.sh [commit]   copy the port at a full SHA, the pin by default
 #        sh .claude/update-pstack.sh --check    compare the pin with upstream and write nothing
-# --check exits 0 when up to date, 10 when behind and 11 when the pin is not
-# on upstream's default branch or upstream no longer has it. Any other status
-# is an error.
+# --check exits 0 when no upstream commit since the pin touches the copied
+# files, 10 when one does, and 11 when the pin is ahead of upstream's default
+# branch, off it, or gone. 2 is a usage error; any other status is an error.
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
@@ -30,29 +30,31 @@ check() {
   [ -n "$latest" ] || { echo "could not read upstream's HEAD" >&2; exit 1; }
   # Without blobs the fetch has the history and trees but no file contents.
   git -C "$tmp" fetch -q --filter=blob:none "$repo" "$latest"
+  upstream=$(git -C "$tmp" log -1 --format='%H %cs %s' "$latest")
   echo "pinned:   $pin"
-  echo "upstream: $(git -C "$tmp" log -1 --format='%H %cs %s' "$latest")"
+  echo "upstream: $upstream"
   if [ "$latest" = "$pin" ]; then
     echo "up to date"
     exit 0
   fi
-  if ! git -C "$tmp" fetch -q --filter=blob:none "$repo" "$pin" 2>/dev/null; then
-    echo "diverged: upstream no longer has the pinned commit"
+  if ! git -C "$tmp" fetch -q --filter=blob:none "$repo" "$pin" 2>"$tmp/err"; then
+    case $(cat "$tmp/err") in
+      *"not our ref"* | *"couldn't find remote ref"*)
+        echo "diverged: upstream no longer has the pinned commit"
+        exit 11 ;;
+    esac
+    cat "$tmp/err" >&2
+    exit 1
+  fi
+  behind=$(git -C "$tmp" rev-list --count "$pin..$latest")
+  ahead=$(git -C "$tmp" rev-list --count "$latest..$pin")
+  if [ "$ahead" -gt 0 ] && [ "$behind" -gt 0 ]; then
+    echo "diverged: the pin is not on upstream's default branch"
+    exit 11
+  elif [ "$ahead" -gt 0 ]; then
+    echo "diverged: the pin is ahead of upstream's default branch"
     exit 11
   fi
-  status=0
-  git -C "$tmp" merge-base --is-ancestor "$pin" "$latest" || status=$?
-  case $status in
-    0) ;;
-    1)
-      if git -C "$tmp" merge-base --is-ancestor "$latest" "$pin"; then
-        echo "diverged: the pin is ahead of upstream's default branch"
-      else
-        echo "diverged: the pin is not on upstream's default branch"
-      fi
-      exit 11 ;;
-    *) exit "$status" ;;
-  esac
   set -- ":(glob)plugins/pstack/skills/*/**" "plugins/pstack/$hook"
   for dir in $agent_dirs; do
     set -- "$@" ":(glob)plugins/pstack/$dir/*.md"
@@ -61,8 +63,9 @@ check() {
     set -- "$@" ":(exclude)plugins/pstack/skills/$name"
   done
   touched=$(git -C "$tmp" rev-list --count "$pin..$latest" -- "$@")
-  echo "behind by $(git -C "$tmp" rev-list --count "$pin..$latest") commits, $touched in the copied files"
-  git -C "$tmp" log --format='  %h %cs %s' "$pin..$latest" -- "$@"
+  echo "behind by $behind commits, $touched in the copied files"
+  [ "$touched" -gt 0 ] || exit 0
+  git -C "$tmp" log --format='  %H %cs %s' "$pin..$latest" -- "$@"
   exit 10
 }
 
