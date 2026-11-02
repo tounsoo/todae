@@ -111,7 +111,7 @@ pnpm test
 pnpm test:browser
 ```
 
-- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
+- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`, then the verify helper's `self-test` and `scripts/verify-skill-sync.mjs`, which fails when the Claude and Cursor verify skills drift apart, as [0005](docs/decisions/0005-verify-procedure.md) describes. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
