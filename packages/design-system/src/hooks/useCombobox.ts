@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type AriaAttributes,
   type ChangeEvent,
   type KeyboardEvent,
@@ -220,16 +221,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   // Async result sets replace each other as the query changes; remember labels so selected
   // chips and the committed input text do not fall back to raw values.
-  const labels = useRef(new Map<string, string>());
+  // State, not a ref: a label a load brings in renders again, so the input that shows it reads as committed.
+  const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const syncOptions = options.loadOptions ? EMPTY_OPTIONS : (options.options ?? EMPTY_OPTIONS);
   const committedLabel =
-    selectionMode === 'single' && singleValue ? labelOf(syncOptions, singleValue, labels.current) : '';
+    selectionMode === 'single' && singleValue ? labelOf(syncOptions, singleValue, labels) : '';
   // Empty while the input shows the committed label, so the list is the full one.
   const filterQuery =
     selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
       ? ''
       : inputValue;
   const trimmed = inputValue.trim();
+  // The text the list is for. The committed label asks for no create row, since it names the value.
+  const queryText = filterQuery.trim();
   const list = useOptionList({
     listboxId: ids.listbox,
     options: options.options,
@@ -240,19 +244,27 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     // Whether the query matches a row is known only once its own list is in.
     trailing: (shown) =>
       options.allowCreate &&
-      trimmed &&
-      !shown.some((option) => option.label.toLowerCase() === trimmed.toLowerCase())
+      queryText &&
+      !shown.some((option) => option.label.toLowerCase() === queryText.toLowerCase())
         ? CREATE_VALUE
         : null,
     // On open, the selected single value is the active row.
     preferred: selectionMode === 'single' ? singleValue : null,
   });
   const { activeValue, activeId, listIsCurrent, highlight, move, reset: resetList, getOptionProps: optionProps } = list;
-  for (const option of list.options) labels.current.set(option.value, option.label);
-  const labelFor = useCallback(
-    (raw: string) => labelOf(list.options, raw, labels.current),
-    [list.options],
-  );
+  if (list.options.some((option) => labels.get(option.value) !== option.label)) {
+    const next = new Map(labels);
+    for (const option of list.options) next.set(option.value, option.label);
+    setLabels(next);
+  }
+  const labelFor = useCallback((raw: string) => labelOf(list.options, raw, labels), [labels, list.options]);
+
+  // Each opening of a single combobox with a value starts from that value, whoever opens it.
+  const [shownOpen, setShownOpen] = useState(open);
+  if (shownOpen !== open) {
+    setShownOpen(open);
+    if (open && selectionMode === 'single' && singleValue !== null) highlight(null);
+  }
   const showCreate = list.trailing !== null;
   // The label text, not the function, keys the rows, so an inline createLabel
   // does not rebuild them on every render.
@@ -284,14 +296,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const setOpen = useCallback(
     (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
       const opening = next && !fieldNow().open;
-      if (opening) {
-        clearCreateError();
-        // Each opening starts from the default row: the selected value, else the top one.
-        highlight(null);
-      }
-      // Each time the dialog opens, start from the full list.
+      if (opening) clearCreateError();
+      // Each time the dialog opens, start from the full list with the default row active.
       // Reopened while still closing, focus is still inside: keep the query and the focus target.
       if (opening && isDialog && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
+        highlight(null);
         rememberReturnFocus();
         apply({ inputValue: '', open: true, reason });
         return;

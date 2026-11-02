@@ -382,6 +382,51 @@ describe('useCombobox', () => {
     expect(result.current.items).toHaveLength(2);
   });
 
+  it('loads the full list once a load brings in the label the open input already shows', async () => {
+    const all: ComboboxOption[] = [
+      { value: 'react', label: 'React' },
+      { value: 'redux', label: 'Redux' },
+      { value: 'vue', label: 'Vue' },
+    ];
+    const loadOptions = vi.fn(async (query: string) => all.filter((option) => option.label.includes(query)));
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, defaultValue: 'vue', defaultInputValue: 'Vue', defaultOpen: true, presentation: 'popover' }),
+    );
+    await act(async () => {
+      for (let i = 0; i < 4; i += 1) await Promise.resolve();
+    });
+    expect(loadOptions).toHaveBeenLastCalledWith('', expect.any(AbortSignal));
+    expect(result.current.query).toBe('');
+    expect(result.current.items).toHaveLength(3);
+  });
+
+  it('offers no create row for the label the input commits, even when the full list leaves it out', async () => {
+    const all: ComboboxOption[] = [
+      { value: 'react', label: 'React' },
+      { value: 'redux', label: 'Redux' },
+      { value: 'vue', label: 'Vue' },
+    ];
+    // A loader that returns at most two rows.
+    const loadOptions = vi.fn(async (query: string) =>
+      all.filter((option) => option.label.toLowerCase().includes(query.toLowerCase())).slice(0, 2),
+    );
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate: () => undefined, defaultOpen: true, presentation: 'popover' }),
+    );
+    const flush = () =>
+      act(async () => {
+        for (let i = 0; i < 4; i += 1) await Promise.resolve();
+      });
+    await flush();
+    act(() => result.current.setInputValue('v'));
+    await flush();
+    act(() => result.current.select('vue'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Vue');
+    expect(result.current.showCreate).toBe(false);
+  });
+
   it('keeps chip labels for selections that left the async result set', async () => {
     const { result } = renderHook(() =>
       useCombobox({
@@ -1750,6 +1795,45 @@ describe('useCombobox async create', () => {
 });
 
 describe('useCombobox keys', () => {
+  const ALL: ComboboxOption[] = [
+    { value: 'react', label: 'React' },
+    { value: 'redux', label: 'Redux' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it('starts each opening of a single value from that value, also when the owner controls open', () => {
+    const { result, rerender } = renderHook(
+      ({ open }) => useCombobox({ options: ALL, defaultValue: 'react', open, onOpenChange: () => undefined, presentation: 'popover' }),
+      { initialProps: { open: true } },
+    );
+    expect(result.current.activeValue).toBe('react');
+    act(() => result.current.highlight('vue'));
+    rerender({ open: false });
+    rerender({ open: true });
+    expect(result.current.activeValue).toBe('react');
+  });
+
+  it('keeps the highlight across a reopen with no single value', () => {
+    const { result } = renderHook(() => useCombobox({ selectionMode: 'multiple', options: ALL, presentation: 'popover' }));
+    act(() => result.current.setOpen(true));
+    act(() => result.current.highlight('vue'));
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('vue');
+  });
+
+  it('has no row active while the next query loads, though one was highlighted on the last list', async () => {
+    const pending: Record<string, (rows: ComboboxOption[]) => void> = {};
+    const loadOptions = vi.fn((query: string) => new Promise<ComboboxOption[]>((resolve) => (pending[query] = resolve)));
+    const { result } = renderHook(() => useCombobox({ loadOptions, defaultOpen: true, presentation: 'popover' }));
+    await act(async () => pending['']!(ALL));
+    act(() => result.current.highlight('redux'));
+    act(() => result.current.setInputValue('re'));
+    expect(result.current.loading).toBe(true);
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
+  });
+
   function CityBox({ onValueChange, onCreate }: { onValueChange: (value: string | null) => void; onCreate: (label: string) => Promise<string> }) {
     const cb = useCombobox({
       options: [

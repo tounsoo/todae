@@ -101,7 +101,8 @@ export function useOptionList(config: OptionListConfig): OptionList {
   // Bumped by retry and reset, so the same query loads again.
   const [run, setRun] = useState(0);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [active, setActive] = useState<{ scope: string; value: string } | null>(null);
+  // The chosen row, and the query it was chosen under.
+  const [active, setActive] = useState<{ scope: string; query: string | null; value: string } | null>(null);
 
   // The loader is read when a load starts, so an inline function loads once per query.
   const loader = useRef(config.loadOptions);
@@ -159,9 +160,9 @@ export function useOptionList(config: OptionListConfig): OptionList {
   // A highlight is forgotten once its row leaves the list, so it does not come back with it.
   const chosen = active !== null && active.scope === scope ? active.value : null;
   if (chosen !== null && !enabledValues.includes(chosen)) setActive(null);
-  // Until this query's own list is in, no row is active unless one was chosen.
+  // Until this query's own list is in, no row is active unless one was chosen while it loads.
   const activeValue =
-    chosen !== null && enabledValues.includes(chosen)
+    chosen !== null && enabledValues.includes(chosen) && (listIsCurrent || active?.query === query)
       ? chosen
       : !listIsCurrent
         ? null
@@ -170,8 +171,11 @@ export function useOptionList(config: OptionListConfig): OptionList {
           : (enabledValues[0] ?? null);
   const activeId = activeValue === null ? null : optionDomId(listboxId, activeValue);
 
+  // Read at call time, so highlight keeps its identity as the query changes.
+  const queryNow = useRef(query);
+  queryNow.current = query;
   const highlight = useCallback(
-    (value: string | null) => setActive(value === null ? null : { scope, value }),
+    (value: string | null) => setActive(value === null ? null : { scope, query: queryNow.current, value }),
     [scope],
   );
 

@@ -295,14 +295,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     },
     [query, trigger, value],
   );
-  // Each trigger word is its own list: its loads and highlight never show on another's.
+  // Each trigger is its own list, so one trigger's loads never show on another's.
   const list = useOptionList({
     listboxId: ids.listbox,
     options: trigger?.options,
     loadOptions: trigger?.loadOptions,
     query: query?.query ?? null,
     filter: trigger?.filter,
-    scope: session ?? undefined,
+    scope: query ? String(query.trigger) : undefined,
     canPick: fits,
   });
   const { activeValue, activeId: listActiveId, listIsCurrent, enabledValues, error, highlight, move } = list;
@@ -311,6 +311,12 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     [ids.listbox, list.options],
   );
   const activeId = open ? listActiveId : null;
+  // A new word starts from its first row, even at the place an earlier word was.
+  const [shownSession, setShownSession] = useState(session);
+  if (shownSession !== session) {
+    setShownSession(session);
+    highlight(null);
+  }
 
   const listName = trigger?.label ?? strings.suggestions;
   // A failed load is not "no suggestions", so it announces nothing.

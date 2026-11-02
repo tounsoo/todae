@@ -294,10 +294,14 @@ describe('useMentions', () => {
     fireEvent.focus(el);
     type(el, '@a');
     await act(async () => finishes[0]!(people));
+    // A row highlighted on the last list is not active while the next query loads.
+    fireEvent.keyDown(el, { key: 'ArrowDown' });
+    expect(result.activeValue).toBe('alan');
     type(el, '@al');
     expect(result.loading).toBe(true);
     expect(result.items.map((item) => item.option.value)).toEqual(['ada', 'alan']);
     expect(result.activeValue).toBeNull();
+    expect(el.getAttribute('aria-activedescendant')).toBeNull();
     // Up with no active row goes to the last row.
     expect(fireEvent.keyDown(el, { key: 'ArrowUp' })).toBe(false);
     expect(result.activeValue).toBe('alan');
@@ -307,6 +311,34 @@ describe('useMentions', () => {
     expect(result.activeValue).toBe('alan');
     fireEvent.keyDown(el, { key: 'Enter' });
     expect(el.value).toBe('@Alan Turing ');
+  });
+
+  it('starts a new word at the first row, even where an earlier word was', () => {
+    let result!: UseMentionsResult;
+    render(<Harness expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    fireEvent.keyDown(el, { key: 'ArrowDown' });
+    expect(result.activeValue).toBe('alan');
+    type(el, '');
+    type(el, '@a');
+    expect(result.activeValue).toBe('ada');
+  });
+
+  it('keeps the loaded list when text before the word changes', async () => {
+    let result!: UseMentionsResult;
+    const loadOptions = vi.fn(async () => people);
+    render(<Harness triggers={[{ char: '@', loadOptions }]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'a @al');
+    await act(async () => {});
+    expect(result.items).toHaveLength(2);
+    fireEvent.change(el, { target: { value: 'aa @al', selectionStart: 6, selectionEnd: 6 } });
+    expect(loadOptions).toHaveBeenCalledTimes(1);
+    expect(result.loading).toBe(false);
+    expect(result.items).toHaveLength(2);
   });
 
   it('builds the popover anchor from a CSS-safe id even when the id option is not one', () => {
