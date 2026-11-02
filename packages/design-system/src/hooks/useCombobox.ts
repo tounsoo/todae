@@ -28,7 +28,7 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { readsLabel, useComboboxCreate } from './useCombobox.create.js';
 import { isMultiple, useComboboxState } from './useCombobox.state.js';
 import { usePopoverInternal } from '../overlay/popover.js';
-import { useOptionList } from './optionList/useOptionList.js';
+import { useOptionList, type OptionListMove } from './optionList/useOptionList.js';
 import type {
   ComboboxCloseReason,
   ComboboxItem,
@@ -252,18 +252,23 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     preferred: selectionMode === 'single' ? singleValue : null,
   });
   const { activeValue, activeId, listIsCurrent, highlight, move, reset: resetList, getOptionProps: optionProps } = list;
-  if (list.options.some((option) => labels.get(option.value) !== option.label)) {
-    const next = new Map(labels);
-    for (const option of list.options) next.set(option.value, option.label);
-    setLabels(next);
-  }
+  const learned = new Map(labels);
+  for (const option of list.options) learned.set(option.value, option.label);
+  // Compared after the merge, so two rows sharing a value settle on the last label.
+  if (list.options.some((option) => learned.get(option.value) !== labels.get(option.value))) setLabels(learned);
   const labelFor = useCallback((raw: string) => labelOf(list.options, raw, labels), [labels, list.options]);
 
-  // Each opening of a single combobox with a value starts from that value, whoever opens it.
+  // Each opening of a single combobox with a value starts from that value, whoever opens it,
+  // unless a key opened it to move to an end. A move the owner's open refused is dropped.
   const [shownOpen, setShownOpen] = useState(open);
-  if (shownOpen !== open) {
-    setShownOpen(open);
-    if (open && selectionMode === 'single' && singleValue !== null) highlight(null);
+  const [openMove, setOpenMove] = useState<OptionListMove | null>(null);
+  if (shownOpen !== open || openMove !== null) {
+    if (shownOpen !== open) setShownOpen(open);
+    if (open && !shownOpen) {
+      if (openMove !== null) move(openMove);
+      else if (selectionMode === 'single' && singleValue !== null) highlight(null);
+    }
+    if (openMove !== null) setOpenMove(null);
   }
   const showCreate = list.trailing !== null;
   // The label text, not the function, keys the rows, so an inline createLabel
@@ -428,8 +433,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         event.preventDefault();
         if (!open) {
           setOpen(true, 'trigger');
-          if (event.key === 'ArrowUp' || event.key === 'End') move('last');
-          else if (event.key === 'Home') move('first');
+          if (event.key === 'ArrowUp' || event.key === 'End') setOpenMove('last');
+          else if (event.key === 'Home') setOpenMove('first');
           return;
         }
         if (event.key === 'Home') move('first');

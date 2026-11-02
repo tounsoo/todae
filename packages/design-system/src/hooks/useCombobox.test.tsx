@@ -1822,6 +1822,37 @@ describe('useCombobox keys', () => {
     expect(result.current.activeValue).toBe('vue');
   });
 
+  it('opens a closed single value at the end a key asks for', () => {
+    for (const [key, end] of [
+      ['ArrowUp', 'vue'],
+      ['End', 'vue'],
+      ['Home', 'react'],
+    ] as const) {
+      const { unmount } = render(<SingleBox defaultValue="redux" />);
+      const input = screen.getByRole('combobox');
+      fireEvent.keyDown(input, { key });
+      expect(input.getAttribute('aria-expanded')).toBe('true');
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, end));
+      unmount();
+    }
+  });
+
+  it('opens a closed single value on ArrowDown at that value', () => {
+    render(<SingleBox defaultValue="redux" />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
+  });
+
+  it('settles on the last label when two rows share a value', () => {
+    const rows: ComboboxOption[] = [
+      { value: 'a', label: 'Alpha' },
+      { value: 'a', label: 'Alpha 2' },
+    ];
+    const { result } = renderHook(() => useCombobox({ options: rows, defaultOpen: true, presentation: 'popover' }));
+    expect(result.current.items).toHaveLength(2);
+  });
+
   it('has no row active while the next query loads, though one was highlighted on the last list', async () => {
     const pending: Record<string, (rows: ComboboxOption[]) => void> = {};
     const loadOptions = vi.fn((query: string) => new Promise<ComboboxOption[]>((resolve) => (pending[query] = resolve)));
