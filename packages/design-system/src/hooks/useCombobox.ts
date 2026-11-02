@@ -3,7 +3,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type AriaAttributes,
   type ChangeEvent,
   type KeyboardEvent,
