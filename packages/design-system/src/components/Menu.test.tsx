@@ -830,6 +830,29 @@ describe('Menu', () => {
     expect(commits).toBe(before);
   });
 
+  it('a radio group with a read-only value does not render on a click', async () => {
+    let commits = 0;
+    render(
+      <Profiler id="menu" onRender={() => (commits += 1)}>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Content>
+            <Menu.RadioGroup aria-label="Sort" value="name">
+              <Menu.RadioItem value="name">Name</Menu.RadioItem>
+              <Menu.RadioItem value="date">Date</Menu.RadioItem>
+            </Menu.RadioGroup>
+          </Menu.Content>
+        </Menu.Root>
+      </Profiler>,
+    );
+    await raf();
+    const date = screen.getByText('Date').closest<HTMLElement>('[role="menuitemradio"]')!;
+    const before = commits;
+    act(() => date.click());
+    expect(date.getAttribute('aria-checked')).toBe('false');
+    expect(commits).toBe(before);
+  });
+
   it('arrow keys on the trigger of an open menu move into it', async () => {
     render(<Actions open onOpenChange={() => undefined} />);
     await raf();

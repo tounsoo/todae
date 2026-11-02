@@ -42,11 +42,12 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
     options.open,
     options.defaultOpen ?? false,
-    (next, reason) =>
-      report(
-        () => Object.is(openNow(), next),
-        () => latest.current.onOpenChange?.(next, reason),
-      ),
+    options.onOpenChange &&
+      ((next, reason) =>
+        report(
+          () => Object.is(openNow(), next),
+          () => latest.current.onOpenChange?.(next, reason),
+        )),
   );
   const initialSingle = multiple ? null : options.value !== undefined ? options.value : (options.defaultValue ?? null);
   // Only a label we actually know: never seed the input (and the first async query) with a raw id.
@@ -54,35 +55,38 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   const [inputValue, setInput, inputNow] = useControllableState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
-    (next) =>
-      report(
-        () => Object.is(inputNow(), next),
-        () => latest.current.onInputValueChange?.(next),
-      ),
+    options.onInputValueChange &&
+      ((next) =>
+        report(
+          () => Object.is(inputNow(), next),
+          () => latest.current.onInputValueChange?.(next),
+        )),
   );
   const [single, setSingle, singleNow] = useControllableState<string | null>(
     multiple ? undefined : options.value,
     multiple ? null : (options.defaultValue ?? null),
-    (next) =>
-      report(
-        () => Object.is(singleNow(), next),
-        () => {
-          const current = latest.current;
-          if (!isMultiple(current)) current.onValueChange?.(next);
-        },
-      ),
+    options.onValueChange &&
+      ((next) =>
+        report(
+          () => Object.is(singleNow(), next),
+          () => {
+            const current = latest.current;
+            if (!isMultiple(current)) current.onValueChange?.(next);
+          },
+        )),
   );
   const [multi, setMulti, multiNow] = useControllableState<readonly string[]>(
     multiple ? options.value : undefined,
     multiple ? (options.defaultValue ?? []) : [],
-    (next) =>
-      report(
-        () => Object.is(multiNow(), next),
-        () => {
-          const current = latest.current;
-          if (isMultiple(current)) current.onValueChange?.([...next]);
-        },
-      ),
+    options.onValueChange &&
+      ((next) =>
+        report(
+          () => Object.is(multiNow(), next),
+          () => {
+            const current = latest.current;
+            if (isMultiple(current)) current.onValueChange?.([...next]);
+          },
+        )),
   );
 
   /** The field as the last change left it, which writes build on until the next render. */

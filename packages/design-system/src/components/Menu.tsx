@@ -732,8 +732,14 @@ function Group({ children, className, ...props }: MenuGroupProps) {
 
 function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }: MenuRadioGroupProps) {
   // Only items select, so a change is never back to null.
-  const notify = useCallback((next: string | null) => next !== null && onValueChange?.(next), [onValueChange]);
-  const [value, select] = useControllableState<string | null>(valueProp, defaultValue ?? null, notify);
+  const [value, select] = useControllableState<string | null>(
+    valueProp,
+    defaultValue ?? null,
+    onValueChange &&
+      ((next) => {
+        if (next !== null) onValueChange(next);
+      }),
+  );
   const radio = useMemo(() => ({ value, select }), [select, value]);
   return (
     <RadioContext.Provider value={radio}>
