@@ -24,6 +24,7 @@ const MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const STAMP_PATTERN = /^claude-\d{8}T\d{6}Z$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
+const PREVIEW_HOST = /^todae-[a-z0-9-]+-ben-eunsoo-hos-projects\.vercel\.app$/;
 
 export const EXIT = { PASS: 0, FAIL: 1, BLOCKED: 2, USAGE: 64 };
 
@@ -251,9 +252,11 @@ export function parseBase(value) {
     throw new UsageError('--url must be a bare origin such as http://127.0.0.1:3322');
   }
   const local = url.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(url.hostname) && url.port !== '';
-  const remote = url.protocol === 'https:' && url.hostname.endsWith('.vercel.app') && url.hostname.length > '.vercel.app'.length;
+  const remote = url.protocol === 'https:' && url.port === '' && PREVIEW_HOST.test(url.hostname);
   if (!local && !remote) {
-    throw new UsageError('--url must be http://127.0.0.1:<port>, http://localhost:<port> or https://<name>.vercel.app');
+    throw new UsageError(
+      '--url must be http://127.0.0.1:<port>, http://localhost:<port> or a todae preview, https://todae-<id>-ben-eunsoo-hos-projects.vercel.app',
+    );
   }
   return { url, remote };
 }
@@ -316,9 +319,12 @@ export async function checkPage(base, value, headers = {}, options = {}) {
   record.status = response.status;
   if (response.reason) return { ...record, reason: response.reason };
   const html = response.body;
+  const landed = new URL(response.url).pathname.replace(/(.)\/$/, '$1');
+  const asked = url.pathname.replace(/(.)\/$/, '$1');
   record.lang = /<html\b[^>]*\blang=["']?([^"'\s>]+)/i.exec(html)?.[1] ?? null;
   record.h1 = firstHeading(html);
   const reasons = [];
+  if (landed !== asked) reasons.push(`redirected to ${landed}, so ${asked} itself was not shown`);
   if (response.status !== 200) reasons.push(`returned ${response.status}, expected 200`);
   if (!html.includes('data-appearance')) reasons.push('no data-appearance, so this is not the docs site (login wall?)');
   if (record.lang !== locale) reasons.push(`html lang is ${record.lang ?? 'missing'}, expected ${locale}`);
@@ -351,7 +357,7 @@ export function renderBody(report, head) {
   if (report.head !== head) {
     throw new Error(`the report is for ${report.head}, but HEAD is ${head}. Run verify again.`);
   }
-  const lines = ['## Verification', '', `Tested commit: \`${report.head}\``, `Verdict: ${report.verdict}`, ''];
+  const lines = [`Tested commit: \`${report.head}\``, `Base: \`${report.base}\``, `Verdict: ${report.verdict}`, ''];
   for (const result of report.results) {
     if (result.id === 'drive') {
       lines.push(...driveLines(result, report.drive));
@@ -517,6 +523,15 @@ function alive(pid) {
   }
 }
 
+export async function startTime(pid) {
+  try {
+    const { stdout } = await exec('ps', ['-o', 'lstart=', '-p', String(pid)]);
+    return stdout.trim();
+  } catch {
+    return '';
+  }
+}
+
 async function commandLine(pid) {
   try {
     const { stdout } = await exec('ps', ['-o', 'args=', '-p', String(pid)]);
@@ -535,10 +550,12 @@ async function readPidRecord() {
   }
 }
 
-async function isOurServer(record) {
+export async function isOurServer(record) {
   if (!record || !alive(record.pid)) return false;
-  const line = await commandLine(record.pid);
-  return line.includes('next') && line.includes(String(record.port));
+  const args = (await commandLine(record.pid)).split(/\s+/);
+  const at = args.indexOf('--port');
+  const launched = args.includes('next') && args.includes('dev') && at > 0 && args[at + 1] === String(record.port);
+  return launched && Boolean(record.started) && (await startTime(record.pid)) === record.started;
 }
 
 function portInUse(port) {
@@ -598,7 +615,7 @@ async function launch(port = DEFAULT_PORT, { onSpawn } = {}) {
   if (spawnError || !child.pid) {
     throw new Blocked(`could not start the docs server: ${spawnError?.code === 'ENOENT' ? 'pnpm was not found' : (spawnError?.message ?? 'no pid')}`);
   }
-  const record = { pid: child.pid, port, startedAt: new Date().toISOString() };
+  const record = { pid: child.pid, port, startedAt: new Date().toISOString(), started: await startTime(child.pid) };
   const temporary = `${pidPath}.tmp`;
   await writeFile(temporary, JSON.stringify(record));
   await rename(temporary, pidPath);
@@ -650,7 +667,16 @@ async function cleanup() {
 }
 
 async function testedCommit(baseInfo, flags, head) {
-  if (!baseInfo.remote) return { mode: 'local', source: 'git-head', sha: head };
+  if (!baseInfo.remote) {
+    const record = await readPidRecord();
+    if (!(await isOurServer(record)) || String(record.port) !== (baseInfo.url.port || '80')) {
+      throw new Blocked(`${baseInfo.url.origin} is not the docs server this checkout started; run launch here, or let run start it`);
+    }
+    if ((await gitTry(['status', '--porcelain'])) !== '') {
+      throw new Blocked('the tree has uncommitted changes, so the local server is not showing HEAD; commit or stash first');
+    }
+    return { mode: 'local', source: 'git-head', sha: head };
+  }
   const expect = flags['expect-sha'];
   const deployment = flags['deployment-sha'];
   const valid = (value) => typeof value === 'string' && SHA_PATTERN.test(value.toLowerCase());
@@ -665,6 +691,7 @@ async function testedCommit(baseInfo, flags, head) {
 
 async function driveCommand(flags, routes) {
   const baseInfo = parseBase(flags.url);
+  for (const route of routes) checkPath(baseInfo.url.origin, route);
   const head = await gitTry(['rev-parse', 'HEAD']);
   if (!head || !SHA_PATTERN.test(head)) throw new Blocked('HEAD does not resolve to a commit');
   const commit = await testedCommit(baseInfo, flags, head);
@@ -805,6 +832,12 @@ function reportMarkdown(report) {
 
 const blockedResult = (id, command, reason) => ({ id, label: id, command, status: 'blocked', exit: null, ms: 0, reason });
 
+export function skippedResults(planned, ran) {
+  return planned
+    .filter((id) => !ran.includes(id))
+    .map((id) => blockedResult(id, STEPS[id].drive ? 'drive' : STEPS[id].cmd.join(' '), 'not run: --only left it out of this run'));
+}
+
 async function run(flags) {
   if (flags.url) parseBase(flags.url);
   const startedAt = new Date().toISOString();
@@ -835,6 +868,13 @@ async function run(flags) {
         const unknown = only.filter((id) => !steps.includes(id));
         if (unknown.length) throw new UsageError(`--only names steps that are not in the plan: ${unknown.join(', ')}`);
         steps = steps.filter((id) => only.includes(id));
+        results.push(...skippedResults(plan.steps, steps));
+      }
+      if (flags.base !== undefined) {
+        const merge = await gitTry(['merge-base', 'origin/main', 'HEAD']);
+        if (merge !== plan.base) {
+          results.push(blockedResult('plan', `node ${SELF} plan --base ${flags.base}`, `the base ${plan.base} is not the merge base with origin/main, so the plan may miss changed files`));
+        }
       }
       if (plan.files.length === 0) {
         results.push(blockedResult('plan', `node ${SELF} plan`, `no committed changes against ${plan.base}; there is nothing to verify`));

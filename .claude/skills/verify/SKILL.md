@@ -74,13 +74,15 @@ The drive reads pages over HTTP. It takes no screenshots.
 node .claude/skills/verify/verify.mjs drive --url http://127.0.0.1:3322 --paths /button
 ```
 
-Each path is driven in both languages. `/button` also opens `/ko/button`, and `/` also opens `/ko`. A page passes when it returns 200, its HTML has `data-appearance`, `<html lang>` is the page's language, and it has an `h1`. A login wall fails, because it has no `data-appearance`.
+Each path is driven in both languages. `/button` also opens `/ko/button`, and `/` also opens `/ko`. A page passes when it returns 200 at the path asked for, its HTML has `data-appearance`, `<html lang>` is the page's language, and it has an `h1`. A login wall fails, because it has no `data-appearance`. A redirect to another page fails too, because the page asked for was never shown.
+
+A local `--url` must be the server `launch` started from this checkout, on the port in its pid file, and the tree must be clean. Any other local server is `BLOCKED`, because nothing ties what it serves to HEAD.
 
 `run` derives the paths from the diff. A changed `page.mdx` or `page.tsx` under `apps/docs/app/(en)/` or `apps/docs/app/ko/` gives its route. Any other docs file gives `/`.
 
 ### A Vercel preview
 
-A preview at `https://<deployment>.vercel.app` needs `--expect-sha` and `--deployment-sha`. Read the deployment yourself with the Vercel tools. Its state is `READY` and its `meta.githubCommitSha` is the pull request head. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper requires the two to match and labels the line caller-asserted. It does not call the Vercel API.
+The helper accepts only todae's own preview hosts, `https://todae-<id>-ben-eunsoo-hos-projects.vercel.app`, on the default port. Any other `*.vercel.app` host is refused, so no other Vercel project gets a token. A preview needs `--expect-sha` and `--deployment-sha`. Read the deployment yourself with the Vercel tools. Its state is `READY` and its `meta.githubCommitSha` is the pull request head. Pass that SHA as `--deployment-sha` and the head as `--expect-sha`. The helper requires the two to match each other and HEAD, and labels the line caller-asserted. It does not call the Vercel API, so cite the deployment id you read next to that line.
 
 Previews ask for Vercel SSO. When `VERCEL_AUTOMATION_BYPASS_SECRET` or `VERCEL_OIDC_TOKEN` is set, the helper sends it as a header, but only to the preview's own origin. It follows redirects itself and refuses one that leaves that origin, so the token never goes to another host. A path must start with one `/`. A path such as `//other.example` or a full URL is refused. The helper never prints or writes a token. With neither variable set, drive the local app instead, or read the preview with the Vercel MCP `web_fetch_vercel_url` tool and cite that read.
 
@@ -94,7 +96,7 @@ Previews ask for Vercel SSO. When `VERCEL_AUTOMATION_BYPASS_SECRET` or `VERCEL_O
 
 `.verify/` is ignored by git. Do not commit it, and do not commit a PNG outside `apps/docs/visual/baselines`.
 
-`body` turns the newest report into the pull request's Verification section, with the tested commit and each command with its result. It refuses when HEAD has moved since the run, so a pushed fix always gets a new run. Paste its output into the body that `.github/pull_request_template.md` lays out. Steps that ended `BLOCKED`, and any proof the helper can't give, such as the CI run link, go under Unverified checks.
+`body` turns the newest report into the lines under the pull request's Verification heading: the tested commit, the base the plan diffed against, the verdict, and each command with its result. It refuses when HEAD has moved since the run, so a pushed fix always gets a new run. Paste its output into the body that `.github/pull_request_template.md` lays out. Steps that ended `BLOCKED`, and any proof the helper can't give, such as the CI run link, go under Unverified checks.
 
 ## CLEANUP
 
@@ -106,7 +108,9 @@ Cleanup stops only the server this helper started. It reads `.verify/scratch/cla
 
 ## Re-running one step
 
-`run --only <step>` runs the named steps on the same plan, for example after a fix, `run --only browser`. The steps and their ids are in `plan`. A partial run proves only the steps it ran, and `body` lists only those.
+`run --only <step>` runs the named steps on the same plan, for example `run --only browser` to check a fix quickly. The steps and their ids are in `plan`. Each planned step it leaves out is recorded as `BLOCKED`, so a partial run never ends `PASS`. Before a pull request opens or takes a push, run the whole plan on the final commit.
+
+`run --base <ref>` is for trying a plan. A base other than the merge base with `origin/main` makes the run `BLOCKED`, because the plan could miss changed files.
 
 ## Keeping it honest
 

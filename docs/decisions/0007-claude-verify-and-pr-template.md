@@ -6,7 +6,7 @@
 
 ## Decision
 
-Claude has a verifier at `.claude/skills/verify/`. Its helper, `verify.mjs`, maps each changed file to a change type, runs the proof that type needs on the tested commit, and ends with one verdict: `PASS`, `FAIL` or `BLOCKED`. `BLOCKED` means a step could not run, and it is never reported as a pass. The procedure has the same five steps as [0005](0005-verify-procedure.md): LAUNCH, DOCTOR, DRIVE, EVIDENCE and CLEANUP. Its docs drive reads pages over HTTP in English and Korean and takes no screenshots. It sends a Vercel bypass token only to the preview's own origin and refuses a redirect or a path that leaves it.
+Claude has a verifier at `.claude/skills/verify/`. Its helper, `verify.mjs`, maps each changed file to a change type, runs the proof that type needs on the tested commit, and ends with one verdict: `PASS`, `FAIL` or `BLOCKED`. `BLOCKED` means a step could not run, and it is never reported as a pass. The procedure has the same five steps as [0005](0005-verify-procedure.md): LAUNCH, DOCTOR, DRIVE, EVIDENCE and CLEANUP. Its docs drive reads pages over HTTP in English and Korean and takes no screenshots. It drives only a local server it launched from the checkout, or one of todae's own Vercel previews. It sends a Vercel bypass token only to that preview's origin and refuses a redirect or a path that leaves it.
 
 Every pull request body follows `.github/pull_request_template.md`. Its Verification section starts with a tested-commit line, the full SHA the checks ran on, and lists each command with its result. The Unverified checks and Remaining risks sections stay, as `AGENTS.md` requires.
 

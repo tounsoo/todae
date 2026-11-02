@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
@@ -15,6 +15,7 @@ import {
   checkPath,
   classify,
   driveSite,
+  isOurServer,
   pairLocales,
   parseBase,
   planFor,
@@ -22,12 +23,15 @@ import {
   renderBody,
   routesFor,
   sameSiteFetch,
+  skippedResults,
+  startTime,
   verdictOf,
 } from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '../../..');
 const SHA = 'a'.repeat(40);
+const BASE = 'c'.repeat(40);
 
 const ids = (files) => classify(files);
 
@@ -161,10 +165,11 @@ describe('checkPath', () => {
 });
 
 describe('parseBase', () => {
-  test('allows loopback with a port and vercel.app previews', () => {
+  test('allows loopback with a port and the todae project previews', () => {
     assert.equal(parseBase('http://127.0.0.1:3322').remote, false);
     assert.equal(parseBase('http://localhost:3000').remote, false);
-    assert.equal(parseBase('https://todae-git-x-tounsoo.vercel.app').remote, true);
+    assert.equal(parseBase('https://todae-glu169ioq-ben-eunsoo-hos-projects.vercel.app').remote, true);
+    assert.equal(parseBase('https://todae-git-claude-x-ben-eunsoo-hos-projects.vercel.app').remote, true);
   });
 
   for (const bad of [
@@ -175,6 +180,11 @@ describe('parseBase', () => {
     'http://x.vercel.app',
     'https://user:pw@x.vercel.app',
     'https://x.vercel.app/path',
+    'https://x.vercel.app',
+    'https://someone-elses-project.vercel.app',
+    'https://todae-abc-another-team.vercel.app',
+    'https://todae-abc-ben-eunsoo-hos-projects.vercel.app:8443',
+    'https://todae-abc-ben-eunsoo-hos-projects.vercel.app.evil.example',
     'ftp://127.0.0.1:21',
     'not a url',
   ]) {
@@ -198,10 +208,48 @@ describe('verdictOf', () => {
   });
 });
 
+describe('a partial run', () => {
+  test('each planned step that --only left out is blocked, so the verdict is not PASS', () => {
+    const skipped = skippedResults(['verify-self-test', 'verify-tests', 'check'], ['verify-tests']);
+    assert.deepEqual(skipped.map((result) => [result.id, result.status, result.command]), [
+      ['verify-self-test', 'blocked', 'node .claude/skills/verify/verify.mjs self-test'],
+      ['check', 'blocked', 'pnpm check'],
+    ]);
+    assert.equal(verdictOf([{ status: 'passed' }, ...skipped]), 'BLOCKED');
+    assert.equal(verdictOf(skippedResults(['check'], [])), 'BLOCKED');
+  });
+});
+
+describe('isOurServer', () => {
+  const children = [];
+  after(() => {
+    for (const child of children) child.kill('SIGKILL');
+  });
+  const spawnLike = async (...args) => {
+    const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1e5)', ...args], { stdio: 'ignore' });
+    children.push(child);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    return child;
+  };
+
+  test('matches only the launched next dev on that port, started at the recorded time', async () => {
+    const server = await spawnLike('next', 'dev', '--port', '3399');
+    const started = await startTime(server.pid);
+    assert.ok(started);
+    assert.equal(await isOurServer({ pid: server.pid, port: 3399, started }), true);
+    assert.equal(await isOurServer({ pid: server.pid, port: 33, started }), false);
+    assert.equal(await isOurServer({ pid: server.pid, port: 3399, started: 'Mon Jan  1 00:00:00 2001' }), false);
+    assert.equal(await isOurServer({ pid: server.pid, port: 3399 }), false);
+    const lookalike = await spawnLike('nextcloud-sync', '33990');
+    assert.equal(await isOurServer({ pid: lookalike.pid, port: 3399, started: await startTime(lookalike.pid) }), false);
+  });
+});
+
 describe('renderBody', () => {
   const report = {
     verdict: 'BLOCKED',
     head: SHA,
+    base: BASE,
     results: [
       { id: 'typecheck', command: 'pnpm typecheck', status: 'passed' },
       { id: 'browser', command: 'pnpm test:browser', status: 'blocked', reason: 'Playwright Chromium is not installed.' },
@@ -214,9 +262,8 @@ describe('renderBody', () => {
     assert.equal(
       renderBody(report, SHA),
       [
-        '## Verification',
-        '',
         `Tested commit: \`${SHA}\``,
+        `Base: \`${BASE}\``,
         'Verdict: BLOCKED',
         '',
         '- `pnpm typecheck`: passed',
@@ -356,7 +403,11 @@ describe('sameSiteFetch', () => {
         '/wall': '<html lang="en"><body><h1>Sign in</h1></body></html>',
         '/empty': page('en', '<h1> <span></span> </h1>'),
         '/ko': page('ko', '<h1>\n  <span>안녕</span>   하세요 </h1>'),
+        '/': page('en'),
+        '/trailing/': page('en'),
       };
+      if (request.url === '/gone') return response.writeHead(301, { location: '/' }).end();
+      if (request.url === '/trailing') return response.writeHead(308, { location: '/trailing/' }).end();
       if (routes[request.url]) response.end(routes[request.url]);
       else response.writeHead(404).end(page('en'));
     });
@@ -367,6 +418,8 @@ describe('sameSiteFetch', () => {
     assert.match((await checkPage(base.origin, '/empty')).reason, /no non-empty h1/);
     assert.match((await checkPage(base.origin, '/missing')).reason, /returned 404/);
     assert.equal((await checkPage(base.origin, '/ko')).h1, '안녕 하세요');
+    assert.match((await checkPage(base.origin, '/gone')).reason, /redirected to \/, so \/gone itself was not shown/);
+    assert.equal((await checkPage(base.origin, '/trailing')).ok, true);
   });
 
   test('driveSite drives English then Korean and reports an unreachable server as blocked', async () => {
@@ -402,6 +455,23 @@ describe('command line', () => {
       encoding: 'utf8',
     });
     assert.equal(run.status, 64);
+  });
+
+  test('a local server this checkout did not launch is BLOCKED, and it gets no request', async () => {
+    const { server, origin, seen } = await listen((_request, response) => response.end('stale'));
+    try {
+      const run = await new Promise((resolve) => {
+        const child = spawn(process.execPath, [path.join(here, 'verify.mjs'), 'drive', '--url', origin, '--paths', '/button'], { cwd: repoRoot });
+        let stdout = '';
+        child.stdout.on('data', (chunk) => (stdout += chunk));
+        child.on('close', (status) => resolve({ status, stdout }));
+      });
+      assert.equal(run.status, 2);
+      assert.match(run.stdout, /is not the docs server this checkout started/);
+      assert.equal(seen.length, 0);
+    } finally {
+      server.close();
+    }
   });
 
   describe('in a scratch repository', () => {

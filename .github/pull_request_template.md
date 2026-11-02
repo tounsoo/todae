@@ -13,12 +13,13 @@
 ## Verification
 
 <!--
-Paste the output of `node .claude/skills/verify/verify.mjs body`, or fill these lines by hand.
+Replace the lines below with the output of `node .claude/skills/verify/verify.mjs body`, or fill them by hand.
 The tested commit is the full SHA the commands ran on. A push after the run needs a new run.
 List every command with its result: passed, failed, or blocked with the reason.
 -->
 
 Tested commit: `<40-character SHA>`
+Base: `<merge base with main>`
 Verdict: <PASS, FAIL or BLOCKED>
 
 - `<command>`: <result>
