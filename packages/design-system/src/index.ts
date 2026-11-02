@@ -29,7 +29,7 @@ export { Progress, type ProgressRootProps } from './components/Progress.js';
 export { Meter, type MeterRootProps } from './components/Meter.js';
 export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
 export { Skeleton, type SkeletonRootProps } from './components/Skeleton.js';
-export { Slider, type SliderRootProps } from './components/Slider.js';
+export { Slider, type SliderRootProps } from './components/Slider.client.js';
 export { Code, type CodeRootProps } from './components/Code.js';
 export { CodeBlock, type CodeBlockRootProps } from './components/CodeBlock.js';
 export { Kbd, type KbdRootProps } from './components/Kbd.js';

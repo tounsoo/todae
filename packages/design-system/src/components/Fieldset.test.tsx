@@ -5,7 +5,7 @@ import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
 import { Fieldset } from './Fieldset.js';
 import { RadioGroup } from './Radio.js';
-import { Slider } from './Slider.js';
+import { Slider } from './Slider.client.js';
 import { Switch } from './Switch.js';
 
 afterEach(cleanup);
