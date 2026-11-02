@@ -97,8 +97,8 @@ const reexport = (file) => `export * from ${JSON.stringify(file)}`
 const root = entries.find((entry) => entry.key === '.')
 if (root) {
   await measure('.', async () => {
-    const { result } = await bundleGzip(reexport(root.file), 'browser', { metafile: true })
-    rows[EVERYTHING] = { kind: 'entry', platform: 'browser', gzip: (await bundleGzip(reexport(root.file), 'browser')).gzip }
+    const { gzip, result } = await bundleGzip(reexport(root.file), 'browser', { metafile: true })
+    rows[EVERYTHING] = { kind: 'entry', platform: 'browser', gzip }
     const names = new Set(Object.values(result.metafile.outputs).flatMap((output) => output.exports ?? []))
     await Promise.all(
       [...names].map((name) =>
