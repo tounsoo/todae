@@ -244,6 +244,15 @@ export function validateEntries(entries: ResolvedEntry[]): void {
           .filter((t) => t.path.startsWith(`${root}.base.`))
           .map((t) => t.path.split('.')[2]!),
       );
+      // A context named like a group under the root (`bg`, `radius`) would
+      // make `<root>.<name>.*` mean two things.
+      const names = new Set([
+        ...shared,
+        ...[...contexts.values()].flat().map((t) => t.path.split('.')[2]!),
+      ]);
+      for (const context of contexts.keys()) {
+        if (names.has(context)) fail(`${loc} context "${context}" is named like ${root}.<context>.${context}; pick another name`);
+      }
       // Only a context feeds `<root>.<context>.*` to the consume vars, so no
       // other set or modifier may declare a token there.
       for (const other of entries) {

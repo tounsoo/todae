@@ -1700,6 +1700,26 @@ describe('company token build', () => {
     );
   });
 
+  it('rejects a button variant named like a group under button', async () => {
+    for (const name of ['bg', 'ring', 'radius']) {
+      const resolver = await company(async (resolver, root) => {
+        const tokens = JSON.parse(await readFile(join(root, 'button.outline.json'), 'utf8'));
+        await writeFile(join(root, `button.${name}.json`), JSON.stringify({ button: { [name]: tokens.button.outline } }));
+        resolver.modifiers.buttonVariant.contexts[name] = [{ $ref: `./button.${name}.json` }];
+      });
+      await expect(buildCompanyTokens({ resolver, base: tokensDir })).rejects.toThrow(
+        new RegExp(`context "${name}" is named like button\\.<context>\\.${name}; pick another name`),
+      );
+    }
+  });
+
+  it('names the removed button rule', async () => {
+    const resolver = await company((resolver) => {
+      resolver.modifiers.buttonVariant.$extensions['dev.todae'].rules = ['button'];
+    });
+    await expect(buildCompanyTokens({ resolver, base: tokensDir })).rejects.toThrow(/rule "button" was removed; delete it/);
+  });
+
   it('keeps Todae\'s button slots and variant paths in a company build', async () => {
     const loosened = await company((resolver) => {
       resolver.modifiers.buttonVariant.$extensions['dev.todae'].slots = {

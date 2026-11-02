@@ -95,6 +95,7 @@ function parseRules(rules: unknown, loc: string): { rules?: Rule[] } {
   if (rules === undefined) return {};
   if (!Array.isArray(rules)) fail(`${loc} rules must be an array`);
   for (const rule of rules) {
+    if (rule === 'button') fail(`${loc} rule "button" was removed; delete it, since Todae's button slots now check a variant`);
     if (!RULES.includes(rule as Rule)) fail(`${loc} rule "${String(rule)}" must be one of ${RULES.join('|')}`);
   }
   if (new Set(rules).size !== rules.length) fail(`${loc} rules must not repeat`);
