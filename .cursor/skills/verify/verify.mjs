@@ -565,21 +565,18 @@ async function drive(flags) {
   let spawned = false;
   try {
     if (!flags['expect-sha']) throw new Error('pass --expect-sha');
-    if (flags.launch) {
-      const started = await launch();
-      spawned = started.spawned;
-      if (!flags.url && !process.env.VERIFY_URL) flags.url = started.url;
-    }
+    fullSha(flags['expect-sha']);
     if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
+    const baseUrl = openUrl(flags);
     await ensureConfig();
     const groups = await loadSiteGroups();
     const copy = loadCopy();
-    const baseUrl = openUrl(flags);
+    const targets = await targetsOf(flags.paths, baseUrl);
+    if (flags.launch) spawned = (await launch()).spawned;
     const sha = await assertSha(flags, new URL(baseUrl).origin);
     const deployment = sha.deploymentId ? ` deployment-id=${sha.deploymentId}` : '';
     note(`doctor mode=${sha.mode} source=${sha.source}${deployment} expect-sha=${sha.expectSha} compared-sha=${sha.deploymentSha}`);
     note(`doctor url=${publicUrl(baseUrl)}`);
-    const targets = await targetsOf(flags.paths, baseUrl);
     browser = await openBrowser();
     for (const { pathname, target } of targets) {
       for (const width of [WIDE, NARROW]) {
@@ -610,7 +607,6 @@ async function drive(flags) {
         }
       }
     }
-    if (!failed) note('drive ok');
   } catch (error) {
     failed = error;
     note(`FAIL ${error.message}`);
@@ -627,6 +623,7 @@ async function drive(flags) {
       }
     }
   }
+  if (!failed) note('drive ok');
   const report = path.join(dir, 'report.txt');
   await writeFile(report, `${lines.join('\n')}\n`);
   if (failed) process.exitCode = 1;

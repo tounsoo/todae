@@ -97,7 +97,7 @@ Stop only the server this helper started, then leave `.verify/evidence` in place
 node --experimental-strip-types --no-warnings=ExperimentalWarning .claude/skills/verify/verify.mjs cleanup
 ```
 
-Cleanup signals the pid in `.verify/scratch/server.json` only when `ps` shows `next` and `3321` in its command, then removes the pid file. A second cleanup with no pid file is a no-op.
+Cleanup signals the pid in `.verify/scratch/server.json` only when `ps` shows `next` and `3321` in its command, then removes the pid file. A second cleanup with no pid file is a no-op. A run that is killed, by a signal or a tool timeout, skips that cleanup and leaves a stamp with no `report.txt`. Run `cleanup` then, and treat that stamp as unfinished.
 
 ## Keeping it current
 
