@@ -206,7 +206,42 @@ async function selfTest() {
   }
   if (en.heroTitle.length < 8 || ko.heroTitle.length < 8) throw new Error('hero title missing');
   if (localize('/', 'ko') !== '/ko' || localize('/alert', 'ko') !== '/ko/alert') throw new Error('localizePath drifted');
-  console.log(`self-test ok groups=${groups.map((group) => `${group.id}:${group.links.length}`).join(',')}`);
+  await guardTest();
+  console.log(`self-test ok groups=${groups.map((group) => `${group.id}:${group.links.length}`).join(',')} guards=ok`);
+}
+
+async function refuses(label, attempt) {
+  let result;
+  try {
+    result = await attempt();
+  } catch {
+    return;
+  }
+  throw new Error(`self-test accepted ${label}: ${JSON.stringify(result)}`);
+}
+
+async function guardTest() {
+  const preview = { url: 'https://todae-verify.vercel.app' };
+  const targets = async (paths) => (await pathsOf({ ...preview, paths })).map((pathname) => pageUrl(pathname, preview));
+  for (const escape of ['https://evil.example/', '//evil.example/', '/\\evil.example/', '/\t/evil.example/', '/ko//evil.example/']) {
+    await refuses(`--paths ${JSON.stringify(escape)}`, () => targets(escape));
+  }
+  const kept = await targets('/button');
+  if (kept.join(' ') !== 'https://todae-verify.vercel.app/button https://todae-verify.vercel.app/ko/button') {
+    throw new Error(`--paths /button opened ${kept.join(' ')}`);
+  }
+  for (const host of ['127.evil.example', '127.0.0.1.nip.io']) {
+    if (isLoopback(new URL(`http://${host}:${PORT}/`).hostname)) throw new Error(`${host} counted as loopback`);
+  }
+  for (const host of ['127.0.0.1', 'localhost', '[::1]']) {
+    if (!isLoopback(new URL(`http://${host}:${PORT}/`).hostname)) throw new Error(`${host} did not count as loopback`);
+  }
+  const sha = 'a'.repeat(40);
+  await refuses('a preview with no --deployment-id', () =>
+    assertSha({ 'expect-sha': sha, 'deployment-sha': sha }, preview.url),
+  );
+  const asserted = await assertSha({ 'expect-sha': sha, 'deployment-sha': sha, 'deployment-id': 'dpl_verify' }, preview.url);
+  if (asserted.deploymentId !== 'dpl_verify') throw new Error(`deployment id not kept: ${JSON.stringify(asserted)}`);
 }
 
 function fullSha(value) {
