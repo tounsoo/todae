@@ -1,6 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import {
   useContext,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -157,6 +158,9 @@ function Root({
   const shellComposed = useComposedRefs(shellRef, props.ref);
   const pendingPicker = useRef<HTMLElement | null>(null);
   const [registry] = useState(createFieldRegistry);
+  // A Root nested in this one: a press on this shell can land on its picker.
+  const parentRegistry = useContext(FieldContext)?.registry;
+  useLayoutEffect(() => parentRegistry?.addChild(registry), [parentRegistry, registry]);
   const inputId = id ?? autoId;
   // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
   useCustomValidity(shellRef, () => {

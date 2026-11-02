@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState, type ChangeEvent } from 'react';
 import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { hasCounter, useRegistryValue } from './fieldRegistry.js';
+import { hasCounter, serverNo, useRegistryValue } from './fieldRegistry.js';
 
 /**
  * One change handler that calls `onChange` and `onValueChange`, or undefined
@@ -47,7 +47,7 @@ export function useTextControl<E extends HTMLInputElement | HTMLTextAreaElement>
     registry.publishText(self, { value, maxLength: limit });
   }, [registry, self, value, limit]);
   useLayoutEffect(() => () => registry.publishText(self, null), [registry, self]);
-  const counted = useRegistryValue(registry, hasCounter);
+  const counted = useRegistryValue(registry, hasCounter, serverNo);
   return {
     describedBy: mergeDescribedBy(describedBy, counted && limit !== undefined ? hintId : undefined),
     onChange: valueChangeHandler(onChange, onValueChange),

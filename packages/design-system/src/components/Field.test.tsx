@@ -1497,6 +1497,38 @@ describe('Field.Counter', () => {
     expect(view.container.querySelector('[data-todae-counter]')?.textContent).toBe('2');
   });
 
+  it('counts the text control mounted before it once the last one goes away', () => {
+    function Harness({ second }: { second: boolean }) {
+      return (
+        <Field.Root aria-label="Note">
+          <Field.TextInput aria-label="A" value="ab" maxLength={10} onChange={() => undefined} />
+          {second ? <Field.TextInput aria-label="B" value="xyz" maxLength={5} onChange={() => undefined} /> : null}
+          <Field.Counter />
+        </Field.Root>
+      );
+    }
+    const view = render(<Harness second />);
+    expect(view.container.textContent).toContain('3 / 5');
+    view.rerender(<Harness second={false} />);
+    expect(view.container.textContent).toContain('2 / 10');
+    const described = screen.getByRole('textbox', { name: 'A' }).getAttribute('aria-describedby') ?? '';
+    for (const id of described.split(' ').filter(Boolean)) expect(document.getElementById(id)).not.toBeNull();
+  });
+
+  it('opens the picker of a Field.Root nested in it on a press on its shell', () => {
+    const view = render(
+      <Field.Root aria-label="Outer">
+        <Field.Root aria-label="Inner">
+          <Field.DatePicker aria-label="Inner day" value={null} onValueChange={() => undefined} />
+        </Field.Root>
+      </Field.Root>,
+    );
+    const outer = view.container.firstElementChild as HTMLElement;
+    fireEvent.mouseDown(outer, { button: 0 });
+    fireEvent.click(outer, { detail: 1 });
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
   it('re-renders only the counter while typing', () => {
     const counts = { root: 0, icon: 0, affix: 0, counter: 0 };
     function Value() {

@@ -113,18 +113,21 @@ describe('createFieldRegistry', () => {
     expect(registry.stepper()).toBeNull();
   });
 
-  it('gives the first value input in document order', () => {
+  it('gives the first value input in the document, in document order', () => {
     const registry = createFieldRegistry();
     const shell = node('div');
+    document.body.append(shell);
     const first = document.createElement('input');
     const second = document.createElement('input');
     shell.append(first, second);
     const removeSecond = registry.addValueInput(second);
     const removeFirst = registry.addValueInput(first);
     expect(registry.firstValueInput()).toBe(first);
-    removeFirst();
+    first.remove();
     expect(registry.firstValueInput()).toBe(second);
+    removeFirst();
     removeSecond();
     expect(registry.firstValueInput()).toBeNull();
+    shell.remove();
   });
 });

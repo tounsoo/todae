@@ -59,12 +59,17 @@ export type FieldRegistry = {
   namedBy: (except?: object) => boolean;
   /** The element a press on the shell focuses: the last `control` to mount, else the last picker. */
   focusTarget: () => HTMLElement | null;
-  /** The toggle of the picker whose button is `node`, if it is one. */
+  /** The toggle of the picker whose button is `node`, if it is one, here or in a field nested inside. */
   toggleFor: (node: Element | null | undefined) => (() => void) | undefined;
+  /** Adds the registry of a Field.Root nested inside this one, so `toggleFor` finds its pickers; the result removes it. */
+  addChild: (child: FieldRegistry) => () => void;
   /** Counts a Field.Counter; the result uncounts it. */
   addCounter: () => () => void;
   hasCounter: () => boolean;
-  /** Publishes, or with null withdraws, `owner`'s text. An owner withdraws only its own. */
+  /**
+   * Publishes, or with null withdraws, `owner`'s text. The counter counts the
+   * text control that mounted last, and the one before it once that one goes.
+   */
   publishText: (owner: object, entry: TextEntry | null) => void;
   /** The text the counter counts, once committed. */
   text: () => TextEntry | null;
@@ -83,7 +88,7 @@ export type FieldRegistry = {
   stepper: () => StepperEntry | null;
   /** Registers a value input of the field; the result unregisters it. */
   addValueInput: (input: HTMLInputElement) => () => void;
-  /** The field's first value input in document order. */
+  /** The field's first value input in the document, in document order. */
   firstValueInput: () => HTMLInputElement | null;
 };
 
@@ -91,6 +96,12 @@ function lastOf(entries: Iterable<FieldControlEntry>, role: FieldControlRole): H
   let found: HTMLElement | null = null;
   for (const entry of entries) if (entry.role === role) found = entry.node;
   return found;
+}
+
+function lastText(texts: Map<object, TextEntry>): TextEntry | null {
+  let last: TextEntry | null = null;
+  for (const entry of texts.values()) last = entry;
+  return last;
 }
 
 const sameText = (a: TextEntry | null, b: TextEntry) => a !== null && a.value === b.value && a.maxLength === b.maxLength;
@@ -101,7 +112,9 @@ export function createFieldRegistry(): FieldRegistry {
   const controls = new Map<object, FieldControlEntry>();
   const valueInputs = new Set<HTMLInputElement>();
   let counters = 0;
-  let text: { owner: object; entry: TextEntry } | null = null;
+  // Insertion order is mount order: the last entry is the one counted.
+  const texts = new Map<object, TextEntry>();
+  const children = new Set<FieldRegistry>();
   let seed: TextEntry | null = null;
   // Whether a text was ever committed: from then on, render seeds nothing.
   let committed = false;
@@ -136,7 +149,17 @@ export function createFieldRegistry(): FieldRegistry {
     toggleFor(node) {
       if (!node) return undefined;
       for (const entry of controls.values()) if (entry.node === node) return entry.toggle;
+      for (const child of children) {
+        const toggle = child.toggleFor(node);
+        if (toggle) return toggle;
+      }
       return undefined;
+    },
+    addChild(child) {
+      children.add(child);
+      return () => {
+        children.delete(child);
+      };
     },
     addCounter() {
       counters += 1;
@@ -149,23 +172,23 @@ export function createFieldRegistry(): FieldRegistry {
     hasCounter: () => counters > 0,
     publishText(owner, entry) {
       if (!entry) {
-        if (text?.owner !== owner) return;
-        text = null;
+        if (!texts.delete(owner)) return;
       } else {
-        if (text?.owner === owner && sameText(text.entry, entry)) return;
+        const prev = texts.get(owner) ?? null;
+        if (prev && sameText(prev, entry)) return;
         // The seed the server rendered with, when it matches, so hydration's markup stays the same object.
-        text = { owner, entry: sameText(seed, entry) ? seed! : entry };
+        texts.set(owner, sameText(seed, entry) ? seed! : entry);
         committed = true;
       }
       seed = null;
       notify();
     },
-    text: () => text?.entry ?? null,
+    text: () => lastText(texts),
     seedText(entry) {
       if (committed || sameText(seed, entry)) return;
       seed = entry;
     },
-    serverText: () => text?.entry ?? seed,
+    serverText: () => lastText(texts) ?? seed,
     publishStepper(owner, entry) {
       const replaced = stepper !== null && stepper.owner !== owner;
       if (stepper?.owner === owner && stepper.entry === entry) return false;
@@ -188,6 +211,7 @@ export function createFieldRegistry(): FieldRegistry {
     firstValueInput() {
       let first: HTMLInputElement | null = null;
       for (const input of valueInputs) {
+        if (!input.isConnected) continue;
         if (!first || first.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_PRECEDING) first = input;
       }
       return first;
@@ -196,14 +220,16 @@ export function createFieldRegistry(): FieldRegistry {
 }
 
 /**
- * One answer from the registry, re-read when it changes. The server knows of
- * no control, counter or stepper, since they register on commit, so `server`
- * defaults to the same question over the registry the server has.
+ * One answer from the registry, re-read when it changes. `server` is the
+ * answer the server rendered with, which hydration must repeat: the server
+ * knows of no control, counter or stepper, since they register on commit, and
+ * a part that hydrates late (in a Suspense boundary) must not read what the
+ * client's registry learned meanwhile.
  */
 export function useRegistryValue<T>(
   registry: FieldRegistry,
   read: (registry: FieldRegistry) => T,
-  server: (registry: FieldRegistry) => T = read,
+  server: (registry: FieldRegistry) => T,
 ): T {
   return useSyncExternalStore(
     registry.subscribe,
@@ -215,6 +241,8 @@ export function useRegistryValue<T>(
 export const hasControl = (registry: FieldRegistry) => registry.hasControl();
 export const hasCounter = (registry: FieldRegistry) => registry.hasCounter();
 export const readStepper = (registry: FieldRegistry) => registry.stepper();
+/** The server snapshot of every yes-or-no question: nothing has registered there. */
+export const serverNo = () => false;
 
 /**
  * Publishes a Field.NumberInput's entry, for Field.Increment and

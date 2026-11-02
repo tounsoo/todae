@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo, useRef, type InputHTMLAttributes, type RefCallback, type RefObject } from 'react';
 import type { FieldContextValue } from './Field.context.js';
-import { useRegistryValue } from './fieldRegistry.js';
+import { serverNo, useRegistryValue } from './fieldRegistry.js';
 import { FormContext, ValidationScopeContext } from './Form.context.js';
 import { registerValueInput, type ValueInputBound } from './validity.js';
 import { visuallyHiddenClass } from './VisuallyHidden.js';
@@ -55,10 +55,12 @@ const noop = () => {};
 export function useValueInput(ctx: FieldContextValue, self: object, controlNode: RefObject<HTMLElement | null>) {
   const { disabled, name: fieldName, registry } = ctx;
   // The one fact the name decision needs: a control re-renders when it flips, not each time another control mounts, and not for the name its own control took.
-  const named = useRegistryValue(registry, (current) => current.namedBy(self));
+  const named = useRegistryValue(registry, (current) => current.namedBy(self), serverNo);
   const form = useContext(FormContext);
   const scope = useContext(ValidationScopeContext);
   const input = useRef<HTMLInputElement | null>(null);
+  // Takes the attached value input out of the registry.
+  const detach = useRef<(() => void) | null>(null);
   const owner = useCallback(() => controlNode.current, [controlNode]);
   // The ref changes only when a bound does, so React does not detach and attach it on every render. A memo of the last one, not state.
   const lastRef = useRef<{ key: string; ref: RefCallback<HTMLInputElement> } | null>(null);
@@ -69,14 +71,19 @@ export function useValueInput(ctx: FieldContextValue, self: object, controlNode:
         lastRef.current = {
           key,
           ref: (node) => {
-            input.current = node;
+            // A ref a product wraps by hand drops the cleanup and is called with null instead, so both detach.
+            detach.current?.();
             if (!node) return;
+            input.current = node;
             registerValueInput(node, { owner, bound });
             const remove = registry.addValueInput(node);
-            return () => {
+            const own = () => {
               remove();
               if (input.current === node) input.current = null;
+              if (detach.current === own) detach.current = null;
             };
+            detach.current = own;
+            return own;
           },
         };
       }

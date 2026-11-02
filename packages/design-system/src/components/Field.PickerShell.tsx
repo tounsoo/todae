@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { hasControl, useRegistryValue } from './fieldRegistry.js';
+import { hasControl, serverNo, useRegistryValue } from './fieldRegistry.js';
 import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from './useField.js';
 import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
@@ -94,7 +94,7 @@ export function useFieldPicker<Reason extends string>({
   // A picker, not a control: it leaves the field to any control beside it.
   const field = useFieldControl({ role: 'picker', toggle });
   const { shellRef, registry } = useFieldContext();
-  const beside = useRegistryValue(registry, hasControl);
+  const beside = useRegistryValue(registry, hasControl, serverNo);
   // A button cannot say `aria-required`, so a required picker is described as required.
   const requiredId = useDomId();
   const describedBy = mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined);
