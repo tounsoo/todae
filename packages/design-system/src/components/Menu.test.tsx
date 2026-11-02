@@ -830,6 +830,31 @@ describe('Menu', () => {
     expect(commits).toBe(before);
   });
 
+  it('a menu with a read-only open does not render on Escape or an outside press', async () => {
+    let commits = 0;
+    render(
+      <>
+        <Profiler id="menu" onRender={() => (commits += 1)}>
+          <Menu.Root open>
+            <Menu.Trigger>Open</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>One</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </Profiler>
+        <button type="button">After</button>
+      </>,
+    );
+    await raf();
+    const before = commits;
+    fireEvent.keyDown(item('One'), { key: 'Escape' });
+    await raf();
+    fireEvent.pointerDown(screen.getByText('After'));
+    fireEvent.click(screen.getByText('After'));
+    await raf();
+    expect(commits).toBe(before);
+  });
+
   it('a radio group with a read-only value does not render on a click', async () => {
     let commits = 0;
     render(

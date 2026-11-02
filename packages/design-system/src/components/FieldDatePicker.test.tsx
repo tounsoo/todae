@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { Profiler, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Field, GlyphsProvider, Label, useField } from '../index.js';
 
@@ -231,5 +231,27 @@ describe('Field.DatePicker', () => {
       </Field.Root>,
     );
     expect((screen.getByRole('button') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('with a read-only open, does not render on an outside press or Escape', async () => {
+    let commits = 0;
+    const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    render(
+      <>
+        <Profiler id="picker" onRender={() => (commits += 1)}>
+          <Field.Root aria-label="Date">
+            <Field.DatePicker value={null} open />
+          </Field.Root>
+        </Profiler>
+        <button type="button">After</button>
+      </>,
+    );
+    await frame();
+    const before = commits;
+    fireEvent.pointerDown(screen.getByText('After'));
+    fireEvent.pointerUp(screen.getByText('After'));
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    await frame();
+    expect(commits).toBe(before);
   });
 });

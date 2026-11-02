@@ -683,7 +683,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const popover = usePopoverInternal(
     {
       open,
-      onOpenChange: setOpen,
+      // A read-only open has no one to ask, so the popover asks no one either.
+      onOpenChange: options.open === undefined || options.onOpenChange ? setOpen : undefined,
       anchorRef,
       initialFocusRef: inputRef,
       restoreFocusRef: inputRef,

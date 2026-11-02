@@ -32,11 +32,15 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
 export function useComboboxState(options: UseComboboxOptions, latest: RefObject<UseComboboxOptions>) {
   const multiple = isMultiple(options);
   // While `apply` writes, change callbacks wait here, so every change is stored
-  // before any callback runs. A held callback whose value a later write, such
-  // as the owner's own from an earlier callback, has replaced is skipped.
+  // before any callback runs. A held callback whose field a later write, such
+  // as the owner's own from an earlier callback, has changed again is skipped:
+  // the owner hears about that write instead. A render alone, such as one the
+  // owner forces from a callback, is not a write and skips nothing.
   const held = useRef<(() => void)[] | null>(null);
-  const report = useCallback((current: () => boolean, call: () => void) => {
-    if (held.current) held.current.push(() => current() && call());
+  const writes = useRef<Record<keyof ComboboxFieldState, number>>({ open: 0, inputValue: 0, single: 0, multi: 0 });
+  const report = useCallback((field: keyof ComboboxFieldState, call: () => void) => {
+    const count = ++writes.current[field];
+    if (held.current) held.current.push(() => writes.current[field] === count && call());
     else call();
   }, []);
   const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
@@ -45,7 +49,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
     options.onOpenChange &&
       ((next, reason) =>
         report(
-          () => Object.is(openNow(), next),
+          'open',
           () => latest.current.onOpenChange?.(next, reason),
         )),
   );
@@ -58,7 +62,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
     options.onInputValueChange &&
       ((next) =>
         report(
-          () => Object.is(inputNow(), next),
+          'inputValue',
           () => latest.current.onInputValueChange?.(next),
         )),
   );
@@ -68,7 +72,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
     options.onValueChange &&
       ((next) =>
         report(
-          () => Object.is(singleNow(), next),
+          'single',
           () => {
             const current = latest.current;
             if (!isMultiple(current)) current.onValueChange?.(next);
@@ -81,7 +85,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
     options.onValueChange &&
       ((next) =>
         report(
-          () => Object.is(multiNow(), next),
+          'multi',
           () => {
             const current = latest.current;
             if (isMultiple(current)) current.onValueChange?.([...next]);

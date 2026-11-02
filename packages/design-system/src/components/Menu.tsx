@@ -255,7 +255,14 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const popover = usePopoverInternal(
-    { open, onOpenChange: setOpen, restoreFocusRef, initialFocusRef, haspopup: 'menu' },
+    {
+      open,
+      // A read-only open has no one to ask, so the popover asks no one either.
+      onOpenChange: openProp === undefined || onOpenChange ? setOpen : undefined,
+      restoreFocusRef,
+      initialFocusRef,
+      haspopup: 'menu',
+    },
     true,
   );
   // The item chosen for one open never carries over to the next.

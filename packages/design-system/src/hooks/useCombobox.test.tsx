@@ -9,7 +9,8 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { DialogRootProps } from '../components/Dialog.js';
-import { Activity, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Activity, Profiler, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
@@ -2239,5 +2240,128 @@ describe('useCombobox changes from a callback', () => {
     act(() => result.current.select('react'));
     expect(result.current.inputValue).toBe('custom');
     expect(log).toEqual(['value:react', 'input:custom']);
+  });
+});
+
+describe('useCombobox held change reports', () => {
+  const picks = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it('still reports each change to an owner that renders at once from an earlier callback', () => {
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      return useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          flushSync(() => setValue(next));
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['value:react', 'input:React', 'open:false:select']);
+    expect(result.current.open).toBe(false);
+    expect(result.current.inputValue).toBe('React');
+  });
+
+  it('asks a controlled owner to open on typing, even when it renders at once from the text report', () => {
+    const log: string[] = [];
+    function Typed() {
+      const [open, setOpen] = useState(false);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: input,
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          flushSync(() => setInput(text));
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Typed />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(log).toEqual(['input:r', 'open:true:trigger']);
+  });
+
+  it("skips a held report once the owner's own writes have changed that field again", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange: (next, reason) => log.push(`open:${next}:${reason}`),
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setOpen(false, 'escape');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['open:true:trigger', 'open:false:escape']);
+    expect(result.current.open).toBe(false);
+  });
+
+  it('does not render a read-only open popover again on an outside press', async () => {
+    let commits = 0;
+    function ReadOnly() {
+      const combobox = useCombobox({ options: picks, presentation: 'popover', open: true });
+      return (
+        <div>
+          <label {...combobox.getLabelProps()}>Field</label>
+          <Field.Root {...combobox.getAnchorProps()}>
+            <Field.TextInput {...combobox.getInputProps()} />
+          </Field.Root>
+          <Popover.Root {...combobox.getPopoverProps()}>
+            <OptionList.Root {...combobox.getListboxProps()}>
+              {combobox.items.map((item) => (
+                <OptionList.Option key={item.id} {...combobox.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </div>
+      );
+    }
+    render(
+      <Profiler id="combobox" onRender={() => (commits += 1)}>
+        <ReadOnly />
+      </Profiler>,
+    );
+    const input = screen.getByRole('combobox');
+    input.focus();
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    const before = commits;
+    fireEvent.pointerDown(document.body);
+    fireEvent.pointerUp(document.body);
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    expect(commits).toBe(before);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
   });
 });

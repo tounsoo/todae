@@ -217,7 +217,8 @@ export function useFieldPicker<Reason extends string>({
   );
   const popover = usePopover({
     open: shown,
-    onOpenChange: setOpen,
+    // A read-only open has no one to ask, so the popover asks no one either.
+    onOpenChange: openProp === undefined || onOpenChange ? setOpen : undefined,
     // For the outside-press check: a press anywhere in the field is not outside.
     anchorRef: shellRef,
     initialFocusRef,
