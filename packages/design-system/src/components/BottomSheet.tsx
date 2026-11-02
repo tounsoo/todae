@@ -15,7 +15,7 @@ import {
 } from 'react';
 import { useDomId } from './domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControllableState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
@@ -250,7 +250,7 @@ function BottomSheetRoot({
     },
     [onSnapChange, snap],
   );
-  const [open, onOpenChange] = useControlledValue<boolean, [reason: SheetCloseReason]>(
+  const [open, onOpenChange] = useControllableState<boolean, [reason: SheetCloseReason]>(
     openProp,
     defaultOpen,
     onOpenChangeProp,

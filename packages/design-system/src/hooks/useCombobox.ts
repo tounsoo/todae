@@ -203,7 +203,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // inline `loadOptions` / `onValueChange` / `filter` functions never retrigger effects.
   const latest = useRef(options);
   latest.current = options;
-  const { open, inputValue, singleValue, multiValue, state, apply } = useComboboxState(options, latest);
+  const { open, inputValue, singleValue, multiValue, fieldNow, apply } = useComboboxState(options, latest);
   const value = selectionMode === 'multiple' ? [...multiValue] : singleValue;
   const {
     creating,
@@ -212,7 +212,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     run: runCreate,
     cancel: cancelCreates,
     clearError: clearCreateError,
-  } = useComboboxCreate(selectionMode === 'multiple', inputValue, state);
+  } = useComboboxCreate(selectionMode === 'multiple', inputValue, fieldNow);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -307,7 +307,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const setOpen = useCallback(
     (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
-      const opening = next && !state.current.open;
+      const opening = next && !fieldNow().open;
       if (opening) clearCreateError();
       // Each time the dialog opens, start from the full list with the top row active.
       // Reopened while still closing, focus is still inside: keep the query and the focus target.
@@ -319,7 +319,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       }
       apply({ open: next, reason });
     },
-    [apply, clearCreateError, isDialog, rememberReturnFocus, state],
+    [apply, clearCreateError, isDialog, rememberReturnFocus, fieldNow],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -335,7 +335,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       (signal) => latest.current.onCreate?.(label, signal),
       (canonical) => {
         const next = canonical ?? label;
-        const now = state.current;
+        const now = fieldNow();
         if (selectionMode === 'single') {
           apply({ value: next, inputValue: label, open: false, reason: 'select' });
           return;
@@ -347,7 +347,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         });
       },
     );
-  }, [apply, isDialog, open, runCreate, selectionMode, showCreate, state, trimmed]);
+  }, [apply, fieldNow, isDialog, open, runCreate, selectionMode, showCreate, trimmed]);
 
   const select = useCallback(
     (raw: string) => {
@@ -363,16 +363,16 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         apply({ value: raw, inputValue: labelFor(raw), open: false, reason: 'select' });
         return;
       }
-      const current = state.current.multi;
+      const current = fieldNow().multi;
       const next = current.includes(raw) ? current.filter((item) => item !== raw) : [...current, raw];
       apply({ value: next, inputValue: '' });
     },
-    [apply, cancelCreates, create, clearCreateError, isDialog, labelFor, open, selectionMode, state],
+    [apply, cancelCreates, create, clearCreateError, isDialog, labelFor, open, selectionMode, fieldNow],
   );
 
   const remove = useCallback(
     (raw: string) => {
-      const now = state.current;
+      const now = fieldNow();
       if (selectionMode === 'multiple') {
         clearCreateError();
         apply({ value: now.multi.filter((item) => item !== raw) });
@@ -381,7 +381,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         apply({ value: null, inputValue: '' });
       }
     },
-    [apply, clearCreateError, selectionMode, state],
+    [apply, clearCreateError, selectionMode, fieldNow],
   );
 
   const clear = useCallback(() => {
@@ -401,7 +401,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     setReloads((count) => count + 1);
     const defaultOpen = initial.defaultOpen ?? false;
     // Not setOpen: reopening a dialog there would clear the text reset puts back.
-    if (defaultOpen && isDialog && !state.current.open) rememberReturnFocus();
+    if (defaultOpen && isDialog && !fieldNow().open) rememberReturnFocus();
     if (isMultiple(initial)) {
       apply({
         value: initial.defaultValue ?? [],
@@ -419,7 +419,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       open: defaultOpen,
       reason: 'reset',
     });
-  }, [apply, cancelCreates, clearCreateError, isDialog, rememberReturnFocus, state]);
+  }, [apply, cancelCreates, clearCreateError, fieldNow, isDialog, rememberReturnFocus]);
 
   const runLoad = useCallback(
     (query: string) => {
@@ -542,7 +542,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           return;
         }
         // With nothing to clear, Escape on a closed list goes on, so a dialog around it closes.
-        const now = state.current;
+        const now = fieldNow();
         const clearsText = selectionMode === 'single' && !now.single && now.inputValue !== '';
         if (clearsText) {
           event.preventDefault();
@@ -554,7 +554,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (open) setOpen(false, 'blur');
       }
     },
-    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, state],
+    [commitActive, isModal, move, open, selectionMode, setInputValue, setOpen, fieldNow],
   );
 
   const changeInput = useCallback(

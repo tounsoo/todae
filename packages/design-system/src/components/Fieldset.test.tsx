@@ -5,6 +5,7 @@ import { ErrorMessage } from './ErrorMessage.js';
 import { Field } from './Field.js';
 import { Fieldset } from './Fieldset.js';
 import { RadioGroup } from './Radio.js';
+import { Slider } from './Slider.js';
 import { Switch } from './Switch.js';
 
 afterEach(cleanup);
@@ -118,6 +119,23 @@ describe('Fieldset', () => {
     expect(screen.getByRole('checkbox').hasAttribute('disabled')).toBe(true);
     const nested = screen.getByRole('switch', { name: 'Nested toggle' });
     expect(nested.closest('label')!.hasAttribute('data-disabled')).toBe(true);
+  });
+
+  it('carries its state into a Slider, which can opt out of invalid with aria-invalid={false}', () => {
+    render(
+      <Fieldset.Root disabled invalid aria-describedby="err">
+        <Fieldset.Legend>Volume</Fieldset.Legend>
+        <Slider.Root aria-label="Music" aria-describedby="hint" />
+        <Slider.Root aria-label="Alerts" aria-invalid={false} />
+        <ErrorMessage.Root id="err">Too loud</ErrorMessage.Root>
+      </Fieldset.Root>,
+    );
+    const music = screen.getByRole('slider', { name: 'Music' });
+    const alerts = screen.getByRole('slider', { name: 'Alerts' });
+    expect(music).toHaveProperty('disabled', true);
+    expect(music.getAttribute('aria-invalid')).toBe('true');
+    expect(music.getAttribute('aria-describedby')).toBe('hint');
+    expect(alerts.hasAttribute('aria-invalid')).toBe(false);
   });
 
   it('lets a control inside an invalid fieldset opt out with invalid={false}', () => {

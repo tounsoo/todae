@@ -8,7 +8,7 @@ import {
   type FocusEvent,
   type ReactNode,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState.js';
+import { useControllableState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
@@ -78,7 +78,7 @@ function Root(props: ToggleGroupRootProps) {
     ...rest
   } = props;
   const multiple = selectionMode === 'multiple';
-  const [value, setValue] = useControlledState<string | null | readonly string[]>(
+  const [value, setValue] = useControllableState<string | null | readonly string[]>(
     valueProp,
     defaultValue ?? (multiple ? [] : null),
   );

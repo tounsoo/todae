@@ -27,7 +27,7 @@ import { composeHandlers, useComposedRefs, useStableComposedRef } from '../compo
 import { useDomId } from '../components/domId.js';
 import { anchorTriggerStyle } from '../overlay/anchorName.js';
 import { tokenMs } from '../overlay/cssTime.js';
-import { useControlledState } from './useControlledState.js';
+import { useControllableState } from './useControlledState.js';
 
 export type { TooltipOpenReason, TooltipWire };
 
@@ -181,9 +181,12 @@ export function useTooltipInternal<I extends boolean = false>(
     enabled = true,
     id,
   } = options;
-  const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
+  const [open, setOpen] = useControllableState<boolean, [reason: TooltipOpenReason]>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
   const [restoreEpoch, setRestoreEpoch] = useState(0);
-  const [controlledEpoch, setControlledEpoch] = useState(0);
   const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
   const anchorName = anchorNameOption ?? `--todae-tooltip-${uid}`;
@@ -192,7 +195,6 @@ export function useTooltipInternal<I extends boolean = false>(
   const intentRef = useRef(createIntent());
   const timerRef = useRef<number | null>(null);
   const openRef = useRef(open);
-  const onOpenChangeRef = useRef(onOpenChange);
   const showDelayRef = useRef(showDelay);
   const hideDelayRef = useRef(hideDelay);
   const skipDelayRef = useRef(skipDelay);
@@ -203,7 +205,6 @@ export function useTooltipInternal<I extends boolean = false>(
   const holdsFocusRef = useRef(holdsFocus);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
   openRef.current = open;
-  onOpenChangeRef.current = onOpenChange;
   showDelayRef.current = showDelay;
   hideDelayRef.current = hideDelay;
   skipDelayRef.current = skipDelay;
@@ -217,14 +218,12 @@ export function useTooltipInternal<I extends boolean = false>(
         onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
         commit: (next, reason) => {
           requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
-          setValue(next);
-          onOpenChangeRef.current?.(next, reason);
-          if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
+          setOpen(next, reason);
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
       });
     },
-    [openProp, setValue],
+    [setOpen],
   );
 
   const dispatch = useCallback(
@@ -270,11 +269,8 @@ export function useTooltipInternal<I extends boolean = false>(
     if (enabled) return;
     intentRef.current = createIntent();
     applyCommands([{ kind: 'clear-delay' }]);
-    if (openRef.current) {
-      setValue(false);
-      onOpenChangeRef.current?.(false, 'escape');
-    }
-  }, [applyCommands, enabled, setValue]);
+    if (openRef.current) setOpen(false, 'escape');
+  }, [applyCommands, enabled, setOpen]);
 
   const onEscape = useCallback(() => {
     const tooltip = tooltipRef.current;
@@ -292,6 +288,8 @@ export function useTooltipInternal<I extends boolean = false>(
     (firstTabbable(trigger) ?? trigger).focus();
   }, [open, restoreEpoch]);
 
+  // Every render, so a controlled owner's render after a commit, which may
+  // keep `open` as it was, still settles the hover count.
   useLayoutEffect(() => {
     const count = open && requestedHoverOpenRef.current;
     if (!open) requestedHoverOpenRef.current = false;
@@ -299,7 +297,7 @@ export function useTooltipInternal<I extends boolean = false>(
     countedHoverRef.current = count;
     if (count) retainHoverTip();
     else releaseHoverTip(Date.now());
-  }, [open, controlledEpoch]);
+  });
 
   useEffect(() => {
     if (!open || !enabled) return;

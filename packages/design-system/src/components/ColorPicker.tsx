@@ -10,7 +10,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControllableState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color.js';
 import { useFieldsetState } from './Fieldset.context.js';
@@ -80,7 +80,7 @@ function Root({
   ...props
 }: ColorPickerRootProps) {
   const { disabled } = useFieldsetState({ disabled: disabledProp });
-  const [value, setValue] = useControlledValue(valueProp, defaultValue ?? BLACK, onValueChange);
+  const [value, setValue] = useControllableState(valueProp, defaultValue ?? BLACK, onValueChange);
   const [last, setLast] = useState<Hsv>(() => hexToHsv(value) ?? { h: 0, s: 0, v: 0 });
   const hsv = resolveHsv(value, last);
   // A value from outside becomes the color the picker last showed, so a gray

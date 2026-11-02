@@ -16,7 +16,7 @@ import {
   type PointerEvent,
   type RefObject,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState.js';
+import { useControllableState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import { focusWithoutScroll, revealRing } from './revealRing.js';
@@ -196,7 +196,7 @@ function Root({
     }),
     [min, max, room, collapsible],
   );
-  const [stored, setStored] = useControlledState<number>(
+  const [stored, setStored] = useControllableState<number>(
     value,
     defaultValue ?? Math.min(Math.max(DEFAULT_SIZE, min), max ?? Number.POSITIVE_INFINITY),
   );
