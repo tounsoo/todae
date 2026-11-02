@@ -2478,6 +2478,10 @@
       "en": "Fires on toggle or dismiss. Leaving open unchanged is a veto.",
       "ko": "토글하거나 닫을 때 호출됩니다. open을 바꾸지 않으면 거부로 처리됩니다."
     },
+    "anchorName": {
+      "en": "CSS anchor name the popover sits at, set on an element other than the trigger, such as useMentions caretPeekAnchorName. Default is the trigger.",
+      "ko": "팝오버가 자리 잡을 CSS anchor name입니다. useMentions의 caretPeekAnchorName처럼 트리거가 아닌 요소에 설정된 이름을 씁니다. 기본값은 트리거입니다."
+    },
     "anchorRef": {
       "en": "Sets CSS anchor-name on this element and excludes it from outside press.",
       "ko": "이 요소에 CSS anchor-name을 설정하고 바깥 누르기 판정에서 제외합니다."

@@ -64,6 +64,12 @@ export default tseslint.config(
           ],
         },
       ],
+      // `import { type X }` still loads the module under verbatimModuleSyntax.
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'ImportExpression[source.value=/^\\.\\.\\/components\\//]', message: 'Only types come from components/.' },
+      ],
     },
   },
   {
@@ -74,6 +80,11 @@ export default tseslint.config(
       '@typescript-eslint/no-restricted-imports': [
         'error',
         { patterns: [{ group: ['../*'], message: 'internal/ imports only React and other internal/ files.' }] },
+      ],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'ImportExpression[source.value=/^\\.\\.\\//]', message: 'internal/ imports only React and other internal/ files.' },
       ],
     },
   },
