@@ -1,7 +1,7 @@
 # 0004. The bundle size budget is a tripwire
 
 - **Date:** 2026-11-01
-- **Status:** Active
+- **Status:** Superseded by [0008](0008-bundle-size-is-reported.md), 2026-11-02
 - **Source:** Ben, approved 2026-11-01.
 
 ## Decision

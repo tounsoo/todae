@@ -35,6 +35,5 @@ Verdict: <PASS, FAIL or BLOCKED>
 <!--
 Also, when it applies:
 - A user-facing change has a changeset, or `pnpm changeset --empty` when it ships nothing.
-- A raised size budget states the reason and the new number here.
 - A changed decision or spec edits its file in docs/decisions/.
 -->

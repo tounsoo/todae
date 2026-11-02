@@ -113,7 +113,7 @@ pnpm test:browser
 
 - `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
-- `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
+- `pnpm size:check` prints the gzip size of each export after tree-shaking, and of each shipped CSS file. Add `--baseline <file>` with an earlier `--json <file>` report to see the change. Run `pnpm build:ds` first. CI runs the same command after the package build and shows the change against main in the job summary. It never fails on size. [0008](docs/decisions/0008-bundle-size-is-reported.md) is the record.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
