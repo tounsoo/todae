@@ -1,5 +1,7 @@
 # Claude instructions
 
+Read [`AGENTS.md`](AGENTS.md) for the repository's rules. They apply to every agent, including the rule that `.claude/`, `.agents/` and this file change only with Ben's yes.
+
 Duet threads: read [`.claude/thread-start.md`](.claude/thread-start.md) next.
 
 ## Architecture and decisions
@@ -16,4 +18,4 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component,
 - `tokens.md` keeps every design token change behind Ben's approval and runs the token checks.
 - `changesets.md` adds the changeset a shipping change needs.
 
-`.claude/models.md` is the pstack model sheet. Edit it to change a role's model or effort.
+`.claude/models.md` is the pstack model sheet. A change to a role's model or effort goes there, with Ben's yes.

@@ -14,4 +14,4 @@ Cursor is separate. `.cursor/`, its verify skill and [0005](0005-verify-procedur
 
 ## Why
 
-A Duet thread starts outside the repository and attaches it later, so nothing in `.claude/` loaded by itself: not the SessionStart hook, the agents, the skills, or the `@` import in `CLAUDE.md`. The pinned copy of pstack from 2026-10-19 was never read by threads. Ben chose the latest upstream for every thread over a reviewed pin.
+A Duet thread starts outside the repository and attaches it later, so nothing in `.claude/` loaded by itself: not the SessionStart hook, the agents, the skills, or the `@` import in `CLAUDE.md`. The pinned copy of pstack in `.claude/` was never read by threads. Ben chose the latest upstream for every thread over a reviewed pin.
