@@ -205,7 +205,15 @@ function BottomSheetRoot({
     if (open) onOpenChange(false, 'drag');
   }, [open, onOpenChange]);
   const sheetRef = useRef<HTMLDialogElement>(null);
-  const sheetRefs = useComposedRefs(sheetRef, ref);
+  // The shell renders the <dialog> a commit after open, and re-renders only
+  // itself. Holding the node in state renders this root again then, so
+  // useSnapDrag finds the sheet and attaches its listeners.
+  const [, setSheetNode] = useState<HTMLDialogElement | null>(null);
+  const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
+    sheetRef.current = node;
+    setSheetNode(node);
+  }, []);
+  const sheetRefs = useComposedRefs(setSheetRef, ref);
   const bodyRef = useRef<HTMLElement | null>(null);
   const [grabbers, setGrabbers] = useState(0);
   const registerGrabber = useCallback(() => {
