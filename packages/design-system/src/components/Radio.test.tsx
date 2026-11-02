@@ -3,7 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 import * as api from '../index.js';
 
 afterEach(cleanup);

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { resetWarnOnce } from '../components/warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 import { defineMentionSource } from './source.js';
 
 describe('defineMentionSource', () => {

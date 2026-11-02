@@ -7,7 +7,7 @@ import {
   type TooltipEvent,
   type TooltipIntentState,
   type TooltipPolicy,
-} from './Tooltip.intent.js';
+} from './tooltipIntent.js';
 
 const fine: TooltipPolicy = { fidelity: 'fine', showDelayMs: 300, hideDelayMs: 100 };
 const coarse: TooltipPolicy = { fidelity: 'coarse', showDelayMs: 300, hideDelayMs: 100 };
@@ -45,7 +45,7 @@ function delaysOf(commands: readonly TooltipCommand[]) {
   return commands.filter((command) => command.kind === 'start-delay');
 }
 
-describe('Tooltip.intent', () => {
+describe('tooltipIntent', () => {
   it.each([
     {
       name: 'shows hover at 300 not 299',

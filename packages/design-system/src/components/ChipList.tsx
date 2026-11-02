@@ -16,9 +16,9 @@ import { Chip, type ChipTone } from './Chip.js';
 import { ChipCount, ChipCountChip } from './chipCount.js';
 import { useChipKeys } from './chipKeys.js';
 import { Popover } from './Popover.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './ChipList.module.css';
-import { focusWithoutScroll } from './revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 /**
  * A read-only or removable list of chips that folds the ones past `maxRows`

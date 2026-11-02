@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type RefObject } from 'react';
 import { tokenMs } from '../overlay/cssTime.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 
 export type Stack = readonly string[];
 

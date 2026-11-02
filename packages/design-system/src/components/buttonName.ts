@@ -1,5 +1,5 @@
 import { isValidElement, useCallback, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
-import { useComposedRefs } from './props.js';
+import { useComposedRefs } from '../internal/props.js';
 
 /**
  * Two or more letters or digits name the button, such as "Got it" or "닫기";

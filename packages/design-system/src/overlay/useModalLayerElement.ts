@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack.js';
-import { inToastHostWithin } from './tabbables.js';
+import { inGuestLayerWithin } from './tabbables.js';
 import { initialFocusTarget } from './useInitialFocus.js';
 import { reshowHeldInside } from './usePopoverSync.js';
 
@@ -21,7 +21,7 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
     if (!el) return;
     // Joins while `open` is true and it is shown modally. Once in, it stays
     // until close(), also after `open` turns false: until then the page is
-    // still inert, so the toasts must stay inside. Only a show moves it in
+    // still inert, so guest layers such as the toasts must stay inside. Only a show moves it in
     // front: one that joins late, or whose `open` turns true again, keeps
     // the place it was shown in.
     const sync = (shown = false) => {
@@ -32,11 +32,11 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
     // the element open and close however it happens.
     const unwatch = watchOpen(el, (shown) => {
       if (shown) {
-        // showModal() focuses the first focusable element inside, which is a
-        // toast when the toasts were still inside and the element has
-        // nothing focusable of its own before them.
+        // showModal() focuses the first focusable element inside, which is in
+        // a guest layer when one was still inside and the element has
+        // nothing focusable of its own before it.
         const active = el.ownerDocument.activeElement;
-        if (active instanceof HTMLElement && inToastHostWithin(active, el)) initialFocusTarget(el).focus();
+        if (active instanceof HTMLElement && inGuestLayerWithin(active, el)) initialFocusTarget(el).focus();
         // Shown again, it is in front of the popovers open inside it, such
         // as a tooltip, which go back in front of it. A caller that shows it
         // itself does this right after its showModal().

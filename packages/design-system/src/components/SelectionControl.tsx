@@ -4,10 +4,10 @@ import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
-import { useComposedRefs } from './props.js';
+import { useComposedRefs } from '../internal/props.js';
 import { CheckGlyph, DashGlyph, glyphOr } from './glyphs.js';
 import styles from './selection.module.css';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
 

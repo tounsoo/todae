@@ -415,10 +415,10 @@ describe('Tooltip', () => {
         'react',
         '../overlay/usePopoverSync.js',
         './Tooltip.surface.js',
-        './Tooltip.wire.js',
+        '../overlay/tooltipWire.js',
         './Tooltip.module.css',
-        './props.js',
-        './cx.js',
+        '../internal/props.js',
+        '../internal/cx.js',
       ]),
     );
     expect(css).not.toContain('.trigger');

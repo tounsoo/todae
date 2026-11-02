@@ -46,6 +46,38 @@ export default tseslint.config(
     },
   },
   {
+    // Hooks, overlay engines and mention sources sit under the components:
+    // they take only types from components/, so no import cycle runs through
+    // them. Shared helpers live in internal/.
+    files: ['packages/design-system/src/{hooks,overlay,mentions}/**/*.{ts,tsx}'],
+    ignores: ['packages/design-system/src/**/*.test.ts', 'packages/design-system/src/**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../components/*'],
+              allowTypeImports: true,
+              message: 'Only types come from components/. Move shared code to internal/, or an overlay engine to overlay/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // internal/ is the leaf every layer may import, so it imports nothing else in the package.
+    files: ['packages/design-system/src/internal/**/*.{ts,tsx}'],
+    ignores: ['packages/design-system/src/**/*.test.ts', 'packages/design-system/src/**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        { patterns: [{ group: ['../*'], message: 'internal/ imports only React and other internal/ files.' }] },
+      ],
+    },
+  },
+  {
     // Test fixtures poke at loosely typed JSON and mixed element refs.
     files: ['**/*.test.{ts,tsx}'],
     rules: { '@typescript-eslint/no-explicit-any': 'off' },

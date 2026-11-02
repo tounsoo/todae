@@ -14,8 +14,8 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { domSafe, useDomId } from './domId.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { domSafe, useDomId } from '../internal/domId.js';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';

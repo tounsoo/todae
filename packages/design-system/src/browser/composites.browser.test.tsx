@@ -9,7 +9,7 @@ import { formatDate, parseDate } from '../components/dateText.js';
 import { Label } from '../components/Label.js';
 import { Menu } from '../components/Menu.js';
 import { Tabs } from '../components/Tabs.js';
-import { useField } from '../hooks/useField.js';
+import { useField } from '../components/useField.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {

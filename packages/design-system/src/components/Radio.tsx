@@ -7,16 +7,16 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
-import { useComposedRefs } from './props.js';
+import { useComposedRefs } from '../internal/props.js';
 import { SelectionControl } from './SelectionControl.js';
-import { warnOnce } from './warnOnce.js';
-import { cx } from './cx.js';
+import { warnOnce } from '../internal/warnOnce.js';
+import { cx } from '../internal/cx.js';
 import styles from './selection.module.css';
 
 type RadioGroupName =

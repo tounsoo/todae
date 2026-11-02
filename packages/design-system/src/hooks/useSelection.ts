@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
-import { composeHandlers } from '../components/props.js';
+import { composeHandlers } from '../internal/props.js';
 import { useControlledState } from './useControlledState.js';
 
 export type SelectionState = 'none' | 'some' | 'all';

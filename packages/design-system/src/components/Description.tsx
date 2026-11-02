@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Description.module.css';
 
 export type DescriptionRootProps = {

@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { mergeDescribedBy } from './Field.context.js';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
 import type { PopoverCloseReason, PopoverHaspopup } from '../hooks/usePopover.js';
 import { Popover, type PopoverChrome } from './Popover.js';

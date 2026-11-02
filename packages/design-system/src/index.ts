@@ -133,7 +133,7 @@ export {
   type DrilldownViewportProps,
   type DrilldownViewProps,
 } from './components/Drilldown.js';
-export { composeRefs } from './components/props.js';
+export { composeRefs } from './internal/props.js';
 export {
   OptionList,
   type OptionListMultipleProps,
@@ -252,7 +252,7 @@ export {
   type ValueInputControl,
   type ValueInputOptions,
   type ValueInputProps,
-} from './hooks/useField.js';
+} from './components/useField.js';
 export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset.js';
 export {
   Form,

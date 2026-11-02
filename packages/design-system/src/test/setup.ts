@@ -1,6 +1,6 @@
 import './temporal.js';
 import { afterEach } from 'vitest';
-import { resetTooltipWarmth } from '../components/Tooltip.warmth.js';
+import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
 
 afterEach(() => {
   resetTooltipWarmth();

@@ -14,9 +14,9 @@ import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color.js';
 import { useFieldsetState } from './Fieldset.context.js';
-import { composeHandlers, cx } from './props.js';
+import { composeHandlers, cx } from '../internal/props.js';
 import styles from './ColorPicker.module.css';
-import { focusWithoutScroll } from './revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 export type ColorPickerRootProps = {
   /** Controlled color as #rrggbb. Pass with onValueChange. */

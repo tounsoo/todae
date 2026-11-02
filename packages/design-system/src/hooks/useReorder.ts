@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from 'react';
-import { composeHandlers } from '../components/props.js';
+import { composeHandlers } from '../internal/props.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 
 export type ReorderDropPosition = 'before' | 'after';

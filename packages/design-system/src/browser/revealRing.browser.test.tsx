@@ -14,7 +14,7 @@ import { Popover } from '../components/Popover.js';
 import { ScrollArea } from '../components/ScrollArea.js';
 import { Switch } from '../components/Switch.js';
 import { Tree } from '../components/Tree.js';
-import { focusWithoutScroll } from '../components/revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

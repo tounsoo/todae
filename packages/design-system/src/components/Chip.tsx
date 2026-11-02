@@ -3,7 +3,7 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CrossGlyph, glyphOr } from './glyphs.js';
 import type { BadgeTone } from './Badge.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Chip.module.css';
 
 /** The same tones as Badge. */

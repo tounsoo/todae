@@ -6,10 +6,10 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
-import { resetTooltipWarmth } from '../components/Tooltip.warmth.js';
+import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
+import { useTooltipInternal } from '../overlay/tooltip.js';
 import {
   useTooltip,
-  useTooltipInternal,
   type TooltipTriggerUserProps,
   type TooltipWire,
   type UseTooltipOptions,
@@ -17,7 +17,7 @@ import {
 } from './useTooltip.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(join(here, 'useTooltip.ts'), 'utf8');
+const source = readFileSync(join(here, '../overlay/tooltip.ts'), 'utf8');
 
 afterEach(() => {
   cleanup();
@@ -138,16 +138,16 @@ describe('useTooltip exports', () => {
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
-        '../components/props.js',
-        '../components/domId.js',
-        '../overlay/anchorName.js',
-        '../overlay/cssTime.js',
-        '../components/Tooltip.intent.js',
-        '../components/Tooltip.warmth.js',
-        '../components/Tooltip.wire.js',
-        '../overlay/tabbables.js',
-        '../overlay/useEscapeKey.js',
-        './useControlledState.js',
+        '../internal/props.js',
+        '../internal/domId.js',
+        './anchorName.js',
+        './cssTime.js',
+        './tooltipIntent.js',
+        './tooltipWarmth.js',
+        './tooltipWire.js',
+        './tabbables.js',
+        './useEscapeKey.js',
+        '../hooks/useControlledState.js',
       ]),
     );
   });

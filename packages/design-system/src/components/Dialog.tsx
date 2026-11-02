@@ -9,7 +9,7 @@ import {
   type DialogRootProps,
   type DialogShell,
 } from './dialogShell.js';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Dialog.module.css';
 
 export type { DialogCloseReason, DialogRootProps } from './dialogShell.js';

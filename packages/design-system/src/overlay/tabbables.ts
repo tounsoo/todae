@@ -15,14 +15,15 @@ const CANDIDATES = /* @__PURE__ */ [
 ].join(', ');
 
 /**
- * Marks the element Toast.Region moves into an open modal. Its toasts are not
+ * Marks a layer another part moves into an open modal so it stays usable
+ * while the page is inert, such as Toast.Region's host. What it holds is not
  * the modal's own content.
  */
-export const TOAST_HOST_ATTRIBUTE = 'data-todae-toast-host';
+export const GUEST_LAYER_ATTRIBUTE = 'data-todae-guest-layer';
 
-/** Whether `el` sits in a toast host inside `root`, rather than being root's own content. */
-export function inToastHostWithin(el: Element, root: Element): boolean {
-  const host = el.closest(`[${TOAST_HOST_ATTRIBUTE}]`);
+/** Whether `el` sits in a guest layer inside `root`, rather than being root's own content. */
+export function inGuestLayerWithin(el: Element, root: Element): boolean {
+  const host = el.closest(`[${GUEST_LAYER_ATTRIBUTE}]`);
   return Boolean(host && host !== root && root.contains(host));
 }
 
@@ -140,10 +141,10 @@ function tabStopTest(root: HTMLElement): (el: HTMLElement) => boolean {
   };
 }
 
-// root's candidates in document order, less the toasts moved into it.
+// root's candidates in document order, less the guest layers moved into it.
 function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
   for (const el of root.querySelectorAll<HTMLElement>(CANDIDATES)) {
-    if (!inToastHostWithin(el, root)) yield el;
+    if (!inGuestLayerWithin(el, root)) yield el;
   }
 }
 

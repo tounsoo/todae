@@ -5,7 +5,7 @@ import { getCandidates, getTabbables } from '../overlay/tabbables.js';
 import { ErrorMessage, Field, Form, Label, useField, type DateRange, type FieldControlUserProps } from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(cleanup);
 

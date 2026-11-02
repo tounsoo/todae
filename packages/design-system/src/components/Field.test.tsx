@@ -18,10 +18,10 @@ import {
 } from './Field.js';
 import type { ChipCommitKey } from './commitKeys.js';
 import { useChipField } from '../hooks/useChipField.js';
-import { useField } from '../hooks/useField.js';
+import { useField } from './useField.js';
 import * as api from '../index.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);

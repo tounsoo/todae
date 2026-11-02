@@ -13,6 +13,14 @@ export function anchorTriggerStyle(variable: string, name: string, existing?: CS
   } as CSSProperties;
 }
 
+/**
+ * The style an overlay anchored by `name` needs: `position-anchor`, plus the
+ * same name in `variable` for the CSS that positions it.
+ */
+export function anchoredContentStyle(variable: string, name: string): CSSProperties {
+  return { [variable]: name, positionAnchor: name } as CSSProperties;
+}
+
 // The names in an `anchor-name` value, other than `none` and `name`.
 function otherNames(existing: string | undefined, name: string): string[] {
   return (existing ?? '')

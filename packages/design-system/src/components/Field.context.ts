@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 
 type CountEntry = { value: string; maxLength?: number };
 

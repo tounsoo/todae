@@ -10,10 +10,10 @@ import {
   type RefCallback,
   type RefObject,
 } from 'react';
-import { useDomId } from '../components/domId.js';
-import { isImeKeyEvent } from '../components/ime.js';
-import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
-import { optionDomId } from '../components/OptionList.ids.js';
+import { useDomId } from '../internal/domId.js';
+import { isImeKeyEvent } from '../internal/ime.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
+import { optionDomId } from '../internal/optionDomId.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { ButtonRootProps } from '../components/Button.js';
 import type { DialogRootProps } from '../components/Dialog.js';
@@ -23,12 +23,12 @@ import type {
   OptionListSingleProps,
   OptionListOptionProps,
 } from '../components/OptionList.js';
-import type { PopoverWire } from '../components/Popover.wire.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { createAsyncGate } from './useCombobox.async.js';
 import { readsLabel, useComboboxCreate } from './useCombobox.create.js';
 import { isMultiple, useComboboxState } from './useCombobox.state.js';
-import { usePopoverInternal } from './usePopover.js';
+import { usePopoverInternal } from '../overlay/popover.js';
 import { defaultFilter, filterOptions } from './useCombobox.filter.js';
 import type {
   ComboboxCloseReason,

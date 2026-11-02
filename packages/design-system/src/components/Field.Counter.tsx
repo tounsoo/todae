@@ -1,6 +1,6 @@
 import { useContext, useEffect, useSyncExternalStore, type ComponentPropsWithRef, type CSSProperties } from 'react';
 import { FieldContext, type FieldContextValue } from './Field.context.js';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useStrings, type Strings } from '../providers/StringsProvider.js';
 import { subscribeCount } from './Field.shared.js';

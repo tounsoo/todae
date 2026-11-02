@@ -19,7 +19,7 @@ import { createPortal } from 'react-dom';
 import { frontModal, isModal, subscribeModals } from '../overlay/modalStack.js';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { isPopoverOpen, reshowHeldInside } from '../overlay/usePopoverSync.js';
-import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables.js';
+import { GUEST_LAYER_ATTRIBUTE } from '../overlay/tabbables.js';
 import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { eventInside } from '../overlay/eventInside.js';
@@ -28,10 +28,10 @@ import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Butt
 import { useStrings } from '../providers/StringsProvider.js';
 import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import type { Toaster, ToastRecord, ToastTone } from './toaster.js';
 import styles from './Toast.module.css';
-import { focusWithoutScroll } from './revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 export { matchesHotkey } from '../hooks/hotkey.js';
 
@@ -369,7 +369,7 @@ function Region<T extends object = object>({
     el.setAttribute('popover', 'manual');
     el.className = styles.host ?? '';
     // Marks it as not the dialog's own content when it moves into one.
-    el.setAttribute(TOAST_HOST_ATTRIBUTE, '');
+    el.setAttribute(GUEST_LAYER_ATTRIBUTE, '');
     home.append(el);
     setHost(el);
     return () => {

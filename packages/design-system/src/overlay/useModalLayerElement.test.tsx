@@ -2,7 +2,7 @@ import { cleanup, render, renderHook, waitFor } from '@testing-library/react';
 import { useLayoutEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack.js';
-import { TOAST_HOST_ATTRIBUTE } from './tabbables.js';
+import { GUEST_LAYER_ATTRIBUTE } from './tabbables.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 
 afterEach(() => {
@@ -56,7 +56,7 @@ describe('useModalLayerElement', () => {
     el.tabIndex = -1;
     el.setAttribute('open', '');
     const host = document.createElement('div');
-    host.setAttribute(TOAST_HOST_ATTRIBUTE, '');
+    host.setAttribute(GUEST_LAYER_ATTRIBUTE, '');
     const toast = document.createElement('button');
     host.append(toast);
     el.append(host);

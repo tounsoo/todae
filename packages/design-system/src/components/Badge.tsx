@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
 import type { AlertTone } from './Alert.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import type { CategoryTone } from './tone.js';
 import styles from './Badge.module.css';
 

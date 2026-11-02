@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from 'react';
 import { DEFAULT_STRINGS } from '../providers/strings.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import { hasGlyph } from './glyphs.js';
 import styles from './Breadcrumbs.module.css';
 

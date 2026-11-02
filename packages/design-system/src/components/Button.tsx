@@ -16,9 +16,9 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useTooltip } from '../hooks/useTooltip.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
-import { composeHandlers, useComposedRefs } from './props.js';
+import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
 
 /**

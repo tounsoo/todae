@@ -18,8 +18,8 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { focusWithoutScroll, revealRing } from './revealRing.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { focusWithoutScroll, revealRing } from '../internal/revealRing.js';
 import {
   clampSize,
   DEFAULT_SIZE,
@@ -36,7 +36,7 @@ import {
   type SplitterOrientation,
   type SplitterPrimary,
 } from './splitterModel.js';
-import { warnOnce } from './warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import styles from './Splitter.module.css';
 
 export type { SplitterOrientation, SplitterPrimary };

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useStrings } from '../providers/StringsProvider.js';
 import type { PopoverCloseReason } from '../hooks/usePopover.js';

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { warnOnce } from '../components/warnOnce.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import type { MentionTrigger } from '../hooks/useMentions.js';
 
 /** Which peek is open, and a way for the consumer's own content to close it. */
