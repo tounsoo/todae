@@ -130,14 +130,30 @@ describe('routesFor', () => {
     assert.deepEqual(routesFor(['apps/docs/app/(en)/button/layout.tsx']), shared);
   });
 
-  test('the shared MDX pages render what mdx-components.tsx registers, so a change there shows on them', () => {
-    const button = readFileSync(path.join(repoRoot, 'apps/docs/app/(en)/button/page.mdx'), 'utf8');
-    const select = readFileSync(path.join(repoRoot, 'apps/docs/app/(en)/field/select/page.mdx'), 'utf8');
-    for (const text of [button, select]) {
-      assert.match(text, /<Example[\s>]/);
-      assert.match(text, /<PropsTable[\s>/]/);
-      assert.match(text, /^```/m);
-      assert.match(text, /\]\(/);
+  test('the shared MDX pages render each docs component mdx-components.tsx registers, so a change there shows on them', () => {
+    const registry = readFileSync(path.join(repoRoot, 'apps/docs/mdx-components.tsx'), 'utf8');
+    const local = new Set();
+    for (const match of registry.matchAll(/^import \{([^}]+)\} from '\.\/components\//gm)) {
+      for (const name of match[1].split(',')) local.add(name.trim());
+    }
+    const body = /const components = \{([^}]+)\}/.exec(registry)[1];
+    const entries = body.split(',').map((item) => item.trim()).filter(Boolean).map((item) => {
+      const [key, value = key] = item.split(':').map((part) => part.trim());
+      return { key, value: value.split('.')[0] };
+    });
+    const remark = readFileSync(path.join(repoRoot, 'apps/docs/lib/remarkPageContents.mjs'), 'utf8');
+    const pages = ['apps/docs/app/(en)/button/page.mdx', 'apps/docs/app/(en)/field/select/page.mdx']
+      .map((file) => readFileSync(path.join(repoRoot, file), 'utf8'));
+    const shows = (key) => {
+      if (key === 'a') return pages.every((text) => /\]\(/.test(text));
+      if (key === 'pre') return pages.every((text) => /^```/m.test(text));
+      if (/^[A-Z]/.test(key)) return pages.every((text) => new RegExp(`<${key}[\\s>/]`).test(text)) || remark.includes(`jsx('${key}'`);
+      return false;
+    };
+    assert.ok(local.size > 0);
+    for (const name of local) {
+      const keys = entries.filter((entry) => entry.value === name).map((entry) => entry.key);
+      assert.ok(keys.some(shows), `${name} (registered as ${keys.join(', ')}) is not shown on /button and /field/select`);
     }
   });
 
@@ -174,6 +190,14 @@ describe('routesFor', () => {
       { file: 'apps/docs/components/Nav.tsx', text: '' },
     ]);
     assert.deepEqual(routesFor(['apps/docs/components/Nav.tsx'], () => true, importers), ['/button', '/ko/button', ...shared.slice(0, 2), ...shared.slice(4)]);
+  });
+
+  test('a changed layout drives the shared set even when a page imports it', () => {
+    const importers = importGraph([
+      { file: 'apps/docs/app/(en)/button/page.mdx', text: "import x from '../layout';" },
+      { file: 'apps/docs/app/(en)/layout.tsx', text: '' },
+    ]);
+    assert.deepEqual(routesFor(['apps/docs/app/(en)/layout.tsx'], () => true, importers), ['/button', '/ko/button', ...shared.slice(0, 2), ...shared.slice(4)]);
   });
 
   test('a docs file the MDX renderers import also drives the shared set', () => {

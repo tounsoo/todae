@@ -249,7 +249,7 @@ export function routesFor(files, exists = () => true, importers = new Map()) {
     }
     const seen = new Set([file]);
     const queue = [file];
-    let shared = !exists(file);
+    let shared = !exists(file) || (SHARED_ENTRY.test(file) && !/\.test\.[cm]?[jt]sx?$/.test(file));
     const found = [];
     while (queue.length) {
       for (const parent of importers.get(queue.shift()) ?? []) {
@@ -879,7 +879,7 @@ async function executeDrive(step, number, dir, flags, routes) {
     } else if (drive.pages.every((page) => page.ok)) {
       result.status = 'passed';
     } else {
-      result.reason = `${drive.pages.filter((page) => !page.ok && !page.blocked).length} of ${drive.pages.length} pages failed`;
+      result.reason = `${drive.pages.filter((page) => !page.ok && !page.blocked).length} of ${drive.pages.length + (drive.unreached?.paths.length ?? 0)} pages failed${drive.unreached ? `, ${drive.unreached.paths.length} not reached` : ''}`;
     }
   } catch (error) {
     if (error instanceof Blocked) {
