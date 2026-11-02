@@ -67,8 +67,8 @@ export const CHANGE_TYPES = [
     id: 'agent',
     label: 'Agent instructions and skills',
     match: anyOf(under('.claude/'), under('.agents/'), oneOf('CLAUDE.md', 'AGENTS.md')),
-    steps: ['verify-self-test'],
-    proof: 'the verify self-test; the rest is review',
+    steps: ['verify-self-test', 'verify-tests'],
+    proof: 'the verify self-test and its tests; the rest is review',
   },
   {
     id: 'ci',
@@ -145,6 +145,11 @@ export const STEPS = {
     id: 'verify-self-test',
     label: 'Verify helper self-test',
     cmd: ['node', SELF, 'self-test'],
+  },
+  'verify-tests': {
+    id: 'verify-tests',
+    label: 'Verify helper tests',
+    cmd: ['node', '--test', '.claude/skills/verify/verify.test.mjs'],
   },
   drive: { id: 'drive', label: 'Drive the touched docs routes in English and Korean', drive: true },
 };
@@ -964,7 +969,8 @@ function selfTest() {
     expect(Array.isArray(step.cmd) && step.cmd.every((part) => typeof part === 'string') && step.cmd.length > 0, `STEPS.${id} has no cmd`);
     const [program, ...rest] = step.cmd;
     if (program === 'node') {
-      expect(existsSync(path.join(root, rest[0])), `STEPS.${id} runs ${rest[0]}, which does not exist`);
+      const script = rest.find((part) => !part.startsWith('-'));
+      expect(script && existsSync(path.join(root, script)), `STEPS.${id} runs ${script}, which does not exist`);
     } else if (program === 'pnpm' && rest[0] === '--filter') {
       const manifest = packages.get(rest[1]);
       expect(manifest, `STEPS.${id} filters on ${rest[1]}, which is not a workspace package`);

@@ -35,7 +35,7 @@ A run ends in one of three verdicts. The exit code carries it.
 | `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and the size check. |
 | `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, and a drive of the touched routes in English and Korean. |
 | `example` | `examples/` | the package build and the Fernway example build. |
-| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test. Review covers the rest. |
+| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test and `verify.test.mjs`. Review covers the rest. |
 | `ci` | `.github/`, root config, `scripts/` | `pnpm check` and the unit tests. The CI run on the pull request head is the rest of the proof, so cite its link. |
 | `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
 | `other` | anything else | `pnpm check` and the unit tests. |

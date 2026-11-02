@@ -86,6 +86,10 @@ describe('planFor', () => {
     assert.deepEqual(planFor([]), { types: [], steps: [] });
   });
 
+  test('an agent change runs the verify self-test and its tests', () => {
+    assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests']);
+  });
+
   test('tokens plan the token checks before unit tests', () => {
     assert.deepEqual(planFor(['packages/design-system/tokens/a.json']).steps, ['tokens-check', 'tokens-api-check', 'unit']);
   });
