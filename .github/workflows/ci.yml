@@ -97,31 +97,6 @@ jobs:
         with:
           path: packages/design-system/dist
           key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
-      # The report from main's last push. A miss only means the summary has nothing to compare with.
-      - name: Restore the main size report
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/cache/restore@v4
-        with:
-          path: size-baseline/size-report.json
-          key: size-report-${{ github.event.pull_request.base.sha }}
-          restore-keys: size-report-
-      - name: Bundle size
-        id: bundle-size
-        if: ${{ !cancelled() }}
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            node scripts/size-check.mjs --summary "$GITHUB_STEP_SUMMARY" --baseline size-baseline/size-report.json
-          else
-            node scripts/size-check.mjs --summary "$GITHUB_STEP_SUMMARY" --json size-baseline/size-report.json
-          fi
-      # Later pull requests compare with this report. A failed save does not fail the job, because a miss only drops the comparison.
-      - name: Share the main size report
-        if: ${{ github.event_name == 'push' && steps.bundle-size.outcome == 'success' }}
-        continue-on-error: true
-        uses: actions/cache/save@v4
-        with:
-          path: size-baseline/size-report.json
-          key: size-report-${{ github.sha }}
       - name: Publish checks
         if: ${{ !cancelled() }}
         run: pnpm publish:check

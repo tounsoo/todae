@@ -4,7 +4,7 @@ These files record dated decisions. Design-system rules stay in [ARCHITECTURE.md
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
-- [0008. Bundle size is reported, not budgeted](0008-bundle-size-is-reported.md). Active, 2026-11-02.
+- [0008. The bundle size check is removed](0008-bundle-size-check-removed.md). Active, 2026-11-02.
 - [0007. Claude verifies with its own skill, and pull requests use a template](0007-claude-verify-and-pr-template.md). Active, 2026-11-02.
 - [0006. Claude threads install pstack at thread start](0006-claude-threads-install-pstack.md). Active, 2026-11-02.
 - [0005. Docs changes are checked with the verify procedure](0005-verify-procedure.md). Active, 2026-11-01.
