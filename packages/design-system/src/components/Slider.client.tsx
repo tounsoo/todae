@@ -5,9 +5,9 @@ import { Slider as ServerSlider, type SliderRootProps } from './Slider.js';
 
 export type { SliderRootProps } from './Slider.js';
 
-/** `aria-invalid` as a boolean, or undefined when it is not set. */
+/** Whether the slider's own `aria-invalid` marks it invalid, such as `true` or `"spelling"`; undefined when it is not set. */
 function ownInvalid(value: SliderRootProps['aria-invalid']): boolean | undefined {
-  return value === undefined ? undefined : value === true || value === 'true';
+  return value === undefined ? undefined : value !== false && value !== 'false';
 }
 
 // The main entry's Root: the server one, with the nearest Fieldset's state and a recheck of its validation scope.
@@ -23,7 +23,7 @@ function Root({
     <ServerSlider.Root
       {...props}
       disabled={disabled}
-      aria-invalid={invalid || undefined}
+      aria-invalid={ariaInvalid ?? (invalid || undefined)}
       aria-describedby={mergeDescribedBy(describedBy, errorId)}
     />
   );

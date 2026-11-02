@@ -135,7 +135,21 @@ describe('Fieldset', () => {
     expect(music).toHaveProperty('disabled', true);
     expect(music.getAttribute('aria-invalid')).toBe('true');
     expect(music.getAttribute('aria-describedby')).toBe('hint');
-    expect(alerts.hasAttribute('aria-invalid')).toBe(false);
+    expect(alerts.getAttribute('aria-invalid')).toBe('false');
+  });
+
+  it("keeps a Slider's own aria-invalid value, in a Fieldset or not", () => {
+    render(
+      <>
+        <Slider.Root aria-label="Alone" aria-invalid="spelling" />
+        <Fieldset.Root invalid>
+          <Fieldset.Legend>Volume</Fieldset.Legend>
+          <Slider.Root aria-label="Inside" aria-invalid="grammar" />
+        </Fieldset.Root>
+      </>,
+    );
+    expect(screen.getByRole('slider', { name: 'Alone' }).getAttribute('aria-invalid')).toBe('spelling');
+    expect(screen.getByRole('slider', { name: 'Inside' }).getAttribute('aria-invalid')).toBe('grammar');
   });
 
   it('lets a control inside an invalid fieldset opt out with invalid={false}', () => {
