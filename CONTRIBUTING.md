@@ -153,6 +153,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 ## Pull requests
 
 - Keep a pull request to one change.
+- Write the body from [`.github/pull_request_template.md`](.github/pull_request_template.md). Its Verification section names the tested commit, the full SHA the checks ran on, and each command with its result.
 - Include the tests, docs (in both languages) and changeset the change needs.
 - CI skips Checks and Docs on a draft pull request. Check, Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
 
