@@ -23,7 +23,7 @@ export const meta = {
       type: '(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>',
       required: false,
       description:
-        'Async options. Stale responses are discarded. An inline function is fine; it is read at call time.',
+        'Async options, shown as the loader returns them. Stale responses are discarded. An inline function is fine; it is read at call time.',
     },
     {
       name: 'loadKey',

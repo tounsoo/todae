@@ -2339,8 +2339,8 @@
       "ko": "동기 옵션. loadOptions가 설정되면 무시됩니다."
     },
     "loadOptions": {
-      "en": "Async options. Stale responses are discarded. An inline function is fine; it is read at call time.",
-      "ko": "비동기 옵션. 오래된 응답은 버립니다. 인라인 함수도 괜찮습니다. 호출 시점에 읽습니다."
+      "en": "Async options, shown as the loader returns them. Stale responses are discarded. An inline function is fine; it is read at call time.",
+      "ko": "비동기 옵션으로, 로더가 반환한 그대로 보여 줍니다. 오래된 응답은 버립니다. 인라인 함수도 괜찮습니다. 호출 시점에 읽습니다."
     },
     "loadKey": {
       "en": "Reloads options when it changes. Use it when loadOptions depends on state outside the query, such as a category.",

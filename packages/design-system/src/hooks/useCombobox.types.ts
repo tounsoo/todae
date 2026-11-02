@@ -1,10 +1,7 @@
 import type { OverlayCloseReason } from '../overlay/useControlledOpen.js';
+import type { ComboboxOption } from './optionList/types.js';
 
-export type ComboboxOption = {
-  value: string;
-  label: string;
-  disabled?: boolean;
-};
+export type { ComboboxOption } from './optionList/types.js';
 
 export type ComboboxItem =
   | { kind: 'option'; option: ComboboxOption; id: string }
