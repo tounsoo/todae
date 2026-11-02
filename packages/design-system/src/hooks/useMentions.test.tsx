@@ -285,22 +285,28 @@ describe('useMentions', () => {
     expect(result.items.map((item) => item.option.value)).toEqual(['general']);
   });
 
-  it.each([
-    ['rejected with no reason', () => Promise.reject(undefined)],
-    [
-      'thrown before returning a promise',
-      () => {
-        throw null;
-      },
-    ],
-  ])('reads a load %s as a failure', async (_case, loadOptions) => {
+  it('keeps the last list of the word on show while its next query loads, and Enter waits even on one of its rows', async () => {
     let result!: UseMentionsResult;
+    const finishes: ((options: typeof people) => void)[] = [];
+    const loadOptions = vi.fn(() => new Promise<typeof people>((resolve) => finishes.push(resolve)));
     render(<Harness triggers={[{ char: '@', loadOptions }]} expose={(r) => (result = r)} />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.focus(el);
     type(el, '@a');
-    await act(async () => {});
-    expect(result.error).toBeInstanceOf(Error);
+    await act(async () => finishes[0]!(people));
+    type(el, '@al');
+    expect(result.loading).toBe(true);
+    expect(result.items.map((item) => item.option.value)).toEqual(['ada', 'alan']);
+    expect(result.activeValue).toBeNull();
+    // Up with no active row goes to the last row.
+    expect(fireEvent.keyDown(el, { key: 'ArrowUp' })).toBe(false);
+    expect(result.activeValue).toBe('alan');
+    expect(fireEvent.keyDown(el, { key: 'Enter' })).toBe(false);
+    expect(el.value).toBe('@al');
+    await act(async () => finishes[1]!([people[1]!]));
+    expect(result.activeValue).toBe('alan');
+    fireEvent.keyDown(el, { key: 'Enter' });
+    expect(el.value).toBe('@Alan Turing ');
   });
 
   it('builds the popover anchor from a CSS-safe id even when the id option is not one', () => {

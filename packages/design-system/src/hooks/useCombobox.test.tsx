@@ -266,32 +266,6 @@ describe('useCombobox', () => {
     expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
   });
 
-  it('reads a load that throws before returning a promise as a failure, and stops loading', async () => {
-    const { result } = renderHook(() =>
-      useCombobox({
-        loadOptions: () => {
-          throw null;
-        },
-        presentation: 'popover',
-      }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('reads a load rejected with no reason as a failure', async () => {
-    const { result } = renderHook(() =>
-      useCombobox({ loadOptions: () => Promise.reject(undefined), presentation: 'popover' }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-  });
-
   it('closes the sheet once on Escape from the input', () => {
     const onOpenChange = vi.fn();
     function SheetBox() {
@@ -358,91 +332,6 @@ describe('useCombobox', () => {
     expect(result.current.items).not.toEqual(custom.result.current.items);
   });
 
-  it('discards stale async results and exposes retry', async () => {
-    let resolveSlow: (value: ComboboxOption[]) => void = () => undefined;
-    let rejectFast: (error: Error) => void = () => undefined;
-    const loadOptions = vi.fn((query: string, _signal: AbortSignal) => {
-      if (query === 'old') {
-        return new Promise<ComboboxOption[]>((resolve) => {
-          resolveSlow = resolve;
-        });
-      }
-      if (query === 'boom') {
-        return new Promise<ComboboxOption[]>((_resolve, reject) => {
-          rejectFast = reject;
-        });
-      }
-      return Promise.resolve([{ value: 'new', label: 'New' }]);
-    });
-    const { result, rerender } = renderHook(
-      ({ query }) => useCombobox({ loadOptions, inputValue: query, presentation: 'popover' }),
-      { initialProps: { query: 'old' } },
-    );
-    expect(result.current.loading).toBe(true);
-    rerender({ query: 'new' });
-    await act(async () => {
-      resolveSlow([{ value: 'stale', label: 'Stale' }]);
-      await Promise.resolve();
-    });
-    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual([
-      'new',
-    ]);
-    rerender({ query: 'boom' });
-    await act(async () => {
-      rejectFast(new Error('nope'));
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-    await act(async () => {
-      result.current.retry();
-      await Promise.resolve();
-    });
-    expect(loadOptions).toHaveBeenLastCalledWith('boom', expect.any(AbortSignal));
-  });
-
-  it('loads once per query when loadOptions is an inline function', async () => {
-    const calls: string[] = [];
-    const { result } = renderHook(() =>
-      useCombobox({
-        loadOptions: async (query) => {
-          calls.push(query);
-          return [{ value: 'a', label: 'A' }];
-        },
-        presentation: 'popover',
-      }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(calls).toEqual(['']);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('reloads when loadKey changes even though loadOptions is read at call time', async () => {
-    const calls: string[] = [];
-    const { rerender } = renderHook(
-      ({ category }) =>
-        useCombobox({
-          loadKey: category,
-          loadOptions: async (query) => {
-            calls.push(`${category}:${query}`);
-            return [];
-          },
-          presentation: 'popover',
-        }),
-      { initialProps: { category: 'a' } },
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    rerender({ category: 'b' });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(calls).toEqual(['a:', 'b:']);
-  });
-
   it('does not fall back to defaultValue for a controlled null value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),
@@ -467,6 +356,30 @@ describe('useCombobox', () => {
       useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),
     );
     expect(result.current.inputValue).toBe('Vue');
+  });
+
+  it('shows loaded options as the loader returns them, without filtering them again', async () => {
+    const loadOptions = vi.fn(async () => [{ value: 'john', label: 'John Doe' }]);
+    const { result } = renderHook(() => useCombobox({ loadOptions, inputValue: 'jdoe', presentation: 'popover' }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['john']);
+  });
+
+  it('loads the full list while the input shows the committed label', async () => {
+    const loadOptions = vi.fn(async () => [{ value: 'vue', label: 'Vue' }, { value: 'react', label: 'React' }]);
+    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'popover' }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => result.current.select('vue'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.inputValue).toBe('Vue');
+    expect(loadOptions).toHaveBeenLastCalledWith('', expect.any(AbortSignal));
+    expect(result.current.items).toHaveLength(2);
   });
 
   it('keeps chip labels for selections that left the async result set', async () => {

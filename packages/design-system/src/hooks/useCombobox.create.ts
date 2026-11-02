@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { failureOf } from './useCombobox.async.js';
+import { failureOf } from './optionList/load.js';
 import type { ComboboxFieldState } from './useCombobox.state.js';
 
 type CreateResult = string | void | Promise<string | void>;

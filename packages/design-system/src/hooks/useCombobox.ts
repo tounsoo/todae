@@ -25,11 +25,10 @@ import type {
 } from '../components/OptionList.js';
 import type { PopoverWire } from '../overlay/popoverWire.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { createAsyncGate } from './useCombobox.async.js';
 import { readsLabel, useComboboxCreate } from './useCombobox.create.js';
 import { isMultiple, useComboboxState } from './useCombobox.state.js';
 import { usePopoverInternal } from '../overlay/popover.js';
-import { defaultFilter, filterOptions } from './useCombobox.filter.js';
+import { useOptionList } from './optionList/useOptionList.js';
 import type {
   ComboboxCloseReason,
   ComboboxItem,
@@ -178,7 +177,6 @@ function labelOf(
 
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
   const selectionMode = isMultiple(options) ? 'multiple' : 'single';
-  const filter = options.filter ?? defaultFilter;
   const strings = useStrings();
   const createLabel = options.createLabel ?? strings.createOption;
   const autoId = useDomId();
@@ -219,55 +217,49 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // Filled only when nothing had focus at open (Safari does not focus a clicked button).
   // Left null, Dialog returns focus to whatever had it when the dialog opened.
   const returnFocusRef = useRef<HTMLElement | null>(null);
-  const [activeValue, setActiveValue] = useState<string | null>(null);
-  const [asyncOptions, setAsyncOptions] = useState<readonly ComboboxOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<unknown | null>(null);
-  const gate = useRef(createAsyncGate());
-  const lastQuery = useRef(inputValue);
-  // The query and loadKey of the last load, once it settles; null while a load is in flight.
-  const [loadedFor, setLoadedFor] = useState<{ query: string; key: string | number | undefined } | null>(null);
-  // Bumped by reset() to load again when the query and loadKey stay the same.
-  const [reloads, setReloads] = useState(0);
   const lastPresentation = useRef(presentation);
-  const hasLoader = Boolean(options.loadOptions);
 
-  const source = hasLoader ? asyncOptions : (options.options ?? EMPTY_OPTIONS);
   // Async result sets replace each other as the query changes; remember labels so selected
   // chips and the committed input text do not fall back to raw values.
   const labels = useRef(new Map<string, string>());
-  for (const option of source) labels.current.set(option.value, option.label);
-  const labelFor = useCallback(
-    (raw: string) => labelOf(source, raw, labels.current),
-    [source],
-  );
+  const syncOptions = options.loadOptions ? EMPTY_OPTIONS : (options.options ?? EMPTY_OPTIONS);
   const committedLabel =
-    selectionMode === 'single' && singleValue ? labelFor(singleValue) : '';
+    selectionMode === 'single' && singleValue ? labelOf(syncOptions, singleValue, labels.current) : '';
+  // Empty while the input shows the committed label, so the list is the full one.
   const filterQuery =
     selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
       ? ''
       : inputValue;
-  const filtered = useMemo(
-    () => filterOptions(source, filterQuery, filter),
-    [filter, filterQuery, source],
-  );
   const trimmed = inputValue.trim();
-  // False while the loaded list is still another query's or another loadKey's.
-  const listIsCurrent =
-    !hasLoader ||
-    (loadedFor !== null && loadedFor.query === inputValue && Object.is(loadedFor.key, options.loadKey));
-  // Whether the query matches a row is known only once its own list is in.
-  const showCreate = Boolean(
-    listIsCurrent &&
+  const list = useOptionList({
+    listboxId: ids.listbox,
+    options: options.options,
+    loadOptions: options.loadOptions,
+    loadKey: options.loadKey,
+    query: filterQuery,
+    filter: options.filter,
+    // Whether the query matches a row is known only once its own list is in.
+    trailing: (shown) =>
       options.allowCreate &&
       trimmed &&
-      !filtered.some((option) => option.label.toLowerCase() === trimmed.toLowerCase()),
+      !shown.some((option) => option.label.toLowerCase() === trimmed.toLowerCase())
+        ? CREATE_VALUE
+        : null,
+    // On open, the selected single value is the active row.
+    preferred: selectionMode === 'single' ? singleValue : null,
+  });
+  const { activeValue, activeId, listIsCurrent, highlight, move, reset: resetList, getOptionProps: optionProps } = list;
+  for (const option of list.options) labels.current.set(option.value, option.label);
+  const labelFor = useCallback(
+    (raw: string) => labelOf(list.options, raw, labels.current),
+    [list.options],
   );
+  const showCreate = list.trailing !== null;
   // The label text, not the function, keys the rows, so an inline createLabel
   // does not rebuild them on every render.
   const createRowLabel = showCreate ? createLabel(trimmed) : null;
   const items = useMemo<ComboboxItem[]>(() => {
-    const rows: ComboboxItem[] = filtered.map((option) => ({
+    const rows: ComboboxItem[] = list.options.map((option) => ({
       kind: 'option',
       option,
       id: optionDomId(ids.listbox, option.value),
@@ -281,22 +273,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       });
     }
     return rows;
-  }, [createRowLabel, filtered, ids.listbox, trimmed]);
-
-  // A pending create row stays reachable: it keeps the highlight, and Enter on it waits.
-  const enabledValues = useMemo(
-    () =>
-      items
-        .filter((item) => item.kind === 'create' || !item.option.disabled)
-        .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
-    [items],
-  );
-  const resolvedActive =
-    activeValue && enabledValues.includes(activeValue)
-      ? activeValue
-      : listIsCurrent ? (enabledValues[0] ?? null) : null;
-  const activeId = resolvedActive ? optionDomId(ids.listbox, resolvedActive) : null;
-  const isEmpty = items.length === 0 && !loading && error == null;
+  }, [createRowLabel, ids.listbox, list.options, trimmed]);
 
   const setInputValue = useCallback((next: string) => apply({ inputValue: next }), [apply]);
 
@@ -308,23 +285,22 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const setOpen = useCallback(
     (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
       const opening = next && !fieldNow().open;
-      if (opening) clearCreateError();
-      // Each time the dialog opens, start from the full list with the top row active.
+      if (opening) {
+        clearCreateError();
+        // Each opening starts from the default row: the selected value, else the top one.
+        highlight(null);
+      }
+      // Each time the dialog opens, start from the full list.
       // Reopened while still closing, focus is still inside: keep the query and the focus target.
       if (opening && isDialog && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
-        setActiveValue(null);
         rememberReturnFocus();
         apply({ inputValue: '', open: true, reason });
         return;
       }
       apply({ open: next, reason });
     },
-    [apply, clearCreateError, isDialog, rememberReturnFocus, fieldNow],
+    [apply, clearCreateError, highlight, isDialog, rememberReturnFocus, fieldNow],
   );
-
-  const highlight = useCallback((next: string | null) => {
-    setActiveValue(next);
-  }, []);
 
   const create = useCallback(() => {
     // A closing dialog stays live, so a second Enter or click would run it again.
@@ -394,11 +370,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     const initial = latest.current;
     cancelCreates();
     clearCreateError();
-    setActiveValue(null);
-    setAsyncOptions([]);
-    setLoadedFor(null);
-    setError(null);
-    setReloads((count) => count + 1);
+    resetList();
     const defaultOpen = initial.defaultOpen ?? false;
     // Not setOpen: reopening a dialog there would clear the text reset puts back.
     if (defaultOpen && isDialog && !fieldNow().open) rememberReturnFocus();
@@ -419,82 +391,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       open: defaultOpen,
       reason: 'reset',
     });
-  }, [apply, cancelCreates, clearCreateError, fieldNow, isDialog, rememberReturnFocus]);
-
-  const runLoad = useCallback(
-    (query: string) => {
-      const load = latest.current.loadOptions;
-      if (!load) return;
-      const key = latest.current.loadKey;
-      lastQuery.current = query;
-      setLoadedFor(null);
-      setLoading(true);
-      setError(null);
-      void gate.current.next(query, load).then((result) => {
-        if (!gate.current.isCurrent(result.gen)) return;
-        if ('aborted' in result && result.aborted) return;
-        setLoading(false);
-        // A failed load still settles this query: no rows, so the create row
-        // can show and no other query's rows stay active.
-        if ('error' in result) setError(result.error);
-        setAsyncOptions('error' in result ? [] : result.result);
-        setLoadedFor({ query, key });
-      });
-    },
-    [],
-  );
-
-  const retry = useCallback(() => {
-    runLoad(lastQuery.current);
-  }, [runLoad]);
-
-  useEffect(() => {
-    if (!hasLoader) return;
-    runLoad(inputValue);
-  }, [hasLoader, inputValue, options.loadKey, reloads, runLoad]);
-
-  useEffect(() => {
-    const current = gate.current;
-    return () => current.abort();
-  }, []);
+  }, [apply, cancelCreates, clearCreateError, fieldNow, isDialog, rememberReturnFocus, resetList]);
 
   useEffect(() => {
     if (lastPresentation.current === presentation) return;
     lastPresentation.current = presentation;
     if (open) setOpen(false, 'blur');
   }, [open, presentation, setOpen]);
-
-  useEffect(() => {
-    if (!open) return;
-    if (selectionMode === 'single' && singleValue && enabledValues.includes(singleValue)) {
-      setActiveValue(singleValue);
-      return;
-    }
-    setActiveValue((current) => {
-      if (current && enabledValues.includes(current)) return current;
-      // Pick a row only from this input's own list, once it is in.
-      if (!listIsCurrent) return null;
-      return enabledValues[0] ?? null;
-    });
-  }, [enabledValues, listIsCurrent, open, selectionMode, singleValue]);
-
-  const move = useCallback(
-    (delta: number | 'home' | 'end') => {
-      if (enabledValues.length === 0) return;
-      if (delta === 'home') {
-        setActiveValue(enabledValues[0] ?? null);
-        return;
-      }
-      if (delta === 'end') {
-        setActiveValue(enabledValues[enabledValues.length - 1] ?? null);
-        return;
-      }
-      const index = resolvedActive ? enabledValues.indexOf(resolvedActive) : -1;
-      const next = Math.min(Math.max(index + delta, 0), enabledValues.length - 1);
-      setActiveValue(enabledValues[next] ?? null);
-    },
-    [enabledValues, resolvedActive],
-  );
 
   // What Enter, or a chip input's commit key, does. False when it has nothing to
   // commit, as on a closed list: the key then belongs to the input and its form.
@@ -503,11 +406,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     // Until this query's list is in, no row is active: hold the key rather than submit.
     if (!listIsCurrent) return true;
     // A pending create row holds the key too: create() waits for its request.
-    if (resolvedActive === CREATE_VALUE) create();
-    else if (resolvedActive) select(resolvedActive);
+    if (activeValue === CREATE_VALUE) create();
+    else if (activeValue) select(activeValue);
     else return false;
     return true;
-  }, [create, listIsCurrent, open, resolvedActive, select]);
+  }, [activeValue, create, listIsCurrent, open, select]);
 
   const onInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -517,12 +420,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         event.preventDefault();
         if (!open) {
           setOpen(true, 'trigger');
-          if (event.key === 'ArrowUp' || event.key === 'End') move('end');
-          else if (event.key === 'Home') move('home');
+          if (event.key === 'ArrowUp' || event.key === 'End') move('last');
+          else if (event.key === 'Home') move('first');
           return;
         }
-        if (event.key === 'Home') move('home');
-        else if (event.key === 'End') move('end');
+        if (event.key === 'Home') move('first');
+        else if (event.key === 'End') move('last');
         else move(event.key === 'ArrowDown' ? 1 : -1);
         return;
       }
@@ -742,7 +645,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           : { 'aria-labelledby': ids.label };
       if (selectionMode === 'multiple') {
         return {
-          id: ids.listbox,
+          ...list.listboxProps,
           selectionMode: 'multiple',
           value: [...multiValue],
           onValueChange: (next: string[]) => {
@@ -751,24 +654,18 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
             const raw = added ?? removed;
             if (raw) select(raw);
           },
-          activeValue: resolvedActive,
-          onActiveValueChange: highlight,
-          tabIndex: -1,
           ...name,
         };
       }
       return {
-        id: ids.listbox,
+        ...list.listboxProps,
         selectionMode: 'single',
         value: singleValue,
         onValueChange: (next: string) => select(next),
-        activeValue: resolvedActive,
-        onActiveValueChange: highlight,
-        tabIndex: -1,
         ...name,
       };
     },
-    [highlight, ids.label, ids.listbox, multiValue, resolvedActive, select, selectionMode, singleValue],
+    [ids.label, list.listboxProps, multiValue, select, selectionMode, singleValue],
   );
 
   const getOptionProps = useCallback(
@@ -777,13 +674,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         // Unavailable while its create is pending, but still reachable, so it keeps the highlight.
         return { value: CREATE_VALUE, children: item.label, 'aria-disabled': isCreatePending(item.value) || undefined };
       }
-      return {
-        value: item.option.value,
-        children: item.option.label,
-        disabled: item.option.disabled,
-      };
+      return optionProps(item.option);
     },
-    [isCreatePending],
+    [isCreatePending, optionProps],
   );
 
   return {
@@ -795,13 +688,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     query: filterQuery.trim(),
     value,
     items,
-    isEmpty,
+    isEmpty: list.isEmpty,
     showCreate,
     activeId,
-    activeValue: resolvedActive,
-    loading,
-    error,
-    retry,
+    activeValue,
+    loading: list.loading,
+    error: list.error,
+    retry: list.retry,
     creating,
     createError,
     ids,
