@@ -228,6 +228,15 @@ export function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
 
 /** Context-level checks that need a modifier's full set of contexts. */
 export function validateEntries(entries: ResolvedEntry[]): void {
+  const roots = new Map<string, string>();
+  for (const entry of entries) {
+    if (entry.kind !== 'modifier' || !entry.extension.alias) continue;
+    const { root } = aliasGroups([entry])[0]!;
+    const first = roots.get(root);
+    if (first) fail(`modifier "${entry.name}" and modifier "${first}" both alias ${root}.*; make one of them a context of the other`);
+    roots.set(root, entry.name);
+  }
+  validateSlotOwners(entries);
   for (const entry of entries) {
     if (entry.kind !== 'modifier') continue;
     const { extension, defaultContext, contexts } = entry;
@@ -244,6 +253,12 @@ export function validateEntries(entries: ResolvedEntry[]): void {
           .filter((t) => t.path.startsWith(`${root}.base.`))
           .map((t) => t.path.split('.')[2]!),
       );
+      const baseFeeds = new Map(
+        entries
+          .flatMap(entryTokens)
+          .filter((t) => t.path.startsWith(`${root}.base.`))
+          .map((t) => [cssVarName(`${root}.${t.path.slice(root.length + 6)}`), t.path] as const),
+      );
       // A context named like a group under the root (`bg`, `radius`) would
       // make `<root>.<name>.*` mean two things.
       const names = new Set([
@@ -253,14 +268,16 @@ export function validateEntries(entries: ResolvedEntry[]): void {
       for (const context of contexts.keys()) {
         if (names.has(context)) fail(`${loc} context "${context}" is named like ${root}.<context>.${context}; pick another name`);
       }
-      // Only a context feeds `<root>.<context>.*` to the consume vars, so no
-      // other set or modifier may declare a token there.
+      // Only a context declares `<root>.<context>.*`. When the root has a
+      // `<root>.base`, as button does, that is where its shared tokens live,
+      // so the modifier owns all of `<root>.*`.
       for (const other of entries) {
         if (other === entry) continue;
-        const misplaced = entryTokens(other).find((t) => contexts.has(t.path.split('.')[1]!) && t.path.startsWith(`${root}.`));
-        if (misplaced) {
-          const context = misplaced.path.split('.')[1]!;
-          fail(`${other.kind} "${other.name}" token "${misplaced.path}" belongs in context "${context}" of ${loc}`);
+        for (const t of entryTokens(other)) {
+          if (!t.path.startsWith(`${root}.`) || t.path.startsWith(`${root}.base.`)) continue;
+          const context = t.path.split('.')[1]!;
+          if (contexts.has(context)) fail(`${other.kind} "${other.name}" token "${t.path}" belongs in context "${context}" of ${loc}`);
+          if (baseFeeds.size > 0) fail(`${other.kind} "${other.name}" token "${t.path}" must be in a context of ${loc} or under ${root}.base`);
         }
       }
       for (const [context, tokens] of contexts) {
@@ -270,6 +287,11 @@ export function validateEntries(entries: ResolvedEntry[]): void {
         if (base) {
           const name = base.path.split('.')[2]!;
           fail(`${loc} context "${context}" token "${base.path}" sets "${name}", which ${root}.base also sets; declare ${name} on ${root}.base or in every context, not both`);
+        }
+        for (const t of tokens) {
+          const feeds = `${root}.${t.path.slice(root.length + context.length + 2)}`;
+          const twin = baseFeeds.get(cssVarName(feeds));
+          if (twin) fail(`${loc} context "${context}" token "${t.path}" and "${twin}" both feed ${cssVarName(feeds)}; rename one of them`);
         }
       }
       validateAliasParity(
@@ -283,6 +305,31 @@ export function validateEntries(entries: ResolvedEntry[]): void {
       if (context === defaultContext) continue;
       const label = extension.layer === 'appearance' ? 'appearance' : loc;
       validateParity(tokenMapOf(defaults), tokenMapOf(tokens), label, [defaultContext, context]);
+    }
+  }
+}
+
+/**
+ * A slot group closes its group for the whole build: a token under it
+ * belongs in the set or modifier that declares the slot, where the slot
+ * checks it.
+ */
+function validateSlotOwners(entries: ResolvedEntry[]): void {
+  for (const owner of entries) {
+    const patterns = Object.keys(owner.extension.slots ?? {});
+    if (patterns.length === 0) continue;
+    for (const other of entries) {
+      if (other === owner) continue;
+      for (const t of entryTokens(other)) {
+        const parts = t.path.split('.');
+        for (let i = 1; i < parts.length; i++) {
+          const group = parts.slice(0, i).join('.');
+          const pattern = patterns.find((p) => matchesGroup(p, group));
+          if (pattern) {
+            fail(`${other.kind} "${other.name}" token "${t.path}" is under "${group}", which ${owner.kind} "${owner.name}" closes with slot group "${pattern}"; declare it there`);
+          }
+        }
+      }
     }
   }
 }

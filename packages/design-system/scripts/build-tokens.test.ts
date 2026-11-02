@@ -962,7 +962,7 @@ describe('resolver-driven build', () => {
       });
     });
     await expect(buildTokensGraph(stray)).rejects.toThrow(
-      /token "button\.bg\.default" declares --todae-button-bg-default, which "button\.primary\.bg\.default" feeds/,
+      /set "contract" token "button\.bg\.default" must be in a context of modifier "buttonVariant" or under button\.base/,
     );
     const geometry = await fixture(async (_resolver, dir) => {
       for (const paint of ['primary', 'secondary', 'ghost']) {
@@ -1008,9 +1008,15 @@ describe('resolver-driven build', () => {
 
   it('rejects a token declared by two resolution entries', async () => {
     const root = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/focus.json' });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/token "focus\.[a-z.-]+" is declared by both set "focus" and set "contract"/);
+    const base = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
-    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.-]+" is declared by both set "button" and set "contract"/);
+    await expect(buildTokensGraph(base)).rejects.toThrow(
+      /set "contract" token "button\.base\.[a-z.-]+" is under "button\.base", which set "button" closes with slot group "button\.base"; declare it there/,
+    );
   });
 
   it('rejects malformed resolver entries', async () => {
@@ -1735,7 +1741,58 @@ describe('company token build', () => {
       });
     });
     await expect(buildCompanyTokens({ resolver: misplaced, base: tokensDir })).rejects.toThrow(
-      /set "brand" token "button\.primary\.bg\.pressed" belongs in context "primary" of modifier "buttonVariant"/,
+      /set "brand" token "button\.primary\.bg\.pressed" is under "button\.primary\.bg", which modifier "buttonVariant" closes/,
+    );
+    const unpacked = await company((resolver) => {
+      resolver.sets.brand.sources.push({
+        button: { ring: { hover: { $type: 'color', $value: { $ref: '#/color/bg/surface/$value' } } } },
+      });
+    });
+    await expect(buildCompanyTokens({ resolver: unpacked, base: tokensDir })).rejects.toThrow(
+      /set "brand" token "button\.ring\.hover" must be in a context of modifier "buttonVariant" or under button\.base/,
+    );
+    const shape = await company((resolver) => {
+      resolver.sets.brand.sources.push({ button: { base: { shape: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } } });
+    });
+    await expect(buildCompanyTokens({ resolver: shape, base: tokensDir })).rejects.toThrow(
+      /set "brand" token "button\.base\.shape" is under "button\.base", which set "button" closes/,
+    );
+    const tone = await company((resolver) => {
+      resolver.modifiers.buttonTone = {
+        default: 'loud',
+        contexts: { loud: [{ button: { loud: { lift: { $type: 'dimension', $value: { value: 1, unit: 'px' } } } } }] },
+        $extensions: { 'dev.todae': { layer: 'contract', attribute: 'data-button-tone', alias: true } },
+      };
+      resolver.resolutionOrder.push({ $ref: '#/modifiers/buttonTone' });
+    });
+    await expect(buildCompanyTokens({ resolver: tone, base: tokensDir })).rejects.toThrow(/both alias button\.\*/);
+    const hyphen = await company(async (resolver, root) => {
+      for (const context of ['primary', 'secondary', 'ghost', 'outline']) {
+        const file = join(root, `button.${context}.json`);
+        const tokens = context === 'outline' ? JSON.parse(await readFile(file, 'utf8')) : { button: { [context]: {} } };
+        tokens.button[context]['padding-x'] = { $type: 'dimension', $value: { value: 2, unit: 'px' } };
+        await writeFile(file, JSON.stringify(tokens));
+        if (context !== 'outline') resolver.modifiers.buttonVariant.contexts[context] = [{ $ref: `./button.${context}.json` }];
+      }
+    });
+    await expect(buildCompanyTokens({ resolver: hyphen, base: tokensDir })).rejects.toThrow(
+      /token "button\.[a-z]+\.padding-x" and "button\.base\.padding\.x" both feed --todae-button-padding-x/,
+    );
+  });
+
+  it('keeps tokens off a consume var on a root with no base', async () => {
+    const resolver = await company((r) => {
+      const color = (ref: string) => ({ $type: 'color', $value: { $ref: ref } });
+      r.modifiers.badgeTone = {
+        default: 'solid',
+        contexts: { solid: [{ badge: { solid: { bg: color('#/color/accent/default/$value') } } }] },
+        $extensions: { 'dev.todae': { layer: 'contract', attribute: 'data-badge-tone', alias: true } },
+      };
+      r.resolutionOrder.push({ $ref: '#/modifiers/badgeTone' });
+      r.sets.brand.sources.push({ badge: { bg: color('#/color/bg/surface/$value') } });
+    });
+    await expect(buildCompanyTokens({ resolver, base: tokensDir })).rejects.toThrow(
+      /token "badge\.bg" declares --todae-badge-bg, which "badge\.solid\.bg" feeds/,
     );
   });
 
