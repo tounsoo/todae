@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heldModals } from '../overlay/modalStack.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useModalLayer } from '../hooks/useModalLayer.js';
+import { usePopover } from '../hooks/usePopover.js';
+import { Popover } from './Popover.js';
 import { Dialog } from './Dialog.js';
 import { matchesHotkey, Toast, type ToastRegionProps } from './Toast.js';
 import { createToaster, type Toaster } from './toaster.js';
@@ -36,6 +38,17 @@ function Region({ toaster, ...props }: { toaster: Toaster } & Partial<ToastRegio
       )}
     </Toast.Region>
   );
+}
+
+/** An open Popover, shown as it mounts; `onEscape` hears when Escape closes it. */
+function OpenPopover({ onEscape }: { onEscape: () => void }) {
+  const popover = usePopover({
+    defaultOpen: true,
+    onOpenChange: (open, reason) => {
+      if (!open && reason === 'escape') onEscape();
+    },
+  });
+  return <Popover.Root {...popover.getPopoverProps()}>Popover</Popover.Root>;
 }
 
 describe('Toast', () => {
@@ -617,12 +630,13 @@ describe('Toast', () => {
     const toaster = createToaster({ duration: Infinity });
     render(<Region toaster={toaster} />);
     act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
     const seen: boolean[] = [];
     const listen = (event: KeyboardEvent) => seen.push(event.defaultPrevented);
+    // After focus came in, which put the toast on the stack.
     document.addEventListener('keydown', listen);
     try {
-      const undo = screen.getByRole('button', { name: 'Undo' });
-      act(() => undo.focus());
       fireEvent.keyDown(undo, { key: 'Escape' });
     } finally {
       document.removeEventListener('keydown', listen);
@@ -680,6 +694,44 @@ describe('Toast', () => {
     fireEvent.keyDown(region, { key: 'Escape' });
     expect(document.activeElement).toBe(before);
     expect(toaster.getSnapshot()[0]?.open).toBe(true);
+  });
+
+  it('takes Escape on the region before a popover opened before focus came in', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const popoverEscape = vi.fn();
+    render(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+        <OpenPopover onEscape={popoverEscape} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const before = screen.getByRole('button', { name: 'Before' });
+    act(() => before.focus());
+    fireEvent.keyDown(before, { key: 'F8' });
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'Escape' });
+    expect(popoverEscape).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(before);
+  });
+
+  it('takes Escape in a toast shown again before a popover opened before focus came in', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const popoverEscape = vi.fn();
+    const { rerender } = render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    rerender(
+      <>
+        <Region toaster={toaster} />
+        <OpenPopover onEscape={popoverEscape} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A again' }));
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
+    fireEvent.keyDown(undo, { key: 'Escape' });
+    expect(popoverEscape).not.toHaveBeenCalled();
+    expect(toaster.getSnapshot()[0]?.open).toBe(false);
   });
 
   it('keeps focus in the dialog the toasts sit in when the last one leaves', () => {

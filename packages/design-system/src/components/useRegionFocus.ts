@@ -34,8 +34,9 @@ type RegionFocusOptions<T extends object> = {
 /**
  * Focus in the toast region: where it came from, to go back to, the hotkey
  * that moves it in, and where it goes when it leaves. `focused` is keyboard
- * focus inside, which spreads the stack and holds the timers. Escape on the
- * region itself leaves it, as a layer on the Escape stack. `whileMoving`
+ * focus inside, which spreads the stack and holds the timers; `inside` is any
+ * focus inside, while which the region and its toasts are layers on the
+ * Escape stack. Escape on the region itself leaves it. `whileMoving`
  * runs a move of the region's host, whose focus events don't count as focus
  * coming in, and `lastInside` is what to focus again if the host left the
  * document with focus inside.
@@ -50,6 +51,10 @@ export function useRegionFocus<T extends object>({
   onBlur,
 }: RegionFocusOptions<T>) {
   const [focused, setFocused] = useState(false);
+  // Focus anywhere inside, from a pointer too. The region's Escape layers
+  // join the stack when focus comes in, so overlays shown before that don't
+  // take Escape from them.
+  const [inside, setInside] = useState(false);
   // Where focus came from into the region, to go back to. Never inside it.
   const origin = useRef<HTMLElement | null>(null);
   const lastInside = useRef<HTMLElement | null>(null);
@@ -76,7 +81,9 @@ export function useRegionFocus<T extends object>({
   const syncFocused = useCallback(() => {
     const section = sectionRef.current;
     const active = section?.ownerDocument.activeElement;
-    setFocused(Boolean(active && section.contains(active) && isKeyboardFocus(active)));
+    const within = Boolean(active && section.contains(active));
+    setInside(within);
+    setFocused(within && isKeyboardFocus(active!));
   }, [sectionRef]);
 
   // Focus leaves the region: back where it came from, else to the modal the
@@ -111,7 +118,7 @@ export function useRegionFocus<T extends object>({
 
   // Escape on the region itself, where the hotkey and a keyboard user whose
   // toast left put focus. A toast takes Escape inside it.
-  useEscapeKey(true, (target) => target !== null && target === sectionRef.current, leave, sectionRef, {
+  useEscapeKey(inside, (target) => target !== null && target === sectionRef.current, leave, sectionRef, {
     closeRequests: false,
     passesKey: handledOrComposing,
   });
@@ -144,6 +151,7 @@ export function useRegionFocus<T extends object>({
     () => {
       origin.current = null;
       lastInside.current = null;
+      setInside(false);
       setFocused(false);
     },
     // Nor while Todae moves or shows the host again, which puts focus back.
@@ -153,6 +161,7 @@ export function useRegionFocus<T extends object>({
   const handlers = {
     onFocus: alongside(onFocus, (event: FocusEvent<HTMLElement>) => {
       focusLeave.onFocus();
+      setInside(true);
       if (event.target instanceof HTMLElement) lastInside.current = event.target;
       if (moving.current) return;
       const from = event.relatedTarget;
@@ -164,5 +173,5 @@ export function useRegionFocus<T extends object>({
     onBlur: alongside(onBlur, focusLeave.onBlur),
   };
 
-  return { focused, syncFocused, whileMoving, lastInside, afterFocusLost, handlers };
+  return { focused, inside, syncFocused, whileMoving, lastInside, afterFocusLost, handlers };
 }

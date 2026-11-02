@@ -85,12 +85,15 @@ function Item<T extends object>({
   toast,
   toaster,
   paused,
+  escapable,
   onFocusLost,
   children,
 }: {
   toast: ToastRecord<T>;
   toaster: Toaster<T>;
   paused: boolean;
+  /** Whether focus is in the region, while which the toast is a layer on the Escape stack. */
+  escapable: boolean;
   onFocusLost: (keyboard: boolean) => void;
   children: ReactNode;
 }) {
@@ -152,11 +155,12 @@ function Item<T extends object>({
   // Escape inside the toast is the toast's, not a dialog's or popover's
   // behind it, also while it leaves. A layer inside it, such as a button's
   // tooltip, takes it first. The back gesture passes it by, as it does a
-  // tooltip.
+  // tooltip. It joins the stack when focus comes into the region, so an
+  // overlay shown before that doesn't take Escape from it.
   const itemRef = useRef<HTMLLIElement>(null);
   const itemRefs = useComposedRefs(itemRef, setNode);
   useEscapeKey(
-    true,
+    escapable,
     (target) => target !== null && itemRef.current?.contains(target) === true,
     () => {
       if (open) dismiss();
@@ -291,6 +295,7 @@ function Region<T extends object = object>({
             toast={toast}
             toaster={toaster}
             paused={expanded || pointer.pressed || pageHidden}
+            escapable={focus.inside}
             onFocusLost={focus.afterFocusLost}
           >
             {children(toast)}
