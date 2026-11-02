@@ -9,7 +9,7 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar.js';
-import { htmlDate, valueBounds } from './Field.shared.js';
+import { htmlDate, valueBounds } from './htmlValue.js';
 import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */

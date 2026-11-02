@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { Suspense, use, useState, type ReactNode } from 'react';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, useField } from '../index.js';
 
 afterEach(cleanup);
@@ -82,5 +83,88 @@ describe('on the server', () => {
       </Field.Root>,
     );
     expect(html.match(/name="tags"/g)).toHaveLength(1);
+  });
+});
+
+describe('the field registry across hydration and remounts', () => {
+  it('hydrates a picker that suspends beside a text input as the server rendered it', async () => {
+    let resolve!: () => void;
+    const promise = new Promise<void>((done) => {
+      resolve = done;
+    });
+    // Suspends on the client only, so the text input registers before the picker hydrates.
+    function Gate({ children }: { children: ReactNode }) {
+      use(promise);
+      return children;
+    }
+    const tree = (gate: boolean) => (
+      <Field.Root name="when">
+        <Field.TextInput value="x" onChange={noop} />
+        <Suspense fallback={null}>
+          {gate ? (
+            <Gate>
+              <Field.ColorPicker value="#3366ff" />
+            </Gate>
+          ) : (
+            <Field.ColorPicker value="#3366ff" />
+          )}
+        </Suspense>
+      </Field.Root>
+    );
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    host.innerHTML = renderToString(tree(false));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const recoverable = vi.fn();
+    await act(async () => {
+      hydrateRoot(host, tree(true), { onRecoverableError: recoverable });
+    });
+    await act(async () => resolve());
+    expect(error).not.toHaveBeenCalled();
+    expect(recoverable).not.toHaveBeenCalled();
+    error.mockRestore();
+    // Only the text input sends the field's name, and only it has the field's id.
+    expect([...host.querySelectorAll('[name]')].map((node) => node.getAttribute('name'))).toEqual(['when']);
+    expect(host.querySelector('button')?.hasAttribute('id')).toBe(false);
+    host.remove();
+  });
+
+  it("keeps the Root's customValidity on the mounted value input when its ref is wrapped by hand", () => {
+    // A product's control that wraps the value input's ref, so React calls it with null instead of its cleanup.
+    function Slider() {
+      const field = useField();
+      const control = field.getControlProps({}, { native: false });
+      const { ref, ...input } = field.getValueInputProps({ type: 'number', value: '3' }, control);
+      return (
+        <>
+          <div role="slider" aria-valuenow={3} tabIndex={0} {...control} />
+          <input
+            {...input}
+            ref={(node) => {
+              ref(node);
+            }}
+          />
+        </>
+      );
+    }
+    function Harness() {
+      const [key, setKey] = useState(0);
+      return (
+        <>
+          <button type="button" onClick={() => setKey((n) => n + 1)}>
+            Remount
+          </button>
+          <Field.Root name="level" customValidity="Bad">
+            <Slider key={key} />
+          </Field.Root>
+        </>
+      );
+    }
+    const view = render(<Harness />);
+    for (let i = 0; i < 2; i += 1) {
+      act(() => screen.getByText('Remount').click());
+      const input = view.container.querySelector<HTMLInputElement>('[data-todae-value-input]')!;
+      expect(input.validationMessage).toBe('Bad');
+    }
   });
 });
