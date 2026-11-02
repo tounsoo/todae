@@ -114,8 +114,8 @@ export const STEPS = {
   lint: { id: 'lint', label: 'ESLint', cmd: ['pnpm', 'lint'] },
   stylelint: { id: 'stylelint', label: 'Stylelint', cmd: ['pnpm', 'stylelint'] },
   check: { id: 'check', label: 'Lint, typecheck, stylelint and the Cursor self-test', cmd: ['pnpm', 'check'] },
-  unit: { id: 'unit', label: 'Unit tests', cmd: ['pnpm', 'test'] },
-  'docs-unit': { id: 'docs-unit', label: 'Docs unit tests', cmd: ['pnpm', '--filter', 'docs', 'test'] },
+  unit: { id: 'unit', label: 'Unit tests', cmd: ['pnpm', 'test'], needs: ['build-ds'] },
+  'docs-unit': { id: 'docs-unit', label: 'Docs unit tests', cmd: ['pnpm', '--filter', 'docs', 'test'], needs: ['build-ds'] },
   schema: {
     id: 'schema',
     label: 'Regenerate the schema and require no diff',
@@ -129,6 +129,7 @@ export const STEPS = {
     id: 'browser',
     label: 'Browser tests',
     cmd: ['pnpm', 'test:browser'],
+    needs: ['build-ds'],
     blockedWhen: /Executable doesn't exist|playwright install|browserType\.launch/i,
     blockedReason:
       'Playwright Chromium is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium.',
@@ -174,7 +175,7 @@ export function planFor(files) {
   const steps = [];
   const emit = (id) => {
     if (steps.includes(id)) return;
-    for (const need of STEPS[id].needs ?? []) if (wanted.includes(need)) emit(need);
+    for (const need of STEPS[id].needs ?? []) emit(need);
     steps.push(id);
   };
   wanted.forEach(emit);

@@ -72,7 +72,7 @@ describe('planFor', () => {
   test('build-ds precedes size and fernway, and steps are de-duplicated across types', () => {
     const { types, steps } = planFor(['examples/fernway/a.ts', 'packages/design-system/src/a.ts', 'apps/docs/lib/a.ts']);
     assert.deepEqual(types, ['component', 'docs', 'example']);
-    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'size', 'docs-unit', 'drive', 'fernway']);
+    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'size', 'docs-unit', 'drive', 'fernway']);
     assert.equal(new Set(steps).size, steps.length);
   });
 
@@ -90,8 +90,12 @@ describe('planFor', () => {
     assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests']);
   });
 
+  test('tests that import the built package run after the build, even when no type asks for the build', () => {
+    assert.deepEqual(planFor(['package.json']).steps, ['check', 'build-ds', 'unit']);
+  });
+
   test('tokens plan the token checks before unit tests', () => {
-    assert.deepEqual(planFor(['packages/design-system/tokens/a.json']).steps, ['tokens-check', 'tokens-api-check', 'unit']);
+    assert.deepEqual(planFor(['packages/design-system/tokens/a.json']).steps, ['tokens-check', 'tokens-api-check', 'build-ds', 'unit']);
   });
 });
 

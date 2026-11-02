@@ -40,6 +40,8 @@ A run ends in one of three verdicts. The exit code carries it.
 | `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
 | `other` | anything else | `pnpm check` and the unit tests. |
 
+The unit, docs and browser tests import the built package, as CI's Build job does, so the plan runs `pnpm build:ds` before them.
+
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
 
 ## LAUNCH
