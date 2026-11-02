@@ -210,6 +210,9 @@ function routeOf(file) {
   return `${prefix}/${segments.join('/')}`.replace(/\/$/, '') || '/';
 }
 
+// Files Next loads for many pages: anything under app/ that is not a page, and the MDX renderers.
+const SHARED_ENTRY = /^apps\/docs\/(?:app\/|mdx-components\.[jt]sx?$)/;
+
 export const SHARED_ROUTES = ['/', '/button', '/field/select', '/playground'];
 
 const SOURCE_FILE = /\.(?:mdx?|[cm]?[jt]sx?|css)$/;
@@ -258,7 +261,7 @@ export function routesFor(files, exists = () => true, importers = new Map()) {
           found.push(parentRoute);
           continue;
         }
-        if (parent.startsWith('apps/docs/app/') && !/\.test\.[cm]?[jt]sx?$/.test(parent)) shared = true;
+        if (SHARED_ENTRY.test(parent) && !/\.test\.[cm]?[jt]sx?$/.test(parent)) shared = true;
         queue.push(parent);
       }
     }
@@ -417,6 +420,7 @@ export async function driveSite(base, paths, headers = {}, options = {}) {
       pages.push(await checkPage(base, value, headers, options));
     } catch (error) {
       if (error instanceof UsageError) throw error;
+      if (pages.some((page) => !page.ok && !page.blocked)) return { pages, blocked: null };
       return { pages, blocked: `could not reach ${new URL(base).origin}: ${describeNetworkError(error)}` };
     }
   }
@@ -454,7 +458,8 @@ function driveLines(result, drive) {
   const caller = drive?.source === 'caller-asserted' ? ' The preview commit is caller-asserted.' : '';
   if (good.length) lines.push(`- Drive: ${good.join(', ')} returned 200 with their h1.${caller}`);
   for (const page of pages.filter((item) => !item.ok)) {
-    lines.push(`- Drive: \`${page.path}\` failed. ${oneLine(page.reason ?? 'unknown')}`);
+    const status = page.blocked ? 'blocked' : 'failed';
+    lines.push(`- Drive: \`${page.path}\` ${status}. ${oneLine(page.blocked ?? page.reason ?? 'unknown')}`);
   }
   if (!pages.length || (result.status !== 'passed' && !pages.some((page) => !page.ok))) {
     lines.push(`- Drive: ${result.status}. ${oneLine(result.reason ?? '')}`.trimEnd());
@@ -789,7 +794,7 @@ async function driveCommand(flags, routes) {
 function driveSummary(drive) {
   return drive.pages.map(
     (page) =>
-      `${page.ok ? 'ok  ' : 'FAIL'} ${page.path} status=${page.status} lang=${page.lang ?? '-'} h1=${JSON.stringify(page.h1)}${page.reason ? ` ${page.reason}` : ''}`,
+      `${page.ok ? 'ok  ' : page.blocked ? 'BLKD' : 'FAIL'} ${page.path} status=${page.status} lang=${page.lang ?? '-'} h1=${JSON.stringify(page.h1)}${page.reason ? ` ${page.reason}` : ''}${page.blocked ? ` ${page.blocked}` : ''}`,
   );
 }
 
@@ -860,7 +865,7 @@ async function executeDrive(step, number, dir, flags, routes) {
     } else if (drive.pages.every((page) => page.ok)) {
       result.status = 'passed';
     } else {
-      result.reason = `${drive.pages.filter((page) => !page.ok).length} of ${drive.pages.length} pages failed`;
+      result.reason = `${drive.pages.filter((page) => !page.ok && !page.blocked).length} of ${drive.pages.length} pages failed`;
     }
   } catch (error) {
     if (error instanceof Blocked) {

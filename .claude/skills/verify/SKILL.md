@@ -78,7 +78,7 @@ Each path is driven in both languages. `/button` also opens `/ko/button`, and `/
 
 A local `--url` must be the server `launch` started from this checkout, on the port in its pid file, and the tree must be clean. Any other local server is `BLOCKED`, because nothing ties what it serves to HEAD.
 
-`run` derives the paths from the diff. A changed `page.mdx` or `page.tsx` under `apps/docs/app/(en)/` or `apps/docs/app/ko/` gives its route. Any other docs file gives the routes of the pages that import it by a relative path, directly or through other files, so a change to a demo drives the pages that show it. When no page imports the file, or a layout or another shared entry such as the Korean catch-all page does, the file can break any page, so it also gives the shared set in `SHARED_ROUTES`: `/`, `/button`, `/field/select` and `/playground`. A deleted file gives the shared set too.
+`run` derives the paths from the diff. A changed `page.mdx` or `page.tsx` under `apps/docs/app/(en)/` or `apps/docs/app/ko/` gives its route. Any other docs file gives the routes of the pages that import it by a relative path, directly or through other files, so a change to a demo drives the pages that show it. When no page imports the file, or a layout, `mdx-components.tsx` or another shared entry such as the Korean catch-all page does, the file can break any page, so it also gives the shared set in `SHARED_ROUTES`: `/`, `/button`, `/field/select` and `/playground`. A deleted file gives the shared set too.
 
 ### A Vercel preview
 

@@ -165,6 +165,15 @@ describe('routesFor', () => {
     assert.deepEqual(routesFor(['apps/docs/components/Nav.tsx'], () => true, importers), ['/button', '/ko/button', ...shared.slice(0, 2), ...shared.slice(4)]);
   });
 
+  test('a docs file the MDX renderers import also drives the shared set', () => {
+    const importers = importGraph([
+      { file: 'apps/docs/mdx-components.tsx', text: "import { LocalizedLink } from './components/LocalizedLink';" },
+      { file: 'apps/docs/app/(en)/link/page.mdx', text: "import { LocalizedLink } from '../../../components/LocalizedLink';" },
+      { file: 'apps/docs/components/LocalizedLink.tsx', text: '' },
+    ]);
+    assert.deepEqual(routesFor(['apps/docs/components/LocalizedLink.tsx'], () => true, importers), ['/link', '/ko/link', ...shared]);
+  });
+
   test('in this repo, the badge demo drives only the badge pages', async () => {
     const { execFileSync: run } = await import('node:child_process');
     const { readFileSync } = await import('node:fs');
@@ -506,6 +515,19 @@ describe('sameSiteFetch', () => {
     const driven = await driveSite(base.origin, ['/'], {}, { remote: true });
     assert.equal(driven.blocked, null);
     assert.deepEqual(driven.pages.map((item) => [item.path, item.ok]), [['/', false], ['/ko', false]]);
+    const body = renderBody({ verdict: 'FAIL', head: SHA, base: BASE, results: [{ id: 'drive', status: 'failed' }], drive: driven }, SHA);
+    assert.match(body, /- Drive: `\/` failed\. returned 500/);
+    assert.match(body, /- Drive: `\/ko` blocked\. the preview answered 403/);
+  });
+
+  test('a page that fails is not hidden by a later network error', async () => {
+    const base = await start((request, response) => {
+      if (request.url.startsWith('/ko')) return response.socket.destroy();
+      response.writeHead(500).end('boom');
+    });
+    const driven = await driveSite(base.origin, ['/'], {}, { remote: true });
+    assert.equal(driven.blocked, null);
+    assert.equal(driven.pages[0].ok, false);
   });
 
   test('driveSite drives English then Korean and reports an unreachable server as blocked', async () => {
