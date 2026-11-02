@@ -159,6 +159,7 @@ type MenuContextValue = {
   /** The context request the menu is open for, dropped when it closes. */
   context: ContextOpen | null;
   openAt: (context: ContextOpen) => void;
+  setContext: (context: ContextOpen | null) => void;
   /** Where focus goes when the menu closes or Tab leaves it. */
   restoreTarget: () => HTMLElement | SVGElement | null;
   /** The anchor name of the box a context request put the menu at. */
@@ -291,12 +292,13 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       initialFocusRef,
       context,
       openAt,
+      setContext,
       restoreTarget,
       boxName,
       popover,
       roving,
     }),
-    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, restoreTarget, boxName, popover, roving],
+    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, setContext, restoreTarget, boxName, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -319,6 +321,9 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
     ref: refs,
     onClick: composeHandlers(onClick, () => {
       openEnd.current = null;
+      // A click that opens drops a context request the owner turned down,
+      // even when the popover has no one to ask.
+      if (!ctx.open) ctx.setContext(null);
     }),
     // A key's request for an end lasts while the trigger has focus, so one
     // the owner refused does not carry over to a later open from code. This

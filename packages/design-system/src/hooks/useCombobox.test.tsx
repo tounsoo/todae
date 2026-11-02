@@ -2364,4 +2364,66 @@ describe('useCombobox held change reports', () => {
     expect(commits).toBe(before);
     expect(input.getAttribute('aria-expanded')).toBe('true');
   });
+
+  it.each([false, true])('lets an owner keep the list open from onValueChange (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setOpen(true, 'trigger');
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(log).not.toContain('open:false:select');
+  });
+
+  it.each([false, true])('lets an owner keep its query from onValueChange in multiple mode (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string[]>([]);
+      const [input, setInput] = useState('re');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        selectionMode: 'multiple',
+        value,
+        inputValue: input,
+        defaultOpen: true,
+        onValueChange: (next: string[]) => {
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setInputValue('re');
+        },
+        onInputValueChange: setInput,
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('re');
+  });
 });

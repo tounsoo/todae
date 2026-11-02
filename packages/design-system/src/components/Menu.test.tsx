@@ -855,6 +855,28 @@ describe('Menu', () => {
     expect(commits).toBe(before);
   });
 
+  it('with a read-only open, a trigger click opens under the trigger after a refused context request', async () => {
+    function Owned() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open}>
+          <Menu.Trigger onClick={() => setOpen((was) => !was)}>Open</Menu.Trigger>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>One</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(<Owned />);
+    fireEvent.contextMenu(screen.getByTestId('region'), { clientX: 40, clientY: 50, button: 2 });
+    await raf();
+    // A click with no pointerdown or keydown before it, as assistive tech sends.
+    fireEvent.click(screen.getByText('Open'));
+    await raf();
+    expect(screen.getByTestId('region').hasAttribute('data-open')).toBe(false);
+  });
+
   it('a radio group with a read-only value does not render on a click', async () => {
     let commits = 0;
     render(

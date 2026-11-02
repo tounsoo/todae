@@ -32,16 +32,25 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
 export function useComboboxState(options: UseComboboxOptions, latest: RefObject<UseComboboxOptions>) {
   const multiple = isMultiple(options);
   // While `apply` writes, change callbacks wait here, so every change is stored
-  // before any callback runs. A held callback whose field a later write, such
-  // as the owner's own from an earlier callback, has changed again is skipped:
-  // the owner hears about that write instead. A render alone, such as one the
-  // owner forces from a callback, is not a write and skips nothing.
+  // before any callback runs. A held callback still runs only when no later
+  // report has replaced it and the field's last request, such as the owner's
+  // own from an earlier callback, still asks for its value. A render alone,
+  // such as one the owner forces from a callback, changes neither.
   const held = useRef<(() => void)[] | null>(null);
-  const writes = useRef<Record<keyof ComboboxFieldState, number>>({ open: 0, inputValue: 0, single: 0, multi: 0 });
-  const report = useCallback((field: keyof ComboboxFieldState, call: () => void) => {
-    const count = ++writes.current[field];
-    if (held.current) held.current.push(() => writes.current[field] === count && call());
-    else call();
+  const reports = useRef<Record<keyof ComboboxFieldState, number>>({ open: 0, inputValue: 0, single: 0, multi: 0 });
+  const requested = useRef<Partial<ComboboxFieldState>>({});
+  const report = useCallback(<F extends keyof ComboboxFieldState>(field: F, next: ComboboxFieldState[F], call: () => void) => {
+    const count = ++reports.current[field];
+    if (!held.current) return call();
+    held.current.push(() => {
+      if (reports.current[field] !== count) return;
+      const asked = requested.current[field];
+      const same =
+        field === 'multi'
+          ? sameList(asked as readonly string[], next as readonly string[])
+          : Object.is(asked, next);
+      if (same) call();
+    });
   }, []);
   const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
     options.open,
@@ -50,6 +59,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       ((next, reason) =>
         report(
           'open',
+          next,
           () => latest.current.onOpenChange?.(next, reason),
         )),
   );
@@ -63,6 +73,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       ((next) =>
         report(
           'inputValue',
+          next,
           () => latest.current.onInputValueChange?.(next),
         )),
   );
@@ -73,6 +84,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       ((next) =>
         report(
           'single',
+          next,
           () => {
             const current = latest.current;
             if (!isMultiple(current)) current.onValueChange?.(next);
@@ -86,6 +98,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       ((next) =>
         report(
           'multi',
+          next,
           () => {
             const current = latest.current;
             if (isMultiple(current)) current.onValueChange?.([...next]);
@@ -110,13 +123,22 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       held.current = calls;
       try {
         const { value, inputValue: text } = changes;
+        const asked = requested.current;
         if (typeof value === 'object' && value !== null) {
+          asked.multi = value;
           if (!sameList(value, multiNow())) setMulti([...value]);
         } else if (value !== undefined) {
+          asked.single = value;
           setSingle(value);
         }
-        if (text !== undefined) setInput(text);
-        if (changes.open !== undefined) setOpen(changes.open, changes.reason);
+        if (text !== undefined) {
+          asked.inputValue = text;
+          setInput(text);
+        }
+        if (changes.open !== undefined) {
+          asked.open = changes.open;
+          setOpen(changes.open, changes.reason);
+        }
       } finally {
         held.current = null;
       }
