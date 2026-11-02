@@ -67,7 +67,7 @@ test('an outside tap closes the mention peek', async ({ page }) => {
       const hit = document.elementFromPoint(point.x, point.y);
       if (!hit) continue;
       if (field && (hit === field || field.contains(hit))) continue;
-      if (hit.closest('[popover]')) continue;
+      if (hit.closest('[popover], header, dialog, a, button')) continue;
       return point;
     }
     throw new Error('no blank point');
