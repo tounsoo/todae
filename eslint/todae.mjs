@@ -370,7 +370,8 @@ const layerImports = {
   },
   create(context) {
     const options = context.options[0];
-    const src = path.resolve(context.cwd, options.src);
+    // Relative to the repository root, whatever directory ESLint runs from.
+    const src = path.resolve(import.meta.dirname, '..', options.src);
     const filename = context.filename;
     const self = layerOf('.', filename, src);
     const allow = options.allow && new Set([...options.allow, self]);
