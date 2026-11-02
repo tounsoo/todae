@@ -1091,6 +1091,11 @@ table {
   gap: 1.5rem;
 }
 
+/* Chrome 156 draws the first preset ring one pixel past the sheet's ring room. */
+.pg-sheet .pg-sheet-body {
+  padding-inline: calc(var(--_ring-room) + 1px);
+}
+
 /* Presets scroll sideways in one row instead of taking two. */
 .pg-sheet .preset-grid {
   grid-template-columns: none;
