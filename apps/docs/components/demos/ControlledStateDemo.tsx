@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, RadioGroup, Stack, Text, useControlledValue } from '@tounsoo/todae';
+import { Button, RadioGroup, Stack, Text, useControlledState } from '@tounsoo/todae';
 import { useState } from 'react';
 
 function Filter({
@@ -14,7 +14,7 @@ function Filter({
   defaultValue?: string;
   onValueChange?: (next: string) => void;
 }) {
-  const [current, change] = useControlledValue(value, defaultValue, onValueChange);
+  const [current, change] = useControlledState(value, defaultValue, onValueChange);
   return (
     <Stack.Root gap="condensed" align="start">
       <RadioGroup.Root aria-label={label} value={current} onValueChange={change}>

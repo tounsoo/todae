@@ -25,7 +25,7 @@ import { useAnnouncer } from './useAnnouncer.js';
 import { createAsyncGate } from './useCombobox.async.js';
 import { defaultFilter, filterOptions } from './useCombobox.filter.js';
 import type { ComboboxOption } from './useCombobox.types.js';
-import { useControllableState } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 import {
   findQuery,
   sameTokens,
@@ -175,7 +175,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const latest = useRef(options);
   latest.current = options;
 
-  const [draft, setDraft] = useControllableState(options.value, options.defaultValue ?? EMPTY_DRAFT);
+  const [draft, setDraft] = useControlledState(options.value, options.defaultValue ?? EMPTY_DRAFT);
   const value = draft.text;
   const given = draft.tokens;
   // The tokens that still hold their text; the others are left out.

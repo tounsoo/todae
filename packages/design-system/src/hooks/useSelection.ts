@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
 import { composeHandlers } from '../components/props.js';
-import { useControllableState } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 
 export type SelectionState = 'none' | 'some' | 'all';
 
@@ -68,7 +68,7 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
   // Writes build on each other until a render, so two calls both count, and a
   // change a controlled owner turned down is dropped by the render that follows.
-  const [value, write, latest] = useControllableState<readonly K[]>(
+  const [value, write, latest] = useControlledState<readonly K[]>(
     valueProp,
     defaultValue ?? NO_KEYS,
     onValueChange && ((next) => onValueChange([...next])),

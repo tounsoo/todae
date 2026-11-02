@@ -8,7 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { useDomId } from './domId.js';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
@@ -104,7 +104,7 @@ function RadioGroupRoot({
     customValidity,
   );
   useRevalidate();
-  const [value, select] = useControllableState<string | null>(
+  const [value, select] = useControlledState<string | null>(
     valueProp,
     defaultValue ?? null,
     onValueChange &&

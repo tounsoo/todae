@@ -22,7 +22,7 @@ import {
 } from 'react';
 import { isTextEntry } from '../hooks/hotkey.js';
 import { canFocusNow } from '../overlay/tabbables.js';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
@@ -181,7 +181,7 @@ type RadioContextValue = { value: string | null; select: (value: string) => void
 const RadioContext = /* @__PURE__ */ createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
-  const [open, setOpenValue] = useControllableState(openProp, defaultOpen ?? false, onOpenChange);
+  const [open, setOpenValue] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
   // Set while the input that asked for a close is still being handled, so
   // the focus move that same input makes does not ask a second time.
   const closeAsked = useRef(false);
@@ -713,7 +713,7 @@ function CheckboxItem({
 }: MenuCheckboxItemProps) {
   const ctx = useMenu('CheckboxItem');
   const { check } = useGlyphs();
-  const [checked, setChecked, latestChecked] = useControllableState(checkedProp, defaultChecked ?? false, onCheckedChange);
+  const [checked, setChecked, latestChecked] = useControlledState(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
     ctx,
     'menuitemcheckbox',
@@ -744,7 +744,7 @@ function Group({ children, className, ...props }: MenuGroupProps) {
 
 function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }: MenuRadioGroupProps) {
   // Only items select, so a change is never back to null.
-  const [value, select] = useControllableState<string | null>(
+  const [value, select] = useControlledState<string | null>(
     valueProp,
     defaultValue ?? null,
     onValueChange &&

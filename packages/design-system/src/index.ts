@@ -419,7 +419,7 @@ export {
   type UseComboboxResult,
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox.js';
-export { useControlledState, useControlledValue } from './hooks/useControlledState.js';
+export { useControlledState } from './hooks/useControlledState.js';
 export {
   useMentions,
   type MentionDraft,

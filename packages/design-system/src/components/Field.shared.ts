@@ -15,7 +15,7 @@ import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from
 import type { ControlBrand, ValueInputOptions } from './valueInput.js';
 import { useDomId } from './domId.js';
 import { warnOnce } from './warnOnce.js';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import {
   usePopover,
   type PopoverCloseReason,
@@ -190,7 +190,7 @@ export function useFieldPicker<Reason extends string>({
   const describedBy = mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined);
   // Another control in the field takes its id and description.
   const control = pickerControl(beside, field, { ...props, 'aria-describedby': describedBy }, label);
-  const [open, setOpen] = useControllableState<boolean, [Reason | PopoverCloseReason | 'disabled']>(
+  const [open, setOpen] = useControlledState<boolean, [Reason | PopoverCloseReason | 'disabled']>(
     openProp,
     defaultOpen ?? false,
     onOpenChange,

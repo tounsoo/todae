@@ -14,7 +14,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
@@ -118,7 +118,7 @@ function Root({
 }: TreeRootProps) {
   // Without any of these the tree has no selection: items only open and close.
   const selectable = valueProp !== undefined || defaultValue !== undefined || onValueChange !== undefined;
-  const [selected, setSelected] = useControllableState<string | null>(
+  const [selected, setSelected] = useControlledState<string | null>(
     valueProp,
     defaultValue ?? null,
     onValueChange &&
@@ -126,7 +126,7 @@ function Root({
         if (next !== null) onValueChange(next);
       }),
   );
-  const [expanded, setExpandedList] = useControllableState(expandedProp, defaultExpanded ?? EMPTY, onExpandedChange);
+  const [expanded, setExpandedList] = useControlledState(expandedProp, defaultExpanded ?? EMPTY, onExpandedChange);
   const setExpanded = useCallback(
     (value: string, open: boolean) => {
       if (expanded.includes(value) === open) return;

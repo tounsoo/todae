@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { warnOnce } from './warnOnce.js';
 import { SelectionControl } from './SelectionControl.js';
 
@@ -36,7 +36,7 @@ function Root({
   if (checkedProp !== undefined && defaultChecked !== undefined) {
     warnOnce('Checkbox.Root:checked', 'Checkbox.Root cannot take both checked and defaultChecked', 'error');
   }
-  const [checked, setChecked] = useControllableState(checkedProp, defaultChecked ?? false, onCheckedChange);
+  const [checked, setChecked] = useControlledState(checkedProp, defaultChecked ?? false, onCheckedChange);
   return (
     <SelectionControl
       kind="checkbox"

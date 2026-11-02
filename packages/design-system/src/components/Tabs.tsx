@@ -11,7 +11,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
@@ -100,7 +100,7 @@ function Root({
   ...props
 }: TabsRootProps) {
   const baseId = useDomId();
-  const [value, select] = useControllableState(valueProp, defaultValue ?? '', onValueChange);
+  const [value, select] = useControlledState(valueProp, defaultValue ?? '', onValueChange);
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.

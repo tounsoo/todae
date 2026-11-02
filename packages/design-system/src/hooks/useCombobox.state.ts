@@ -1,7 +1,7 @@
 import { useCallback, useRef, type RefObject } from 'react';
 import type { UseComboboxMultipleOptions, UseComboboxOptions } from './useCombobox.js';
 import type { ComboboxCloseReason } from './useCombobox.types.js';
-import { useControllableState } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 
 /** The field as the last change left it. Only the parts the hook owns can be ahead of the last render. */
 export type ComboboxFieldState = {
@@ -52,7 +52,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       if (same) call();
     });
   }, []);
-  const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
+  const [open, setOpen, openNow] = useControlledState<boolean, [reason: ComboboxCloseReason]>(
     options.open,
     options.defaultOpen ?? false,
     options.onOpenChange &&
@@ -66,7 +66,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   const initialSingle = multiple ? null : options.value !== undefined ? options.value : (options.defaultValue ?? null);
   // Only a label we actually know: never seed the input (and the first async query) with a raw id.
   const selectedLabel = options.options?.find((option) => option.value === initialSingle)?.label ?? '';
-  const [inputValue, setInput, inputNow] = useControllableState(
+  const [inputValue, setInput, inputNow] = useControlledState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
     options.onInputValueChange &&
@@ -77,7 +77,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
           () => latest.current.onInputValueChange?.(next),
         )),
   );
-  const [single, setSingle, singleNow] = useControllableState<string | null>(
+  const [single, setSingle, singleNow] = useControlledState<string | null>(
     multiple ? undefined : options.value,
     multiple ? null : (options.defaultValue ?? null),
     options.onValueChange &&
@@ -91,7 +91,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
           },
         )),
   );
-  const [multi, setMulti, multiNow] = useControllableState<readonly string[]>(
+  const [multi, setMulti, multiNow] = useControlledState<readonly string[]>(
     multiple ? options.value : undefined,
     multiple ? (options.defaultValue ?? []) : [],
     options.onValueChange &&

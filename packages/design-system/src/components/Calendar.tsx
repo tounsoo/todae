@@ -15,7 +15,7 @@ import {
   type RefObject,
 } from 'react';
 import { localeFirstDay, type DayOfWeek } from './weekInfo.js';
-import { useControllableState } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -243,7 +243,7 @@ function Root(rootProps: CalendarRootProps) {
   const min = useMemo(() => (minText === undefined ? undefined : Temporal.PlainDate.from(minText)), [minText]);
   const max = useMemo(() => (maxText === undefined ? undefined : Temporal.PlainDate.from(maxText)), [maxText]);
   const { onValueChange, ...ends } = useRangeProps(rootProps);
-  const [value, setValue] = useControllableState<DateRange | null>(ends.value, ends.defaultValue);
+  const [value, setValue] = useControlledState<DateRange | null>(ends.value, ends.defaultValue);
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
   const today = useMemo(() => (todayText === null ? null : Temporal.PlainDate.from(todayText)), [todayText]);
   const locale = useMemo(

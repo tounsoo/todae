@@ -11,7 +11,7 @@ import {
 import { useDomId } from '../components/domId.js';
 import { useStableComposedRef } from '../components/props.js';
 import { isReachable } from '../overlay/tabbables.js';
-import { useControllableState } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
 
@@ -174,7 +174,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const scope = useDomId();
   // A fallback tab stop that takes focus is reported too, so a controlled
   // owner can pin it before a DOM change moves the fallback elsewhere.
-  const [active, commitActive] = useControllableState<string | null>(
+  const [active, commitActive] = useControlledState<string | null>(
     activeProp,
     defaultActiveValue ?? null,
     onActiveValueChange &&
