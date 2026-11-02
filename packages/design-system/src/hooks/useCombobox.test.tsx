@@ -2426,4 +2426,53 @@ describe('useCombobox held change reports', () => {
     act(() => result.current.select('react'));
     expect(result.current.inputValue).toBe('re');
   });
+
+  it('keeps a close an owner asks for after it renders at once from the text report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    function Owner() {
+      const [open, setOpen] = useState(false);
+      const [query, setQuery] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: query,
+        onInputValueChange: (text) => {
+          flushSync(() => setQuery(text));
+          box.current!.setOpen(false, 'escape');
+        },
+        onOpenChange: (next) => setOpen(next),
+      });
+      box.current = combobox;
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Owner />);
+    // Typing reports the text and asks to open.
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(box.current!.inputValue).toBe('r');
+    expect(box.current!.open).toBe(false);
+  });
+
+  it('keeps a clear an owner asks for after it renders at once from the value report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [query, setQuery] = useState('');
+      const [, setTick] = useState(0);
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        inputValue: query,
+        onInputValueChange: setQuery,
+        onValueChange: () => {
+          flushSync(() => setTick((count) => count + 1));
+          box.current!.clear();
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('vue'));
+    expect(result.current.inputValue).toBe('');
+    expect(result.current.value).toBe(null);
+  });
 });
