@@ -78,4 +78,16 @@ export function composeHandlers<E extends SyntheticEvent>(
   };
 }
 
+/**
+ * Runs the consumer's handler, then the part's own bookkeeping, always. Unlike
+ * {@link composeHandlers}, `preventDefault()` doesn't skip it: for tracking
+ * state, such as hover or focus, that has no default to prevent.
+ */
+export function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E) => void): (event: E) => void {
+  return (event) => {
+    theirs?.(event);
+    ours(event);
+  };
+}
+
 export { cx } from './cx.js';
