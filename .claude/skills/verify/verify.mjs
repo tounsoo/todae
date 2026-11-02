@@ -212,14 +212,74 @@ function routeOf(file) {
 
 export const SHARED_ROUTES = ['/', '/button', '/field/select', '/playground'];
 
-export function routesFor(files, exists = () => true) {
+const SOURCE_FILE = /\.(?:mdx?|[cm]?[jt]sx?|css)$/;
+const IMPORT_SPEC = /(?:\bfrom|\bimport)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g;
+const RESOLVE_SUFFIXES = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.mdx', '.md', '.css', '/index.ts', '/index.tsx', '/index.js', '/index.jsx'];
+
+// Maps each docs file to the docs files that import it by a relative path.
+export function importGraph(sources) {
+  const known = new Set(sources.map((source) => source.file));
+  const importers = new Map();
+  for (const { file, text } of sources) {
+    for (const match of String(text).matchAll(IMPORT_SPEC)) {
+      const joined = path.posix.normalize(path.posix.join(path.posix.dirname(file), match[1]));
+      const target = RESOLVE_SUFFIXES.map((suffix) => joined + suffix).find((candidate) => known.has(candidate));
+      if (!target || target === file) continue;
+      if (!importers.has(target)) importers.set(target, []);
+      if (!importers.get(target).includes(file)) importers.get(target).push(file);
+    }
+  }
+  return importers;
+}
+
+// A page file gives its route. Any other docs file gives the routes of the pages that import it,
+// directly or through other files. When nothing maps it to a page, or a layout or another
+// shared entry imports it, it can break any page, so it also gives the shared set.
+export function routesFor(files, exists = () => true, importers = new Map()) {
   const routes = [];
   for (const file of files) {
     if (!file.startsWith('apps/docs/')) continue;
     const route = exists(file) && routeOf(file);
-    routes.push(...(route ? [route] : SHARED_ROUTES));
+    if (route) {
+      routes.push(route);
+      continue;
+    }
+    const seen = new Set([file]);
+    const queue = [file];
+    let shared = !exists(file);
+    const found = [];
+    while (queue.length) {
+      for (const parent of importers.get(queue.shift()) ?? []) {
+        if (seen.has(parent)) continue;
+        seen.add(parent);
+        const parentRoute = routeOf(parent);
+        // A page is where the change shows. What imports a page, such as the page registry, is not.
+        if (parentRoute) {
+          found.push(parentRoute);
+          continue;
+        }
+        if (parent.startsWith('apps/docs/app/') && !/\.test\.[cm]?[jt]sx?$/.test(parent)) shared = true;
+        queue.push(parent);
+      }
+    }
+    routes.push(...found);
+    if (shared || found.length === 0) routes.push(...SHARED_ROUTES);
   }
   return pairLocales(routes);
+}
+
+async function docsImporters() {
+  const listing = await gitTry(['-c', 'core.quotePath=false', 'ls-files', '--', 'apps/docs']);
+  const sources = [];
+  for (const file of (listing ?? '').split('\n')) {
+    if (!SOURCE_FILE.test(file)) continue;
+    try {
+      sources.push({ file, text: readFileSync(path.join(root, file), 'utf8') });
+    } catch {
+      // A file that can't be read imports nothing.
+    }
+  }
+  return importGraph(sources);
 }
 
 export function verdictOf(results) {
@@ -360,8 +420,10 @@ export async function driveSite(base, paths, headers = {}, options = {}) {
       return { pages, blocked: `could not reach ${new URL(base).origin}: ${describeNetworkError(error)}` };
     }
   }
+  // A page that answered and failed proves a failure, so a wall on another page doesn't hide it.
+  const failed = pages.some((page) => !page.ok && !page.blocked);
   const wall = pages.find((page) => page.blocked);
-  return { pages, blocked: wall ? `${wall.path}: ${wall.blocked}` : null };
+  return { pages, blocked: wall && !failed ? `${wall.path}: ${wall.blocked}` : null };
 }
 
 const oneLine = (value) => String(value).replace(/\s+/g, ' ').trim();
@@ -370,7 +432,7 @@ export function renderBody(report, head) {
   if (report.head !== head) {
     throw new Error(`the report is for ${report.head}, but HEAD is ${head}. Run verify again.`);
   }
-  const lines = [`Tested commit: \`${report.head}\``, `Base: \`${report.base}\``, `Verdict: ${report.verdict}`, ''];
+  const lines = [`Tested commit: \`${report.head}\``, report.base ? `Base: \`${report.base}\`` : 'Base: not resolved', `Verdict: ${report.verdict}`, ''];
   for (const result of report.results) {
     if (result.id === 'drive') {
       lines.push(...driveLines(result, report.drive));
@@ -443,7 +505,8 @@ async function resolveBase(ref) {
     if (ref.startsWith('-')) throw new UsageError(`--base ${ref} is not a ref`);
     const sha = await gitTry(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
     if (!sha) throw new Blocked(`base ${ref} does not resolve to a commit; fetch it first`);
-    return sha;
+    // The plan diffs base...HEAD, which starts at their merge base, so that is the real base.
+    return (await gitTry(['merge-base', sha, 'HEAD'])) ?? sha;
   }
   if (!(await gitTry(['rev-parse', '--verify', '--quiet', 'origin/main^{commit}']))) {
     throw new Blocked('origin/main is missing: fetch origin main first');
@@ -460,7 +523,8 @@ async function computePlan(ref) {
   const listing = await git(['-c', 'core.quotePath=false', 'diff', '--name-only', '--no-renames', `${base}...HEAD`]);
   const files = listing.split('\n').filter(Boolean);
   const { types, steps } = planFor(files);
-  const routes = routesFor(files, (file) => existsSync(path.join(root, file)));
+  const docsChanged = files.some((file) => file.startsWith('apps/docs/'));
+  const routes = routesFor(files, (file) => existsSync(path.join(root, file)), docsChanged ? await docsImporters() : new Map());
   return { base, head, files, types, steps, routes };
 }
 
@@ -830,7 +894,7 @@ function reportMarkdown(report) {
     '',
     `Verdict: ${report.verdict}`,
     `Tested commit: \`${report.head}\``,
-    `Base: \`${report.base}\``,
+    report.base ? `Base: \`${report.base}\`` : 'Base: not resolved',
     `Started: ${report.startedAt}`,
     `Finished: ${report.finishedAt}`,
     `Node ${report.node}, pnpm ${report.pnpm}`,

@@ -17,6 +17,7 @@ import {
   checkPath,
   classify,
   driveSite,
+  importGraph,
   isOurServer,
   pairLocales,
   parseBase,
@@ -140,6 +141,38 @@ describe('routesFor', () => {
     assert.deepEqual(routesFor(['apps/docs/app/(en)/gone/page.mdx'], () => false), shared);
     const files = ['apps/docs/app/(en)/button/page.mdx', 'apps/docs/app/ko/button/page.mdx', 'apps/docs/lib/a.ts'];
     assert.deepEqual(routesFor(files), ['/button', '/ko/button', '/', '/ko', '/field/select', '/ko/field/select', '/playground', '/ko/playground']);
+  });
+
+  test('a docs file one page imports drives that page, also through another file', () => {
+    const importers = importGraph([
+      { file: 'apps/docs/app/(en)/badge/page.mdx', text: "import { BadgeTones } from '../../../components/demos/BadgeDemo';" },
+      { file: 'apps/docs/app/ko/badge/page.mdx', text: "import { BadgeTones } from '../../../components/demos/BadgeDemo';" },
+      { file: 'apps/docs/components/demos/BadgeDemo.tsx', text: "import { tone } from './tones.ts';\nexport { x } from \"../../lib/x\";" },
+      { file: 'apps/docs/components/demos/tones.ts', text: '' },
+      { file: 'apps/docs/lib/x/index.ts', text: '' },
+    ]);
+    assert.deepEqual(routesFor(['apps/docs/components/demos/BadgeDemo.tsx'], () => true, importers), ['/badge', '/ko/badge']);
+    assert.deepEqual(routesFor(['apps/docs/components/demos/tones.ts'], () => true, importers), ['/badge', '/ko/badge']);
+    assert.deepEqual(routesFor(['apps/docs/lib/x/index.ts'], () => true, importers), ['/badge', '/ko/badge']);
+  });
+
+  test('a docs file a layout imports also drives the shared set', () => {
+    const importers = importGraph([
+      { file: 'apps/docs/app/(en)/layout.tsx', text: "import { Nav } from '../../components/Nav';" },
+      { file: 'apps/docs/app/(en)/button/page.mdx', text: "import { Nav } from '../../../components/Nav';" },
+      { file: 'apps/docs/components/Nav.tsx', text: '' },
+    ]);
+    assert.deepEqual(routesFor(['apps/docs/components/Nav.tsx'], () => true, importers), ['/button', '/ko/button', ...shared.slice(0, 2), ...shared.slice(4)]);
+  });
+
+  test('in this repo, the badge demo drives only the badge pages', async () => {
+    const { execFileSync: run } = await import('node:child_process');
+    const { readFileSync } = await import('node:fs');
+    const files = run('git', ['-c', 'core.quotePath=false', 'ls-files', '--', 'apps/docs'], { cwd: repoRoot, encoding: 'utf8' })
+      .split('\n')
+      .filter((file) => /\.(?:mdx?|[cm]?[jt]sx?|css)$/.test(file));
+    const importers = importGraph(files.map((file) => ({ file, text: readFileSync(path.join(repoRoot, file), 'utf8') })));
+    assert.deepEqual(routesFor(['apps/docs/components/demos/BadgeDemo.tsx'], () => true, importers), ['/badge', '/ko/badge']);
   });
 
   test('files outside the docs app add no routes', () => {
@@ -327,6 +360,9 @@ describe('renderBody', () => {
     const body = renderBody({ ...report, results: [{ id: 'drive', status: 'blocked', reason: 'could not reach http://127.0.0.1:1: ECONNREFUSED' }], drive: null }, SHA);
     assert.match(body, /- Drive: blocked\. could not reach http:\/\/127\.0\.0\.1:1: ECONNREFUSED/);
   });
+  test('a report with no base says so instead of printing null', () => {
+    assert.match(renderBody({ ...report, base: null }, SHA), /^Tested commit: .*\nBase: not resolved\nVerdict: BLOCKED/);
+  });
 });
 
 describe('redact', () => {
@@ -462,6 +498,16 @@ describe('sameSiteFetch', () => {
     assert.match((await checkPage(base.origin, '/x')).reason, /returned 401/);
   });
 
+  test('a page that fails is not hidden by a walled page', async () => {
+    const base = await start((request, response) => {
+      if (request.url.startsWith('/ko')) return response.writeHead(403).end();
+      response.writeHead(500).end('boom');
+    });
+    const driven = await driveSite(base.origin, ['/'], {}, { remote: true });
+    assert.equal(driven.blocked, null);
+    assert.deepEqual(driven.pages.map((item) => [item.path, item.ok]), [['/', false], ['/ko', false]]);
+  });
+
   test('driveSite drives English then Korean and reports an unreachable server as blocked', async () => {
     const base = await start((request, response) => response.end(page(request.url.startsWith('/ko') ? 'ko' : 'en')));
     const driven = await driveSite(base.origin, ['/button']);
@@ -560,6 +606,21 @@ describe('command line', () => {
       const out = JSON.parse(plan('--base', 'HEAD').stdout);
       assert.deepEqual(out.types, []);
       assert.deepEqual(out.steps, []);
+    });
+
+    test('a base ahead of the merge base plans from the merge base, as the diff does', () => {
+      const mergeBase = git('rev-parse', 'origin/main').trim();
+      const head = git('rev-parse', 'HEAD').trim();
+      git('checkout', '-q', '-b', 'side', mergeBase);
+      write('later.md', 'y');
+      git('add', '.');
+      git('commit', '-qm', 'later on main');
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      git('checkout', '-q', head);
+      const out = JSON.parse(plan('--base', 'origin/main').stdout);
+      assert.equal(out.base, mergeBase);
+      assert.ok(!out.files.includes('later.md'));
+      assert.equal(JSON.parse(plan().stdout).base, mergeBase);
     });
 
     test('plan is BLOCKED when origin/main is missing', () => {
