@@ -87,6 +87,25 @@ describe('BottomSheet', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
   });
 
+  it('dismisses from a handle drag on a sheet that opens after mount', async () => {
+    const onOpenChange = vi.fn();
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    const sheet = (open: boolean) => (
+      <BottomSheet.Root open={open} onOpenChange={onOpenChange}>
+        <BottomSheet.Title>Drag</BottomSheet.Title>
+        <BottomSheet.Body>list</BottomSheet.Body>
+      </BottomSheet.Root>
+    );
+    const { rerender } = render(sheet(false));
+    await act(async () => rerender(sheet(true)));
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
+    expect(handle).not.toBeNull();
+    handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: 100 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: 500 }));
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: 500 }));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
+  });
+
   it('dismisses from a slow drag all the way down', () => {
     // jsdom stamps events with Date.now().
     vi.useFakeTimers({ toFake: ['Date'] });

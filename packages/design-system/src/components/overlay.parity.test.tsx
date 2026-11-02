@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createRef, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
+import { createRef, memo, Profiler, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from './BottomSheet.js';
 import { Dialog } from './Dialog.js';
 import { Drawer } from './Drawer.js';
@@ -313,6 +313,44 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
     it('names the close button', () => {
       renderSurface(harness(), true, {});
       expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
+    });
+
+    it('shows the close glyph with no tip when the close part has no content', () => {
+      const h = harness();
+      render(
+        <h.Root open onOpenChange={() => undefined}>
+          <h.Title>Save file</h.Title>
+          <h.Close>{null}</h.Close>
+        </h.Root>,
+      );
+      const close = screen.getByRole('button', { name: 'Close' });
+      expect(close.hasAttribute('data-todae-close')).toBe(true);
+      expect(close.querySelector('svg')).not.toBeNull();
+    });
+
+    it('keeps its parts from rendering again when the root renders with the same props', () => {
+      const h = harness();
+      const onRender = vi.fn();
+      const Parts = memo(function Parts() {
+        return (
+          <Profiler id="title" onRender={onRender}>
+            <h.Title>Save file</h.Title>
+          </Profiler>
+        );
+      });
+      const onOpenChange = vi.fn();
+      const { rerender } = render(
+        <h.Root open onOpenChange={onOpenChange}>
+          <Parts />
+        </h.Root>,
+      );
+      const before = onRender.mock.calls.length;
+      rerender(
+        <h.Root open onOpenChange={onOpenChange}>
+          <Parts />
+        </h.Root>,
+      );
+      expect(onRender.mock.calls.length).toBe(before);
     });
   });
 }

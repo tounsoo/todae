@@ -19,8 +19,7 @@ import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useRaiseOnNew, useToastHost } from '../overlay/useToastHost.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useButtonName } from './buttonName.js';
-import { useCloseGlyph } from './closeGlyph.js';
+import { CloseButton } from './closeButton.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { usePageHidden } from '../internal/usePageHidden.js';
 import type { Toaster, ToastRecord, ToastTone } from './toaster.js';
@@ -362,24 +361,15 @@ function Action({ variant = 'secondary', onClick, className, ...props }: ToastAc
 }
 
 /** A ghost Button.Root that dismisses the toast. Named by the `dismiss` string unless its own text names it. */
-function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...props }: ToastCloseProps) {
+function Close({ onClick, className, ...props }: ToastCloseProps) {
   const item = useContext(ItemContext);
-  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().dismiss);
-  const glyph = useCloseGlyph();
   return (
-    <Button.Root
-      variant="ghost"
-      // Todae's own close shows no tip, as a text × never did: a dialog's first
-      // focus often lands on it.
-      tooltip={children == null ? false : undefined}
-      aria-label={label}
+    <CloseButton
       {...props}
-      ref={refs}
+      fallbackName={useStrings().dismiss}
       className={cx(styles.close, className)}
       onClick={composeHandlers(onClick, () => item?.dismiss())}
-    >
-      {children ?? glyph}
-    </Button.Root>
+    />
   );
 }
 

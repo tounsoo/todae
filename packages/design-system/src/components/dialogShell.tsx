@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -12,11 +13,10 @@ import {
   type RefObject,
 } from 'react';
 import { useDomId } from '../internal/domId.js';
-import { Button, type ButtonActionProps } from './Button.js';
+import type { ButtonActionProps } from './Button.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useButtonName } from './buttonName.js';
-import { useCloseGlyph } from './closeGlyph.js';
+import { CloseButton } from './closeButton.js';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen.js';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
@@ -26,8 +26,8 @@ import { useModalDialog } from '../overlay/useModalDialog.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
 
-// The modal machinery Dialog and Drawer share. Each component wraps these
-// parts with its own classes, so neither styles the other's parts.
+// The modal machinery Dialog, Drawer and BottomSheet share. Each component
+// wraps these parts with its own classes, so none styles another's parts.
 
 /**
  * Why the dialog asked to close. `form` is a `<form method="dialog">` submit
@@ -71,7 +71,7 @@ const ShellContext = /* @__PURE__ */ createContext<ShellContextValue | null>(nul
 
 function useShell(): ShellContextValue {
   const ctx = useContext(ShellContext);
-  if (!ctx) throw new Error('Dialog and Drawer parts must render inside Dialog.Root or Drawer.Root');
+  if (!ctx) throw new Error('Dialog, Drawer and BottomSheet parts must render inside their own Root');
   return ctx;
 }
 
@@ -105,39 +105,48 @@ export function ShellDescription({ children, id: idProp, ...props }: ComponentPr
   );
 }
 
-export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
+export function ShellClose({ onClick, ...props }: ButtonActionProps) {
   const { requestClose } = useShell();
-  // Text a screen reader reads, such as "Cancel", names the button; the close string names one without, such as an icon.
-  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().close);
-  const glyph = useCloseGlyph();
   return (
-    <Button.Root
-      variant="ghost"
-      // Todae's own close shows no tip, as a text × never did: a dialog's first
-      // focus often lands on it.
-      tooltip={children == null ? false : undefined}
-      aria-label={label}
+    <CloseButton
       {...props}
-      ref={refs}
+      fallbackName={useStrings().close}
       // Marks it for the header rule, which puts it at the end of the row, and
       // for an alert dialog's initial focus, which takes it as the safe choice.
       data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
-    >
-      {children ?? glyph}
-    </Button.Root>
+    />
   );
 }
 
-// What each modal changes: its layout classes, exit fallback and attributes.
+// What each modal changes: its layout, exit fallback and attributes.
 export type DialogShell = {
   className?: string;
+  /**
+   * True (the default) for a `<dialog>` that covers the screen as the
+   * backdrop, with a panel inside that holds the content: a click that lands
+   * on the `<dialog>` itself is a backdrop click. False for a `<dialog>` that
+   * is the panel, as BottomSheet's is: a click outside its box is.
+   */
+  panel?: boolean;
   panelClassName?: string;
+  /** False removes the `<dialog>` while it is closed and its exit has ended. Defaults to true. */
+  keepMounted?: boolean;
   exitMs: number;
   /** The `<dialog>` element's transition that ends the exit. */
   exitProperty: string;
   attributes?: Record<`data-${string}`, string>;
 };
+
+type PointerSpot = { target: EventTarget | null; clientX: number; clientY: number };
+
+/** Whether a pointer event landed on the backdrop: on the `<dialog>` itself, and outside its box when it is its own panel. */
+function onBackdrop(dialog: HTMLDialogElement | null, event: PointerSpot, panel: boolean): boolean {
+  if (!dialog || event.target !== dialog) return false;
+  if (panel) return true;
+  const rect = dialog.getBoundingClientRect();
+  return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+}
 
 export function DialogShellRoot({
   shell,
@@ -161,7 +170,8 @@ export function DialogShellRoot({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
-  const pointerOnDialog = useRef(false);
+  const pressOnBackdrop = useRef(false);
+  const panel = shell.panel ?? true;
   const [open, onOpenChange] = useControlledState<boolean, [reason: DialogCloseReason]>(
     openProp,
     defaultOpen,
@@ -213,8 +223,14 @@ export function DialogShellRoot({
     return () => clearTimeout(timer);
   }, [alertShown, described]);
 
+  // Stable across renders, so a memoized part such as a Title doesn't render again with the root.
+  const ctx = useMemo<ShellContextValue>(() => ({ requestClose, setLabelledBy, setDescribedBy }), [requestClose]);
+
+  if (!present && shell.keepMounted === false) return null;
+
+  const content = <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>;
   return (
-    <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
+    <ShellContext.Provider value={ctx}>
       <dialog
         {...props}
         role={role}
@@ -231,7 +247,7 @@ export function DialogShellRoot({
           onPointerDown?.(event);
           // Always tracked, even when the consumer prevents it, so a later click
           // is judged by where its own press started.
-          pointerOnDialog.current = event.target === dialogRef.current;
+          pressOnBackdrop.current = onBackdrop(dialogRef.current, event, panel);
         }}
         onSubmit={(event) => {
           onSubmit?.(event);
@@ -243,22 +259,20 @@ export function DialogShellRoot({
           if (panelRef.current) revealRing(panelRef.current, event.target);
         })}
         onClick={composeHandlers(onClick, (event) => {
-          if (
-            dismissOnBackdrop &&
-            pointerOnDialog.current &&
-            event.target === dialogRef.current
-          ) {
-            requestClose('backdrop');
-          }
+          const fromBackdrop = pressOnBackdrop.current && onBackdrop(dialogRef.current, event, panel);
+          pressOnBackdrop.current = false;
+          // A <dialog> that is its own panel sits below the viewport until its
+          // enter motion starts, so its box would put any tap on the backdrop.
+          if (fromBackdrop && dismissOnBackdrop && (panel || entered)) requestClose('backdrop');
         })}
       >
-        <div
-          className={shell.panelClassName}
-          role="document"
-          ref={panelRef}
-        >
-          <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>
-        </div>
+        {panel ? (
+          <div className={shell.panelClassName} role="document" ref={panelRef}>
+            {content}
+          </div>
+        ) : (
+          content
+        )}
       </dialog>
     </ShellContext.Provider>
   );
