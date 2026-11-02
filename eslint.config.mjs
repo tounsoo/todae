@@ -57,7 +57,8 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['../components/*'],
+              // components/ in any spelling, and the entries that re-export it.
+              regex: '^(\\./)*\\.\\./(components(/|$)|index(\\.js)?$|server/)',
               allowTypeImports: true,
               message: 'Only types come from components/. Move shared code to internal/, or an overlay engine to overlay/.',
             },
@@ -68,7 +69,7 @@ export default tseslint.config(
       '@typescript-eslint/no-import-type-side-effects': 'error',
       'no-restricted-syntax': [
         'error',
-        { selector: 'ImportExpression[source.value=/^\\.\\.\\/components\\//]', message: 'Only types come from components/.' },
+        { selector: 'ImportExpression[source.value=/^(\\.\\/)*\\.\\.\\/(components|index|server)/]', message: 'Only types come from components/.' },
       ],
     },
   },
