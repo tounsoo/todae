@@ -22,7 +22,7 @@ Preconditions:
 - Doctor passed for the origin under test.
 - `self-test` printed a group list, including `tools:2`.
 
-- **English home.** Open `/` at 1280 and at 390. Run `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --paths /`. The helper also opens `/ko`. The report contains `home en 1280 h1 The foundation your design system builds on.` and a `home en` line for each group id.
+- **English home.** Open `/` at 1280 and at 390. Run `node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs run --url <origin> --expect-sha <head> --deployment-sha <sha> --deployment-id <id> --paths /`. The helper also opens `/ko`. The report contains `home en 1280 h1 The foundation your design system builds on.` and a `home en` line for each group id.
 - **Korean home.** The same command opens `/ko`. The report contains `home ko 1280 h1 회사의 디자인 시스템을 그 위에 세우세요.` and Korean group labels such as `컴포넌트`.
 - **Counts.** Each `home` line ends with the count text for that group's `links.length`. The helper imports `SITE_GROUPS`. A home page with no `.home-group` sections fails.
 - **Proof.** `report.txt` has the `home` lines. The stamp directory has `en-1280-root.png`, `en-390-root.png`, `ko-1280-ko.png`, and `ko-390-ko.png`.

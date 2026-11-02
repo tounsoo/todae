@@ -16,6 +16,7 @@ const sharedRules = [
   'meta.githubCommitSha',
   '--expect-sha',
   '--deployment-sha',
+  '--deployment-id',
   'source=caller-asserted',
   'x-vercel-trusted-oidc-idp-token',
   'VERCEL_OIDC_TOKEN',
