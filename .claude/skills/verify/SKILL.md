@@ -27,7 +27,7 @@ node --experimental-strip-types --no-warnings=ExperimentalWarning .claude/skills
 node --experimental-strip-types --no-warnings=ExperimentalWarning .claude/skills/verify/verify.mjs self-test
 ```
 
-The helper drives Chromium through the docs app's `playwright` package. If the browser is missing, install it once with `pnpm --filter docs exec playwright install chromium`.
+The helper drives Chromium through the docs app's `playwright` package. If the browser is missing, install it once with `pnpm --filter docs exec playwright install chromium`. If the session can't download it, DRIVE can't run: report the drive checks as unverified, and don't swap in another browser tool and call it the same proof.
 
 ## LAUNCH
 
