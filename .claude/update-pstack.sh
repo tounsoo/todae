@@ -8,8 +8,9 @@
 # --check exits 0 when no upstream commit since the pin touches the copied
 # files, 10 when one does, and 11 when the pin is ahead of upstream's default
 # branch, off it, or gone. 2 is a usage error; any other status is an error.
-# --brief prints one line on 10 or 11 and nothing otherwise, and always exits 0,
-# so an offline or failed check never holds up a session.
+# --brief prints one line on 10 or 11 and nothing otherwise, and always exits 0.
+# It gives up after 5 seconds, and stays silent without `timeout`, so an offline
+# or stalled network never holds up a session. It prints no upstream text.
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
@@ -22,6 +23,27 @@ skip='babysit fix-ci fix-merge-conflicts get-pr-comments setup-pstack'
 # agent directory, and the hook text. The copy and --check both read these.
 agent_dirs='agents effort-agents'
 hook=hooks/session-start-context.md
+
+if [ "${1:-}" = --brief ]; then
+  {
+    command -v timeout >/dev/null || exit 0
+    status=0
+    out=$(GIT_TERMINAL_PROMPT=0 GIT_ALLOW_PROTOCOL=https timeout -k 2 5 sh "$0" --check) ||
+      status=$?
+    case $status in
+      10)
+        verdict=$(printf '%s\n' "$out" |
+          grep -xE 'behind by [0-9]+ commits, [0-9]+ in the copied files' | head -n 1)
+        [ -z "$verdict" ] ||
+          echo "pstack-claude check: the pinned port is $verdict." \
+            "\`sh .claude/update-pstack.sh --check\` lists them. Don't bump the pin unless asked." ;;
+      11)
+        echo "pstack-claude check: the pin is ahead of upstream, off its default branch, or gone." \
+          "\`sh .claude/update-pstack.sh --check\` says which. Don't change the pin unless asked." ;;
+    esac
+  } 2>/dev/null || :
+  exit 0
+fi
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -75,18 +97,7 @@ check() {
 
 case ${1:-} in
   --check) check ;;
-  --brief)
-    limit=
-    command -v timeout >/dev/null && limit='timeout 10'
-    status=0
-    out=$(GIT_TERMINAL_PROMPT=0 $limit sh "$0" --check 2>/dev/null) || status=$?
-    case $status in
-      10) echo "pstack-claude check: the pinned port is $(echo "$out" | grep '^behind by ')." \
-        "\`sh .claude/update-pstack.sh --check\` lists them. Bump only when Ben asks." ;;
-      11) echo "pstack-claude check: $(echo "$out" | grep '^diverged: ')." ;;
-    esac
-    exit 0 ;;
-  -*) echo "usage: sh .claude/update-pstack.sh [commit | --check]" >&2; exit 2 ;;
+  -*) echo "usage: sh .claude/update-pstack.sh [commit | --check | --brief]" >&2; exit 2 ;;
 esac
 
 root=$(git rev-parse --show-toplevel)
