@@ -28,10 +28,10 @@ The bundle size budget is a tripwire, not a hard cap. A pull request may raise t
 - A user-facing change carries a changeset. [Changesets](CONTRIBUTING.md#changesets) says how to add one, and when a change that ships nothing still needs `pnpm changeset --empty`.
 - Every pull request body has a Verification section, an Unverified checks section, and a Remaining risks section. Write "None" only when that is actually true. A pull request missing any of the three is not ready for review.
 - After a fix for a bug, a review finding, or a maintainer correction (not routine edits), run a short reflect. Run correct only when the same kind of mistake shows up a second time, then enforce it in this order: architecture, then types, then lint or CI, then a test. A written rule is the last resort.
-- Drive the docs site with the verify skill at `.cursor/skills/verify/SKILL.md`. [0005](docs/decisions/0005-verify-procedure.md) records the procedure.
+- Drive the docs site with the verify skill: `.claude/skills/verify/SKILL.md` in Claude, or `.cursor/skills/verify/SKILL.md` in Cursor. [0005](docs/decisions/0005-verify-procedure.md) records the procedure and what both copies must keep matched.
 - Do not change a design token unless Ben approves the change.
 - Do not release 1.0.0. [Versioning](README.md#versioning) says how bumps work until then.
 - Do not force-push or rebase unless Ben agrees.
 - Agents do not merge. A merge waits until Ben approves it.
-- Leave `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` unchanged. The one exception is the verify pointer at `.claude/skills/verify/SKILL.md`, which [0005](docs/decisions/0005-verify-procedure.md) records. Keep it a pointer.
+- Leave `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` unchanged. The one exception is the Claude verify skill at `.claude/skills/verify/`, which [0005](docs/decisions/0005-verify-procedure.md) records. Change it and the Cursor copy together.
 - A pull request that changes a decision or a spec also edits that decision's file in `docs/decisions/` in the same pull request. A design-system rule still belongs in [ARCHITECTURE.md](ARCHITECTURE.md), updated in that same pull request.

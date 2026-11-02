@@ -32,7 +32,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "stylelint": "stylelint \"packages/design-system/src/**/*.css\"",
-    "check": "pnpm lint && pnpm typecheck && pnpm stylelint && node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test",
+    "check": "pnpm lint && pnpm typecheck && pnpm stylelint && node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test && node scripts/verify-skill-sync.mjs",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",
     "graft:check": "npx -y @nanonets/graft@0.18.0 check",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
