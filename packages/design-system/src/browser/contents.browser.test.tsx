@@ -552,7 +552,8 @@ describe('Contents in a browser', () => {
     for (const list of screen.getAllByRole('list')) {
       expect(getComputedStyle(list).getPropertyValue('scroll-target-group')).not.toBe('auto');
     }
-    expect(link('One').matches(':target-current')).toBe(true);
+    // Chrome 156 chooses the marker on a frame after layout, later than aria-current.
+    await waitFor(() => expect(link('One').matches(':target-current')).toBe(true));
 
     const linkClass = [...link('One').classList].find((name) => name.includes('link'));
     if (!linkClass) throw new Error('Contents link class missing');

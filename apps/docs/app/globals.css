@@ -1091,10 +1091,9 @@ table {
   gap: 1.5rem;
 }
 
-/* The sheet body already pads by the focus ring. Chrome 156 draws the first
-   preset's ring another pixel past that clip, so the row needs one pixel more. */
+/* Chrome 156 draws the first preset ring one pixel past the sheet's ring room. */
 .pg-sheet .pg-sheet-body {
-  padding-inline: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + 1px);
+  padding-inline: calc(var(--_ring-room) + 1px);
 }
 
 /* Presets scroll sideways in one row instead of taking two. */
