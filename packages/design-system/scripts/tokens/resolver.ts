@@ -103,7 +103,7 @@ function parseRules(rules: unknown, loc: string): { rules?: Rule[] } {
 
 function parseSlots(slots: unknown, loc: string): { slots?: SlotRules } {
   if (slots === undefined) return {};
-  if (!isRecord(slots)) fail(`${loc} slots must map token groups to leaf names`);
+  if (!isRecord(slots)) fail(`${loc} slots must map token groups to child names`);
   for (const [group, leaves] of Object.entries(slots)) {
     if (!SLOT_GROUP_RE.test(group)) fail(`${loc} slot group "${group}" must be lowercase dot segments or *`);
     if (
@@ -112,7 +112,7 @@ function parseSlots(slots: unknown, loc: string): { slots?: SlotRules } {
       leaves.some((leaf) => typeof leaf !== 'string' || !SLOT_LEAF_RE.test(leaf)) ||
       new Set(leaves).size !== leaves.length
     ) {
-      fail(`${loc} slot group "${group}" must list distinct lowercase leaf names`);
+      fail(`${loc} slot group "${group}" must list distinct lowercase child names`);
     }
   }
   return { slots: slots as SlotRules };
@@ -332,6 +332,12 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
       // brand.* tokens are not held to it.
       const inheritedRules = (base.extension.rules ?? []).filter((rule) => rule !== 'reserved-roots');
       const rules = [...new Set([...inheritedRules, ...(extension.rules ?? [])])];
+      for (const [group, children] of Object.entries(extension.slots ?? {})) {
+        const todae = base.extension.slots?.[group];
+        if (todae && (todae.length !== children.length || todae.some((child) => !children.includes(child)))) {
+          fail(`${loc} slot group "${group}" is Todae's, so its list must be ${todae.join('|')}; leave it out to keep Todae's`);
+        }
+      }
       const slots = { ...base.extension.slots, ...extension.slots };
       if (rules.length > 0) extension.rules = rules;
       if (Object.keys(slots).length > 0) extension.slots = slots;

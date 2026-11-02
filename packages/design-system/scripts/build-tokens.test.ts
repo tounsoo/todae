@@ -1057,7 +1057,7 @@ describe('resolver-driven build', () => {
       /slot group "Chip\.bg"/,
     );
     expect(() => parseExtension(ext({ layer: 'core', slots: { 'chip.bg': [] } }), 'set', 'set "x"')).toThrow(
-      /distinct lowercase leaf names/,
+      /distinct lowercase child names/,
     );
     expect(
       parseExtension(ext({ layer: 'contract', rules: ['reserved-roots'], slots: { 'card.*.bg': ['default'] } }), 'set', 'set "x"'),
@@ -1697,6 +1697,25 @@ describe('company token build', () => {
     });
     await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
       /contract\/outline "button\.outline\.ring" is missing; it must have focus/,
+    );
+  });
+
+  it('keeps Todae\'s button slots and variant paths in a company build', async () => {
+    const loosened = await company((resolver) => {
+      resolver.modifiers.buttonVariant.$extensions['dev.todae'].slots = {
+        'button.*.bg': ['default', 'hover', 'active', 'focus', 'disabled', 'pressed'],
+      };
+    });
+    await expect(buildCompanyTokens({ resolver: loosened, base: tokensDir })).rejects.toThrow(
+      /modifier "buttonVariant" slot group "button\.\*\.bg" is Todae's, so its list must be default\|hover\|active\|focus\|disabled/,
+    );
+    const misplaced = await company((resolver) => {
+      resolver.sets.brand.sources.push({
+        button: { primary: { bg: { pressed: { $type: 'color', $value: { $ref: '#/color/bg/surface/$value' } } } } },
+      });
+    });
+    await expect(buildCompanyTokens({ resolver: misplaced, base: tokensDir })).rejects.toThrow(
+      /set "brand" token "button\.primary\.bg\.pressed" belongs in context "primary" of modifier "buttonVariant"/,
     );
   });
 

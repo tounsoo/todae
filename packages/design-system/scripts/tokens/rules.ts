@@ -244,6 +244,16 @@ export function validateEntries(entries: ResolvedEntry[]): void {
           .filter((t) => t.path.startsWith(`${root}.base.`))
           .map((t) => t.path.split('.')[2]!),
       );
+      // Only a context feeds `<root>.<context>.*` to the consume vars, so no
+      // other set or modifier may declare a token there.
+      for (const other of entries) {
+        if (other === entry) continue;
+        const misplaced = entryTokens(other).find((t) => contexts.has(t.path.split('.')[1]!) && t.path.startsWith(`${root}.`));
+        if (misplaced) {
+          const context = misplaced.path.split('.')[1]!;
+          fail(`${other.kind} "${other.name}" token "${misplaced.path}" belongs in context "${context}" of ${loc}`);
+        }
+      }
       for (const [context, tokens] of contexts) {
         const stray = tokens.find((t) => !t.path.startsWith(`${root}.${context}.`));
         if (stray) fail(`${loc} context "${context}" token "${stray.path}" must be under ${root}.${context}.*`);
