@@ -10,7 +10,7 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component,
 
 ## Project playbooks
 
-`.agents/playbooks/` holds todae's playbooks. pstack's `poteto-mode` opens each one when the task fits its `when` line. [0006](docs/decisions/0006-claude-threads-install-pstack.md) records this layout.
+`.agents/playbooks/` holds todae's playbooks. A thread opens each one whose `when` line fits the task, as `.claude/thread-start.md` says. [0006](docs/decisions/0006-claude-threads-install-pstack.md) records this layout.
 
 - `review-before-pr.md` runs the review on the branch before a pull request opens.
 - `waiting-on-ci.md` drives a pull request to green with the GitHub MCP tools.
