@@ -2180,3 +2180,36 @@ describe('useCombobox controlled owner that turns a change down', () => {
     ]);
   });
 });
+
+describe('useCombobox changes from a callback', () => {
+  const choices = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it("stores a pick's changes before its callbacks run, so the owner's own write from one wins", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange,
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(result.current.inputValue).toBe('custom');
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [false, 'select'],
+    ]);
+  });
+});

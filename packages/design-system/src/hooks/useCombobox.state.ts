@@ -1,4 +1,4 @@
-import { useCallback, type RefObject } from 'react';
+import { useCallback, useRef, type RefObject } from 'react';
 import type { UseComboboxMultipleOptions, UseComboboxOptions } from './useCombobox.js';
 import type { ComboboxCloseReason } from './useCombobox.types.js';
 import { useControllableState } from './useControlledState.js';
@@ -31,10 +31,17 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
  */
 export function useComboboxState(options: UseComboboxOptions, latest: RefObject<UseComboboxOptions>) {
   const multiple = isMultiple(options);
+  // While `apply` writes, change callbacks wait here, so every change is stored
+  // before any callback runs and an owner's own write from a callback wins.
+  const held = useRef<(() => void)[] | null>(null);
+  const report = useCallback((call: () => void) => {
+    if (held.current) held.current.push(call);
+    else call();
+  }, []);
   const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
     options.open,
     options.defaultOpen ?? false,
-    (next, reason) => latest.current.onOpenChange?.(next, reason),
+    (next, reason) => report(() => latest.current.onOpenChange?.(next, reason)),
   );
   const initialSingle = multiple ? null : options.value !== undefined ? options.value : (options.defaultValue ?? null);
   // Only a label we actually know: never seed the input (and the first async query) with a raw id.
@@ -42,23 +49,25 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   const [inputValue, setInput, inputNow] = useControllableState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
-    (next) => latest.current.onInputValueChange?.(next),
+    (next) => report(() => latest.current.onInputValueChange?.(next)),
   );
   const [single, setSingle, singleNow] = useControllableState<string | null>(
     multiple ? undefined : options.value,
     multiple ? null : (options.defaultValue ?? null),
-    (next) => {
-      const current = latest.current;
-      if (!isMultiple(current)) current.onValueChange?.(next);
-    },
+    (next) =>
+      report(() => {
+        const current = latest.current;
+        if (!isMultiple(current)) current.onValueChange?.(next);
+      }),
   );
   const [multi, setMulti, multiNow] = useControllableState<readonly string[]>(
     multiple ? options.value : undefined,
     multiple ? (options.defaultValue ?? []) : [],
-    (next) => {
-      const current = latest.current;
-      if (isMultiple(current)) current.onValueChange?.([...next]);
-    },
+    (next) =>
+      report(() => {
+        const current = latest.current;
+        if (isMultiple(current)) current.onValueChange?.([...next]);
+      }),
   );
 
   /** The field as the last change left it, which writes build on until the next render. */
@@ -68,28 +77,30 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   );
 
   /**
-   * Writes each change, which stores it and calls its change callback when it
-   * differs from the field's latest state. Every write runs even if a callback
-   * throws; the first throw is rethrown after them.
+   * Stores each change that differs from the field's latest state, then calls
+   * their change callbacks. Every callback runs even if one throws; the first
+   * throw is rethrown after them.
    */
   const apply = useCallback(
     (changes: ComboboxChanges) => {
-      const writes: (() => void)[] = [];
-      const { value, inputValue: text } = changes;
-      if (typeof value === 'object' && value !== null) {
-        if (!sameList(value, multiNow())) writes.push(() => setMulti([...value]));
-      } else if (value !== undefined) {
-        writes.push(() => setSingle(value));
-      }
-      if (text !== undefined) writes.push(() => setInput(text));
-      if (changes.open !== undefined) {
-        const { open: next, reason } = changes;
-        writes.push(() => setOpen(next, reason));
+      const calls: (() => void)[] = [];
+      held.current = calls;
+      try {
+        const { value, inputValue: text } = changes;
+        if (typeof value === 'object' && value !== null) {
+          if (!sameList(value, multiNow())) setMulti([...value]);
+        } else if (value !== undefined) {
+          setSingle(value);
+        }
+        if (text !== undefined) setInput(text);
+        if (changes.open !== undefined) setOpen(changes.open, changes.reason);
+      } finally {
+        held.current = null;
       }
       let failure: { error: unknown } | null = null;
-      for (const write of writes) {
+      for (const call of calls) {
         try {
-          write();
+          call();
         } catch (error) {
           failure ??= { error };
         }

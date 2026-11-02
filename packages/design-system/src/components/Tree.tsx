@@ -121,9 +121,10 @@ function Root({
   const [selected, setSelected] = useControllableState<string | null>(
     valueProp,
     defaultValue ?? null,
-    useCallback((next: string | null) => {
-      if (next !== null) onValueChange?.(next);
-    }, [onValueChange]),
+    onValueChange &&
+      ((next) => {
+        if (next !== null) onValueChange(next);
+      }),
   );
   const [expanded, setExpandedList] = useControllableState(expandedProp, defaultExpanded ?? EMPTY, onExpandedChange);
   const setExpanded = useCallback(

@@ -8,9 +8,9 @@ import { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'reac
  * value `Object.is` equal to the latest write, stores it when uncontrolled,
  * then calls `onChange` with the value and any extra arguments, such as a
  * reason. So two writes before a render both count. A controlled write also
- * renders the hook again, and each render makes the rendered value the base
- * again, so a change the owner has not passed back by then is dropped and the
- * next write builds on the value it passed. A controlled value with no
+ * renders the hook again, and that render, or one with a new value, makes the
+ * rendered value the base again, so a change the owner has not passed back by
+ * then is dropped and the next write builds on the value it passed. A controlled value with no
  * `onChange` has no one to ask, so a write to it does nothing.
  *
  * `latest()` reads the value the next write builds on. `onChange` is read when
@@ -23,13 +23,18 @@ export function useControllableState<T, A extends unknown[] = []>(
   onChange?: (next: T, ...args: A) => void,
 ): [value: T, set: (next: T, ...args: A) => void, latest: () => T] {
   const [own, setOwn] = useState(defaultValue);
-  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  const [renders, rerender] = useReducer((count: number) => count + 1, 0);
   const controlled = prop !== undefined;
   const value = controlled ? prop : own;
   const base = useRef(value);
   const change = useRef(onChange);
+  // Only a new value or a controlled write's own render resets the base, so an
+  // urgent render that doesn't hold a pending write yet, such as one in a
+  // transition, doesn't drop it.
   useLayoutEffect(() => {
     base.current = value;
+  }, [value, renders]);
+  useLayoutEffect(() => {
     change.current = onChange;
   });
   const set = useCallback(
