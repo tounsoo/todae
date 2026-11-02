@@ -19,3 +19,9 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component,
 - `changesets.md` adds the changeset a shipping change needs.
 
 `.claude/models.md` is the pstack model sheet. A change to a role's model or effort goes there, with Ben's yes.
+
+## Verify, pull requests and briefs
+
+- `.claude/skills/verify/SKILL.md` proves a change on the commit it was tested at and ends in PASS, FAIL or BLOCKED. Run it on the commit that ends each review round in `review-before-pr.md`, so before a pull request opens and before each push of new work. [0007](docs/decisions/0007-claude-verify-and-pr-template.md) records it.
+- `.github/pull_request_template.md` lays out every pull request body. `node .claude/skills/verify/verify.mjs body` prints the lines that go under its Verification heading.
+- `.claude/task-prompt.md` is the template for a brief that starts a thread or a subagent.

@@ -26,9 +26,9 @@ The bundle size budget is a tripwire, not a hard cap. A pull request may raise t
 ## Conventions
 
 - A user-facing change carries a changeset. [Changesets](CONTRIBUTING.md#changesets) says how to add one, and when a change that ships nothing still needs `pnpm changeset --empty`.
-- Every pull request body has a Verification section, an Unverified checks section, and a Remaining risks section. Write "None" only when that is actually true. A pull request missing any of the three is not ready for review.
+- Every pull request body follows [`.github/pull_request_template.md`](.github/pull_request_template.md). It has a Verification section, an Unverified checks section, and a Remaining risks section. Verification starts with the tested commit, the full SHA the checks ran on, and lists each command with its result. Write "None" only when that is actually true. A pull request missing any of the three sections, or the tested commit, is not ready for review.
 - After a fix for a bug, a review finding, or a maintainer correction (not routine edits), run a short reflect. Run correct only when the same kind of mistake shows up a second time, then enforce it in this order: architecture, then types, then lint or CI, then a test. A written rule is the last resort.
-- Drive the docs site with the verify skill at `.cursor/skills/verify/SKILL.md`. [0005](docs/decisions/0005-verify-procedure.md) records the procedure.
+- Cursor drives the docs site with its verify skill at `.cursor/skills/verify/SKILL.md`. [0005](docs/decisions/0005-verify-procedure.md) records that procedure. Claude verifies every change with `.claude/skills/verify/SKILL.md`, which ends in PASS, FAIL or BLOCKED. [0007](docs/decisions/0007-claude-verify-and-pr-template.md) records it.
 - Do not change a design token unless Ben approves the change.
 - Do not release 1.0.0. [Versioning](README.md#versioning) says how bumps work until then.
 - Do not force-push or rebase unless Ben agrees.
