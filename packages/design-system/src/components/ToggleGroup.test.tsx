@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { Profiler } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from './Button.js';
 import { ToggleGroup } from './ToggleGroup.js';
@@ -164,5 +165,26 @@ describe('ToggleGroup.Root types', () => {
         <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
       </ToggleGroup.Root>
     )).not.toThrow();
+  });
+
+});
+
+describe('ToggleGroup read-only value', () => {
+  it('with a read-only value, does not render on a press', () => {
+    let commits = 0;
+    render(
+      <Profiler id="group" onRender={() => (commits += 1)}>
+        <ToggleGroup.Root selectionMode="single" value="a" aria-label="Align">
+          <ToggleGroup.Item value="a">A</ToggleGroup.Item>
+          <ToggleGroup.Item value="b">B</ToggleGroup.Item>
+        </ToggleGroup.Root>
+      </Profiler>,
+    );
+    const before = commits;
+    fireEvent.click(button('B'));
+    fireEvent.click(button('A'));
+    expect(commits).toBe(before);
+    expect(button('A').getAttribute('aria-pressed')).toBe('true');
+    expect(button('B').getAttribute('aria-pressed')).toBe('false');
   });
 });

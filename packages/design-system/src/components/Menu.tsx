@@ -22,7 +22,7 @@ import {
 } from 'react';
 import { isTextEntry } from '../hooks/hotkey.js';
 import { canFocusNow } from '../overlay/tabbables.js';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
@@ -159,6 +159,7 @@ type MenuContextValue = {
   /** The context request the menu is open for, dropped when it closes. */
   context: ContextOpen | null;
   openAt: (context: ContextOpen) => void;
+  setContext: (context: ContextOpen | null) => void;
   /** Where focus goes when the menu closes or Tab leaves it. */
   restoreTarget: () => HTMLElement | SVGElement | null;
   /** The anchor name of the box a context request put the menu at. */
@@ -180,7 +181,7 @@ type RadioContextValue = { value: string | null; select: (value: string) => void
 const RadioContext = /* @__PURE__ */ createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
-  const [open, setOpenValue] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  const [open, setOpenValue] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
   // Set while the input that asked for a close is still being handled, so
   // the focus move that same input makes does not ask a second time.
   const closeAsked = useRef(false);
@@ -255,7 +256,14 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const popover = usePopoverInternal(
-    { open, onOpenChange: setOpen, restoreFocusRef, initialFocusRef, haspopup: 'menu' },
+    {
+      open,
+      // A read-only open has no one to ask, so the popover asks no one either.
+      onOpenChange: openProp === undefined || onOpenChange ? setOpen : undefined,
+      restoreFocusRef,
+      initialFocusRef,
+      haspopup: 'menu',
+    },
     true,
   );
   // The item chosen for one open never carries over to the next.
@@ -284,12 +292,13 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
       initialFocusRef,
       context,
       openAt,
+      setContext,
       restoreTarget,
       boxName,
       popover,
       roving,
     }),
-    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, restoreTarget, boxName, popover, roving],
+    [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, setContext, restoreTarget, boxName, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -312,6 +321,9 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
     ref: refs,
     onClick: composeHandlers(onClick, () => {
       openEnd.current = null;
+      // A click that opens drops a context request the owner turned down,
+      // even when the popover has no one to ask.
+      if (!ctx.open) ctx.setContext(null);
     }),
     // A key's request for an end lasts while the trigger has focus, so one
     // the owner refused does not carry over to a later open from code. This
@@ -701,13 +713,13 @@ function CheckboxItem({
 }: MenuCheckboxItemProps) {
   const ctx = useMenu('CheckboxItem');
   const { check } = useGlyphs();
-  const [checked, setChecked] = useControlledValue(checkedProp, defaultChecked ?? false, onCheckedChange);
+  const [checked, setChecked, latestChecked] = useControlledState(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
     ctx,
     'menuitemcheckbox',
     props,
     () => {
-      setChecked(!checked);
+      setChecked(!latestChecked());
       if (closeOnSelect) ctx.setOpen(false, 'select');
     },
     checked,
@@ -732,8 +744,14 @@ function Group({ children, className, ...props }: MenuGroupProps) {
 
 function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }: MenuRadioGroupProps) {
   // Only items select, so a change is never back to null.
-  const notify = useCallback((next: string | null) => next !== null && onValueChange?.(next), [onValueChange]);
-  const [value, select] = useControlledValue<string | null>(valueProp, defaultValue ?? null, notify);
+  const [value, select] = useControlledState<string | null>(
+    valueProp,
+    defaultValue ?? null,
+    onValueChange &&
+      ((next) => {
+        if (next !== null) onValueChange(next);
+      }),
+  );
   const radio = useMemo(() => ({ value, select }), [select, value]);
   return (
     <RadioContext.Provider value={radio}>

@@ -839,7 +839,7 @@
   },
   "slider": {
     "(top)": "42cde11261eb",
-    "# Slider": "b79fc04f1f20",
+    "# Slider": "affd57d6aa6b",
     "## Accessible composition": "85a57c99624e",
     "## When to use": "ad0bb8c22aff",
     "## Props": "a289d00d67fe",
@@ -1072,17 +1072,11 @@
     "(section order)": "80890c96c652"
   },
   "utilities/use-controlled-state": {
-    "# useControlledState": "21ec41c3bb3f",
-    "## When to use": "06595b4c27fe",
+    "(top)": "3ceb399c4524",
+    "# useControlledState": "9c8cd0ef252f",
+    "## When to use": "c1d050420c92",
     "## Props": "086905cc163b",
-    "(section order)": "1666f868c727"
-  },
-  "utilities/use-controlled-value": {
-    "(top)": "81a5d461fbfb",
-    "# useControlledValue": "91691e41b6f4",
-    "## When to use": "9854f80dde78",
-    "## Props": "479579cd5e3b",
-    "(section order)": "40919ea34197"
+    "(section order)": "63b1892e9481"
   },
   "utilities/use-dropzone": {
     "(top)": "6b766d17652a",

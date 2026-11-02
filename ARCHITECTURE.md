@@ -72,7 +72,7 @@ Rules:
 
 The rules below were read from the code rather than decided in a thread. Follow them unless there is a reason not to.
 
-- **Controlled state comes in triples:** `value`/`defaultValue`/`onValueChange`, and the same for `open`, `checked` and `pressed`, built on `useControlledState` or `useControlledValue`. The callback gets the new value, not an event, and `undefined` means uncontrolled.
+- **Controlled state comes in triples:** `value`/`defaultValue`/`onValueChange`, and the same for `open`, `checked` and `pressed`, built on `useControlledState` (`hooks/useControlledState.ts`), which products get too. The callback gets the new value, not an event, and `undefined` means uncontrolled. Its setter builds on the latest write, so two writes before a render both count, and a controlled write renders the hook again so a change the owner did not pass back is dropped; a controlled value with no callback ignores writes.
 - **`onOpenChange(open, reason)`** passes a typed reason, such as `'escape'`, `'backdrop'` or `'close-button'`, so a product can tell why an overlay closed.
 - **Names.** Props types are `<Component><Part>Props` (`BadgeRootProps`). Union prop types are exported as `<Component><Prop>` (`AlertTone`, `ButtonVariant`). Form state is `disabled` and `invalid`, not `isDisabled` or `error`. Modal overlays take `dismissOnEscape`, `dismissOnBackdrop`, `initialFocusRef` and `restoreFocusRef`.
 - **Read Fieldset state** through `useFieldsetState`: `disabled` is OR-ed with the nearest Fieldset, and a control's own `invalid` wins over the Fieldset's.

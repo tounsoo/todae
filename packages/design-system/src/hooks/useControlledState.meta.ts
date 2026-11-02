@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useControlledState',
   description:
-    'useControlledState(controlled, defaultValue) returns [value, setValue]. While controlled is not undefined it is the value and setValue does nothing; otherwise setValue stores the next value. It never calls a change callback.',
+    'useControlledState(controlled, defaultValue, onChange) returns [value, change, latest]. change(next, ...args) builds on the latest write: it skips a value equal to it (Object.is), stores it when uncontrolled, then calls onChange(next, ...args). A controlled change the owner does not pass back by the next render is dropped, and a controlled value with no onChange is read-only.',
   props: [
     {
       name: 'controlled',
@@ -16,6 +16,12 @@ export const meta = {
       type: 'T',
       required: true,
       description: 'Starting value when uncontrolled. Read on the first render only.',
+    },
+    {
+      name: 'onChange',
+      type: '(next: T, ...args: A) => void',
+      required: false,
+      description: 'Called with each new value and any extra arguments, such as a reason, controlled or not. Without it a controlled value is read-only.',
     },
   ],
 } as const satisfies ComponentMeta;

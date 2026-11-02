@@ -17,7 +17,7 @@ import { useInitialFocus } from '../overlay/useInitialFocus.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { useDomId } from '../components/domId.js';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
-import { useControlledValue } from './useControlledState.js';
+import { useControlledState } from './useControlledState.js';
 import { eventInside } from '../overlay/eventInside.js';
 import { focusWithoutScroll } from '../components/revealRing.js';
 
@@ -98,7 +98,7 @@ export function usePopoverInternal(
     id,
     haspopup = 'dialog',
   } = options;
-  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  const [open, setOpen] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
   const uid = useDomId();
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;

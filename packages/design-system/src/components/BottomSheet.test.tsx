@@ -175,11 +175,14 @@ describe('BottomSheet', () => {
     const onOpenChange = vi.fn();
     render(<BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s" />);
     const sheet = screen.getByRole('dialog') as HTMLDialogElement;
-    sheet.close();
+    // Each close is its own event, so the owner's render after the first comes before the second.
+    act(() => sheet.close());
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'native');
     sheet.showModal();
-    sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
-    sheet.close();
+    act(() => {
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+      sheet.close();
+    });
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
   });
 

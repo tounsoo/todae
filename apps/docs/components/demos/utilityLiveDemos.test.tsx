@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { codeBlocks } from '../../lib/mdxAst';
-import { StatusFilter } from './ControlledValueDemo';
+import { StatusFilter } from './ControlledStateDemo';
 import { ImageDrop } from './DropzoneDemo';
 import { SearchShortcut } from './HotkeyDemo';
 
@@ -27,9 +27,9 @@ describe('utility live demos', () => {
     ['components/demos/HotkeyDemo.tsx', 'app/(en)/utilities/use-hotkey/page.mdx', 'app/ko/utilities/use-hotkey/page.mdx'],
     ['components/demos/DropzoneDemo.tsx', 'app/(en)/utilities/use-dropzone/page.mdx', 'app/ko/utilities/use-dropzone/page.mdx'],
     [
-      'components/demos/ControlledValueDemo.tsx',
-      'app/(en)/utilities/use-controlled-value/page.mdx',
-      'app/ko/utilities/use-controlled-value/page.mdx',
+      'components/demos/ControlledStateDemo.tsx',
+      'app/(en)/utilities/use-controlled-state/page.mdx',
+      'app/ko/utilities/use-controlled-state/page.mdx',
     ],
   ])('%s is the snippet on the English and Korean pages', (file, en, ko) => {
     const source = moduleSource(file);

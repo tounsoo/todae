@@ -183,6 +183,9 @@ export function useTooltipInternal<I extends boolean = false>(
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
+  // A commit reports to the owner even when `open` doesn't change, and a controlled
+  // commit always renders again so the hover bookkeeping below settles, so the
+  // tooltip calls onOpenChange itself rather than through useControlledState.
   const [controlledEpoch, setControlledEpoch] = useState(0);
   const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;

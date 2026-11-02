@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState, type ReactNode } from 'react';
+import { Profiler, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
@@ -313,5 +313,27 @@ describe('Tree', () => {
       ),
     ).toThrow('Tree.Label must render inside Tree.Item');
     vi.restoreAllMocks();
+  });
+});
+
+describe('Tree read-only value', () => {
+  it('does not render again on a click when value has no onValueChange', () => {
+    let commits = 0;
+    render(
+      <Profiler id="tree" onRender={() => void (commits += 1)}>
+        <Tree.Root aria-label="Files" value="a">
+          <Tree.Item value="a">
+            <Tree.Label>a</Tree.Label>
+          </Tree.Item>
+          <Tree.Item value="b">
+            <Tree.Label>b</Tree.Label>
+          </Tree.Item>
+        </Tree.Root>
+      </Profiler>,
+    );
+    const before = commits;
+    fireEvent.click(screen.getByText('b'));
+    expect(commits).toBe(before);
+    expect(document.querySelector('[aria-selected="true"]')?.textContent).toBe('a');
   });
 });

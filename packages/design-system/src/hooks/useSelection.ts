@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ChangeEvent } from 'react';
+import { useCallback, useMemo, useRef, type ChangeEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
 import { composeHandlers } from '../components/props.js';
 import { useControlledState } from './useControlledState.js';
@@ -66,22 +66,13 @@ function withSelected<K>(value: readonly K[], targets: readonly K[], selected: b
  */
 export function useSelection<K extends string | number>(options: UseSelectionOptions<K>): UseSelectionResult<K> {
   const { keys, disabledKeys = NO_KEYS, value: valueProp, defaultValue, onValueChange } = options;
-  const [value, setValue] = useControlledState<readonly K[]>(valueProp, defaultValue ?? NO_KEYS);
-  // Writes build on each other until the value changes, so two calls both
-  // count. A controlled write also forces a render that makes the rendered
-  // value the base again, so a change the parent turned down is dropped.
-  const latest = useRef(value);
-  const [renders, rerender] = useReducer((count: number) => count + 1, 0);
-  useLayoutEffect(() => {
-    latest.current = value;
-  }, [value, renders]);
-  const write = (next: readonly K[]) => {
-    if (next === latest.current) return;
-    latest.current = next;
-    setValue(next);
-    if (valueProp !== undefined) rerender();
-    onValueChange?.([...next]);
-  };
+  // Writes build on each other until a render, so two calls both count, and a
+  // change a controlled owner turned down is dropped by the render that follows.
+  const [value, write, latest] = useControlledState<readonly K[]>(
+    valueProp,
+    defaultValue ?? NO_KEYS,
+    onValueChange && ((next) => onValueChange([...next])),
+  );
 
   const selected = useMemo(() => new Set<K>(value), [value]);
   const disabled = useMemo(() => new Set<K>(disabledKeys), [disabledKeys]);
@@ -97,21 +88,21 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
 
   const toggle = (key: K, { range = false }: { range?: boolean } = {}) => {
     if (disabled.has(key)) return;
-    const next = !latest.current.includes(key);
+    const next = !latest().includes(key);
     const span = range && anchor.current !== null ? keysBetween(uniqueKeys, anchor.current, key) : null;
     anchor.current = key;
-    write(withSelected(latest.current, span ? span.filter((k) => !disabled.has(k)) : [key], next));
+    write(withSelected(latest(), span ? span.filter((k) => !disabled.has(k)) : [key], next));
   };
 
   const toggleAll = () => {
     anchor.current = null;
-    const current = new Set(latest.current);
-    write(withSelected(latest.current, enabledKeys, !enabledKeys.every((key) => current.has(key))));
+    const current = new Set(latest());
+    write(withSelected(latest(), enabledKeys, !enabledKeys.every((key) => current.has(key))));
   };
 
   const clear = () => {
     anchor.current = null;
-    if (latest.current.length > 0) write(NO_KEYS);
+    if (latest().length > 0) write(NO_KEYS);
   };
 
   const getCheckboxProps: UseSelectionResult<K>['getCheckboxProps'] = (key, props = {}) => ({

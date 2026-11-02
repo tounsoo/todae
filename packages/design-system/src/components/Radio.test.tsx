@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio.js';
+import { resetWarnOnce } from './warnOnce.js';
 import * as api from '../index.js';
 
 afterEach(cleanup);
@@ -63,6 +64,7 @@ describe('RadioGroup', () => {
   });
 
   it('names RadioGroup.Root when both value and defaultValue are set', () => {
+    resetWarnOnce();
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <RadioGroup.Root aria-label="Plan" value="free" defaultValue="pro" onValueChange={() => undefined}>
@@ -70,6 +72,21 @@ describe('RadioGroup', () => {
       </RadioGroup.Root>,
     );
     expect(error).toHaveBeenCalledWith('RadioGroup.Root cannot take both value and defaultValue');
+    error.mockRestore();
+  });
+
+  it('reports both value and defaultValue once, not on every render', () => {
+    resetWarnOnce();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const group = (
+      <RadioGroup.Root aria-label="Plan" value="free" defaultValue="pro" onValueChange={() => undefined}>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>
+    );
+    const { rerender } = render(group);
+    rerender(group);
+    rerender(group);
+    expect(error.mock.calls.filter(([message]) => String(message).includes('cannot take both'))).toHaveLength(1);
     error.mockRestore();
   });
 

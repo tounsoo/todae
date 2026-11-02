@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -125,7 +125,7 @@ function focusTarget(view: HTMLElement, remembered: Covered | undefined, initial
 const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
-  const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
+  const [stack, change] = useControlledState<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
   const [memory] = useState(createViewMemory);
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
