@@ -32,16 +32,21 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
 export function useComboboxState(options: UseComboboxOptions, latest: RefObject<UseComboboxOptions>) {
   const multiple = isMultiple(options);
   // While `apply` writes, change callbacks wait here, so every change is stored
-  // before any callback runs and an owner's own write from a callback wins.
+  // before any callback runs. A held callback whose value a later write, such
+  // as the owner's own from an earlier callback, has replaced is skipped.
   const held = useRef<(() => void)[] | null>(null);
-  const report = useCallback((call: () => void) => {
-    if (held.current) held.current.push(call);
+  const report = useCallback((current: () => boolean, call: () => void) => {
+    if (held.current) held.current.push(() => current() && call());
     else call();
   }, []);
   const [open, setOpen, openNow] = useControllableState<boolean, [reason: ComboboxCloseReason]>(
     options.open,
     options.defaultOpen ?? false,
-    (next, reason) => report(() => latest.current.onOpenChange?.(next, reason)),
+    (next, reason) =>
+      report(
+        () => Object.is(openNow(), next),
+        () => latest.current.onOpenChange?.(next, reason),
+      ),
   );
   const initialSingle = multiple ? null : options.value !== undefined ? options.value : (options.defaultValue ?? null);
   // Only a label we actually know: never seed the input (and the first async query) with a raw id.
@@ -49,25 +54,35 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
   const [inputValue, setInput, inputNow] = useControllableState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
-    (next) => report(() => latest.current.onInputValueChange?.(next)),
+    (next) =>
+      report(
+        () => Object.is(inputNow(), next),
+        () => latest.current.onInputValueChange?.(next),
+      ),
   );
   const [single, setSingle, singleNow] = useControllableState<string | null>(
     multiple ? undefined : options.value,
     multiple ? null : (options.defaultValue ?? null),
     (next) =>
-      report(() => {
-        const current = latest.current;
-        if (!isMultiple(current)) current.onValueChange?.(next);
-      }),
+      report(
+        () => Object.is(singleNow(), next),
+        () => {
+          const current = latest.current;
+          if (!isMultiple(current)) current.onValueChange?.(next);
+        },
+      ),
   );
   const [multi, setMulti, multiNow] = useControllableState<readonly string[]>(
     multiple ? options.value : undefined,
     multiple ? (options.defaultValue ?? []) : [],
     (next) =>
-      report(() => {
-        const current = latest.current;
-        if (isMultiple(current)) current.onValueChange?.([...next]);
-      }),
+      report(
+        () => Object.is(multiNow(), next),
+        () => {
+          const current = latest.current;
+          if (isMultiple(current)) current.onValueChange?.([...next]);
+        },
+      ),
   );
 
   /** The field as the last change left it, which writes build on until the next render. */
@@ -78,8 +93,8 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
 
   /**
    * Stores each change that differs from the field's latest state, then calls
-   * their change callbacks. Every callback runs even if one throws; the first
-   * throw is rethrown after them.
+   * the change callbacks of those still current. Every callback runs even if
+   * one throws; the first throw is rethrown after them.
    */
   const apply = useCallback(
     (changes: ComboboxChanges) => {

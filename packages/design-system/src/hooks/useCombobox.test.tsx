@@ -2207,9 +2207,37 @@ describe('useCombobox changes from a callback', () => {
     act(() => result.current.select('react'));
     expect(result.current.open).toBe(true);
     expect(result.current.inputValue).toBe('custom');
-    expect(onOpenChange.mock.calls).toEqual([
-      [true, 'trigger'],
-      [false, 'select'],
-    ]);
+    // The pick's own close was replaced by the owner's open, so it isn't reported.
+    expect(onOpenChange.mock.calls).toEqual([[true, 'trigger']]);
+  });
+
+  it("keeps a controlled owner's own text from onValueChange, with no later report of the pick's label", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        value,
+        inputValue: input,
+        onInputValueChange: (text: string) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          setValue(next);
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('custom');
+    expect(log).toEqual(['value:react', 'input:custom']);
   });
 });
