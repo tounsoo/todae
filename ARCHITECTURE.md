@@ -192,7 +192,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 
 ## Docs
 
-Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean twin in `apps/docs/app/ko`, changed in the same pull request (see [`CLAUDE.md`](CLAUDE.md) and [`apps/docs/TRANSLATING.md`](apps/docs/TRANSLATING.md)).
+Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean twin in `apps/docs/app/ko`, changed in the same pull request (see [`.agents/playbooks/docs-translation.md`](.agents/playbooks/docs-translation.md) and [`apps/docs/TRANSLATING.md`](apps/docs/TRANSLATING.md)).
 
 - **Draw Todae's mark from `apps/docs/lib/brand.tsx`.** The header, the favicons (`/brand/mark.svg`, `/brand/mark-32.png`), the touch icon (`/brand/mark-180.png`) and the link-preview card all render its shapes; don't copy the mark into CSS or another file. *Why:* each copy drifts when the mark changes.
 - **Page shape for a component or hook:** a short intro with a live `<Example>` and code, any topic sections, then `## Accessible composition` (**Todae handles:** / **You supply:** / **Watch for:**), `## When to use` (**When:** / **When not:**), and `## Props`. The docs MCP server reads "When to use".
