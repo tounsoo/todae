@@ -523,7 +523,11 @@ async function resolveBase(ref) {
     if (!sha) throw new Blocked(`base ${ref} does not resolve to a commit; fetch it first`);
     // The plan diffs base...HEAD, which starts at their merge base, so that is the real base.
     const merge = await gitTry(['merge-base', sha, 'HEAD']);
-    if (!merge) throw new Blocked(`no merge base between ${ref} and HEAD in this clone; fetch more history (git fetch --unshallow origin), or pick a base that shares history with HEAD`);
+    if (!merge) {
+      const shallow = (await gitTry(['rev-parse', '--is-shallow-repository'])) === 'true';
+      const fix = shallow ? 'this clone is shallow, so fetch more history (git fetch --unshallow origin) first' : 'pick a base that shares history with HEAD';
+      throw new Blocked(`no merge base between ${ref} and HEAD; ${fix}`);
+    }
     return merge;
   }
   if (!(await gitTry(['rev-parse', '--verify', '--quiet', 'origin/main^{commit}']))) {

@@ -133,8 +133,12 @@ describe('routesFor', () => {
   test('the shared MDX pages render each docs component mdx-components.tsx registers, so a change there shows on them', () => {
     const registry = readFileSync(path.join(repoRoot, 'apps/docs/mdx-components.tsx'), 'utf8');
     const local = new Set();
-    for (const match of registry.matchAll(/^import \{([^}]+)\} from '\.\/components\//gm)) {
-      for (const name of match[1].split(',')) local.add(name.trim());
+    // Every local name bound by an import from ./components/, whatever the import's shape.
+    for (const match of registry.matchAll(/^import\s+(?!type\b)(.+?)\s+from\s+['"]\.\/components\//gm)) {
+      for (const part of match[1].replace(/[{}]/g, ',').split(',')) {
+        const name = part.trim().split(/\s+as\s+/).pop().replace(/^\*\s*/, '').trim();
+        if (name) local.add(name);
+      }
     }
     const body = /const components = \{([^}]+)\}/.exec(registry)[1];
     const entries = body.split(',').map((item) => item.trim()).filter(Boolean).map((item) => {
@@ -686,7 +690,7 @@ describe('command line', () => {
       const lone = execFileSync('git', ['commit-tree', git('rev-parse', 'HEAD^{tree}').trim(), '-m', 'lone'], { cwd: dir, encoding: 'utf8' }).trim();
       const run = plan('--base', lone);
       assert.equal(run.status, 2, run.stderr);
-      assert.match(run.stdout, /no merge base between .* and HEAD in this clone; fetch more history/);
+      assert.match(run.stdout, /no merge base between .* and HEAD; pick a base that shares history with HEAD/);
     });
 
     test('plan is BLOCKED when origin/main is missing', () => {
