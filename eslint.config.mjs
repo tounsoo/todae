@@ -52,24 +52,14 @@ export default tseslint.config(
     files: ['packages/design-system/src/{hooks,overlay,mentions}/**/*.{ts,tsx}'],
     ignores: ['packages/design-system/src/**/*.test.ts', 'packages/design-system/src/**/*.test.tsx'],
     rules: {
-      '@typescript-eslint/no-restricted-imports': [
+      'todae/layer-imports': [
         'error',
         {
-          patterns: [
-            {
-              // components/ in any spelling, and the entries that re-export it.
-              regex: '^(\\./)*\\.\\./(components(/|$)|index(\\.js)?$|server/)',
-              allowTypeImports: true,
-              message: 'Only types come from components/. Move shared code to internal/, or an overlay engine to overlay/.',
-            },
-          ],
+          src: 'packages/design-system/src',
+          deny: ['components', 'index', 'server'],
+          allowTypeImports: true,
+          message: 'Only types come from components/. Move shared code to internal/, or an overlay engine to overlay/.',
         },
-      ],
-      // `import { type X }` still loads the module under verbatimModuleSyntax.
-      '@typescript-eslint/no-import-type-side-effects': 'error',
-      'no-restricted-syntax': [
-        'error',
-        { selector: 'ImportExpression[source.value=/^(\\.\\/)*\\.\\.\\/(components|index|server)/]', message: 'Only types come from components/.' },
       ],
     },
   },
@@ -78,14 +68,9 @@ export default tseslint.config(
     files: ['packages/design-system/src/internal/**/*.{ts,tsx}'],
     ignores: ['packages/design-system/src/**/*.test.ts', 'packages/design-system/src/**/*.test.tsx'],
     rules: {
-      '@typescript-eslint/no-restricted-imports': [
+      'todae/layer-imports': [
         'error',
-        { patterns: [{ group: ['../*'], message: 'internal/ imports only React and other internal/ files.' }] },
-      ],
-      '@typescript-eslint/no-import-type-side-effects': 'error',
-      'no-restricted-syntax': [
-        'error',
-        { selector: 'ImportExpression[source.value=/^\\.\\.\\//]', message: 'internal/ imports only React and other internal/ files.' },
+        { src: 'packages/design-system/src', allow: [], message: 'internal/ imports only React and other internal/ files.' },
       ],
     },
   },

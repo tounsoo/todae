@@ -27,7 +27,7 @@
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "tokens:grandfather": "pnpm --filter @tounsoo/todae tokens:grandfather",
     "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
-    "test": "node --test stylelint/*.test.mjs .claude/skills/verify/verify.test.mjs && pnpm -r --if-present test",
+    "test": "node --test stylelint/*.test.mjs eslint/*.test.mjs .claude/skills/verify/verify.test.mjs && pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
