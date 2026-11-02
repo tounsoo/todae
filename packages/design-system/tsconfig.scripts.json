@@ -4,8 +4,8 @@
     "noEmit": false,
     "rewriteRelativeImportExtensions": true,
     "declaration": true,
-    "outDir": "dist/scripts",
-    "rootDir": "scripts",
+    "outDir": "dist",
+    "rootDir": ".",
     "lib": ["ES2022"],
     "types": ["node"]
   },
