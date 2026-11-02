@@ -68,7 +68,14 @@ test('a clean package exits 0 and writes a row for every export, entry and css f
     Alpha: 'export/browser',
     Beta: 'export/browser',
   })
-  assert.ok(report.rows.Alpha.gzip < report.rows.Beta.gzip + report.rows.Alpha.gzip)
+  assert.ok(report.rows.Alpha.gzip < report.rows['. (everything)'].gzip)
+})
+
+test('--json creates the folder it writes into', () => {
+  const json = join(temp, 'new-folder', 'nested', 'report.json')
+  const result = run(fixture({}), '--json', json)
+  assert.equal(result.status, 0, result.stderr)
+  assert.ok(readReport(json).rows.Alpha)
 })
 
 test('a bare -- argument is ignored', () => {

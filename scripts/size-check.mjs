@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { basename, dirname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -136,7 +136,10 @@ const kindOrder = { entry: 0, css: 1, export: 2 }
 const names = Object.keys(rows).sort((a, b) => kindOrder[rows[a].kind] - kindOrder[rows[b].kind] || a.localeCompare(b))
 const report = { commit: process.env.GITHUB_SHA ?? null, rows: Object.fromEntries(names.map((name) => [name, rows[name]])) }
 
-if (values.json) writeFileSync(values.json, `${JSON.stringify(report, null, 2)}\n`)
+if (values.json) {
+  mkdirSync(dirname(resolve(values.json)), { recursive: true })
+  writeFileSync(values.json, `${JSON.stringify(report, null, 2)}\n`)
+}
 
 let baseline = null
 if (values.baseline) {
