@@ -112,7 +112,6 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-clipboard': () => import('../../app/(en)/utilities/use-clipboard/page.mdx'),
   'utilities/use-combobox': () => import('../../app/(en)/utilities/use-combobox/page.mdx'),
   'utilities/use-controlled-state': () => import('../../app/(en)/utilities/use-controlled-state/page.mdx'),
-  'utilities/use-controlled-value': () => import('../../app/(en)/utilities/use-controlled-value/page.mdx'),
   'utilities/use-dropzone': () => import('../../app/(en)/utilities/use-dropzone/page.mdx'),
   'utilities/use-field': () => import('../../app/(en)/utilities/use-field/page.mdx'),
   'utilities/use-focus-handoff': () => import('../../app/(en)/utilities/use-focus-handoff/page.mdx'),

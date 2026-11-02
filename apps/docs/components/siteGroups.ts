@@ -110,7 +110,6 @@ export const SITE_GROUPS = [
       ['/utilities/use-clipboard', 'useClipboard'],
       ['/utilities/use-combobox', 'useCombobox'],
       ['/utilities/use-controlled-state', 'useControlledState'],
-      ['/utilities/use-controlled-value', 'useControlledValue'],
       ['/utilities/use-dropzone', 'useDropzone'],
       ['/utilities/use-field', 'useField'],
       ['/utilities/use-focus-handoff', 'useFocusHandoff'],

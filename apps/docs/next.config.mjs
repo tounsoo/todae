@@ -13,6 +13,7 @@ const REDIRECTS = [
   ['/field/time-input', '/field/time-picker'],
   ['/field/date-time-input', '/field/date-time-picker'],
   ['/spinner', '/loader'],
+  ['/utilities/use-controlled-value', '/utilities/use-controlled-state'],
 ];
 
 // Vercel names the project's production domain in every deployment, previews included.

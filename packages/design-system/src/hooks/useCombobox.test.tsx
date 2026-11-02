@@ -9,7 +9,8 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { DialogRootProps } from '../components/Dialog.js';
-import { Activity, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Activity, Profiler, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
@@ -2178,5 +2179,300 @@ describe('useCombobox controlled owner that turns a change down', () => {
       [['react', 'redux', 'vue', 'x']],
       [['redux', 'vue']],
     ]);
+  });
+});
+
+describe('useCombobox changes from a callback', () => {
+  const choices = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it("stores a pick's changes before its callbacks run, so the owner's own write from one wins", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange,
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(result.current.inputValue).toBe('custom');
+    // The pick's own close was replaced by the owner's open, so it isn't reported.
+    expect(onOpenChange.mock.calls).toEqual([[true, 'trigger']]);
+  });
+
+  it("keeps a controlled owner's own text from onValueChange, with no later report of the pick's label", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        value,
+        inputValue: input,
+        onInputValueChange: (text: string) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          setValue(next);
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('custom');
+    expect(log).toEqual(['value:react', 'input:custom']);
+  });
+});
+
+describe('useCombobox held change reports', () => {
+  const picks = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it('still reports each change to an owner that renders at once from an earlier callback', () => {
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      return useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          flushSync(() => setValue(next));
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['value:react', 'input:React', 'open:false:select']);
+    expect(result.current.open).toBe(false);
+    expect(result.current.inputValue).toBe('React');
+  });
+
+  it('asks a controlled owner to open on typing, even when it renders at once from the text report', () => {
+    const log: string[] = [];
+    function Typed() {
+      const [open, setOpen] = useState(false);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: input,
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          flushSync(() => setInput(text));
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Typed />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(log).toEqual(['input:r', 'open:true:trigger']);
+  });
+
+  it("skips a held report once the owner's own writes have changed that field again", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange: (next, reason) => log.push(`open:${next}:${reason}`),
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setOpen(false, 'escape');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['open:true:trigger', 'open:false:escape']);
+    expect(result.current.open).toBe(false);
+  });
+
+  it('does not render a read-only open popover again on an outside press', async () => {
+    let commits = 0;
+    function ReadOnly() {
+      const combobox = useCombobox({ options: picks, presentation: 'popover', open: true });
+      return (
+        <div>
+          <label {...combobox.getLabelProps()}>Field</label>
+          <Field.Root {...combobox.getAnchorProps()}>
+            <Field.TextInput {...combobox.getInputProps()} />
+          </Field.Root>
+          <Popover.Root {...combobox.getPopoverProps()}>
+            <OptionList.Root {...combobox.getListboxProps()}>
+              {combobox.items.map((item) => (
+                <OptionList.Option key={item.id} {...combobox.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </div>
+      );
+    }
+    render(
+      <Profiler id="combobox" onRender={() => (commits += 1)}>
+        <ReadOnly />
+      </Profiler>,
+    );
+    const input = screen.getByRole('combobox');
+    input.focus();
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    const before = commits;
+    fireEvent.pointerDown(document.body);
+    fireEvent.pointerUp(document.body);
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    expect(commits).toBe(before);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it.each([false, true])('lets an owner keep the list open from onValueChange (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setOpen(true, 'trigger');
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(log).not.toContain('open:false:select');
+  });
+
+  it.each([false, true])('lets an owner keep its query from onValueChange in multiple mode (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string[]>([]);
+      const [input, setInput] = useState('re');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        selectionMode: 'multiple',
+        value,
+        inputValue: input,
+        defaultOpen: true,
+        onValueChange: (next: string[]) => {
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setInputValue('re');
+        },
+        onInputValueChange: setInput,
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('re');
+  });
+
+  it('keeps a close an owner asks for after it renders at once from the text report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    function Owner() {
+      const [open, setOpen] = useState(false);
+      const [query, setQuery] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: query,
+        onInputValueChange: (text) => {
+          flushSync(() => setQuery(text));
+          box.current!.setOpen(false, 'escape');
+        },
+        onOpenChange: (next) => setOpen(next),
+      });
+      box.current = combobox;
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Owner />);
+    // Typing reports the text and asks to open.
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(box.current!.inputValue).toBe('r');
+    expect(box.current!.open).toBe(false);
+  });
+
+  it('keeps a clear an owner asks for after it renders at once from the value report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [query, setQuery] = useState('');
+      const [, setTick] = useState(0);
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        inputValue: query,
+        onInputValueChange: setQuery,
+        onValueChange: () => {
+          flushSync(() => setTick((count) => count + 1));
+          box.current!.clear();
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('vue'));
+    expect(result.current.inputValue).toBe('');
+    expect(result.current.value).toBe(null);
   });
 });

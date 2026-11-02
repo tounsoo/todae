@@ -148,7 +148,7 @@ describe('docs mcp tools', () => {
     }
     // Every other hook in the schema has its own page under Utilities, slugged from its name.
     const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name) && !(row.name in providerHooks));
-    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useAnnouncer', 'useChipField', 'useChipList', 'useCombobox', 'useControlledState', 'useControlledValue', 'usePopover', 'useSheetPresentation', 'useTooltip']));
+    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useAnnouncer', 'useChipField', 'useChipList', 'useCombobox', 'useControlledState', 'usePopover', 'useSheetPresentation', 'useTooltip']));
     for (const { name } of hooks) {
       const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
       expect(getComponent(name).docsUrl, name).toBe(`${DOCS_ORIGIN}/utilities/${slug}`);

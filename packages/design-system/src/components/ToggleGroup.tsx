@@ -53,6 +53,8 @@ export type ToggleGroupItemProps = {
 type ToggleGroupContextValue = {
   pressed: ReadonlySet<string>;
   toggle: (value: string) => void;
+  /** A controlled value with no onValueChange, which a press can't change. */
+  readOnly: boolean;
   disabled: boolean;
   roving: UseRovingFocusResult | null;
 };
@@ -116,7 +118,15 @@ function Root(props: ToggleGroupRootProps) {
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
   return (
-    <ToggleGroupContext.Provider value={{ pressed, toggle, disabled, roving: toolbar ? null : roving }}>
+    <ToggleGroupContext.Provider
+      value={{
+        pressed,
+        toggle,
+        readOnly: valueProp !== undefined && !onValueChange,
+        disabled,
+        roving: toolbar ? null : roving,
+      }}
+    >
       <div
         {...rest}
         {...container}
@@ -155,7 +165,8 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
       {...roving}
       disabled={off}
       pressed={ctx.pressed.has(value)}
-      onPressedChange={() => ctx.toggle(value)}
+      // A read-only group asks no one, so its items don't render on a press.
+      onPressedChange={ctx.readOnly ? undefined : () => ctx.toggle(value)}
     />
   );
 }

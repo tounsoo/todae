@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { useDomId } from './domId.js';
 import { Button, type ButtonActionProps } from './Button.js';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useButtonName } from './buttonName.js';
 import { useCloseGlyph } from './closeGlyph.js';
@@ -162,7 +162,7 @@ export function DialogShellRoot({
   const panelRef = useRef<HTMLDivElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
-  const [open, onOpenChange] = useControlledValue<boolean, [reason: DialogCloseReason]>(
+  const [open, onOpenChange] = useControlledState<boolean, [reason: DialogCloseReason]>(
     openProp,
     defaultOpen,
     onOpenChangeProp,
