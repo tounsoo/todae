@@ -57,9 +57,9 @@ node --experimental-strip-types --no-warnings=ExperimentalWarning .claude/skills
 `run` checks these first and writes no passing report when one fails. `doctor` and `drive` are the same command as `run`.
 
 - The helper accepts a local URL on port 3321 (`127.0.0.1` or `localhost`), or an `https` URL on `*.vercel.app`. It rejects every other host, `https://todae.omsoo.design` included, and a host name that only starts with `127.`, such as `127.example.com`.
-- Preview: pass the SHA you read from the deployment as `--deployment-sha` and the head as `--expect-sha`. The helper compares the two flags and labels the line `source=caller-asserted`. It does not call the Vercel API. Pass the deployment's `dpl_` id as `--deployment-id`. The helper refuses a preview without it and writes it on the doctor line, so the report names the deployment it was checked against.
+- Preview: pass the SHA you read from the deployment as `--deployment-sha` and the head as `--expect-sha`. The helper compares the two flags and labels the line `source=caller-asserted`. It does not call the Vercel API. Pass the deployment's `dpl_` id as `--deployment-id`. The helper refuses a preview without it and writes it on the doctor line. It does not look the id up, so the id is caller-asserted too. The helper trusts `--url` and sends the OIDC header to the host it names, so pass the URL of that same deployment.
 - Local: `.verify/scratch/server.json` names the pid, that process's command contains `next` and `3321`, `git rev-parse HEAD` equals `--expect-sha`, and `apps/docs` and `packages/design-system` have no uncommitted changes.
-- Each path is a site path such as `/button`. The helper refuses one that would open another host, so the OIDC header stays on the deployment.
+- Each path is a site path such as `/button`. The helper refuses one that would leave the `--url` origin, before it starts the browser. A redirect can still carry the OIDC header off that origin, as LAUNCH says.
 - Each path returns 200 with `data-appearance` in the HTML. A login wall fails here.
 
 ## DRIVE
@@ -78,7 +78,7 @@ Each feature file names the extra checks for its page. Find elements by role and
 
 ## EVIDENCE
 
-The helper writes `.verify/evidence/<stamp>/`: `report.txt` is the log, `latest` names the newest stamp, whether that run passed or failed, so read its `report.txt` before you cite it, and the screenshots are full-page PNGs named `<locale>-<width>-<slug>.png`. Open the PNGs with Read and look at them before you call a UI change proven.
+The helper writes `.verify/evidence/<stamp>/`: `report.txt` is the log, `latest` names the newest stamp from the moment that run starts, whether it passes or fails, so read its `report.txt` before you cite it, and the screenshots are full-page PNGs named `<locale>-<width>-<slug>.png`. Open the PNGs with Read and look at them before you call a UI change proven.
 
 Cite the proof that matches the change in the pull request's Verification section. The PNGs stay in `.verify/evidence`, so for screenshots cite the stamp and file names and say what each one showed when you read it:
 

@@ -18,8 +18,8 @@ const PORT = 3321;
 const WIDE = 1280;
 const NARROW = 390;
 // apps/docs/app/globals.css hides .top-links at max-width 48rem and the menu trigger at min-width 64rem.
-const TOP_LINKS_HIDE_AT = 768;
-const MENU_HIDES_FROM = 1024;
+const TOP_LINKS_HIDDEN_UP_TO = 768;
+const MENU_HIDDEN_FROM = 1024;
 const REPO = 'https://github.com/tounsoo/todae';
 
 const docsRequire = createRequire(path.join(root, 'apps/docs/package.json'));
@@ -213,37 +213,45 @@ async function selfTest() {
   console.log(`self-test ok groups=${groups.map((group) => `${group.id}:${group.links.length}`).join(',')} guards=ok`);
 }
 
-async function refuses(label, attempt) {
+async function refuses(label, reason, attempt) {
   let result;
   try {
     result = await attempt();
-  } catch {
-    return;
+  } catch (error) {
+    if (reason.test(error.message)) return;
+    throw new Error(`self-test refused ${label} for another reason: ${error.message}`);
   }
   throw new Error(`self-test accepted ${label}: ${JSON.stringify(result)}`);
 }
 
 async function guardTest() {
-  const preview = { url: 'https://todae-verify.vercel.app' };
-  const targets = async (paths) => (await pathsOf({ ...preview, paths })).map((pathname) => pageUrl(pathname, preview));
+  const preview = 'https://todae-verify.vercel.app';
   for (const escape of ['https://evil.example/', '//evil.example/', '/\\evil.example/', '/\t/evil.example/', '/ko//evil.example/']) {
-    await refuses(`--paths ${JSON.stringify(escape)}`, () => targets(escape));
+    await refuses(`--paths ${JSON.stringify(escape)}`, /leaves https:\/\/todae-verify\.vercel\.app/, () => targetsOf(escape, preview));
   }
-  const kept = await targets('/button');
+  for (const empty of ['', ',', true]) {
+    await refuses(`--paths ${JSON.stringify(empty)}`, /pass --paths/, () => targetsOf(empty, preview));
+  }
+  const kept = (await targetsOf('/button', preview)).map(({ target }) => target);
   if (kept.join(' ') !== 'https://todae-verify.vercel.app/button https://todae-verify.vercel.app/ko/button') {
     throw new Error(`--paths /button opened ${kept.join(' ')}`);
   }
+  await refuses('a page off the verified origin', /is not on https:\/\/todae-verify\.vercel\.app/, () =>
+    openPage(null, WIDE, 'https://evil.example/', preview),
+  );
+  const sha = 'a'.repeat(40);
   for (const host of ['127.evil.example', '127.0.0.1.nip.io']) {
-    if (isLoopback(new URL(`http://${host}:${PORT}/`).hostname)) throw new Error(`${host} counted as loopback`);
+    await refuses(`http://${host}:${PORT}`, /pass http:\/\/127\.0\.0\.1:3321/, () =>
+      assertSha({ 'expect-sha': sha }, `http://${host}:${PORT}`),
+    );
   }
   for (const host of ['127.0.0.1', 'localhost', '[::1]']) {
     if (!isLoopback(new URL(`http://${host}:${PORT}/`).hostname)) throw new Error(`${host} did not count as loopback`);
   }
-  const sha = 'a'.repeat(40);
-  await refuses('a preview with no --deployment-id', () =>
-    assertSha({ 'expect-sha': sha, 'deployment-sha': sha }, preview.url),
+  await refuses('a preview with no --deployment-id', /pass --deployment-id/, () =>
+    assertSha({ 'expect-sha': sha, 'deployment-sha': sha }, preview),
   );
-  const asserted = await assertSha({ 'expect-sha': sha, 'deployment-sha': sha, 'deployment-id': 'dpl_verify' }, preview.url);
+  const asserted = await assertSha({ 'expect-sha': sha, 'deployment-sha': sha, 'deployment-id': 'dpl_verify' }, preview);
   if (asserted.deploymentId !== 'dpl_verify') throw new Error(`deployment id not kept: ${JSON.stringify(asserted)}`);
 }
 
@@ -369,8 +377,8 @@ function openUrl(flags) {
   return process.env.VERIFY_URL || flags.url;
 }
 
-function pageUrl(pathname, flags) {
-  const base = new URL(openUrl(flags));
+function pageUrl(pathname, baseUrl) {
+  const base = new URL(baseUrl);
   const target = new URL(pathname, `${base.origin}/`);
   if (target.origin !== base.origin) {
     throw new Error(`--paths takes site paths such as /button, and ${JSON.stringify(pathname)} leaves ${base.origin}`);
@@ -380,10 +388,11 @@ function pageUrl(pathname, flags) {
   return target.toString();
 }
 
-async function pathsOf(flags) {
+async function targetsOf(raw = '/,/ko', baseUrl) {
   await ensureConfig();
-  const raw = flags.paths ?? '/,/ko';
+  if (typeof raw !== 'string') throw new Error('pass --paths with site paths such as /button');
   const given = raw.split(',').map((item) => item.trim()).filter(Boolean);
+  if (given.length === 0) throw new Error('pass --paths with at least one site path such as /');
   const out = [];
   for (const pathname of given) {
     const bare = stripLocale(pathname);
@@ -392,7 +401,7 @@ async function pathsOf(flags) {
       if (!out.includes(next)) out.push(next);
     }
   }
-  return out;
+  return out.map((pathname) => ({ pathname, target: pageUrl(pathname, baseUrl) }));
 }
 
 function isLoopback(hostname) {
@@ -429,19 +438,15 @@ async function assertSha(flags, origin) {
   return { expectSha, deploymentSha, deploymentId, mode: 'preview', source: 'caller-asserted' };
 }
 
-async function withBrowser(callback) {
+function openBrowser() {
   const { chromium } = docsRequire('playwright');
-  const browser = await chromium.launch({ headless: true });
-  try {
-    return await callback(browser);
-  } finally {
-    await browser.close();
-  }
+  return chromium.launch({ headless: true });
 }
 
-async function openPage(browser, width, target) {
+async function openPage(browser, width, target, verifiedUrl) {
+  const origin = new URL(verifiedUrl).origin;
+  if (new URL(target).origin !== origin) throw new Error(`${publicUrl(target)} is not on ${origin}`);
   const height = width === NARROW ? 844 : 800;
-  const origin = new URL(target).origin;
   const context = await browser.newContext({
     viewport: { width, height },
     reducedMotion: 'reduce',
@@ -505,14 +510,14 @@ async function headerCheck(page, copy, groups, pathname, width) {
     const link = main.locator('a', { hasText: label });
     if ((await link.count()) !== 1) throw new Error(`top link ${label} count ${await link.count()}`);
     const shown = await link.isVisible();
-    if (width > TOP_LINKS_HIDE_AT && !shown) throw new Error(`${label} hidden at ${width}`);
-    if (width <= TOP_LINKS_HIDE_AT && shown) throw new Error(`${label} visible at ${width}`);
+    if (width > TOP_LINKS_HIDDEN_UP_TO && !shown) throw new Error(`${label} hidden at ${width}`);
+    if (width <= TOP_LINKS_HIDDEN_UP_TO && shown) throw new Error(`${label} visible at ${width}`);
     if ((await link.getAttribute('href')) !== href) throw new Error(`${label} href mismatch`);
   }
   const menu = page.getByRole('button', { name: copy.openMenu, exact: true });
-  const menuShown = width < MENU_HIDES_FROM || bare === '/playground';
+  const menuShown = width < MENU_HIDDEN_FROM || bare === '/playground';
   if ((await menu.isVisible()) !== menuShown) throw new Error(`menu button ${menuShown ? 'hidden' : 'visible'} at ${width} on ${pathname}`);
-  if (width <= TOP_LINKS_HIDE_AT) {
+  if (width <= TOP_LINKS_HIDDEN_UP_TO) {
     await menu.click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor({ state: 'visible' });
@@ -542,15 +547,13 @@ async function homeCheck(page, copy, groups) {
   return lines;
 }
 
-async function drive(flags, browser) {
-  await ensureConfig();
-  const groups = await loadSiteGroups();
-  const copy = loadCopy();
-  const origin = new URL(openUrl(flags)).origin;
+async function drive(flags) {
   const stamp = new Date().toISOString().replaceAll(':', '').replaceAll('.', '');
   const dir = path.join(evidenceRoot, stamp);
   await mkdir(dir, { recursive: true });
-  await rm(path.join(evidenceRoot, 'latest'), { force: true });
+  const pointer = path.join(evidenceRoot, 'latest.tmp');
+  await writeFile(pointer, `${dir}\n`);
+  await rename(pointer, path.join(evidenceRoot, 'latest'));
   const lines = [];
   const note = (line) => {
     const safe = redact(line);
@@ -558,17 +561,23 @@ async function drive(flags, browser) {
     console.log(safe);
   };
   let failed = null;
+  let browser;
   try {
-    const sha = await assertSha(flags, origin);
+    await ensureConfig();
+    const groups = await loadSiteGroups();
+    const copy = loadCopy();
+    const baseUrl = openUrl(flags);
+    const sha = await assertSha(flags, new URL(baseUrl).origin);
     const deployment = sha.deploymentId ? ` deployment-id=${sha.deploymentId}` : '';
     note(`doctor mode=${sha.mode} source=${sha.source}${deployment} expect-sha=${sha.expectSha} compared-sha=${sha.deploymentSha}`);
-    note(`doctor url=${publicUrl(openUrl(flags))}`);
-    for (const pathname of await pathsOf(flags)) {
+    note(`doctor url=${publicUrl(baseUrl)}`);
+    const targets = await targetsOf(flags.paths, baseUrl);
+    browser = await openBrowser();
+    for (const { pathname, target } of targets) {
       for (const width of [WIDE, NARROW]) {
-        const target = pageUrl(pathname, flags);
         let opened;
         try {
-          opened = await openPage(browser, width, target);
+          opened = await openPage(browser, width, target, baseUrl);
           const { page, status } = opened;
           const locale = localeOf(pathname);
           const words = copyFor(copy, locale);
@@ -597,10 +606,11 @@ async function drive(flags, browser) {
   } catch (error) {
     failed = error;
     note(`FAIL ${error.message}`);
+  } finally {
+    if (browser) await browser.close();
   }
   const report = path.join(dir, 'report.txt');
   await writeFile(report, `${lines.join('\n')}\n`);
-  await writeFile(path.join(evidenceRoot, 'latest'), `${dir}\n`);
   if (failed) process.exitCode = 1;
   return dir;
 }
@@ -630,10 +640,7 @@ async function main() {
         if (!flags.url && !process.env.VERIFY_URL) flags.url = started.url;
       }
       if (!flags.url && !process.env.VERIFY_URL) flags.url = `http://127.0.0.1:${PORT}`;
-      await assertSha(flags, new URL(openUrl(flags)).origin);
-      await withBrowser(async (browser) => {
-        await drive(flags, browser);
-      });
+      await drive(flags);
     } finally {
       if (spawned) {
         try {
