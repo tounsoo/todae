@@ -76,13 +76,15 @@ if (problems.length === 0) {
   }
 }
 
+if (problems.length > 0) problems.push('make the same change in both copies, as docs/decisions/0005-verify-procedure.md says')
+
 const manifest = readFileSync(join(repo, '.claude/pstack-files.txt'), 'utf8').split('\n')
 if (manifest.includes(copies.claude)) {
-  problems.push(`.claude/pstack-files.txt lists ${copies.claude}, so the next update-pstack.sh run deletes the Claude copy. Add verify to the skip list in .claude/update-pstack.sh`)
+  problems.push(`.claude/pstack-files.txt lists ${copies.claude}, so the next update-pstack.sh run deletes the Claude copy. Restore the copy from git and add verify to the skip list in .claude/update-pstack.sh`)
 }
 
 if (problems.length > 0) {
-  console.error(`verify-skill-sync: ${problems.join('; ')}. Make the same change in both copies, as docs/decisions/0005-verify-procedure.md says.`)
+  console.error(`verify-skill-sync: ${problems.join('; ')}`)
   process.exit(1)
 }
 console.log(`verify-skill-sync: ${walk(join(repo, copies.cursor)).length - 1} shared files and ${sharedRules.length} rules match`)
