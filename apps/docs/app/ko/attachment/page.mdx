@@ -1,24 +1,10 @@
-import { AttachmentExample } from '../../../components/demos/AttachmentDemo';
+import AttachmentExample from '../../../examples/attachment/AttachmentExample';
 
 # Attachment
 
 `Attachment.Root`는 작성창이나 메시지 안의 파일 하나를 보여 줍니다. 미리보기, 이름, 크기 같은 한 줄, 업로드 막대, 그리고 파일을 빼는 버튼입니다. 업로드의 상태를 보여 줄 뿐, 업로드 자체는 [useDropzone](/utilities/use-dropzone)이 받은 파일마다 보내는 `fetch`처럼 직접 작성하는 코드입니다.
 
-```tsx
-<Attachment.Root status={file.status}>
-  <Attachment.Preview>
-    <FileText aria-hidden />
-  </Attachment.Preview>
-  <Attachment.Name>{file.name}</Attachment.Name>
-  <Attachment.Meta>{file.size}</Attachment.Meta>
-  {file.status === 'uploading' ? <Attachment.Progress value={file.progress} max={100} /> : null}
-  <Attachment.Remove onClick={() => remove(file)} />
-</Attachment.Root>
-```
-
-<Example>
-  <AttachmentExample />
-</Example>
+<Example of={AttachmentExample} />
 
 ## 파트
 

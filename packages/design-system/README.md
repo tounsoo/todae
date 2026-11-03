@@ -4,6 +4,8 @@ Todae is a low-level React design system that companies build their own design s
 
 Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.omsoo.design)
 
+Todae is on 0.x, so a minor release can break the API. The [changelog](https://github.com/tounsoo/todae/blob/main/packages/design-system/CHANGELOG.md) lists what each release changed and, for each breaking change, what to change in your code.
+
 ## Install
 
 ```sh
@@ -51,7 +53,7 @@ In Next.js, the main entry is a client module: a Server Component can render the
 
 ## Browser support
 
-Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers, `parseDate`, `parseTime` and `parseDateTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
+Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers, `parseDate`, `parseDateRange`, `parseTime` and `parseDateTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
 ## License
 

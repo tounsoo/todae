@@ -1,34 +1,10 @@
-import { PaginationButtons } from '../../../components/demos/PaginationDemo';
+import PaginationButtons from '../../../examples/pagination/PaginationButtons';
 
 # Pagination
 
 페이지들의 순서 있는 목록을 감싼 `nav` 랜드마크입니다. 보여 줄 페이지는 `paginationRange`가 정하고, 항목 안에는 직접 만든 링크나 버튼을 넣으므로 라우터의 링크를 그대로 쓸 수 있습니다.
 
-```tsx
-<Pagination.Root>
-  <Pagination.Item>
-    {page > 1 ? <Link.Root href={`?page=${page - 1}`}>Previous</Link.Root> : <Link.Root role="link" aria-disabled="true">Previous</Link.Root>}
-  </Pagination.Item>
-  {paginationRange({ page, count }).map((item) =>
-    typeof item === 'number' ? (
-      <Pagination.Item key={item}>
-        <Link.Root href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
-          {item}
-        </Link.Root>
-      </Pagination.Item>
-    ) : (
-      <Pagination.Ellipsis key={item} />
-    ),
-  )}
-  <Pagination.Item>
-    {page < count ? <Link.Root href={`?page=${page + 1}`}>Next</Link.Root> : <Link.Root role="link" aria-disabled="true">Next</Link.Root>}
-  </Pagination.Item>
-</Pagination.Root>
-```
-
-<Example>
-  <PaginationButtons />
-</Example>
+<Example of={PaginationButtons} />
 
 ## 페이지 범위
 

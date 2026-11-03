@@ -1,23 +1,10 @@
-import { SelectFiles } from '../../../../components/demos/SelectionDemo';
+import SelectFiles from '../../../../examples/utilities/use-selection/SelectFiles';
 
 # useSelection
 
 `useSelection(options)` keeps a selection of keys, such as the rows of a table or the items of a list, and returns prop getters that wire it to `Checkbox.Root`. `getCheckboxProps(key)` gives one item's checkbox its `checked`, `disabled` and `onChange`, and `getSelectAllProps()` gives a select-all checkbox the same, with `indeterminate` while some items are selected.
 
-```tsx
-const selection = useSelection({ keys: files });
-
-<Checkbox.Root {...selection.getSelectAllProps()}>Select all files</Checkbox.Root>
-{files.map((file) => (
-  <Checkbox.Root key={file} {...selection.getCheckboxProps(file)}>
-    {file}
-  </Checkbox.Root>
-))}
-```
-
-<Example block>
-  <SelectFiles />
-</Example>
+<Example of={SelectFiles} block />
 
 `keys` lists the keys that can be selected now, in display order, and `disabledKeys` the ones among them that cannot. `value` is the selected keys in the order they were selected, and `state` is `'none'`, `'some'` or `'all'` over the enabled keys in `keys`. `toggle(key)` flips one key, `toggleAll()` selects every enabled key or, when all are selected, clears them, and `clear()` empties the selection. A key is a string or a number. Pass `value` and `onValueChange` to control the selection, or `defaultValue` to start it somewhere; `onValueChange` gets the new array of keys, as in [ToggleGroup](/toggle-group).
 

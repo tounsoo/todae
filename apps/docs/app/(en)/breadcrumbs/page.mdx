@@ -1,24 +1,11 @@
-import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/BreadcrumbsDemo';
+import BreadcrumbsTrail from '../../../examples/breadcrumbs/BreadcrumbsTrail';
+import { BreadcrumbsChevron } from '../../../components/demos/BreadcrumbsDemo';
 
 # Breadcrumbs
 
 The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark around an ordered list, and each `Breadcrumbs.Item` is a list item. Put a link in each item, such as an `a` or your router's link, and plain text in the last one, marked `current`, which wraps that text in a `span` with `aria-current="page"`.
 
-```tsx
-<Breadcrumbs.Root>
-  <Breadcrumbs.Item>
-    <Link.Root href="/">Home</Link.Root>
-  </Breadcrumbs.Item>
-  <Breadcrumbs.Item>
-    <Link.Root href="/settings">Settings</Link.Root>
-  </Breadcrumbs.Item>
-  <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
-</Breadcrumbs.Root>
-```
-
-<Example>
-  <BreadcrumbsTrail />
-</Example>
+<Example of={BreadcrumbsTrail} />
 
 Server Components can import it from `@tounsoo/todae/breadcrumbs`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 

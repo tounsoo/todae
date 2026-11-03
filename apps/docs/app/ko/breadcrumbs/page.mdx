@@ -1,24 +1,11 @@
-import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/BreadcrumbsDemo';
+import BreadcrumbsTrail from '../../../examples/breadcrumbs/BreadcrumbsTrail';
+import { BreadcrumbsChevron } from '../../../components/demos/BreadcrumbsDemo';
 
 # Breadcrumbs
 
 현재 페이지 위에 있는 페이지들의 경로입니다. `Breadcrumbs.Root`는 순서 있는 목록을 감싼 `nav` 랜드마크이고, 각 `Breadcrumbs.Item`은 목록 항목입니다. 각 항목에는 `a`나 라우터의 링크 같은 링크를 넣고, 마지막 항목에는 일반 텍스트를 넣어 `current`로 표시하세요. 그러면 그 텍스트가 `aria-current="page"`가 있는 `span`으로 감싸집니다.
 
-```tsx
-<Breadcrumbs.Root>
-  <Breadcrumbs.Item>
-    <Link.Root href="/">Home</Link.Root>
-  </Breadcrumbs.Item>
-  <Breadcrumbs.Item>
-    <Link.Root href="/settings">Settings</Link.Root>
-  </Breadcrumbs.Item>
-  <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
-</Breadcrumbs.Root>
-```
-
-<Example>
-  <BreadcrumbsTrail />
-</Example>
+<Example of={BreadcrumbsTrail} />
 
 Server Components는 `@tounsoo/todae/breadcrumbs`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
 

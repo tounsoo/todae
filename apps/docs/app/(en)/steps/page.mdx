@@ -1,22 +1,11 @@
-import { StepsExample, StepsProgressExample } from '../../../components/demos/StepsDemo';
+import StepsProgressExample from '../../../examples/steps/StepsProgressExample';
+import StepsExample from '../../../examples/steps/StepsExample';
 
 # Steps
 
 `Steps.Root` shows a sequence of steps and where each one is, such as an agent's plan while it works, a checklist, or the steps of a form. Each `Steps.Item` takes a `status`: `done`, `current`, `pending` or `error`. The steps and their order are your data; Todae draws a marker for each status and the line that joins them.
 
-```tsx
-<Steps.Root aria-label="Plan">
-  {plan.map((step) => (
-    <Steps.Item key={step.id} status={step.status}>
-      {step.title}
-    </Steps.Item>
-  ))}
-</Steps.Root>
-```
-
-<Example>
-  <StepsExample />
-</Example>
+<Example of={StepsExample} />
 
 ## Parts
 
@@ -29,17 +18,7 @@ The markers and their colors come from the `steps.marker.*` tokens, the progress
 
 `variant` on `Steps.Root` sets how the steps are drawn. The default, `plan`, is work that runs, such as an agent's plan: the current step shows a [Loader](/loader) spinner and done steps have their text struck through. `progress` is where a person is in a form, such as the steps of a [Wizard](/recipes/wizard): the current step shows a still ring with a dot in it, and done steps keep their text. The statuses, status words and `aria-current` are the same in both.
 
-```tsx
-<Steps.Root variant="progress" aria-label="Sign-up steps">
-  <Steps.Item status="done">Account</Steps.Item>
-  <Steps.Item status="current">Workspace</Steps.Item>
-  <Steps.Item>Review</Steps.Item>
-</Steps.Root>
-```
-
-<Example>
-  <StepsProgressExample />
-</Example>
+<Example of={StepsProgressExample} />
 
 ## Status words
 

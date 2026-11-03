@@ -1,28 +1,10 @@
-import { ContentsGuide } from '../../../components/demos/ContentsDemo';
+import ContentsGuide from '../../../examples/contents/ContentsGuide';
 
 # Contents
 
 An "On this page" list of links to the sections of a page. `Contents.Root` is a `nav` landmark holding a list, each `Contents.Item` holds a `Contents.Link` to a section's heading by its fragment, and a `Contents.List` nests the sections under one heading. While the page scrolls, the link to the section being read takes `aria-current="location"`.
 
-```tsx
-<Contents.Root label="On this page">
-  <Contents.Item>
-    <Contents.Link href="#install">Install</Contents.Link>
-  </Contents.Item>
-  <Contents.Item>
-    <Contents.Link href="#tokens">Tokens</Contents.Link>
-    <Contents.List>
-      <Contents.Item>
-        <Contents.Link href="#colors">Colors</Contents.Link>
-      </Contents.Item>
-    </Contents.List>
-  </Contents.Item>
-</Contents.Root>
-```
-
-<Example>
-  <ContentsGuide />
-</Example>
+<Example of={ContentsGuide} />
 
 You give the links, as you do for [Nav](/nav). Todae doesn't read the page's headings, so the list says what you choose and your server can render it. Give each heading an `id` that its link's `href` names; a link to another page is not marked current.
 

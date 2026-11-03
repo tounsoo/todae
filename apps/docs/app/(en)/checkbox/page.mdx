@@ -1,4 +1,5 @@
-import { CheckboxIndeterminate, CheckboxStates } from '../../../components/demos/CheckboxDemo';
+import CheckboxIndeterminate from '../../../examples/checkbox/CheckboxIndeterminate';
+import CheckboxStates from '../../../examples/checkbox/CheckboxStates';
 
 # Checkbox
 
@@ -6,27 +7,7 @@ Native checkbox. Children are the visible label.
 
 Controlled when `checked` is defined. Uncontrolled when you pass `defaultChecked` or omit both. `useControlledState` does not fire `onCheckedChange`. The component does.
 
-```tsx
-const errorId = useId();
-const invalid = !accepted;
-
-<Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
-<Field.Group>
-  <Checkbox.Root
-    checked={accepted}
-    onCheckedChange={setAccepted}
-    invalid={invalid}
-    aria-describedby={invalid ? errorId : undefined}
-  >
-    I accept the terms
-  </Checkbox.Root>
-  {invalid ? <ErrorMessage.Root id={errorId}>Accept the terms to continue.</ErrorMessage.Root> : null}
-</Field.Group>
-```
-
-<Example block>
-  <CheckboxStates />
-</Example>
+<Example of={CheckboxStates} block />
 
 Do not put Checkbox inside `Field.Root`. The shell is for text and chip inputs. Wire `aria-describedby` on the checkbox when a [Description](/description) or [ErrorMessage](/errormessage) sits under it.
 
@@ -36,22 +17,7 @@ For a permanent exclusive choice, use [Radio](/radio). For an overlay list, use 
 
 `indeterminate` shows the mixed state, such as a select-all box over a list where only some items are checked. It sets the input's `indeterminate` property and draws the `indeterminate` glyph in place of the check. It does not change `checked`: a click toggles `checked` as usual, and you decide what the box shows next. Todae sets the property again after every render, so a click does not leave it cleared while your state says mixed.
 
-```tsx
-<Checkbox.Root
-  checked={email && push}
-  indeterminate={(email || push) && !(email && push)}
-  onCheckedChange={(checked) => {
-    setEmail(checked);
-    setPush(checked);
-  }}
->
-  All notifications
-</Checkbox.Root>
-```
-
-<Example block>
-  <CheckboxIndeterminate />
-</Example>
+<Example of={CheckboxIndeterminate} block />
 
 [useSelection](/utilities/use-selection) wires a select-all checkbox this way, from its `getSelectAllProps()`.
 

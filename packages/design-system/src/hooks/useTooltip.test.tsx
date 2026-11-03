@@ -397,7 +397,7 @@ describe('useTooltip', () => {
   });
 
   it('opens the next hover tip immediately while a hover tip is still within its hide delay', () => {
-    render(<Pair showDelay={200} hideDelay={40} skipDelay={0} />);
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={1} />);
     const first = openHover('A', 200);
     fireEvent.pointerLeave(first);
     expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
@@ -406,6 +406,31 @@ describe('useTooltip', () => {
     expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
     advance(40);
     expect(screen.queryByRole('tooltip', { name: 'Tip A' })).toBeNull();
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('waits the show delay with skipDelay 0, even while another hover tip is open', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={0} />);
+    const first = openHover('A', 200);
+    fireEvent.pointerLeave(first);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' })).toBeTruthy();
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(40);
+    expect(screen.queryByRole('tooltip', { name: 'Tip A' })).toBeNull();
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(159);
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('waits the show delay with skipDelay 0 when the pointer moves straight from an open tip', () => {
+    render(<Pair showDelay={200} hideDelay={0} skipDelay={0} />);
+    const first = openHover('A', 200);
+    fireEvent.pointerOut(first, { relatedTarget: screen.getByRole('button', { name: 'B' }) });
+    expect(screen.queryByRole('tooltip', { name: 'Tip B' })).toBeNull();
+    advance(200);
     expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
   });
 

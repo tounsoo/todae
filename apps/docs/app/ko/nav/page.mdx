@@ -1,32 +1,10 @@
-import { NavApp } from '../../../components/demos/NavDemo';
+import NavApp from '../../../examples/nav/NavApp';
 
 # Nav
 
 사이드바 같은 사이트나 앱의 내비게이션입니다. `Nav.Root`는 `nav` 랜드마크입니다. 각 `Nav.Group`은 목록이고, `label`이 있으면 그것이 이름이 됩니다. 각 `Nav.Item`은 `Nav.Link`를 담는 목록 항목입니다. `Nav.Branch`는 네이티브 `<details>`이며, 토글이 항목들의 중첩된 목록을 엽니다.
 
-```tsx
-<Nav.Root aria-label="Docs">
-  <Nav.Group label="Components">
-    <Nav.Item>
-      <Nav.Link href="/button">Button</Nav.Link>
-    </Nav.Item>
-    <Nav.Item>
-      <Nav.Link href="/field" aria-current="page">
-        Field
-      </Nav.Link>
-      <Nav.Branch label="Field pages" open>
-        <Nav.Item>
-          <Nav.Link href="/field/select">Select</Nav.Link>
-        </Nav.Item>
-      </Nav.Branch>
-    </Nav.Item>
-  </Nav.Group>
-</Nav.Root>
-```
-
-<Example>
-  <NavApp />
-</Example>
+<Example of={NavApp} />
 
 링크와 가지(branch) 토글은 각각 하나의 Tab 정지점입니다. Nav에는 화살표 키도 선택도 없으므로 [Tree](/tree)가 아닙니다.
 

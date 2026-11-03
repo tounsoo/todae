@@ -1,4 +1,6 @@
-import { TooltipArchive, TooltipOverflow, TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
+import TooltipOverflow from '../../../examples/utilities/use-tooltip/TooltipOverflow';
+import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
+import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
 import { Code } from '@tounsoo/todae/code';
 import { Table } from '@tounsoo/todae/table';
 
@@ -14,7 +16,7 @@ Placement is CSS anchors. The tip sits above the trigger and flips below when it
 
 ## Warm-up
 
-Slide from One to Three and each tip after the first opens at once, then land on Waits, which has `skipDelay={0}` and waits.
+Slide from One to Three and each tip after the first opens at once, then land on Waits, which has `skipDelay={0}` and always waits, even straight from an open tip.
 
 <Example>
   <TooltipWarmup />
@@ -95,19 +97,7 @@ const tooltip = useTooltip({ interactive: true });
 
 Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-labelledby`. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip.
 
-```tsx
-import { Archive } from 'lucide-react';
-
-<Button.Root aria-label="Archive">
-  <Button.Icon>
-    <Archive />
-  </Button.Icon>
-</Button.Root>
-```
-
-<Example>
-  <TooltipArchive />
-</Example>
+<Example of={TooltipArchive} />
 
 ## Accessible composition
 

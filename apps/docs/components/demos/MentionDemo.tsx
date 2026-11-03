@@ -1,3 +1,3 @@
 'use client';
 
-export { ChatComposerCard as MentionExample } from './ChatComposer';
+export { default as MentionExample } from '../../examples/recipes/chat-composer-mentions/ChatComposer';

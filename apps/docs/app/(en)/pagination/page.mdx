@@ -1,34 +1,10 @@
-import { PaginationButtons } from '../../../components/demos/PaginationDemo';
+import PaginationButtons from '../../../examples/pagination/PaginationButtons';
 
 # Pagination
 
 A `nav` landmark around an ordered list of pages. `paginationRange` decides which pages to show, and your own links or buttons go inside the items, so a router's link works as it is.
 
-```tsx
-<Pagination.Root>
-  <Pagination.Item>
-    {page > 1 ? <Link.Root href={`?page=${page - 1}`}>Previous</Link.Root> : <Link.Root role="link" aria-disabled="true">Previous</Link.Root>}
-  </Pagination.Item>
-  {paginationRange({ page, count }).map((item) =>
-    typeof item === 'number' ? (
-      <Pagination.Item key={item}>
-        <Link.Root href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
-          {item}
-        </Link.Root>
-      </Pagination.Item>
-    ) : (
-      <Pagination.Ellipsis key={item} />
-    ),
-  )}
-  <Pagination.Item>
-    {page < count ? <Link.Root href={`?page=${page + 1}`}>Next</Link.Root> : <Link.Root role="link" aria-disabled="true">Next</Link.Root>}
-  </Pagination.Item>
-</Pagination.Root>
-```
-
-<Example>
-  <PaginationButtons />
-</Example>
+<Example of={PaginationButtons} />
 
 ## The page range
 

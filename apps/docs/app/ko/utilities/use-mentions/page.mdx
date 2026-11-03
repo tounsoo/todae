@@ -1,39 +1,10 @@
-import { MentionsExample } from '../../../../components/demos/MentionsDemo';
+import MentionsExample from '../../../../examples/utilities/use-mentions/MentionsExample';
 
 # useMentions
 
 `useMentions(options)`는 [Field.Textarea](/field/textarea)에 멘션과 슬래시 명령을 더합니다. `@` 같은 트리거 문자를 입력하면 그 단어에 제안 목록이 열리고, 하나를 고르면 그 단어가 `@Ada Lovelace` 같은 토큰의 텍스트로 바뀝니다. 텍스트는 네이티브 textarea 안의 일반 텍스트로 남고, 훅은 토큰을 그 텍스트의 범위로 기억해 텍스트 뒤에 그립니다.
 
-```tsx
-const mentions = useMentions({
-  triggers: [
-    { char: '@', options: people, label: 'People' },
-    { char: '/', options: commands, label: 'Commands' },
-  ],
-  value: draft,
-  onValueChange: setDraft,
-});
-
-<form onSubmit={send}>
-  <Field.Root aria-label="Message">
-    <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
-    <Field.Row>
-      <Button.Root type="submit" disabled={draft.text.trim() === ''} aria-label="Send">Send</Button.Root>
-    </Field.Row>
-  </Field.Root>
-</form>
-<Popover.Root {...mentions.getPopoverProps()}>
-  <OptionList.Root {...mentions.getListboxProps()}>
-    {mentions.items.map((item) => (
-      <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
-    ))}
-  </OptionList.Root>
-</Popover.Root>
-```
-
-<Example>
-  <MentionsExample />
-</Example>
+<Example of={MentionsExample} />
 
 ## 트리거
 

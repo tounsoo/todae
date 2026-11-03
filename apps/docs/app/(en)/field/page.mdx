@@ -1,20 +1,6 @@
-import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
-import {
-  CounterBefore,
-  CounterDefault,
-  CounterInline,
-  CounterNarrow,
-  CounterOver,
-  CounterPlain,
-  CounterTextarea,
-  FieldAdornments,
-  FieldLabelAdornments,
-  FieldLabelStates,
-  FieldStates,
-  RowChipInput,
-  RowComposer,
-  RowComposerDensity,
-} from '../../../components/demos/FieldDemo';
+import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibling';
+import FieldLabelStates from '../../../examples/field/FieldLabelStates';
+import { CounterBefore, CounterDefault, CounterInline, CounterNarrow, CounterOver, CounterPlain, CounterTextarea, FieldAdornments, FieldLabelAdornments, FieldStates, RowChipInput, RowComposer, RowComposerDensity } from '../../../components/demos/FieldDemo';
 
 # Field
 
@@ -44,20 +30,7 @@ Each input part has its own page:
 
 `Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `Field.Group`, which puts the label `field.label.gap` above the shell. See [Label](/label) for the API.
 
-```tsx
-const id = useId()
-
-<Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldLabelStates />
-</Example>
+<Example of={FieldLabelStates} block />
 
 Label works with Icon, Affix, and ChipInput.
 
@@ -75,22 +48,7 @@ Label works with Icon, Affix, and ChipInput.
 
 [Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
 
-```tsx
-const describedBy = invalid ? `${hintId} ${errorId}` : hintId
-
-<Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
-		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
-	</Field.Root>
-	<Description.Root id={hintId}>Use your work address.</Description.Root>
-	{invalid ? <ErrorMessage.Root id={errorId}>{error}</ErrorMessage.Root> : null}
-</Field.Group>
-```
-
-<Example block>
-  <ErrorMessageSibling />
-</Example>
+<Example of={ErrorMessageSibling} block />
 
 That is the wiring by hand. Inside a [Form](/form), a `Field.Group` reads the browser's own validation, and an `ErrorMessage.Root` with no `id` shows the problem and does this wiring for you.
 

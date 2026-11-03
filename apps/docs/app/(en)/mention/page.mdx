@@ -66,6 +66,8 @@ While the caret is inside a token and the list is closed, the textarea's descrip
 
 A peek with a focusable control is a dialog named by `peekLabel`, or by the mention text. A text-only peek is the trigger's description and has no role. `peek.mode` is `interactive` on a sent mention and `caret` in the composer. `peek.close()` closes it and returns focus.
 
+Hover or focus opens the peek and leaves focus where it is, so it closes when the pointer leaves or focus moves on. A click, or Space on a link, pins the peek open, moves focus into a dialog peek, and returns focus to the mention when it closes. The peek renders a `<span>`, so a mention can sit inside a paragraph, such as a `Text.Root`; its content renders only while it is open.
+
 ## When to use
 
 A sent message should show a mention as a real button or link, with the same peek the composer shows while the caret is in that mention.

@@ -1,19 +1,11 @@
-import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos/NativeDemo';
+import DisclosureAccordion from '../../../examples/disclosure/DisclosureAccordion';
+import DisclosureSingle from '../../../examples/disclosure/DisclosureSingle';
 
 # Disclosure
 
 `Disclosure.Root` is a native `<details>` and `Disclosure.Summary` a native `<summary>`, styled from the `disclosure` contract tokens. The browser handles the keyboard, the expanded state that a screen reader announces, and the open marker. Browsers that support it also open a closed disclosure when find-in-page matches its content.
 
-```tsx
-<Disclosure.Root>
-  <Disclosure.Summary>Shipping details</Disclosure.Summary>
-  <Text.Root>Orders ship within two business days.</Text.Root>
-</Disclosure.Root>
-```
-
-<Example>
-  <DisclosureSingle />
-</Example>
+<Example of={DisclosureSingle} />
 
 Server Components can import it from `@tounsoo/todae/disclosure`.
 
@@ -21,20 +13,7 @@ Server Components can import it from `@tounsoo/todae/disclosure`.
 
 Give disclosures the same `name` and the browser keeps at most one of them open: an exclusive accordion. Named disclosures get a divider from `disclosure.border`. Use `open` to start one open, and `onToggle` to follow changes.
 
-```tsx
-<Disclosure.Root name="faq" open>
-  <Disclosure.Summary>What is Todae?</Disclosure.Summary>
-  …
-</Disclosure.Root>
-<Disclosure.Root name="faq">
-  <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
-  …
-</Disclosure.Root>
-```
-
-<Example block>
-  <DisclosureAccordion />
-</Example>
+<Example of={DisclosureAccordion} block />
 
 The marker is the browser's own and turns as the disclosure opens; to draw an icon instead, see Icons below. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
 

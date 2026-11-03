@@ -1,24 +1,10 @@
-import { AttachmentExample } from '../../../components/demos/AttachmentDemo';
+import AttachmentExample from '../../../examples/attachment/AttachmentExample';
 
 # Attachment
 
 `Attachment.Root` shows one file in a composer or a message: a preview, its name, a line such as its size, an upload bar, and a button that removes it. It shows the state of an upload; the upload itself is your code, such as a `fetch` for each file that [useDropzone](/utilities/use-dropzone) accepts.
 
-```tsx
-<Attachment.Root status={file.status}>
-  <Attachment.Preview>
-    <FileText aria-hidden />
-  </Attachment.Preview>
-  <Attachment.Name>{file.name}</Attachment.Name>
-  <Attachment.Meta>{file.size}</Attachment.Meta>
-  {file.status === 'uploading' ? <Attachment.Progress value={file.progress} max={100} /> : null}
-  <Attachment.Remove onClick={() => remove(file)} />
-</Attachment.Root>
-```
-
-<Example>
-  <AttachmentExample />
-</Example>
+<Example of={AttachmentExample} />
 
 ## Parts
 

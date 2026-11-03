@@ -1,35 +1,10 @@
-import { TreeFiles } from '../../../components/demos/TreeDemo';
+import TreeFiles from '../../../examples/tree/TreeFiles';
 
 # Tree
 
 A list whose items hold lists of their own, such as files in folders. `Tree.Root` is the `role="tree"` and owns which items are open and which one is selected. Each `Tree.Item` is a `role="treeitem"` named by its `Tree.Label`, the row you see. An item with a `Tree.Group` inside is a branch: it opens and closes, and the group holds its child items. `Tree.Icon` holds an icon before the text.
 
-```tsx
-import { Folder } from 'lucide-react';
-
-<Tree.Root aria-label="Files" defaultExpanded={['src']}>
-  <Tree.Item value="src">
-    <Tree.Label>
-      <Tree.Icon>
-        <Folder />
-      </Tree.Icon>
-      src
-    </Tree.Label>
-    <Tree.Group>
-      <Tree.Item value="src/index.ts">
-        <Tree.Label>index.ts</Tree.Label>
-      </Tree.Item>
-    </Tree.Group>
-  </Tree.Item>
-  <Tree.Item value="README.md">
-    <Tree.Label>README.md</Tree.Label>
-  </Tree.Item>
-</Tree.Root>
-```
-
-<Example block>
-  <TreeFiles />
-</Example>
+<Example of={TreeFiles} block />
 
 The tree holds one tab stop, on the selected item, or the first item when none is selected or the selected one is inside a closed item. Keys follow the tree view pattern through the `tree` mode of [useRovingFocus](/utilities/use-roving-focus). Up and Down move between the items shown, without wrapping. Right opens a closed item, or moves to the first item inside an open one. Left closes an open item, or moves to the item that holds this one. Home and End go to the first and last items shown, and typing a letter moves to the next item whose label starts with it. Left and Right swap in a right-to-left page.
 

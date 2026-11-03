@@ -1,46 +1,11 @@
-import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDatePicked from '../../../../examples/field/date-picker/FieldDatePicked';
+import { FieldDatePickerAlone } from '../../../../components/demos/FieldDemo';
 
 # Field.DatePicker
 
 `Field.DatePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) in a [Popover](/popover). Its `value` is a `Temporal.PlainDate` or `null`, and `onValueChange` gets the date picked in the calendar, which then closes. It takes the calendar's `min`, `max`, `isDateDisabled`, `firstDayOfWeek` and `locale`.
 
-```tsx
-const id = useId();
-const [date, setDate] = useState<Temporal.PlainDate | null>(null);
-const [text, setText] = useState('');
-const [invalid, setInvalid] = useState(false);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Start date</Label.Root>
-  <Field.Root id={id} invalid={invalid}>
-    <Field.TextInput
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setDate(parseDate(event.target.value));
-        setInvalid(false);
-      }}
-      onBlur={() => {
-        if (date) setText(formatDate(date));
-        else setInvalid(text.trim() !== '');
-      }}
-    />
-    <Field.DatePicker
-      value={date}
-      onValueChange={(next) => {
-        setDate(next);
-        setText(formatDate(next));
-        setInvalid(false);
-      }}
-      showValue={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldDatePicked />
-</Example>
+<Example of={FieldDatePicked} block />
 
 Here a [Field.TextInput](/field/text-input) in the same field lets people type the date too. A picked date is written into the text with `formatDate`, and typed text that `parseDate` reads as a date moves the calendar to its month. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showValue={false}`, the button shows only a calendar glyph. The button sends the date with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker` or `Field.DateTimePicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the date as `2026-10-13` rather than the typed text, put `name` on the picker instead of the Root.
 

@@ -1,23 +1,12 @@
-import { MenuActions, MenuContext, MenuOptions } from '../../../components/demos/MenuDemo';
+import MenuContext from '../../../examples/menu/MenuContext';
+import MenuActions from '../../../examples/menu/MenuActions';
+import { MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
 동작 목록을 여는 버튼입니다. `Menu.Trigger`는 `aria-haspopup="menu"`와 `aria-expanded`를 가진 `Button.Root`입니다. `Menu.Content`는 CSS 앵커 포지셔닝으로 트리거에 고정된 비모달 팝오버 안의 `role="menu"`이며, [Popover](/popover)와 같은 표면입니다. 메뉴는 `aria-label`이나 `aria-labelledby`를 받지 않으면 트리거로 이름이 붙습니다.
 
-```tsx
-<Menu.Root>
-  <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
-  <Menu.Content>
-    <Menu.Item onSelect={rename}>Rename</Menu.Item>
-    <Menu.Separator />
-    <Menu.Item onSelect={remove}>Delete</Menu.Item>
-  </Menu.Content>
-</Menu.Root>
-```
-
-<Example>
-  <MenuActions />
-</Example>
+<Example of={MenuActions} />
 
 ## 키보드
 
@@ -49,37 +38,7 @@ import NextLink from 'next/link';
 
 각 영역에는 같은 `Menu.Root` 안에 보이는 `Menu.Trigger`도 두세요. 컨텍스트 메뉴는 눈에 보이지 않고, Shift+F10을 아는 사람은 적으며, Mac 키보드에는 ContextMenu 키가 없고, iOS Safari는 길게 누르기에 `contextmenu`를 보내지 않으므로, 많은 사람은 이 버튼으로 같은 메뉴에 닿습니다.
 
-```tsx
-import { Button, Menu } from '@tounsoo/todae';
-import { Ellipsis } from 'lucide-react';
-
-export function FileRow({ name }: { name: string }) {
-  return (
-    <Menu.Root>
-      <Menu.ContextTrigger
-        render={(props) => (
-          <li {...props}>
-            {name}
-            <Menu.Trigger variant="ghost" aria-label={`Actions for ${name}`}>
-              <Button.Icon>
-                <Ellipsis />
-              </Button.Icon>
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item>Open</Menu.Item>
-              <Menu.Item>Delete</Menu.Item>
-            </Menu.Content>
-          </li>
-        )}
-      />
-    </Menu.Root>
-  );
-}
-```
-
-<Example>
-  <MenuContext />
-</Example>
+<Example of={MenuContext} />
 
 영역 안의 텍스트 필드에서 오른쪽 클릭이나 Shift+F10을 누르면 필드의 편집 명령이 담긴 브라우저 메뉴가 그대로 열립니다. 다른 영역 안에 있는 영역이 요청을 먼저 받습니다. 열린 메뉴 안에서 오른쪽 클릭해도 그 위에 브라우저 메뉴가 열리지 않습니다.
 

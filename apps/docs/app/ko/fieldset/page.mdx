@@ -1,28 +1,11 @@
-import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
+import FieldsetCheckboxes from '../../../examples/fieldset/FieldsetCheckboxes';
+import { FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
 
 # Fieldset
 
 체크박스 묶음처럼 관련된 컨트롤을 하나의 `<legend>` 아래로 묶는 네이티브 `<fieldset>`입니다. 포커스가 그룹 안으로 들어가면 스크린 리더가 legend를 그룹 이름으로 읽습니다.
 
-```tsx
-const errorId = useId();
-const none = topics.length === 0;
-
-<Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
-  <Fieldset.Legend>Email topics</Fieldset.Legend>
-  <Checkbox.Root checked={topics.includes('product')} onCheckedChange={toggle('product')}>
-    Product news
-  </Checkbox.Root>
-  <Checkbox.Root checked={topics.includes('security')} onCheckedChange={toggle('security')}>
-    Security notices
-  </Checkbox.Root>
-  {none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
-</Fieldset.Root>
-```
-
-<Example block>
-  <FieldsetCheckboxes />
-</Example>
+<Example of={FieldsetCheckboxes} block />
 
 `invalid`는 안의 모든 Todae 컨트롤을 invalid로 표시합니다. Checkbox, Switch, RadioGroup, Field가 `aria-invalid`와 invalid 스타일을 받습니다. fieldset에는 자체 `aria-invalid`가 없으므로, 이유는 [Description](/description)이나 [ErrorMessage](/errormessage)로 알리고 Root의 `aria-describedby`로 그것을 가리키세요.
 

@@ -15,7 +15,7 @@ import { createIntent, step, type TooltipEvent, type TooltipIntentState } from '
 import type { PopoverWire } from '../overlay/popoverWire.js';
 import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
 import { applyTooltipCommands, readTooltipPolicy } from '../overlay/tooltip.js';
-import { usePopover } from './usePopover.js';
+import { usePopoverInternal } from '../overlay/popover.js';
 
 type Phase<T> =
   | { status: 'idle' }
@@ -86,6 +86,7 @@ export function useMentionPeek<T>({
 }: UseMentionPeekOptions<T>): UseMentionPeekResult<T> {
   const triggerRef = useRef<HTMLElement | null>(null);
   const keepFocus = useRef<HTMLElement | null>(null);
+  const returnTo = useRef<HTMLElement | null>(null);
   const pendingFocus = useRef(false);
   const intentRef = useRef<TooltipIntentState>(createIntent());
   const timerRef = useRef<number | null>(null);
@@ -168,17 +169,26 @@ export function useMentionPeek<T>({
     setHoverOpen(false);
   }, [dispatch]);
 
-  const restoreTo = mode === 'caret' ? focusRef : triggerRef;
-  const popover = usePopover({
-    open: shown,
-    anchorRef: mode === 'interactive' ? triggerRef : undefined,
-    initialFocusRef: keepFocus,
-    restoreFocusRef: restoreTo,
-    anchorName: mode === 'caret' ? anchorName : null,
-    onOpenChange: (next) => {
-      if (!next) close();
+  // Only a pinned peek, opened by a click or Space, moves focus: onto the
+  // mention, then into the card, and back to the mention when it closes. A
+  // peek that hover or focus opened leaves focus where it is, and returns it
+  // only to where it was when the peek opened.
+  const movesFocus = mode === 'caret' || pinned;
+  if (mode === 'interactive' && shown) returnTo.current = pinned ? triggerRef.current : null;
+  const popover = usePopoverInternal(
+    {
+      open: shown,
+      anchorRef: mode === 'interactive' ? triggerRef : undefined,
+      initialFocusRef: mode === 'caret' ? keepFocus : triggerRef,
+      restoreFocusRef: mode === 'caret' ? focusRef : returnTo,
+      anchorName: mode === 'caret' ? anchorName : null,
+      onOpenChange: (next) => {
+        if (!next) close();
+      },
     },
-  });
+    movesFocus,
+    movesFocus,
+  );
 
   useEffect(
     () => () => {
@@ -212,14 +222,6 @@ export function useMentionPeek<T>({
   const interactiveDialog = mode === 'interactive' && dialog;
   const described = shown && !interactiveDialog;
 
-  const remember = (preferTrigger: boolean) => {
-    const activeEl = document.activeElement;
-    keepFocus.current =
-      !preferTrigger && activeEl instanceof HTMLElement && activeEl !== document.body
-        ? activeEl
-        : triggerRef.current;
-  };
-
   const peekProps: PeekProps = {
     ...popover.getPopoverProps(),
     onPointerEnter:
@@ -235,15 +237,20 @@ export function useMentionPeek<T>({
         : undefined,
   };
 
-  const triggerProps: MentionPeekTriggerProps = {
-    ref: (node) => {
+  const popoverTrigger = popover.triggerRef;
+  const setTrigger = useCallback(
+    (node: HTMLElement | null) => {
       triggerRef.current = node;
       if (mode === 'caret' && focusRef) return;
-      popover.triggerRef.current = node;
+      popoverTrigger.current = node;
     },
+    [focusRef, mode, popoverTrigger],
+  );
+
+  const triggerProps: MentionPeekTriggerProps = {
+    ref: setTrigger,
     onPointerEnter: () => {
       if (mode !== 'interactive') return;
-      remember(false);
       dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
     },
     onPointerLeave: (event) => {
@@ -253,7 +260,6 @@ export function useMentionPeek<T>({
     },
     onFocus: () => {
       if (mode !== 'interactive') return;
-      remember(true);
       dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     },
     onBlur: (event) => {
@@ -269,7 +275,6 @@ export function useMentionPeek<T>({
         close();
         return;
       }
-      remember(true);
       pendingFocus.current = true;
       setDismissed(false);
       setPinned(true);
@@ -286,7 +291,6 @@ export function useMentionPeek<T>({
         event.preventDefault();
         if (shown) close();
         else {
-          remember(true);
           pendingFocus.current = true;
           setDismissed(false);
           setPinned(true);

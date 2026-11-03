@@ -1,39 +1,10 @@
-import { MentionsExample } from '../../../../components/demos/MentionsDemo';
+import MentionsExample from '../../../../examples/utilities/use-mentions/MentionsExample';
 
 # useMentions
 
 `useMentions(options)` adds mentions and slash commands to a [Field.Textarea](/field/textarea). Typing a trigger character, such as `@`, opens a list of suggestions at that word, and a pick replaces the word with the token's text, such as `@Ada Lovelace`. The text stays plain text in a native textarea, and the hook keeps the tokens as ranges of it, drawn behind the text.
 
-```tsx
-const mentions = useMentions({
-  triggers: [
-    { char: '@', options: people, label: 'People' },
-    { char: '/', options: commands, label: 'Commands' },
-  ],
-  value: draft,
-  onValueChange: setDraft,
-});
-
-<form onSubmit={send}>
-  <Field.Root aria-label="Message">
-    <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
-    <Field.Row>
-      <Button.Root type="submit" disabled={draft.text.trim() === ''} aria-label="Send">Send</Button.Root>
-    </Field.Row>
-  </Field.Root>
-</form>
-<Popover.Root {...mentions.getPopoverProps()}>
-  <OptionList.Root {...mentions.getListboxProps()}>
-    {mentions.items.map((item) => (
-      <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
-    ))}
-  </OptionList.Root>
-</Popover.Root>
-```
-
-<Example>
-  <MentionsExample />
-</Example>
+<Example of={MentionsExample} />
 
 ## Triggers
 

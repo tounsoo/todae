@@ -1,0 +1,40 @@
+'use client';
+
+import { Chip, Stack, useStrings, VisuallyHidden } from '@tounsoo/todae';
+import { X } from 'lucide-react';
+
+export default function ChipExamples() {
+  const { moreChips } = useStrings();
+  return (
+    <Stack.Root as="ul" direction="row" wrap align="center" aria-label="Chip examples">
+      <li>
+        <Chip.Root>Default</Chip.Root>
+      </li>
+      <li>
+        <Chip.Root onRemove={() => undefined}>Removable</Chip.Root>
+      </li>
+      <li>
+        <Chip.Root onRemove={() => undefined} removeIcon={<X strokeWidth={3} />}>
+          Own icon
+        </Chip.Root>
+      </li>
+      <li>
+        <Chip.Root disabled onRemove={() => undefined}>
+          Disabled
+        </Chip.Root>
+      </li>
+      <li>
+        <Chip.Root tone="success">Paid</Chip.Root>
+      </li>
+      <li>
+        <Chip.Root tone="category-3" onRemove={() => undefined}>
+          Design
+        </Chip.Root>
+      </li>
+      <li>
+        <Chip.Root aria-hidden>+4</Chip.Root>
+        <VisuallyHidden.Root>{moreChips(4)}</VisuallyHidden.Root>
+      </li>
+    </Stack.Root>
+  );
+}

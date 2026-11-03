@@ -1,27 +1,10 @@
-import { ChipExamples } from '../../../components/demos/ChipDemo';
+import ChipExamples from '../../../examples/chip/ChipExamples';
 
 # Chip
 
 Text-only label. Optional remove is a named button. A `+N` count is a plain chip.
 
-```tsx
-<Stack.Root as="ul" direction="row" wrap aria-label="Tags">
-  <li>
-    <Chip.Root>Design</Chip.Root>
-  </li>
-  <li>
-    <Chip.Root onRemove={remove}>Tokens</Chip.Root>
-  </li>
-  <li>
-    <Chip.Root aria-hidden>+4</Chip.Root>
-    <VisuallyHidden.Root>{moreChips(4)}</VisuallyHidden.Root>
-  </li>
-</Stack.Root>
-```
-
-<Example>
-  <ChipExamples />
-</Example>
+<Example of={ChipExamples} />
 
 The `+N` chip is hidden from assistive technology, and the visually hidden text beside it is read in its place. It is not a button and is not in the tab order.
 

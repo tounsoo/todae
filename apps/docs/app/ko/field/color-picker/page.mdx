@@ -1,40 +1,10 @@
-import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
+import FieldColorAccent from '../../../../examples/field/color-picker/FieldColorAccent';
 
 # Field.ColorPicker
 
 `Field.ColorPicker`는 [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 엽니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다.
 
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Accent</Label.Root>
-  <Field.Root id={id}>
-    <Field.ColorPicker
-      value={color}
-      onValueChange={(next) => {
-        setColor(next);
-        setText(next);
-      }}
-    />
-    <Field.TextInput
-      value={text}
-      onChange={() => undefined}
-      onValueChange={(next) => {
-        setText(next);
-        const hex = normalizeHex(next);
-        if (hex) setColor(hex);
-      }}
-      onBlur={() => setText(color)}
-      spellCheck={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldColorAccent />
-</Example>
+<Example of={FieldColorAccent} block />
 
 여기서는 같은 필드 안의 `Field.TextInput`으로 색을 입력할 수도 있습니다. 둘은 상태를 함께 씁니다. 고른 색이 텍스트를 바꾸고, [`normalizeHex`](/color-picker)는 입력한 텍스트가 색이면 색으로 바꿉니다. `Field.TextInput`이 옆에 있으면 그 입력이 필드의 컨트롤입니다. 그 입력이 필드의 `id`와 설명을 받고, 필드의 다른 곳을 누르면 그 입력에 포커스가 갑니다. `Field.Textarea`, `Field.ChipInput`, `Field.Select`, [`useField`](/utilities/use-field)로 연결한 컨트롤도 같은 방식으로 `id`와 설명을 받습니다. 견본은 옆에 숨은 텍스트 입력을 통해, 자신의 `name`이 있으면 그 이름으로 폼에 색을 보냅니다. 없으면 필드의 `name`으로 보내는데, `useField`가 이 컨트롤 중 하나에 그 `name`을 주었으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다.
 

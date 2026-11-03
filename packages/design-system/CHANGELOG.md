@@ -1,5 +1,92 @@
 # @tounsoo/todae
 
+## 0.6.0
+
+### Minor Changes
+
+- Add `chip.min-height`, `chip.font.weight` and `chip.dismiss.*` tokens, apply `option.leading` and `option.font.weight` to Field.Select options, and recolor the option check from `option.fg.selected`, so overriding `option.fg.selected` recolors the check in existing themes. ([#276](https://github.com/tounsoo/todae/pull/276))
+
+- Checkbox.Root, Switch.Root and RadioGroup.Root now follow a form reset, so `data-checked` and the stored value match what the form put back, `onCheckedChange` or `onValueChange` reports the value the reset put back, and the first change after it is reported again. ([#330](https://github.com/tounsoo/todae/pull/330))
+  
+  - RadioGroup.Root's `onValueChange` now takes `string | null`, and gets `null` when a form reset leaves no radio selected. Replace a callback typed `(value: string) => void`, such as a `useState<string>` setter, with one that takes `string | null`, or map `null` to your own empty value.
+
+- BREAKING: Remove Composer, including its send and stop strings and glyphs. ([#293](https://github.com/tounsoo/todae/pull/293))
+  
+  - Build the chat composer from the recipe at /recipes/chat-composer-mentions, with Field, Button, Attachment, and useMentions. Pass that same mention source to MentionText.
+  - Delete `send` and `stop` from Strings and Glyphs.
+
+- Todae's controlled-state hooks and components now share one model, the public `useControlledState`, which takes the change callback and replaces `useControlledValue`. ([#317](https://github.com/tounsoo/todae/pull/317))
+  
+  - Replace `useControlledValue(value, defaultValue, onChange)` with `useControlledState(value, defaultValue, onChange)`. Its setter builds on the latest write, so a value set twice in one event calls `onChange` once.
+  - Where you called `useControlledState(value, defaultValue)` and then your callback yourself, pass the callback as the third argument and drop your own call. The setter now calls it, and a controlled value with no callback stays read-only.
+  - `useControlledState` returns a third item, `latest()`. Code that spreads or checks the tuple's length sees three items.
+  - A toggle Button and Menu.CheckboxItem pressed twice before a render now toggle twice, and the second press no longer reports the first value again.
+  - useCombobox reports each change only after every change of a pick or edit is stored, and drops a report that the owner's own later request from a change callback has replaced. So an owner that keeps the list open or sets its own text from onValueChange gets what it asked for.
+  - A controlled value with no change callback is read-only, so a press, Escape or an outside press doesn't render Menu.RadioGroup, Menu.Root, ToggleGroup, a Field picker or a useCombobox popover again. A Menu.Trigger click also drops a context request the owner turned down.
+  - Checkbox.Root, Switch.Root and RadioGroup.Root report taking both the controlled and the default prop once, not on every render.
+  - Slider.Root from `@tounsoo/todae` reads the nearest Fieldset: a disabled Fieldset disables it, and an invalid one sets `aria-invalid`, which the slider's own `aria-invalid` overrides. It also asks its validation scope to recheck as it renders, like the other controls. The server entry, `@tounsoo/todae/slider`, is unchanged.
+
+- BREAKING: useCombobox and useMentions now share one option-list engine, so their async loading, active row and arrow keys behave the same way. ([#323](https://github.com/tounsoo/todae/pull/323))
+  
+  - useCombobox shows the options `loadOptions` returns as they are, and `filter` now applies only to sync `options`. If you relied on the label filter to narrow loaded options, match them in your loader.
+  - useCombobox loads the full list, `loadOptions('')`, while the input shows the selected label in single mode, as it already shows sync options. It no longer loads the label's text.
+  - With no active row, ArrowUp moves to the last row in both hooks. useCombobox used to move to the first.
+  - useMentions keeps the trigger's last suggestions on show while the next query loads, and Enter picks nothing until the new list is in, as useCombobox already did. Text changing before the word no longer reloads its suggestions.
+  - While the next query loads, no row is active in either hook unless the user highlights one during that load. useCombobox used to keep a row highlighted on the last list.
+  - A row the user highlights stays active in useCombobox while the list changes around it, instead of jumping back to the selected value. In both hooks, a highlight whose row leaves the list is forgotten and does not come back with the row.
+
+- usePopover takes an `anchorName` option that places the popover at a CSS anchor other than its trigger, such as useMentions' `caretPeekAnchorName`, and a modal now recognizes a moved-in layer by `data-todae-guest-layer`. ([#319](https://github.com/tounsoo/todae/pull/319))
+  
+  - Toast.Region's host now carries `data-todae-guest-layer` instead of `data-todae-toast-host`; update any selector that targets the old attribute.
+  - To show a peek at the caret's mention, pass `anchorName: useMentions().caretPeekAnchorName` to `usePopover`. Both are new, so there is nothing to migrate.
+
+- Todae's contract set now checks indicator and pill contrast: progress and meter fills on `progress.track` and the switch thumb and check on `selection.bg.checked` need Lc 30, and primary button text on each of its four fills and `mention.fg.default` on `mention.bg.hover` need Lc 60. ([#292](https://github.com/tounsoo/todae/pull/292))
+  
+  - A company token build inherits these pairs, so a resolver that built on 0.5.2 can now stop with "contrast: N pair(s) fail APCA", for example a primary button on `color.red.500` with Todae's dark text. Set the token to the lightness the error names, or lower that pair's `min` with an entry of the same `fg` and `bg` in your resolver's `$extensions["dev.todae"].contrast`. In development, `ThemeProvider` overrides now also warn on these pairs.
+
+- Move Button's token shape into `tokens/resolver.json` as `slots` and cut `@tounsoo/todae/tokens-builder` down to what a company build needs. ([#324](https://github.com/tounsoo/todae/pull/324))
+  
+  - `@tounsoo/todae/tokens-builder` now exports only `buildCompanyTokens`, `cli`, `contrastResults`, `apcaContrast`, `oklchToSrgb`, `resolveEntries`, `parseScope` and the resolver types (`ContrastPair`, `ContrastResult`, `CompanyTokensResult`, `EntryToken`, `FlatToken`, `Layer`, `ResolvedEntry`, `Rule`, `SlotRules`, `TodaeExtension`, `TokenEntry`, `TokenRef`). Import nothing else from it; the build internals, such as `validatePaintPacks`, `emitCss`, `loadResolver` and `buildTokensGraph`, are gone.
+  - The `button` value of `$extensions["dev.todae"].rules` is gone, and a resolver that lists it fails. Delete `"rules": ["button"]` from your `buttonVariant` and `button` entries; they keep Todae's button `slots`, so the build still checks a variant's shape.
+  - A `slots` group now lists every child its group may have, subgroups included, so a token in a subgroup the slot doesn't list fails the build. Add the subgroup's name to the slot's list, or declare its own slot group for it.
+  - A company resolver can no longer change one of Todae's `slots` groups or declare a `button.<variant>.*` token outside its `buttonVariant` context. Add slot groups of your own instead, and move such tokens into the variant's context.
+  - A company build now rejects a `button.*` token that is neither in a `buttonVariant` context nor under `button.base`, a `button.base` token outside the `button` set, and a second alias modifier on the `button` root. Move such tokens into a variant's context or the `button` set.
+
+- Field.Root keeps one registry of its controls, so `useField`, the pickers, Field.Counter and the step buttons share how a field decides which control owns its id, name and focus. ([#322](https://github.com/tounsoo/todae/pull/322))
+  
+  - `data-todae-field-control` is now always empty on a control from `useField().getControlProps()`; it no longer reads `"name"` for the control that took the field's name. Don't select on its value, and `FieldControlWire['data-todae-field-control']` is typed `''`.
+  - Field pickers' buttons no longer carry `data-todae-field-picker`. Find a picker by its role and name instead.
+  - Field.Counter outside Field.Root now throws "Field parts must be rendered inside Field.Root", like the other Field parts.
+  - Field.Counter counts the Field.TextInput or Field.Textarea that mounted last, and the one before it once that one unmounts. With none left it shows nothing, instead of the last count.
+  - A press on a Field.Root's shell focuses the control that mounted last, else the picker that mounted last. Before, once that control unmounted, the press went to the first control in the shell.
+
+- Toast takes Escape through Todae's Escape stack instead of stopping the key, so a layer inside a toast, such as a button's tooltip, closes first, and Toast.Region's code is split into focused hooks with no other change in behavior. ([#321](https://github.com/tounsoo/todae/pull/321))
+  
+  - Escape in a toast or on the region no longer stops propagation: it reaches your own `keydown` listeners with `defaultPrevented` set, so a listener of yours that should leave a key Todae took alone checks `event.defaultPrevented`.
+  - A toast and the region join the Escape stack when focus comes into the region, so an overlay shown after that, such as a popover, now closes on Escape before the toasts showing then; press Escape again to dismiss the toast.
+  - A `keydown` handler of yours above `Toast.Region` that stops Escape's propagation now keeps the key from the toasts, as it already does from Todae's popovers and menus.
+  - A control inside a toast that prevents Escape's default, such as a field of yours that uses the key, now keeps the toast open, as a key a control already took passes the Escape stack by.
+
+- Todae's token resolver now declares each component's own state words, such as `option.bg.selected` and `tabs.fg.selected`, as `slots` on that component's stateful properties, so the token build holds those groups to exactly the words listed. ([#325](https://github.com/tounsoo/todae/pull/325))
+  
+  - A company resolver can no longer add a new child under one of these groups (for example `option.bg.pressed` or `focus.ring.style`), whether in its own set or in an extension of Todae's `contract` or `focus` set. Put a new state in a token group of your own, such as `brand.*`, or set the existing tokens' values instead.
+
+### Patch Changes
+
+- Keep a one-time code's caret when its label is clicked. ([#313](https://github.com/tounsoo/todae/pull/313))
+
+- Add Mention.Root, MentionText and defineMentionSource, with their prop and source types: one `defineMentionSource` object feeds both `useMentions` while composing and `MentionText` in a sent message, which draws each mention as a Mention.Root button or link with a peek card from the source's `renderPeek`, styled by the new `mention.*` tokens. ([#327](https://github.com/tounsoo/todae/pull/327))
+
+- BottomSheet now runs on the same modal shell as Dialog and Drawer, every close part (Dialog, Drawer and BottomSheet Close, Toast.Close, Alert.Close and Attachment.Remove) renders one shared close button, and a Dialog, Drawer or BottomSheet Title, Description or Close outside its Root throws one message that names all three. ([#320](https://github.com/tounsoo/todae/pull/320))
+
+- ThemeProvider's development contrast check and the tokens-builder APCA helpers now share one copy of the OKLCH and APCA math, with the same results as before. ([#316](https://github.com/tounsoo/todae/pull/316))
+
+- Publish `tokens/api.json`, a list of every public token path and its type, and an empty `tokens/api-approved-removals.json`. ([#279](https://github.com/tounsoo/todae/pull/279))
+
+- useTooltip opens a hover tip immediately while another hover tip is open, and for that tip's `skipDelay` milliseconds after the last hover tip closes. A `skipDelay` of 0 or less turns skipping off, so that tip always waits its show delay. ([#299](https://github.com/tounsoo/todae/pull/299))
+
+- Add `togglegroup.*` tokens for the track and for the segment properties that differ from Button, so a theme can restyle ToggleGroup as a segmented control. ([#276](https://github.com/tounsoo/todae/pull/276))
+
 ## 0.5.2
 
 ### Patch Changes

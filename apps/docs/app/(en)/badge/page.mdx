@@ -1,30 +1,17 @@
-import { BadgeCount, BadgeTones } from '../../../components/demos/BadgeDemo';
+import BadgeCount from '../../../examples/badge/BadgeCount';
+import BadgeTones from '../../../examples/badge/BadgeTones';
 
 # Badge
 
 A short static label or count, such as a status on a row or the number of unread messages. `tone` is `neutral`, the default, one of the four status tones `info`, `success`, `warning` and `critical`, or one of the eight category tones `category-1` to `category-8`. Each tone reads its colors through the `badge.<tone>` contract tokens: the status tones from `color.status.<tone>` and the category tones from `color.category.<n>`.
 
-```tsx
-<Badge.Root tone="success">Paid</Badge.Root>
-```
-
-<Example>
-  <BadgeTones />
-</Example>
+<Example of={BadgeTones} />
 
 Server Components can import it from `@tounsoo/todae/badge`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
 `Badge.Root` is a `span` with no role, so a screen reader reads it as part of the text around it. A bare number has no meaning on its own: add the rest in visually hidden text.
 
-```tsx
-<Badge.Root>
-  3<VisuallyHidden.Root> unread</VisuallyHidden.Root>
-</Badge.Root>
-```
-
-<Example>
-  <BadgeCount />
-</Example>
+<Example of={BadgeCount} />
 
 ## Accessible composition
 
