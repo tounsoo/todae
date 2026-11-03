@@ -148,7 +148,7 @@ useCombobox names its listbox by the field's Label.
 - `getTriggerProps().ref` is a callback ref; read `cb.triggerRef` for the element.
 ```
 
-The TypeScript API job fails a pull request that removes or changes a path in `typescript-api.json` until a changeset the pull request adds names each export it touched, such as `ButtonRootProps` for `type ButtonRootProps.variant?`. A removal needs the breaking bump: `minor` until 1.0.0, `major` after. A change may only widen a type, so any bump names it; use the breaking bump when it narrows one. An added export or prop needs nothing beyond the regenerated file.
+The TypeScript API job fails a pull request that removes or changes a path in `typescript-api.json` until a changeset the pull request adds names each export it touched, such as `ButtonRootProps` for `type ButtonRootProps.variant?`, or an export that uses it, such as `Button`. A removal, or a union that loses a member, needs the breaking bump: `minor` until 1.0.0, `major` after. Any other change may only widen a type, so any bump names it; use the breaking bump when it narrows one. An added export or prop needs nothing beyond the regenerated file.
 
 CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures, snapshots and `CHANGELOG.md`, and Changesets doesn't count dotfiles. For a change that ships nothing but still trips the check, add an empty changeset with `pnpm changeset --empty`.
 

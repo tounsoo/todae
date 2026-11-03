@@ -5,10 +5,13 @@ export type ApiSnapshot = { version: 1; entries: Record<string, Record<string, s
 
 export type Bump = 'patch' | 'minor' | 'major';
 
-/** A path that disappeared, or a path whose rendered type changed. An added path is neither. */
+/**
+ * A path that disappeared, a union that lost a member, or a path whose rendered type changed
+ * some other way. An added path is none of these.
+ */
 export type ApiBreak =
   | { kind: 'removed'; entry: string; path: string; was: string }
-  | { kind: 'changed'; entry: string; path: string; was: string; now: string };
+  | { kind: 'narrowed' | 'changed'; entry: string; path: string; was: string; now: string };
 
 /** A changeset this pull request adds: its bump for the package, if any, and its text. */
 export type AddedChangeset = { file: string; bump: Bump | null; text: string };
@@ -65,6 +68,38 @@ export function parseApiSnapshot(text: string): ApiSnapshot {
   return { version: 1, entries };
 }
 
+/** The members of a union printed at the top level of `text`, or the whole text as one member. */
+export function unionMembers(text: string): string[] {
+  const members: string[] = [];
+  let depth = 0;
+  let quote: string | null = null;
+  let start = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (quote !== null) {
+      if (char === '\\') index += 1;
+      else if (char === quote) quote = null;
+    } else if (char === "'" || char === '"' || char === '`') quote = char;
+    else if (char === '=' && text[index + 1] === '>') index += 1;
+    else if (char === '(' || char === '[' || char === '{' || char === '<') depth += 1;
+    else if (char === ')' || char === ']' || char === '}' || char === '>') depth -= 1;
+    else if (depth === 0 && text.startsWith(' | ', index)) {
+      members.push(text.slice(start, index));
+      start = index + 3;
+      index += 2;
+    }
+  }
+  members.push(text.slice(start));
+  return members;
+}
+
+/** A union that lost a member narrows what a prop or argument accepts, so it breaks like a removal. */
+function lostMember(was: string, now: string): boolean {
+  const kept = new Set(unionMembers(now));
+  const before = unionMembers(was);
+  return before.length > 1 && before.some((member) => !kept.has(member));
+}
+
 export function emptyApiSnapshot(): ApiSnapshot {
   return { version: 1, entries: {} };
 }
@@ -84,7 +119,7 @@ export function apiBreaks(before: ApiSnapshot, after: ApiSnapshot): ApiBreak[] {
       if (now === undefined) {
         if (path.startsWith('internal ') && !internal.has(exportName(path))) breaks.push({ kind: 'changed', entry, path, was, now: 'no longer named' });
         else breaks.push({ kind: 'removed', entry, path, was });
-      } else if (now !== was) breaks.push({ kind: 'changed', entry, path, was, now });
+      } else if (now !== was) breaks.push({ kind: lostMember(was, now) ? 'narrowed' : 'changed', entry, path, was, now });
     }
   }
   return breaks.sort((a, b) => byCodePoint(a.entry, b.entry) || byCodePoint(a.path, b.path));
@@ -147,7 +182,8 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
 /**
  * Exports with a removed or changed path that no added changeset acknowledges.
  * A changeset acknowledges an export when it bumps the package and names the export, or an export that uses it.
- * A removal also needs that changeset to be at least `removalBump`. A change may widen a type, so any bump will do.
+ * A removal or a narrowed union also needs that changeset to be at least `removalBump`.
+ * Another change may only widen a type, so any bump will do.
  */
 export function unacknowledged(
   breaks: readonly ApiBreak[],
@@ -162,7 +198,7 @@ export function unacknowledged(
   }
   const missing: Unacknowledged[] = [];
   for (const [name, items] of [...byName.entries()].sort(([a], [b]) => byCodePoint(a, b))) {
-    const needs: Bump = items.some((item) => item.kind === 'removed') ? removalBump : 'patch';
+    const needs: Bump = items.some((item) => item.kind !== 'changed') ? removalBump : 'patch';
     const candidates = [...accepted(name)];
     const ok = changesets.some(
       (set) => set.bump !== null && RANK[set.bump] >= RANK[needs] && candidates.some((candidate) => names(set.text, candidate)),
@@ -174,7 +210,7 @@ export function unacknowledged(
 
 export function formatApiBreak(item: ApiBreak): string {
   const where = `${item.entry} ${item.path}`;
-  return item.kind === 'removed' ? `  - removed ${where}: ${item.was}` : `  - changed ${where}: ${item.was} → ${item.now}`;
+  return item.kind === 'removed' ? `  - removed ${where}: ${item.was}` : `  - ${item.kind} ${where}: ${item.was} → ${item.now}`;
 }
 
 export function unacknowledgedFailure(missing: readonly Unacknowledged[], packageName: string): string {
@@ -186,7 +222,7 @@ export function unacknowledgedFailure(missing: readonly Unacknowledged[], packag
   lines.push(
     '',
     `Add a changeset for ${packageName} that names each export above, with one bullet per break saying what to change in your code.`,
-    'A removal needs the breaking bump. A change that only widens a type can stay a patch, but the changeset still names it.',
+    'A removal or a union that lost a member needs the breaking bump. Another change that only widens a type can stay a patch, but the changeset still names it.',
     'If the change was not meant, restore the export instead.',
   );
   return lines.join('\n');

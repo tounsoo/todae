@@ -11,6 +11,7 @@ import {
   parseApiSnapshot,
   parseChangeset,
   unacknowledged,
+  unionMembers,
   usersOf,
   type ApiSnapshot,
 } from './compare.ts';
@@ -34,12 +35,12 @@ function snapshot(paths: Record<string, string>): ApiSnapshot {
 }
 
 describe('apiBreaks', () => {
-  it('reports removed and changed paths, not added ones', () => {
+  it('reports removed and narrowed paths, not added ones', () => {
     const before = snapshot({ Button: '(arg0: ButtonProps) => JSX.Element', 'type ButtonProps.tone?': "'info' | undefined", Gone: 'string' });
     const after = snapshot({ Button: '(arg0: ButtonProps) => JSX.Element', 'type ButtonProps.tone?': "'critical' | undefined", Added: 'number' });
     expect(apiBreaks(before, after)).toEqual([
       { kind: 'removed', entry: '@tounsoo/todae', path: 'Gone', was: 'string' },
-      { kind: 'changed', entry: '@tounsoo/todae', path: 'type ButtonProps.tone?', was: "'info' | undefined", now: "'critical' | undefined" },
+      { kind: 'narrowed', entry: '@tounsoo/todae', path: 'type ButtonProps.tone?', was: "'info' | undefined", now: "'critical' | undefined" },
     ]);
   });
 
@@ -48,6 +49,24 @@ describe('apiBreaks', () => {
     expect(apiBreaks(before, { version: 1, entries: {} })).toEqual([
       { kind: 'removed', entry: '@tounsoo/todae/stack', path: 'Stack', was: 'object' },
     ]);
+  });
+});
+
+describe('unionMembers', () => {
+  it('splits only the top-level union', () => {
+    expect(unionMembers("'a' | ((value: 'b' | 'c') => void) | { x: 'd' | 'e' } | undefined")).toEqual([
+      "'a'",
+      "((value: 'b' | 'c') => void)",
+      "{ x: 'd' | 'e' }",
+      'undefined',
+    ]);
+    expect(unionMembers("'a | b'")).toEqual(["'a | b'"]);
+  });
+
+  it('counts a union that lost a member as narrowed, and one that gained a member as changed', () => {
+    const before = snapshot({ 'type Tone': "'critical' | 'info' | 'warning'" });
+    expect(apiBreaks(before, snapshot({ 'type Tone': "'critical' | 'info'" }))[0]?.kind).toBe('narrowed');
+    expect(apiBreaks(before, snapshot({ 'type Tone': "'critical' | 'info' | 'success' | 'warning'" }))[0]?.kind).toBe('changed');
   });
 });
 
