@@ -97,6 +97,8 @@ describe('apiBreaks kinds', () => {
     const before = { 'internal Bound': 'object', 'internal Bound.min?': 'number | undefined' };
     expect(kinds(before, { ...before, 'internal Bound.label': 'string' })).toEqual([['narrowed', 'internal Bound.label']]);
     expect(kinds(before, { ...before, 'internal Bound.label?': 'string | undefined' })).toEqual([]);
+    expect(kinds(before, { ...before, 'internal Bound.x': 'string' })).toEqual([['narrowed', 'internal Bound.x']]);
+    expect(kinds(before, { ...before, 'internal Bound.x?': 'string | undefined' })).toEqual([]);
     expect(kinds({}, { 'type New': 'object', 'type New.label': 'string' })).toEqual([]);
   });
 

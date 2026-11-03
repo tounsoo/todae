@@ -183,9 +183,15 @@ describe('apiReport', () => {
     const api = await report(`
       export type A = { get(a: string): 'str'; get(a: unknown): 'any'; b: 1; a: 2 };
       export type B = { on: ((a: string) => 'str') & ((a: unknown) => 'any') };
+      type Fa = (a: string) => 'str';
+      type Fb = (a: unknown) => 'any';
+      export type C = { on: Fb & Fa; mixed: Fb & ((a: string) => 'str') };
     `);
     expect(api['type A.get']).toBe("{ (arg0: string): 'str'; (arg0: unknown): 'any'; }");
     expect(api['type B.on']).toBe("((arg0: string) => 'str') & ((arg0: unknown) => 'any')");
+    // A named type might be callable, so an intersection with two of them keeps its order too.
+    expect(api['type C.on']).toBe('Fb & Fa');
+    expect(api['type C.mixed']).toBe("Fb & ((arg0: string) => 'str')");
   });
 
   it('scopes an infer name to the extends clause and the true branch', async () => {

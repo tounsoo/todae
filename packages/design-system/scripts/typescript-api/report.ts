@@ -86,12 +86,21 @@ function inferNames(node: ts.ConditionalTypeNode): string[] {
 }
 
 /** Whether a type is something to call, whose order among overloads decides which one TypeScript picks. */
-function isCallable(node: ts.TypeNode): boolean {
+/**
+ * Whether an intersection operand could hold a call or construct signature. A named type, `typeof` or any
+ * other indirection might, since the printed text alone can't show what it points to.
+ */
+function mayBeCallable(node: ts.TypeNode): boolean {
   const inner = ts.isParenthesizedTypeNode(node) ? node.type : node;
-  return (
-    ts.isFunctionTypeNode(inner) ||
-    ts.isConstructorTypeNode(inner) ||
-    (ts.isTypeLiteralNode(inner) && inner.members.some((member) => ts.isCallSignatureDeclaration(member) || ts.isConstructSignatureDeclaration(member)))
+  if (ts.isTypeLiteralNode(inner)) return inner.members.some((member) => ts.isCallSignatureDeclaration(member) || ts.isConstructSignatureDeclaration(member));
+  if (ts.isUnionTypeNode(inner) || ts.isIntersectionTypeNode(inner)) return inner.types.some(mayBeCallable);
+  return !(
+    ts.isLiteralTypeNode(inner) ||
+    ts.isMappedTypeNode(inner) ||
+    ts.isTemplateLiteralTypeNode(inner) ||
+    ts.isTupleTypeNode(inner) ||
+    ts.isArrayTypeNode(inner) ||
+    (inner.kind >= ts.SyntaxKind.FirstKeyword && inner.kind <= ts.SyntaxKind.LastKeyword)
   );
 }
 
@@ -116,7 +125,8 @@ function flatten(nodes: readonly ts.TypeNode[], same: (node: ts.TypeNode) => nod
  * Prints a type the same way whatever its source calls things or the order it lists them in,
  * so only a change callers can feel changes the text:
  * - Union and intersection members, and the properties of an object literal, are sorted by text. Overloads keep
- *   their order: an object literal's call and method signatures, and an intersection of two or more callables.
+ *   their order: an object literal's call and method signatures, and an intersection with two or more operands that
+ *   may be callable (a function type, a callable literal, or a named type the text can't see into).
  * - Parameters of every function type are `arg0`, `arg1`, and tuple members lose their labels.
  * - The exported type's own type parameters are `outer` (`T0`, `T1`). A nested scope's are numbered by
  *   its depth and their position, `T1_0`, so the names don't depend on what else the type holds.
@@ -162,7 +172,7 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
         }
         if (ts.isIntersectionTypeNode(visited)) {
           const operands = flatten(visited.types, ts.isIntersectionTypeNode);
-          const ordered = operands.filter(isCallable).length > 1 ? operands : sortedBy(operands);
+          const ordered = operands.filter(mayBeCallable).length > 1 ? operands : sortedBy(operands);
           return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(ordered));
         }
         if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortMembers(visited.members)));
