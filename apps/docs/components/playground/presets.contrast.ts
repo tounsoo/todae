@@ -10,6 +10,7 @@ export const PRESET_PAIRS = [
   'meter.fill.suboptimum|progress.track',
   'meter.fill.critical|progress.track',
   'selection.thumb.bg|selection.bg.checked',
+  'selection.thumb.border|selection.track.bg',
   'selection.indicator.fg|selection.bg.checked',
   'button.primary.fg.default|button.primary.bg.default',
   'button.primary.fg.hover|button.primary.bg.hover',
