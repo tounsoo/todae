@@ -6,9 +6,9 @@ import { vi } from 'vitest';
  * real iframe's do. The setup's popover and animation stand-ins are copied onto
  * its prototypes, and so are its dialog stand-ins. The caller removes the frame.
  */
-export function makeFrame(): Document {
+export function makeFrame(parent: Element = document.body): Document {
   const frame = document.createElement('iframe');
-  document.body.append(frame);
+  parent.append(frame);
   const view = frame.contentWindow as unknown as { HTMLElement: typeof HTMLElement; Element: typeof Element };
   for (const name of ['showPopover', 'hidePopover', 'togglePopover'] as const) {
     Object.assign(view.HTMLElement.prototype, { [name]: HTMLElement.prototype[name] });

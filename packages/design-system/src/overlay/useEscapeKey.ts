@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
-import { focusPath, isElement } from '../internal/dom.js';
+import { focusPath, isElement, topDocument } from '../internal/dom.js';
 import { isImeKeyEvent } from '../internal/ime.js';
 import { frontModal, isModal } from './modalStack.js';
 
@@ -74,7 +74,7 @@ function innermost(layers: readonly Entry[]): Entry | undefined {
     let inner: Entry | undefined;
     for (let i = layers.length - 1; i >= 0 && inner === undefined; i--) {
       const el = layers[i]!.element();
-      if (el && el !== outer && outer.contains(el)) inner = layers[i];
+      if (el && el !== outer && within(outer, el)) inner = layers[i];
     }
     if (inner === undefined) return top;
     top = inner;
@@ -83,8 +83,9 @@ function innermost(layers: readonly Entry[]): Entry | undefined {
 }
 
 function contains(outer: Entry, inner: Entry): boolean {
+  const scope = outer.element();
   const el = inner.element();
-  return Boolean(el && outer.element()?.contains(el));
+  return Boolean(scope && el && within(scope, el));
 }
 
 /**
@@ -112,12 +113,39 @@ function modalsInFront(doc: Document, target: EventTarget | null): Element[] {
   return [...doc.querySelectorAll('dialog[open]')].filter(isModal);
 }
 
-/** Whether `entry`'s element is inside `scope`, also through the frames around it. */
-function inside(scope: Element, entry: Entry): boolean {
-  for (let el: Element | null | undefined = entry.element(); el; el = el.ownerDocument.defaultView?.frameElement) {
+/** Whether `node` is inside `scope`, also through the frames around it. */
+function within(scope: Element, node: Element): boolean {
+  for (let el: Element | null | undefined = node; el; el = el.ownerDocument.defaultView?.frameElement) {
     if (scope.contains(el)) return true;
   }
   return false;
+}
+
+/**
+ * Whether a modal dialog keeps `entry` behind it in one of the documents
+ * between its own and `doc`: its own, then each one holding the frame it is
+ * in. A modal in `doc` itself is the caller's to check.
+ */
+function behindFrameModal(entry: Entry, doc: Document): boolean {
+  for (
+    let el: Element | null | undefined = entry.element();
+    el && el.ownerDocument !== doc;
+    el = el.ownerDocument.defaultView?.frameElement
+  ) {
+    const modals = modalsInFront(el.ownerDocument, null);
+    const node = el;
+    if (modals.length > 0 && !modals.some((modal) => modal.contains(node))) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether `entry`'s element is inside `scope`, also through the frames around
+ * it, and no modal dialog in a frame between keeps it behind.
+ */
+function inside(scope: Element, entry: Entry): boolean {
+  const el = entry.element();
+  return Boolean(el && within(scope, el) && !behindFrameModal(entry, scope.ownerDocument));
 }
 
 /**
@@ -144,10 +172,10 @@ function candidates(
 
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
-  // A layer outside the modal dialog the key was pressed in sits behind it
-  // and is inert. Escape belongs to the dialog's own close request.
   // The document the listener was added to. A key in a frame or popup goes only to its layers.
   const doc = event.currentTarget as Document;
+  // A layer outside the modal dialog the key was pressed in sits behind it
+  // and is inert. Escape belongs to the dialog's own close request.
   const modals = modalsInFront(doc, event.target);
   const target = isElement(event.target) ? event.target : null;
   const scope = modals.length > 0 ? modals : null;
@@ -155,16 +183,16 @@ function onKeyDown(event: KeyboardEvent) {
   // tooltip portaled into an iframe while its trigger keeps focus here, in one
   // selection with the page's, so the innermost or the popup goes first. A
   // modal in that document keeps the layers behind it.
-  const top = select(
-    doc === document
-      ? candidates(scope, target, event).filter((entry) => {
-          const other = entry.doc();
-          if (other === document) return true;
-          const behind = modalsInFront(other, null);
-          return behind.length === 0 || behind.some((el) => inside(el, entry));
-        })
-      : candidates(scope, target, event, doc),
-  );
+  // A popup window isn't beside the page, so its layers only take a key no
+  // layer here or in the page's frames takes.
+  let top: Entry | undefined;
+  if (doc === document) {
+    const reached = candidates(scope, target, event).filter((entry) => !behindFrameModal(entry, document));
+    const here = (entry: Entry) => topDocument(entry.doc()) === document;
+    top = select(reached.filter(here)) ?? select(reached.filter((entry) => !here(entry)));
+  } else {
+    top = select(candidates(scope, target, event, doc));
+  }
   if (!top) return;
   event.preventDefault();
   top.handle();
@@ -176,7 +204,9 @@ function onKeyDown(event: KeyboardEvent) {
  * reach, and returns whether one took it.
  */
 export function takeCloseRequest(dialog: Element): boolean {
-  const top = select(candidates([dialog], dialog.ownerDocument.activeElement));
+  // Where focus is, also inside a frame in the dialog.
+  const path = focusPath(dialog.ownerDocument);
+  const top = select(candidates([dialog], path.at(-1) ?? dialog.ownerDocument.activeElement));
   top?.handle();
   return top !== undefined;
 }

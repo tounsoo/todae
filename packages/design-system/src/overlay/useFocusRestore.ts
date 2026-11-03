@@ -46,8 +46,9 @@ export function useFocusRestore(
       };
       let current = read(doc);
       const own = topDocument(doc);
-      // Nothing focused in an unfocused popup window: it opened from the page.
-      if (own !== topDocument(document) && !own.hasFocus() && (!current || current === current.ownerDocument.body)) {
+      // Nothing focused in an unfocused popup window, or in a frame there: it opened from the page.
+      const last = focusPath(doc).at(-1);
+      if (own !== topDocument(document) && !own.hasFocus() && (!last || last === last.ownerDocument.body)) {
         current = read(document);
       }
       prior.current = isHTMLElement(current) ? current : null;

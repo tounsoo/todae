@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
-import { escapeIn, makeFrame, makeShadowedFrame } from '../test/frame.js';
+import { escapeIn, makeFrame, makePopup, makeShadowedFrame } from '../test/frame.js';
 import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
 afterEach(() => {
@@ -394,6 +394,128 @@ describe('useEscapeKey', () => {
         expect(onPage).not.toHaveBeenCalled();
       });
     }
+
+    // A layer whose element is `at`, when given, as a page element that holds an iframe.
+    function Kind({
+      onEscape,
+      popup = true,
+      own = false,
+      at,
+      children,
+    }: {
+      onEscape: () => void;
+      popup?: boolean;
+      own?: boolean;
+      at?: HTMLElement;
+      children?: ReactNode;
+    }) {
+      const ref = useRef<HTMLDivElement>(null);
+      const element = at ? { current: at } : ref;
+      useEscapeKey(true, own ? (target) => element.current?.contains(target) === true : true, onEscape, element, {
+        popup,
+      });
+      return at ? children : <div ref={ref}>{children}</div>;
+    }
+
+    // Frames these tests put in a box or dialog on the page go after their portals unmount.
+    afterEach(() => {
+      cleanup();
+      for (const el of document.querySelectorAll<HTMLElement>('body > [data-box], body > dialog')) el.remove();
+    });
+
+    function box(): HTMLElement {
+      const el = document.body.appendChild(document.createElement('div'));
+      el.dataset.box = '';
+      el.append(document.createElement('button'));
+      return el;
+    }
+
+    it('gives a key on the page to a layer in an iframe inside a page layer that mounted with it', () => {
+      const page = box();
+      const doc = makeFrame(page);
+      const outer = vi.fn();
+      const inner = vi.fn();
+      render(<Kind onEscape={outer} at={page}>{createPortal(<Kind onEscape={inner} />, doc.body)}</Kind>);
+      escapeIn(page.querySelector('button')!);
+      expect(inner).toHaveBeenCalledTimes(1);
+      expect(outer).not.toHaveBeenCalled();
+    });
+
+    it('gives a key on the page to a layer that is not a popup in an iframe inside a page popup', () => {
+      const page = box();
+      const doc = makeFrame(page);
+      const outer = vi.fn();
+      const inner = vi.fn();
+      render(<Kind onEscape={outer} at={page} />);
+      render(<Kind onEscape={inner} popup={false} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      escapeIn(page.querySelector('button')!);
+      expect(inner).toHaveBeenCalledTimes(1);
+      expect(outer).not.toHaveBeenCalled();
+    });
+
+    it('gives a modal close request to the layer focused in an iframe inside the dialog', () => {
+      const dialog = document.body.appendChild(document.createElement('dialog'));
+      const doc = makeFrame(dialog);
+      const inner = vi.fn();
+      render(
+        <Kind onEscape={inner} own>
+          <button>Inside</button>
+        </Kind>,
+        { container: doc.body.appendChild(doc.createElement('div')) },
+      );
+      act(() => doc.querySelector('button')!.focus());
+      expect(takeCloseRequest(dialog)).toBe(true);
+      expect(inner).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps a layer behind a modal in an iframe out of the close request of a page modal around the iframe', () => {
+      const modal = document.body.appendChild(document.createElement('dialog'));
+      const pressed = modal.appendChild(document.createElement('button'));
+      const doc = makeFrame(modal);
+      modal.showModal();
+      try {
+        doc.body.appendChild(doc.createElement('dialog')).showModal();
+        const behind = vi.fn();
+        render(<Kind onEscape={behind} />, { container: doc.body.appendChild(doc.createElement('div')) });
+        act(() => pressed.focus());
+        expect(escapeIn(pressed).defaultPrevented).toBe(false);
+        expect(takeCloseRequest(modal)).toBe(false);
+        expect(behind).not.toHaveBeenCalled();
+      } finally {
+        cleanup();
+        modal.close();
+        modal.remove();
+      }
+    });
+
+    it('keeps a key on the page from a layer in a nested frame behind a modal in the frame around it', () => {
+      const outer = makeFrame();
+      const modal = outer.body.appendChild(outer.createElement('dialog'));
+      modal.append(outer.createElement('button'));
+      modal.showModal();
+      const nested = outer.body.appendChild(outer.createElement('iframe')).contentDocument!;
+      const behind = vi.fn();
+      render(<Kind onEscape={behind} />, { container: nested.body.appendChild(nested.createElement('div')) });
+      escapeIn(document.body);
+      expect(behind).not.toHaveBeenCalled();
+    });
+
+    it('gives a key in an edit on the page to the edit before a popup in a popup window', () => {
+      const popup = makePopup();
+      const inPopup = vi.fn();
+      const edit = vi.fn();
+      render(<Kind onEscape={inPopup} />, { container: popup.body.appendChild(popup.createElement('div')) });
+      render(
+        <Kind onEscape={edit} popup={false} own>
+          <input aria-label="Name" />
+        </Kind>,
+      );
+      const input = document.querySelector('input')!;
+      act(() => input.focus());
+      escapeIn(input);
+      expect(edit).toHaveBeenCalledTimes(1);
+      expect(inPopup).not.toHaveBeenCalled();
+    });
 
     it('keeps a key in an iframe from reaching a layer on the page', () => {
       const doc = makeFrame();
