@@ -1,12 +1,10 @@
 # Todae
 
-**Status (2026-11-01):** 0.5.0 is published; 0.6.0 is in progress, release PR [#277](https://github.com/tounsoo/todae/pull/277) on hold until the docs examples audit and fixes merge; 1.0.0 is not planned.
-
 Todae is a low-level React design system that companies build their own design systems on. It ships accessible components, headless hooks, design tokens in the [DTCG](https://www.designtokens.org/) format and a token build. A company adds its own token package, a few TypeScript declarations and thin wrappers around Todae's parts, without forking Todae.
 
 Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.omsoo.design)
 
-Todae is published on npm as [`@tounsoo/todae`](https://www.npmjs.com/package/@tounsoo/todae), starting with 0.1.0.
+Todae is published on npm as [`@tounsoo/todae`](https://www.npmjs.com/package/@tounsoo/todae). It is on 0.x, so a minor release can break the API, as [Versioning](#versioning) says, and 1.0.0 is not planned. The [changelog](packages/design-system/CHANGELOG.md) lists what each release changed and, for each breaking change, what to change in your code.
 
 ## Versioning
 
