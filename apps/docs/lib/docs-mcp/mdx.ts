@@ -1,5 +1,6 @@
 import { lstatSync, readdirSync, readFileSync, type Dirent } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { withExampleCode } from '../exampleCode';
 import { parseMdx } from '../mdxAst';
 import { DOCS_ORIGIN } from '../origin';
 import { listComponentMeta } from './meta';
@@ -210,7 +211,8 @@ export function loadPages(appDir: string): PageDoc[] {
     if (stat.isSymbolicLink() || !stat.isFile()) return [];
     let markdown: string;
     try {
-      markdown = readFileSync(file, 'utf8');
+      // Pages name their examples with <Example of={…} />, so the code a reader sees lives in examples/.
+      markdown = withExampleCode(file, readFileSync(file, 'utf8'));
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`, { cause: error });

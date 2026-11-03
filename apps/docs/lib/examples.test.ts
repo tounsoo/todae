@@ -1,0 +1,109 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import type { Root } from 'mdast';
+import { describe, expect, it } from 'vitest';
+import { withExampleCode } from './exampleCode';
+import exampleDependencyLoader from './exampleDependencyLoader.mjs';
+import { exampleSource } from './exampleSource.mjs';
+import { parseMdx } from './mdxAst';
+import remarkExamples, { pageLocale } from './remarkExamples.mjs';
+
+const APP = join(process.cwd(), 'app');
+const EXAMPLES = join(process.cwd(), 'examples');
+const EN_PAGE = join(APP, '(en)', 'text', 'page.mdx');
+const KO_PAGE = join(APP, 'ko', 'text', 'page.mdx');
+const TONES = join(EXAMPLES, 'text', 'TextTones.tsx');
+
+function render(mdx: string, path = EN_PAGE): Root {
+  const tree = parseMdx(mdx);
+  remarkExamples()(tree, { path });
+  return tree;
+}
+
+function pages(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return pages(path);
+    return entry.name === 'page.mdx' ? [path] : [];
+  });
+}
+
+describe('docs examples', () => {
+  it('shows an example file’s code above the example, which gets the page’s locale', () => {
+    const tree = render("import TextTones from '../../../examples/text/TextTones';\n\n<Example of={TextTones} block />\n");
+    const [, code, example] = tree.children;
+    expect(code).toEqual({ type: 'code', lang: 'tsx', meta: null, value: exampleSource(readFileSync(TONES, 'utf8')) });
+    expect(example).toMatchObject({
+      type: 'mdxJsxFlowElement',
+      name: 'Example',
+      attributes: [{ name: 'block' }],
+      children: [{ type: 'mdxJsxFlowElement', name: 'TextTones', attributes: [{ type: 'mdxJsxAttribute', name: 'locale', value: 'en' }] }],
+    });
+    const korean = render("import TextTones from '../../../examples/text/TextTones';\n\n<Example of={TextTones} />\n", KO_PAGE);
+    expect(korean.children[2]).toMatchObject({ children: [{ attributes: [{ value: 'ko' }] }] });
+  });
+
+  it('leaves an Example with children as it is', () => {
+    const mdx = '<Example>\n  <Demo />\n</Example>\n';
+    expect(render(mdx)).toEqual(parseMdx(mdx));
+  });
+
+  it('shows the code without the client directive', () => {
+    expect(exampleSource("'use client';\n\nimport { useId } from 'react';\n\nexport default function A() {}\n")).toBe(
+      "import { useId } from 'react';\n\nexport default function A() {}",
+    );
+  });
+
+  it('refuses an example it cannot find or that has children', () => {
+    expect(() => render('<Example of={TextTones} />\n')).toThrow(/needs `import TextTones/);
+    expect(() => render("import Demo from '../../../components/demos/FieldDemo';\n\n<Example of={Demo} />\n")).toThrow(/not in apps\/docs\/examples/);
+    expect(() => render("import Gone from '../../../examples/text/Gone';\n\n<Example of={Gone} />\n")).toThrow(/has no \.tsx file/);
+    expect(() => render("import TextTones from '../../../examples/text/TextTones';\n\n<Example of={TextTones}>\n  <p>x</p>\n</Example>\n")).toThrow(/takes no children/);
+    expect(() => render('<Example of={tones[0]} />\n')).toThrow(/takes the name of an imported example/);
+  });
+
+  it('names the locale of a page by its folder', () => {
+    expect(pageLocale(EN_PAGE)).toBe('en');
+    expect(pageLocale(KO_PAGE)).toBe('ko');
+  });
+
+  it('rebuilds a page when an example file it imports changes', () => {
+    const added: string[] = [];
+    const text = "import TextTones from '../../../examples/text/TextTones';\nimport { Text } from '@tounsoo/todae/text';\n";
+    expect(exampleDependencyLoader.call({ resourcePath: EN_PAGE, addDependency: (file: string) => added.push(file) }, text)).toBe(text);
+    expect(added).toEqual([TONES]);
+  });
+
+  it('gives tools that read the MDX the code a reader sees', () => {
+    const mdx = "import TextTones from '../../../examples/text/TextTones';\n\n# Text\n\n<Example of={TextTones} />\n";
+    expect(withExampleCode(EN_PAGE, mdx)).toBe(
+      `import TextTones from '../../../examples/text/TextTones';\n\n# Text\n\n\`\`\`tsx\n${exampleSource(readFileSync(TONES, 'utf8'))}\n\`\`\`\n\n<Example of={TextTones} />\n`,
+    );
+  });
+
+  it('shows every example file on an English page and on each translation of it', () => {
+    const shown = new Map<string, Set<string>>();
+    for (const page of pages(APP)) {
+      const imports = [...readFileSync(page, 'utf8').matchAll(/^import (\w+) from '([^']*\/examples\/[^']*)';$/gm)];
+      for (const [, , from] of imports) {
+        const file = relative(EXAMPLES, join(page, '..', `${from}.tsx`));
+        shown.set(file, (shown.get(file) ?? new Set()).add(relative(APP, page).split('/')[0]!));
+      }
+    }
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.filter((file) => !shown.get(file)?.has('(en)') || !shown.get(file)?.has('ko'))).toEqual([]);
+  });
+
+  it('imports only what a product has: the package, React and icon libraries', () => {
+    const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react)$/;
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const outside = files.flatMap((file) =>
+      [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]
+        .map((match) => match[1]!)
+        .filter((from) => !allowed.test(from))
+        .map((from) => `${file}: ${from}`),
+    );
+    expect(outside).toEqual([]);
+  });
+});

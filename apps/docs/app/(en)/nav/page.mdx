@@ -1,32 +1,10 @@
-import { NavApp } from '../../../components/demos/NavDemo';
+import NavApp from '../../../examples/nav/NavApp';
 
 # Nav
 
 A site's or app's navigation, such as a sidebar. `Nav.Root` is a `nav` landmark. Each `Nav.Group` is a list, named by its `label` when it has one, and each `Nav.Item` is a list item holding a `Nav.Link`. A `Nav.Branch` is a native `<details>` whose toggle opens a nested list of items.
 
-```tsx
-<Nav.Root aria-label="Docs">
-  <Nav.Group label="Components">
-    <Nav.Item>
-      <Nav.Link href="/button">Button</Nav.Link>
-    </Nav.Item>
-    <Nav.Item>
-      <Nav.Link href="/field" aria-current="page">
-        Field
-      </Nav.Link>
-      <Nav.Branch label="Field pages" open>
-        <Nav.Item>
-          <Nav.Link href="/field/select">Select</Nav.Link>
-        </Nav.Item>
-      </Nav.Branch>
-    </Nav.Item>
-  </Nav.Group>
-</Nav.Root>
-```
-
-<Example>
-  <NavApp />
-</Example>
+<Example of={NavApp} />
 
 Each link and each branch toggle is its own Tab stop. Nav has no arrow keys and no selection, so it is not a [Tree](/tree).
 

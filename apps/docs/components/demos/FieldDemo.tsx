@@ -1,6 +1,16 @@
 'use client';
 
-import { Button, DensityProvider, Description, ErrorMessage, Field, Form, Label, Stack, Text, ThemeProvider, formatDate, formatDateRange, formatDateTime, formatTime, normalizeHex, parseDate, parseDateRange, parseDateTime, parseTime, useChipField, useField, type DateRange } from '@tounsoo/todae';
+import {
+  Button,
+  DensityProvider,
+  Description,
+  ErrorMessage,
+  Field,
+  Label,
+  ThemeProvider,
+  useChipField,
+  type DateRange,
+} from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -19,39 +29,6 @@ export function FieldStates() {
       <Field.Root aria-label="Invalid field" invalid>
         <Field.TextInput value="Invalid" onChange={() => undefined} />
       </Field.Root>
-    </>
-  );
-}
-
-export function FieldLabelStates() {
-  const idleId = useId();
-  const disabledId = useId();
-  const invalidId = useId();
-  const [email, setEmail] = useState('');
-  return (
-    <>
-      <Field.Group>
-        <Label.Root htmlFor={idleId}>Email</Label.Root>
-        <Field.Root id={idleId}>
-          <Field.TextInput
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-          />
-        </Field.Root>
-      </Field.Group>
-      <Field.Group>
-        <Label.Root htmlFor={disabledId}>Email</Label.Root>
-        <Field.Root id={disabledId} disabled>
-          <Field.TextInput value="Disabled" onChange={() => undefined} />
-        </Field.Root>
-      </Field.Group>
-      <Field.Group>
-        <Label.Root htmlFor={invalidId}>Email</Label.Root>
-        <Field.Root id={invalidId} invalid>
-          <Field.TextInput value="Invalid" onChange={() => undefined} />
-        </Field.Root>
-      </Field.Group>
     </>
   );
 }
@@ -106,24 +83,6 @@ export function FieldAdornments() {
         </Field.Icon>
       </Field.Root>
     </>
-  );
-}
-
-export function TextareaRows() {
-  const [value, setValue] = useState('Notes');
-  return (
-    <Field.Root aria-label="Note">
-      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
-    </Field.Root>
-  );
-}
-
-export function TextareaAutoGrow() {
-  const [value, setValue] = useState('Grows up to six rows.');
-  return (
-    <Field.Root aria-label="Note">
-      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} autoGrow maxRows={6} />
-    </Field.Root>
   );
 }
 
@@ -195,35 +154,6 @@ export function TextareaMessages() {
         </Field.Root>
       </Field.Group>
     </>
-  );
-}
-
-export function ChipInputControlled() {
-  const [chips, setChips] = useState(['alpha', 'beta']);
-  const [inputValue, setInputValue] = useState('');
-  return (
-    <Field.Root aria-label="Tags">
-      <Field.ChipInput
-        chips={chips}
-        inputValue={inputValue}
-        onInputValueChange={setInputValue}
-        onCommit={(value) => {
-          setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
-          setInputValue('');
-        }}
-        onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
-        placeholder="Type and press Enter"
-      />
-    </Field.Root>
-  );
-}
-
-export function ChipInputHook() {
-  const field = useChipField({ initialChips: ['react'] });
-  return (
-    <Field.Root aria-label="Tags">
-      <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
-    </Field.Root>
   );
 }
 
@@ -514,155 +444,6 @@ export function ChipInputStates() {
   );
 }
 
-export function FieldSelectSize() {
-  const id = useId();
-  const [size, setSize] = useState('m');
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Size</Label.Root>
-      <Field.Root id={id}>
-        <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-          <option value="s">Small</option>
-          <option value="m">Medium</option>
-          <option value="l">Large</option>
-          <option value="xl" disabled>
-            Extra large (sold out)
-          </option>
-        </Field.Select>
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldColorAccent() {
-  const id = useId();
-  const [color, setColor] = useState('#3366ff');
-  const [text, setText] = useState(color);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Accent</Label.Root>
-      <Field.Root id={id}>
-        <Field.ColorPicker
-          value={color}
-          onValueChange={(next) => {
-            setColor(next);
-            setText(next);
-          }}
-        />
-        <Field.TextInput
-          value={text}
-          onChange={() => undefined}
-          onValueChange={(next) => {
-            setText(next);
-            const hex = normalizeHex(next);
-            if (hex) setColor(hex);
-          }}
-          onBlur={() => setText(color)}
-          spellCheck={false}
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldNumberStepper() {
-  const id = useId();
-  const locale = useLocale();
-  const [quantity, setQuantity] = useState<number | null>(2);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Quantity</Label.Root>
-      <Field.Root id={id} name="quantity">
-        <Field.Decrement />
-        <Field.NumberInput value={quantity} onValueChange={setQuantity} min={1} max={99} locale={locale} />
-        <Field.Increment />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldNumberPrice() {
-  const id = useId();
-  const [price, setPrice] = useState<number | null>(12000);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Price</Label.Root>
-      <Field.Root id={id} name="price">
-        <Field.Affix>₩</Field.Affix>
-        <Field.NumberInput
-          value={price}
-          onValueChange={setPrice}
-          min={0}
-          step={100}
-          locale="ko"
-          formatOptions={{ maximumFractionDigits: 0 }}
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldNumberPercent() {
-  const id = useId();
-  const locale = useLocale();
-  const [rate, setRate] = useState<number | null>(0.125);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Discount</Label.Root>
-      <Field.Root id={id} name="discount">
-        <Field.NumberInput
-          value={rate}
-          onValueChange={setRate}
-          min={0}
-          max={1}
-          step={0.005}
-          locale={locale}
-          formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-// The date and time demos start empty, so the server render needs no Temporal.
-// The picker and the input share one state, so typing and picking stay in step.
-export function FieldDatePicked() {
-  const id = useId();
-  const locale = useLocale();
-  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
-  const [text, setText] = useState('');
-  const [invalid, setInvalid] = useState(false);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Start date</Label.Root>
-      <Field.Root id={id} invalid={invalid}>
-        <Field.TextInput
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setDate(parseDate(event.target.value, { locale }));
-            setInvalid(false);
-          }}
-          onBlur={() => {
-            if (date) setText(formatDate(date, { locale }));
-            else setInvalid(text.trim() !== '');
-          }}
-        />
-        <Field.DatePicker
-          value={date}
-          onValueChange={(next) => {
-            setDate(next);
-            setText(formatDate(next, { locale }));
-            setInvalid(false);
-          }}
-          locale={locale}
-          showValue={false}
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
 export function FieldDatePickerAlone() {
   const id = useId();
   const locale = useLocale();
@@ -676,43 +457,6 @@ export function FieldDatePickerAlone() {
           onValueChange={setDate}
           locale={locale}
           placeholder="Pick a date"
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldDateRangePicked() {
-  const id = useId();
-  const locale = useLocale();
-  const [range, setRange] = useState<DateRange | null>(null);
-  const [text, setText] = useState('');
-  const [invalid, setInvalid] = useState(false);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Stay</Label.Root>
-      <Field.Root id={id} invalid={invalid}>
-        <Field.TextInput
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setRange(parseDateRange(event.target.value, { locale }));
-            setInvalid(false);
-          }}
-          onBlur={() => {
-            if (range) setText(formatDateRange(range, { locale }));
-            else setInvalid(text.trim() !== '');
-          }}
-        />
-        <Field.DateRangePicker
-          value={range}
-          onValueChange={(next) => {
-            setRange(next);
-            setText(formatDateRange(next, { locale }));
-            setInvalid(false);
-          }}
-          locale={locale}
-          showValue={false}
         />
       </Field.Root>
     </Field.Group>
@@ -738,45 +482,6 @@ export function FieldDateRangePickerAlone() {
   );
 }
 
-// The picker and the input share one state, so typing and picking stay in step.
-export function FieldTimePicked() {
-  const id = useId();
-  const locale = useLocale();
-  const [time, setTime] = useState<Temporal.PlainTime | null>(null);
-  const [text, setText] = useState('');
-  const [invalid, setInvalid] = useState(false);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Start time</Label.Root>
-      <Field.Root id={id} invalid={invalid}>
-        <Field.TextInput
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setTime(parseTime(event.target.value, { locale }));
-            setInvalid(false);
-          }}
-          onBlur={() => {
-            if (time) setText(formatTime(time, { locale }));
-            else setInvalid(text.trim() !== '');
-          }}
-        />
-        <Field.TimePicker
-          value={time}
-          onValueChange={(next) => {
-            setTime(next);
-            setText(formatTime(next, { locale }));
-            setInvalid(false);
-          }}
-          locale={locale}
-          step={15}
-          showValue={false}
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
 export function FieldTimePickerAlone() {
   const id = useId();
   const locale = useLocale();
@@ -790,44 +495,6 @@ export function FieldTimePickerAlone() {
           onValueChange={setTime}
           locale={locale}
           placeholder="Pick a time"
-        />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldDateTimePicked() {
-  const id = useId();
-  const locale = useLocale();
-  const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
-  const [text, setText] = useState('');
-  const [invalid, setInvalid] = useState(false);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Meeting starts</Label.Root>
-      <Field.Root id={id} invalid={invalid}>
-        <Field.TextInput
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setStart(parseDateTime(event.target.value, { locale }));
-            setInvalid(false);
-          }}
-          onBlur={() => {
-            if (start) setText(formatDateTime(start, { locale }));
-            else setInvalid(text.trim() !== '');
-          }}
-        />
-        <Field.DateTimePicker
-          value={start}
-          onValueChange={(next) => {
-            setStart(next);
-            setText(formatDateTime(next, { locale }));
-            setInvalid(false);
-          }}
-          locale={locale}
-          step={15}
-          showValue={false}
         />
       </Field.Root>
     </Field.Group>
@@ -850,86 +517,5 @@ export function FieldDateTimePickerAlone() {
         />
       </Field.Root>
     </Field.Group>
-  );
-}
-
-// A company control that is not a native input, joined to Field.Root with useField.
-function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
-  const field = useField();
-  const { disabled } = field;
-  const step = (delta: number) => onChange(Math.min(5, Math.max(0, value + delta)));
-  return (
-    <span
-      {...field.getControlProps({}, { native: false })}
-      role="slider"
-      tabIndex={disabled ? -1 : 0}
-      aria-valuemin={0}
-      aria-valuemax={5}
-      aria-valuenow={value}
-      aria-valuetext={`${value} of 5 stars`}
-      className="demo-stars"
-      onKeyDown={(event) => {
-        if (disabled) return;
-        if (event.key === 'ArrowRight' || event.key === 'ArrowUp') step(1);
-        else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') step(-1);
-        else return;
-        event.preventDefault();
-      }}
-    >
-      {'★'.repeat(value)}
-      {'☆'.repeat(5 - value)}
-    </span>
-  );
-}
-
-// A span is not labelable, so the caption names it through aria-labelledby.
-export function FieldUseField() {
-  const captionId = useId();
-  const hintId = useId();
-  const [stars, setStars] = useState(3);
-  return (
-    <Field.Group>
-      <Text.Root as="span" id={captionId} weight="medium">
-        Rating
-      </Text.Root>
-      <Field.Root aria-labelledby={captionId} aria-describedby={hintId}>
-        <Stars value={stars} onChange={setStars} />
-      </Field.Root>
-      <Description.Root id={hintId}>Arrow keys change the rating.</Description.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldOneTimeCode() {
-  const id = useId();
-  const hintId = useId();
-  const [code, setCode] = useState('');
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Verification code</Label.Root>
-      <Field.Root id={id} name="code" aria-describedby={hintId}>
-        <Field.OneTimeCode value={code} onValueChange={setCode} />
-      </Field.Root>
-      <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
-    </Field.Group>
-  );
-}
-
-export function FieldOneTimeCodeForm() {
-  const id = useId();
-  const [code, setCode] = useState('48');
-  return (
-    <Form.Root onSubmit={(event) => event.preventDefault()}>
-      <Stack.Root align="start">
-        <Field.Group>
-          <Label.Root htmlFor={id}>Recovery code</Label.Root>
-          <Field.Root id={id} name="recovery">
-            <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
-          </Field.Root>
-          <ErrorMessage.Root />
-        </Field.Group>
-        <Button.Root type="submit">Verify</Button.Root>
-      </Stack.Root>
-    </Form.Root>
   );
 }

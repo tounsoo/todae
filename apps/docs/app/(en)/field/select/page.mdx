@@ -1,4 +1,4 @@
-import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
+import FieldSelectSize from '../../../../examples/field/select/FieldSelectSize';
 
 # Field.Select
 
@@ -6,23 +6,7 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 
 When the browser supports `appearance: base-select`, the button and its picker are drawn from field and option tokens. Elsewhere the browser's own picker shows, with the same value and the same keyboard. Children are `<option>` or `<optgroup>` elements. A `Label.Root htmlFor` names the select like any other field.
 
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Size</Label.Root>
-  <Field.Root id={id}>
-    <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-      <option value="s">Small</option>
-      <option value="m">Medium</option>
-    </Field.Select>
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldSelectSize />
-</Example>
+<Example of={FieldSelectSize} block />
 
 ## Icons
 

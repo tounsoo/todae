@@ -1,4 +1,4 @@
-import { RadioPlan } from '../../../components/demos/RadioDemo';
+import RadioPlan from '../../../examples/radio/RadioPlan';
 
 # Radio
 
@@ -8,21 +8,7 @@ import { RadioPlan } from '../../../components/demos/RadioDemo';
 
 `value={null}`은 아무것도 선택되지 않은 제어 상태입니다. 비제어로 쓰려면 `value`를 생략하세요.
 
-```tsx
-const captionId = useId();
-
-<Field.Group>
-  <Text.Root as="span" id={captionId} weight="medium">Plan</Text.Root>
-  <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
-    <RadioGroup.Item value="free">Free</RadioGroup.Item>
-    <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
-  </RadioGroup.Root>
-</Field.Group>
-```
-
-<Example block>
-  <RadioPlan />
-</Example>
+<Example of={RadioPlan} block />
 
 이름이 같은 네이티브 라디오는 화살표 키로 포커스를 옮깁니다. 그룹은 키보드 핸들러를 더하지 않습니다.
 

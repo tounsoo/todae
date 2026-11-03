@@ -1,5 +1,5 @@
-import { BottomSheetBasic } from '../../../components/demos/BottomSheetDemo';
-import { ComboboxSheet } from '../../../components/demos/ComboboxDemo';
+import ComboboxSheet from '../../../examples/recipes/combobox/ComboboxSheet';
+import BottomSheetBasic from '../../../examples/bottomsheet/BottomSheetBasic';
 
 # BottomSheet
 
@@ -9,26 +9,7 @@ The sheet renders where you put it, so it takes the theme of its parent. That al
 
 Enter slides up from below into the snap height (first-frame pose, not a height tween). Both overlays use `data-entered`; Dialog also keeps `@starting-style`. Exit slides off and unmounts on `transitionend` (240ms fallback). Drag keeps `transition: none`.
 
-```tsx
-<Button.Root onClick={() => setOpen(true)}>Open sheet</Button.Root>
-<BottomSheet.Root open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
-  <BottomSheet.Header>
-    <BottomSheet.Title>Share</BottomSheet.Title>
-    <BottomSheet.Close />
-  </BottomSheet.Header>
-  <BottomSheet.Description>Drag the grabber. Mid and full snap.</BottomSheet.Description>
-  <BottomSheet.Body>…</BottomSheet.Body>
-  <BottomSheet.Footer>
-    <Button.Root variant="secondary" onClick={() => setOpen(false)}>
-      Cancel
-    </Button.Root>
-  </BottomSheet.Footer>
-</BottomSheet.Root>
-```
-
-<Example>
-  <BottomSheetBasic />
-</Example>
+<Example of={BottomSheetBasic} />
 
 The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a backdrop click call `onOpenChange(false, reason)`. A controlled sheet closes once you set `open` to false; an uncontrolled one closes right away. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
 

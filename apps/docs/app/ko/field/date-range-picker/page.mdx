@@ -1,46 +1,11 @@
-import { FieldDateRangePicked, FieldDateRangePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDateRangePicked from '../../../../examples/field/date-range-picker/FieldDateRangePicked';
+import { FieldDateRangePickerAlone } from '../../../../components/demos/FieldDemo';
 
 # Field.DateRangePicker
 
 `Field.DateRangePicker`는 [Field](/field) 안에서 범위 모드의 [Calendar](/calendar)를 [Popover](/popover)로 여는 버튼입니다. `value`는 시작일과 종료일을 모두 포함하는 `{ start, end }` 형태의 `DateRange`나 `null`입니다. 달력에서 처음 고른 날짜가 범위를 시작하고 두 번째로 고른 날짜가 끝내며, 순서는 상관없습니다. 그러면 `onValueChange`가 범위를 받고 달력이 닫힙니다. 달력의 `min`, `max`, `isDateDisabled`, `firstDayOfWeek`, `locale`을 받습니다.
 
-```tsx
-const id = useId();
-const [range, setRange] = useState<DateRange | null>(null);
-const [text, setText] = useState('');
-const [invalid, setInvalid] = useState(false);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Stay</Label.Root>
-  <Field.Root id={id} invalid={invalid}>
-    <Field.TextInput
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setRange(parseDateRange(event.target.value));
-        setInvalid(false);
-      }}
-      onBlur={() => {
-        if (range) setText(formatDateRange(range));
-        else setInvalid(text.trim() !== '');
-      }}
-    />
-    <Field.DateRangePicker
-      value={range}
-      onValueChange={(next) => {
-        setRange(next);
-        setText(formatDateRange(next));
-        setInvalid(false);
-      }}
-      showValue={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldDateRangePicked />
-</Example>
+<Example of={FieldDateRangePicked} block />
 
 여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 범위를 입력할 수도 있습니다. 고른 범위는 `formatDateRange`로 텍스트에 쓰이고, `parseDateRange`가 범위로 읽은 입력은 달력을 그 시작일로 옮깁니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 달력 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 범위를 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 입력한 텍스트 대신 `2026-10-03/2026-10-10` 형식으로 범위를 보내려면 Root 대신 선택기에 `name`을 두세요.
 

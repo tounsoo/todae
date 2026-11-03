@@ -1,4 +1,5 @@
-import { TabsBasic, TabsManualVertical } from '../../../components/demos/TabsDemo';
+import TabsBasic from '../../../examples/tabs/TabsBasic';
+import { TabsManualVertical } from '../../../components/demos/TabsDemo';
 
 # Tabs
 
@@ -6,20 +7,7 @@ import { TabsBasic, TabsManualVertical } from '../../../components/demos/TabsDem
 
 목록에는 선택된 탭에 탭 정지점이 하나 있습니다. 화살표 키, Home, End는 [useRovingFocus](/utilities/use-roving-focus)를 통해 탭 사이를 이동합니다. 오른쪽에서 왼쪽으로 쓰는 페이지에서는 Left와 Right가 서로 바뀝니다. 비활성 탭은 네이티브 `disabled` 버튼이므로 화살표 키가 건너뜁니다.
 
-```tsx
-<Tabs.Root defaultValue="account">
-  <Tabs.List aria-label="Settings">
-    <Tabs.Tab value="account">Account</Tabs.Tab>
-    <Tabs.Tab value="billing">Billing</Tabs.Tab>
-  </Tabs.List>
-  <Tabs.Panel value="account">…</Tabs.Panel>
-  <Tabs.Panel value="billing">…</Tabs.Panel>
-</Tabs.Root>
-```
-
-<Example block>
-  <TabsBasic />
-</Example>
+<Example of={TabsBasic} block />
 
 `activation="automatic"`(기본값)은 다른 탭에서 포커스가 옮겨 오는 즉시 탭을 선택합니다. 밖에서 목록으로 포커스가 들어올 때는 아무것도 선택하지 않습니다. 선택된 탭이 비활성이어서 대체 탭에 포커스가 놓여도 마찬가지입니다. 패널 렌더링이 느리면 `activation="manual"`을 쓰세요. 화살표 키는 포커스만 옮기고, Enter, Space 또는 클릭으로 선택합니다. 포커스가 목록을 떠나면 탭 정지점은 선택된 탭으로 돌아갑니다. `orientation="vertical"`은 목록을 패널 옆에 두고 Up과 Down으로 이동합니다.
 

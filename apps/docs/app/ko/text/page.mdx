@@ -1,6 +1,8 @@
+import TextTones from '../../../examples/text/TextTones';
+import TextLines from '../../../examples/text/TextLines';
+import TextLabel from '../../../examples/text/TextLabel';
+import TextHeadings from '../../../examples/text/TextHeadings';
 import { Text } from '@tounsoo/todae/text';
-import { TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
-import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
@@ -14,21 +16,7 @@ import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이 진입점에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 진입점은 클라이언트 모듈입니다.
 
-```tsx
-<Text.Root tone="muted">Muted body</Text.Root>
-<Text.Root>Medium default</Text.Root>
-<Text.Root tone="accent" weight="bold">
-  Accent, bold
-</Text.Root>
-```
-
-<Example>
-  <Text.Root tone="muted">Muted body</Text.Root>
-  <Text.Root>Medium default</Text.Root>
-  <Text.Root tone="accent" weight="bold">
-    Accent, bold
-  </Text.Root>
-</Example>
+<Example of={TextTones} />
 
 `tone="accent"`는 `color.accent.default`를 따릅니다. Todae의 액센트는 중립적인 잉크이므로, 테마나 회사 토큰 패키지가 브랜드 액센트를 설정하기 전까지 accent 텍스트는 기본 텍스트처럼 보입니다.
 
@@ -42,15 +30,7 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 </Text.Root>
 ```
 
-```css
-.section-title {
-  font-size: var(--todae-font-size-3);
-}
-```
-
-<Example block>
-  <TextHeadings />
-</Example>
+<Example of={TextHeadings} block />
 
 ## 레이블
 
@@ -60,18 +40,7 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 
 직접 준 `tone`이나 `weight`가 레이블 자체의 색과 굵기보다 우선합니다.
 
-```tsx
-<hgroup>
-  <Text.Root variant="label">Release notes</Text.Root>
-  <Text.Root as="h2">
-    What changed in 0.4
-  </Text.Root>
-</hgroup>
-```
-
-<Example block>
-  <TextLabel />
-</Example>
+<Example of={TextLabel} block />
 
 회사 토큰 패키지는 [Fernway 예제](https://github.com/tounsoo/todae/tree/main/examples/fernway)처럼 자체 `contract` 세트에서 모양을 지정합니다.
 
@@ -95,18 +64,7 @@ Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이
 
 텍스트가 잘리면 `@tounsoo/todae`의 `Text.Root`는 포인터를 올렸을 때와, 텍스트나 텍스트를 감싼 링크, 행, 메뉴 항목이 키보드 포커스를 받았을 때 툴팁에 텍스트 전체를 보여 줍니다. 잘린 텍스트를 여럿 담고 있으면 첫 번째 텍스트의 툴팁을 보여 줍니다. 줄 자르기는 그려지는 모습만 바꾸므로 스크린 리더는 텍스트 전체를 읽고, 툴팁은 스크린 리더에서 숨겨집니다. 툴팁이 보이는 동안에는 텍스트 바로 뒤에 요소로 있으므로 `:last-child` 같은 선택자가 가리키는 대상이 바뀔 수 있습니다. Escape는 툴팁을 먼저 닫습니다. `tooltip={false}`로 끌 수 있습니다. `@tounsoo/todae/text`도 같은 방식으로 자르지만, 툴팁에는 클라이언트 컴포넌트가 필요하므로 툴팁을 그리지 않습니다.
 
-```tsx
-<Text.Root lines={1} weight="medium">
-  quarterly-revenue-report-northern-region-final.pdf
-</Text.Root>
-<Text.Root lines={2} tone="muted">
-  Every branch office's numbers for July through September, with notes from each regional lead and the forecast for the next quarter.
-</Text.Root>
-```
-
-<Example block>
-  <TextLines />
-</Example>
+<Example of={TextLines} block />
 
 ## 접근성을 지키는 조합
 

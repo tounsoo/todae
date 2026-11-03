@@ -1,9 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { exampleSource } from './exampleSource.mjs';
 import { codeBlocks } from './mdxAst';
 
 const APP = join(process.cwd(), 'app');
+const EXAMPLES = join(process.cwd(), 'examples');
 const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh']);
 
 // Pages whose code blocks don't follow the conventions yet. Bring them in line, then remove them here.
@@ -17,16 +19,19 @@ function pages(dir: string): string[] {
   });
 }
 
-/** Each fenced block as its language and body, named by its page and its place on the page. */
+/** Each fenced block as its language and body, named by its page and its place on the page, and the code of each example file. */
 function blocks(): { name: string; lang: string; body: string }[] {
-  return pages(APP)
+  const examples = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' })
+    .filter((file) => file.endsWith('.tsx'))
+    .map((file) => ({ name: `examples/${file}`, lang: 'tsx', body: exampleSource(readFileSync(join(EXAMPLES, file), 'utf8')) }));
+  return [...examples, ...pages(APP)
     .filter((path) => !PENDING.has(relative(APP, path).split(sep).slice(1, -1).join('/')))
     .flatMap((path) =>
       codeBlocks(readFileSync(path, 'utf8')).code.map((source, index) => {
         const [fence = '', ...lines] = source.split('\n');
         return { name: `${relative(APP, path)} #${index + 1}`, lang: fence.replace(/^`+/, '').trim(), body: lines.slice(0, -1).join('\n') };
       }),
-    );
+    )];
 }
 
 describe('docs code blocks', () => {

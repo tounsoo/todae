@@ -1,47 +1,11 @@
-import { FieldDateTimePicked, FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDateTimePicked from '../../../../examples/field/date-time-picker/FieldDateTimePicked';
+import { FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
 
 # Field.DateTimePicker
 
 `Field.DateTimePicker`는 [Field](/field) 안에서 [Popover](/popover)에 [Calendar](/calendar)와 시각 목록을 나란히, 좁은 화면에서는 목록을 달력 아래에 여는 버튼입니다. `value`는 `Temporal.PlainDateTime`이나 `null`입니다. `onValueChange`는 고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있을 때마다 그 날짜와 시각을 받습니다. 달력이 내놓는 날짜가 골라져 있을 때 시각을 고르면 팝오버가 닫힙니다. [Field.DatePicker](/field/date-picker), [Field.TimePicker](/field/time-picker)와 같은 방식으로 동작하고, 뜻이 같은 props는 같은 이름으로 받습니다. `PlainDateTime`에는 시간대가 없습니다. 사용자의 시계에 보이는 날짜와 시각입니다. 시점을 저장하려면 `value.toZonedDateTime(zone)`처럼 직접 작성한 코드에서 시간대와 합치세요.
 
-```tsx
-const id = useId();
-const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
-const [text, setText] = useState('');
-const [invalid, setInvalid] = useState(false);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Meeting starts</Label.Root>
-  <Field.Root id={id} invalid={invalid}>
-    <Field.TextInput
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setStart(parseDateTime(event.target.value));
-        setInvalid(false);
-      }}
-      onBlur={() => {
-        if (start) setText(formatDateTime(start));
-        else setInvalid(text.trim() !== '');
-      }}
-    />
-    <Field.DateTimePicker
-      value={start}
-      onValueChange={(next) => {
-        setStart(next);
-        setText(formatDateTime(next));
-        setInvalid(false);
-      }}
-      step={15}
-      showValue={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldDateTimePicked />
-</Example>
+<Example of={FieldDateTimePicked} block />
 
 여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 날짜와 시각을 입력할 수도 있습니다. 고른 날짜와 시각은 `formatDateTime`으로 텍스트에 쓰입니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 달력 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 날짜와 시각을 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, 다른 `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `2026-10-13T09:30` 형식으로 보내려면 Root 대신 선택기에 `name`을 두세요.
 

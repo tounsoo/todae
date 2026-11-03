@@ -1,4 +1,5 @@
-import { DialogAlert, DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
+import DialogBasic from '../../../examples/dialog/DialogBasic';
+import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo';
 
 # Dialog
 
@@ -6,25 +7,7 @@ Centered native `<dialog>` via `showModal()`. `open` is controlled, or `defaultO
 
 Enter is an opacity fade over 200ms. `@starting-style` where supported; `data-entered` is the fallback so unsupported engines still tween. Exit stays mounted until `transitionend` (160ms fallback).
 
-```tsx
-<Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
-<Dialog.Root open={open} onOpenChange={setOpen}>
-  <Dialog.Header>
-    <Dialog.Title>Invite teammates</Dialog.Title>
-    <Dialog.Close />
-  </Dialog.Header>
-  <Dialog.Description>They get an email with a link to this project.</Dialog.Description>
-  <Dialog.Body>…</Dialog.Body>
-  <Dialog.Footer>
-    <Dialog.Close>Cancel</Dialog.Close>
-    <Button.Root onClick={sendInvites}>Send invites</Button.Root>
-  </Dialog.Footer>
-</Dialog.Root>
-```
-
-<Example>
-  <DialogBasic />
-</Example>
+<Example of={DialogBasic} />
 
 Dark compact, backdrop dismiss off.
 

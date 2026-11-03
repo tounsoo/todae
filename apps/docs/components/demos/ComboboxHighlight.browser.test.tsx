@@ -2,8 +2,8 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
+import ComboboxHighlight from '../../examples/recipes/combobox/ComboboxHighlight';
 import { Providers } from '../Providers';
-import { ComboboxHighlight } from './ComboboxDemo';
 
 afterEach(cleanup);
 

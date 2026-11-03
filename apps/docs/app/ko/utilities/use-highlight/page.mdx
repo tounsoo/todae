@@ -1,4 +1,4 @@
-import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
+import HighlightSearch from '../../../../examples/utilities/use-highlight/HighlightSearch';
 
 # useHighlight
 
@@ -13,16 +13,7 @@ const found = useHighlight({ name: 'search', query });
 <output>{found.matches.length} results</output>
 ```
 
-```css
-::highlight(search) {
-  background-color: var(--todae-color-status-warning-bg);
-  color: var(--todae-color-fg-default);
-}
-```
-
-<Example>
-  <HighlightSearch />
-</Example>
+<Example of={HighlightSearch} />
 
 `matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. CSS로 숨긴 텍스트도 일치 항목에 들어갑니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
 

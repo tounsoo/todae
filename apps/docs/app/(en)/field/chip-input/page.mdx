@@ -1,33 +1,11 @@
-import {
-  ChipInputCommitKeys,
-  ChipInputControlled,
-  ChipInputLabel,
-  ChipInputMaxRows,
-  ChipInputStates,
-} from '../../../../components/demos/FieldDemo';
+import ChipInputControlled from '../../../../examples/field/chip-input/ChipInputControlled';
+import { ChipInputCommitKeys, ChipInputLabel, ChipInputMaxRows, ChipInputStates } from '../../../../components/demos/FieldDemo';
 
 # Field.ChipInput
 
 Controlled chips plus input, inside a [Field](/field). The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label.Root htmlFor` or Root's `aria-label`.
 
-```tsx
-<Field.Root aria-label="Tags">
-  <Field.ChipInput
-    chips={chips}
-    inputValue={inputValue}
-    onInputValueChange={setInputValue}
-    onCommit={(value) => {
-      setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
-      setInputValue('');
-    }}
-    onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
-  />
-</Field.Root>
-```
-
-<Example block>
-  <ChipInputControlled />
-</Example>
+<Example of={ChipInputControlled} block />
 
 Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
 

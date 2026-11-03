@@ -1,4 +1,6 @@
-import { DrilldownFilterDrawer, DrilldownOrderSheet, DrilldownSettingsDialog } from '../../../components/demos/DrilldownDemo';
+import DrilldownFilterDrawer from '../../../examples/drilldown/DrilldownFilterDrawer';
+import DrilldownSettingsDialog from '../../../examples/drilldown/DrilldownSettingsDialog';
+import { DrilldownOrderSheet } from '../../../components/demos/DrilldownDemo';
 
 # Drilldown
 
@@ -6,33 +8,7 @@ A stack of views inside one surface, such as Settings → Account → Email in a
 
 `Drilldown.Root` renders no element, so it can wrap both the overlay's header and its body. `Drilldown.Back` goes before the title and renders nothing at the first view. `Drilldown.Label` prints the shown view's `label`, so the title, and the dialog's name with it, follows the view. `Drilldown.Viewport` holds the views, and each `Drilldown.View` is a group named by its `label`.
 
-```tsx
-<Dialog.Root open={open} onOpenChange={setOpen}>
-  <Drilldown.Root defaultValue={['settings']}>
-    <Dialog.Header>
-      <Drilldown.Back />
-      <Dialog.Title>
-        <Drilldown.Label />
-      </Dialog.Title>
-      <Dialog.Close />
-    </Dialog.Header>
-    <Dialog.Body>
-      <Drilldown.Viewport>
-        <Drilldown.View value="settings" label="Settings">
-          <Drilldown.Trigger value="account">Account</Drilldown.Trigger>
-          <Drilldown.Trigger value="notifications">Notifications</Drilldown.Trigger>
-        </Drilldown.View>
-        <Drilldown.View value="account" label="Account">…</Drilldown.View>
-        <Drilldown.View value="notifications" label="Notifications">…</Drilldown.View>
-      </Drilldown.Viewport>
-    </Dialog.Body>
-  </Drilldown.Root>
-</Dialog.Root>
-```
-
-<Example>
-  <DrilldownSettingsDialog />
-</Example>
+<Example of={DrilldownSettingsDialog} />
 
 ## The stack
 
@@ -42,20 +18,7 @@ A view is mounted while its value is in the stack. Views lower in the stack stay
 
 `Drilldown.Trigger` is a [Button](/button) and takes Button's props, so it can be a primary Next button, a ghost row with a chevron, or a link through `render`. To push after async work, such as validating a step first, control `value` and set the stack when the work is done; Back still returns focus to the trigger. Only the next change of the stack can count as the trigger's push: if it shows that view, Back returns focus to the trigger, so a push you turn down and then make yourself returns focus there too. Any other change first, such as showing another view, ends the push, and Back then focuses the view's first tab stop.
 
-```tsx
-import { ChevronRight } from 'lucide-react';
-
-<Drilldown.Trigger value="brand" variant="ghost">
-  Brand
-  <Button.Icon>
-    <ChevronRight />
-  </Button.Icon>
-</Drilldown.Trigger>
-```
-
-<Example>
-  <DrilldownFilterDrawer />
-</Example>
+<Example of={DrilldownFilterDrawer} />
 
 ## Escape and the back gesture
 

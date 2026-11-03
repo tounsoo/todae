@@ -1,26 +1,11 @@
-import { FieldOneTimeCode, FieldOneTimeCodeForm } from '../../../../components/demos/FieldDemo';
+import FieldOneTimeCodeForm from '../../../../examples/field/one-time-code/FieldOneTimeCodeForm';
+import FieldOneTimeCode from '../../../../examples/field/one-time-code/FieldOneTimeCode';
 
 # Field.OneTimeCode
 
 `Field.OneTimeCode` is a sign-in or verification code inside a [Field](/field), drawn as one box per character. Its `value` is a string of at most `length` characters, 6 by default. `characters` is `"digits"` by default, or `"alphanumeric"` for letters and digits. Pass `onValueChange` for the cleaned code, `onChange` for the event, or both; without either, the input is read-only. `onChange` gets the native event with the raw text, so a product that uses only `onChange` cleans it or uses `onValueChange`. A product that sends the code by itself does so a short pause after `value.length === length`, since with an IME a full code can be reported and taken back (see Typing, paste and autofill).
 
-```tsx
-const id = useId();
-const hintId = useId();
-const [code, setCode] = useState('');
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Verification code</Label.Root>
-  <Field.Root id={id} name="code" aria-describedby={hintId}>
-    <Field.OneTimeCode value={code} onValueChange={setCode} />
-  </Field.Root>
-  <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldOneTimeCode />
-</Example>
+<Example of={FieldOneTimeCode} block />
 
 The boxes are drawn over one native `<input>`, not made of one input per character. So the browser keeps paste, undo, selection and screen reader support, and a phone can offer the code from a text message because the input has `autocomplete="one-time-code"`. Inputs split per digit break each of these. The boxes are `aria-hidden` and take no pointer events; the input is the control.
 
@@ -43,27 +28,7 @@ A press on a box selects its character, so typing replaces it. A press on an emp
 
 The input is the field's native, validated control, so it sends its text under the field's `name` and takes `required` and the other native attributes. It has `maxLength` equal to `length`. A code that is not empty and shorter than `length` is flagged as too short, whether a person typed it or your code set it, because the browser's own `tooShort` skips a value a script writes. An empty code is the job of `required`. The problem has `kind: 'customError'`, not `'tooShort'`, and its message is the `tooShort` string. While the code is short, that message wins over a `Field.Root` `customValidity`, since the innermost owner comes first. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, such as "Use at least 8 characters", and focus goes to the input.
 
-```tsx
-const id = useId();
-const [code, setCode] = useState('');
-
-<Form.Root onSubmit={verify}>
-  <Stack.Root align="start">
-    <Field.Group>
-      <Label.Root htmlFor={id}>Recovery code</Label.Root>
-      <Field.Root id={id} name="recovery">
-        <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
-      </Field.Root>
-      <ErrorMessage.Root />
-    </Field.Group>
-    <Button.Root type="submit">Verify</Button.Root>
-  </Stack.Root>
-</Form.Root>
-```
-
-<Example block>
-  <FieldOneTimeCodeForm />
-</Example>
+<Example of={FieldOneTimeCodeForm} block />
 
 `pattern` is `[0-9]*` or `[A-Za-z0-9]*`. It leaves `length` to the too-short check, so a code that is too short reads "too short" and not "wrong format".
 

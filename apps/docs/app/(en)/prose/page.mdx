@@ -1,22 +1,10 @@
-import { ProseArticle } from '../../../components/demos/ProseDemo';
+import ProseArticle from '../../../examples/prose/ProseArticle';
 
 # Prose
 
 `Prose.Root` is a `div` that sets the type and spacing of rendered markdown or MDX: headings, paragraphs, lists and block quotes, drawn from the `prose` contract tokens. Wrap a docs page or an article in it, or the text of a chat message.
 
-```tsx
-<Prose.Root>
-  <h2>Release notes</h2>
-  <p>This release adds a prose token group.</p>
-  <ul>
-    <li>Headings take their size from the prose tokens.</li>
-  </ul>
-</Prose.Root>
-```
-
-<Example block>
-  <ProseArticle />
-</Example>
+<Example of={ProseArticle} block />
 
 Server Components can import it from `@tounsoo/todae/prose`. The MDX pages of this site are set in it.
 

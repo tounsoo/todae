@@ -19,14 +19,22 @@ declare global {
   }
 }
 
-// Every demo module in this folder; each exported component is one docs example.
+// Every demo module in this folder, where each exported component is one docs example, and every
+// example file in apps/docs/examples, whose default export is one. Pages pass an example their locale.
 const modules = import.meta.glob<Record<string, unknown>>(['./*Demo.tsx'], { eager: true });
+const examples = import.meta.glob<{ default: ComponentType<{ locale: string }> }>(['../../examples/**/*.tsx'], { eager: true });
 
-const demos = Object.entries(modules).flatMap(([file, mod]) =>
-  Object.entries(mod)
-    .filter((entry): entry is [string, ComponentType] => /^[A-Z]/.test(entry[0]) && typeof entry[1] === 'function')
-    .map(([name, Demo]) => ({ file: file.replace('./', ''), name, Demo })),
-);
+const demos = [
+  ...Object.entries(modules).flatMap(([file, mod]) =>
+    Object.entries(mod)
+      .filter((entry): entry is [string, ComponentType] => /^[A-Z]/.test(entry[0]) && typeof entry[1] === 'function')
+      .map(([name, Demo]) => ({ file: file.replace('./', ''), name, Demo })),
+  ),
+  ...Object.entries(examples).map(([file, mod]) => {
+    const Shown = mod.default;
+    return { file: file.replace('../../', ''), name: Shown.name, Demo: () => <Shown locale="en" /> };
+  }),
+];
 
 async function violations(): Promise<string[]> {
   return describeViolations(await axe.run(document.body, AXE_OPTIONS));
@@ -60,10 +68,10 @@ describe('docs demos under axe', () => {
 // Open each one and check again: from a combobox field when the demo has one,
 // else from its first button.
 describe('docs demos under axe, overlay open', () => {
-  const overlayDemos = demos.filter(({ file, name }) => OVERLAY_DEMOS.has(file) && !NO_OVERLAY.has(name));
+  const overlayDemos = demos.filter(({ file, name }) => overlayGroup(file) && !NO_OVERLAY.has(name));
 
   it('found the overlay demos', () => {
-    expect(new Set(overlayDemos.map((d) => d.file))).toEqual(OVERLAY_DEMOS);
+    expect(new Set(overlayDemos.map((d) => overlayGroup(d.file)))).toEqual(new Set(OVERLAY_DEMOS));
   });
 
   for (const { file, name, Demo } of overlayDemos) {
@@ -110,7 +118,22 @@ describe('docs demos under axe, no matches', () => {
   });
 });
 
-const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'DrawerDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx', 'MenuDemo.tsx', 'CommandPaletteDemo.tsx']);
+// Demo files, and folders of example files, whose demos open an overlay.
+const OVERLAY_DEMOS = [
+  'DialogDemo.tsx',
+  'ComboboxDemo.tsx',
+  'MenuDemo.tsx',
+  'CommandPaletteDemo.tsx',
+  'examples/bottomsheet/',
+  'examples/dialog/',
+  'examples/drawer/',
+  'examples/menu/',
+  'examples/popover/',
+  'examples/recipes/combobox/',
+  'examples/utilities/use-popover/',
+];
+
+const overlayGroup = (file: string) => OVERLAY_DEMOS.find((group) => (group.endsWith('/') ? file.startsWith(group) : file === group));
 
 async function openFirstOverlay(container: HTMLElement) {
   const scope = within(container);

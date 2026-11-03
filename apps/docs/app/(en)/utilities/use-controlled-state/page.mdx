@@ -1,4 +1,4 @@
-import { StatusFilter } from '../../../../components/demos/ControlledStateDemo';
+import StatusFilter from '../../../../examples/utilities/use-controlled-state/StatusFilter';
 
 # useControlledState
 
@@ -22,61 +22,7 @@ A controlled write renders the hook again. A change the parent hasn't passed bac
 
 Set open twice. The second press is already the latest value, so `onChange` does not run. Reset parent writes the controlled value from outside the hook.
 
-```tsx
-import { Button, RadioGroup, Stack, Text, useControlledState } from '@tounsoo/todae';
-import { useState } from 'react';
-
-function Filter({
-  label,
-  value,
-  defaultValue = 'all',
-  onValueChange,
-}: {
-  label: string;
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (next: string) => void;
-}) {
-  const [current, change] = useControlledState(value, defaultValue, onValueChange);
-  return (
-    <Stack.Root gap="condensed" align="start">
-      <RadioGroup.Root aria-label={label} value={current} onValueChange={change}>
-        <RadioGroup.Item value="all">All</RadioGroup.Item>
-        <RadioGroup.Item value="open">Open</RadioGroup.Item>
-      </RadioGroup.Root>
-      <Button.Root onClick={() => change('open')}>Set open</Button.Root>
-    </Stack.Root>
-  );
-}
-
-export function StatusFilter() {
-  const [freeChanges, setFreeChanges] = useState(0);
-  const [held, setHeld] = useState('all');
-  const [heldChanges, setHeldChanges] = useState(0);
-  return (
-    <Stack.Root gap="normal" align="start">
-      <Text.Root>Uncontrolled. Changes {freeChanges}.</Text.Root>
-      <Filter label="Uncontrolled status" onValueChange={() => setFreeChanges((count) => count + 1)} />
-      <Text.Root>Controlled. Parent holds {held}. Changes {heldChanges}.</Text.Root>
-      <Filter
-        label="Controlled status"
-        value={held}
-        onValueChange={(next) => {
-          setHeld(next);
-          setHeldChanges((count) => count + 1);
-        }}
-      />
-      <Button.Root variant="secondary" onClick={() => setHeld('all')}>
-        Reset parent
-      </Button.Root>
-    </Stack.Root>
-  );
-}
-```
-
-<Example>
-  <StatusFilter />
-</Example>
+<Example of={StatusFilter} />
 
 Extra arguments, such as a reason, pass through to `onChange`: type them as the second type parameter, as in `useControlledState<boolean, [reason: string]>(…)`. `undefined` means uncontrolled, so a controlled empty value is `null`. `change` takes a value, not an updater function. `latest()` reads the value the next write builds on. `change` keeps its identity while the hook stays controlled or uncontrolled, and reads the newest `onChange` when it runs. Keep one mode for a component's life: going from controlled to uncontrolled shows the hook's own state, not the last controlled value.
 
