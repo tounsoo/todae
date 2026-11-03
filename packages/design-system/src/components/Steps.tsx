@@ -1,7 +1,7 @@
 import { createContext, useContext, type ComponentPropsWithRef } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import { CheckGlyph, ErrorGlyph, glyphOr } from './glyphs.js';
 import { Loader } from './Loader.js';
 import { VisuallyHidden } from './VisuallyHidden.js';

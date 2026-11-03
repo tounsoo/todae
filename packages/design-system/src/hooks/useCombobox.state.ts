@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, type RefObject } from 'react';
+import { useCallback, useRef, type RefObject } from 'react';
 import type { UseComboboxMultipleOptions, UseComboboxOptions } from './useCombobox.js';
 import type { ComboboxCloseReason } from './useCombobox.types.js';
 import { useControlledState } from './useControlledState.js';
@@ -31,73 +31,117 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
  */
 export function useComboboxState(options: UseComboboxOptions, latest: RefObject<UseComboboxOptions>) {
   const multiple = isMultiple(options);
-  const [open, setOpen] = useControlledState(options.open, options.defaultOpen ?? false);
+  // While `apply` writes, change callbacks wait here, so every change is stored
+  // before any callback runs. A held callback still runs only when no later
+  // report has replaced it and the field's last request, such as the owner's
+  // own from an earlier callback, still asks for its value. A render alone,
+  // such as one the owner forces from a callback, changes neither.
+  const held = useRef<(() => void)[] | null>(null);
+  const reports = useRef<Record<keyof ComboboxFieldState, number>>({ open: 0, inputValue: 0, single: 0, multi: 0 });
+  const requested = useRef<Partial<ComboboxFieldState>>({});
+  const report = useCallback(<F extends keyof ComboboxFieldState>(field: F, next: ComboboxFieldState[F], call: () => void) => {
+    const count = ++reports.current[field];
+    if (!held.current) return call();
+    held.current.push(() => {
+      if (reports.current[field] !== count) return;
+      const asked = requested.current[field];
+      const same =
+        field === 'multi'
+          ? sameList(asked as readonly string[], next as readonly string[])
+          : Object.is(asked, next);
+      if (same) call();
+    });
+  }, []);
+  const [open, setOpen, openNow] = useControlledState<boolean, [reason: ComboboxCloseReason]>(
+    options.open,
+    options.defaultOpen ?? false,
+    options.onOpenChange &&
+      ((next, reason) =>
+        report(
+          'open',
+          next,
+          () => latest.current.onOpenChange?.(next, reason),
+        )),
+  );
   const initialSingle = multiple ? null : options.value !== undefined ? options.value : (options.defaultValue ?? null);
   // Only a label we actually know: never seed the input (and the first async query) with a raw id.
   const selectedLabel = options.options?.find((option) => option.value === initialSingle)?.label ?? '';
-  const [inputValue, setInput] = useControlledState(options.inputValue, options.defaultInputValue ?? selectedLabel);
-  const [single, setSingle] = useControlledState(
+  const [inputValue, setInput, inputNow] = useControlledState(
+    options.inputValue,
+    options.defaultInputValue ?? selectedLabel,
+    options.onInputValueChange &&
+      ((next) =>
+        report(
+          'inputValue',
+          next,
+          () => latest.current.onInputValueChange?.(next),
+        )),
+  );
+  const [single, setSingle, singleNow] = useControlledState<string | null>(
     multiple ? undefined : options.value,
     multiple ? null : (options.defaultValue ?? null),
+    options.onValueChange &&
+      ((next) =>
+        report(
+          'single',
+          next,
+          () => {
+            const current = latest.current;
+            if (!isMultiple(current)) current.onValueChange?.(next);
+          },
+        )),
   );
-  const [multi, setMulti] = useControlledState<readonly string[]>(
+  const [multi, setMulti, multiNow] = useControlledState<readonly string[]>(
     multiple ? options.value : undefined,
     multiple ? (options.defaultValue ?? []) : [],
+    options.onValueChange &&
+      ((next) =>
+        report(
+          'multi',
+          next,
+          () => {
+            const current = latest.current;
+            if (isMultiple(current)) current.onValueChange?.([...next]);
+          },
+        )),
   );
 
-  const state = useRef<ComboboxFieldState>({ open, inputValue, single, multi });
-  // Each render brings it back to what the field shows, so it follows a controlled
-  // owner's own changes.
-  useLayoutEffect(() => {
-    state.current = { open, inputValue, single, multi };
-  });
+  /** The field as the last change left it, which writes build on until the next render. */
+  const fieldNow = useCallback(
+    (): ComboboxFieldState => ({ open: openNow(), inputValue: inputNow(), single: singleNow(), multi: multiNow() }),
+    [inputNow, multiNow, openNow, singleNow],
+  );
 
   /**
-   * Stores each change that differs from the field's latest state, then calls its
-   * change callback. Every callback runs even if one throws; the first throw is
-   * rethrown after them.
+   * Stores each change that differs from the field's latest state, then calls
+   * the change callbacks of those still current. Every callback runs even if
+   * one throws; the first throw is rethrown after them.
    */
   const apply = useCallback(
     (changes: ComboboxChanges) => {
-      const now = state.current;
-      const current = latest.current;
-      const next = { ...now };
       const calls: (() => void)[] = [];
-      const { value } = changes;
-      if (typeof value === 'object' && value !== null) {
-        if (!sameList(value, now.multi)) {
-          const list = [...value];
-          next.multi = list;
-          setMulti(list);
-          if (isMultiple(current)) calls.push(() => current.onValueChange?.(list));
+      held.current = calls;
+      try {
+        const { value, inputValue: text } = changes;
+        const asked = requested.current;
+        if (typeof value === 'object' && value !== null) {
+          asked.multi = value;
+          if (!sameList(value, multiNow())) setMulti([...value]);
+        } else if (value !== undefined) {
+          asked.single = value;
+          setSingle(value);
         }
-      } else if (value !== undefined && !Object.is(value, now.single)) {
-        next.single = value;
-        setSingle(value);
-        if (!isMultiple(current)) calls.push(() => current.onValueChange?.(value));
+        if (text !== undefined) {
+          asked.inputValue = text;
+          setInput(text);
+        }
+        if (changes.open !== undefined) {
+          asked.open = changes.open;
+          setOpen(changes.open, changes.reason);
+        }
+      } finally {
+        held.current = null;
       }
-      const text = changes.inputValue;
-      if (text !== undefined && text !== now.inputValue) {
-        next.inputValue = text;
-        setInput(text);
-        calls.push(() => current.onInputValueChange?.(text));
-      }
-      if (changes.open !== undefined && changes.open !== now.open) {
-        const { open: nextOpen, reason } = changes;
-        next.open = nextOpen;
-        setOpen(nextOpen);
-        calls.push(() => current.onOpenChange?.(nextOpen, reason));
-      }
-      // A controlled part stays at what its owner rendered until the owner renders
-      // another, so a change it turns down is neither kept nor built on.
-      const single = !isMultiple(current) ? current.value : undefined;
-      const multi = isMultiple(current) ? current.value : undefined;
-      state.current = {
-        open: current.open ?? next.open,
-        inputValue: current.inputValue ?? next.inputValue,
-        single: single !== undefined ? single : next.single,
-        multi: multi ?? next.multi,
-      };
       let failure: { error: unknown } | null = null;
       for (const call of calls) {
         try {
@@ -108,8 +152,8 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
       }
       if (failure) throw failure.error;
     },
-    [latest, setInput, setMulti, setOpen, setSingle],
+    [multiNow, setInput, setMulti, setOpen, setSingle],
   );
 
-  return { open, inputValue, singleValue: single, multiValue: multi, state, apply };
+  return { open, inputValue, singleValue: single, multiValue: multi, fieldNow, apply };
 }

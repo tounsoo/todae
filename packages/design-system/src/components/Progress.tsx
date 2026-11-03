@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Progress.module.css';
 
 /**

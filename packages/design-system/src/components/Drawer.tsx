@@ -9,8 +9,8 @@ import {
   type DialogRootProps,
   type DialogShell,
 } from './dialogShell.js';
-import { composeHandlers, cx } from './props.js';
-import { revealRing } from './revealRing.js';
+import { composeHandlers, cx } from '../internal/props.js';
+import { revealRing } from '../internal/revealRing.js';
 import styles from './Drawer.module.css';
 
 export type DrawerSide = 'start' | 'end';

@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../index.js';
 import { button, input, key, type } from '../test/number.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(() => {
   cleanup();

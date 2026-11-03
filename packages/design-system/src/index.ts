@@ -29,7 +29,7 @@ export { Progress, type ProgressRootProps } from './components/Progress.js';
 export { Meter, type MeterRootProps } from './components/Meter.js';
 export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
 export { Skeleton, type SkeletonRootProps } from './components/Skeleton.js';
-export { Slider, type SliderRootProps } from './components/Slider.js';
+export { Slider, type SliderRootProps } from './components/Slider.client.js';
 export { Code, type CodeRootProps } from './components/Code.js';
 export { CodeBlock, type CodeBlockRootProps } from './components/CodeBlock.js';
 export { Kbd, type KbdRootProps } from './components/Kbd.js';
@@ -82,7 +82,9 @@ export {
   type AttachmentStatus,
 } from './components/Attachment.js';
 export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus, type StepsVariant } from './components/Steps.js';
-export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer.js';
+export { Mention, type MentionRootProps } from './components/Mention.js';
+export { MentionText, type MentionTextProps } from './components/MentionText.js';
+export { defineMentionSource, type MentionPeekContext, type MentionSource } from './mentions/source.js';
 export {
   Conversation,
   type ConversationContentProps,
@@ -131,7 +133,7 @@ export {
   type DrilldownViewportProps,
   type DrilldownViewProps,
 } from './components/Drilldown.js';
-export { composeRefs } from './components/props.js';
+export { composeRefs } from './internal/props.js';
 export {
   OptionList,
   type OptionListMultipleProps,
@@ -250,7 +252,7 @@ export {
   type ValueInputControl,
   type ValueInputOptions,
   type ValueInputProps,
-} from './hooks/useField.js';
+} from './components/useField.js';
 export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset.js';
 export {
   Form,
@@ -417,7 +419,7 @@ export {
   type UseComboboxResult,
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox.js';
-export { useControlledState, useControlledValue } from './hooks/useControlledState.js';
+export { useControlledState } from './hooks/useControlledState.js';
 export {
   useMentions,
   type MentionDraft,

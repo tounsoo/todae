@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
-import { isImeKeyEvent } from '../components/ime.js';
+import { isImeKeyEvent } from '../internal/ime.js';
 import { frontModal, isModal } from './modalStack.js';
 
 type Entry = {

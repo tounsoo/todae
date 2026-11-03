@@ -2,7 +2,6 @@
 
 import {
   Button,
-  Composer,
   Field,
   Loader,
   Message,
@@ -306,7 +305,15 @@ export function SuggestionsExample() {
           ))}
         </Stack.Root>
       )}
-      <Composer.Root busy={busy} onSubmit={send}>
+      <form
+        onSubmit={send}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' || event.shiftKey || event.defaultPrevented) return;
+          if (!(event.target instanceof HTMLTextAreaElement)) return;
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }}
+      >
         <Field.Root aria-label="Message">
           <Field.Textarea
             ref={field}
@@ -317,10 +324,17 @@ export function SuggestionsExample() {
             maxRows={6}
           />
           <Field.Row>
-            <Composer.Submit disabled={!hasDraft} onStop={stop} />
+            <Button.Root type="submit" variant="primary" disabled={!hasDraft || busy} aria-label="Send">
+              Send
+            </Button.Root>
+            {busy ? (
+              <Button.Root type="button" variant="secondary" onClick={stop}>
+                Stop
+              </Button.Root>
+            ) : null}
           </Field.Row>
         </Field.Root>
-      </Composer.Root>
+      </form>
     </Stack.Root>
   );
 }

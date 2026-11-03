@@ -222,6 +222,10 @@
     box-decoration-break: clone;
   }
 
+  .token[data-kind] {
+    background: var(--todae-mention-composing-bg);
+  }
+
   @media (forced-colors: active) {
     /* The textarea's forced background would hide the layer, so it goes on top and draws outlines only. */
     .highlights {

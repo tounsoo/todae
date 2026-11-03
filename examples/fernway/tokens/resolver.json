@@ -36,7 +36,7 @@
         "soft": [{ "$ref": "./button.soft.json" }]
       },
       "$extensions": {
-        "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+        "dev.todae": { "layer": "contract", "attribute": "data-button-variant", "alias": true }
       }
     }
   },

@@ -6,25 +6,23 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type Ref,
   type RefObject,
   type SyntheticEvent,
 } from 'react';
-import { useDomId } from '../components/domId.js';
-import { isImeKeyEvent } from '../components/ime.js';
+import { useDomId } from '../internal/domId.js';
+import { isImeKeyEvent } from '../internal/ime.js';
 import type { FieldTextareaHighlight, FieldTextareaProps } from '../components/Field.js';
 import type { OptionListOptionProps, OptionListSingleProps } from '../components/OptionList.js';
-import { optionDomId } from '../components/OptionList.ids.js';
-import type { PopoverWire } from '../components/Popover.wire.js';
-import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { optionDomId } from '../internal/optionDomId.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useAnnouncer } from './useAnnouncer.js';
-import { createAsyncGate } from './useCombobox.async.js';
-import { defaultFilter, filterOptions } from './useCombobox.filter.js';
-import type { ComboboxOption } from './useCombobox.types.js';
+import type { ComboboxOption } from './optionList/types.js';
+import { useOptionList } from './optionList/useOptionList.js';
 import { useControlledState } from './useControlledState.js';
 import {
   findQuery,
@@ -36,7 +34,7 @@ import {
   type MentionToken,
   type MentionTriggerPosition,
 } from './useMentions.detect.js';
-import { usePopoverInternal } from './usePopover.js';
+import { usePopoverInternal } from '../overlay/popover.js';
 
 export type { MentionToken, MentionTriggerPosition } from './useMentions.detect.js';
 
@@ -116,10 +114,15 @@ export type UseMentionsResult = {
   getPopoverProps: () => PopoverWire;
   getListboxProps: () => Omit<OptionListSingleProps, 'children'>;
   getOptionProps: (item: MentionItem) => OptionListOptionProps;
+  /**
+   * CSS anchor name on the token the caret is inside, while the suggestion
+   * list is closed, and null otherwise. Pass it as `usePopover`'s
+   * `anchorName` to show a peek at that token.
+   */
+  caretPeekAnchorName: string | null;
 };
 
 const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
-const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
 const SPACE = /\s/;
 /** Keys that move the caret without editing. */
 const CARET_KEYS = /* @__PURE__ */ new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
@@ -150,6 +153,15 @@ function caretOf(el: HTMLTextAreaElement): number | null {
   return el.selectionStart === el.selectionEnd ? el.selectionStart : null;
 }
 
+/** The token whose text the caret sits in. A boundary belongs to the token that ends there. */
+export function tokenAtCaret(tokens: readonly MentionToken[], caret: number): MentionToken | null {
+  let match: MentionToken | null = null;
+  for (const token of tokens) {
+    if (caret > token.start && caret <= token.end) match = token;
+  }
+  return match;
+}
+
 export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const strings = useStrings();
   const announce = useAnnouncer();
@@ -172,7 +184,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   );
   const [caret, setCaret] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
-  const [active, setActive] = useState<{ session: string; value: string | null } | null>(null);
   // Where the caret goes after a pick, once its text is in. Until then no list opens.
   const [caretAfter, setCaretAfter] = useState<{ to: number; value: string; from: string } | null>(null);
 
@@ -275,52 +286,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const session = query ? `${query.trigger}:${query.start}` : null;
   const open = query !== null;
 
-  // The last settled load and the trigger and word it was for, so one
-  // trigger's results or error never show on another's list.
-  const [loaded, setLoaded] = useState<{ for: string; options: readonly ComboboxOption[]; error: unknown | null } | null>(
-    null,
-  );
-  const [reloads, setReloads] = useState(0);
-  const gate = useRef(createAsyncGate());
-  const hasLoader = Boolean(trigger?.loadOptions);
-  // The query object changes every render; its trigger and word are what a load and the filter read.
-  const queryTrigger = query?.trigger;
-  const queryText = query?.query;
-  const loadFor = query ? `${query.trigger}:${query.query}` : null;
-
-  useEffect(() => {
-    if (!hasLoader || loadFor === null || queryTrigger === undefined || queryText === undefined) return;
-    const load = latest.current.triggers[queryTrigger]?.loadOptions;
-    if (!load) return;
-    setLoaded(null);
-    void gate.current.next(queryText, load).then((result) => {
-      if (!gate.current.isCurrent(result.gen)) return;
-      if ('aborted' in result && result.aborted) return;
-      setLoaded(
-        'error' in result
-          ? { for: loadFor, options: EMPTY_OPTIONS, error: result.error }
-          : { for: loadFor, options: result.result, error: null },
-      );
-    });
-  }, [hasLoader, loadFor, queryText, queryTrigger, reloads]);
-
-  useEffect(() => {
-    const current = gate.current;
-    return () => current.abort();
-  }, []);
-
-  const current = hasLoader && loaded !== null && loaded.for === loadFor ? loaded : null;
-  const listIsCurrent = !hasLoader || current !== null;
-  const loading = open && hasLoader && current === null;
-  const error = current?.error ?? null;
-  const source = !trigger ? EMPTY_OPTIONS : hasLoader ? (current?.options ?? EMPTY_OPTIONS) : (trigger.options ?? EMPTY_OPTIONS);
-  const filter = trigger?.filter ?? defaultFilter;
-  const items = useMemo<MentionItem[]>(() => {
-    if (queryText === undefined) return [];
-    const shown = hasLoader ? source : filterOptions(source, queryText, filter);
-    return shown.map((option) => ({ option, id: optionDomId(ids.listbox, option.value) }));
-  }, [filter, hasLoader, ids.listbox, queryText, source]);
-
   const fits = useCallback(
     (option: ComboboxOption) => {
       const max = latest.current.maxLength;
@@ -330,12 +295,28 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     },
     [query, trigger, value],
   );
-  const enabledValues = items.filter((item) => !item.option.disabled && fits(item.option)).map((item) => item.option.value);
-  const chosen = active && active.session === session ? active.value : null;
-  const activeValue =
-    chosen !== null && enabledValues.includes(chosen) ? chosen : listIsCurrent ? (enabledValues[0] ?? null) : null;
-  const activeId = open && activeValue !== null ? optionDomId(ids.listbox, activeValue) : null;
-  const isEmpty = open && listIsCurrent && items.length === 0 && error == null;
+  // Each trigger is its own list, so one trigger's loads never show on another's.
+  const list = useOptionList({
+    listboxId: ids.listbox,
+    options: trigger?.options,
+    loadOptions: trigger?.loadOptions,
+    query: query?.query ?? null,
+    filter: trigger?.filter,
+    scope: query ? String(query.trigger) : undefined,
+    canPick: fits,
+  });
+  const { activeValue, activeId: listActiveId, listIsCurrent, enabledValues, error, highlight, move } = list;
+  const items = useMemo<MentionItem[]>(
+    () => list.options.map((option) => ({ option, id: optionDomId(ids.listbox, option.value) })),
+    [ids.listbox, list.options],
+  );
+  const activeId = open ? listActiveId : null;
+  // A new word starts from its first row, even at the place an earlier word was.
+  const [shownSession, setShownSession] = useState(session);
+  if (shownSession !== session) {
+    setShownSession(session);
+    highlight(null);
+  }
 
   const listName = trigger?.label ?? strings.suggestions;
   // A failed load is not "no suggestions", so it announces nothing.
@@ -357,20 +338,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     if (start === null) return;
     setOwn((current) => ({ ...current, dismissed: start }));
   }, [query?.start]);
-
-  const highlight = useCallback(
-    (next: string | null) => {
-      if (session !== null) setActive({ session, value: next });
-    },
-    [session],
-  );
-
-  const move = (delta: number) => {
-    if (enabledValues.length === 0) return;
-    const index = activeValue === null ? -1 : enabledValues.indexOf(activeValue);
-    const next = index === -1 ? (delta > 0 ? 0 : enabledValues.length - 1) : Math.min(Math.max(index + delta, 0), enabledValues.length - 1);
-    highlight(enabledValues[next] ?? null);
-  };
 
   const select = useCallback(
     (raw: string) => {
@@ -446,14 +413,15 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
         return;
       }
       if ((event.key === 'Enter' || event.key === 'Tab') && plain) {
-        if (activeValue !== null) {
-          event.preventDefault();
-          select(activeValue);
-          return;
-        }
-        // Enter while the word's list is still loading picks nothing and sends nothing.
+        // Enter while the word's list is still loading picks nothing and sends nothing,
+        // even on a row of the last list, which is still showing.
         if (event.key === 'Enter' && !listIsCurrent) {
           event.preventDefault();
+          return;
+        }
+        if (activeValue !== null && listIsCurrent) {
+          event.preventDefault();
+          select(activeValue);
           return;
         }
         dismiss();
@@ -488,6 +456,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       anchorRef: textareaRef,
       initialFocusRef: textareaRef,
       restoreFocusRef: textareaRef,
+      anchorName,
     },
     false,
   );
@@ -519,18 +488,24 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // The word's range is what the anchor follows; the query object changes every render.
   const queryStart = query?.start;
   const queryEnd = query?.end;
+  const caretToken = !open && caret !== null ? tokenAtCaret(tokens, caret) : null;
+  const caretPeekAnchorName = caretToken ? `--todae-mention-peek-${autoId}` : null;
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
     const list: FieldTextareaHighlight[] = tokens.map((token) => ({
       start: token.start,
       end: token.end,
       kind: token.char,
+      anchorName:
+        caretToken && token.start === caretToken.start && token.end === caretToken.end && token.value === caretToken.value
+          ? caretPeekAnchorName ?? undefined
+          : undefined,
     }));
     // The word being typed carries the anchor the list sits at, and is not drawn.
     if (queryStart !== undefined && queryEnd !== undefined) {
       list.push({ start: queryStart, end: Math.max(queryEnd, queryStart + 1), anchorName, draw: false });
     }
     return list.sort((a, b) => a.start - b.start);
-  }, [anchorName, queryEnd, queryStart, tokens]);
+  }, [anchorName, caretPeekAnchorName, caretToken, queryEnd, queryStart, tokens]);
 
   const getTextareaProps = <P extends UseMentionsTextareaProps>(props?: P): Omit<P, keyof TextareaWire> & TextareaWire => {
     const user = (props ?? {}) as P;
@@ -551,34 +526,16 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     };
   };
 
-  const getPopoverProps = (): PopoverWire => {
-    const wire = popover.getPopoverProps();
-    return {
-      ...wire,
-      style: {
-        ...wire.style,
-        ['--todae-popover-anchor' as string]: anchorName,
-        positionAnchor: anchorName,
-      } as CSSProperties,
-    };
-  };
 
   const getListboxProps = (): Omit<OptionListSingleProps, 'children'> => ({
-    id: ids.listbox,
+    ...list.listboxProps,
     selectionMode: 'single',
     value: null,
     onValueChange: select,
-    activeValue,
-    onActiveValueChange: highlight,
-    tabIndex: -1,
     'aria-label': listName,
   });
 
-  const getOptionProps = (item: MentionItem): OptionListOptionProps => ({
-    value: item.option.value,
-    children: item.option.label,
-    disabled: item.option.disabled || !fits(item.option),
-  });
+  const getOptionProps = (item: MentionItem): OptionListOptionProps => list.getOptionProps(item.option);
 
   return {
     value: shown,
@@ -586,20 +543,21 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     trigger,
     query: query?.query ?? '',
     items,
-    isEmpty,
+    isEmpty: list.isEmpty,
     activeId,
     activeValue: open ? activeValue : null,
-    loading,
-    error: open ? error : null,
-    retry: () => setReloads((n) => n + 1),
+    loading: list.loading,
+    error,
+    retry: list.retry,
     ids,
     textareaRef,
     select,
     highlight,
     dismiss,
     getTextareaProps,
-    getPopoverProps,
+    getPopoverProps: popover.getPopoverProps,
     getListboxProps,
     getOptionProps,
+    caretPeekAnchorName,
   };
 }

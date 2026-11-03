@@ -1,6 +1,0 @@
-@layer todae.components {
-  /* The send button closes a Field.Row: it sits at the row's end. */
-  .submit {
-    margin-inline-start: auto;
-  }
-}

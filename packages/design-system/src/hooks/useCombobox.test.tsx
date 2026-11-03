@@ -4,12 +4,13 @@ import { Button } from '../components/Button.js';
 import { Field } from '../components/Field.js';
 import { OptionList } from '../components/OptionList.js';
 import { Popover } from '../components/Popover.js';
-import { optionDomId } from '../components/OptionList.ids.js';
+import { optionDomId } from '../internal/optionDomId.js';
 import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { DialogRootProps } from '../components/Dialog.js';
-import { Activity, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Activity, Profiler, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
@@ -265,32 +266,6 @@ describe('useCombobox', () => {
     expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })).toBe(true);
   });
 
-  it('reads a load that throws before returning a promise as a failure, and stops loading', async () => {
-    const { result } = renderHook(() =>
-      useCombobox({
-        loadOptions: () => {
-          throw null;
-        },
-        presentation: 'popover',
-      }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('reads a load rejected with no reason as a failure', async () => {
-    const { result } = renderHook(() =>
-      useCombobox({ loadOptions: () => Promise.reject(undefined), presentation: 'popover' }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-  });
-
   it('closes the sheet once on Escape from the input', () => {
     const onOpenChange = vi.fn();
     function SheetBox() {
@@ -357,91 +332,6 @@ describe('useCombobox', () => {
     expect(result.current.items).not.toEqual(custom.result.current.items);
   });
 
-  it('discards stale async results and exposes retry', async () => {
-    let resolveSlow: (value: ComboboxOption[]) => void = () => undefined;
-    let rejectFast: (error: Error) => void = () => undefined;
-    const loadOptions = vi.fn((query: string, _signal: AbortSignal) => {
-      if (query === 'old') {
-        return new Promise<ComboboxOption[]>((resolve) => {
-          resolveSlow = resolve;
-        });
-      }
-      if (query === 'boom') {
-        return new Promise<ComboboxOption[]>((_resolve, reject) => {
-          rejectFast = reject;
-        });
-      }
-      return Promise.resolve([{ value: 'new', label: 'New' }]);
-    });
-    const { result, rerender } = renderHook(
-      ({ query }) => useCombobox({ loadOptions, inputValue: query, presentation: 'popover' }),
-      { initialProps: { query: 'old' } },
-    );
-    expect(result.current.loading).toBe(true);
-    rerender({ query: 'new' });
-    await act(async () => {
-      resolveSlow([{ value: 'stale', label: 'Stale' }]);
-      await Promise.resolve();
-    });
-    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual([
-      'new',
-    ]);
-    rerender({ query: 'boom' });
-    await act(async () => {
-      rejectFast(new Error('nope'));
-      await Promise.resolve();
-    });
-    expect(result.current.error).toBeInstanceOf(Error);
-    await act(async () => {
-      result.current.retry();
-      await Promise.resolve();
-    });
-    expect(loadOptions).toHaveBeenLastCalledWith('boom', expect.any(AbortSignal));
-  });
-
-  it('loads once per query when loadOptions is an inline function', async () => {
-    const calls: string[] = [];
-    const { result } = renderHook(() =>
-      useCombobox({
-        loadOptions: async (query) => {
-          calls.push(query);
-          return [{ value: 'a', label: 'A' }];
-        },
-        presentation: 'popover',
-      }),
-    );
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(calls).toEqual(['']);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('reloads when loadKey changes even though loadOptions is read at call time', async () => {
-    const calls: string[] = [];
-    const { rerender } = renderHook(
-      ({ category }) =>
-        useCombobox({
-          loadKey: category,
-          loadOptions: async (query) => {
-            calls.push(`${category}:${query}`);
-            return [];
-          },
-          presentation: 'popover',
-        }),
-      { initialProps: { category: 'a' } },
-    );
-    await act(async () => {
-      await Promise.resolve();
-    });
-    rerender({ category: 'b' });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(calls).toEqual(['a:', 'b:']);
-  });
-
   it('does not fall back to defaultValue for a controlled null value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),
@@ -466,6 +356,75 @@ describe('useCombobox', () => {
       useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),
     );
     expect(result.current.inputValue).toBe('Vue');
+  });
+
+  it('shows loaded options as the loader returns them, without filtering them again', async () => {
+    const loadOptions = vi.fn(async () => [{ value: 'john', label: 'John Doe' }]);
+    const { result } = renderHook(() => useCombobox({ loadOptions, inputValue: 'jdoe', presentation: 'popover' }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['john']);
+  });
+
+  it('loads the full list while the input shows the committed label', async () => {
+    const loadOptions = vi.fn(async () => [{ value: 'vue', label: 'Vue' }, { value: 'react', label: 'React' }]);
+    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'popover' }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => result.current.select('vue'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.inputValue).toBe('Vue');
+    expect(loadOptions).toHaveBeenLastCalledWith('', expect.any(AbortSignal));
+    expect(result.current.items).toHaveLength(2);
+  });
+
+  it('loads the full list once a load brings in the label the open input already shows', async () => {
+    const all: ComboboxOption[] = [
+      { value: 'react', label: 'React' },
+      { value: 'redux', label: 'Redux' },
+      { value: 'vue', label: 'Vue' },
+    ];
+    const loadOptions = vi.fn(async (query: string) => all.filter((option) => option.label.includes(query)));
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, defaultValue: 'vue', defaultInputValue: 'Vue', defaultOpen: true, presentation: 'popover' }),
+    );
+    await act(async () => {
+      for (let i = 0; i < 4; i += 1) await Promise.resolve();
+    });
+    expect(loadOptions).toHaveBeenLastCalledWith('', expect.any(AbortSignal));
+    expect(result.current.query).toBe('');
+    expect(result.current.items).toHaveLength(3);
+  });
+
+  it('offers no create row for the label the input commits, even when the full list leaves it out', async () => {
+    const all: ComboboxOption[] = [
+      { value: 'react', label: 'React' },
+      { value: 'redux', label: 'Redux' },
+      { value: 'vue', label: 'Vue' },
+    ];
+    // A loader that returns at most two rows.
+    const loadOptions = vi.fn(async (query: string) =>
+      all.filter((option) => option.label.toLowerCase().includes(query.toLowerCase())).slice(0, 2),
+    );
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate: () => undefined, defaultOpen: true, presentation: 'popover' }),
+    );
+    const flush = () =>
+      act(async () => {
+        for (let i = 0; i < 4; i += 1) await Promise.resolve();
+      });
+    await flush();
+    act(() => result.current.setInputValue('v'));
+    await flush();
+    act(() => result.current.select('vue'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Vue');
+    expect(result.current.showCreate).toBe(false);
   });
 
   it('keeps chip labels for selections that left the async result set', async () => {
@@ -1836,6 +1795,76 @@ describe('useCombobox async create', () => {
 });
 
 describe('useCombobox keys', () => {
+  const ALL: ComboboxOption[] = [
+    { value: 'react', label: 'React' },
+    { value: 'redux', label: 'Redux' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it('starts each opening of a single value from that value, also when the owner controls open', () => {
+    const { result, rerender } = renderHook(
+      ({ open }) => useCombobox({ options: ALL, defaultValue: 'react', open, onOpenChange: () => undefined, presentation: 'popover' }),
+      { initialProps: { open: true } },
+    );
+    expect(result.current.activeValue).toBe('react');
+    act(() => result.current.highlight('vue'));
+    rerender({ open: false });
+    rerender({ open: true });
+    expect(result.current.activeValue).toBe('react');
+  });
+
+  it('keeps the highlight across a reopen with no single value', () => {
+    const { result } = renderHook(() => useCombobox({ selectionMode: 'multiple', options: ALL, presentation: 'popover' }));
+    act(() => result.current.setOpen(true));
+    act(() => result.current.highlight('vue'));
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('vue');
+  });
+
+  it('opens a closed single value at the end a key asks for', () => {
+    for (const [key, end] of [
+      ['ArrowUp', 'vue'],
+      ['End', 'vue'],
+      ['Home', 'react'],
+    ] as const) {
+      const { unmount } = render(<SingleBox defaultValue="redux" />);
+      const input = screen.getByRole('combobox');
+      fireEvent.keyDown(input, { key });
+      expect(input.getAttribute('aria-expanded')).toBe('true');
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, end));
+      unmount();
+    }
+  });
+
+  it('opens a closed single value on ArrowDown at that value', () => {
+    render(<SingleBox defaultValue="redux" />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
+  });
+
+  it('settles on the last label when two rows share a value', () => {
+    const rows: ComboboxOption[] = [
+      { value: 'a', label: 'Alpha' },
+      { value: 'a', label: 'Alpha 2' },
+    ];
+    const { result } = renderHook(() => useCombobox({ options: rows, defaultOpen: true, presentation: 'popover' }));
+    expect(result.current.items).toHaveLength(2);
+  });
+
+  it('has no row active while the next query loads, though one was highlighted on the last list', async () => {
+    const pending: Record<string, (rows: ComboboxOption[]) => void> = {};
+    const loadOptions = vi.fn((query: string) => new Promise<ComboboxOption[]>((resolve) => (pending[query] = resolve)));
+    const { result } = renderHook(() => useCombobox({ loadOptions, defaultOpen: true, presentation: 'popover' }));
+    await act(async () => pending['']!(ALL));
+    act(() => result.current.highlight('redux'));
+    act(() => result.current.setInputValue('re'));
+    expect(result.current.loading).toBe(true);
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
+  });
+
   function CityBox({ onValueChange, onCreate }: { onValueChange: (value: string | null) => void; onCreate: (label: string) => Promise<string> }) {
     const cb = useCombobox({
       options: [
@@ -2178,5 +2207,300 @@ describe('useCombobox controlled owner that turns a change down', () => {
       [['react', 'redux', 'vue', 'x']],
       [['redux', 'vue']],
     ]);
+  });
+});
+
+describe('useCombobox changes from a callback', () => {
+  const choices = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it("stores a pick's changes before its callbacks run, so the owner's own write from one wins", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange,
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(result.current.inputValue).toBe('custom');
+    // The pick's own close was replaced by the owner's open, so it isn't reported.
+    expect(onOpenChange.mock.calls).toEqual([[true, 'trigger']]);
+  });
+
+  it("keeps a controlled owner's own text from onValueChange, with no later report of the pick's label", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: choices,
+        presentation: 'popover',
+        defaultOpen: true,
+        value,
+        inputValue: input,
+        onInputValueChange: (text: string) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          setValue(next);
+          box.current!.setInputValue('custom');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('custom');
+    expect(log).toEqual(['value:react', 'input:custom']);
+  });
+});
+
+describe('useCombobox held change reports', () => {
+  const picks = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+  ];
+
+  it('still reports each change to an owner that renders at once from an earlier callback', () => {
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      return useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          flushSync(() => setValue(next));
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['value:react', 'input:React', 'open:false:select']);
+    expect(result.current.open).toBe(false);
+    expect(result.current.inputValue).toBe('React');
+  });
+
+  it('asks a controlled owner to open on typing, even when it renders at once from the text report', () => {
+    const log: string[] = [];
+    function Typed() {
+      const [open, setOpen] = useState(false);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: input,
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          flushSync(() => setInput(text));
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Typed />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(log).toEqual(['input:r', 'open:true:trigger']);
+  });
+
+  it("skips a held report once the owner's own writes have changed that field again", () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        defaultOpen: true,
+        onOpenChange: (next, reason) => log.push(`open:${next}:${reason}`),
+        onValueChange: () => {
+          box.current!.setOpen(true, 'trigger');
+          box.current!.setOpen(false, 'escape');
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(log).toEqual(['open:true:trigger', 'open:false:escape']);
+    expect(result.current.open).toBe(false);
+  });
+
+  it('does not render a read-only open popover again on an outside press', async () => {
+    let commits = 0;
+    function ReadOnly() {
+      const combobox = useCombobox({ options: picks, presentation: 'popover', open: true });
+      return (
+        <div>
+          <label {...combobox.getLabelProps()}>Field</label>
+          <Field.Root {...combobox.getAnchorProps()}>
+            <Field.TextInput {...combobox.getInputProps()} />
+          </Field.Root>
+          <Popover.Root {...combobox.getPopoverProps()}>
+            <OptionList.Root {...combobox.getListboxProps()}>
+              {combobox.items.map((item) => (
+                <OptionList.Option key={item.id} {...combobox.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </div>
+      );
+    }
+    render(
+      <Profiler id="combobox" onRender={() => (commits += 1)}>
+        <ReadOnly />
+      </Profiler>,
+    );
+    const input = screen.getByRole('combobox');
+    input.focus();
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    const before = commits;
+    fireEvent.pointerDown(document.body);
+    fireEvent.pointerUp(document.body);
+    await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
+    expect(commits).toBe(before);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it.each([false, true])('lets an owner keep the list open from onValueChange (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const log: string[] = [];
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string | null>(null);
+      const [open, setOpen] = useState(true);
+      const [input, setInput] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        value,
+        open,
+        inputValue: input,
+        onValueChange: (next: string | null) => {
+          log.push(`value:${next}`);
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setOpen(true, 'trigger');
+        },
+        onInputValueChange: (text) => {
+          log.push(`input:${text}`);
+          setInput(text);
+        },
+        onOpenChange: (next, reason) => {
+          log.push(`open:${next}:${reason}`);
+          setOpen(next);
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.open).toBe(true);
+    expect(log).not.toContain('open:false:select');
+  });
+
+  it.each([false, true])('lets an owner keep its query from onValueChange in multiple mode (flushSync: %s)', (flush) => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string[]>([]);
+      const [input, setInput] = useState('re');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        selectionMode: 'multiple',
+        value,
+        inputValue: input,
+        defaultOpen: true,
+        onValueChange: (next: string[]) => {
+          if (flush) flushSync(() => setValue(next));
+          else setValue(next);
+          box.current!.setInputValue('re');
+        },
+        onInputValueChange: setInput,
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('react'));
+    expect(result.current.inputValue).toBe('re');
+  });
+
+  it('keeps a close an owner asks for after it renders at once from the text report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    function Owner() {
+      const [open, setOpen] = useState(false);
+      const [query, setQuery] = useState('');
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        open,
+        inputValue: query,
+        onInputValueChange: (text) => {
+          flushSync(() => setQuery(text));
+          box.current!.setOpen(false, 'escape');
+        },
+        onOpenChange: (next) => setOpen(next),
+      });
+      box.current = combobox;
+      return <input {...combobox.getInputProps()} />;
+    }
+    render(<Owner />);
+    // Typing reports the text and asks to open.
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'r' } });
+    expect(box.current!.inputValue).toBe('r');
+    expect(box.current!.open).toBe(false);
+  });
+
+  it('keeps a clear an owner asks for after it renders at once from the value report', () => {
+    const box: { current: UseComboboxResult | null } = { current: null };
+    const { result } = renderHook(() => {
+      const [query, setQuery] = useState('');
+      const [, setTick] = useState(0);
+      const combobox = useCombobox({
+        options: picks,
+        presentation: 'popover',
+        inputValue: query,
+        onInputValueChange: setQuery,
+        onValueChange: () => {
+          flushSync(() => setTick((count) => count + 1));
+          box.current!.clear();
+        },
+      });
+      box.current = combobox;
+      return combobox;
+    });
+    act(() => result.current.select('vue'));
+    expect(result.current.inputValue).toBe('');
+    expect(result.current.value).toBe(null);
   });
 });

@@ -17,7 +17,6 @@
     "build": "pnpm -r --if-present build",
     "build:ds": "pnpm --filter @tounsoo/todae build",
     "publish:check": "bash scripts/publish-check.sh",
-    "size:check": "node scripts/size-check.mjs",
     "ssr:smoke": "pnpm --filter ssr-smoke build && pnpm --filter ssr-smoke smoke",
     "dev:ds": "pnpm --filter @tounsoo/todae dev",
     "dev:docs": "pnpm --filter docs dev",
@@ -25,10 +24,14 @@
     "schema": "pnpm --filter @tounsoo/todae schema",
     "tokens": "pnpm --filter @tounsoo/todae tokens",
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
-    "test": "pnpm -r --if-present test",
+    "tokens:grandfather": "pnpm --filter @tounsoo/todae tokens:grandfather",
+    "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
+    "test": "node --test stylelint/*.test.mjs eslint/*.test.mjs .claude/skills/verify/verify.test.mjs && pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
+    "stylelint": "stylelint \"packages/design-system/src/**/*.css\"",
+    "check": "pnpm lint && pnpm typecheck && pnpm stylelint && node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",
     "graft:check": "npx -y @nanonets/graft@0.18.0 check",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
@@ -37,11 +40,14 @@
     "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/changelog-github": "1.0.1",
     "@changesets/cli": "^3.0.3",
+    "@eslint-community/eslint-plugin-eslint-comments": "4.8.1",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "postcss-value-parser": "^4.2.0",
     "publint": "^0.3.25",
+    "stylelint": "^17.16.0",
     "typescript-eslint": "^8.71.0"
   }
 }

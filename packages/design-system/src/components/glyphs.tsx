@@ -103,23 +103,6 @@ export function MinusGlyph() {
   );
 }
 
-/** Points up, toward the conversation the message goes to. */
-export function SendGlyph() {
-  return (
-    <svg {...svgProps}>
-      <path d="M8 13V3M4 7l4-4 4 4" />
-    </svg>
-  );
-}
-
-export function StopGlyph() {
-  return (
-    <svg {...svgProps}>
-      <rect x="4" y="4" width="8" height="8" rx="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 export function ErrorGlyph() {
   return (
     <svg {...svgProps}>

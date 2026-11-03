@@ -18,10 +18,10 @@ import {
 } from './Field.js';
 import type { ChipCommitKey } from './commitKeys.js';
 import { useChipField } from '../hooks/useChipField.js';
-import { useField } from '../hooks/useField.js';
+import { useField } from './useField.js';
 import * as api from '../index.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
@@ -1479,6 +1479,56 @@ describe('Field.Counter', () => {
     error.mockRestore();
   });
 
+  it('stops counting when its text control goes away, and counts the one that replaces it', () => {
+    function Harness({ shown }: { shown: 'input' | 'area' | 'none' }) {
+      return (
+        <Field.Root>
+          {shown === 'input' ? <Field.TextInput value="hello" maxLength={10} onChange={() => undefined} /> : null}
+          {shown === 'area' ? <Field.Textarea value="hi" onChange={() => undefined} /> : null}
+          <Field.Counter />
+        </Field.Root>
+      );
+    }
+    const view = render(<Harness shown="input" />);
+    expect(view.container.textContent).toContain('5 / 10');
+    view.rerender(<Harness shown="none" />);
+    expect(view.container.querySelector('[data-todae-counter]')).toBeNull();
+    view.rerender(<Harness shown="area" />);
+    expect(view.container.querySelector('[data-todae-counter]')?.textContent).toBe('2');
+  });
+
+  it('counts the text control mounted before it once the last one goes away', () => {
+    function Harness({ second }: { second: boolean }) {
+      return (
+        <Field.Root aria-label="Note">
+          <Field.TextInput aria-label="A" value="ab" maxLength={10} onChange={() => undefined} />
+          {second ? <Field.TextInput aria-label="B" value="xyz" maxLength={5} onChange={() => undefined} /> : null}
+          <Field.Counter />
+        </Field.Root>
+      );
+    }
+    const view = render(<Harness second />);
+    expect(view.container.textContent).toContain('3 / 5');
+    view.rerender(<Harness second={false} />);
+    expect(view.container.textContent).toContain('2 / 10');
+    const described = screen.getByRole('textbox', { name: 'A' }).getAttribute('aria-describedby') ?? '';
+    for (const id of described.split(' ').filter(Boolean)) expect(document.getElementById(id)).not.toBeNull();
+  });
+
+  it('opens the picker of a Field.Root nested in it on a press on its shell', () => {
+    const view = render(
+      <Field.Root aria-label="Outer">
+        <Field.Root aria-label="Inner">
+          <Field.DatePicker aria-label="Inner day" value={null} onValueChange={() => undefined} />
+        </Field.Root>
+      </Field.Root>,
+    );
+    const outer = view.container.firstElementChild as HTMLElement;
+    fireEvent.mouseDown(outer, { button: 0 });
+    fireEvent.click(outer, { detail: 1 });
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
   it('re-renders only the counter while typing', () => {
     const counts = { root: 0, icon: 0, affix: 0, counter: 0 };
     function Value() {
@@ -1651,7 +1701,7 @@ describe('Field.Counter', () => {
 
   it('throws outside Root, naming the part and its Root', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(() => render(<Field.Counter />)).toThrow('Field.Counter must render inside Field.Root');
+    expect(() => render(<Field.Counter />)).toThrow('Field parts must be rendered inside Field.Root');
     error.mockRestore();
   });
 

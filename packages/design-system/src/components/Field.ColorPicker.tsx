@@ -1,11 +1,11 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
-import { cx } from './props.js';
+import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useStrings } from '../providers/StringsProvider.js';
 import type { PopoverCloseReason } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
 import { ColorPicker as ColorPickerParts } from './ColorPicker.js';
-import { useFieldPicker } from './Field.shared.js';
+import { useFieldPicker } from './Field.PickerShell.js';
 import { FieldValueInput } from './Field.ValueInput.js';
 
 /** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
@@ -59,7 +59,6 @@ export function ColorPicker({
       <button
         {...picker.triggerProps}
         type="button"
-        data-todae-field-picker=""
         className={cx(styles.swatch, className)}
         style={{ ...picker.triggerProps.style, '--_swatch': value } as CSSProperties}
       />

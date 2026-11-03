@@ -17,7 +17,6 @@ import {
   Message,
   Attachment,
   Steps,
-  Composer,
   Conversation,
   Checkbox,
   Form,
@@ -750,15 +749,6 @@ const cases: Case[] = [
       <Steps.Root>
         <Steps.Item {...p} />
       </Steps.Root>
-    ),
-  ],
-  ['Composer.Root', (p) => <Composer.Root {...p} />],
-  [
-    'Composer.Submit',
-    (p) => (
-      <Composer.Root>
-        <Composer.Submit {...p} />
-      </Composer.Root>
     ),
   ],
   ['Conversation.Root', (p) => <Conversation.Root {...p} />],

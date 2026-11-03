@@ -16,9 +16,9 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useTooltip } from '../hooks/useTooltip.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
-import { composeHandlers, useComposedRefs } from './props.js';
+import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
 
 /**
@@ -170,11 +170,9 @@ function Root({
 }: ButtonRootProps | ButtonRenderedProps) {
   const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
-  const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
+  const [pressed, setPressed, latestPressed] = useControlledState(pressedProp, defaultPressed ?? false, onPressedChange);
   const composedClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
-    if (!toggle) return;
-    setPressed(!pressed);
-    onPressedChange?.(!pressed);
+    if (toggle) setPressed(!latestPressed());
   });
   // aria-disabled keeps the button focusable, not usable: a click runs no
   // onClick, flips no toggle, submits no form and follows no link.

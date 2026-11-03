@@ -29,28 +29,18 @@ export function isValidityCarrier(node: EventTarget | null): node is ValidityCar
 export type ValueInputBound = { min?: string; max?: string };
 
 type ValueInputEntry = {
-  /** The field the input belongs to: a `Field.Root`'s own object. */
-  field: object;
   /** Finds the visible control it speaks for. */
   owner: () => HTMLElement | null;
   /** Words its `min` and `max`. */
   bound: ValueInputBound;
 };
 
-// For each value input, who it is, who it speaks for and how it words its bounds. Written when the value input attaches, and again when its bounds change.
+// For each value input, who it speaks for and how it words its bounds, so Form.Root, which finds controls in the DOM, can read them. Written when the value input attaches, and again when its bounds change.
 const valueInputs = /* @__PURE__ */ new WeakMap<ValidityCarrier, ValueInputEntry>();
 
 /** Makes `el` a value input. */
 export function registerValueInput(el: ValidityCarrier, entry: ValueInputEntry): void {
   valueInputs.set(el, entry);
-}
-
-/** The first value input of `field` inside `within`, in document order, so a rule that goes on the field's control can go there when the control is not a carrier. */
-export function valueInputOf(field: object, within: ParentNode): ValidityCarrier | null {
-  for (const el of within.querySelectorAll<HTMLInputElement>('[data-todae-value-input]')) {
-    if (valueInputs.get(el)?.field === field) return el;
-  }
-  return null;
 }
 
 /** The element focus goes to for a control: its field's visible control for a value input, else itself. */

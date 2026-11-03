@@ -1,12 +1,11 @@
 import { useMemo, useRef, type ChangeEvent, type CSSProperties, type Ref, type TextareaHTMLAttributes } from 'react';
-import { mergeDescribedBy, useFieldContext } from './Field.context.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows.js';
 import { TextareaHighlights, useTextareaHighlights, type FieldTextareaHighlight } from './TextareaHighlights.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
-import { useField } from '../hooks/useField.js';
-import { useTextEntry, valueChangeHandler } from './Field.shared.js';
+import { useField } from './useField.js';
+import { useTextControl } from './useTextControl.js';
 
 export type FieldTextareaProps = {
   value: string;
@@ -43,17 +42,15 @@ export function Textarea({
   const own = useRef<HTMLTextAreaElement | null>(null);
   const textareaRef = useComposedRefs(own, ref);
   const layer = useTextareaHighlights(own, highlights !== undefined);
-  const ctx = useFieldContext();
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
   );
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
-  const counterMounted = useTextEntry(ctx.store, value, limit);
-  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
+  const text = useTextControl({ value, limit, describedBy, onChange, onValueChange, readOnly });
   const textarea = (
     <textarea
-      {...field.getControlProps({ ...props, ref: textareaRef, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
+      {...field.getControlProps({ ...props, ref: textareaRef, 'aria-describedby': text.describedBy })}
       maxLength={maxLength}
       value={value}
       rows={resolved.rows}
@@ -69,8 +66,8 @@ export function Textarea({
           ...(highlights !== undefined ? { anchorName: mergeAnchorNames(style?.anchorName, layer.anchorName) } : null),
         } as CSSProperties
       }
-      onChange={valueChangeHandler(onChange, onValueChange)}
-      readOnly={readOnly ?? (!onChange && !onValueChange)}
+      onChange={text.onChange}
+      readOnly={text.readOnly}
       onScroll={composeHandlers(onScroll, layer.onScroll)}
     />
   );

@@ -6,7 +6,7 @@ const PORT = 3100;
 // taller in about one run in ten, so its shot failed at random. Chromium positions glyphs at
 // subpixels above a ratio of 1, and a page seems to lay out at times before that setting applies:
 // a reload, or this switch turning it off, made every run alike. Phone shots therefore check layout
-// with whole-pixel glyphs, not the exact text a phone draws. Checked on Playwright 1.56.1; if phone
+// with whole-pixel glyphs, not the exact text a phone draws. Checked on Playwright 1.64.1; if phone
 // shots turn flaky after a bump, see whether Chromium still honors the switch.
 const phone = { ...devices['Pixel 7'], launchOptions: { args: ['--disable-font-subpixel-positioning'] } };
 

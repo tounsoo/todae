@@ -1,7 +1,7 @@
 import { useCallback, type RefCallback, type RefObject } from 'react';
-import { focusWithoutScroll } from '../components/revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 import { getCandidates } from '../overlay/tabbables.js';
-import { activeIn, focusLost } from '../components/activeElement.js';
+import { activeIn, focusLost } from '../internal/activeElement.js';
 
 export type UseFocusHandoffOptions = {
   /** The element that takes focus when the watched element unmounts while it holds focus. */

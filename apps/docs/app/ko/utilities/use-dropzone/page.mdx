@@ -1,3 +1,5 @@
+import { ImageDrop } from '../../../../components/demos/DropzoneDemo';
+
 # useDropzone
 
 네이티브 파일 입력에 드래그 앤 드롭을 더합니다. 컨트롤은 그대로 입력입니다. 클릭이나 키보드로 브라우저의 파일 선택기가 열리고, 폼은 입력에 담긴 파일을 제출합니다. 훅은 드롭 대상을 더하고 모든 파일을 규칙에 맞춰 확인합니다.
@@ -34,6 +36,46 @@ const zone = useDropzone({ paste: true, accept: 'image/*', onFiles });
   <input {...zone.getInputProps()} aria-label="Attach images" />
 </div>
 ```
+
+이 대상은 이미지를 받습니다. 파일을 끌어다 놓거나 고르세요. 파일이 위에 있는 동안 테두리는 실선이 되고, 아래 줄은 통과한 파일의 이름을 보여 줍니다.
+
+```tsx
+import { Stack, Text, useDropzone } from '@tounsoo/todae';
+import { useState } from 'react';
+
+export function ImageDrop() {
+  const [names, setNames] = useState<string[]>([]);
+  const zone = useDropzone({
+    accept: 'image/*',
+    multiple: true,
+    onFiles: (accepted) => setNames(accepted.map((file) => file.name)),
+  });
+  return (
+    <Stack.Root gap="condensed" align="start">
+      <label
+        {...zone.getRootProps()}
+        style={{
+          display: 'grid',
+          justifyItems: 'center',
+          gap: 'var(--todae-space-3)',
+          padding: 'var(--todae-space-6)',
+          border: `2px ${zone.dragging ? 'solid' : 'dashed'} var(--todae-color-border-default)`,
+          borderRadius: 'var(--todae-radius-md)',
+          background: zone.dragging ? 'var(--todae-color-bg-subtle)' : undefined,
+        }}
+      >
+        <Text.Root as="span">Drop images here, or choose them</Text.Root>
+        <input {...zone.getInputProps()} name="images" />
+      </label>
+      <Text.Root>{names.length > 0 ? names.join(', ') : 'No images yet'}</Text.Root>
+    </Stack.Root>
+  );
+}
+```
+
+<Example>
+  <ImageDrop />
+</Example>
 
 오류와 파일 목록까지 갖춘 전체 예시는 [File upload 레시피](/recipes/file-upload)를 보세요.
 

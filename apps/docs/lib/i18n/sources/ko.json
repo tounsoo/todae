@@ -140,20 +140,9 @@
     "## Props": "e964cb5c505c",
     "(section order)": "5b4b04f4c6fa"
   },
-  "composer": {
-    "(top)": "8b1c09e2edc7",
-    "# Composer": "d9048ed43a08",
-    "## Parts": "941377e532cb",
-    "## Sending and stopping": "05349db7894a",
-    "## Attachments": "dc80e94ef4d1",
-    "## Accessible composition": "4955edaafb67",
-    "## When to use": "facc46d850a1",
-    "## Props": "1d66d97cff3e",
-    "(section order)": "75139535fcad"
-  },
   "composition": {
     "(top)": "daa9c66a4c98",
-    "# Composition": "5df38cfb773f",
+    "# Composition": "654c6a27af86",
     "## Placing something new": "7535f6400597",
     "## Components": "9db230c231a6",
     "## Recipes": "0ccacf69fdb0",
@@ -268,7 +257,7 @@
     "## Label": "215e3cc94f24",
     "## Messages": "34bda9e4b60a",
     "## Counter": "ca3bd330d359",
-    "## Row": "c753eb292752",
+    "## Row": "3c9d633e538f",
     "## Custom controls": "edafb0ec7ed8",
     "## Icons": "4a52c267d4a7",
     "## Accessible composition": "421616bf383e",
@@ -308,7 +297,7 @@
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
     "# Field.DatePicker": "d2d2dc01e837",
-    "## Typed dates": "a9bc729f1755",
+    "## Typed dates {/*#typed-dates*/}": "12673b4fe38c",
     "## On its own": "b1d2f5440119",
     "## Accessible composition": "d44831dbbcd9",
     "## When to use": "d57fe8233a0b",
@@ -316,7 +305,7 @@
     "### formatDate": "8733ccff7aed",
     "### parseDate": "9c8aa249da4e",
     "## Props": "965c55594523",
-    "(section order)": "31048754c69b"
+    "(section order)": "4eba0aaed1f8"
   },
   "field/date-range-picker": {
     "(top)": "2d895db44745",
@@ -409,7 +398,7 @@
   "field/time-picker": {
     "(top)": "c91058d9eff0",
     "# Field.TimePicker": "c0cddca30b82",
-    "## Typed times": "dca979543684",
+    "## Typed times {/*#typed-times*/}": "de0dcce61750",
     "## On its own": "45bd56452ca5",
     "## Temporal": "d7c947f6ad86",
     "## Accessible composition": "80c06e4918c3",
@@ -418,7 +407,7 @@
     "### formatTime": "fd8940b1ed01",
     "### parseTime": "68e25c09dd81",
     "## Props": "6af2d44fb439",
-    "(section order)": "59143873f613"
+    "(section order)": "80fe48d8edaa"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
@@ -435,15 +424,15 @@
     "## What a problem says": "c8019d5f7405",
     "## Submit": "a2ac8ded7ff0",
     "## Summary": "3da0810ca127",
-    "## Server errors": "a29e407d2091",
+    "## Server errors {/*#server-errors*/}": "ab3d98d18868",
     "## Rules the browser can't check": "99253d6a0c4e",
     "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
     "## When to use": "d57fe8233a0b",
-    "### Form.Root": "40c89002b3da",
+    "### Form.Root": "af67d4185ff3",
     "### Form.Summary": "54922167d07e",
     "## Props": "ca664955bde2",
-    "(section order)": "19f58fcd5e5d"
+    "(section order)": "b640ce64b736"
   },
   "grid": {
     "(top)": "10102724ef24",
@@ -462,7 +451,7 @@
     "## Several themes on one page": "a81e42a147ff",
     "## Overrides: CSS or ThemeProvider": "81bfc0b31cda",
     "## A worked example": "d64b3c5ea00e",
-    "## Adding a variant or a density": "6ef889d9ec6e",
+    "## Adding a variant or a density": "d33efabb520a",
     "## Wrapping a component": "60f88028be57",
     "(section order)": "9fe9aab4b317"
   },
@@ -531,6 +520,16 @@
     "## Limits": "09fbdacf6bf0",
     "(section order)": "e12b559a1ab2"
   },
+  "mention": {
+    "(top)": "a6444b7f1ffd",
+    "# Mention": "1e28ab336144",
+    "## Keyboard": "85c57b097eb7",
+    "## Peek": "233f9efb0fbc",
+    "## When to use": "0d368d8f5054",
+    "## When not": "e95dcd9fd900",
+    "## Props": "005978ba96cd",
+    "(section order)": "18b56400fd30"
+  },
   "menu": {
     "(top)": "e2e0eb39de52",
     "# Menu": "e7f09e8bde16",
@@ -586,8 +585,9 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "e57894201f80",
-    "(section order)": "d16f4890fdc5"
+    "(top)": "37a947c8e5fd",
+    "# Native platform": "2769f31c1878",
+    "(section order)": "4d06dc5f1974"
   },
   "popover": {
     "(top)": "8ca54dadf076",
@@ -650,6 +650,13 @@
     "## When to use": "763e187b5f3a",
     "(section order)": "4737a88ef46b"
   },
+  "recipes/chat-composer-mentions": {
+    "(top)": "abc231058c55",
+    "# Chat composer mentions": "9d98290f9b69",
+    "## When to use": "6e644b8ce597",
+    "## When not to use": "9d0c3e164258",
+    "(section order)": "9be1d599de1e"
+  },
   "recipes/citations": {
     "(top)": "45f1fee3ae62",
     "# Citations": "c1e97aef2ff3",
@@ -711,7 +718,7 @@
     "## Images": "4b5a68d12763",
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "a51aedc3e4e1",
-    "## When to use": "239c65308c01",
+    "## When to use": "0f2627b8b100",
     "(section order)": "4bf10e81c190"
   },
   "recipes/filter-bar": {
@@ -741,7 +748,7 @@
     "## Regenerate and rate": "88352ed724ed",
     "## Edit": "ebcd46bb2db8",
     "## Accessible composition": "b737b3facda9",
-    "## When to use": "2320a958107a",
+    "## When to use": "94a72392f4d1",
     "(section order)": "6486b947abab"
   },
   "recipes/message-parts": {
@@ -787,10 +794,10 @@
   },
   "recipes/suggestions": {
     "(top)": "64f0689194fa",
-    "# Suggestions": "1f16320c7c36",
-    "## Suggested prompts": "f32fcd4e4a57",
+    "# Suggestions": "512827f3ead4",
+    "## Suggested prompts": "18a738f51298",
     "## Versions of a reply": "201d818cbf71",
-    "## Accessible composition": "bac05d860697",
+    "## Accessible composition": "68a64f2a9155",
     "## When to use": "712b903230ea",
     "(section order)": "d07108b52651"
   },
@@ -832,7 +839,7 @@
   },
   "slider": {
     "(top)": "42cde11261eb",
-    "# Slider": "b79fc04f1f20",
+    "# Slider": "affd57d6aa6b",
     "## Accessible composition": "85a57c99624e",
     "## When to use": "ad0bb8c22aff",
     "## Props": "a289d00d67fe",
@@ -961,15 +968,16 @@
     "(section order)": "26fee290bbab"
   },
   "tooltip": {
-    "(top)": "c6ad05ceec66",
-    "# Tooltip": "3e0fd9fdfe39",
+    "(top)": "d6905641ee72",
+    "# Tooltip": "a6dda7750684",
+    "## Warm-up": "23c04f5b9adc",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
     "## Accessible composition": "da1671bee85f",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
-    "(section order)": "28600b829282"
+    "(section order)": "21c10c21c07e"
   },
   "tree": {
     "(top)": "3fd9d6322503",
@@ -980,7 +988,7 @@
     "(section order)": "a507fd436fd2"
   },
   "utilities/compose-refs": {
-    "# composeRefs": "4b6b82815c66",
+    "# composeRefs": "97fe1c34d747",
     "## When to use": "02fd64ae0747",
     "## Props": "d83af1624b33",
     "(section order)": "8da5a3f9ff32"
@@ -998,7 +1006,7 @@
   "utilities/glyphs-provider": {
     "(top)": "ac3cc0c20ee4",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "79786a87f258",
+    "## Glyphs": "0b475ed62a9e",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -1008,8 +1016,8 @@
   },
   "utilities/strings-provider": {
     "(top)": "cc58e6fad9bd",
-    "# StringsProvider": "a18713b4e742",
-    "## Strings": "c7d82e0dd44a",
+    "# StringsProvider": "f839eb817fff",
+    "## Strings": "e618124a5933",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",
@@ -1018,7 +1026,7 @@
     "(section order)": "bf6c068e392e"
   },
   "utilities/theme-override-style": {
-    "# themeOverrideStyle": "39fc51c83ecd",
+    "# themeOverrideStyle": "dfaddd7d2d47",
     "## When to use": "ef727144bb95",
     "## Props": "35105b6c4f4f",
     "(section order)": "498547eab27f"
@@ -1041,7 +1049,7 @@
   },
   "utilities/use-chip-list": {
     "(top)": "c9de0d3dd8c7",
-    "# useChipList": "70c79e6b0268",
+    "# useChipList": "b79ad997f886",
     "## Accessible composition": "b4dfd443a9c5",
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
@@ -1064,23 +1072,19 @@
     "(section order)": "80890c96c652"
   },
   "utilities/use-controlled-state": {
-    "# useControlledState": "21852158c1df",
-    "## When to use": "06595b4c27fe",
+    "(top)": "3ceb399c4524",
+    "# useControlledState": "9c8cd0ef252f",
+    "## When to use": "c1d050420c92",
     "## Props": "086905cc163b",
-    "(section order)": "1666f868c727"
-  },
-  "utilities/use-controlled-value": {
-    "# useControlledValue": "572e8147a749",
-    "## When to use": "9854f80dde78",
-    "## Props": "479579cd5e3b",
-    "(section order)": "bb763bd86155"
+    "(section order)": "63b1892e9481"
   },
   "utilities/use-dropzone": {
-    "# useDropzone": "97a9fd5e6cd7",
+    "(top)": "6b766d17652a",
+    "# useDropzone": "b58783791c68",
     "## Accessible composition": "8193170f3eaf",
     "## When to use": "eb0c79e2522e",
     "## Props": "5587a8d7ce2b",
-    "(section order)": "79c25db48345"
+    "(section order)": "59fdfc6e4ea3"
   },
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
@@ -1108,11 +1112,12 @@
     "(section order)": "e2126a397a0e"
   },
   "utilities/use-hotkey": {
-    "# useHotkey": "d19a9ff5fb44",
+    "(top)": "c5b80835bdf7",
+    "# useHotkey": "eac74c1e9018",
     "## Accessible composition": "36a7e58b6717",
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
-    "(section order)": "b7ca335f1524"
+    "(section order)": "3ea24d982f40"
   },
   "utilities/use-inline-edit": {
     "(top)": "89db7894a8df",
@@ -1124,9 +1129,9 @@
   },
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",
-    "# useMentions": "35b74ad67fc5",
+    "# useMentions": "44fea2b6d5d3",
     "## Triggers": "f8479853365c",
-    "## Picking and editing": "a1e352f8fb40",
+    "## Picking and editing": "75a15b0ef307",
     "## Drawing tokens": "01c86baed977",
     "## Accessible composition": "6052007a7a2e",
     "## When to use": "9ec50166c73a",
@@ -1134,7 +1139,7 @@
     "(section order)": "4f7a49b7b144"
   },
   "utilities/use-modal-layer": {
-    "# useModalLayer": "ab9c7fb8b312",
+    "# useModalLayer": "861464ad5dec",
     "## Accessible composition": "9f367f0deb61",
     "## When to use": "438fa9ab3d43",
     "## Props": "4c6c20ec68bd",
@@ -1184,7 +1189,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "01b4c07ef8fa",
+    "# useTooltip": "a19a17a88bfb",
     "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",

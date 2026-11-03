@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState.js';
+import { useControlledState } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -22,8 +22,8 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useButtonName } from './buttonName.js';
 import { BackGlyph, glyphOr } from './glyphs.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 import { sameStack, useStackMotion, type Stack, type StackChange, type StackDirection, type StackViews, type ViewStatus } from './useStackMotion.js';
 import { createViewMemory, type Covered } from './viewMemory.js';
 import styles from './Drilldown.module.css';
@@ -125,7 +125,7 @@ function focusTarget(view: HTMLElement, remembered: Covered | undefined, initial
 const EMPTY: Stack = [];
 
 function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', children }: DrilldownRootProps) {
-  const [stack, change] = useControlledValue<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
+  const [stack, change] = useControlledState<Stack, [reason: DrilldownChangeReason]>(value, defaultValue, onValueChange);
   const [memory] = useState(createViewMemory);
   const views = useRef(new Map<string, ViewRecord>());
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());

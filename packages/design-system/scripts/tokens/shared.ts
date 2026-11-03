@@ -33,7 +33,7 @@ function editDistance(a: string, b: string): number {
  * path format, a $type per token, value shapes, ref existence, cycles, layer
  * order, resolution order, and context parity.
  */
-export const RULES = ['reserved-roots', 'density-space', 'button'] as const;
+export const RULES = ['reserved-roots', 'density-space'] as const;
 export type Rule = (typeof RULES)[number];
 
 /** Token groups (`*` matches one segment) mapped to the exact leaves each must have. */
@@ -92,6 +92,10 @@ export function fail(message: string): never {
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 export function isRef(value: unknown): value is { $ref: string } {
@@ -180,3 +184,7 @@ export type ResolvedEntry =
       defaultContext: string;
       contexts: Map<string, EntryToken[]>;
     };
+
+export function entryTokens(entry: ResolvedEntry): EntryToken[] {
+  return entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
+}

@@ -35,14 +35,21 @@ export function stripLocale(path: string): string {
   return rest === '' || /^[?#]/.test(rest) ? `/${rest}` : rest;
 }
 
+const DOCS_ASSET = /\.(css|gif|ico|jpe?g|js|json|pdf|png|svg|txt|webmanifest|webp|woff2?|xml)$/i;
+
+/** A same-site docs page, not an asset, the API, or a Next internal path. */
+export function isDocsPagePath(href: string): boolean {
+  if (!href.startsWith('/') || href.startsWith('//') || /^\/(api|_next)(\/|$)/.test(href)) return false;
+  return !DOCS_ASSET.test(href.split(/[?#]/)[0] ?? '');
+}
+
 /**
  * The same page in another locale. Only same-site absolute paths change;
  * external links, protocol-relative URLs, hashes, the API, Next's assets and
  * files such as `/favicon.ico` keep theirs.
  */
 export function localizePath(href: string, locale: Locale): string {
-  if (!href.startsWith('/') || href.startsWith('//') || /^\/(api|_next)(\/|$)/.test(href)) return href;
-  if (/\.(css|gif|ico|jpe?g|js|json|pdf|png|svg|txt|webmanifest|webp|woff2?|xml)$/i.test(href.split(/[?#]/)[0] ?? '')) return href;
+  if (!isDocsPagePath(href)) return href;
   const path = stripLocale(href);
   if (locale === DEFAULT_LOCALE) return path;
   return path === '/' || /^\/[?#]/.test(path) ? `/${locale}${path.slice(1)}` : `/${locale}${path}`;

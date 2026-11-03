@@ -8,7 +8,7 @@ import * as api from '../index.js';
 import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover.js';
 import { OptionList } from './OptionList.js';
 import { Popover, type PopoverRootProps } from './Popover.js';
-import type { PopoverWire } from './Popover.wire.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Popover.tsx'), 'utf8');
@@ -160,7 +160,7 @@ describe('Popover', () => {
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync.js', './Popover.wire.js', './Popover.module.css', './props.js', './revealRing.js', './cx.js', '../overlay/surfaceContext.js']),
+      new Set(['react', '../overlay/usePopoverSync.js', '../overlay/popoverWire.js', './Popover.module.css', '../internal/props.js', '../internal/revealRing.js', '../internal/cx.js', '../overlay/surfaceContext.js']),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');

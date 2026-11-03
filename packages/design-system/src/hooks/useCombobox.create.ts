@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { failureOf } from './useCombobox.async.js';
+import { failureOf } from './optionList/load.js';
 import type { ComboboxFieldState } from './useCombobox.state.js';
 
 type CreateResult = string | void | Promise<string | void>;
@@ -47,7 +47,7 @@ function holds(request: CreateRequest, text: string, single: string | null, mult
  * twice. Only a live one counts in `creating`, and only a live one that still holds
  * commits or reports when it settles.
  */
-export function useComboboxCreate(multiple: boolean, inputValue: string, state: RefObject<ComboboxFieldState>) {
+export function useComboboxCreate(multiple: boolean, inputValue: string, fieldNow: () => ComboboxFieldState) {
   const requests = useRef(new Map<string, CreateRequest>());
   // The labels of the live requests, for rendering.
   const [live, setLive] = useState(NONE);
@@ -77,7 +77,7 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
       commit: (canonical: string | void) => void,
     ) => {
       const key = keyOf(label);
-      const now = () => state.current;
+      const now = fieldNow;
       const pending = requests.current.get(key);
       if (pending) {
         if (pending.dropped) {
@@ -127,7 +127,7 @@ export function useComboboxCreate(multiple: boolean, inputValue: string, state: 
         },
       );
     },
-    [multiple, state, sync],
+    [fieldNow, multiple, sync],
   );
 
   const cancel = useCallback(() => {

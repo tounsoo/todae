@@ -8,8 +8,8 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { useDomId } from '../components/domId.js';
-import { useStableComposedRef } from '../components/props.js';
+import { useDomId } from '../internal/domId.js';
+import { useStableComposedRef } from '../internal/props.js';
 import { isReachable } from '../overlay/tabbables.js';
 import { useControlledState } from './useControlledState.js';
 
@@ -172,7 +172,16 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const loop = tree ? false : loopOption;
   const keepTabStop = tabStopOption && !findItems;
   const scope = useDomId();
-  const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
+  // A fallback tab stop that takes focus is reported too, so a controlled
+  // owner can pin it before a DOM change moves the fallback elsewhere.
+  const [active, commitActive] = useControlledState<string | null>(
+    activeProp,
+    defaultActiveValue ?? null,
+    onActiveValueChange &&
+      ((next) => {
+        if (next !== null) onActiveValueChange(next);
+      }),
+  );
   // The items last read from the DOM: enabled ones, and of those the ones
   // focus can reach now. The tab stop is derived from these and `active`
   // during render, so a new `active` takes the tab stop in the same render.
@@ -344,18 +353,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     if (node) setContainer(node);
   }, [keepTabStop, setContainer]);
 
-  const commit = useCallback(
-    (value: string) => {
-      // The tab stop is derived from `active`, so a controlled owner that
-      // keeps its value keeps the tab stop too.
-      if (value === active) return;
-      // A fallback tab stop that takes focus is reported too, so a controlled
-      // owner can pin it before a DOM change moves the fallback elsewhere.
-      setActive(value);
-      onActiveValueChange?.(value);
-    },
-    [active, onActiveValueChange, setActive],
-  );
+  // The tab stop is derived from `active`, so a controlled owner that keeps
+  // its value keeps the tab stop too.
+  const commit = useCallback((value: string) => commitActive(value), [commitActive]);
 
   const getItemNode = useCallback(
     (value: string): HTMLElement | null => items().find((node) => valueOf(node) === value) ?? null,

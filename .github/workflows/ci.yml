@@ -15,7 +15,10 @@ on:
       - '.changeset/**'
       - 'packages/design-system/README.md'
       - 'packages/design-system/CHANGELOG.md'
-  # Drafts skip CI; marking one ready for review runs it.
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
+  # Drafts skip Checks and Docs. Token API, Token consumers, and Forbidden paths still run.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -24,6 +27,9 @@ on:
       - '.changeset/**'
       - 'packages/design-system/README.md'
       - 'packages/design-system/CHANGELOG.md'
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
 
 # A new push to a pull request cancels its older run; runs on main always finish.
 concurrency:
@@ -31,10 +37,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  checks:
+  static:
     if: ${{ !github.event.pull_request.draft }}
-    name: Checks
-    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
+    name: Static
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -43,38 +48,16 @@ jobs:
           # The changeset check compares the pull request with its base branch.
           fetch-depth: 0
 
-      - id: change
+      - &classify-diff
+        id: change
         name: Classify the diff
-        run: |
-          set -euo pipefail
-          bash .github/scripts/change-class.sh --self-test
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.event.pull_request.base.sha }}"
-            head="${{ github.event.pull_request.head.sha }}"
-            diff_args=("$base...$head")
-          else
-            base="${{ github.event.before }}"
-            head="${{ github.sha }}"
-            diff_args=("$base" "$head")
-          fi
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (commits not in the checkout)"
-            exit 0
-          fi
-          # --no-renames lists both paths of a rename, so the classifier sees the old file and the new one.
-          # A diff that cannot be read, such as two histories with no merge base, runs every check.
-          if ! files=$(git -c core.quotePath=false diff --name-only --no-renames "${diff_args[@]}"); then
-            echo "class=all" >> "$GITHUB_OUTPUT"
-            echo "class=all (diff failed)"
-            exit 0
-          fi
-          class=$(printf '%s\n' "$files" | bash .github/scripts/change-class.sh)
-          echo "class=$class" >> "$GITHUB_OUTPUT"
-          echo "class=$class"
-          if [ "$class" = prose ]; then
-            printf '%s\n' "$files"
-          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: bash .github/scripts/classify-diff.sh
 
       - uses: ./.github/actions/setup
 
@@ -89,20 +72,31 @@ jobs:
       - name: Schema
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
-      - name: Typecheck
+      - name: Check
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        run: pnpm typecheck
-      - name: Lint
-        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        run: pnpm lint
+        run: pnpm check
 
-      # The docs tests import the package from dist, and some browser demos import its subpath entries.
+  build:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
       - name: Build the package
+        id: package-build
         if: ${{ !cancelled() }}
         run: pnpm build:ds
-      - name: Bundle size
-        if: ${{ !cancelled() }}
-        run: pnpm size:check
+      # Fernway restores this copy. A failed save does not fail the job, because a miss makes Fernway build dist itself.
+      - name: Share the package build
+        if: ${{ steps.package-build.outcome == 'success' }}
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: packages/design-system/dist
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Publish checks
         if: ${{ !cancelled() }}
         run: pnpm publish:check
@@ -112,6 +106,21 @@ jobs:
       - name: Unit tests
         if: ${{ !cancelled() }}
         run: pnpm test
+
+  fernway:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Fernway
+    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
 
       # Keyed on the lockfile, which pins Playwright and so its Chromium build.
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
@@ -124,6 +133,17 @@ jobs:
         run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
         run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
+
+      - name: Restore the package build
+        id: package-dist
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/design-system/dist
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Build the package
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
+        run: pnpm build:ds
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm test:browser
@@ -135,13 +155,106 @@ jobs:
         name: Second-brand example
         run: pnpm --filter fernway-example build
 
+  # One result named Checks, so branch protection that requires that name keeps working.
+  checks:
+    name: Checks
+    needs: [static, build, fernway]
+    if: ${{ always() && !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require static, build, and fernway
+        run: |
+          set -euo pipefail
+          needs='${{ toJSON(needs) }}'
+          printf '%s\n' "$needs" | jq -r 'to_entries[] | "\(.key) \(.value.result)"'
+          printf '%s\n' "$needs" | jq -e '[.[].result] | all(. == "success")' >/dev/null
+
+  # Drafts skip Checks. This job still runs, as Token API does, so a lint or type error fails before review.
+  check:
+    name: Check
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Lint and types
+        run: pnpm check
+
+  # Drafts skip Checks. This job still runs so a removed, renamed, or retyped token path fails before review.
+  # The prose-only skip does not apply. This job is the only token API gate, so a docs-only pull request still runs it.
+  token-api:
+    name: Token API
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Snapshot matches the build
+        run: pnpm --filter @tounsoo/todae tokens:check --base "${{ github.event.pull_request.base.sha }}"
+      - name: No public token was removed, renamed or retyped
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
+  # Informational. Lists components that read a changed token. Never fails the build.
+  token-consumers:
+    name: Token consumers
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Report
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/token-consumers.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}" --summary "$GITHUB_STEP_SUMMARY"
+
+  # Drafts skip Checks and Docs. This job still runs, as Token API does, so a scratch file fails before review.
+  forbidden-paths:
+    name: Forbidden paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: No forbidden paths
+        run: |
+          set -euo pipefail
+          bash .github/scripts/forbidden-paths.sh --self-test
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+            diff_args=("$base...$head")
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            diff_args=("$base" "$head")
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "forbidden-paths: skipped because this push has no base commit"
+            exit 0
+          fi
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
+            echo "forbidden-paths: could not read the base or head commit"
+            exit 1
+          fi
+          # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
+          # Do not store this output in a variable. Bash drops bytes at the first NUL.
+          git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
+
   docs:
     if: ${{ !github.event.pull_request.draft }}
     name: Docs build and screenshots
     runs-on: ubuntu-latest
     # Screenshot baselines are taken in this image, so fonts and Chromium match. Its version is
     # @playwright/test's in apps/docs, which apps/docs/visual/image.test.ts checks.
-    container: mcr.microsoft.com/playwright:v1.56.1-noble
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -149,6 +262,11 @@ jobs:
       - run: pnpm build:ds
       - run: pnpm --filter docs build
       - run: pnpm --filter docs test:visual
+      - run: pnpm --filter docs exec playwright install --with-deps webkit firefox
+      # Firefox refuses to launch as root when HOME is owned by another user.
+      - run: pnpm --filter docs test:peek
+        env:
+          HOME: /root
       # The report shows each changed shot; test-results holds its new image as `<name>-actual.png`.
       - if: failure()
         uses: actions/upload-artifact@v4

@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Quantity, input, valueInput, type, key, button, type NumberProps } from '../test/number.js';
 import type { NumberFormatOptions } from './numberText.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(() => {
   cleanup();

@@ -830,6 +830,76 @@ describe('Menu', () => {
     expect(commits).toBe(before);
   });
 
+  it('a menu with a read-only open does not render on Escape or an outside press', async () => {
+    let commits = 0;
+    render(
+      <>
+        <Profiler id="menu" onRender={() => (commits += 1)}>
+          <Menu.Root open>
+            <Menu.Trigger>Open</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>One</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </Profiler>
+        <button type="button">After</button>
+      </>,
+    );
+    await raf();
+    const before = commits;
+    fireEvent.keyDown(item('One'), { key: 'Escape' });
+    await raf();
+    fireEvent.pointerDown(screen.getByText('After'));
+    fireEvent.click(screen.getByText('After'));
+    await raf();
+    expect(commits).toBe(before);
+  });
+
+  it('with a read-only open, a trigger click opens under the trigger after a refused context request', async () => {
+    function Owned() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Menu.Root open={open}>
+          <Menu.Trigger onClick={() => setOpen((was) => !was)}>Open</Menu.Trigger>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>One</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(<Owned />);
+    fireEvent.contextMenu(screen.getByTestId('region'), { clientX: 40, clientY: 50, button: 2 });
+    await raf();
+    // A click with no pointerdown or keydown before it, as assistive tech sends.
+    fireEvent.click(screen.getByText('Open'));
+    await raf();
+    expect(screen.getByTestId('region').hasAttribute('data-open')).toBe(false);
+  });
+
+  it('a radio group with a read-only value does not render on a click', async () => {
+    let commits = 0;
+    render(
+      <Profiler id="menu" onRender={() => (commits += 1)}>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Content>
+            <Menu.RadioGroup aria-label="Sort" value="name">
+              <Menu.RadioItem value="name">Name</Menu.RadioItem>
+              <Menu.RadioItem value="date">Date</Menu.RadioItem>
+            </Menu.RadioGroup>
+          </Menu.Content>
+        </Menu.Root>
+      </Profiler>,
+    );
+    await raf();
+    const date = screen.getByText('Date').closest<HTMLElement>('[role="menuitemradio"]')!;
+    const before = commits;
+    act(() => date.click());
+    expect(date.getAttribute('aria-checked')).toBe('false');
+    expect(commits).toBe(before);
+  });
+
   it('arrow keys on the trigger of an open menu move into it', async () => {
     render(<Actions open onOpenChange={() => undefined} />);
     await raf();

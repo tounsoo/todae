@@ -440,6 +440,13 @@ main:focus {
   font-size: 0.875rem;
 }
 
+/* Prose.Root sets overflow-wrap: break-word, and Korean sets overflow-wrap: anywhere.
+   Either one lets a narrow column split a key name such as ArrowDown. A row header
+   in these tables is that name. Props tables nest their scroller and set their own wrap. */
+.docs-prose > .scroll-x th[scope="row"] {
+  white-space: nowrap;
+}
+
 .scroll-x caption {
   padding: 0.75rem 1rem 0;
   text-align: start;
@@ -627,6 +634,27 @@ table {
   box-shadow:
     0 1px 2px oklch(0 0 0 / 0.06),
     0 16px 40px -16px oklch(0 0 0 / 0.22);
+}
+
+.showcase-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-block-start: 0.75rem;
+}
+
+.showcase-docs a {
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--todae-color-border-subtle);
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-default);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.showcase-docs a:hover {
+  border-color: var(--todae-color-border-default);
+  background: var(--todae-color-bg-highlight);
 }
 
 .showcase-panel {
@@ -955,6 +983,24 @@ table {
   font-size: 0.75rem;
 }
 
+.pg-code-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 0.625rem;
+}
+
+.pg-code-head .pg-heading {
+  margin: 0;
+}
+
+.pg-code {
+  max-block-size: 12rem;
+  overflow: auto;
+}
+
 /* Narrow screens: the token editor moves into a sheet, so the stage sits
    right under the theme controls. Same breakpoint as NARROW in Playground. */
 @media screen and (width < 64rem) {
@@ -1043,6 +1089,11 @@ table {
   display: grid;
   align-content: start;
   gap: 1.5rem;
+}
+
+/* Chrome 156 draws the first preset ring one pixel past the sheet's ring room. */
+.pg-sheet .pg-sheet-body {
+  padding-inline: calc(var(--_ring-room) + 1px);
 }
 
 /* Presets scroll sideways in one row instead of taking two. */
@@ -1165,6 +1216,13 @@ table {
   }
 }
 
+.preview-tune {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(12rem, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
 @container (max-width: 38rem) {
   .preview-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1176,6 +1234,10 @@ table {
 
   .preview-alerts {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .preview-tune {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1213,6 +1275,20 @@ table {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
+}
+
+.preview-chip-list {
+  max-inline-size: 16rem;
+}
+
+.preview-split {
+  block-size: 8rem;
+  border: 1px solid var(--todae-color-border-subtle);
+  border-radius: var(--todae-radius-md);
+}
+
+.preview-split-pane {
+  padding: var(--todae-space-3);
 }
 
 .preview-list {

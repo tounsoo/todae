@@ -1,9 +1,8 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
-import { Button, type ButtonActionProps } from './Button.js';
+import type { ButtonActionProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useButtonName } from './buttonName.js';
-import { useCloseGlyph } from './closeGlyph.js';
-import { cx } from './props.js';
+import { CloseButton } from './closeButton.js';
+import { cx } from '../internal/props.js';
 import styles from './Alert.module.css';
 
 export type AlertTone = 'info' | 'success' | 'warning' | 'critical';
@@ -58,23 +57,8 @@ function Actions({ className, ...props }: AlertActionsProps) {
  * A ghost Button.Root. The alert has no open state: remove it in `onClick`.
  * Named by the `dismiss` string unless its own text names it, so a visible label stays its name.
  */
-function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
-  const [label, refs] = useButtonName(children, ariaLabel, ref, useStrings().dismiss);
-  const glyph = useCloseGlyph();
-  return (
-    <Button.Root
-      variant="ghost"
-      // Todae's own close shows no tip, as a text × never did: a dialog's first
-      // focus often lands on it.
-      tooltip={children == null ? false : undefined}
-      aria-label={label}
-      {...props}
-      ref={refs}
-      className={cx(styles.close, className)}
-    >
-      {children ?? glyph}
-    </Button.Root>
-  );
+function Close({ className, ...props }: AlertCloseProps) {
+  return <CloseButton {...props} fallbackName={useStrings().dismiss} className={cx(styles.close, className)} />;
 }
 
 export const Alert = { Root, Icon, Title, Description, Actions, Close } as const;

@@ -201,13 +201,13 @@ Todae 저장소의 [`examples/fernway`](https://github.com/tounsoo/todae/tree/ma
 
 버튼 변형과 밀도는 모디파이어 컨텍스트이므로, 회사는 리졸버에서 추가합니다.
 
-버튼 변형은 Todae와 같은 토큰 구조를 가진 `buttonVariant` 컨텍스트입니다. `default`, `hover`, `active`, `focus`, `disabled` 각각의 `bg`, `fg`, `border`, 그리고 `ring.focus`와 `shadow`입니다. 빌드가 그 구조를 검사하도록 `button` 규칙을 켜세요.
+버튼 변형은 Todae와 같은 토큰 구조를 가진 `buttonVariant` 컨텍스트입니다. `default`, `hover`, `active`, `focus`, `disabled` 각각의 `bg`, `fg`, `border`, 그리고 `ring.focus`와 `shadow`입니다. Todae의 `buttonVariant`가 그 구조를 `slots`로 선언하고 회사의 `buttonVariant`도 이를 그대로 이어받으므로, 빌드는 새 변형도 검사합니다.
 
 ```json
 "buttonVariant": {
   "contexts": { "outline": [{ "$ref": "./button.outline.json" }] },
   "$extensions": {
-    "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+    "dev.todae": { "layer": "contract", "attribute": "data-button-variant", "alias": true }
   }
 }
 ```

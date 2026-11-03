@@ -9,13 +9,13 @@ import {
 } from 'react';
 import { Chip } from './Chip.js';
 import { ChipCount, ChipCountChip } from './chipCount.js';
-import { isImeKeyEvent } from './ime.js';
-import { cx, useComposedRefs } from './props.js';
+import { isImeKeyEvent } from '../internal/ime.js';
+import { cx, useComposedRefs } from '../internal/props.js';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
 import { useChipList } from '../hooks/useChipList.js';
-import { useField } from '../hooks/useField.js';
-import { useDomId } from './domId.js';
+import { useField } from './useField.js';
+import { useDomId } from '../internal/domId.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { FieldValueInput } from './Field.ValueInput.js';
 

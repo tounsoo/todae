@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
-import { composeHandlers, useComposedRefs } from './props.js';
-import { revealRing } from './revealRing.js';
-import type { PopoverWire } from './Popover.wire.js';
-import { cx } from './cx.js';
+import { composeHandlers, useComposedRefs } from '../internal/props.js';
+import { revealRing } from '../internal/revealRing.js';
+import type { PopoverWire } from '../overlay/popoverWire.js';
+import { cx } from '../internal/cx.js';
 import styles from './Popover.module.css';
 
 type PopoverBase = {

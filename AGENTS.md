@@ -1,0 +1,32 @@
+# Agent notes
+
+This file is for anyone changing the repo, including agents. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, commands, and pull requests. [ARCHITECTURE.md](ARCHITECTURE.md) records how the design system is built. Dated decisions are in [docs/decisions](docs/decisions/README.md).
+
+## Set up
+
+Use Node 24. `.nvmrc` pins it, and CI reads that file. Install pnpm with Corepack so the version matches `packageManager` in the root `package.json`. Then run `pnpm install`. The [Set up](CONTRIBUTING.md#set-up) section has the rest.
+
+## Build, test, and check
+
+Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.md#build-the-design-system) says what that writes. [Check your change](CONTRIBUTING.md#check-your-change) lists every command CI expects.
+
+- `pnpm check` runs lint, typecheck, and Stylelint. The Static job runs it.
+- `pnpm test` runs the unit tests. The Build job runs it.
+- `pnpm test:browser` runs the browser tests. The Fernway job installs Playwright Chromium, then runs it.
+- `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
+- The docs job builds the package and the docs site, then runs `pnpm --filter docs test:visual` and `pnpm --filter docs test:peek`.
+
+[Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
+
+## Conventions
+
+- A user-facing change carries a changeset. [Changesets](CONTRIBUTING.md#changesets) says how to add one, and when a change that ships nothing still needs `pnpm changeset --empty`.
+- Every pull request body follows [`.github/pull_request_template.md`](.github/pull_request_template.md). It has a Verification section, an Unverified checks section, and a Remaining risks section. Verification starts with the tested commit, the full SHA the checks ran on, and lists each command with its result. Write "None" only when that is actually true. A pull request missing any of the three sections, or the tested commit, is not ready for review.
+- After a fix for a bug, a review finding, or a maintainer correction (not routine edits), run a short reflect. Run correct only when the same kind of mistake shows up a second time, then enforce it in this order: architecture, then types, then lint or CI, then a test. A written rule is the last resort.
+- Cursor drives the docs site with its verify skill at `.cursor/skills/verify/SKILL.md`. [0005](docs/decisions/0005-verify-procedure.md) records that procedure. Claude verifies every change with `.claude/skills/verify/SKILL.md`, which ends in PASS, FAIL or BLOCKED. [0007](docs/decisions/0007-claude-verify-and-pr-template.md) records it.
+- Do not change a design token unless Ben approves the change.
+- Do not release 1.0.0. [Versioning](README.md#versioning) says how bumps work until then.
+- Do not force-push or rebase unless Ben agrees.
+- Agents do not merge. A merge waits until Ben approves it.
+- Change `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` only with Ben's yes.
+- A pull request that changes a decision or a spec also edits that decision's file in `docs/decisions/` in the same pull request. A design-system rule still belongs in [ARCHITECTURE.md](ARCHITECTURE.md), updated in that same pull request.

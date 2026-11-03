@@ -5,6 +5,7 @@ import {
   BottomSheet,
   Button,
   Code,
+  CodeBlock,
   COMPONENT_OVERRIDE_KEYS,
   Field,
   RAW_OVERRIDE_KEYS,
@@ -26,7 +27,7 @@ import {
   type ThemeOverride,
   type ThemeOverrideKey,
 } from '@tounsoo/todae';
-import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
@@ -229,6 +230,7 @@ export function Playground({ locale }: { locale: Locale }) {
   // Option values, layer names and preset names are Todae's own names and stay in English; the preview follows the locale.
   const t = DICTIONARIES[locale].playground;
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
+  const codeId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
@@ -341,6 +343,23 @@ export function Playground({ locale }: { locale: Locale }) {
     </div>
   );
 
+  // The same string the Copy JSON button writes, shown so the reader can check it first.
+  const codePanel = (
+    <section className="pg-section">
+      <div className="pg-code-head">
+        <h2 className="pg-heading" id={codeId}>
+          {t.code}
+        </h2>
+        <Button.Root variant="secondary" onClick={exportOverrides}>
+          {t.copyCode}
+        </Button.Root>
+      </div>
+      <CodeBlock.Root className="pg-code" role="region" aria-labelledby={codeId} tabIndex={0}>
+        <code>{exportJson}</code>
+      </CodeBlock.Root>
+    </section>
+  );
+
   // The presets and modes, in the rail on wide screens and in the sheet on narrow ones.
   const themeControls = (
     <>
@@ -445,6 +464,7 @@ export function Playground({ locale }: { locale: Locale }) {
               <>
                 {themeControls}
                 {tokenSection}
+                {codePanel}
                 {actions}
                 <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
               </>
@@ -508,6 +528,7 @@ export function Playground({ locale }: { locale: Locale }) {
             <BottomSheet.Body className="pg-sheet-body">
               {themeControls}
               {tokenSection}
+              {codePanel}
               {/* At the end of the list, so it leaves the short sheet's room to the tokens. */}
               <BottomSheet.Description className="pg-hint">{t.exportHint}</BottomSheet.Description>
             </BottomSheet.Body>

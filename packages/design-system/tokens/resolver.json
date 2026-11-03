@@ -11,12 +11,23 @@
     "focus": {
       "description": "Focus ring shared by every component; later contract entries read it",
       "sources": [{ "$ref": "./components/focus.json" }],
-      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots"] } }
+      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots"], "slots": { "focus.ring": ["color", "width", "offset"] } } }
     },
     "button": {
       "description": "Button geometry shared by every variant",
       "sources": [{ "$ref": "./components/button.base.json" }],
-      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots", "button"] } }
+      "$extensions": {
+        "dev.todae": {
+          "layer": "contract",
+          "rules": ["reserved-roots"],
+          "slots": {
+            "button.base": ["radius", "gap", "border-width", "pressed-ring-width", "padding", "font", "icon"],
+            "button.base.padding": ["x", "y"],
+            "button.base.font": ["size", "weight", "letter-spacing", "text-transform"],
+            "button.base.icon": ["size"]
+          }
+        }
+      }
     },
     "contract": {
       "sources": [
@@ -50,6 +61,7 @@
         { "$ref": "./components/card.json" },
         { "$ref": "./components/datalist.json" },
         { "$ref": "./components/message.json" },
+        { "$ref": "./components/mention.json" },
         { "$ref": "./components/conversation.json" },
         { "$ref": "./components/attachment.json" },
         { "$ref": "./components/steps.json" },
@@ -74,7 +86,7 @@
       "$extensions": {
         "dev.todae": {
           "layer": "contract",
-          "rules": ["reserved-roots", "button"],
+          "rules": ["reserved-roots"],
           "slots": {
             "chip.bg": ["default", "hover", "focus", "disabled"],
             "chip.fg": ["default", "hover", "focus", "disabled"],
@@ -85,7 +97,36 @@
             "steps.fg": ["done", "current", "pending", "error"],
             "steps.marker.bg": ["done", "current", "pending", "error"],
             "steps.marker.fg": ["done", "current", "pending", "error"],
-            "steps.marker.border": ["done", "current", "pending", "error"]
+            "steps.marker.border": ["done", "current", "pending", "error"],
+            "attachment.border": ["default", "error"],
+            "attachment.meta.fg": ["default", "error"],
+            "calendar.day.bg": ["default", "hover", "selected", "range"],
+            "calendar.day.border": ["current"],
+            "calendar.day.fg": ["default", "selected", "range", "disabled"],
+            "contents.link.fg": ["default", "hover", "current"],
+            "disclosure.ring": ["focus", "radius"],
+            "field.fg": ["default", "disabled", "placeholder", "adornment"],
+            "form.summary.link.decoration": ["default", "hover", "thickness", "offset"],
+            "form.summary.link.ring": ["focus", "radius"],
+            "link.decoration": ["default", "hover", "current", "thickness", "current-thickness", "offset"],
+            "link.fg": ["default", "hover", "current"],
+            "link.ring": ["focus", "radius"],
+            "menu.item.bg": ["default", "highlight"],
+            "nav.item.bg": ["default", "hover", "current"],
+            "nav.item.fg": ["default", "hover", "current"],
+            "option.bg": ["default", "hover", "selected", "selected-highlighted"],
+            "option.fg": ["default", "selected", "disabled"],
+            "picker.thumb.border": ["width", "color"],
+            "selection.bg": ["default", "checked", "disabled"],
+            "selection.border": ["default", "checked", "invalid", "disabled"],
+            "selection.ring": ["focus", "invalid"],
+            "table.row.bg": ["selected"],
+            "table.sort.icon.fg": ["default", "selected"],
+            "tabs.fg": ["default", "hover", "selected", "disabled"],
+            "text.fg": ["default", "muted", "accent"],
+            "text.leading": ["default", "tight"],
+            "tree.item.bg": ["default", "hover", "selected"],
+            "tree.item.fg": ["default", "selected", "disabled"]
           },
           "contrast": [
             { "fg": "field.fg.default", "bg": "field.bg.default", "min": 75, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },
@@ -101,7 +142,18 @@
             { "fg": "text.label.fg", "bg": "color.bg.surface", "min": 60 },
             { "fg": "text.label.fg", "bg": "color.bg.subtle", "min": 60 },
             { "fg": "text.label.fg", "bg": "color.bg.elevated", "min": 60 },
-            { "fg": "text.label.fg", "bg": "popover.bg", "min": 60 }
+            { "fg": "text.label.fg", "bg": "popover.bg", "min": 60 },
+            { "fg": "mention.fg.default", "bg": "mention.bg.hover", "min": 60, "over": ["color.bg.surface"] },
+            { "fg": "progress.fill", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.optimum", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.suboptimum", "bg": "progress.track", "min": 30 },
+            { "fg": "meter.fill.critical", "bg": "progress.track", "min": 30 },
+            { "fg": "selection.thumb.bg", "bg": "selection.bg.checked", "min": 30 },
+            { "fg": "selection.indicator.fg", "bg": "selection.bg.checked", "min": 30 },
+            { "fg": "button.primary.fg.default", "bg": "button.primary.bg.default", "min": 60 },
+            { "fg": "button.primary.fg.hover", "bg": "button.primary.bg.hover", "min": 60 },
+            { "fg": "button.primary.fg.active", "bg": "button.primary.bg.active", "min": 60 },
+            { "fg": "button.primary.fg.focus", "bg": "button.primary.bg.focus", "min": 60 }
           ]
         }
       }
@@ -181,7 +233,13 @@
       "$extensions": {
         "dev.todae": {
           "layer": "contract",
-          "rules": ["reserved-roots", "button"],
+          "rules": ["reserved-roots"],
+          "slots": {
+            "button.*.bg": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.fg": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.border": ["default", "hover", "active", "focus", "disabled"],
+            "button.*.ring": ["focus"]
+          },
           "attribute": "data-button-variant",
           "alias": true
         }

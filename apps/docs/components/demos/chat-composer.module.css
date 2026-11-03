@@ -1,0 +1,253 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: var(--todae-field-border-width) solid var(--todae-field-border-default);
+  border-radius: var(--todae-radius-lg);
+  background: var(--todae-field-bg-default);
+}
+
+.card .bare,
+.card .bare.bare:is(:hover, :focus-within) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 10px 0;
+}
+
+.area {
+  resize: none;
+  font-size: var(--todae-font-size-2);
+  line-height: var(--todae-field-leading);
+}
+
+.input {
+  box-sizing: border-box;
+  height: auto;
+  min-height: calc(48px + 20px);
+  padding: 10px 12px;
+  overflow: hidden;
+  field-sizing: fixed;
+}
+
+.badge {
+  inline-size: 32px;
+  block-size: 32px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.dismiss {
+  inline-size: 30px;
+  block-size: 30px;
+  min-inline-size: 30px;
+  min-block-size: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--todae-color-fg-muted);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px 8px;
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--todae-radius-md);
+  background: transparent;
+  color: var(--todae-color-fg-muted);
+  font: inherit;
+  font-size: 15px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint {
+  margin-right: 6px;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.send {
+  width: 32px;
+  height: 32px;
+  min-inline-size: 32px;
+  padding: 0;
+  border-radius: var(--todae-radius-full);
+}
+
+.frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 560px;
+  min-height: 280px;
+  padding: 28px;
+  background: var(--todae-color-bg-surface);
+  color: var(--todae-color-fg-default);
+}
+
+.cap {
+  margin: 0 0 6px;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.msg {
+  display: flex;
+  gap: 10px;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--todae-radius-full);
+  background: var(--todae-avatar-category-3-bg);
+  color: var(--todae-avatar-category-3-fg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.avatarLarge {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  background: var(--todae-avatar-category-5-bg);
+  color: var(--todae-avatar-category-5-fg);
+}
+
+.header {
+  margin-bottom: 2px;
+  color: var(--todae-message-header-fg);
+  font-size: var(--todae-message-header-font-size);
+}
+
+.header b {
+  color: var(--todae-color-fg-default);
+}
+
+.body {
+  line-height: var(--todae-text-leading-default);
+}
+
+.peek {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.message {
+  padding: 4px 10px;
+  font-size: var(--todae-font-size-1);
+  line-height: 1.4;
+}
+
+.view {
+  margin: 0;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: var(--todae-color-fg-default);
+  font: inherit;
+  font-size: var(--todae-font-size-1);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-option-list-gap);
+  width: 260px;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+.lbl {
+  padding: 4px 8px;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+  border-radius: var(--todae-option-radius);
+  color: var(--todae-option-fg-default);
+  cursor: default;
+}
+
+.on {
+  background: var(--todae-option-bg-hover);
+}
+
+.face {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--todae-radius-full);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.handle {
+  margin-inline-start: auto;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-font-size-1);
+}
+
+.ref {
+  display: flex;
+  align-items: flex-start;
+  gap: 120px;
+  min-height: 220px;
+}

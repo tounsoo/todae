@@ -8,7 +8,7 @@ export function useRefElement<T extends Element>(ref: RefObject<T | null>): T | 
   const [node, setNode] = useState<T | null>(null);
   // Every commit on purpose: a ref has no change signal, and the element can
   // attach later or be replaced. The updater bails out when it is the same.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- a ref has no change signal, and the same element bails out
   useLayoutEffect(() => {
     const current = ref.current;
     setNode((prev) => (prev === current ? prev : current));

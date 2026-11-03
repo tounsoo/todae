@@ -201,13 +201,13 @@ TypeScript then accepts `brand.*` keys and still rejects misspelled ones.
 
 Button variants and densities are modifier contexts, so a company adds one in its resolver.
 
-A button variant is a `buttonVariant` context with the same token shape as Todae's: `bg`, `fg` and `border` for `default`, `hover`, `active`, `focus` and `disabled`, plus `ring.focus` and `shadow`. Opt into the `button` rule so the build checks that shape:
+A button variant is a `buttonVariant` context with the same token shape as Todae's: `bg`, `fg` and `border` for `default`, `hover`, `active`, `focus` and `disabled`, plus `ring.focus` and `shadow`. Todae's `buttonVariant` declares that shape as `slots`, and a company's `buttonVariant` keeps them, so the build checks a new variant too:
 
 ```json
 "buttonVariant": {
   "contexts": { "outline": [{ "$ref": "./button.outline.json" }] },
   "$extensions": {
-    "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+    "dev.todae": { "layer": "contract", "attribute": "data-button-variant", "alias": true }
   }
 }
 ```

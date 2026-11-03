@@ -338,6 +338,46 @@ describe('docs locales', () => {
     for (const href of hrefs) expect(pages.has(href), href).toBe(true);
   });
 
+  it('translates the Korean mention keyboard table and keeps the key names', () => {
+    const page = readFileSync(join(APP, 'ko/mention/page.mdx'), 'utf8');
+    const table = page.slice(page.indexOf('## 키보드'), page.indexOf('## 피크'));
+    expect(table).toContain('<Table.HeaderCell scope="col">키</Table.HeaderCell>');
+    expect(table).toContain('<Table.HeaderCell scope="col">제안 목록</Table.HeaderCell>');
+    expect(table).toContain('<Table.HeaderCell scope="col">멘션</Table.HeaderCell>');
+    expect(table).toContain('Enter 또는 Tab');
+    expect(table).not.toMatch(/\bor\b/);
+    expect(table).toContain('활성 옵션을 옮깁니다');
+    expect(table).toContain('목록을 닫습니다');
+    expect(table).toContain('피크를 닫습니다. 포커스는 멘션에 남습니다');
+    expect(table).toContain('피크를 열거나 닫습니다');
+    expect(table).not.toMatch(/Suggestion list|Move the active option|Toggle the peek|Close the peek/);
+    for (const key of ['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape', 'Space']) expect(table).toContain(key);
+  });
+
+  it('shows the home showcase in the reader’s language and links each piece', () => {
+    const pieces = [
+      ['Card', '/card'],
+      ['Tabs', '/tabs'],
+      ['Field', '/field'],
+      ['Switch', '/switch'],
+    ];
+    const { unmount } = render(<HomeContent locale="ko" />);
+    const korean = document.querySelector('.hero-showcase')!;
+    expect(korean.textContent).toContain('주간 요약');
+    expect(korean.textContent).toContain('변경 사항 저장');
+    expect(korean.textContent).not.toContain('Weekly digest');
+    expect(korean.querySelector('[lang="en"]')).toBeNull();
+    expect([...korean.querySelectorAll('a')].map((link) => [link.textContent, link.getAttribute('href')])).toEqual(
+      pieces.map(([label, href]) => [label, `/ko${href}`]),
+    );
+    unmount();
+    render(<HomeContent locale="en" />);
+    const english = document.querySelector('.hero-showcase')!;
+    expect(english.textContent).toContain('Weekly digest');
+    expect(english.textContent).toContain('Save changes');
+    expect([...english.querySelectorAll('a')].map((link) => [link.textContent, link.getAttribute('href')])).toEqual(pieces);
+  });
+
   it('keeps MDX links in the reader’s language', () => {
     path.current = '/ko/button';
     render(

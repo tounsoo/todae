@@ -5,7 +5,7 @@ import { getCandidates, getTabbables } from '../overlay/tabbables.js';
 import { ErrorMessage, Field, Form, Label, useField, type DateRange, type FieldControlUserProps } from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(cleanup);
 
@@ -754,8 +754,9 @@ describe('a picker beside another control', () => {
         </Field.Group>
       </Form.Root>,
     );
+    // Before the submit, which adds a summary row of the same name.
+    const button = screen.getByRole('button', { name: 'Day' });
     await submit(screen.getByTestId('form'));
-    const button = document.querySelector('[data-todae-field-picker]');
     await act(async () => {
       fireEvent.click(within(screen.getByRole('list')).getByRole('button', { name: 'Day' }));
     });

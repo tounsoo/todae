@@ -1,0 +1,27 @@
+{
+  "mention": {
+    "$description": "A mention pill. The peek is a stock Popover; these tokens paint the pill and the token drawn while composing.",
+    "fg": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+    },
+    "bg": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/accent/soft/$value" } },
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/accent/soft-strong/$value" } },
+      "pressed": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+    },
+    "font": {
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/text/weight/medium/$value" } }
+    },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "composing": {
+      "bg": { "$type": "color", "$value": { "$ref": "#/field/token/bg/$value" } }
+    }
+  }
+}

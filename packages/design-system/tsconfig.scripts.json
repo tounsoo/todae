@@ -4,10 +4,10 @@
     "noEmit": false,
     "rewriteRelativeImportExtensions": true,
     "declaration": true,
-    "outDir": "dist/scripts",
-    "rootDir": "scripts",
+    "outDir": "dist",
+    "rootDir": ".",
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["scripts/build-tokens.ts"]
+  "include": ["scripts/build-tokens.ts", "scripts/tokens-builder.ts", "scripts/token-consumers.ts", "scripts/tokens/consumers.ts"]
 }

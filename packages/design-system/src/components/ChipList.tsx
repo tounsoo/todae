@@ -16,9 +16,9 @@ import { Chip, type ChipTone } from './Chip.js';
 import { ChipCount, ChipCountChip } from './chipCount.js';
 import { useChipKeys } from './chipKeys.js';
 import { Popover } from './Popover.js';
-import { cx } from './cx.js';
+import { cx } from '../internal/cx.js';
 import styles from './ChipList.module.css';
-import { focusWithoutScroll } from './revealRing.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 
 /**
  * A read-only or removable list of chips that folds the ones past `maxRows`
@@ -201,7 +201,7 @@ function Root({
   // else +N, else the list. A chip that leaves the panel as it closes
   // leaves to the last chip in the row.
   // Runs after every commit, and after useChipListInternal's own effect.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs after every commit, and after useChipListInternal's own effect
   useLayoutEffect(() => {
     const spot = parked.current;
     const list = listRef.current;

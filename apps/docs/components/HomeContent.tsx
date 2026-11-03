@@ -1,5 +1,5 @@
 import { Stack } from '@tounsoo/todae/stack';
-import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
+import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 import { HomeShowcase } from './HomeShowcase';
 import { ArrowIcon } from './icons';
@@ -25,10 +25,7 @@ export function HomeContent({ locale }: { locale: Locale }) {
           </Stack.Root>
         </div>
         <div className="hero-showcase" role="group" aria-label={dict.hero.showcase}>
-          {/* Demo copy is written in English. */}
-          <div lang={locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE}>
-            <HomeShowcase />
-          </div>
+          <HomeShowcase locale={locale} />
         </div>
       </section>
       <div className="home-groups">

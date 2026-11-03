@@ -161,6 +161,19 @@ describe('usePopover', () => {
     );
   });
 
+  it('sits at anchorName instead of the trigger when given one', () => {
+    const own = renderHook(() => usePopover({ open: true })).result.current;
+    const ownName = own.getTriggerProps().style.anchorName;
+    expect(own.getPopoverProps().style).toMatchObject({ positionAnchor: ownName, '--todae-popover-anchor': ownName });
+    const { result, rerender } = renderHook(({ name }: { name: string | null }) => usePopover({ open: true, anchorName: name }), {
+      initialProps: { name: '--token' as string | null },
+    });
+    expect(result.current.getPopoverProps().style).toMatchObject({ positionAnchor: '--token', '--todae-popover-anchor': '--token' });
+    rerender({ name: null });
+    const fallback = result.current.getTriggerProps().style.anchorName;
+    expect(result.current.getPopoverProps().style).toMatchObject({ positionAnchor: fallback });
+  });
+
   it('keeps the anchor variable on a popover still anchored, whichever unmounts first', () => {
     function Anchored({ anchorRef }: { anchorRef: RefObject<HTMLDivElement | null> }) {
       usePopover({ open: true, anchorRef });

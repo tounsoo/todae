@@ -71,8 +71,6 @@ const FRENCH: Strings = {
   scrollToLatest: 'Aller au dernier message',
   messageStarted: 'Nouveau message',
   messageFinished: 'Message terminé',
-  send: 'Envoyer',
-  stop: 'Arrêter',
   stepDone: 'Terminé',
   stepCurrent: 'En cours',
   stepPending: 'À faire',

@@ -40,6 +40,21 @@ describe('page contents', () => {
     expect(slugOf('접근성을 지키는 조합', seen)).toBe('접근성을-지키는-조합');
   });
 
+  it('uses an id a heading names, in place of a slug of its words', () => {
+    const tree = parse('## 서버 오류 {/*#server-errors*/}\n\n## Server errors\n');
+    expect(pageSections(tree)).toEqual([
+      { id: 'server-errors', text: '서버 오류', children: [] },
+      { id: 'server-errors-1', text: 'Server errors', children: [] },
+    ]);
+    const heading = tree.children[0];
+    expect(heading && 'children' in heading && heading.children.some((child) => child.type === 'mdxTextExpression')).toBe(false);
+  });
+
+  it('refuses an id an earlier heading already uses', () => {
+    const tree = parse('## Server errors\n\n## 서버 오류 {/*#server-errors*/}\n');
+    expect(() => pageSections(tree)).toThrow(/#server-errors/);
+  });
+
   it('lists each ## section with the ### sections under it, and gives their headings ids', () => {
     const tree = parse(PAGE);
     expect(pageSections(tree)).toEqual([

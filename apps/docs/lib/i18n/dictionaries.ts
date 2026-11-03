@@ -32,6 +32,27 @@ export type Dictionary = {
   changelog: string;
   /** The home page's opening section. */
   hero: Record<'eyebrow' | 'title' | 'lead' | 'start' | 'playground' | 'showcase', string>;
+  /** Copy inside the live panel on the home page. Component names in `docs` stay in English. */
+  homeShowcase: {
+    workspace: string;
+    members: string;
+    active: string;
+    settings: string;
+    general: string;
+    billing: string;
+    name: string;
+    nameValue: string;
+    weeklyDigest: string;
+    mentionAlerts: string;
+    people: Record<'ada' | 'grace' | 'alan', { name: string; initials: string; team: string }>;
+    pending: string;
+    plan: string;
+    cancel: string;
+    save: string;
+    /** Accessible name of the links under the panel. */
+    docsLabel: string;
+    docs: Record<'card' | 'tabs' | 'field' | 'switch', string>;
+  };
   /** One line under each section on the home page. */
   groupBlurbs: Record<GroupId, string>;
   /** Pages in a section; `{count}` is the number. */
@@ -68,6 +89,8 @@ export type Dictionary = {
     | 'reset'
     | 'export'
     | 'exportHint'
+    | 'code'
+    | 'copyCode'
     | 'copied'
     | 'copyFailed'
     | 'stage',
@@ -108,6 +131,29 @@ const en: Dictionary = {
     playground: 'Open the playground',
     showcase: 'Todae components, live',
   },
+  homeShowcase: {
+    workspace: 'Workspace',
+    members: 'Members',
+    active: 'Active',
+    settings: 'Workspace settings',
+    general: 'General',
+    billing: 'Billing',
+    name: 'Name',
+    nameValue: 'Acme Inc.',
+    weeklyDigest: 'Weekly digest',
+    mentionAlerts: 'Mention alerts',
+    people: {
+      ada: { name: 'Ada Lovelace', initials: 'AL', team: 'Design' },
+      grace: { name: 'Grace Hopper', initials: 'GH', team: 'Platform' },
+      alan: { name: 'Alan Turing', initials: 'AT', team: 'Research' },
+    },
+    pending: '12 members, 3 pending invites.',
+    plan: 'Pro plan, renews 2027-01-04.',
+    cancel: 'Cancel',
+    save: 'Save changes',
+    docsLabel: 'Components in this example',
+    docs: { card: 'Card', tabs: 'Tabs', field: 'Field', switch: 'Switch' },
+  },
   groupBlurbs: {
     foundations: 'How Todae is put together, its tokens, and how to build on it.',
     components: 'Accessible parts with one root each, styled from tokens.',
@@ -141,6 +187,8 @@ const en: Dictionary = {
     reset: 'Reset',
     export: 'Copy JSON',
     exportHint: 'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance.',
+    code: 'Overrides',
+    copyCode: 'Copy overrides',
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     stage: 'Preview',
@@ -184,6 +232,29 @@ const ko: Dictionary = {
     playground: '플레이그라운드 열기',
     showcase: '실제로 동작하는 Todae 컴포넌트',
   },
+  homeShowcase: {
+    workspace: '작업 공간',
+    members: '구성원',
+    active: '활성',
+    settings: '작업 공간 설정',
+    general: '일반',
+    billing: '결제',
+    name: '이름',
+    nameValue: 'Acme Inc.',
+    weeklyDigest: '주간 요약',
+    mentionAlerts: '멘션 알림',
+    people: {
+      ada: { name: 'Ada Lovelace', initials: 'AL', team: '디자인' },
+      grace: { name: 'Grace Hopper', initials: 'GH', team: '플랫폼' },
+      alan: { name: 'Alan Turing', initials: 'AT', team: '연구' },
+    },
+    pending: '구성원 12명, 대기 중인 초대 3건.',
+    plan: 'Pro 요금제, 2027-01-04에 갱신됩니다.',
+    cancel: '취소',
+    save: '변경 사항 저장',
+    docsLabel: '이 예시의 컴포넌트',
+    docs: { card: 'Card', tabs: 'Tabs', field: 'Field', switch: 'Switch' },
+  },
   groupBlurbs: {
     foundations: 'Todae의 구조와 토큰, 그리고 그 위에 시스템을 만드는 방법.',
     components: '토큰으로 스타일을 입힌, 루트가 하나인 접근성 있는 부품.',
@@ -217,6 +288,8 @@ const ko: Dictionary = {
     reset: '초기화',
     export: 'JSON 복사',
     exportHint: '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요.',
+    code: '오버라이드',
+    copyCode: '오버라이드 복사',
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     stage: '미리보기',

@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { FormContext, type Reading, type ValidationScopeValue } from './Form.context.js';
 import { pickShown, readScope, sameReadings, SCOPE_ATTRIBUTE, SCOPE_SELECTOR } from './Form.model.js';
 import type { FieldsetContextValue } from './Fieldset.context.js';

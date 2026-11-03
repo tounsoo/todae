@@ -12,6 +12,8 @@ const { ref, ...props } = popover.getPopoverProps();
 
 호출할 때마다 새 콜백을 반환하므로, React는 렌더링할 때마다 ref를 떼었다가 다시 붙입니다.
 
+동작하는 팝오버는 [Popover](/popover)에 있습니다. 그 예시는 props를 받지 않는 `getPopoverProps()`를 펼치므로, 자신의 ref는 훅이 반환한 ref와 합쳐야 합니다.
+
 ## 언제 쓰나요
 
 **언제:** 내 ref와, `getPopoverProps()`처럼 props를 받지 않는 prop getter의 ref처럼 한 요소에 ref가 둘 이상일 때.

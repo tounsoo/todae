@@ -26,6 +26,32 @@ export function slugOf(text, seen) {
   return slug;
 }
 
+const EXPLICIT_ID = /^#([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+
+function takeExplicitId(node) {
+  const last = node.children?.at(-1);
+  if (last?.type !== 'mdxTextExpression') return null;
+  const comment = /^\s*\/\*([\s\S]*?)\*\/\s*$/.exec(last.value);
+  if (!comment) return null;
+  const body = comment[1].trim();
+  if (!body.startsWith('#')) return null;
+  const id = EXPLICIT_ID.exec(body)?.[1];
+  if (!id) throw new Error(`Heading id "${body}" must be lowercase letters, digits and hyphens`);
+  node.children.pop();
+  const prev = node.children.at(-1);
+  if (prev?.type === 'text') prev.value = prev.value.trimEnd();
+  return id;
+}
+
+function headingId(node, seen) {
+  const declared = takeExplicitId(node);
+  const text = plainText(node).replace(/\s+/g, ' ').trim();
+  if (!declared) return { id: slugOf(text, seen), text };
+  if (seen.has(declared)) throw new Error(`Heading "${text}" asks for #${declared}, which an earlier heading already uses`);
+  seen.add(declared);
+  return { id: declared, text };
+}
+
 /**
  * The page's sections: each `##` heading with the `###` headings under it, in
  * order. It gives each of those headings its id. Headings inside JSX, such as
@@ -36,8 +62,7 @@ export function pageSections(tree) {
   const sections = [];
   for (const node of tree.children) {
     if (node.type !== 'heading' || node.depth < 2 || node.depth > 3) continue;
-    const text = plainText(node).replace(/\s+/g, ' ').trim();
-    const id = slugOf(text, seen);
+    const { id, text } = headingId(node, seen);
     node.data = { ...node.data, hProperties: { ...node.data?.hProperties, id } };
     const entry = { id, text, children: [] };
     if (node.depth === 2 || sections.length === 0) sections.push(entry);

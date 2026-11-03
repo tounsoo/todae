@@ -12,6 +12,8 @@ const { ref, ...props } = popover.getPopoverProps();
 
 Each call returns a new callback, so React detaches and reattaches it on every render.
 
+The live popover is on [Popover](/popover). Its demo spreads `getPopoverProps()`, which takes no props, so a ref of your own has to be composed with the one it returns.
+
 ## When to use
 
 **When:** Two or more refs on one element, such as your own and one from a prop getter that takes no props, like `getPopoverProps()`.

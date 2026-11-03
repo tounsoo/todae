@@ -12,7 +12,7 @@ import {
   type SubmitEvent,
 } from 'react';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import {
   FormContext,
   type Dismissal,
@@ -22,8 +22,8 @@ import {
 } from './Form.context.js';
 import { errorsKey, FORM_ROOTS, failingEntries, keyHasErrors, sameEntry, scopedControls } from './Form.model.js';
 import { Link } from './Link.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
-import { warnOnce } from './warnOnce.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { isValidityCarrier, reachTarget, type FormFieldError, type ValidityCarrier } from './validity.js';
 import styles from './Form.module.css';
 
@@ -265,7 +265,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     const target = focusTarget.current?.isConnected || !form ? focusTarget.current : firstProblem(form, state.failed, state.native);
     (summaryRef.current ?? target)?.focus();
     // Only a new request moves focus; the list is the one it came with.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new request moves focus
   }, [state.focus]);
 
   // A reply is a commit whose `errors` differ in content from the commit before and have entries; the same content in a new object does not run this.
@@ -281,7 +281,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     // By now the form shows what it has.
     if (process.env.NODE_ENV !== 'production' && errors) warnUnscoped(formId, form, errors);
     // Only a change of content is a reply.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a change of content is a reply
   }, [key]);
 
   // What `errors` or an edit changed may change the summary's rows.
@@ -289,7 +289,7 @@ function Root({ errors, onSubmit, onReset, onChangeCapture, ref, ...props }: For
     dispatch({ type: 'forget', errors });
     refresh();
     // The content is the dependency, not the object.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the content is the dependency, not the object
   }, [key, state.dismissal, refresh]);
 
   useEffect(() => () => window.clearTimeout(resetTimer.current), []);

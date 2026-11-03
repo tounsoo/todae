@@ -15,11 +15,11 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
-import { optionDomId } from './OptionList.ids.js';
-import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { optionDomId } from '../internal/optionDomId.js';
+import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './OptionList.module.css';
 
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */

@@ -1,0 +1,30 @@
+import { ChatComposerCard } from '../../../../components/demos/ChatComposer';
+
+# 채팅 작성창 멘션
+
+패키지 네임스페이스가 아닌 레시피입니다. 카드는 [Field](/field), [Button](/button), [Attachment](/attachment)와, `useMentions`와 [MentionText](/mention)가 함께 쓰는 `people` 소스로 만듭니다. 카드 프레임은 이 페이지의 것이고 패키지 파트가 아닙니다.
+
+```tsx
+const people = defineMentionSource({ char: '@', options, resolve, renderPeek });
+
+<form className={card} onSubmit={send}>
+  <Field.Root>
+    <Field.Textarea {...mentions.getTextareaProps()} />
+  </Field.Root>
+  <Button.Root type="submit" aria-label="Send">↑</Button.Root>
+</form>
+
+<MentionText value={sent} sources={[people]} />
+```
+
+<Example>
+  <ChatComposerCard />
+</Example>
+
+## When to use
+
+`@`로 사람을 멘션하는 채팅 입력창, 그리고 보낸 메시지에서 같은 피크로 그 멘션을 보여 줄 때.
+
+## When not to use
+
+토큰이 되지 않는 제안 목록은 [Combobox](/recipes/combobox)입니다.

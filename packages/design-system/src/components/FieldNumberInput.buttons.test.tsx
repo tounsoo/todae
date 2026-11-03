@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, GlyphsProvider, Label, StringsProvider } from '../index.js';
 import { Quantity, input, type, button } from '../test/number.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 // Each tick of a held press is its own task, as in a browser, so each renders before the next.
 function tick(ms: number) {

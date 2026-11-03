@@ -11,14 +11,13 @@ import {
 } from 'react';
 import { isReachable } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { Button, type ButtonActionProps } from './Button.js';
-import { useCloseGlyph } from './closeGlyph.js';
-import { useButtonName } from './buttonName.js';
-import { useDomId } from './domId.js';
+import type { ButtonActionProps } from './Button.js';
+import { CloseButton } from './closeButton.js';
+import { useDomId } from '../internal/domId.js';
 import { Progress, type ProgressRootProps } from './Progress.js';
-import { cx, useComposedRefs } from './props.js';
-import { activeIn, focusLost } from './activeElement.js';
-import { focusWithoutScroll } from './revealRing.js';
+import { cx, useComposedRefs } from '../internal/props.js';
+import { activeIn, focusLost } from '../internal/activeElement.js';
+import { focusWithoutScroll } from '../internal/revealRing.js';
 import styles from './Attachment.module.css';
 
 /** Where the file is: `ready` to send or open, `uploading`, or failed with an `error`. */
@@ -173,11 +172,9 @@ function AttachmentProgress({ className, ...props }: AttachmentProgressProps) {
   return <Progress.Root {...props} aria-labelledby={labelledBy(props, named)} className={cx(styles.progress, className)} />;
 }
 
-function Remove({ 'aria-label': ariaLabel, className, children, ref, onClick, ...props }: AttachmentRemoveProps) {
+function Remove({ className, onClick, ...props }: AttachmentRemoveProps) {
   const { named } = useAttachment('Remove');
   const { removeAttachment } = useStrings();
-  const [label, refs] = useButtonName(children, ariaLabel, ref, removeAttachment(named?.text ?? ''));
-  const glyph = useCloseGlyph();
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     // A click does not focus a button in every browser (Safari). Focus the
     // pressed button before the product's handler, which may remove the
@@ -188,18 +185,13 @@ function Remove({ 'aria-label': ariaLabel, className, children, ref, onClick, ..
     onClick?.(event);
   };
   return (
-    <Button.Root
-      variant="ghost"
-      tooltip={children == null ? false : undefined}
-      aria-label={label}
+    <CloseButton
       {...props}
+      fallbackName={removeAttachment(named?.text ?? '')}
       onClick={handleClick}
-      ref={refs}
       {...{ [REMOVE_ATTR]: '' }}
       className={cx(styles.remove, className)}
-    >
-      {children ?? glyph}
-    </Button.Root>
+    />
   );
 }
 

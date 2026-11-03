@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:visual": "playwright test",
+    "test:peek": "playwright test --config playwright.peek.config.ts",
     "test:visual:docker": "sh scripts/visual.sh",
     "i18n:stamp": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/stamp-translations.ts",
     "clean": "rm -rf .next"
@@ -38,7 +39,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1",
+    "@playwright/test": "1.64.1",
     "@testing-library/react": "^16.3.3",
     "@types/mdast": "4.0.4",
     "@types/mdx": "^2.0.13",
@@ -48,7 +49,7 @@
     "@vitest/browser": "3.2.7",
     "axe-core": "^4.13.0",
     "jsdom": "^26.1.0",
-    "playwright": "1.56.1",
+    "playwright": "1.64.1",
     "typescript": "^6.0.2",
     "vitest": "^3.0.9"
   },

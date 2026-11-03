@@ -7,15 +7,16 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useDomId } from './domId.js';
+import { useDomId } from '../internal/domId.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
-import { useComposedRefs } from './props.js';
+import { useComposedRefs } from '../internal/props.js';
 import { SelectionControl } from './SelectionControl.js';
-import { cx } from './cx.js';
+import { warnOnce } from '../internal/warnOnce.js';
+import { cx } from '../internal/cx.js';
 import styles from './selection.module.css';
 
 type RadioGroupName =
@@ -89,8 +90,8 @@ function RadioGroupRoot({
   'aria-describedby': describedBy,
   ...props
 }: RadioGroupRootProps) {
-  if (process.env.NODE_ENV !== 'production' && valueProp !== undefined && defaultValue !== undefined) {
-    console.error('RadioGroup.Root cannot take both value and defaultValue');
+  if (valueProp !== undefined && defaultValue !== undefined) {
+    warnOnce('RadioGroup.Root:value', 'RadioGroup.Root cannot take both value and defaultValue', 'error');
   }
   const autoName = useDomId();
   const name = nameProp ?? autoName;
@@ -103,7 +104,14 @@ function RadioGroupRoot({
     customValidity,
   );
   useRevalidate();
-  const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
+  const [value, select] = useControlledState<string | null>(
+    valueProp,
+    defaultValue ?? null,
+    onValueChange &&
+      ((next) => {
+        if (next !== null) onValueChange(next);
+      }),
+  );
   return (
     <RadioGroupContext.Provider
       value={{
@@ -111,10 +119,7 @@ function RadioGroupRoot({
         value,
         disabled: isDisabled,
         invalid: isInvalid,
-        select: (next) => {
-          setValue(next);
-          onValueChange?.(next);
-        },
+        select,
       }}
     >
       <div

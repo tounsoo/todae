@@ -9,7 +9,6 @@ import {
   Breadcrumbs,
   Checkbox,
   Chip,
-  Composer,
   Dialog,
   Disclosure,
   Drilldown,
@@ -45,8 +44,6 @@ const ICONS: Required<Glyphs> = {
   clock: <svg data-testid="clock" />,
   plus: <svg data-testid="plus" />,
   minus: <svg data-testid="minus" />,
-  send: <svg data-testid="send" />,
-  stop: <svg data-testid="stop" />,
   error: <svg data-testid="error" />,
   back: <svg data-testid="back" />,
 };
@@ -281,21 +278,6 @@ describe('GlyphsProvider', () => {
     const [, own, server] = container.querySelectorAll('li');
     expect(own!.textContent).toBe('...');
     expect(server!.textContent).toBe('…');
-  });
-
-  it('uses the send and stop glyphs for an empty Composer.Submit; content still wins', () => {
-    const composer = (busy: boolean) =>
-      withIcons(
-        <Composer.Root busy={busy}>
-          <Composer.Submit onStop={() => {}} />
-          <Composer.Submit onStop={() => {}}>Go</Composer.Submit>
-        </Composer.Root>,
-      );
-    const { rerender } = render(composer(false));
-    expect(screen.getAllByTestId('send')).toHaveLength(1);
-    rerender(composer(true));
-    expect(screen.queryByTestId('send')).toBeNull();
-    expect(screen.getAllByTestId('stop')).toHaveLength(1);
   });
 
   it("uses the back glyph for an empty Drilldown.Back, else Todae's chevron, on a wrapper that mirrors in right-to-left", () => {

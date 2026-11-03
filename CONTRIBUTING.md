@@ -85,25 +85,33 @@ pnpm schema
 
 The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packages/design-system/schema/components.json`. Commit that file. Running `pnpm schema` again must leave no diff.
 
+## Lint
+
+`pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
+
+Stylelint rejects a raw color, a raw spacing value, a raw radius, a raw font size, or a raw color in `box-shadow` or `text-shadow`. `var(--…)` is allowed. `0` and `0px` are allowed everywhere. They are the same length. `100%`, `currentColor`, `transparent`, `inherit`, and `auto` are allowed everywhere. `1px` is allowed only on a border or outline width, only in the sheets the allowlist names, and only inside `@media (forced-colors: active)`. `50%` is allowed only on a circle radius in those sheets. `360` is allowed only as the end stop of ColorPicker's longer-hue gradient. Other literals are allowed only in the sheets `stylelint/raw-value-allowlist.mjs` names, and only while that file lists each one with a reason. System colors, `currentColor`, and `transparent` are allowed inside `@media (forced-colors: active)`. A hex, a named color, or a raw length there still fails. A plain number inside `calc`, `min`, `max`, or `clamp` is a factor, not a length. A percentage inside a color function is a channel, not a length. The check leaves out tests, stories, docs, and token build output (`*.generated.css`).
+
+`todae/no-raw-literal` rejects a length of `999px` or more, a numeric `line-height` other than `1`, a fractional `opacity`, the keywords `ease`, `ease-in`, `ease-out` and `ease-in-out`, and `1px` in a `border*` property or in `calc()`. It skips `@media (forced-colors: active)`, including a query that continues after that text. `todae/token-root-scope` rejects a `var(--todae-…)` whose root the sheet does not own. The owned roots, the core reads, and the shared roots (`overlay` and `focus`) are options in `stylelint.config.mjs`. `todae/local-custom-property` rejects a custom property the sheet declares under `--todae-`. A local property starts with `--_`. `todae/focus-ring-token` requires `outline` to start with the focus or chip ring width token and `solid`, and `outline-offset` to be the matching offset token or `calc(-1 * var(--todae-focus-ring-width))`. `outline: none` is allowed. Pagination's `1px solid CanvasText` is an option on that file. `todae/disabled-state` rejects `opacity` on a selector that mentions `disabled` outside `:not()`, and rejects a `cursor` there other than `not-allowed` or `inherit`.
+
+Any of these fails `pnpm check` and CI.
+
 ## Check your change
 
 Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
-pnpm typecheck
-pnpm lint
+pnpm check
 pnpm tokens:check
 pnpm schema
 pnpm build:ds
 pnpm publish:check
-pnpm size:check
 pnpm ssr:smoke
 pnpm test
 pnpm test:browser
 ```
 
+- `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
-- `pnpm size:check` compares the gzip size of the shipped JavaScript and CSS with `packages/design-system/size-budget.json`. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
@@ -143,8 +151,9 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 ## Pull requests
 
 - Keep a pull request to one change.
+- Write the body from [`.github/pull_request_template.md`](.github/pull_request_template.md). Its Verification section names the tested commit, the full SHA the checks ran on, and each command with its result.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips draft pull requests, and a Markdown-only pull request as described above. Mark a draft ready for review when you want CI to run.
+- CI skips Checks and Docs on a draft pull request. Check, Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
 
 ## Releases
 

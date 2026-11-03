@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from './anchorName.js';
+import { anchoredContentStyle, anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from './anchorName.js';
 
 describe('mergeAnchorNames', () => {
   it('adds a name to a list once and drops none', () => {
@@ -15,6 +15,10 @@ describe('mergeAnchorNames', () => {
       '--v': '--a',
       anchorName: '--tip, --a',
     });
+  });
+
+  it('builds the content side: position-anchor plus the positioning variable', () => {
+    expect(anchoredContentStyle('--v', '--a')).toEqual({ '--v': '--a', positionAnchor: '--a' });
   });
 
   it('takes out only its own name', () => {

@@ -11,7 +11,6 @@ import {
   categoryTone,
   Checkbox,
   Chip,
-  Composer,
   Disclosure,
   Field,
   GlyphsProvider,
@@ -43,6 +42,7 @@ import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import type { Locale } from '../../lib/i18n/config';
 import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';
 import { PREVIEW_COPY } from './previewCopy';
+import { PreviewSamples } from './PreviewSamples';
 
 const NO_GLYPHS: Glyphs = {};
 
@@ -351,7 +351,7 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                     <Message.Content>{text}</Message.Content>
                   </Message.Root>
                 ))}
-                <Composer.Root onSubmit={ask}>
+                <form onSubmit={ask}>
                   <Field.Root aria-label={copy.messageLabel}>
                     <Field.Textarea
                       value={draft}
@@ -361,10 +361,12 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                       maxRows={4}
                     />
                     <Field.Row>
-                      <Composer.Submit disabled={draft.trim() === ''} />
+                      <Button.Root type="submit" variant="primary" disabled={draft.trim() === ''} aria-label={copy.send}>
+                        {copy.send}
+                      </Button.Root>
                     </Field.Row>
                   </Field.Root>
-                </Composer.Root>
+                </form>
               </div>
             </Card.Body>
           </Card.Root>
@@ -474,6 +476,8 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
               ))}
             </Card.Body>
           </Card.Root>
+
+          <PreviewSamples copy={copy.samples} chips={copy.chips} locale={locale} />
 
           <div className="preview-span-3 preview-alerts">
             <Alert.Root tone="info" role="none">

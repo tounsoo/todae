@@ -3,7 +3,7 @@ import { useCustomValidity } from './customValidity.js';
 import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context.js';
 import { ValidationScopeContext } from './Form.context.js';
 import { mergeDescribedBy } from './Field.context.js';
-import { cx, useComposedRefs } from './props.js';
+import { cx, useComposedRefs } from '../internal/props.js';
 import { carriersIn } from './Form.model.js';
 import { useValidationScope } from './ValidationScope.js';
 import styles from './Fieldset.module.css';
@@ -99,7 +99,7 @@ function Legend({ className, ref, ...props }: FieldsetLegendProps) {
   const refs = useComposedRefs(legendRef, ref);
   // Every commit: a legend added before this one takes the exemption from it.
   // The same value bails out, so this settles after one pass.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- a legend added before this one takes the exemption, and the same value bails out
   useLayoutEffect(() => {
     const node = legendRef.current;
     const parent = node?.parentElement;

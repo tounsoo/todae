@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Dialog, Drilldown, StringsProvider, type DrilldownChangeReason, type DrilldownRootProps } from '../index.js';
-import { resetWarnOnce } from './warnOnce.js';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 
 afterEach(cleanup);
 

@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { startTransition, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Checkbox } from '../components/Checkbox.js';
 import { useSelection, type UseSelectionOptions } from './useSelection.js';
@@ -272,5 +273,25 @@ describe('useSelection prop getters', () => {
     expect(props.disabled).toBe(true);
     expect(result.current.getCheckboxProps('b').disabled).toBe(true);
     expect(result.current.getSelectAllProps({ name: 'all' }).name).toBe('all');
+  });
+});
+
+describe('useSelection writes', () => {
+  it('keeps a toggle made in a transition when an urgent render lands before it commits', () => {
+    const box: { toggle: ((key: string) => void) | null; bump: (() => void) | null } = { toggle: null, bump: null };
+    function Rows() {
+      const [, setCount] = useState(0);
+      box.bump = () => setCount((count) => count + 1);
+      const selection = useSelection<string>({ keys: ['a', 'b', 'c'] });
+      box.toggle = selection.toggle;
+      return <output>{selection.value.join(',')}</output>;
+    }
+    const { container } = render(<Rows />);
+    act(() => {
+      startTransition(() => box.toggle!('a'));
+      flushSync(() => box.bump!());
+      box.toggle!('b');
+    });
+    expect(container.textContent).toBe('a,b');
   });
 });
