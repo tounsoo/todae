@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -376,6 +376,47 @@ describe('useEscapeKey', () => {
       }
       render(<Late />);
       expect(escapeIn(doc.body).defaultPrevented).toBe(true);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    });
+
+    /** Portals its children into `doc`'s body once it has mounted, as a wrapper waiting for a frame does. */
+    function FramePortal({ doc, children }: { doc: Document; children: ReactNode }) {
+      const [target, setTarget] = useState<HTMLElement | null>(null);
+      useEffect(() => setTarget(doc.body), [doc]);
+      return target ? createPortal(children, target) : null;
+    }
+
+    function PortaledLayer({ doc, onEscape }: { doc: Document; onEscape: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref);
+      return (
+        <FramePortal doc={doc}>
+          <div ref={ref}>
+            <button type="button">Inside</button>
+          </div>
+        </FramePortal>
+      );
+    }
+
+    it('listens in an iframe another component portals its element into, once focus goes there', async () => {
+      const doc = makeFrame();
+      const onEscape = vi.fn();
+      render(<PortaledLayer doc={doc} onEscape={onEscape} />);
+      act(() => doc.querySelector('button')!.focus());
+      // The page's window blurs as focus goes into the frame; jsdom doesn't send it.
+      window.dispatchEvent(new FocusEvent('blur'));
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(escapeIn(doc.querySelector('button')!).defaultPrevented).toBe(true);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    });
+
+    it('listens in the iframe focus is already in when the layer activates', () => {
+      const doc = makeFrame();
+      const field = doc.body.appendChild(doc.createElement('input'));
+      act(() => field.focus());
+      const onEscape = vi.fn();
+      render(<PortaledLayer doc={doc} onEscape={onEscape} />);
+      expect(escapeIn(field).defaultPrevented).toBe(true);
       expect(onEscape).toHaveBeenCalledTimes(1);
     });
 

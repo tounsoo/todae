@@ -1,6 +1,23 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { isHTMLElement } from '../internal/dom.js';
 
+/**
+ * The element with focus in the window tree `doc` is in, looked up from its
+ * top document, so focus that left an iframe for the page around it counts as
+ * moved. Inside a frame focus is in, it is that frame's active element.
+ */
+function focusedElement(doc: Document): Element | null {
+  let top = doc;
+  for (let host = top.defaultView?.frameElement; host; host = top.defaultView?.frameElement) top = host.ownerDocument;
+  let el = top.activeElement;
+  while (el && (el.localName === 'iframe' || el.localName === 'frame')) {
+    const inner = (el as HTMLIFrameElement).contentDocument;
+    if (!inner) break;
+    el = inner.activeElement;
+  }
+  return el;
+}
+
 export function useFocusRestore(
   active: boolean,
   {
@@ -20,13 +37,16 @@ export function useFocusRestore(
 ): void {
   const prior = useRef<HTMLElement | null>(null);
   const wasActive = useRef(false);
+  const openedIn = useRef<Document | null>(null);
 
   useLayoutEffect(() => {
     if (active) {
       // Only when it opens: a new restoreTo while it is open runs this again, with focus already inside.
       if (wasActive.current) return;
       wasActive.current = true;
-      const current = (containerRef?.current?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document).activeElement;
+      const doc = containerRef?.current?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document;
+      openedIn.current = doc;
+      const current = doc.activeElement;
       prior.current = isHTMLElement(current) ? current : null;
       return;
     }
@@ -35,9 +55,10 @@ export function useFocusRestore(
     wasActive.current = false;
     const fallback = restoreTo?.current ?? prior.current;
     const container = containerRef?.current;
-    const doc = container?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document;
+    // The container may already be gone, so fall back to the document it opened in.
+    const doc = container?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? openedIn.current ?? document;
     queueMicrotask(() => {
-      const moved = doc.activeElement;
+      const moved = focusedElement(doc);
       if (
         isHTMLElement(moved) &&
         moved !== doc.body &&

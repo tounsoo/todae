@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type FocusEvent } from 'react';
+import { isElement, isNode } from '../internal/dom.js';
 
 /**
  * Calls `onLeave` when focus leaves the element these handlers sit on, with
@@ -25,7 +26,7 @@ export function useFocusLeave(onLeave: (next: Element | null) => void, ignore?: 
     (event: FocusEvent<HTMLElement>) => {
       const next = event.relatedTarget;
       const container = event.currentTarget;
-      if (next instanceof Node && container.contains(next)) return;
+      if (isNode(next) && container.contains(next)) return;
       if (latestIgnore.current?.()) {
         cancel();
         return;
@@ -34,12 +35,12 @@ export function useFocusLeave(onLeave: (next: Element | null) => void, ignore?: 
         cancel();
         pending.current = setTimeout(() => {
           pending.current = undefined;
-          const active = document.activeElement;
+          const active = container.ownerDocument.activeElement;
           if (!container.contains(active)) latest.current(active);
         });
         return;
       }
-      latest.current(next instanceof Element ? next : null);
+      latest.current(isElement(next) ? next : null);
     },
     [cancel],
   );

@@ -26,16 +26,43 @@ const watchers = /* @__PURE__ */ new Set<() => void>();
 // documents, so a layer in an iframe or a popup window needs its own.
 const listening = /* @__PURE__ */ new Set<Document>();
 
+/** The page's document and the same-origin frames focus sits in, outermost first. */
+function focusedDocuments(): Document[] {
+  const docs = [document];
+  for (let el = document.activeElement; el && (el.localName === 'iframe' || el.localName === 'frame'); ) {
+    const inner = (el as HTMLIFrameElement).contentDocument;
+    if (!inner) break;
+    docs.push(inner);
+    el = inner.activeElement;
+  }
+  return docs;
+}
+
+// A key comes only from the document with focus, so check again once focus
+// has moved to another one: an element can reach an iframe after its layer
+// activates with nothing rendering again.
+function onWindowBlur(): void {
+  setTimeout(sync);
+}
+
+/**
+ * Listens on each layer's document and, while any layer is up, on the page's
+ * document and the frames focus is in, as a layer's element may get there
+ * after it activates.
+ */
 function sync(): void {
   const wanted = new Set(stack.map((entry) => entry.doc()));
+  if (wanted.size > 0) for (const doc of focusedDocuments()) wanted.add(doc);
   for (const doc of wanted) {
     if (listening.has(doc)) continue;
     doc.addEventListener('keydown', onKeyDown);
+    doc.defaultView?.addEventListener('blur', onWindowBlur);
     listening.add(doc);
   }
   for (const doc of [...listening]) {
     if (wanted.has(doc)) continue;
     doc.removeEventListener('keydown', onKeyDown);
+    doc.defaultView?.removeEventListener('blur', onWindowBlur);
     listening.delete(doc);
   }
 }

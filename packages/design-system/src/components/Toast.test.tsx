@@ -719,6 +719,9 @@ describe('Toast', () => {
     act(() => before.focus());
     fireEvent.keyDown(before, { key: 'F8' });
     expect(doc.activeElement).toBe(region);
+    // Focus moving within the region keeps where it came from.
+    act(() => doc.querySelector<HTMLElement>('li button')!.focus());
+    act(() => region.focus());
     let event!: KeyboardEvent;
     act(() => void (event = escapeIn(region)));
     expect(event.defaultPrevented).toBe(true);
