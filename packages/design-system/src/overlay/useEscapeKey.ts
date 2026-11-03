@@ -157,7 +157,7 @@ function inside(scope: Element, entry: Entry): boolean {
  */
 function candidates(
   scope: readonly Element[] | null,
-  target: Element | null,
+  target: Element | null | ((entry: Entry) => Element | null),
   event?: KeyboardEvent,
   doc?: Document,
 ): Entry[] {
@@ -166,7 +166,7 @@ function candidates(
       (doc === undefined || entry.doc() === doc) &&
       (scope === null || scope.some((el) => inside(el, entry))) &&
       (event ? !entry.passesKey(event) : entry.closeRequests) &&
-      entry.takes(target),
+      entry.takes(typeof target === 'function' ? target(entry) : target),
   );
 }
 
@@ -188,7 +188,9 @@ function onKeyDown(event: KeyboardEvent) {
   let top: Entry | undefined;
   if (doc === document) {
     const reached = candidates(scope, target, event).filter((entry) => !behindFrameModal(entry, document));
-    const here = (entry: Entry) => topDocument(entry.doc()) === document;
+    // The page may itself be in a frame, such as a docs sandbox.
+    const page = topDocument(document);
+    const here = (entry: Entry) => topDocument(entry.doc()) === page;
     top = select(reached.filter(here)) ?? select(reached.filter((entry) => !here(entry)));
   } else {
     top = select(candidates(scope, target, event, doc));
@@ -204,9 +206,15 @@ function onKeyDown(event: KeyboardEvent) {
  * reach, and returns whether one took it.
  */
 export function takeCloseRequest(dialog: Element): boolean {
-  // Where focus is, also inside a frame in the dialog.
-  const path = focusPath(dialog.ownerDocument);
-  const top = select(candidates([dialog], path.at(-1) ?? dialog.ownerDocument.activeElement));
+  // Where focus is, read as each layer's document reads it, as a key there
+  // would be: a shadow root's focus as its host, a frame's as the frame.
+  const focused = focusPath(dialog.ownerDocument).filter((el) => el.getRootNode().nodeType === 9);
+  const top = select(
+    candidates([dialog], (entry) => {
+      const doc = entry.doc();
+      return focused.filter((el) => el.ownerDocument === doc).at(-1) ?? doc.activeElement;
+    }),
+  );
   top?.handle();
   return top !== undefined;
 }

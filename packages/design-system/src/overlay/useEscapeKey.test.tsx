@@ -325,6 +325,27 @@ describe('useEscapeKey', () => {
     expect(popup).not.toHaveBeenCalled();
   });
 
+  it('gives a modal close request to a layer that takes only keys inside it, with focus in a shadow root there', () => {
+    const dialog = document.body.appendChild(document.createElement('dialog'));
+    try {
+      const layer = dialog.appendChild(document.createElement('div'));
+      const root = layer.appendChild(document.createElement('div')).attachShadow({ mode: 'open' });
+      const inner = root.appendChild(document.createElement('button'));
+      const onEscape = vi.fn();
+      function Own() {
+        useEscapeKey(true, (target) => layer.contains(target), onEscape, { current: layer });
+        return null;
+      }
+      render(<Own />);
+      act(() => inner.focus());
+      expect(takeCloseRequest(dialog)).toBe(true);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    } finally {
+      cleanup();
+      dialog.remove();
+    }
+  });
+
   describe('in another document', () => {
     it('handles Escape pressed in an iframe a layer is rendered into', () => {
       const doc = makeFrame();
@@ -468,6 +489,24 @@ describe('useEscapeKey', () => {
       expect(inner).toHaveBeenCalledTimes(1);
     });
 
+    for (const into of [true, false]) {
+      it(`gives a modal close request to a page layer around an iframe with focus ${into ? 'inside the iframe' : 'on the iframe'}`, () => {
+        const dialog = document.body.appendChild(document.createElement('dialog'));
+        const layer = dialog.appendChild(document.createElement('div'));
+        const doc = makeFrame(layer);
+        const onEscape = vi.fn();
+        function Own() {
+          useEscapeKey(true, (target) => layer.contains(target), onEscape, { current: layer });
+          return null;
+        }
+        render(<Own />);
+        const frame = doc.defaultView!.frameElement as HTMLIFrameElement;
+        act(() => (into ? doc.body.appendChild(doc.createElement('input')) : frame).focus());
+        expect(takeCloseRequest(dialog)).toBe(true);
+        expect(onEscape).toHaveBeenCalledTimes(1);
+      });
+    }
+
     it('keeps a layer behind a modal in an iframe out of the close request of a page modal around the iframe', () => {
       const modal = document.body.appendChild(document.createElement('dialog'));
       const pressed = modal.appendChild(document.createElement('button'));
@@ -500,22 +539,32 @@ describe('useEscapeKey', () => {
       expect(behind).not.toHaveBeenCalled();
     });
 
-    it('gives a key in an edit on the page to the edit before a popup in a popup window', () => {
-      const popup = makePopup();
-      const inPopup = vi.fn();
-      const edit = vi.fn();
-      render(<Kind onEscape={inPopup} />, { container: popup.body.appendChild(popup.createElement('div')) });
-      render(
-        <Kind onEscape={edit} popup={false} own>
-          <input aria-label="Name" />
-        </Kind>,
-      );
-      const input = document.querySelector('input')!;
-      act(() => input.focus());
-      escapeIn(input);
-      expect(edit).toHaveBeenCalledTimes(1);
-      expect(inPopup).not.toHaveBeenCalled();
-    });
+    for (const embedded of [false, true]) {
+      it(`gives a key in an edit on the page to the edit before a popup in a popup window${embedded ? ', with the page in a frame' : ''}`, () => {
+        if (embedded) {
+          const host = document.implementation.createHTMLDocument('').body.appendChild(document.createElement('iframe'));
+          Object.defineProperty(window, 'frameElement', { value: host, configurable: true });
+        }
+        try {
+          const popup = makePopup();
+          const inPopup = vi.fn();
+          const edit = vi.fn();
+          render(<Kind onEscape={inPopup} />, { container: popup.body.appendChild(popup.createElement('div')) });
+          render(
+            <Kind onEscape={edit} popup={false} own>
+              <input aria-label="Name" />
+            </Kind>,
+          );
+          const input = document.querySelector('input')!;
+          act(() => input.focus());
+          escapeIn(input);
+          expect(edit).toHaveBeenCalledTimes(1);
+          expect(inPopup).not.toHaveBeenCalled();
+        } finally {
+          if (embedded) Reflect.deleteProperty(window, 'frameElement');
+        }
+      });
+    }
 
     it('keeps a key in an iframe from reaching a layer on the page', () => {
       const doc = makeFrame();
