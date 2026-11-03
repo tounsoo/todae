@@ -205,7 +205,7 @@
   "disclosure": {
     "(top)": "3036525bad11",
     "# Disclosure": "11352d1b4588",
-    "## Accordion": "35fc990cd5e3",
+    "## Accordion": "81daf0e76655",
     "## Icons": "90cd4835c3a3",
     "## Accessible composition": "9773f4547249",
     "## When to use": "e742af5b01d9",
@@ -957,9 +957,10 @@
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "d4f6cb5c0687",
+    "## Motion": "53eb25662b3f",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "e8311a9e6fc8"
+    "(section order)": "f02d196ecc83"
   },
   "toolbar": {
     "(top)": "60d1de50adb8",

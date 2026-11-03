@@ -1774,12 +1774,20 @@
       "type": "dimension"
     },
     {
-      "path": "dialog.motion.enter",
+      "path": "dialog.motion.duration.enter",
       "type": "duration"
     },
     {
-      "path": "dialog.motion.exit",
+      "path": "dialog.motion.duration.exit",
       "type": "duration"
+    },
+    {
+      "path": "dialog.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "dialog.motion.easing.exit",
+      "type": "cubicBezier"
     },
     {
       "path": "dialog.padding.x",
@@ -1830,7 +1838,11 @@
       "type": "number"
     },
     {
-      "path": "disclosure.motion.duration",
+      "path": "disclosure.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "disclosure.motion.duration.exit",
       "type": "duration"
     },
     {
@@ -1882,12 +1894,20 @@
       "type": "dimension"
     },
     {
-      "path": "drawer.motion.enter",
+      "path": "drawer.motion.duration.enter",
       "type": "duration"
     },
     {
-      "path": "drawer.motion.exit",
+      "path": "drawer.motion.duration.exit",
       "type": "duration"
+    },
+    {
+      "path": "drawer.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "drawer.motion.easing.exit",
+      "type": "cubicBezier"
     },
     {
       "path": "drawer.padding.x",
@@ -2654,7 +2674,11 @@
       "type": "dimension"
     },
     {
-      "path": "message.actions.motion.duration",
+      "path": "message.actions.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "message.actions.motion.duration.exit",
       "type": "duration"
     },
     {
@@ -2874,7 +2898,11 @@
       "type": "dimension"
     },
     {
-      "path": "nav.motion.duration",
+      "path": "nav.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "nav.motion.duration.exit",
       "type": "duration"
     },
     {
@@ -3430,16 +3458,24 @@
       "type": "dimension"
     },
     {
-      "path": "sheet.motion.enter",
+      "path": "sheet.motion.duration.enter",
       "type": "duration"
     },
     {
-      "path": "sheet.motion.exit",
+      "path": "sheet.motion.duration.exit",
       "type": "duration"
     },
     {
-      "path": "sheet.motion.resize",
+      "path": "sheet.motion.duration.resize",
       "type": "duration"
+    },
+    {
+      "path": "sheet.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "sheet.motion.easing.exit",
+      "type": "cubicBezier"
     },
     {
       "path": "sheet.padding.x",
@@ -4066,12 +4102,20 @@
       "type": "number"
     },
     {
-      "path": "toast.motion.enter",
+      "path": "toast.motion.duration.enter",
       "type": "duration"
     },
     {
-      "path": "toast.motion.exit",
+      "path": "toast.motion.duration.exit",
       "type": "duration"
+    },
+    {
+      "path": "toast.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "toast.motion.easing.exit",
+      "type": "cubicBezier"
     },
     {
       "path": "toast.padding.x",
@@ -4338,7 +4382,11 @@
       "type": "color"
     },
     {
-      "path": "tree.motion.duration",
+      "path": "tree.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "tree.motion.duration.exit",
       "type": "duration"
     },
     {

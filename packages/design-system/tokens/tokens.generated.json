@@ -1111,7 +1111,7 @@
       "path": "motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-motion-easing-exit",
-      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "cssValue": "cubic-bezier(0.4, 0, 1, 1)",
       "ref": null,
       "layer": "core",
       "context": null,
@@ -7529,9 +7529,9 @@
       "description": "Dialog.Root: a modal panel centered over a scrim."
     },
     {
-      "path": "dialog.motion.enter",
+      "path": "dialog.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-dialog-motion-enter",
+      "cssVar": "--todae-dialog-motion-duration-enter",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -7543,11 +7543,39 @@
       "description": "Dialog.Root: a modal panel centered over a scrim."
     },
     {
-      "path": "dialog.motion.exit",
+      "path": "dialog.motion.duration.exit",
       "type": "duration",
-      "cssVar": "--todae-dialog-motion-exit",
+      "cssVar": "--todae-dialog-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-fast)",
       "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Dialog.Root: a modal panel centered over a scrim."
+    },
+    {
+      "path": "dialog.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-dialog-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Dialog.Root: a modal panel centered over a scrim."
+    },
+    {
+      "path": "dialog.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-dialog-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7781,9 +7809,9 @@
       "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
     },
     {
-      "path": "sheet.motion.enter",
+      "path": "sheet.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-sheet-motion-enter",
+      "cssVar": "--todae-sheet-motion-duration-enter",
       "cssValue": "var(--todae-motion-duration-slow)",
       "ref": "motion.duration.slow",
       "layer": "contract",
@@ -7795,9 +7823,9 @@
       "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
     },
     {
-      "path": "sheet.motion.exit",
+      "path": "sheet.motion.duration.exit",
       "type": "duration",
-      "cssVar": "--todae-sheet-motion-exit",
+      "cssVar": "--todae-sheet-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-moderate)",
       "ref": "motion.duration.moderate",
       "layer": "contract",
@@ -7809,11 +7837,39 @@
       "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
     },
     {
-      "path": "sheet.motion.resize",
+      "path": "sheet.motion.duration.resize",
       "type": "duration",
-      "cssVar": "--todae-sheet-motion-resize",
+      "cssVar": "--todae-sheet-motion-duration-resize",
       "cssValue": "var(--todae-motion-duration-slower)",
       "ref": "motion.duration.slower",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
+    },
+    {
+      "path": "sheet.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-sheet-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
+    },
+    {
+      "path": "sheet.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-sheet-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10133,9 +10189,9 @@
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
     },
     {
-      "path": "toast.motion.enter",
+      "path": "toast.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-toast-motion-enter",
+      "cssVar": "--todae-toast-motion-duration-enter",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -10147,11 +10203,39 @@
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
     },
     {
-      "path": "toast.motion.exit",
+      "path": "toast.motion.duration.exit",
       "type": "duration",
-      "cssVar": "--todae-toast-motion-exit",
+      "cssVar": "--todae-toast-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-fast)",
       "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
+    },
+    {
+      "path": "toast.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-toast-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
+    },
+    {
+      "path": "toast.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-toast-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10959,9 +11043,23 @@
       "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
     },
     {
-      "path": "disclosure.motion.duration",
+      "path": "disclosure.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-disclosure-motion-duration",
+      "cssVar": "--todae-disclosure-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
+    },
+    {
+      "path": "disclosure.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-disclosure-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -12401,9 +12499,23 @@
       "description": "DataList.Root and its parts: a list of terms and their details, beside each other or stacked."
     },
     {
-      "path": "message.actions.motion.duration",
+      "path": "message.actions.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-message-actions-motion-duration",
+      "cssVar": "--todae-message-actions-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Message.Root: one chat message, with user and system variants."
+    },
+    {
+      "path": "message.actions.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-message-actions-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -13955,9 +14067,9 @@
       "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
     },
     {
-      "path": "drawer.motion.enter",
+      "path": "drawer.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-drawer-motion-enter",
+      "cssVar": "--todae-drawer-motion-duration-enter",
       "cssValue": "var(--todae-motion-duration-slow)",
       "ref": "motion.duration.slow",
       "layer": "contract",
@@ -13969,11 +14081,39 @@
       "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
     },
     {
-      "path": "drawer.motion.exit",
+      "path": "drawer.motion.duration.exit",
       "type": "duration",
-      "cssVar": "--todae-drawer-motion-exit",
+      "cssVar": "--todae-drawer-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-moderate)",
       "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
+    },
+    {
+      "path": "drawer.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-drawer-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
+    },
+    {
+      "path": "drawer.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-drawer-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15271,9 +15411,23 @@
       "description": "Tree.Root: a hierarchical list with expandable branches and a selected item."
     },
     {
-      "path": "tree.motion.duration",
+      "path": "tree.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-tree-motion-duration",
+      "cssVar": "--todae-tree-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tree.Root: a hierarchical list with expandable branches and a selected item."
+    },
+    {
+      "path": "tree.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-tree-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -15663,9 +15817,23 @@
       "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."
     },
     {
-      "path": "nav.motion.duration",
+      "path": "nav.motion.duration.enter",
       "type": "duration",
-      "cssVar": "--todae-nav-motion-duration",
+      "cssVar": "--todae-nav-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."
+    },
+    {
+      "path": "nav.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-nav-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",

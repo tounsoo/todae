@@ -101,9 +101,9 @@ const pin = () => screen.queryByRole('button', { name: 'Pin' });
 // A slow runner draws few frames in a 200-280ms enter, too few to show the
 // tip following; a one-second enter gives it enough on any runner.
 const slowEnter = {
-  ['--_todae-dialog-motion-enter' as string]: '1s',
-  ['--_todae-drawer-motion-enter' as string]: '1s',
-  ['--_todae-sheet-motion-enter' as string]: '1s',
+  ['--_todae-dialog-motion-duration-enter' as string]: '1s',
+  ['--_todae-drawer-motion-duration-enter' as string]: '1s',
+  ['--_todae-sheet-motion-duration-enter' as string]: '1s',
 };
 
 describe('A tip opened during an overlay enter motion', () => {

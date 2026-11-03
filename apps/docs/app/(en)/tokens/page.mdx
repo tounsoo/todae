@@ -111,6 +111,12 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 }
 ```
 
+## Motion
+
+A component that animates as it opens and closes has four motion tokens: `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter` and `motion.easing.exit`, such as `dialog.motion.duration.enter`. The enter curve slows as it settles, `cubic-bezier(0.2, 0.8, 0.2, 1)`. The exit curve speeds up as it leaves, `cubic-bezier(0.4, 0, 1, 1)`, and an exit is as short as its enter or shorter. Dialog, Drawer, BottomSheet (`sheet`) and Toast point their curves at `overlay.motion.easing.enter` and `overlay.motion.easing.exit`, so changing those two retimes every overlay. Disclosure, Nav, Tree and Message's action row point at the core `motion.easing.enter` and `motion.easing.exit`. Drilldown has one `motion.duration`, since a push and a pop are each one slide, and Loader, Progress and Skeleton have one `motion.duration` for a loop.
+
+When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Some components also skip their fades for now.
+
 ## Descriptions
 
 Todae's semantic and density tokens and each component's token group carry a DTCG `$description` that says what they are for. A token with no description of its own takes the nearest enclosing group's in the same file. The token catalog (`tokens.json`) and the MCP token tools return it as `description`. Describe a token that changes with appearance or density once, in one context's file. A company token package describes its own tokens the same way. Its description of a Todae token, in any context, replaces Todae's; an override with none keeps Todae's.

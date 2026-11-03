@@ -1,4 +1,57 @@
 {
   "version": 1,
-  "removals": []
+  "removals": [
+    {
+      "path": "dialog.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "dialog.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "disclosure.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "drawer.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "drawer.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "message.actions.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "nav.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.resize",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "tree.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    }
+  ]
 }

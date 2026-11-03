@@ -34,7 +34,7 @@ export { matchesHotkey } from '../hooks/hotkey.js';
 const MAX_TIMEOUT_MS = 2_147_483_647; // 2 ** 31 - 1, written out since esbuild keeps `**` in unused code
 
 // Fallback for when the exit transition can't be read from computed style.
-// The real length comes from the toast.motion.exit token.
+// The real length comes from the toast.motion.duration.exit token.
 export const TOAST_EXIT_MS = 160;
 
 export type ToastPlacement = 'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end';

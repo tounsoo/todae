@@ -23,7 +23,10 @@
       "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     },
     "motion": {
-      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } }
+      },
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
         "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
