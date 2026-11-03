@@ -6,6 +6,8 @@ import { Checkbox } from '../components/Checkbox.js';
 import { RadioGroup } from '../components/Radio.js';
 import { Switch } from '../components/Switch.js';
 import { Tabs } from '../components/Tabs.js';
+import { Tooltip } from '../components/Tooltip.js';
+import { useTooltip } from '../hooks/useTooltip.js';
 import { emulateMedia } from '../test/drilldown.js';
 
 afterEach(async () => {
@@ -95,6 +97,34 @@ describe('Tabs indicator motion', () => {
     expect(end.indicator.top + end.indicator.height).toBeGreaterThan(end.tab.bottom);
   });
 
+  it('stays under a selected tab that also triggers a tooltip', async () => {
+    function TipTabs() {
+      const tip = useTooltip();
+      return (
+        <Tabs.Root defaultValue="b">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab value="a">Alpha</Tabs.Tab>
+            <Tabs.Tab {...tip.getTriggerProps()} value="b">
+              A much longer tab
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tooltip.Root {...tip.getTooltipProps()}>More</Tooltip.Root>
+          <Tabs.Panel value="a">Alpha panel</Tabs.Panel>
+          <Tabs.Panel value="b">Beta panel</Tabs.Panel>
+        </Tabs.Root>
+      );
+    }
+    render(
+      <Themed>
+        <TipTabs />
+      </Themed>,
+    );
+    const now = indicatorAndSelectedTabRects();
+    expect(now.indicator.width).toBeGreaterThan(0);
+    expect(now.indicator.left).toBeCloseTo(now.tab.left, 0);
+    expect(now.indicator.width).toBeCloseTo(now.tab.width, 0);
+  });
+
   it('runs along the inline end of a vertical list', async () => {
     render(
       <Themed>
@@ -163,27 +193,59 @@ describe('Switch, Checkbox and Radio motion', () => {
     expect(now).not.toContain('transform');
   });
 
-  it('grows the check in, and only fades it under reduced motion', async () => {
+  it('grows the check in and hides it at once', async () => {
     render(
       <Themed>
         <Checkbox.Root>Updates</Checkbox.Root>
       </Themed>,
     );
     const box = screen.getByRole('checkbox');
+    const glyph = box.nextElementSibling!.querySelector('[data-todae-glyph]')!;
     await userEvent.click(box);
     await frame();
-    expect(runningTransitionProperties(box.nextElementSibling!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
-    await settle(box.nextElementSibling!);
-    const glyph = box.nextElementSibling!.querySelector('[data-todae-glyph]')!;
+    expect(runningTransitionProperties(glyph)).toEqual(expect.arrayContaining(['opacity', 'scale']));
+    await settle(glyph);
     expect(getComputedStyle(glyph).opacity).toBe('1');
     expect(getComputedStyle(glyph).visibility).toBe('visible');
 
-    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await userEvent.click(box);
     await frame();
-    expect(runningTransitionProperties(box.nextElementSibling!)).not.toContain('scale');
-    await settle(box.nextElementSibling!);
+    expect(runningTransitionProperties(glyph)).toEqual([]);
     expect(getComputedStyle(glyph).visibility).toBe('hidden');
+  });
+
+  it('shows no check while a mixed box unchecks', async () => {
+    const { rerender } = render(
+      <Themed>
+        <Checkbox.Root checked={false} indeterminate onCheckedChange={() => undefined}>
+          All
+        </Checkbox.Root>
+      </Themed>,
+    );
+    rerender(
+      <Themed>
+        <Checkbox.Root checked={false} onCheckedChange={() => undefined}>
+          All
+        </Checkbox.Root>
+      </Themed>,
+    );
+    await frame();
+    expect(getComputedStyle(screen.getByRole('checkbox').nextElementSibling!.querySelector('[data-todae-glyph]')!).visibility).toBe('hidden');
+  });
+
+  it('only fades the check in under reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    render(
+      <Themed>
+        <Checkbox.Root>Updates</Checkbox.Root>
+      </Themed>,
+    );
+    const box = screen.getByRole('checkbox');
+    const glyph = box.nextElementSibling!.querySelector('[data-todae-glyph]')!;
+    await userEvent.click(box);
+    await frame();
+    expect(runningTransitionProperties(glyph)).toEqual(['opacity']);
+    expect(getComputedStyle(glyph).scale).toBe('1');
   });
 
   it('grows the radio dot in, and only fades it under reduced motion', async () => {
@@ -209,5 +271,8 @@ describe('Switch, Checkbox and Radio motion', () => {
     const now = runningTransitionProperties(pro.nextElementSibling!);
     expect(now).toContain('opacity');
     expect(now).not.toContain('scale');
+    // The dot leaving the other radio fades at full size.
+    expect(runningTransitionProperties(free.nextElementSibling!)).toContain('opacity');
+    expect(getComputedStyle(free.nextElementSibling!, '::after').scale).toBe('1');
   });
 });

@@ -87,10 +87,6 @@
       anchor-scope: --todae-tab-selected;
     }
 
-    .tab[data-selected] {
-      anchor-name: --todae-tab-selected;
-    }
-
     .tab[data-selected]::after {
       content: none;
     }

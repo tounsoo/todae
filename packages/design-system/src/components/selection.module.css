@@ -90,9 +90,6 @@
     line-height: 1;
     visibility: hidden;
     opacity: 0;
-    transition-property: opacity, scale, visibility;
-    transition-duration: var(--todae-selection-motion-duration);
-    transition-timing-function: var(--todae-selection-motion-easing);
   }
 
   .glyph > :is(svg, img) {
@@ -108,6 +105,15 @@
   .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
     opacity: 1;
+  }
+
+  /* Only showing animates: a mixed box that unchecks swaps its dash for the
+     check in the same render, so a fade out would flash the check. */
+  .input:checked + .indicator > .glyph,
+  .root[data-indeterminate] .indicator > .glyph {
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
   }
 
   .indicator > [data-todae-glyph] {
@@ -161,9 +167,13 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .glyph,
+    .indicator > [data-todae-glyph] {
+      scale: 1;
+    }
+
     .root[data-control='radio'] .indicator::after {
-      transition-property: opacity, visibility;
+      scale: 1;
+      transition-property: opacity;
     }
 
     .root[data-control='switch'] .indicator::after {

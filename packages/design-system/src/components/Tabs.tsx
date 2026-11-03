@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { domSafe, useDomId } from '../internal/domId.js';
@@ -85,6 +86,11 @@ function useTabs(part: string): TabsContextValue {
   if (!ctx) throw new Error(`Tabs.${part} must render inside Tabs.Root`);
   return ctx;
 }
+
+// The list's indicator anchors to the selected tab. The name goes in the inline
+// style, merged with any other, since an overlay trigger's inline anchor-name
+// would hide one set by the stylesheet.
+const SELECTED_TAB_ANCHOR = '--todae-tab-selected';
 
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${domSafe(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${domSafe(value)}`;
@@ -201,6 +207,7 @@ function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, o
       data-selected={selected ? '' : undefined}
       data-orientation={ctx.orientation}
       className={cx(styles.tab, className)}
+      style={selected ? { ...item.style, anchorName: mergeAnchorNames(item.style?.anchorName, SELECTED_TAB_ANCHOR) } : item.style}
       onPointerDown={composeHandlers(onPointerDown, () => {
         pressing.current = true;
         selectedOnFocus.current = false;
