@@ -62,9 +62,18 @@ describe('docs examples', () => {
     expect(() => render('<Example of={tones[0]} />\n')).toThrow(/takes the name of an imported example/);
   });
 
+  it('refuses an example inside other elements, lists or a line of text', () => {
+    const imported = "import TextTones from '../../../examples/text/TextTones';\n\n";
+    for (const body of ['- <Example of={TextTones} />\n', '> <Example of={TextTones} />\n', '<Columns>\n  <Example of={TextTones} />\n</Columns>\n', 'See <Example of={TextTones} /> here.\n']) {
+      expect(() => render(imported + body), body).toThrow(/on a line of its own at the top level/);
+    }
+  });
+
   it('names the locale of a page by its folder', () => {
     expect(pageLocale(EN_PAGE)).toBe('en');
     expect(pageLocale(KO_PAGE)).toBe('ko');
+    expect(pageLocale(join(APP, '(en)', 'recipes', 'app', 'page.mdx'))).toBe('en');
+    expect(() => pageLocale(join(process.cwd(), 'content', 'page.mdx'))).toThrow(/not a page under apps\/docs\/app/);
   });
 
   it('rebuilds a page when an example file it imports changes', () => {
@@ -72,6 +81,15 @@ describe('docs examples', () => {
     const text = "import TextTones from '../../../examples/text/TextTones';\nimport { Text } from '@tounsoo/todae/text';\n";
     expect(exampleDependencyLoader.call({ resourcePath: EN_PAGE, addDependency: (file: string) => added.push(file) }, text)).toBe(text);
     expect(added).toEqual([TONES]);
+    for (const line of [
+      'import TextTones from "../../../examples/text/TextTones";',
+      "import TextTones from '../../../examples/text/TextTones'",
+      "import TextTones, { x } from '../../../examples/text/TextTones';",
+    ]) {
+      const found: string[] = [];
+      exampleDependencyLoader.call({ resourcePath: EN_PAGE, addDependency: (file: string) => found.push(file) }, line);
+      expect(found, line).toEqual([TONES]);
+    }
   });
 
   it('gives tools that read the MDX the code a reader sees', () => {
@@ -93,6 +111,18 @@ describe('docs examples', () => {
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
     expect(files.length).toBeGreaterThan(100);
     expect(files.filter((file) => !shown.get(file)?.has('(en)') || !shown.get(file)?.has('ko'))).toEqual([]);
+  });
+
+  it('uses no class name that only the docs stylesheet defines', () => {
+    const docsCss = readFileSync(join(APP, 'globals.css'), 'utf8');
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const docsOnly = files.flatMap((file) =>
+      [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/className=["']([^"']+)["']/g)]
+        .flatMap((match) => match[1]!.split(/\s+/))
+        .filter((name) => new RegExp(`\\.${name}\\b`).test(docsCss))
+        .map((name) => `${file}: ${name}`),
+    );
+    expect(docsOnly).toEqual([]);
   });
 
   it('imports only what a product has: the package, React and icon libraries', () => {

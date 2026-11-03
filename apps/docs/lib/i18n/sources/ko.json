@@ -909,7 +909,7 @@
   "text": {
     "(top)": "84bfb563a515",
     "# Text": "28c8b5892561",
-    "## Headings": "304ce18c60eb",
+    "## Headings": "b1cbeabcd0bc",
     "## Label": "fe63cd5d460f",
     "## Lines": "3ce5ebb3c4d1",
     "## Accessible composition": "93f34a323d7b",
@@ -1105,7 +1105,7 @@
   },
   "utilities/use-highlight": {
     "(top)": "42a7d18814e7",
-    "# useHighlight": "eddb23588ab8",
+    "# useHighlight": "832293813cf2",
     "## Accessible composition": "75acde477e72",
     "## When to use": "4b2cc31bf020",
     "## Props": "79050128b65f",

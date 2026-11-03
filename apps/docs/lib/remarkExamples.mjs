@@ -6,11 +6,13 @@ import { exampleSource } from './exampleSource.mjs';
 
 // The docs app's folder, as the other page tools take it, since the MCP route runs bundled.
 export const EXAMPLES_DIR = resolve(process.cwd(), 'examples') + sep;
+const APP_DIR = resolve(process.cwd(), 'app') + sep;
 
 /** The locale of a page file under `app/`: `(en)` is English, any other first folder names its locale. */
 export function pageLocale(path) {
-  const parts = path.split(sep);
-  const folder = parts[parts.lastIndexOf('app') + 1];
+  const file = resolve(path);
+  const folder = file.startsWith(APP_DIR) ? file.slice(APP_DIR.length).split(sep)[0] : '';
+  if (!folder || folder === 'page.mdx') throw new Error(`${path} is not a page under apps/docs/app, so it has no locale`);
   return folder === '(en)' ? 'en' : folder;
 }
 
@@ -41,8 +43,8 @@ export function exampleFile(pagePath, imports, name) {
 
 /** The example files a page's import lines name, for the loader that rebuilds the page when one changes. */
 export function exampleImports(pagePath, text) {
-  return [...text.matchAll(/^import\s+\w+\s+from\s+'([^']+)';/gm)]
-    .map((match) => resolve(dirname(pagePath), match[1].endsWith('.tsx') ? match[1] : `${match[1]}.tsx`))
+  return [...text.matchAll(/^import\s[^'"]*?\sfrom\s*(['"])([^'"]+)\1/gm)]
+    .map((match) => resolve(dirname(pagePath), match[2].endsWith('.tsx') ? match[2] : `${match[2]}.tsx`))
     .filter((file) => file.startsWith(EXAMPLES_DIR) && existsSync(file));
 }
 
@@ -56,11 +58,10 @@ export default function remarkExamples() {
   return (tree, file) => {
     if (!file.path) return;
     const imports = defaultImports(tree);
-    const locale = pageLocale(file.path);
     const visit = (parent) => {
       parent.children = (parent.children ?? []).flatMap((node) => {
         const of =
-          node.type === 'mdxJsxFlowElement' && node.name === 'Example'
+          (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Example'
             ? node.attributes.find((attribute) => attribute.type === 'mdxJsxAttribute' && attribute.name === 'of')
             : undefined;
         if (!of) {
@@ -69,7 +70,10 @@ export default function remarkExamples() {
         }
         const name = typeof of.value === 'object' ? of.value?.value.trim() : undefined;
         if (!name || !/^[A-Z]\w*$/.test(name)) throw new Error('<Example of={…}> takes the name of an imported example, such as of={FieldDatePicked}');
+        // Tools that read the MDX put the code above the element, which only works at the top level.
+        if (node.type !== 'mdxJsxFlowElement' || parent.type !== 'root') throw new Error(`<Example of={${name}}> goes on a line of its own at the top level of the page, outside other elements and lists`);
         if (node.children.length > 0) throw new Error(`<Example of={${name}}> renders its example itself, so it takes no children`);
+        const locale = pageLocale(file.path);
         const code = exampleSource(readFileSync(exampleFile(file.path, imports, name), 'utf8'));
         const example = {
           ...node,

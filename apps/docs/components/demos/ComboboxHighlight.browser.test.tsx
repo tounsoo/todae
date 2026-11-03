@@ -16,6 +16,6 @@ it('highlights the typed text in every matching option', async () => {
   await userEvent.click(screen.getByRole('combobox'));
   await userEvent.keyboard('san');
   await expect
-    .poll(() => [...(CSS.highlights.get('docs-combobox-match') ?? [])].map(String))
+    .poll(() => [...(CSS.highlights.get('search') ?? [])].map(String))
     .toEqual(['San', 'San', 'San']);
 });

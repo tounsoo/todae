@@ -17,7 +17,8 @@ function Stars({ value, onChange }: { value: number; onChange: (value: number) =
       aria-valuemax={5}
       aria-valuenow={value}
       aria-valuetext={`${value} of 5 stars`}
-      className="demo-stars"
+      // Field.Root's frame draws the focus ring, so the control draws none.
+      style={{ letterSpacing: '0.1em', outline: 'none' }}
       onKeyDown={(event) => {
         if (disabled) return;
         if (event.key === 'ArrowRight' || event.key === 'ArrowUp') step(1);

@@ -27,7 +27,7 @@ function optionNodes(
 
 export default function ComboboxHighlight() {
   const cb = useCombobox({ options: CITIES, presentation: 'popover' });
-  const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
+  const found = useHighlight({ name: 'search', query: cb.query });
   return (
     <>
       <Field.Group>
