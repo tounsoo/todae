@@ -85,6 +85,9 @@ describe('name schema', () => {
       { rule: 'state', path: 'chip.bg.muted.size', word: 'muted' },
     ]);
     expect(hint({ rule: 'state', path: 'chip.bg.muted.size', word: 'muted' }, declared)).toContain('the rest of chip.bg\'s states');
+    expect(hint({ rule: 'depth', path: 'chip.bg.hover.extra' }, declared)).toBe(
+      'chip.bg.hover.extra: a name ends at its state, and "hover" follows chip.bg. Move what comes after it before the property (e.g. tabs.selected.bg.hover), or fold it into one word.',
+    );
   });
 
   it('accepts the words a component lists in its slot for that property, and only there', () => {

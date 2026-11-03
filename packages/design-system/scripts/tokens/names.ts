@@ -260,6 +260,10 @@ export function hint(violation: Violation, schema: Schema): string {
     return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
   }
   if (violation.rule === 'depth') {
+    const state = stateOf(violation.path.split('.'), schema);
+    if (state && !state.last) {
+      return `${violation.path}: a name ends at its state, and "${state.word}" follows ${state.group}. Move what comes after it before the property (e.g. tabs.selected.bg.hover), or fold it into one word.`;
+    }
     return `${violation.path}: too deep. Names are a component, up to three parts, the property and an optional state; fold an extra segment into a part or the property (e.g. text.h3-font.size).`;
   }
   return `${violation.path} (${violation.cssVar}): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don't add it.`;
