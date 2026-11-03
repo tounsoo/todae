@@ -3177,7 +3177,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -3191,7 +3191,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.popover.padding",
@@ -3429,7 +3429,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -3443,7 +3443,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.popover.padding",
@@ -3681,7 +3681,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -3695,7 +3695,7 @@
         "kind": "modifier",
         "name": "density"
       },
-      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers and cards; changes with density."
     },
     {
       "path": "space.popover.padding",

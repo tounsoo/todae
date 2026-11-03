@@ -3586,6 +3586,10 @@
       "type": "dimension"
     },
     {
+      "path": "space.popover.padding",
+      "type": "dimension"
+    },
+    {
       "path": "space.prose.gap",
       "type": "dimension"
     },
