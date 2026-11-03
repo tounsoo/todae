@@ -2,5 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm build:ds && pnpm --filter docs build"
+  "buildCommand": "cd ../.. && pnpm build:ds && pnpm --filter docs build",
+  "ignoreCommand": "printf '%s\\n' \"$VERCEL_GIT_COMMIT_REF\" | grep -q '^changesets-ghcommit-temp/'"
 }

@@ -180,7 +180,7 @@ npm deprecate @tounsoo/todae@0.0.0-stage "Placeholder for staged publishing. Do 
 
 ## Deploy the docs
 
-The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app.
+The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app. Its `ignoreCommand` skips the build only for the changesets action's temporary `changesets-ghcommit-temp/` branches; every other branch, `main` and `docs-stable` included, builds.
 
 The production branch is `docs-stable`, so `todae.omsoo.design` and its MCP server match the latest release on npm. The docs job in `release.yml` runs on every push to `main` and moves `docs-stable` forward, never back: to that commit when its package version is on npm and no changeset that releases something is waiting, otherwise to the commit tagged with the latest version on npm. The first run creates the branch, so set Vercel's production branch to `docs-stable` only after it exists. It waits behind a release that waits for approval in the `npm` environment. If the job fails, re-run it; after a publish it fails when npm still doesn't serve the new version five minutes later. To see unreleased docs, open the Vercel preview of a pull request or of `main`.
 
