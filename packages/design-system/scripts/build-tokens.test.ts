@@ -1008,9 +1008,19 @@ describe('resolver-driven build', () => {
 
   it('rejects a token declared by two resolution entries', async () => {
     const root = await fixture((resolver) => {
+      resolver.sets.extra = {
+        sources: [{ $ref: './components/stack.json' }],
+        $extensions: { 'dev.todae': { layer: 'contract' } },
+      };
+      (resolver.resolutionOrder as unknown[]).push({ $ref: '#/sets/extra' });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/token "stack\.[a-z.-]+" is declared by both set "contract" and set "extra"/);
+    const focus = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/focus.json' });
     });
-    await expect(buildTokensGraph(root)).rejects.toThrow(/token "focus\.[a-z.-]+" is declared by both set "focus" and set "contract"/);
+    await expect(buildTokensGraph(focus)).rejects.toThrow(
+      /set "contract" token "focus\.ring\.[a-z-]+" is under "focus\.ring", which set "focus" closes with slot group "focus\.ring"; declare it there/,
+    );
     const base = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
@@ -1994,13 +2004,13 @@ describe('token name ratchet', () => {
       { cwd: join(import.meta.dirname, '..'), encoding: 'utf8' },
     );
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
-    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
+    expect(stdout).toContain('names: 7 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 
   it('passes on the repo and skips the shrink check when the base commit has no list', async () => {
     const stdout = await capture(() => buildPackageTokens({ check: true, base: 'adc3772c3c509663e7103900b67dd80e323978d3' }));
     expect(stdout).toContain('no grandfather list at base; skipping shrink check');
-    expect(stdout).toContain('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
+    expect(stdout).toContain('names: 7 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 
   it('throws the state hint after a fixture token is renamed to .selected', async () => {
@@ -2018,7 +2028,7 @@ describe('token name ratchet', () => {
     await writeFile(sheet, css.replaceAll('--todae-tabs-bg-hover', '--todae-tabs-bg-selected'));
     await buildTokens({ root });
     const hint =
-      'tabs.bg.selected: unknown state "selected". States are default, hover, active, pressed, focus, disabled. Rename to one of them, or if "selected" is a variant, move it before the property (e.g. option.selected.bg).';
+      'tabs.bg.selected: unknown state "selected". Every stateful property takes default, hover, active, pressed, focus, disabled. For a state of this component, list "selected" with the rest of tabs.bg\'s states in its slots in tokens/resolver.json; if "selected" is a variant, move it before the property (e.g. option.selected.bg).';
     let message = '';
     try {
       await buildPackageTokens({ check: true, root });

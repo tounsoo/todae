@@ -129,7 +129,8 @@ function collectGroups(paths: Iterable<string>): Map<string, Set<string>> {
   return groups;
 }
 
-function matchesGroup(pattern: string, group: string): boolean {
+/** A slot pattern matches a group of the same depth; `*` matches any one segment. */
+export function matchesGroup(pattern: string, group: string): boolean {
   const want = pattern.split('.');
   const have = group.split('.');
   return want.length === have.length && want.every((segment, i) => segment === '*' || segment === have[i]);

@@ -17,10 +17,11 @@ import {
   staleLine,
   tallyLine,
   type Grandfather,
+  type Schema,
 } from './tokens/names.ts';
 import { fail } from './tokens/shared.ts';
 
-type PreparedNames = { found: ReturnType<typeof collectViolations>; list: Grandfather | null };
+type PreparedNames = { found: ReturnType<typeof collectViolations>; list: Grandfather | null; schema: Schema };
 
 function errorText(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'stderr' in error && typeof error.stderr === 'string' && error.stderr.trim()) {
@@ -89,18 +90,18 @@ async function readText(file: string): Promise<string | null> {
   }
 }
 
-async function prepareNames(pkgRoot: string, catalogJson: string): Promise<PreparedNames> {
+async function prepareNames(pkgRoot: string, result: BuildTokensResult): Promise<PreparedNames> {
   const schemaText = await readText(join(pkgRoot, 'tokens', 'name-schema.json'));
   if (schemaText === null) fail('tokens/name-schema.json is missing');
-  const snapshot = parseSnapshot(JSON.parse(catalogJson) as unknown);
-  const schema = parseSchema(JSON.parse(schemaText) as unknown);
+  const snapshot = parseSnapshot(JSON.parse(result.json) as unknown);
+  const schema = parseSchema(JSON.parse(schemaText) as unknown, result.slots);
   const found = collectViolations(snapshot, schema, await loadConsumerFiles(pkgRoot));
   const listText = await readText(join(pkgRoot, 'tokens', 'name-grandfather.json'));
-  return { found, list: listText === null ? null : parseGrandfather(JSON.parse(listText) as unknown) };
+  return { found, schema, list: listText === null ? null : parseGrandfather(JSON.parse(listText) as unknown) };
 }
 
-async function writeGrandfatherList(pkgRoot: string, catalogJson: string): Promise<void> {
-  const { found, list } = await prepareNames(pkgRoot, catalogJson);
+async function writeGrandfatherList(pkgRoot: string, built: BuildTokensResult): Promise<void> {
+  const { found, list } = await prepareNames(pkgRoot, built);
   const formatted = formatGrandfather(found);
   if (list) {
     const next = parseGrandfather(JSON.parse(formatted) as unknown);
@@ -128,14 +129,14 @@ function baseGrandfather(pkgRoot: string, sha: string): Grandfather | null {
   }
 }
 
-async function enforceNameRatchet(pkgRoot: string, catalogJson: string, base: string | undefined): Promise<void> {
-  const { found, list } = await prepareNames(pkgRoot, catalogJson);
+async function enforceNameRatchet(pkgRoot: string, built: BuildTokensResult, base: string | undefined): Promise<void> {
+  const { found, list, schema } = await prepareNames(pkgRoot, built);
   if (!list) fail('tokens/name-grandfather.json is missing. Run pnpm tokens:grandfather.');
   const baseList = base === undefined ? undefined : baseGrandfather(pkgRoot, base);
   const result = ratchet({ found, list, ...(base === undefined ? {} : { base: baseList ?? 'missing' }) });
   if (result.note) process.stdout.write(`${result.note}\n`);
   const messages = [
-    ...result.unlisted.map((violation) => hint(violation)),
+    ...result.unlisted.map((violation) => hint(violation, schema)),
     ...result.stale.map((violation) => staleLine(violation)),
     ...result.added.map((violation) => addedLine(violation)),
   ];
@@ -149,11 +150,11 @@ export async function buildPackageTokens(
   const pkgRoot = options.root ?? join(import.meta.dirname, '..');
   if (options.writeGrandfather === true && options.check !== true) {
     const result = await buildTokensGraph(join(pkgRoot, 'tokens'));
-    await writeGrandfatherList(pkgRoot, result.json);
+    await writeGrandfatherList(pkgRoot, result);
     return result;
   }
   const result = await buildTokens({ check: true, root: pkgRoot });
-  await enforceNameRatchet(pkgRoot, result.json, options.base);
+  await enforceNameRatchet(pkgRoot, result, options.base);
   return result;
 }
 

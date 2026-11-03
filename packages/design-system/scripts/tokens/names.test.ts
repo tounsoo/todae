@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { buildTokensGraph } from './build.ts';
 import { cssVarOf, parseSnapshot, type ConsumerFile, type Snapshot } from './consumers.ts';
 import {
   addedLine,
@@ -21,12 +22,15 @@ import {
 
 const pkgRoot = join(import.meta.dirname, '../..');
 
-function schema(): Schema {
-  return parseSchema({
-    version: 1,
-    states: ['default', 'hover', 'active', 'pressed', 'focus', 'disabled'],
-    statefulProperties: ['bg', 'border', 'color', 'decoration', 'fg', 'leading', 'ring', 'shadow'],
-  });
+function schema(slots: Record<string, string[]> = {}): Schema {
+  return parseSchema(
+    {
+      version: 1,
+      states: ['default', 'hover', 'active', 'pressed', 'focus', 'disabled'],
+      statefulProperties: ['bg', 'border', 'color', 'decoration', 'fg', 'leading', 'ring', 'shadow'],
+    },
+    slots,
+  );
 }
 
 function snap(rows: { path: string; cssValue: string; layer?: 'core' | 'appearance' | 'density' | 'contract'; alias?: string }[]): Snapshot {
@@ -57,13 +61,27 @@ describe('name schema', () => {
     expect(nameViolations('button.icon.size', rules)).toEqual([]);
   });
 
-  it('flags an unknown state, a name that is too deep, and a name that is both', () => {
+  it('accepts two parts before the property and flags a third', () => {
+    expect(nameViolations('text.h3.font.size', rules)).toEqual([]);
+    expect(nameViolations('form.summary.link.fg.hover', rules)).toEqual([]);
+    expect(nameViolations('steps.marker.progress.dot.size', rules)).toEqual([{ rule: 'depth', path: 'steps.marker.progress.dot.size' }]);
+  });
+
+  it('flags a state no slot declares, and a name that is too deep as well', () => {
     expect(nameViolations('button.bg.selected', rules)).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
-    expect(nameViolations('text.h3.font.size', rules)).toEqual([{ rule: 'depth', path: 'text.h3.font.size' }]);
-    expect(nameViolations('table.sort.icon.fg.selected', rules)).toEqual([
-      { rule: 'depth', path: 'table.sort.icon.fg.selected' },
-      { rule: 'state', path: 'table.sort.icon.fg.selected', word: 'selected' },
+    expect(nameViolations('table.sort.cell.icon.fg.selected', rules)).toEqual([
+      { rule: 'depth', path: 'table.sort.cell.icon.fg.selected' },
+      { rule: 'state', path: 'table.sort.cell.icon.fg.selected', word: 'selected' },
     ]);
+  });
+
+  it('accepts the words a component lists in its slot for that property, and only there', () => {
+    const declared = schema({ 'option.bg': ['default', 'selected'], 'button.*.fg': ['default', 'current'] });
+    expect(nameViolations('option.bg.selected', declared)).toEqual([]);
+    expect(nameViolations('table.sort.icon.fg.selected', schema({ 'table.sort.icon.fg': ['default', 'selected'] }))).toEqual([]);
+    expect(nameViolations('button.primary.fg.current', declared)).toEqual([]);
+    expect(nameViolations('option.fg.selected', declared)).toEqual([{ rule: 'state', path: 'option.fg.selected', word: 'selected' }]);
+    expect(nameViolations('tree.bg.selected', declared)).toEqual([{ rule: 'state', path: 'tree.bg.selected', word: 'selected' }]);
   });
 
   it('does not name-check core, appearance, or density paths', () => {
@@ -77,8 +95,11 @@ describe('name schema', () => {
     expect(names).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
   });
 
-  it('rejects a state outside the six', () => {
-    expect(() => parseSchema({ version: 1, states: ['selected'], statefulProperties: ['bg'] })).toThrow(/selected/);
+  it('takes its shared states from the schema file, not a fixed list', () => {
+    const custom = parseSchema({ version: 1, states: ['default', 'selected'], statefulProperties: ['bg'] });
+    expect(nameViolations('option.bg.selected', custom)).toEqual([]);
+    expect(nameViolations('option.bg.hover', custom)).toEqual([{ rule: 'state', path: 'option.bg.hover', word: 'hover' }]);
+    expect(() => parseSchema({ version: 1, states: ['Selected'], statefulProperties: ['bg'] })).toThrow(/Selected/);
   });
 });
 
@@ -118,25 +139,25 @@ describe('dead tokens', () => {
 });
 
 describe('grandfather ratchet', () => {
-  const depth: Violation = { rule: 'depth', path: 'text.h3.font.size' };
+  const depth: Violation = { rule: 'depth', path: 'steps.marker.progress.dot.size' };
   const state: Violation = { rule: 'state', path: 'option.bg.selected', word: 'selected' };
 
   it('fails an unlisted name with the hint, a fixed name with the remove line, and a new entry against the base', () => {
     const unlisted = ratchet({ found: [state], list: parseGrandfather({ version: 1, entries: [] }) });
     expect(unlisted.unlisted).toEqual([state]);
-    expect(hint(state)).toBe(
-      'option.bg.selected: unknown state "selected". States are default, hover, active, pressed, focus, disabled. Rename to one of them, or if "selected" is a variant, move it before the property (e.g. option.selected.bg).',
+    expect(hint(state, schema())).toBe(
+      'option.bg.selected: unknown state "selected". Every stateful property takes default, hover, active, pressed, focus, disabled. For a state of this component, list "selected" with the rest of option.bg\'s states in its slots in tokens/resolver.json; if "selected" is a variant, move it before the property (e.g. option.selected.bg).',
     );
     const stale = ratchet({ found: [], list: parseGrandfather({ version: 1, entries: [depth] }) });
     expect(stale.stale).toEqual([depth]);
-    expect(staleLine(depth)).toBe('grandfathered name text.h3.font.size (depth) is fixed; remove it from tokens/name-grandfather.json');
+    expect(staleLine(depth)).toBe('grandfathered name steps.marker.progress.dot.size (depth) is fixed; remove it from tokens/name-grandfather.json');
     const added = ratchet({
       found: [depth],
       list: parseGrandfather({ version: 1, entries: [depth] }),
       base: parseGrandfather({ version: 1, entries: [] }),
     });
     expect(added.added).toEqual([depth]);
-    expect(addedLine(depth)).toBe('grandfather list can only shrink; text.h3.font.size (depth) is new. Fix the name instead (see hint)');
+    expect(addedLine(depth)).toBe('grandfather list can only shrink; steps.marker.progress.dot.size (depth) is new. Fix the name instead (see hint)');
   });
 
   it('skips the shrink check when the base list is missing and when no base was passed', () => {
@@ -171,22 +192,24 @@ describe('grandfather ratchet', () => {
   });
 
   it('uses the hint for each rule', () => {
-    expect(hint({ rule: 'state', path: 'button.bg.selected', word: 'selected' })).toBe(
-      'button.bg.selected: unknown state "selected". States are default, hover, active, pressed, focus, disabled. Rename to one of them, or if "selected" is a variant, move it before the property (e.g. option.selected.bg).',
+    const states = parseSchema({ version: 1, states: ['default', 'selected'], statefulProperties: ['bg'] });
+    expect(hint({ rule: 'state', path: 'button.bg.current', word: 'current' }, states)).toBe(
+      'button.bg.current: unknown state "current". Every stateful property takes default, selected. For a state of this component, list "current" with the rest of button.bg\'s states in its slots in tokens/resolver.json; if "current" is a variant, move it before the property (e.g. option.selected.bg).',
     );
-    expect(hint({ rule: 'depth', path: 'text.h3.font.size' })).toBe(
-      'text.h3.font.size: too deep. Names are component.(part.)property(.state); fold the extra segment into the part or property (e.g. text.h3-font.size).',
+    expect(hint({ rule: 'depth', path: 'steps.marker.progress.dot.size' }, states)).toBe(
+      'steps.marker.progress.dot.size: too deep. Names are component.(part.(part.))property(.state); fold an extra segment into a part or the property (e.g. text.h3-font.size).',
     );
-    expect(hint({ rule: 'dead', path: 'color.accent.soft', cssVar: cssVarOf('--todae-color-accent-soft') })).toBe(
+    expect(hint({ rule: 'dead', path: 'color.accent.soft', cssVar: cssVarOf('--todae-color-accent-soft') }, states)).toBe(
       'color.accent.soft (--todae-color-accent-soft): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don\'t add it.',
     );
   });
 });
 
 describe('main baseline', () => {
-  it('matches the grandfathered name and dead counts on this repo', () => {
-    const snapshot = parseSnapshot(JSON.parse(readFileSync(join(pkgRoot, 'tokens/tokens.generated.json'), 'utf8')) as unknown);
-    const rules = parseSchema(JSON.parse(readFileSync(join(pkgRoot, 'tokens/name-schema.json'), 'utf8')) as unknown);
+  it('matches the grandfathered name and dead counts on this repo', async () => {
+    const graph = await buildTokensGraph(join(pkgRoot, 'tokens'));
+    const snapshot = parseSnapshot(JSON.parse(graph.json) as unknown);
+    const rules = parseSchema(JSON.parse(readFileSync(join(pkgRoot, 'tokens/name-schema.json'), 'utf8')) as unknown, graph.slots);
     const listed = execFileSync('git', ['ls-files', '-z', '--', 'src'], { cwd: pkgRoot, encoding: 'utf8' })
       .split('\0')
       .filter((path) => isConsumerPath(path));
@@ -195,9 +218,16 @@ describe('main baseline', () => {
     const names = found.filter((violation) => violation.rule !== 'dead');
     const dead = found.filter((violation) => violation.rule === 'dead');
     const contract = new Set([...snapshot.values()].filter((row) => row.layer === 'contract').map((row) => row.path));
-    expect(names.filter((violation) => violation.rule === 'depth')).toHaveLength(167);
-    expect(names.filter((violation) => violation.rule === 'state')).toHaveLength(61);
-    expect(new Set(names.map((violation) => violation.path)).size).toBe(197);
+    expect(names.filter((violation) => violation.rule === 'state')).toEqual([]);
+    expect(names.map((violation) => violation.path)).toEqual([
+      'form.summary.title.font.weight',
+      'message.actions.motion.easing.enter',
+      'message.actions.motion.easing.exit',
+      'nav.group.label.font.size',
+      'nav.group.label.font.weight',
+      'steps.marker.progress.dot.color',
+      'steps.marker.progress.dot.size',
+    ]);
     expect(dead.map((violation) => violation.path)).toEqual([
       'color.bg.canvas',
       'color.gray.50',
@@ -210,7 +240,7 @@ describe('main baseline', () => {
     const result = ratchet({ found, list });
     expect(result.unlisted).toEqual([]);
     expect(result.stale).toEqual([]);
-    expect(list.size).toBe(233);
-    expect(tallyLine(found, result.unlisted)).toBe('names: 197 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
+    expect(list.size).toBe(12);
+    expect(tallyLine(found, result.unlisted)).toBe('names: 7 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
   });
 });

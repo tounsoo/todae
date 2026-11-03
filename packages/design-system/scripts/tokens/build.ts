@@ -10,7 +10,7 @@ import { loadResolver, mergeEntries, resolveEntries } from './resolver.ts';
 import { validateEntries } from './rules.ts';
 import { parseScope } from './scope.ts';
 import { aliasGroups, emitCatalog, emitOverrideKeys, settleDescriptions } from './serialize.ts';
-import { entryTokens, fail, type EntryToken } from './shared.ts';
+import { entryTokens, fail, type EntryToken, type SlotRules } from './shared.ts';
 
 export type BuildTokensResult = {
   css: string;
@@ -19,6 +19,8 @@ export type BuildTokensResult = {
   api: string;
   overrideKeys: string;
   tokens: EntryToken[];
+  /** The contract layer's slot rules, where components declare their own state words. */
+  slots: SlotRules;
 };
 
 export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
@@ -32,6 +34,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     api: formatTokenApiSnapshot(tokenApiSnapshot(all)),
     overrideKeys: emitOverrideKeys(all, pairs),
     tokens: all,
+    slots: Object.assign({}, ...entries.filter((entry) => entry.extension.layer === 'contract').map((entry) => entry.extension.slots ?? {})),
   };
 }
 
