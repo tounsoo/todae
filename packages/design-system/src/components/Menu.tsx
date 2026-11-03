@@ -514,7 +514,9 @@ function Content({
   useLayoutEffect(() => {
     if (fading) return whenExited(localRef.current, 'opacity', () => setFading(false));
   }, [fading]);
-  const at = ctx.context ?? (fading ? kept : null);
+  // A request that comes while it fades, and that its owner turns down, does
+  // not move it.
+  const at = !open && fading ? kept : ctx.context;
   // A context request that comes while the menu is already open shows its box
   // after the menu, which can only anchor to what is earlier in the top
   // layer, so the menu is shown again in front of it, keeping focus.
@@ -584,7 +586,7 @@ function Content({
       }
     });
   }, [open, ctx.hasTrigger, ariaLabel, ariaLabelledby]);
-  const atStyle = at ? anchoredContentStyle('--todae-popover-anchor', ctx.boxName) : undefined;
+  const atStyle = at && (open || fading) ? anchoredContentStyle('--todae-popover-anchor', ctx.boxName) : undefined;
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
   // document never sees as a pointerdown. Focus dropped to the page, as when

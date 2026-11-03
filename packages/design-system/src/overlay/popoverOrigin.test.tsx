@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { anchorNamed } from './popoverOrigin.js';
+import { useSurfaceClosed } from './surfaceContext.js';
 
 afterEach(() => {
   cleanup();
@@ -188,5 +189,76 @@ describe('A popover whose anchor goes away as it closes', () => {
     const { rerender } = render(<Harness open />);
     rerender(<Harness open={false} />);
     expect(screen.getByRole('dialog', { name: 'List', hidden: true }).hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+});
+
+/** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
+function markAwareFade(match: (el: HTMLElement) => boolean) {
+  const real = window.getComputedStyle.bind(window);
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+    const style = real(el, pseudo);
+    if (el instanceof HTMLElement && match(el)) {
+      const none = el.hasAttribute('data-todae-unanchored');
+      return Object.assign(Object.create(style), {
+        transitionProperty: none ? 'none' : 'opacity, scale, display, overlay',
+        transitionDuration: none ? '0s' : '0.16s',
+        transitionDelay: '0s',
+      }) as CSSStyleDeclaration;
+    }
+    return style;
+  });
+}
+
+describe('A Popover whose trigger goes away as it closes', () => {
+  function Closed({ onClosed }: { onClosed: () => void }) {
+    useSurfaceClosed(onClosed);
+    return <span>Body</span>;
+  }
+  function Owner({ open, withTrigger, onClosed }: { open: boolean; withTrigger: boolean; onClosed: () => void }) {
+    const popover = usePopover({ open, onOpenChange: () => undefined });
+    return (
+      <>
+        {withTrigger ? (
+          <button type="button" {...popover.getTriggerProps()}>
+            Open
+          </button>
+        ) : null}
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Panel">
+          <Closed onClosed={onClosed} />
+        </Popover.Root>
+      </>
+    );
+  }
+
+  it('goes at once and reports closed when its fade is cut short', () => {
+    vi.useFakeTimers();
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    const onClosed = vi.fn();
+    const { rerender } = render(<Owner open withTrigger onClosed={onClosed} />);
+    rerender(<Owner open={false} withTrigger={false} onClosed={onClosed} />);
+    const el = screen.getByRole('dialog', { hidden: true });
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
+    // The mark cuts the fade short, which a browser reports as a cancel.
+    act(() => {
+      el.dispatchEvent(Object.assign(new Event('transitioncancel'), { propertyName: 'opacity' }));
+    });
+    expect(onClosed).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe('A Popover opened from code, with nothing to sit by', () => {
+  it('keeps its fade as it closes', () => {
+    function Bare({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined });
+      return (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Bare">
+          x
+        </Popover.Root>
+      );
+    }
+    const { rerender } = render(<Bare open />);
+    rerender(<Bare open={false} />);
+    expect(screen.getByRole('dialog', { name: 'Bare', hidden: true }).hasAttribute('data-todae-unanchored')).toBe(false);
   });
 });

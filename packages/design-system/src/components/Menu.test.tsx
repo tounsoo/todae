@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Profiler, useState } from 'react';
+import { Profiler, StrictMode, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Menu, type MenuRootProps } from '../index.js';
 
@@ -1271,6 +1271,164 @@ describe('Menu motion', () => {
       // A forced layout read with the mark present resolves the opening style with no transition.
       // (On main nothing reads the menu's box here and nothing marks it.)
       expect(seen).not.toContain(true);
+    });
+  });
+});
+
+describe('Menu motion while it fades', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  /** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
+  function markAwareFade(match: (el: HTMLElement) => boolean) {
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (el instanceof HTMLElement && match(el)) {
+        const none = el.hasAttribute('data-todae-unanchored');
+        return Object.assign(Object.create(style), {
+          transitionProperty: none ? 'none' : 'opacity, scale, display, overlay',
+          transitionDuration: none ? '0s' : '0.16s',
+          transitionDelay: '0s',
+        }) as CSSStyleDeclaration;
+      }
+      return style;
+    });
+  }
+
+  describe('under StrictMode', () => {
+    const ui = (
+      <StrictMode>
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </StrictMode>
+    );
+    const menu = () => screen.getByRole('menu', { hidden: true });
+    const endFade = () =>
+      act(() => {
+        menu().dispatchEvent(Object.assign(new Event('transitionend', { bubbles: true }), { propertyName: 'opacity' }));
+      });
+
+    it('fades a trigger-opened menu by its trigger after a context menu', () => {
+      markAwareFade((el) => el.getAttribute('role') === 'menu');
+      render(ui);
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      const boxName = menu().style.getPropertyValue('position-anchor');
+      expect(boxName).toContain('-box');
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      expect(menu().style.getPropertyValue('position-anchor')).toBe(boxName);
+      endFade();
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      });
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      expect(menu().style.getPropertyValue('position-anchor')).not.toBe(boxName);
+      expect(document.querySelector('span[popover]')).toBeNull();
+      expect(menu().hasAttribute('data-todae-unanchored')).toBe(false);
+    });
+
+    it('opens at a box asked for inside a trigger-opened fade, and fades there', () => {
+      markAwareFade((el) => el.getAttribute('role') === 'menu');
+      render(ui);
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      });
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      expect(menu().hasAttribute('data-popover-open')).toBe(true);
+      const boxName = menu().style.getPropertyValue('position-anchor');
+      expect(boxName).toContain('-box');
+      expect(menu().hasAttribute('data-todae-unanchored')).toBe(false);
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      expect(menu().style.getPropertyValue('position-anchor')).toBe(boxName);
+      expect(document.querySelector('span[popover]')).not.toBeNull();
+      endFade();
+      expect(document.querySelector('span[popover]')).toBeNull();
+    });
+  });
+
+  describe('with an owner that turns a context request down', () => {
+    function Owned() {
+      const [open, setOpen] = useState(false);
+      const [refuse, setRefuse] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setRefuse(true)}>
+            Refuse
+          </button>
+          <Menu.Root open={open} onOpenChange={(next) => (refuse && next ? undefined : setOpen(next))}>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+            <Menu.Content>
+              <Menu.Item>Open</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </>
+      );
+    }
+    const menu = () => screen.getByRole('menu', { hidden: true });
+
+    it('keeps a fading context menu where it was', () => {
+      markAwareFade((el) => el.getAttribute('role') === 'menu');
+      render(<Owned />);
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      const box = () => document.querySelector<HTMLElement>('span[popover]')!;
+      const firstLeft = box().style.getPropertyValue('--_left');
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      // Fading at the first box. The owner now turns opens down.
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Refuse' }));
+      });
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 300, clientY: 300 });
+      });
+      expect(menu().hasAttribute('data-popover-open')).toBe(false);
+      // Still fading: it should stay where it sat.
+      expect(box().style.getPropertyValue('--_left')).toBe(firstLeft);
+    });
+
+    it('keeps a fading menu by its trigger', () => {
+      markAwareFade((el) => el.getAttribute('role') === 'menu');
+      render(<Owned />);
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      });
+      const byTrigger = menu().style.getPropertyValue('position-anchor');
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Refuse' }));
+      });
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 300, clientY: 300 });
+      });
+      expect(menu().hasAttribute('data-popover-open')).toBe(false);
+      // Its exit fade by the trigger is still drawing: it should not re-anchor to a hidden box.
+      expect(menu().style.getPropertyValue('position-anchor')).toBe(byTrigger);
     });
   });
 });

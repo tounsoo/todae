@@ -147,6 +147,7 @@ export function usePopoverInternal(
   useEffect(() => () => outsideRestore.current?.(), []);
 
   const wasOpen = useRef(open);
+  const satByAnchor = useRef(false);
   // The popover grows from where it sits by its anchor as it shows, and
   // shrinks back toward where it sits then as it closes, since it may have
   // flipped while open. Its anchor is its trigger, or the element that
@@ -160,8 +161,10 @@ export function usePopoverInternal(
     const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
     const closing = wasOpen.current && !open;
     wasOpen.current = open;
-    if (closing && !anchor?.isConnected) el.setAttribute('data-todae-unanchored', '');
-    if (anchor?.isConnected) aimPopoverOrigin(el, anchor);
+    const anchored = Boolean(anchor?.isConnected);
+    if (closing && satByAnchor.current && !anchored) el.setAttribute('data-todae-unanchored', '');
+    if (open) satByAnchor.current = anchored;
+    if (anchor && anchored) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);
 
   useEffect(() => {
