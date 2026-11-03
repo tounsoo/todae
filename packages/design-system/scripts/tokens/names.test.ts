@@ -61,17 +61,18 @@ describe('name schema', () => {
     expect(nameViolations('button.icon.size', rules)).toEqual([]);
   });
 
-  it('accepts two parts before the property and flags a third', () => {
+  it('accepts three parts before the property and flags a fourth', () => {
     expect(nameViolations('text.h3.font.size', rules)).toEqual([]);
     expect(nameViolations('form.summary.link.fg.hover', rules)).toEqual([]);
-    expect(nameViolations('steps.marker.progress.dot.size', rules)).toEqual([{ rule: 'depth', path: 'steps.marker.progress.dot.size' }]);
+    expect(nameViolations('steps.marker.progress.dot.size', rules)).toEqual([]);
+    expect(nameViolations('steps.marker.progress.dot.halo.size', rules)).toEqual([{ rule: 'depth', path: 'steps.marker.progress.dot.halo.size' }]);
   });
 
   it('flags a state no slot declares, and a name that is too deep as well', () => {
     expect(nameViolations('button.bg.selected', rules)).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
-    expect(nameViolations('table.sort.cell.icon.fg.selected', rules)).toEqual([
-      { rule: 'depth', path: 'table.sort.cell.icon.fg.selected' },
-      { rule: 'state', path: 'table.sort.cell.icon.fg.selected', word: 'selected' },
+    expect(nameViolations('table.sort.cell.icon.mark.fg.selected', rules)).toEqual([
+      { rule: 'depth', path: 'table.sort.cell.icon.mark.fg.selected' },
+      { rule: 'state', path: 'table.sort.cell.icon.mark.fg.selected', word: 'selected' },
     ]);
   });
 
@@ -118,6 +119,20 @@ describe('dead tokens', () => {
     expect(deadTokens(chain, []).map((violation) => violation.path)).toEqual(['color.orphan.source', 'color.orphan.user']);
   });
 
+  it('keeps an unread step of a scale while another step of it is read, outside the contract layer', () => {
+    const scales = snap([
+      { path: 'color.red.400', cssValue: 'red', layer: 'core' },
+      { path: 'color.red.600', cssValue: 'darkred', layer: 'core' },
+      { path: 'color.teal.400', cssValue: 'teal', layer: 'core' },
+      { path: 'space.7', cssValue: '1.75rem', layer: 'density' },
+      { path: 'space.8', cssValue: '2rem', layer: 'density' },
+      { path: 'widget.bg.default', cssValue: 'red' },
+      { path: 'widget.bg.hover', cssValue: 'red' },
+    ]);
+    const css = file('src/components/Widget.module.css', '.w { color: var(--todae-color-red-600); gap: var(--todae-space-8); background: var(--todae-widget-bg-default); }');
+    expect(deadTokens(scales, [css]).map((violation) => violation.path)).toEqual(['color.teal.400', 'widget.bg.hover']);
+  });
+
   it('is live when a stylesheet, a tsx literal, or an alias to a read token reads it', () => {
     const widget = snap([{ path: 'widget.bg', cssValue: 'red' }]);
     expect(deadTokens(widget, [file('src/components/Widget.module.css', '.w { background: var(--todae-widget-bg); }')])).toEqual([]);
@@ -139,7 +154,7 @@ describe('dead tokens', () => {
 });
 
 describe('grandfather ratchet', () => {
-  const depth: Violation = { rule: 'depth', path: 'steps.marker.progress.dot.size' };
+  const depth: Violation = { rule: 'depth', path: 'steps.marker.progress.dot.halo.size' };
   const state: Violation = { rule: 'state', path: 'option.bg.selected', word: 'selected' };
 
   it('fails an unlisted name with the hint, a fixed name with the remove line, and a new entry against the base', () => {
@@ -150,14 +165,14 @@ describe('grandfather ratchet', () => {
     );
     const stale = ratchet({ found: [], list: parseGrandfather({ version: 1, entries: [depth] }) });
     expect(stale.stale).toEqual([depth]);
-    expect(staleLine(depth)).toBe('grandfathered name steps.marker.progress.dot.size (depth) is fixed; remove it from tokens/name-grandfather.json');
+    expect(staleLine(depth)).toBe('grandfathered name steps.marker.progress.dot.halo.size (depth) is fixed; remove it from tokens/name-grandfather.json');
     const added = ratchet({
       found: [depth],
       list: parseGrandfather({ version: 1, entries: [depth] }),
       base: parseGrandfather({ version: 1, entries: [] }),
     });
     expect(added.added).toEqual([depth]);
-    expect(addedLine(depth)).toBe('grandfather list can only shrink; steps.marker.progress.dot.size (depth) is new. Fix the name instead (see hint)');
+    expect(addedLine(depth)).toBe('grandfather list can only shrink; steps.marker.progress.dot.halo.size (depth) is new. Fix the name instead (see hint)');
   });
 
   it('skips the shrink check when the base list is missing and when no base was passed', () => {
@@ -196,8 +211,8 @@ describe('grandfather ratchet', () => {
     expect(hint({ rule: 'state', path: 'button.bg.current', word: 'current' }, states)).toBe(
       'button.bg.current: unknown state "current". Every stateful property takes default, selected. For a state of this component, list "current" with the rest of button.bg\'s states in its slots in tokens/resolver.json; if "current" is a variant, move it before the property (e.g. option.selected.bg).',
     );
-    expect(hint({ rule: 'depth', path: 'steps.marker.progress.dot.size' }, states)).toBe(
-      'steps.marker.progress.dot.size: too deep. Names are component.(part.(part.))property(.state); fold an extra segment into a part or the property (e.g. text.h3-font.size).',
+    expect(hint({ rule: 'depth', path: 'steps.marker.progress.dot.halo.size' }, states)).toBe(
+      'steps.marker.progress.dot.halo.size: too deep. Names are a component, up to three parts, the property and an optional state; fold an extra segment into a part or the property (e.g. text.h3-font.size).',
     );
     expect(hint({ rule: 'dead', path: 'color.accent.soft', cssVar: cssVarOf('--todae-color-accent-soft') }, states)).toBe(
       'color.accent.soft (--todae-color-accent-soft): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don\'t add it.',
@@ -206,7 +221,7 @@ describe('grandfather ratchet', () => {
 });
 
 describe('main baseline', () => {
-  it('matches the grandfathered name and dead counts on this repo', async () => {
+  it('finds no bad name and no dead token on this repo, so the grandfather list is empty', async () => {
     const graph = await buildTokensGraph(join(pkgRoot, 'tokens'));
     const snapshot = parseSnapshot(JSON.parse(graph.json) as unknown);
     const rules = parseSchema(JSON.parse(readFileSync(join(pkgRoot, 'tokens/name-schema.json'), 'utf8')) as unknown, graph.slots);
@@ -217,30 +232,13 @@ describe('main baseline', () => {
     const found = collectViolations(snapshot, rules, files);
     const names = found.filter((violation) => violation.rule !== 'dead');
     const dead = found.filter((violation) => violation.rule === 'dead');
-    const contract = new Set([...snapshot.values()].filter((row) => row.layer === 'contract').map((row) => row.path));
-    expect(names.filter((violation) => violation.rule === 'state')).toEqual([]);
-    expect(names.map((violation) => violation.path)).toEqual([
-      'form.summary.title.font.weight',
-      'message.actions.motion.easing.enter',
-      'message.actions.motion.easing.exit',
-      'nav.group.label.font.size',
-      'nav.group.label.font.weight',
-      'steps.marker.progress.dot.color',
-      'steps.marker.progress.dot.size',
-    ]);
-    expect(dead.map((violation) => violation.path)).toEqual([
-      'color.bg.canvas',
-      'color.gray.50',
-      'color.red.400',
-      'color.red.500',
-      'space.7',
-    ]);
-    expect(dead.filter((violation) => contract.has(violation.path))).toEqual([]);
+    expect(names).toEqual([]);
+    expect(dead).toEqual([]);
     const list = parseGrandfather(JSON.parse(readFileSync(join(pkgRoot, 'tokens/name-grandfather.json'), 'utf8')) as unknown);
     const result = ratchet({ found, list });
     expect(result.unlisted).toEqual([]);
     expect(result.stale).toEqual([]);
-    expect(list.size).toBe(12);
-    expect(tallyLine(found, result.unlisted)).toBe('names: 7 grandfathered, 0 new; dead: 5 grandfathered, 0 new');
+    expect(list.size).toBe(0);
+    expect(tallyLine(found, result.unlisted)).toBe('names: 0 grandfathered, 0 new; dead: 0 grandfathered, 0 new');
   });
 });

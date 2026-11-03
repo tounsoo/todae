@@ -2,8 +2,8 @@ import { cssVarOf, dependents, readsOf, type ConsumerFile, type CssVar, type Sna
 import { matchesGroup } from './rules.ts';
 import type { Layer, SlotRules } from './shared.ts';
 
-/** A name is component.(part.(part.))property(.state): at most two parts. */
-const MAX_PARTS = 2;
+/** A name is component, up to three parts, the property, and an optional state. */
+const MAX_PARTS = 3;
 
 const WORD_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -209,15 +209,28 @@ function reachable(snapshot: Snapshot, read: ReadonlySet<CssVar>): Set<CssVar> {
   return live;
 }
 
+function scaleOf(path: string): string {
+  return path.slice(0, path.lastIndexOf('.'));
+}
+
 export function deadTokens(snapshot: Snapshot, files: readonly ConsumerFile[]): Violation[] {
   const read = new Set<CssVar>();
   for (const file of files) {
     for (const cssVar of readsOf(file.path, file.source)) read.add(cssVar);
   }
   const live = reachable(snapshot, read);
+  const rows = representatives(snapshot);
+  const isLive = (row: { cssVars: CssVar[] }) => row.cssVars.some((cssVar) => live.has(cssVar));
+  // A core, appearance or density token is a step of a scale (color.red.400,
+  // space.7, color.bg.canvas): it stays while another step of its scale is read.
+  const liveScales = new Set<string>();
+  for (const [path, row] of rows) {
+    if (row.layer !== 'contract' && isLive(row)) liveScales.add(scaleOf(path));
+  }
   const dead: Violation[] = [];
-  for (const [path, row] of representatives(snapshot)) {
-    if (row.cssVars.some((cssVar) => live.has(cssVar))) continue;
+  for (const [path, row] of rows) {
+    if (isLive(row)) continue;
+    if (row.layer !== 'contract' && liveScales.has(scaleOf(path))) continue;
     dead.push({ rule: 'dead', path, cssVar: row.cssVars[0] });
   }
   dead.sort(violationOrder);
@@ -240,7 +253,7 @@ export function hint(violation: Violation, schema: Schema): string {
     return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
   }
   if (violation.rule === 'depth') {
-    return `${violation.path}: too deep. Names are component.(part.(part.))property(.state); fold an extra segment into a part or the property (e.g. text.h3-font.size).`;
+    return `${violation.path}: too deep. Names are a component, up to three parts, the property and an optional state; fold an extra segment into a part or the property (e.g. text.h3-font.size).`;
   }
   return `${violation.path} (${violation.cssVar}): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don't add it.`;
 }
