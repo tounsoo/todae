@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useReducer,
   useRef,
   type HTMLAttributes,
   type InputHTMLAttributes,
@@ -13,6 +14,7 @@ import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
+import { useFormReset } from '../internal/formReset.js';
 import { useComposedRefs } from '../internal/props.js';
 import { SelectionControl } from './SelectionControl.js';
 import { warnOnce } from '../internal/warnOnce.js';
@@ -112,6 +114,15 @@ function RadioGroupRoot({
         if (next !== null) onValueChange(next);
       }),
   );
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  // A reset puts back the radio each input mounted checked, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.
+  useFormReset(groupRef, () => {
+    const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [];
+    const picked = [...radios].find((radio) => radio.name === name && radio.checked)?.value ?? null;
+    if (picked === value) return;
+    select(picked);
+    rerender();
+  });
   return (
     <RadioGroupContext.Provider
       value={{

@@ -16,6 +16,7 @@ import { FieldValueInput } from './Field.ValueInput.js';
 import { valueBounds } from './htmlValue.js';
 import { watchLabel } from './labelText.js';
 import { useFormSubmitHold } from './useFormSubmitHold.js';
+import { useFormReset } from '../internal/formReset.js';
 import { isImeKeyEvent } from '../internal/ime.js';
 import {
   boundsOf,
@@ -261,20 +262,10 @@ export function NumberInput({
     if (!input) return;
     const listener = (event: Event) => latest.current.refuse(event as InputEvent);
     input.addEventListener('beforeinput', listener);
-    // A reset puts back what the form had, which is not what was typed, unless a handler cancels it. Those run after this listener, and after a microtask too, so it waits a task. `reset` is not composed, so the listener sits on the input's root node, a document or a shadow root.
-    const root = input.getRootNode();
-    const onReset = (event: Event) => {
-      if (event.target !== input.form) return;
-      window.setTimeout(() => {
-        if (!event.defaultPrevented) setDraft(null);
-      });
-    };
-    root.addEventListener('reset', onReset, true);
-    return () => {
-      input.removeEventListener('beforeinput', listener);
-      root.removeEventListener('reset', onReset, true);
-    };
+    return () => input.removeEventListener('beforeinput', listener);
   }, []);
+  // A reset puts back what the form had, which is not what was typed.
+  useFormReset(node, () => setDraft(null));
   // The label's own text can change, such as a translation that loads later, and a label can mount, be replaced or go from anywhere in the page, so the page's one shared observer follows them.
   useLayoutEffect(() => watchLabel(node.current, setLabel).stop, []);
 

@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
+import { useLayoutEffect, useReducer, useRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
+import { useFormReset } from '../internal/formReset.js';
 import { useComposedRefs } from '../internal/props.js';
 import { CheckGlyph, DashGlyph, glyphOr } from './glyphs.js';
 import styles from './selection.module.css';
@@ -71,6 +72,14 @@ export function SelectionControl({
   const refs = useComposedRefs(inputRef, ref);
   useCustomValidity(inputRef, () => inputRef.current, customValidity);
   useRevalidate();
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  // A reset puts back the checked state the input mounted with, and fires no change event. A radio's group follows the reset, since one reset can move two radios. A controlled box whose owner turns the reset down renders again, so React writes `checked` back.
+  useFormReset(inputRef, () => {
+    const input = inputRef.current;
+    if (kind === 'radio' || !input || input.checked === checked) return;
+    onChecked(input.checked);
+    rerender();
+  });
   const { check, indeterminate: indeterminateGlyph } = useGlyphs();
   const indeterminate = kind === 'checkbox' && !!indeterminateProp;
   // The DOM property has no attribute; onChange puts back the latest prop
