@@ -4,7 +4,7 @@ import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
 
-`defineMentionSource` describes a mention once. Pass that object to `useMentions` for suggestions and the caret peek, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover). The chat card that uses it is the [chat composer mentions](/recipes/chat-composer-mentions) recipe.
+`defineMentionSource` describes a mention once. Pass that object to `useMentions` for suggestions, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover). The chat card that uses it, with a peek while the caret rests in a mention, is the [chat composer mentions](/recipes/chat-composer-mentions) recipe.
 
 ```tsx
 const people = defineMentionSource({
@@ -60,17 +60,17 @@ const people = defineMentionSource({
 </Table.Root>
 </ScrollRegion>
 
-While the caret is inside a token and the list is closed, the textarea's description is the caret peek. That peek does not take focus. Escape closes the list first, then the peek.
+Todae has no caret peek of its own. While the caret is inside a token and the list is closed, `useMentions` returns `caretPeekAnchorName`, and the recipe opens a peek there that does not take focus and describes the textarea. Escape closes the list first, then that peek.
 
 ## Peek
 
-A peek with a focusable control is a dialog named by `peekLabel`, or by the mention text. A text-only peek is the trigger's description and has no role. `peek.mode` is `interactive` on a sent mention and `caret` in the composer. `peek.close()` closes it and returns focus.
+A peek with a focusable control is a dialog named by `peekLabel`, or by the mention text. A text-only peek is the trigger's description and has no role. `peek.mode` is `interactive` on a sent mention. A caret peek you build passes `caret`, as the recipe does. `peek.close()` closes it and returns focus.
 
 Hover or focus opens the peek and leaves focus where it is, so it closes when the pointer leaves or focus moves on. A click, or Space on a link, pins the peek open, moves focus into a dialog peek, and returns focus to the mention when it closes. The peek renders a `<span>`, so a mention can sit inside a paragraph, such as a `Text.Root`; its content renders only while it is open.
 
 ## When to use
 
-A sent message should show a mention as a real button or link, with the same peek the composer shows while the caret is in that mention.
+A sent message should show a mention as a real button or link, with the same peek the composer recipe shows while the caret is in that mention.
 
 ## When not
 

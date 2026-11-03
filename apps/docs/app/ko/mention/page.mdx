@@ -4,7 +4,7 @@ import { MentionExample } from '../../../components/demos/MentionDemo';
 
 # Mention
 
-`defineMentionSource`는 멘션을 한 번 설명합니다. 그 객체를 `useMentions`에 넘기면 제안과 캐럿 피크에 쓰이고, `MentionText`에 넘기면 보낸 메시지에 쓰입니다. `renderPeek`가 피크의 유일한 내용입니다. Todae는 그것을 [Popover](/popover) 안에 그립니다. 이 소스를 쓰는 채팅 카드는 [채팅 작성창 멘션](/recipes/chat-composer-mentions) 레시피입니다.
+`defineMentionSource`는 멘션을 한 번 설명합니다. 그 객체를 `useMentions`에 넘기면 제안에 쓰이고, `MentionText`에 넘기면 보낸 메시지에 쓰입니다. `renderPeek`가 피크의 유일한 내용입니다. Todae는 그것을 [Popover](/popover) 안에 그립니다. 이 소스를 쓰고 캐럿이 멘션 안에 있는 동안 피크를 보여 주는 채팅 카드는 [채팅 작성창 멘션](/recipes/chat-composer-mentions) 레시피입니다.
 
 ```tsx
 const people = defineMentionSource({
@@ -60,17 +60,17 @@ const people = defineMentionSource({
 </Table.Root>
 </ScrollRegion>
 
-캐럿이 토큰 안에 있고 목록이 닫혀 있으면, 텍스트 영역의 설명은 캐럿 피크입니다. 그 피크는 포커스를 받지 않습니다. Escape는 목록을 먼저 닫고, 그다음 피크를 닫습니다.
+Todae에는 자체 캐럿 피크가 없습니다. 캐럿이 토큰 안에 있고 목록이 닫혀 있으면 `useMentions`가 `caretPeekAnchorName`을 반환하고, 레시피는 그 자리에 포커스를 받지 않고 텍스트 영역을 설명하는 피크를 엽니다. Escape는 목록을 먼저 닫고, 그다음 그 피크를 닫습니다.
 
 ## 피크
 
-포커스를 받을 수 있는 컨트롤이 있는 피크는 `peekLabel` 또는 멘션 텍스트로 이름이 붙는 dialog입니다. 텍스트만 있는 피크는 트리거의 설명이고 role이 없습니다. `peek.mode`는 보낸 멘션에서 `interactive`이고 작성창에서는 `caret`입니다. `peek.close()`는 피크를 닫고 포커스를 되돌립니다.
+포커스를 받을 수 있는 컨트롤이 있는 피크는 `peekLabel` 또는 멘션 텍스트로 이름이 붙는 dialog입니다. 텍스트만 있는 피크는 트리거의 설명이고 role이 없습니다. `peek.mode`는 보낸 멘션에서 `interactive`입니다. 직접 만드는 캐럿 피크는 레시피처럼 `caret`을 넘깁니다. `peek.close()`는 피크를 닫고 포커스를 되돌립니다.
 
 호버나 포커스는 피크를 열고 포커스를 그대로 둡니다. 그래서 포인터가 떠나거나 포커스가 옮겨 가면 피크가 닫힙니다. 클릭이나 링크에서의 Space는 피크를 열어 고정하고, dialog 피크 안으로 포커스를 옮기며, 닫힐 때 포커스를 멘션으로 되돌립니다. 피크는 `<span>`을 렌더링하므로 멘션을 `Text.Root` 같은 문단 안에 둘 수 있습니다. 피크의 내용은 열려 있는 동안에만 렌더링됩니다.
 
 ## 쓸 때
 
-보낸 메시지에서 멘션은 실제 버튼이나 링크여야 하고, 작성창에서 캐럿이 그 멘션 안에 있을 때와 같은 피크를 보여 줍니다.
+보낸 메시지에서 멘션은 실제 버튼이나 링크여야 하고, 작성창 레시피에서 캐럿이 그 멘션 안에 있을 때와 같은 피크를 보여 줍니다.
 
 ## 쓰지 않을 때
 

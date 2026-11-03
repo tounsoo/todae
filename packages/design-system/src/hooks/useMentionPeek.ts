@@ -8,7 +8,6 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
-  type RefObject,
 } from 'react';
 import type { MentionPeekContext, MentionSource } from '../mentions/source.js';
 import { createIntent, step, type TooltipEvent, type TooltipIntentState } from '../overlay/tooltipIntent.js';
@@ -26,15 +25,8 @@ type Phase<T> =
 export type UseMentionPeekOptions<T> = {
   source: MentionSource<T> | null;
   id: string | null;
-  mode: 'interactive' | 'caret';
-  /** Caret peek stays closed while this is false, such as while the suggestion list is open. */
-  active?: boolean;
   /** Default accessible name when `peekLabel` is omitted. */
   text?: string;
-  /** Element that keeps focus for a caret peek. */
-  focusRef?: RefObject<HTMLElement | null>;
-  /** CSS anchor name of the token span. The rendered peek anchors to the mention instead. */
-  anchorName?: string | null;
 };
 
 export type MentionPeekTriggerProps = {
@@ -62,37 +54,30 @@ export type UseMentionPeekResult<T> = {
   open: boolean;
   entity: T | undefined;
   loading: boolean;
-  /** The peek is a dialog. Caret peeks are never dialogs. */
+  /** The peek is a dialog: its content has a focusable control. */
   dialog: boolean;
   label: string;
   /** Passed to `renderPeek`. */
   context: MentionPeekContext;
   close: () => void;
-  inert: boolean;
 };
 
 function contains(root: HTMLElement | null, node: EventTarget | null): boolean {
   return node instanceof Node && root !== null && root.contains(node);
 }
 
-export function useMentionPeek<T>({
-  source,
-  id,
-  mode,
-  active = true,
-  text = '',
-  focusRef,
-  anchorName = null,
-}: UseMentionPeekOptions<T>): UseMentionPeekResult<T> {
+/**
+ * The peek of a rendered mention, for `Mention.Root`. Hover or focus opens it
+ * after the tooltip delay; a click, or Space on a link, pins it open.
+ */
+export function useMentionPeek<T>({ source, id, text = '' }: UseMentionPeekOptions<T>): UseMentionPeekResult<T> {
   const triggerRef = useRef<HTMLElement | null>(null);
-  const keepFocus = useRef<HTMLElement | null>(null);
   const returnTo = useRef<HTMLElement | null>(null);
   const pendingFocus = useRef(false);
   const intentRef = useRef<TooltipIntentState>(createIntent());
   const timerRef = useRef<number | null>(null);
   const [hoverOpen, setHoverOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const [phase, setPhase] = useState<Phase<T>>({ status: 'idle' });
   const [dialog, setDialog] = useState(false);
   const hoverOpenRef = useRef(false);
@@ -101,7 +86,6 @@ export function useMentionPeek<T>({
   pinnedRef.current = pinned;
 
   useEffect(() => {
-    setDismissed(false);
     setPinned(false);
     setHoverOpen(false);
     intentRef.current = createIntent();
@@ -139,13 +123,9 @@ export function useMentionPeek<T>({
   const hasCard = phase.status === 'loading' || phase.status === 'ready';
   const entity = phase.status === 'ready' ? phase.entity : undefined;
   const loading = phase.status === 'loading';
-  const shown =
-    hasCard && source?.renderPeek != null && (mode === 'caret' ? active && !dismissed : hoverOpen || pinned);
-
-  if (mode === 'caret' && focusRef?.current) keepFocus.current = focusRef.current;
+  const shown = hasCard && source?.renderPeek != null && (hoverOpen || pinned);
 
   const dispatch = useCallback((event: TooltipEvent) => {
-    if (mode !== 'interactive') return;
     const openNow = hoverOpenRef.current || pinnedRef.current;
     const result = step({
       policy: readTooltipPolicy(triggerRef.current, { delayFocus: true }),
@@ -160,11 +140,10 @@ export function useMentionPeek<T>({
       commit: (next) => setHoverOpen(next),
       restore: () => {},
     });
-  }, [mode]);
+  }, []);
 
   const close = useCallback(() => {
     setPinned(false);
-    setDismissed(true);
     dispatch({ kind: 'escape' });
     setHoverOpen(false);
   }, [dispatch]);
@@ -173,21 +152,19 @@ export function useMentionPeek<T>({
   // mention, then into the card, and back to the mention when it closes. A
   // peek that hover or focus opened leaves focus where it is, and returns it
   // only to where it was when the peek opened.
-  const movesFocus = mode === 'caret' || pinned;
-  if (mode === 'interactive' && shown) returnTo.current = pinned ? triggerRef.current : null;
+  if (shown) returnTo.current = pinned ? triggerRef.current : null;
   const popover = usePopoverInternal(
     {
       open: shown,
-      anchorRef: mode === 'interactive' ? triggerRef : undefined,
-      initialFocusRef: mode === 'caret' ? keepFocus : triggerRef,
-      restoreFocusRef: mode === 'caret' ? focusRef : returnTo,
-      anchorName: mode === 'caret' ? anchorName : null,
+      anchorRef: triggerRef,
+      initialFocusRef: triggerRef,
+      restoreFocusRef: returnTo,
       onOpenChange: (next) => {
         if (!next) close();
       },
     },
-    movesFocus,
-    movesFocus,
+    pinned,
+    pinned,
   );
 
   useEffect(
@@ -198,77 +175,64 @@ export function useMentionPeek<T>({
   );
 
   useLayoutEffect(() => {
-    if (mode === 'caret' || !shown) {
+    if (!shown) {
       setDialog(false);
       return;
     }
     const root = popover.popoverRef.current;
     if (!root) return;
     setDialog(getTabbables(root).length > 0);
-  }, [mode, popover.popoverRef, shown, phase]);
+  }, [popover.popoverRef, shown, phase]);
 
   useLayoutEffect(() => {
-    if (!pendingFocus.current || !shown || mode !== 'interactive') return;
+    if (!pendingFocus.current || !shown) return;
     if (phase.status === 'loading') return;
     const root = popover.popoverRef.current;
     const target = root ? firstTabbable(root) : null;
     if (target) target.focus();
     pendingFocus.current = false;
-  }, [mode, phase, popover.popoverRef, shown]);
+  }, [phase, popover.popoverRef, shown]);
 
   const label =
     entity !== undefined && source?.peekLabel ? source.peekLabel(entity) : text;
   const contentId = popover.ids.popover;
-  const interactiveDialog = mode === 'interactive' && dialog;
-  const described = shown && !interactiveDialog;
+  const described = shown && !dialog;
 
   const peekProps: PeekProps = {
     ...popover.getPopoverProps(),
-    onPointerEnter:
-      mode === 'interactive'
-        ? () => dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover-bridge' })
-        : undefined,
-    onPointerLeave:
-      mode === 'interactive'
-        ? (event) => {
-            if (contains(triggerRef.current, event.relatedTarget)) return;
-            dispatch({ kind: 'release', hold: 'hover', reason: 'hover-bridge' });
-          }
-        : undefined,
+    onPointerEnter: () => dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover-bridge' }),
+    onPointerLeave: (event) => {
+      if (contains(triggerRef.current, event.relatedTarget)) return;
+      dispatch({ kind: 'release', hold: 'hover', reason: 'hover-bridge' });
+    },
   };
 
   const popoverTrigger = popover.triggerRef;
   const setTrigger = useCallback(
     (node: HTMLElement | null) => {
       triggerRef.current = node;
-      if (mode === 'caret' && focusRef) return;
       popoverTrigger.current = node;
     },
-    [focusRef, mode, popoverTrigger],
+    [popoverTrigger],
   );
 
   const triggerProps: MentionPeekTriggerProps = {
     ref: setTrigger,
     onPointerEnter: () => {
-      if (mode !== 'interactive') return;
       dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
     },
     onPointerLeave: (event) => {
-      if (mode !== 'interactive') return;
       if (contains(popover.popoverRef.current, event.relatedTarget)) return;
       dispatch({ kind: 'release', hold: 'hover' });
     },
     onFocus: () => {
-      if (mode !== 'interactive') return;
       dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
     },
     onBlur: (event) => {
-      if (mode !== 'interactive') return;
       if (contains(popover.popoverRef.current, event.relatedTarget)) return;
       dispatch({ kind: 'release', hold: 'focus' });
     },
     onClick: (event) => {
-      if (mode !== 'interactive') return;
       const href = source?.href?.(id ?? '', entity);
       if (href && event.detail === 0) return;
       if (shown) {
@@ -276,7 +240,6 @@ export function useMentionPeek<T>({
         return;
       }
       pendingFocus.current = true;
-      setDismissed(false);
       setPinned(true);
     },
     onKeyDown: (event) => {
@@ -285,25 +248,23 @@ export function useMentionPeek<T>({
         close();
         return;
       }
-      if (mode !== 'interactive') return;
       const href = source?.href?.(id ?? '', entity);
       if (event.key === ' ' && href) {
         event.preventDefault();
         if (shown) close();
         else {
           pendingFocus.current = true;
-          setDismissed(false);
           setPinned(true);
         }
       }
     },
-    'aria-haspopup': interactiveDialog ? 'dialog' : undefined,
-    'aria-expanded': interactiveDialog ? shown : undefined,
-    'aria-controls': interactiveDialog && shown ? contentId : undefined,
+    'aria-haspopup': dialog ? 'dialog' : undefined,
+    'aria-expanded': dialog ? shown : undefined,
+    'aria-controls': dialog && shown ? contentId : undefined,
     'aria-describedby': described ? contentId : undefined,
   };
 
-  const context: MentionPeekContext = { id: id ?? '', mode, close };
+  const context: MentionPeekContext = { id: id ?? '', mode: 'interactive', close };
 
   return {
     triggerProps,
@@ -311,10 +272,9 @@ export function useMentionPeek<T>({
     open: shown,
     entity,
     loading,
-    dialog: interactiveDialog,
+    dialog,
     label,
     context,
     close,
-    inert: mode === 'caret',
   };
 }
