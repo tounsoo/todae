@@ -140,6 +140,7 @@ describe('useTooltip exports', () => {
         'react',
         '../internal/props.js',
         '../internal/domId.js',
+        '../internal/dom.js',
         './anchorName.js',
         './cssTime.js',
         './tooltipIntent.js',
