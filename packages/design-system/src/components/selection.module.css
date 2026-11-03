@@ -90,7 +90,6 @@
     line-height: 1;
     visibility: hidden;
     opacity: 0;
-    scale: 0.5;
     transition-property: opacity, scale, visibility;
     transition-duration: var(--todae-selection-motion-duration);
     transition-timing-function: var(--todae-selection-motion-easing);
@@ -101,10 +100,22 @@
     block-size: 100%;
   }
 
-  .input:checked + .indicator > .glyph,
+  .input:checked + .indicator > .glyph {
+    visibility: visible;
+    opacity: 1;
+  }
+
   .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
     opacity: 1;
+  }
+
+  .indicator > [data-todae-glyph] {
+    scale: 0.5;
+  }
+
+  .input:checked + .indicator > [data-todae-glyph],
+  .root[data-indeterminate] .indicator > [data-todae-glyph] {
     scale: 1;
   }
 
