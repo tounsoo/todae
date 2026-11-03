@@ -118,6 +118,54 @@ describe('docs demos under axe, no matches', () => {
   });
 });
 
+// The chat composer recipe's overlays open from typing, not from a button: the suggestion list
+// after `@`, and the caret peek while the caret rests in a mention.
+describe('docs demos under axe, chat composer open', () => {
+  const Composer = demos.find((d) => d.file === 'examples/recipes/chat-composer-mentions/ChatComposer.tsx')?.Demo;
+
+  function renderComposer() {
+    expect(Composer).toBeDefined();
+    const { container } = render(
+      <Providers>
+        <main>
+          <Example>{Composer ? <Composer /> : null}</Example>
+        </main>
+      </Providers>,
+    );
+    return within(container).getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
+  }
+
+  it('with the suggestion list open, the field points at the rendered list and option', async () => {
+    const field = renderComposer();
+    await userEvent.click(field);
+    field.setSelectionRange(field.value.length, field.value.length);
+    await userEvent.keyboard(' @mi');
+    await settle();
+    const list = document.getElementById(field.getAttribute('aria-controls') ?? '');
+    expect(list?.getAttribute('role')).toBe('listbox');
+    expect(list?.closest(':popover-open'), 'the list is not in an open popover').not.toBeNull();
+    const active = document.getElementById(field.getAttribute('aria-activedescendant') ?? '');
+    expect(active?.getAttribute('role')).toBe('option');
+    expect(list?.contains(active ?? null)).toBe(true);
+    expect(await violations()).toEqual([]);
+  });
+
+  it('with the caret peek open', async () => {
+    const field = renderComposer();
+    const at = field.value.indexOf('@Mina Park');
+    field.focus();
+    field.setSelectionRange(at + 2, at + 2);
+    field.dispatchEvent(new Event('selectionchange'));
+    await expect.poll(() => document.querySelector(':popover-open')?.textContent ?? '').toContain('Design systems');
+    expect(document.activeElement).toBe(field);
+    const peek = document.querySelector<HTMLElement>(':popover-open');
+    expect(await violations()).toEqual([]);
+    // The peek is inert, so axe skips it above. Check its content too.
+    if (peek) peek.inert = false;
+    expect(describeViolations(await axe.run(peek ?? document.body, AXE_OPTIONS))).toEqual([]);
+  });
+});
+
 // Demo files, and folders of example files, whose demos open an overlay.
 const OVERLAY_DEMOS = [
   'DialogDemo.tsx',
