@@ -83,6 +83,7 @@ describe('token consistency across component styles', () => {
       ColorPicker: ['.area:has(.axis:focus-visible) > .thumb'],
       Tree: ['.item:focus-visible > .label'],
       ChipList: ['.more:focus-visible [data-overflow]'],
+      BottomSheet: ['.grabber:focus-visible > .pill'],
     });
     const renderedIn: Record<string, string> = {
       Field: 'Field.OneTimeCode',
@@ -90,6 +91,7 @@ describe('token consistency across component styles', () => {
       ColorPicker: 'ColorPicker',
       Tree: 'Tree',
       ChipList: 'ChipList',
+      BottomSheet: 'BottomSheet',
     };
     for (const [name, file] of Object.entries(renderedIn)) {
       const source = readFileSync(join(componentsDir, `${file}.tsx`), 'utf8');
