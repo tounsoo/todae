@@ -1,47 +1,11 @@
-import { FieldDateTimePicked, FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDateTimePicked from '../../../../examples/field/date-time-picker/FieldDateTimePicked';
+import { FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
 
 # Field.DateTimePicker
 
 `Field.DateTimePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) and a list of times in a [Popover](/popover), side by side, or the list under the calendar on a narrow screen. Its `value` is a `Temporal.PlainDateTime` or `null`. `onValueChange` gets the date and time each time a pick leaves a date the calendar offers and a time in range for it. Picking a time while the calendar holds a date it offers closes the popover. It works like [Field.DatePicker](/field/date-picker) and [Field.TimePicker](/field/time-picker), and takes the same props where they mean the same thing. A `PlainDateTime` has no time zone: it is the date and time on the user's clock. To store an instant, combine it with a time zone in your own code, such as `value.toZonedDateTime(zone)`.
 
-```tsx
-const id = useId();
-const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
-const [text, setText] = useState('');
-const [invalid, setInvalid] = useState(false);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Meeting starts</Label.Root>
-  <Field.Root id={id} invalid={invalid}>
-    <Field.TextInput
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setStart(parseDateTime(event.target.value));
-        setInvalid(false);
-      }}
-      onBlur={() => {
-        if (start) setText(formatDateTime(start));
-        else setInvalid(text.trim() !== '');
-      }}
-    />
-    <Field.DateTimePicker
-      value={start}
-      onValueChange={(next) => {
-        setStart(next);
-        setText(formatDateTime(next));
-        setInvalid(false);
-      }}
-      step={15}
-      showValue={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldDateTimePicked />
-</Example>
+<Example of={FieldDateTimePicked} block />
 
 Here a [Field.TextInput](/field/text-input) in the same field lets people type the date and time too. A picked date and time is written into the text with `formatDateTime`. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showValue={false}`, the button shows only a calendar glyph. The button sends the date and time with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker` or another `Field.DateTimePicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the date and time as `2026-10-13T09:30` rather than the typed text, put `name` on the picker instead of the Root.
 

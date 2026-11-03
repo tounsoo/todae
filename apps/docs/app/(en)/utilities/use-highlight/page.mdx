@@ -1,4 +1,4 @@
-import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
+import HighlightSearch from '../../../../examples/utilities/use-highlight/HighlightSearch';
 
 # useHighlight
 
@@ -18,11 +18,14 @@ const found = useHighlight({ name: 'search', query });
   background-color: var(--todae-color-status-warning-bg);
   color: var(--todae-color-fg-default);
 }
+
+::highlight(search-current) {
+  background-color: var(--todae-color-status-warning-border);
+  color: var(--todae-color-fg-default);
+}
 ```
 
-<Example>
-  <HighlightSearch />
-</Example>
+<Example of={HighlightSearch} />
 
 `matches` holds a live `Range` per match, in document order. Text hidden by CSS is still matched. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
 

@@ -1,35 +1,11 @@
-import { MessageStreaming, MessageTurns } from '../../../components/demos/MessageDemo';
+import MessageStreaming from '../../../examples/message/MessageStreaming';
+import MessageTurns from '../../../examples/message/MessageTurns';
 
 # Message
 
 `Message.Root` is one turn of a conversation, as an `<article>`. `from` says who wrote it: a user's message sits at the end side in a bubble, an assistant's runs the full width, and a system message is a quiet line in the middle. It knows nothing about any agent SDK's message shape: map your own data onto its parts.
 
-```tsx
-<Message.Root from="user" aria-label="You">
-  <Message.Content>How do I name an icon-only button?</Message.Content>
-</Message.Root>
-
-<Message.Root aria-label="Assistant">
-  <Message.Avatar>
-    <Avatar.Root tone="category-3">
-      <Avatar.Fallback>A</Avatar.Fallback>
-    </Avatar.Root>
-  </Message.Avatar>
-  <Message.Header>
-    <strong>Assistant</strong>
-    <Message.Time value={sentAt} locale={locale} />
-  </Message.Header>
-  <Message.Content>
-    <Prose.Root>
-      <p>Give it aria-label, or put a visually hidden label inside it.</p>
-    </Prose.Root>
-  </Message.Content>
-</Message.Root>
-```
-
-<Example block>
-  <MessageTurns />
-</Example>
+<Example of={MessageTurns} block />
 
 Server Components can import it from `@tounsoo/todae/message`.
 
@@ -61,22 +37,7 @@ Without `locale`, the runtime's own locale is used. When a server renders the me
 
 Set `streaming` while the message is still arriving, and set it back to `false` when it finishes or fails. It sets `aria-busy="true"` on the article and `data-streaming`, and draws nothing of its own. To show that the reply is still coming, add [Loader](/loader)'s `dots` variant, as below.
 
-```tsx
-<Message.Root streaming={status === 'streaming'} aria-label="Assistant">
-  <Message.Content>
-    <Prose.Root>{rendered}</Prose.Root>
-  </Message.Content>
-  {status === 'streaming' && (
-    <Message.Actions>
-      <Loader.Root variant="dots" aria-label="Writing" />
-    </Message.Actions>
-  )}
-</Message.Root>
-```
-
-<Example block>
-  <MessageStreaming />
-</Example>
+<Example of={MessageStreaming} block />
 
 Restyle it through the `message` tokens: `message.fg` sets the text color, `message.gap` and `message.row-gap` space the parts, `message.header.*` sets the header's color, size and the smaller space below it, `message.time.*` the time's color and size, `message.actions.motion.*` how a `reveal="hover"` row fades, `message.user.*` the bubble's background, text color, radius, padding, `max-width` and the `border-width` of its forced-colors outline, and `message.system.*` the system line. A `Prose.Root` inside keeps the `prose` tokens' text color and size.
 

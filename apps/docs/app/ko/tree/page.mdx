@@ -1,35 +1,10 @@
-import { TreeFiles } from '../../../components/demos/TreeDemo';
+import TreeFiles from '../../../examples/tree/TreeFiles';
 
 # Tree
 
 폴더 안의 파일처럼 항목이 자기 목록을 품는 목록입니다. `Tree.Root`는 `role="tree"`이며, 어떤 항목이 열려 있고 어떤 항목이 선택됐는지를 가집니다. 각 `Tree.Item`은 `role="treeitem"`이고, 눈에 보이는 행인 `Tree.Label`이 이름을 붙입니다. 안에 `Tree.Group`이 있는 항목은 가지(branch)입니다. 열고 닫을 수 있고, 그룹이 자식 항목을 담습니다. `Tree.Icon`은 텍스트 앞의 아이콘을 담습니다.
 
-```tsx
-import { Folder } from 'lucide-react';
-
-<Tree.Root aria-label="Files" defaultExpanded={['src']}>
-  <Tree.Item value="src">
-    <Tree.Label>
-      <Tree.Icon>
-        <Folder />
-      </Tree.Icon>
-      src
-    </Tree.Label>
-    <Tree.Group>
-      <Tree.Item value="src/index.ts">
-        <Tree.Label>index.ts</Tree.Label>
-      </Tree.Item>
-    </Tree.Group>
-  </Tree.Item>
-  <Tree.Item value="README.md">
-    <Tree.Label>README.md</Tree.Label>
-  </Tree.Item>
-</Tree.Root>
-```
-
-<Example block>
-  <TreeFiles />
-</Example>
+<Example of={TreeFiles} block />
 
 트리는 Tab 정지점을 하나 가집니다. 선택된 항목에 있고, 선택된 항목이 없거나 닫힌 항목 안에 있으면 첫 항목에 있습니다. 키는 [useRovingFocus](/utilities/use-roving-focus)의 `tree` 모드를 거쳐 트리 뷰 패턴을 따릅니다. 위쪽과 아래쪽 화살표는 보이는 항목 사이를 움직이며 끝에서 돌아가지 않습니다. 오른쪽 화살표는 닫힌 항목을 열고, 열린 항목에서는 그 안의 첫 항목으로 움직입니다. 왼쪽 화살표는 열린 항목을 닫고, 그 밖에는 이 항목을 품은 항목으로 움직입니다. Home과 End는 보이는 첫 항목과 마지막 항목으로 가고, 글자를 입력하면 레이블이 그 글자로 시작하는 다음 항목으로 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다.
 

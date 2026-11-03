@@ -1,26 +1,11 @@
-import { FieldOneTimeCode, FieldOneTimeCodeForm } from '../../../../components/demos/FieldDemo';
+import FieldOneTimeCodeForm from '../../../../examples/field/one-time-code/FieldOneTimeCodeForm';
+import FieldOneTimeCode from '../../../../examples/field/one-time-code/FieldOneTimeCode';
 
 # Field.OneTimeCode
 
 `Field.OneTimeCode`는 [Field](/field) 안에서 쓰는 로그인·인증 코드 입력으로, 문자마다 칸 하나를 그립니다. `value`는 최대 `length`자(기본 6)의 문자열입니다. `characters`는 기본값이 `"digits"`이고, 영문자와 숫자를 허용하려면 `"alphanumeric"`을 씁니다. 정리된 코드는 `onValueChange`로, 이벤트는 `onChange`로 받으며 둘 다 써도 됩니다. 둘 다 없으면 입력은 읽기 전용입니다. `onChange`는 정리 전의 원문이 담긴 네이티브 이벤트를 받으므로, `onChange`만 쓰는 제품은 직접 정리하거나 `onValueChange`를 씁니다. 코드를 저절로 전송하는 제품은 `value.length === length`가 된 뒤 잠시 기다렸다가 전송합니다. IME에서는 완전한 코드가 전달됐다가 되돌려질 수 있기 때문입니다(입력, 붙여넣기, 자동 완성 참고).
 
-```tsx
-const id = useId();
-const hintId = useId();
-const [code, setCode] = useState('');
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Verification code</Label.Root>
-  <Field.Root id={id} name="code" aria-describedby={hintId}>
-    <Field.OneTimeCode value={code} onValueChange={setCode} />
-  </Field.Root>
-  <Description.Root id={hintId}>Enter the 6-digit code we sent.</Description.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldOneTimeCode />
-</Example>
+<Example of={FieldOneTimeCode} block />
 
 칸은 문자마다 입력을 하나씩 두는 방식이 아니라, 하나의 네이티브 `<input>` 위에 그려집니다. 그래서 브라우저의 붙여넣기, 실행 취소, 선택, 스크린 리더 지원이 그대로 동작하고, 입력에 `autocomplete="one-time-code"`가 있으므로 휴대폰이 문자 메시지의 코드를 제안할 수 있습니다. 숫자마다 입력을 나누면 이 기능이 모두 깨집니다. 칸은 `aria-hidden`이고 포인터 이벤트를 받지 않으며, 컨트롤은 입력입니다.
 
@@ -43,27 +28,7 @@ const [code, setCode] = useState('');
 
 입력은 필드의 네이티브 검증 컨트롤이므로, 텍스트를 필드의 `name`으로 보내고 `required`와 다른 네이티브 속성을 받습니다. `maxLength`가 `length`와 같습니다. 비어 있지 않고 `length`보다 짧은 코드는 사용자가 입력했든 코드가 설정했든 너무 짧다고 표시되는데, 브라우저의 `tooShort`는 스크립트가 쓴 값을 건너뛰기 때문입니다. 빈 코드는 `required`의 몫입니다. 이 문제의 `kind`는 `'tooShort'`가 아니라 `'customError'`이고, 메시지는 `tooShort` 문자열입니다. 코드가 짧은 동안에는 이 메시지가 `Field.Root`의 `customValidity`보다 우선하는데, 가장 안쪽 소유자가 먼저이기 때문입니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지 언어로 표시되고("Use at least 8 characters" 같은 문구), 포커스는 입력으로 이동합니다.
 
-```tsx
-const id = useId();
-const [code, setCode] = useState('');
-
-<Form.Root onSubmit={verify}>
-  <Stack.Root align="start">
-    <Field.Group>
-      <Label.Root htmlFor={id}>Recovery code</Label.Root>
-      <Field.Root id={id} name="recovery">
-        <Field.OneTimeCode required length={8} characters="alphanumeric" value={code} onValueChange={setCode} />
-      </Field.Root>
-      <ErrorMessage.Root />
-    </Field.Group>
-    <Button.Root type="submit">Verify</Button.Root>
-  </Stack.Root>
-</Form.Root>
-```
-
-<Example block>
-  <FieldOneTimeCodeForm />
-</Example>
+<Example of={FieldOneTimeCodeForm} block />
 
 `pattern`은 `[0-9]*` 또는 `[A-Za-z0-9]*`입니다. 길이는 너무 짧음 검사에 맡기므로, 너무 짧은 코드는 "형식 오류"가 아니라 "너무 짧음"으로 표시됩니다.
 

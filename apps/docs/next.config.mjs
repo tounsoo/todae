@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import createMDX from '@next/mdx';
-import remarkPageContents from './lib/remarkPageContents.mjs';
-import remarkPageMetadata from './lib/remarkPageMetadata.mjs';
+import { remarkPlugins } from './lib/remarkPlugins.mjs';
 
 // The non-default locales in lib/i18n/config.ts, as URL prefixes.
 const LOCALE_PREFIXES = ['/ko'];
@@ -32,6 +31,7 @@ const nextConfig = {
   // tsconfig paths point the package at its source, whose relative imports name the emitted .js
   // files. The alias is scoped to that source, so dependencies resolve as they publish.
   webpack: (config) => {
+    config.module.rules.push({ test: /\.mdx$/, enforce: 'pre', use: [fileURLToPath(new URL('./lib/exampleDependencyLoader.mjs', import.meta.url))] });
     config.module.rules.push({
       include: fileURLToPath(new URL('../../packages/design-system/src', import.meta.url)),
       resolve: { extensionAlias: { '.js': ['.ts', '.tsx', '.js'] } },
@@ -39,11 +39,12 @@ const nextConfig = {
     return config;
   },
   outputFileTracingIncludes: {
-    // The MCP reads English pages only, builds company tokens on Todae's token files with its CLI, and reads the changelog.
-    // The CLI in dist/scripts imports the shared color math from dist/src/color.
+    // The MCP reads English pages only, with the example files they show, builds company tokens on Todae's token
+    // files with its CLI, and reads the changelog. The CLI in dist/scripts imports the shared color math from dist/src/color.
     '/api/[transport]': [
       '../../packages/design-system/CHANGELOG.md',
       './app/(en)/**/page.mdx',
+      './examples/**/*.tsx',
       '../../packages/design-system/tokens/**/*.json',
       '../../packages/design-system/dist/scripts/**/*.js',
       '../../packages/design-system/dist/src/color/*.js',
@@ -57,4 +58,4 @@ const nextConfig = {
 };
 
 // Every MDX page exports metadata from its own title and first paragraph, and lists its sections.
-export default createMDX({ options: { remarkPlugins: [remarkPageMetadata, remarkPageContents] } })(nextConfig);
+export default createMDX({ options: { remarkPlugins } })(nextConfig);

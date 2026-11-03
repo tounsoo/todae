@@ -1,28 +1,10 @@
-import { ContentsGuide } from '../../../components/demos/ContentsDemo';
+import ContentsGuide from '../../../examples/contents/ContentsGuide';
 
 # Contents
 
 페이지의 섹션으로 가는 링크를 모은 "이 페이지의 내용" 목록입니다. `Contents.Root`는 목록을 담은 `nav` 랜드마크이고, 각 `Contents.Item`은 섹션 제목을 프래그먼트로 가리키는 `Contents.Link`를 담으며, `Contents.List`는 한 제목 아래의 섹션을 중첩합니다. 페이지를 스크롤하는 동안 지금 읽고 있는 섹션의 링크가 `aria-current="location"`을 받습니다.
 
-```tsx
-<Contents.Root label="On this page">
-  <Contents.Item>
-    <Contents.Link href="#install">Install</Contents.Link>
-  </Contents.Item>
-  <Contents.Item>
-    <Contents.Link href="#tokens">Tokens</Contents.Link>
-    <Contents.List>
-      <Contents.Item>
-        <Contents.Link href="#colors">Colors</Contents.Link>
-      </Contents.Item>
-    </Contents.List>
-  </Contents.Item>
-</Contents.Root>
-```
-
-<Example>
-  <ContentsGuide />
-</Example>
+<Example of={ContentsGuide} />
 
 [Nav](/nav)처럼 링크는 직접 넣습니다. Todae는 페이지의 제목을 읽지 않으므로, 목록에는 여러분이 고른 내용이 들어가고 서버에서 렌더링할 수 있습니다. 각 제목에 링크의 `href`가 가리키는 `id`를 붙이세요. 다른 페이지로 가는 링크는 현재 항목으로 표시되지 않습니다.
 

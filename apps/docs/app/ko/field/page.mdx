@@ -1,20 +1,6 @@
-import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
-import {
-  CounterBefore,
-  CounterDefault,
-  CounterInline,
-  CounterNarrow,
-  CounterOver,
-  CounterPlain,
-  CounterTextarea,
-  FieldAdornments,
-  FieldLabelAdornments,
-  FieldLabelStates,
-  FieldStates,
-  RowChipInput,
-  RowComposer,
-  RowComposerDensity,
-} from '../../../components/demos/FieldDemo';
+import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibling';
+import FieldLabelStates from '../../../examples/field/FieldLabelStates';
+import { CounterBefore, CounterDefault, CounterInline, CounterNarrow, CounterOver, CounterPlain, CounterTextarea, FieldAdornments, FieldLabelAdornments, FieldStates, RowChipInput, RowComposer, RowComposerDensity } from '../../../components/demos/FieldDemo';
 
 # Field
 
@@ -44,20 +30,7 @@ import {
 
 `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. `Field.Root`에 넘기는 것과 같은 `id`를 받습니다. 둘을 하나의 `Field.Group`으로 감싸세요. `Field.Group`은 레이블을 셸 위 `field.label.gap` 간격에 둡니다. API는 [Label](/label)을 보세요.
 
-```tsx
-const id = useId()
-
-<Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldLabelStates />
-</Example>
+<Example of={FieldLabelStates} block />
 
 Label은 Icon, Affix, ChipInput과 함께 동작합니다.
 
@@ -75,22 +48,7 @@ Label은 Icon, Affix, ChipInput과 함께 동작합니다.
 
 [Description](/description)과 [ErrorMessage](/errormessage)는 셸 아래에 형제 요소로 놓입니다. Field 파트가 아닙니다. `aria-describedby`는 `Field.Root`에 두세요. Root가 그 값을 입력에 복사합니다.
 
-```tsx
-const describedBy = invalid ? `${hintId} ${errorId}` : hintId
-
-<Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
-		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
-	</Field.Root>
-	<Description.Root id={hintId}>Use your work address.</Description.Root>
-	{invalid ? <ErrorMessage.Root id={errorId}>{error}</ErrorMessage.Root> : null}
-</Field.Group>
-```
-
-<Example block>
-  <ErrorMessageSibling />
-</Example>
+<Example of={ErrorMessageSibling} block />
 
 이것은 직접 하는 연결입니다. [Form](/form) 안에서는 `Field.Group`이 브라우저 자체의 검증을 읽고, `id` 없는 `ErrorMessage.Root`가 문제를 보여 주면서 이 연결을 대신 해 줍니다.
 

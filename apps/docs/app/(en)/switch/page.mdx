@@ -1,4 +1,4 @@
-import { SwitchStates } from '../../../components/demos/SwitchDemo';
+import SwitchStates from '../../../examples/switch/SwitchStates';
 
 # Switch
 
@@ -6,21 +6,7 @@ On or off. The indicator is a track and a thumb. There is no check glyph. Childr
 
 The input is `type="checkbox"` with `role="switch"`. Controlled and uncontrolled follow the same rule as [Checkbox](/checkbox).
 
-```tsx
-const hintId = useId();
-
-<Switch.Root defaultChecked>Play a sound on mention</Switch.Root>
-<Field.Group>
-  <Switch.Root checked={digest} onCheckedChange={setDigest} aria-describedby={hintId}>
-    Send a weekly digest
-  </Switch.Root>
-  <Description.Root id={hintId}>One email on Monday. No ads.</Description.Root>
-</Field.Group>
-```
-
-<Example block>
-  <SwitchStates />
-</Example>
+<Example of={SwitchStates} block />
 
 Density scales the track through `space.selection.size`. Do not put Switch inside `Field.Root`.
 

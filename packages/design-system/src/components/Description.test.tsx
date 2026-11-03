@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render } from '@testing-library/react';
@@ -52,16 +52,15 @@ describe('Description', () => {
     expect(docsCss).not.toMatch(/\.messages/);
     // Field.Group spaces label, control and messages, so the docs keep no stack class of their own.
     expect(docsCss).not.toMatch(/\.labelled-field/);
-    const demos = join(here, '../../../../apps/docs/components/demos');
-    for (const name of [
-      'DescriptionDemo.tsx',
-      'ErrorMessageDemo.tsx',
-      'CheckboxDemo.tsx',
-      'RadioDemo.tsx',
-      'SwitchDemo.tsx',
-      'FieldDemo.tsx',
-    ]) {
-      expect(readFileSync(join(demos, name), 'utf8')).not.toMatch(/className=["']messages["']/);
+    const docs = join(here, '../../../../apps/docs');
+    const files = ['components/demos', 'examples'].flatMap((folder) =>
+      readdirSync(join(docs, folder), { recursive: true, encoding: 'utf8' })
+        .filter((file) => file.endsWith('.tsx'))
+        .map((file) => join(docs, folder, file)),
+    );
+    expect(files.length).toBeGreaterThan(100);
+    for (const file of files) {
+      expect(readFileSync(file, 'utf8'), file).not.toMatch(/className=["']messages["']/);
     }
   });
 });

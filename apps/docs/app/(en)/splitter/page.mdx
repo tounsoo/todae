@@ -1,44 +1,15 @@
+import SplitterMail from '../../../examples/splitter/SplitterMail';
+import SplitterEditor from '../../../examples/splitter/SplitterEditor';
+import SplitterShow from '../../../examples/splitter/SplitterShow';
+import SplitterSidebar from '../../../examples/splitter/SplitterSidebar';
 import { Table } from '@tounsoo/todae/table';
 import { ScrollRegion } from '../../../components/ScrollRegion';
-import { SplitterEditor, SplitterMail, SplitterShow, SplitterSidebar } from '../../../components/demos/SplitterDemo';
 
 # Splitter
 
 Two panels you can resize, such as a sidebar and the page beside it. `Splitter.Root` holds a `Splitter.Panel`, a `Splitter.Handle` and a second `Splitter.Panel`, in that order. `value` is the size of the first panel in CSS pixels, and the second panel takes the rest. The handle is a `separator` with one Tab stop: drag it, or focus it and press the arrow keys.
 
-```tsx
-import { useId, useState } from 'react';
-import { Splitter, Text } from '@tounsoo/todae';
-
-export function AppLayout() {
-  const navId = useId();
-  const [width, setWidth] = useState(240);
-
-  return (
-    <Splitter.Root
-      value={width}
-      onValueChange={setWidth}
-      min={180}
-      max={480}
-      collapsible
-      style={{ blockSize: '100%' }}
-    >
-      <Splitter.Panel>
-        <Text.Root as="h2" id={navId}>
-          Projects
-        </Text.Root>
-        …
-      </Splitter.Panel>
-      <Splitter.Handle aria-labelledby={navId} />
-      <Splitter.Panel>…</Splitter.Panel>
-    </Splitter.Root>
-  );
-}
-```
-
-<Example block>
-  <SplitterSidebar />
-</Example>
+<Example of={SplitterSidebar} block />
 
 `Splitter.Root` is a grid, and the size reaches the sheet as a custom property, so a server renders the layout with no measurement. It stays inside its container, down to the width of the handle's own track: if the container is narrower than the size, the first panel shrinks to fit and the size you hold stays as it is, so it shows again when there is room. Room wins over `min` too: in a container narrower than `min` the panel is as wide as the container allows, and the handle's range says so. A vertical splitter, and any splitter that should fill its parent, needs a definite size from you along its height, as the examples do with `blockSize`.
 
@@ -64,15 +35,7 @@ With `collapsible`, the first panel can go to 0. Enter on the handle collapses i
 
 `show` picks which panels show, and `"both"` is the default. `show="start"` or `show="end"` shows that panel alone across the root, and takes the other panel and the handle out of the layout with `display: none`, so they leave the tab order and the accessibility tree. Both panels stay mounted, so their state, such as a form's values, is kept, and the panel left showing keeps its scroll position too. The size you hold is kept for when both show again. Set it below a width where two panels don't fit, such as a mail layout that shows the list or the message on a phone, or the [App shell](/recipes/app-shell) recipe, which moves its sidebar into a Drawer. Focus inside the part it hides falls to the page, so move focus before you set it, or take the focused content out as the App shell recipe does.
 
-```tsx
-<Splitter.Root show={wide ? 'both' : 'end'} defaultValue={240} min={180}>
-  …
-</Splitter.Root>
-```
-
-<Example block>
-  <SplitterShow />
-</Example>
+<Example of={SplitterShow} block />
 
 ## Keys and pointer
 
@@ -113,53 +76,13 @@ A press with the primary pointer button on the handle focuses it and captures th
 
 `orientation="vertical"` stacks the panels, and the handle becomes a horizontal separator that Up and Down move. The root needs a block size, since the panels share it.
 
-```tsx
-import { useId } from 'react';
-import { Splitter, Text } from '@tounsoo/todae';
-
-export function EditorWithOutput() {
-  const editorId = useId();
-
-  return (
-    <Splitter.Root orientation="vertical" defaultValue={96} min={64} style={{ blockSize: '18rem' }}>
-      <Splitter.Panel>
-        <Text.Root as="h2" id={editorId}>
-          Query
-        </Text.Root>
-        …
-      </Splitter.Panel>
-      <Splitter.Handle aria-labelledby={editorId} />
-      <Splitter.Panel>…</Splitter.Panel>
-    </Splitter.Root>
-  );
-}
-```
-
-<Example block>
-  <SplitterEditor />
-</Example>
+<Example of={SplitterEditor} block />
 
 ## Nested panes
 
 A root holds exactly two panels. For more panes, put a `Splitter.Root` inside a panel, which is how a mail layout of mailboxes, a message list and a reading pane is built: the mailboxes split from the rest, and the list splits from the message. Each root has its own size, bounds and handle, and the inner root fills its panel.
 
-```tsx
-<Splitter.Root defaultValue={160} min={120} collapsible style={{ blockSize: '18rem' }}>
-  <Splitter.Panel>…mailboxes…</Splitter.Panel>
-  <Splitter.Handle aria-labelledby={mailboxesId} />
-  <Splitter.Panel>
-    <Splitter.Root defaultValue={200} min={160} style={{ blockSize: '100%' }}>
-      <Splitter.Panel>…message list…</Splitter.Panel>
-      <Splitter.Handle aria-labelledby={inboxId} />
-      <Splitter.Panel>…reading pane…</Splitter.Panel>
-    </Splitter.Root>
-  </Splitter.Panel>
-</Splitter.Root>
-```
-
-<Example block>
-  <SplitterMail />
-</Example>
+<Example of={SplitterMail} block />
 
 Panels scroll their own overflow (`overflow: auto`), so content stays in its pane. A [ScrollArea](/scroll-area) with `block-size: 100%` in a panel fills it and scrolls there, with the panel itself not scrolling.
 

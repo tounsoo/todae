@@ -11,9 +11,9 @@ The docs are written in English and translated into Korean (한국어). Translat
 
 ## Translate a page
 
-1. Copy the English page to the same path under the locale folder. For the Button page in Korean, copy `app/(en)/button/page.mdx` to `app/ko/button/page.mdx`. The locale folder sits beside `(en)`, so relative imports such as `../../../components/demos/ButtonDemo` stay the same.
+1. Copy the English page to the same path under the locale folder. For the Button page in Korean, copy `app/(en)/button/page.mdx` to `app/ko/button/page.mdx`. The locale folder sits beside `(en)`, so relative imports such as `../../../examples/button/ButtonVariants` stay the same.
 2. Translate the prose and headings. Keep these as they are:
-   - Code blocks and inline code.
+   - Code blocks and inline code. Live examples, written `<Example of={Name} />`, show code from a shared file in `examples/`, so the Korean page imports the same file and has no code to copy. Keep the import line as it is.
    - Component, prop, hook and token names.
    - JSX such as `<Example>` and `<PropsTable name="…" />`. Translate only the text you pass to them.
    - Links to other docs pages, such as `[Tokens](/tokens)`. Write the English path; on a Korean page it goes to `/ko/tokens` by itself.
@@ -27,6 +27,7 @@ The docs are written in English and translated into Korean (한국어). Translat
 Korean is kept complete, so a change to an English `page.mdx` needs its Korean page brought up to date in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
 
 - A new top-level heading or block, or a new code block, demo, props table, link target anywhere on the page, or a new `href` on a JSX element written directly in the page (not inside a `{…}` expression), changes the page's shape, which the Korean page must match.
+- A change to a live example's code goes in its file under `examples/`, which both pages show, so it needs nothing on the Korean page.
 - Other changes to the English text change the fingerprint of the section they are in. The test names each section that changed, was added or was removed since the Korean was last stamped, and whether the order of sections changed, which adding or removing one also does. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
 
 Stamp only after the translation says what the English now says: a stamp records only the English, and nothing checks the Korean wording.

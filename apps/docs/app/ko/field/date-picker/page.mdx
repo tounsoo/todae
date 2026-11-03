@@ -1,46 +1,11 @@
-import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDatePicked from '../../../../examples/field/date-picker/FieldDatePicked';
+import { FieldDatePickerAlone } from '../../../../components/demos/FieldDemo';
 
 # Field.DatePicker
 
 `Field.DatePicker`는 [Field](/field) 안에서 [Calendar](/calendar)를 [Popover](/popover)로 여는 버튼입니다. `value`는 `Temporal.PlainDate`나 `null`이고, `onValueChange`는 달력에서 고른 날짜를 받으며, 그러면 달력이 닫힙니다. 달력의 `min`, `max`, `isDateDisabled`, `firstDayOfWeek`, `locale`을 받습니다.
 
-```tsx
-const id = useId();
-const [date, setDate] = useState<Temporal.PlainDate | null>(null);
-const [text, setText] = useState('');
-const [invalid, setInvalid] = useState(false);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Start date</Label.Root>
-  <Field.Root id={id} invalid={invalid}>
-    <Field.TextInput
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setDate(parseDate(event.target.value));
-        setInvalid(false);
-      }}
-      onBlur={() => {
-        if (date) setText(formatDate(date));
-        else setInvalid(text.trim() !== '');
-      }}
-    />
-    <Field.DatePicker
-      value={date}
-      onValueChange={(next) => {
-        setDate(next);
-        setText(formatDate(next));
-        setInvalid(false);
-      }}
-      showValue={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldDatePicked />
-</Example>
+<Example of={FieldDatePicked} block />
 
 여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 날짜를 입력할 수도 있습니다. 고른 날짜는 `formatDate`로 텍스트에 쓰이고, `parseDate`가 날짜로 읽은 입력은 달력을 그 달로 옮깁니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 달력 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 날짜를 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `2026-10-13` 형식으로 날짜를 보내려면 Root 대신 선택기에 `name`을 두세요.
 

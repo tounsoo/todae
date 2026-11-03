@@ -1,4 +1,4 @@
-import { DescriptionSibling } from '../../../components/demos/DescriptionDemo';
+import DescriptionSibling from '../../../examples/description/DescriptionSibling';
 
 # Description
 
@@ -12,22 +12,7 @@ Description owns its spacing. `margin-block-start` is `field.label.gap` (0.4rem)
 
 Inside a `Field.Group`, the group's gap replaces that margin, so the distance stays `field.label.gap`. The group also spaces Label from the control.
 
-```tsx
-const id = useId();
-const hintId = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Work email</Label.Root>
-  <Field.Root id={id} aria-describedby={hintId}>
-    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-  </Field.Root>
-  <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-</Field.Group>
-```
-
-<Example block>
-  <DescriptionSibling />
-</Example>
+<Example of={DescriptionSibling} block />
 
 This is not `Dialog.Description`. Dialog Description wires `aria-describedby` for you. Form Description does not.
 
