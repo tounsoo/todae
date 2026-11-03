@@ -28,6 +28,7 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { anchoredContentStyle } from '../overlay/anchorName.js';
 import { aimPopoverOrigin } from '../overlay/popoverOrigin.js';
+import { whenExited } from '../overlay/whenExited.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -499,8 +500,21 @@ function Content({
     ctx.popover.getPopoverProps();
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
-  const at = ctx.context;
   const boxRef = useRef<HTMLSpanElement | null>(null);
+  // A menu at a context request's box keeps that box, shown, while its exit
+  // fade runs, so it fades where it sat. Root drops the request as it closes.
+  const [kept, setKept] = useState(ctx.context);
+  const [fading, setFading] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (ctx.context && ctx.context !== kept) setKept(ctx.context);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    setFading(!open && kept !== null);
+  }
+  useLayoutEffect(() => {
+    if (fading) return whenExited(localRef.current, 'opacity', () => setFading(false));
+  }, [fading]);
+  const at = ctx.context ?? (fading ? kept : null);
   // A context request that comes while the menu is already open shows its box
   // after the menu, which can only anchor to what is earlier in the top
   // layer, so the menu is shown again in front of it, keeping focus.
@@ -586,7 +600,7 @@ function Content({
   );
   return (
     <>
-      {at && <BoxAnchor ref={boxRef} box={at.box} name={ctx.boxName} open={open} />}
+      {at && <BoxAnchor ref={boxRef} box={at.box} name={ctx.boxName} open={open || fading} />}
       <div
         {...props}
         ref={refs}

@@ -42,6 +42,11 @@
     transition-timing-function: var(--todae-popover-motion-easing-exit);
   }
 
+  /* Its anchor went away as it closed, so it has nowhere to fade. */
+  .content[data-todae-unanchored] {
+    transition: none;
+  }
+
   /* Only on the way in and out: an open popover is never scaled, so a
      tooltip anchored inside it, placed against its trigger's untransformed
      box, sits by its trigger. A tip that opens while the popover still

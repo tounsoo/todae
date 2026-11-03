@@ -222,17 +222,21 @@ export function useTooltipInternal<I extends boolean = false>(
         commit: (next, reason) => {
           const seq = ++commitSeq.current;
           // A tip waits while its trigger moves by a transform, as in a
-          // popover that is still growing open, and opens then only if what
-          // asked for it still holds it: a hover that comes after a focus
-          // left keeps its own show delay.
+          // popover that is still growing open. It opens then for what still
+          // holds it: the hold that asked, or else the other one, unless that
+          // one is still running its own show delay.
           const settling = next ? transformsSettling(triggerRef.current) : null;
           if (!settling) {
             commitNow(next, reason);
             return;
           }
-          const hold = reason === 'focus' ? 'focus' : 'hover';
+          const asked = reason === 'focus' ? 'focus' : 'hover';
           void settling.then(() => {
-            if (commitSeq.current === seq && intentRef.current[hold] === 'held') commitNow(next, reason);
+            if (commitSeq.current !== seq) return;
+            const intent = intentRef.current;
+            if (intent[asked] === 'held') commitNow(next, reason);
+            else if (intent.pending === null && intent.focus === 'held') commitNow(next, 'focus');
+            else if (intent.pending === null && intent.hover === 'held') commitNow(next, 'hover');
           });
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),

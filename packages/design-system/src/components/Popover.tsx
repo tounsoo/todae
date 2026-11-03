@@ -73,29 +73,16 @@ export function PopoverSurface({
   const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
   // It finishes closing as its exit fade ends, or at once with no fade.
-  // Opening again inside the fade finishes it then, so what it holds still
-  // starts over; unmounting just drops the wait.
+  // Opening again inside the fade, while it still shows, takes it back
+  // without finishing, as a Dialog does, so what it holds keeps its place
+  // and focus has somewhere to land. Unmounting drops the wait.
   const [closedListeners, closed] = useSurfaceClosedSignal();
   const wasOpen = useRef(open);
-  const exiting = useRef<(() => void) | null>(null);
   useLayoutEffect(() => {
     const closing = wasOpen.current && !open;
     wasOpen.current = open;
-    if (closing) {
-      let ended = false;
-      const cancel = whenExited(localRef.current, 'opacity', () => {
-        ended = true;
-        exiting.current = null;
-        closed();
-      });
-      if (!ended) exiting.current = cancel;
-    } else if (open && exiting.current) {
-      exiting.current();
-      exiting.current = null;
-      closed();
-    }
+    if (closing) return whenExited(localRef.current, 'opacity', closed);
   }, [closed, open]);
-  useLayoutEffect(() => () => exiting.current?.(), []);
   return createElement(
     as,
     {

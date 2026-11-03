@@ -278,15 +278,18 @@ describe('Popover closing with an exit fade', () => {
     expect(screen.getByTestId('title').textContent).toBe('Settings');
   });
 
-  it('still starts over when it opens again inside the fade', () => {
+  it('keeps its place when it opens again inside the fade, as a Dialog does', () => {
     vi.useFakeTimers();
     stubOpacityFade();
     const { rerender } = render(<Settings open />);
     goToAccount(rerender);
     act(() => vi.advanceTimersByTime(50));
     rerender(<Settings open />);
-    expect(screen.getByTestId('title').textContent).toBe('Settings');
     act(() => vi.advanceTimersByTime(500));
+    expect(screen.getByTestId('title').textContent).toBe('Account');
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Email' }));
+    rerender(<Settings open={false} />);
+    act(() => vi.advanceTimersByTime(200));
     expect(screen.getByTestId('title').textContent).toBe('Settings');
   });
 });

@@ -1082,3 +1082,54 @@ describe('Menu.ContextTrigger', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 });
+
+describe('A context menu closing with an exit fade', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('stays anchored at the box it opened at until the fade ends', () => {
+    // Popover.module.css gives the menu its exit (160ms by default); jsdom reads no
+    // stylesheet, so supply the computed transition the browser would.
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (el instanceof HTMLElement && el.getAttribute('role') === 'menu') {
+        return Object.assign(Object.create(style), {
+          transitionProperty: 'opacity, scale, display, overlay',
+          transitionDuration: '0.16s',
+          transitionDelay: '0s',
+        }) as CSSStyleDeclaration;
+      }
+      return style;
+    });
+    render(
+      <Menu.Root>
+        <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+        <Menu.Content aria-label="File">
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+    });
+    const menu = screen.getByRole('menu', { hidden: true });
+    const boxName = menu.style.getPropertyValue('position-anchor');
+    expect(boxName).toContain('-box');
+    expect(document.querySelector('span[popover]')).not.toBeNull();
+
+    act(() => {
+      fireEvent.keyDown(menu, { key: 'Escape' });
+    });
+    expect(menu.hasAttribute('data-popover-open')).toBe(false);
+    // The browser keeps drawing the menu for its exit (display and
+    // overlay allow-discrete). It should still sit at the box meanwhile.
+    expect(menu.style.getPropertyValue('position-anchor')).toBe(boxName);
+    expect(document.querySelector('span[popover]')).not.toBeNull();
+    expect(menu.hasAttribute('data-todae-unanchored')).toBe(false);
+    // The fade's end lets the box go.
+    act(() => {
+      menu.dispatchEvent(Object.assign(new Event('transitionend', { bubbles: true }), { propertyName: 'opacity' }));
+    });
+    expect(document.querySelector('span[popover]')).toBeNull();
+  });
+});

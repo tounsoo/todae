@@ -1,12 +1,15 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { createRoot } from 'react-dom/client';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
+import { anchorNamed } from './popoverOrigin.js';
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  document.body.innerHTML = '';
 });
 
 const box = (top: number, left: number, height: number, width: number) =>
@@ -95,5 +98,95 @@ describe('A popover grows from its anchor', () => {
     stubAbove();
     act(() => setOpen(false));
     expect(el.style.getPropertyValue('--_origin')).toBe('left bottom');
+  });
+});
+
+describe('anchorNamed', () => {
+  it('does not match a name that is only a prefix of another', () => {
+    document.body.innerHTML = '<span id="a" style="anchor-name: --word-2"></span><span id="b" style="anchor-name: --word"></span>';
+    expect(anchorNamed(document.body, '--word')?.id).toBe('b');
+  });
+
+  it('matches one name in a list', () => {
+    document.body.innerHTML = '<span id="a" style="anchor-name: --tip, --word"></span>';
+    expect(anchorNamed(document.body, '--word')?.id).toBe('a');
+  });
+
+  it('like CSS, takes the last element carrying a duplicated name', () => {
+    document.body.innerHTML = '<span id="a" style="anchor-name: --word"></span><span id="b" style="anchor-name: --word"></span>';
+    expect(anchorNamed(document.body, '--word')?.id).toBe('b');
+  });
+});
+
+describe('a popover inside a shadow root, placed by name', () => {
+  it('aims at the named anchor beside it in the same shadow tree', () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('popover')) return box(100, 20, 200, 160); // It sits above its anchor.
+      return box(304, 20, 30, 80);
+    });
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const container = document.createElement('div');
+    shadow.append(container);
+    function Harness() {
+      const popover = usePopover({ defaultOpen: true, anchorName: '--word' });
+      return (
+        <>
+          <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span>
+          <button type="button" {...popover.getTriggerProps()}>
+            Open
+          </button>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="List">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const root = createRoot(container);
+    act(() => root.render(<Harness />));
+    const el = shadow.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(el.style.getPropertyValue('--_origin')).toBe('left bottom');
+    act(() => root.unmount());
+  });
+});
+
+describe('A popover whose anchor goes away as it closes', () => {
+  it('goes at once, and fades in again on its next open', () => {
+    function Harness({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: '--word' });
+      return (
+        <>
+          {open && <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span>}
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="List">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open />);
+    const el = screen.getByRole('dialog', { name: 'List', hidden: true });
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+    rerender(<Harness open={false} />);
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
+    rerender(<Harness open />);
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('keeps its fade while its anchor stays', () => {
+    function Harness({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: '--word' });
+      return (
+        <>
+          <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="List">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open />);
+    rerender(<Harness open={false} />);
+    expect(screen.getByRole('dialog', { name: 'List', hidden: true }).hasAttribute('data-todae-unanchored')).toBe(false);
   });
 });

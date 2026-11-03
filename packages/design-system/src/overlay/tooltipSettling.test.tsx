@@ -102,3 +102,92 @@ describe('A tip whose trigger is still growing open', () => {
     expect(onOpenChange).toHaveBeenCalledWith(true, 'focus');
   });
 });
+
+const flush = async () => {
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+};
+
+describe('A tip that waited while the hold that asked for it hands over', () => {
+  it('opens for a hover already holding it once focus leaves', async () => {
+    const onOpenChange = vi.fn();
+    render(<Harness onOpenChange={onOpenChange} />);
+    stubScalingBox(screen.getByTestId('box'));
+    const trigger = screen.getByRole('button', { name: 'Pin' });
+
+    act(() => trigger.focus()); // focus asks to open now; deferred by the scale
+    fireEvent.pointerEnter(trigger); // pointer comes onto the trigger while focused
+    act(() => trigger.blur()); // focus leaves; the hover still holds
+
+    await act(async () => {
+      resolveFinished();
+      await flush();
+    });
+    // Give any show delay plenty of time to run out.
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+      await flush();
+    });
+    // The pointer is still on the trigger: the tip should be up.
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+  });
+
+  it('opens for focus still holding it once the hover that asked leaves', async () => {
+    const onOpenChange = vi.fn();
+    render(<Harness onOpenChange={onOpenChange} />);
+    stubScalingBox(screen.getByTestId('box'));
+    const trigger = screen.getByRole('button', { name: 'Pin' });
+
+    fireEvent.pointerEnter(trigger);
+    await act(async () => {
+      vi.advanceTimersByTime(1000); // hover show delay runs out; the open is deferred by the scale
+      await flush();
+    });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    act(() => trigger.focus()); // focus now holds it too
+    fireEvent.pointerLeave(trigger); // the pointer leaves; focus still holds
+
+    await act(async () => {
+      resolveFinished();
+      await flush();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+      await flush();
+    });
+    expect(document.activeElement).toBe(trigger);
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+  });
+
+  it('ends open the same way with no scale running', async () => {
+    const onOpenChange = vi.fn();
+    render(<Harness onOpenChange={onOpenChange} />);
+    const trigger = screen.getByRole('button', { name: 'Pin' });
+    act(() => trigger.focus());
+    fireEvent.pointerEnter(trigger);
+    act(() => trigger.blur());
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+      await flush();
+    });
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+  });
+});
+
+describe('A tip held by focus after the hover leaves', () => {
+  it('stays open with no scale running', async () => {
+    render(<Harness onOpenChange={vi.fn()} />);
+    const trigger = screen.getByRole('button', { name: 'Pin' });
+    fireEvent.pointerEnter(trigger);
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await flush();
+    });
+    act(() => trigger.focus());
+    fireEvent.pointerLeave(trigger);
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+      await flush();
+    });
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+  });
+});

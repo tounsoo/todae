@@ -15,10 +15,19 @@ export function aimPopoverOrigin(popover: HTMLElement, anchor: Element): void {
   popover.style.setProperty('--_origin', `${x} ${y}`);
 }
 
-/** The element whose own `anchor-name` list holds `name`, such as a word a list of suggestions sits by. */
-export function anchorNamed(doc: Document, name: string): HTMLElement | null {
+/**
+ * The element `popover` was placed by when it was placed by `name`, such as
+ * a word a list of suggestions sits by: the last one in its tree whose own
+ * inline `anchor-name` list holds `name`, as CSS picks the last. A name set
+ * from a stylesheet is not found, and the popover keeps its default origin.
+ */
+export function anchorNamed(popover: Element, name: string): HTMLElement | null {
   if (!name) return null;
-  for (const el of doc.querySelectorAll<HTMLElement>('[style*="anchor-name"]')) {
+  const root = popover.getRootNode() as Document | ShadowRoot;
+  if (!root.querySelectorAll) return null;
+  const named = root.querySelectorAll<HTMLElement>('[style*="anchor-name"]');
+  for (let i = named.length - 1; i >= 0; i--) {
+    const el = named[i]!;
     if (el.style.getPropertyValue('anchor-name').split(',').some((part) => part.trim() === name)) return el;
   }
   return null;
