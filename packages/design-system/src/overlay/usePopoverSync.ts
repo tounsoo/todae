@@ -17,7 +17,11 @@ export function usePopoverSync(contentRef: RefObject<HTMLElement | null>, open: 
       if (isPopoverOpen(el)) el.hidePopover();
       return;
     }
-    if (!isPopoverOpen(el)) el.showPopover();
+    if (!isPopoverOpen(el)) {
+      // A close that lost its anchor went at once; this open fades in again.
+      el.removeAttribute('data-todae-unanchored');
+      el.showPopover();
+    }
     held.add(el);
     return () => {
       held.delete(el);

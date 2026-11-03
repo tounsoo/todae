@@ -117,10 +117,6 @@ export function usePopoverInternal(
   );
 
   useFocusRestore(enabled && open, { restoreTo: restoreFocusRef, containerRef: popoverRef });
-  // An open fades in again, before initial focus first reads its style.
-  useLayoutEffect(() => {
-    if (open) popoverRef.current?.removeAttribute('data-todae-unanchored');
-  }, [open]);
   useInitialFocus(popoverRef, enabled && open && initialFocus, initialFocusRef);
   useEscapeKey(open, enabled, useCallback(() => requestClose('escape'), [requestClose]), popoverRef);
 
@@ -150,6 +146,7 @@ export function usePopoverInternal(
 
   useEffect(() => () => outsideRestore.current?.(), []);
 
+  const wasOpen = useRef(open);
   // The popover grows from where it sits by its anchor as it shows, and
   // shrinks back toward where it sits then as it closes, since it may have
   // flipped while open. Its anchor is its trigger, or the element that
@@ -161,7 +158,9 @@ export function usePopoverInternal(
     if (!el) return;
     const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
     const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
-    if (!open && !anchor?.isConnected) el.setAttribute('data-todae-unanchored', '');
+    const closing = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (closing && !anchor?.isConnected) el.setAttribute('data-todae-unanchored', '');
     if (anchor?.isConnected) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);
 

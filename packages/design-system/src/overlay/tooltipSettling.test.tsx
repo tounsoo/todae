@@ -191,3 +191,31 @@ describe('A tip held by focus after the hover leaves', () => {
     expect(screen.queryByRole('tooltip')).not.toBeNull();
   });
 });
+
+describe('A waiting tip when a new hover delay starts', () => {
+  it('reports the open once', async () => {
+    const onOpenChange = vi.fn();
+    render(<Harness onOpenChange={onOpenChange} />);
+    const trigger = screen.getByRole('button', { name: 'Pin' });
+    fireEvent.pointerEnter(trigger);
+    stubScalingBox(screen.getByTestId('box'));
+    await act(async () => {
+      vi.advanceTimersByTime(1000); // hover delay runs out; deferred by the scale
+      await flush();
+    });
+    fireEvent.pointerLeave(trigger);
+    fireEvent.pointerEnter(trigger); // a new hover: a new show delay is pending
+    await act(async () => {
+      resolveFinished();
+      await flush();
+    });
+    // The new delay, not the settle, opens it.
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+      await flush();
+    });
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+    expect(onOpenChange.mock.calls.filter(([open]) => open === true)).toHaveLength(1);
+  });
+});

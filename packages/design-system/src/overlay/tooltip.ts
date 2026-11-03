@@ -223,8 +223,8 @@ export function useTooltipInternal<I extends boolean = false>(
           const seq = ++commitSeq.current;
           // A tip waits while its trigger moves by a transform, as in a
           // popover that is still growing open. It opens then for what still
-          // holds it: the hold that asked, or else the other one, unless that
-          // one is still running its own show delay.
+          // holds it, the hold that asked or else the other, unless a show
+          // delay is running.
           const settling = next ? transformsSettling(triggerRef.current) : null;
           if (!settling) {
             commitNow(next, reason);
@@ -232,11 +232,12 @@ export function useTooltipInternal<I extends boolean = false>(
           }
           const asked = reason === 'focus' ? 'focus' : 'hover';
           void settling.then(() => {
-            if (commitSeq.current !== seq) return;
             const intent = intentRef.current;
+            // A show delay started since then opens it when it runs out.
+            if (commitSeq.current !== seq || intent.pending !== null) return;
             if (intent[asked] === 'held') commitNow(next, reason);
-            else if (intent.pending === null && intent.focus === 'held') commitNow(next, 'focus');
-            else if (intent.pending === null && intent.hover === 'held') commitNow(next, 'hover');
+            else if (intent.focus === 'held') commitNow(next, 'focus');
+            else if (intent.hover === 'held') commitNow(next, 'hover');
           });
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),

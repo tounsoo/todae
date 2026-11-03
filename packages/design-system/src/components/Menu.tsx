@@ -506,7 +506,7 @@ function Content({
   const [kept, setKept] = useState(ctx.context);
   const [fading, setFading] = useState(false);
   const [wasOpen, setWasOpen] = useState(open);
-  if (ctx.context && ctx.context !== kept) setKept(ctx.context);
+  if (open && ctx.context !== kept) setKept(ctx.context);
   if (wasOpen !== open) {
     setWasOpen(open);
     setFading(!open && kept !== null);

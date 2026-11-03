@@ -1133,3 +1133,144 @@ describe('A context menu closing with an exit fade', () => {
     expect(document.querySelector('span[popover]')).toBeNull();
   });
 });
+
+describe('Menu motion', () => {
+  function fakeExit() {
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (el instanceof HTMLElement && el.getAttribute('role') === 'menu') {
+        return Object.assign(Object.create(style), {
+          transitionProperty: 'opacity, scale, display, overlay',
+          transitionDuration: '0.16s',
+          transitionDelay: '0s',
+        }) as CSSStyleDeclaration;
+      }
+      return style;
+    });
+  }
+
+  const ui = (
+    <Menu.Root>
+      <Menu.Trigger>Actions</Menu.Trigger>
+      <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+      <Menu.Content>
+        <Menu.Item>Open</Menu.Item>
+      </Menu.Content>
+    </Menu.Root>
+  );
+
+  const menu = () => screen.getByRole('menu', { hidden: true });
+  const endFade = () =>
+    act(() => {
+      menu().dispatchEvent(Object.assign(new Event('transitionend', { bubbles: true }), { propertyName: 'opacity' }));
+    });
+
+  describe('A menu opened from its trigger after a context menu', () => {
+    afterEach(() => {
+      cleanup();
+      vi.restoreAllMocks();
+    });
+
+    it('fades out by its trigger once the context fade ended', () => {
+      fakeExit();
+      render(ui);
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      const boxName = menu().style.getPropertyValue('position-anchor');
+      expect(boxName).toContain('-box');
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      endFade();
+      expect(document.querySelector('span[popover]')).toBeNull();
+
+      // Now open from the trigger and close it again.
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      });
+      expect(menu().hasAttribute('data-popover-open')).toBe(true);
+      expect(menu().style.getPropertyValue('position-anchor')).not.toBe(boxName);
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      // During its exit fade it should stay by the trigger.
+      expect(menu().style.getPropertyValue('position-anchor')).not.toBe(boxName);
+      expect(document.querySelector('span[popover]')).toBeNull();
+    });
+
+    it('fades out by its trigger when opened from it inside the context fade', () => {
+      fakeExit();
+      render(ui);
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      const boxName = menu().style.getPropertyValue('position-anchor');
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      // Still fading; reopen from the trigger.
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      });
+      expect(menu().style.getPropertyValue('position-anchor')).not.toBe(boxName);
+      act(() => {
+        fireEvent.keyDown(menu(), { key: 'Escape' });
+      });
+      expect(menu().style.getPropertyValue('position-anchor')).not.toBe(boxName);
+      expect(document.querySelector('span[popover]')).toBeNull();
+    });
+  });
+
+
+  describe('A context-only menu', () => {
+    afterEach(() => {
+      cleanup();
+      vi.restoreAllMocks();
+    });
+
+    it('is not marked as having lost its anchor before it ever opened', () => {
+      render(
+        <Menu.Root>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Content aria-label="File">
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>,
+      );
+      expect(screen.getByRole('menu', { hidden: true }).hasAttribute('data-todae-unanchored')).toBe(false);
+    });
+
+    it('has no such mark when its layout is first read after showing', () => {
+      render(
+        <Menu.Root>
+          <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+          <Menu.Content aria-label="File">
+            <Menu.Item>Open</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>,
+      );
+      const el = screen.getByRole('menu', { hidden: true });
+      const seen: boolean[] = [];
+      const realShow = el.showPopover.bind(el);
+      let shown = false;
+      el.showPopover = () => {
+        shown = true;
+        realShow();
+      };
+      const realRect = el.getBoundingClientRect.bind(el);
+      vi.spyOn(el, 'getBoundingClientRect').mockImplementation(() => {
+        if (shown) seen.push(el.hasAttribute('data-todae-unanchored'));
+        return realRect();
+      });
+      act(() => {
+        fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+      });
+      expect(el.hasAttribute('data-popover-open')).toBe(true);
+      // A forced layout read with the mark present resolves the opening style with no transition.
+      // (On main nothing reads the menu's box here and nothing marks it.)
+      expect(seen).not.toContain(true);
+    });
+  });
+});
