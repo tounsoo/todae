@@ -13,7 +13,6 @@ afterEach(async () => {
   await emulateMedia([]);
 });
 
-// A one-second linear move leaves a frame or two after the click well inside it.
 const slow = {
   ['--_todae-selection-motion-duration' as string]: '1s',
   ['--_todae-selection-motion-easing' as string]: 'linear',
@@ -31,8 +30,7 @@ function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
-/** The CSS properties now transitioning on the element or its ::before and ::after. */
-function moving(el: Element): string[] {
+function runningTransitionProperties(el: Element): string[] {
   return el
     .getAnimations({ subtree: true })
     .filter((a): a is CSSTransition => a instanceof CSSTransition && a.playState === 'running')
@@ -56,8 +54,7 @@ function SectionTabs({ orientation }: { orientation?: 'vertical' }) {
   );
 }
 
-/** The indicator's box and the selected tab's, in viewport pixels. */
-function boxes() {
+function indicatorAndSelectedTabRects() {
   const list = screen.getByRole('tablist');
   const tab = screen.getByRole('tab', { selected: true });
   const style = getComputedStyle(list, '::after');
@@ -77,7 +74,7 @@ describe('Tabs indicator motion', () => {
         <SectionTabs />
       </Themed>,
     );
-    const start = boxes();
+    const start = indicatorAndSelectedTabRects();
     expect(start.indicator.left).toBeCloseTo(start.tab.left, 0);
     expect(start.indicator.width).toBeCloseTo(start.tab.width, 0);
 
@@ -85,17 +82,16 @@ describe('Tabs indicator motion', () => {
     await frame();
     await frame();
     const list = screen.getByRole('tablist');
-    expect(moving(list).length).toBeGreaterThan(0);
-    const mid = boxes();
+    expect(runningTransitionProperties(list).length).toBeGreaterThan(0);
+    const mid = indicatorAndSelectedTabRects();
     const [from, to] = [start.tab.left, mid.tab.left].sort((a, b) => a - b) as [number, number];
     expect(mid.indicator.left).toBeGreaterThan(from + 1);
     expect(mid.indicator.left).toBeLessThan(to - 1);
 
     await settle(list);
-    const end = boxes();
+    const end = indicatorAndSelectedTabRects();
     expect(end.indicator.left).toBeCloseTo(end.tab.left, 0);
     expect(end.indicator.width).toBeCloseTo(end.tab.width, 0);
-    // It sits on the list's border, under the tab.
     expect(end.indicator.top + end.indicator.height).toBeGreaterThan(end.tab.bottom);
   });
 
@@ -107,7 +103,7 @@ describe('Tabs indicator motion', () => {
     );
     await userEvent.click(screen.getByRole('tab', { name: 'A much longer tab' }));
     await settle(screen.getByRole('tablist'));
-    const end = boxes();
+    const end = indicatorAndSelectedTabRects();
     expect(end.indicator.top).toBeCloseTo(end.tab.top, 0);
     expect(end.indicator.height).toBeCloseTo(end.tab.height, 0);
     expect(end.indicator.left + end.indicator.width).toBeGreaterThan(end.tab.right);
@@ -122,8 +118,8 @@ describe('Tabs indicator motion', () => {
     );
     await userEvent.click(screen.getByRole('tab', { name: 'A much longer tab' }));
     await frame();
-    expect(moving(screen.getByRole('tablist'))).toEqual([]);
-    const now = boxes();
+    expect(runningTransitionProperties(screen.getByRole('tablist'))).toEqual([]);
+    const now = indicatorAndSelectedTabRects();
     expect(now.indicator.left).toBeCloseTo(now.tab.left, 0);
   });
 });
@@ -143,7 +139,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     await userEvent.click(input);
     await frame();
     await frame();
-    expect(moving(input.nextElementSibling!)).toEqual(expect.arrayContaining(['transform', 'background-color']));
+    expect(runningTransitionProperties(input.nextElementSibling!)).toEqual(expect.arrayContaining(['transform', 'background-color']));
     const mid = thumbX(input);
     await settle(input.nextElementSibling!);
     const end = thumbX(input);
@@ -162,7 +158,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     const input = screen.getByRole('switch');
     await userEvent.click(input);
     await frame();
-    const now = moving(input.nextElementSibling!);
+    const now = runningTransitionProperties(input.nextElementSibling!);
     expect(now).toContain('background-color');
     expect(now).not.toContain('transform');
   });
@@ -176,7 +172,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     const box = screen.getByRole('checkbox');
     await userEvent.click(box);
     await frame();
-    expect(moving(box.nextElementSibling!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
+    expect(runningTransitionProperties(box.nextElementSibling!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
     await settle(box.nextElementSibling!);
     const glyph = box.nextElementSibling!.querySelector('[data-todae-glyph]')!;
     expect(getComputedStyle(glyph).opacity).toBe('1');
@@ -185,7 +181,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await userEvent.click(box);
     await frame();
-    expect(moving(box.nextElementSibling!)).not.toContain('scale');
+    expect(runningTransitionProperties(box.nextElementSibling!)).not.toContain('scale');
     await settle(box.nextElementSibling!);
     expect(getComputedStyle(glyph).visibility).toBe('hidden');
   });
@@ -202,7 +198,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     const free = screen.getByRole('radio', { name: 'Free' });
     await userEvent.click(free);
     await frame();
-    expect(moving(free.nextElementSibling!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
+    expect(runningTransitionProperties(free.nextElementSibling!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
     await settle(free.nextElementSibling!);
     expect(getComputedStyle(free.nextElementSibling!, '::after').scale).toBe('1');
 
@@ -210,7 +206,7 @@ describe('Switch, Checkbox and Radio motion', () => {
     const pro = screen.getByRole('radio', { name: 'Pro' });
     await userEvent.click(pro);
     await frame();
-    const now = moving(pro.nextElementSibling!);
+    const now = runningTransitionProperties(pro.nextElementSibling!);
     expect(now).toContain('opacity');
     expect(now).not.toContain('scale');
   });

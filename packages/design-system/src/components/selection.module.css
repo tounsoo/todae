@@ -119,7 +119,6 @@
     scale: 1;
   }
 
-  /* The dot is always drawn, so it can grow in when the radio is checked. */
   .root[data-control='radio'] .indicator::after {
     content: '';
     display: block;
@@ -161,7 +160,6 @@
     transform: translateX(calc(var(--todae-selection-size) * -0.8));
   }
 
-  /* Under reduced motion the thumb jumps and the check and dot only fade. */
   @media (prefers-reduced-motion: reduce) {
     .glyph,
     .root[data-control='radio'] .indicator::after {

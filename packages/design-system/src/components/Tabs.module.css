@@ -81,8 +81,6 @@
     height: auto;
   }
 
-  /* Where anchor positioning works, the list draws one indicator anchored to
-     the selected tab, so it slides from tab to tab instead of jumping. */
   @supports (anchor-name: --todae-tab) {
     .list {
       position: relative;
