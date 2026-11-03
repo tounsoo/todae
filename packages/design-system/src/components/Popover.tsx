@@ -1,7 +1,7 @@
 import { createElement, useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
-import { whenExited } from '../overlay/useOverlayPresence.js';
+import { whenExited } from '../overlay/whenExited.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
 import type { PopoverWire } from '../overlay/popoverWire.js';

@@ -147,6 +147,7 @@ describe('useTooltip exports', () => {
         './tooltipWire.js',
         './tabbables.js',
         './useEscapeKey.js',
+        './transformsSettling.js',
         '../hooks/useControlledState.js',
       ]),
     );
