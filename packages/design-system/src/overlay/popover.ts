@@ -20,7 +20,7 @@ import { anchoredContentStyle, anchorTriggerStyle, mergeAnchorNames, removeAncho
 import { useControlledState } from '../hooks/useControlledState.js';
 import { eventInside } from './eventInside.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
-import { aimPopoverOrigin } from './popoverOrigin.js';
+import { aimPopoverOrigin, anchorNamed } from './popoverOrigin.js';
 
 export type { PopoverWire };
 
@@ -146,14 +146,16 @@ export function usePopoverInternal(
 
   useEffect(() => () => outsideRestore.current?.(), []);
 
-  // The popover grows from where it sits by its anchor, once it shows. A
-  // popover placed at another anchor, such as a context menu's box, is aimed
-  // by whoever placed it.
+  // The popover grows from where it sits by its anchor as it shows, and
+  // shrinks back toward where it sits then as it closes, since it may have
+  // flipped while open. Its anchor is its trigger, or the element that
+  // carries the name it was placed at, such as a word or a context menu's box.
   useLayoutEffect(() => {
     const el = popoverRef.current;
-    const anchor = anchorRef?.current ?? triggerRef.current;
-    if (!open || !el || !anchor || el.style.getPropertyValue('--todae-popover-anchor') !== anchorName) return;
-    aimPopoverOrigin(el, anchor);
+    if (!el) return;
+    const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
+    const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el.ownerDocument, placedAt);
+    if (anchor) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);
 
   useEffect(() => {

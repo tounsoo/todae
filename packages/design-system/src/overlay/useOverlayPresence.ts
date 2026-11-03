@@ -10,11 +10,12 @@ export const DRAWER_EXIT_MS = 240;
 /** Duration plus delay of `propertyName`'s computed transition, or null when none applies. */
 export function transitionMs(node: Element, propertyName: string): number | null {
   const style = getComputedStyle(node);
-  const split = (value: string) => value.split(',').map((part) => part.trim());
+  // A mocked or partial computed style can leave these out.
+  if (!style.transitionDuration) return null;
+  const split = (value: string | undefined) => (value ?? '').split(',').map((part) => part.trim());
   const properties = split(style.transitionProperty);
   const durations = split(style.transitionDuration);
   const delays = split(style.transitionDelay);
-  if (!style.transitionDuration) return null;
   let index = properties.lastIndexOf(propertyName);
   if (index < 0) index = properties.lastIndexOf('all');
   if (index < 0) return null;

@@ -18,7 +18,6 @@ import {
   type TooltipEvent,
   type TooltipOpenReason,
   type TooltipPolicy,
-  wantsOpen,
 } from './tooltipIntent.js';
 import { transformsSettling } from './transformsSettling.js';
 import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from './tooltipWarmth.js';
@@ -223,15 +222,17 @@ export function useTooltipInternal<I extends boolean = false>(
         commit: (next, reason) => {
           const seq = ++commitSeq.current;
           // A tip waits while its trigger moves by a transform, as in a
-          // popover that is still growing open, and opens then only if
-          // something still holds it.
+          // popover that is still growing open, and opens then only if what
+          // asked for it still holds it: a hover that comes after a focus
+          // left keeps its own show delay.
           const settling = next ? transformsSettling(triggerRef.current) : null;
           if (!settling) {
             commitNow(next, reason);
             return;
           }
+          const hold = reason === 'focus' ? 'focus' : 'hover';
           void settling.then(() => {
-            if (commitSeq.current === seq && wantsOpen(intentRef.current)) commitNow(next, reason);
+            if (commitSeq.current === seq && intentRef.current[hold] === 'held') commitNow(next, reason);
           });
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
