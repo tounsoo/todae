@@ -22,6 +22,13 @@ export function useFocusRestore(
   const wasActive = useRef(false);
   const openedIn = useRef<Document | null>(null);
 
+  // Follow a container that reaches another document after it opened, such as
+  // a portal whose target is set later.
+  useLayoutEffect(() => {
+    const doc = containerRef?.current?.ownerDocument;
+    if (wasActive.current && doc) openedIn.current = doc;
+  });
+
   useLayoutEffect(() => {
     if (active) {
       // Only when it opens: a new restoreTo while it is open runs this again, with focus already inside.
