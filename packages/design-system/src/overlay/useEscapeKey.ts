@@ -207,13 +207,12 @@ function onKeyDown(event: KeyboardEvent) {
  */
 export function takeCloseRequest(dialog: Element): boolean {
   // Where focus is, read as each layer's document reads it, as a key there
-  // would be: a shadow root's focus as its host, a frame's as the frame.
+  // would be: a shadow root's focus as its host, a frame's as the frame. A
+  // document focus isn't in gets where it is, not its own stale activeElement.
   const focused = focusPath(dialog.ownerDocument).filter((el) => el.getRootNode().nodeType === 9);
+  const fallback = focused.at(-1) ?? dialog.ownerDocument.activeElement;
   const top = select(
-    candidates([dialog], (entry) => {
-      const doc = entry.doc();
-      return focused.filter((el) => el.ownerDocument === doc).at(-1) ?? doc.activeElement;
-    }),
+    candidates([dialog], (entry) => focused.filter((el) => el.ownerDocument === entry.doc()).at(-1) ?? fallback),
   );
   top?.handle();
   return top !== undefined;

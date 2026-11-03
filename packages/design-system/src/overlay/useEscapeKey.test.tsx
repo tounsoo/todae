@@ -507,6 +507,24 @@ describe('useEscapeKey', () => {
       });
     }
 
+    it('keeps a modal close request from a layer in an iframe that focus has left for the dialog', () => {
+      const dialog = document.body.appendChild(document.createElement('dialog'));
+      const pressed = dialog.appendChild(document.createElement('button'));
+      const doc = makeFrame(dialog);
+      const onEscape = vi.fn();
+      render(
+        <Kind onEscape={onEscape} own>
+          <input aria-label="Name" />
+        </Kind>,
+        { container: doc.body.appendChild(doc.createElement('div')) },
+      );
+      act(() => doc.querySelector('input')!.focus());
+      act(() => pressed.focus());
+      expect(doc.activeElement).toBe(doc.querySelector('input'));
+      expect(takeCloseRequest(dialog)).toBe(false);
+      expect(onEscape).not.toHaveBeenCalled();
+    });
+
     it('keeps a layer behind a modal in an iframe out of the close request of a page modal around the iframe', () => {
       const modal = document.body.appendChild(document.createElement('dialog'));
       const pressed = modal.appendChild(document.createElement('button'));
