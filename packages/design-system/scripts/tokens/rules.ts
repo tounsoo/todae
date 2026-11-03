@@ -327,7 +327,7 @@ function validateSlotOwners(entries: ResolvedEntry[]): void {
           const group = parts.slice(0, i).join('.');
           const pattern = patterns.find((p) => matchesGroup(p, group));
           if (pattern) {
-            fail(`${other.kind} "${other.name}" token "${t.path}" is under "${group}", which ${owner.kind} "${owner.name}" closes with slot group "${pattern}"; declare it there`);
+            fail(`${other.kind} "${other.name}" token "${t.path}" is under "${group}", which ${owner.kind} "${owner.name}" closes with slot group "${pattern}". Declare it in ${owner.kind} "${owner.name}" with the slot, or, if that slot is Todae's, put it in a token group of your own`);
           }
         }
       }

@@ -76,6 +76,17 @@ describe('name schema', () => {
     ]);
   });
 
+  it('ends a name at its state', () => {
+    const declared = schema({ 'option.bg': ['default', 'selected'] });
+    expect(nameViolations('chip.bg.hover.extra', declared)).toEqual([{ rule: 'depth', path: 'chip.bg.hover.extra' }]);
+    expect(nameViolations('option.bg.selected.a.b', declared)).toEqual([{ rule: 'depth', path: 'option.bg.selected.a.b' }]);
+    expect(nameViolations('chip.bg.muted.size', declared)).toEqual([
+      { rule: 'depth', path: 'chip.bg.muted.size' },
+      { rule: 'state', path: 'chip.bg.muted.size', word: 'muted' },
+    ]);
+    expect(hint({ rule: 'state', path: 'chip.bg.muted.size', word: 'muted' }, declared)).toContain('the rest of chip.bg\'s states');
+  });
+
   it('accepts the words a component lists in its slot for that property, and only there', () => {
     const declared = schema({ 'option.bg': ['default', 'selected'], 'button.*.fg': ['default', 'current'] });
     expect(nameViolations('option.bg.selected', declared)).toEqual([]);

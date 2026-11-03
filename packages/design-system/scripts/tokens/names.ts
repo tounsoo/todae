@@ -149,23 +149,30 @@ export function formatGrandfather(found: readonly Violation[]): string {
   return `${JSON.stringify({ version: 1, entries }, null, 2)}\n`;
 }
 
+/**
+ * Splits a name at its first stateful property that has a word after it.
+ * That word is the state, and the name ends there.
+ */
+function stateOf(segments: readonly string[], schema: Schema): { group: string; word: string; last: boolean } | null {
+  for (let index = 1; index < segments.length - 1; index += 1) {
+    if (!schema.statefulProperties.has(segments[index] ?? '')) continue;
+    return { group: segments.slice(0, index + 1).join('.'), word: segments[index + 1] ?? '', last: index + 2 === segments.length };
+  }
+  return null;
+}
+
 export function nameViolations(path: string, schema: Schema): Violation[] {
   const segments = path.split('.');
-  const parent = segments.slice(0, -1);
-  const last = segments[segments.length - 1] ?? '';
-  const stateful = schema.statefulProperties.has(parent[parent.length - 1] ?? '');
-  const endsInState = schema.states.has(last) || (stateful && knownState(schema, parent.join('.'), last));
-  const stem = endsInState ? parent.length : segments.length;
+  const state = stateOf(segments, schema);
   const violations: Violation[] = [];
-  if (stem < 2 || stem > MAX_PARTS + 2) violations.push({ rule: 'depth', path });
-  for (let index = 1; index < segments.length - 1; index += 1) {
-    const segment = segments[index] ?? '';
-    const next = segments[index + 1] ?? '';
-    if (schema.statefulProperties.has(segment) && !knownState(schema, segments.slice(0, index + 1).join('.'), next)) {
-      violations.push({ rule: 'state', path, word: next });
-      break;
-    }
+  if (state) {
+    const stem = state.group.split('.').length;
+    if (stem > MAX_PARTS + 2 || !state.last) violations.push({ rule: 'depth', path });
+    if (!knownState(schema, state.group, state.word)) violations.push({ rule: 'state', path, word: state.word });
+    return violations;
   }
+  const stem = schema.states.has(segments[segments.length - 1] ?? '') ? segments.length - 1 : segments.length;
+  if (stem < 2 || stem > MAX_PARTS + 2) violations.push({ rule: 'depth', path });
   return violations;
 }
 
@@ -249,7 +256,7 @@ export function collectViolations(snapshot: Snapshot, schema: Schema, files: rea
 
 export function hint(violation: Violation, schema: Schema): string {
   if (violation.rule === 'state') {
-    const group = violation.path.split('.').slice(0, -1).join('.');
+    const group = stateOf(violation.path.split('.'), schema)?.group ?? violation.path;
     return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
   }
   if (violation.rule === 'depth') {

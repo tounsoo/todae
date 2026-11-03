@@ -1019,13 +1019,13 @@ describe('resolver-driven build', () => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/focus.json' });
     });
     await expect(buildTokensGraph(focus)).rejects.toThrow(
-      /set "contract" token "focus\.ring\.[a-z-]+" is under "focus\.ring", which set "focus" closes with slot group "focus\.ring"; declare it there/,
+      /set "contract" token "focus\.ring\.[a-z-]+" is under "focus\.ring", which set "focus" closes with slot group "focus\.ring"\. Declare it in set "focus" with the slot, or, if that slot is Todae's, put it in a token group of your own/,
     );
     const base = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
     await expect(buildTokensGraph(base)).rejects.toThrow(
-      /set "contract" token "button\.base\.[a-z.-]+" is under "button\.base", which set "button" closes with slot group "button\.base"; declare it there/,
+      /set "contract" token "button\.base\.[a-z.-]+" is under "button\.base", which set "button" closes with slot group "button\.base"\. Declare it in set "button" with the slot/,
     );
   });
 
