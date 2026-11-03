@@ -25,6 +25,9 @@
     border: var(--todae-selection-border-width) solid var(--todae-selection-border-default);
     border-radius: var(--todae-selection-radius);
     background: var(--todae-selection-bg-default);
+    /* Its growing check, dot and sliding thumb paint over the input; clicks
+       still belong to the input. */
+    pointer-events: none;
     transition-property: background-color, border-color;
     transition-duration: var(--todae-selection-motion-duration);
     transition-timing-function: var(--todae-selection-motion-easing);
