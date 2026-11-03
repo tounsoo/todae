@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { ChatComposerCard } from './ChatComposer';
+import ChatComposer from '../../examples/recipes/chat-composer-mentions/ChatComposer';
 
 afterEach(cleanup);
 
@@ -22,7 +22,7 @@ function placeCaretInMention() {
 it('closes the caret peek on an outside pointer and on blur', async () => {
   render(
     <Providers>
-      <ChatComposerCard />
+      <ChatComposer />
     </Providers>,
   );
   placeCaretInMention();

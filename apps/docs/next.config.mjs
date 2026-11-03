@@ -12,6 +12,7 @@ const REDIRECTS = [
   ['/field/time-input', '/field/time-picker'],
   ['/field/date-time-input', '/field/date-time-picker'],
   ['/spinner', '/loader'],
+  ['/composer', '/recipes/chat-composer-mentions'],
   ['/utilities/use-controlled-value', '/utilities/use-controlled-state'],
 ];
 
