@@ -8,6 +8,8 @@ type Entry = {
   passesKey: (event: KeyboardEvent) => boolean;
   /** Null while the layer's element isn't mounted, so every caller checks it. */
   element: () => Element | null;
+  /** The document the layer lives in: its element's, or the one it was activated in while unmounted. */
+  doc: () => Document;
   popup: boolean;
   closeRequests: boolean;
 };
@@ -19,7 +21,28 @@ export function handledOrComposing(event: KeyboardEvent): boolean {
 
 const stack: Entry[] = [];
 const watchers = /* @__PURE__ */ new Set<() => void>();
-let listening = false;
+// The documents that have the keydown listener. Key events don't cross
+// documents, so a layer in an iframe or a popup window needs its own.
+const listening = /* @__PURE__ */ new Set<Document>();
+
+function isElement(node: unknown): node is Element {
+  // Not instanceof: an element from an iframe fails it against the parent window's Element.
+  return typeof node === 'object' && node !== null && (node as Node).nodeType === 1;
+}
+
+function sync(): void {
+  const wanted = new Set(stack.map((entry) => entry.doc()));
+  for (const doc of wanted) {
+    if (listening.has(doc)) continue;
+    doc.addEventListener('keydown', onKeyDown);
+    listening.add(doc);
+  }
+  for (const doc of [...listening]) {
+    if (wanted.has(doc)) continue;
+    doc.removeEventListener('keydown', onKeyDown);
+    listening.delete(doc);
+  }
+}
 
 /**
  * The layer that answers first: the one registered last, or, when other
@@ -64,13 +87,13 @@ function select(enabled: readonly Entry[]): Entry | undefined {
  * has fallen back to the body, the one Todae opened last. Failing that, any
  * open modal counts.
  */
-function modalsInFront(target: EventTarget | null): Element[] {
-  let node = target instanceof Element ? target.closest('dialog[open]') : null;
+function modalsInFront(doc: Document, target: EventTarget | null): Element[] {
+  let node = isElement(target) ? target.closest('dialog[open]') : null;
   while (node && !isModal(node)) node = node.parentElement?.closest('dialog[open]') ?? null;
   if (node) return [node];
-  const front = frontModal();
+  const front = frontModal((modal) => modal.ownerDocument !== doc);
   if (front) return [front];
-  return [...document.querySelectorAll('dialog[open]')].filter(isModal);
+  return [...doc.querySelectorAll('dialog[open]')].filter(isModal);
 }
 
 function inside(scope: Element, entry: Entry): boolean {
@@ -85,9 +108,15 @@ function inside(scope: Element, entry: Entry): boolean {
  * close requests. A disabled layer keeps its place in the stack but is left
  * out, so the request falls through to the next one.
  */
-function candidates(scope: readonly Element[] | null, target: Element | null, event?: KeyboardEvent): Entry[] {
+function candidates(
+  scope: readonly Element[] | null,
+  target: Element | null,
+  event?: KeyboardEvent,
+  doc?: Document,
+): Entry[] {
   return stack.filter(
     (entry) =>
+      (doc === undefined || entry.doc() === doc) &&
       (scope === null || scope.some((el) => inside(el, entry))) &&
       (event ? !entry.passesKey(event) : entry.closeRequests) &&
       entry.takes(target),
@@ -98,9 +127,11 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
-  const modals = modalsInFront(event.target);
-  const target = event.target instanceof Element ? event.target : null;
-  const top = select(candidates(modals.length > 0 ? modals : null, target, event));
+  // The document the listener was added to, so a key reaches only the layers of the document it was pressed in.
+  const doc = event.currentTarget as Document;
+  const modals = modalsInFront(doc, event.target);
+  const target = isElement(event.target) ? event.target : null;
+  const top = select(candidates(modals.length > 0 ? modals : null, target, event, doc));
   if (!top) return;
   event.preventDefault();
   top.handle();
@@ -137,18 +168,12 @@ export function useLayerInside(element: Element | null): boolean {
 
 function push(entry: Entry): () => void {
   stack.push(entry);
-  if (!listening) {
-    document.addEventListener('keydown', onKeyDown);
-    listening = true;
-  }
+  sync();
   for (const watcher of [...watchers]) watcher();
   return () => {
     const index = stack.indexOf(entry);
     if (index !== -1) stack.splice(index, 1);
-    if (stack.length === 0 && listening) {
-      document.removeEventListener('keydown', onKeyDown);
-      listening = false;
-    }
+    sync();
     for (const watcher of [...watchers]) watcher();
   };
 }
@@ -185,6 +210,7 @@ export function useEscapeKey(
   // Keyed on `active` only: toggling `enabled` must not move the layer above overlays opened later.
   useEffect(() => {
     if (!active) return;
+    const pushedIn = elementRef.current?.ownerDocument ?? document;
     return push({
       handle: () => latest.current.handler(),
       takes: (target) => {
@@ -193,6 +219,7 @@ export function useEscapeKey(
       },
       passesKey: (event) => latest.current.passesKey?.(event) === true,
       element: () => elementRef.current,
+      doc: () => elementRef.current?.ownerDocument ?? pushedIn,
       popup,
       closeRequests,
     });

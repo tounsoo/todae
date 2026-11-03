@@ -4,7 +4,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
 import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  for (const frame of document.querySelectorAll('iframe')) frame.remove();
+});
+
+function makeFrame(): Document {
+  const frame = document.createElement('iframe');
+  document.body.append(frame);
+  return frame.contentDocument!;
+}
+
+function escapeIn(el: Element | Document) {
+  const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+  el.dispatchEvent(event);
+  return event;
+}
 
 function Layer({
   active = true,
@@ -317,5 +332,56 @@ describe('useEscapeKey', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(stack).toHaveBeenCalledTimes(1);
     expect(popup).not.toHaveBeenCalled();
+  });
+
+  describe('in another document', () => {
+    it('handles Escape pressed in an iframe a layer is rendered into', () => {
+      const doc = makeFrame();
+      const onEscape = vi.fn();
+      render(<Layer onEscape={onEscape} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      const event = escapeIn(doc.body);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('keeps a key in one document from reaching a layer in another', () => {
+      const doc = makeFrame();
+      const inFrame = vi.fn();
+      const inMain = vi.fn();
+      render(<Layer onEscape={inFrame} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      render(<Layer onEscape={inMain} />);
+      expect(escapeIn(document.body).defaultPrevented).toBe(true);
+      expect(inMain).toHaveBeenCalledTimes(1);
+      expect(inFrame).not.toHaveBeenCalled();
+      escapeIn(doc.body);
+      expect(inFrame).toHaveBeenCalledTimes(1);
+      expect(inMain).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops listening in an iframe once its last layer goes, and listens again for a new one', () => {
+      const doc = makeFrame();
+      const first = vi.fn();
+      const second = vi.fn();
+      const container = doc.body.appendChild(doc.createElement('div'));
+      const { unmount } = render(<Layer onEscape={first} />, { container });
+      unmount();
+      const event = escapeIn(doc.body);
+      expect(first).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+      render(<Layer onEscape={second} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      escapeIn(doc.body);
+      expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not hide an iframe layer from a modal dialog shown in the main document', () => {
+      const doc = makeFrame();
+      const onEscape = vi.fn();
+      const { getByRole } = render(<dialog aria-label="sheet" />);
+      (getByRole('dialog', { hidden: true }) as HTMLDialogElement).showModal();
+      render(<Layer onEscape={onEscape} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      const event = escapeIn(doc.body);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+      expect(event.defaultPrevented).toBe(true);
+    });
   });
 });

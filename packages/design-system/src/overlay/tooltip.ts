@@ -266,8 +266,8 @@ export function useTooltipInternal<I extends boolean = false>(
 
   const onEscape = useCallback(() => {
     const tooltip = tooltipRef.current;
-    const active = document.activeElement;
-    const restoreFocus = Boolean(tooltip && active instanceof Node && tooltip.contains(active));
+    const active = (tooltip?.ownerDocument ?? document).activeElement;
+    const restoreFocus = Boolean(tooltip && active && active.nodeType === 1 && tooltip.contains(active));
     dispatch({ kind: 'escape' }, restoreFocus);
   }, [dispatch]);
 
