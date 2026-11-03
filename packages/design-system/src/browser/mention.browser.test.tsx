@@ -1,10 +1,21 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Field, Mention, MentionText, OptionList, Popover, defineMentionSource, useMentions, type MentionDraft, type MentionSource } from '../index.js';
-import { useMentionPeek } from '../hooks/useMentionPeek.js';
+import {
+  Field,
+  Mention,
+  MentionText,
+  OptionList,
+  Popover,
+  VisuallyHidden,
+  defineMentionSource,
+  useMentions,
+  usePopover,
+  type MentionDraft,
+  type MentionSource,
+} from '../index.js';
 import { tokenAtCaret } from '../hooks/useMentions.js';
 
 afterEach(cleanup);
@@ -52,15 +63,13 @@ function MentionField({
   const caret = el && el.selectionStart === el.selectionEnd ? el.selectionStart : null;
   const token = !api.open && caret !== null ? tokenAtCaret(api.value.tokens, caret) : null;
   const source = token ? (mentions.find((item) => item.char === token.char) ?? null) : null;
-  const peek = useMentionPeek({
-    source,
-    id: token?.value ?? null,
-    mode: 'caret',
-    active: token !== null && !api.open,
-    text: token?.text ?? '',
-    focusRef: api.textareaRef,
-    anchorName: api.caretPeekAnchorName,
-  });
+  // The caret peek is built from public parts, as the chat composer recipe builds it. These
+  // sources resolve synchronously, so the lookup needs no effect.
+  const entity = token && source ? source.resolve?.(token.value, new AbortController().signal) : undefined;
+  const person = entity instanceof Promise ? undefined : entity;
+  const descriptionId = useId();
+  const open = token !== null && person !== undefined && source?.renderPeek != null;
+  const peek = usePopover({ open, anchorName: api.caretPeekAnchorName });
   return (
     <form
       onSubmit={(event) => {
@@ -77,7 +86,7 @@ function MentionField({
       <Field.Root aria-label="Message">
         <Field.Textarea
           {...api.getTextareaProps({
-            'aria-describedby': peek.open ? peek.triggerProps['aria-describedby'] : undefined,
+            'aria-describedby': open ? descriptionId : undefined,
           })}
         />
       </Field.Root>
@@ -88,11 +97,10 @@ function MentionField({
           ))}
         </OptionList.Root>
       </Popover.Root>
-      {source?.renderPeek ? (
-        <Popover.Root {...peek.peekProps} inert={peek.inert ? true : undefined}>
-          {peek.entity !== undefined ? source.renderPeek(peek.entity, peek.context) : null}
-        </Popover.Root>
-      ) : null}
+      <Popover.Root {...peek.getPopoverProps()} inert>
+        {open && token ? source?.renderPeek?.(person, { id: token.value, mode: 'caret', close: () => {} }) : null}
+      </Popover.Root>
+      {open ? <VisuallyHidden.Root id={descriptionId}>{person.name}</VisuallyHidden.Root> : null}
       <button type="submit">Send</button>
     </form>
   );
