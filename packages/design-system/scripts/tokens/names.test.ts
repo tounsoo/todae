@@ -140,6 +140,9 @@ describe('name schema', () => {
     expect(hint({ rule: 'property', path: 'focus.ring.width', word: 'width' }, listed)).toBe(
       'focus.ring.width: "width" is not a state of focus.ring, whose states are color values of ring. Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "width" is a part, move it before the property (e.g. field.placeholder.fg).',
     );
+    expect(hint({ rule: 'property', path: 'focus.ring.color', word: 'color' }, listed)).toBe(
+      'focus.ring.color: "color" is not a state of focus.ring, whose states are color values of ring. If it is focus.ring\'s own value, name it focus.ring.default, or focus.ring when ring has no states.',
+    );
   });
 
   it('accepts a sub-property joined to its property, and a role of the same type as its property', () => {

@@ -273,7 +273,10 @@ export function hint(violation: Violation, schema: Schema): string {
     const state = stateOf(violation.path.split('.'), schema);
     const group = state?.group ?? violation.path;
     const property = group.slice(group.lastIndexOf('.') + 1);
-    return `${violation.path}: "${violation.word}" is not a state of ${group}, whose states are ${state?.type ?? 'one'} values of ${property}. Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "${violation.word}" is a part, move it before the property (e.g. field.placeholder.fg).`;
+    const fix = schema.statefulProperties.has(violation.word)
+      ? `If it is ${group}'s own value, name it ${group}.default, or ${group} when ${property} has no states`
+      : `Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "${violation.word}" is a part, move it before the property (e.g. field.placeholder.fg)`;
+    return `${violation.path}: "${violation.word}" is not a state of ${group}, whose states are ${state?.type ?? 'one'} values of ${property}. ${fix}.`;
   }
   if (violation.rule === 'state') {
     const group = stateOf(violation.path.split('.'), schema)?.group ?? violation.path;

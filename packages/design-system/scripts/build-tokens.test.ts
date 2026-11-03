@@ -1334,7 +1334,16 @@ describe('company token build', () => {
       def.resolutionOrder.splice(def.resolutionOrder.length - 1, 0, { $ref: '#/sets/focus' });
     });
     await expect(buildCompanyTokens({ resolver: renamed, base: tokensDir })).rejects.toThrow(
-      'set "focus" token "focus.ring.width" is under "focus.ring", which set "focus" declares as a token',
+      'set "focus" token "focus.ring.width" is under "focus.ring", which set "focus" declares as a token, and a token holds no tokens. Name it beside "focus.ring" instead, joining a sub-property with a hyphen (e.g. focus.ring-width)',
+    );
+    const recolored = await company(async (def, root) => {
+      const red = { $type: 'color', $value: { colorSpace: 'oklch', components: [0.6, 0.2, 25] } };
+      await writeFile(join(root, 'focus.json'), JSON.stringify({ focus: { ring: { color: red } } }));
+      def.sets.focus = { sources: [{ $ref: './focus.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } };
+      def.resolutionOrder.splice(def.resolutionOrder.length - 1, 0, { $ref: '#/sets/focus' });
+    });
+    await expect(buildCompanyTokens({ resolver: recolored, base: tokensDir })).rejects.toThrow(
+      'set "focus" token "focus.ring.color" is under "focus.ring", which set "focus" declares as a token, and a token holds no tokens. Set the value on "focus.ring" itself',
     );
     const twins = await company(async (def, root) => {
       await writeFile(join(root, 'twins.json'), JSON.stringify({ brand: { gap: { x: ring }, 'gap-x': ring } }));
