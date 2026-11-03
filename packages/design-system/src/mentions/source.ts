@@ -6,7 +6,12 @@ import type { MentionTrigger } from '../hooks/useMentions.js';
 export type MentionPeekContext = {
   /** The token value the source resolves. */
   id: string;
-  /** `caret` is the peek while the caret rests in a token. It never takes focus. */
+  /**
+   * `interactive` is the peek of a rendered mention, from `Mention.Root` and
+   * `MentionText`. `caret` is for a peek your own code opens while the caret
+   * rests in a token, as the chat composer recipe does. Make that peek
+   * `inert`, so it never takes focus.
+   */
   mode: 'interactive' | 'caret';
   /** Closes the peek. Focus returns to the mention, or stays on the textarea. */
   close: () => void;
@@ -23,7 +28,7 @@ export type MentionSource<T = unknown> = MentionTrigger & {
   /**
    * Peek contents, entirely consumer-owned. The result is the Popover's only
    * child. Omit for no peek. The same function fills the rendered peek and
-   * the caret peek.
+   * any caret peek you build.
    */
   renderPeek?(entity: T, peek: MentionPeekContext): ReactNode;
   /** Accessible name of the peek dialog. Default: the mention's text. */

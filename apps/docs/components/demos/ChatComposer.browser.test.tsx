@@ -45,6 +45,15 @@ it('closes the caret peek on an outside pointer and on blur', async () => {
   await expect.poll(() => openPeek()).toBeNull();
 });
 
+it('closes the caret peek with Escape and keeps focus in the field', async () => {
+  renderComposer();
+  const field = placeCaretInMention();
+  await expect.poll(() => openPeek()?.textContent ?? '').toContain('Design systems');
+  await userEvent.keyboard('{Escape}');
+  await expect.poll(() => openPeek()).toBeNull();
+  expect(document.activeElement).toBe(field);
+});
+
 function renderComposer() {
   render(
     <Providers>

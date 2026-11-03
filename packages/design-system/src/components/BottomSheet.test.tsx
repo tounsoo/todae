@@ -35,15 +35,92 @@ describe('BottomSheet', () => {
     expect(onSnapChange).toHaveBeenCalledWith('mid');
   });
 
-  it('disables mid when snapPoints is full only', () => {
+  it('toggles between the two heights on a press of the grabber, and says which one it is at', () => {
+    const onSnapChange = vi.fn();
+    render(
+      <BottomSheet.Root open onOpenChange={() => undefined} onSnapChange={onSnapChange}>
+        <BottomSheet.Title>Pick</BottomSheet.Title>
+      </BottomSheet.Root>,
+    );
+    const grabber = screen.getByRole('button', { name: 'Resize sheet' });
+    expect(grabber.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(grabber);
+    expect(onSnapChange).toHaveBeenLastCalledWith('full');
+    expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
+    expect(grabber.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(grabber);
+    expect(onSnapChange).toHaveBeenLastCalledWith('mid');
+    expect(grabber.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('reports a snap only when it changes', () => {
+    const onSnapChange = vi.fn();
+    render(
+      <BottomSheet.Root open onOpenChange={() => undefined} defaultSnap="full" onSnapChange={onSnapChange}>
+        <BottomSheet.Title>Pick</BottomSheet.Title>
+      </BottomSheet.Root>,
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Resize sheet' }), { key: 'ArrowUp' });
+    expect(onSnapChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps a controlled snap with no onSnapChange where it is', () => {
+    render(
+      <BottomSheet.Root open onOpenChange={() => undefined} snap="mid">
+        <BottomSheet.Title>Pick</BottomSheet.Title>
+      </BottomSheet.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Resize sheet' }));
+    expect(document.querySelector('[data-snap="mid"]')).not.toBeNull();
+  });
+
+  it('does not toggle the height when a drag from the grabber ends on it', async () => {
+    const onSnapChange = vi.fn();
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    render(
+      <BottomSheet.Root open onOpenChange={() => undefined} onSnapChange={onSnapChange} dismissOnDrag={false}>
+        <BottomSheet.Title>Pick</BottomSheet.Title>
+      </BottomSheet.Root>,
+    );
+    const grabber = screen.getByRole('button', { name: 'Resize sheet' });
+    const drag = (pointerId: number, from: number, to: number) =>
+      act(() => {
+        grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId, clientY: from }));
+        window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId, clientY: to }));
+        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId, clientY: to }));
+      });
+    // A touch tap's click comes a task after the release.
+    drag(8, 400, 200);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    act(() => fireEvent.click(grabber, { detail: 1 }));
+    expect(onSnapChange.mock.calls).toEqual([['full']]);
+    // A mouse clicks in the same task as the release.
+    drag(9, 200, 400);
+    act(() => fireEvent.click(grabber, { detail: 1 }));
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid']]);
+    // The next press is a press of its own.
+    act(() => {
+      grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 10, clientY: 200 }));
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 10, clientY: 200 }));
+      fireEvent.click(grabber, { detail: 1 });
+    });
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid'], ['full']]);
+    // Enter or Space right after a drag is the keyboard's own press.
+    drag(11, 200, 400);
+    act(() => fireEvent.click(grabber, { detail: 0 }));
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid'], ['full'], ['mid'], ['full']]);
+  });
+
+  it('shows the grabber as a mark, not a button, when there is one height', () => {
     render(
       <BottomSheet.Root open onOpenChange={() => undefined} snapPoints={['full']}>
         <BottomSheet.Title>Full</BottomSheet.Title>
       </BottomSheet.Root>,
     );
     expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Resize sheet' }), { key: 'ArrowDown' });
-    expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Resize sheet' })).toBeNull();
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
+    expect(handle!.querySelector('[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('grows height with the pointer while dragging mid toward full', () => {
@@ -127,6 +204,71 @@ describe('BottomSheet', () => {
     window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 3, clientY: 700 }));
     window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 3, clientY: 700 }));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
+  });
+
+  function dragHandleDown(pointerId: number) {
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
+    handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId, clientY: 100 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId, clientY: 500 }));
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId, clientY: 500 }));
+  }
+
+  it.each([
+    ['an owner that keeps it open', true],
+    ['a read-only open', false],
+  ])('shows the sheet at its snap height again after %s turns down a drag-dismiss', async (_, owned) => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    const onOpenChange = vi.fn();
+    render(
+      <BottomSheet.Root open onOpenChange={owned ? onOpenChange : undefined}>
+        <BottomSheet.Title>Discard?</BottomSheet.Title>
+        <BottomSheet.Body>draft</BottomSheet.Body>
+      </BottomSheet.Root>,
+    );
+    const sheet = document.querySelector('dialog') as HTMLDialogElement;
+    act(() => dragHandleDown(4));
+    if (owned) expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
+    await waitFor(() => expect(sheet.style.getPropertyValue('--_drag-height')).toBe(''));
+    expect(sheet.style.getPropertyValue('--_scrim-progress')).toBe('');
+    expect(sheet.hasAttribute('data-dragging')).toBe(false);
+    expect(sheet.open).toBe(true);
+    expect(sheet.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('exits from the dragged height after an accepted drag-dismiss', async () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    render(
+      <BottomSheet.Root defaultOpen>
+        <BottomSheet.Title>Drag</BottomSheet.Title>
+        <BottomSheet.Body>list</BottomSheet.Body>
+      </BottomSheet.Root>,
+    );
+    const sheet = document.querySelector('dialog') as HTMLDialogElement;
+    act(() => dragHandleDown(5));
+    expect(sheet.hasAttribute('data-todae-exiting')).toBe(true);
+    const dragged = sheet.style.getPropertyValue('--_drag-height');
+    expect(dragged).not.toBe('');
+    // Past the frames where a turned-down dismiss lets go of it.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    expect(sheet.style.getPropertyValue('--_drag-height')).toBe(dragged);
+  });
+
+  it('opens again at its snap height after a drag-dismiss exit is cut short', () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    const sheet = (open: boolean) => (
+      <BottomSheet.Root open={open} onOpenChange={() => undefined}>
+        <BottomSheet.Title>Drag</BottomSheet.Title>
+      </BottomSheet.Root>
+    );
+    const { rerender } = render(sheet(true));
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    act(() => dragHandleDown(6));
+    rerender(sheet(false));
+    expect(dialog.hasAttribute('data-todae-exiting')).toBe(true);
+    expect(dialog.style.getPropertyValue('--_drag-height')).not.toBe('');
+    rerender(sheet(true));
+    expect(dialog.hasAttribute('data-todae-exiting')).toBe(false);
+    expect(dialog.style.getPropertyValue('--_drag-height')).toBe('');
   });
 
   it('does not drag from a scrolled body', () => {

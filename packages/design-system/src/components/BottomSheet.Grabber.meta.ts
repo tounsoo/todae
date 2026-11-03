@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'BottomSheet.Grabber',
-  description: 'Drag handle. Rendered by default if omitted. Arrow keys change snap.',
+  description: 'Drag handle. Rendered by default if omitted. A press toggles between mid and full, arrow keys step between them. A decorative mark when snapPoints has one entry.',
   props: [
     {
       name: 'aria-label',
