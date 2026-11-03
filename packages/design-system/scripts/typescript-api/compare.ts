@@ -8,10 +8,11 @@ export type Bump = 'patch' | 'minor' | 'major';
 /**
  * How a path on the base differs on the branch. An added path is none of these.
  * - `removed`: the path is gone.
- * - `narrowed`: a union lost a member, a prop became required, or an `Omit` leaves out one more DOM prop.
- * - `changed`: any other change the gate can't show is a widening, such as a dropped parameter or overload.
- * - `widened`: a union gained members, a prop became optional, an `Omit` leaves out fewer DOM props,
- *   or a function takes a new optional parameter at the end.
+ * - `narrowed`: a union lost a member, a member became required or was added as required, or an `Omit`
+ *   leaves out one more DOM prop.
+ * - `widened`: a union gained members, a member became optional, or an `Omit` leaves out fewer DOM props.
+ *   That still breaks code that reads the type, such as a `switch` over a callback's argument.
+ * - `changed`: any other change, such as a dropped parameter or overload.
  * - `renamed`: the text only swaps the name of a type that is gone, such as an internal props type. `from` lists the old names.
  */
 export type ApiBreak =
@@ -101,7 +102,22 @@ export function unionMembers(text: string): string[] {
     }
   }
   members.push(text.slice(start));
-  return members;
+  return members.map(unwrap);
+}
+
+/** `(A)` as `A`, when the parentheses hold the whole member. */
+function unwrap(member: string): string {
+  if (!member.startsWith('(') || !member.endsWith(')')) return member;
+  let depth = 0;
+  for (let index = 0; index < member.length; index += 1) {
+    const char = member[index];
+    if (char === '(') depth += 1;
+    else if (char === ')') {
+      depth -= 1;
+      if (depth === 0 && index < member.length - 1) return member;
+    }
+  }
+  return member.slice(1, -1);
 }
 
 /** The DOM props an `extends` path leaves out: `all` leaves out none. */
@@ -116,47 +132,6 @@ function subset(items: Iterable<string>, of: Set<string>): boolean {
   return true;
 }
 
-/** The parameters and the rest of a function signature that starts with `(`. */
-function signature(text: string): { parameters: string[]; rest: string } | null {
-  if (!text.startsWith('(')) return null;
-  let depth = 0;
-  let quote: string | null = null;
-  let start = 1;
-  const parameters: string[] = [];
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    if (quote !== null) {
-      if (char === '\\') index += 1;
-      else if (char === quote) quote = null;
-    } else if (char === "'" || char === '"' || char === '`') quote = char;
-    else if (char === '=' && text[index + 1] === '>') index += 1;
-    else if (char === '(' || char === '[' || char === '{' || char === '<') depth += 1;
-    else if (char === ')' || char === ']' || char === '}' || char === '>') {
-      depth -= 1;
-      if (depth === 0) {
-        const last = text.slice(start, index).trim();
-        if (last !== '') parameters.push(last);
-        return { parameters, rest: text.slice(index + 1) };
-      }
-    } else if (char === ',' && depth === 1) {
-      parameters.push(text.slice(start, index).trim());
-      start = index + 1;
-    }
-  }
-  return null;
-}
-
-/** The same parameters and return type, plus optional parameters at the end. */
-function addedOptionalParameters(was: string, now: string): boolean {
-  const before = signature(was);
-  const after = signature(now);
-  if (!before || !after || before.rest !== after.rest || after.parameters.length <= before.parameters.length) return false;
-  return (
-    before.parameters.every((parameter, index) => after.parameters[index] === parameter) &&
-    after.parameters.slice(before.parameters.length).every((parameter) => /^arg\d+\?:/.test(parameter))
-  );
-}
-
 /** A path's members: a long literal union or tuple lists them as their own paths, anything else as its text. */
 function membersOf(paths: Record<string, string>, path: string, text: string): string[] {
   if (text === 'union' || text === 'tuple') {
@@ -167,8 +142,8 @@ function membersOf(paths: Record<string, string>, path: string, text: string): s
 }
 
 /**
- * Whether a changed path only widens what it takes, narrows it, or changes it some other way.
- * Text can't show assignability, so only the widenings below count as widenings.
+ * Whether a changed path widens its type, narrows it, or changes it some other way. Text can't show
+ * assignability, so only the shapes below are read, and only a rename is safe for every caller.
  */
 function changeKind(path: string, was: string, now: string, before: string[], after: string[]): 'narrowed' | 'changed' | 'widened' {
   if (path.includes(' extends ')) {
@@ -177,8 +152,7 @@ function changeKind(path: string, was: string, now: string, before: string[], af
     if (left && right) return subset(right, left) ? 'widened' : 'narrowed';
   }
   if (subset(before, new Set(after))) return 'widened';
-  if (before.length > 1) return 'narrowed';
-  return addedOptionalParameters(was, now) ? 'widened' : 'changed';
+  return before.length > 1 ? 'narrowed' : 'changed';
 }
 
 /** An `extends` path's interface and, if its props show them, its type arguments. */
@@ -293,8 +267,34 @@ export function apiBreaks(before: ApiSnapshot, after: ApiSnapshot): ApiBreak[] {
         breaks.push({ kind, entry, path, was, now });
       }
     }
+    breaks.push(...addedRequired(entry, paths, next, map));
   }
   return breaks.sort((a, b) => byCodePoint(a.entry, b.entry) || byCodePoint(a.path, b.path));
+}
+
+/** A required member path, such as `type ButtonRootProps.label`: not optional, not a DOM interface, not a literal. */
+const REQUIRED_MEMBER = /^((?:type|internal) [A-Za-z_$][\w$]*)(\.[^ ]*[^?])$/;
+
+/**
+ * Required members a type gained, measured against the type on the base with the same name, or the one
+ * a rename replaced. Every caller that builds the type must now pass them, so each is `narrowed`.
+ */
+function addedRequired(entry: string, paths: Record<string, string>, next: Record<string, string>, renamed: ReadonlyMap<string, string>): ApiBreak[] {
+  const breaks: ApiBreak[] = [];
+  const has = (name: string, rest: string) => [`type ${name}${rest}`, `internal ${name}${rest}`].some((path) => path in paths);
+  for (const [path, now] of Object.entries(next)) {
+    const match = REQUIRED_MEMBER.exec(path);
+    if (!match) continue;
+    const name = exportName(path);
+    const rest = match[2] ?? '';
+    const earlier = [name, ...[...renamed].filter(([, to]) => to === name).map(([from]) => from)];
+    for (const old of earlier) {
+      if ((paths[`type ${old}`] ?? paths[`internal ${old}`]) !== 'object') continue;
+      if (has(old, rest) || has(old, `${rest}?`)) continue;
+      breaks.push({ kind: 'narrowed', entry, path, was: 'not there', now: old === name ? `${now} (required)` : `${now} (required, not on ${old})` });
+    }
+  }
+  return breaks;
 }
 
 /** The exported name a path belongs to: `type ButtonRootProps.variant?` belongs to `ButtonRootProps`. */
@@ -330,7 +330,7 @@ function userOf(path: string): string {
 /**
  * The names a changeset may use for a break in `name`: the name itself, each type or value whose type
  * names it, directly or through another name, and each component a type is named after
- * (`AvatarRootProps` is Avatar's). A compound part counts by its own dotted name, so `Message.Avatar`
+ * (`AvatarRootProps` is Avatar's, and `ChipListRootProps` is ChipList's, not Chip's). A compound part counts by its own dotted name, so `Message.Avatar`
  * taking `AvatarRootProps` makes `Message.Avatar` a user, not all of Message.
  */
 export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Set<string> {
@@ -348,13 +348,17 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
       }
     }
   }
-  const owners = (name: string) =>
-    [...values].filter((value) => value !== name && name.startsWith(value) && /[A-Z]/.test(name.charAt(value.length)));
+  /** The component a type is named after: the longest value name it starts with, so `ChipListRootProps` is ChipList's, not Chip's. */
+  const owners = (name: string) => {
+    const found = [...values].filter((value) => value !== name && name.startsWith(value) && /[A-Z]/.test(name.charAt(value.length)));
+    const longest = found.sort((a, b) => b.length - a.length)[0];
+    return longest === undefined ? [] : [longest];
+  };
   return (name) => {
     const found = new Set([name]);
     const queue = [name];
     for (let next = queue.pop(); next !== undefined; next = queue.pop()) {
-      for (const user of [...(users.get(next) ?? []), ...(next.includes('.') ? [] : owners(next))]) {
+      for (const user of [...(users.get(next) ?? []), ...(next.includes('.') || values.has(next) ? [] : owners(next))]) {
         if (!found.has(user)) {
           found.add(user);
           queue.push(user);
@@ -365,14 +369,14 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
   };
 }
 
-const PATCH_KINDS = new Set<ApiBreak['kind']>(['widened', 'renamed']);
+const PATCH_KINDS = new Set<ApiBreak['kind']>(['renamed']);
 
 /**
  * Exports with a removed or changed path that no added changeset acknowledges.
  * A changeset acknowledges an export when it bumps the package and names the export, a type or value
  * that uses it, or the old name of a type it renamed.
- * Only widenings and renames may be a patch. Anything else needs at least `breaking`, since text
- * can't show that a change is safe.
+ * Only a rename may be a patch. Anything else needs at least `breaking`: text can't tell a type callers
+ * pass in from one they read back, so even a widening can break someone.
  */
 export function unacknowledged(
   breaks: readonly ApiBreak[],
@@ -412,8 +416,8 @@ export function unacknowledgedFailure(missing: readonly Unacknowledged[], packag
   lines.push(
     '',
     `Add a changeset for ${packageName} that names each export above, with one bullet per break saying what to change in your code.`,
-    'A widening (a union that gains members, a prop that becomes optional, an Omit that leaves out fewer DOM props, an optional parameter added at the end) or a renamed type can be a patch.',
-    'Anything else needs the breaking bump, since the gate cannot tell that it is safe.',
+    'Only a rename of a type that is gone can be a patch, and the changeset may name the old name.',
+    'Anything else needs the breaking bump: the gate cannot tell a type callers pass in from one they read back, so even a widening can break someone.',
     'If the change was not meant, restore the export instead.',
   );
   return lines.join('\n');

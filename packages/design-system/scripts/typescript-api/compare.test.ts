@@ -56,7 +56,7 @@ describe('unionMembers', () => {
   it('splits only the top-level union', () => {
     expect(unionMembers("'a' | ((value: 'b' | 'c') => void) | { x: 'd' | 'e' } | undefined")).toEqual([
       "'a'",
-      "((value: 'b' | 'c') => void)",
+      "(value: 'b' | 'c') => void",
       "{ x: 'd' | 'e' }",
       'undefined',
     ]);
@@ -65,7 +65,9 @@ describe('unionMembers', () => {
 
   it('keeps a return type whole, so a function returning a union is one member', () => {
     expect(unionMembers('(arg0: Props) => JSX.Element | null')).toEqual(['(arg0: Props) => JSX.Element | null']);
-    expect(unionMembers('((arg0: string) => void) | undefined')).toEqual(['((arg0: string) => void)', 'undefined']);
+    expect(unionMembers('((arg0: string) => void) | undefined')).toEqual(['(arg0: string) => void', 'undefined']);
+    expect(unionMembers('(A) | (B)')).toEqual(['A', 'B']);
+    expect(unionMembers('(a: A) => (B)')).toEqual(['(a: A) => (B)']);
   });
 
   it('counts a union that lost a member as narrowed, and one that gained a member as widened', () => {
@@ -87,8 +89,29 @@ describe('apiBreaks kinds', () => {
     expect(kinds({ 'Button.Root': '(arg0: A) => E & (arg0: B) => E' }, { 'Button.Root': '(arg0: B) => E' })).toEqual([['changed', 'Button.Root']]);
   });
 
-  it('counts an optional parameter added at the end as widened', () => {
-    expect(kinds({ usePopover: '(arg0: A) => R' }, { usePopover: '(arg0: A, arg1?: B) => R' })).toEqual([['widened', 'usePopover']]);
+  it('counts a function prop that became optional as widened', () => {
+    expect(kinds({ 'type P.children': '(arg0: A) => R' }, { 'type P.children?': '((arg0: A) => R) | undefined' })).toEqual([['widened', 'type P.children']]);
+  });
+
+  it('counts a required member added to a type that was there as narrowed, and an optional one as nothing', () => {
+    const before = { 'internal Bound': 'object', 'internal Bound.min?': 'number | undefined' };
+    expect(kinds(before, { ...before, 'internal Bound.label': 'string' })).toEqual([['narrowed', 'internal Bound.label']]);
+    expect(kinds(before, { ...before, 'internal Bound.label?': 'string | undefined' })).toEqual([]);
+    expect(kinds({}, { 'type New': 'object', 'type New.label': 'string' })).toEqual([]);
+  });
+
+  it('counts a required member the new name of a renamed type has as narrowed', () => {
+    const before = { Field: '(arg0: Bound) => E', 'internal Bound': 'object', 'internal Bound.min?': 'number | undefined' };
+    const after = { Field: '(arg0: Range) => E', 'internal Range': 'object', 'internal Range.min?': 'number | undefined', 'internal Range.label': 'string' };
+    expect(kinds(before, after)).toEqual([
+      ['renamed', 'Field'],
+      ['renamed', 'internal Bound'],
+      ['renamed', 'internal Bound.min?'],
+      ['narrowed', 'internal Range.label'],
+    ]);
+    const existing = { ...before, 'type Range': 'object', 'type Range.min?': 'number | undefined', 'type Range.label': 'string' };
+    const swapped = { Field: '(arg0: Range) => E', 'type Range': 'object', 'type Range.min?': 'number | undefined', 'type Range.label': 'string' };
+    expect(kinds(existing, swapped)).toContainEqual(['narrowed', 'type Range.label']);
   });
 
   it('counts a prop that became optional as widened, and one that became required as narrowed', () => {
@@ -154,6 +177,11 @@ describe('usersOf', () => {
     expect(unacknowledged([removed], [set], 'minor')).toHaveLength(1);
   });
 
+  it('takes the longest component name a type starts with', () => {
+    const after = snapshot({ Chip: '(arg0: ChipProps) => E', ChipList: 'object', 'ChipList.Root': '(arg0: ChipListRootProps) => E', 'type ChipListRootProps': 'object' });
+    expect(usersOf([after])('ChipListRootProps')).toEqual(new Set(['ChipListRootProps', 'ChipList.Root', 'ChipList']));
+  });
+
   it('accepts the component a type is named after, but not another component with a part that takes it', () => {
     const after = snapshot({ Avatar: 'object', 'Avatar.Root': '(arg0: AvatarRootProps) => E', 'Message.Avatar': '(arg0: AvatarRootProps) => E', Message: 'object', 'type AvatarRootProps': 'object' });
     const users = usersOf([after]);
@@ -202,12 +230,14 @@ describe('unacknowledged', () => {
   const removed = { kind: 'removed', entry: '@tounsoo/todae', path: 'type GoneProps.size?', was: 'string' } as const;
   const changed = { kind: 'changed', entry: '@tounsoo/todae', path: 'type ToneProps.tone?', was: 'a', now: 'b' } as const;
 
-  it('needs the breaking bump for anything but a widening or a rename, each naming the export', () => {
+  it('needs the breaking bump for anything but a rename, a widening too, each naming the export', () => {
     const widened = { ...changed, kind: 'widened' } as const;
     const patch = { file: 'p.md', bump: 'patch' as const, text: 'Widens `ToneProps` and drops `GoneProps.size`.' };
-    expect(unacknowledged([removed, widened], [patch], 'minor')).toEqual([{ name: 'GoneProps', needs: 'minor', breaks: [removed] }]);
-    expect(unacknowledged([changed], [patch], 'minor')).toEqual([{ name: 'ToneProps', needs: 'minor', breaks: [changed] }]);
-    const minor = { file: 'm.md', bump: 'minor' as const, text: '- `GoneProps` loses `size`; set the size with CSS.' };
+    expect(unacknowledged([removed, widened], [patch], 'minor')).toEqual([
+      { name: 'GoneProps', needs: 'minor', breaks: [removed] },
+      { name: 'ToneProps', needs: 'minor', breaks: [widened] },
+    ]);
+    const minor = { file: 'm.md', bump: 'minor' as const, text: '- `GoneProps` loses `size`; set the size with CSS. `ToneProps` takes more tones.' };
     expect(unacknowledged([removed, widened], [patch, minor], 'minor')).toEqual([]);
   });
 

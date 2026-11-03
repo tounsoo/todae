@@ -144,6 +144,24 @@ describe('apiReport', () => {
     expect(after).toEqual(before);
   });
 
+  it('numbers the type parameters of a method, drops tuple labels and never renames a string literal', async () => {
+    const before = await report(`
+      export type Result<K extends string> = { get<P extends object>(props?: P): P; pair(): [value: K, set: (next: K) => void]; hotkey?: 'K' | 'A' };
+    `);
+    const after = await report(`
+      export type Result<Key extends string> = { get<Props extends object>(props?: Props): Props; pair(): [current: Key, update: (value: Key) => void]; hotkey?: 'K' | 'A' };
+    `);
+    expect(before['type Result.get']).toBe('<T1 extends object>(arg0?: T1) => T1');
+    expect(before['type Result.pair']).toBe('() => [T0, (arg0: T0) => void]');
+    expect(before['type Result.hotkey?']).toBe("'A' | 'K' | undefined");
+    expect(after).toEqual(before);
+  });
+
+  it('prints a generic mapped type by its declaration, since it has no members to list', async () => {
+    const api = await report(`export type Kinds<K extends string = string> = Readonly<Record<K, 'a' | 'b'>>;`);
+    expect(api['type Kinds']).toContain("'a' | 'b'");
+  });
+
   it('prints union members in the same order whatever order the source uses', async () => {
     const first = await report(`export type Size = 'sm' | 'md' | 'lg'; export type Gap = 'lg' | 'sm';`);
     const second = await report(`export type Gap = 'sm' | 'lg'; export type Size = 'lg' | 'md' | 'sm';`);
