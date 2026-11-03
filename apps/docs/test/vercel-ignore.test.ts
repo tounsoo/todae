@@ -8,7 +8,11 @@ const { ignoreCommand } = JSON.parse(readFileSync(new URL('../vercel.json', impo
 };
 
 function skips(ref: string | undefined): boolean {
-  const env = { PATH: process.env.PATH, ...(ref === undefined ? {} : { VERCEL_GIT_COMMIT_REF: ref }) };
+  const env = {
+    NODE_ENV: 'test' as const,
+    PATH: process.env.PATH,
+    ...(ref === undefined ? {} : { VERCEL_GIT_COMMIT_REF: ref }),
+  };
   return spawnSync('sh', ['-c', ignoreCommand], { env }).status === 0;
 }
 
