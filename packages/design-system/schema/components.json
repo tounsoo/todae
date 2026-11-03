@@ -6077,7 +6077,7 @@
           "name": "skipDelay",
           "type": "number",
           "required": false,
-          "description": "Milliseconds this tip skips its show delay after a hover tip closes. While a hover tip is open, this tip skips that delay too. Focus does not start it.",
+          "description": "Milliseconds this tip skips its show delay after a hover tip closes. While a hover tip is open, this tip skips that delay too. 0 or less turns skipping off, so this tip always waits. Focus does not start it.",
           "default": "300"
         },
         {

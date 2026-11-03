@@ -2,6 +2,7 @@ let open = 0;
 let closedAt = 0;
 
 export function hoverShowSkipsDelay(now: number, windowMs: number): boolean {
+  if (windowMs <= 0) return false;
   return open > 0 || (closedAt > 0 && now - closedAt < windowMs);
 }
 
