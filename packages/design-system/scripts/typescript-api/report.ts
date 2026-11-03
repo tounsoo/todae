@@ -67,29 +67,54 @@ function withSignature(node: Scoped, typeParameters: ts.NodeArray<ts.TypeParamet
   return ts.factory.updateConstructSignature(node, typeParameters, parameters, node.type);
 }
 
+/** Type parameters a node brings into scope: a signature's, a mapped type's key, and a conditional type's `infer`s. */
+function scopeParameters(node: ts.Node): string[] {
+  if (isScoped(node)) return (node.typeParameters ?? []).map((parameter) => parameter.name.text);
+  if (ts.isMappedTypeNode(node)) return [node.typeParameter.name.text];
+  if (ts.isConditionalTypeNode(node)) {
+    const names: string[] = [];
+    const find = (child: ts.Node): void => {
+      if (ts.isInferTypeNode(child)) names.push(child.typeParameter.name.text);
+      ts.forEachChild(child, find);
+    };
+    find(node.extendsType);
+    return names;
+  }
+  return [];
+}
+
+function sortedBy<T extends ts.Node>(nodes: readonly T[]): T[] {
+  return [...nodes].sort((a, b) => byCodePoint(print(a), print(b)));
+}
+
 /**
- * Prints a type the same way whatever its source calls things, so only a change callers can feel changes it:
- * - Union members are sorted by text, since the checker orders them by when it first met each type.
+ * Prints a type the same way whatever its source calls things or the order it lists them in,
+ * so only a change callers can feel changes the text:
+ * - Union and intersection members, and the members of an object literal, are sorted by text.
  * - Parameters of every function type are `arg0`, `arg1`, and tuple members lose their labels.
- * - Type parameters are numbered `T0`, `T1` in the order their scopes open, starting after `outer`,
- *   the exported type's own parameters. Only type references are renamed, never a string literal or a key.
+ * - The exported type's own type parameters are `outer` (`T0`, `T1`). A nested scope's are numbered by
+ *   its depth and their position, `T1_0`, so the names don't depend on what else the type holds.
+ *   Only type references are renamed, never a string literal or a key.
  */
 function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string> = new Map()): T {
   const result = ts.transform(node, [
     (context) => {
-      let next = outer.size;
-      const visit = (child: ts.Node, scope: ReadonlyMap<string, string>): ts.Node => {
+      const visit = (child: ts.Node, scope: ReadonlyMap<string, string>, depth: number): ts.Node => {
         let inner = scope;
-        if (isScoped(child) && child.typeParameters && child.typeParameters.length > 0) {
+        let innerDepth = depth;
+        const opened = scopeParameters(child);
+        if (opened.length > 0) {
+          innerDepth = depth + 1;
           const names = new Map(scope);
-          for (const parameter of child.typeParameters) names.set(parameter.name.text, `T${next++}`);
+          opened.forEach((name, index) => names.set(name, `T${innerDepth}_${index}`));
           inner = names;
         }
+        const recurse = (grand: ts.Node) => visit(grand, inner, innerDepth);
         if (ts.isTypeParameterDeclaration(child) && inner.has(child.name.text)) {
-          const visited = ts.visitEachChild(child, (grand) => visit(grand, inner), context);
+          const visited = ts.visitEachChild(child, recurse, context);
           return ts.factory.updateTypeParameterDeclaration(visited, visited.modifiers, ts.factory.createIdentifier(inner.get(child.name.text) ?? child.name.text), visited.constraint, visited.default);
         }
-        const visited = ts.visitEachChild(child, (grand) => visit(grand, inner), context);
+        const visited = ts.visitEachChild(child, recurse, context);
         if (ts.isTypeReferenceNode(visited) && ts.isIdentifier(visited.typeName) && inner.has(visited.typeName.text)) {
           return ts.factory.updateTypeReferenceNode(visited, ts.factory.createIdentifier(inner.get(visited.typeName.text) ?? ''), visited.typeArguments);
         }
@@ -98,11 +123,14 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
           const type = visited.questionToken ? ts.factory.createOptionalTypeNode(visited.type) : visited.type;
           return visited.dotDotDotToken ? ts.factory.createRestTypeNode(type) : type;
         }
-        if (!ts.isUnionTypeNode(visited)) return visited;
-        const sorted = [...visited.types].sort((a, b) => byCodePoint(print(a), print(b)));
-        return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sorted));
+        if (ts.isUnionTypeNode(visited)) return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sortedBy(visited.types)));
+        if (ts.isIntersectionTypeNode(visited)) {
+          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(sortedBy(visited.types)));
+        }
+        if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortedBy(visited.members)));
+        return visited;
       };
-      return (root) => visit(root, outer) as T;
+      return (root) => visit(root, outer, 0) as T;
     },
   ]);
   const [transformed] = result.transformed;
@@ -349,18 +377,22 @@ class Renderer {
         for (const decl of declarations) {
           const owner = decl.parent;
           const ownerSymbol = ts.isInterfaceDeclaration(owner) ? this.checker.getSymbolAtLocation(owner.name) : undefined;
-          if (!ownerSymbol) continue;
+          if (!ownerSymbol) {
+            // A React type literal, such as `PropsWithChildren`'s `{ children?: ReactNode }`, has no interface to summarize it.
+            this.member(prefix, property, declaration);
+            break;
+          }
           const present = inherited.get(ownerSymbol) ?? new Map<string, { property: ts.Symbol; decl: ts.Declaration }>();
           present.set(property.name, { property, decl });
           inherited.set(ownerSymbol, present);
         }
         continue;
       }
-      const optional = property.flags & ts.SymbolFlags.Optional ? '?' : '';
-      const decl = property.valueDeclaration ?? declarations[0] ?? declaration;
-      const readonly = decl && ts.getCombinedModifierFlags(decl) & ts.ModifierFlags.Readonly ? 'readonly ' : '';
-      const propType = this.checker.getTypeOfSymbolAtLocation(property, declaration);
-      this.addType(`${prefix}.${this.propertyName(property)}${optional}`, propType, declaration, `${readonly}${this.typeText(propType, declaration)}`);
+      this.member(prefix, property, declaration);
+    }
+    for (const info of this.checker.getIndexInfosOfType(type)) {
+      const readonly = info.isReadonly ? 'readonly ' : '';
+      this.add(`${prefix}.[${this.typeText(info.keyType, declaration)}]`, `${readonly}${this.typeText(info.type, declaration)}`);
     }
     const owners = [...inherited.entries()].map(([owner, present]) => ({ owner, present, name: this.ownerName(owner, present, declaration) }));
     for (const { owner, present, name } of owners.sort((a, b) => byCodePoint(a.name, b.name))) {
@@ -371,6 +403,14 @@ class Renderer {
       missing.sort(byCodePoint);
       this.add(`${prefix} extends ${name}`, missing.length === 0 ? 'all' : `except ${missing.join(', ')}`);
     }
+  }
+
+  private member(prefix: string, property: ts.Symbol, declaration: ts.Declaration): void {
+    const optional = property.flags & ts.SymbolFlags.Optional ? '?' : '';
+    const decl = property.valueDeclaration ?? property.declarations?.[0] ?? declaration;
+    const readonly = decl && ts.getCombinedModifierFlags(decl) & ts.ModifierFlags.Readonly ? 'readonly ' : '';
+    const propType = this.checker.getTypeOfSymbolAtLocation(property, declaration);
+    this.addType(`${prefix}.${this.propertyName(property)}${optional}`, propType, declaration, `${readonly}${this.typeText(propType, declaration)}`);
   }
 
   /**

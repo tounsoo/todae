@@ -315,9 +315,13 @@ function escape(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Whether `text` names `name` as a whole word: `Button` or `Button.Root`, not `Buttons` or `ButtonGroup`. */
+/**
+ * Whether `text` names `name` as a whole word: `Button`, not `Buttons` or `ButtonGroup`. A component's name
+ * doesn't count where the text names one of its parts, so `Field` isn't in "`Field.Label` takes a size".
+ */
 function names(text: string, name: string): boolean {
-  return new RegExp(`(?<![\\w$])${escape(name)}(?![\\w$])`).test(text);
+  const part = name.includes('.') ? '' : '(?!\\.[A-Za-z_$])';
+  return new RegExp(`(?<![\\w$])${escape(name)}(?![\\w$])${part}`).test(text);
 }
 
 export type Unacknowledged = { name: string; needs: Bump; breaks: ApiBreak[] };
@@ -336,11 +340,13 @@ function userOf(path: string): string {
 export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Set<string> {
   const users = new Map<string, Set<string>>();
   const values = new Set<string>();
+  const parts = new Set<string>();
   for (const snapshot of snapshots) {
     for (const paths of Object.values(snapshot.entries)) {
       for (const [path, text] of Object.entries(paths)) {
         const user = userOf(path);
         if (!/^(?:type|internal) /.test(path) && !/[. ]/.test(path)) values.add(path);
+        if (!/^(?:type|internal) /.test(path) && /^[\w$]+\.[\w$]+$/.test(path)) parts.add(path);
         for (const word of text.match(/[A-Za-z_$][\w$]*/g) ?? []) {
           if (word === user) continue;
           users.set(word, (users.get(word) ?? new Set<string>()).add(user));
@@ -348,11 +354,20 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
       }
     }
   }
-  /** The component a type is named after: the longest value name it starts with, so `ChipListRootProps` is ChipList's, not Chip's. */
-  const owners = (name: string) => {
-    const found = [...values].filter((value) => value !== name && name.startsWith(value) && /[A-Z]/.test(name.charAt(value.length)));
-    const longest = found.sort((a, b) => b.length - a.length)[0];
-    return longest === undefined ? [] : [longest];
+  const startsWord = (name: string, prefix: string) => name !== prefix && name.startsWith(prefix) && /[A-Z]/.test(name.charAt(prefix.length));
+  const longest = (items: string[]) => items.sort((a, b) => b.length - a.length)[0];
+  /**
+   * What a type is named after: the longest value name it starts with, so `ChipListRootProps` is ChipList's,
+   * not Chip's, then the longest part of that component, so `FieldColorPickerProps` is `Field.ColorPicker`'s,
+   * not all of Field's. A `Root` part's type is the whole component's too.
+   */
+  const owners = (name: string): string[] => {
+    const component = longest([...values].filter((value) => startsWord(name, value)));
+    if (component === undefined) return [];
+    const rest = name.slice(component.length);
+    const part = longest([...parts].filter((path) => path.startsWith(`${component}.`) && (rest === path.slice(component.length + 1) || startsWord(rest, path.slice(component.length + 1)))));
+    if (part === undefined) return [component];
+    return part.endsWith('.Root') ? [part, component] : [part];
   };
   return (name) => {
     const found = new Set([name]);
@@ -393,6 +408,7 @@ export function unacknowledged(
   for (const [name, items] of [...byName.entries()].sort(([a], [b]) => byCodePoint(a, b))) {
     const needs: Bump = items.every((item) => PATCH_KINDS.has(item.kind)) ? 'patch' : breaking;
     const candidates = new Set(accepted(name));
+    for (const item of items) for (const user of accepted(userOf(item.path))) candidates.add(user);
     for (const item of items) if (item.kind === 'renamed') for (const old of item.from) for (const user of accepted(old)) candidates.add(user);
     const ok = changesets.some(
       (set) => set.bump !== null && RANK[set.bump] >= RANK[needs] && [...candidates].some((candidate) => names(set.text, candidate)),

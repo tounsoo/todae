@@ -182,6 +182,31 @@ describe('usersOf', () => {
     expect(usersOf([after])('ChipListRootProps')).toEqual(new Set(['ChipListRootProps', 'ChipList.Root', 'ChipList']));
   });
 
+  it('gives a type to the part it is named after, and does not read a part as its whole component', () => {
+    const after = snapshot({
+      Field: 'object',
+      'Field.ColorPicker': '(arg0: FieldColorPickerProps) => E',
+      'Field.Label': '(arg0: FieldLabelProps) => E',
+      'type FieldColorPickerProps': 'object',
+      'type FieldColorPickerProps.onClose?': 'PopoverCloseReason',
+    });
+    const users = usersOf([after]);
+    expect(users('FieldColorPickerProps')).toEqual(new Set(['FieldColorPickerProps', 'Field.ColorPicker']));
+    const narrowed = { kind: 'narrowed', entry: '@tounsoo/todae', path: 'type FieldColorPickerProps.onClose?', was: 'a', now: 'b' } as const;
+    const label = { file: 'l.md', bump: 'minor' as const, text: '`Field.Label` takes a `size` prop.' };
+    expect(unacknowledged([narrowed], [label], 'minor', users)).toHaveLength(1);
+    const field = { file: 'f.md', bump: 'minor' as const, text: 'Field: everything changed.' };
+    expect(unacknowledged([narrowed], [field], 'minor', users)).toHaveLength(1);
+    const picker = { file: 'p.md', bump: 'minor' as const, text: '`Field.ColorPicker` closes with a reason.' };
+    expect(unacknowledged([narrowed], [picker], 'minor', users)).toEqual([]);
+  });
+
+  it('accepts a changed compound part by its dotted name', () => {
+    const changed = { kind: 'changed', entry: '@tounsoo/todae', path: 'Button.Root', was: 'a', now: 'b' } as const;
+    const set = { file: 'b.md', bump: 'minor' as const, text: '`Button.Root` takes one overload.' };
+    expect(unacknowledged([changed], [set], 'minor')).toEqual([]);
+  });
+
   it('accepts the component a type is named after, but not another component with a part that takes it', () => {
     const after = snapshot({ Avatar: 'object', 'Avatar.Root': '(arg0: AvatarRootProps) => E', 'Message.Avatar': '(arg0: AvatarRootProps) => E', Message: 'object', 'type AvatarRootProps': 'object' });
     const users = usersOf([after]);

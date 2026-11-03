@@ -151,10 +151,37 @@ describe('apiReport', () => {
     const after = await report(`
       export type Result<Key extends string> = { get<Props extends object>(props?: Props): Props; pair(): [current: Key, update: (value: Key) => void]; hotkey?: 'K' | 'A' };
     `);
-    expect(before['type Result.get']).toBe('<T1 extends object>(arg0?: T1) => T1');
+    expect(before['type Result.get']).toBe('<T1_0 extends object>(arg0?: T1_0) => T1_0');
     expect(before['type Result.pair']).toBe('() => [T0, (arg0: T0) => void]');
     expect(before['type Result.hotkey?']).toBe("'A' | 'K' | undefined");
     expect(after).toEqual(before);
+  });
+
+  it('reads the same whatever order or names the source uses for members, mapped keys and infer', async () => {
+    const before = await report(`
+      type Base = { id: string };
+      export type Pick1<T> = { [K in keyof T]: T[K] };
+      export type Item<T> = T extends Array<infer E> ? E : never;
+      export type Fn = (<A>(arg: A) => A) | (<B>(arg: B) => string);
+      export type Named = ({ 'aria-label': string; role: 'dialog' } | { role?: undefined }) & Base;
+    `);
+    const after = await report(`
+      type Base = { id: string };
+      export type Pick1<T> = { [P in keyof T]: T[P] };
+      export type Item<T> = T extends Array<infer U> ? U : never;
+      export type Fn = (<B>(arg: B) => string) | (<A>(arg: A) => A);
+      export type Named = Base & ({ role?: undefined } | { role: 'dialog'; 'aria-label': string });
+    `);
+    expect(after).toEqual(before);
+  });
+
+  it('lists a prop React declares in a type literal and an index signature', async () => {
+    const api = await report(`
+      import type { PropsWithChildren } from 'react';
+      export type BoxProps = PropsWithChildren<{ tone?: string }> & { [key: \`data-\${string}\`]: string | undefined };
+    `);
+    expect(api['type BoxProps.children?']).toMatch(/ReactNode/);
+    expect(api['type BoxProps.[`data-${string}`]']).toBe('string | undefined');
   });
 
   it('prints a generic mapped type by its declaration, since it has no members to list', async () => {
