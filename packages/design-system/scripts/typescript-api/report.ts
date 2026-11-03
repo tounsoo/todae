@@ -71,16 +71,33 @@ function withSignature(node: Scoped, typeParameters: ts.NodeArray<ts.TypeParamet
 function scopeParameters(node: ts.Node): string[] {
   if (isScoped(node)) return (node.typeParameters ?? []).map((parameter) => parameter.name.text);
   if (ts.isMappedTypeNode(node)) return [node.typeParameter.name.text];
-  if (ts.isConditionalTypeNode(node)) {
-    const names: string[] = [];
-    const find = (child: ts.Node): void => {
-      if (ts.isInferTypeNode(child)) names.push(child.typeParameter.name.text);
-      ts.forEachChild(child, find);
-    };
-    find(node.extendsType);
-    return names;
-  }
   return [];
+}
+
+/** The `infer` names a conditional type's `extends` clause declares. They are in scope there and in the true branch only. */
+function inferNames(node: ts.ConditionalTypeNode): string[] {
+  const names: string[] = [];
+  const find = (child: ts.Node): void => {
+    if (ts.isInferTypeNode(child)) names.push(child.typeParameter.name.text);
+    ts.forEachChild(child, find);
+  };
+  find(node.extendsType);
+  return names;
+}
+
+/** Whether a type is something to call, whose order among overloads decides which one TypeScript picks. */
+function isCallable(node: ts.TypeNode): boolean {
+  const inner = ts.isParenthesizedTypeNode(node) ? node.type : node;
+  return (
+    ts.isFunctionTypeNode(inner) ||
+    ts.isConstructorTypeNode(inner) ||
+    (ts.isTypeLiteralNode(inner) && inner.members.some((member) => ts.isCallSignatureDeclaration(member) || ts.isConstructSignatureDeclaration(member)))
+  );
+}
+
+/** An object literal's properties sorted by text, then its signatures and methods in source order, since overloads keep their order. */
+function sortMembers(members: readonly ts.TypeElement[]): ts.TypeElement[] {
+  return [...sortedBy(members.filter(ts.isPropertySignature)), ...members.filter((member) => !ts.isPropertySignature(member))];
 }
 
 function sortedBy<T extends ts.Node>(nodes: readonly T[]): T[] {
@@ -98,7 +115,8 @@ function flatten(nodes: readonly ts.TypeNode[], same: (node: ts.TypeNode) => nod
 /**
  * Prints a type the same way whatever its source calls things or the order it lists them in,
  * so only a change callers can feel changes the text:
- * - Union and intersection members, and the members of an object literal, are sorted by text.
+ * - Union and intersection members, and the properties of an object literal, are sorted by text. Overloads keep
+ *   their order: an object literal's call and method signatures, and an intersection of two or more callables.
  * - Parameters of every function type are `arg0`, `arg1`, and tuple members lose their labels.
  * - The exported type's own type parameters are `outer` (`T0`, `T1`). A nested scope's are numbered by
  *   its depth and their position, `T1_0`, so the names don't depend on what else the type holds.
@@ -118,6 +136,14 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
           inner = names;
         }
         const recurse = (grand: ts.Node) => visit(grand, inner, innerDepth);
+        if (ts.isConditionalTypeNode(child)) {
+          const infers = inferNames(child);
+          const names = new Map(scope);
+          infers.forEach((name, index) => names.set(name, `T${depth + 1}_${index}`));
+          const inside = (grand: ts.TypeNode) => visit(grand, infers.length > 0 ? names : scope, infers.length > 0 ? depth + 1 : depth) as ts.TypeNode;
+          const outside = (grand: ts.TypeNode) => visit(grand, scope, depth) as ts.TypeNode;
+          return ts.factory.updateConditionalTypeNode(child, outside(child.checkType), inside(child.extendsType), inside(child.trueType), outside(child.falseType));
+        }
         if (ts.isTypeParameterDeclaration(child) && inner.has(child.name.text)) {
           const visited = ts.visitEachChild(child, recurse, context);
           return ts.factory.updateTypeParameterDeclaration(visited, visited.modifiers, ts.factory.createIdentifier(inner.get(child.name.text) ?? child.name.text), visited.constraint, visited.default);
@@ -135,9 +161,11 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
           return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sortedBy(flatten(visited.types, ts.isUnionTypeNode))));
         }
         if (ts.isIntersectionTypeNode(visited)) {
-          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(sortedBy(flatten(visited.types, ts.isIntersectionTypeNode))));
+          const operands = flatten(visited.types, ts.isIntersectionTypeNode);
+          const ordered = operands.filter(isCallable).length > 1 ? operands : sortedBy(operands);
+          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(ordered));
         }
-        if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortedBy(visited.members)));
+        if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortMembers(visited.members)));
         return visited;
       };
       return (root) => visit(root, outer, 0) as T;

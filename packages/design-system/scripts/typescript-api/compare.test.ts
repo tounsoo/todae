@@ -201,6 +201,23 @@ describe('usersOf', () => {
     expect(unacknowledged([narrowed], [picker], 'minor', users)).toEqual([]);
   });
 
+  it('accepts a type named with one of its members, and the Root part of the component a type is named after', () => {
+    const after = snapshot({ Checkbox: 'object', 'Checkbox.Root': '(arg0: CheckboxRootProps) => E', 'type CheckboxRootProps': 'object', 'internal CheckboxProps': 'object' });
+    const users = usersOf([after]);
+    const member = { kind: 'changed', entry: '@tounsoo/todae', path: 'type CheckboxRootProps.customValidity?', was: 'a', now: 'b' } as const;
+    const dotted = { file: 'd.md', bump: 'minor' as const, text: '`CheckboxRootProps.customValidity` accepts null.' };
+    expect(unacknowledged([member], [dotted], 'minor', users)).toEqual([]);
+    const internal = { kind: 'changed', entry: '@tounsoo/todae', path: 'internal CheckboxProps.customValidity?', was: 'a', now: 'b' } as const;
+    const root = { file: 'r.md', bump: 'minor' as const, text: '`Checkbox.Root` customValidity accepts null.' };
+    expect(unacknowledged([internal], [root], 'minor', users)).toEqual([]);
+  });
+
+  it('does not count a new index signature as a required member', () => {
+    const before = snapshot({ 'type P': 'object' });
+    const after = snapshot({ 'type P': 'object', 'type P.[`data-${string}`]': 'string | undefined' });
+    expect(apiBreaks(before, after)).toEqual([]);
+  });
+
   it('accepts a changed compound part by its dotted name', () => {
     const changed = { kind: 'changed', entry: '@tounsoo/todae', path: 'Button.Root', was: 'a', now: 'b' } as const;
     const set = { file: 'b.md', bump: 'minor' as const, text: '`Button.Root` takes one overload.' };

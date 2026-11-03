@@ -272,8 +272,8 @@ export function apiBreaks(before: ApiSnapshot, after: ApiSnapshot): ApiBreak[] {
   return breaks.sort((a, b) => byCodePoint(a.entry, b.entry) || byCodePoint(a.path, b.path));
 }
 
-/** A required member path, such as `type ButtonRootProps.label`: not optional, not a DOM interface, not a literal. */
-const REQUIRED_MEMBER = /^((?:type|internal) [A-Za-z_$][\w$]*)(\.[^ ]*[^?])$/;
+/** A required member path, such as `type ButtonRootProps.label`: not optional, not an index signature, not a DOM interface, not a literal. */
+const REQUIRED_MEMBER = /^((?:type|internal) [A-Za-z_$][\w$]*)(\.[^ [][^ ]*[^?])$/;
 
 /**
  * Required members a type gained, measured against the type on the base with the same name, or the one
@@ -316,11 +316,12 @@ function escape(text: string): string {
 }
 
 /**
- * Whether `text` names `name` as a whole word: `Button`, not `Buttons` or `ButtonGroup`. A component's name
- * doesn't count where the text names one of its parts, so `Field` isn't in "`Field.Label` takes a size".
+ * Whether `text` names `name` as a whole word: `Button`, not `Buttons` or `ButtonGroup`. With `component`,
+ * the name doesn't count where the text names one of its parts, so `Field` isn't in "`Field.Label` takes a size".
+ * A type's name still counts before a member, as in `ButtonRootProps.defaultPressed`.
  */
-function names(text: string, name: string): boolean {
-  const part = name.includes('.') ? '' : '(?!\\.[A-Za-z_$])';
+function names(text: string, name: string, component = false): boolean {
+  const part = component ? '(?!\\.[A-Za-z_$])' : '';
   return new RegExp(`(?<![\\w$])${escape(name)}(?![\\w$])${part}`).test(text);
 }
 
@@ -337,7 +338,9 @@ function userOf(path: string): string {
  * (`AvatarRootProps` is Avatar's, and `ChipListRootProps` is ChipList's, not Chip's). A compound part counts by its own dotted name, so `Message.Avatar`
  * taking `AvatarRootProps` makes `Message.Avatar` a user, not all of Message.
  */
-export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Set<string> {
+export type Users = ((name: string) => Set<string>) & { components?: ReadonlySet<string> };
+
+export function usersOf(snapshots: readonly ApiSnapshot[]): Users {
   const users = new Map<string, Set<string>>();
   const values = new Set<string>();
   const parts = new Set<string>();
@@ -366,10 +369,10 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
     if (component === undefined) return [];
     const rest = name.slice(component.length);
     const part = longest([...parts].filter((path) => path.startsWith(`${component}.`) && (rest === path.slice(component.length + 1) || startsWord(rest, path.slice(component.length + 1)))));
-    if (part === undefined) return [component];
+    if (part === undefined) return parts.has(`${component}.Root`) ? [component, `${component}.Root`] : [component];
     return part.endsWith('.Root') ? [part, component] : [part];
   };
-  return (name) => {
+  const accept: Users = (name) => {
     const found = new Set([name]);
     const queue = [name];
     for (let next = queue.pop(); next !== undefined; next = queue.pop()) {
@@ -382,6 +385,8 @@ export function usersOf(snapshots: readonly ApiSnapshot[]): (name: string) => Se
     }
     return found;
   };
+  accept.components = values;
+  return accept;
 }
 
 const PATCH_KINDS = new Set<ApiBreak['kind']>(['renamed']);
@@ -397,8 +402,9 @@ export function unacknowledged(
   breaks: readonly ApiBreak[],
   changesets: readonly AddedChangeset[],
   breaking: Bump,
-  accepted: (name: string) => Set<string> = (name) => new Set([name]),
+  accepted: Users = (name) => new Set([name]),
 ): Unacknowledged[] {
+  const components = accepted.components ?? new Set<string>();
   const byName = new Map<string, ApiBreak[]>();
   for (const item of breaks) {
     const name = exportName(item.path);
@@ -411,7 +417,7 @@ export function unacknowledged(
     for (const item of items) for (const user of accepted(userOf(item.path))) candidates.add(user);
     for (const item of items) if (item.kind === 'renamed') for (const old of item.from) for (const user of accepted(old)) candidates.add(user);
     const ok = changesets.some(
-      (set) => set.bump !== null && RANK[set.bump] >= RANK[needs] && [...candidates].some((candidate) => names(set.text, candidate)),
+      (set) => set.bump !== null && RANK[set.bump] >= RANK[needs] && [...candidates].some((candidate) => names(set.text, candidate, components.has(candidate))),
     );
     if (!ok) missing.push({ name, needs, breaks: items });
   }

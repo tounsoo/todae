@@ -179,6 +179,23 @@ describe('apiReport', () => {
     expect(after).toEqual(before);
   });
 
+  it('keeps overloads in their order, in an object literal and in an intersection', async () => {
+    const api = await report(`
+      export type A = { get(a: string): 'str'; get(a: unknown): 'any'; b: 1; a: 2 };
+      export type B = { on: ((a: string) => 'str') & ((a: unknown) => 'any') };
+    `);
+    expect(api['type A.get']).toBe("{ (arg0: string): 'str'; (arg0: unknown): 'any'; }");
+    expect(api['type B.on']).toBe("((arg0: string) => 'str') & ((arg0: unknown) => 'any')");
+  });
+
+  it('scopes an infer name to the extends clause and the true branch', async () => {
+    const api = await report(`
+      type Box<T> = { value: T };
+      export type Pick2<T, U> = T extends Box<infer U> ? U : U;
+    `);
+    expect(api['type Pick2']).toBe('T0 extends Box<infer T1_0> ? T1_0 : T1');
+  });
+
   it('lists a prop React declares in a type literal and an index signature', async () => {
     const api = await report(`
       import type { PropsWithChildren } from 'react';
