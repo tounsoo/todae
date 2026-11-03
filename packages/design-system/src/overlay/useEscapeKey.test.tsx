@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
+import { escapeIn, makeFrame } from '../test/frame.js';
 import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
 afterEach(() => {
@@ -9,17 +11,6 @@ afterEach(() => {
   for (const frame of document.querySelectorAll('iframe')) frame.remove();
 });
 
-function makeFrame(): Document {
-  const frame = document.createElement('iframe');
-  document.body.append(frame);
-  return frame.contentDocument!;
-}
-
-function escapeIn(el: Element | Document) {
-  const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
-  el.dispatchEvent(event);
-  return event;
-}
 
 function Layer({
   active = true,
@@ -371,6 +362,37 @@ describe('useEscapeKey', () => {
       render(<Layer onEscape={second} />, { container: doc.body.appendChild(doc.createElement('div')) });
       escapeIn(doc.body);
       expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    it('listens in an iframe its element reaches after the layer activates', () => {
+      const doc = makeFrame();
+      const onEscape = vi.fn();
+      function Late() {
+        const ref = useRef<HTMLDivElement>(null);
+        const [target, setTarget] = useState<HTMLElement | null>(null);
+        useEscapeKey(true, true, onEscape, ref);
+        useEffect(() => setTarget(doc.body), []);
+        return target ? createPortal(<div ref={ref} />, target) : null;
+      }
+      render(<Late />);
+      expect(escapeIn(doc.body).defaultPrevented).toBe(true);
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    });
+
+    it('follows an open layer whose element moves into an iframe', () => {
+      const doc = makeFrame();
+      const onEscape = vi.fn();
+      function Moving({ target }: { target: HTMLElement }) {
+        const ref = useRef<HTMLDivElement>(null);
+        useEscapeKey(true, true, onEscape, ref);
+        return createPortal(<div ref={ref} />, target);
+      }
+      const { rerender } = render(<Moving target={document.body} />);
+      rerender(<Moving target={doc.body} />);
+      expect(escapeIn(document.body).defaultPrevented).toBe(false);
+      expect(onEscape).not.toHaveBeenCalled();
+      expect(escapeIn(doc.body).defaultPrevented).toBe(true);
+      expect(onEscape).toHaveBeenCalledTimes(1);
     });
 
     it('does not hide an iframe layer from a modal dialog shown in the main document', () => {

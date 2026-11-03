@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { makeFrame } from '../test/frame.js';
 import { Menu, type MenuRootProps } from '../index.js';
 
 afterEach(cleanup);
@@ -317,17 +318,7 @@ describe('Menu', () => {
   });
 
   it('closes on Escape pressed in an iframe it is rendered into, with focus back on the trigger there', async () => {
-    const frame = document.createElement('iframe');
-    document.body.append(frame);
-    const doc = frame.contentDocument!;
-    // jsdom's iframe window has its own prototypes, without the polyfills the test setup puts on this window's.
-    const frameWindow = frame.contentWindow as unknown as { HTMLElement: typeof HTMLElement; Element: typeof Element };
-    for (const name of ['showPopover', 'hidePopover', 'togglePopover'] as const) {
-      Object.assign(frameWindow.HTMLElement.prototype, { [name]: HTMLElement.prototype[name] });
-    }
-    for (const name of ['getAnimations', 'animate', 'checkVisibility'] as const) {
-      Object.assign(frameWindow.Element.prototype, { [name]: Element.prototype[name] });
-    }
+    const doc = makeFrame();
     const onOpenChange = vi.fn();
     render(<Actions onOpenChange={onOpenChange} />, { container: doc.body.appendChild(doc.createElement('div')) });
     const inFrame = (selector: string) => doc.querySelector<HTMLElement>(selector)!;
@@ -340,7 +331,7 @@ describe('Menu', () => {
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
     expect(inFrame('[role="menu"]').hasAttribute('data-popover-open')).toBe(false);
     expect(doc.activeElement).toBe(button);
-    frame.remove();
+    for (const frame of document.querySelectorAll('iframe')) frame.remove();
   });
 
   it('closes when focus moves outside some other way, with reason outside', async () => {

@@ -24,6 +24,7 @@ import type { TooltipWire } from './tooltipWire.js';
 import { firstTabbable } from './tabbables.js';
 import { useEscapeKey } from './useEscapeKey.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
+import { isElement } from '../internal/dom.js';
 import { useDomId } from '../internal/domId.js';
 import { anchoredContentStyle, anchorTriggerStyle } from './anchorName.js';
 import { tokenMs } from './cssTime.js';
@@ -267,7 +268,7 @@ export function useTooltipInternal<I extends boolean = false>(
   const onEscape = useCallback(() => {
     const tooltip = tooltipRef.current;
     const active = (tooltip?.ownerDocument ?? document).activeElement;
-    const restoreFocus = Boolean(tooltip && active && active.nodeType === 1 && tooltip.contains(active));
+    const restoreFocus = Boolean(tooltip && isElement(active) && tooltip.contains(active));
     dispatch({ kind: 'escape' }, restoreFocus);
   }, [dispatch]);
 

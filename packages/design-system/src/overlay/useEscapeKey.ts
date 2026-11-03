@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { isElement } from '../internal/dom.js';
 import { isImeKeyEvent } from '../internal/ime.js';
 import { frontModal, isModal } from './modalStack.js';
 
@@ -24,11 +25,6 @@ const watchers = /* @__PURE__ */ new Set<() => void>();
 // The documents that have the keydown listener. Key events don't cross
 // documents, so a layer in an iframe or a popup window needs its own.
 const listening = /* @__PURE__ */ new Set<Document>();
-
-function isElement(node: unknown): node is Element {
-  // Not instanceof: an element from an iframe fails it against the parent window's Element.
-  return typeof node === 'object' && node !== null && (node as Node).nodeType === 1;
-}
 
 function sync(): void {
   const wanted = new Set(stack.map((entry) => entry.doc()));
@@ -224,4 +220,15 @@ export function useEscapeKey(
       closeRequests,
     });
   }, [active, elementRef, popup, closeRequests]);
+
+  // The element can reach another document after the layer activates, as when
+  // a portal's target is an iframe's body set after mount, so the listeners
+  // follow it.
+  const listenedIn = useRef<Document | null>(null);
+  useEffect(() => {
+    const doc = active ? (elementRef.current?.ownerDocument ?? null) : null;
+    if (doc === listenedIn.current) return;
+    listenedIn.current = doc;
+    if (doc) sync();
+  });
 }

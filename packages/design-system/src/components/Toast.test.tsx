@@ -10,6 +10,7 @@ import { Popover } from './Popover.js';
 import { Dialog } from './Dialog.js';
 import { matchesHotkey, Toast, type ToastRegionProps } from './Toast.js';
 import { createToaster, type Toaster } from './toaster.js';
+import { escapeIn, makeFrame } from '../test/frame.js';
 
 afterEach(() => {
   cleanup();
@@ -694,6 +695,41 @@ describe('Toast', () => {
     fireEvent.keyDown(region, { key: 'Escape' });
     expect(document.activeElement).toBe(before);
     expect(toaster.getSnapshot()[0]?.open).toBe(true);
+  });
+
+  it('takes Escape in an iframe it is rendered into, on a toast and on the region', () => {
+    const doc = makeFrame();
+    const toaster = createToaster({ duration: Infinity });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    rtlRender(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+      </>,
+      { container: doc.body.appendChild(doc.createElement('div')) },
+    );
+    act(() => void vi.advanceTimersByTime(0));
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    act(() => void toaster.add({ id: 'b', title: 'B' }));
+    act(() => void vi.advanceTimersByTime(0));
+    vi.useRealTimers();
+    const button = (name: string) => [...doc.querySelectorAll('button')].find((el) => el.textContent === name)!;
+    const before = button('Before');
+    const region = doc.querySelector('section')!;
+    act(() => before.focus());
+    fireEvent.keyDown(before, { key: 'F8' });
+    expect(doc.activeElement).toBe(region);
+    let event!: KeyboardEvent;
+    act(() => void (event = escapeIn(region)));
+    expect(event.defaultPrevented).toBe(true);
+    expect(doc.activeElement).toBe(before);
+
+    fireEvent.keyDown(before, { key: 'F8' });
+    const undo = doc.querySelector<HTMLElement>('li button')!;
+    act(() => undo.focus());
+    act(() => void escapeIn(undo));
+    expect(toaster.getSnapshot().filter((toast) => toast.open)).toHaveLength(1);
+    for (const frame of document.querySelectorAll('iframe')) frame.remove();
   });
 
   it('takes Escape on the region before a popover opened before focus came in', () => {

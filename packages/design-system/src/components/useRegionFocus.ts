@@ -4,6 +4,7 @@ import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { tryFocus } from '../overlay/useToastHost.js';
+import { isHTMLElement } from '../internal/dom.js';
 import { alongside } from '../internal/props.js';
 import type { Toaster } from './toaster.js';
 
@@ -97,9 +98,9 @@ export function useRegionFocus<T extends object>({
     origin.current = null;
     const active = section.ownerDocument.activeElement;
     const container = section.parentElement?.parentElement;
-    const modal = container instanceof HTMLDialogElement ? container : null;
+    const modal = isHTMLElement(container) && container.localName === 'dialog' ? (container as HTMLDialogElement) : null;
     if (!tryFocus(from) && !(modal && tryFocus(initialFocusTarget(modal)))) {
-      if (active instanceof HTMLElement && section.contains(active)) active.blur();
+      if (isHTMLElement(active) && section.contains(active)) active.blur();
     }
     syncFocused();
   }, [sectionRef, syncFocused]);
@@ -162,12 +163,12 @@ export function useRegionFocus<T extends object>({
     onFocus: alongside(onFocus, (event: FocusEvent<HTMLElement>) => {
       focusLeave.onFocus();
       setInside(true);
-      if (event.target instanceof HTMLElement) lastInside.current = event.target;
+      if (isHTMLElement(event.target)) lastInside.current = event.target;
       if (moving.current) return;
       const from = event.relatedTarget;
       // Only from outside: focus moving within the region keeps the origin,
       // and an unknown origin keeps the last one.
-      if (from instanceof HTMLElement && !event.currentTarget.contains(from)) origin.current = from;
+      if (isHTMLElement(from) && !event.currentTarget.contains(from)) origin.current = from;
       setFocused(isKeyboardFocus(event.target));
     }),
     onBlur: alongside(onBlur, focusLeave.onBlur),

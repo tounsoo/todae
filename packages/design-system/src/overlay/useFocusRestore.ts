@@ -1,11 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
-
-// Not instanceof: an element from an iframe or a popup window fails it against this window's HTMLElement.
-function isFocusable(node: unknown): node is HTMLElement {
-  return (
-    typeof node === 'object' && node !== null && (node as Node).nodeType === 1 && typeof (node as HTMLElement).focus === 'function'
-  );
-}
+import { isHTMLElement } from '../internal/dom.js';
 
 export function useFocusRestore(
   active: boolean,
@@ -33,7 +27,7 @@ export function useFocusRestore(
       if (wasActive.current) return;
       wasActive.current = true;
       const current = (containerRef?.current?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document).activeElement;
-      prior.current = isFocusable(current) ? current : null;
+      prior.current = isHTMLElement(current) ? current : null;
       return;
     }
     // Restore only when an open overlay closes, never on a closed first render.
@@ -45,7 +39,7 @@ export function useFocusRestore(
     queueMicrotask(() => {
       const moved = doc.activeElement;
       if (
-        isFocusable(moved) &&
+        isHTMLElement(moved) &&
         moved !== doc.body &&
         moved !== fallback &&
         !(nativeReturn && moved === prior.current) &&
