@@ -7,6 +7,7 @@ import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
 import remarkExamples, { pageLocale } from './remarkExamples.mjs';
+import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
 const EXAMPLES = join(process.cwd(), 'examples');
@@ -111,6 +112,23 @@ describe('docs examples', () => {
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
     expect(files.length).toBeGreaterThan(100);
     expect(files.filter((file) => !shown.get(file)?.has('(en)') || !shown.get(file)?.has('ko'))).toEqual([]);
+  });
+
+  it('turns every example on every page into its code and demo, with the plugins in the build’s order', () => {
+    let shown = 0;
+    for (const page of pages(APP)) {
+      const tree = parseMdx(readFileSync(page, 'utf8'));
+      for (const plugin of remarkPlugins) (plugin as () => (tree: Root, file: { path: string }) => void)()(tree, { path: page });
+      const left: string[] = [];
+      const visit = (node: Root | Root['children'][number]) => {
+        if ('name' in node && node.name === 'Example' && node.attributes.some((attribute) => 'name' in attribute && attribute.name === 'of')) left.push(relative(APP, page));
+        if (node.type === 'code' && node.lang === 'tsx') shown++;
+        if ('children' in node) for (const child of node.children) visit(child as Root['children'][number]);
+      };
+      visit(tree);
+      expect(left).toEqual([]);
+    }
+    expect(shown).toBeGreaterThan(200);
   });
 
   it('uses no class name that only the docs stylesheet defines', () => {
