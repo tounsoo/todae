@@ -74,12 +74,17 @@ export function SelectionControl({
   useRevalidate();
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   // A reset puts back `defaultChecked`, which React sets once, from the checked state the input mounted with, and fires no change event. That, not `checked`, is read, since a render in the reset's own task writes the old `checked` back. A radio's group follows the reset, since one reset can move two radios. A controlled box whose owner turns the reset down renders again, so React writes `checked` back.
-  useFormReset(inputRef, () => {
-    const input = inputRef.current;
-    if (kind === 'radio' || !input || input.defaultChecked === checked) return;
-    onChecked(input.defaultChecked);
-    rerender();
-  });
+  // A controlled owner that set a new value in its own reset handler has answered the reset already.
+  useFormReset(
+    inputRef,
+    (atReset) => {
+      const input = inputRef.current;
+      if (kind === 'radio' || !input || checked !== atReset || input.defaultChecked === checked) return;
+      onChecked(input.defaultChecked);
+      rerender();
+    },
+    () => checked,
+  );
   const { check, indeterminate: indeterminateGlyph } = useGlyphs();
   const indeterminate = kind === 'checkbox' && !!indeterminateProp;
   // The DOM property has no attribute; onChange puts back the latest prop

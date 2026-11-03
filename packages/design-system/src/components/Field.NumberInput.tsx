@@ -265,7 +265,7 @@ export function NumberInput({
     return () => input.removeEventListener('beforeinput', listener);
   }, []);
   // A reset puts back what the form had, which is not what was typed.
-  useFormReset(node, () => setDraft(null));
+  useFormReset(node, () => setDraft(null), () => undefined);
   // The label's own text can change, such as a translation that loads later, and a label can mount, be replaced or go from anywhere in the page, so the page's one shared observer follows them.
   useLayoutEffect(() => watchLabel(node.current, setLabel).stop, []);
 

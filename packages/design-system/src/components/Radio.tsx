@@ -116,13 +116,19 @@ function RadioGroupRoot({
   );
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   // A reset checks each radio whose `defaultChecked` React set from the value it mounted with, so the last in tree order wins, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.
-  useFormReset(groupRef, () => {
-    const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [];
-    const picked = [...radios].reverse().find((radio) => radio.name === name && radio.defaultChecked)?.value ?? null;
-    if (picked === value) return;
-    select(picked);
-    rerender();
-  });
+  // A controlled owner that set a new value in its own reset handler has answered the reset already.
+  useFormReset(
+    groupRef,
+    (atReset) => {
+      if (value !== atReset) return;
+      const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [];
+      const picked = [...radios].reverse().find((radio) => radio.name === name && radio.defaultChecked)?.value ?? null;
+      if (picked === value) return;
+      select(picked);
+      rerender();
+    },
+    () => value,
+  );
   return (
     <RadioGroupContext.Provider
       value={{
