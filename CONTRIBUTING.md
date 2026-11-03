@@ -102,6 +102,7 @@ Run these before you open a pull request. CI runs them unless the pull request o
 ```sh
 pnpm check
 pnpm tokens:check
+pnpm api:check
 pnpm schema
 pnpm build:ds
 pnpm publish:check
@@ -111,6 +112,7 @@ pnpm test:browser
 ```
 
 - `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
+- `pnpm api:check` compares `packages/design-system/typescript-api.json` with the type exports of every entry point in the package's `exports`. When you add, change or remove an export, a prop or a type, run `pnpm api` and commit the file; its diff shows reviewers the API change. The TypeScript API job runs `pnpm api:check`, then compares the file with the one on the branch's merge base, as [Changesets](#changesets) describes.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
@@ -146,6 +148,8 @@ useCombobox names its listbox by the field's Label.
 - `getTriggerProps().ref` is a callback ref; read `cb.triggerRef` for the element.
 ```
 
+The TypeScript API job fails a pull request that removes or changes a path in `typescript-api.json` until a changeset the pull request adds names each export it touched, such as `ButtonRootProps` for `type ButtonRootProps.variant?`. A removal needs the breaking bump: `minor` until 1.0.0, `major` after. A change may only widen a type, so any bump names it; use the breaking bump when it narrows one. An added export or prop needs nothing beyond the regenerated file.
+
 CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures, snapshots and `CHANGELOG.md`, and Changesets doesn't count dotfiles. For a change that ships nothing but still trips the check, add an empty changeset with `pnpm changeset --empty`.
 
 ## Pull requests
@@ -153,7 +157,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 - Keep a pull request to one change.
 - Write the body from [`.github/pull_request_template.md`](.github/pull_request_template.md). Its Verification section names the tested commit, the full SHA the checks ran on, and each command with its result.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- CI skips Checks and Docs on a draft pull request. Check, Token API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
+- CI skips Checks and Docs on a draft pull request. Check, Token API, TypeScript API and Forbidden paths still run. A Markdown-only pull request is skipped as described above. Mark a draft ready for review when you want Checks and Docs to run.
 
 ## Releases
 
