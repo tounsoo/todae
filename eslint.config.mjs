@@ -75,6 +75,22 @@ export default tseslint.config(
     },
   },
   {
+    // An overlay can render into an iframe or a popup window, whose nodes fail
+    // instanceof against this window's classes. Read nodes with src/internal/dom.ts.
+    files: ['packages/design-system/src/overlay/**/*.{ts,tsx}'],
+    ignores: ['packages/design-system/src/**/*.test.ts', 'packages/design-system/src/**/*.test.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "BinaryExpression[operator='instanceof'][right.name=/^(Node|Element|Document|HTML\\w*Element|SVG\\w*Element)$/]",
+          message: 'Another window\'s nodes fail instanceof. Use isNode, isElement or isHTMLElement from internal/dom.ts.',
+        },
+      ],
+    },
+  },
+  {
     // Test fixtures poke at loosely typed JSON and mixed element refs.
     files: ['**/*.test.{ts,tsx}'],
     rules: { '@typescript-eslint/no-explicit-any': 'off' },

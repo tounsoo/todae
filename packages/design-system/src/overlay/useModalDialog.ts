@@ -5,6 +5,7 @@ import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 import { reshowHeldInside } from './usePopoverSync.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { isHTMLElement } from '../internal/dom.js';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -108,7 +109,7 @@ export function useModalDialog({
       // StrictMode's pretend unmount.
       if (presentRef.current || !el.open) return;
       const active = el.ownerDocument.activeElement;
-      const guest = active instanceof HTMLElement && inGuestLayerWithin(active, el) ? active : null;
+      const guest = isHTMLElement(active) && inGuestLayerWithin(active, el) ? active : null;
       el.close();
       if (!guest) return;
       dropModal(el);
@@ -153,7 +154,7 @@ export function useModalDialog({
       // Only this element's own controls, not those of a modal written inside
       // it, nor a guest layer moved in.
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest('dialog') === el && !inGuestLayerWithin(target, el)) {
+      if (isHTMLElement(target) && target.closest('dialog') === el && !inGuestLayerWithin(target, el)) {
         lastFocus.current = target;
       }
     }

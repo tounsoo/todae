@@ -3,6 +3,7 @@ import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from
 import { inGuestLayerWithin } from './tabbables.js';
 import { initialFocusTarget } from './useInitialFocus.js';
 import { reshowHeldInside } from './usePopoverSync.js';
+import { isHTMLElement } from '../internal/dom.js';
 
 /**
  * useModalLayer for a caller that already holds the element. `shownModal`
@@ -36,7 +37,7 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
         // a guest layer when one was still inside and the element has
         // nothing focusable of its own before it.
         const active = el.ownerDocument.activeElement;
-        if (active instanceof HTMLElement && inGuestLayerWithin(active, el)) initialFocusTarget(el).focus();
+        if (isHTMLElement(active) && inGuestLayerWithin(active, el)) initialFocusTarget(el).focus();
         // Shown again, it is in front of the popovers open inside it, such
         // as a tooltip, which go back in front of it. A caller that shows it
         // itself does this right after its showModal().

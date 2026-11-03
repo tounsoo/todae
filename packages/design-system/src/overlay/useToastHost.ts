@@ -3,6 +3,7 @@ import { focusWithoutScroll } from '../internal/revealRing.js';
 import { frontModal, isModal, subscribeModals } from './modalStack.js';
 import { GUEST_LAYER_ATTRIBUTE } from './tabbables.js';
 import { isPopoverOpen, reshowHeldInside } from './usePopoverSync.js';
+import { isHTMLElement } from '../internal/dom.js';
 
 /** Focuses `el` and says whether it took focus: an inert or hidden one does not. */
 export function tryFocus(el: HTMLElement | null | undefined): boolean {
@@ -29,7 +30,7 @@ function hasOpenModal(el: HTMLElement): boolean {
 /** Runs `change`, which may hide `el`, and puts focus back where it was inside. */
 function keepingFocus(el: HTMLElement, change: () => void): void {
   const active = el.ownerDocument.activeElement;
-  const focused = active instanceof HTMLElement && el.contains(active) ? active : null;
+  const focused = isHTMLElement(active) && el.contains(active) ? active : null;
   change();
   if (focused && el.isConnected) focusWithoutScroll(focused);
 }

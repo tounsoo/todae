@@ -11,9 +11,10 @@ function focusedElement(doc: Document): Element | null {
   for (let host = top.defaultView?.frameElement; host; host = top.defaultView?.frameElement) top = host.ownerDocument;
   let el = top.activeElement;
   while (el && (el.localName === 'iframe' || el.localName === 'frame')) {
-    const inner = (el as HTMLIFrameElement).contentDocument;
-    if (!inner) break;
-    el = inner.activeElement;
+    // A frame showing no HTML element with focus, such as an SVG document, counts as the frame.
+    const inner = (el as HTMLIFrameElement).contentDocument?.activeElement;
+    if (!isHTMLElement(inner)) break;
+    el = inner;
   }
   return el;
 }

@@ -24,7 +24,7 @@ import type { TooltipWire } from './tooltipWire.js';
 import { firstTabbable } from './tabbables.js';
 import { useEscapeKey } from './useEscapeKey.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
-import { isElement } from '../internal/dom.js';
+import { isElement, isNode } from '../internal/dom.js';
 import { useDomId } from '../internal/domId.js';
 import { anchoredContentStyle, anchorTriggerStyle } from './anchorName.js';
 import { tokenMs } from './cssTime.js';
@@ -243,7 +243,7 @@ export function useTooltipInternal<I extends boolean = false>(
   dispatchRef.current = dispatch;
 
   const pairContains = useCallback((node: EventTarget | null) => {
-    if (!(node instanceof Node)) return false;
+    if (!isNode(node)) return false;
     const trigger = triggerRef.current;
     const tooltip = tooltipRef.current;
     return Boolean((trigger && trigger.contains(node)) || (tooltip && tooltip.contains(node)));
@@ -251,7 +251,7 @@ export function useTooltipInternal<I extends boolean = false>(
 
   // Whether `node` is an element that `holdsFocus` accepts.
   const holderAccepts = useCallback(
-    (node: EventTarget | null) => node instanceof Element && holdsFocusRef.current?.(node) === true,
+    (node: EventTarget | null) => isElement(node) && holdsFocusRef.current?.(node) === true,
     [],
   );
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { useRefElement } from './useRefElement.js';
+import { isElement } from '../internal/dom.js';
 
 export type SheetSnap = 'mid' | 'full';
 
@@ -120,7 +121,7 @@ export function useSnapDrag({
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0 || pointerId != null) return;
       const target = event.target;
-      if (!(target instanceof Element)) return;
+      if (!isElement(target)) return;
       const fromHandle = Boolean(target.closest('[data-todae-sheet-drag-handle]'));
       const interactive = target.closest('button, a, input, select, textarea');
       if (interactive && !fromHandle) return;

@@ -2,7 +2,7 @@
  * An iframe's document for a test of another document. jsdom gives the frame
  * its own window, so its classes fail `instanceof` against this window's, as a
  * real iframe's do. The setup's popover and animation stand-ins are copied onto
- * its prototypes. The caller removes the frame.
+ * its prototypes, and so are its dialog stand-ins. The caller removes the frame.
  */
 export function makeFrame(): Document {
   const frame = document.createElement('iframe');
@@ -14,6 +14,10 @@ export function makeFrame(): Document {
   for (const name of ['getAnimations', 'animate', 'checkVisibility'] as const) {
     Object.assign(view.Element.prototype, { [name]: Element.prototype[name] });
   }
+  const dialog = (frame.contentWindow as unknown as { HTMLDialogElement: typeof HTMLDialogElement }).HTMLDialogElement.prototype;
+  Object.defineProperty(dialog, 'open', Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'open')!);
+  dialog.showModal = HTMLDialogElement.prototype.showModal;
+  dialog.close = HTMLDialogElement.prototype.close;
   return frame.contentDocument!;
 }
 

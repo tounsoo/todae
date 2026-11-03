@@ -6,8 +6,13 @@ import type { ComboboxCloseReason } from '../hooks/useCombobox.types.js';
 import type { SheetCloseReason } from './BottomSheet.js';
 import { Dialog, type DialogCloseReason, type DialogRootProps } from './Dialog.js';
 import type { DrawerRootProps } from './Drawer.js';
+import { Menu } from './Menu.js';
+import { escapeIn, makeFrame } from '../test/frame.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  for (const frame of document.querySelectorAll('iframe')) frame.remove();
+});
 
 describe('Dialog', () => {
   it('calls showModal once per open and close when open becomes false', async () => {
@@ -217,6 +222,67 @@ describe('Dialog', () => {
     expect(el.open).toBe(true);
     expect(document.activeElement).toBe(screen.getByLabelText('second'));
     spy.mockRestore();
+  });
+
+  it('shows again where the person was after a native close in an iframe', () => {
+    const doc = makeFrame();
+    const proto = (doc.defaultView as unknown as { HTMLDialogElement: typeof HTMLDialogElement }).HTMLDialogElement.prototype;
+    const showModal = proto.showModal;
+    const spy = vi.spyOn(proto, 'showModal').mockImplementation(function (this: HTMLDialogElement) {
+      showModal.call(this);
+      this.querySelector('input')?.focus();
+    });
+    render(
+      createPortal(
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Title>Save</Dialog.Title>
+          <input aria-label="first" />
+          <input aria-label="second" />
+        </Dialog.Root>,
+        doc.body,
+      ),
+    );
+    const el = doc.querySelector('dialog')!;
+    const second = doc.querySelector<HTMLInputElement>('input[aria-label="second"]')!;
+    second.focus();
+    act(() => {
+      second.blur();
+      el.close();
+    });
+    expect(el.open).toBe(true);
+    expect(doc.activeElement).toBe(second);
+    spy.mockRestore();
+  });
+
+  it('closes a menu inside it in an iframe before itself on Escape', async () => {
+    const doc = makeFrame();
+    const onOpenChange = vi.fn();
+    render(
+      createPortal(
+        <Dialog.Root open onOpenChange={onOpenChange}>
+          <Dialog.Title>Save</Dialog.Title>
+          <Menu.Root>
+            <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </Dialog.Root>,
+        doc.body,
+      ),
+    );
+    fireEvent.click(doc.querySelector<HTMLElement>('button[aria-haspopup="menu"]')!);
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 30)));
+    const menu = doc.querySelector<HTMLElement>('[role="menu"]')!;
+    expect(menu.hasAttribute('data-popover-open')).toBe(true);
+    const item = doc.querySelector<HTMLElement>('[role="menuitem"]')!;
+    act(() => item.focus());
+    const event = escapeIn(item);
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(event.defaultPrevented).toBe(true);
+    expect(menu.hasAttribute('data-popover-open')).toBe(false);
+    expect(doc.querySelector('dialog')!.open).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
 

@@ -735,6 +735,31 @@ describe('Toast', () => {
     for (const frame of document.querySelectorAll('iframe')) frame.remove();
   });
 
+  it('keeps focus inside the region in an iframe when a new toast raises it', () => {
+    const doc = makeFrame();
+    const view = doc.defaultView as unknown as { HTMLElement: typeof HTMLElement };
+    // A browser hides a popover with display: none, which drops focus inside it.
+    const hidePopover = view.HTMLElement.prototype.hidePopover;
+    view.HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+      const active = this.ownerDocument.activeElement as HTMLElement | null;
+      if (active && this.contains(active)) active.blur();
+      hidePopover.call(this);
+    };
+    const toaster = createToaster({ duration: Infinity });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    rtlRender(<Region toaster={toaster} />, { container: doc.body.appendChild(doc.createElement('div')) });
+    act(() => void vi.advanceTimersByTime(0));
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    act(() => void vi.advanceTimersByTime(0));
+    const undo = doc.querySelector<HTMLElement>('li button')!;
+    act(() => undo.focus());
+    act(() => void toaster.add({ id: 'b', title: 'B' }));
+    act(() => void vi.advanceTimersByTime(0));
+    expect(doc.activeElement).toBe(undo);
+    view.HTMLElement.prototype.hidePopover = hidePopover;
+    for (const frame of document.querySelectorAll('iframe')) frame.remove();
+  });
+
   it('takes Escape on the region before a popover opened before focus came in', () => {
     const toaster = createToaster({ duration: Infinity });
     const popoverEscape = vi.fn();

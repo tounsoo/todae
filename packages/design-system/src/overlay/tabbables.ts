@@ -1,3 +1,5 @@
+import { isHTMLElement } from '../internal/dom.js';
+
 // Every kind of element Tab could stop on.
 const CANDIDATES = /* @__PURE__ */ [
   'a[href]',
@@ -124,7 +126,7 @@ function modalAround(root: HTMLElement): HTMLDialogElement | null {
 }
 
 function isNamedRadio(el: HTMLElement): el is HTMLInputElement {
-  return el instanceof HTMLInputElement && el.type === 'radio' && el.name !== '';
+  return isHTMLElement(el) && el.localName === 'input' && (el as HTMLInputElement).type === 'radio' && (el as HTMLInputElement).name !== '';
 }
 
 /**
