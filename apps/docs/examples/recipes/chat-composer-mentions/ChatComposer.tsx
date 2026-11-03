@@ -11,6 +11,7 @@ import {
   Popover,
   Stack,
   Text,
+  VisuallyHidden,
   defineMentionSource,
   useMentions,
   usePopover,
@@ -19,7 +20,7 @@ import {
   type UseMentionsResult,
 } from '@tounsoo/todae';
 import { ArrowUp, FileText, Image } from 'lucide-react';
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent, type KeyboardEvent } from 'react';
 
 type Person = { name: string; initials: string; role: string; place: string };
 
@@ -75,6 +76,7 @@ function useCaretPeek(mentions: UseMentionsResult) {
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const [found, setFound] = useState<{ id: string; person: Person | undefined } | null>(null);
+  const descriptionId = useId();
 
   const token = mentions.open ? null : tokenAt(mentions.value.tokens, caret);
   const key = token ? `${token.start}:${token.value}` : null;
@@ -123,18 +125,26 @@ function useCaretPeek(mentions: UseMentionsResult) {
 
   return {
     textareaProps: {
-      // The peek is inert, so screen readers hear it as the field's description.
-      'aria-describedby': open ? wire.id : undefined,
+      // The peek is inert, and browsers leave inert text out of a description, so the field
+      // is described by a visually hidden copy of what the peek says.
+      'aria-describedby': open ? descriptionId : undefined,
       onFocus: () => setFocused(true),
       onBlur: () => setFocused(false),
       onPointerDown: () => setDismissed(null),
     },
     peek: (
-      <Popover.Root {...wire} inert>
-        {token && person && people.renderPeek
-          ? people.renderPeek(person, { id: token.value, mode: 'caret', close: () => setDismissed(key) })
-          : null}
-      </Popover.Root>
+      <>
+        <Popover.Root {...wire} inert>
+          {token && person && people.renderPeek
+            ? people.renderPeek(person, { id: token.value, mode: 'caret', close: () => setDismissed(key) })
+            : null}
+        </Popover.Root>
+        {open && person ? (
+          <VisuallyHidden.Root id={descriptionId}>
+            {person.name}, {person.role}, active now
+          </VisuallyHidden.Root>
+        ) : null}
+      </>
     ),
   };
 }

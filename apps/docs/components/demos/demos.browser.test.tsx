@@ -159,9 +159,8 @@ describe('docs demos under axe, chat composer open', () => {
     await expect.poll(() => document.querySelector(':popover-open')?.textContent ?? '').toContain('Design systems');
     expect(document.activeElement).toBe(field);
     const peek = document.querySelector<HTMLElement>(':popover-open');
-    expect(field.getAttribute('aria-describedby')?.split(' ')).toContain(peek?.id);
     expect(await violations()).toEqual([]);
-    // The peek is inert, so axe skips it above. Its content is the field's description, so check it too.
+    // The peek is inert, so axe skips it above. Check its content too.
     if (peek) peek.inert = false;
     expect(describeViolations(await axe.run(peek ?? document.body, AXE_OPTIONS))).toEqual([]);
   });

@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
@@ -83,4 +83,22 @@ it('says when no one matches, and keeps the list the field points at', async () 
   const list = document.getElementById(field.getAttribute('aria-controls') ?? '');
   expect(list?.getAttribute('role')).toBe('listbox');
   expect(list?.hidden).toBe(true);
+});
+
+it('describes the field with what the caret peek says, as the browser computes it', async () => {
+  const field = renderComposer();
+  const at = field.value.indexOf('@Mina Park');
+  field.focus();
+  field.setSelectionRange(at + 2, at + 2);
+  field.dispatchEvent(new Event('selectionchange'));
+  await expect.poll(() => openPeek()?.textContent ?? '').toContain('Design systems');
+  // Chromium's own accessibility tree, since the peek is inert and its text alone would not count.
+  const session = cdp();
+  await session.send('Accessibility.enable');
+  const description = async () => {
+    const { nodes } = await session.send('Accessibility.getFullAXTree');
+    const box = nodes.find((node: { role?: { value?: string }; name?: { value?: string } }) => node.role?.value === 'textbox' && node.name?.value === 'Message');
+    return String(box?.description?.value ?? '');
+  };
+  await expect.poll(description).toBe('Mina Park, Design systems, active now');
 });
