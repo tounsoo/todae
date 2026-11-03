@@ -382,6 +382,22 @@ describe('Menu', () => {
     expect(isOpen()).toBe(false);
   });
 
+  it('leaves focus in a page iframe pressed into while open', async () => {
+    const frame = makeFrame().defaultView!.frameElement as HTMLIFrameElement;
+    const onOpenChange = vi.fn();
+    render(<Actions onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    act(() => item('Rename').focus());
+    // The frame's document shows its body with focus.
+    act(() => frame.focus());
+    await settle();
+    await raf();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside');
+    expect(document.activeElement).toBe(frame);
+    frame.remove();
+  });
+
   it('a blur with no target checks nothing once the menu has gone', async () => {
     const onOpenChange = vi.fn();
     const { unmount } = render(<Actions onOpenChange={onOpenChange} />);

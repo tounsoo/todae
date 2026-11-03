@@ -29,7 +29,11 @@ export function useFocusRestore(
       wasActive.current = true;
       const doc = containerRef?.current?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document;
       openedIn.current = doc;
-      const current = doc.activeElement;
+      // Focus may sit in the page around an iframe the overlay renders into. A
+      // frame showing its own body holds focus as the frame.
+      const path = focusPath(doc);
+      let current = path.at(-1);
+      if (path.length > 1 && current === current?.ownerDocument.body) current = path.at(-2);
       prior.current = isHTMLElement(current) ? current : null;
       return;
     }
@@ -44,9 +48,12 @@ export function useFocusRestore(
       // Read from the top document, so focus that left an iframe for the page around it counts as moved.
       const path = focusPath(doc);
       const moved = path.at(-1) ?? null;
+      // Focus dropped to the body of the overlay's document or of the page. A
+      // page iframe's own body is the person in that frame.
+      const dropped = moved === doc.body || (path.length === 1 && moved === moved?.ownerDocument.body);
       if (
         isHTMLElement(moved) &&
-        moved !== doc.body &&
+        !dropped &&
         moved !== fallback &&
         !(nativeReturn && moved === prior.current) &&
         (!container || !path.some((el) => container.contains(el)))

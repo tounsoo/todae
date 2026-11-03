@@ -2,7 +2,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { makeFrame } from '../test/frame.js';
+import { makeFrame, makeShadowedFrame } from '../test/frame.js';
 import { useFocusLeave } from './useFocusLeave.js';
 
 afterEach(() => {
@@ -65,5 +65,21 @@ describe('useFocusLeave across documents', () => {
     act(() => blurOut(one));
     await settle();
     expect(onLeave).not.toHaveBeenCalled();
+  });
+
+  it('keeps focus inside in an iframe the page reads as inside a shadow root when the window loses focus', async () => {
+    const { doc, restore } = makeShadowedFrame();
+    try {
+      const onLeave = vi.fn();
+      render(<Group doc={doc} onLeave={onLeave} />);
+      const one = doc.querySelector('button')!;
+      act(() => one.focus());
+      // Focus goes to another window: the element blurs and stays its document's active element.
+      act(() => blurOut(one));
+      await settle();
+      expect(onLeave).not.toHaveBeenCalled();
+    } finally {
+      restore();
+    }
   });
 });

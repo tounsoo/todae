@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { makeFrame } from '../test/frame.js';
+import { makeFrame, makeShadowedFrame } from '../test/frame.js';
 import { useFocusRestore } from './useFocusRestore.js';
 
 afterEach(() => {
@@ -115,5 +115,56 @@ describe('useFocusRestore in another document', () => {
     expect(focus).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(outside);
     outside.remove();
+  });
+
+  it('returns focus to an opener on the page around the iframe it renders into', async () => {
+    const doc = makeFrame();
+    // Focus once sat in the frame, so the frame's document still has an active element.
+    const earlier = doc.body.appendChild(doc.createElement('input'));
+    function Example() {
+      const [open, setOpen] = useState(false);
+      const container = useRef<HTMLDivElement>(null);
+      useFocusRestore(open, { containerRef: container });
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open
+          </button>
+          {createPortal(
+            <div ref={container}>
+              <button type="button" onClick={() => setOpen(false)}>
+                Close
+              </button>
+            </div>,
+            doc.body,
+          )}
+        </>
+      );
+    }
+    render(<Example />);
+    act(() => earlier.focus());
+    act(() => button(document, 'Open').focus());
+    fireEvent.click(button(document, 'Open'));
+    act(() => button(doc, 'Close').focus());
+    // Focus drops to the page's body as the overlay closes.
+    act(() => (document.activeElement as HTMLElement).blur());
+    fireEvent.click(button(doc, 'Close'));
+    await act(async () => undefined);
+    expect(document.activeElement).toBe(button(document, 'Open'));
+  });
+
+  it('returns focus in an iframe the page reads as inside a shadow root', async () => {
+    const { doc, restore } = makeShadowedFrame();
+    try {
+      render(<Panel doc={doc} withRestoreTo={false} />);
+      act(() => button(doc, 'Open').focus());
+      fireEvent.click(button(doc, 'Open'));
+      act(() => button(doc, 'Close').focus());
+      fireEvent.click(button(doc, 'Close'));
+      await act(async () => undefined);
+      expect(doc.activeElement).toBe(button(doc, 'Open'));
+    } finally {
+      restore();
+    }
   });
 });

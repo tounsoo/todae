@@ -15,11 +15,11 @@ export function isHTMLElement(node: unknown): node is HTMLElement {
 
 /**
  * Where focus is in `doc`'s window and the same-origin frames around and in it:
- * the top document's active element, then each focused frame's, inside out
- * last. A window keeps its active element when focus moves to a frame or to
- * the page around it, so a document's own `activeElement` can be stale. A
- * frame showing no HTML element with focus, such as an SVG document, ends the
- * path at the frame.
+ * the top document's active element, then each open shadow root's and focused
+ * frame's on the way in, the innermost last. A window keeps its active element
+ * when focus moves to a frame or to the page around it, so a document's own
+ * `activeElement` can be stale. A frame showing no HTML element with focus,
+ * such as an SVG document, ends the path at the frame.
  */
 export function focusPath(doc: Document): Element[] {
   let top = doc;
@@ -27,6 +27,12 @@ export function focusPath(doc: Document): Element[] {
   const path: Element[] = [];
   for (let el: Element | null | undefined = top.activeElement; el; ) {
     path.push(el);
+    // A document reads focus in an open shadow root as its host.
+    const shadowed: Element | null | undefined = el.shadowRoot?.activeElement;
+    if (shadowed) {
+      el = shadowed;
+      continue;
+    }
     if (el.localName !== 'iframe' && el.localName !== 'frame') break;
     const inner: Element | null | undefined = (el as HTMLIFrameElement).contentDocument?.activeElement;
     el = isHTMLElement(inner) ? inner : null;

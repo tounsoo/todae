@@ -83,9 +83,10 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         {
-          selector:
-            "BinaryExpression[operator='instanceof'][right.name=/^(Node|Element|Document|HTML\\w*Element|SVG\\w*Element)$/]",
-          message: 'Another window\'s nodes fail instanceof. Use isNode, isElement or isHTMLElement from internal/dom.ts.',
+          // Every instanceof, since an Event, a ShadowRoot or window.HTMLElement fails across windows too.
+          selector: "BinaryExpression[operator='instanceof']",
+          message:
+            "Another window's nodes and events fail instanceof. Use isNode, isElement or isHTMLElement from internal/dom.ts, or check a field.",
         },
       ],
     },
