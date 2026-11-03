@@ -7,10 +7,11 @@ import {
   type PopoverTriggerUserProps,
   type UsePopoverOptions,
 } from './usePopover.js';
-import { escapeIn, makeFrame } from '../test/frame.js';
+import { escapeIn, makeFrame, makePopup } from '../test/frame.js';
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   for (const frame of document.querySelectorAll('iframe')) frame.remove();
 });
 
@@ -320,4 +321,47 @@ describe('usePopover in an iframe', () => {
     expect(doc.querySelector('button')).toBeNull();
     expect(document.activeElement).toBe(open);
   });
+});
+
+describe('usePopover in a popup window', () => {
+  for (const how of ['an item press', 'Escape'] as const) {
+    it(`returns focus to its trigger on the page with no restoreFocusRef, closed by ${how}`, async () => {
+      const popup = makePopup();
+      function Example() {
+        const [open, setOpen] = useState(false);
+        const popover = usePopover({ open, onOpenChange: setOpen });
+        return (
+          <>
+            <button type="button" {...popover.getTriggerProps()}>
+              Open
+            </button>
+            {open
+              ? createPortal(
+                  <div {...popover.getPopoverProps()}>
+                    <button type="button" onClick={() => setOpen(false)}>
+                      Item
+                    </button>
+                  </div>,
+                  popup.body,
+                )
+              : null}
+          </>
+        );
+      }
+      render(<Example />);
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      act(() => trigger.focus());
+      // The page keeps the trigger as its active element while focus is in the popup.
+      vi.spyOn(document, 'activeElement', 'get').mockReturnValue(trigger);
+      fireEvent.click(trigger);
+      const item = popup.querySelector('button')!;
+      act(() => item.focus());
+      const focus = vi.spyOn(trigger, 'focus');
+      if (how === 'Escape') act(() => void escapeIn(item));
+      else fireEvent.click(item);
+      await act(async () => undefined);
+      expect(popup.querySelector('button')).toBeNull();
+      expect(focus).toHaveBeenCalled();
+    });
+  }
 });

@@ -36,9 +36,11 @@ export function useFocusRestore(
       wasActive.current = true;
       const doc = containerRef?.current?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? document;
       openedIn.current = doc;
-      // Focus may sit in the page around an iframe the overlay renders into. A
-      // frame showing its own body holds focus as the frame.
-      const path = focusPath(doc);
+      // Focus may sit in the page around an iframe the overlay renders into, or
+      // in the page that opens a popup window the overlay renders into. A frame
+      // showing its own body holds focus as the frame.
+      const own = topDocument(doc);
+      const path = focusPath(own !== topDocument(document) && !own.hasFocus() ? document : doc);
       let current = path.at(-1);
       if (path.length > 1 && current === current?.ownerDocument.body) current = path.at(-2);
       prior.current = isHTMLElement(current) ? current : null;
