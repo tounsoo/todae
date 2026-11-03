@@ -41,7 +41,7 @@ import { X } from 'lucide-react';
 
 **You supply:** A name: `BottomSheet.Title`, or `aria-label` on `BottomSheet.Root`. An `initialFocusRef` on the control the task starts with, such as a search field: otherwise focus starts on the first tabbable element, which is the default grabber when the sheet has two heights. A visible `BottomSheet.Close` or footer button, since a drag or a backdrop tap needs a pointer.
 
-**Watch for:** A placed `BottomSheet.Grabber` passes its `aria-label` to the button; a wrapper that drops it leaves the `resizeSheet` string, English unless [StringsProvider](/utilities/strings-provider) sets it. With `dismissOnEscape`, `dismissOnBackdrop` and `dismissOnDrag` all false, a button inside the sheet is the only way out. A wrapper that renders its own heading instead of `BottomSheet.Title` must pass `aria-labelledby`.
+**Watch for:** A placed `BottomSheet.Grabber` passes its `aria-label` to the button, when the sheet has two heights and the grabber is one; a wrapper that drops it leaves the `resizeSheet` string, English unless [StringsProvider](/utilities/strings-provider) sets it. With `dismissOnEscape`, `dismissOnBackdrop` and `dismissOnDrag` all false, a button inside the sheet is the only way out. A wrapper that renders its own heading instead of `BottomSheet.Title` must pass `aria-labelledby`.
 
 ## When to use
 

@@ -286,16 +286,24 @@ describe('BottomSheet in a browser', () => {
       </Themed>,
     );
     await waitFor(() => expect(sheet().hasAttribute('data-entered')).toBe(true));
-    const rest = await new Promise<number>((resolve) => setTimeout(() => resolve(sheet().getBoundingClientRect().height), 700));
+    // The enter motion moves `bottom`; the height is already at rest.
+    const rest = sheet().getBoundingClientRect().height;
     const handle = sheet().querySelector('[data-todae-sheet-drag-handle]')!;
     const top = handle.getBoundingClientRect().top;
     handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: top }));
     window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: window.innerHeight }));
+    // Proves the ::backdrop read is real: the drag has faded the scrim out.
+    expect(getComputedStyle(sheet(), '::backdrop').opacity).toBe('0');
     window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: window.innerHeight }));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
-    await waitFor(() => expect(Math.abs(sheet().getBoundingClientRect().height - rest)).toBeLessThan(1), { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(Math.abs(sheet().getBoundingClientRect().height - rest)).toBeLessThan(1);
+        expect(parseFloat(getComputedStyle(sheet(), '::backdrop').opacity)).toBeGreaterThan(0.99);
+      },
+      { timeout: 2000 },
+    );
     expect(sheet().matches(':modal')).toBe(true);
-    expect(getComputedStyle(sheet(), '::backdrop').opacity).toBe('1');
   });
 
   it('resizes from a press on the grabber, which gives a touch a full-height target', async () => {

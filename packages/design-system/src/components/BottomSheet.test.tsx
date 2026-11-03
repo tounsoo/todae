@@ -74,23 +74,37 @@ describe('BottomSheet', () => {
     expect(document.querySelector('[data-snap="mid"]')).not.toBeNull();
   });
 
-  it('does not toggle the height when a drag from the grabber ends on it', () => {
+  it('does not toggle the height when a drag from the grabber ends on it', async () => {
     const onSnapChange = vi.fn();
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
     render(
-      <BottomSheet.Root open onOpenChange={() => undefined} onSnapChange={onSnapChange}>
+      <BottomSheet.Root open onOpenChange={() => undefined} onSnapChange={onSnapChange} dismissOnDrag={false}>
         <BottomSheet.Title>Pick</BottomSheet.Title>
       </BottomSheet.Root>,
     );
     const grabber = screen.getByRole('button', { name: 'Resize sheet' });
-    act(() => {
-      grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 8, clientY: 400 }));
-      window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 8, clientY: 200 }));
-      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 8, clientY: 200 }));
-    });
-    // The browser clicks right after the release, in the same task.
+    const drag = (pointerId: number, from: number, to: number) =>
+      act(() => {
+        grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId, clientY: from }));
+        window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId, clientY: to }));
+        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId, clientY: to }));
+      });
+    // A touch tap's click comes a task after the release.
+    drag(8, 400, 200);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
     act(() => grabber.click());
     expect(onSnapChange.mock.calls).toEqual([['full']]);
+    // A mouse clicks in the same task as the release.
+    drag(9, 200, 400);
+    act(() => grabber.click());
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid']]);
+    // The next press is a press of its own.
+    act(() => {
+      grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 10, clientY: 200 }));
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 10, clientY: 200 }));
+      grabber.click();
+    });
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid'], ['full']]);
   });
 
   it('shows the grabber as a mark, not a button, when there is one height', () => {

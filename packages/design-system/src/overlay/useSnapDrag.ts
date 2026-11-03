@@ -124,6 +124,7 @@ export function useSnapDrag({
 
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0 || pointerId != null) return;
+      quietUntil = 0;
       const target = event.target;
       if (!(target instanceof Element)) return;
       const fromHandle = Boolean(target.closest('[data-todae-sheet-drag-handle]'));
@@ -155,6 +156,8 @@ export function useSnapDrag({
           return;
         }
         armed = true;
+        // A new drag owns the variables; the last release's frames must not clear them.
+        cancelAnimationFrame(frame);
         try {
           surface.setPointerCapture(event.pointerId);
         } catch {
@@ -215,15 +218,22 @@ export function useSnapDrag({
       });
     }
 
-    // The release of a drag that started on the grabber would also click it,
-    // and a click there toggles the height. The drag already chose one.
+    // A drag's release can also click what it started on: the grabber, which
+    // toggles the height, or a close part in the header. The drag already
+    // chose, so a click soon after it is dropped. On touch the click comes in
+    // a later task than the release, so the window is time-based, and the
+    // next press ends it early.
+    let quietUntil = 0;
+
     function swallowClick() {
-      const swallow = (event: MouseEvent) => {
-        event.stopPropagation();
-        event.preventDefault();
-      };
-      surface.addEventListener('click', swallow, { capture: true, once: true });
-      setTimeout(() => surface.removeEventListener('click', swallow, { capture: true }));
+      quietUntil = performance.now() + 400;
+    }
+
+    function onClick(event: MouseEvent) {
+      if (performance.now() >= quietUntil) return;
+      quietUntil = 0;
+      event.stopPropagation();
+      event.preventDefault();
     }
 
     function onPointerUp(event: PointerEvent) {
@@ -242,24 +252,24 @@ export function useSnapDrag({
     // A fresh open starts at its snap height, whatever an earlier exit left.
     setDrag(null, false);
     surface.addEventListener('pointerdown', onPointerDown);
+    surface.addEventListener('click', onClick, { capture: true });
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerCancel);
     surface.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
       surface.removeEventListener('pointerdown', onPointerDown);
+      surface.removeEventListener('click', onClick, { capture: true });
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       surface.removeEventListener('touchmove', onTouchMove);
-      // An accepted drag-dismiss closes the sheet, which ends this effect
-      // before the exit starts; the exit still needs the dragged height.
-      if (dismissing) {
-        surface.removeAttribute('data-dragging');
-        return;
-      }
       cancelAnimationFrame(frame);
-      setDrag(null, false);
+      // An accepted drag-dismiss closes the sheet, which ends this effect
+      // before the exit starts; the exit still needs the dragged height. The
+      // next open clears it.
+      if (dismissing) surface.removeAttribute('data-dragging');
+      else setDrag(null, false);
     };
   }, [bodyRef, enabled, sheet]);
 }

@@ -168,11 +168,16 @@
     justify-content: flex-end;
   }
 
-  /* Forced colors paints a span's background as Canvas, which hides the pill. */
+  /* Forced colors paints a span's background as Canvas, which hides the pill.
+     Opting the pill out also keeps its ring's author color, so set a system one. */
   @media (forced-colors: active) {
     .pill {
       forced-color-adjust: none;
       background: CanvasText;
+    }
+
+    .grabber:focus-visible > .pill {
+      outline-color: Highlight;
     }
   }
 
