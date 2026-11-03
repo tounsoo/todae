@@ -1,23 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
-import { isHTMLElement } from '../internal/dom.js';
-
-/**
- * The element with focus in the window tree `doc` is in, looked up from its
- * top document, so focus that left an iframe for the page around it counts as
- * moved. Inside a frame focus is in, it is that frame's active element.
- */
-function focusedElement(doc: Document): Element | null {
-  let top = doc;
-  for (let host = top.defaultView?.frameElement; host; host = top.defaultView?.frameElement) top = host.ownerDocument;
-  let el = top.activeElement;
-  while (el && (el.localName === 'iframe' || el.localName === 'frame')) {
-    // A frame showing no HTML element with focus, such as an SVG document, counts as the frame.
-    const inner = (el as HTMLIFrameElement).contentDocument?.activeElement;
-    if (!isHTMLElement(inner)) break;
-    el = inner;
-  }
-  return el;
-}
+import { focusPath, isHTMLElement } from '../internal/dom.js';
 
 export function useFocusRestore(
   active: boolean,
@@ -59,13 +41,15 @@ export function useFocusRestore(
     // The container may already be gone, so fall back to the document it opened in.
     const doc = container?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? openedIn.current ?? document;
     queueMicrotask(() => {
-      const moved = focusedElement(doc);
+      // Read from the top document, so focus that left an iframe for the page around it counts as moved.
+      const path = focusPath(doc);
+      const moved = path.at(-1) ?? null;
       if (
         isHTMLElement(moved) &&
-        moved !== doc.body &&
+        moved !== moved.ownerDocument.body &&
         moved !== fallback &&
         !(nativeReturn && moved === prior.current) &&
-        (!container || !container.contains(moved))
+        (!container || !path.some((el) => container.contains(el)))
       ) {
         return;
       }

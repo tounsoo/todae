@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type FocusEvent } from 'react';
-import { isElement, isNode } from '../internal/dom.js';
+import { focusPath, isElement, isNode } from '../internal/dom.js';
 
 /**
  * Calls `onLeave` when focus leaves the element these handlers sit on, with
  * the element focus landed on. A blur with no relatedTarget (an iframe, the
  * page, another window) is checked once focus settles, and dropped when focus
- * comes back first or the element unmounts. A window that lost focus keeps
- * its active element, so it is not leaving. `ignore`, read at the blur,
+ * comes back first or the element unmounts. Focus in a frame inside the
+ * element still counts as inside, and a window that lost focus keeps its
+ * active element, so it is not leaving. `ignore`, read at the blur,
  * drops a leave the owner already knows about.
  */
 export function useFocusLeave(onLeave: (next: Element | null) => void, ignore?: () => boolean) {
@@ -35,8 +36,8 @@ export function useFocusLeave(onLeave: (next: Element | null) => void, ignore?: 
         cancel();
         pending.current = setTimeout(() => {
           pending.current = undefined;
-          const active = container.ownerDocument.activeElement;
-          if (!container.contains(active)) latest.current(active);
+          const path = focusPath(container.ownerDocument);
+          if (!path.some((el) => container.contains(el))) latest.current(path.at(-1) ?? null);
         });
         return;
       }
