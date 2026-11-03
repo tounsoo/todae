@@ -36,6 +36,28 @@ function Panel({ doc, withRestoreTo }: { doc: Document; withRestoreTo: boolean }
 
 const button = (doc: Document, name: string) => [...doc.querySelectorAll('button')].find((el) => el.textContent === name)!;
 
+it('returns focus to an opener inside an open shadow root', async () => {
+  const host = document.body.appendChild(document.createElement('div'));
+  const opener = host.attachShadow({ mode: 'open' }).appendChild(document.createElement('button'));
+  act(() => opener.focus());
+  function Example({ open }: { open: boolean }) {
+    const container = useRef<HTMLDivElement>(null);
+    useFocusRestore(open, { containerRef: container });
+    return open ? (
+      <div ref={container}>
+        <button type="button">Inside</button>
+      </div>
+    ) : null;
+  }
+  const { rerender } = render(<Example open={false} />);
+  rerender(<Example open />);
+  act(() => button(document, 'Inside').focus());
+  rerender(<Example open={false} />);
+  await act(async () => undefined);
+  expect(host.shadowRoot!.activeElement).toBe(opener);
+  host.remove();
+});
+
 describe('useFocusRestore in another document', () => {
   for (const withRestoreTo of [true, false]) {
     it(`returns focus to the opener in an iframe, ${withRestoreTo ? 'with' : 'without'} restoreTo`, async () => {

@@ -203,7 +203,9 @@ function onKeyDown(event: KeyboardEvent) {
 /**
  * Gives a close request of the modal `dialog`, such as the Android back
  * gesture, to the layer inside it that Escape pressed where focus is would
- * reach, and returns whether one took it.
+ * reach, and returns whether one took it. It is the whole dialog's, so a layer
+ * in a frame there that takes any key, such as an open popover, takes it
+ * wherever focus is in the dialog, as one on the page would.
  */
 export function takeCloseRequest(dialog: Element): boolean {
   // Where focus is, read as each layer's document reads it, as a key there
