@@ -165,6 +165,46 @@ describe('RadioGroup after a form reset', () => {
     expect(onValueChange.mock.calls).toEqual([['pro'], ['free']]);
   });
 
+  it('follows the radio the reset checks last when two mounted checked', async () => {
+    const onValueChange = vi.fn();
+    function Harness() {
+      const [plan, setPlan] = useState<string | null>('free');
+      const [hasTeam, setHasTeam] = useState(false);
+      return (
+        <form>
+          <button
+            type="button"
+            onClick={() => {
+              setHasTeam(true);
+              setPlan('team');
+            }}
+          >
+            Pick team
+          </button>
+          <RadioGroup.Root
+            aria-label="Plan"
+            value={plan}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setPlan(next);
+            }}
+          >
+            {hasTeam ? <RadioGroup.Item value="team">Team</RadioGroup.Item> : null}
+            <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          </RadioGroup.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick team' }));
+    await reset(radio('Free').form!);
+    expect(radio('Free').checked).toBe(true);
+    expect(shownChecked('Free')).toBe(true);
+    expect(shownChecked('Team')).toBe(false);
+    fireEvent.click(radio('Team'));
+    expect(onValueChange.mock.calls).toEqual([['free'], ['team']]);
+  });
+
   it('goes back to no pick, and reports the next pick', async () => {
     const onValueChange = vi.fn();
     render(
