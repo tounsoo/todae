@@ -3,9 +3,6 @@ import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tokenAtCaret, useMentions, type MentionDraft } from '../hooks/useMentions.js';
-import { useMentionPeek } from '../hooks/useMentionPeek.js';
-import { OptionList } from './OptionList.js';
-import { Popover } from './Popover.js';
 import { defineMentionSource, type MentionSource } from '../mentions/source.js';
 import { Field } from './Field.js';
 import { Mention } from './Mention.js';
@@ -261,42 +258,10 @@ describe('Mention.Root', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '@Mina Park' }));
   });
 
-  it('passes mode caret to the caret peek', () => {
-    const source = peopleSource({ renderPeek: (_person, peek) => <span>{peek.mode}</span> });
-    function Harness() {
-      const [draft, setDraft] = useState<MentionDraft>({
-        text: '@Mina Park',
-        tokens: [{ start: 0, end: 10, char: '@', value: 'mina', text: '@Mina Park' }],
-      });
-      const api = useMentions({ triggers: [source], value: draft, onValueChange: setDraft });
-      const token = tokenAtCaret(api.value.tokens, 2);
-      const peek = useMentionPeek({
-        source,
-        id: token?.value ?? null,
-        mode: 'caret',
-        active: token !== null,
-        text: token?.text ?? '',
-        focusRef: api.textareaRef,
-        anchorName: api.caretPeekAnchorName,
-      });
-      return (
-        <>
-          <Field.Root aria-label="Message">
-            <Field.Textarea {...api.getTextareaProps()} />
-          </Field.Root>
-          <Popover.Root {...api.getPopoverProps()}>
-            <OptionList.Root {...api.getListboxProps()}>{null}</OptionList.Root>
-          </Popover.Root>
-          {peek.entity !== undefined ? source.renderPeek?.(peek.entity, peek.context) : null}
-        </>
-      );
-    }
-    render(<Harness />);
-    const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
-    fireEvent.focus(field);
-    field.setSelectionRange(2, 2);
-    fireEvent.select(field);
-    expect(document.body.textContent).toContain('caret');
+  it('passes mode interactive to the peek of a rendered mention', () => {
+    render(<Mention.Root source={peopleSource()} id="mina">@Mina Park</Mention.Root>);
+    fireEvent.click(screen.getByRole('button', { name: '@Mina Park' }));
+    expect(document.querySelector('[data-mode]')?.getAttribute('data-mode')).toBe('interactive');
   });
 });
 

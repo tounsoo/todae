@@ -51,9 +51,10 @@ describe('Switch', () => {
     expect(screen.getByRole('switch')).toHaveProperty('checked', false);
   });
 
-  it('paints a thumb, not a check glyph', () => {
+  it('paints a thumb with an edge, not a check glyph', () => {
     const thumb = css.match(/data-control='switch'\] \.indicator::after \{[\s\S]*?\}/)?.[0];
     expect(thumb).toContain('--todae-selection-thumb-bg');
+    expect(thumb).toContain('--todae-selection-thumb-border');
     expect(thumb).not.toContain('--todae-selection-indicator-fg');
   });
 

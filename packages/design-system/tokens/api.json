@@ -3402,6 +3402,10 @@
       "type": "color"
     },
     {
+      "path": "selection.thumb.border",
+      "type": "color"
+    },
+    {
       "path": "selection.thumb.inset",
       "type": "dimension"
     },

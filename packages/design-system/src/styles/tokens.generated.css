@@ -822,6 +822,7 @@
   --todae-selection-ring-invalid: var(--_todae-selection-ring-invalid, var(--todae-color-danger-default));
   --todae-selection-size: var(--_todae-selection-size, var(--todae-space-selection-size));
   --todae-selection-thumb-bg: var(--_todae-selection-thumb-bg, var(--todae-color-bg-surface));
+  --todae-selection-thumb-border: var(--_todae-selection-thumb-border, var(--todae-color-border-default));
   --todae-selection-thumb-inset: var(--_todae-selection-thumb-inset, 1px);
   --todae-selection-track-bg: var(--_todae-selection-track-bg, var(--todae-color-bg-subtle));
   --todae-alert-border-width: var(--_todae-alert-border-width, var(--todae-border-width));

@@ -9461,6 +9461,20 @@
       "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
+      "path": "selection.thumb.border",
+      "type": "color",
+      "cssVar": "--todae-selection-thumb-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
+    },
+    {
       "path": "selection.thumb.inset",
       "type": "dimension",
       "cssVar": "--todae-selection-thumb-inset",

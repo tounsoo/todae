@@ -275,6 +275,59 @@ describe('BottomSheet in a browser', () => {
     expect(panel.matches(':popover-open')).toBe(true);
   });
 
+  it('comes back into view when its owner turns down a drag-dismiss', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={onOpenChange}>
+          <BottomSheet.Title>Discard changes?</BottomSheet.Title>
+          <BottomSheet.Body>Draft</BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    // Wait out the enter slide, so the drag starts from where the handle rests.
+    await waitFor(() => expect(Math.round(sheet().getBoundingClientRect().bottom)).toBe(window.innerHeight), {
+      timeout: 2000,
+    });
+    const rest = sheet().getBoundingClientRect().height;
+    const handle = sheet().querySelector('[data-todae-sheet-drag-handle]')!;
+    const top = handle.getBoundingClientRect().top;
+    handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: top }));
+    // Past the bottom edge, so the drag clamps the height to zero.
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: window.innerHeight + 50 }));
+    // Proves the ::backdrop read is real: the drag has faded the scrim out.
+    expect(getComputedStyle(sheet(), '::backdrop').opacity).toBe('0');
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: window.innerHeight + 50 }));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
+    await waitFor(
+      () => {
+        expect(Math.abs(sheet().getBoundingClientRect().height - rest)).toBeLessThan(1);
+        expect(parseFloat(getComputedStyle(sheet(), '::backdrop').opacity)).toBeGreaterThan(0.99);
+      },
+      { timeout: 2000 },
+    );
+    expect(sheet().matches(':modal')).toBe(true);
+  });
+
+  it('resizes from a press on the grabber, which gives a touch a full-height target', async () => {
+    render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Sort</BottomSheet.Title>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    await waitFor(() => expect(sheet().hasAttribute('data-entered')).toBe(true));
+    const grabber = screen.getByRole('button', { name: 'Resize sheet' });
+    // The pill is a few pixels tall; the button around it meets the 24px target minimum.
+    expect(grabber.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    expect(grabber.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+    const midHeight = sheet().getBoundingClientRect().height;
+    await userEvent.click(grabber);
+    await waitFor(() => expect(sheet().getBoundingClientRect().height).toBeGreaterThan(midHeight + 50), { timeout: 2000 });
+    expect(grabber.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('warns when it opens inside a hidden container', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
