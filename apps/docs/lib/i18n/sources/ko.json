@@ -969,7 +969,7 @@
   },
   "tooltip": {
     "(top)": "d6905641ee72",
-    "# Tooltip": "a6dda7750684",
+    "# Tooltip": "aa790d28497e",
     "## Warm-up": "23c04f5b9adc",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
@@ -1189,7 +1189,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "a19a17a88bfb",
+    "# useTooltip": "8f637f36a0b5",
     "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
