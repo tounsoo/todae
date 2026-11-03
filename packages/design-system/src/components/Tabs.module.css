@@ -95,7 +95,7 @@
       content: none;
     }
 
-    .list:has(> .tab[data-selected])::after {
+    .list:has(.tab[data-selected])::after {
       content: '';
       position: absolute;
       position-anchor: --todae-tab-selected;
@@ -107,7 +107,7 @@
       transition: inset var(--todae-tabs-motion-duration) var(--todae-tabs-motion-easing);
     }
 
-    .list[data-orientation='vertical']:has(> .tab[data-selected])::after {
+    .list[data-orientation='vertical']:has(.tab[data-selected])::after {
       inset-block: anchor(top) anchor(bottom);
       inset-inline: auto calc(anchor(end) - var(--todae-tabs-border-width));
       width: var(--todae-tabs-indicator-size);
@@ -115,7 +115,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .list::after {
+      .list:has(.tab[data-selected])::after {
         transition: none;
       }
     }
@@ -149,7 +149,7 @@
   /* Forced colors drop backgrounds, so paint the indicator with a system color. */
   @media (forced-colors: active) {
     .tab[data-selected]::after,
-    .list::after {
+    .list:has(.tab[data-selected])::after {
       background: Highlight;
     }
   }
