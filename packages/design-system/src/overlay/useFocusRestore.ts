@@ -43,7 +43,7 @@ export function useFocusRestore(
     const fallback = restoreTo?.current ?? prior.current;
     const container = containerRef?.current;
     // The container may already be gone, so fall back to the document it opened in.
-    const doc = container?.ownerDocument ?? restoreTo?.current?.ownerDocument ?? openedIn.current ?? document;
+    const doc = container?.ownerDocument ?? openedIn.current ?? restoreTo?.current?.ownerDocument ?? document;
     queueMicrotask(() => {
       // Read from the top document, so focus that left an iframe for the page around it counts as moved.
       const path = focusPath(doc);

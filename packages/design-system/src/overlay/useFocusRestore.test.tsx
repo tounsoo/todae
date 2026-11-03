@@ -153,6 +153,40 @@ describe('useFocusRestore in another document', () => {
     expect(document.activeElement).toBe(button(document, 'Open'));
   });
 
+  it('returns focus to a restoreTo on the page around the iframe after the overlay unmounts', async () => {
+    const doc = makeFrame();
+    function Example() {
+      const [open, setOpen] = useState(false);
+      const container = useRef<HTMLDivElement>(null);
+      const trigger = useRef<HTMLButtonElement>(null);
+      useFocusRestore(open, { containerRef: container, restoreTo: trigger });
+      return (
+        <>
+          <button type="button" ref={trigger} onClick={() => setOpen(true)}>
+            Open
+          </button>
+          {open
+            ? createPortal(
+                <div ref={container}>
+                  <button type="button" onClick={() => setOpen(false)}>
+                    Close
+                  </button>
+                </div>,
+                doc.body,
+              )
+            : null}
+        </>
+      );
+    }
+    render(<Example />);
+    act(() => button(document, 'Open').focus());
+    fireEvent.click(button(document, 'Open'));
+    act(() => button(doc, 'Close').focus());
+    fireEvent.click(button(doc, 'Close'));
+    await act(async () => undefined);
+    expect(document.activeElement).toBe(button(document, 'Open'));
+  });
+
   it('returns focus in an iframe the page reads as inside a shadow root', async () => {
     const { doc, restore } = makeShadowedFrame();
     try {
