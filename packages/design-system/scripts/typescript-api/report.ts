@@ -87,6 +87,14 @@ function sortedBy<T extends ts.Node>(nodes: readonly T[]): T[] {
   return [...nodes].sort((a, b) => byCodePoint(print(a), print(b)));
 }
 
+/** The operands of `A & (B & C)` as `A`, `B`, `C`, and the same for a union, since grouping changes nothing. */
+function flatten(nodes: readonly ts.TypeNode[], same: (node: ts.TypeNode) => node is ts.UnionTypeNode | ts.IntersectionTypeNode): ts.TypeNode[] {
+  return nodes.flatMap((node) => {
+    const inner = ts.isParenthesizedTypeNode(node) ? node.type : node;
+    return same(inner) ? flatten(inner.types, same) : [node];
+  });
+}
+
 /**
  * Prints a type the same way whatever its source calls things or the order it lists them in,
  * so only a change callers can feel changes the text:
@@ -123,9 +131,11 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
           const type = visited.questionToken ? ts.factory.createOptionalTypeNode(visited.type) : visited.type;
           return visited.dotDotDotToken ? ts.factory.createRestTypeNode(type) : type;
         }
-        if (ts.isUnionTypeNode(visited)) return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sortedBy(visited.types)));
+        if (ts.isUnionTypeNode(visited)) {
+          return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sortedBy(flatten(visited.types, ts.isUnionTypeNode))));
+        }
         if (ts.isIntersectionTypeNode(visited)) {
-          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(sortedBy(visited.types)));
+          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(sortedBy(flatten(visited.types, ts.isIntersectionTypeNode))));
         }
         if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortedBy(visited.members)));
         return visited;

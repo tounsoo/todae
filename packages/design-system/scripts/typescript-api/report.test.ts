@@ -164,6 +164,8 @@ describe('apiReport', () => {
       export type Item<T> = T extends Array<infer E> ? E : never;
       export type Fn = (<A>(arg: A) => A) | (<B>(arg: B) => string);
       export type Named = ({ 'aria-label': string; role: 'dialog' } | { role?: undefined }) & Base;
+      type W = { w?: string }; type X = { x?: string }; type Y = { y?: string; z: 1 | 2 };
+      export type Grouped = W & X & Y;
     `);
     const after = await report(`
       type Base = { id: string };
@@ -171,6 +173,8 @@ describe('apiReport', () => {
       export type Item<T> = T extends Array<infer U> ? U : never;
       export type Fn = (<B>(arg: B) => string) | (<A>(arg: A) => A);
       export type Named = Base & ({ role?: undefined } | { role: 'dialog'; 'aria-label': string });
+      type W = { w?: string }; type X = { x?: string }; type Y = { y?: string; z: 1 | 2 };
+      export type Grouped = Y & (X & W);
     `);
     expect(after).toEqual(before);
   });
