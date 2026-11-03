@@ -209,6 +209,33 @@ describe('Checkbox after a form reset', () => {
     expect(onCheckedChange.mock.calls).toEqual([[false], [true]]);
   });
 
+  it('keeps the value a controlled owner sets in its own reset handler', async () => {
+    const onCheckedChange = vi.fn();
+    function Harness() {
+      const [checked, setChecked] = useState(false);
+      return (
+        <form onReset={() => setChecked(true)}>
+          <Checkbox.Root
+            checked={checked}
+            onCheckedChange={(next) => {
+              onCheckedChange(next);
+              setChecked(next);
+            }}
+          >
+            Weekly digest
+          </Checkbox.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange).not.toHaveBeenCalled();
+    fireEvent.click(box());
+    expect(onCheckedChange.mock.calls).toEqual([[false]]);
+  });
+
   it('keeps its state when a handler cancels the reset', async () => {
     const onCheckedChange = vi.fn();
     render(

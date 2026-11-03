@@ -205,6 +205,33 @@ describe('RadioGroup after a form reset', () => {
     expect(onValueChange.mock.calls).toEqual([['free'], ['team']]);
   });
 
+  it('keeps the value a controlled owner sets in its own reset handler', async () => {
+    const onValueChange = vi.fn();
+    function Harness() {
+      const [plan, setPlan] = useState<string | null>('free');
+      return (
+        <form onReset={() => setPlan('pro')}>
+          <RadioGroup.Root
+            aria-label="Plan"
+            value={plan}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setPlan(next);
+            }}
+          >
+            <RadioGroup.Item value="free">Free</RadioGroup.Item>
+            <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+          </RadioGroup.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    await reset(radio('Pro').form!);
+    expect(radio('Pro').checked).toBe(true);
+    expect(shownChecked('Pro')).toBe(true);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('goes back to no pick, and reports the next pick', async () => {
     const onValueChange = vi.fn();
     render(
