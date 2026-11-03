@@ -1,4 +1,6 @@
-import { LoaderDots, LoaderLabelled, SkeletonProfile } from '../../../components/demos/NativeDemo';
+import SkeletonProfile from '../../../examples/loader/SkeletonProfile';
+import LoaderDots from '../../../examples/loader/LoaderDots';
+import LoaderLabelled from '../../../examples/loader/LoaderLabelled';
 
 # Loader and Skeleton
 
@@ -8,29 +10,13 @@ import { LoaderDots, LoaderLabelled, SkeletonProfile } from '../../../components
 
 `Loader.Root`는 progressbar 역할이 그대로 남으므로 스크린 리더는 진행 막대로 알려 주고, 다른 progress처럼 이름이 필요합니다. 텍스트와 함께 `<label>`로 감싸거나 `aria-label`을 주세요. 기본값인 `variant="spinner"`에서는 채움 호 하나가 도는 고리로 그려지고, 사용자가 동작 줄이기를 요청하면 멈춥니다. `value`는 받지 않습니다. 끝을 아는 기다림에는 [Progress](/progress) 막대를 쓰세요.
 
-```tsx
-<label>
-  <Loader.Root /> Loading invoices
-</label>
-
-<Loader.Root aria-label="Saving" />
-```
-
-<Example>
-  <LoaderLabelled />
-</Example>
+<Example of={LoaderLabelled} />
 
 ### Dots
 
 `variant="dots"`는 타이핑 표시처럼 점 세 개가 차례로 올라가며, 텍스트가 시작하는 쪽부터 움직입니다. 채팅의 어시스턴트처럼 누군가 답을 쓰고 있을 때 쓰세요. 같은 `<progress>`이고 역할도 같으므로 역시 이름이 필요하며, 동작 줄이기에서는 점이 멈춥니다.
 
-```tsx
-<Loader.Root variant="dots" aria-label="Assistant is typing" />
-```
-
-<Example>
-  <LoaderDots />
-</Example>
+<Example of={LoaderDots} />
 
 두 변형 모두 텍스트 색으로 그리므로 기본 버튼을 포함해 어떤 표면에서도 보입니다. 색을 바꾸려면 `color`를 정하세요. `loader.size`(점은 너비가 1.5배입니다), `loader.thickness`, `loader.track-tint`(트랙이 텍스트 색을 얼마나 쓰는지), `loader.motion.duration`(점의 물결 한 번)으로 바꾸세요. `loader.thickness`와 `loader.track-tint`는 스피너에만 적용됩니다.
 
@@ -38,22 +24,7 @@ import { LoaderDots, LoaderLabelled, SkeletonProfile } from '../../../components
 
 `Skeleton.Root`는 내용이 오기 전에 그 자리를 대신합니다. 높이는 최소 한 줄이고, 안에 든 요소는 크기만 정할 뿐 숨겨집니다. 깜빡이며, 동작 줄이기에서는 멈춥니다.
 
-```tsx
-<div>
-  <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
-  <Stack.Root direction="row" aria-hidden="true">
-    <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
-    <Stack.Root style={{ flex: 1 }}>
-      <Skeleton.Root style={{ inlineSize: '40%' }} />
-      <Skeleton.Root style={{ inlineSize: '70%' }} />
-    </Stack.Root>
-  </Stack.Root>
-</div>
-```
-
-<Example block>
-  <SkeletonProfile />
-</Example>
+<Example of={SkeletonProfile} block />
 
 Skeleton은 스크린 리더에게 아무 뜻이 없으니 `aria-hidden`으로 숨기고, 무엇을 불러오는지 텍스트로 알리세요. `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`, `skeleton.motion.easing`, 그리고 펄스가 옅어지는 불투명도인 `skeleton.pulse.opacity`로 바꾸세요.
 

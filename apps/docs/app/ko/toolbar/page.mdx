@@ -1,26 +1,10 @@
-import { ToolbarEditor } from '../../../components/demos/ToolbarDemo';
+import ToolbarEditor from '../../../examples/toolbar/ToolbarEditor';
 
 # Toolbar
 
 에디터의 서식 막대처럼 컨트롤들이 Tab 순서에서 한 자리를 함께 쓰는 행입니다. 자기 자리를 유지하는 컨트롤은 예외입니다(아래 참고). `Toolbar.Root`는 `role="toolbar"`입니다. 그 안에서 왼쪽, 오른쪽 화살표 키는 컨트롤 사이로 포커스를 옮기고, Home과 End는 처음과 끝으로 가며, Tab은 컨트롤 묶음을 벗어납니다. 위, 아래 키는 컨트롤에 맡기므로 메뉴 트리거는 여전히 메뉴를 엽니다.
 
-```tsx
-<Toolbar.Root aria-label="Formatting">
-  <ToggleGroup.Root aria-label="Text style" selectionMode="multiple">
-    <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
-    <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
-  </ToggleGroup.Root>
-  <Toolbar.Separator />
-  <Toolbar.Group aria-label="History">
-    <Button.Root variant="ghost">Undo</Button.Root>
-    <Button.Root variant="ghost">Redo</Button.Root>
-  </Toolbar.Group>
-</Toolbar.Root>
-```
-
-<Example>
-  <ToolbarEditor />
-</Example>
+<Example of={ToolbarEditor} />
 
 버튼, 링크, 체크박스, 메뉴 트리거는 직접 만든 래퍼 안에 있어도 문서 순서대로 포함됩니다. 비활성 컨트롤, 숨겨진 컨트롤, `aria-hidden="true"` 아래의 컨트롤은 건너뜁니다. 툴바는 어떤 `tabIndex`도 바꾸지 않습니다. 텍스트 입력, RadioGroup처럼 자기 화살표 키가 있는 컴포지트, 그 밖에 이런 컨트롤이 아니면서 Tab이 닿는 요소는 자기 탭 위치를 유지하며, 툴바의 화살표 키는 이를 건너뜁니다. 이런 요소는 주변 컨트롤을 여러 묶음으로 나누고, 각 묶음이 탭 위치 하나입니다. Tab은 묶음을 건너뛰고, 페이지의 다른 곳에서 Tab이나 Shift+Tab으로 묶음에 돌아오면 마지막으로 Tab으로 떠났던 컨트롤로, 처음에는 첫 컨트롤로 갑니다. 툴바에서 열리는 팝오버나 다이얼로그 안의 컨트롤은 자기 키보드 모델을 유지합니다.
 

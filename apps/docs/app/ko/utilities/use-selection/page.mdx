@@ -1,23 +1,10 @@
-import { SelectFiles } from '../../../../components/demos/SelectionDemo';
+import SelectFiles from '../../../../examples/utilities/use-selection/SelectFiles';
 
 # useSelection
 
 `useSelection(options)`은 표의 행이나 목록의 항목 같은 키의 선택을 보관하고, 이를 `Checkbox.Root`에 연결하는 prop getter를 돌려줍니다. `getCheckboxProps(key)`는 항목 하나의 체크박스에 `checked`, `disabled`, `onChange`를 주고, `getSelectAllProps()`는 전체 선택 체크박스에 같은 것을 주되 일부 항목만 선택된 동안에는 `indeterminate`도 줍니다.
 
-```tsx
-const selection = useSelection({ keys: files });
-
-<Checkbox.Root {...selection.getSelectAllProps()}>Select all files</Checkbox.Root>
-{files.map((file) => (
-  <Checkbox.Root key={file} {...selection.getCheckboxProps(file)}>
-    {file}
-  </Checkbox.Root>
-))}
-```
-
-<Example block>
-  <SelectFiles />
-</Example>
+<Example of={SelectFiles} block />
 
 `keys`는 지금 선택할 수 있는 키를 표시 순서대로 나열하고, `disabledKeys`는 그중 선택할 수 없는 키입니다. `value`는 선택된 키를 선택된 순서대로 담고, `state`는 `keys`의 활성 키에 대해 `'none'`, `'some'`, `'all'` 중 하나입니다. `toggle(key)`는 키 하나를 뒤집고, `toggleAll()`은 활성 키를 모두 선택하거나, 모두 선택되어 있으면 모두 해제하며, `clear()`는 선택을 비웁니다. 키는 문자열이나 숫자입니다. 선택을 제어하려면 `value`와 `onValueChange`를, 시작 상태를 정하려면 `defaultValue`를 넘기세요. `onValueChange`는 [ToggleGroup](/toggle-group)처럼 새 키 배열을 받습니다.
 

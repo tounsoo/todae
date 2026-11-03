@@ -1,4 +1,5 @@
-import { OptionListMultiple, OptionListSingle } from '../../../components/demos/OptionListDemo';
+import OptionListMultiple from '../../../examples/optionlist/OptionListMultiple';
+import OptionListSingle from '../../../examples/optionlist/OptionListSingle';
 
 # OptionList
 
@@ -6,29 +7,11 @@ import { OptionListMultiple, OptionListSingle } from '../../../components/demos/
 
 단일 선택의 `value`는 `string | null`입니다. 다중 선택의 `value`는 `string[]`입니다. 선택된 옵션은 `font-weight: 400`을 유지하고 액센트를 옅게 깐 행 배경(`color.bg.selected`, 액센트 12%)을 씁니다. 하이라이트된 선택 옵션은 20%(`color.accent.soft-strong`)입니다. 행 사이 간격은 `2px`입니다. 호버는 `@media (hover: hover)`로 제한합니다.
 
-```tsx
-<OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
-  <OptionList.Option value="apple">Apple</OptionList.Option>
-  <OptionList.Option value="pear">Pear</OptionList.Option>
-</OptionList.Root>
-```
-
-<Example>
-  <OptionListSingle />
-</Example>
+<Example of={OptionListSingle} />
 
 `selectionMode="multiple"`이면 모든 행에 체크 영역을 둡니다. 선택되면 상자를 채우고 체크 글리프를 그립니다.
 
-```tsx
-<OptionList.Root aria-label="Fruit" selectionMode="multiple" value={values} onValueChange={setValues}>
-  <OptionList.Option value="apple">Apple</OptionList.Option>
-  <OptionList.Option value="pear">Pear</OptionList.Option>
-</OptionList.Root>
-```
-
-<Example>
-  <OptionListMultiple />
-</Example>
+<Example of={OptionListMultiple} />
 
 옵션은 `OptionList.Root` 안의 `OptionList.Option` 파트입니다.
 

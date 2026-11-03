@@ -1,40 +1,10 @@
-import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
+import FieldColorAccent from '../../../../examples/field/color-picker/FieldColorAccent';
 
 # Field.ColorPicker
 
 `Field.ColorPicker` is a button inside a [Field](/field), drawn as a swatch one field line tall and filled with its color. It opens a [ColorPicker](/color-picker) in a [Popover](/popover). Its value is a `#rrggbb` string, and `onValueChange` gets each new color as it is dragged or keyed.
 
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Accent</Label.Root>
-  <Field.Root id={id}>
-    <Field.ColorPicker
-      value={color}
-      onValueChange={(next) => {
-        setColor(next);
-        setText(next);
-      }}
-    />
-    <Field.TextInput
-      value={text}
-      onChange={() => undefined}
-      onValueChange={(next) => {
-        setText(next);
-        const hex = normalizeHex(next);
-        if (hex) setColor(hex);
-      }}
-      onBlur={() => setText(color)}
-      spellCheck={false}
-    />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldColorAccent />
-</Example>
+<Example of={FieldColorAccent} block />
 
 Here a `Field.TextInput` in the same field lets people type the color too. The two share state: a picked color sets the text, and [`normalizeHex`](/color-picker) turns typed text into a color when it is one. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id` and description, and a press elsewhere in the field focuses it. A `Field.Textarea`, `Field.ChipInput` or `Field.Select`, or a control joined with [`useField`](/utilities/use-field), takes the `id` and description in the same way. The swatch sends the color with a form, through a text input hidden beside it, under its own `name` if it has one, and otherwise under the field's `name`, unless `useField` gave one of these controls that `name`, as it does a `Field.TextInput` with no `name` of its own.
 

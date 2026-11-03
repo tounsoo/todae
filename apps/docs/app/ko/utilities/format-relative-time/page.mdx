@@ -1,20 +1,10 @@
-import { RelativeTimeList } from '../../../../components/demos/RelativeTimeDemo';
+import RelativeTimeList from '../../../../examples/utilities/format-relative-time/RelativeTimeList';
 
 # formatRelativeTime
 
 `formatRelativeTime(value, now, options?)`는 `value` 시각이 `now`보다 얼마나 앞서거나 뒤인지를 로캘이 쓰는 대로 반환합니다. `en`에서는 `3 minutes ago`, `yesterday`, `in 2 weeks`, `ko`에서는 `3분 전`, `어제`, `2주 후`처럼 씁니다. 메시지를 보낸 때, 파일을 고친 때, 항목이 만료되는 때에 쓰세요. 텍스트는 `Intl.RelativeTimeFormat`으로 쓰고 시계는 두지 않으므로, `now`는 제품이 넘기고 텍스트가 언제 바뀔지도 제품이 정합니다. 타이머는 아래 최신으로 유지하기에 있습니다.
 
-```tsx
-const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZone);
-
-<time dateTime={editedAt.toInstant().toString()}>
-  {formatRelativeTime(editedAt, now, { locale })}
-</time>
-```
-
-<Example>
-  <RelativeTimeList />
-</Example>
+<Example of={RelativeTimeList} />
 
 ## 단위
 

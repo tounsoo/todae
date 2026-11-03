@@ -1,4 +1,4 @@
-import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
+import TooltipOverflow from '../../../../examples/utilities/use-tooltip/TooltipOverflow';
 
 # useTooltip
 
@@ -6,22 +6,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 
 A `+N` count chip and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
 
-```tsx
-const tooltip = useTooltip();
-const { moreChips } = useStrings();
-
-<>
-  <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
-    <Chip.Root aria-hidden>+2</Chip.Root>
-    <VisuallyHidden.Root>{moreChips(2)}</VisuallyHidden.Root>
-  </span>
-  <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
-</>
-```
-
-<Example>
-  <TooltipOverflow />
-</Example>
+<Example of={TooltipOverflow} />
 
 ## Accessible composition
 

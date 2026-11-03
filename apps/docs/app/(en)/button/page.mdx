@@ -1,5 +1,8 @@
-import { ButtonGroupAlign, ButtonIconLibraries, ButtonIcons, ButtonLinks, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
-import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
+import ButtonIconLibraries from '../../../examples/button/ButtonIconLibraries';
+import ButtonGroupAlign from '../../../examples/button/ButtonGroupAlign';
+import ButtonToggle from '../../../examples/button/ButtonToggle';
+import ButtonVariants from '../../../examples/button/ButtonVariants';
+import { ButtonIcons, ButtonLinks, ButtonOverflow } from '../../../components/demos/ButtonDemo';
 
 # Button
 
@@ -9,18 +12,7 @@ Icon-only roots tip that name. A labeled button tips the full string only while 
 
 Variants use the existing paint packs. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. A click then does nothing: `onClick` doesn't run, a toggle doesn't flip, and the button submits no form and follows no link.
 
-```tsx
-<Button.Root onClick={save}>Save</Button.Root>
-<Button.Root variant="secondary" onClick={cancel}>
-  Cancel
-</Button.Root>
-<Button.Root variant="ghost">Ghost</Button.Root>
-<Button.Root disabled>Disabled</Button.Root>
-```
-
-<Example>
-  <ButtonVariants />
-</Example>
+<Example of={ButtonVariants} />
 
 Leading icon, trailing icon, icon-only.
 
@@ -38,60 +30,19 @@ Overflowing label.
 
 Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `aria-pressed` and flips on click, unless it is `aria-disabled`. `onPressedChange` gets the new state. A pressed button keeps the active colors with an inset ring. For a set of toggles, use [ToggleGroup](/toggle-group).
 
-```tsx
-<Button.Root variant="secondary" pressed={muted} onPressedChange={setMuted}>
-  Mute
-</Button.Root>
-```
-
-<Example>
-  <ButtonToggle />
-</Example>
+<Example of={ButtonToggle} />
 
 ## Button.Group
 
 Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by the border width and share the outer radius. No selection state.
 
-```tsx
-import { AlignLeft } from 'lucide-react';
-
-<Button.Group aria-label="Align">
-  <Button.Root variant="secondary" aria-label="Left">
-    <Button.Icon>
-      <AlignLeft />
-    </Button.Icon>
-  </Button.Root>
-  …
-</Button.Group>
-```
-
-<Example>
-  <ButtonGroupAlign />
-</Example>
+<Example of={ButtonGroupAlign} />
 
 ## Icons
 
 `Button.Icon` takes an icon from any library, such as Lucide, Phosphor or Tabler. An `svg` or `img` directly inside it takes the `button.icon.size` token, whatever the icon's own `size` or `width`. An icon-only button is a square as tall as a labeled one.
 
-```tsx
-import { Plus, Settings } from 'lucide-react';
-
-<Button.Root>
-  <Button.Icon>
-    <Plus />
-  </Button.Icon>
-  New project
-</Button.Root>
-<Button.Root variant="ghost" aria-label="Settings">
-  <Button.Icon>
-    <Settings />
-  </Button.Icon>
-</Button.Root>
-```
-
-<Example>
-  <ButtonIconLibraries />
-</Example>
+<Example of={ButtonIconLibraries} />
 
 ## Links
 

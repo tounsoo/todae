@@ -1,26 +1,10 @@
-import { ToolbarEditor } from '../../../components/demos/ToolbarDemo';
+import ToolbarEditor from '../../../examples/toolbar/ToolbarEditor';
 
 # Toolbar
 
 A row of controls, such as an editor's formatting bar, whose controls share one stop in the Tab order, apart from those that keep their own (see below). `Toolbar.Root` has `role="toolbar"`. Inside it, Left and Right arrow keys move focus between controls, Home and End jump to the first and last, and Tab leaves the run of controls. Up and Down are left to the controls, so a menu trigger still opens its menu.
 
-```tsx
-<Toolbar.Root aria-label="Formatting">
-  <ToggleGroup.Root aria-label="Text style" selectionMode="multiple">
-    <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
-    <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
-  </ToggleGroup.Root>
-  <Toolbar.Separator />
-  <Toolbar.Group aria-label="History">
-    <Button.Root variant="ghost">Undo</Button.Root>
-    <Button.Root variant="ghost">Redo</Button.Root>
-  </Toolbar.Group>
-</Toolbar.Root>
-```
-
-<Example>
-  <ToolbarEditor />
-</Example>
+<Example of={ToolbarEditor} />
 
 Buttons, links, checkboxes and menu triggers inside count, in document order, even inside your own wrappers. Disabled controls, hidden ones, and ones under `aria-hidden="true"` are skipped. The toolbar does not change any `tabIndex`. A text input, a composite with its own arrow keys such as RadioGroup, or anything else Tab can reach that is not such a control keeps its own Tab stop, and the toolbar's arrow keys skip it. It splits the controls around it into runs, and each run is one Tab stop. Tab moves past a run, and Tab or Shift+Tab coming back into it from elsewhere on the page returns to the control Tab last left it from, or the first time, to its first control. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
 

@@ -1,19 +1,10 @@
-import { ColorPickerInline } from '../../../components/demos/ColorPickerDemo';
+import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline';
 
 # ColorPicker
 
 `ColorPicker.Root` holds one color as a `#rrggbb` string. `ColorPicker.Area` sets saturation, left to right, and brightness, bottom to top, over the current hue. `ColorPicker.Hue` sets the hue. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` as the color is dragged or keyed.
 
-```tsx
-<ColorPicker.Root aria-label="Accent" value={color} onValueChange={setColor}>
-  <ColorPicker.Area />
-  <ColorPicker.Hue />
-</ColorPicker.Root>
-```
-
-<Example block>
-  <ColorPickerInline />
-</Example>
+<Example of={ColorPickerInline} block />
 
 For a color in a form, use [Field.ColorPicker](/field/color-picker): a swatch in a field that opens this picker in a popover.
 

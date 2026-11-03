@@ -1,15 +1,10 @@
-import {
-  ComboboxAsync,
-  ComboboxAuto,
-  ComboboxCreate,
-  ComboboxCreateMulti,
-  ComboboxEmpty,
-  ComboboxHighlight,
-  ComboboxMulti,
-  ComboboxSheet,
-  ComboboxSingle,
-  PresentationBadge,
-} from '../../../../components/demos/ComboboxDemo';
+import PresentationBadge from '../../../../examples/utilities/use-sheet-presentation/PresentationBadge';
+import ComboboxHighlight from '../../../../examples/recipes/combobox/ComboboxHighlight';
+import ComboboxAsync from '../../../../examples/recipes/combobox/ComboboxAsync';
+import ComboboxSheet from '../../../../examples/recipes/combobox/ComboboxSheet';
+import ComboboxMulti from '../../../../examples/recipes/combobox/ComboboxMulti';
+import ComboboxSingle from '../../../../examples/recipes/combobox/ComboboxSingle';
+import { ComboboxAuto, ComboboxCreate, ComboboxCreateMulti, ComboboxEmpty } from '../../../../components/demos/ComboboxDemo';
 
 # Combobox
 
@@ -31,82 +26,19 @@ The badge shows what [useSheetPresentation](/utilities/use-sheet-presentation) p
 
 Sibling `Label.Root` + `Field.Root` id. The input is the combobox. The list lives in `Popover.Root`.
 
-```tsx
-import { ChevronDown } from 'lucide-react';
-
-const cb = useCombobox({ options, presentation: 'popover' });
-
-<Field.Group>
-  <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
-  <Field.Root {...cb.getAnchorProps()}>
-    <Field.TextInput {...cb.getInputProps()} />
-    <Field.Icon>
-      <ChevronDown />
-    </Field.Icon>
-  </Field.Root>
-</Field.Group>
-<Popover.Root {...cb.getPopoverProps()}>
-  <OptionList.Root {...cb.getListboxProps()}>
-    {cb.items.map((item) => (
-      <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
-    ))}
-  </OptionList.Root>
-</Popover.Root>
-```
-
-<Example block>
-  <ComboboxSingle />
-</Example>
+<Example of={ComboboxSingle} block />
 
 ## Popover · multi
 
 `Field.ChipInput` via `getChipInputProps`. Chips are labels. Values dedupe.
 
-```tsx
-const cb = useCombobox({ options, selectionMode: 'multiple', presentation: 'popover' });
-
-<Field.Group>
-  <Label.Root {...cb.getLabelProps()}>Type</Label.Root>
-  <Field.Root {...cb.getAnchorProps()}>
-    <Field.ChipInput {...cb.getChipInputProps()} />
-  </Field.Root>
-</Field.Group>
-<Popover.Root {...cb.getPopoverProps()}>
-  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
-</Popover.Root>
-```
-
-<Example block>
-  <ComboboxMulti />
-</Example>
+<Example of={ComboboxMulti} block />
 
 ## Sheet
 
 The closed control is `Button.Root`. Search Field lives inside the sheet. Same `inputValue` and list as popover.
 
-```tsx
-const cb = useCombobox({ options, presentation: 'sheet' });
-const selected = options.find((option) => option.value === cb.value)?.label ?? 'Choose';
-
-<Field.Group>
-  <Label.Root {...cb.getLabelProps()}>
-    City
-  </Label.Root>
-  <Button.Root {...cb.getTriggerProps()}>
-    {selected}
-  </Button.Root>
-</Field.Group>
-<BottomSheet.Root {...cb.getSheetProps()}>
-  <Field.Root id={cb.ids.input} aria-label="Search">
-    <Field.TextInput {...cb.getInputProps()} />
-  </Field.Root>
-  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
-</BottomSheet.Root>
-```
-
-<Example block>
-  <ComboboxSheet />
-</Example>
+<Example of={ComboboxSheet} block />
 
 ## Auto
 
@@ -122,28 +54,7 @@ One hook. The tree flips with the presentation. Force `presentation` when you ne
 
 Type `fail` to see the error row.
 
-```tsx
-const cb = useCombobox({
-  loadOptions: (query, signal) => fetchPackages(query, { signal }),
-  presentation: 'popover',
-});
-
-<Popover.Root {...cb.getPopoverProps()}>
-  <Text.Root role="status">{cb.loading ? 'Loading…' : cb.error ? 'Couldn’t load options.' : ''}</Text.Root>
-  {cb.error && !cb.loading ? (
-    <Button.Root variant="ghost" onClick={cb.retry}>
-      Retry
-    </Button.Root>
-  ) : null}
-  <OptionList.Root {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
-    …
-  </OptionList.Root>
-</Popover.Root>
-```
-
-<Example block>
-  <ComboboxAsync />
-</Example>
+<Example of={ComboboxAsync} block />
 
 ## Empty and create
 
@@ -165,15 +76,7 @@ No matches render a status row. `allowCreate` adds one `Create "{query}"` option
 
 [useHighlight](/utilities/use-highlight) marks the query in each option without changing the options' markup. Pass the hook's `query` (empty while the input shows the selected label), put the `ref` on the list, and style the name with `::highlight(search)`.
 
-```tsx
-const found = useHighlight({ name: 'search', query: cb.query });
-
-<OptionList.Root ref={found.ref} {...cb.getListboxProps()}>…</OptionList.Root>
-```
-
-<Example block>
-  <ComboboxHighlight />
-</Example>
+<Example of={ComboboxHighlight} block />
 
 ## Composition rules
 

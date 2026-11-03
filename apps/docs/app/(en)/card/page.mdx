@@ -1,26 +1,10 @@
-import { CardPlan } from '../../../components/demos/CardDemo';
+import CardPlan from '../../../examples/card/CardPlan';
 
 # Card
 
 A bordered surface that groups related content: a plan, a setting, a summary. Its background, border, radius, padding and gap come from the `card` contract tokens, and the padding and gap follow density. It is the base for a company's own cards and panels.
 
-```tsx
-<Card.Root>
-  <Card.Header>
-    <Text.Root as="h3">Pro plan</Text.Root>
-  </Card.Header>
-  <Card.Body>
-    <Text.Root>Billed yearly.</Text.Root>
-  </Card.Body>
-  <Card.Footer>
-    <Button.Root>Change plan</Button.Root>
-  </Card.Footer>
-</Card.Root>
-```
-
-<Example>
-  <CardPlan />
-</Example>
+<Example of={CardPlan} />
 
 Server Components can import it from `@tounsoo/todae/card`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 

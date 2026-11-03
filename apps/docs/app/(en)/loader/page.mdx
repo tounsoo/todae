@@ -1,4 +1,6 @@
-import { LoaderDots, LoaderLabelled, SkeletonProfile } from '../../../components/demos/NativeDemo';
+import SkeletonProfile from '../../../examples/loader/SkeletonProfile';
+import LoaderDots from '../../../examples/loader/LoaderDots';
+import LoaderLabelled from '../../../examples/loader/LoaderLabelled';
 
 # Loader and Skeleton
 
@@ -8,29 +10,13 @@ Two components for content that is still loading. `Loader.Root` is a native `<pr
 
 `Loader.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. By default, as `variant="spinner"`, it is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
 
-```tsx
-<label>
-  <Loader.Root /> Loading invoices
-</label>
-
-<Loader.Root aria-label="Saving" />
-```
-
-<Example>
-  <LoaderLabelled />
-</Example>
+<Example of={LoaderLabelled} />
 
 ### Dots
 
 `variant="dots"` draws three dots that rise in turn, starting from the side the text starts on, as a typing indicator does. Use it where someone or something is writing a reply, such as an assistant in a chat. It is the same `<progress>`, with the same role, so it needs a name too; under reduced motion the dots hold still.
 
-```tsx
-<Loader.Root variant="dots" aria-label="Assistant is typing" />
-```
-
-<Example>
-  <LoaderDots />
-</Example>
+<Example of={LoaderDots} />
 
 Either variant draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `loader.size` (the dots are one and a half times as wide), `loader.thickness`, `loader.track-tint` (how much of the text color the track takes) and `loader.motion.duration` (one wave of the dots); `loader.thickness` and `loader.track-tint` only change the spinner.
 
@@ -38,22 +24,7 @@ Either variant draws in the text color, so it shows on any surface, a primary bu
 
 `Skeleton.Root` stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
 
-```tsx
-<div>
-  <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
-  <Stack.Root direction="row" aria-hidden="true">
-    <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
-    <Stack.Root style={{ flex: 1 }}>
-      <Skeleton.Root style={{ inlineSize: '40%' }} />
-      <Skeleton.Root style={{ inlineSize: '70%' }} />
-    </Stack.Root>
-  </Stack.Root>
-</div>
-```
-
-<Example block>
-  <SkeletonProfile />
-</Example>
+<Example of={SkeletonProfile} block />
 
 A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`, `skeleton.motion.easing` and `skeleton.pulse.opacity`, the opacity the pulse fades to.
 

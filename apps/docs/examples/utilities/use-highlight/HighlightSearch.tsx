@@ -1,0 +1,49 @@
+'use client';
+
+import { Button, Field, Label, Stack, useHighlight } from '@tounsoo/todae';
+import { useId, useState } from 'react';
+
+export default function HighlightSearch() {
+  const inputId = useId();
+  const [query, setQuery] = useState('token');
+  const [index, setIndex] = useState(0);
+  const found = useHighlight({ name: 'search', query: query.trim() });
+  const total = found.matches.length;
+  // The matches can shrink under a kept index, so wrap it on read.
+  const at = total === 0 ? 0 : index % total;
+  const current = found.matches[at];
+  useHighlight({ name: 'search-current', ranges: current ? [current] : undefined, priority: 1 });
+  const step = (by: number) => setIndex((at + by + total) % total);
+  return (
+    <Stack.Root>
+      <Field.Group>
+        <Label.Root htmlFor={inputId}>Find</Label.Root>
+        <Field.Root id={inputId}>
+          <Field.TextInput
+            type="search"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setIndex(0);
+            }}
+          />
+        </Field.Root>
+      </Field.Group>
+      <Stack.Root direction="row">
+        <Button.Root variant="ghost" disabled={total === 0} onClick={() => step(-1)}>
+          Previous
+        </Button.Root>
+        <Button.Root variant="ghost" disabled={total === 0} onClick={() => step(1)}>
+          Next
+        </Button.Root>
+        <output>{total === 0 ? 'No matches' : `${at + 1} of ${total}`}</output>
+      </Stack.Root>
+      <div ref={found.ref}>
+        <p style={{ margin: 0, maxWidth: '60ch' }}>
+          Todae ships design tokens in the DTCG format. A company adds its own tokens on top, and every
+          component reads them, so a token change reaches buttons, fields and dialogs at once.
+        </p>
+      </div>
+    </Stack.Root>
+  );
+}

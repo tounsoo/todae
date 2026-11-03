@@ -234,7 +234,7 @@ describe('routesFor', () => {
       .split('\n')
       .filter((file) => /\.(?:mdx?|[cm]?[jt]sx?|css)$/.test(file));
     const importers = importGraph(files.map((file) => ({ file, text: readFileSync(path.join(repoRoot, file), 'utf8') })));
-    assert.deepEqual(routesFor(['apps/docs/components/demos/BadgeDemo.tsx'], () => true, importers), ['/badge', '/ko/badge']);
+    assert.deepEqual(routesFor(['apps/docs/examples/badge/BadgeTones.tsx'], () => true, importers), ['/badge', '/ko/badge']);
   });
 
   test('files outside the docs app add no routes', () => {
