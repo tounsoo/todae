@@ -57,7 +57,7 @@ function snapshotAt(sha: string): ApiSnapshot | null {
 }
 
 function addedChangesets(from: string, head: string, packageName: string): AddedChangeset[] {
-  const files = git(['diff', '--name-only', '--diff-filter=A', '--no-renames', from, head, '--', '.changeset'])
+  const files = git(['diff', '--name-only', '--diff-filter=A', '-M', from, head, '--', ':(top).changeset'])
     .split('\n')
     .filter((file) => file.endsWith('.md') && file !== '.changeset/README.md');
   return files.map((file) => parseChangeset(file, fileAt(head, file) ?? '', packageName));

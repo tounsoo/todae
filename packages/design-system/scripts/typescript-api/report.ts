@@ -31,15 +31,47 @@ function print(node: ts.Node): string {
   return oneLine(PRINTER.printNode(ts.EmitHint.Unspecified, node, SCRATCH));
 }
 
+function renameParameters(parameters: ts.NodeArray<ts.ParameterDeclaration>): ts.NodeArray<ts.ParameterDeclaration> {
+  return ts.factory.createNodeArray(
+    parameters.map((parameter, index) =>
+      ts.factory.updateParameterDeclaration(
+        parameter,
+        parameter.modifiers,
+        parameter.dotDotDotToken,
+        ts.factory.createIdentifier(`arg${index}`),
+        parameter.questionToken,
+        parameter.type,
+        undefined,
+      ),
+    ),
+  );
+}
+
 /**
  * The checker orders union members by when it first met each type, which depends on the
  * rest of the program. Sorting them by text keeps an unrelated change from reordering a union.
+ * Parameter names of every function type become `arg0`, `arg1`, so renaming a callback's parameter changes nothing.
  */
 function sortUnions<T extends ts.Node>(node: T): T {
   const result = ts.transform(node, [
     (context) => {
       const visit = (child: ts.Node): ts.Node => {
         const visited = ts.visitEachChild(child, visit, context);
+        if (ts.isFunctionTypeNode(visited)) {
+          return ts.factory.updateFunctionTypeNode(visited, visited.typeParameters, renameParameters(visited.parameters), visited.type);
+        }
+        if (ts.isConstructorTypeNode(visited)) {
+          return ts.factory.updateConstructorTypeNode(visited, visited.modifiers, visited.typeParameters, renameParameters(visited.parameters), visited.type);
+        }
+        if (ts.isMethodSignature(visited)) {
+          return ts.factory.updateMethodSignature(visited, visited.modifiers, visited.name, visited.questionToken, visited.typeParameters, renameParameters(visited.parameters), visited.type);
+        }
+        if (ts.isCallSignatureDeclaration(visited)) {
+          return ts.factory.updateCallSignature(visited, visited.typeParameters, renameParameters(visited.parameters), visited.type);
+        }
+        if (ts.isConstructSignatureDeclaration(visited)) {
+          return ts.factory.updateConstructSignature(visited, visited.typeParameters, renameParameters(visited.parameters), visited.type);
+        }
         if (!ts.isUnionTypeNode(visited)) return visited;
         const sorted = [...visited.types].sort((a, b) => byCodePoint(print(a), print(b)));
         return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sorted));
@@ -141,8 +173,19 @@ class Renderer {
     visit(node);
   }
 
+  /** While an exported generic type is listed, its type parameter names and the `T0`, `T1` they print as. */
+  private parameterNames: Map<string, string> | null = null;
+
   private add(path: string, text: string): void {
-    this.entries.push({ entry: this.entry, path, text });
+    const names = this.parameterNames;
+    if (names === null || names.size === 0) {
+      this.entries.push({ entry: this.entry, path, text });
+      return;
+    }
+    const pattern = new RegExp(`(?<![\\w$])(${[...names.keys()].join('|')})(?![\\w$])`, 'g');
+    const rename = (value: string) => value.replace(pattern, (name) => names.get(name) ?? name);
+    // Member names stay; only a type in an `extends`, union or tuple tail is renamed.
+    this.entries.push({ entry: this.entry, path: path.replace(/ (?:extends|\||has) .*$/, rename), text: rename(text) });
   }
 
   private typeText(type: ts.Type, node?: ts.Node, flags = NODE_FLAGS): string {
@@ -167,19 +210,36 @@ class Renderer {
     if (target.flags & ts.SymbolFlags.Value) this.exportValue(name, target, declaration);
   }
 
-  private typeParameters(declaration: ts.Declaration): string {
+  /**
+   * A generic type's parameters as `T0 extends string = string`, numbered rather than named, with
+   * their constraints and defaults printed by the checker so a reordered union reads the same.
+   */
+  private typeParameters(declaration: ts.Declaration): { names: Map<string, string>; text: string } {
     const params = ts.getEffectiveTypeParameterDeclarations(declaration as ts.DeclarationWithTypeParameters);
-    return params.length === 0 ? '' : `<${params.map((param) => oneLine(param.getText())).join(', ')}>`;
+    const names = new Map(params.map((param, index) => [param.name.text, `T${index}`]));
+    const text = params.map((param, index) => {
+      const constraint = param.constraint ? ` extends ${this.typeText(this.checker.getTypeAtLocation(param.constraint), param)}` : '';
+      const fallback = param.default ? ` = ${this.typeText(this.checker.getTypeAtLocation(param.default), param)}` : '';
+      return `T${index}${constraint}${fallback}`;
+    });
+    return { names, text: text.length === 0 ? '' : `<${text.join(', ')}>` };
   }
 
   private exportType(name: string, symbol: ts.Symbol, declaration: ts.Declaration, kind: 'type' | 'internal' = 'type'): void {
     const type = this.checker.getDeclaredTypeOfSymbol(symbol);
-    const head = `${kind} ${name}${this.typeParameters(declaration)}`;
-    if (this.isObjectish(type)) {
-      this.add(head, 'object');
-      this.members(`${kind} ${name}`, type, declaration);
-    } else {
-      this.addType(head, type, declaration, this.declaredText(type, declaration));
+    const head = `${kind} ${name}`;
+    const parameters = this.typeParameters(declaration);
+    this.parameterNames = parameters.names;
+    try {
+      if (parameters.text !== '') this.add(`${head}<>`, parameters.text);
+      if (this.isObjectish(type)) {
+        this.add(head, 'object');
+        this.members(head, type, declaration);
+      } else {
+        this.addType(head, type, declaration, this.declaredText(type, declaration));
+      }
+    } finally {
+      this.parameterNames = null;
     }
   }
 
@@ -211,20 +271,12 @@ class Renderer {
   private signatureText(signature: ts.Signature, node: ts.Node): string {
     const built = this.checker.signatureToSignatureDeclaration(signature, ts.SyntaxKind.FunctionType, node, NODE_FLAGS);
     if (!built || !ts.isFunctionTypeNode(built)) return this.checker.signatureToString(signature, node, FLAGS);
-    const parameters = built.parameters.map((parameter, index) =>
-      ts.factory.updateParameterDeclaration(
-        parameter,
-        parameter.modifiers,
-        parameter.dotDotDotToken,
-        ts.factory.createIdentifier(`arg${index}`),
-        parameter.questionToken,
-        parameter.type,
-        undefined,
-      ),
-    );
     this.collect(built);
-    const normalized = ts.factory.updateFunctionTypeNode(built, built.typeParameters, ts.factory.createNodeArray(parameters), built.type);
-    return print(sortUnions(normalized));
+    const text = print(sortUnions(built));
+    const names = (built.typeParameters ?? []).map((parameter) => parameter.name.text);
+    if (names.length === 0) return text;
+    const numbered = new Map(names.map((name, index) => [name, `T${index}`]));
+    return text.replace(new RegExp(`(?<![\\w$])(${names.join('|')})(?![\\w$])`, 'g'), (name) => numbered.get(name) ?? name);
   }
 
   /** A long union of literals, or a long tuple, lists one member per line so a removed member is its own entry. */
@@ -269,7 +321,7 @@ class Renderer {
   }
 
   private members(prefix: string, type: ts.Type, declaration: ts.Declaration): void {
-    const inherited = new Map<ts.Symbol, Set<string>>();
+    const inherited = new Map<ts.Symbol, Map<string, { property: ts.Symbol; decl: ts.Declaration }>>();
     for (const property of this.checker.getPropertiesOfType(type)) {
       const declarations = property.declarations ?? [];
       if (declarations.length > 0 && declarations.every(isExternal)) {
@@ -277,9 +329,9 @@ class Renderer {
           const owner = decl.parent;
           const ownerSymbol = ts.isInterfaceDeclaration(owner) ? this.checker.getSymbolAtLocation(owner.name) : undefined;
           if (!ownerSymbol) continue;
-          const set = inherited.get(ownerSymbol) ?? new Set<string>();
-          set.add(property.name);
-          inherited.set(ownerSymbol, set);
+          const present = inherited.get(ownerSymbol) ?? new Map<string, { property: ts.Symbol; decl: ts.Declaration }>();
+          present.set(property.name, { property, decl });
+          inherited.set(ownerSymbol, present);
         }
         continue;
       }
@@ -289,14 +341,56 @@ class Renderer {
       const propType = this.checker.getTypeOfSymbolAtLocation(property, declaration);
       this.addType(`${prefix}.${this.propertyName(property)}${optional}`, propType, declaration, `${readonly}${this.typeText(propType, declaration)}`);
     }
-    for (const [owner, present] of [...inherited.entries()].sort(([a], [b]) => byCodePoint(a.name, b.name))) {
+    const owners = [...inherited.entries()].map(([owner, present]) => ({ owner, present, name: this.ownerName(owner, present, declaration) }));
+    for (const { owner, present, name } of owners.sort((a, b) => byCodePoint(a.name, b.name))) {
       const missing: string[] = [];
       owner.members?.forEach((member) => {
         if (member.flags & ts.SymbolFlags.Property && !present.has(member.name)) missing.push(member.name);
       });
       missing.sort(byCodePoint);
-      this.add(`${prefix} extends ${owner.name}`, missing.length === 0 ? 'all' : `except ${missing.join(', ')}`);
+      this.add(`${prefix} extends ${name}`, missing.length === 0 ? 'all' : `except ${missing.join(', ')}`);
     }
+  }
+
+  /**
+   * The inherited interface with the type arguments its props were given, such as
+   * `DOMAttributes<HTMLDivElement>`, so a change of element shows. Each argument is read off the first
+   * prop whose declared type uses that parameter, by matching the printed prop type against its declaration.
+   * An interface whose props don't use a parameter is named without arguments, since the argument changes nothing.
+   */
+  private ownerName(owner: ts.Symbol, present: Map<string, { property: ts.Symbol; decl: ts.Declaration }>, at: ts.Node): string {
+    const declaration = owner.declarations?.find(ts.isInterfaceDeclaration);
+    const parameters = declaration?.typeParameters?.map((parameter) => parameter.name.text) ?? [];
+    if (parameters.length === 0) return owner.name;
+    const found = new Map<string, string>();
+    for (const { property, decl } of [...present.values()].sort((a, b) => byCodePoint(a.property.name, b.property.name))) {
+      if (found.size === parameters.length) break;
+      const typeNode = (decl as ts.PropertySignature).type;
+      if (!typeNode) continue;
+      const declared = oneLine(typeNode.getText());
+      const used = parameters.filter((name) => !found.has(name) && new RegExp(`(?<![\\w$])${name}(?![\\w$])`).test(declared));
+      if (used.length === 0) continue;
+      const printed = this.checker.typeToString(this.checker.getTypeOfSymbolAtLocation(property, at), undefined, FLAGS);
+      const groups: string[] = [];
+      const pattern = declared
+        .split(new RegExp(`(?<![\\w$])(${parameters.join('|')})(?![\\w$])`))
+        .map((part, index) => {
+          if (index % 2 === 0) return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const seen = groups.indexOf(part);
+          if (seen >= 0) return `\\k<p${seen}>`;
+          groups.push(part);
+          return `(?<p${groups.length - 1}>.+?)`;
+        })
+        .join('');
+      const match = new RegExp(`^${pattern}$`).exec(printed);
+      if (!match?.groups) continue;
+      groups.forEach((name, index) => {
+        const value = match.groups?.[`p${index}`];
+        if (value !== undefined && !found.has(name)) found.set(name, value);
+      });
+    }
+    if (found.size === 0) return owner.name;
+    return `${owner.name}<${parameters.map((name) => found.get(name) ?? name).join(', ')}>`;
   }
 }
 

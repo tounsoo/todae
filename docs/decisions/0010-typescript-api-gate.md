@@ -6,7 +6,7 @@
 
 ## Decision
 
-`packages/design-system/scripts/check-typescript-api.ts` reads the package's TypeScript source with the compiler API and writes `typescript-api.json`, one path per export, member and compound part. CI fails when that file drifts, and when the branch removes or changes a path without an added changeset that names the export. A removal also needs the breaking bump, `minor` until 1.0.0 and `major` after. [ARCHITECTURE.md](../../ARCHITECTURE.md#releases) records the rules.
+`packages/design-system/scripts/check-typescript-api.ts` reads the package's TypeScript source with the compiler API and writes `typescript-api.json`, one path per export, member and compound part. CI fails when that file drifts, and when the branch removes or changes a path without an added changeset that names the export. Anything but a widening or a rename also needs the breaking bump, `minor` until 1.0.0 and `major` after, since the script compares printed types and can't prove that another change is safe. [ARCHITECTURE.md](../../ARCHITECTURE.md#releases) records the rules.
 
 ## Why
 

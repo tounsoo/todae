@@ -14,7 +14,7 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 - `pnpm test` runs the unit tests. The Build job runs it.
 - `pnpm test:browser` runs the browser tests. The Fernway job installs Playwright Chromium, then runs it.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
-- `pnpm api:check` fails when `packages/design-system/typescript-api.json` no longer matches the package's type exports. Run `pnpm api` to rewrite it. The TypeScript API job runs it, then fails a pull request that removes or changes an export unless one of its changesets names that export.
+- `pnpm api:check` fails when `packages/design-system/typescript-api.json` no longer matches the package's type exports. Run `pnpm api` to rewrite it. The TypeScript API job runs it, then fails a pull request that removes or changes an export unless one of its changesets names that export, with the breaking bump for anything but a widening or a rename.
 - The docs job builds the package and the docs site, then runs `pnpm --filter docs test:visual` and `pnpm --filter docs test:peek`.
 
 [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.

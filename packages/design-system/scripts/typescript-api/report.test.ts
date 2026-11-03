@@ -88,11 +88,11 @@ describe('apiReport', () => {
     expect(api['type CardProps.tone?']).toBe("'critical' | 'info' | undefined");
     expect(api['type CardProps.title']).toBe('string');
     expect(api['type CardProps extends HTMLAttributes']).toBe('except title');
-    expect(api['type CardProps extends DOMAttributes']).toBe('except children');
+    expect(api['type CardProps extends DOMAttributes<HTMLDivElement>']).toBe('except children');
     expect(Object.keys(api).some((path) => path.includes('onClick'))).toBe(false);
   });
 
-  it('reports a newly omitted DOM prop as a change', async () => {
+  it('reports a newly omitted DOM prop as narrowed', async () => {
     const before = await report(`
       import type { ComponentPropsWithRef } from 'react';
       export type FieldProps = Omit<ComponentPropsWithRef<'input'>, 'size'>;
@@ -103,8 +103,45 @@ describe('apiReport', () => {
     `);
     const breaks = apiBreaks({ version: 1, entries: { lib: before } }, { version: 1, entries: { lib: after } });
     expect(breaks).toEqual([
-      { kind: 'changed', entry: 'lib', path: 'type FieldProps extends InputHTMLAttributes', was: 'except size', now: 'except onChange, size' },
+      {
+        kind: 'narrowed',
+        entry: 'lib',
+        path: 'type FieldProps extends InputHTMLAttributes<HTMLInputElement>',
+        was: 'except size',
+        now: 'except onChange, size (as FieldProps extends InputHTMLAttributes)',
+      },
     ]);
+  });
+
+  it('names the element an inherited interface was given, so a ref or handler for another element shows', async () => {
+    const span = await report(`
+      import type { ComponentPropsWithRef } from 'react';
+      export type BadgeProps = ComponentPropsWithRef<'span'>;
+    `);
+    const div = await report(`
+      import type { ComponentPropsWithRef } from 'react';
+      export type BadgeProps = ComponentPropsWithRef<'div'>;
+    `);
+    expect(span['type BadgeProps extends RefAttributes<HTMLSpanElement>']).toBe('all');
+    const breaks = apiBreaks({ version: 1, entries: { lib: span } }, { version: 1, entries: { lib: div } });
+    expect(breaks.map((item) => [item.kind, item.path])).toEqual([
+      ['changed', 'type BadgeProps extends DOMAttributes<HTMLSpanElement>'],
+      ['changed', 'type BadgeProps extends RefAttributes<HTMLSpanElement>'],
+    ]);
+  });
+
+  it('leaves out the names of callback and type parameters, and the order of a constraint', async () => {
+    const before = await report(`
+      export type SheetProps<T extends string | number> = { value: T; onSnapChange?: (snap: T) => void };
+      export function pick<K>(items: K[]): K { return items[0]!; }
+    `);
+    const after = await report(`
+      export type SheetProps<Item extends number | string> = { value: Item; onSnapChange?: (next: Item) => void };
+      export function pick<Value>(list: Value[]): Value { return list[0]!; }
+    `);
+    expect(before['type SheetProps<>']).toBe('<T0 extends number | string>');
+    expect(before['type SheetProps.onSnapChange?']).toBe('((arg0: T0) => void) | undefined');
+    expect(after).toEqual(before);
   });
 
   it('prints union members in the same order whatever order the source uses', async () => {
