@@ -93,12 +93,25 @@ it('describes the field with what the caret peek says, as the browser computes i
   field.dispatchEvent(new Event('selectionchange'));
   await expect.poll(() => openPeek()?.textContent ?? '').toContain('Design systems');
   // Chromium's own accessibility tree, since the peek is inert and its text alone would not count.
+  // Tests run in an iframe, so read every frame's tree.
+  type AXNode = { role?: { value?: string }; name?: { value?: string }; description?: { value?: string } };
+  type Frame = { frame: { id: string }; childFrames?: Frame[] };
   const session = cdp();
   await session.send('Accessibility.enable');
   const description = async () => {
-    const { nodes } = await session.send('Accessibility.getFullAXTree');
-    const box = nodes.find((node: { role?: { value?: string }; name?: { value?: string } }) => node.role?.value === 'textbox' && node.name?.value === 'Message');
-    return String(box?.description?.value ?? '');
+    const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: Frame };
+    const frames: string[] = [];
+    const walk = (node: Frame) => {
+      frames.push(node.frame.id);
+      node.childFrames?.forEach(walk);
+    };
+    walk(frameTree);
+    for (const frameId of frames) {
+      const { nodes } = (await session.send('Accessibility.getFullAXTree', { frameId })) as { nodes: AXNode[] };
+      const box = nodes.find((node) => node.role?.value === 'textbox' && node.name?.value === 'Message');
+      if (box) return String(box.description?.value ?? '');
+    }
+    return '';
   };
   await expect.poll(description).toBe('Mina Park, Design systems, active now');
 });
