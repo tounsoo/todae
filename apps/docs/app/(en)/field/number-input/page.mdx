@@ -1,26 +1,12 @@
-import { FieldNumberPercent, FieldNumberPrice, FieldNumberStepper } from '../../../../components/demos/FieldDemo';
+import FieldNumberPercent from '../../../../examples/field/number-input/FieldNumberPercent';
+import FieldNumberPrice from '../../../../examples/field/number-input/FieldNumberPrice';
+import FieldNumberStepper from '../../../../examples/field/number-input/FieldNumberStepper';
 
 # Field.NumberInput
 
 `Field.NumberInput` is a text input for a number inside a [Field](/field). Its `value` is a `number` or `null`, never `NaN`. It shows the number in the locale's own format, such as `1,234.5` in `en` and `1.234,5` in `de`, and lets people type freely. On blur or Enter it reads the text with `parseNumber`, snaps the number to `step`, clamps it to `min` and `max`, writes the text back as the locale writes it, and calls `onValueChange`. Without `onValueChange` the input is read-only. `Field.Increment` and `Field.Decrement` in the same field are buttons that step the number.
 
-```tsx
-const id = useId();
-const [quantity, setQuantity] = useState<number | null>(2);
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Quantity</Label.Root>
-  <Field.Root id={id} name="quantity">
-    <Field.Decrement />
-    <Field.NumberInput value={quantity} onValueChange={setQuantity} min={1} max={99} />
-    <Field.Increment />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldNumberStepper />
-</Example>
+<Example of={FieldNumberStepper} block />
 
 The visible element is a native `<input type="text">` with `role="spinbutton"`, so the browser keeps its text editing, undo, selection and IME. A native `<input type="number">` takes no locale format, steps on the mouse wheel, draws a spinner that tokens can't reach, and accepts letters such as `e`, so `Field.TextInput` has no `type="number"`: a number is `Field.NumberInput`, as a date is a picker.
 
@@ -55,40 +41,11 @@ Each is named by the `increment` or `decrement` string of [StringsProvider](/uti
 
 `formatOptions` takes what `Intl.NumberFormat` takes, so a percent, a currency or a unit is a style away. `locale` picks the locale, and without it the browser's own, so pass it when the input renders on a server. Put a unit or a currency sign in a [`Field.Affix`](/field) when you can: it stays out of the text that people edit.
 
-```tsx
-<Field.Root id={id} name="price">
-  <Field.Affix>₩</Field.Affix>
-  <Field.NumberInput
-    value={price}
-    onValueChange={setPrice}
-    min={0}
-    step={100}
-    locale="ko"
-    formatOptions={{ maximumFractionDigits: 0 }}
-  />
-</Field.Root>
-```
-
-<Example block>
-  <FieldNumberPrice />
-</Example>
+<Example of={FieldNumberPrice} block />
 
 A percent style takes the number as a fraction: 0.125 shows `12.5%`, and typing `13` commits 0.13.
 
-```tsx
-<Field.NumberInput
-  value={rate}
-  onValueChange={setRate}
-  min={0}
-  max={1}
-  step={0.005}
-  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
-/>
-```
-
-<Example block>
-  <FieldNumberPercent />
-</Example>
+<Example of={FieldNumberPercent} block />
 
 `formatNumber(value, { locale, formatOptions })` writes a number as the input does, and `parseNumber(text, { locale, formatOptions })` reads a text back into a number, or returns `null` when the text is not one. Use them to show or read the same number outside the input.
 

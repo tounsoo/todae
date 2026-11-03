@@ -1,33 +1,11 @@
-import {
-  ChipInputCommitKeys,
-  ChipInputControlled,
-  ChipInputLabel,
-  ChipInputMaxRows,
-  ChipInputStates,
-} from '../../../../components/demos/FieldDemo';
+import ChipInputControlled from '../../../../examples/field/chip-input/ChipInputControlled';
+import { ChipInputCommitKeys, ChipInputLabel, ChipInputMaxRows, ChipInputStates } from '../../../../components/demos/FieldDemo';
 
 # Field.ChipInput
 
 [Field](/field) 안의 제어되는 칩과 입력입니다. 필드는 칩을 직접 추가하지 않습니다. 부모의 `onCommit`이 결정합니다. 장식 요소는 칩 흐름 밖, `Field.Root`에 남습니다. ChipInput 안의 칩은 모든 밀도에서 입력과 같은 필드 한 줄 높이입니다. `chipLayout="row"`는 ChipInput 안에서 칩을 입력 위의 전체 너비 줄에 놓습니다. Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 `Field.TextInput`과 같은 높이의 한 줄 필드입니다. row에서 `maxRows`는 칩 줄만 세고, 인라인 흐름처럼 잘라 냅니다. `Label.Root htmlFor`나 Root의 `aria-label`로 레이블을 붙이세요.
 
-```tsx
-<Field.Root aria-label="Tags">
-  <Field.ChipInput
-    chips={chips}
-    inputValue={inputValue}
-    onInputValueChange={setInputValue}
-    onCommit={(value) => {
-      setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
-      setInputValue('');
-    }}
-    onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
-  />
-</Field.Root>
-```
-
-<Example block>
-  <ChipInputControlled />
-</Example>
+<Example of={ChipInputControlled} block />
 
 선택 사항인 [useChipField](/utilities/use-chip-field)는 칩과 입력을 보관하고, 그 `getChipInputProps()`를 `Field.ChipInput`에 펼쳐 넘깁니다.
 

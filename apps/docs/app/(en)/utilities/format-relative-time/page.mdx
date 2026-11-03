@@ -1,20 +1,10 @@
-import { RelativeTimeList } from '../../../../components/demos/RelativeTimeDemo';
+import RelativeTimeList from '../../../../examples/utilities/format-relative-time/RelativeTimeList';
 
 # formatRelativeTime
 
 `formatRelativeTime(value, now, options?)` returns how long before or after `now` the time `value` is, as the locale writes it, such as `3 minutes ago`, `yesterday` or `in 2 weeks` in `en` and `3분 전`, `어제` or `2주 후` in `ko`. Use it for when a message was sent, a file was edited or an item expires. It writes text with `Intl.RelativeTimeFormat` and keeps no clock, so the product passes `now` and decides when the text changes. Keeping it current, below, shows a timer.
 
-```tsx
-const editedAt = Temporal.Instant.from(file.editedAt).toZonedDateTimeISO(timeZone);
-
-<time dateTime={editedAt.toInstant().toString()}>
-  {formatRelativeTime(editedAt, now, { locale })}
-</time>
-```
-
-<Example>
-  <RelativeTimeList />
-</Example>
+<Example of={RelativeTimeList} />
 
 ## Units
 

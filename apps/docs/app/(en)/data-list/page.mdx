@@ -1,29 +1,12 @@
-import { DataListColumns, DataListOrder, DataListVertical } from '../../../components/demos/DataListDemo';
+import DataListColumns from '../../../examples/data-list/DataListColumns';
+import DataListVertical from '../../../examples/data-list/DataListVertical';
+import DataListOrder from '../../../examples/data-list/DataListOrder';
 
 # DataList
 
 A list of key and value pairs: an order summary, a profile, a settings pane, the input of a tool call. It is a native `dl`, so each term and its details are a `dt` and a `dd`. The gaps follow density, and the term and details colors, the term weight and the term column width come from the `datalist` contract tokens.
 
-```tsx
-<DataList.Root aria-label="Order summary">
-  <DataList.Item>
-    <DataList.Term>Order</DataList.Term>
-    <DataList.Details>#10482</DataList.Details>
-  </DataList.Item>
-  <DataList.Item>
-    <DataList.Term>Status</DataList.Term>
-    <DataList.Details>Shipped on 2027-01-04</DataList.Details>
-  </DataList.Item>
-  <DataList.Item>
-    <DataList.Term>Total</DataList.Term>
-    <DataList.Details>$42.00</DataList.Details>
-  </DataList.Item>
-</DataList.Root>
-```
-
-<Example block>
-  <DataListOrder />
-</Example>
+<Example of={DataListOrder} block />
 
 Server Components can import it from `@tounsoo/todae/data-list`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
@@ -33,44 +16,13 @@ Server Components can import it from `@tounsoo/todae/data-list`. That entry has 
 
 `orientation="vertical"` puts the term above its details. The default, `"horizontal"`, puts the term in a column beside the details. The value reaches CSS as `data-orientation`.
 
-```tsx
-<DataList.Root orientation="vertical" aria-label="Profile">
-  <DataList.Item>
-    <DataList.Term>Name</DataList.Term>
-    <DataList.Details>Mina Park</DataList.Details>
-  </DataList.Item>
-  <DataList.Item>
-    <DataList.Term>Email</DataList.Term>
-    <DataList.Details>mina@example.com</DataList.Details>
-  </DataList.Item>
-</DataList.Root>
-```
-
-<Example block>
-  <DataListVertical />
-</Example>
+<Example of={DataListVertical} block />
 
 ## Columns
 
 `minItemSize` lays the items out in columns, each no narrower than the CSS length you give it, such as `"10rem"`. As many columns fit as the width allows, so the list reflows without a media query, and in a list narrower than `minItemSize` the single column shrinks to fit. Items fill the rows in DOM order, so the reading order stays the source order. The gap between columns is `datalist.gap.between-columns`, and the gap between rows stays `datalist.gap.row`. [Grid](/grid) can't lay out a list's items, since it renders a `div` and the items have to be children of the `dl`.
 
-```tsx
-<DataList.Root orientation="vertical" minItemSize="10rem" aria-label="Plan">
-  <DataList.Item>
-    <DataList.Term>Plan</DataList.Term>
-    <DataList.Details>Team</DataList.Details>
-  </DataList.Item>
-  <DataList.Item>
-    <DataList.Term>Seats</DataList.Term>
-    <DataList.Details>12 of 20</DataList.Details>
-  </DataList.Item>
-  {/* … */}
-</DataList.Root>
-```
-
-<Example block>
-  <DataListColumns />
-</Example>
+<Example of={DataListColumns} block />
 
 Each item keeps its orientation inside its column. A horizontal item stacks when its column is narrower than the term column, `datalist.gap.column` and the details minimum together, so give columns of horizontal items a `minItemSize` of at least `calc(var(--todae-datalist-term-width) + var(--todae-datalist-gap-column) + var(--todae-datalist-details-min-width))`.
 

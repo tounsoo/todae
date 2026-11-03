@@ -1,4 +1,4 @@
-import { DescriptionSibling } from '../../../components/demos/DescriptionDemo';
+import DescriptionSibling from '../../../examples/description/DescriptionSibling';
 
 # Description
 
@@ -12,22 +12,7 @@ Description은 자신의 간격을 스스로 가집니다. `margin-block-start`�
 
 `Field.Group` 안에서는 그룹의 간격이 이 마진을 대신하므로, 거리는 그대로 `field.label.gap`입니다. 그룹은 Label과 컨트롤 사이 간격도 잡습니다.
 
-```tsx
-const id = useId();
-const hintId = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Work email</Label.Root>
-  <Field.Root id={id} aria-describedby={hintId}>
-    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-  </Field.Root>
-  <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-</Field.Group>
-```
-
-<Example block>
-  <DescriptionSibling />
-</Example>
+<Example of={DescriptionSibling} block />
 
 이것은 `Dialog.Description`이 아닙니다. Dialog의 Description은 `aria-describedby`를 대신 연결해 줍니다. 폼의 Description은 그렇지 않습니다.
 

@@ -1,4 +1,4 @@
-import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
+import TooltipOverflow from '../../../../examples/utilities/use-tooltip/TooltipOverflow';
 
 # useTooltip
 
@@ -6,22 +6,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 
 `+N` 개수 칩과 버튼이 아닌 다른 트리거는 훅을 직접 씁니다. 탭으로 갈 수 없는 감싸는 요소에는 `tabIndex={0}`을 붙이세요. `Button.Root`는 이미 자신의 레이블을 팁으로 보여 주므로, 훅이 팁을 담당할 때는 그 버튼에 `tooltip={false}`를 설정하세요.
 
-```tsx
-const tooltip = useTooltip();
-const { moreChips } = useStrings();
-
-<>
-  <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
-    <Chip.Root aria-hidden>+2</Chip.Root>
-    <VisuallyHidden.Root>{moreChips(2)}</VisuallyHidden.Root>
-  </span>
-  <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
-</>
-```
-
-<Example>
-  <TooltipOverflow />
-</Example>
+<Example of={TooltipOverflow} />
 
 ## 접근성을 지키는 조합
 

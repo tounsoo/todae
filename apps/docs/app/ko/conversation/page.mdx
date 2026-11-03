@@ -1,27 +1,10 @@
-import { ConversationExample } from '../../../components/demos/ConversationDemo';
+import ConversationExample from '../../../examples/conversation/ConversationExample';
 
 # Conversation
 
 `Conversation.Root`는 채팅의 메시지를 담고, 가장 새 메시지가 자라는 동안 화면에 보이게 합니다. 끝에서 열리고, 메시지가 스트리밍되는 동안 끝을 따라갑니다. 읽는 사람이 위로 스크롤하면 따라가기를 멈추고, `Conversation.ScrollButton`이 다시 끝으로 데려옵니다.
 
-```tsx
-<Conversation.Root style={{ blockSize: '24rem' }}>
-  <Conversation.Viewport>
-    <Conversation.Content>
-      {messages.map((message) => (
-        <Message.Root key={message.id} from={message.role} streaming={message.streaming} aria-label={message.author}>
-          <Message.Content>…</Message.Content>
-        </Message.Root>
-      ))}
-    </Conversation.Content>
-  </Conversation.Viewport>
-  <Conversation.ScrollButton />
-</Conversation.Root>
-```
-
-<Example block>
-  <ConversationExample />
-</Example>
+<Example of={ConversationExample} block />
 
 루트에 높이를 주거나, flex 열처럼 높이를 주는 레이아웃 안에 두세요. 뷰포트는 그 안에서 스크롤합니다.
 

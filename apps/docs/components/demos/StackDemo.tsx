@@ -1,16 +1,6 @@
 'use client';
 
-import { Badge, Button, Stack, Text } from '@tounsoo/todae';
-
-export function StackButtons() {
-  return (
-    <Stack.Root>
-      <Text.Root>Stacked label</Text.Root>
-      <Button.Root>Primary</Button.Root>
-      <Button.Root variant="secondary">Secondary</Button.Root>
-    </Stack.Root>
-  );
-}
+import { Badge, Stack, Text } from '@tounsoo/todae';
 
 export function StackGaps() {
   return (
@@ -25,22 +15,6 @@ export function StackGaps() {
           </Stack.Root>
         </Stack.Root>
       ))}
-    </Stack.Root>
-  );
-}
-
-export function StackSpread() {
-  return (
-    <Stack.Root direction="row" justify="between" align="center" wrap style={{ inlineSize: '100%' }}>
-      <Text.Root weight="bold">Billing</Text.Root>
-      <Stack.Root as="ul" direction="row" gap="condensed" aria-label="Plan features">
-        <li>
-          <Badge.Root>Monthly</Badge.Root>
-        </li>
-        <li>
-          <Badge.Root>Invoices</Badge.Root>
-        </li>
-      </Stack.Root>
     </Stack.Root>
   );
 }

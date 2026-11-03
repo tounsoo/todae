@@ -1,19 +1,10 @@
-import { ColorPickerInline } from '../../../components/demos/ColorPickerDemo';
+import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline';
 
 # ColorPicker
 
 `ColorPicker.Root`는 색 하나를 `#rrggbb` 문자열로 가집니다. `ColorPicker.Area`는 현재 색상(hue) 위에서 채도(왼쪽에서 오른쪽)와 밝기(아래에서 위)를 정합니다. `ColorPicker.Hue`는 색상을 정합니다. 루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받고, 색을 끌거나 키로 바꾸는 동안 `onValueChange`를 호출합니다.
 
-```tsx
-<ColorPicker.Root aria-label="Accent" value={color} onValueChange={setColor}>
-  <ColorPicker.Area />
-  <ColorPicker.Hue />
-</ColorPicker.Root>
-```
-
-<Example block>
-  <ColorPickerInline />
-</Example>
+<Example of={ColorPickerInline} block />
 
 폼의 색에는 [Field.ColorPicker](/field/color-picker)를 쓰세요. 필드 안의 색 견본이 이 선택기를 팝오버로 엽니다.
 

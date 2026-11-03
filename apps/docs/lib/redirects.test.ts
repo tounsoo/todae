@@ -11,7 +11,7 @@ describe('redirects', () => {
     const redirects = await config.redirects!();
     const sources = redirects.map((redirect) => redirect.source);
     expect(sources).toEqual(
-      expect.arrayContaining(['/field/time-input', '/ko/field/time-input', '/field/date-time-input', '/ko/field/date-time-input']),
+      expect.arrayContaining(['/field/time-input', '/ko/field/time-input', '/field/date-time-input', '/ko/field/date-time-input', '/composer', '/ko/composer']),
     );
     for (const { source, destination } of redirects) {
       const ko = destination.startsWith('/ko/');

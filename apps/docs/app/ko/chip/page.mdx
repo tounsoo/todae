@@ -1,27 +1,10 @@
-import { ChipExamples } from '../../../components/demos/ChipDemo';
+import ChipExamples from '../../../examples/chip/ChipExamples';
 
 # Chip
 
 텍스트만 담는 레이블입니다. 선택적인 제거는 이름이 있는 버튼입니다. `+N` 개수는 일반 칩입니다.
 
-```tsx
-<Stack.Root as="ul" direction="row" wrap aria-label="Tags">
-  <li>
-    <Chip.Root>Design</Chip.Root>
-  </li>
-  <li>
-    <Chip.Root onRemove={remove}>Tokens</Chip.Root>
-  </li>
-  <li>
-    <Chip.Root aria-hidden>+4</Chip.Root>
-    <VisuallyHidden.Root>{moreChips(4)}</VisuallyHidden.Root>
-  </li>
-</Stack.Root>
-```
-
-<Example>
-  <ChipExamples />
-</Example>
+<Example of={ChipExamples} />
 
 `+N` 칩은 보조 기술에서 숨겨지고, 옆의 시각적으로 숨긴 텍스트가 대신 읽힙니다. 버튼이 아니며 탭 순서에 들어가지 않습니다.
 

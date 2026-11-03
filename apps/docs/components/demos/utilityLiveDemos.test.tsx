@@ -1,42 +1,11 @@
 // @vitest-environment jsdom
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { codeBlocks } from '../../lib/mdxAst';
-import { StatusFilter } from './ControlledStateDemo';
-import { ImageDrop } from './DropzoneDemo';
-import { SearchShortcut } from './HotkeyDemo';
-
-const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8');
-
-/** The demo module readers can copy, without the Next client directive. */
-function moduleSource(file: string): string {
-  const source = read(file);
-  const prefix = "'use client';\n\n";
-  expect(source.startsWith(prefix), file).toBe(true);
-  return source.slice(prefix.length).replace(/\n$/, '');
-}
-
-function fences(page: string): string[] {
-  return codeBlocks(read(page)).code.map((source) => source.split('\n').slice(1, -1).join('\n'));
-}
+import StatusFilter from '../../examples/utilities/use-controlled-state/StatusFilter';
+import ImageDrop from '../../examples/utilities/use-dropzone/ImageDrop';
+import SearchShortcut from '../../examples/utilities/use-hotkey/SearchShortcut';
 
 describe('utility live demos', () => {
-  it.each([
-    ['components/demos/HotkeyDemo.tsx', 'app/(en)/utilities/use-hotkey/page.mdx', 'app/ko/utilities/use-hotkey/page.mdx'],
-    ['components/demos/DropzoneDemo.tsx', 'app/(en)/utilities/use-dropzone/page.mdx', 'app/ko/utilities/use-dropzone/page.mdx'],
-    [
-      'components/demos/ControlledStateDemo.tsx',
-      'app/(en)/utilities/use-controlled-state/page.mdx',
-      'app/ko/utilities/use-controlled-state/page.mdx',
-    ],
-  ])('%s is the snippet on the English and Korean pages', (file, en, ko) => {
-    const source = moduleSource(file);
-    expect(fences(en)).toContain(source);
-    expect(fences(ko)).toContain(source);
-  });
-
   it('runs the hotkey from the document and from the button', () => {
     render(<SearchShortcut />);
     expect(screen.getByText('Press Alt+T')).toBeTruthy();

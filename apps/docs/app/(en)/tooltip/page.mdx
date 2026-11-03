@@ -1,4 +1,6 @@
-import { TooltipArchive, TooltipOverflow, TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
+import TooltipOverflow from '../../../examples/utilities/use-tooltip/TooltipOverflow';
+import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
+import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
 import { Code } from '@tounsoo/todae/code';
 import { Table } from '@tounsoo/todae/table';
 
@@ -97,19 +99,7 @@ const tooltip = useTooltip({ interactive: true });
 
 Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-labelledby`. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip.
 
-```tsx
-import { Archive } from 'lucide-react';
-
-<Button.Root aria-label="Archive">
-  <Button.Icon>
-    <Archive />
-  </Button.Icon>
-</Button.Root>
-```
-
-<Example>
-  <TooltipArchive />
-</Example>
+<Example of={TooltipArchive} />
 
 ## Accessible composition
 

@@ -1,23 +1,12 @@
-import { MenuActions, MenuContext, MenuOptions } from '../../../components/demos/MenuDemo';
+import MenuContext from '../../../examples/menu/MenuContext';
+import MenuActions from '../../../examples/menu/MenuActions';
+import { MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
 A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `aria-haspopup="menu"` and `aria-expanded`. `Menu.Content` is a `role="menu"` in a non-modal popover anchored to the trigger with CSS anchor positioning, the same surface as [Popover](/popover). The menu is named by its trigger unless it gets `aria-label` or `aria-labelledby`.
 
-```tsx
-<Menu.Root>
-  <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
-  <Menu.Content>
-    <Menu.Item onSelect={rename}>Rename</Menu.Item>
-    <Menu.Separator />
-    <Menu.Item onSelect={remove}>Delete</Menu.Item>
-  </Menu.Content>
-</Menu.Root>
-```
-
-<Example>
-  <MenuActions />
-</Example>
+<Example of={MenuActions} />
 
 ## Keyboard
 
@@ -49,37 +38,7 @@ import NextLink from 'next/link';
 
 Give each region a visible `Menu.Trigger` in the same `Menu.Root` as well. A context menu can't be seen, few people know Shift+F10, Mac keyboards have no ContextMenu key, and iOS Safari fires no `contextmenu` on a long press, so the button is how many people reach the same menu.
 
-```tsx
-import { Button, Menu } from '@tounsoo/todae';
-import { Ellipsis } from 'lucide-react';
-
-export function FileRow({ name }: { name: string }) {
-  return (
-    <Menu.Root>
-      <Menu.ContextTrigger
-        render={(props) => (
-          <li {...props}>
-            {name}
-            <Menu.Trigger variant="ghost" aria-label={`Actions for ${name}`}>
-              <Button.Icon>
-                <Ellipsis />
-              </Button.Icon>
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item>Open</Menu.Item>
-              <Menu.Item>Delete</Menu.Item>
-            </Menu.Content>
-          </li>
-        )}
-      />
-    </Menu.Root>
-  );
-}
-```
-
-<Example>
-  <MenuContext />
-</Example>
+<Example of={MenuContext} />
 
 A right click or Shift+F10 in a text field inside the region leaves the browser's own menu, which holds the field's editing commands. A region inside another region takes the request first. A right click inside an open menu doesn't open the browser's menu over it.
 

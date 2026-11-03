@@ -6,6 +6,9 @@ import { createRef, useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Checkbox, type CheckboxRootProps } from './Checkbox.js';
 import * as api from '../index.js';
+import { Field } from './Field.js';
+import { Form } from './Form.js';
+import { mount, reset } from '../test/form.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
 
@@ -145,5 +148,152 @@ describe('Checkbox indeterminate', () => {
     const ref = createRef<HTMLInputElement>();
     render(<Checkbox.Root ref={ref} indeterminate>Select all</Checkbox.Root>);
     expect(ref.current).toBe(screen.getByRole('checkbox'));
+  });
+});
+
+describe('Checkbox after a form reset', () => {
+  const box = () => screen.getByRole('checkbox') as HTMLInputElement;
+  const shownChecked = () => box().closest('label')!.hasAttribute('data-checked');
+
+  it('goes back to defaultChecked, reports it, and reports the next tick', async () => {
+    const onCheckedChange = vi.fn();
+    render(
+      <form>
+        <Checkbox.Root onCheckedChange={onCheckedChange}>Weekly digest</Checkbox.Root>
+      </form>,
+    );
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(false);
+    expect(shownChecked()).toBe(false);
+    fireEvent.click(box());
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[true], [false], [true]]);
+  });
+
+  it('follows the reset when a reset handler renders the box again first', async () => {
+    const onCheckedChange = vi.fn();
+    function Harness() {
+      const [resets, setResets] = useState(0);
+      return (
+        <form onReset={() => setResets((count) => count + 1)}>
+          <Checkbox.Root defaultChecked onCheckedChange={onCheckedChange}>
+            Weekly digest {resets}
+          </Checkbox.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[false], [true]]);
+  });
+
+  it('follows the reset in a Field.Group inside Form.Root', async () => {
+    const onCheckedChange = vi.fn();
+    await mount(
+      <Form.Root>
+        <Field.Group>
+          <Checkbox.Root name="terms" defaultChecked onCheckedChange={onCheckedChange}>
+            I accept the terms
+          </Checkbox.Root>
+        </Field.Group>
+      </Form.Root>,
+    );
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[false], [true]]);
+  });
+
+  it('keeps the value a controlled owner sets in its own reset handler', async () => {
+    const onCheckedChange = vi.fn();
+    function Harness() {
+      const [checked, setChecked] = useState(false);
+      return (
+        <form onReset={() => setChecked(true)}>
+          <Checkbox.Root
+            checked={checked}
+            onCheckedChange={(next) => {
+              onCheckedChange(next);
+              setChecked(next);
+            }}
+          >
+            Weekly digest
+          </Checkbox.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange).not.toHaveBeenCalled();
+    fireEvent.click(box());
+    expect(onCheckedChange.mock.calls).toEqual([[false]]);
+  });
+
+  it('keeps its state when a handler cancels the reset', async () => {
+    const onCheckedChange = vi.fn();
+    render(
+      <form onReset={(event) => event.preventDefault()}>
+        <Checkbox.Root onCheckedChange={onCheckedChange}>Weekly digest</Checkbox.Root>
+      </form>,
+    );
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[true]]);
+  });
+
+  it('tells a controlled owner, who can follow the reset', async () => {
+    function Harness() {
+      const [checked, setChecked] = useState(false);
+      return (
+        <form>
+          <Checkbox.Root checked={checked} onCheckedChange={setChecked}>
+            Weekly digest
+          </Checkbox.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(false);
+    expect(shownChecked()).toBe(false);
+  });
+
+  it('shows a controlled value again when the owner turns the reset down or has no callback', async () => {
+    const onCheckedChange = vi.fn();
+    const { rerender } = render(
+      <form>
+        <Checkbox.Root checked={false} onCheckedChange={onCheckedChange}>
+          Weekly digest
+        </Checkbox.Root>
+      </form>,
+    );
+    rerender(
+      <form>
+        <Checkbox.Root checked onCheckedChange={onCheckedChange}>
+          Weekly digest
+        </Checkbox.Root>
+      </form>,
+    );
+    await reset(box().form!);
+    expect(onCheckedChange.mock.calls).toEqual([[false]]);
+    expect(box().checked).toBe(true);
+    rerender(
+      <form>
+        <Checkbox.Root checked>Weekly digest</Checkbox.Root>
+      </form>,
+    );
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
   });
 });

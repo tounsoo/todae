@@ -82,14 +82,16 @@ describe('docs locales', () => {
   });
 
   it('keeps each translation in step with its English page', () => {
-    // A translation changes prose only. When an English page changes its imports, demos, props tables,
-    // code or links, its translations must change with it.
+    // A translation changes prose only. When an English page changes its imports, demos, the example
+    // files it shows, props tables, code or links, its translations must change with it.
     const shape = (text: string) => {
       const { code, rest: prose } = codeBlocks(text);
       return {
         imports: prose.match(/^import .*$/gm) ?? [],
         code,
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
+        // Which example file each <Example of={…} /> shows, in order. Its code lives in that file, not on the page.
+        examples: [...prose.matchAll(/<Example\b[^>]*?\bof=\{\s*(\w+)\s*\}/g)].map((match) => match[1]),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
         links: links(text),
         // Each top-level heading's level and the number of top-level blocks under it, so a section or

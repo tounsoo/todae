@@ -1,6 +1,8 @@
+import TextTones from '../../../examples/text/TextTones';
+import TextLines from '../../../examples/text/TextLines';
+import TextLabel from '../../../examples/text/TextLabel';
+import TextHeadings from '../../../examples/text/TextHeadings';
 import { Text } from '@tounsoo/todae/text';
-import { TextHeadings, TextLabel } from '../../../components/demos/TextDemo';
-import { TextLines } from '../../../components/demos/TextLinesDemo';
 
 # Text
 
@@ -14,21 +16,7 @@ The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae 
 
 Server Components can import it from `@tounsoo/todae/text`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
-```tsx
-<Text.Root tone="muted">Muted body</Text.Root>
-<Text.Root>Medium default</Text.Root>
-<Text.Root tone="accent" weight="bold">
-  Accent, bold
-</Text.Root>
-```
-
-<Example>
-  <Text.Root tone="muted">Muted body</Text.Root>
-  <Text.Root>Medium default</Text.Root>
-  <Text.Root tone="accent" weight="bold">
-    Accent, bold
-  </Text.Root>
-</Example>
+<Example of={TextTones} />
 
 `tone="accent"` follows `color.accent.default`. Todae's accent is neutral ink, so accent text looks like default text until a theme or company token package sets a brand accent.
 
@@ -48,9 +36,7 @@ Server Components can import it from `@tounsoo/todae/text`. That entry has no `'
 }
 ```
 
-<Example block>
-  <TextHeadings />
-</Example>
+<Example of={TextHeadings} block />
 
 ## Label
 
@@ -60,18 +46,7 @@ Todae applies `text.label.font.family`, unlike `text.font.family`. It reads `tex
 
 A `tone` or `weight` you give wins over the label's own color and weight.
 
-```tsx
-<hgroup>
-  <Text.Root variant="label">Release notes</Text.Root>
-  <Text.Root as="h2">
-    What changed in 0.4
-  </Text.Root>
-</hgroup>
-```
-
-<Example block>
-  <TextLabel />
-</Example>
+<Example of={TextLabel} block />
 
 A company token package sets the look in its own `contract` set, as the [Fernway example](https://github.com/tounsoo/todae/tree/main/examples/fernway) does:
 
@@ -95,18 +70,7 @@ A company token package sets the look in its own `contract` set, as the [Fernway
 
 When the text is cut, `Text.Root` from `@tounsoo/todae` shows the whole text in a tooltip on hover, and on keyboard focus of the text or of a link, row or menu item around it. One that holds several cut texts shows the first one's tooltip. Clamping changes only what is painted, so screen readers read the whole text and the tooltip is hidden from them. While it shows, the tooltip is an element right after the text, so it can change what a selector such as `:last-child` matches. Escape closes it first. `tooltip={false}` turns it off. `@tounsoo/todae/text` clamps the same way but draws no tooltip, since that needs a client component.
 
-```tsx
-<Text.Root lines={1} weight="medium">
-  quarterly-revenue-report-northern-region-final.pdf
-</Text.Root>
-<Text.Root lines={2} tone="muted">
-  Every branch office's numbers for July through September, with notes from each regional lead and the forecast for the next quarter.
-</Text.Root>
-```
-
-<Example block>
-  <TextLines />
-</Example>
+<Example of={TextLines} block />
 
 ## Accessible composition
 

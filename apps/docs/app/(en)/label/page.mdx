@@ -1,5 +1,5 @@
-import { FieldLabelStates } from '../../../components/demos/FieldDemo';
-import { LabelSibling } from '../../../components/demos/LabelDemo';
+import FieldLabelStates from '../../../examples/field/FieldLabelStates';
+import LabelSibling from '../../../examples/label/LabelSibling';
 
 # Label
 
@@ -11,20 +11,7 @@ Server Components can import it from `@tounsoo/todae/label`. That entry has no `
 
 Label carries no margin. Put the label, the control and any [Description](/description) or [ErrorMessage](/errormessage) in a `Field.Group`, which puts the label `field.label.gap` (0.4rem) above the control.
 
-```tsx
-const id = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Email</Label.Root>
-  <Field.Root id={id}>
-    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <LabelSibling />
-</Example>
+<Example of={LabelSibling} block />
 
 One `Field.Group` per field. The order is Label, control, then Description and ErrorMessage. When ErrorMessage follows Description, the gap between them is `field.messages.gap` (0.2rem). Do not put several fields in one group. Put groups inside `Stack.Root`: `stack.gap` is the density gap between fields, not between a label and its shell.
 
@@ -32,27 +19,7 @@ One `Field.Group` per field. The order is Label, control, then Description and E
 
 Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
 
-```tsx
-const disabledId = useId();
-const invalidId = useId();
-
-<Field.Group>
-  <Label.Root htmlFor={disabledId}>Email</Label.Root>
-  <Field.Root id={disabledId} disabled>
-    <Field.TextInput value={disabledEmail} onChange={(event) => setDisabledEmail(event.target.value)} />
-  </Field.Root>
-</Field.Group>
-<Field.Group>
-  <Label.Root htmlFor={invalidId}>Email</Label.Root>
-  <Field.Root id={invalidId} invalid>
-    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
-  </Field.Root>
-</Field.Group>
-```
-
-<Example block>
-  <FieldLabelStates />
-</Example>
+<Example of={FieldLabelStates} block />
 
 ## Accessible composition
 

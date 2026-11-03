@@ -1,35 +1,11 @@
-import { MessageStreaming, MessageTurns } from '../../../components/demos/MessageDemo';
+import MessageStreaming from '../../../examples/message/MessageStreaming';
+import MessageTurns from '../../../examples/message/MessageTurns';
 
 # Message
 
 `Message.Root`는 대화의 한 차례로, `<article>`입니다. `from`은 누가 썼는지 나타냅니다. 사용자의 메시지는 끝쪽에 말풍선으로 놓이고, 어시스턴트의 메시지는 너비 전체를 쓰며, 시스템 메시지는 가운데의 조용한 한 줄입니다. 어떤 에이전트 SDK의 메시지 형태도 알지 못하므로, 자신의 데이터를 파트에 맞춰 넣으세요.
 
-```tsx
-<Message.Root from="user" aria-label="You">
-  <Message.Content>How do I name an icon-only button?</Message.Content>
-</Message.Root>
-
-<Message.Root aria-label="Assistant">
-  <Message.Avatar>
-    <Avatar.Root tone="category-3">
-      <Avatar.Fallback>A</Avatar.Fallback>
-    </Avatar.Root>
-  </Message.Avatar>
-  <Message.Header>
-    <strong>Assistant</strong>
-    <Message.Time value={sentAt} locale={locale} />
-  </Message.Header>
-  <Message.Content>
-    <Prose.Root>
-      <p>Give it aria-label, or put a visually hidden label inside it.</p>
-    </Prose.Root>
-  </Message.Content>
-</Message.Root>
-```
-
-<Example block>
-  <MessageTurns />
-</Example>
+<Example of={MessageTurns} block />
 
 Server Components는 `@tounsoo/todae/message`에서 가져올 수 있습니다.
 
@@ -61,22 +37,7 @@ const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZ
 
 메시지가 아직 도착하는 동안 `streaming`을 주고, 끝나거나 실패하면 `false`로 되돌리세요. article에 `aria-busy="true"`와 `data-streaming`을 설정하고, 그 밖에는 아무것도 그리지 않습니다. 답이 아직 오고 있음을 보여 주려면 아래처럼 [Loader](/loader)의 `dots` 변형을 넣으세요.
 
-```tsx
-<Message.Root streaming={status === 'streaming'} aria-label="Assistant">
-  <Message.Content>
-    <Prose.Root>{rendered}</Prose.Root>
-  </Message.Content>
-  {status === 'streaming' && (
-    <Message.Actions>
-      <Loader.Root variant="dots" aria-label="Writing" />
-    </Message.Actions>
-  )}
-</Message.Root>
-```
-
-<Example block>
-  <MessageStreaming />
-</Example>
+<Example of={MessageStreaming} block />
 
 `message` 토큰으로 바꾸세요. `message.fg`는 텍스트 색, `message.gap`과 `message.row-gap`은 파트 사이 간격, `message.header.*`는 헤더의 색, 크기와 그 아래의 더 좁은 간격, `message.time.*`는 시각의 색과 크기, `message.actions.motion.*`는 `reveal="hover"` 줄이 나타나는 모션, `message.user.*`는 말풍선의 배경, 텍스트 색, 모서리, 패딩, `max-width`, 강제 색상 모드 외곽선의 `border-width`, `message.system.*`는 시스템 줄을 정합니다. 안에 넣은 `Prose.Root`는 `prose` 토큰의 텍스트 색과 크기를 그대로 씁니다.
 

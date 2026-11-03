@@ -1,4 +1,4 @@
-import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
+import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibling';
 
 # ErrorMessage
 
@@ -8,25 +8,7 @@ Mount the error only while it applies, and include its id in `aria-describedby` 
 
 ErrorMessage owns its spacing. After a control, `margin-block-start` is `field.label.gap` (0.4rem). After Description, the sibling rule drops that to `field.messages.gap` (0.2rem). `margin-block-end` is 0.
 
-```tsx
-const id = useId();
-const hintId = useId();
-const errorId = useId();
-const describedBy = invalid ? `${hintId} ${errorId}` : hintId;
-
-<Field.Group>
-  <Label.Root htmlFor={id}>Work email</Label.Root>
-  <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
-    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
-  </Field.Root>
-  <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-  {invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
-</Field.Group>
-```
-
-<Example block>
-  <ErrorMessageSibling />
-</Example>
+<Example of={ErrorMessageSibling} block />
 
 To announce a submit-time error, pass `role="alert"` on this component. The package does not choose announcement policy.
 

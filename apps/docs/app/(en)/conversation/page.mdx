@@ -1,27 +1,10 @@
-import { ConversationExample } from '../../../components/demos/ConversationDemo';
+import ConversationExample from '../../../examples/conversation/ConversationExample';
 
 # Conversation
 
 `Conversation.Root` holds the messages of a chat and keeps the newest one in view while it grows. It opens at the end and follows it as a message streams in. When the reader scrolls up, it stops following, and `Conversation.ScrollButton` brings them back.
 
-```tsx
-<Conversation.Root style={{ blockSize: '24rem' }}>
-  <Conversation.Viewport>
-    <Conversation.Content>
-      {messages.map((message) => (
-        <Message.Root key={message.id} from={message.role} streaming={message.streaming} aria-label={message.author}>
-          <Message.Content>…</Message.Content>
-        </Message.Root>
-      ))}
-    </Conversation.Content>
-  </Conversation.Viewport>
-  <Conversation.ScrollButton />
-</Conversation.Root>
-```
-
-<Example block>
-  <ConversationExample />
-</Example>
+<Example of={ConversationExample} block />
 
 Give the root a height, or put it in a layout that gives it one, such as a flex column. The viewport scrolls inside it.
 

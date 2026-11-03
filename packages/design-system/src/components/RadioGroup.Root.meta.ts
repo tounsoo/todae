@@ -31,9 +31,9 @@ export const meta = {
     },
     {
       name: 'onValueChange',
-      type: '(value: string) => void',
+      type: '(value: string | null) => void',
       required: false,
-      description: 'Fires with the next selected value.',
+      description: 'Fires with the next selected value, or null when a form reset leaves no radio selected.',
     },
     {
       name: 'name',
