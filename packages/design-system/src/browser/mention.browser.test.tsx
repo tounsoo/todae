@@ -152,7 +152,7 @@ describe('mention peek in a browser', () => {
     await userEvent.hover(peek);
     await wait(200);
     expect(peek.hasAttribute('data-popover-open') || peek.matches(':popover-open')).toBe(true);
-    mention.blur();
+    expect(document.activeElement).not.toBe(mention);
     fireEvent.pointerLeave(mention, { relatedTarget: document.body });
     fireEvent.pointerLeave(peek, { relatedTarget: document.body });
     await wait(400);
