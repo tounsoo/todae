@@ -357,6 +357,23 @@ describe('useEscapeKey', () => {
       expect(inFrame).toHaveBeenCalledTimes(1);
     });
 
+    it('lets a key on the page reach a layer in an iframe inside a modal dialog on the page', () => {
+      const dialog = document.body.appendChild(document.createElement('dialog'));
+      const button = dialog.appendChild(document.createElement('button'));
+      const doc = makeFrame();
+      dialog.append(doc.defaultView!.frameElement!);
+      dialog.showModal();
+      try {
+        const inFrame = vi.fn();
+        render(<Layer onEscape={inFrame} />, { container: doc.body.appendChild(doc.createElement('div')) });
+        expect(escapeIn(button).defaultPrevented).toBe(true);
+        expect(inFrame).toHaveBeenCalledTimes(1);
+      } finally {
+        dialog.close();
+        dialog.remove();
+      }
+    });
+
     it('keeps a key in an iframe from reaching a layer on the page', () => {
       const doc = makeFrame();
       const inMain = vi.fn();

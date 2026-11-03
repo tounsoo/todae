@@ -39,10 +39,17 @@ export function useFocusRestore(
       // Focus may sit in the page around an iframe the overlay renders into, or
       // in the page that opens a popup window the overlay renders into. A frame
       // showing its own body holds focus as the frame.
+      const read = (from: Document) => {
+        const path = focusPath(from);
+        const last = path.at(-1);
+        return path.length > 1 && last === last?.ownerDocument.body ? path.at(-2) : last;
+      };
+      let current = read(doc);
       const own = topDocument(doc);
-      const path = focusPath(own !== topDocument(document) && !own.hasFocus() ? document : doc);
-      let current = path.at(-1);
-      if (path.length > 1 && current === current?.ownerDocument.body) current = path.at(-2);
+      // Nothing focused in an unfocused popup window: it opened from the page.
+      if (own !== topDocument(document) && !own.hasFocus() && (!current || current === current.ownerDocument.body)) {
+        current = read(document);
+      }
       prior.current = isHTMLElement(current) ? current : null;
       return;
     }

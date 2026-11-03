@@ -112,9 +112,12 @@ function modalsInFront(doc: Document, target: EventTarget | null): Element[] {
   return [...doc.querySelectorAll('dialog[open]')].filter(isModal);
 }
 
+/** Whether `entry`'s element is inside `scope`, also through the frames around it. */
 function inside(scope: Element, entry: Entry): boolean {
-  const el = entry.element();
-  return Boolean(el && scope.contains(el));
+  for (let el: Element | null | undefined = entry.element(); el; el = el.ownerDocument.defaultView?.frameElement) {
+    if (scope.contains(el)) return true;
+  }
+  return false;
 }
 
 /**
@@ -150,10 +153,11 @@ function onKeyDown(event: KeyboardEvent) {
   let top = select(candidates(modals.length > 0 ? modals : null, target, event, doc));
   // A key on the page still reaches a layer in another document when nothing
   // on the page takes it, such as a tooltip portaled into an iframe while its
-  // trigger keeps focus here. A modal there still keeps the layers behind it.
-  if (!top && doc === document && modals.length === 0) {
+  // trigger keeps focus here. A modal on the page or in that document still
+  // keeps the layers behind it.
+  if (!top && doc === document) {
     top = select(
-      candidates(null, target, event).filter((entry) => {
+      candidates(modals.length > 0 ? modals : null, target, event).filter((entry) => {
         const other = entry.doc();
         if (other === document) return false;
         const scope = modalsInFront(other, null);

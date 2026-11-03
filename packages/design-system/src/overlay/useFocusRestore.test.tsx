@@ -268,6 +268,37 @@ describe('useFocusRestore in another document', () => {
     });
   }
 
+  it('returns focus to an opener in a popup window that has no focus as the overlay opens there', async () => {
+    const popup = makePopup();
+    const elsewhere = document.body.appendChild(document.createElement('button'));
+    act(() => elsewhere.focus());
+    const opener = popup.body.appendChild(popup.createElement('button'));
+    act(() => opener.focus());
+    // A timer opens the overlay while the page has focus. The popup keeps its active element.
+    vi.spyOn(popup, 'hasFocus').mockReturnValue(false);
+    vi.spyOn(document, 'activeElement', 'get').mockReturnValue(elsewhere);
+    function Example({ open }: { open: boolean }) {
+      const container = useRef<HTMLDivElement>(null);
+      useFocusRestore(open, { containerRef: container });
+      return open
+        ? createPortal(
+            <div ref={container}>
+              <button type="button">Inside</button>
+            </div>,
+            popup.body,
+          )
+        : null;
+    }
+    const { rerender } = render(<Example open={false} />);
+    rerender(<Example open />);
+    act(() => button(popup, 'Inside').focus());
+    const focus = vi.spyOn(opener, 'focus');
+    rerender(<Example open={false} />);
+    await act(async () => undefined);
+    expect(focus).toHaveBeenCalled();
+    elsewhere.remove();
+  });
+
   it('returns focus in an iframe the page reads as inside a shadow root', async () => {
     const { doc, restore } = makeShadowedFrame();
     try {
