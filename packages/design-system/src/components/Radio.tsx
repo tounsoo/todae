@@ -115,10 +115,10 @@ function RadioGroupRoot({
       }),
   );
   const [, rerender] = useReducer((count: number) => count + 1, 0);
-  // A reset puts back the radio whose `defaultChecked` React set from the value it mounted with, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.
+  // A reset checks each radio whose `defaultChecked` React set from the value it mounted with, so the last in tree order wins, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.
   useFormReset(groupRef, () => {
     const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [];
-    const picked = [...radios].find((radio) => radio.name === name && radio.defaultChecked)?.value ?? null;
+    const picked = [...radios].reverse().find((radio) => radio.name === name && radio.defaultChecked)?.value ?? null;
     if (picked === value) return;
     select(picked);
     rerender();
