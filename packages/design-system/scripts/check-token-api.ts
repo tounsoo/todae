@@ -88,10 +88,29 @@ function approvalsAt(sha: string): TokenApiApprovals {
   return parseTokenApiApprovals(parsed);
 }
 
-export function auditRange(base: string, head: string): TokenApiBreak[] {
+function contains(sha: string, ancestor: string): boolean {
+  try {
+    git(['merge-base', '--is-ancestor', ancestor, sha]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function auditHistory(from: string, commits: string[]): TokenApiBreak[] {
   const seen = { value: false };
-  const snapshots = [snapshotAt(base, seen), ...commitsBetween(base, head).map((sha) => snapshotAt(sha, seen))];
-  return withoutApprovals(auditTokenApiHistory(snapshots), approvalsAt(head));
+  return auditTokenApiHistory([snapshotAt(from, seen), ...commits.map((sha) => snapshotAt(sha, seen))]);
+}
+
+export function auditRange(base: string, head: string): TokenApiBreak[] {
+  const commits = commitsBetween(base, head);
+  // Branch commits made before main was merged in hold an older main's files,
+  // so they are checked against the commit they forked from, not the base.
+  const forked = commits.findIndex((sha) => contains(sha, base));
+  const before = forked === -1 ? commits : commits.slice(0, forked);
+  const after = forked === -1 ? [] : commits.slice(forked);
+  const removed = [...(before.length > 0 ? auditHistory(`${before[0]}^`, before) : []), ...auditHistory(base, after)];
+  return withoutApprovals(removed, approvalsAt(head));
 }
 
 function run(argv: string[]): void {
