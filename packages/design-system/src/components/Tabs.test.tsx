@@ -318,14 +318,7 @@ describe('Tabs', () => {
 });
 
 describe('Tabs indicator anchor', () => {
-  const names = (el: HTMLElement) =>
-    el.style
-      .getPropertyValue('anchor-name')
-      .split(',')
-      .map((n) => n.trim())
-      .filter(Boolean);
-
-  it('names only the selected tab, beside a popover anchored to it', async () => {
+  it('leaves the anchor-name on the tab to a popover anchored to it', async () => {
     function Anchored() {
       const alpha = useRef<HTMLButtonElement | null>(null);
       usePopover({ anchorRef: alpha });
@@ -345,16 +338,14 @@ describe('Tabs indicator anchor', () => {
     render(<Anchored />);
     const alpha = tab('Alpha');
     const popover = alpha.style.getPropertyValue('--todae-popover-anchor');
-    expect(names(alpha)).toEqual(expect.arrayContaining([popover, '--todae-tab-selected']));
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
     await act(async () => tab('Beta').click());
-    expect(names(alpha)).toEqual([popover]);
-    expect(names(tab('Beta'))).toEqual(['--todae-tab-selected']);
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
     await act(async () => alpha.click());
-    expect(names(alpha)).toEqual(expect.arrayContaining([popover, '--todae-tab-selected']));
-    expect(names(tab('Beta'))).toEqual([]);
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
   });
 
-  it('joins the inline anchor name of a tooltip trigger', () => {
+  it('renders the indicator anchor inside a tooltip trigger tab, from the server too', () => {
     function Tipped() {
       const tip = useTooltip();
       return (
@@ -368,9 +359,11 @@ describe('Tabs indicator anchor', () => {
         </Tabs.Root>
       );
     }
+    const html = new DOMParser().parseFromString(renderToString(<Tipped />), 'text/html');
+    const served = html.querySelector('[role="tab"]')!;
+    expect(served.querySelector(':scope > span[aria-hidden]')).not.toBeNull();
     render(<Tipped />);
-    const alpha = tab('Alpha');
-    expect(names(alpha)).toHaveLength(2);
-    expect(names(alpha)).toContain('--todae-tab-selected');
+    expect(tab('Alpha').querySelector(':scope > span[aria-hidden]')).not.toBeNull();
+    expect(tab('Alpha').textContent).toBe('Alpha');
   });
 });
