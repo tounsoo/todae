@@ -1,6 +1,6 @@
 {
   "dialog": {
-    "$description": "Dialog.Root: a modal panel centered over a scrim.",
+    "$description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
@@ -27,7 +27,8 @@
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },
         "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/exit/$value" } }
-      }
+      },
+      "offset": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
     }
   }
 }

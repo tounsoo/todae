@@ -57,19 +57,28 @@
     border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
     border-radius: var(--todae-dialog-radius);
     box-shadow: var(--todae-dialog-shadow);
+    /* How far below its place the panel starts and ends. It rises by
+       layout, not a transform, so a tooltip anchored inside follows it. */
+    --_rise: var(--todae-dialog-motion-offset);
+    top: var(--_rise);
     opacity: 0;
-    transition: opacity var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter);
+    transition:
+      opacity var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter),
+      top var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter);
 
     @starting-style {
+      top: var(--_rise);
       opacity: 0;
     }
   }
 
   .dialog[open][data-entered] .panel {
+    top: 0;
     opacity: 1;
   }
 
   .dialog[open][data-todae-exiting] .panel {
+    top: var(--_rise);
     opacity: 0;
     transition-duration: var(--todae-dialog-motion-duration-exit);
     transition-timing-function: var(--todae-dialog-motion-easing-exit);
@@ -112,10 +121,10 @@
     justify-content: flex-end;
   }
 
+  /* Fades keep their tokens; the panel no longer rises. */
   @media (prefers-reduced-motion: reduce) {
-    .dialog[open],
     .panel {
-      transition: none;
+      --_rise: 0px;
     }
   }
 }

@@ -120,10 +120,29 @@ function movingKeyframes(css: string): Set<string> {
 /** A sheet can run keyframes another sheet defines, so collect them from every sheet. */
 const MOVING_KEYFRAMES = new Set(sheets.flatMap(({ css }) => [...movingKeyframes(css)]));
 
+/** Whether every selector in `prelude` styles a popover only while it is closed. */
+function closedPopoverOnly(prelude: string): boolean {
+  return splitTopLevel(prelude).every((part) => subject(part.trim()).includes(':not(:popover-open)'));
+}
+
+/**
+ * A scale a popover only has on its way in or out: the @starting-style it
+ * opens from, or its closed state, which it shrinks to as it closes. An open
+ * popover is never scaled, and a tooltip that opens while its trigger still
+ * scales waits for it to settle (transformsSettling), so no tip is placed
+ * against a box that is still moving.
+ */
+function isOpenCloseScale(property: string, stack: readonly Block[]): boolean {
+  if (property !== 'scale') return false;
+  if (stack.some((b) => b.prelude === '@starting-style')) return true;
+  const rule = [...stack].reverse().find((b) => !b.prelude.startsWith('@'));
+  return rule !== undefined && closedPopoverOnly(rule.prelude);
+}
+
 /**
  * Every transform-like declaration on an element that could hold a trigger,
  * as "selector { declaration }": outside @keyframes, or an animation that
- * runs @keyframes with one.
+ * runs @keyframes with one. A popover's open and close scale is allowed.
  */
 function containerMoves(css: string, moving = movingKeyframes(css)): string[] {
   const out: string[] = [];
@@ -131,6 +150,7 @@ function containerMoves(css: string, moving = movingKeyframes(css)): string[] {
     const declaration = parse(text);
     if (!declaration || stack.some((b) => isKeyframes(b.prelude))) return;
     const { property, value } = declaration;
+    if (isOpenCloseScale(property, stack)) return;
     const moves =
       MOVES.has(property) ||
       ((property === 'animation' || property === 'animation-name') &&
@@ -150,7 +170,8 @@ describe('design-system styles', () => {
   });
 
   // A tooltip sits in the top layer, placed against its trigger's
-  // untransformed box, so a container that holds a trigger moves by layout.
+  // untransformed box, so a container that holds a trigger moves by layout,
+  // apart from a popover's scale on its way in or out.
   it.each(sheets)('$name moves no element by a transform, outside pseudo-elements and @keyframes', ({ css }) => {
     expect(containerMoves(css, MOVING_KEYFRAMES)).toEqual([]);
   });
@@ -162,12 +183,35 @@ describe('design-system styles', () => {
           .a { transform: none; }
           .b::after, .c::before { transform: rotate(45deg); }
           .d::after, .e { rotate: 45deg; }
-          .f { @starting-style { scale: 0.9; } }
+          .f:popover-open { scale: 0.9; }
           .g { transition: transform 1s; }
           @keyframes spin { to { transform: rotate(1turn); } }
         }
       `),
-    ).toEqual(['.a { transform: none }', '.d::after, .e { rotate: 45deg }', '.f { scale: 0.9 }']);
+    ).toEqual(['.a { transform: none }', '.d::after, .e { rotate: 45deg }', '.f:popover-open { scale: 0.9 }']);
+  });
+
+  it('allows only a scale on the way in or out: in @starting-style or on a closed popover', () => {
+    expect(
+      containerMoves(`
+        .a:popover-open { @starting-style { scale: 0.9; } }
+        .b:not(:popover-open) { scale: 0.9; }
+        @media (prefers-reduced-motion: no-preference) { .c:not(:popover-open) { scale: 0.9; } }
+        .d { @starting-style { translate: 0 4px; } }
+        .e { @starting-style { transform: scale(0.9); } }
+        .f:not(:popover-open) { translate: 0 4px; }
+        .g:not(:popover-open), .h { scale: 0.9; }
+        .i:not(:popover-open) .j { scale: 0.9; }
+        .k:popover-open { scale: 0.9; }
+      `),
+    ).toEqual([
+      '.d { translate: 0 4px }',
+      '.e { transform: scale(0.9) }',
+      '.f:not(:popover-open) { translate: 0 4px }',
+      '.g:not(:popover-open), .h { scale: 0.9 }',
+      '.i:not(:popover-open) .j { scale: 0.9 }',
+      '.k:popover-open { scale: 0.9 }',
+    ]);
   });
 
   it('finds a prefixed transform and one an animation runs, and allows ::backdrop and <progress>', () => {

@@ -20,6 +20,7 @@ import { anchoredContentStyle, anchorTriggerStyle, mergeAnchorNames, removeAncho
 import { useControlledState } from '../hooks/useControlledState.js';
 import { eventInside } from './eventInside.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { aimPopoverOrigin } from './popoverOrigin.js';
 
 export type { PopoverWire };
 
@@ -144,6 +145,16 @@ export function usePopoverInternal(
   }, [anchorName, anchorRef]);
 
   useEffect(() => () => outsideRestore.current?.(), []);
+
+  // The popover grows from where it sits by its anchor, once it shows. A
+  // popover placed at another anchor, such as a context menu's box, is aimed
+  // by whoever placed it.
+  useLayoutEffect(() => {
+    const el = popoverRef.current;
+    const anchor = anchorRef?.current ?? triggerRef.current;
+    if (!open || !el || !anchor || el.style.getPropertyValue('--todae-popover-anchor') !== anchorName) return;
+    aimPopoverOrigin(el, anchor);
+  }, [anchorName, anchorRef, open]);
 
   useEffect(() => {
     if (!open || !enabled) return;

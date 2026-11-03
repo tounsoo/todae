@@ -27,6 +27,7 @@ import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } fr
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { anchoredContentStyle } from '../overlay/anchorName.js';
+import { aimPopoverOrigin } from '../overlay/popoverOrigin.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -447,8 +448,17 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
  * menu stays put if the element it came from goes away. It shows before the
  * menu, which can only anchor to what is earlier in the top layer.
  */
-function BoxAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
+function BoxAnchor({
+  box,
+  name,
+  open,
+  ref,
+}: {
+  box: ContextOpen['box'];
+  name: string;
+  open: boolean;
+  ref: RefObject<HTMLSpanElement | null>;
+}) {
   usePopoverSync(ref, open);
   return (
     <span
@@ -490,6 +500,7 @@ function Content({
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   const at = ctx.context;
+  const boxRef = useRef<HTMLSpanElement | null>(null);
   // A context request that comes while the menu is already open shows its box
   // after the menu, which can only anchor to what is earlier in the top
   // layer, so the menu is shown again in front of it, keeping focus.
@@ -506,6 +517,13 @@ function Content({
     reshowHeldInside(el);
     if (active instanceof HTMLElement && el.contains(active)) focusWithoutScroll(active);
   });
+  // A menu at a context request's box grows from that box. This runs after
+  // the box and the menu show.
+  useLayoutEffect(() => {
+    const el = localRef.current;
+    const box = boxRef.current;
+    if (open && at && el && box) aimPopoverOrigin(el, box);
+  }, [at, open]);
   const { openEnd, initialFocusRef, roving } = ctx;
   const { reachableItems } = roving;
   // However the menu opens, it starts on an end of the list, never on the
@@ -568,7 +586,7 @@ function Content({
   );
   return (
     <>
-      {at && <BoxAnchor box={at.box} name={ctx.boxName} open={open} />}
+      {at && <BoxAnchor ref={boxRef} box={at.box} name={ctx.boxName} open={open} />}
       <div
         {...props}
         ref={refs}

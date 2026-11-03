@@ -1,6 +1,7 @@
 import { createElement, useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
+import { whenExited } from '../overlay/useOverlayPresence.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
 import type { PopoverWire } from '../overlay/popoverWire.js';
@@ -71,12 +72,14 @@ export function PopoverSurface({
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
-  // A popover has no exit motion, so it finishes closing as it closes.
+  // It finishes closing as its exit fade ends, or at once with no fade.
+  // Opening again first cancels that, as unmounting does.
   const [closedListeners, closed] = useSurfaceClosedSignal();
   const wasOpen = useRef(open);
   useLayoutEffect(() => {
-    if (wasOpen.current && !open) closed();
+    const closing = wasOpen.current && !open;
     wasOpen.current = open;
+    if (closing) return whenExited(localRef.current, 'opacity', closed);
   }, [closed, open]);
   return createElement(
     as,

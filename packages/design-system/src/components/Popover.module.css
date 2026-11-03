@@ -17,6 +17,45 @@
     border-radius: var(--todae-popover-radius);
     box-shadow: var(--todae-popover-shadow);
     pointer-events: auto;
+    /* The side and edge of the anchor it opened from, which the popover's
+       engine sets, so it grows from its trigger. */
+    transform-origin: var(--_origin, left top);
+    /* display and overlay keep a closing popover drawn in the top layer
+       until its exit ends. */
+    transition:
+      opacity var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter),
+      scale var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter),
+      display var(--todae-popover-motion-duration-enter) allow-discrete,
+      overlay var(--todae-popover-motion-duration-enter) allow-discrete;
+  }
+
+  .content:popover-open {
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .content:not(:popover-open) {
+    opacity: 0;
+    pointer-events: none;
+    transition-duration: var(--todae-popover-motion-duration-exit);
+    transition-timing-function: var(--todae-popover-motion-easing-exit);
+  }
+
+  /* Only on the way in and out: an open popover is never scaled, so a
+     tooltip anchored inside it, placed against its trigger's untransformed
+     box, sits by its trigger. A tip that opens while the popover still
+     scales waits for it to settle. */
+  @media (prefers-reduced-motion: no-preference) {
+    .content:popover-open {
+      @starting-style {
+        scale: var(--todae-popover-motion-scale);
+      }
+    }
+
+    .content:not(:popover-open) {
+      scale: var(--todae-popover-motion-scale);
+    }
   }
 
   @supports (top: anchor(bottom)) {
