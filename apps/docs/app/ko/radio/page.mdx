@@ -10,6 +10,8 @@ import RadioPlan from '../../../examples/radio/RadioPlan';
 
 <Example of={RadioPlan} block />
 
+폼 초기화로 선택된 라디오가 없으면 `onValueChange`는 `null`을 받으므로, 값을 `string | null`로 들고 있으세요.
+
 이름이 같은 네이티브 라디오는 화살표 키로 포커스를 옮깁니다. 그룹은 키보드 핸들러를 더하지 않습니다.
 
 옵션이 계속 보여야 하면 Radio를 쓰세요. 옵션이 팝오버나 시트 안에 있으면 [OptionList](/optionlist)를 쓰세요. 둘을 같은 값에 연결하면 QA 실패입니다.

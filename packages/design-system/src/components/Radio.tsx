@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useReducer,
   useRef,
   type HTMLAttributes,
   type InputHTMLAttributes,
@@ -13,6 +14,7 @@ import { useCustomValidity } from './customValidity.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { useRevalidate } from './Form.context.js';
+import { useFormReset } from '../internal/formReset.js';
 import { useComposedRefs } from '../internal/props.js';
 import { SelectionControl } from './SelectionControl.js';
 import { warnOnce } from '../internal/warnOnce.js';
@@ -29,7 +31,8 @@ export type RadioGroupRootProps = {
   children?: ReactNode;
   value?: string | null;
   defaultValue?: string | null;
-  onValueChange?: (value: string) => void;
+  /** Fires with the next value: the picked radio's, or `null` when a form reset leaves none picked. */
+  onValueChange?: (value: string | null) => void;
   name?: string;
   disabled?: boolean;
   invalid?: boolean;
@@ -107,10 +110,22 @@ function RadioGroupRoot({
   const [value, select] = useControlledState<string | null>(
     valueProp,
     defaultValue ?? null,
-    onValueChange &&
-      ((next) => {
-        if (next !== null) onValueChange(next);
-      }),
+    onValueChange,
+  );
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
+  // A reset checks each radio whose `defaultChecked` React set from the value it mounted with, so the last in tree order wins, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.
+  // A controlled owner that set a new value in its own reset handler has answered the reset already.
+  useFormReset(
+    groupRef,
+    (atReset) => {
+      if (value !== atReset) return;
+      const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [];
+      const picked = [...radios].reverse().find((radio) => radio.name === name && radio.defaultChecked)?.value ?? null;
+      if (picked === value) return;
+      select(picked);
+      rerender();
+    },
+    () => value,
   );
   return (
     <RadioGroupContext.Provider

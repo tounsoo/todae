@@ -4,9 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
-import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Switch, type SwitchRootProps } from './Switch.js';
 import * as api from '../index.js';
+import { reset } from '../test/form.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
 
@@ -61,5 +62,25 @@ describe('Switch', () => {
     expect(html).toContain('role="switch"');
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('Weekly digest');
+  });
+});
+
+describe('Switch after a form reset', () => {
+  it('goes back to defaultChecked, reports it, and reports the next toggle', async () => {
+    const onCheckedChange = vi.fn();
+    render(
+      <form>
+        <Switch.Root defaultChecked onCheckedChange={onCheckedChange}>
+          Weekly digest
+        </Switch.Root>
+      </form>,
+    );
+    const toggle = screen.getByRole('switch') as HTMLInputElement;
+    fireEvent.click(toggle);
+    await reset(toggle.form!);
+    expect(toggle.checked).toBe(true);
+    expect(toggle.closest('label')!.hasAttribute('data-checked')).toBe(true);
+    fireEvent.click(toggle);
+    expect(onCheckedChange.mock.calls).toEqual([[false], [true], [false]]);
   });
 });

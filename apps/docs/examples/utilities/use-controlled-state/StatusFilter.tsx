@@ -10,9 +10,9 @@ function Filter({
   onValueChange,
 }: {
   label: string;
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (next: string) => void;
+  value?: string | null;
+  defaultValue?: string | null;
+  onValueChange?: (next: string | null) => void;
 }) {
   const [current, change] = useControlledState(value, defaultValue, onValueChange);
   return (
@@ -28,7 +28,7 @@ function Filter({
 
 export default function StatusFilter() {
   const [freeChanges, setFreeChanges] = useState(0);
-  const [held, setHeld] = useState('all');
+  const [held, setHeld] = useState<string | null>('all');
   const [heldChanges, setHeldChanges] = useState(0);
   return (
     <Stack.Root gap="normal" align="start">

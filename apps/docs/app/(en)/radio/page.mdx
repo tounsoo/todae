@@ -10,6 +10,8 @@ The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"`
 
 <Example of={RadioPlan} block />
 
+`onValueChange` gets `null` when a form reset leaves no radio selected, so hold the value as `string | null`.
+
 Same-name native radios move focus with arrow keys. The group does not add a keyboard handler.
 
 Use Radio when the options stay visible. Use [OptionList](/optionlist) when the options live in a popover or sheet. Wiring both to the same value is a QA fail.
