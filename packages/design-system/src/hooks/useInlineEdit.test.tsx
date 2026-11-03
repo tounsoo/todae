@@ -3,9 +3,13 @@ import { StrictMode, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
+import { makeFrame } from '../test/frame.js';
 import { useInlineEdit } from './useInlineEdit.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  for (const frame of document.querySelectorAll('iframe')) frame.remove();
+});
 
 function Rename({
   initial = 'Q3 report',
@@ -417,4 +421,39 @@ it('commits once under StrictMode', async () => {
   expect(accept).toHaveBeenCalledTimes(1);
   expect(screen.getByText('Q4 report')).toBeTruthy();
   expect(document.activeElement).toBe(rename());
+});
+
+it('keeps the draft in an iframe when focus moves to a button in the group', () => {
+  const doc = makeFrame();
+  const onCommit = vi.fn();
+  function RenameInFrame() {
+    const [name, setName] = useState('Q3 report');
+    const edit = useInlineEdit({
+      value: name,
+      onCommit: (draft) => {
+        onCommit(draft);
+        setName(draft);
+      },
+    });
+    return edit.editing ? (
+      createPortal(
+        <div {...edit.getGroupProps()}>
+          <input aria-label="Name" {...edit.getInputProps()} />
+          <button type="button">Save</button>
+        </div>,
+        doc.body,
+      )
+    ) : (
+      <button {...edit.getTriggerProps()}>Rename</button>
+    );
+  }
+  render(<RenameInFrame />);
+  fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+  const input = doc.querySelector('input')!;
+  const save = doc.querySelector('button')!;
+  act(() => input.focus());
+  fireEvent.change(input, { target: { value: 'Renamed' } });
+  act(() => void input.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: save })));
+  expect(onCommit).not.toHaveBeenCalled();
+  expect(doc.contains(input)).toBe(true);
 });

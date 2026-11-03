@@ -349,6 +349,32 @@ describe('useEscapeKey', () => {
       expect(inMain).toHaveBeenCalledTimes(1);
     });
 
+    it('lets a key on the page reach a layer in an iframe when no layer on the page takes it', () => {
+      const doc = makeFrame();
+      const inFrame = vi.fn();
+      render(<Layer onEscape={inFrame} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      expect(escapeIn(document.body).defaultPrevented).toBe(true);
+      expect(inFrame).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps a key in an iframe from reaching a layer on the page', () => {
+      const doc = makeFrame();
+      const inMain = vi.fn();
+      render(<Layer onEscape={inMain} />);
+      expect(escapeIn(doc.body).defaultPrevented).toBe(false);
+      expect(inMain).not.toHaveBeenCalled();
+    });
+
+    it('keeps a key on the page from reaching an iframe layer behind a modal dialog there', () => {
+      const doc = makeFrame();
+      const inFrame = vi.fn();
+      render(<Layer onEscape={inFrame} />, { container: doc.body.appendChild(doc.createElement('div')) });
+      const dialog = doc.body.appendChild(doc.createElement('dialog'));
+      dialog.showModal();
+      expect(escapeIn(document.body).defaultPrevented).toBe(false);
+      expect(inFrame).not.toHaveBeenCalled();
+    });
+
     it('stops listening in an iframe once its last layer goes, and listens again for a new one', () => {
       const doc = makeFrame();
       const first = vi.fn();
@@ -444,8 +470,6 @@ describe('useEscapeKey', () => {
       }
       const { rerender } = render(<Moving target={document.body} />);
       rerender(<Moving target={doc.body} />);
-      expect(escapeIn(document.body).defaultPrevented).toBe(false);
-      expect(onEscape).not.toHaveBeenCalled();
       expect(escapeIn(doc.body).defaultPrevented).toBe(true);
       expect(onEscape).toHaveBeenCalledTimes(1);
     });

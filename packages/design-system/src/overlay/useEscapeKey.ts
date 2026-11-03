@@ -143,11 +143,24 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
-  // The document the listener was added to, so a key reaches only the layers of the document it was pressed in.
+  // The document the listener was added to: a key goes to the layers of the document it was pressed in.
   const doc = event.currentTarget as Document;
   const modals = modalsInFront(doc, event.target);
   const target = isElement(event.target) ? event.target : null;
-  const top = select(candidates(modals.length > 0 ? modals : null, target, event, doc));
+  let top = select(candidates(modals.length > 0 ? modals : null, target, event, doc));
+  // A key on the page still reaches a layer in another document when nothing
+  // on the page takes it, such as a tooltip portaled into an iframe while its
+  // trigger keeps focus here. A modal there still keeps the layers behind it.
+  if (!top && doc === document && modals.length === 0) {
+    top = select(
+      candidates(null, target, event).filter((entry) => {
+        const other = entry.doc();
+        if (other === document) return false;
+        const scope = modalsInFront(other, null);
+        return scope.length === 0 || scope.some((el) => inside(el, entry));
+      }),
+    );
+  }
   if (!top) return;
   event.preventDefault();
   top.handle();

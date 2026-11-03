@@ -10,6 +10,7 @@ import {
   type RefCallback,
 } from 'react';
 import { activeIn, focusLost } from '../internal/activeElement.js';
+import { isElement, isNode } from '../internal/dom.js';
 import { isImeKeyEvent } from '../internal/ime.js';
 import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
 
@@ -178,7 +179,7 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       if (!live.current.editing) return;
       const el = event.currentTarget;
       const next = event.relatedTarget;
-      if (next instanceof Node && el.contains(next)) return;
+      if (isNode(next) && el.contains(next)) return;
       // No new target and no focus in the document: the window or tab lost
       // focus, and the person may come back to the edit.
       if (next === null && !el.ownerDocument.hasFocus()) return;
@@ -191,7 +192,7 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
       // Anywhere but a field, so a press on a checkbox, the gap or the error
       // text doesn't take focus to the page and save either.
       const el = event.currentTarget;
-      const target = event.target instanceof Element ? event.target : null;
+      const target = isElement(event.target) ? event.target : null;
       // React bubbles a portal's events here; they aren't the group's.
       if (!target || !el.contains(target)) return;
       const field = target.closest(TEXT_ENTRY);
