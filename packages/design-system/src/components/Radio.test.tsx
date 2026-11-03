@@ -232,7 +232,7 @@ describe('RadioGroup after a form reset', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('goes back to no pick, and reports the next pick', async () => {
+  it('goes back to no pick, reports it, and reports the next pick', async () => {
     const onValueChange = vi.fn();
     render(
       <form>
@@ -248,7 +248,37 @@ describe('RadioGroup after a form reset', () => {
     expect(shownChecked('Pro')).toBe(false);
     fireEvent.click(radio('Pro'));
     expect(shownChecked('Pro')).toBe(true);
-    expect(onValueChange.mock.calls).toEqual([['pro'], ['pro']]);
+    expect(onValueChange.mock.calls).toEqual([['pro'], [null], ['pro']]);
+  });
+
+  it('lets a controlled owner follow a reset to no pick', async () => {
+    const onValueChange = vi.fn();
+    function Plan() {
+      const [plan, setPlan] = useState<string | null>(null);
+      return (
+        <form>
+          <RadioGroup.Root
+            aria-label="Plan"
+            value={plan}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setPlan(next);
+            }}
+          >
+            <RadioGroup.Item value="free">Free</RadioGroup.Item>
+            <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+          </RadioGroup.Root>
+        </form>
+      );
+    }
+    render(<Plan />);
+    fireEvent.click(radio('Pro'));
+    await reset(radio('Pro').form!);
+    expect(radio('Pro').checked).toBe(false);
+    expect(shownChecked('Pro')).toBe(false);
+    fireEvent.click(radio('Pro'));
+    expect(radio('Pro').checked).toBe(true);
+    expect(onValueChange.mock.calls).toEqual([['pro'], [null], ['pro']]);
   });
 
   it('shows a controlled value again when the owner has no callback', async () => {

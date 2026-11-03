@@ -6,7 +6,7 @@ import { useId, useState } from 'react';
 export function RadioPlan() {
   const captionId = useId();
   const proHintId = useId();
-  const [plan, setPlan] = useState('free');
+  const [plan, setPlan] = useState<string | null>('free');
   return (
     <Field.Group>
       <Text.Root as="span" id={captionId} weight="medium">

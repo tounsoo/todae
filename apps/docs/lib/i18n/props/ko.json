@@ -1745,8 +1745,8 @@
       "ko": "비제어일 때의 초기 값."
     },
     "onValueChange": {
-      "en": "Fires with the next selected value.",
-      "ko": "다음 선택 값과 함께 호출됩니다."
+      "en": "Fires with the next selected value, or null when a form reset leaves no radio selected.",
+      "ko": "다음 선택 값과 함께 호출되며, 폼 초기화로 선택된 라디오가 없으면 null과 함께 호출됩니다."
     },
     "name": {
       "en": "Shared native name. Generated when omitted.",

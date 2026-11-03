@@ -31,7 +31,8 @@ export type RadioGroupRootProps = {
   children?: ReactNode;
   value?: string | null;
   defaultValue?: string | null;
-  onValueChange?: (value: string) => void;
+  /** Fires with the next value: the picked radio's, or `null` when a form reset leaves none picked. */
+  onValueChange?: (value: string | null) => void;
   name?: string;
   disabled?: boolean;
   invalid?: boolean;
@@ -109,10 +110,7 @@ function RadioGroupRoot({
   const [value, select] = useControlledState<string | null>(
     valueProp,
     defaultValue ?? null,
-    onValueChange &&
-      ((next) => {
-        if (next !== null) onValueChange(next);
-      }),
+    onValueChange,
   );
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   // A reset checks each radio whose `defaultChecked` React set from the value it mounted with, so the last in tree order wins, or none, and fires no change event. A controlled group whose owner turns the reset down renders again, so React writes `checked` back.

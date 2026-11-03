@@ -6,7 +6,7 @@ Exclusive choice that stays on the page. `RadioGroup.Root` owns the value, the s
 
 The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"` div is not a labelable control, so do not point `Label.Root htmlFor` at the group. Caption it with `Text.Root` and `aria-labelledby`, and put both in a `Field.Group` to space the caption from the group.
 
-`value={null}` is controlled with nothing selected. Omit `value` for uncontrolled.
+`value={null}` is controlled with nothing selected. Omit `value` for uncontrolled. `onValueChange` gets `null` when a form reset leaves no radio selected, so hold the value as `string | null`.
 
 ```tsx
 const captionId = useId();

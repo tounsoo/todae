@@ -242,7 +242,7 @@ export function WizardExample() {
           </Field.Group>
           <Fieldset.Root>
             <Fieldset.Legend>Plan</Fieldset.Legend>
-            <RadioGroup.Root aria-label="Plan" name="plan" value={answers.plan || null} onValueChange={set('plan')}>
+            <RadioGroup.Root aria-label="Plan" name="plan" value={answers.plan || null} onValueChange={(plan) => set('plan')(plan ?? '')}>
               <RadioGroup.Item value="team" required>
                 Team
               </RadioGroup.Item>
