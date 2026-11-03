@@ -457,3 +457,37 @@ it('keeps the draft in an iframe when focus moves to a button in the group', () 
   expect(onCommit).not.toHaveBeenCalled();
   expect(doc.contains(input)).toBe(true);
 });
+
+for (const how of ['Escape', 'Enter'] as const) {
+  it(`returns focus to the trigger in an iframe after ${how}`, async () => {
+    const doc = makeFrame();
+    function RenameInFrame() {
+      const [name, setName] = useState('Q3 report');
+      const edit = useInlineEdit({ value: name, onCommit: setName });
+      return createPortal(
+        edit.editing ? (
+          <div {...edit.getGroupProps()}>
+            <input aria-label="Name" {...edit.getInputProps()} />
+          </div>
+        ) : (
+          <button {...edit.getTriggerProps()}>Rename</button>
+        ),
+        doc.body,
+      );
+    }
+    render(<RenameInFrame />);
+    const trigger = doc.querySelector('button')!;
+    act(() => trigger.focus());
+    fireEvent.click(trigger);
+    const input = doc.querySelector('input')!;
+    if (how === 'Escape') {
+      act(() => void input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })));
+    } else {
+      fireEvent.change(input, { target: { value: 'Q4 report' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    }
+    await act(async () => undefined);
+    expect(doc.querySelector('input')).toBeNull();
+    expect(doc.activeElement).toBe(doc.querySelector('button'));
+  });
+}

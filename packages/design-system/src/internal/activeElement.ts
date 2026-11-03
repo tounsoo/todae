@@ -1,7 +1,9 @@
 /** The focused element in the document or shadow root that holds `el`. */
 export function activeIn(el: Element): Element | null {
-  const node = el.getRootNode();
-  return node instanceof Document || node instanceof ShadowRoot ? node.activeElement : null;
+  const node = el.getRootNode() as Document | ShadowRoot;
+  // By node type, not instanceof, which fails for an iframe's or a popup window's nodes.
+  const holdsFocus = node.nodeType === 9 || (node.nodeType === 11 && 'host' in node);
+  return holdsFocus ? node.activeElement : null;
 }
 
 /** The focused element, looking into shadow roots. */

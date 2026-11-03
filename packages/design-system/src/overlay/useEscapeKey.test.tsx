@@ -374,6 +374,27 @@ describe('useEscapeKey', () => {
       }
     });
 
+    for (const [name, popup] of [
+      ['a popup shown later in an iframe before an earlier popup on the page', true],
+      ['a popup in an iframe before a layer on the page that is not a popup', false],
+    ] as const) {
+      it(`gives a key on the page to ${name}`, () => {
+        function Kind({ onEscape, popup }: { onEscape: () => void; popup: boolean }) {
+          const ref = useRef<HTMLDivElement>(null);
+          useEscapeKey(true, true, onEscape, ref, { popup });
+          return <div ref={ref} />;
+        }
+        const doc = makeFrame();
+        const onPage = vi.fn();
+        const inFrame = vi.fn();
+        render(<Kind onEscape={onPage} popup={popup} />);
+        render(<Kind onEscape={inFrame} popup />, { container: doc.body.appendChild(doc.createElement('div')) });
+        escapeIn(document.body);
+        expect(inFrame).toHaveBeenCalledTimes(1);
+        expect(onPage).not.toHaveBeenCalled();
+      });
+    }
+
     it('keeps a key in an iframe from reaching a layer on the page', () => {
       const doc = makeFrame();
       const inMain = vi.fn();

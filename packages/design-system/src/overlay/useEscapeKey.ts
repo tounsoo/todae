@@ -146,25 +146,25 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
-  // The document the listener was added to: a key goes to the layers of the document it was pressed in.
+  // The document the listener was added to. A key in a frame or popup goes only to its layers.
   const doc = event.currentTarget as Document;
   const modals = modalsInFront(doc, event.target);
   const target = isElement(event.target) ? event.target : null;
-  let top = select(candidates(modals.length > 0 ? modals : null, target, event, doc));
-  // A key on the page still reaches a layer in another document when nothing
-  // on the page takes it, such as a tooltip portaled into an iframe while its
-  // trigger keeps focus here. A modal on the page or in that document still
-  // keeps the layers behind it.
-  if (!top && doc === document) {
-    top = select(
-      candidates(modals.length > 0 ? modals : null, target, event).filter((entry) => {
-        const other = entry.doc();
-        if (other === document) return false;
-        const scope = modalsInFront(other, null);
-        return scope.length === 0 || scope.some((el) => inside(el, entry));
-      }),
-    );
-  }
+  const scope = modals.length > 0 ? modals : null;
+  // A key on the page also reaches the layers of other documents, such as a
+  // tooltip portaled into an iframe while its trigger keeps focus here, in one
+  // selection with the page's, so the innermost or the popup goes first. A
+  // modal in that document keeps the layers behind it.
+  const top = select(
+    doc === document
+      ? candidates(scope, target, event).filter((entry) => {
+          const other = entry.doc();
+          if (other === document) return true;
+          const behind = modalsInFront(other, null);
+          return behind.length === 0 || behind.some((el) => inside(el, entry));
+        })
+      : candidates(scope, target, event, doc),
+  );
   if (!top) return;
   event.preventDefault();
   top.handle();
