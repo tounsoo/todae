@@ -99,7 +99,8 @@ function useCaretPeek(mentions: UseMentionsResult) {
   useEffect(() => {
     if (id === null) return;
     const controller = new AbortController();
-    Promise.resolve(people.resolve?.(id, controller.signal)).then(
+    // A promise around the call also catches a `resolve` that throws before it returns.
+    new Promise<Person | undefined>((done) => done(people.resolve?.(id, controller.signal))).then(
       (person) => {
         if (!controller.signal.aborted) setFound({ id, person });
       },
@@ -110,22 +111,26 @@ function useCaretPeek(mentions: UseMentionsResult) {
     return () => controller.abort();
   }, [id]);
 
+  const open = focused && key !== null && person !== undefined && dismissed !== key;
   const popover = usePopover({
-    open: focused && key !== null && person !== undefined && dismissed !== key,
+    open,
     anchorName: mentions.caretPeekAnchorName,
-    onOpenChange: (open) => {
-      if (!open) setDismissed(key);
+    onOpenChange: (next) => {
+      if (!next) setDismissed(key);
     },
   });
+  const wire = popover.getPopoverProps();
 
   return {
     textareaProps: {
+      // The peek is inert, so screen readers hear it as the field's description.
+      'aria-describedby': open ? wire.id : undefined,
       onFocus: () => setFocused(true),
       onBlur: () => setFocused(false),
       onPointerDown: () => setDismissed(null),
     },
     peek: (
-      <Popover.Root {...popover.getPopoverProps()} inert>
+      <Popover.Root {...wire} inert>
         {token && person && people.renderPeek
           ? people.renderPeek(person, { id: token.value, mode: 'caret', close: () => setDismissed(key) })
           : null}
@@ -170,6 +175,14 @@ export default function ChatComposer() {
     setSent((all) => [...all, { id: all.length, ...mentions.value }]);
     setDraft(EMPTY);
     setFiles([]);
+    // Sending from the Send button disables it, so keep focus in the field.
+    mentions.textareaRef.current?.focus();
+  };
+
+  const remove = (file: Upload) => {
+    // The list goes with its last file, so focus moves to the field.
+    if (files.length === 1) mentions.textareaRef.current?.focus();
+    setFiles((all) => all.filter((other) => other !== file));
   };
 
   return (
@@ -192,7 +205,7 @@ export default function ChatComposer() {
                       <Attachment.Preview>{file.kind === 'image' ? <Image aria-hidden /> : <FileText aria-hidden />}</Attachment.Preview>
                       <Attachment.Name>{file.name}</Attachment.Name>
                       <Attachment.Meta>{file.size}</Attachment.Meta>
-                      <Attachment.Remove onClick={() => setFiles((all) => all.filter((other) => other !== file))} />
+                      <Attachment.Remove onClick={() => remove(file)} />
                     </Attachment.Root>
                   </li>
                 ))}
@@ -216,11 +229,15 @@ export default function ChatComposer() {
         </Field.Root>
       </form>
       <Popover.Root {...mentions.getPopoverProps()}>
-        <OptionList.Root {...mentions.getListboxProps()}>
+        {/* Hidden, not unmounted, when nothing matches, so the field's aria-controls still points at it. */}
+        <OptionList.Root {...mentions.getListboxProps()} hidden={mentions.isEmpty}>
           {mentions.items.map((item) => (
             <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
           ))}
         </OptionList.Root>
+        <Text.Root as="span" role="status" tone="muted">
+          {mentions.isEmpty ? 'No one matches' : ''}
+        </Text.Root>
       </Popover.Root>
       {caretPeek.peek}
     </Stack.Root>

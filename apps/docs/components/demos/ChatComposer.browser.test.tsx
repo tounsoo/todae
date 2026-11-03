@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
@@ -42,4 +43,44 @@ it('closes the caret peek on an outside pointer and on blur', async () => {
   await expect.poll(() => openPeek()?.textContent ?? '').toContain('Design systems');
   field.blur();
   await expect.poll(() => openPeek()).toBeNull();
+});
+
+function renderComposer() {
+  render(
+    <Providers>
+      <ChatComposer />
+    </Providers>,
+  );
+  return screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
+}
+
+it('keeps focus in the field after sending from the Send button', async () => {
+  const field = renderComposer();
+  const send = screen.getByRole('button', { name: 'Send' });
+  send.focus();
+  await userEvent.keyboard('{Enter}');
+  await expect.poll(() => field.value).toBe('');
+  expect(document.activeElement).toBe(field);
+});
+
+it('moves focus to the field when the last attachment is removed', async () => {
+  const field = renderComposer();
+  screen.getByRole('button', { name: 'Remove peek-card.png' }).focus();
+  await userEvent.keyboard('{Enter}');
+  await expect.poll(() => screen.queryAllByRole('button', { name: /^Remove / }).length).toBe(1);
+  screen.getByRole('button', { name: 'Remove m8-contrast.pdf' }).focus();
+  await userEvent.keyboard('{Enter}');
+  await expect.poll(() => screen.queryAllByRole('button', { name: /^Remove / }).length).toBe(0);
+  expect(document.activeElement).toBe(field);
+});
+
+it('says when no one matches, and keeps the list the field points at', async () => {
+  const field = renderComposer();
+  await userEvent.click(field);
+  field.setSelectionRange(field.value.length, field.value.length);
+  await userEvent.keyboard(' @zzz');
+  await expect.poll(() => screen.getByRole('status').textContent).toBe('No one matches');
+  const list = document.getElementById(field.getAttribute('aria-controls') ?? '');
+  expect(list?.getAttribute('role')).toBe('listbox');
+  expect(list?.hidden).toBe(true);
 });

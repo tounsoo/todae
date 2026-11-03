@@ -653,8 +653,8 @@
   "recipes/chat-composer-mentions": {
     "(top)": "a89e892d69b6",
     "# Chat composer mentions": "d736e408b8f5",
-    "## Caret peek": "b2734d5828cd",
-    "## Accessible composition": "07c8f46228f9",
+    "## Caret peek": "526ee935a253",
+    "## Accessible composition": "9f14cbb2c737",
     "## When to use": "6e644b8ce597",
     "## When not to use": "9d0c3e164258",
     "(section order)": "92d2fb4f1d2f"
