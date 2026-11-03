@@ -82,17 +82,35 @@
     touch-action: none;
   }
 
-  .handle button {
-    width: var(--todae-sheet-grabber-width);
-    height: var(--todae-sheet-grabber-height);
+  /* The grabber button fills the handle's hit height, so a tap on the pill
+     lands on it; the pill inside is what shows. Without a second height the
+     pill renders alone, as a mark. */
+  .grabber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--todae-sheet-handle-hit);
+    min-height: var(--todae-sheet-handle-hit);
     padding: 0;
     border: 0;
-    border-radius: var(--todae-sheet-grabber-radius);
-    background: var(--todae-sheet-grabber-bg);
+    background: none;
     cursor: grab;
   }
 
-  .handle button:focus-visible {
+  .pill {
+    display: block;
+    width: var(--todae-sheet-grabber-width);
+    height: var(--todae-sheet-grabber-height);
+    border-radius: var(--todae-sheet-grabber-radius);
+    background: var(--todae-sheet-grabber-bg);
+  }
+
+  /* The ring wraps the pill, not the hit box. */
+  .grabber:focus-visible {
+    outline: none;
+  }
+
+  .grabber:focus-visible > .pill {
     outline: var(--todae-focus-ring-width) solid var(--todae-sheet-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
   }
@@ -148,6 +166,19 @@
     flex-wrap: wrap;
     gap: var(--todae-sheet-gap);
     justify-content: flex-end;
+  }
+
+  /* Forced colors paints a span's background as Canvas, which hides the pill.
+     Opting the pill out also keeps its ring's author color, so set a system one. */
+  @media (forced-colors: active) {
+    .pill {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    .grabber:focus-visible > .pill {
+      outline-color: Highlight;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

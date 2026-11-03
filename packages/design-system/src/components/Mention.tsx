@@ -32,12 +32,7 @@ function Root<T>({
   'aria-describedby': describedBy,
   ...props
 }: MentionRootProps<T>) {
-  const peek = useMentionPeek({
-    source,
-    id,
-    mode: 'interactive',
-    text: textOf(children, id),
-  });
+  const peek = useMentionPeek({ source, id, text: textOf(children, id) });
   const href = source.href?.(id, peek.entity);
   const refs = useComposedRefs(ref, peek.triggerProps.ref);
   const trigger = createElement(

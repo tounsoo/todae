@@ -168,6 +168,8 @@ function anvilAppearance(c: {
     'selection.border.default': c.ink,
     'selection.track.bg': c.track,
     'selection.thumb.bg': c.thumb,
+    // Anvil's thumb has no ring, so its edge is its fill.
+    'selection.thumb.border': c.thumb,
     'tabs.fg.default': c.ink,
     'tabs.indicator.color': c.ink,
     'chip.bg.default': c.fill,
@@ -470,7 +472,9 @@ export const PRESETS: readonly ThemePreset[] = [
         fillHover: oklch(0.446, 0, 0),
         rule: oklch(0.371, 0, 0),
         control: oklch(0.446, 0, 0),
-        track: oklch(0.545, 0, 0),
+        // Anvil's thumb on its 0.545 off track reaches Lc 28, under Todae's 30,
+        // so the track sits a step lighter.
+        track: oklch(0.565, 0, 0),
         thumb: oklch(0.218, 0, 0),
         // Anvil's #1a1a1a text on the blue reaches Lc 58, under Todae's 60, so
         // text on the accent is Anvil's darkest neutral instead.

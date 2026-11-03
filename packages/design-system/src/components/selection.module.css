@@ -111,12 +111,15 @@
     background: var(--todae-selection-indicator-fg);
   }
 
+  /* The thumb's edge draws it against the off track, which is close to its fill. */
   .root[data-control='switch'] .indicator::after {
     content: '';
     display: block;
+    box-sizing: border-box;
     width: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
     height: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
     margin: var(--todae-selection-thumb-inset);
+    border: var(--todae-selection-border-width) solid var(--todae-selection-thumb-border);
     border-radius: 50%;
     background: var(--todae-selection-thumb-bg);
     transform: translateX(0);
@@ -147,13 +150,15 @@
   }
 
   /* Forced colors drop author backgrounds but keep system colors, so paint the
-     dot, thumb and on-track with system colors. The check is a glyph in the
-     text color, which forcing keeps. Forcing stays on, so focus
-     rings and other states are still forced. */
+     dot, thumb and on-track with system colors. The thumb's edge takes its
+     fill's color, so the thumb draws as one solid disc. The check is a glyph in
+     the text color, which forcing keeps. Forcing stays on, so focus rings and
+     other states are still forced. */
   @media (forced-colors: active) {
     .root[data-control='radio'] .input:checked + .indicator::after,
     .root[data-control='switch'] .indicator::after {
       background: CanvasText;
+      border-color: CanvasText;
     }
 
     .root[data-control='switch'] .input:checked + .indicator {
@@ -163,12 +168,14 @@
 
     .root[data-control='switch'] .input:checked + .indicator::after {
       background: HighlightText;
+      border-color: HighlightText;
     }
 
     .root[data-disabled][data-control='radio'] .input:checked + .indicator::after,
     .root[data-disabled][data-control='switch'] .indicator::after,
     .root[data-disabled][data-control='switch'] .input:checked + .indicator::after {
       background: GrayText;
+      border-color: GrayText;
     }
 
     .root[data-disabled][data-control='switch'] .input:checked + .indicator {

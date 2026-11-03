@@ -162,7 +162,11 @@ describe('BottomSheet padding in a browser', () => {
     await userEvent.tab();
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(grabber);
-    const style = getComputedStyle(grabber);
+    // The ring is drawn on the pill inside the full-height button.
+    expect(getComputedStyle(grabber).outlineStyle).toBe('none');
+    const pill = grabber.querySelector<HTMLElement>('[data-todae-focus-ring]');
+    expect(pill).not.toBeNull();
+    const style = getComputedStyle(pill!);
     expect(style.outlineStyle).toBe('solid');
     expect(style.outlineWidth).toBe('3px');
     expect(style.outlineOffset).toBe('2px');

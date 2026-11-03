@@ -149,6 +149,7 @@
             { "fg": "meter.fill.suboptimum", "bg": "progress.track", "min": 30 },
             { "fg": "meter.fill.critical", "bg": "progress.track", "min": 30 },
             { "fg": "selection.thumb.bg", "bg": "selection.bg.checked", "min": 30 },
+            { "fg": "selection.thumb.border", "bg": "selection.track.bg", "min": 30 },
             { "fg": "selection.indicator.fg", "bg": "selection.bg.checked", "min": 30 },
             { "fg": "button.primary.fg.default", "bg": "button.primary.bg.default", "min": 60 },
             { "fg": "button.primary.fg.hover", "bg": "button.primary.bg.hover", "min": 60 },

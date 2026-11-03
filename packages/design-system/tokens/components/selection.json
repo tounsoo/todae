@@ -36,6 +36,7 @@
     },
     "thumb": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
       "inset": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
     }
   }

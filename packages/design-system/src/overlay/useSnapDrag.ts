@@ -104,6 +104,11 @@ export function useSnapDrag({
     let armed = false;
     const samples: { t: number; y: number }[] = [];
 
+    // A drag-dismiss keeps the dragged height so the exit slides off from
+    // where the finger let go. Set while that release waits on the owner.
+    let dismissing = false;
+    let frame = 0;
+
     function setDrag(height: number | null, dragging: boolean) {
       surface.toggleAttribute('data-dragging', dragging);
       if (height == null) {
@@ -119,6 +124,7 @@ export function useSnapDrag({
 
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0 || pointerId != null) return;
+      quietUntil = 0;
       const target = event.target;
       if (!(target instanceof Element)) return;
       const fromHandle = Boolean(target.closest('[data-todae-sheet-drag-handle]'));
@@ -150,6 +156,9 @@ export function useSnapDrag({
           return;
         }
         armed = true;
+        // A new drag owns the variables; the last release's frames must not clear them.
+        cancelAnimationFrame(frame);
+        dismissing = false;
         try {
           surface.setPointerCapture(event.pointerId);
         } catch {
@@ -175,6 +184,7 @@ export function useSnapDrag({
         setDrag(null, false);
         return;
       }
+      swallowClick();
       const heights = sheetHeights(surface);
       const first = samples[0];
       const last = samples[samples.length - 1];
@@ -189,17 +199,43 @@ export function useSnapDrag({
       });
       setDrag(lastHeight, false);
       if (next === 'dismiss') {
+        dismissing = true;
         onDismissRef.current();
-        return;
+      } else if (next !== snapRef.current) {
+        onSnapRef.current(next);
       }
-      if (next !== snapRef.current) onSnapRef.current(next);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!surface.isConnected) return;
-          surface.style.removeProperty('--_drag-height');
-          surface.style.removeProperty('--_scrim-progress');
+      // The snap height takes over on the next frames and the sheet moves to
+      // it. After a dismiss the owner may keep the sheet open, to ask first or
+      // because `open` is read-only. Unless it started its exit by then, the
+      // sheet goes back to its snap height; it must never stay open at the
+      // dragged height, which can be zero.
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => {
+          if (surface.hasAttribute('data-todae-exiting')) return;
+          dismissing = false;
+          setDrag(null, false);
         });
       });
+    }
+
+    // A drag's release can also click what it started on: the grabber, which
+    // toggles the height, or a close part in the header. The drag already
+    // chose, so a pointer's click soon after it is dropped. On touch the click
+    // comes in a later task than the release, so the window is time-based, and
+    // the next press ends it early.
+    let quietUntil = 0;
+
+    function swallowClick() {
+      quietUntil = performance.now() + 400;
+    }
+
+    function onClick(event: MouseEvent) {
+      // A keyboard or scripted click (detail 0) is never the drag's own.
+      if (event.detail === 0 || performance.now() >= quietUntil) return;
+      quietUntil = 0;
+      event.stopPropagation();
+      event.preventDefault();
     }
 
     function onPointerUp(event: PointerEvent) {
@@ -215,18 +251,27 @@ export function useSnapDrag({
       event.preventDefault();
     }
 
+    // A fresh open starts at its snap height, whatever an earlier exit left.
+    setDrag(null, false);
     surface.addEventListener('pointerdown', onPointerDown);
+    surface.addEventListener('click', onClick, { capture: true });
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerCancel);
     surface.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
       surface.removeEventListener('pointerdown', onPointerDown);
+      surface.removeEventListener('click', onClick, { capture: true });
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       surface.removeEventListener('touchmove', onTouchMove);
-      setDrag(null, false);
+      cancelAnimationFrame(frame);
+      // An accepted drag-dismiss closes the sheet, which ends this effect
+      // before the exit starts; the exit still needs the dragged height. The
+      // next open clears it.
+      if (dismissing) surface.removeAttribute('data-dragging');
+      else setDrag(null, false);
     };
   }, [bodyRef, enabled, sheet]);
 }
