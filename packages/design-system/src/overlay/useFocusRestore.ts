@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
-import { focusPath, isHTMLElement } from '../internal/dom.js';
+import { focusPath, isHTMLElement, topDocument } from '../internal/dom.js';
 
 export function useFocusRestore(
   active: boolean,
@@ -53,7 +53,10 @@ export function useFocusRestore(
     const doc = container?.ownerDocument ?? openedIn.current ?? restoreTo?.current?.ownerDocument ?? document;
     queueMicrotask(() => {
       // Read from the top document, so focus that left an iframe for the page around it counts as moved.
-      const path = focusPath(doc);
+      // An overlay in a popup window reads the window focus is in, which may be the opener's.
+      const top = topDocument(doc);
+      const opener = fallback && topDocument(fallback.ownerDocument);
+      const path = focusPath(opener && opener !== top && !top.hasFocus() && opener.hasFocus() ? opener : doc);
       const moved = path.at(-1) ?? null;
       // Focus dropped to the body of the overlay's document or of the page. A
       // page iframe's own body is the person in that frame.

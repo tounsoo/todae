@@ -13,6 +13,13 @@ export function isHTMLElement(node: unknown): node is HTMLElement {
   return isElement(node) && node.namespaceURI === 'http://www.w3.org/1999/xhtml';
 }
 
+/** The document of the top window around `doc`, as far up as frames are same-origin. */
+export function topDocument(doc: Document): Document {
+  let top = doc;
+  for (let host = top.defaultView?.frameElement; host; host = top.defaultView?.frameElement) top = host.ownerDocument;
+  return top;
+}
+
 /**
  * Where focus is in `doc`'s window and the same-origin frames around and in it:
  * the top document's active element, then each open shadow root's and focused
@@ -22,8 +29,7 @@ export function isHTMLElement(node: unknown): node is HTMLElement {
  * such as an SVG document, ends the path at the frame.
  */
 export function focusPath(doc: Document): Element[] {
-  let top = doc;
-  for (let host = top.defaultView?.frameElement; host; host = top.defaultView?.frameElement) top = host.ownerDocument;
+  const top = topDocument(doc);
   const path: Element[] = [];
   for (let el: Element | null | undefined = top.activeElement; el; ) {
     path.push(el);

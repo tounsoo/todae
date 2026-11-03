@@ -23,6 +23,18 @@ export function makeFrame(): Document {
   return frame.contentDocument!;
 }
 
+/**
+ * A popup window's document. jsdom opens no window, so this is a frame from
+ * `makeFrame` whose window reads as a top window, with no frame element. It
+ * keeps its active element once focus goes back to the page, as a window
+ * does. The caller removes the frame.
+ */
+export function makePopup(): Document {
+  const doc = makeFrame();
+  Object.defineProperty(doc.defaultView!, 'frameElement', { value: null, configurable: true });
+  return doc;
+}
+
 /** Dispatches a cancelable Escape keydown on `el` and returns the event. */
 export function escapeIn(el: Element | Document): KeyboardEvent {
   const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });

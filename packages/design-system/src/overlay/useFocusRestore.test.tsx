@@ -2,11 +2,12 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { makeFrame, makeShadowedFrame } from '../test/frame.js';
+import { makeFrame, makePopup, makeShadowedFrame } from '../test/frame.js';
 import { useFocusRestore } from './useFocusRestore.js';
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   for (const frame of document.querySelectorAll('iframe')) frame.remove();
 });
 
@@ -225,6 +226,47 @@ describe('useFocusRestore in another document', () => {
     await act(async () => undefined);
     expect(document.activeElement).toBe(button(document, 'Open'));
   });
+
+  for (const unmounts of [true, false]) {
+    it(`leaves focus the person moved back to the page when an overlay in a popup window closes, ${unmounts ? 'unmounting' : 'kept mounted'}`, async () => {
+      const popup = makePopup();
+      // Focus goes back to the page below, so the popup's window has none.
+      vi.spyOn(popup, 'hasFocus').mockReturnValue(false);
+      function Example() {
+        const [open, setOpen] = useState(false);
+        const container = useRef<HTMLDivElement>(null);
+        const trigger = useRef<HTMLButtonElement>(null);
+        useFocusRestore(open, { containerRef: container, restoreTo: trigger });
+        const panel = (
+          <div ref={container} hidden={!open}>
+            <button type="button">Item</button>
+          </div>
+        );
+        return (
+          <>
+            <button type="button" ref={trigger} onClick={() => setOpen(true)}>
+              Open
+            </button>
+            <button type="button" onClick={() => setOpen(false)}>
+              Done
+            </button>
+            <input aria-label="Notes" />
+            {!unmounts || open ? createPortal(panel, popup.body) : null}
+          </>
+        );
+      }
+      render(<Example />);
+      act(() => button(document, 'Open').focus());
+      fireEvent.click(button(document, 'Open'));
+      act(() => button(popup, 'Item').focus());
+      const notes = document.querySelector('input')!;
+      act(() => notes.focus());
+      // Closed from the page by a press that doesn't take focus.
+      act(() => button(document, 'Done').click());
+      await act(async () => undefined);
+      expect(document.activeElement).toBe(notes);
+    });
+  }
 
   it('returns focus in an iframe the page reads as inside a shadow root', async () => {
     const { doc, restore } = makeShadowedFrame();
