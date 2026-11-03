@@ -37,6 +37,10 @@
     "thumb": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
       "inset": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
     }
   }
 }

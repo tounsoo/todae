@@ -25,6 +25,9 @@
     border: var(--todae-selection-border-width) solid var(--todae-selection-border-default);
     border-radius: var(--todae-selection-radius);
     background: var(--todae-selection-bg-default);
+    transition-property: background-color, border-color;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
   }
 
   .root[data-control='radio'] .indicator {
@@ -86,6 +89,11 @@
     font-size: calc(var(--todae-selection-size) * 0.75);
     line-height: 1;
     visibility: hidden;
+    opacity: 0;
+    scale: 0.5;
+    transition-property: opacity, scale, visibility;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
   }
 
   .glyph > :is(svg, img) {
@@ -93,15 +101,15 @@
     block-size: 100%;
   }
 
-  .input:checked + .indicator > .glyph {
-    visibility: visible;
-  }
-
+  .input:checked + .indicator > .glyph,
   .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
+    opacity: 1;
+    scale: 1;
   }
 
-  .root[data-control='radio'] .input:checked + .indicator::after {
+  /* The dot is always drawn, so it can grow in when the radio is checked. */
+  .root[data-control='radio'] .indicator::after {
     content: '';
     display: block;
     width: 40%;
@@ -109,6 +117,16 @@
     margin: 30% auto 0;
     border-radius: 50%;
     background: var(--todae-selection-indicator-fg);
+    opacity: 0;
+    scale: 0;
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .root[data-control='radio'] .input:checked + .indicator::after {
+    opacity: 1;
+    scale: 1;
   }
 
   .root[data-control='switch'] .indicator::after {
@@ -120,6 +138,7 @@
     border-radius: 50%;
     background: var(--todae-selection-thumb-bg);
     transform: translateX(0);
+    transition: transform var(--todae-selection-motion-duration) var(--todae-selection-motion-easing);
   }
 
   .root[data-control='switch'] .input:checked + .indicator::after {
@@ -129,6 +148,18 @@
   /* The thumb starts at the inline start, so it travels the other way in rtl. */
   .root[data-control='switch']:dir(rtl) .input:checked + .indicator::after {
     transform: translateX(calc(var(--todae-selection-size) * -0.8));
+  }
+
+  /* Under reduced motion the thumb jumps and the check and dot only fade. */
+  @media (prefers-reduced-motion: reduce) {
+    .glyph,
+    .root[data-control='radio'] .indicator::after {
+      transition-property: opacity, visibility;
+    }
+
+    .root[data-control='switch'] .indicator::after {
+      transition: none;
+    }
   }
 
   .label {

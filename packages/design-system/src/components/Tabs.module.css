@@ -81,6 +81,48 @@
     height: auto;
   }
 
+  /* Where anchor positioning works, the list draws one indicator anchored to
+     the selected tab, so it slides from tab to tab instead of jumping. */
+  @supports (anchor-name: --todae-tab) {
+    .list {
+      position: relative;
+      anchor-scope: --todae-tab-selected;
+    }
+
+    .tab[data-selected] {
+      anchor-name: --todae-tab-selected;
+    }
+
+    .tab[data-selected]::after {
+      content: none;
+    }
+
+    .list:has(> .tab[data-selected])::after {
+      content: '';
+      position: absolute;
+      position-anchor: --todae-tab-selected;
+      inset-inline: anchor(start) anchor(end);
+      bottom: calc(anchor(bottom) - var(--todae-tabs-border-width));
+      height: var(--todae-tabs-indicator-size);
+      background: var(--todae-tabs-indicator-color);
+      pointer-events: none;
+      transition: inset var(--todae-tabs-motion-duration) var(--todae-tabs-motion-easing);
+    }
+
+    .list[data-orientation='vertical']:has(> .tab[data-selected])::after {
+      inset-block: anchor(top) anchor(bottom);
+      inset-inline: auto calc(anchor(end) - var(--todae-tabs-border-width));
+      width: var(--todae-tabs-indicator-size);
+      height: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .list::after {
+        transition: none;
+      }
+    }
+  }
+
   .tab:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-tabs-ring-focus);
     outline-offset: calc(-1 * var(--todae-focus-ring-width));
@@ -108,7 +150,8 @@
 
   /* Forced colors drop backgrounds, so paint the indicator with a system color. */
   @media (forced-colors: active) {
-    .tab[data-selected]::after {
+    .tab[data-selected]::after,
+    .list::after {
       background: Highlight;
     }
   }

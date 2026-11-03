@@ -10,6 +10,8 @@ import RadioPlan from '../../../examples/radio/RadioPlan';
 
 <Example of={RadioPlan} block />
 
+선택된 라디오의 점은 `selection.motion.duration` 동안 커지며 나타납니다. 사용자가 동작 줄이기를 선호하면 서서히 나타나기만 합니다.
+
 폼 초기화로 선택된 라디오가 없으면 `onValueChange`는 `null`을 받으므로, 값을 `string | null`로 들고 있으세요.
 
 이름이 같은 네이티브 라디오는 화살표 키로 포커스를 옮깁니다. 그룹은 키보드 핸들러를 더하지 않습니다.
