@@ -16,7 +16,7 @@ Placement is CSS anchors. The tip sits above the trigger and flips below when it
 
 ## Warm-up
 
-Slide from One to Three and each tip after the first opens at once, then land on Waits, which has `skipDelay={0}` and waits.
+Slide from One to Three and each tip after the first opens at once, then land on Waits, which has `skipDelay={0}` and always waits, even straight from an open tip.
 
 <Example>
   <TooltipWarmup />
@@ -42,8 +42,6 @@ function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; ski
   <WarmButton label="Waits" tip="Waits again" skipDelay={0} />
 </Stack.Root>
 ```
-
-A `skipDelay` of 0 turns skipping off, so that tip always waits its show delay, even when the pointer comes straight from another open tip.
 
 ## Examples
 
