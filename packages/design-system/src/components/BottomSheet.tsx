@@ -83,16 +83,17 @@ function GrabberHandle({
   const { resizeSheet } = useStrings();
   const ariaLabel = ariaLabelProp || resizeSheet;
   const { snap, snapPoints, setSnap, dismissOnDrag, dismissByDrag } = useSheet();
+  const resizable = snapPoints.includes('mid') && snapPoints.includes('full');
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
-    if (event.key === 'ArrowUp' && snapPoints.includes('full')) {
+    if (event.key === 'ArrowUp') {
       event.preventDefault();
       setSnap('full');
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      if (snap === 'full' && snapPoints.includes('mid')) setSnap('mid');
-      else if (snap === 'mid' && dismissOnDrag) dismissByDrag();
+      if (snap === 'full') setSnap('mid');
+      else if (dismissOnDrag) dismissByDrag();
     }
   }
 
@@ -102,7 +103,23 @@ function GrabberHandle({
       className={cx(styles.handle, className)}
       data-todae-sheet-drag-handle=""
     >
-      <button type="button" aria-label={ariaLabel} onKeyDown={onKeyDown} />
+      {/* A press toggles between the two heights, so screen reader, switch and
+          touch users can resize without a drag or arrow keys. With one height
+          there is nothing to resize: the pill only marks where to drag. */}
+      {resizable ? (
+        <button
+          type="button"
+          className={styles.grabber}
+          aria-label={ariaLabel}
+          aria-expanded={snap === 'full'}
+          onClick={() => setSnap(snap === 'full' ? 'mid' : 'full')}
+          onKeyDown={onKeyDown}
+        >
+          <span className={styles.pill} />
+        </button>
+      ) : (
+        <span className={styles.pill} aria-hidden="true" />
+      )}
     </div>
   );
 }
@@ -183,16 +200,10 @@ function BottomSheetRoot({
   ...props
 }: BottomSheetRootProps) {
   const points = snapPoints ?? DEFAULT_SNAP_POINTS;
-  const [uncontrolled, setUncontrolled] = useState<SheetSnap>(
+  const [currentSnap, setSnap] = useControlledState<SheetSnap>(
+    snap,
     points.includes(defaultSnap) ? defaultSnap : (points[0] ?? 'mid'),
-  );
-  const currentSnap = snap ?? uncontrolled;
-  const setSnap = useCallback(
-    (next: SheetSnap) => {
-      if (snap == null) setUncontrolled(next);
-      onSnapChange?.(next);
-    },
-    [onSnapChange, snap],
+    onSnapChange,
   );
   // Held here, not only in the shell, because a drag closes the sheet too and
   // drag follows the open state.

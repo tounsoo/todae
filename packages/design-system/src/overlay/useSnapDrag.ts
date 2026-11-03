@@ -104,6 +104,11 @@ export function useSnapDrag({
     let armed = false;
     const samples: { t: number; y: number }[] = [];
 
+    // A drag-dismiss keeps the dragged height so the exit slides off from
+    // where the finger let go. Set while that release waits on the owner.
+    let dismissing = false;
+    let frame = 0;
+
     function setDrag(height: number | null, dragging: boolean) {
       surface.toggleAttribute('data-dragging', dragging);
       if (height == null) {
@@ -175,6 +180,7 @@ export function useSnapDrag({
         setDrag(null, false);
         return;
       }
+      swallowClick();
       const heights = sheetHeights(surface);
       const first = samples[0];
       const last = samples[samples.length - 1];
@@ -189,17 +195,35 @@ export function useSnapDrag({
       });
       setDrag(lastHeight, false);
       if (next === 'dismiss') {
+        dismissing = true;
         onDismissRef.current();
-        return;
+      } else if (next !== snapRef.current) {
+        onSnapRef.current(next);
       }
-      if (next !== snapRef.current) onSnapRef.current(next);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!surface.isConnected) return;
-          surface.style.removeProperty('--_drag-height');
-          surface.style.removeProperty('--_scrim-progress');
+      // The snap height takes over on the next frames and the sheet moves to
+      // it. After a dismiss the owner may keep the sheet open, to ask first or
+      // because `open` is read-only. Unless it started its exit by then, the
+      // sheet goes back to its snap height; it must never stay open at the
+      // dragged height, which can be zero.
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => {
+          if (surface.hasAttribute('data-todae-exiting')) return;
+          dismissing = false;
+          setDrag(null, false);
         });
       });
+    }
+
+    // The release of a drag that started on the grabber would also click it,
+    // and a click there toggles the height. The drag already chose one.
+    function swallowClick() {
+      const swallow = (event: MouseEvent) => {
+        event.stopPropagation();
+        event.preventDefault();
+      };
+      surface.addEventListener('click', swallow, { capture: true, once: true });
+      setTimeout(() => surface.removeEventListener('click', swallow, { capture: true }));
     }
 
     function onPointerUp(event: PointerEvent) {
@@ -215,6 +239,8 @@ export function useSnapDrag({
       event.preventDefault();
     }
 
+    // A fresh open starts at its snap height, whatever an earlier exit left.
+    setDrag(null, false);
     surface.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
@@ -226,6 +252,13 @@ export function useSnapDrag({
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       surface.removeEventListener('touchmove', onTouchMove);
+      // An accepted drag-dismiss closes the sheet, which ends this effect
+      // before the exit starts; the exit still needs the dragged height.
+      if (dismissing) {
+        surface.removeAttribute('data-dragging');
+        return;
+      }
+      cancelAnimationFrame(frame);
       setDrag(null, false);
     };
   }, [bodyRef, enabled, sheet]);
