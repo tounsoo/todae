@@ -174,8 +174,8 @@ export function ToolCallExample() {
           <Prose.Root>
             <p>
               {last.status === 'done'
-                ? 'Made the branch focus-ring-brand. Set focus.ring.color in your token package there.'
-                : "I didn't make the branch. Set focus.ring.color in your token package when you're ready."}
+                ? 'Made the branch focus-ring-brand. Set focus.ring in your token package there.'
+                : "I didn't make the branch. Set focus.ring in your token package when you're ready."}
             </p>
           </Prose.Root>
         </Message.Content>

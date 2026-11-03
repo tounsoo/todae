@@ -97,13 +97,13 @@ describe('token consistency across component styles', () => {
     }
   });
 
-  it('colors every focus ring token from focus.ring.color', () => {
+  it('colors every focus ring token from focus.ring', () => {
     const generated = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/tokens.generated.json'), 'utf8')) as {
       tokens: { path: string; ref: string | null }[];
     };
     const rings = generated.tokens.filter((token) => token.path.endsWith('.ring.focus'));
     expect(rings.length).toBeGreaterThan(10);
-    for (const { path, ref } of rings) expect({ path, ref }).toEqual({ path, ref: 'focus.ring.color' });
+    for (const { path, ref } of rings) expect({ path, ref }).toEqual({ path, ref: 'focus.ring' });
   });
 
   it('lifts every overlay surface with its own shadow token', () => {

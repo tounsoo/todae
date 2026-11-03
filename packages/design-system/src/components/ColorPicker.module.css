@@ -46,7 +46,7 @@
     box-sizing: border-box;
     inline-size: var(--todae-picker-thumb-size);
     block-size: var(--todae-picker-thumb-size);
-    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border);
     border-radius: 50%;
     background: var(--_color);
     box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);
@@ -91,7 +91,7 @@
     box-sizing: border-box;
     inline-size: var(--todae-picker-thumb-size);
     block-size: var(--todae-picker-thumb-size);
-    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border);
     border-radius: 50%;
     background: hsl(var(--_hue) 100% 50%);
     box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);
@@ -101,7 +101,7 @@
     box-sizing: border-box;
     inline-size: var(--todae-picker-thumb-size);
     block-size: var(--todae-picker-thumb-size);
-    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border);
     border-radius: 50%;
     background: hsl(var(--_hue) 100% 50%);
     box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);

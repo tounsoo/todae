@@ -12,18 +12,22 @@ const WORD_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * from tokens/name-schema.json. A component adds its own words by listing
  * them in a slot for that property (`"option.bg": ["default", "selected"]`
  * in tokens/resolver.json), and the build holds the group to that list.
+ * A state is another value of its property, so each stateful property
+ * names the `$type` its states hold: a word whose token has another type,
+ * or that is itself a property, is a sub-property, not a state.
  */
 export type Schema = {
   states: ReadonlySet<string>;
-  statefulProperties: ReadonlySet<string>;
+  statefulProperties: ReadonlyMap<string, string>;
   slots: SlotRules;
 };
 
-export type Rule = 'depth' | 'state' | 'dead';
+export type Rule = 'depth' | 'state' | 'property' | 'dead';
 
 export type Violation =
   | { rule: 'depth'; path: string }
   | { rule: 'state'; path: string; word: string }
+  | { rule: 'property'; path: string; word: string }
   | { rule: 'dead'; path: string; cssVar: CssVar };
 
 export type Grandfather = ReadonlyMap<`${Rule}:${string}`, Violation>;
@@ -57,7 +61,7 @@ function knownState(schema: Schema, group: string, word: string): boolean {
 }
 
 function isRule(value: string): value is Rule {
-  return value === 'depth' || value === 'state' || value === 'dead';
+  return value === 'depth' || value === 'state' || value === 'property' || value === 'dead';
 }
 
 export function violationKey(violation: { rule: Rule; path: string }): `${Rule}:${string}` {
@@ -80,9 +84,11 @@ export function isConsumerPath(file: string): boolean {
 /** `slots` are the contract layer's slot rules, where components declare their own state words. */
 export function parseSchema(json: unknown, slots: SlotRules = {}): Schema {
   if (!isRecord(json)) throw new Error('name schema must be an object');
-  if (json.version !== 1) throw new Error('name schema version must be 1');
+  if (json.version !== 2) throw new Error('name schema version must be 2');
   if (!Array.isArray(json.states)) throw new Error('name schema states must be an array');
-  if (!Array.isArray(json.statefulProperties)) throw new Error('name schema statefulProperties must be an array');
+  if (!isRecord(json.statefulProperties)) {
+    throw new Error('name schema statefulProperties must map each property to the $type of its states');
+  }
   const states = new Set<string>();
   for (const state of json.states) {
     if (typeof state !== 'string' || !WORD_RE.test(state)) {
@@ -91,13 +97,14 @@ export function parseSchema(json: unknown, slots: SlotRules = {}): Schema {
     if (states.has(state)) throw new Error(`name schema repeats state "${state}"`);
     states.add(state);
   }
-  const statefulProperties = new Set<string>();
-  for (const property of json.statefulProperties) {
-    if (typeof property !== 'string' || property.length === 0) {
-      throw new Error('name schema statefulProperties must be non-empty strings');
+  const statefulProperties = new Map<string, string>();
+  for (const [property, type] of Object.entries(json.statefulProperties)) {
+    if (!WORD_RE.test(property)) throw new Error(`name schema stateful property "${property}" must be a lowercase word`);
+    if (states.has(property)) throw new Error(`name schema "${property}" cannot be both a state and a property`);
+    if (typeof type !== 'string' || type.length === 0) {
+      throw new Error(`name schema stateful property "${property}" must name the $type of its states`);
     }
-    if (statefulProperties.has(property)) throw new Error(`name schema repeats stateful property "${property}"`);
-    statefulProperties.add(property);
+    statefulProperties.set(property, type);
   }
   return { states, statefulProperties, slots };
 }
@@ -114,11 +121,11 @@ function parseEntry(entry: unknown, index: number): Violation {
   if (typeof entry.path !== 'string' || entry.path.length === 0) {
     throw new Error(`name grandfather entry ${index} needs a path`);
   }
-  if (entry.rule === 'state') {
+  if (entry.rule === 'state' || entry.rule === 'property') {
     if (typeof entry.word !== 'string' || entry.word.length === 0) {
-      throw new Error(`name grandfather state entry ${entry.path} needs a word`);
+      throw new Error(`name grandfather ${entry.rule} entry ${entry.path} needs a word`);
     }
-    return { rule: 'state', path: entry.path, word: entry.word };
+    return { rule: entry.rule, path: entry.path, word: entry.word };
   }
   if ('word' in entry) throw new Error(`name grandfather ${entry.rule} entry ${entry.path} cannot name a word`);
   if (entry.rule === 'depth') return { rule: 'depth', path: entry.path };
@@ -143,7 +150,7 @@ export function parseGrandfather(json: unknown): Grandfather {
 
 export function formatGrandfather(found: readonly Violation[]): string {
   const entries = [...found].sort(violationOrder).map((violation) => {
-    if (violation.rule === 'state') return { rule: violation.rule, path: violation.path, word: violation.word };
+    if (violation.rule === 'state' || violation.rule === 'property') return { rule: violation.rule, path: violation.path, word: violation.word };
     return { rule: violation.rule, path: violation.path };
   });
   return `${JSON.stringify({ version: 1, entries }, null, 2)}\n`;
@@ -153,22 +160,29 @@ export function formatGrandfather(found: readonly Violation[]): string {
  * Splits a name at its first stateful property that has a word after it.
  * That word is the state, and the name ends there.
  */
-function stateOf(segments: readonly string[], schema: Schema): { group: string; word: string; last: boolean } | null {
+function stateOf(
+  segments: readonly string[],
+  schema: Schema,
+): { group: string; type: string; word: string; last: boolean } | null {
   for (let index = 1; index < segments.length - 1; index += 1) {
-    if (!schema.statefulProperties.has(segments[index] ?? '')) continue;
-    return { group: segments.slice(0, index + 1).join('.'), word: segments[index + 1] ?? '', last: index + 2 === segments.length };
+    const type = schema.statefulProperties.get(segments[index] ?? '');
+    if (type === undefined) continue;
+    return { group: segments.slice(0, index + 1).join('.'), type, word: segments[index + 1] ?? '', last: index + 2 === segments.length };
   }
   return null;
 }
 
-export function nameViolations(path: string, schema: Schema): Violation[] {
+/** `type` is the token's `$type`; a state holds the same type as its property. */
+export function nameViolations(path: string, type: string, schema: Schema): Violation[] {
   const segments = path.split('.');
   const state = stateOf(segments, schema);
   const violations: Violation[] = [];
   if (state) {
     const stem = state.group.split('.').length;
     if (stem > MAX_PARTS + 2 || !state.last) violations.push({ rule: 'depth', path });
-    if (!knownState(schema, state.group, state.word)) violations.push({ rule: 'state', path, word: state.word });
+    const subProperty = (state.last && type !== state.type) || schema.statefulProperties.has(state.word);
+    if (subProperty) violations.push({ rule: 'property', path, word: state.word });
+    else if (!knownState(schema, state.group, state.word)) violations.push({ rule: 'state', path, word: state.word });
     return violations;
   }
   const stem = schema.states.has(segments[segments.length - 1] ?? '') ? segments.length - 1 : segments.length;
@@ -176,12 +190,12 @@ export function nameViolations(path: string, schema: Schema): Violation[] {
   return violations;
 }
 
-function representatives(snapshot: Snapshot): Map<string, { layer: Layer; cssVars: [CssVar, ...CssVar[]] }> {
-  const byPath = new Map<string, { layer: Layer; cssVars: [CssVar, ...CssVar[]] }>();
+function representatives(snapshot: Snapshot): Map<string, { layer: Layer; type: string; cssVars: [CssVar, ...CssVar[]] }> {
+  const byPath = new Map<string, { layer: Layer; type: string; cssVars: [CssVar, ...CssVar[]] }>();
   for (const row of snapshot.values()) {
     const current = byPath.get(row.path);
     if (current) current.cssVars.push(row.cssVar);
-    else byPath.set(row.path, { layer: row.layer, cssVars: [row.cssVar] });
+    else byPath.set(row.path, { layer: row.layer, type: row.type, cssVars: [row.cssVar] });
   }
   return byPath;
 }
@@ -248,13 +262,19 @@ export function collectViolations(snapshot: Snapshot, schema: Schema, files: rea
   const names: Violation[] = [];
   for (const [path, row] of representatives(snapshot)) {
     if (row.layer !== 'contract') continue;
-    names.push(...nameViolations(path, schema));
+    names.push(...nameViolations(path, row.type, schema));
   }
   names.sort(violationOrder);
   return [...names, ...deadTokens(snapshot, files)];
 }
 
 export function hint(violation: Violation, schema: Schema): string {
+  if (violation.rule === 'property') {
+    const state = stateOf(violation.path.split('.'), schema);
+    const group = state?.group ?? violation.path;
+    const property = group.slice(group.lastIndexOf('.') + 1);
+    return `${violation.path}: "${violation.word}" is not a state of ${group}, whose states are ${state?.type ?? 'one'} values of ${property}. Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "${violation.word}" is a part, move it before the property (e.g. field.placeholder.fg).`;
+  }
   if (violation.rule === 'state') {
     const group = stateOf(violation.path.split('.'), schema)?.group ?? violation.path;
     return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
@@ -279,7 +299,9 @@ export function addedLine(violation: { rule: Rule; path: string }): string {
 
 function sameViolation(listed: Violation, found: Violation): boolean {
   if (listed.rule !== found.rule || listed.path !== found.path) return false;
-  if (listed.rule === 'state' && found.rule === 'state') return listed.word === found.word;
+  if ((listed.rule === 'state' || listed.rule === 'property') && (found.rule === 'state' || found.rule === 'property')) {
+    return listed.word === found.word;
+  }
   return true;
 }
 

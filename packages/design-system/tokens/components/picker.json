@@ -13,17 +13,15 @@
     },
     "thumb": {
       "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
-      "border": {
-        "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
-        "color": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
-      },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
       "edge": {
         "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
         "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
       }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
     }
   }
 }

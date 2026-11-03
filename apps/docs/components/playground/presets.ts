@@ -146,7 +146,7 @@ function anvilAppearance(c: {
     'color.fg.default': c.ink,
     'color.fg.muted': c.muted,
     'color.danger.default': c.danger,
-    'focus.ring.color': c.focus,
+    'focus.ring': c.focus,
     'color.border.subtle': c.rule,
     'button.secondary.bg.default': alpha(c.ink, c.tint1),
     'button.secondary.bg.focus': alpha(c.ink, c.tint1),
@@ -269,7 +269,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.border.subtle': oklch(0.2, 0.024, 110),
       'progress.fill': oklch(0.9, 0.2, 122),
       'progress.track': oklch(0.68, 0.024, 110),
-      'focus.ring.color': oklch(0.6, 0.25, 330),
+      'focus.ring': oklch(0.6, 0.25, 330),
     },
     {
       ...accent(oklch(0.9, 0.2, 122), oklch(0.93, 0.19, 122), oklch(0.85, 0.2, 122), oklch(0.15, 0.02, 120)),
@@ -277,7 +277,7 @@ export const PRESETS: readonly ThemePreset[] = [
       ...hardShadows(oklch(0.92, 0.014, 120)),
       'color.border.subtle': oklch(0.9, 0.012, 120),
       'progress.track': oklch(0.35, 0.012, 120),
-      'focus.ring.color': oklch(0.72, 0.22, 330),
+      'focus.ring': oklch(0.72, 0.22, 330),
     },
   ),
   preset(
@@ -289,7 +289,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.border': oklch(1, 0, 0),
       'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0.6, 0.24, 350), 0.18)),
       ...accent(oklch(0.6, 0.25, 350), oklch(0.66, 0.24, 350), oklch(0.54, 0.25, 350), oklch(0.99, 0, 0)),
-      'focus.ring.color': oklch(0.6, 0.25, 350),
+      'focus.ring': oklch(0.6, 0.25, 350),
     },
     {
       'color.bg.canvas': oklch(0.15, 0.04, 320),
@@ -297,7 +297,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.border': oklch(0.2, 0.024, 320),
       'card.shadow': shadow(0, 12, 48, 0, alpha(oklch(0.7, 0.22, 350), 0.22)),
       ...accent(oklch(0.82, 0.14, 350), oklch(0.86, 0.12, 350), oklch(0.79, 0.15, 350), oklch(0.15, 0.05, 340)),
-      'focus.ring.color': oklch(0.82, 0.14, 350),
+      'focus.ring': oklch(0.82, 0.14, 350),
     },
   ),
   preset(
@@ -310,7 +310,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.bg.canvas': oklch(0.95, 0.02, 85),
       ...accent(oklch(0.62, 0.24, 0), oklch(0.67, 0.23, 0), oklch(0.57, 0.24, 0), oklch(0.99, 0.01, 0)),
       ...offsetInk(alpha(oklch(0.62, 0.12, 190), 0.85)),
-      'focus.ring.color': oklch(0.55, 0.12, 200),
+      'focus.ring': oklch(0.55, 0.12, 200),
     },
     {
       // The same inks printed on navy stock.
@@ -318,7 +318,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.bg.canvas': oklch(0.17, 0.035, 260),
       ...accent(oklch(0.8, 0.15, 0), oklch(0.84, 0.13, 0), oklch(0.78, 0.16, 0), oklch(0.13, 0.03, 0)),
       ...offsetInk(alpha(oklch(0.7, 0.12, 190), 0.85)),
-      'focus.ring.color': oklch(0.75, 0.12, 190),
+      'focus.ring': oklch(0.75, 0.12, 190),
     },
   ),
   preset(
@@ -333,7 +333,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.shadow': shadow(0, 12, 32, 0, alpha(oklch(0.5, 0.1, 300), 0.15)),
       ...accent(oklch(0.56, 0.18, 305), oklch(0.61, 0.17, 305), oklch(0.51, 0.18, 305), oklch(0.99, 0, 0)),
       ...gloss(alpha(oklch(1, 0, 0), 0.6), alpha(oklch(0.4, 0.1, 300), 0.25)),
-      'focus.ring.color': oklch(0.56, 0.18, 305),
+      'focus.ring': oklch(0.56, 0.18, 305),
     },
     {
       ...grays(290, 0.035),
@@ -342,7 +342,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0, 0, 0), 0.5)),
       ...accent(oklch(0.82, 0.12, 305), oklch(0.86, 0.1, 305), oklch(0.78, 0.13, 305), oklch(0.17, 0.04, 300)),
       ...gloss(alpha(oklch(1, 0, 0), 0.35), alpha(oklch(0, 0, 0), 0.4)),
-      'focus.ring.color': oklch(0.82, 0.12, 305),
+      'focus.ring': oklch(0.82, 0.12, 305),
     },
   ),
   preset(

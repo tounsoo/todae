@@ -594,7 +594,7 @@ describe('resolver-driven build', () => {
       rows.find((row) => row.path === path && row.context === context)?.entry;
     expect(entryOf('radius.md')).toEqual({ kind: 'set', name: 'core' });
     expect(entryOf('color.accent.default', 'light')).toEqual({ kind: 'modifier', name: 'appearance' });
-    expect(entryOf('focus.ring.color')).toEqual({ kind: 'set', name: 'focus' });
+    expect(entryOf('focus.ring')).toEqual({ kind: 'set', name: 'focus' });
     expect(entryOf('button.base.radius')).toEqual({ kind: 'set', name: 'button' });
     expect(entryOf('button.primary.bg.default', 'primary')).toEqual({ kind: 'modifier', name: 'buttonVariant', context: 'primary' });
     expect(entryOf('card.shadow')).toEqual({ kind: 'set', name: 'contract' });
@@ -1018,9 +1018,7 @@ describe('resolver-driven build', () => {
     const focus = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/focus.json' });
     });
-    await expect(buildTokensGraph(focus)).rejects.toThrow(
-      /set "contract" token "focus\.ring\.[a-z-]+" is under "focus\.ring", which set "focus" closes with slot group "focus\.ring"\. Declare it in set "focus" with the slot, or, if that slot is Todae's, put it in a token group of your own/,
-    );
+    await expect(buildTokensGraph(focus)).rejects.toThrow(/token "focus\.ring[a-z-]*" is declared by both set "focus" and set "contract"/);
     const base = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
@@ -1326,6 +1324,23 @@ describe('company token build', () => {
     // A walk that recursed once per alias overflowed the stack at about 1500 links.
     await expect(build(0.5)).resolves.toBeDefined();
     await expect(build(2)).rejects.toThrow('alpha "brand.chain.n1999" must stay in [0, 1], not 2');
+  });
+
+  it('rejects a token under another token, and two tokens that write one CSS variable', async () => {
+    const ring = { $type: 'dimension', $value: { value: 3, unit: 'px' } };
+    const renamed = await company(async (def, root) => {
+      await writeFile(join(root, 'focus.json'), JSON.stringify({ focus: { ring: { width: ring } } }));
+      def.sets.focus = { sources: [{ $ref: './focus.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } };
+      def.resolutionOrder.splice(def.resolutionOrder.length - 1, 0, { $ref: '#/sets/focus' });
+    });
+    await expect(buildCompanyTokens({ resolver: renamed, base: tokensDir })).rejects.toThrow(
+      'set "focus" token "focus.ring.width" is under "focus.ring", which set "focus" declares as a token',
+    );
+    const twins = await company(async (def, root) => {
+      await writeFile(join(root, 'twins.json'), JSON.stringify({ brand: { gap: { x: ring }, 'gap-x': ring } }));
+      def.sets.brand.sources.push({ $ref: './twins.json' });
+    });
+    await expect(buildCompanyTokens({ resolver: twins, base: tokensDir })).rejects.toThrow(/tokens "brand\.gap[.-]x" \(set "brand"\) and "brand\.gap[.-]x" \(set "brand"\) both write --todae-brand-gap-x/);
   });
 
   it('emits only the company layer, after Todae\'s', async () => {

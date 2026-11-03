@@ -24,7 +24,7 @@
         "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
       },
       "ring": {
-        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
       },
       "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
     }
