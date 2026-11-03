@@ -44,8 +44,8 @@ export type MentionPeekTriggerProps = {
 };
 
 type PeekProps = PopoverWire & {
-  onPointerEnter?: (event: PointerEvent<HTMLElement>) => void;
-  onPointerLeave?: (event: PointerEvent<HTMLElement>) => void;
+  onPointerEnter: (event: PointerEvent<HTMLElement>) => void;
+  onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
 };
 
 export type UseMentionPeekResult<T> = {
