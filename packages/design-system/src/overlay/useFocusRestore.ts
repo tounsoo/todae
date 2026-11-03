@@ -46,7 +46,7 @@ export function useFocusRestore(
       const moved = path.at(-1) ?? null;
       if (
         isHTMLElement(moved) &&
-        moved !== moved.ownerDocument.body &&
+        moved !== doc.body &&
         moved !== fallback &&
         !(nativeReturn && moved === prior.current) &&
         (!container || !path.some((el) => container.contains(el)))

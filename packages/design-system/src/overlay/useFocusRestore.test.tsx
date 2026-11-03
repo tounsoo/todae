@@ -49,37 +49,41 @@ describe('useFocusRestore in another document', () => {
     });
   }
 
-  it('leaves focus on a page iframe that shows an SVG document', async () => {
-    const frame = document.body.appendChild(document.createElement('iframe'));
-    frame.tabIndex = 0;
-    const inner = frame.contentDocument!;
-    inner.replaceChild(inner.createElementNS('http://www.w3.org/2000/svg', 'svg'), inner.documentElement);
-    function Example({ open }: { open: boolean }) {
-      const container = useRef<HTMLDivElement>(null);
-      const trigger = useRef<HTMLButtonElement>(null);
-      useFocusRestore(open, { containerRef: container, restoreTo: trigger });
-      return (
-        <>
-          <button type="button" ref={trigger}>
-            Open
-          </button>
-          <div ref={container}>
-            <button type="button">Inside</button>
-          </div>
-        </>
-      );
-    }
-    const { rerender } = render(<Example open={false} />);
-    act(() => button(document, 'Open').focus());
-    rerender(<Example open />);
-    act(() => button(document, 'Inside').focus());
-    act(() => frame.focus());
-    const focus = vi.spyOn(button(document, 'Open'), 'focus');
-    rerender(<Example open={false} />);
-    await act(async () => undefined);
-    expect(focus).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(frame);
-  });
+  for (const shows of ['an HTML', 'an SVG'] as const) {
+    it(`leaves focus on a page iframe that shows ${shows} document`, async () => {
+      const frame = document.body.appendChild(document.createElement('iframe'));
+      frame.tabIndex = 0;
+      const inner = frame.contentDocument!;
+      if (shows === 'an SVG') {
+        inner.replaceChild(inner.createElementNS('http://www.w3.org/2000/svg', 'svg'), inner.documentElement);
+      }
+      function Example({ open }: { open: boolean }) {
+        const container = useRef<HTMLDivElement>(null);
+        const trigger = useRef<HTMLButtonElement>(null);
+        useFocusRestore(open, { containerRef: container, restoreTo: trigger });
+        return (
+          <>
+            <button type="button" ref={trigger}>
+              Open
+            </button>
+            <div ref={container}>
+              <button type="button">Inside</button>
+            </div>
+          </>
+        );
+      }
+      const { rerender } = render(<Example open={false} />);
+      act(() => button(document, 'Open').focus());
+      rerender(<Example open />);
+      act(() => button(document, 'Inside').focus());
+      act(() => frame.focus());
+      const focus = vi.spyOn(button(document, 'Open'), 'focus');
+      rerender(<Example open={false} />);
+      await act(async () => undefined);
+      expect(focus).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(frame);
+    });
+  }
 
   it('leaves focus that moved to the page around the iframe there', async () => {
     const doc = makeFrame();
