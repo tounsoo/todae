@@ -1,13 +1,18 @@
-import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   usePopover,
   type PopoverTriggerUserProps,
   type UsePopoverOptions,
 } from './usePopover.js';
+import { escapeIn, makeFrame } from '../test/frame.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  for (const frame of document.querySelectorAll('iframe')) frame.remove();
+});
 
 function Harness({
   label = 'Open',
@@ -279,5 +284,40 @@ describe('usePopover', () => {
     wire.onPointerDown(event as never);
     wire.onClick(event as never);
     expect(event.stopPropagation).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('usePopover in an iframe', () => {
+  it('returns focus to its trigger on the page when content shown only while open closes on Escape', async () => {
+    const doc = makeFrame();
+    function Example() {
+      const trigger = useRef<HTMLButtonElement | null>(null);
+      const popover = usePopover({ restoreFocusRef: trigger });
+      return (
+        <>
+          <button type="button" {...popover.getTriggerProps({ ref: trigger })}>
+            Open
+          </button>
+          {popover.open
+            ? createPortal(
+                <div {...popover.getPopoverProps()}>
+                  <button type="button">Item</button>
+                </div>,
+                doc.body,
+              )
+            : null}
+        </>
+      );
+    }
+    render(<Example />);
+    const open = screen.getByRole('button', { name: 'Open' });
+    act(() => open.focus());
+    fireEvent.click(open);
+    const item = doc.querySelector('button')!;
+    act(() => item.focus());
+    act(() => void escapeIn(item));
+    await act(async () => undefined);
+    expect(doc.querySelector('button')).toBeNull();
+    expect(document.activeElement).toBe(open);
   });
 });

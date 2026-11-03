@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, pushModal } from './modalStack.js';
-import { escapeIn, makeFrame } from '../test/frame.js';
+import { escapeIn, makeFrame, makeShadowedFrame } from '../test/frame.js';
 import { takeCloseRequest, useEscapeKey } from './useEscapeKey.js';
 
 afterEach(() => {
@@ -418,6 +418,20 @@ describe('useEscapeKey', () => {
       render(<PortaledLayer doc={doc} onEscape={onEscape} />);
       expect(escapeIn(field).defaultPrevented).toBe(true);
       expect(onEscape).toHaveBeenCalledTimes(1);
+    });
+
+    it('listens in an iframe the page reads as inside a shadow root, with focus already there', () => {
+      const { doc, restore } = makeShadowedFrame();
+      try {
+        const field = doc.body.appendChild(doc.createElement('input'));
+        act(() => field.focus());
+        const onEscape = vi.fn();
+        render(<PortaledLayer doc={doc} onEscape={onEscape} />);
+        expect(escapeIn(field).defaultPrevented).toBe(true);
+        expect(onEscape).toHaveBeenCalledTimes(1);
+      } finally {
+        restore();
+      }
     });
 
     it('follows an open layer whose element moves into an iframe', () => {

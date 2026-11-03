@@ -3,6 +3,8 @@
 // own box, so a ring drawn on another element, such as a Field shell around
 // the control or a Checkbox indicator beside it, can stay cut at the edge.
 
+import { isElement } from './dom.js';
+
 let quiet = 0;
 
 /**
@@ -57,7 +59,7 @@ function ringOf(area: Element, target: Element): { ringed: Element; room: number
  * inside the area, which the top layer draws outside it.
  */
 export function revealRing(area: HTMLElement, target: EventTarget | null) {
-  if (quiet > 0 || !(target instanceof Element) || target === area || !area.contains(target)) return;
+  if (quiet > 0 || !isElement(target) || target === area || !area.contains(target)) return;
   // Nothing to scroll, so nothing to measure.
   if (area.scrollHeight <= area.clientHeight && area.scrollWidth <= area.clientWidth) return;
   if (!target.matches(':focus-visible')) return;

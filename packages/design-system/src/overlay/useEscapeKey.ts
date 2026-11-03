@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
-import { isElement } from '../internal/dom.js';
+import { focusPath, isElement } from '../internal/dom.js';
 import { isImeKeyEvent } from '../internal/ime.js';
 import { frontModal, isModal } from './modalStack.js';
 
@@ -26,16 +26,9 @@ const watchers = /* @__PURE__ */ new Set<() => void>();
 // documents, so a layer in an iframe or a popup window needs its own.
 const listening = /* @__PURE__ */ new Set<Document>();
 
-/** The page's document and the same-origin frames focus sits in, outermost first. */
-function focusedDocuments(): Document[] {
-  const docs = [document];
-  for (let el = document.activeElement; el && (el.localName === 'iframe' || el.localName === 'frame'); ) {
-    const inner = (el as HTMLIFrameElement).contentDocument;
-    if (!inner) break;
-    docs.push(inner);
-    el = inner.activeElement;
-  }
-  return docs;
+/** The page's document and the same-origin frames focus sits in, through shadow roots too. */
+function focusedDocuments(): Set<Document> {
+  return new Set([document, ...focusPath(document).map((el) => el.ownerDocument)]);
 }
 
 // A key comes only from the document with focus, so check again once focus
