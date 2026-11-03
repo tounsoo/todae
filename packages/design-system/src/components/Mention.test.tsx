@@ -55,7 +55,7 @@ describe('Mention.Root', () => {
       </Mention.Root>,
     );
     const button = screen.getByRole('button', { name: '@Mina Park' });
-    fireEvent.focus(button);
+    act(() => button.focus());
     expect(button.getAttribute('aria-describedby')).toBeNull();
     act(() => {
       vi.advanceTimersByTime(300);
@@ -69,6 +69,143 @@ describe('Mention.Root', () => {
     await act(async () => {});
     expect(document.activeElement).toBe(button);
     vi.useRealTimers();
+  });
+
+  it('opens on hover without moving focus, and closes when the pointer leaves', () => {
+    vi.useFakeTimers();
+    try {
+      render(<Mention.Root source={peopleSource()} id="mina">@Mina Park</Mention.Root>);
+      const button = screen.getByRole('button', { name: '@Mina Park' });
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(button.getAttribute('aria-describedby')).toBeTruthy();
+      expect(document.activeElement).toBe(document.body);
+      fireEvent.pointerLeave(button, { relatedTarget: document.body });
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(button.getAttribute('aria-describedby')).toBeNull();
+      expect(document.querySelector('[popover][data-popover-open]')).toBeNull();
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('leaves focus in another control when a hover peek opens and closes', async () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <>
+          <input aria-label="Reply" />
+          <Mention.Root source={peopleSource()} id="mina">
+            @Mina Park
+          </Mention.Root>
+        </>,
+      );
+      const input = screen.getByRole('textbox', { name: 'Reply' });
+      act(() => input.focus());
+      const button = screen.getByRole('button', { name: '@Mina Park' });
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(button.getAttribute('aria-describedby')).toBeTruthy();
+      expect(document.activeElement).toBe(input);
+      fireEvent.pointerDown(document.body);
+      fireEvent.pointerUp(document.body);
+      fireEvent.pointerLeave(button, { relatedTarget: document.body });
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      await act(async () => {});
+      expect(button.getAttribute('aria-describedby')).toBeNull();
+      expect(document.activeElement).toBe(input);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('closes a hover peek on an outside press without moving focus onto the mention', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<Mention.Root source={peopleSource()} id="mina">@Mina Park</Mention.Root>);
+      const button = screen.getByRole('button', { name: '@Mina Park' });
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(button.getAttribute('aria-describedby')).toBeTruthy();
+      fireEvent.pointerDown(document.body);
+      fireEvent.pointerUp(document.body);
+      await act(async () => {});
+      expect(button.getAttribute('aria-describedby')).toBeNull();
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("runs the consumer's focus, blur and pointer handlers, and keeps their aria-describedby", () => {
+    vi.useFakeTimers();
+    try {
+      const calls: string[] = [];
+      render(
+        <>
+          <span id="hint">Away</span>
+          <Mention.Root
+            source={peopleSource()}
+            id="mina"
+            aria-describedby="hint"
+            onFocus={() => calls.push('focus')}
+            onBlur={() => calls.push('blur')}
+            onPointerEnter={() => calls.push('enter')}
+            onPointerLeave={() => calls.push('leave')}
+          >
+            @Mina Park
+          </Mention.Root>
+        </>,
+      );
+      const button = screen.getByRole('button', { name: '@Mina Park' });
+      expect(button.getAttribute('aria-describedby')).toBe('hint');
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      const ids = button.getAttribute('aria-describedby')?.split(' ') ?? [];
+      expect(ids[0]).toBe('hint');
+      expect(ids).toHaveLength(2);
+      expect(document.getElementById(ids[1]!)?.textContent).toBe('Mina Park');
+      fireEvent.pointerLeave(button, { relatedTarget: document.body });
+      act(() => button.focus());
+      act(() => button.blur());
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(calls).toEqual(['enter', 'leave', 'focus', 'blur']);
+      expect(button.getAttribute('aria-describedby')).toBe('hint');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the consumer's callback ref attached across renders", () => {
+    const ref = vi.fn();
+    const source = peopleSource();
+    const { rerender } = render(
+      <Mention.Root source={source} id="mina" ref={ref}>
+        @Mina Park
+      </Mention.Root>,
+    );
+    rerender(
+      <Mention.Root source={source} id="mina" ref={ref} className="again">
+        @Mina Park
+      </Mention.Root>,
+    );
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0]?.[0]).toBe(screen.getByRole('button', { name: '@Mina Park' }));
   });
 
   it('uses a named dialog when the peek has a focusable, moves focus in on click, and restores it on close', async () => {
@@ -288,5 +425,24 @@ describe('server render', () => {
       />,
     );
     expect(html).toContain('@Mina Park');
+  });
+
+  it('keeps a mention and its closed peek inside a paragraph', () => {
+    const source = peopleSource({ renderPeek: (person) => <p>{person.name}</p> });
+    const html = renderToString(
+      <p>
+        <MentionText
+          value={{ text: 'Hi @Mina Park, ok', tokens: [{ start: 3, end: 13, char: '@', value: 'mina', text: '@Mina Park' }] }}
+          sources={[source]}
+        />
+      </p>,
+    );
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    const paragraphs = host.querySelectorAll('p');
+    expect(paragraphs).toHaveLength(1);
+    expect(paragraphs[0]?.textContent).toBe('Hi @Mina Park, ok');
+    expect(paragraphs[0]?.querySelector('[popover]')?.tagName).toBe('SPAN');
+    expect(host.querySelector('div')).toBeNull();
   });
 });

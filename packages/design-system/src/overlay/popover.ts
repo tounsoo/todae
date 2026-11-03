@@ -77,10 +77,16 @@ function labelsOf(el: HTMLElement | null): HTMLElement[] {
   return labels ? [...labels] : [];
 }
 
-/** The engine behind usePopover, Menu, useCombobox and useMentions. `restoreOnOutside` false skips the outside-click focus return. */
+/**
+ * The engine behind usePopover, Menu, useCombobox, useMentions and Mention's
+ * peek. `restoreOnOutside` false skips the outside-click focus return.
+ * `initialFocus` false leaves focus where it is when the popover opens, for a
+ * peek a hover opened.
+ */
 export function usePopoverInternal(
   options: UsePopoverOptions,
   restoreOnOutside: boolean,
+  initialFocus = true,
 ): UsePopoverResult {
   const {
     open: openProp,
@@ -110,7 +116,7 @@ export function usePopoverInternal(
   );
 
   useFocusRestore(enabled && open, { restoreTo: restoreFocusRef, containerRef: popoverRef });
-  useInitialFocus(popoverRef, enabled && open, initialFocusRef);
+  useInitialFocus(popoverRef, enabled && open && initialFocus, initialFocusRef);
   useEscapeKey(open, enabled, useCallback(() => requestClose('escape'), [requestClose]), popoverRef);
 
   useLayoutEffect(() => {
