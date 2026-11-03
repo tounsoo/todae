@@ -31,6 +31,14 @@ export async function blur(el: HTMLElement) {
   });
 }
 
+/** Resets the form, then waits the task a control waits to learn whether a handler cancelled the reset. */
+export async function reset(form: HTMLFormElement) {
+  await act(async () => {
+    form.reset();
+    await new Promise((resolve) => setTimeout(resolve));
+  });
+}
+
 export async function submit(form: HTMLElement) {
   await act(async () => {
     fireEvent.submit(form);

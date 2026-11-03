@@ -5,6 +5,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio.js';
 import { resetWarnOnce } from '../internal/warnOnce.js';
 import * as api from '../index.js';
+import { reset } from '../test/form.js';
 
 afterEach(cleanup);
 
@@ -116,5 +117,70 @@ describe('RadioGroup', () => {
     expect(html).toContain('aria-label="Plan"');
     expect(html).toContain('type="radio"');
     expect(html).toContain('name="plan"');
+  });
+});
+
+describe('RadioGroup after a form reset', () => {
+  const radio = (name: string) => screen.getByRole('radio', { name }) as HTMLInputElement;
+  const shownChecked = (name: string) => radio(name).closest('label')!.hasAttribute('data-checked');
+
+  it('goes back to defaultValue, reports it, and reports the next pick', async () => {
+    const onValueChange = vi.fn();
+    render(
+      <form>
+        <RadioGroup.Root aria-label="Plan" defaultValue="free" onValueChange={onValueChange}>
+          <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+        </RadioGroup.Root>
+      </form>,
+    );
+    fireEvent.click(radio('Pro'));
+    await reset(radio('Pro').form!);
+    expect(radio('Free').checked).toBe(true);
+    expect(shownChecked('Free')).toBe(true);
+    expect(shownChecked('Pro')).toBe(false);
+    fireEvent.click(radio('Pro'));
+    expect(onValueChange.mock.calls).toEqual([['pro'], ['free'], ['pro']]);
+  });
+
+  it('goes back to no pick, and reports the next pick', async () => {
+    const onValueChange = vi.fn();
+    render(
+      <form>
+        <RadioGroup.Root aria-label="Plan" onValueChange={onValueChange}>
+          <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+        </RadioGroup.Root>
+      </form>,
+    );
+    fireEvent.click(radio('Pro'));
+    await reset(radio('Pro').form!);
+    expect(radio('Pro').checked).toBe(false);
+    expect(shownChecked('Pro')).toBe(false);
+    fireEvent.click(radio('Pro'));
+    expect(shownChecked('Pro')).toBe(true);
+    expect(onValueChange.mock.calls).toEqual([['pro'], ['pro']]);
+  });
+
+  it('shows a controlled value again when the owner has no callback', async () => {
+    const { rerender } = render(
+      <form>
+        <RadioGroup.Root aria-label="Plan" value="free">
+          <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+        </RadioGroup.Root>
+      </form>,
+    );
+    rerender(
+      <form>
+        <RadioGroup.Root aria-label="Plan" value="pro">
+          <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+        </RadioGroup.Root>
+      </form>,
+    );
+    await reset(radio('Pro').form!);
+    expect(radio('Pro').checked).toBe(true);
+    expect(shownChecked('Pro')).toBe(true);
   });
 });
