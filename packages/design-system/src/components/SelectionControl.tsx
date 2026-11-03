@@ -73,11 +73,11 @@ export function SelectionControl({
   useCustomValidity(inputRef, () => inputRef.current, customValidity);
   useRevalidate();
   const [, rerender] = useReducer((count: number) => count + 1, 0);
-  // A reset puts back the checked state the input mounted with, and fires no change event. A radio's group follows the reset, since one reset can move two radios. A controlled box whose owner turns the reset down renders again, so React writes `checked` back.
+  // A reset puts back `defaultChecked`, which React sets once, from the checked state the input mounted with, and fires no change event. That, not `checked`, is read, since a render in the reset's own task writes the old `checked` back. A radio's group follows the reset, since one reset can move two radios. A controlled box whose owner turns the reset down renders again, so React writes `checked` back.
   useFormReset(inputRef, () => {
     const input = inputRef.current;
-    if (kind === 'radio' || !input || input.checked === checked) return;
-    onChecked(input.checked);
+    if (kind === 'radio' || !input || input.defaultChecked === checked) return;
+    onChecked(input.defaultChecked);
     rerender();
   });
   const { check, indeterminate: indeterminateGlyph } = useGlyphs();
