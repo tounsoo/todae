@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -320,6 +320,33 @@ describe('usePopover in an iframe', () => {
     await act(async () => undefined);
     expect(doc.querySelector('button')).toBeNull();
     expect(document.activeElement).toBe(open);
+  });
+});
+
+describe('usePopover open at mount that another component portals into an iframe', () => {
+  it('closes on Escape there with no window blur', () => {
+    const doc = makeFrame();
+    function FramePortal({ children }: { children: ReactNode }) {
+      const [target, setTarget] = useState<HTMLElement | null>(null);
+      useEffect(() => setTarget(doc.body), []);
+      return target ? createPortal(children, target) : null;
+    }
+    const onOpenChange = vi.fn();
+    function Example() {
+      const popover = usePopover({ defaultOpen: true, onOpenChange });
+      return (
+        <FramePortal>
+          <div {...popover.getPopoverProps()}>
+            <button type="button">Inside</button>
+          </div>
+        </FramePortal>
+      );
+    }
+    render(<Example />);
+    const inside = doc.querySelector('button')!;
+    act(() => inside.focus());
+    act(() => void escapeIn(inside));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
   });
 });
 

@@ -220,6 +220,15 @@ export function takeCloseRequest(dialog: Element): boolean {
   return top !== undefined;
 }
 
+/**
+ * A ref for a layer's element that follows it into the document it attaches
+ * in, as when another component portals it into an iframe after the layer
+ * activates, with nothing rendering the layer's owner again.
+ */
+export function followLayerElement(element: Element | null): void {
+  if (element) sync();
+}
+
 function subscribe(watcher: () => void): () => void {
   watchers.add(watcher);
   return () => watchers.delete(watcher);

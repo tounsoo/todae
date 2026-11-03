@@ -2,11 +2,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { resetMatchMedia } from '../test/setup.js';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
+import { escapeIn, makeFrame } from '../test/frame.js';
 import { useTooltipInternal } from '../overlay/tooltip.js';
 import {
   useTooltip,
@@ -709,5 +711,33 @@ describe('useTooltip tooltip ref', () => {
     const first = result.current.getTooltipProps().ref;
     rerender();
     expect(result.current.getTooltipProps().ref).toBe(first);
+  });
+});
+
+describe('useTooltip open at mount that another component portals into an iframe', () => {
+  it('closes on Escape from its trigger there with no window blur', () => {
+    const doc = makeFrame();
+    function FramePortal({ children }: { children: ReactNode }) {
+      const [target, setTarget] = useState<HTMLElement | null>(null);
+      useEffect(() => setTarget(doc.body), []);
+      return target ? createPortal(children, target) : null;
+    }
+    const onOpenChange = vi.fn();
+    function Example() {
+      const tooltip = useTooltip({ defaultOpen: true, onOpenChange });
+      return (
+        <FramePortal>
+          <button type="button" {...tooltip.getTriggerProps()}>
+            Save
+          </button>
+          <div {...tooltip.getTooltipProps()}>Saves the draft</div>
+        </FramePortal>
+      );
+    }
+    render(<Example />);
+    const trigger = doc.querySelector('button')!;
+    act(() => trigger.focus());
+    act(() => void escapeIn(trigger));
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything());
   });
 });

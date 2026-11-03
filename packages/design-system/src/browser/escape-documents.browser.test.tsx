@@ -71,8 +71,6 @@ describe('Escape in another document, in a browser', () => {
     const inside = [...doc.querySelectorAll('button')].find((el) => el.textContent === 'Inside')!;
     inside.focus();
     await waitFor(() => expect(doc.activeElement).toBe(inside));
-    // The stack starts listening in the frame a task after the window focus left blurs.
-    await new Promise((resolve) => setTimeout(resolve, 50));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(closed).toEqual(['escape']));
   });

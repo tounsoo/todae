@@ -22,7 +22,7 @@ import {
 import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from './tooltipWarmth.js';
 import type { TooltipWire } from './tooltipWire.js';
 import { firstTabbable } from './tabbables.js';
-import { useEscapeKey } from './useEscapeKey.js';
+import { followLayerElement, useEscapeKey } from './useEscapeKey.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
 import { isElement, isNode } from '../internal/dom.js';
 import { useDomId } from '../internal/domId.js';
@@ -382,7 +382,7 @@ export function useTooltipInternal<I extends boolean = false>(
     [anchorName, contentId, dispatch, enabled, holdHover, holderAccepts, open, pairContains, releaseHover, triggerComposed],
   );
 
-  const setTooltip = useComposedRefs(tooltipRef);
+  const setTooltip = useComposedRefs(tooltipRef, followLayerElement);
   const getTooltipProps = useCallback((): TooltipWire<I> => {
     const wire = {
       id: contentId,

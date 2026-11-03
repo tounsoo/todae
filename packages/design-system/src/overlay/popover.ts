@@ -11,7 +11,7 @@ import {
   type RefObject,
 } from 'react';
 import type { PopoverWire } from './popoverWire.js';
-import { useEscapeKey } from './useEscapeKey.js';
+import { followLayerElement, useEscapeKey } from './useEscapeKey.js';
 import { useFocusRestore } from './useFocusRestore.js';
 import { useInitialFocus } from './useInitialFocus.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
@@ -201,7 +201,7 @@ export function usePopoverInternal(
 
   // Stable, so a part that composes it with its own refs is not detached and
   // reattached on every render.
-  const setPopover = useComposedRefs(popoverRef);
+  const setPopover = useComposedRefs(popoverRef, followLayerElement);
 
   const getPopoverProps = useCallback(
     (): PopoverWire => ({
