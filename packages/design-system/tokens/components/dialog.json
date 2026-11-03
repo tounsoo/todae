@@ -20,8 +20,14 @@
       }
     },
     "motion": {
-      "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
-      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } }
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/exit/$value" } }
+      }
     }
   }
 }

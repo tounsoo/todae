@@ -18,7 +18,7 @@
   /* data-entered drives the enter motion. Only the scrim's color fades, so the panel slides in view. */
   .drawer[open] {
     display: flex;
-    transition: background-color var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing-enter);
+    transition: background-color var(--todae-drawer-motion-duration-enter) var(--todae-drawer-motion-easing-enter);
   }
 
   .drawer[open][data-side='end'] {
@@ -31,8 +31,8 @@
 
   .drawer[open][data-todae-exiting] {
     background-color: transparent;
-    transition-duration: var(--todae-drawer-motion-exit);
-    transition-timing-function: var(--todae-overlay-motion-easing-exit);
+    transition-duration: var(--todae-drawer-motion-duration-exit);
+    transition-timing-function: var(--todae-drawer-motion-easing-exit);
   }
 
   .drawer::backdrop {
@@ -64,7 +64,7 @@
     border-inline-end-width: var(--todae-drawer-border-width);
     box-shadow: var(--todae-drawer-shadow);
     inset-inline-start: var(--_from);
-    transition: inset-inline-start var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing-enter);
+    transition: inset-inline-start var(--todae-drawer-motion-duration-enter) var(--todae-drawer-motion-easing-enter);
   }
 
   .drawer[data-side='end'] .panel {
@@ -79,8 +79,8 @@
 
   .drawer[open][data-todae-exiting] .panel {
     inset-inline-start: var(--_from);
-    transition-duration: var(--todae-drawer-motion-exit);
-    transition-timing-function: var(--todae-overlay-motion-easing-exit);
+    transition-duration: var(--todae-drawer-motion-duration-exit);
+    transition-timing-function: var(--todae-drawer-motion-easing-exit);
   }
 
   .title {

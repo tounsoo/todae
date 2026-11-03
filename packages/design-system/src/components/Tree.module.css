@@ -75,7 +75,7 @@
     block-size: var(--todae-tree-chevron-size);
     color: var(--todae-tree-chevron-fg);
     line-height: 1;
-    transition: rotate var(--todae-tree-motion-duration) var(--todae-tree-motion-easing-enter);
+    transition: rotate var(--todae-tree-motion-duration-enter) var(--todae-tree-motion-easing-enter);
   }
 
   .chevron > :is(svg, img) {
@@ -89,6 +89,7 @@
 
   .item[aria-expanded='false'] > .label > [data-todae-glyph] {
     rotate: -90deg;
+    transition-duration: var(--todae-tree-motion-duration-exit);
     transition-timing-function: var(--todae-tree-motion-easing-exit);
   }
 

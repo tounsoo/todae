@@ -32,7 +32,7 @@
     margin-inline-end: calc(var(--todae-disclosure-marker-gap) * 1em);
     color: var(--todae-disclosure-marker-fg);
     line-height: 1;
-    transition: rotate var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-enter);
+    transition: rotate var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter);
   }
 
   .marker > :is(svg, img) {
@@ -42,6 +42,7 @@
 
   .root:not([open]) > .summary > [data-todae-glyph] {
     rotate: -90deg;
+    transition-duration: var(--todae-disclosure-motion-duration-exit);
     transition-timing-function: var(--todae-disclosure-motion-easing-exit);
   }
 
@@ -59,12 +60,13 @@
   .root::details-content {
     opacity: 0;
     transition:
-      opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-exit),
-      content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-exit) allow-discrete;
+      opacity var(--todae-disclosure-motion-duration-exit) var(--todae-disclosure-motion-easing-exit),
+      content-visibility var(--todae-disclosure-motion-duration-exit) var(--todae-disclosure-motion-easing-exit) allow-discrete;
   }
 
   .root[open]::details-content {
     opacity: 1;
+    transition-duration: var(--todae-disclosure-motion-duration-enter);
     transition-timing-function: var(--todae-disclosure-motion-easing-enter);
   }
 
