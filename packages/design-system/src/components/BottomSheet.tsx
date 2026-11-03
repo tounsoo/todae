@@ -115,7 +115,7 @@ function GrabberHandle({
           onClick={() => setSnap(snap === 'full' ? 'mid' : 'full')}
           onKeyDown={onKeyDown}
         >
-          <span className={styles.pill} />
+          <span className={styles.pill} data-todae-focus-ring="" />
         </button>
       ) : (
         <span className={styles.pill} aria-hidden="true" />
