@@ -267,6 +267,34 @@ describe('check-token-api', () => {
     expect(result.status).toBe(0);
   });
 
+  it('checks branch commits made before main added the snapshot against their own fork point', async () => {
+    const root = await repo();
+    await writeFile(join(root, 'note.txt'), 'start\n');
+    git(root, ['add', 'note.txt']);
+    git(root, ['commit', '-m', 'start']);
+    git(root, ['checkout', '-b', 'feature']);
+    await writeFile(join(root, 'feature.txt'), 'feature\n');
+    git(root, ['add', 'feature.txt']);
+    git(root, ['commit', '-m', 'feature work']);
+    git(root, ['checkout', 'main']);
+    const base = await commitSnapshot(root, [{ path: 'separator.color', type: 'color' }], 'add the snapshot');
+    git(root, ['checkout', 'feature']);
+    git(root, ['merge', '--no-edit', '-m', 'merge main', 'main']);
+    const head = await commitSnapshot(
+      root,
+      [
+        { path: 'separator.color', type: 'color' },
+        { path: 'separator.thickness', type: 'dimension' },
+      ],
+      'add separator.thickness',
+    );
+    expect(check(root, base, head).status).toBe(0);
+    await commitSnapshot(root, [], 'remove separator.color');
+    const removed = check(root, base, git(root, ['rev-parse', 'HEAD']).trim());
+    expect(removed.status).toBe(1);
+    expect(removed.stderr).toContain('separator.color');
+  });
+
   it('fails when a later commit restores a path an earlier commit removed', async () => {
     const root = await repo();
     const base = await commitSnapshot(
