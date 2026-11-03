@@ -1,13 +1,22 @@
 import { cssVarOf, dependents, readsOf, type ConsumerFile, type CssVar, type Snapshot } from './consumers.ts';
-import type { Layer } from './shared.ts';
+import { matchesGroup } from './rules.ts';
+import type { Layer, SlotRules } from './shared.ts';
 
-const STATES = ['default', 'hover', 'active', 'pressed', 'focus', 'disabled'] as const;
+/** A name is component, up to three parts, the property, and an optional state. */
+const MAX_PARTS = 3;
 
-export type State = (typeof STATES)[number];
+const WORD_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * The one state model. `states` are the words any stateful property takes,
+ * from tokens/name-schema.json. A component adds its own words by listing
+ * them in a slot for that property (`"option.bg": ["default", "selected"]`
+ * in tokens/resolver.json), and the build holds the group to that list.
+ */
 export type Schema = {
-  states: ReadonlySet<State>;
+  states: ReadonlySet<string>;
   statefulProperties: ReadonlySet<string>;
+  slots: SlotRules;
 };
 
 export type Rule = 'depth' | 'state' | 'dead';
@@ -38,13 +47,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isStateWord(value: string): value is State {
-  for (const state of STATES) if (state === value) return true;
-  return false;
-}
-
-function knownState(states: ReadonlySet<State>, word: string): word is State {
-  for (const state of states) if (state === word) return true;
+/** Whether `word` is a state of the stateful property group `group`. */
+function knownState(schema: Schema, group: string, word: string): boolean {
+  if (schema.states.has(word)) return true;
+  for (const [pattern, words] of Object.entries(schema.slots)) {
+    if (words.includes(word) && matchesGroup(pattern, group)) return true;
+  }
   return false;
 }
 
@@ -69,15 +77,16 @@ export function isConsumerPath(file: string): boolean {
   return base.endsWith('.css') || base.endsWith('.ts') || base.endsWith('.tsx');
 }
 
-export function parseSchema(json: unknown): Schema {
+/** `slots` are the contract layer's slot rules, where components declare their own state words. */
+export function parseSchema(json: unknown, slots: SlotRules = {}): Schema {
   if (!isRecord(json)) throw new Error('name schema must be an object');
   if (json.version !== 1) throw new Error('name schema version must be 1');
   if (!Array.isArray(json.states)) throw new Error('name schema states must be an array');
   if (!Array.isArray(json.statefulProperties)) throw new Error('name schema statefulProperties must be an array');
-  const states = new Set<State>();
+  const states = new Set<string>();
   for (const state of json.states) {
-    if (typeof state !== 'string' || !isStateWord(state)) {
-      throw new Error(`name schema state "${String(state)}" is not one of ${STATES.join(', ')}`);
+    if (typeof state !== 'string' || !WORD_RE.test(state)) {
+      throw new Error(`name schema state "${String(state)}" must be a lowercase word`);
     }
     if (states.has(state)) throw new Error(`name schema repeats state "${state}"`);
     states.add(state);
@@ -90,7 +99,7 @@ export function parseSchema(json: unknown): Schema {
     if (statefulProperties.has(property)) throw new Error(`name schema repeats stateful property "${property}"`);
     statefulProperties.add(property);
   }
-  return { states, statefulProperties };
+  return { states, statefulProperties, slots };
 }
 
 function deadVar(path: string): CssVar {
@@ -140,20 +149,30 @@ export function formatGrandfather(found: readonly Violation[]): string {
   return `${JSON.stringify({ version: 1, entries }, null, 2)}\n`;
 }
 
+/**
+ * Splits a name at its first stateful property that has a word after it.
+ * That word is the state, and the name ends there.
+ */
+function stateOf(segments: readonly string[], schema: Schema): { group: string; word: string; last: boolean } | null {
+  for (let index = 1; index < segments.length - 1; index += 1) {
+    if (!schema.statefulProperties.has(segments[index] ?? '')) continue;
+    return { group: segments.slice(0, index + 1).join('.'), word: segments[index + 1] ?? '', last: index + 2 === segments.length };
+  }
+  return null;
+}
+
 export function nameViolations(path: string, schema: Schema): Violation[] {
   const segments = path.split('.');
-  const last = segments[segments.length - 1] ?? '';
-  const stem = knownState(schema.states, last) ? segments.length - 1 : segments.length;
+  const state = stateOf(segments, schema);
   const violations: Violation[] = [];
-  if (stem < 2 || stem > 3) violations.push({ rule: 'depth', path });
-  for (let index = 1; index < segments.length - 1; index += 1) {
-    const segment = segments[index] ?? '';
-    const next = segments[index + 1] ?? '';
-    if (schema.statefulProperties.has(segment) && !knownState(schema.states, next)) {
-      violations.push({ rule: 'state', path, word: next });
-      break;
-    }
+  if (state) {
+    const stem = state.group.split('.').length;
+    if (stem > MAX_PARTS + 2 || !state.last) violations.push({ rule: 'depth', path });
+    if (!knownState(schema, state.group, state.word)) violations.push({ rule: 'state', path, word: state.word });
+    return violations;
   }
+  const stem = schema.states.has(segments[segments.length - 1] ?? '') ? segments.length - 1 : segments.length;
+  if (stem < 2 || stem > MAX_PARTS + 2) violations.push({ rule: 'depth', path });
   return violations;
 }
 
@@ -197,15 +216,28 @@ function reachable(snapshot: Snapshot, read: ReadonlySet<CssVar>): Set<CssVar> {
   return live;
 }
 
+function scaleOf(path: string): string {
+  return path.slice(0, path.lastIndexOf('.'));
+}
+
 export function deadTokens(snapshot: Snapshot, files: readonly ConsumerFile[]): Violation[] {
   const read = new Set<CssVar>();
   for (const file of files) {
     for (const cssVar of readsOf(file.path, file.source)) read.add(cssVar);
   }
   const live = reachable(snapshot, read);
+  const rows = representatives(snapshot);
+  const isLive = (row: { cssVars: CssVar[] }) => row.cssVars.some((cssVar) => live.has(cssVar));
+  // A core, appearance or density token is a step of a scale (color.red.400,
+  // space.7, color.bg.canvas): it stays while another step of its scale is read.
+  const liveScales = new Set<string>();
+  for (const [path, row] of rows) {
+    if (row.layer !== 'contract' && isLive(row)) liveScales.add(scaleOf(path));
+  }
   const dead: Violation[] = [];
-  for (const [path, row] of representatives(snapshot)) {
-    if (row.cssVars.some((cssVar) => live.has(cssVar))) continue;
+  for (const [path, row] of rows) {
+    if (isLive(row)) continue;
+    if (row.layer !== 'contract' && liveScales.has(scaleOf(path))) continue;
     dead.push({ rule: 'dead', path, cssVar: row.cssVars[0] });
   }
   dead.sort(violationOrder);
@@ -222,12 +254,17 @@ export function collectViolations(snapshot: Snapshot, schema: Schema, files: rea
   return [...names, ...deadTokens(snapshot, files)];
 }
 
-export function hint(violation: Violation): string {
+export function hint(violation: Violation, schema: Schema): string {
   if (violation.rule === 'state') {
-    return `${violation.path}: unknown state "${violation.word}". States are ${STATES.join(', ')}. Rename to one of them, or if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
+    const group = stateOf(violation.path.split('.'), schema)?.group ?? violation.path;
+    return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
   }
   if (violation.rule === 'depth') {
-    return `${violation.path}: too deep. Names are component.(part.)property(.state); fold the extra segment into the part or property (e.g. text.h3-font.size).`;
+    const state = stateOf(violation.path.split('.'), schema);
+    if (state && !state.last) {
+      return `${violation.path}: a name ends at its state, and "${state.word}" follows ${state.group}. Move what comes after it before the property (e.g. tabs.selected.bg.hover), or fold it into one word.`;
+    }
+    return `${violation.path}: too deep. Names are a component, up to three parts, the property and an optional state; fold an extra segment into a part or the property (e.g. text.h3-font.size).`;
   }
   return `${violation.path} (${violation.cssVar}): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don't add it.`;
 }

@@ -11,7 +11,7 @@
     "focus": {
       "description": "Focus ring shared by every component; later contract entries read it",
       "sources": [{ "$ref": "./components/focus.json" }],
-      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots"] } }
+      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots"], "slots": { "focus.ring": ["color", "width", "offset"] } } }
     },
     "button": {
       "description": "Button geometry shared by every variant",
@@ -97,7 +97,36 @@
             "steps.fg": ["done", "current", "pending", "error"],
             "steps.marker.bg": ["done", "current", "pending", "error"],
             "steps.marker.fg": ["done", "current", "pending", "error"],
-            "steps.marker.border": ["done", "current", "pending", "error"]
+            "steps.marker.border": ["done", "current", "pending", "error"],
+            "attachment.border": ["default", "error"],
+            "attachment.meta.fg": ["default", "error"],
+            "calendar.day.bg": ["default", "hover", "selected", "range"],
+            "calendar.day.border": ["current"],
+            "calendar.day.fg": ["default", "selected", "range", "disabled"],
+            "contents.link.fg": ["default", "hover", "current"],
+            "disclosure.ring": ["focus", "radius"],
+            "field.fg": ["default", "disabled", "placeholder", "adornment"],
+            "form.summary.link.decoration": ["default", "hover", "thickness", "offset"],
+            "form.summary.link.ring": ["focus", "radius"],
+            "link.decoration": ["default", "hover", "current", "thickness", "current-thickness", "offset"],
+            "link.fg": ["default", "hover", "current"],
+            "link.ring": ["focus", "radius"],
+            "menu.item.bg": ["default", "highlight"],
+            "nav.item.bg": ["default", "hover", "current"],
+            "nav.item.fg": ["default", "hover", "current"],
+            "option.bg": ["default", "hover", "selected", "selected-highlighted"],
+            "option.fg": ["default", "selected", "disabled"],
+            "picker.thumb.border": ["width", "color"],
+            "selection.bg": ["default", "checked", "disabled"],
+            "selection.border": ["default", "checked", "invalid", "disabled"],
+            "selection.ring": ["focus", "invalid"],
+            "table.row.bg": ["selected"],
+            "table.sort.icon.fg": ["default", "selected"],
+            "tabs.fg": ["default", "hover", "selected", "disabled"],
+            "text.fg": ["default", "muted", "accent"],
+            "text.leading": ["default", "tight"],
+            "tree.item.bg": ["default", "hover", "selected"],
+            "tree.item.fg": ["default", "selected", "disabled"]
           },
           "contrast": [
             { "fg": "field.fg.default", "bg": "field.bg.default", "min": 75, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle", "color.bg.elevated"] },

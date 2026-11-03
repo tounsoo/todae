@@ -129,7 +129,8 @@ function collectGroups(paths: Iterable<string>): Map<string, Set<string>> {
   return groups;
 }
 
-function matchesGroup(pattern: string, group: string): boolean {
+/** A slot pattern matches a group of the same depth; `*` matches any one segment. */
+export function matchesGroup(pattern: string, group: string): boolean {
   const want = pattern.split('.');
   const have = group.split('.');
   return want.length === have.length && want.every((segment, i) => segment === '*' || segment === have[i]);
@@ -326,7 +327,7 @@ function validateSlotOwners(entries: ResolvedEntry[]): void {
           const group = parts.slice(0, i).join('.');
           const pattern = patterns.find((p) => matchesGroup(p, group));
           if (pattern) {
-            fail(`${other.kind} "${other.name}" token "${t.path}" is under "${group}", which ${owner.kind} "${owner.name}" closes with slot group "${pattern}"; declare it there`);
+            fail(`${other.kind} "${other.name}" token "${t.path}" is under "${group}", which ${owner.kind} "${owner.name}" closes with slot group "${pattern}". Declare it in ${owner.kind} "${owner.name}" with the slot, or, if that slot is Todae's, put it in a token group of your own`);
           }
         }
       }
