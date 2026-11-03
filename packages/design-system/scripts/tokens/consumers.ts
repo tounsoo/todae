@@ -1,4 +1,4 @@
-import { consumeCssVar, cssVarName } from '../build-tokens.ts';
+import { consumeCssVar, cssVarName, type AliasGroup } from './serialize.ts';
 import type { Layer } from './shared.ts';
 
 const CSS_VAR_RE = /^--todae-[a-z0-9-]+$/;
@@ -15,6 +15,8 @@ export type Row = {
   cssValue: string;
   context: string | null;
   layer: Layer;
+  /** The context of the alias modifier that declares it, the catalog's `entry.context`. */
+  alias?: string;
 };
 
 export type Snapshot = Map<`${string}@${string}`, Row>;
@@ -95,6 +97,7 @@ export function parseSnapshot(json: unknown): Snapshot {
     if (layer !== 'core' && layer !== 'appearance' && layer !== 'density' && layer !== 'contract') {
       throw new Error(`tokens.generated.json row ${path} is missing layer`);
     }
+    const alias = isRecord(entry.entry) && typeof entry.entry.context === 'string' ? entry.entry.context : undefined;
     const row: Row = {
       path,
       type: requireString(entry, 'type'),
@@ -102,6 +105,7 @@ export function parseSnapshot(json: unknown): Snapshot {
       cssValue: requireString(entry, 'cssValue'),
       context,
       layer,
+      ...(alias === undefined ? {} : { alias }),
     };
     const key = snapshotKey(row.path, row.context);
     if (snapshot.has(key)) throw new Error(`tokens.generated.json repeats ${row.path} in context ${row.context ?? 'default'}`);
@@ -171,8 +175,23 @@ function varsInValue(cssValue: string): CssVar[] {
   return found;
 }
 
-function packConsumeVar(path: string): { cssVar: CssVar; path: string } | null {
-  const consume = consumeCssVar(path);
+/** The alias groups the snapshots' rows were declared in, as the build derives them from its entries. */
+function aliasGroupsOf(...snapshots: Snapshot[]): AliasGroup[] {
+  const groups = new Map<string, Set<string>>();
+  for (const snapshot of snapshots) {
+    for (const row of snapshot.values()) {
+      if (row.alias === undefined) continue;
+      const root = row.path.slice(0, row.path.indexOf('.'));
+      const contexts = groups.get(root);
+      if (contexts) contexts.add(row.alias);
+      else groups.set(root, new Set([row.alias]));
+    }
+  }
+  return [...groups].map(([root, contexts]) => ({ root, contexts: [...contexts] }));
+}
+
+function packConsumeVar(path: string, aliases: readonly AliasGroup[]): { cssVar: CssVar; path: string } | null {
+  const consume = consumeCssVar(path, aliases);
   if (!consume || consume === cssVarName(path) || !isCssVar(consume)) return null;
   const parts = path.split('.');
   const root = parts[0];
@@ -192,9 +211,10 @@ export function dependents(head: Snapshot, base: Snapshot): Map<CssVar, CssVar[]
     if (list) list.add(to);
     else reverse.set(from, new Set([to]));
   };
+  const aliases = aliasGroupsOf(base, head);
   for (const row of [...base.values(), ...head.values()]) {
     for (const ref of varsInValue(row.cssValue)) add(ref, row.cssVar);
-    const alias = packConsumeVar(row.path);
+    const alias = packConsumeVar(row.path, aliases);
     if (alias) add(row.cssVar, alias.cssVar);
   }
   return new Map([...reverse].map(([cssVar, next]) => [cssVar, [...next]]));
@@ -271,9 +291,10 @@ export function readsOf(file: string, source: string): CssVar[] {
 
 function indexPaths(base: Snapshot, head: Snapshot): Map<CssVar, string> {
   const paths = new Map<CssVar, string>();
+  const aliases = aliasGroupsOf(base, head);
   for (const row of [...base.values(), ...head.values()]) {
     if (!paths.has(row.cssVar)) paths.set(row.cssVar, row.path);
-    const alias = packConsumeVar(row.path);
+    const alias = packConsumeVar(row.path, aliases);
     if (alias && !paths.has(alias.cssVar)) paths.set(alias.cssVar, alias.path);
   }
   return paths;

@@ -137,8 +137,8 @@
     "./schema/components.json": "./schema/components.json",
     "./tokens.json": "./tokens/tokens.generated.json",
     "./tokens-builder": {
-      "types": "./dist/scripts/build-tokens.d.ts",
-      "import": "./dist/scripts/build-tokens.js"
+      "types": "./dist/scripts/tokens-builder.d.ts",
+      "import": "./dist/scripts/tokens-builder.js"
     }
   },
   "files": [
