@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
-import { mergeAnchorNames } from '../overlay/anchorName.js';
+import { mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { domSafe, useDomId } from '../internal/domId.js';
@@ -87,9 +87,9 @@ function useTabs(part: string): TabsContextValue {
   return ctx;
 }
 
-// The list's indicator anchors to the selected tab. The name goes in the inline
-// style, merged with any other, since an overlay trigger's inline anchor-name
-// would hide one set by the stylesheet.
+// The list's indicator anchors to the selected tab. The stylesheet names it for
+// the first paint; the tab also joins the name into its inline anchor-name,
+// since an overlay trigger's inline name would hide the stylesheet's.
 const SELECTED_TAB_ANCHOR = '--todae-tab-selected';
 
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${domSafe(value)}`;
@@ -166,14 +166,28 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
   );
 }
 
-function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, onPointerDown, ...props }: TabsTabProps) {
+function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, onPointerDown, ref, ...props }: TabsTabProps) {
   const ctx = useTabs('Tab');
+  const own = useRef<HTMLButtonElement>(null);
+  const refs = useComposedRefs(own, ref);
   // A press that focuses this tab selects it on focus; the click ending that
   // press must not ask the owner a second time.
   const pressing = useRef(false);
   const selectedOnFocus = useRef(false);
   const selected = ctx.value === value;
   const { release } = ctx;
+  // Imperative, like a popover's anchorRef, so each joins and leaves the list
+  // without dropping the other's name.
+  useLayoutEffect(() => {
+    const el = own.current;
+    if (!selected || !el) return;
+    el.style.setProperty('anchor-name', mergeAnchorNames(el.style.getPropertyValue('anchor-name'), SELECTED_TAB_ANCHOR));
+    return () => {
+      const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), SELECTED_TAB_ANCHOR);
+      if (rest) el.style.setProperty('anchor-name', rest);
+      else el.style.removeProperty('anchor-name');
+    };
+  }, [selected]);
   // Hand the tab stop back to the selected tab when this one goes away.
   useLayoutEffect(() => {
     if (disabled) release(value);
@@ -198,6 +212,7 @@ function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, o
   return (
     <button
       {...item}
+      ref={refs}
       type="button"
       role="tab"
       id={tabId(ctx.baseId, value)}
@@ -207,7 +222,6 @@ function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, o
       data-selected={selected ? '' : undefined}
       data-orientation={ctx.orientation}
       className={cx(styles.tab, className)}
-      style={selected ? { ...item.style, anchorName: mergeAnchorNames(item.style?.anchorName, SELECTED_TAB_ANCHOR) } : item.style}
       onPointerDown={composeHandlers(onPointerDown, () => {
         pressing.current = true;
         selectedOnFocus.current = false;

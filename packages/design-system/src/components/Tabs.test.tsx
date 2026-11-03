@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Tabs, type TabsRootProps } from '../index.js';
+import { Tabs, usePopover, useTooltip, type TabsRootProps } from '../index.js';
 
 afterEach(cleanup);
 
@@ -314,5 +314,63 @@ describe('Tabs', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => render(<Tabs.Tab value="a">A</Tabs.Tab>)).toThrow('Tabs.Tab must render inside Tabs.Root');
     spy.mockRestore();
+  });
+});
+
+describe('Tabs indicator anchor', () => {
+  const names = (el: HTMLElement) =>
+    el.style
+      .getPropertyValue('anchor-name')
+      .split(',')
+      .map((n) => n.trim())
+      .filter(Boolean);
+
+  it('names only the selected tab, beside a popover anchored to it', async () => {
+    function Anchored() {
+      const alpha = useRef<HTMLButtonElement | null>(null);
+      usePopover({ anchorRef: alpha });
+      return (
+        <Tabs.Root defaultValue="a">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab value="a" ref={alpha}>
+              Alpha
+            </Tabs.Tab>
+            <Tabs.Tab value="b">Beta</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a">A</Tabs.Panel>
+          <Tabs.Panel value="b">B</Tabs.Panel>
+        </Tabs.Root>
+      );
+    }
+    render(<Anchored />);
+    const alpha = tab('Alpha');
+    const popover = alpha.style.getPropertyValue('--todae-popover-anchor');
+    expect(names(alpha)).toEqual(expect.arrayContaining([popover, '--todae-tab-selected']));
+    await act(async () => tab('Beta').click());
+    expect(names(alpha)).toEqual([popover]);
+    expect(names(tab('Beta'))).toEqual(['--todae-tab-selected']);
+    await act(async () => alpha.click());
+    expect(names(alpha)).toEqual(expect.arrayContaining([popover, '--todae-tab-selected']));
+    expect(names(tab('Beta'))).toEqual([]);
+  });
+
+  it('joins the inline anchor name of a tooltip trigger', () => {
+    function Tipped() {
+      const tip = useTooltip();
+      return (
+        <Tabs.Root defaultValue="a">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab {...tip.getTriggerProps()} value="a">
+              Alpha
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a">A</Tabs.Panel>
+        </Tabs.Root>
+      );
+    }
+    render(<Tipped />);
+    const alpha = tab('Alpha');
+    expect(names(alpha)).toHaveLength(2);
+    expect(names(alpha)).toContain('--todae-tab-selected');
   });
 });
