@@ -285,16 +285,19 @@ describe('BottomSheet in a browser', () => {
         </BottomSheet.Root>
       </Themed>,
     );
-    await waitFor(() => expect(sheet().hasAttribute('data-entered')).toBe(true));
-    // The enter motion moves `bottom`; the height is already at rest.
+    // Wait out the enter slide, so the drag starts from where the handle rests.
+    await waitFor(() => expect(Math.round(sheet().getBoundingClientRect().bottom)).toBe(window.innerHeight), {
+      timeout: 2000,
+    });
     const rest = sheet().getBoundingClientRect().height;
     const handle = sheet().querySelector('[data-todae-sheet-drag-handle]')!;
     const top = handle.getBoundingClientRect().top;
     handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: top }));
-    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: window.innerHeight }));
+    // Past the bottom edge, so the drag clamps the height to zero.
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: window.innerHeight + 50 }));
     // Proves the ::backdrop read is real: the drag has faded the scrim out.
     expect(getComputedStyle(sheet(), '::backdrop').opacity).toBe('0');
-    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: window.innerHeight }));
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: window.innerHeight + 50 }));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
     await waitFor(
       () => {

@@ -92,19 +92,23 @@ describe('BottomSheet', () => {
     // A touch tap's click comes a task after the release.
     drag(8, 400, 200);
     await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
-    act(() => grabber.click());
+    act(() => fireEvent.click(grabber, { detail: 1 }));
     expect(onSnapChange.mock.calls).toEqual([['full']]);
     // A mouse clicks in the same task as the release.
     drag(9, 200, 400);
-    act(() => grabber.click());
+    act(() => fireEvent.click(grabber, { detail: 1 }));
     expect(onSnapChange.mock.calls).toEqual([['full'], ['mid']]);
     // The next press is a press of its own.
     act(() => {
       grabber.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 10, clientY: 200 }));
       window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 10, clientY: 200 }));
-      grabber.click();
+      fireEvent.click(grabber, { detail: 1 });
     });
     expect(onSnapChange.mock.calls).toEqual([['full'], ['mid'], ['full']]);
+    // Enter or Space right after a drag is the keyboard's own press.
+    drag(11, 200, 400);
+    act(() => fireEvent.click(grabber, { detail: 0 }));
+    expect(onSnapChange.mock.calls).toEqual([['full'], ['mid'], ['full'], ['mid'], ['full']]);
   });
 
   it('shows the grabber as a mark, not a button, when there is one height', () => {

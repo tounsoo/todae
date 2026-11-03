@@ -158,6 +158,7 @@ export function useSnapDrag({
         armed = true;
         // A new drag owns the variables; the last release's frames must not clear them.
         cancelAnimationFrame(frame);
+        dismissing = false;
         try {
           surface.setPointerCapture(event.pointerId);
         } catch {
@@ -220,9 +221,9 @@ export function useSnapDrag({
 
     // A drag's release can also click what it started on: the grabber, which
     // toggles the height, or a close part in the header. The drag already
-    // chose, so a click soon after it is dropped. On touch the click comes in
-    // a later task than the release, so the window is time-based, and the
-    // next press ends it early.
+    // chose, so a pointer's click soon after it is dropped. On touch the click
+    // comes in a later task than the release, so the window is time-based, and
+    // the next press ends it early.
     let quietUntil = 0;
 
     function swallowClick() {
@@ -230,7 +231,8 @@ export function useSnapDrag({
     }
 
     function onClick(event: MouseEvent) {
-      if (performance.now() >= quietUntil) return;
+      // A keyboard or scripted click (detail 0) is never the drag's own.
+      if (event.detail === 0 || performance.now() >= quietUntil) return;
       quietUntil = 0;
       event.stopPropagation();
       event.preventDefault();
