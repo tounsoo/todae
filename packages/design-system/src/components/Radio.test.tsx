@@ -5,7 +5,9 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio.js';
 import { resetWarnOnce } from '../internal/warnOnce.js';
 import * as api from '../index.js';
-import { reset } from '../test/form.js';
+import { Field } from './Field.js';
+import { Form } from './Form.js';
+import { mount, reset } from '../test/form.js';
 
 afterEach(cleanup);
 
@@ -141,6 +143,26 @@ describe('RadioGroup after a form reset', () => {
     expect(shownChecked('Pro')).toBe(false);
     fireEvent.click(radio('Pro'));
     expect(onValueChange.mock.calls).toEqual([['pro'], ['free'], ['pro']]);
+  });
+
+  it('follows the reset in a Field.Group inside Form.Root', async () => {
+    const onValueChange = vi.fn();
+    await mount(
+      <Form.Root>
+        <Field.Group>
+          <RadioGroup.Root aria-label="Plan" name="plan" defaultValue="free" onValueChange={onValueChange}>
+            <RadioGroup.Item value="free">Free</RadioGroup.Item>
+            <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+          </RadioGroup.Root>
+        </Field.Group>
+      </Form.Root>,
+    );
+    fireEvent.click(radio('Pro'));
+    await reset(radio('Pro').form!);
+    expect(radio('Free').checked).toBe(true);
+    expect(shownChecked('Free')).toBe(true);
+    expect(shownChecked('Pro')).toBe(false);
+    expect(onValueChange.mock.calls).toEqual([['pro'], ['free']]);
   });
 
   it('goes back to no pick, and reports the next pick', async () => {

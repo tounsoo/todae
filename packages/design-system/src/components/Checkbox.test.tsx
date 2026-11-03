@@ -6,7 +6,9 @@ import { createRef, useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Checkbox, type CheckboxRootProps } from './Checkbox.js';
 import * as api from '../index.js';
-import { reset } from '../test/form.js';
+import { Field } from './Field.js';
+import { Form } from './Form.js';
+import { mount, reset } from '../test/form.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
 
@@ -167,6 +169,44 @@ describe('Checkbox after a form reset', () => {
     fireEvent.click(box());
     expect(shownChecked()).toBe(true);
     expect(onCheckedChange.mock.calls).toEqual([[true], [false], [true]]);
+  });
+
+  it('follows the reset when a reset handler renders the box again first', async () => {
+    const onCheckedChange = vi.fn();
+    function Harness() {
+      const [resets, setResets] = useState(0);
+      return (
+        <form onReset={() => setResets((count) => count + 1)}>
+          <Checkbox.Root defaultChecked onCheckedChange={onCheckedChange}>
+            Weekly digest {resets}
+          </Checkbox.Root>
+        </form>
+      );
+    }
+    render(<Harness />);
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[false], [true]]);
+  });
+
+  it('follows the reset in a Field.Group inside Form.Root', async () => {
+    const onCheckedChange = vi.fn();
+    await mount(
+      <Form.Root>
+        <Field.Group>
+          <Checkbox.Root name="terms" defaultChecked onCheckedChange={onCheckedChange}>
+            I accept the terms
+          </Checkbox.Root>
+        </Field.Group>
+      </Form.Root>,
+    );
+    fireEvent.click(box());
+    await reset(box().form!);
+    expect(box().checked).toBe(true);
+    expect(shownChecked()).toBe(true);
+    expect(onCheckedChange.mock.calls).toEqual([[false], [true]]);
   });
 
   it('keeps its state when a handler cancels the reset', async () => {
