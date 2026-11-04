@@ -2802,6 +2802,46 @@
       "type": "cubicBezier"
     },
     {
+      "path": "motion.modal.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.modal.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "motion.notice.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.notice.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "motion.panel.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.panel.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "motion.popup.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.popup.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "motion.reveal.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.reveal.duration.exit",
+      "type": "duration"
+    },
+    {
       "path": "nav.chevron.fg",
       "type": "color"
     },

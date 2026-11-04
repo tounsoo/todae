@@ -56,8 +56,8 @@
     },
     "motion": {
       "duration": {
-        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
-        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } }
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/exit/$value" } }
       },
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
