@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3100;
 
-// axe over the built docs site's Korean pages, in light and dark, at desktop and phone width.
+// axe over the built docs site's Korean pages, in light and dark, at desktop and phone width, and
+// a smoke run over every English page with an example, in light at desktop width.
 export default defineConfig({
   testDir: 'axe',
   testMatch: '*.axe.ts',
@@ -18,7 +19,7 @@ export default defineConfig({
     contextOptions: { reducedMotion: 'reduce' },
   },
   projects: [
-    { name: 'light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' } },
+    { name: 'light', testMatch: ['*.axe.ts', '*.smoke.ts'], use: { ...devices['Desktop Chrome'], colorScheme: 'light' } },
     { name: 'dark', use: { ...devices['Desktop Chrome'], colorScheme: 'dark' } },
     { name: 'phone-light', use: { ...devices['Pixel 7'], colorScheme: 'light' } },
     { name: 'phone-dark', use: { ...devices['Pixel 7'], colorScheme: 'dark' } },
