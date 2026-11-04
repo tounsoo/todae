@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, useState, type ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BottomSheet,
   Button,
@@ -26,6 +26,8 @@ import {
   type ComboboxOption,
 } from '../index.js';
 import { ChipCount } from '../components/chipCount.js';
+import { paintedContrast } from '../test/paintedContrast.js';
+import { settle } from '../test/settle.js';
 
 /**
  * axe in a real browser, so roles, names and the top layer are what a screen
@@ -39,13 +41,33 @@ async function violations(root: Element = document.body): Promise<string[]> {
   );
 }
 
+/**
+ * Waits for the page to settle, so an overlay is checked open, not partway
+ * through its entry motion. Then axe finds nothing, and no visible text paints
+ * below its APCA floor: axe's contrast rule is off, so this is what checks
+ * color, and what the dark pass catches that the light one can't.
+ */
 async function expectNoViolations() {
+  await settle();
   expect(await violations()).toEqual([]);
+  const { low, checked } = paintedContrast();
+  expect(low).toEqual([]);
+  expect(checked.length, 'no text measured').toBeGreaterThan(0);
 }
+
+const APPEARANCES = ['light', 'dark'] as const;
+
+// The appearance the running pass renders in, set before each test.
+let appearance: (typeof APPEARANCES)[number] = 'light';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
-    <main data-appearance="light" data-density="comfortable">
+    // Painted as an app paints its page, so text has the appearance's canvas behind it and its color.
+    <main
+      data-appearance={appearance}
+      data-density="comfortable"
+      style={{ background: 'var(--todae-color-bg-canvas)', color: 'var(--todae-color-fg-default)' }}
+    >
       {children}
     </main>
   );
@@ -169,7 +191,11 @@ function OverlayHarness() {
   );
 }
 
-describe('axe in a browser', () => {
+describe.each(APPEARANCES)('axe in a browser, %s', (pass) => {
+  beforeEach(() => {
+    appearance = pass;
+  });
+
   it('reports a real violation, so a clean run means something', async () => {
     render(
       <Themed>

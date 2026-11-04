@@ -9,6 +9,7 @@ import {
   Disclosure,
   Field,
   GlyphsProvider,
+  Link,
   Pagination,
   Stack,
   ToggleGroup,
@@ -84,7 +85,7 @@ function GlyphParts({ icon }: { icon?: ReactNode }) {
       </Disclosure.Root>
       <Breadcrumbs.Root>
         <Breadcrumbs.Item>
-          <a href="#glyphs">Projects</a>
+          <Link.Root href="#glyphs">Projects</Link.Root>
         </Breadcrumbs.Item>
         <Breadcrumbs.Item current>Todae</Breadcrumbs.Item>
       </Breadcrumbs.Root>
