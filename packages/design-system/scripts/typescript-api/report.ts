@@ -86,24 +86,6 @@ function inferNames(node: ts.ConditionalTypeNode): string[] {
 }
 
 /** Whether a type is something to call, whose order among overloads decides which one TypeScript picks. */
-/**
- * Whether an intersection operand could hold a call or construct signature. A named type, `typeof` or any
- * other indirection might, since the printed text alone can't show what it points to.
- */
-function mayBeCallable(node: ts.TypeNode): boolean {
-  const inner = ts.isParenthesizedTypeNode(node) ? node.type : node;
-  if (ts.isTypeLiteralNode(inner)) return inner.members.some((member) => ts.isCallSignatureDeclaration(member) || ts.isConstructSignatureDeclaration(member));
-  if (ts.isUnionTypeNode(inner) || ts.isIntersectionTypeNode(inner)) return inner.types.some(mayBeCallable);
-  return !(
-    ts.isLiteralTypeNode(inner) ||
-    ts.isMappedTypeNode(inner) ||
-    ts.isTemplateLiteralTypeNode(inner) ||
-    ts.isTupleTypeNode(inner) ||
-    ts.isArrayTypeNode(inner) ||
-    (inner.kind >= ts.SyntaxKind.FirstKeyword && inner.kind <= ts.SyntaxKind.LastKeyword)
-  );
-}
-
 /** An object literal's properties sorted by text, then its signatures and methods in source order, since overloads keep their order. */
 function sortMembers(members: readonly ts.TypeElement[]): ts.TypeElement[] {
   return [...sortedBy(members.filter(ts.isPropertySignature)), ...members.filter((member) => !ts.isPropertySignature(member))];
@@ -124,9 +106,9 @@ function flatten(nodes: readonly ts.TypeNode[], same: (node: ts.TypeNode) => nod
 /**
  * Prints a type the same way whatever its source calls things or the order it lists them in,
  * so only a change callers can feel changes the text:
- * - Union and intersection members, and the properties of an object literal, are sorted by text. Overloads keep
- *   their order: an object literal's call and method signatures, and an intersection with two or more operands that
- *   may be callable (a function type, a callable literal, or a named type the text can't see into).
+ * - Union members and the properties of an object literal are sorted by text. Overloads keep their order: an
+ *   object literal's call and method signatures, and an intersection's operands, since any two of them can
+ *   hold the same member (`{ on: A } & { on: B }`, or a named type) and their order decides which is picked.
  * - Parameters of every function type are `arg0`, `arg1`, and tuple members lose their labels.
  * - The exported type's own type parameters are `outer` (`T0`, `T1`). A nested scope's are numbered by
  *   its depth and their position, `T1_0`, so the names don't depend on what else the type holds.
@@ -171,9 +153,7 @@ function normalize<T extends ts.Node>(node: T, outer: ReadonlyMap<string, string
           return ts.factory.updateUnionTypeNode(visited, ts.factory.createNodeArray(sortedBy(flatten(visited.types, ts.isUnionTypeNode))));
         }
         if (ts.isIntersectionTypeNode(visited)) {
-          const operands = flatten(visited.types, ts.isIntersectionTypeNode);
-          const ordered = operands.filter(mayBeCallable).length > 1 ? operands : sortedBy(operands);
-          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(ordered));
+          return ts.factory.updateIntersectionTypeNode(visited, ts.factory.createNodeArray(flatten(visited.types, ts.isIntersectionTypeNode)));
         }
         if (ts.isTypeLiteralNode(visited)) return ts.factory.updateTypeLiteralNode(visited, ts.factory.createNodeArray(sortMembers(visited.members)));
         return visited;
@@ -440,7 +420,7 @@ class Renderer {
     }
     for (const info of this.checker.getIndexInfosOfType(type)) {
       const readonly = info.isReadonly ? 'readonly ' : '';
-      this.add(`${prefix}.[${this.typeText(info.keyType, declaration)}]`, `${readonly}${this.typeText(info.type, declaration)}`);
+      this.add(`${prefix}.[key: ${this.typeText(info.keyType, declaration)}]`, `${readonly}${this.typeText(info.type, declaration)}`);
     }
     const owners = [...inherited.entries()].map(([owner, present]) => ({ owner, present, name: this.ownerName(owner, present, declaration) }));
     for (const { owner, present, name } of owners.sort((a, b) => byCodePoint(a.name, b.name))) {

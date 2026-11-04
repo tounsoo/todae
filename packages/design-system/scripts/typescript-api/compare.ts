@@ -272,8 +272,11 @@ export function apiBreaks(before: ApiSnapshot, after: ApiSnapshot): ApiBreak[] {
   return breaks.sort((a, b) => byCodePoint(a.entry, b.entry) || byCodePoint(a.path, b.path));
 }
 
-/** A required member path, such as `type ButtonRootProps.label`: not optional, not an index signature, not a DOM interface, not a literal. */
-const REQUIRED_MEMBER = /^((?:type|internal) [A-Za-z_$][\w$]*)(\.(?:[^ [?]|[^ [][^ ]*[^?]))$/;
+/**
+ * A required member path, such as `type ButtonRootProps.label` or a symbol key `type P.[brand]`: not optional,
+ * not an index signature (`.[key: string]`), not a DOM interface, not a literal.
+ */
+const REQUIRED_MEMBER = /^((?:type|internal) [A-Za-z_$][\w$]*)(\.(?:[^ ?]|[^ ][^ ]*[^?]))$/;
 
 /**
  * Required members a type gained, measured against the type on the base with the same name, or the one

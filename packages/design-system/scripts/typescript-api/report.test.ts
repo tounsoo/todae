@@ -157,7 +157,7 @@ describe('apiReport', () => {
     expect(after).toEqual(before);
   });
 
-  it('reads the same whatever order or names the source uses for members, mapped keys and infer', async () => {
+  it('reads the same whatever order or names the source uses for union and object members, mapped keys and infer', async () => {
     const before = await report(`
       type Base = { id: string };
       export type Pick1<T> = { [K in keyof T]: T[K] };
@@ -172,7 +172,7 @@ describe('apiReport', () => {
       export type Pick1<T> = { [P in keyof T]: T[P] };
       export type Item<T> = T extends Array<infer U> ? U : never;
       export type Fn = (<B>(arg: B) => string) | (<A>(arg: A) => A);
-      export type Named = Base & ({ role?: undefined } | { role: 'dialog'; 'aria-label': string });
+      export type Named = ({ role?: undefined } | { role: 'dialog'; 'aria-label': string }) & Base;
       type W = { w?: string }; type X = { x?: string }; type Y = { y?: string; z: 1 | 2 };
       export type Grouped = Y & (X & W);
     `);
@@ -194,6 +194,20 @@ describe('apiReport', () => {
     expect(api['type C.mixed']).toBe("Fb & ((arg0: string) => 'str')");
   });
 
+  it('keeps an intersection in its order, since two operands can hold the same member', async () => {
+    const source = (first: string, second: string) => `
+      type Fa = (a: string) => 'str';
+      type Fb = (a: unknown) => 'any';
+      export type U = (${first} & ${second}) | ((arg: number) => void);
+      export declare function use(p: ${first} & ${second}): void;
+    `;
+    const before = await report(source('{ on: Fa }', '{ on: Fb }'));
+    const after = await report(source('{ on: Fb }', '{ on: Fa }'));
+    expect(before['type U']).toBe('((arg0: number) => void) | ({ on: Fa; } & { on: Fb; })');
+    expect(after['type U']).toBe('((arg0: number) => void) | ({ on: Fb; } & { on: Fa; })');
+    expect(after['use']).not.toBe(before['use']);
+  });
+
   it('scopes an infer name to the extends clause and the true branch', async () => {
     const api = await report(`
       type Box<T> = { value: T };
@@ -208,7 +222,7 @@ describe('apiReport', () => {
       export type BoxProps = PropsWithChildren<{ tone?: string }> & { [key: \`data-\${string}\`]: string | undefined };
     `);
     expect(api['type BoxProps.children?']).toMatch(/ReactNode/);
-    expect(api['type BoxProps.[`data-${string}`]']).toBe('string | undefined');
+    expect(api['type BoxProps.[key: `data-${string}`]']).toBe('string | undefined');
   });
 
   it('prints a generic mapped type by its declaration, since it has no members to list', async () => {

@@ -99,6 +99,7 @@ describe('apiBreaks kinds', () => {
     expect(kinds(before, { ...before, 'internal Bound.label?': 'string | undefined' })).toEqual([]);
     expect(kinds(before, { ...before, 'internal Bound.x': 'string' })).toEqual([['narrowed', 'internal Bound.x']]);
     expect(kinds(before, { ...before, 'internal Bound.x?': 'string | undefined' })).toEqual([]);
+    expect(kinds(before, { ...before, 'internal Bound.[brand]': 'true' })).toEqual([['narrowed', 'internal Bound.[brand]']]);
     expect(kinds({}, { 'type New': 'object', 'type New.label': 'string' })).toEqual([]);
   });
 
@@ -216,7 +217,7 @@ describe('usersOf', () => {
 
   it('does not count a new index signature as a required member', () => {
     const before = snapshot({ 'type P': 'object' });
-    const after = snapshot({ 'type P': 'object', 'type P.[`data-${string}`]': 'string | undefined' });
+    const after = snapshot({ 'type P': 'object', 'type P.[key: `data-${string}`]': 'string | undefined' });
     expect(apiBreaks(before, after)).toEqual([]);
   });
 
