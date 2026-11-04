@@ -1,6 +1,6 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from '@vitest/browser/context';
 import { useEffect, useState, type ClipboardEvent, type CSSProperties, type DragEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';
@@ -49,6 +49,9 @@ function Code({
 const input = () => screen.getByLabelText<HTMLInputElement>('Verification code');
 const boxes = () => [...input().nextElementSibling!.children] as HTMLElement[];
 const session = () => cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
+// For tests that type, drop or compose through CDP's Input domain, which only Chromium has.
+// Firefox and WebKit run the rest of the file.
+const chromiumIt = it.runIf(server.browser === 'chromium');
 const boxPosition = (i: number) => {
   const rect = boxes()[i]!.getBoundingClientRect();
   return { x: rect.left + rect.width / 2 - input().getBoundingClientRect().left, y: rect.height / 2 };
@@ -210,7 +213,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(boxes().map((box) => box.textContent)).toEqual(['1', '2', '', '', '', '']);
   });
 
-  it('treats a keyboard\'s multi-character insert as a paste', async () => {
+  chromiumIt('treats a keyboard\'s multi-character insert as a paste', async () => {
     render(<Code initial="12" />);
     await userEvent.click(input());
     await userEvent.keyboard('{End}');
@@ -275,7 +278,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('treats a dropped text as a paste, whatever surrounds the code', async () => {
+  chromiumIt('treats a dropped text as a paste, whatever surrounds the code', async () => {
     render(<Code />);
     const rect = input().getBoundingClientRect();
     const data = { items: [{ mimeType: 'text/plain', data: 'Your code: 482-913' }], dragOperationsMask: 1 };
@@ -332,7 +335,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('129456'));
   });
 
-  it('applies a composition on a full code over the box at the caret when it ends, as one edit, and lands none after the code', async () => {
+  chromiumIt('applies a composition on a full code over the box at the caret when it ends, as one edit, and lands none after the code', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -347,7 +350,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).toHaveBeenCalledTimes(1);
   });
 
-  it('shows a composition in the boxes, by the rule, while it is composed', async () => {
+  chromiumIt('shows a composition in the boxes, by the rule, while it is composed', async () => {
     render(<Code initial="ABC123" characters="alphanumeric" />);
     await userEvent.click(input());
     await userEvent.keyboard('{Home}{ArrowRight}');
@@ -357,7 +360,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('AxC123'));
   });
 
-  it('leaves a full code as it was when a composition brings no character it allows', async () => {
+  chromiumIt('leaves a full code as it was when a composition brings no character it allows', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -370,7 +373,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AxC123');
   });
 
-  it('leaves a partial code as it was when a composition brings no character it allows, and keeps the IME working while it composes', async () => {
+  chromiumIt('leaves a partial code as it was when a composition brings no character it allows, and keeps the IME working while it composes', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -383,7 +386,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange.mock.calls).toEqual([['ABc'], ['ABcd']]);
   });
 
-  it('reports a composed text that is already a code as it is typed, as a phone keyboard composes a whole word', async () => {
+  chromiumIt('reports a composed text that is already a code as it is typed, as a phone keyboard composes a whole word', async () => {
     const onValueChange = vi.fn();
     render(<Code characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -416,7 +419,7 @@ describe('Field.OneTimeCode in a browser', () => {
     );
   }
 
-  it.each(['change', 'both'] as const)('reports a full code a composition makes on a code that was not empty, to a product with %s', async (mode) => {
+  chromiumIt.each(['change', 'both'] as const)('reports a full code a composition makes on a code that was not empty, to a product with %s', async (mode) => {
     const events: string[] = [];
     render(<Listening initial="ABC12" mode={mode} events={events} />);
     await userEvent.click(input());
@@ -427,7 +430,7 @@ describe('Field.OneTimeCode in a browser', () => {
     if (mode === 'both') expect(events).toContain('change:ABC12x');
   });
 
-  it.each(['change', 'both'] as const)('reports a composition that overwrites a box of a full code, to a product with %s', async (mode) => {
+  chromiumIt.each(['change', 'both'] as const)('reports a composition that overwrites a box of a full code, to a product with %s', async (mode) => {
     const events: string[] = [];
     render(<Listening initial="ABC123" mode={mode} events={events} />);
     await userEvent.click(input());
@@ -438,7 +441,7 @@ describe('Field.OneTimeCode in a browser', () => {
     if (mode === 'both') expect(events).toContain('value:AxC123');
   });
 
-  it('calls onChange when it reports back the code before a composition that went from a code to a text the code refuses and was cancelled', async () => {
+  chromiumIt('calls onChange when it reports back the code before a composition that went from a code to a text the code refuses and was cancelled', async () => {
     const events: string[] = [];
     render(<Listening initial="AB" mode="both" events={events} />);
     await userEvent.click(input());
@@ -450,7 +453,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('keeps the whole code of a composition for a product that uppercases what it is told', async () => {
+  chromiumIt('keeps the whole code of a composition for a product that uppercases what it is told', async () => {
     const events: string[] = [];
     render(<Listening initial="AB" mode="upper" events={events} />);
     await userEvent.click(input());
@@ -460,7 +463,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(boxes().map((box) => box.textContent).join('')).toBe('ABCDEF');
   });
 
-  it('reports the code before a cancelled composition back to a product that uppercases what it is told', async () => {
+  chromiumIt('reports the code before a cancelled composition back to a product that uppercases what it is told', async () => {
     const events: string[] = [];
     render(<Listening initial="AB" mode="upper" events={events} />);
     await userEvent.click(input());
@@ -469,7 +472,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('AB'));
   });
 
-  it.each([['AB'], ['ABC12']])('takes a composition back to %s for a product that uppercases what it is told, and tells it', async (initial) => {
+  chromiumIt.each([['AB'], ['ABC12']])('takes a composition back to %s for a product that uppercases what it is told, and tells it', async (initial) => {
     const events: string[] = [];
     render(<Listening initial={initial} mode="upper" events={events} />);
     await userEvent.click(input());
@@ -503,7 +506,7 @@ describe('Field.OneTimeCode in a browser', () => {
     );
   }
 
-  it('leaves a product that clears a full code cleared when a composition ends', async () => {
+  chromiumIt('leaves a product that clears a full code cleared when a composition ends', async () => {
     const calls: string[] = [];
     render(<Answering initial="ABC12" mode="clear" calls={calls} />);
     await userEvent.click(input());
@@ -514,7 +517,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(calls).toEqual(['ABC12k']);
   });
 
-  it.each([['effect'], ['timer']] as const)('takes a composition back for a product that normalizes in %s', async (mode) => {
+  chromiumIt.each([['effect'], ['timer']] as const)('takes a composition back for a product that normalizes in %s', async (mode) => {
     for (const initial of ['AB', 'ABC12']) {
       const calls: string[] = [];
       const view = render(<Answering initial={initial} mode={mode} calls={calls} />);
@@ -529,7 +532,7 @@ describe('Field.OneTimeCode in a browser', () => {
     }
   });
 
-  it('takes a composition back for a product holding its answer to an earlier step when the composition ends', async () => {
+  chromiumIt('takes a composition back for a product holding its answer to an earlier step when the composition ends', async () => {
     const calls: string[] = [];
     render(<Answering initial="AB" mode="timer" calls={calls} />);
     await userEvent.click(input());
@@ -544,7 +547,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('reports the code before a cancelled composition to a product whose value stays fixed', async () => {
+  chromiumIt('reports the code before a cancelled composition to a product whose value stays fixed', async () => {
     const heard: string[] = [];
     render(
       <Field.Root aria-label="Verification code">
@@ -558,7 +561,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('gives onChange an input event with an inputType for the code a composition is taken back to', async () => {
+  chromiumIt('gives onChange an input event with an inputType for the code a composition is taken back to', async () => {
     const types: Array<string | undefined> = [];
     const data: Array<string | null> = [];
     render(
@@ -598,7 +601,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('AAA123'));
   });
 
-  it('takes a composition that rewrites the text before the caret', async () => {
+  chromiumIt('takes a composition that rewrites the text before the caret', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -610,7 +613,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('AX');
   });
 
-  it('leaves a full code as it was when a composition is cancelled', async () => {
+  chromiumIt('leaves a full code as it was when a composition is cancelled', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -621,7 +624,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('reports the code before a cancelled composition back when its steps were reported', async () => {
+  chromiumIt('reports the code before a cancelled composition back when its steps were reported', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -631,7 +634,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('calls onChange for the code before a cancelled composition that it reports back', async () => {
+  chromiumIt('calls onChange for the code before a cancelled composition that it reports back', async () => {
     const events: string[] = [];
     render(<Listening initial="AB" mode="both" events={events} />);
     await userEvent.click(input());
@@ -645,7 +648,7 @@ describe('Field.OneTimeCode in a browser', () => {
 
   const redo = () => userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
 
-  it('undoes a finished composition back to the code before it, or leaves the code, and reports no code the person did not see', async () => {
+  chromiumIt('undoes a finished composition back to the code before it, or leaves the code, and reports no code the person did not see', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="ABC123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -660,7 +663,7 @@ describe('Field.OneTimeCode in a browser', () => {
     for (const [code] of onValueChange.mock.calls) expect(['ABC123', 'AxC123']).toContain(code);
   });
 
-  it('leaves the code as it was when a composition the code refuses is undone', async () => {
+  chromiumIt('leaves the code as it was when a composition the code refuses is undone', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -674,7 +677,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('keeps the undo history through a cancelled composition', async () => {
+  chromiumIt('keeps the undo history through a cancelled composition', async () => {
     render(<Code initial="AB" characters="alphanumeric" />);
     await userEvent.click(input());
     await userEvent.keyboard('{End}C');
@@ -684,7 +687,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('AB');
   });
 
-  it('keeps a value the product sets while a composition runs, and drops the composition, which undo does not bring back', async () => {
+  chromiumIt('keeps a value the product sets while a composition runs, and drops the composition, which undo does not bring back', async () => {
     let reset = (_value: string) => {};
     const onValueChange = vi.fn();
     function Resettable() {
@@ -718,7 +721,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('lands a composed character next to the same one at the box it was typed at', async () => {
+  chromiumIt('lands a composed character next to the same one at the box it was typed at', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="AB1123" characters="alphanumeric" onValueChange={onValueChange} />);
     await userEvent.click(input());
@@ -736,7 +739,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('takes a composed full-width digit as its ASCII one', async () => {
+  chromiumIt('takes a composed full-width digit as its ASCII one', async () => {
     render(<Code initial="123456" />);
     await userEvent.click(input());
     await userEvent.keyboard('{Home}{ArrowRight}');
@@ -744,7 +747,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('113456'));
   });
 
-  it('writes a composition of several steps over the boxes after the caret, and moves nothing out', async () => {
+  chromiumIt('writes a composition of several steps over the boxes after the caret, and moves nothing out', async () => {
     render(<Code initial="ABC123" characters="alphanumeric" />);
     await userEvent.click(input());
     await userEvent.keyboard('{Home}{ArrowRight}');
@@ -752,7 +755,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('Aab123'));
   });
 
-  it('takes full-width digits typed or pasted as their ASCII ones', async () => {
+  chromiumIt('takes full-width digits typed or pasted as their ASCII ones', async () => {
     render(<Code />);
     await userEvent.click(input());
     await session().send('Input.insertText', { text: '１' });

@@ -46,8 +46,31 @@ const scopedThemeCss: BrowserCommand<[scope: string, options: { empty?: boolean;
   }
 };
 
+type MediaFeature =
+  | { name: 'prefers-reduced-motion'; value: 'reduce' | 'no-preference' }
+  | { name: 'forced-colors'; value: 'active' | 'none' }
+  | { name: 'prefers-color-scheme'; value: 'light' | 'dark' };
+
+/**
+ * Sets the media features the page reports, through Playwright so every engine
+ * takes it. The list replaces the last one: a feature it leaves out goes back
+ * to the page's starting value (no reduced motion, no forced colors, light),
+ * not the host's, so every test starts from the same media in every engine.
+ */
+const emulateMedia: BrowserCommand<[features: MediaFeature[]]> = async ({ page }, features) => {
+  const value = (name: MediaFeature['name']) => features.find((feature) => feature.name === name)?.value;
+  await page.emulateMedia({
+    reducedMotion: (value('prefers-reduced-motion') ?? 'no-preference') as 'reduce' | 'no-preference',
+    forcedColors: (value('forced-colors') ?? 'none') as 'active' | 'none',
+    colorScheme: (value('prefers-color-scheme') ?? 'light') as 'light' | 'dark',
+  });
+};
+
 // Real-browser tests for what jsdom can't check: the top layer, anchor
 // positioning, layout measurement and focus. Run with `pnpm test:browser`.
+// Every test runs in Chromium, Firefox and WebKit, the engines README's
+// browser floors name, except those gated to Chromium for its CDP session;
+// `--project chromium` runs one.
 export default defineConfig({
   ...base,
   // Found mid-run, these would make Vite reload the page and load a second React.
@@ -61,8 +84,8 @@ export default defineConfig({
       provider: 'playwright',
       headless: true,
       screenshotFailures: false,
-      instances: [{ browser: 'chromium' }],
-      commands: { scopedThemeCss },
+      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
+      commands: { scopedThemeCss, emulateMedia },
     },
   },
 });

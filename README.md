@@ -81,7 +81,7 @@ Checked against public browser support data on 2026-10-16, these are the first v
 | Firefox | 147 | 147 |
 | Safari and iOS Safari | 26 | Not shipped; load a polyfill |
 
-CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code, and Todae's browser tests run in Chromium only.
+CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code. Todae's component browser tests run in Chromium, Firefox and WebKit through Playwright, which ship builds newer than these floors, so the floors themselves are not tested.
 
 ## Contributing
 

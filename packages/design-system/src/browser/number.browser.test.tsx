@@ -1,6 +1,6 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -254,7 +254,8 @@ describe('Field.NumberInput in a browser', () => {
     }
   });
 
-  it('lets an IME composition land, and flags the text on commit when it is no number', async () => {
+  // Composes through CDP's Input domain, which only Chromium has.
+  it.runIf(server.browser === 'chromium')('lets an IME composition land, and flags the text on commit when it is no number', async () => {
     render(<Quantity locale="en" />);
     await userEvent.click(input());
     const session = cdp();

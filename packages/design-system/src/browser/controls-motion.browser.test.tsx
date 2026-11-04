@@ -8,7 +8,7 @@ import { Switch } from '../components/Switch.js';
 import { Tabs } from '../components/Tabs.js';
 import { Tooltip } from '../components/Tooltip.js';
 import { useTooltip } from '../hooks/useTooltip.js';
-import { emulateMedia } from '../test/drilldown.js';
+import { emulateMedia } from '../test/media.js';
 
 afterEach(async () => {
   cleanup();
