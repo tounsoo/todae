@@ -207,7 +207,7 @@ describe('BottomSheet in a browser', () => {
     const onClose = vi.fn();
     render(<SheetHarness onClose={onClose} />);
     await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
-    // Press once the sheet has slid in, not while it waits below the viewport.
+    // Press once the sheet has slid in, not while it waits below the test frame.
     await settle();
     await userEvent.click(screen.getByText('Newest first'));
     // The sheet's own padding is the dialog element too, but inside its box.

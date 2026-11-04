@@ -7,8 +7,8 @@ import { Drilldown } from '../components/Drilldown.js';
 import { cleanupAll, dialog, openDialog, settled, SettingsDialog, Surfaced, surfaceOpen, Themed, view } from '../test/drilldown.js';
 import { settle } from '../test/settle.js';
 
-// Press only once the surface has entered. A BottomSheet holds still below the viewport for a couple of frames
-// before it slides up, so a press then counts it as stable and lands outside the page in Firefox (#351).
+// Press only once the surface has entered. A BottomSheet holds still below the test frame for a couple of frames
+// before it slides up. Playwright counts it stable there, and in Firefox the press lands outside the frame (#351).
 async function openSurface() {
   await waitFor(() => expect(surfaceOpen()).toBe(true));
   await settle();

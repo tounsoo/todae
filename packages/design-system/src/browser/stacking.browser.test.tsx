@@ -191,8 +191,8 @@ describe('BottomSheet drag in a browser', () => {
     const onClose = vi.fn();
     render(<DraggableSheet onClose={onClose} />);
     const grabber = await screen.findByRole('button', { name: 'Resize sheet' });
-    // Drag once the sheet has slid in. Before that it holds still below the viewport, where a drag in Firefox
-    // starts outside the page and never reaches the grabber (#356).
+    // Drag once the sheet has slid in. Before that it holds still below the test frame, where a drag in Firefox
+    // starts outside the frame and never reaches the grabber (#356).
     await settle();
     await userEvent.dragAndDrop(grabber, screen.getByTestId('floor'));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('drag'));
