@@ -118,6 +118,7 @@ describe('Field.NumberInput in a browser', () => {
     input().form!.requestSubmit();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(onSubmit).not.toHaveBeenCalled();
+    blurBeforeCleanup();
     unmount();
 
     // A product that refuses the number: the form reads what is shown.
