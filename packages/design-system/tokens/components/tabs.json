@@ -32,6 +32,10 @@
     },
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
     }
   }
 }

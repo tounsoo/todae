@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Tabs, type TabsRootProps } from '../index.js';
+import { Tabs, usePopover, useTooltip, type TabsRootProps } from '../index.js';
 
 afterEach(cleanup);
 
@@ -314,5 +314,56 @@ describe('Tabs', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => render(<Tabs.Tab value="a">A</Tabs.Tab>)).toThrow('Tabs.Tab must render inside Tabs.Root');
     spy.mockRestore();
+  });
+});
+
+describe('Tabs indicator anchor', () => {
+  it('leaves the anchor-name on the tab to a popover anchored to it', async () => {
+    function Anchored() {
+      const alpha = useRef<HTMLButtonElement | null>(null);
+      usePopover({ anchorRef: alpha });
+      return (
+        <Tabs.Root defaultValue="a">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab value="a" ref={alpha}>
+              Alpha
+            </Tabs.Tab>
+            <Tabs.Tab value="b">Beta</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a">A</Tabs.Panel>
+          <Tabs.Panel value="b">B</Tabs.Panel>
+        </Tabs.Root>
+      );
+    }
+    render(<Anchored />);
+    const alpha = tab('Alpha');
+    const popover = alpha.style.getPropertyValue('--todae-popover-anchor');
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
+    await act(async () => tab('Beta').click());
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
+    await act(async () => alpha.click());
+    expect(alpha.style.getPropertyValue('anchor-name')).toBe(popover);
+  });
+
+  it('renders the indicator anchor inside a tooltip trigger tab, from the server too', () => {
+    function Tipped() {
+      const tip = useTooltip();
+      return (
+        <Tabs.Root defaultValue="a">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab {...tip.getTriggerProps()} value="a">
+              Alpha
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a">A</Tabs.Panel>
+        </Tabs.Root>
+      );
+    }
+    const html = new DOMParser().parseFromString(renderToString(<Tipped />), 'text/html');
+    const served = html.querySelector('[role="tab"]')!;
+    expect(served.querySelector(':scope > span[aria-hidden]')).not.toBeNull();
+    render(<Tipped />);
+    expect(tab('Alpha').querySelector(':scope > span[aria-hidden]')).not.toBeNull();
+    expect(tab('Alpha').textContent).toBe('Alpha');
   });
 });

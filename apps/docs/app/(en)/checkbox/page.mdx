@@ -9,6 +9,8 @@ Controlled when `checked` is defined. Uncontrolled when you pass `defaultChecked
 
 <Example of={CheckboxStates} block />
 
+When it is checked, the box fades to its checked color and the check grows in over `selection.motion.duration`. When the user prefers reduced motion, the check only fades.
+
 Do not put Checkbox inside `Field.Root`. The shell is for text and chip inputs. Wire `aria-describedby` on the checkbox when a [Description](/description) or [ErrorMessage](/errormessage) sits under it.
 
 For a permanent exclusive choice, use [Radio](/radio). For an overlay list, use [OptionList](/optionlist).

@@ -9,6 +9,8 @@ import { TabsManualVertical } from '../../../components/demos/TabsDemo';
 
 <Example of={TabsBasic} block />
 
+인디케이터는 CSS 앵커 위치 지정을 지원하는 브라우저에서 `tabs.motion.duration` 동안 이전 탭에서 새 탭으로 미끄러집니다. 다른 브라우저에서나 사용자가 동작 줄이기를 선호할 때는 바로 옮겨집니다.
+
 `activation="automatic"`(기본값)은 다른 탭에서 포커스가 옮겨 오는 즉시 탭을 선택합니다. 밖에서 목록으로 포커스가 들어올 때는 아무것도 선택하지 않습니다. 선택된 탭이 비활성이어서 대체 탭에 포커스가 놓여도 마찬가지입니다. 패널 렌더링이 느리면 `activation="manual"`을 쓰세요. 화살표 키는 포커스만 옮기고, Enter, Space 또는 클릭으로 선택합니다. 포커스가 목록을 떠나면 탭 정지점은 선택된 탭으로 돌아갑니다. `orientation="vertical"`은 목록을 패널 옆에 두고 Up과 Down으로 이동합니다.
 
 루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받습니다. 탭 하나는 항상 선택되어 있으므로 빈 상태가 없습니다. 선택된 패널만 자식을 렌더링합니다. 반쯤 채운 폼처럼 숨겨진 패널의 상태를 유지하려면 `keepMounted`를 넘기세요. 패널은 기본적으로 Tab 정지점이므로 스크린 리더 사용자가 그 텍스트에 닿을 수 있습니다. 패널이 자체 컨트롤로 시작하면 `tabIndex={-1}`을 넘기세요.

@@ -25,6 +25,12 @@
     border: var(--todae-selection-border-width) solid var(--todae-selection-border-default);
     border-radius: var(--todae-selection-radius);
     background: var(--todae-selection-bg-default);
+    /* Its growing check, dot and sliding thumb paint over the input; clicks
+       still belong to the input. */
+    pointer-events: none;
+    transition-property: background-color, border-color;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
   }
 
   .root[data-control='radio'] .indicator {
@@ -86,6 +92,7 @@
     font-size: calc(var(--todae-selection-size) * 0.75);
     line-height: 1;
     visibility: hidden;
+    opacity: 0;
   }
 
   .glyph > :is(svg, img) {
@@ -95,13 +102,33 @@
 
   .input:checked + .indicator > .glyph {
     visibility: visible;
+    opacity: 1;
   }
 
   .root[data-indeterminate] .indicator > .glyph {
     visibility: visible;
+    opacity: 1;
   }
 
-  .root[data-control='radio'] .input:checked + .indicator::after {
+  /* Only showing animates: a mixed box that unchecks swaps its dash for the
+     check in the same render, so a fade out would flash the check. */
+  .input:checked + .indicator > .glyph,
+  .root[data-indeterminate] .indicator > .glyph {
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .indicator > [data-todae-glyph] {
+    scale: 0.5;
+  }
+
+  .input:checked + .indicator > [data-todae-glyph],
+  .root[data-indeterminate] .indicator > [data-todae-glyph] {
+    scale: 1;
+  }
+
+  .root[data-control='radio'] .indicator::after {
     content: '';
     display: block;
     width: 40%;
@@ -109,6 +136,16 @@
     margin: 30% auto 0;
     border-radius: 50%;
     background: var(--todae-selection-indicator-fg);
+    opacity: 0;
+    scale: 0;
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .root[data-control='radio'] .input:checked + .indicator::after {
+    opacity: 1;
+    scale: 1;
   }
 
   /* The thumb's edge draws it against the off track, which is close to its fill. */
@@ -123,6 +160,7 @@
     border-radius: 50%;
     background: var(--todae-selection-thumb-bg);
     transform: translateX(0);
+    transition: transform var(--todae-selection-motion-duration) var(--todae-selection-motion-easing);
   }
 
   .root[data-control='switch'] .input:checked + .indicator::after {
@@ -132,6 +170,21 @@
   /* The thumb starts at the inline start, so it travels the other way in rtl. */
   .root[data-control='switch']:dir(rtl) .input:checked + .indicator::after {
     transform: translateX(calc(var(--todae-selection-size) * -0.8));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .indicator > [data-todae-glyph] {
+      scale: 1;
+    }
+
+    .root[data-control='radio'] .indicator::after {
+      scale: 1;
+      transition-property: opacity;
+    }
+
+    .root[data-control='switch'] .indicator::after {
+      transition: none;
+    }
   }
 
   .label {

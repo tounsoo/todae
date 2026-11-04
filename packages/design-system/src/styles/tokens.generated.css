@@ -795,6 +795,8 @@
   --todae-tabs-indicator-color: var(--_todae-tabs-indicator-color, var(--todae-color-accent-default));
   --todae-tabs-indicator-size: var(--_todae-tabs-indicator-size, 2px);
   --todae-tabs-leading: var(--_todae-tabs-leading, var(--todae-font-leading-tight));
+  --todae-tabs-motion-duration: var(--_todae-tabs-motion-duration, var(--todae-motion-duration-normal));
+  --todae-tabs-motion-easing: var(--_todae-tabs-motion-easing, var(--todae-motion-easing-enter));
   --todae-tabs-padding-x: var(--_todae-tabs-padding-x, var(--todae-space-control-x));
   --todae-tabs-padding-y: var(--_todae-tabs-padding-y, var(--todae-space-control-y));
   --todae-tabs-radius: var(--_todae-tabs-radius, var(--todae-radius-sm));
@@ -813,6 +815,8 @@
   --todae-selection-font-weight: var(--_todae-selection-font-weight, var(--todae-font-weight-regular));
   --todae-selection-gap: var(--_todae-selection-gap, var(--todae-space-selection-gap));
   --todae-selection-indicator-fg: var(--_todae-selection-indicator-fg, var(--todae-color-on-accent));
+  --todae-selection-motion-duration: var(--_todae-selection-motion-duration, var(--todae-motion-duration-fast));
+  --todae-selection-motion-easing: var(--_todae-selection-motion-easing, var(--todae-motion-easing-enter));
   --todae-selection-radius: var(--_todae-selection-radius, var(--todae-radius-sm));
   --todae-selection-ring-focus: var(--_todae-selection-ring-focus, var(--todae-focus-ring));
   --todae-selection-ring-invalid: var(--_todae-selection-ring-invalid, var(--todae-color-danger-default));
