@@ -168,9 +168,12 @@ export function useOptionList(config: OptionListConfig): OptionList {
     return values;
   }, [canPick, options, trailing]);
 
-  // A highlight is forgotten once its row leaves the list, so it does not come back with it.
-  const chosen = active !== null && active.scope === scope ? active.value : null;
-  if (chosen !== null && !enabledValues.includes(chosen)) setActive(null);
+  // A highlight belongs to the text it was chosen under: new text starts again at its own first
+  // row, so a ranking filterOptions puts its best match under Enter. It is also forgotten once its
+  // row leaves the list, so it does not come back with it.
+  const own = active !== null && active.scope === scope ? active : null;
+  const chosen = own !== null && own.query === query && enabledValues.includes(own.value) ? own.value : null;
+  if (own !== null && chosen === null) setActive(null);
   // Until this query's own list is in, no row is active unless one was chosen while it loads.
   const activeValue =
     chosen !== null && enabledValues.includes(chosen) && (listIsCurrent || active?.query === query)

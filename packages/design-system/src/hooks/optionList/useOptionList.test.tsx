@@ -138,6 +138,25 @@ describe('useOptionList keys', () => {
     expect(result.current.activeValue).toBe('ada');
   });
 
+  it('starts new text at its own first row, even when the highlighted row is still listed', () => {
+    const rank = (rows: readonly ComboboxOption[], query: string) =>
+      [...rows.filter((row) => row.label.toLowerCase().includes(query))].sort(
+        (a, b) => Number(!a.label.toLowerCase().startsWith(query)) - Number(!b.label.toLowerCase().startsWith(query)),
+      );
+    const { result, rerender } = setup({ options: ROWS, query: '', filterOptions: rank });
+    act(() => result.current.highlight('grace'));
+    rerender({ options: ROWS, query: 'g', filterOptions: rank });
+    expect(result.current.activeValue).toBe('grace');
+    act(() => result.current.move(1));
+    rerender({ options: ROWS, query: 'a', filterOptions: rank });
+    expect(result.current.options.map((row) => row.value)).toEqual(['ada', 'alan', 'barbara', 'grace']);
+    expect(result.current.activeValue).toBe('ada');
+    // Spaces around the text leave it the same text, so the highlight stays.
+    act(() => result.current.highlight('grace'));
+    rerender({ options: ROWS, query: 'a ', filterOptions: rank });
+    expect(result.current.activeValue).toBe('grace');
+  });
+
   it('keeps a highlight to its own scope', () => {
     const { result, rerender } = setup({ options: ROWS, query: '', scope: 'one' });
     act(() => result.current.highlight('grace'));
