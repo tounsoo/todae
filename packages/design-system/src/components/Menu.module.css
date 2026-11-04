@@ -112,10 +112,13 @@
     height: calc(var(--todae-menu-item-indicator-scale) * 1em);
     margin-inline-start: auto;
     line-height: 1;
+  }
+
+  .item[aria-haspopup='menu'] > [data-todae-glyph] {
     rotate: -90deg;
   }
 
-  .submenuIndicator:dir(rtl) {
+  .item[aria-haspopup='menu']:dir(rtl) > [data-todae-glyph] {
     rotate: 90deg;
   }
 
