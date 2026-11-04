@@ -447,7 +447,7 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "9ec5daf020a5",
-    "## A company resolver": "23b228dee217",
+    "## A company resolver": "184b205b815f",
     "## Several themes on one page": "a81e42a147ff",
     "## Overrides: CSS or ThemeProvider": "81bfc0b31cda",
     "## A worked example": "d64b3c5ea00e",
@@ -487,7 +487,7 @@
   },
   "link": {
     "(top)": "b3c68dc2ae25",
-    "# Link": "fc844e9bb58a",
+    "# Link": "a5eb13eb9233",
     "## Router links": "72885f5c533c",
     "## Current page": "46ace89018d8",
     "## Accessible composition": "3b651dd29c72",
@@ -956,7 +956,7 @@
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
-    "## Focus ring": "d4f6cb5c0687",
+    "## Focus ring": "c4641c4527e8",
     "## Motion": "6cc09ef86e12",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",

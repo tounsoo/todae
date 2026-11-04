@@ -50,8 +50,8 @@ test('focus and chip rings, outline none, and the negative width offset pass', a
 
 test('a raw outline or offset fails, except the value named for that file', async () => {
   assert.deepEqual(await lint('.a { outline: 2px solid red; }', button), ['outline 2px solid red']);
-  assert.deepEqual(await lint('.a { outline: var(--todae-button-border-width) solid var(--todae-focus-ring-color); }', button), [
-    'outline var(--todae-button-border-width) solid var(--todae-focus-ring-color)',
+  assert.deepEqual(await lint('.a { outline: var(--todae-button-border-width) solid var(--todae-focus-ring); }', button), [
+    'outline var(--todae-button-border-width) solid var(--todae-focus-ring)',
   ]);
   assert.deepEqual(await lint('.a { outline-offset: 2px; }', button), ['outline-offset 2px']);
   assert.deepEqual(await lint('.a { outline: 1px solid CanvasText; }', pagination), []);
@@ -79,7 +79,7 @@ test('the project config allows Pagination only inside the real forced-colors ru
   assert.deepEqual(quiet.results[0].warnings, []);
 
   const noisy = await stylelint.lint({
-    code: '.a { outline: var(--todae-button-border-width) solid var(--todae-focus-ring-color); }',
+    code: '.a { outline: var(--todae-button-border-width) solid var(--todae-focus-ring); }',
     codeFilename: button,
     config: projectConfig,
   });

@@ -49,7 +49,7 @@
         "current": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
       },
       "ring": {
-        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
       }
     }
   }

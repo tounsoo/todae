@@ -8,6 +8,7 @@ import {
   addedLine,
   collectViolations,
   deadTokens,
+  formatGrandfather,
   hint,
   isConsumerPath,
   nameViolations,
@@ -25,20 +26,32 @@ const pkgRoot = join(import.meta.dirname, '../..');
 function schema(slots: Record<string, string[]> = {}): Schema {
   return parseSchema(
     {
-      version: 1,
+      version: 2,
       states: ['default', 'hover', 'active', 'pressed', 'focus', 'disabled'],
-      statefulProperties: ['bg', 'border', 'color', 'decoration', 'fg', 'leading', 'ring', 'shadow'],
+      statefulProperties: {
+        bg: 'color',
+        border: 'color',
+        color: 'color',
+        decoration: 'color',
+        'decoration-thickness': 'dimension',
+        fg: 'color',
+        leading: 'number',
+        ring: 'color',
+        shadow: 'shadow',
+      },
     },
     slots,
   );
 }
 
-function snap(rows: { path: string; cssValue: string; layer?: 'core' | 'appearance' | 'density' | 'contract'; alias?: string }[]): Snapshot {
+function snap(
+  rows: { path: string; cssValue: string; type?: string; layer?: 'core' | 'appearance' | 'density' | 'contract'; alias?: string }[],
+): Snapshot {
   return parseSnapshot({
     version: 1,
     tokens: rows.map((row) => ({
       path: row.path,
-      type: 'color',
+      type: row.type ?? 'color',
       cssVar: `--todae-${row.path.replaceAll('.', '-')}`,
       cssValue: row.cssValue,
       context: null,
@@ -56,21 +69,21 @@ describe('name schema', () => {
   const rules = schema();
 
   it('accepts a state, a variant before the property, and a part that is not stateful', () => {
-    expect(nameViolations('button.bg.hover', rules)).toEqual([]);
-    expect(nameViolations('chip.warning.fg', rules)).toEqual([]);
-    expect(nameViolations('button.icon.size', rules)).toEqual([]);
+    expect(nameViolations('button.bg.hover', 'color', rules)).toEqual([]);
+    expect(nameViolations('chip.warning.fg', 'color', rules)).toEqual([]);
+    expect(nameViolations('button.icon.size', 'dimension', rules)).toEqual([]);
   });
 
   it('accepts three parts before the property and flags a fourth', () => {
-    expect(nameViolations('text.h3.font.size', rules)).toEqual([]);
-    expect(nameViolations('form.summary.link.fg.hover', rules)).toEqual([]);
-    expect(nameViolations('steps.marker.progress.dot.size', rules)).toEqual([]);
-    expect(nameViolations('steps.marker.progress.dot.halo.size', rules)).toEqual([{ rule: 'depth', path: 'steps.marker.progress.dot.halo.size' }]);
+    expect(nameViolations('text.h3.font.size', 'dimension', rules)).toEqual([]);
+    expect(nameViolations('form.summary.link.fg.hover', 'color', rules)).toEqual([]);
+    expect(nameViolations('steps.marker.progress.dot.size', 'dimension', rules)).toEqual([]);
+    expect(nameViolations('steps.marker.progress.dot.halo.size', 'dimension', rules)).toEqual([{ rule: 'depth', path: 'steps.marker.progress.dot.halo.size' }]);
   });
 
   it('flags a state no slot declares, and a name that is too deep as well', () => {
-    expect(nameViolations('button.bg.selected', rules)).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
-    expect(nameViolations('table.sort.cell.icon.mark.fg.selected', rules)).toEqual([
+    expect(nameViolations('button.bg.selected', 'color', rules)).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
+    expect(nameViolations('table.sort.cell.icon.mark.fg.selected', 'color', rules)).toEqual([
       { rule: 'depth', path: 'table.sort.cell.icon.mark.fg.selected' },
       { rule: 'state', path: 'table.sort.cell.icon.mark.fg.selected', word: 'selected' },
     ]);
@@ -78,9 +91,9 @@ describe('name schema', () => {
 
   it('ends a name at its state', () => {
     const declared = schema({ 'option.bg': ['default', 'selected'] });
-    expect(nameViolations('chip.bg.hover.extra', declared)).toEqual([{ rule: 'depth', path: 'chip.bg.hover.extra' }]);
-    expect(nameViolations('option.bg.selected.a.b', declared)).toEqual([{ rule: 'depth', path: 'option.bg.selected.a.b' }]);
-    expect(nameViolations('chip.bg.muted.size', declared)).toEqual([
+    expect(nameViolations('chip.bg.hover.extra', 'color', declared)).toEqual([{ rule: 'depth', path: 'chip.bg.hover.extra' }]);
+    expect(nameViolations('option.bg.selected.a.b', 'color', declared)).toEqual([{ rule: 'depth', path: 'option.bg.selected.a.b' }]);
+    expect(nameViolations('chip.bg.muted.size', 'dimension', declared)).toEqual([
       { rule: 'depth', path: 'chip.bg.muted.size' },
       { rule: 'state', path: 'chip.bg.muted.size', word: 'muted' },
     ]);
@@ -92,11 +105,11 @@ describe('name schema', () => {
 
   it('accepts the words a component lists in its slot for that property, and only there', () => {
     const declared = schema({ 'option.bg': ['default', 'selected'], 'button.*.fg': ['default', 'current'] });
-    expect(nameViolations('option.bg.selected', declared)).toEqual([]);
-    expect(nameViolations('table.sort.icon.fg.selected', schema({ 'table.sort.icon.fg': ['default', 'selected'] }))).toEqual([]);
-    expect(nameViolations('button.primary.fg.current', declared)).toEqual([]);
-    expect(nameViolations('option.fg.selected', declared)).toEqual([{ rule: 'state', path: 'option.fg.selected', word: 'selected' }]);
-    expect(nameViolations('tree.bg.selected', declared)).toEqual([{ rule: 'state', path: 'tree.bg.selected', word: 'selected' }]);
+    expect(nameViolations('option.bg.selected', 'color', declared)).toEqual([]);
+    expect(nameViolations('table.sort.icon.fg.selected', 'color', schema({ 'table.sort.icon.fg': ['default', 'selected'] }))).toEqual([]);
+    expect(nameViolations('button.primary.fg.current', 'color', declared)).toEqual([]);
+    expect(nameViolations('option.fg.selected', 'color', declared)).toEqual([{ rule: 'state', path: 'option.fg.selected', word: 'selected' }]);
+    expect(nameViolations('tree.bg.selected', 'color', declared)).toEqual([{ rule: 'state', path: 'tree.bg.selected', word: 'selected' }]);
   });
 
   it('does not name-check core, appearance, or density paths', () => {
@@ -110,11 +123,61 @@ describe('name schema', () => {
     expect(names).toEqual([{ rule: 'state', path: 'button.bg.selected', word: 'selected' }]);
   });
 
+  it('fails a sub-property after a stateful property, even when a slot lists it', () => {
+    const listed = schema({
+      'link.decoration': ['default', 'thickness'],
+      'focus.ring': ['color', 'width'],
+      'link.decoration-thickness': ['default', 'current'],
+    });
+    expect(nameViolations('link.decoration.thickness', 'dimension', listed)).toEqual([
+      { rule: 'property', path: 'link.decoration.thickness', word: 'thickness' },
+    ]);
+    expect(nameViolations('focus.ring.width', 'dimension', listed)).toEqual([{ rule: 'property', path: 'focus.ring.width', word: 'width' }]);
+    expect(nameViolations('focus.ring.color', 'color', listed)).toEqual([{ rule: 'property', path: 'focus.ring.color', word: 'color' }]);
+    expect(nameViolations('disclosure.ring.radius', 'dimension', schema())).toEqual([
+      { rule: 'property', path: 'disclosure.ring.radius', word: 'radius' },
+    ]);
+    expect(hint({ rule: 'property', path: 'focus.ring.width', word: 'width' }, listed)).toBe(
+      'focus.ring.width: "width" is not a state of focus.ring, whose states are color values of ring. Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "width" is a part, move it before the property (e.g. field.placeholder.fg).',
+    );
+    expect(hint({ rule: 'property', path: 'focus.ring.color', word: 'color' }, listed)).toBe(
+      'focus.ring.color: "color" is not a state of focus.ring, whose states are color values of ring. If it is focus.ring\'s own value, name it focus.ring.default, or focus.ring when ring has no states.',
+    );
+  });
+
+  it('accepts a sub-property joined to its property, and a role of the same type as its property', () => {
+    const listed = schema({ 'link.decoration-thickness': ['default', 'current'], 'field.fg': ['default', 'placeholder'] });
+    expect(nameViolations('focus.ring', 'color', listed)).toEqual([]);
+    expect(nameViolations('focus.ring-width', 'dimension', listed)).toEqual([]);
+    expect(nameViolations('link.decoration-offset', 'dimension', listed)).toEqual([]);
+    expect(nameViolations('link.decoration-thickness.current', 'dimension', listed)).toEqual([]);
+    expect(nameViolations('field.fg.placeholder', 'color', listed)).toEqual([]);
+    expect(nameViolations('text.leading.default', 'number', listed)).toEqual([]);
+    expect(nameViolations('link.decoration-thickness.wide', 'dimension', listed)).toEqual([
+      { rule: 'state', path: 'link.decoration-thickness.wide', word: 'wide' },
+    ]);
+  });
+
+  it('reads each token\'s type from the snapshot', () => {
+    const snapshot = snap([
+      { path: 'link.decoration.default', cssValue: 'red' },
+      { path: 'link.decoration.offset', cssValue: '3px', type: 'dimension' },
+    ]);
+    const names = collectViolations(snapshot, schema({ 'link.decoration': ['default', 'offset'] }), []).filter(
+      (violation) => violation.rule !== 'dead',
+    );
+    expect(names).toEqual([{ rule: 'property', path: 'link.decoration.offset', word: 'offset' }]);
+  });
+
   it('takes its shared states from the schema file, not a fixed list', () => {
-    const custom = parseSchema({ version: 1, states: ['default', 'selected'], statefulProperties: ['bg'] });
-    expect(nameViolations('option.bg.selected', custom)).toEqual([]);
-    expect(nameViolations('option.bg.hover', custom)).toEqual([{ rule: 'state', path: 'option.bg.hover', word: 'hover' }]);
-    expect(() => parseSchema({ version: 1, states: ['Selected'], statefulProperties: ['bg'] })).toThrow(/Selected/);
+    const custom = parseSchema({ version: 2, states: ['default', 'selected'], statefulProperties: { bg: 'color' } });
+    expect(nameViolations('option.bg.selected', 'color', custom)).toEqual([]);
+    expect(nameViolations('option.bg.hover', 'color', custom)).toEqual([{ rule: 'state', path: 'option.bg.hover', word: 'hover' }]);
+    expect(() => parseSchema({ version: 2, states: ['Selected'], statefulProperties: { bg: 'color' } })).toThrow(/Selected/);
+    expect(() => parseSchema({ version: 1, states: ['default'], statefulProperties: ['bg'] })).toThrow(/version must be 2/);
+    expect(() => parseSchema({ version: 2, states: ['default'], statefulProperties: ['bg'] })).toThrow(/\$type/);
+    expect(() => parseSchema({ version: 2, states: ['default'], statefulProperties: { bg: '' } })).toThrow(/\$type/);
+    expect(() => parseSchema({ version: 2, states: ['focus'], statefulProperties: { focus: 'color' } })).toThrow(/both a state and a property/);
   });
 });
 
@@ -218,10 +281,19 @@ describe('grandfather ratchet', () => {
       }),
     ).toThrow(/repeats/);
     expect(() => parseGrandfather({ version: 1, entries: [{ rule: 'nope', path: 'button.bg' }] })).toThrow(/unknown/);
+    expect(() => parseGrandfather({ version: 1, entries: [{ rule: 'property', path: 'link.decoration.offset' }] })).toThrow(/needs a word/);
+  });
+
+  it('round-trips a sub-property entry and matches it by word', () => {
+    const property: Violation = { rule: 'property', path: 'link.decoration.offset', word: 'offset' };
+    const list = parseGrandfather(JSON.parse(formatGrandfather([property])) as unknown);
+    expect([...list.values()]).toEqual([property]);
+    expect(ratchet({ found: [property], list }).unlisted).toEqual([]);
+    expect(ratchet({ found: [{ ...property, word: 'other' }], list }).unlisted).toHaveLength(1);
   });
 
   it('uses the hint for each rule', () => {
-    const states = parseSchema({ version: 1, states: ['default', 'selected'], statefulProperties: ['bg'] });
+    const states = parseSchema({ version: 2, states: ['default', 'selected'], statefulProperties: { bg: 'color' } });
     expect(hint({ rule: 'state', path: 'button.bg.current', word: 'current' }, states)).toBe(
       'button.bg.current: unknown state "current". Every stateful property takes default, selected. For a state of this component, list "current" with the rest of button.bg\'s states in its slots in tokens/resolver.json; if "current" is a variant, move it before the property (e.g. option.selected.bg).',
     );

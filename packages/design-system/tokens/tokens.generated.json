@@ -3838,9 +3838,9 @@
       "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
-      "path": "focus.ring.color",
+      "path": "focus.ring",
       "type": "color",
-      "cssVar": "--todae-focus-ring-color",
+      "cssVar": "--todae-focus-ring",
       "cssValue": "var(--todae-color-accent-default)",
       "ref": "color.accent.default",
       "layer": "contract",
@@ -3849,10 +3849,10 @@
         "kind": "set",
         "name": "focus"
       },
-      "description": "The focus ring every component draws; component ring.focus colors read focus.ring.color."
+      "description": "The focus ring every component draws; component ring.focus colors read focus.ring."
     },
     {
-      "path": "focus.ring.offset",
+      "path": "focus.ring-offset",
       "type": "dimension",
       "cssVar": "--todae-focus-ring-offset",
       "cssValue": "2px",
@@ -3863,10 +3863,10 @@
         "kind": "set",
         "name": "focus"
       },
-      "description": "The focus ring every component draws; component ring.focus colors read focus.ring.color."
+      "description": "The focus ring every component draws; component ring.focus colors read focus.ring."
     },
     {
-      "path": "focus.ring.width",
+      "path": "focus.ring-width",
       "type": "dimension",
       "cssVar": "--todae-focus-ring-width",
       "cssValue": "2px",
@@ -3877,7 +3877,7 @@
         "kind": "set",
         "name": "focus"
       },
-      "description": "The focus ring every component draws; component ring.focus colors read focus.ring.color."
+      "description": "The focus ring every component draws; component ring.focus colors read focus.ring."
     },
     {
       "path": "button.base.border-width",
@@ -4262,8 +4262,8 @@
       "path": "button.primary.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-primary-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": "primary",
       "entry": {
@@ -4517,8 +4517,8 @@
       "path": "button.secondary.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-secondary-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": "secondary",
       "entry": {
@@ -4772,8 +4772,8 @@
       "path": "button.ghost.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-ghost-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": "ghost",
       "entry": {
@@ -6230,8 +6230,8 @@
       "path": "field.ring.focus",
       "type": "color",
       "cssVar": "--todae-field-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7280,8 +7280,8 @@
       "path": "chip.ring.focus",
       "type": "color",
       "cssVar": "--todae-chip-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7295,7 +7295,7 @@
       "type": "dimension",
       "cssVar": "--todae-chip-ring-offset",
       "cssValue": "var(--todae-focus-ring-offset)",
-      "ref": "focus.ring.offset",
+      "ref": "focus.ring-offset",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7309,7 +7309,7 @@
       "type": "dimension",
       "cssVar": "--todae-chip-ring-width",
       "cssValue": "var(--todae-focus-ring-width)",
-      "ref": "focus.ring.width",
+      "ref": "focus.ring-width",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7924,8 +7924,8 @@
       "path": "sheet.ring.focus",
       "type": "color",
       "cssVar": "--todae-sheet-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8596,8 +8596,8 @@
       "path": "option.ring.focus",
       "type": "color",
       "cssVar": "--todae-option-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8806,8 +8806,8 @@
       "path": "menu.item.ring.focus",
       "type": "color",
       "cssVar": "--todae-menu-item-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -9156,8 +9156,8 @@
       "path": "tabs.ring.focus",
       "type": "color",
       "cssVar": "--todae-tabs-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -9408,8 +9408,8 @@
       "path": "selection.ring.focus",
       "type": "color",
       "cssVar": "--todae-selection-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10066,8 +10066,8 @@
       "path": "splitter.ring.focus",
       "type": "color",
       "cssVar": "--todae-splitter-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10374,8 +10374,8 @@
       "path": "toast.ring.focus",
       "type": "color",
       "cssVar": "--todae-toast-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10721,11 +10721,11 @@
       "description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same."
     },
     {
-      "path": "form.summary.link.decoration.offset",
+      "path": "form.summary.link.decoration-offset",
       "type": "dimension",
       "cssVar": "--todae-form-summary-link-decoration-offset",
       "cssValue": "var(--todae-link-decoration-offset)",
-      "ref": "link.decoration.offset",
+      "ref": "link.decoration-offset",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10735,11 +10735,11 @@
       "description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same."
     },
     {
-      "path": "form.summary.link.decoration.thickness",
+      "path": "form.summary.link.decoration-thickness",
       "type": "dimension",
       "cssVar": "--todae-form-summary-link-decoration-thickness",
-      "cssValue": "var(--todae-link-decoration-thickness)",
-      "ref": "link.decoration.thickness",
+      "cssValue": "var(--todae-link-decoration-thickness-default)",
+      "ref": "link.decoration-thickness.default",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10780,8 +10780,8 @@
       "path": "form.summary.link.ring.focus",
       "type": "color",
       "cssVar": "--todae-form-summary-link-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10791,11 +10791,11 @@
       "description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same."
     },
     {
-      "path": "form.summary.link.ring.radius",
+      "path": "form.summary.link.ring-radius",
       "type": "dimension",
       "cssVar": "--todae-form-summary-link-ring-radius",
       "cssValue": "var(--todae-link-ring-radius)",
-      "ref": "link.ring.radius",
+      "ref": "link.ring-radius",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10850,8 +10850,8 @@
       "path": "form.summary.ring.focus",
       "type": "color",
       "cssVar": "--todae-form-summary-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10889,20 +10889,6 @@
       "description": "Link.Root: an inline text link and its underline."
     },
     {
-      "path": "link.decoration.current-thickness",
-      "type": "dimension",
-      "cssVar": "--todae-link-decoration-current-thickness",
-      "cssValue": "2px",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Link.Root: an inline text link and its underline."
-    },
-    {
       "path": "link.decoration.default",
       "type": "color",
       "cssVar": "--todae-link-decoration-default",
@@ -10931,7 +10917,7 @@
       "description": "Link.Root: an inline text link and its underline."
     },
     {
-      "path": "link.decoration.offset",
+      "path": "link.decoration-offset",
       "type": "dimension",
       "cssVar": "--todae-link-decoration-offset",
       "cssValue": "3px",
@@ -10945,9 +10931,23 @@
       "description": "Link.Root: an inline text link and its underline."
     },
     {
-      "path": "link.decoration.thickness",
+      "path": "link.decoration-thickness.current",
       "type": "dimension",
-      "cssVar": "--todae-link-decoration-thickness",
+      "cssVar": "--todae-link-decoration-thickness-current",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Link.Root: an inline text link and its underline."
+    },
+    {
+      "path": "link.decoration-thickness.default",
+      "type": "dimension",
+      "cssVar": "--todae-link-decoration-thickness-default",
       "cssValue": "1px",
       "ref": null,
       "layer": "contract",
@@ -11004,8 +11004,8 @@
       "path": "link.ring.focus",
       "type": "color",
       "cssVar": "--todae-link-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11015,7 +11015,7 @@
       "description": "Link.Root: an inline text link and its underline."
     },
     {
-      "path": "link.ring.radius",
+      "path": "link.ring-radius",
       "type": "dimension",
       "cssVar": "--todae-link-ring-radius",
       "cssValue": "2px",
@@ -11186,8 +11186,8 @@
       "path": "disclosure.ring.focus",
       "type": "color",
       "cssVar": "--todae-disclosure-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11197,7 +11197,7 @@
       "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
     },
     {
-      "path": "disclosure.ring.radius",
+      "path": "disclosure.ring-radius",
       "type": "dimension",
       "cssVar": "--todae-disclosure-ring-radius",
       "cssValue": "2px",
@@ -11508,8 +11508,8 @@
       "path": "table.sort.ring.focus",
       "type": "color",
       "cssVar": "--todae-table-sort-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11648,8 +11648,8 @@
       "path": "slider.ring.focus",
       "type": "color",
       "cssVar": "--todae-slider-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -12992,8 +12992,8 @@
       "path": "mention.ring.focus",
       "type": "color",
       "cssVar": "--todae-mention-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -13020,8 +13020,8 @@
       "path": "conversation.ring.focus",
       "type": "color",
       "cssVar": "--todae-conversation-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15162,8 +15162,8 @@
       "path": "pagination.ring.focus",
       "type": "color",
       "cssVar": "--todae-pagination-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15190,8 +15190,8 @@
       "path": "scroll.ring.focus",
       "type": "color",
       "cssVar": "--todae-scroll-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15470,8 +15470,8 @@
       "path": "tree.item.ring.focus",
       "type": "color",
       "cssVar": "--todae-tree-item-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15862,8 +15862,8 @@
       "path": "nav.item.ring.focus",
       "type": "color",
       "cssVar": "--todae-nav-item-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -16184,8 +16184,8 @@
       "path": "contents.link.ring.focus",
       "type": "color",
       "cssVar": "--todae-contents-link-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -16324,8 +16324,8 @@
       "path": "picker.ring.focus",
       "type": "color",
       "cssVar": "--todae-picker-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -16335,9 +16335,9 @@
       "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
-      "path": "picker.thumb.border.color",
+      "path": "picker.thumb.border",
       "type": "color",
-      "cssVar": "--todae-picker-thumb-border-color",
+      "cssVar": "--todae-picker-thumb-border",
       "cssValue": "var(--todae-color-bg-surface)",
       "ref": "color.bg.surface",
       "layer": "contract",
@@ -16349,7 +16349,7 @@
       "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
-      "path": "picker.thumb.border.width",
+      "path": "picker.thumb.border-width",
       "type": "dimension",
       "cssVar": "--todae-picker-thumb-border-width",
       "cssValue": "2px",
@@ -16576,8 +16576,8 @@
       "path": "calendar.day.ring.focus",
       "type": "color",
       "cssVar": "--todae-calendar-day-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -16800,8 +16800,8 @@
       "path": "drilldown.ring.focus",
       "type": "color",
       "cssVar": "--todae-drilldown-ring-focus",
-      "cssValue": "var(--todae-focus-ring-color)",
-      "ref": "focus.ring.color",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
       "layer": "contract",
       "context": null,
       "entry": {

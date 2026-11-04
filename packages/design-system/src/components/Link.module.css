@@ -5,7 +5,7 @@
     color: var(--todae-link-fg-default);
     text-decoration-line: underline;
     text-decoration-color: var(--todae-link-decoration-default);
-    text-decoration-thickness: var(--todae-link-decoration-thickness);
+    text-decoration-thickness: var(--todae-link-decoration-thickness-default);
     text-underline-offset: var(--todae-link-decoration-offset);
   }
 
@@ -17,7 +17,7 @@
   .root:any-link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) {
     color: var(--todae-link-fg-current);
     text-decoration-color: var(--todae-link-decoration-current);
-    text-decoration-thickness: var(--todae-link-decoration-current-thickness);
+    text-decoration-thickness: var(--todae-link-decoration-thickness-current);
   }
 
   .root:any-link:where(:hover) {

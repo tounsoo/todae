@@ -31,7 +31,7 @@
       "size": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
     },
     "motion": {
       "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },

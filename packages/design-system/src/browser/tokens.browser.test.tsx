@@ -40,9 +40,9 @@ describe('shared focus ring tokens in a browser', () => {
     expect(tab.outlineOffset).toBe('-2px');
   });
 
-  it('recolors component rings, button variants included, from focus.ring.color', async () => {
+  it('recolors component rings, button variants included, from focus.ring', async () => {
     render(
-      <div data-appearance="light" data-density="comfortable" style={{ ['--_todae-focus-ring-color' as string]: 'rgb(200, 0, 0)' }}>
+      <div data-appearance="light" data-density="comfortable" style={{ ['--_todae-focus-ring' as string]: 'rgb(200, 0, 0)' }}>
         <Button.Root variant="secondary">Save</Button.Root>
         <Checkbox.Root>Agree</Checkbox.Root>
       </div>,
@@ -55,7 +55,7 @@ describe('shared focus ring tokens in a browser', () => {
     expect(getComputedStyle(indicator).outlineColor).toBe('rgb(200, 0, 0)');
   });
 
-  it('moves an inset tab ring with a wider focus.ring.width', async () => {
+  it('moves an inset tab ring with a wider focus.ring-width', async () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ ['--todae-focus-ring-width' as string]: '3px' }}>
         <Tabs.Root defaultValue="a">

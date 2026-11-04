@@ -1,4 +1,4 @@
-import { aliasGroups, consumeCssVar } from './serialize.ts';
+import { aliasGroups, consumeCssVar, cssVarName } from './serialize.ts';
 import { LAYER_RANK, didYouMean, entryTokens, fail, type EntryToken, type FlatToken, type Layer, type ResolvedEntry } from './shared.ts';
 
 const LAYER_ORDER = Object.keys(LAYER_RANK).join(' < ');
@@ -95,8 +95,9 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
     }
     all.push(...entryTokens(entry));
   }
+  checkPathShapes(owner, all);
   checkTypes(all);
-  // A later entry may read an earlier one of its layer, e.g. a button variant reads focus.ring.color.
+  // A later entry may read an earlier one of its layer, e.g. a button variant reads focus.ring.
   validateRefs(all, known, (from, to) => {
     const [at, target] = [position.get(from)!, position.get(to)!];
     return at === target || (target < at && known.get(from) === known.get(to));
@@ -106,6 +107,34 @@ export function checkGraph(entries: ResolvedEntry[]): EntryToken[] {
   checkOrder(entries, all, declarations);
   checkConsumeVars(entries, all);
   return all;
+}
+
+/**
+ * A path is a token or a group, never both, and no two tokens share a CSS
+ * variable. Either would let a token package that still writes a renamed
+ * path, such as `focus.ring.width` after `focus.ring-width`, build silently.
+ */
+function checkPathShapes(owner: Map<string, string>, all: EntryToken[]): void {
+  const types = new Map(all.map((token) => [token.path, token.type]));
+  const byVar = new Map<string, string>();
+  for (const [path, label] of owner) {
+    const parts = path.split('.');
+    for (let i = 1; i < parts.length; i++) {
+      const group = parts.slice(0, i).join('.');
+      const holder = owner.get(group);
+      if (holder === undefined) continue;
+      // A child of the same type is the token's own value under an old name (focus.ring.color).
+      const advice =
+        types.get(path) === types.get(group)
+          ? `Set the value on "${group}" itself`
+          : `Name it beside "${group}" instead, joining a sub-property with a hyphen (e.g. focus.ring-width)`;
+      fail(`${label} token "${path}" is under "${group}", which ${holder} declares as a token, and a token holds no tokens. ${advice}`);
+    }
+    const cssVar = cssVarName(path);
+    const twin = byVar.get(cssVar);
+    if (twin !== undefined) fail(`tokens "${twin}" (${owner.get(twin)}) and "${path}" (${label}) both write ${cssVar}; rename one of them`);
+    byVar.set(cssVar, path);
+  }
 }
 
 function checkTypes(all: EntryToken[]): void {
