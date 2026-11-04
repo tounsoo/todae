@@ -70,6 +70,14 @@
       "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
     {
+      "path": "motion.modal.duration.enter",
+      "approved": "Renamed to motion.window.duration.enter and exit before it reached main: an earlier commit of the motion role pull request named the centered window's role modal, and Ben said 'Do what is best' on 2026-11-04 when asked whether to rename it, since Drawer and BottomSheet are modal too. His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "motion.modal.duration.exit",
+      "approved": "Renamed to motion.window.duration.enter and exit before it reached main: an earlier commit of the motion role pull request named the centered window's role modal, and Ben said 'Do what is best' on 2026-11-04 when asked whether to rename it, since Drawer and BottomSheet are modal too. His merge of this pull request is the approval of these paths."
+    },
+    {
       "path": "nav.motion.duration",
       "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
