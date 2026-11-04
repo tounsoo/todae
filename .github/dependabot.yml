@@ -1,0 +1,18 @@
+# Keeps the commit-pinned actions in .github/workflows and .github/actions current.
+# Dependabot moves each SHA and its version comment together. Updates are grouped and monthly, so each
+# directory gets at most one pull request a month, which keeps Vercel preview builds and CI runs down. Actions that only release.yml uses first run on main,
+# so check those bumps in the pull request before merging.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
