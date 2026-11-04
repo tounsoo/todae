@@ -20,6 +20,7 @@ import { anchoredContentStyle, anchorTriggerStyle, mergeAnchorNames, removeAncho
 import { useControlledState } from '../hooks/useControlledState.js';
 import { eventInside } from './eventInside.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { aimPopoverOrigin, anchorNamed } from './popoverOrigin.js';
 
 export type { PopoverWire };
 
@@ -144,6 +145,27 @@ export function usePopoverInternal(
   }, [anchorName, anchorRef]);
 
   useEffect(() => () => outsideRestore.current?.(), []);
+
+  const wasOpen = useRef(open);
+  const satByAnchor = useRef(false);
+  // The popover grows from where it sits by its anchor as it shows, and
+  // shrinks back toward where it sits then as it closes, since it may have
+  // flipped while open. Its anchor is its trigger, or the element that
+  // carries the name it was placed at, such as a word or a context menu's box.
+  // One whose anchor went away as it closed, such as the word a list of
+  // suggestions sat by, has nothing to sit by, so it goes at once.
+  useLayoutEffect(() => {
+    const el = popoverRef.current;
+    if (!el) return;
+    const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
+    const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
+    const closing = wasOpen.current && !open;
+    wasOpen.current = open;
+    const anchored = Boolean(anchor?.isConnected);
+    if (closing && satByAnchor.current && !anchored) el.setAttribute('data-todae-unanchored', '');
+    if (open) satByAnchor.current = anchored;
+    if (anchor && anchored) aimPopoverOrigin(el, anchor);
+  }, [anchorName, anchorRef, open]);
 
   useEffect(() => {
     if (!open || !enabled) return;

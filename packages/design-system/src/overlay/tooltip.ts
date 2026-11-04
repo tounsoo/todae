@@ -19,6 +19,7 @@ import {
   type TooltipOpenReason,
   type TooltipPolicy,
 } from './tooltipIntent.js';
+import { transformsSettling } from './transformsSettling.js';
 import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from './tooltipWarmth.js';
 import type { TooltipWire } from './tooltipWire.js';
 import { firstTabbable } from './tabbables.js';
@@ -199,15 +200,45 @@ export function useTooltipInternal<I extends boolean = false>(
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
 
+  // Each commit replaces one still waiting for its trigger to settle.
+  const commitSeq = useRef(0);
+  useEffect(
+    () => () => {
+      commitSeq.current++;
+    },
+    [],
+  );
+
   const applyCommands = useCallback(
     (commands: readonly TooltipCommand[]) => {
+      const commitNow = (next: boolean, reason: TooltipOpenReason) => {
+        requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
+        setValue(next);
+        onOpenChangeRef.current?.(next, reason);
+        if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
+      };
       applyTooltipCommands(commands, timerRef, {
         onElapsed: (token) => dispatchRef.current({ kind: 'delay-elapsed', token }),
         commit: (next, reason) => {
-          requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
-          setValue(next);
-          onOpenChangeRef.current?.(next, reason);
-          if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
+          const seq = ++commitSeq.current;
+          // A tip waits while its trigger moves by a transform, as in a
+          // popover that is still growing open. It opens then for what still
+          // holds it, the hold that asked or else the other, unless a show
+          // delay is running.
+          const settling = next ? transformsSettling(triggerRef.current) : null;
+          if (!settling) {
+            commitNow(next, reason);
+            return;
+          }
+          const asked = reason === 'focus' ? 'focus' : 'hover';
+          void settling.then(() => {
+            const intent = intentRef.current;
+            // A show delay started since then opens it when it runs out.
+            if (commitSeq.current !== seq || intent.pending !== null) return;
+            if (intent[asked] === 'held') commitNow(next, reason);
+            else if (intent.focus === 'held') commitNow(next, 'focus');
+            else if (intent.hover === 'held') commitNow(next, 'hover');
+          });
         },
         restore: () => setRestoreEpoch((epoch) => epoch + 1),
       });

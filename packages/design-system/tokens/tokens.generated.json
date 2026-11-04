@@ -7414,7 +7414,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "overlay.motion.easing.exit",
@@ -7428,7 +7428,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "overlay.scrim.bg",
@@ -7442,7 +7442,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "dialog.bg",
@@ -7456,7 +7456,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.border",
@@ -7470,7 +7470,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.border-width",
@@ -7484,7 +7484,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.fg",
@@ -7498,7 +7498,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.gap",
@@ -7512,7 +7512,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.max-width",
@@ -7526,12 +7526,26 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
+    },
+    {
+      "path": "dialog.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-dialog-motion-duration-exit",
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
@@ -7540,21 +7554,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
-    },
-    {
-      "path": "dialog.motion.duration.exit",
-      "type": "duration",
-      "cssVar": "--todae-dialog-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.motion.easing.enter",
@@ -7568,7 +7568,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.motion.easing.exit",
@@ -7582,7 +7582,21 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
+    },
+    {
+      "path": "dialog.motion.offset",
+      "type": "dimension",
+      "cssVar": "--todae-dialog-motion-offset",
+      "cssValue": "0.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.padding.x",
@@ -7596,7 +7610,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.padding.y",
@@ -7610,7 +7624,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.radius",
@@ -7624,7 +7638,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.shadow",
@@ -7638,7 +7652,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.title.font.size",
@@ -7652,7 +7666,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "dialog.title.font.weight",
@@ -7666,7 +7680,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Dialog.Root: a modal panel centered over a scrim."
+      "description": "Dialog.Root: a modal panel centered over a scrim. The panel rises into place by motion.offset as it opens and sinks back as it closes."
     },
     {
       "path": "sheet.bg",
@@ -8016,7 +8030,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.border",
@@ -8030,7 +8044,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.border-width",
@@ -8044,7 +8058,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.fg",
@@ -8058,7 +8072,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.max-height",
@@ -8072,7 +8086,77 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "popover.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-popover-motion-duration-enter",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "popover.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-popover-motion-duration-exit",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "popover.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-popover-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "popover.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-popover-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "popover.motion.scale",
+      "type": "number",
+      "cssVar": "--todae-popover-motion-scale",
+      "cssValue": "0.96",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.offset",
@@ -8086,7 +8170,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.padding.x",
@@ -8100,7 +8184,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.padding.y",
@@ -8114,7 +8198,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.radius",
@@ -8128,7 +8212,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "popover.shadow",
@@ -8142,7 +8226,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
     },
     {
       "path": "tooltip.bg",

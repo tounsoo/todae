@@ -5,6 +5,8 @@ import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
 import { Dialog } from '../components/Dialog.js';
 import { Drawer, type DrawerSide } from '../components/Drawer.js';
+import { Popover } from '../components/Popover.js';
+import { usePopover } from '../hooks/usePopover.js';
 import { HeldTip } from '../test/heldTip.js';
 
 afterEach(cleanup);
@@ -123,7 +125,7 @@ describe('A tip opened during an overlay enter motion', () => {
     expectTipFollowed(await sampleMotion(pin), { minTravel: 40 });
   });
 
-  it('stays by its trigger while a Dialog fades in', async () => {
+  it('stays by its trigger while a Dialog rises and fades in', async () => {
     render(
       <Themed style={slowEnter}>
         <Dialog.Root open onOpenChange={() => undefined} aria-label="Edit">
@@ -132,7 +134,8 @@ describe('A tip opened during an overlay enter motion', () => {
       </Themed>,
     );
     expect(document.activeElement).toBe(pin());
-    expectTipFollowed(await sampleMotion(pin));
+    // The panel rises by layout, so the tip moves with it.
+    expectTipFollowed(await sampleMotion(pin), { minTravel: 3 });
   });
 
   it('stays by its trigger while a BottomSheet slides up', async () => {
@@ -151,6 +154,47 @@ describe('A tip opened during an overlay enter motion', () => {
     render(<Sheet />);
     await waitFor(() => expect(document.activeElement).toBe(pin()));
     expectTipFollowed(await sampleMotion(pin), { minTravel: 40 });
+  });
+});
+
+describe('A tip in a popover that grows open', () => {
+  function Grow() {
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const popover = usePopover({ defaultOpen: true, initialFocusRef: buttonRef });
+    return (
+      <Themed style={{ ['--_todae-popover-motion-duration-enter' as string]: '1s' }}>
+        <Button.Root {...popover.getTriggerProps()}>Open</Button.Root>
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Grow">
+          <IconButton buttonRef={buttonRef} />
+        </Popover.Root>
+      </Themed>
+    );
+  }
+
+  const scaling = (el: Element) =>
+    el.getAnimations().some((animation) => (animation as CSSTransition).transitionProperty === 'scale');
+
+  it('waits for the scale to settle, then sits by its trigger', async () => {
+    render(<Grow />);
+    const content = screen.getByRole('dialog', { name: 'Grow' });
+    await waitFor(() => expect(document.activeElement).toBe(pin()));
+    // Focus would open the tip at once, but the popover is about to grow or
+    // still grows.
+    expect(content.hasAttribute('data-todae-entering') || scaling(content)).toBe(true);
+    expect(tipOf(pin()!)).toBeNull();
+    await waitFor(() => expect(tipOf(pin()!)).not.toBeNull(), { timeout: 3000 });
+    expect(scaling(content)).toBe(false);
+    expect(getComputedStyle(content).scale).toBe('none');
+    const frames = await sampleMotion(pin);
+    expect(frames.length).toBeGreaterThanOrEqual(1);
+    for (const f of frames) expect(Math.abs(f.dx)).toBeLessThanOrEqual(1);
+  });
+
+  it('grows from the side of its trigger it sits on', async () => {
+    render(<Grow />);
+    const content = screen.getByRole('dialog', { name: 'Grow' });
+    // Below its trigger, lined up with its start edge.
+    expect(content.style.getPropertyValue('--_origin')).toBe('left top');
   });
 });
 

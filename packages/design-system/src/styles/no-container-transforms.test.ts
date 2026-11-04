@@ -120,10 +120,28 @@ function movingKeyframes(css: string): Set<string> {
 /** A sheet can run keyframes another sheet defines, so collect them from every sheet. */
 const MOVING_KEYFRAMES = new Set(sheets.flatMap(({ css }) => [...movingKeyframes(css)]));
 
+/** Whether every selector in `prelude` styles an overlay only before it has entered, or as it exits. */
+function notEnteredOnly(prelude: string): boolean {
+  return splitTopLevel(prelude).every((part) => subject(part.trim()).includes(':not([data-entered])'));
+}
+
+/**
+ * A scale a popover only has on its way in or out: the style it shows with
+ * before it has entered, which it also shrinks back to as it closes. An open
+ * popover is never scaled, and a tooltip that opens while its trigger still
+ * scales waits for it to settle (transformsSettling), so no tip is placed
+ * against a box that is still moving.
+ */
+function isOpenCloseScale(property: string, stack: readonly Block[]): boolean {
+  if (property !== 'scale') return false;
+  const rule = [...stack].reverse().find((b) => !b.prelude.startsWith('@'));
+  return rule !== undefined && notEnteredOnly(rule.prelude);
+}
+
 /**
  * Every transform-like declaration on an element that could hold a trigger,
  * as "selector { declaration }": outside @keyframes, or an animation that
- * runs @keyframes with one.
+ * runs @keyframes with one. A popover's open and close scale is allowed.
  */
 function containerMoves(css: string, moving = movingKeyframes(css)): string[] {
   const out: string[] = [];
@@ -131,6 +149,7 @@ function containerMoves(css: string, moving = movingKeyframes(css)): string[] {
     const declaration = parse(text);
     if (!declaration || stack.some((b) => isKeyframes(b.prelude))) return;
     const { property, value } = declaration;
+    if (isOpenCloseScale(property, stack)) return;
     const moves =
       MOVES.has(property) ||
       ((property === 'animation' || property === 'animation-name') &&
@@ -150,7 +169,8 @@ describe('design-system styles', () => {
   });
 
   // A tooltip sits in the top layer, placed against its trigger's
-  // untransformed box, so a container that holds a trigger moves by layout.
+  // untransformed box, so a container that holds a trigger moves by layout,
+  // apart from a popover's scale on its way in or out.
   it.each(sheets)('$name moves no element by a transform, outside pseudo-elements and @keyframes', ({ css }) => {
     expect(containerMoves(css, MOVING_KEYFRAMES)).toEqual([]);
   });
@@ -162,12 +182,34 @@ describe('design-system styles', () => {
           .a { transform: none; }
           .b::after, .c::before { transform: rotate(45deg); }
           .d::after, .e { rotate: 45deg; }
-          .f { @starting-style { scale: 0.9; } }
+          .f:popover-open { scale: 0.9; }
           .g { transition: transform 1s; }
           @keyframes spin { to { transform: rotate(1turn); } }
         }
       `),
-    ).toEqual(['.a { transform: none }', '.d::after, .e { rotate: 45deg }', '.f { scale: 0.9 }']);
+    ).toEqual(['.a { transform: none }', '.d::after, .e { rotate: 45deg }', '.f:popover-open { scale: 0.9 }']);
+  });
+
+  it('allows only a scale on the way in or out: before it has entered', () => {
+    expect(
+      containerMoves(`
+        .a:not([data-entered]) { scale: 0.9; }
+        @media (prefers-reduced-motion: no-preference) { .b:not([data-entered]) { scale: 0.9; } }
+        .c:popover-open { @starting-style { scale: 0.9; } }
+        .d { @starting-style { translate: 0 4px; } }
+        .e:not([data-entered]) { translate: 0 4px; }
+        .f:not([data-entered]), .g { scale: 0.9; }
+        .h:not([data-entered]) .i { scale: 0.9; }
+        .j[data-entered] { scale: 0.9; }
+      `),
+    ).toEqual([
+      '.c:popover-open { scale: 0.9 }',
+      '.d { translate: 0 4px }',
+      '.e:not([data-entered]) { translate: 0 4px }',
+      '.f:not([data-entered]), .g { scale: 0.9 }',
+      '.h:not([data-entered]) .i { scale: 0.9 }',
+      '.j[data-entered] { scale: 0.9 }',
+    ]);
   });
 
   it('finds a prefixed transform and one an animation runs, and allows ::backdrop and <progress>', () => {

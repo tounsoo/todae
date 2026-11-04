@@ -684,10 +684,11 @@
   --todae-dialog-fg: var(--_todae-dialog-fg, var(--todae-color-fg-default));
   --todae-dialog-gap: var(--_todae-dialog-gap, var(--todae-space-overlay-gap));
   --todae-dialog-max-width: var(--_todae-dialog-max-width, 32rem);
-  --todae-dialog-motion-duration-enter: var(--_todae-dialog-motion-duration-enter, var(--todae-motion-duration-normal));
-  --todae-dialog-motion-duration-exit: var(--_todae-dialog-motion-duration-exit, var(--todae-motion-duration-fast));
+  --todae-dialog-motion-duration-enter: var(--_todae-dialog-motion-duration-enter, var(--todae-motion-duration-slow));
+  --todae-dialog-motion-duration-exit: var(--_todae-dialog-motion-duration-exit, var(--todae-motion-duration-normal));
   --todae-dialog-motion-easing-enter: var(--_todae-dialog-motion-easing-enter, var(--todae-overlay-motion-easing-enter));
   --todae-dialog-motion-easing-exit: var(--_todae-dialog-motion-easing-exit, var(--todae-overlay-motion-easing-exit));
+  --todae-dialog-motion-offset: var(--_todae-dialog-motion-offset, 0.5rem);
   --todae-dialog-padding-x: var(--_todae-dialog-padding-x, var(--todae-space-overlay-padding));
   --todae-dialog-padding-y: var(--_todae-dialog-padding-y, var(--todae-space-overlay-padding));
   --todae-dialog-radius: var(--_todae-dialog-radius, var(--todae-radius-lg));
@@ -723,6 +724,11 @@
   --todae-popover-border-width: var(--_todae-popover-border-width, var(--todae-border-width));
   --todae-popover-fg: var(--_todae-popover-fg, var(--todae-color-fg-default));
   --todae-popover-max-height: var(--_todae-popover-max-height, 20rem);
+  --todae-popover-motion-duration-enter: var(--_todae-popover-motion-duration-enter, var(--todae-motion-duration-moderate));
+  --todae-popover-motion-duration-exit: var(--_todae-popover-motion-duration-exit, var(--todae-motion-duration-normal));
+  --todae-popover-motion-easing-enter: var(--_todae-popover-motion-easing-enter, var(--todae-overlay-motion-easing-enter));
+  --todae-popover-motion-easing-exit: var(--_todae-popover-motion-easing-exit, var(--todae-overlay-motion-easing-exit));
+  --todae-popover-motion-scale: var(--_todae-popover-motion-scale, 0.96);
   --todae-popover-offset: var(--_todae-popover-offset, var(--todae-space-1));
   --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-popover-padding));
   --todae-popover-padding-y: var(--_todae-popover-padding-y, var(--todae-space-popover-padding));

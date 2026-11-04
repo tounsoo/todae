@@ -1,4 +1,4 @@
-import { createElement, useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
+import { createElement, useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
 import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceContext.js';
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
@@ -70,14 +70,12 @@ export function PopoverSurface({
   const localRef = useRef<HTMLElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
-  usePopoverSync(localRef, open);
-  // A popover has no exit motion, so it finishes closing as it closes.
+  // It finishes closing as its exit fade ends, or at once with no fade, and
+  // then tells what it holds. Opening again inside the fade, while it still
+  // shows, takes it back without finishing, as a Dialog does, so what it
+  // holds keeps its place and focus has somewhere to land.
   const [closedListeners, closed] = useSurfaceClosedSignal();
-  const wasOpen = useRef(open);
-  useLayoutEffect(() => {
-    if (wasOpen.current && !open) closed();
-    wasOpen.current = open;
-  }, [closed, open]);
+  usePopoverSync(localRef, open, { onExited: closed });
   return createElement(
     as,
     {

@@ -194,7 +194,7 @@
   },
   "dialog": {
     "(top)": "9e340174dde7",
-    "# Dialog": "d01c72c1acfa",
+    "# Dialog": "da9e4655d247",
     "## Alert dialog": "fcf3468d12fe",
     "## Icons": "53e5ccf42b18",
     "## Accessible composition": "dc6752e3f750",
@@ -591,7 +591,7 @@
   },
   "popover": {
     "(top)": "3e89bd45eeb2",
-    "# Popover": "9ade3fcbfefc",
+    "# Popover": "08e9d3206595",
     "## Examples": "14cb85aebea2",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "3195d8b658e7",
@@ -957,7 +957,7 @@
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "c4641c4527e8",
-    "## Motion": "6cc09ef86e12",
+    "## Motion": "f32aeecf3a93",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "f02d196ecc83"

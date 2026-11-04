@@ -27,6 +27,7 @@ import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } fr
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { anchoredContentStyle } from '../overlay/anchorName.js';
+import { aimPopoverOrigin } from '../overlay/popoverOrigin.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -447,8 +448,17 @@ function ContextTrigger({ render, ref, onContextMenu, onKeyDown, ...props }: Men
  * menu stays put if the element it came from goes away. It shows before the
  * menu, which can only anchor to what is earlier in the top layer.
  */
-function BoxAnchor({ box, name, open }: { box: ContextOpen['box']; name: string; open: boolean }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
+function BoxAnchor({
+  box,
+  name,
+  open,
+  ref,
+}: {
+  box: ContextOpen['box'];
+  name: string;
+  open: boolean;
+  ref: RefObject<HTMLSpanElement | null>;
+}) {
   usePopoverSync(ref, open);
   return (
     <span
@@ -488,17 +498,37 @@ function Content({
   const { ref: wireRef, open, id, style: wireStyle, onPointerDown: wirePointerDown, onClick: wireClick } =
     ctx.popover.getPopoverProps();
   const localRef = useRef<HTMLDivElement | null>(null);
-  usePopoverSync(localRef, open);
-  const at = ctx.context;
-  // A context request that comes while the menu is already open shows its box
-  // after the menu, which can only anchor to what is earlier in the top
-  // layer, so the menu is shown again in front of it, keeping focus.
-  const anchored = useRef({ open: false, box: false });
+  const boxRef = useRef<HTMLSpanElement | null>(null);
+  // A menu at a context request's box keeps that box, shown, while its exit
+  // fade runs, so it fades where it sat. Root drops the request as it closes.
+  const [kept, setKept] = useState(ctx.context);
+  const [fading, setFading] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open && ctx.context !== kept) setKept(ctx.context);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    setFading(!open && kept !== null);
+  }
+  // A request that comes while it fades, and that its owner turns down, does
+  // not move it.
+  const at = !open && fading ? kept : ctx.context;
+  // A context request that comes while the menu is already shown, open or
+  // fading out, shows its box after the menu, which can only anchor to what
+  // is earlier in the top layer, so the menu is shown again in front of it,
+  // keeping focus.
+  const anchored = useRef({ shown: false, box: false });
+  usePopoverSync(localRef, open, {
+    onExited: () => {
+      // Hidden now, so a later context request needs no re-show.
+      anchored.current.shown = false;
+      setFading(false);
+    },
+  });
   useLayoutEffect(() => {
     const before = anchored.current;
-    anchored.current = { open, box: Boolean(at) };
     const el = localRef.current;
-    if (!el || !open || !at || !before.open || before.box || !isPopoverOpen(el)) return;
+    anchored.current = { shown: Boolean(el && isPopoverOpen(el)), box: Boolean(at) };
+    if (!el || !open || !at || !before.shown || before.box || !isPopoverOpen(el)) return;
     const active = document.activeElement;
     el.hidePopover();
     el.showPopover();
@@ -506,6 +536,13 @@ function Content({
     reshowHeldInside(el);
     if (active instanceof HTMLElement && el.contains(active)) focusWithoutScroll(active);
   });
+  // A menu at a context request's box grows from that box. This runs after
+  // the box and the menu show.
+  useLayoutEffect(() => {
+    const el = localRef.current;
+    const box = boxRef.current;
+    if (open && at && el && box) aimPopoverOrigin(el, box);
+  }, [at, open]);
   const { openEnd, initialFocusRef, roving } = ctx;
   const { reachableItems } = roving;
   // However the menu opens, it starts on an end of the list, never on the
@@ -552,7 +589,7 @@ function Content({
       }
     });
   }, [open, ctx.hasTrigger, ariaLabel, ariaLabelledby]);
-  const atStyle = at ? anchoredContentStyle('--todae-popover-anchor', ctx.boxName) : undefined;
+  const atStyle = at && (open || fading) ? anchoredContentStyle('--todae-popover-anchor', ctx.boxName) : undefined;
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
   // document never sees as a pointerdown. Focus dropped to the page, as when
@@ -568,7 +605,7 @@ function Content({
   );
   return (
     <>
-      {at && <BoxAnchor box={at.box} name={ctx.boxName} open={open} />}
+      {at && <BoxAnchor ref={boxRef} box={at.box} name={ctx.boxName} open={open || fading} />}
       <div
         {...props}
         ref={refs}

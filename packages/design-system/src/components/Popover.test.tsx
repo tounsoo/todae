@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState, type CSSProperties } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState, type CSSProperties, type ReactElement } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover.js';
@@ -217,5 +217,84 @@ describe('Popover', () => {
     const content = screen.getByTestId('unnamed');
     expect(content.hasAttribute('aria-label')).toBe(false);
     expect(content.hasAttribute('aria-labelledby')).toBe(false);
+  });
+});
+
+describe('Popover closing with an exit fade', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  function stubOpacityFade() {
+    // The popover is drawn two frames after it shows; pass them at once.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element) => {
+      const style = real(el);
+      return new Proxy(style, {
+        get(target, prop) {
+          if (prop === 'transitionDuration') return '0.15s';
+          if (prop === 'transitionProperty') return 'opacity';
+          if (prop === 'transitionDelay') return '0s';
+          const value = Reflect.get(target, prop, target);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      }) as CSSStyleDeclaration;
+    });
+  }
+
+  function Settings({ open }: { open: boolean }) {
+    const popover = usePopover({ open, onOpenChange: () => undefined });
+    return (
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Settings">
+        <api.Drilldown.Root defaultValue={['settings']}>
+          <api.Drilldown.Label data-testid="title" />
+          <api.Drilldown.Viewport>
+            <api.Drilldown.View value="settings" label="Settings">
+              <api.Drilldown.Trigger value="account">Account</api.Drilldown.Trigger>
+            </api.Drilldown.View>
+            <api.Drilldown.View value="account" label="Account">
+              <input aria-label="Email" />
+            </api.Drilldown.View>
+          </api.Drilldown.Viewport>
+        </api.Drilldown.Root>
+      </Popover.Root>
+    );
+  }
+
+  function goToAccount(rerender: (ui: ReactElement) => void) {
+    fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+    expect(screen.getByTestId('title').textContent).toBe('Account');
+    rerender(<Settings open={false} />);
+  }
+
+  it('starts what it holds over once the fade ends', () => {
+    vi.useFakeTimers();
+    stubOpacityFade();
+    const { rerender } = render(<Settings open />);
+    goToAccount(rerender);
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.getByTestId('title').textContent).toBe('Account');
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.getByTestId('title').textContent).toBe('Settings');
+  });
+
+  it('keeps its place when it opens again inside the fade, as a Dialog does', () => {
+    vi.useFakeTimers();
+    stubOpacityFade();
+    const { rerender } = render(<Settings open />);
+    goToAccount(rerender);
+    act(() => vi.advanceTimersByTime(50));
+    rerender(<Settings open />);
+    act(() => vi.advanceTimersByTime(500));
+    expect(screen.getByTestId('title').textContent).toBe('Account');
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Email' }));
+    rerender(<Settings open={false} />);
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByTestId('title').textContent).toBe('Settings');
   });
 });

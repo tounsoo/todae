@@ -5,7 +5,7 @@ import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo'
 
 `showModal()`로 여는 가운데 정렬 네이티브 `<dialog>`입니다. `open`으로 제어하거나, `defaultOpen`으로 비제어 방식으로 둘 수 있습니다. Escape와 배경 클릭으로 닫기는 기본으로 켜져 있고 끌 수 있습니다. 시트로 변하지 않습니다.
 
-열릴 때는 200ms 동안 opacity가 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
+열릴 때는 280ms 동안 opacity가 변하면서 패널이 `dialog.motion.offset`(`0.5rem`)만큼 아래에서 제자리로 떠오릅니다. 닫힐 때는 사라지면서 다시 내려갑니다. 패널은 transform이 아니라 레이아웃으로 움직이므로, 안에 있는 툴팁이 트리거 곁에 머뭅니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 200ms). 동작 줄이기를 선호하면 패널과 스크림은 페이드만 합니다.
 
 <Example of={DialogBasic} />
 

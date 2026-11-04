@@ -3,18 +3,19 @@ import { cssTimeMs } from './cssTime.js';
 
 // Fallbacks for when the exit transition can't be read from computed style.
 // The real lengths come from the dialog, sheet and drawer motion tokens.
-export const DIALOG_EXIT_MS = 160;
+export const DIALOG_EXIT_MS = 200;
 export const SHEET_EXIT_MS = 240;
 export const DRAWER_EXIT_MS = 240;
 
 /** Duration plus delay of `propertyName`'s computed transition, or null when none applies. */
 export function transitionMs(node: Element, propertyName: string): number | null {
   const style = getComputedStyle(node);
-  const split = (value: string) => value.split(',').map((part) => part.trim());
+  // A mocked or partial computed style can leave these out.
+  if (!style.transitionDuration) return null;
+  const split = (value: string | undefined) => (value ?? '').split(',').map((part) => part.trim());
   const properties = split(style.transitionProperty);
   const durations = split(style.transitionDuration);
   const delays = split(style.transitionDelay);
-  if (!style.transitionDuration) return null;
   let index = properties.lastIndexOf(propertyName);
   if (index < 0) index = properties.lastIndexOf('all');
   if (index < 0) return null;
@@ -85,14 +86,16 @@ export function useOverlayPresence(
       return;
     }
     if (!present) return;
-    if (reducedMotion()) {
+    // Under reduced motion an overlay may still fade out; finish at once only
+    // when it has no transition for the exit to wait on.
+    if (reducedMotion() && !(node && transitionMs(node, propertyName))) {
       setPresent(false);
       setExiting(false);
       onExitedRef.current?.();
       return;
     }
     setExiting(true);
-  }, [open, present]);
+  }, [node, open, present, propertyName]);
 
   const finishExit = useCallback(() => {
     if (!exitingRef.current) return;

@@ -103,7 +103,7 @@ describe('Drawer in a browser', () => {
     expect(Math.round(footer.bottom)).toBe(Math.round(panel.bottom - padding));
   });
 
-  it('turns off every transition under reduced motion, the open state included', async () => {
+  it('turns off every transition under reduced motion, the open state included, and a Dialog only fades', async () => {
     // Applies the reduced-motion rules as if the media query matched, in the
     // same layer and after the rules they override.
     const reduced = [...document.styleSheets]
@@ -125,8 +125,17 @@ describe('Drawer in a browser', () => {
         </div>,
       );
       const dialog = screen.getByRole('dialog', { name: 'Plain' });
-      for (const el of [drawer, drawer.firstElementChild!, dialog, dialog.firstElementChild!]) {
+      for (const el of [drawer, drawer.firstElementChild!]) {
         expect(getComputedStyle(el).transitionProperty).toBe('none');
+      }
+      // A Dialog keeps its fade there, and its rise is nothing.
+      expect(getComputedStyle(dialog.firstElementChild!).getPropertyValue('--_rise').trim()).toBe('0px');
+      for (const el of [dialog, dialog.firstElementChild!]) {
+        const moves = getComputedStyle(el)
+          .transitionProperty.split(',')
+          .map((name) => name.trim())
+          .filter((name) => ['transform', 'translate', 'scale', 'rotate'].includes(name));
+        expect(moves).toEqual([]);
       }
     } finally {
       style.remove();

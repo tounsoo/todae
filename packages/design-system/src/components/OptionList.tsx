@@ -399,12 +399,22 @@ function revealInScrollBox(option: HTMLElement) {
   }
   if (!box || box === doc.body || box === doc.documentElement) return;
   const style = doc.defaultView!.getComputedStyle(box);
-  const boxTop = box.getBoundingClientRect().top + box.clientTop;
-  const top = boxTop + px(style.paddingTop) + scrollPadding(style.scrollPaddingTop, box);
-  const bottom = boxTop + box.clientHeight - px(style.paddingBottom) - scrollPadding(style.scrollPaddingBottom, box);
+  const boxRect = box.getBoundingClientRect();
+  // Measured boxes are scaled while a popover grows open; layout lengths and
+  // scrollTop are not, so measured lengths are divided back by the scale. A
+  // height off by less than a pixel is offsetHeight's rounding, not a scale.
+  const scale =
+    box instanceof HTMLElement && box.offsetHeight > 0 && Math.abs(boxRect.height - box.offsetHeight) > 1
+      ? boxRect.height / box.offsetHeight
+      : 1;
+  const inset = box.clientTop + px(style.paddingTop) + scrollPadding(style.scrollPaddingTop, box);
+  const top = boxRect.top + inset * scale;
+  const bottom =
+    boxRect.top +
+    (box.clientTop + box.clientHeight - px(style.paddingBottom) - scrollPadding(style.scrollPaddingBottom, box)) * scale;
   const rect = option.getBoundingClientRect();
-  if (rect.top < top) box.scrollTop -= top - rect.top;
-  else if (rect.bottom > bottom) box.scrollTop += rect.bottom - bottom;
+  if (rect.top < top) box.scrollTop -= (top - rect.top) / scale;
+  else if (rect.bottom > bottom) box.scrollTop += (rect.bottom - bottom) / scale;
 }
 
 export const OptionList = { Root: OptionListRoot, Option: OptionListOption } as const;

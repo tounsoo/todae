@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { useRef, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reshowHeldInside, usePopoverSync } from './usePopoverSync.js';
@@ -82,5 +82,147 @@ describe('reshowHeldInside', () => {
     const calls = trackCalls();
     reshowHeldInside(getByTestId('layer'));
     expect(calls).toEqual([]);
+  });
+});
+
+describe('usePopoverSync with presence', () => {
+  function Moving({ open, onExited }: { open: boolean; onExited?: () => void }) {
+    const ref = useRef<HTMLDivElement>(null);
+    usePopoverSync(ref, open, { onExited });
+    return <div ref={ref} popover="manual" data-testid="p" />;
+  }
+
+  const frames = () =>
+    new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+  // jsdom reads no stylesheet, so supply the exit fade the browser would.
+  function fade(ms: string | null) {
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (ms === null || !(el instanceof HTMLElement) || el.dataset.testid !== 'p') return style;
+      return Object.assign(Object.create(style), {
+        transitionProperty: 'opacity, scale',
+        transitionDuration: ms,
+        transitionDelay: '0s',
+      }) as CSSStyleDeclaration;
+    });
+  }
+
+  const endFade = (el: HTMLElement) =>
+    act(() => {
+      el.dispatchEvent(Object.assign(new Event('transitionend'), { propertyName: 'opacity' }));
+    });
+
+  it('shows first and marks it entered two frames later, so it transitions in', async () => {
+    const { getByTestId } = render(<Moving open />);
+    const el = getByTestId('p');
+    expect(el.hasAttribute('data-popover-open')).toBe(true);
+    expect(el.hasAttribute('data-entered')).toBe(false);
+    expect(el.hasAttribute('data-todae-entering')).toBe(true);
+    await act(frames);
+    expect(el.hasAttribute('data-entered')).toBe(true);
+    expect(el.hasAttribute('data-todae-entering')).toBe(false);
+  });
+
+  it('hides at once and tells when it closes inside those frames, never drawn', () => {
+    fade('0.2s');
+    const onExited = vi.fn();
+    const { getByTestId, rerender } = render(<Moving open onExited={onExited} />);
+    rerender(<Moving open={false} onExited={onExited} />);
+    const el = getByTestId('p');
+    expect(el.hasAttribute('data-todae-entering')).toBe(false);
+    expect(el.hasAttribute('data-popover-open')).toBe(false);
+    expect(el.inert).toBe(false);
+    expect(onExited).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an inert its owner set through a close and a reopen', async () => {
+    fade('0.2s');
+    function Owned({ open }: { open: boolean }) {
+      const ref = useRef<HTMLDivElement>(null);
+      usePopoverSync(ref, open, {});
+      return <div ref={ref} popover="manual" data-testid="p" inert />;
+    }
+    const { getByTestId, rerender } = render(<Owned open />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Owned open={false} />);
+    rerender(<Owned open />);
+    expect(el.inert).toBe(true);
+    rerender(<Owned open={false} />);
+    endFade(el);
+    expect(el.inert).toBe(true);
+  });
+
+  it('fades again after turning back from a close that lost its anchor', async () => {
+    fade('0.2s');
+    const { getByTestId, rerender } = render(<Moving open />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Moving open={false} />);
+    el.setAttribute('data-todae-unanchored', '');
+    rerender(<Moving open />);
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('stays shown and inert through its exit fade, then hides and tells', async () => {
+    fade('0.2s');
+    const onExited = vi.fn();
+    const { getByTestId, rerender } = render(<Moving open onExited={onExited} />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Moving open={false} onExited={onExited} />);
+    expect(el.hasAttribute('data-popover-open')).toBe(true);
+    expect(el.hasAttribute('data-entered')).toBe(false);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(true);
+    expect(el.inert).toBe(true);
+    expect(onExited).not.toHaveBeenCalled();
+    endFade(el);
+    expect(el.hasAttribute('data-popover-open')).toBe(false);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(false);
+    expect(el.inert).toBe(false);
+    expect(onExited).toHaveBeenCalledTimes(1);
+  });
+
+  it('turns back where it is when opened again inside the fade', async () => {
+    fade('0.2s');
+    const onExited = vi.fn();
+    const { getByTestId, rerender } = render(<Moving open onExited={onExited} />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Moving open={false} onExited={onExited} />);
+    const calls = trackCalls();
+    rerender(<Moving open onExited={onExited} />);
+    expect(calls).toEqual([]);
+    expect(el.hasAttribute('data-entered')).toBe(true);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(false);
+    expect(el.inert).toBe(false);
+    endFade(el);
+    expect(el.hasAttribute('data-popover-open')).toBe(true);
+    expect(onExited).not.toHaveBeenCalled();
+  });
+
+  it('hides at once and tells when it has no fade', async () => {
+    fade(null);
+    const onExited = vi.fn();
+    const { getByTestId, rerender } = render(<Moving open onExited={onExited} />);
+    await act(frames);
+    rerender(<Moving open={false} onExited={onExited} />);
+    expect(getByTestId('p').hasAttribute('data-popover-open')).toBe(false);
+    expect(onExited).toHaveBeenCalledTimes(1);
+  });
+
+  it('tells nothing for a first render closed', () => {
+    const onExited = vi.fn();
+    render(<Moving open={false} onExited={onExited} />);
+    expect(onExited).not.toHaveBeenCalled();
+  });
+
+  it('hides at once without presence, as a tooltip does', () => {
+    fade('0.2s');
+    const { rerender } = render(<Held name="tip" open />);
+    rerender(<Held name="tip" open={false} />);
+    expect(document.querySelector('[data-name="tip"]')!.hasAttribute('data-popover-open')).toBe(false);
   });
 });

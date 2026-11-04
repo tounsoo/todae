@@ -208,7 +208,8 @@ describe('Drilldown Escape and the back gesture in a browser', () => {
       expect(panel.matches(':popover-open')).toBe(true);
       await settled();
       await userEvent.keyboard('{Escape}');
-      expect(panel.matches(':popover-open')).toBe(false);
+      // Fading out, out of reach.
+      expect(panel.hasAttribute('data-todae-exiting')).toBe(true);
       cleanupAll();
       onValueChange.mockClear();
     }

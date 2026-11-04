@@ -1790,6 +1790,10 @@
       "type": "cubicBezier"
     },
     {
+      "path": "dialog.motion.offset",
+      "type": "dimension"
+    },
+    {
       "path": "dialog.padding.x",
       "type": "dimension"
     },
@@ -3172,6 +3176,26 @@
     {
       "path": "popover.max-height",
       "type": "dimension"
+    },
+    {
+      "path": "popover.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "popover.motion.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "popover.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "popover.motion.easing.exit",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "popover.motion.scale",
+      "type": "number"
     },
     {
       "path": "popover.offset",

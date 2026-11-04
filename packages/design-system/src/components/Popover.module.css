@@ -17,6 +17,45 @@
     border-radius: var(--todae-popover-radius);
     box-shadow: var(--todae-popover-shadow);
     pointer-events: auto;
+    /* The side and edge of the anchor it opened from, which the popover's
+       engine sets, so it grows from its trigger. */
+    transform-origin: var(--_origin, left top);
+    /* Future: usePopoverSync moves it in and out with data-entered and
+       data-todae-exiting, standing in for @starting-style plus display and
+       overlay transitions under transition-behavior: allow-discrete. Safari
+       has no overlay, so it hid a closing popover at once, and it ran the
+       opening transition again as it re-resolved the position fallbacks.
+       Move back once Safari supports overlay:
+       https://developer.mozilla.org/en-US/docs/Web/CSS/overlay */
+    transition:
+      opacity var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter),
+      scale var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter);
+  }
+
+  /* Its first frames as it shows, and its fade as it closes. */
+  .content:not([data-entered]) {
+    opacity: 0;
+  }
+
+  .content[data-todae-exiting] {
+    pointer-events: none;
+    transition-duration: var(--todae-popover-motion-duration-exit);
+    transition-timing-function: var(--todae-popover-motion-easing-exit);
+  }
+
+  /* Its anchor went away as it closed, so it has nowhere to fade. */
+  .content[data-todae-unanchored] {
+    transition: none;
+  }
+
+  /* Only on the way in and out: an open popover is never scaled, so a
+     tooltip anchored inside it, placed against its trigger's untransformed
+     box, sits by its trigger. A tip that opens while the popover still
+     scales waits for it to settle. */
+  @media (prefers-reduced-motion: no-preference) {
+    .content:not([data-entered]) {
+      scale: var(--todae-popover-motion-scale);
+    }
   }
 
   @supports (top: anchor(bottom)) {

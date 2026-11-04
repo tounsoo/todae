@@ -31,10 +31,13 @@ describe('Drilldown focus and surface reset in a browser', () => {
       await settled();
       rerender(ui(false));
       await waitFor(() => expect(surfaceOpen()).toBe(false));
-      expect(onValueChange.mock.calls).toEqual([
-        [['filters', 'brand'], 'push'],
-        [['filters'], 'reset'],
-      ]);
+      // A Popover finishes closing as its exit fade ends, after it hides.
+      await waitFor(() =>
+        expect(onValueChange.mock.calls).toEqual([
+          [['filters', 'brand'], 'push'],
+          [['filters'], 'reset'],
+        ]),
+      );
       rerender(ui(true));
       await waitFor(() => expect(surfaceOpen()).toBe(true));
       expect(view('Filters').hidden).toBe(false);
@@ -43,7 +46,7 @@ describe('Drilldown focus and surface reset in a browser', () => {
     });
   }
 
-  for (const kind of ['Dialog', 'BottomSheet'] as const) {
+  for (const kind of ['Dialog', 'BottomSheet', 'Popover'] as const) {
     it(`keeps the stack when the ${kind} around it opens again during its exit`, async () => {
       const onValueChange = vi.fn();
       const ui = (open: boolean) => <Surfaced kind={kind} open={open} onValueChange={onValueChange} />;
