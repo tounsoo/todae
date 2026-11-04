@@ -109,7 +109,8 @@ describe('Menu submenus in a browser', () => {
     await settled();
     const outer = rootMenu().getBoundingClientRect();
     const sub = submenu().getBoundingClientRect();
-    expect(Math.abs(sub.right - outer.left)).toBeLessThanOrEqual(1);
+    const at = `menu ${outer.left}-${outer.right}, submenu ${sub.left}-${sub.right}`;
+    expect(Math.abs(sub.right - outer.left), at).toBeLessThanOrEqual(1);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(submenu().matches(':popover-open')).toBe(false));
     expect(document.activeElement).toBe(item('Share'));
