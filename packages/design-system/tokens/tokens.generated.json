@@ -9167,6 +9167,34 @@
       "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
+      "path": "tabs.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-tabs-motion-duration",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
+    },
+    {
+      "path": "tabs.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tabs-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
+    },
+    {
       "path": "tabs.padding.x",
       "type": "dimension",
       "cssVar": "--todae-tabs-padding-x",
@@ -9410,6 +9438,34 @@
       "cssVar": "--todae-selection-indicator-fg",
       "cssValue": "var(--todae-color-on-accent)",
       "ref": "color.on-accent",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
+    },
+    {
+      "path": "selection.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-selection-motion-duration",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
+    },
+    {
+      "path": "selection.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-selection-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {

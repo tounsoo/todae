@@ -94,7 +94,7 @@
   },
   "checkbox": {
     "(top)": "d0710a5bb3bb",
-    "# Checkbox": "19d3db2e6ab6",
+    "# Checkbox": "6df2580b6085",
     "## Indeterminate": "1e9c97608721",
     "## Icons": "9f7656d75359",
     "## Accessible composition": "14beee0d3dac",
@@ -623,7 +623,7 @@
   },
   "radio": {
     "(top)": "440465fc4399",
-    "# Radio": "c1b37e1a915d",
+    "# Radio": "4302e77e548b",
     "## Accessible composition": "a85f757c07d1",
     "## When to use": "28bf43164b3d",
     "## Props": "4135f3760033",
@@ -884,7 +884,7 @@
   },
   "switch": {
     "(top)": "a556b81cd3e7",
-    "# Switch": "0343a216bbcd",
+    "# Switch": "154f90b342d4",
     "## Accessible composition": "861816c2022e",
     "## When to use": "f1b8decec311",
     "## Props": "b71e3003eff1",
@@ -902,7 +902,7 @@
   },
   "tabs": {
     "(top)": "4f8d6cab6ed9",
-    "# Tabs": "09e89fabccd9",
+    "# Tabs": "107eca063413",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",
@@ -957,7 +957,7 @@
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "d4f6cb5c0687",
-    "## Motion": "2543484b955e",
+    "## Motion": "f32aeecf3a93",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "f02d196ecc83"

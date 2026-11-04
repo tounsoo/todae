@@ -219,6 +219,9 @@ function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, o
       })}
     >
       {children}
+      {/* The list's indicator anchors here, not on the button, so an overlay
+          trigger's inline anchor-name on the button can't hide it. */}
+      <span className={styles.anchor} aria-hidden />
     </button>
   );
 }

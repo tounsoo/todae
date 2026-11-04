@@ -3398,6 +3398,14 @@
       "type": "color"
     },
     {
+      "path": "selection.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "selection.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "selection.radius",
       "type": "dimension"
     },
@@ -3968,6 +3976,14 @@
     {
       "path": "tabs.leading",
       "type": "number"
+    },
+    {
+      "path": "tabs.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "tabs.motion.easing",
+      "type": "cubicBezier"
     },
     {
       "path": "tabs.padding.x",
