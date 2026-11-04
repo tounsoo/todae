@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3100;
 
-// Behaviour only. Screenshot baselines stay in playwright.config.ts.
+// Behaviour only. axe over the Korean pages is in playwright.config.ts.
 export default defineConfig({
   testDir: 'peek',
   fullyParallel: true,

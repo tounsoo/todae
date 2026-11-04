@@ -97,7 +97,7 @@ Any of these fails `pnpm check` and CI.
 
 ## Check your change
 
-Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the screenshot job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
+Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and the docs, runs the unit tests, and runs the Docs job. Other Markdown does not start CI, except a changeset, the package README or the changelog.
 
 ```sh
 pnpm check
@@ -115,7 +115,7 @@ pnpm test:browser
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces through Playwright: the package's in Chromium, Firefox and WebKit, the docs demos in Chromium. Install the three once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit`. Add `--project chromium` to run Chromium only, or run one other engine in the package with `pnpm --filter @tounsoo/todae test:browser --project firefox` (or `webkit`). A test that needs Chromium's CDP session, such as a real IME composition or drag, runs in Chromium only. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
-- `pnpm --filter docs test:visual:docker` compares screenshots of the built docs site with the baselines in `apps/docs/visual/baselines`: every example in light and dark, and the home, Button and playground pages in English and Korean on desktop and phone. It runs in Playwright's Docker image, the one CI uses, since fonts and rendering differ between machines, so build the package and the docs first and have Docker running. It needs a Linux x64 host. When a change is meant to look different, add `--update-snapshots` and commit the new images; when you rename a heading or remove an example, delete its old images too. A failing CI run uploads a `screenshots` artifact: open `playwright-report/index.html` to see each change, and copy a shot's `test-results/**/<name>-actual.png` over its baseline to accept it, which is the way to update baselines without a Linux x64 host.
+- `pnpm --filter docs test:axe` runs axe over the built docs site's Korean home, Button and playground pages, in light and dark at desktop and phone width, and checks that every English page with an example hydrates and settles. Build the package and the docs first, and install Chromium with `pnpm --filter docs exec playwright install --with-deps chromium`. Todae has no pixel screenshot tests; [0010](docs/decisions/0010-pixel-baselines-removed.md) says why.
 
 ## Changesets
 

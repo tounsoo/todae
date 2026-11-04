@@ -20,10 +20,10 @@
     "(section order)": "a6f04dcc4c06"
   },
   "avatar": {
-    "(top)": "f94cfff8a648",
+    "(top)": "c7cce4aa15ea",
     "# Avatar": "925b0922f022",
     "## Naming": "c9dec0ceedfc",
-    "## Sizes": "44b348392d77",
+    "## Sizes": "a4a2ea9cc9cb",
     "## Colors": "3e66c991ca45",
     "## Stacked avatars": "e673413d3feb",
     "## Accessible composition": "a4759450c7bd",
@@ -641,10 +641,10 @@
     "(section order)": "cbe0ddccb14a"
   },
   "recipes/avatar-group": {
-    "(top)": "bbf3a86f9381",
-    "# Avatar group": "e375c87b3f78",
+    "(top)": "10e70a98fa25",
+    "# Avatar group": "d32a36b995cd",
     "## The stack": "bd91c061c493",
-    "## Sizes": "7bf4dd8052d1",
+    "## Sizes": "0cde43d1d448",
     "## Wrapped avatars": "ddbab797c9cb",
     "## Accessible composition": "0189b65fcffe",
     "## When to use": "763e187b5f3a",
