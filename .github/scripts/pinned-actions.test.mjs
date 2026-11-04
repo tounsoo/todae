@@ -23,6 +23,8 @@ test('commit SHAs, local actions and docker digests pass', () => {
     '- uses: ./.github/actions/setup',
     `- uses: docker://alpine@${digest}`,
     `- {uses: actions/checkout@${sha}}`,
+    `- uses:\n          actions/checkout@${sha}`,
+    `- uses: >-\n          actions/checkout@${sha}`,
     '- run: |\n          echo "uses: actions/checkout@v4"\n          uses: actions/checkout@v4',
     '- run: echo hi\n        with:\n          uses: actions/checkout@v4',
   ]) {
@@ -55,12 +57,17 @@ test('every YAML spelling of a step is read', () => {
     '- {uses: actions/checkout@v4}',
     '- "uses": actions/checkout@v4',
     '- uses : actions/checkout@v4',
+    "- 'uses': actions/checkout@v4",
+    '- {name: co, uses: actions/checkout@v4}',
+    '- ? uses\n        : actions/checkout@v4',
+    '- uses: &co actions/checkout@v4',
     '- uses:\n          actions/checkout@v4',
     '- uses: >-\n          actions/checkout@v4',
   ]) {
     assert.deepEqual(refs(workflow(step)), ['actions/checkout@v4'], step);
   }
   assert.deepEqual(refs('jobs:\n  a:\n    steps: [{uses: actions/checkout@v4}]\n'), ['actions/checkout@v4']);
+  assert.deepEqual(refs('jobs:\n  call: {uses: octo/repo/.github/workflows/x.yml@main}\n'), ['octo/repo/.github/workflows/x.yml@main']);
   assert.deepEqual(refs('on: push\r\njobs:\r\n  a:\r\n    steps:\r\n      - uses: actions/checkout@v4\r\n'), [
     'actions/checkout@v4',
   ]);
