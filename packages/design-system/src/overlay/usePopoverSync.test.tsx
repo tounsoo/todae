@@ -203,6 +203,57 @@ describe('usePopoverSync with presence', () => {
     expect(onExited).not.toHaveBeenCalled();
   });
 
+  it('holds still once its fade in ends, so Safari has no transition to run again', async () => {
+    fade('0.2s');
+    const { getByTestId, rerender } = render(<Moving open />);
+    const el = getByTestId('p');
+    await act(frames);
+    expect(el.hasAttribute('data-todae-settled')).toBe(false);
+    endFade(el);
+    expect(el.hasAttribute('data-todae-settled')).toBe(true);
+    rerender(<Moving open={false} />);
+    expect(el.hasAttribute('data-todae-settled')).toBe(false);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(true);
+  });
+
+  it('holds still at once when it has no fade in', async () => {
+    fade(null);
+    const { getByTestId } = render(<Moving open />);
+    const el = getByTestId('p');
+    expect(el.hasAttribute('data-todae-settled')).toBe(false);
+    await act(frames);
+    expect(el.hasAttribute('data-todae-settled')).toBe(true);
+  });
+
+  it('holds still after turning back inside the exit fade', async () => {
+    fade('0.2s');
+    const { getByTestId, rerender } = render(<Moving open />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Moving open={false} />);
+    rerender(<Moving open />);
+    expect(el.hasAttribute('data-todae-settled')).toBe(false);
+    endFade(el);
+    expect(el.hasAttribute('data-todae-settled')).toBe(true);
+  });
+
+  it('never holds still once it closes inside its fade in', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      fade('0.2s');
+      const { getByTestId, rerender } = render(<Moving open />);
+      const el = getByTestId('p');
+      await act(frames);
+      rerender(<Moving open={false} />);
+      // The fade in's own timer would have run out by now.
+      act(() => vi.advanceTimersByTime(250));
+      expect(el.hasAttribute('data-todae-settled')).toBe(false);
+      expect(el.hasAttribute('data-popover-open')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('hides at once and tells when it has no fade', async () => {
     fade(null);
     const onExited = vi.fn();

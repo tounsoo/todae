@@ -47,6 +47,13 @@ export type PopoverPresence = {
  * shown, inert, until its opacity fade ends, then hides. Opening again inside
  * the fade turns it back where it is. Unmounting drops the wait.
  *
+ * Once its fade in ends it takes `data-todae-settled`, which drops its
+ * transition until it closes. Safari re-resolves an open popover's position
+ * fallbacks right after its opening transition ends and starts that
+ * transition again, now and then from halfway, so the popover dipped and
+ * faded in a second time. With no transition left, there is nothing to run
+ * again.
+ *
  * Future: this stands in for the newer CSS, where a popover opens from
  * `@starting-style` and stays drawn as it closes with `display` and `overlay`
  * transitions under `transition-behavior: allow-discrete`. Safari has no
@@ -83,6 +90,7 @@ export function usePopoverSync(
         return;
       }
       el.removeAttribute('data-entered');
+      el.removeAttribute('data-todae-settled');
       el.setAttribute('data-todae-exiting', '');
       // Still shown while it fades, but out of reach: no press, focus or
       // screen reader lands in it.
@@ -120,20 +128,31 @@ export function usePopoverSync(
       // A close that lost its anchor went at once; this open fades in again.
       el.removeAttribute('data-todae-unanchored');
       el.removeAttribute('data-entered');
+      el.removeAttribute('data-todae-settled');
       el.showPopover();
     }
     held.add(el);
     let raf = 0;
+    let stopSettling = () => {};
+    // Its fade in ends, or there was none: it holds still until it closes.
+    const settle = () => {
+      stopSettling = whenExited(el, 'opacity', () => {
+        if (el.hasAttribute('data-entered')) el.setAttribute('data-todae-settled', '');
+      });
+    };
     if (animated && !el.hasAttribute('data-entered')) {
       // Already drawn inside its fade: turn back from where it is.
-      if (returning) el.setAttribute('data-entered', '');
-      else {
+      if (returning) {
+        el.setAttribute('data-entered', '');
+        settle();
+      } else {
         el.setAttribute('data-todae-entering', '');
         raf = requestAnimationFrame(() => {
           raf = requestAnimationFrame(() => {
             raf = 0;
             el.removeAttribute('data-todae-entering');
             el.setAttribute('data-entered', '');
+            settle();
           });
         });
       }
@@ -143,6 +162,7 @@ export function usePopoverSync(
         cancelAnimationFrame(raf);
         el.removeAttribute('data-todae-entering');
       }
+      stopSettling();
       held.delete(el);
     };
   }, [animated, contentRef, open]);

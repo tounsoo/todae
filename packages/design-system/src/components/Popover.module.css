@@ -43,6 +43,13 @@
     transition-timing-function: var(--todae-popover-motion-easing-exit);
   }
 
+  /* Open and still: no transition until it closes. Safari re-resolves the
+     position fallbacks right after the opening transition ends and runs it
+     again, now and then from halfway, so the popover dipped. */
+  .content[data-entered][data-todae-settled] {
+    transition: none;
+  }
+
   /* Its anchor went away as it closed, so it has nowhere to fade. */
   .content[data-todae-unanchored] {
     transition: none;
