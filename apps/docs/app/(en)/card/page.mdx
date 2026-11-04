@@ -1,4 +1,5 @@
 import CardPlan from '../../../examples/card/CardPlan';
+import CardRow from '../../../examples/card/CardRow';
 
 # Card
 
@@ -9,6 +10,10 @@ A bordered surface that groups related content: a plan, a setting, a summary. It
 Server Components can import it from `@tounsoo/todae/card`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
 Every part is a `div` with no role. Pick the heading level that fits the page; a heading or paragraph directly inside the header has no outer margin. A card that should be a landmark takes `role="region"` and a name, like any `div`. A card is not a button or a link: put the actions inside it, in `Card.Footer` or in the body.
+
+`Card.Body` grows into the card's free height. When cards in a row stretch to the same height, as grid items do, every footer sits at the bottom edge and the actions line up.
+
+<Example of={CardRow} />
 
 ## Accessible composition
 
