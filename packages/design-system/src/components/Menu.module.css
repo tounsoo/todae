@@ -124,32 +124,6 @@
     block-size: 100%;
   }
 
-  /* A submenu opens past its trigger's end, its first item level with the
-     trigger, and its edge on the outer edge of the menu it opens from. It
-     flips to the other side where there is no room, and up where it would
-     run off the bottom. */
-  @supports (top: anchor(bottom)) {
-    .menu.submenu {
-      top: calc(anchor(top) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-      inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-    }
-  }
-
-  @position-try --todae-menu-submenu-flip-block {
-    top: unset;
-    bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-    inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-  }
-
-  @supports (position-try-fallbacks: flip-inline) {
-    .menu.submenu {
-      position-try-fallbacks:
-        flip-inline,
-        --todae-menu-submenu-flip-block,
-        --todae-menu-submenu-flip-block flip-inline;
-    }
-  }
-
   .group {
     display: flex;
     flex-direction: column;

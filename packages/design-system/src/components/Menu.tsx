@@ -1146,7 +1146,7 @@ function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerM
       role="menu"
       tabIndex={-1}
       aria-labelledby={sub.triggerId}
-      className={cx(popoverStyles.content, styles.menu, styles.submenu, className)}
+      className={cx(popoverStyles.content, popoverStyles.beside, styles.menu, className)}
       style={{ ...anchoredContentStyle('--todae-popover-anchor', sub.anchorName), ...style }}
       onKeyDown={container.onKeyDown}
       // The pointer reached it, so the list it opened from holds focus no longer.

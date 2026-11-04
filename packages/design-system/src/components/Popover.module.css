@@ -77,4 +77,30 @@
       position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline;
     }
   }
+
+  /* Beside its anchor, as a submenu sits: past the anchor's end, its first
+     row level with the anchor, and its edge on the outer edge of the popover
+     the anchor sits in. It flips to the other side where there is no room,
+     and up where it would run off the bottom. */
+  @supports (top: anchor(bottom)) {
+    .content.beside {
+      top: calc(anchor(top) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
+      inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+    }
+  }
+
+  @position-try --todae-popover-beside-flip-block {
+    top: unset;
+    bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
+    inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+  }
+
+  @supports (position-try-fallbacks: flip-inline) {
+    .content.beside {
+      position-try-fallbacks:
+        flip-inline,
+        --todae-popover-beside-flip-block,
+        --todae-popover-beside-flip-block flip-inline;
+    }
+  }
 }
