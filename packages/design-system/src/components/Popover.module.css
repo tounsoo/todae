@@ -81,41 +81,17 @@
   /* Beside its anchor, as a submenu sits: past the anchor's end, its first
      row level with the anchor, and its edge on the outer edge of the popover
      the anchor sits in. It flips to the other side where there is no room,
-     and up where it would run off the bottom. */
-  @supports (top: anchor(bottom)) {
+     and up where it would run off the bottom. Placed by position-area, not
+     anchor() insets: WebKit laid a submenu that flipped to the start side
+     over its own menu with anchor() insets. */
+  @supports (position-area: inline-end) {
     .content.beside {
-      top: calc(anchor(top) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-      inset-inline-start: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-    }
-  }
-
-  @position-try --todae-popover-beside-flip-block {
-    top: unset;
-    bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-    inset-inline-start: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-  }
-
-  /* The far edge is anchor(outside), not anchor(self-end) or self-start, and
-     the start side is spelled out, not left to flip-inline: with the self-
-     keywords, WebKit laid a flipped submenu over its own menu. */
-  @position-try --todae-popover-beside-start {
-    inset-inline-start: unset;
-    inset-inline-end: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-  }
-
-  @position-try --todae-popover-beside-start-flip-block {
-    top: unset;
-    bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-    inset-inline-start: unset;
-    inset-inline-end: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
-  }
-
-  @supports (position-try-fallbacks: --x) {
-    .content.beside {
-      position-try-fallbacks:
-        --todae-popover-beside-start,
-        --todae-popover-beside-flip-block,
-        --todae-popover-beside-start-flip-block;
+      top: auto;
+      inset-inline-start: auto;
+      position-area: span-block-end inline-end;
+      margin-block-start: calc(-1 * (var(--todae-popover-padding-y) + var(--todae-popover-border-width)));
+      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+      position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
     }
   }
 }
