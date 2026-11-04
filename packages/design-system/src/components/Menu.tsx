@@ -940,13 +940,21 @@ function Submenu({ open: openProp, defaultOpen, onOpenChange, children }: MenuSu
   const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
   // A submenu shows only while the list it sits in does.
   const shown = open && parent.open;
+  // The list closing closes it too, so it is closed on the next open; a list
+  // that starts closed leaves a default open alone.
+  const parentWasOpen = useRef(parent.open);
   useLayoutEffect(() => {
-    if (open && !parent.open) setOpen(false, 'parent');
+    const closing = parentWasOpen.current && !parent.open;
+    parentWasOpen.current = parent.open;
+    if (!closing) return;
+    focusFirst.current = false;
+    if (open) setOpen(false, 'parent');
   }, [open, parent.open, setOpen]);
   // Focus that moves anywhere but its trigger or inside it, such as to
   // another item of the list it sits in, closes it. Focus dropped to the
   // page, as when the focused item goes away, is not a move.
-  useEffect(() => {
+  // Set up before the list's own first focus, which can land on another item.
+  useLayoutEffect(() => {
     if (!shown) return;
     const onFocusIn = (event: globalThis.FocusEvent) => {
       const next = event.target;

@@ -339,6 +339,13 @@ describe('Menu submenus', () => {
     expect(document.activeElement).toBe(item('Share'));
   });
 
+  it('a default open in a menu that starts closed reports no close', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions submenu={{ defaultOpen: true, onOpenChange }} />);
+    await raf();
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it('throws outside Menu.Submenu', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() =>
