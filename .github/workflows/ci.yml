@@ -75,6 +75,12 @@ jobs:
       - name: Check
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm check
+      # Every remote action is pinned to a commit. Dependabot (.github/dependabot.yml) moves the pins.
+      - name: Pinned actions
+        if: ${{ !cancelled() }}
+        run: |
+          bash .github/scripts/pinned-actions.sh --self-test
+          bash .github/scripts/pinned-actions.sh
 
   build:
     if: ${{ !github.event.pull_request.draft }}
