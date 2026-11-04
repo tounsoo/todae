@@ -219,6 +219,30 @@ describe('Menu submenus', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it('does not open once focus has moved on before the delay', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions submenu={{ onOpenChange }} />);
+    await onShare();
+    vi.useFakeTimers();
+    fireEvent.pointerMove(item('Share'), { pointerType: 'mouse' });
+    key('ArrowDown');
+    expect(document.activeElement).toBe(item('Delete'));
+    act(() => vi.advanceTimersByTime(500));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(item('Share').getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('does not open once the menu has closed before the delay', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions submenu={{ onOpenChange }} />);
+    await onShare();
+    vi.useFakeTimers();
+    fireEvent.pointerMove(item('Share'), { pointerType: 'mouse' });
+    key('Escape');
+    act(() => vi.advanceTimersByTime(500));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it('a disabled trigger opens nothing', async () => {
     const onOpenChange = vi.fn();
     render(<Actions shareDisabled submenu={{ onOpenChange }} />);

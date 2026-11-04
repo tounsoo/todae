@@ -995,6 +995,7 @@ function SubmenuTrigger({
   onKeyDown,
   onPointerMove,
   onPointerLeave,
+  onBlur,
   ...props
 }: MenuSubmenuTriggerProps) {
   const sub = useSubmenu('SubmenuTrigger');
@@ -1006,6 +1007,10 @@ function SubmenuTrigger({
     timer.current = undefined;
   };
   useEffect(() => cancelTimer, []);
+  // The menu closing drops a pending open too.
+  useLayoutEffect(() => {
+    if (!sub.parent.open) cancelTimer();
+  }, [sub.parent.open]);
   // A key or a click with no pointer goes into the submenu: it opens, or, open
   // already, hands focus to its first item.
   const enter = () => {
@@ -1039,9 +1044,12 @@ function SubmenuTrigger({
         const delay = tokenMs(event.currentTarget, '--todae-menu-submenu-delay-show') ?? SUBMENU_SHOW_DELAY_MS;
         timer.current = setTimeout(() => {
           timer.current = undefined;
-          sub.setOpen(true, 'pointer');
+          // Only with focus still here.
+          if (document.activeElement === sub.triggerRef.current) sub.setOpen(true, 'pointer');
         }, delay);
       }),
+      // Focus moving on, by key or with the menu closing, drops a pending open.
+      onBlur: composeHandlers(onBlur, cancelTimer),
       // A pointer that leaves toward the open submenu may cross other items
       // of this list on the way, which keep focus where it is meanwhile.
       onPointerLeave: composeHandlers(onPointerLeave, (event: PointerEvent<HTMLDivElement>) => {
