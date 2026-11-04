@@ -170,14 +170,17 @@ for (const appearance of APPEARANCES) {
       it('examples/toast/ToastDemo.tsx ToastDemo', async () => {
         const { container } = renderDemo(demo('ToastDemo'));
         await clearToasts();
-        for (const tone of ['info', 'success', 'warning', 'critical']) {
-          await userEvent.click(within(container).getByRole('button', { name: tone }));
+        // The region shows three toasts at most and holds the rest back, so the four tones show in two rounds.
+        for (const [tones, titles] of [
+          [['success', 'warning', 'critical'], ['Changes saved', 'Payment failed', 'You are offline']],
+          [['info'], ['Draft synced']],
+        ] as const) {
+          for (const tone of tones) await userEvent.click(within(container).getByRole('button', { name: tone }));
+          await expect.poll(() => shownToastTitles().sort()).toEqual(titles);
+          await settle();
+          await expectAccessible(appearance, { overlay: true });
+          await clearToasts();
         }
-        // The region shows the three oldest toasts and holds the fourth back.
-        await expect.poll(() => shownToastTitles().sort()).toEqual(['Changes saved', 'Draft synced', 'You are offline']);
-        await settle();
-        await expectAccessible(appearance, { overlay: true });
-        await clearToasts();
       });
 
       it('examples/toast/ToastDemo.tsx ToastDemo over a dialog', async () => {
