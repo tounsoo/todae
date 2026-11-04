@@ -341,7 +341,7 @@ describe('content parts in a browser', () => {
     const root = screen.getByText('Current').closest('main') as HTMLElement;
     root.style.setProperty('--todae-link-fg-current', 'rgb(1, 2, 3)');
     root.style.setProperty('--todae-link-decoration-current', 'rgb(4, 5, 6)');
-    root.style.setProperty('--todae-link-decoration-current-thickness', '3px');
+    root.style.setProperty('--todae-link-decoration-thickness-current', '3px');
     for (const text of ['Current', 'Step', 'True']) {
       expect(style(text).color).toBe('rgb(1, 2, 3)');
       expect(style(text).textDecorationColor).toBe('rgb(4, 5, 6)');

@@ -102,11 +102,11 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 ## Focus ring
 
-`focus.ring.color`, `focus.ring.width` and `focus.ring.offset` describe Todae's focus ring. Each component's `ring.focus` color token, such as `button.primary.ring.focus` or `field.ring.focus`, points at `focus.ring.color`, so changing it recolors those rings. A component's own token still overrides it for that component. Read the three tokens to draw the same ring on a focusable element of your own:
+`focus.ring`, `focus.ring-width` and `focus.ring-offset` describe Todae's focus ring. Each component's `ring.focus` color token, such as `button.primary.ring.focus` or `field.ring.focus`, points at `focus.ring`, so changing it recolors those rings. A component's own token still overrides it for that component. Read the three tokens to draw the same ring on a focusable element of your own:
 
 ```css
 .my-card:focus-visible {
-  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring);
   outline-offset: var(--todae-focus-ring-offset);
 }
 ```

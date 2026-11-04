@@ -19,9 +19,9 @@
       "gap": { "$type": "number", "$value": 0.375 }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
-      "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
     },
+    "ring-radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "motion": {
       "duration": {
         "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },

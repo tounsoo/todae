@@ -36,7 +36,7 @@
         "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
       },
       "ring": {
-        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
       }
     }
   }

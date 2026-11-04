@@ -2,7 +2,7 @@
   "scroll": {
     "$description": "ScrollArea.Root: a scrolling region that is focusable when it overflows.",
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
     }
   }
 }

@@ -39,7 +39,7 @@ const base = 'packages/design-system/src/styles/base.css';
 
 test('a sheet may read its own root, a configured root, a core read, and a shared root', async () => {
   assert.deepEqual(await lint('.a { color: var(--todae-button-fg); }', button), []);
-  assert.deepEqual(await lint('.a { outline-color: var(--todae-focus-ring-color); }', button), []);
+  assert.deepEqual(await lint('.a { outline-color: var(--todae-focus-ring); }', button), []);
   assert.deepEqual(await lint('.a { background: var(--todae-overlay-bg); }', button), []);
   assert.deepEqual(
     await lint('.a { color: var(--todae-field-fg); background: var(--todae-option-bg); gap: var(--todae-space-2); }', field),

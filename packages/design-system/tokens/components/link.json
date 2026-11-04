@@ -9,14 +9,16 @@
     "decoration": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
       "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
-      "current-thickness": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
-      "offset": { "$type": "dimension", "$value": { "value": 3, "unit": "px" } }
+      "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
     },
+    "decoration-thickness": {
+      "default": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+      "current": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
+    "decoration-offset": { "$type": "dimension", "$value": { "value": 3, "unit": "px" } },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
-      "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
-    }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    },
+    "ring-radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
   }
 }

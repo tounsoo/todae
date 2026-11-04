@@ -22,7 +22,7 @@
         }
       },
       "ring": {
-        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
       },
       "link": {
         "$description": "A row's button when its control has no id to link to. It follows Link.Root, so every row reads the same.",
@@ -32,14 +32,14 @@
         },
         "decoration": {
           "default": { "$type": "color", "$value": { "$ref": "#/link/decoration/default/$value" } },
-          "hover": { "$type": "color", "$value": { "$ref": "#/link/decoration/hover/$value" } },
-          "thickness": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/thickness/$value" } },
-          "offset": { "$type": "dimension", "$value": { "$ref": "#/link/decoration/offset/$value" } }
+          "hover": { "$type": "color", "$value": { "$ref": "#/link/decoration/hover/$value" } }
         },
+        "decoration-thickness": { "$type": "dimension", "$value": { "$ref": "#/link/decoration-thickness/default/$value" } },
+        "decoration-offset": { "$type": "dimension", "$value": { "$ref": "#/link/decoration-offset/$value" } },
         "ring": {
-          "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
-          "radius": { "$type": "dimension", "$value": { "$ref": "#/link/ring/radius/$value" } }
-        }
+          "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+        },
+        "ring-radius": { "$type": "dimension", "$value": { "$ref": "#/link/ring-radius/$value" } }
       }
     }
   }
