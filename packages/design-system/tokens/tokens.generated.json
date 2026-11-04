@@ -7403,34 +7403,6 @@
       "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
-      "path": "motion.modal.duration.enter",
-      "type": "duration",
-      "cssVar": "--todae-motion-modal-duration-enter",
-      "cssValue": "var(--todae-motion-duration-slow)",
-      "ref": "motion.duration.slow",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "How long a centered window takes to rise in."
-    },
-    {
-      "path": "motion.modal.duration.exit",
-      "type": "duration",
-      "cssVar": "--todae-motion-modal-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "How long a centered window takes to leave."
-    },
-    {
       "path": "motion.notice.duration.enter",
       "type": "duration",
       "cssVar": "--todae-motion-notice-duration-enter",
@@ -7541,6 +7513,34 @@
         "name": "contract"
       },
       "description": "How long inline content takes to close."
+    },
+    {
+      "path": "motion.window.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-window-duration-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a centered window takes to rise in."
+    },
+    {
+      "path": "motion.window.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-window-duration-exit",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a centered window takes to leave."
     },
     {
       "path": "overlay.motion.easing.enter",
@@ -7672,8 +7672,8 @@
       "path": "dialog.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-enter",
-      "cssValue": "var(--todae-motion-modal-duration-enter)",
-      "ref": "motion.modal.duration.enter",
+      "cssValue": "var(--todae-motion-window-duration-enter)",
+      "ref": "motion.window.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7686,8 +7686,8 @@
       "path": "dialog.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-exit",
-      "cssValue": "var(--todae-motion-modal-duration-exit)",
-      "ref": "motion.modal.duration.exit",
+      "cssValue": "var(--todae-motion-window-duration-exit)",
+      "ref": "motion.window.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {

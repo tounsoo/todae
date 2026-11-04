@@ -675,8 +675,6 @@
   --todae-chip-warning-bg: var(--_todae-chip-warning-bg, var(--todae-color-status-warning-bg));
   --todae-chip-warning-border: var(--_todae-chip-warning-border, var(--todae-color-status-warning-border));
   --todae-chip-warning-fg: var(--_todae-chip-warning-fg, var(--todae-color-status-warning-fg));
-  --todae-motion-modal-duration-enter: var(--_todae-motion-modal-duration-enter, var(--todae-motion-duration-slow));
-  --todae-motion-modal-duration-exit: var(--_todae-motion-modal-duration-exit, var(--todae-motion-duration-normal));
   --todae-motion-notice-duration-enter: var(--_todae-motion-notice-duration-enter, var(--todae-motion-duration-normal));
   --todae-motion-notice-duration-exit: var(--_todae-motion-notice-duration-exit, var(--todae-motion-duration-fast));
   --todae-motion-panel-duration-enter: var(--_todae-motion-panel-duration-enter, var(--todae-motion-duration-slow));
@@ -685,6 +683,8 @@
   --todae-motion-popup-duration-exit: var(--_todae-motion-popup-duration-exit, var(--todae-motion-duration-normal));
   --todae-motion-reveal-duration-enter: var(--_todae-motion-reveal-duration-enter, var(--todae-motion-duration-normal));
   --todae-motion-reveal-duration-exit: var(--_todae-motion-reveal-duration-exit, var(--todae-motion-duration-normal));
+  --todae-motion-window-duration-enter: var(--_todae-motion-window-duration-enter, var(--todae-motion-duration-slow));
+  --todae-motion-window-duration-exit: var(--_todae-motion-window-duration-exit, var(--todae-motion-duration-normal));
   --todae-overlay-motion-easing-enter: var(--_todae-overlay-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-overlay-motion-easing-exit: var(--_todae-overlay-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-overlay-scrim-bg: var(--_todae-overlay-scrim-bg, var(--todae-color-bg-scrim));
@@ -694,8 +694,8 @@
   --todae-dialog-fg: var(--_todae-dialog-fg, var(--todae-color-fg-default));
   --todae-dialog-gap: var(--_todae-dialog-gap, var(--todae-space-overlay-gap));
   --todae-dialog-max-width: var(--_todae-dialog-max-width, 32rem);
-  --todae-dialog-motion-duration-enter: var(--_todae-dialog-motion-duration-enter, var(--todae-motion-modal-duration-enter));
-  --todae-dialog-motion-duration-exit: var(--_todae-dialog-motion-duration-exit, var(--todae-motion-modal-duration-exit));
+  --todae-dialog-motion-duration-enter: var(--_todae-dialog-motion-duration-enter, var(--todae-motion-window-duration-enter));
+  --todae-dialog-motion-duration-exit: var(--_todae-dialog-motion-duration-exit, var(--todae-motion-window-duration-exit));
   --todae-dialog-motion-easing-enter: var(--_todae-dialog-motion-easing-enter, var(--todae-overlay-motion-easing-enter));
   --todae-dialog-motion-easing-exit: var(--_todae-dialog-motion-easing-exit, var(--todae-overlay-motion-easing-exit));
   --todae-dialog-motion-offset: var(--_todae-dialog-motion-offset, 0.5rem);

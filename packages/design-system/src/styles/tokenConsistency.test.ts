@@ -120,6 +120,11 @@ describe('token consistency across component styles', () => {
       const phase = path.slice(path.lastIndexOf('.') + 1);
       expect({ path, role: new RegExp(`^motion\\.[a-z-]+\\.duration\\.${phase}$`).test(ref ?? '') }).toEqual({ path, role: true });
     }
+    const roles = generated.tokens.filter((token) => /^motion\.[a-z-]+\.duration\.(enter|exit)$/.test(token.path));
+    expect(roles.length).toBeGreaterThan(5);
+    for (const { path, ref } of roles) {
+      expect({ path, scale: /^motion\.duration\.[a-z]+$/.test(ref ?? '') }).toEqual({ path, scale: true });
+    }
   });
 
   it('lifts every overlay surface with its own shadow token', () => {
