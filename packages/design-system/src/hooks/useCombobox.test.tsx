@@ -451,6 +451,16 @@ describe('useCombobox', () => {
     expect(queries).toEqual(['']);
   });
 
+  it('reads a value nothing names, shown as its raw text, as committed: no create row and the full list', () => {
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, value: 'Rust', defaultInputValue: 'Rust', allowCreate: true, presentation: 'popover' }),
+    );
+    act(() => result.current.setOpen(true));
+    expect(result.current.query).toBe('');
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.items).toHaveLength(OPTIONS.length);
+  });
+
   it('does not fall back to defaultValue for a controlled null value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),

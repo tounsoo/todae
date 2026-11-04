@@ -254,13 +254,18 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // starting value's, and is never listed.
   const knownOptions = options.options ?? EMPTY_OPTIONS;
   // The input reads as committed when it shows any label the value is known by: a loaded row's,
-  // or the one `options` lends, which may differ, since a pick writes the loaded one.
+  // or the one `options` lends, which may differ, since a pick writes the loaded one. A value
+  // nothing names, such as a created one, goes by its raw text, as its chip and input do.
+  const cachedLabel = singleValue === null ? undefined : labels.get(singleValue);
+  const lentLabel =
+    singleValue === null ? undefined : knownOptions.find((option) => option.value === singleValue)?.label;
   const committed =
     selectionMode === 'single' &&
     singleValue !== null &&
     inputValue !== '' &&
-    (inputValue === labels.get(singleValue) ||
-      inputValue === knownOptions.find((option) => option.value === singleValue)?.label);
+    (inputValue === cachedLabel ||
+      inputValue === lentLabel ||
+      (cachedLabel === undefined && lentLabel === undefined && inputValue === singleValue));
   // Empty while the input shows the committed label, so the list is the full one.
   const filterQuery = committed ? '' : inputValue;
   const trimmed = inputValue.trim();
