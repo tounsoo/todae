@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Menu, type MenuRootProps, type MenuSubmenuProps } from '../index.js';
 
@@ -313,6 +314,29 @@ describe('Menu submenus', () => {
     await onShare();
     await raf();
     expect(isOpen(menuOf('Share'))).toBe(true);
+  });
+
+  it('a key open its owner refused does not move focus on a later pointer open', async () => {
+    function OnlyPointer() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Actions
+          submenu={{ open, onOpenChange: (next, reason) => setOpen(next && reason === 'pointer' ? true : false) }}
+        />
+      );
+    }
+    render(<OnlyPointer />);
+    await onShare();
+    key('ArrowRight');
+    await raf();
+    expect(isOpen(menuOf('Share'))).toBe(false);
+    vi.useFakeTimers();
+    fireEvent.pointerMove(item('Share'), { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(200));
+    vi.useRealTimers();
+    await raf();
+    expect(isOpen(menuOf('Share'))).toBe(true);
+    expect(document.activeElement).toBe(item('Share'));
   });
 
   it('throws outside Menu.Submenu', () => {

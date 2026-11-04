@@ -1045,7 +1045,10 @@ function SubmenuTrigger({
         timer.current = setTimeout(() => {
           timer.current = undefined;
           // Only with focus still here.
-          if (document.activeElement === sub.triggerRef.current) sub.setOpen(true, 'pointer');
+          if (document.activeElement !== sub.triggerRef.current) return;
+          // A key's open that its owner refused must not move focus on this one.
+          sub.focusFirst.current = false;
+          sub.setOpen(true, 'pointer');
         }, delay);
       }),
       // Focus moving on, by key or with the menu closing, drops a pending open.
@@ -1079,7 +1082,9 @@ function SubmenuTrigger({
     () => {
       // A pointer's click opens it and leaves focus here; a click with no
       // pointer, such as a screen reader's, goes in.
-      if (!sub.open) sub.setOpen(true, 'trigger');
+      if (sub.open) return;
+      sub.focusFirst.current = false;
+      sub.setOpen(true, 'trigger');
     },
   );
   return (
