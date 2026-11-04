@@ -78,9 +78,7 @@ jobs:
       # Every remote action is pinned to a commit. Dependabot (.github/dependabot.yml) moves the pins.
       - name: Pinned actions
         if: ${{ !cancelled() }}
-        run: |
-          bash .github/scripts/pinned-actions.sh --self-test
-          bash .github/scripts/pinned-actions.sh
+        run: node .github/scripts/pinned-actions.mjs
 
   build:
     if: ${{ !github.event.pull_request.draft }}

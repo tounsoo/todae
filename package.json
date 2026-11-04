@@ -26,7 +26,7 @@
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "tokens:grandfather": "pnpm --filter @tounsoo/todae tokens:grandfather",
     "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
-    "test": "node --test stylelint/*.test.mjs eslint/*.test.mjs .claude/skills/verify/verify.test.mjs && pnpm -r --if-present test",
+    "test": "node --test stylelint/*.test.mjs eslint/*.test.mjs .claude/skills/verify/verify.test.mjs .github/scripts/*.test.mjs && pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
@@ -48,6 +48,7 @@
     "postcss-value-parser": "^4.2.0",
     "publint": "^0.3.25",
     "stylelint": "^17.16.0",
-    "typescript-eslint": "^8.71.0"
+    "typescript-eslint": "^8.71.0",
+    "yaml": "^2.9.1"
   }
 }

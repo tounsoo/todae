@@ -111,7 +111,7 @@ pnpm test:browser
 ```
 
 - `pnpm check` runs `pnpm lint`, `pnpm typecheck`, and `pnpm stylelint`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`.
-- `bash .github/scripts/pinned-actions.sh` fails when a workflow or `.github/actions` file uses a remote action by tag or branch instead of a full commit SHA. The Static job runs it. [Releases](ARCHITECTURE.md#releases) says why.
+- `node .github/scripts/pinned-actions.mjs` fails when a workflow or `.github/actions` file uses a remote action by tag or branch instead of a full commit SHA. The Static job runs it. [Releases](ARCHITECTURE.md#releases) says why.
 - `pnpm publish:check` packs `@tounsoo/todae` and runs publint and attw on that tarball. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - `pnpm ssr:smoke` builds the Next.js fixture in `examples/ssr-smoke` and fetches its HTML. Run `pnpm build:ds` first. CI runs the same command after the package build.
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
