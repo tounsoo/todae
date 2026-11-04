@@ -5480,13 +5480,20 @@
           "name": "options",
           "type": "readonly ComboboxOption[]",
           "required": false,
-          "description": "Sync options. Ignored when loadOptions is set."
+          "description": "Every row there is; filterOptions picks the ones to show. With loadOptions, only lends labels, such as the starting value's."
+        },
+        {
+          "name": "filterOptions",
+          "type": "(options: readonly ComboboxOption[], query: string) => readonly ComboboxOption[]",
+          "required": false,
+          "description": "Returns the rows to show, in the order to show them, for the trimmed input text, which is \"\" while nothing is typed or the input shows the committed label. Rank or cap the list here. Ignored when loadOptions is set.",
+          "default": "label holds the query, ignoring case"
         },
         {
           "name": "loadOptions",
           "type": "(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>",
           "required": false,
-          "description": "Async options, shown as the loader returns them. Stale responses are discarded. An inline function is fine; it is read at call time."
+          "description": "Async options for the trimmed input text, shown as the loader returns them, so the loader does the matching. Stale responses are discarded. An inline function is fine; it is read at call time."
         },
         {
           "name": "loadKey",
@@ -5738,7 +5745,7 @@
           "name": "triggers",
           "type": "readonly MentionTrigger[]",
           "required": true,
-          "description": "One entry per trigger character, such as { char: \"@\", options } or { char: \"/\", position: \"start\", loadOptions }. Each takes options or loadOptions, filter, text for what a pick inserts, and label for the list's name."
+          "description": "One entry per trigger character, such as { char: \"@\", options } or { char: \"/\", position: \"start\", loadOptions }. Each takes options, narrowed by filterOptions(options, word), or loadOptions, plus text for what a pick inserts, and label for the list's name."
         },
         {
           "name": "value",

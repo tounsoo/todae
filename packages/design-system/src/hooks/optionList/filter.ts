@@ -1,13 +1,7 @@
-import type { ComboboxOption } from './types.js';
+import type { ComboboxFilterOptions } from './types.js';
 
-export function defaultFilter(option: ComboboxOption, query: string): boolean {
-  return option.label.toLowerCase().includes(query.trim().toLowerCase());
-}
-
-export function filterOptions(
-  options: readonly ComboboxOption[],
-  query: string,
-  filter: (option: ComboboxOption, query: string) => boolean = defaultFilter,
-): ComboboxOption[] {
-  return options.filter((option) => filter(option, query));
-}
+/** The rows whose label holds the query, ignoring case, in their own order; every row for `''`. */
+export const defaultFilterOptions: ComboboxFilterOptions = (options, query) => {
+  const needle = query.toLowerCase();
+  return needle === '' ? options : options.filter((option) => option.label.toLowerCase().includes(needle));
+};

@@ -10,7 +10,7 @@ export const meta = {
       type: 'readonly MentionTrigger[]',
       required: true,
       description:
-        'One entry per trigger character, such as { char: "@", options } or { char: "/", position: "start", loadOptions }. Each takes options or loadOptions, filter, text for what a pick inserts, and label for the list\'s name.',
+        'One entry per trigger character, such as { char: "@", options } or { char: "/", position: "start", loadOptions }. Each takes options, narrowed by filterOptions(options, word), or loadOptions, plus text for what a pick inserts, and label for the list\'s name.',
     },
     {
       name: 'value',

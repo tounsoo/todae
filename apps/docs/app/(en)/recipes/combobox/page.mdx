@@ -50,7 +50,7 @@ One hook. The tree flips with the presentation. Force `presentation` when you ne
 
 ## Async
 
-`loadOptions(query, signal)` loads options. A newer query aborts the last controller and discards a stale resolve. The hook keeps the previous list while `loading` is true. Debounce, loading, and Retry chrome stay in the recipe. The hook does not debounce.
+`loadOptions(query, signal)` loads options for the trimmed text, and they show as it returns them, so the loader does the matching; `filterOptions` is ignored beside it, and `options` only lends labels, such as the starting value's. A newer query aborts the last controller and discards a stale resolve. The hook keeps the previous list while `loading` is true. Debounce, loading, and Retry chrome stay in the recipe. The hook does not debounce.
 
 Type `fail` to see the error row.
 

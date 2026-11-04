@@ -1,6 +1,17 @@
 'use client';
 
-import { Button, Dialog, Field, OptionList, Stack, Text, useCombobox, useHotkey, type ComboboxOption } from '@tounsoo/todae';
+import {
+  Button,
+  Dialog,
+  Field,
+  OptionList,
+  Stack,
+  Text,
+  useCombobox,
+  useHotkey,
+  type ComboboxFilterOptions,
+  type ComboboxOption,
+} from '@tounsoo/todae';
 import { useState } from 'react';
 
 const COMMANDS: ComboboxOption[] = [
@@ -11,11 +22,20 @@ const COMMANDS: ComboboxOption[] = [
   { value: 'sign-out', label: 'Sign out' },
 ];
 
+/** Commands whose label starts with the text come first, then the others that hold it. */
+const rankCommands: ComboboxFilterOptions = (options, query) => {
+  const needle = query.toLowerCase();
+  const holds = options.filter((option) => option.label.toLowerCase().includes(needle));
+  const starts = holds.filter((option) => option.label.toLowerCase().startsWith(needle));
+  return [...starts, ...holds.filter((option) => !starts.includes(option))];
+};
+
 /** `onRun` lets tests count runs; the page renders it without props. */
 export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = {}) {
   const [ran, setRan] = useState<string | null>(null);
   const cb = useCombobox({
     options: COMMANDS,
+    filterOptions: rankCommands,
     presentation: 'dialog',
     // Controlled at null, so running a command never leaves a selection behind.
     value: null,
