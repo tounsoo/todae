@@ -833,7 +833,7 @@ table {
 }
 
 .preset:has(input:focus-visible) {
-  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring);
   outline-offset: var(--todae-focus-ring-offset);
 }
 

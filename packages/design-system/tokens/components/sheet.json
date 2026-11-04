@@ -6,7 +6,7 @@
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
     "shadow": { "$type": "shadow", "$value": { "$ref": "#/dialog/shadow/$value" } },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
     },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },

@@ -1,5 +1,15 @@
 {
-  "version": 1,
+  "version": 2,
   "states": ["default", "hover", "active", "pressed", "focus", "disabled"],
-  "statefulProperties": ["bg", "border", "color", "decoration", "fg", "leading", "ring", "shadow"]
+  "statefulProperties": {
+    "bg": "color",
+    "border": "color",
+    "color": "color",
+    "decoration": "color",
+    "decoration-thickness": "dimension",
+    "fg": "color",
+    "leading": "number",
+    "ring": "color",
+    "shadow": "shadow"
+  }
 }

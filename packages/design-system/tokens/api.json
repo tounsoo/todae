@@ -1862,12 +1862,12 @@
       "type": "dimension"
     },
     {
-      "path": "disclosure.ring.focus",
-      "type": "color"
+      "path": "disclosure.ring-radius",
+      "type": "dimension"
     },
     {
-      "path": "disclosure.ring.radius",
-      "type": "dimension"
+      "path": "disclosure.ring.focus",
+      "type": "color"
     },
     {
       "path": "disclosure.summary.fg",
@@ -2310,15 +2310,15 @@
       "type": "dimension"
     },
     {
-      "path": "focus.ring.color",
+      "path": "focus.ring",
       "type": "color"
     },
     {
-      "path": "focus.ring.offset",
+      "path": "focus.ring-offset",
       "type": "dimension"
     },
     {
-      "path": "focus.ring.width",
+      "path": "focus.ring-width",
       "type": "dimension"
     },
     {
@@ -2414,20 +2414,20 @@
       "type": "number"
     },
     {
+      "path": "form.summary.link.decoration-offset",
+      "type": "dimension"
+    },
+    {
+      "path": "form.summary.link.decoration-thickness",
+      "type": "dimension"
+    },
+    {
       "path": "form.summary.link.decoration.default",
       "type": "color"
     },
     {
       "path": "form.summary.link.decoration.hover",
       "type": "color"
-    },
-    {
-      "path": "form.summary.link.decoration.offset",
-      "type": "dimension"
-    },
-    {
-      "path": "form.summary.link.decoration.thickness",
-      "type": "dimension"
     },
     {
       "path": "form.summary.link.fg.default",
@@ -2438,12 +2438,12 @@
       "type": "color"
     },
     {
-      "path": "form.summary.link.ring.focus",
-      "type": "color"
+      "path": "form.summary.link.ring-radius",
+      "type": "dimension"
     },
     {
-      "path": "form.summary.link.ring.radius",
-      "type": "dimension"
+      "path": "form.summary.link.ring.focus",
+      "type": "color"
     },
     {
       "path": "form.summary.padding.x",
@@ -2506,12 +2506,20 @@
       "type": "dimension"
     },
     {
-      "path": "link.decoration.current",
-      "type": "color"
+      "path": "link.decoration-offset",
+      "type": "dimension"
     },
     {
-      "path": "link.decoration.current-thickness",
+      "path": "link.decoration-thickness.current",
       "type": "dimension"
+    },
+    {
+      "path": "link.decoration-thickness.default",
+      "type": "dimension"
+    },
+    {
+      "path": "link.decoration.current",
+      "type": "color"
     },
     {
       "path": "link.decoration.default",
@@ -2520,14 +2528,6 @@
     {
       "path": "link.decoration.hover",
       "type": "color"
-    },
-    {
-      "path": "link.decoration.offset",
-      "type": "dimension"
-    },
-    {
-      "path": "link.decoration.thickness",
-      "type": "dimension"
     },
     {
       "path": "link.fg.current",
@@ -2542,12 +2542,12 @@
       "type": "color"
     },
     {
-      "path": "link.ring.focus",
-      "type": "color"
+      "path": "link.ring-radius",
+      "type": "dimension"
     },
     {
-      "path": "link.ring.radius",
-      "type": "dimension"
+      "path": "link.ring.focus",
+      "type": "color"
     },
     {
       "path": "loader.motion.duration",
@@ -3134,11 +3134,11 @@
       "type": "color"
     },
     {
-      "path": "picker.thumb.border.color",
+      "path": "picker.thumb.border",
       "type": "color"
     },
     {
-      "path": "picker.thumb.border.width",
+      "path": "picker.thumb.border-width",
       "type": "dimension"
     },
     {
