@@ -20,7 +20,8 @@ export type PopoverPresence = {
  * Shows and hides `contentRef`'s popover as `open` changes. With `presence`
  * it moves in and out the way Dialog and Drawer do: `data-entered` lands two
  * frames after it shows, so its closed style is drawn first and it
- * transitions in, and as it closes it takes `data-todae-exiting` and stays
+ * transitions in, and `data-todae-entering` marks those frames, so a tooltip
+ * inside waits for the growth that is about to start, and as it closes it takes `data-todae-exiting` and stays
  * shown, inert, until its opacity fade ends, then hides. Opening again inside
  * the fade turns it back where it is. Unmounting drops the wait.
  *
@@ -85,16 +86,21 @@ export function usePopoverSync(
       // Already drawn inside its fade: turn back from where it is.
       if (returning) el.setAttribute('data-entered', '');
       else {
+        el.setAttribute('data-todae-entering', '');
         raf = requestAnimationFrame(() => {
           raf = requestAnimationFrame(() => {
             raf = 0;
+            el.removeAttribute('data-todae-entering');
             el.setAttribute('data-entered', '');
           });
         });
       }
     }
     return () => {
-      cancelAnimationFrame(raf);
+      if (raf) {
+        cancelAnimationFrame(raf);
+        el.removeAttribute('data-todae-entering');
+      }
       held.delete(el);
     };
   }, [animated, contentRef, open]);

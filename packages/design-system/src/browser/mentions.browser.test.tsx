@@ -185,17 +185,22 @@ describe('useMentions in a browser', () => {
     await userEvent.click(field());
     await userEvent.keyboard('@a');
     await userEvent.keyboard('{Escape}');
-    expect(screen.queryByRole('listbox')).toBeNull();
+    // Gone, or fading out inert, where nothing reaches it.
+    const reachableList = () => {
+      const list = screen.queryByRole('listbox');
+      return list && !list.closest('[inert]') ? list : null;
+    };
+    expect(reachableList()).toBeNull();
     await userEvent.keyboard('d');
-    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(reachableList()).toBeNull();
     await userEvent.keyboard(' @g');
-    expect(screen.getByRole('listbox')).toBeTruthy();
+    expect(reachableList()).toBeTruthy();
     // selectionchange, which React reads for onSelect, fires after the caret moves.
     await act(async () => {
       field().setSelectionRange(0, 0);
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(reachableList()).toBeNull();
   });
 
   it('puts the caret after a pick when the product commits the draft later', async () => {

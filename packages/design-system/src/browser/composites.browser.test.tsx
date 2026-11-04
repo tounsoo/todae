@@ -176,7 +176,9 @@ describe('Menu in a browser', () => {
     await userEvent.keyboard('{ArrowDown}{Enter}');
     expect(screen.getByRole('status').textContent).toBe('delete');
     await waitFor(() => expect(document.activeElement).toBe(trigger));
-    expect(screen.getByRole('menu', { hidden: true }).matches(':popover-open')).toBe(false);
+    // Closed, or still fading out, out of reach.
+    const menu = screen.getByRole('menu', { hidden: true });
+    expect(!menu.matches(':popover-open') || menu.hasAttribute('data-todae-exiting')).toBe(true);
   });
 
   it('returns focus to the trigger after a choice that moves the trigger in the page', async () => {

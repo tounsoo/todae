@@ -119,8 +119,16 @@ describe('usePopoverSync with presence', () => {
     const el = getByTestId('p');
     expect(el.hasAttribute('data-popover-open')).toBe(true);
     expect(el.hasAttribute('data-entered')).toBe(false);
+    expect(el.hasAttribute('data-todae-entering')).toBe(true);
     await act(frames);
     expect(el.hasAttribute('data-entered')).toBe(true);
+    expect(el.hasAttribute('data-todae-entering')).toBe(false);
+  });
+
+  it('drops its entering mark when it closes inside those frames', () => {
+    const { getByTestId, rerender } = render(<Moving open />);
+    rerender(<Moving open={false} />);
+    expect(getByTestId('p').hasAttribute('data-todae-entering')).toBe(false);
   });
 
   it('stays shown and inert through its exit fade, then hides and tells', async () => {

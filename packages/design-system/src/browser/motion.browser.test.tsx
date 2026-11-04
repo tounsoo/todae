@@ -178,8 +178,9 @@ describe('A tip in a popover that grows open', () => {
     render(<Grow />);
     const content = screen.getByRole('dialog', { name: 'Grow' });
     await waitFor(() => expect(document.activeElement).toBe(pin()));
-    // Focus would open the tip at once, but the popover still scales.
-    expect(scaling(content)).toBe(true);
+    // Focus would open the tip at once, but the popover is about to grow or
+    // still grows.
+    expect(content.hasAttribute('data-todae-entering') || scaling(content)).toBe(true);
     expect(tipOf(pin()!)).toBeNull();
     await waitFor(() => expect(tipOf(pin()!)).not.toBeNull(), { timeout: 3000 });
     expect(scaling(content)).toBe(false);
