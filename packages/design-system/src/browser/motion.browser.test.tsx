@@ -205,6 +205,44 @@ describe('A tip in a popover that grows open', () => {
   });
 });
 
+describe('A popover that has opened', () => {
+  function Opened() {
+    const popover = usePopover({ defaultOpen: true });
+    return (
+      <Themed style={{ paddingBlockStart: 64, paddingInline: 48 }}>
+        <Button.Root {...popover.getTriggerProps()}>Open</Button.Root>
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Opened">
+          <div style={{ inlineSize: 240, blockSize: 160 }}>Body</div>
+        </Popover.Root>
+      </Themed>
+    );
+  }
+
+  // Safari re-resolves the position fallbacks right after the opening
+  // transition ends and ran it again, now and then from halfway.
+  it('fades in once, then holds still with no transition', async () => {
+    const runs: string[] = [];
+    const listen = (event: Event) => {
+      if (event.target instanceof HTMLElement && event.target.getAttribute('aria-label') === 'Opened') {
+        runs.push((event as TransitionEvent).propertyName);
+      }
+    };
+    document.addEventListener('transitionrun', listen, true);
+    try {
+      render(<Opened />);
+      const content = screen.getByRole('dialog', { name: 'Opened' });
+      await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+      // Room for a run that would start again after the first ends.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(runs.filter((name) => name === 'opacity')).toEqual(['opacity']);
+      expect(getComputedStyle(content).transitionProperty).toBe('none');
+      expect(getComputedStyle(content).opacity).toBe('1');
+    } finally {
+      document.removeEventListener('transitionrun', listen, true);
+    }
+  });
+});
+
 type Kind = 'Drawer' | 'Dialog' | 'BottomSheet';
 
 function Overlay({ kind, open }: { kind: Kind; open: boolean }) {

@@ -217,6 +217,9 @@ describe('Drilldown motion, height and scroll in a browser', () => {
             ))}
           </Drilldown.Viewport>
         </Drilldown.Root>
+        {/* Room below a short view, so the page can still sit at the
+            Drilldown's top once its height has settled. */}
+        <div style={{ blockSize: 1200 }} />
       </Themed>,
     );
     try {
