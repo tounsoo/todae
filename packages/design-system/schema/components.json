@@ -3094,7 +3094,7 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Items, groups and separators."
+          "description": "Items, groups, separators and submenus."
         },
         {
           "name": "className",
@@ -3326,6 +3326,84 @@
       "name": "Menu.Separator",
       "description": "role=\"separator\" between items or groups.",
       "props": [
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Submenu",
+      "description": "Owns open state for one submenu inside Menu.Content or another submenu. Renders no element. It closes when the menu it sits in closes or focus moves to another of its items.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: MenuSubmenuOpenChangeReason) => void",
+          "required": false,
+          "description": "Fires on open and close. reason is trigger, pointer, escape, arrow or parent. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "One Menu.SubmenuTrigger and one Menu.SubmenuContent."
+        }
+      ]
+    },
+    {
+      "name": "Menu.SubmenuContent",
+      "description": "role=\"menu\" in a popover past the end of its trigger, flipping sides where there is no room. Named by its trigger. Left arrow (right in RTL) or Escape closes it and focuses the trigger; Tab or choosing an item closes the whole menu.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Items, groups, separators and submenus."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.SubmenuTrigger",
+      "description": "role=\"menuitem\" with aria-haspopup=\"menu\" and a chevron toward the line end. Right arrow (left in RTL), Enter or Space opens the submenu and focuses its first item. The pointer resting on it opens it after menu.submenu.delay.show; a click opens it.",
+      "props": [
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "aria-disabled. Stays in the arrow-key order, so it is announced, but cannot open."
+        },
+        {
+          "name": "textValue",
+          "type": "string",
+          "required": false,
+          "description": "Typeahead text when children are not plain text."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Item label. It also names the submenu."
+        },
         {
           "name": "className",
           "type": "string",

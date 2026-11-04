@@ -21,7 +21,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Items, groups and separators.',
+      description: 'Items, groups, separators and submenus.',
     },
     {
       name: 'className',

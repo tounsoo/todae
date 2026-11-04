@@ -2678,6 +2678,14 @@
       "type": "dimension"
     },
     {
+      "path": "menu.submenu.delay.hide",
+      "type": "duration"
+    },
+    {
+      "path": "menu.submenu.delay.show",
+      "type": "duration"
+    },
+    {
       "path": "message.actions.motion.duration.enter",
       "type": "duration"
     },

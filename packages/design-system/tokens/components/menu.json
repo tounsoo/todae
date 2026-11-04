@@ -34,6 +34,20 @@
       }
     },
     "separator": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
-    "separator-thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
+    "separator-thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "submenu": {
+      "delay": {
+        "show": {
+          "$type": "duration",
+          "$value": { "value": 100, "unit": "ms" },
+          "$description": "How long the pointer rests on a Menu.SubmenuTrigger before its submenu opens."
+        },
+        "hide": {
+          "$type": "duration",
+          "$value": { "value": 300, "unit": "ms" },
+          "$description": "How long the pointer has to reach an open submenu across the items between, which keep focus where it is meanwhile."
+        }
+      }
+    }
   }
 }

@@ -164,6 +164,10 @@ export {
   type MenuRadioItemProps,
   type MenuRootProps,
   type MenuSeparatorProps,
+  type MenuSubmenuContentProps,
+  type MenuSubmenuOpenChangeReason,
+  type MenuSubmenuProps,
+  type MenuSubmenuTriggerProps,
   type MenuTriggerProps,
 } from './components/Menu.js';
 export { Popover, type PopoverRootProps } from './components/Popover.js';

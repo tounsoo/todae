@@ -9083,6 +9083,34 @@
       "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
     },
     {
+      "path": "menu.submenu.delay.hide",
+      "type": "duration",
+      "cssVar": "--todae-menu-submenu-delay-hide",
+      "cssValue": "300ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long the pointer has to reach an open submenu across the items between, which keep focus where it is meanwhile."
+    },
+    {
+      "path": "menu.submenu.delay.show",
+      "type": "duration",
+      "cssVar": "--todae-menu-submenu-delay-show",
+      "cssValue": "100ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long the pointer rests on a Menu.SubmenuTrigger before its submenu opens."
+    },
+    {
       "path": "tabs.bg.default",
       "type": "color",
       "cssVar": "--todae-tabs-bg-default",

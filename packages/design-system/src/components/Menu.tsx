@@ -26,13 +26,15 @@ import { useControlledState } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../overlay/popover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
-import { anchoredContentStyle } from '../overlay/anchorName.js';
+import { anchoredContentStyle, anchorTriggerStyle } from '../overlay/anchorName.js';
+import { tokenMs } from '../overlay/cssTime.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { aimPopoverOrigin } from '../overlay/popoverOrigin.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useDomId } from '../internal/domId.js';
-import { CheckGlyph, glyphOr } from './glyphs.js';
+import { CheckGlyph, ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
@@ -133,6 +135,30 @@ export type MenuSeparatorProps = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
+/**
+ * Why a submenu opened or closed. `trigger` is a click or key on its
+ * Menu.SubmenuTrigger; `pointer` is the pointer resting on it; `escape` is
+ * Escape or a close request; `arrow` is the arrow key toward the line's start;
+ * `parent` is focus moving elsewhere in the menu it sits in, or that menu
+ * closing.
+ */
+export type MenuSubmenuOpenChangeReason = 'trigger' | 'pointer' | 'escape' | 'arrow' | 'parent';
+
+export type MenuSubmenuProps = {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean, reason: MenuSubmenuOpenChangeReason) => void;
+  children?: ReactNode;
+};
+
+export type MenuSubmenuTriggerProps = ItemBase;
+
+/** Named by its Menu.SubmenuTrigger. */
+export type MenuSubmenuContentProps = {
+  children?: ReactNode;
+  className?: string;
+} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'popover' | 'children' | 'aria-label' | 'aria-labelledby' | 'id'>;
+
 /** Where a context request put the menu, and who asked. */
 type ContextOpen = {
   /**
@@ -181,6 +207,49 @@ function useMenu(part: string): MenuContextValue {
 type RadioContextValue = { value: string | null; select: (value: string) => void };
 
 const RadioContext = /* @__PURE__ */ createContext<RadioContextValue | null>(null);
+
+type Point = readonly [x: number, y: number];
+
+/** The pointer is on its way to a submenu, across the items between, until `until`. */
+type Grace = { area: readonly Point[]; until: number };
+
+/** One list of items: the menu's own, or a submenu's. */
+type MenuLevelValue = {
+  roving: UseRovingFocusResult;
+  /** This list is shown. */
+  open: boolean;
+  /** Closes the whole menu, as choosing an item does. */
+  close: (reason: 'select') => void;
+  /** Set while the pointer crosses this list's items toward a submenu; they then leave focus where it is. */
+  grace: RefObject<Grace | null>;
+};
+
+const MenuLevelContext = /* @__PURE__ */ createContext<MenuLevelValue | null>(null);
+
+function useLevel(part: string): MenuLevelValue {
+  const level = useContext(MenuLevelContext);
+  if (!level) throw new Error(`Menu.${part} must render inside Menu.Root`);
+  return level;
+}
+
+function inside([x, y]: Point, area: readonly Point[]): boolean {
+  let hit = false;
+  for (let i = 0, j = area.length - 1; i < area.length; j = i++) {
+    const [xi, yi] = area[i]!;
+    const [xj, yj] = area[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+}
+
+/** The pointer is still on its way to a submenu. Drops a grace that ran out or that the pointer left. */
+function inGrace(level: MenuLevelValue, event: PointerEvent<HTMLElement>): boolean {
+  const grace = level.grace.current;
+  if (!grace) return false;
+  if (performance.now() <= grace.until && inside([event.clientX, event.clientY], grace.area)) return true;
+  level.grace.current = null;
+  return false;
+}
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
   const [open, setOpenValue] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
@@ -302,9 +371,14 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     }),
     [open, setOpen, triggerId, hasTrigger, countTrigger, context, openAt, setContext, restoreTarget, boxName, popover, roving],
   );
+  const grace = useRef<Grace | null>(null);
+  const level = useMemo<MenuLevelValue>(
+    () => ({ roving, open, close: (reason) => setOpen(false, reason), grace }),
+    [open, roving, setOpen],
+  );
   return (
     <MenuContext.Provider value={ctx}>
-      {children}
+      <MenuLevelContext.Provider value={level}>{children}</MenuLevelContext.Provider>
     </MenuContext.Provider>
   );
 }
@@ -653,7 +727,7 @@ function clickWithKeys(event: KeyboardEvent<HTMLElement>) {
 }
 
 function useItem(
-  ctx: MenuContextValue,
+  level: MenuLevelValue,
   role: ItemRole,
   {
     disabled,
@@ -674,7 +748,7 @@ function useItem(
   const spacePressed = useRef(false);
   // Disabled items stay in the arrow-key order, as menus conventionally do,
   // so a screen reader announces them as unavailable; they just can't be chosen.
-  const item = ctx.roving.getItemProps(value, { textValue }, props);
+  const item = level.roving.getItemProps(value, { textValue }, props);
   return {
     ...item,
     role,
@@ -701,7 +775,7 @@ function useItem(
         if (!event.repeat) clickWithKeys(event);
       } else if (event.key === ' ') {
         // Left unprevented while typing, so the menu's typeahead still sees it.
-        spacePressed.current = !ctx.roving.isTypingAhead(event);
+        spacePressed.current = !level.roving.isTypingAhead(event);
         if (spacePressed.current) event.preventDefault();
       }
     }),
@@ -723,18 +797,19 @@ function useItem(
     // The pointer moves focus, so the highlight and the keyboard agree.
     // Disabled items take focus too, as they do from the keyboard, so no
     // other item stays highlighted for Enter and the arrow keys keep their place.
+    // A pointer crossing items on its way to an open submenu moves nothing.
     onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
-      if (event.pointerType === 'touch') return;
+      if (event.pointerType === 'touch' || inGrace(level, event)) return;
       if (document.activeElement !== event.currentTarget) focusWithoutScroll(event.currentTarget);
     }),
   };
 }
 
 function Item({ children, onSelect, closeOnSelect = true, render, ...props }: MenuItemProps) {
-  const ctx = useMenu('Item');
-  const item = useItem(ctx, 'menuitem', props, () => {
+  const level = useLevel('Item');
+  const item = useItem(level, 'menuitem', props, () => {
     onSelect?.();
-    if (closeOnSelect) ctx.setOpen(false, 'select');
+    if (closeOnSelect) level.close('select');
   });
   return render ? render({ ...(item as MenuItemRenderProps), children }) : <div {...item}>{children}</div>;
 }
@@ -747,16 +822,16 @@ function CheckboxItem({
   closeOnSelect = false,
   ...props
 }: MenuCheckboxItemProps) {
-  const ctx = useMenu('CheckboxItem');
+  const level = useLevel('CheckboxItem');
   const { check } = useGlyphs();
   const [checked, setChecked, latestChecked] = useControlledState(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
-    ctx,
+    level,
     'menuitemcheckbox',
     props,
     () => {
       setChecked(!latestChecked());
-      if (closeOnSelect) ctx.setOpen(false, 'select');
+      if (closeOnSelect) level.close('select');
     },
     checked,
   );
@@ -797,16 +872,16 @@ function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }:
 }
 
 function RadioItem({ children, value, closeOnSelect = false, ...props }: MenuRadioItemProps) {
-  const ctx = useMenu('RadioItem');
+  const level = useLevel('RadioItem');
   const group = useContext(RadioContext);
   if (!group) throw new Error('Menu.RadioItem must render inside Menu.RadioGroup');
   const item = useItem(
-    ctx,
+    level,
     'menuitemradio',
     props,
     () => {
       group.select(value);
-      if (closeOnSelect) ctx.setOpen(false, 'select');
+      if (closeOnSelect) level.close('select');
     },
     group.value === value,
   );
@@ -814,6 +889,272 @@ function RadioItem({ children, value, closeOnSelect = false, ...props }: MenuRad
     <div {...item}>
       <span className={styles.indicator} aria-hidden="true" />
       {children}
+    </div>
+  );
+}
+
+/** How long the pointer rests on a Menu.SubmenuTrigger before its submenu opens, where no token says. */
+const SUBMENU_SHOW_DELAY_MS = 100;
+/** How long the pointer has to reach an open submenu across the items between, where no token says. */
+const SUBMENU_GRACE_MS = 300;
+
+type SubmenuContextValue = {
+  open: boolean;
+  setOpen: (open: boolean, reason: MenuSubmenuOpenChangeReason) => void;
+  /** The list the submenu's trigger sits in. */
+  parent: MenuLevelValue;
+  /** The submenu's own list. */
+  level: MenuLevelValue;
+  triggerId: string;
+  contentId: string;
+  anchorName: string;
+  triggerRef: RefObject<HTMLElement | null>;
+  contentRef: RefObject<HTMLDivElement | null>;
+  /** A key, or a click with no pointer, asked the next open to focus the first item. */
+  focusFirst: RefObject<boolean>;
+};
+
+const SubmenuContext = /* @__PURE__ */ createContext<SubmenuContextValue | null>(null);
+
+function useSubmenu(part: string): SubmenuContextValue {
+  const ctx = useContext(SubmenuContext);
+  if (!ctx) throw new Error(`Menu.${part} must render inside Menu.Submenu`);
+  return ctx;
+}
+
+/** Whether `el` reads right to left, so the arrow keys toward the line's start and end swap. */
+function isRtl(el: Element): boolean {
+  return getComputedStyle(el).direction === 'rtl';
+}
+
+function Submenu({ open: openProp, defaultOpen, onOpenChange, children }: MenuSubmenuProps) {
+  const parent = useLevel('Submenu');
+  const [open, setOpen] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
+  const domId = useDomId();
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const focusFirst = useRef(false);
+  const grace = useRef<Grace | null>(null);
+  // Like the menu's own list: every open starts at its first item, and its
+  // items are never Tab stops.
+  const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
+  // A submenu shows only while the list it sits in does.
+  const shown = open && parent.open;
+  useLayoutEffect(() => {
+    if (open && !parent.open) setOpen(false, 'parent');
+  }, [open, parent.open, setOpen]);
+  // Focus that moves anywhere but its trigger or inside it, such as to
+  // another item of the list it sits in, closes it. Focus dropped to the
+  // page, as when the focused item goes away, is not a move.
+  useEffect(() => {
+    if (!shown) return;
+    const onFocusIn = (event: globalThis.FocusEvent) => {
+      const next = event.target;
+      if (!(next instanceof Element) || next === document.body) return;
+      if (next === triggerRef.current || contentRef.current?.contains(next)) return;
+      setOpen(false, 'parent');
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => document.removeEventListener('focusin', onFocusIn, true);
+  }, [shown, setOpen]);
+  // Focus left inside as it closes goes back to its trigger, so it isn't lost
+  // to the page while the submenu fades.
+  useLayoutEffect(() => {
+    if (shown) return;
+    const active = document.activeElement;
+    if (active && contentRef.current?.contains(active) && triggerRef.current) focusWithoutScroll(triggerRef.current);
+  }, [shown]);
+  const level = useMemo<MenuLevelValue>(
+    () => ({ roving, open: shown, close: parent.close, grace }),
+    [parent.close, roving, shown],
+  );
+  const ctx = useMemo<SubmenuContextValue>(
+    () => ({
+      open: shown,
+      setOpen,
+      parent,
+      level,
+      triggerId: `${domId}-trigger`,
+      contentId: `${domId}-content`,
+      anchorName: `--${domId}-submenu`,
+      triggerRef,
+      contentRef,
+      focusFirst,
+    }),
+    [domId, level, parent, setOpen, shown],
+  );
+  return <SubmenuContext.Provider value={ctx}>{children}</SubmenuContext.Provider>;
+}
+
+function SubmenuTrigger({
+  children,
+  disabled,
+  ref,
+  style,
+  onClick,
+  onKeyDown,
+  onPointerMove,
+  onPointerLeave,
+  ...props
+}: MenuSubmenuTriggerProps) {
+  const sub = useSubmenu('SubmenuTrigger');
+  const { chevron } = useGlyphs();
+  const refs = useComposedRefs<HTMLDivElement>(sub.triggerRef as Ref<HTMLDivElement>, ref);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelTimer = () => {
+    clearTimeout(timer.current);
+    timer.current = undefined;
+  };
+  useEffect(() => cancelTimer, []);
+  // A key or a click with no pointer goes into the submenu: it opens, or, open
+  // already, hands focus to its first item.
+  const enter = () => {
+    cancelTimer();
+    if (sub.open) {
+      sub.level.roving.focusFirst();
+      return;
+    }
+    sub.focusFirst.current = true;
+    sub.setOpen(true, 'trigger');
+  };
+  const item = useItem(
+    sub.parent,
+    'menuitem',
+    {
+      ...props,
+      disabled,
+      onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget || disabled) return;
+        const toEnd = isRtl(event.currentTarget) ? 'ArrowLeft' : 'ArrowRight';
+        const space = event.key === ' ' && !sub.parent.roving.isTypingAhead(event);
+        if (event.key !== 'Enter' && event.key !== toEnd && !space) return;
+        // Handled here, so the item's own Enter and Space choose nothing.
+        event.preventDefault();
+        if (!event.repeat) enter();
+      }),
+      // The pointer resting on it opens it; one that moves on first doesn't.
+      onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType === 'touch' || disabled || sub.open || timer.current !== undefined) return;
+        if (inGrace(sub.parent, event)) return;
+        const delay = tokenMs(event.currentTarget, '--todae-menu-submenu-delay-show') ?? SUBMENU_SHOW_DELAY_MS;
+        timer.current = setTimeout(() => {
+          timer.current = undefined;
+          sub.setOpen(true, 'pointer');
+        }, delay);
+      }),
+      // A pointer that leaves toward the open submenu may cross other items
+      // of this list on the way, which keep focus where it is meanwhile.
+      onPointerLeave: composeHandlers(onPointerLeave, (event: PointerEvent<HTMLDivElement>) => {
+        cancelTimer();
+        const content = sub.contentRef.current;
+        if (event.pointerType === 'touch' || !sub.open || !content) return;
+        const box = content.getBoundingClientRect();
+        const from = event.currentTarget.getBoundingClientRect();
+        const toRight = box.left + box.width / 2 >= from.left + from.width / 2;
+        const near = toRight ? box.left : box.right;
+        const far = toRight ? box.right : box.left;
+        // From a little behind the point it left at, so that point is inside.
+        const back = toRight ? -5 : 5;
+        const ms = tokenMs(event.currentTarget, '--todae-menu-submenu-delay-hide') ?? SUBMENU_GRACE_MS;
+        sub.parent.grace.current = {
+          area: [
+            [event.clientX + back, event.clientY],
+            [near, box.top],
+            [far, box.top],
+            [far, box.bottom],
+            [near, box.bottom],
+          ],
+          until: performance.now() + ms,
+        };
+      }),
+    },
+    () => {
+      // A pointer's click opens it and leaves focus here; a click with no
+      // pointer, such as a screen reader's, goes in.
+      if (!sub.open) sub.setOpen(true, 'trigger');
+    },
+  );
+  return (
+    <div
+      {...item}
+      ref={refs}
+      id={sub.triggerId}
+      aria-haspopup="menu"
+      aria-expanded={sub.open}
+      aria-controls={sub.contentId}
+      data-open={sub.open ? '' : undefined}
+      style={anchorTriggerStyle('--todae-popover-anchor', sub.anchorName, style)}
+      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLDivElement>) => {
+        if (!disabled && event.detail === 0) {
+          enter();
+          return;
+        }
+        item.onClick(event);
+      })}
+    >
+      {children}
+      <span className={styles.submenuIndicator} data-todae-glyph="" aria-hidden="true">
+        {glyphOr(chevron, <ChevronGlyph />)}
+      </span>
+    </div>
+  );
+}
+
+function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerMove, ...props }: MenuSubmenuContentProps) {
+  const sub = useSubmenu('SubmenuContent');
+  const refs = useComposedRefs<HTMLDivElement>(sub.contentRef, ref);
+  usePopoverSync(sub.contentRef, sub.open, {});
+  // It grows from its trigger, and an open asked for by a key or a click with
+  // no pointer focuses its first item. This runs after it shows.
+  const { roving } = sub.level;
+  useLayoutEffect(() => {
+    const el = sub.contentRef.current;
+    const trigger = sub.triggerRef.current;
+    if (!sub.open || !el) return;
+    if (trigger) aimPopoverOrigin(el, trigger);
+    if (sub.focusFirst.current) roving.focusFirst();
+    sub.focusFirst.current = false;
+  }, [roving, sub.contentRef, sub.focusFirst, sub.open, sub.triggerRef]);
+  const back = useCallback(
+    (reason: 'escape' | 'arrow') => {
+      sub.setOpen(false, reason);
+      const trigger = sub.triggerRef.current;
+      if (trigger) focusWithoutScroll(trigger);
+    },
+    [sub],
+  );
+  // Escape closes this submenu only, the innermost open layer.
+  useEscapeKey(sub.open, true, () => back('escape'), sub.contentRef);
+  const container = roving.getContainerProps({
+    ref: refs,
+    onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
+      // Keys from a submenu inside this one are that submenu's.
+      const { target } = event;
+      if (!(target instanceof Element) || target.closest('[role="menu"]') !== event.currentTarget) return;
+      const toStart = isRtl(event.currentTarget) ? 'ArrowRight' : 'ArrowLeft';
+      if (event.key !== toStart || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      event.preventDefault();
+      back('arrow');
+    }),
+  });
+  return (
+    <div
+      {...props}
+      ref={container.ref}
+      id={sub.contentId}
+      popover="manual"
+      role="menu"
+      tabIndex={-1}
+      aria-labelledby={sub.triggerId}
+      className={cx(popoverStyles.content, styles.menu, styles.submenu, className)}
+      style={{ ...anchoredContentStyle('--todae-popover-anchor', sub.anchorName), ...style }}
+      onKeyDown={container.onKeyDown}
+      // The pointer reached it, so the list it opened from holds focus no longer.
+      onPointerMove={composeHandlers(onPointerMove, () => {
+        sub.parent.grace.current = null;
+      })}
+    >
+      <MenuLevelContext.Provider value={sub.level}>{children}</MenuLevelContext.Provider>
     </div>
   );
 }
@@ -833,4 +1174,7 @@ export const Menu = {
   RadioGroup,
   RadioItem,
   Separator,
+  Submenu,
+  SubmenuTrigger,
+  SubmenuContent,
 } as const;
