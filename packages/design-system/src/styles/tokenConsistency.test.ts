@@ -108,6 +108,20 @@ describe('token consistency across component styles', () => {
     for (const { path, ref } of rings) expect({ path, ref }).toEqual({ path, ref: 'focus.ring' });
   });
 
+  it('times every enter and exit from a motion role', () => {
+    const generated = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/tokens.generated.json'), 'utf8')) as {
+      tokens: { path: string; ref: string | null }[];
+    };
+    const durations = generated.tokens.filter(
+      (token) => /\.motion\.duration\.(enter|exit)$/.test(token.path) && !token.path.startsWith('motion.'),
+    );
+    expect(durations.length).toBeGreaterThan(10);
+    for (const { path, ref } of durations) {
+      const phase = path.slice(path.lastIndexOf('.') + 1);
+      expect({ path, role: new RegExp(`^motion\\.[a-z-]+\\.duration\\.${phase}$`).test(ref ?? '') }).toEqual({ path, role: true });
+    }
+  });
+
   it('lifts every overlay surface with its own shadow token', () => {
     const surfaces: [string, string][] = [
       ['Dialog', 'dialog'],

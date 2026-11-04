@@ -7403,6 +7403,146 @@
       "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput. The dismiss button is a box of dismiss.size around the icon, dismiss.inset from the chip's end."
     },
     {
+      "path": "motion.modal.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-modal-duration-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a centered window takes to rise in."
+    },
+    {
+      "path": "motion.modal.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-modal-duration-exit",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a centered window takes to leave."
+    },
+    {
+      "path": "motion.notice.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-notice-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a notice takes to appear."
+    },
+    {
+      "path": "motion.notice.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-notice-duration-exit",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a notice takes to go."
+    },
+    {
+      "path": "motion.panel.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-panel-duration-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long an edge panel takes to slide in."
+    },
+    {
+      "path": "motion.panel.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-panel-duration-exit",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long an edge panel takes to slide out."
+    },
+    {
+      "path": "motion.popup.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-popup-duration-enter",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long an anchored popup takes to grow in."
+    },
+    {
+      "path": "motion.popup.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-popup-duration-exit",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long an anchored popup takes to shrink out."
+    },
+    {
+      "path": "motion.reveal.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-motion-reveal-duration-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long inline content takes to open."
+    },
+    {
+      "path": "motion.reveal.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-motion-reveal-duration-exit",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long inline content takes to close."
+    },
+    {
       "path": "overlay.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-overlay-motion-easing-enter",
@@ -7532,8 +7672,8 @@
       "path": "dialog.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-slow)",
-      "ref": "motion.duration.slow",
+      "cssValue": "var(--todae-motion-modal-duration-enter)",
+      "ref": "motion.modal.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7546,8 +7686,8 @@
       "path": "dialog.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-modal-duration-exit)",
+      "ref": "motion.modal.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7826,8 +7966,8 @@
       "path": "sheet.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-sheet-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-slow)",
-      "ref": "motion.duration.slow",
+      "cssValue": "var(--todae-motion-panel-duration-enter)",
+      "ref": "motion.panel.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7840,8 +7980,8 @@
       "path": "sheet.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-sheet-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-moderate)",
-      "ref": "motion.duration.moderate",
+      "cssValue": "var(--todae-motion-panel-duration-exit)",
+      "ref": "motion.panel.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8092,8 +8232,8 @@
       "path": "popover.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-popover-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-moderate)",
-      "ref": "motion.duration.moderate",
+      "cssValue": "var(--todae-motion-popup-duration-enter)",
+      "ref": "motion.popup.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8106,8 +8246,8 @@
       "path": "popover.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-popover-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-popup-duration-exit)",
+      "ref": "motion.popup.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10346,8 +10486,8 @@
       "path": "toast.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-toast-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-notice-duration-enter)",
+      "ref": "motion.notice.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10360,8 +10500,8 @@
       "path": "toast.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-toast-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
+      "cssValue": "var(--todae-motion-notice-duration-exit)",
+      "ref": "motion.notice.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11200,8 +11340,8 @@
       "path": "disclosure.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-disclosure-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11214,8 +11354,8 @@
       "path": "disclosure.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-disclosure-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-exit)",
+      "ref": "motion.reveal.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -12656,8 +12796,8 @@
       "path": "message.actions.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-message-actions-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -12670,8 +12810,8 @@
       "path": "message.actions.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-message-actions-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-exit)",
+      "ref": "motion.reveal.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -14224,8 +14364,8 @@
       "path": "drawer.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-drawer-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-slow)",
-      "ref": "motion.duration.slow",
+      "cssValue": "var(--todae-motion-panel-duration-enter)",
+      "ref": "motion.panel.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -14238,8 +14378,8 @@
       "path": "drawer.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-drawer-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-moderate)",
-      "ref": "motion.duration.moderate",
+      "cssValue": "var(--todae-motion-panel-duration-exit)",
+      "ref": "motion.panel.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15568,8 +15708,8 @@
       "path": "tree.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-tree-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15582,8 +15722,8 @@
       "path": "tree.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-tree-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-exit)",
+      "ref": "motion.reveal.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15974,8 +16114,8 @@
       "path": "nav.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-nav-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -15988,8 +16128,8 @@
       "path": "nav.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-nav-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-reveal-duration-exit)",
+      "ref": "motion.reveal.duration.exit",
       "layer": "contract",
       "context": null,
       "entry": {
