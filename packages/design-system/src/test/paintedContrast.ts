@@ -1,4 +1,4 @@
-import { apcaContrast, compositeSrgb, type Rgb, type Rgba } from '../../../packages/design-system/src/color/apca';
+import { apcaContrast, compositeSrgb, type Rgb, type Rgba } from '../color/apca.js';
 
 /**
  * The APCA floors painted text has to reach: Lc 60 for text below 24px (or
@@ -75,17 +75,23 @@ function describe(el: Element): string {
   return `${el.tagName.toLowerCase()}${classes} "${text.slice(0, 30)}"`;
 }
 
+/** What `paintedContrast` found: each text below its floor, and every element whose text it measured. */
+export type PaintedContrast = { low: string[]; checked: Element[] };
+
 /**
- * Lists each element under `root` whose own visible text paints below its
- * APCA floor on the background behind it, in whatever appearance is showing.
+ * Measures each element under `root` whose own visible text paints on an
+ * opaque background, and lists those below their APCA floor, in whatever
+ * appearance is showing. `checked` lets a test prove the part it opened was
+ * measured, not skipped as hidden or still fading in.
  * The token build checks declared token pairs; this checks what components
  * actually paint, so a part that pairs tokens the contract never declared, or
  * a theme that only one appearance gets wrong, still fails. Disabled text is
  * exempt, as WCAG and APCA exempt it, and so is text under a fading ancestor,
  * whose painted color is not its computed one.
  */
-export function lowContrastText(root: ParentNode = document.body): string[] {
+export function paintedContrast(root: ParentNode = document.body): PaintedContrast {
   const low: string[] = [];
+  const checked: Element[] = [];
   for (const el of root.querySelectorAll('*')) {
     if (!paintsText(el) || el.closest(DISABLED)) continue;
     if (!el.checkVisibility({ visibilityProperty: true, opacityProperty: true })) continue;
@@ -97,9 +103,10 @@ export function lowContrastText(root: ParentNode = document.body): string[] {
     if (ink[3] === 0 || faded(el)) continue;
     const backdrop = backdropOf(el);
     if (!backdrop) continue;
+    checked.push(el);
     const lc = Math.abs(apcaContrast(compositeSrgb(ink, backdrop), backdrop));
     const min = large(style) ? PAINTED_TEXT_MIN.large : PAINTED_TEXT_MIN.text;
     if (lc < min) low.push(`${describe(el)}: Lc ${lc.toFixed(1)}, below ${min}`);
   }
-  return low;
+  return { low, checked };
 }

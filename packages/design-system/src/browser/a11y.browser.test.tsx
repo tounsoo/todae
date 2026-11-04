@@ -26,6 +26,8 @@ import {
   type ComboboxOption,
 } from '../index.js';
 import { ChipCount } from '../components/chipCount.js';
+import { paintedContrast } from '../test/paintedContrast.js';
+import { settle } from '../test/settle.js';
 
 /**
  * axe in a real browser, so roles, names and the top layer are what a screen
@@ -40,13 +42,17 @@ async function violations(root: Element = document.body): Promise<string[]> {
 }
 
 /**
- * Waits for every finite animation and transition to finish, so an overlay is
- * checked open, not partway through its entry motion, then checks.
+ * Waits for the page to settle, so an overlay is checked open, not partway
+ * through its entry motion. Then axe finds nothing, and no visible text paints
+ * below its APCA floor: axe's contrast rule is off, so this is what checks
+ * color, and what the dark pass catches that the light one can't.
  */
 async function expectNoViolations() {
-  const running = document.getAnimations().filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime ?? Infinity));
-  await Promise.race([Promise.allSettled(running.map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 2000))]);
+  await settle();
   expect(await violations()).toEqual([]);
+  const { low, checked } = paintedContrast();
+  expect(low).toEqual([]);
+  expect(checked.length, 'no text measured').toBeGreaterThan(0);
 }
 
 const APPEARANCES = ['light', 'dark'] as const;
@@ -56,7 +62,12 @@ let appearance: (typeof APPEARANCES)[number] = 'light';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
-    <main data-appearance={appearance} data-density="comfortable">
+    // Painted as an app paints its page, so text has the appearance's canvas behind it and its color.
+    <main
+      data-appearance={appearance}
+      data-density="comfortable"
+      style={{ background: 'var(--todae-color-bg-canvas)', color: 'var(--todae-color-fg-default)' }}
+    >
       {children}
     </main>
   );

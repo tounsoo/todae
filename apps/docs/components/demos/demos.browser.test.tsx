@@ -10,7 +10,8 @@ import { Example } from '../Example';
 import { Providers } from '../Providers';
 import { AXE_OPTIONS, describeViolations } from '../../test/axe';
 import { clippedRings } from '../../test/clippedRings';
-import { lowContrastText } from '../../test/paintedContrast';
+import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
+import { settle } from '../../../../packages/design-system/src/test/settle';
 
 afterEach(cleanup);
 
@@ -46,11 +47,26 @@ async function violations(): Promise<string[]> {
 // painted-contrast check is what makes the dark pass catch what only dark gets wrong.
 const APPEARANCES = ['light', 'dark'] as const;
 
-/** axe finds nothing, and no visible text paints below its APCA floor, in the appearance showing. */
-async function expectAccessible(appearance: (typeof APPEARANCES)[number]) {
+const OPEN_OVERLAY = 'dialog[open], :popover-open';
+
+/**
+ * axe finds nothing, and no visible text paints below its APCA floor, in the
+ * appearance showing. With `overlay`, an overlay has to be open, and the
+ * contrast check has to have measured text in each open overlay that holds
+ * text, so one still invisible at the start of its entry can't pass by being
+ * skipped. The ColorPicker popover holds only sliders, so it has none.
+ */
+async function expectAccessible(appearance: (typeof APPEARANCES)[number], { overlay = false } = {}) {
   expect(document.documentElement.getAttribute('data-appearance')).toBe(appearance);
   expect(await violations()).toEqual([]);
-  expect(lowContrastText()).toEqual([]);
+  const { low, checked } = paintedContrast();
+  expect(low).toEqual([]);
+  if (!overlay) return;
+  const open = [...document.querySelectorAll<HTMLElement>(OPEN_OVERLAY)];
+  expect(open.length, 'no overlay open').toBeGreaterThan(0);
+  for (const shown of open.filter((el) => el.innerText.trim() !== '')) {
+    expect(checked.some((el) => shown.contains(el)), `no text measured in ${shown.tagName.toLowerCase()} "${shown.innerText.trim().slice(0, 30)}"`).toBe(true);
+  }
 }
 
 function renderDemo(Demo: ComponentType) {
@@ -114,8 +130,8 @@ for (const appearance of APPEARANCES) {
           await settle();
           await openFirstOverlay(container);
           expect(openOverlay(), 'no overlay opened').toBe(true);
-          await expectAccessible(appearance);
-          expect(clippedRings(document.querySelector('dialog[open], :popover-open') ?? document)).toEqual([]);
+          await expectAccessible(appearance, { overlay: true });
+          expect(clippedRings(document.querySelector(OPEN_OVERLAY) ?? document)).toEqual([]);
         });
       }
     });
@@ -133,7 +149,7 @@ for (const appearance of APPEARANCES) {
           const { container } = renderDemo(Demo);
           await settle();
           await openFirstOverlay(container);
-          const overlay = document.querySelector<HTMLElement>('dialog[open], :popover-open');
+          const overlay = document.querySelector<HTMLElement>(OPEN_OVERLAY);
           expect(overlay, 'no overlay opened').not.toBeNull();
           const first = shownViews(overlay);
           expect(first).toHaveLength(1);
@@ -143,31 +159,37 @@ for (const appearance of APPEARANCES) {
           const shown = shownViews(overlay);
           expect(shown).toHaveLength(1);
           expect(shown[0]).not.toBe(first[0]);
-          await expectAccessible(appearance);
+          await expectAccessible(appearance, { overlay: true });
         });
       }
     });
 
     describe('docs demos under axe, toasts showing', () => {
+      // ToastDemo keeps its toaster at module scope, and its success toast never times out, so
+      // toasts outlive a test. Each test dismisses them before and after.
       it('examples/toast/ToastDemo.tsx ToastDemo', async () => {
         const { container } = renderDemo(demo('ToastDemo'));
+        await clearToasts();
         for (const tone of ['info', 'success', 'warning', 'critical']) {
           await userEvent.click(within(container).getByRole('button', { name: tone }));
         }
-        // The region shows three toasts at most.
-        await expect.poll(() => document.querySelectorAll('ol[aria-live] > li[data-entered]').length).toBe(3);
+        // The region shows the three oldest toasts and holds the fourth back.
+        await expect.poll(() => shownToastTitles().sort()).toEqual(['Changes saved', 'Draft synced', 'You are offline']);
         await settle();
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
+        await clearToasts();
       });
 
       it('examples/toast/ToastDemo.tsx ToastDemo over a dialog', async () => {
         const { container } = renderDemo(demo('ToastDemo'));
+        await clearToasts();
         await userEvent.click(within(container).getByRole('button', { name: 'Open a dialog' }));
         const dialog = await within(document.body).findByRole('dialog', { name: 'Toasts over a dialog' });
         await userEvent.click(within(dialog).getByRole('button', { name: 'Show a toast' }));
-        await expect.poll(() => document.querySelectorAll('ol[aria-live] > li[data-entered]').length).toBeGreaterThanOrEqual(1);
+        await expect.poll(() => shownToastTitles()).toEqual(['Changes saved']);
         await settle();
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
+        await clearToasts();
       });
     });
 
@@ -178,7 +200,7 @@ for (const appearance of APPEARANCES) {
         await userEvent.click(row!, { button: 'right' });
         await expect.poll(() => document.querySelector('[role="menu"]:popover-open')).not.toBeNull();
         await settle();
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
       });
     });
 
@@ -193,7 +215,7 @@ for (const appearance of APPEARANCES) {
           // An interactive tooltip, one that holds a link, is a non-modal dialog.
           await expect.poll(() => document.querySelector(':is([role="tooltip"], [role="dialog"]):popover-open')).not.toBeNull();
           await settle();
-          await expectAccessible(appearance);
+          await expectAccessible(appearance, { overlay: true });
         });
       }
     });
@@ -207,7 +229,7 @@ for (const appearance of APPEARANCES) {
         await settle();
         expect(within(document.body).getByRole('status').textContent).toBe('No matches');
         expect(openOverlay(), 'no overlay opened').toBe(true);
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
       });
     });
 
@@ -234,7 +256,7 @@ for (const appearance of APPEARANCES) {
         const active = document.getElementById(field.getAttribute('aria-activedescendant') ?? '');
         expect(active?.getAttribute('role')).toBe('option');
         expect(list?.contains(active ?? null)).toBe(true);
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
       });
 
       it('with the caret peek open', async () => {
@@ -247,7 +269,7 @@ for (const appearance of APPEARANCES) {
         await settle();
         expect(document.activeElement).toBe(field);
         const peek = document.querySelector<HTMLElement>(':popover-open');
-        await expectAccessible(appearance);
+        await expectAccessible(appearance, { overlay: true });
         // The peek is inert, so axe skips it above. Check its content too.
         if (peek) peek.inert = false;
         expect(describeViolations(await axe.run(peek ?? document.body, AXE_OPTIONS))).toEqual([]);
@@ -314,17 +336,22 @@ function shownViews(overlay: HTMLElement | null): HTMLElement[] {
   );
 }
 
-/**
- * Lets effects, measurement and anchored layout settle, then waits for every
- * finite animation and transition to finish, so an overlay is checked in its
- * open state, not partway through its entry. Loaders and other endless
- * animations are left running.
- */
-async function settle() {
-  const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  await frames();
-  const running = document.getAnimations().filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime ?? Infinity));
-  const finished = Promise.allSettled(running.map((animation) => animation.finished));
-  await Promise.race([finished, new Promise((resolve) => setTimeout(resolve, 2000))]);
-  await frames();
+const TOASTS = 'ol[aria-live] > li[data-entered]:not([data-todae-exiting])';
+
+/** The titles of the toasts the region shows, top to bottom. */
+function shownToastTitles(): string[] {
+  // Toast.Title is the toast's first paragraph.
+  return [...document.querySelectorAll(TOASTS)].map((toast) => toast.querySelector('p')?.textContent ?? '');
+}
+
+/** Dismisses every toast, one at a time, as the region brings held-back ones forward. */
+async function clearToasts() {
+  for (let left = 20; left > 0 && document.querySelector('ol[aria-live] > li'); left--) {
+    // A toast that is leaving has no button to press; settling lets it go.
+    const toast = document.querySelector<HTMLElement>(TOASTS);
+    const [close] = toast ? within(toast).queryAllByRole('button', { name: 'Dismiss' }) : [];
+    if (close) await userEvent.click(close);
+    await settle();
+  }
+  expect(document.querySelector('ol[aria-live] > li'), 'a toast is still showing').toBeNull();
 }
