@@ -41,9 +41,9 @@ function Actions({
 }
 
 const item = (name: string) => screen.getByRole('menuitem', { name, hidden: true });
-const rootMenu = () => screen.getByRole('menu', { name: 'Actions', hidden: true });
-// By its trigger's aria-controls: a closed submenu is hidden, so it has no
-// accessible name to find it by.
+const rootMenu = () => document.getElementById(screen.getByRole('button', { name: 'Actions' }).getAttribute('aria-controls')!)!;
+// Each menu by its trigger's aria-controls: a closed menu is hidden, so it
+// has no accessible name to find it by.
 const submenu = () => document.getElementById(item('Share').getAttribute('aria-controls')!)!;
 /** Waits out the open scale on both menus, so a box measured is where the menu sits. */
 const settled = () => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
