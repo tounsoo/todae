@@ -245,10 +245,17 @@ describe('Contents in a browser', () => {
     const { rerender } = render(<Page threeKey={0} scroller={{ scrollBehavior: 'smooth' }} />);
     await waitFor(() => expect(current()).toBe('One'));
     const scroller = screen.getByTestId('scroller');
+    const hashChanged = new Promise((resolve) => window.addEventListener('hashchange', resolve, { once: true }));
     link('Three').click();
     rerender(<Page threeKey={1} scroller={{ scrollBehavior: 'smooth' }} />);
+    // The click's smooth scroll has started once its hash lands. Stop it at the top, so the scroll shows One
+    // however far it got on a slow runner.
+    await hashChanged;
+    scroller.scrollTo({ top: 0, behavior: 'instant' });
     await waitFor(() => expect(current()).toBe('One'));
+    await frames(2);
     expect(scroller.scrollTop).toBeLessThan(LINE);
+    expect(current()).toBe('One');
   });
 
   it('drops a pick of a section the page lacks, so it does not hold when the section mounts', async () => {
