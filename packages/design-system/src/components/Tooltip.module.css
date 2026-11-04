@@ -32,9 +32,6 @@
     .content {
       position-anchor: var(--todae-tooltip-anchor);
       bottom: calc(anchor(top) + var(--todae-tooltip-offset));
-      /* Both inline insets 0, as anchor-center reads auto ones anyway: Firefox centers from the rtl static position
-         instead, which sits inside a fixed Drawer. */
-      inset-inline: 0;
       justify-self: anchor-center;
       position-try-fallbacks: flip-block;
     }

@@ -2,9 +2,11 @@ import './temporal.js';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
+import { blurBeforeCleanup } from './focus.js';
 import '../styles/todae.css';
 
 afterEach(() => {
+  blurBeforeCleanup();
   cleanup();
   resetTooltipWarmth();
 });

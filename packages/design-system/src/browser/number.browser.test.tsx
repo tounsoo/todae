@@ -6,8 +6,12 @@ import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
+import { blurBeforeCleanup } from '../test/focus.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  blurBeforeCleanup();
+  cleanup();
+});
 
 function Quantity({
   onSubmit,

@@ -13,5 +13,4 @@ Fixes found by running the browser tests in Firefox and WebKit as well as Chromi
 - A Popover or Menu whose anchor went away as it closed, such as the mention list after a pick, now goes at once in Firefox and Safari, as it does in Chrome.
 - A picker that fails the browser's own check outside a `Form.Root` takes the focus in Safari too, instead of leaving it in the hidden date input.
 - A focus ring that a scroll container brings into view is no longer cut by a pixel in Safari.
-- A Tooltip in a right-to-left page sits by its trigger in Firefox when the trigger is in a Drawer.
 - Toasts start timing again in Firefox when the toast under a resting pointer is removed.
