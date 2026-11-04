@@ -77,7 +77,16 @@ export function useValueInput(ctx: FieldContextValue, self: object, controlNode:
             input.current = node;
             registerValueInput(node, { owner, bound });
             const remove = registry.addValueInput(node);
+            // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs, and a field with none keeps no focus here.
+            // A native listener, not React's onFocus: WebKit moves focus on into a date input's own fields and sends no focusin, which React listens for.
+            const handOff = () => {
+              const target = owner();
+              if (target) target.focus();
+              else node.blur();
+            };
+            node.addEventListener('focus', handOff);
             const own = () => {
+              node.removeEventListener('focus', handOff);
               remove();
               if (input.current === node) input.current = null;
               if (detach.current === own) detach.current = null;
@@ -112,14 +121,8 @@ export function useValueInput(ctx: FieldContextValue, self: object, controlNode:
       'aria-hidden': true,
       'data-todae-value-input': '',
       className: visuallyHiddenClass(),
-      // The browser's own check outside a Form.Root focuses the input; the person's control is where focus belongs, and a field with none keeps no focus here.
-      onFocus: (event) => {
-        const target = owner();
-        if (target) target.focus();
-        else event.currentTarget.blur();
-      },
     }),
-    [disabled, fieldName, named, owner, refFor],
+    [disabled, fieldName, named, refFor],
   );
   const formEdited = form?.edited;
   const touch = scope?.touch;

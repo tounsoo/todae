@@ -190,9 +190,7 @@ jobs:
 
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        # Firefox runs every test page in one content process, where pages that run at once take each
-        # other's clicks, so it runs one file at a time.
-        run: pnpm --filter @tounsoo/todae test:browser --project ${{ matrix.browser }} ${{ matrix.browser == 'firefox' && '--no-file-parallelism' || '' }}
+        run: pnpm --filter @tounsoo/todae test:browser --project ${{ matrix.browser }}
 
   # One result named Checks, so branch protection that requires that name keeps working.
   checks:

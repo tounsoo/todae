@@ -11,6 +11,12 @@ declare module '@vitest/browser/context' {
   }
 }
 
+const DEFAULTS: Record<MediaFeature['name'], MediaFeature['value']> = {
+  'prefers-reduced-motion': 'no-preference',
+  'forced-colors': 'none',
+  'prefers-color-scheme': 'light',
+};
+
 /**
  * Makes the page report `features`, in any engine, and resets every feature the
  * list leaves out, so `emulateMedia([])` undoes the last call. Throws when the
@@ -19,7 +25,9 @@ declare module '@vitest/browser/context' {
  */
 export async function emulateMedia(features: MediaFeature[]): Promise<void> {
   await commands.emulateMedia(features);
-  for (const { name, value } of features) {
+  // Every feature, so a reset waits too: a feature left out goes back to its default.
+  for (const name of Object.keys(DEFAULTS) as MediaFeature['name'][]) {
+    const value = features.find((feature) => feature.name === name)?.value ?? DEFAULTS[name];
     const query = `(${name}: ${value})`;
     // Firefox applies the override in the content process a little later.
     for (let frame = 0; frame < 10 && !matchMedia(query).matches; frame++) await new Promise(requestAnimationFrame);

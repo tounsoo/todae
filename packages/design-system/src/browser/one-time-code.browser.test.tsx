@@ -772,7 +772,8 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(input().value).toBe('127856');
   });
 
-  it('copies text dragged inside the field to the box it is dropped on', async () => {
+  // Playwright's Firefox starts no native drag from a text control's selection, so no drop reaches the field.
+  it.skipIf(server.browser === 'firefox')('copies text dragged inside the field to the box it is dropped on', async () => {
     const onValueChange = vi.fn();
     render(<Code initial="123456" onValueChange={onValueChange} />);
     input().focus();

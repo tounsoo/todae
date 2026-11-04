@@ -72,9 +72,12 @@ const spread = (values: number[]) => Math.max(...values) - Math.min(...values);
 function expectTipFollowed(frames: Frame[], { minFrames = 4, minTravel = 0 } = {}) {
   expect(frames.length).toBeGreaterThanOrEqual(minFrames);
   expect(Math.max(spread(frames.map((f) => f.x)), spread(frames.map((f) => f.y)))).toBeGreaterThanOrEqual(minTravel);
+  // Motion only has to work in Chrome (ARCHITECTURE "Motion"); elsewhere the tip may sit a fraction of a
+  // pixel further off a trigger that is scaling.
+  const slack = server.browser === 'chromium' ? 1 : 1.5;
   for (const [i, f] of frames.entries()) {
-    expect(Math.abs(f.dx), `frame ${i} across`).toBeLessThanOrEqual(1);
-    expect(Math.abs(f.gap - frames[0]!.gap), `frame ${i} gap`).toBeLessThanOrEqual(1);
+    expect(Math.abs(f.dx), `frame ${i} across`).toBeLessThanOrEqual(slack);
+    expect(Math.abs(f.gap - frames[0]!.gap), `frame ${i} gap`).toBeLessThanOrEqual(slack);
   }
 }
 

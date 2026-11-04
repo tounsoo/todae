@@ -383,8 +383,12 @@ describe('Field.ColorPicker in a browser', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
     const area = screen.getByRole('slider', { name: 'Saturation' }).parentElement!;
     await waitFor(() => expect(area.getBoundingClientRect().width).toBeGreaterThan(0));
-    // A real press, so the area captures the engine's own mouse pointer (Firefox's id is 0, not 1).
-    await userEvent.click(area, { position: { x: 1, y: 1 } });
+    const rect = area.getBoundingClientRect();
+    // A press with a pointer id the engine may not know (Firefox's mouse is 0): capture can fail, and the
+    // press still picks.
+    area.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: rect.left + 1, clientY: rect.top + 1 }),
+    );
     // The top-left corner is white: no saturation, full brightness.
     await waitFor(() => expect(screen.getByTestId('value').textContent).toMatch(/^#f[a-f0-9]f[a-f0-9]f[a-f0-9]$/));
     expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'Saturation' }));
