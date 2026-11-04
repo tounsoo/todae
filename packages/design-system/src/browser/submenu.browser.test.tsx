@@ -42,7 +42,9 @@ function Actions({
 
 const item = (name: string) => screen.getByRole('menuitem', { name, hidden: true });
 const rootMenu = () => screen.getByRole('menu', { name: 'Actions', hidden: true });
-const submenu = () => screen.getByRole('menu', { name: 'Share', hidden: true });
+// By its trigger's aria-controls: a closed submenu is hidden, so it has no
+// accessible name to find it by.
+const submenu = () => document.getElementById(item('Share').getAttribute('aria-controls')!)!;
 const shown = (el: HTMLElement) => el.matches(':popover-open') && el.hasAttribute('data-entered');
 
 /** Opens the menu from its trigger with a click, then moves focus to Share. */
