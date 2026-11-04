@@ -41,6 +41,15 @@ it('opens with Ctrl+K, filters, runs the highlighted command, and returns focus'
   await expect.poll(options).toHaveLength(5);
 });
 
+it('lists the commands that start with the text first, and makes the first one active', async () => {
+  renderPalette();
+  await userEvent.keyboard('{Control>}k{/Control}');
+  const input = await screen.findByRole('combobox', { name: 'Command' });
+  await userEvent.keyboard('s');
+  await expect.poll(options).toEqual(['Switch theme', 'Sign out', 'Add customer', 'Open billing settings']);
+  expect(document.getElementById(input.getAttribute('aria-activedescendant') ?? '')?.textContent).toBe('Switch theme');
+});
+
 it('returns focus to where it was when opened with the shortcut', async () => {
   renderPalette();
   const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });

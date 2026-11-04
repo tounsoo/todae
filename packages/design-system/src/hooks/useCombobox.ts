@@ -31,6 +31,7 @@ import { usePopoverInternal } from '../overlay/popover.js';
 import { useOptionList, type OptionListMove } from './optionList/useOptionList.js';
 import type {
   ComboboxCloseReason,
+  ComboboxFilterOptions,
   ComboboxItem,
   ComboboxOption,
 } from './useCombobox.types.js';
@@ -41,6 +42,7 @@ import {
 
 export type {
   ComboboxCloseReason,
+  ComboboxFilterOptions,
   ComboboxItem,
   ComboboxOption,
 } from './useCombobox.types.js';
@@ -48,11 +50,24 @@ export type {
 const CREATE_VALUE = '__create__';
 
 type BaseOptions = {
+  /** Every row there is. `filterOptions` picks the ones to show for the typed text. Ignored when `loadOptions` is set. */
   options?: readonly ComboboxOption[];
+  /**
+   * Picks the rows of `options` to show, and their order, for the trimmed input text, which is
+   * `''` while nothing is typed or the input shows the committed label. Default: the rows whose
+   * label holds the text, ignoring case, in their own order. Return a ranked or capped list to put
+   * better matches first. The active row and the create row follow what it returns. Ignored when
+   * `loadOptions` is set, since the loader does the matching.
+   */
+  filterOptions?: ComboboxFilterOptions;
+  /**
+   * Loads the rows for the trimmed input text, and they show as it returns them. A newer query
+   * aborts `signal` and discards the older answer. Read at call time, so an inline function does
+   * not reload. With it set, `options` and `filterOptions` are ignored, and development warns.
+   */
   loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
   /** Reload when this changes. `loadOptions` is read at call time, so changes to it alone do not reload. */
   loadKey?: string | number;
-  filter?: (option: ComboboxOption, query: string) => boolean;
   presentation?: 'popover' | 'sheet' | 'dialog' | 'auto';
   open?: boolean;
   defaultOpen?: boolean;
@@ -198,7 +213,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const isModal = isSheet || isDialog;
 
   // Callbacks read the latest options through this ref so their identity stays stable and
-  // inline `loadOptions` / `onValueChange` / `filter` functions never retrigger effects.
+  // inline `loadOptions` / `onValueChange` / `filterOptions` functions never retrigger effects.
   const latest = useRef(options);
   latest.current = options;
   const { open, inputValue, singleValue, multiValue, fieldNow, apply } = useComboboxState(options, latest);
@@ -240,7 +255,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     loadOptions: options.loadOptions,
     loadKey: options.loadKey,
     query: filterQuery,
-    filter: options.filter,
+    filterOptions: options.filterOptions,
     // Whether the query matches a row is known only once its own list is in.
     trailing: (shown) =>
       options.allowCreate &&

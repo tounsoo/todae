@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { resetWarnOnce } from '../../internal/warnOnce.js';
 import type { ComboboxOption } from './types.js';
 import { useOptionList, type OptionListConfig } from './useOptionList.js';
 
@@ -66,6 +67,21 @@ describe('useOptionList sync options', () => {
     expect(result.current.getOptionProps(ROWS[0]!).disabled).toBe(true);
     expect(result.current.getOptionProps(ROWS[1]!).disabled).toBeUndefined();
     expect(result.current.getOptionProps(ROWS[2]!).disabled).toBe(true);
+  });
+
+  it('shows the rows filterOptions returns, in its order, and makes its first enabled row active', () => {
+    const filterOptions = vi.fn((rows: readonly ComboboxOption[], query: string) =>
+      [...rows.filter((row) => row.label.toLowerCase().includes(query))].reverse().slice(0, 2),
+    );
+    const { result } = setup({ options: ROWS, query: '  a ', filterOptions });
+    expect(filterOptions).toHaveBeenLastCalledWith(ROWS, 'a');
+    expect(result.current.options.map((row) => row.value)).toEqual(['grace', 'barbara']);
+    expect(result.current.activeValue).toBe('grace');
+  });
+
+  it('asks filterOptions for the open list with an empty query', () => {
+    const { result } = setup({ options: ROWS, query: ' ', filterOptions: (rows, query) => (query === '' ? rows.slice(0, 1) : rows) });
+    expect(result.current.options.map((row) => row.value)).toEqual(['ada']);
   });
 
   it('makes the preferred row active while nothing is chosen, if it is enabled', () => {
@@ -150,13 +166,29 @@ describe('useOptionList async options', () => {
     expect(result.current.loading).toBe(false);
   });
 
+  it('loads for the trimmed query, so surrounding spaces load nothing new', async () => {
+    const { calls, loadOptions } = manualLoader();
+    const { rerender } = setup({ loadOptions, query: ' jo' });
+    rerender({ loadOptions, query: 'jo ' });
+    expect(calls.map((call) => call.query)).toEqual(['jo']);
+  });
+
+  it('warns in development that sync options are ignored next to a loader', () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { loadOptions } = manualLoader();
+    setup({ loadOptions, options: ROWS, query: 'a' });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignored while loadOptions is set'));
+    warn.mockRestore();
+  });
+
   it('shows loaded rows as the loader returns them, without the sync filter', async () => {
     const { loadOptions, settle } = manualLoader();
-    const filter = vi.fn(() => false);
-    const { result } = setup({ loadOptions, query: 'jdoe', filter });
+    const filterOptions = vi.fn(() => []);
+    const { result } = setup({ loadOptions, query: 'jdoe', filterOptions });
     await settle(0, (call) => call.resolve([{ value: 'john', label: 'John Doe' }]));
     expect(result.current.options.map((row) => row.value)).toEqual(['john']);
-    expect(filter).not.toHaveBeenCalled();
+    expect(filterOptions).not.toHaveBeenCalled();
   });
 
   it('keeps the last rows of its scope on show while the next query loads, with no row active', async () => {

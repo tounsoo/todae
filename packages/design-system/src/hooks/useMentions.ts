@@ -21,7 +21,7 @@ import type { PopoverWire } from '../overlay/popoverWire.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useAnnouncer } from './useAnnouncer.js';
-import type { ComboboxOption } from './optionList/types.js';
+import type { ComboboxFilterOptions, ComboboxOption } from './optionList/types.js';
 import { useOptionList } from './optionList/useOptionList.js';
 import { useControlledState } from './useControlledState.js';
 import {
@@ -42,16 +42,24 @@ export type { MentionToken, MentionTriggerPosition } from './useMentions.detect.
 export type MentionDraft = { text: string; tokens: readonly MentionToken[] };
 
 export type MentionTrigger = {
+  /** Every row there is. `filterOptions` picks the ones to show for the typed word. Ignored when `loadOptions` is set. */
+  options?: readonly ComboboxOption[];
+  /**
+   * Picks the rows of `options` to show, and their order, for the word typed after the trigger
+   * character, which is `''` right after it. Default: the rows whose label holds the word, ignoring
+   * case, in their own order. Return a ranked or capped list to put better matches first. Ignored
+   * when `loadOptions` is set.
+   */
+  filterOptions?: ComboboxFilterOptions;
+  /**
+   * Loads the rows for the typed word, and they show as it returns them. Stale responses are
+   * discarded. With it set, `options` and `filterOptions` are ignored, and development warns.
+   */
+  loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
   /** One character that starts a suggestion word, such as `@` or `/`. */
   char: string;
   /** `word`: at the start of the text or after whitespace. `start`: only whitespace before it, as slash commands are. */
   position?: MentionTriggerPosition;
-  /** Sync options. Ignored when loadOptions is set. */
-  options?: readonly ComboboxOption[];
-  /** Async options for the typed word. Stale responses are discarded. */
-  loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
-  /** Filters sync options. Default: the label contains the query, ignoring case. */
-  filter?: (option: ComboboxOption, query: string) => boolean;
   /** The text a pick inserts. Default: the trigger character and the option's label. */
   text?: (option: ComboboxOption) => string;
   /** The list's accessible name. Default: the `suggestions` string. */
@@ -301,7 +309,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     options: trigger?.options,
     loadOptions: trigger?.loadOptions,
     query: query?.query ?? null,
-    filter: trigger?.filter,
+    filterOptions: trigger?.filterOptions,
     scope: query ? String(query.trigger) : undefined,
     canPick: fits,
   });

@@ -322,7 +322,7 @@ describe('useCombobox', () => {
       useCombobox({
         options: OPTIONS,
         defaultInputValue: 're',
-        filter: (option) => option.value === 'vue',
+        filterOptions: (options) => options.filter((option) => option.value === 'vue'),
         presentation: 'sheet',
       }),
     );
@@ -330,6 +330,26 @@ describe('useCombobox', () => {
       'vue',
     ]);
     expect(result.current.items).not.toEqual(custom.result.current.items);
+  });
+
+  it('asks filterOptions with the trimmed text, and with an empty query while the input shows the committed label', () => {
+    const filterOptions = vi.fn((options: readonly ComboboxOption[], query: string) =>
+      query === '' ? options : [...options.filter((option) => option.label.toLowerCase().includes(query))].reverse(),
+    );
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, defaultValue: 'vue', filterOptions, allowCreate: true, presentation: 'popover' }),
+    );
+    expect(filterOptions).toHaveBeenLastCalledWith(OPTIONS, '');
+    act(() => result.current.setInputValue('  re '));
+    expect(filterOptions).toHaveBeenLastCalledWith(OPTIONS, 're');
+    // Its order is the list's order and the active row, and the create row follows what it returns.
+    expect(result.current.items.map((item) => (item.kind === 'option' ? item.option.value : item.kind))).toEqual([
+      'redux',
+      'react',
+      'create',
+    ]);
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('redux');
   });
 
   it('does not fall back to defaultValue for a controlled null value', () => {

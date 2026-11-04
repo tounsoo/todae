@@ -16,14 +16,22 @@ export const meta = {
       name: 'options',
       type: 'readonly ComboboxOption[]',
       required: false,
-      description: 'Sync options. Ignored when loadOptions is set.',
+      description: 'Every row there is; filterOptions picks the ones to show. Ignored when loadOptions is set.',
+    },
+    {
+      name: 'filterOptions',
+      type: '(options: readonly ComboboxOption[], query: string) => readonly ComboboxOption[]',
+      required: false,
+      default: 'label holds the query, ignoring case',
+      description:
+        'Returns the rows to show, in the order to show them, for the trimmed input text, which is "" while nothing is typed or the input shows the committed label. Rank or cap the list here. Ignored when loadOptions is set.',
     },
     {
       name: 'loadOptions',
       type: '(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>',
       required: false,
       description:
-        'Async options, shown as the loader returns them. Stale responses are discarded. An inline function is fine; it is read at call time.',
+        'Async options for the trimmed input text, shown as the loader returns them, so the loader does the matching. Stale responses are discarded. An inline function is fine; it is read at call time.',
     },
     {
       name: 'loadKey',
