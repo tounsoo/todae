@@ -14,7 +14,7 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 - `pnpm test` runs the unit tests. The Build job runs it.
 - `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job installs Playwright Chromium and runs them with `--project chromium`; the Engines job runs the package's in Firefox and WebKit.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
-- The docs job builds the package and the docs site, then runs `pnpm --filter docs test:visual` and `pnpm --filter docs test:peek`.
+- The docs job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
 
 [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
 

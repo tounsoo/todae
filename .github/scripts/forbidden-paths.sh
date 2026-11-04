@@ -12,13 +12,9 @@ scratch_body() {
 	[[ "$base" == *-body.md ]]
 }
 
-png_outside_baselines() {
+png_file() {
 	local base="${1##*/}"
-	[[ "${base,,}" == *.png ]] || return 1
-	if [ "${1#apps/docs/visual/baselines/}" = "$1" ]; then
-		return 0
-	fi
-	return 1
+	[[ "${base,,}" == *.png ]]
 }
 
 new_claude_artifact() {
@@ -41,7 +37,7 @@ scan() {
 			A|M|T) ;;
 			*) continue ;;
 		esac
-		if under_audit "$path" || scratch_body "$path" || png_outside_baselines "$path" || new_claude_artifact "$status" "$path"; then
+		if under_audit "$path" || scratch_body "$path" || png_file "$path" || new_claude_artifact "$status" "$path"; then
 			hits+=("$path")
 		fi
 	done
@@ -56,7 +52,7 @@ scan() {
 		fi
 		joined="$joined$shown"
 	done
-	printf 'forbidden-paths: drop %s. Do not add or edit a path under .audit/, a *-body.md file, or a PNG outside apps/docs/visual/baselines. A new file under .claude/ must end in .md, .json, or .mjs.\n' "$joined" >&2
+	printf 'forbidden-paths: drop %s. Do not add or edit a path under .audit/, a *-body.md file, or a PNG. A new file under .claude/ must end in .md, .json, or .mjs.\n' "$joined" >&2
 	return 1
 }
 
@@ -126,11 +122,12 @@ self_test() {
 	check 'root scratch body' 1 'foo-body.md' '' A foo-body.md
 	check 'plain body name' 0 '' '' A body.md
 	check 'body suffix' 0 '' '' A my-body.md.bak
-	check 'baseline png' 0 '' '' M apps/docs/visual/baselines/light/en/home.png
-	check 'baseline uppercase png' 0 '' '' A apps/docs/visual/baselines/light/en/home.PNG
+	check 'old baseline png' 1 'home.png' '' M apps/docs/visual/baselines/light/en/home.png
+	check 'uppercase png' 1 'home.PNG' '' A apps/docs/visual/baselines/light/en/home.PNG
 	check 'brand png' 1 'mark-32.png' '' M apps/docs/public/brand/mark-32.png
 	check 'loose png' 1 'screenshot.PNG' '' A screenshot.PNG
-	check 'baseline prefix file' 1 'baselines.png' '' A apps/docs/visual/baselines.png
+	check 'png delete' 0 '' '' D apps/docs/visual/baselines/light/en/home.png
+	check 'png-like name' 0 '' '' A notes/png.md
 	check 'edit claude markdown' 0 '' '' M .claude/skills/poteto-mode/SKILL.md
 	check 'edit claude script' 0 '' '' M .claude/skills/poteto-mode/scripts/resume.mjs
 	check 'edit claude json' 0 '' '' M .claude/settings.json
@@ -144,7 +141,7 @@ self_test() {
 	check 'new claude shell' 1 '.claude/tools/extra.sh' '' A .claude/tools/extra.sh
 	check 'new claude uppercase md' 1 '.claude/notes.MD' '' A .claude/notes.MD
 	check 'edit claude log' 0 '' '' M .claude/debug.log
-	check 'mixed' 1 '.audit/x' 'settings.json' M .claude/settings.json A .audit/x M apps/docs/visual/baselines/light/en/home.png
+	check 'mixed' 1 '.audit/x' 'settings.json' M .claude/settings.json A .audit/x M packages/design-system/src/index.ts
 }
 
 if [ "${1:-}" = "--self-test" ]; then
