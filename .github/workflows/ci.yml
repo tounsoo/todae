@@ -144,9 +144,10 @@ jobs:
       - name: Build the package
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
         run: pnpm build:ds
+      # Firefox and WebKit run the package's browser tests in the Engines job.
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        run: pnpm test:browser
+        run: pnpm test:browser --project chromium
 
       # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
       - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
@@ -155,15 +156,53 @@ jobs:
         name: Second-brand example
         run: pnpm --filter fernway-example build
 
+  # The package's browser tests in the other engines README's browser floors name, beside Fernway's Chromium run.
+  # Pixel screenshots stay in Chromium, in the Docs job.
+  engines:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Engines (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
+
+      # Keyed on the lockfile, which pins Playwright and so its browser builds.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
+
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        # Firefox runs every test page in one content process, where pages that run at once take each
+        # other's clicks, so it runs one file at a time.
+        run: pnpm --filter @tounsoo/todae test:browser --project ${{ matrix.browser }} ${{ matrix.browser == 'firefox' && '--no-file-parallelism' || '' }}
+
   # One result named Checks, so branch protection that requires that name keeps working.
   checks:
     name: Checks
-    needs: [static, build, fernway]
+    needs: [static, build, fernway, engines]
     if: ${{ always() && !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require static, build, and fernway
+      - name: Require static, build, fernway, and engines
         run: |
           set -euo pipefail
           needs='${{ toJSON(needs) }}'

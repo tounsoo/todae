@@ -68,6 +68,13 @@ describe('Drilldown focus and surface reset in a browser', () => {
         const onValueChange = vi.fn();
         const { rerender } = render(<Surfaced kind={kind} open onValueChange={onValueChange} />);
         await waitFor(() => expect(surfaceOpen()).toBe(true));
+        // A sheet still rising can move out from under the press in Firefox: press once it holds still.
+        await expect.poll(async () => {
+          const top = () => screen.getByRole('button', { name: 'Brand' }).getBoundingClientRect().top;
+          const before = top();
+          await new Promise(requestAnimationFrame);
+          return top() === before;
+        }).toBe(true);
         await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
         await settled();
         rerender(<Surfaced kind={kind} open={false} onValueChange={onValueChange} />);

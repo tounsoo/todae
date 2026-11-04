@@ -110,6 +110,21 @@
     display: flex;
   }
 
+  /* Past Popover's own fallbacks, for a +N that starts too far along for the panel to run on from it and
+     ends too soon for the panel to end at it: held to the far side's inset, which its max-width leaves free. */
+  @position-try --todae-chip-panel-in-view {
+    inset-inline-start: unset;
+    inset-inline-end: var(--todae-chip-panel-viewport-inset);
+  }
+
+  @supports (position-try-fallbacks: flip-block) {
+    .panel[popover] {
+      position-try-fallbacks:
+        --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline, --todae-chip-panel-in-view,
+        --todae-chip-panel-in-view flip-block;
+    }
+  }
+
   .panel:focus {
     outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
     outline-offset: var(--todae-chip-ring-offset);

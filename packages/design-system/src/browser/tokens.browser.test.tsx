@@ -151,15 +151,19 @@ describe('BottomSheet padding in a browser', () => {
           <BottomSheet.Root open onOpenChange={() => undefined}>
             <BottomSheet.Grabber />
             <BottomSheet.Title>Sort</BottomSheet.Title>
-            <BottomSheet.Body>Newest first</BottomSheet.Body>
+            {/* A second stop keeps Tab in the test frame: WebKit leaves focus on the body once Tab has left it. */}
+            <BottomSheet.Body>
+              <button type="button">Done</button>
+            </BottomSheet.Body>
           </BottomSheet.Root>
         </Themed>
       </div>,
     );
     await screen.findByRole('dialog');
-    const grabber = screen.getByRole('button');
+    const [grabber, done] = screen.getAllByRole('button') as [HTMLElement, HTMLElement];
     grabber.focus();
     await userEvent.tab();
+    expect(document.activeElement).toBe(done);
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(grabber);
     // The ring is drawn on the pill inside the full-height button.

@@ -21,6 +21,7 @@ import { useControlledState } from '../hooks/useControlledState.js';
 import { eventInside } from './eventInside.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
 import { aimPopoverOrigin, anchorNamed } from './popoverOrigin.js';
+import { endExitNow } from './usePopoverSync.js';
 
 export type { PopoverWire };
 
@@ -162,7 +163,13 @@ export function usePopoverInternal(
     const closing = wasOpen.current && !open;
     wasOpen.current = open;
     const anchored = Boolean(anchor?.isConnected);
-    if (closing && satByAnchor.current && !anchored) el.setAttribute('data-todae-unanchored', '');
+    if (closing && satByAnchor.current && !anchored) {
+      el.setAttribute('data-todae-unanchored', '');
+      // The content's exit began in its own layout effect, which runs before this one and can't see the
+      // anchor. End it here: Chromium sends the cut-short fade's transitioncancel within a frame, Firefox
+      // a frame later, and WebKit not in time.
+      endExitNow(el);
+    }
     if (open) satByAnchor.current = anchored;
     if (anchor && anchored) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);

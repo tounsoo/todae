@@ -158,8 +158,15 @@ describe('Contents in a browser', () => {
   it('keeps a picked short last section current until the person scrolls', async () => {
     render(<Page />);
     await waitFor(() => expect(current()).toBe('One'));
+    // The click's own hashchange keeps the pick. Firefox can deliver it after the wheel below, where it
+    // would pick Three again, so the wheel waits for it (or a moment, if the hash didn't change).
+    const hashChanged = new Promise((resolve) => {
+      window.addEventListener('hashchange', resolve, { once: true });
+      setTimeout(resolve, 500);
+    });
     link('Three').click();
     await waitFor(() => expect(current()).toBe('Three'));
+    await hashChanged;
     // The box cannot scroll Three up to the line, so the heading above it has passed the line instead.
     const scroller = screen.getByTestId('scroller');
     expect(scroller.scrollTop).toBe(scroller.scrollHeight - scroller.clientHeight);

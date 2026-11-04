@@ -1,13 +1,17 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
+import { blurBeforeCleanup } from '../test/focus.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  blurBeforeCleanup();
+  cleanup();
+});
 
 function Quantity({
   onSubmit,
@@ -114,6 +118,7 @@ describe('Field.NumberInput in a browser', () => {
     input().form!.requestSubmit();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(onSubmit).not.toHaveBeenCalled();
+    blurBeforeCleanup();
     unmount();
 
     // A product that refuses the number: the form reads what is shown.
@@ -254,7 +259,8 @@ describe('Field.NumberInput in a browser', () => {
     }
   });
 
-  it('lets an IME composition land, and flags the text on commit when it is no number', async () => {
+  // Composes through CDP's Input domain, which only Chromium has.
+  it.runIf(server.browser === 'chromium')('lets an IME composition land, and flags the text on commit when it is no number', async () => {
     render(<Quantity locale="en" />);
     await userEvent.click(input());
     const session = cdp();

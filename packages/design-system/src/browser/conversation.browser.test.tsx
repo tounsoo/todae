@@ -1,20 +1,9 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { cdp } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Alert, Conversation, Message } from '../index.js';
-
-/** vitest types the session without its methods; Playwright's session has `send`. */
-function emulateMedia(features: { name: string; value: string }[]) {
-  return (
-    cdp() as unknown as {
-      send(method: string, params: object): Promise<unknown>;
-    }
-  ).send('Emulation.setEmulatedMedia', {
-    features,
-  });
-}
+import { emulateMedia } from '../test/media.js';
 
 const politeRegion = () => document.querySelector<HTMLElement>('body > [data-todae-announcer] > [aria-live="polite"]');
 
@@ -290,12 +279,14 @@ describe('Conversation in a browser', () => {
     const viewport = screen.getByTestId('viewport');
     await frame();
     viewport.scrollTop = 100;
+    // Read back: an engine may snap the offset to a device pixel, and put it back to the nearest one.
+    const kept = viewport.scrollTop;
     await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
     rerender(<Hideable hidden />);
     await frame();
     rerender(<Hideable hidden={false} />);
     await frame();
-    expect(viewport.scrollTop).toBe(100);
+    expect(Math.abs(viewport.scrollTop - kept)).toBeLessThanOrEqual(1);
     expect(screen.getByTestId('scroll').hidden).toBe(false);
   });
 

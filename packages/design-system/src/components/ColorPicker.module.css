@@ -55,7 +55,8 @@
     pointer-events: none;
   }
 
-  .area:has(.axis:focus-visible) > .thumb {
+  /* A sibling selector, not :has(): WebKit can apply a :has(:focus-visible) style after the focus event, where revealRing reads the ring. */
+  .axis:focus-visible ~ .thumb {
     outline: var(--todae-focus-ring-width) solid var(--todae-picker-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
   }

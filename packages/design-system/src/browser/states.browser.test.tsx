@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import { useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover.js';
@@ -16,6 +16,7 @@ import {
   Tabs,
   Toolbar,
 } from '../index.js';
+import { emulateMedia } from '../test/media.js';
 
 function Themed({ children, dir }: { children: React.ReactNode; dir?: 'rtl' }) {
   return (
@@ -23,13 +24,6 @@ function Themed({ children, dir }: { children: React.ReactNode; dir?: 'rtl' }) {
       {children}
     </main>
   );
-}
-
-/** vitest types the session without its methods; Playwright's session has `send`. */
-function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
-    features,
-  });
 }
 
 function paint(element: Element, pseudo?: string): string {
@@ -229,7 +223,9 @@ describe('state in forced colors', () => {
     expect(getComputedStyle(pear).outlineStyle).toBe('solid');
   });
 
-  it('outlines the focused option of an open select', async () => {
+  // Only a customizable select (appearance: base-select) draws its options in the page. Elsewhere, as in
+  // Firefox, the browser's own dropdown draws them, with no :focus-visible to style.
+  it.runIf(CSS.supports('appearance', 'base-select'))('outlines the focused option of an open select', async () => {
     render(
       <Themed>
         <Field.Root>

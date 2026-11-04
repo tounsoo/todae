@@ -3,7 +3,8 @@ import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
 import { Drilldown } from '../components/Drilldown.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
-import { cleanupAll, emulateMedia, openDialog, ScrollList, settled, SettingsDialog, Themed, view } from '../test/drilldown.js';
+import { cleanupAll, openDialog, ScrollList, settled, SettingsDialog, Themed, view } from '../test/drilldown.js';
+import { emulateMedia } from '../test/media.js';
 
 describe('Drilldown motion, height and scroll in a browser', () => {
   it('keeps the leaving view on screen but inert and hidden from screen readers while it slides, then hides it', async () => {

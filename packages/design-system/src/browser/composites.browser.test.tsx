@@ -237,7 +237,8 @@ describe('Field.Select in a browser', () => {
     }
     render(<Size />);
     const select = screen.getByRole('combobox', { name: 'Size' }) as HTMLSelectElement;
-    expect(getComputedStyle(select).appearance).toBe('base-select');
+    // Firefox has no customizable select, so the browser's own picker stays (Field.Select docs).
+    if (CSS.supports('appearance', 'base-select')) expect(getComputedStyle(select).appearance).toBe('base-select');
     await userEvent.tab();
     expect(document.activeElement).toBe(select);
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
@@ -264,7 +265,16 @@ describe('Field.Select in a browser', () => {
     expect(document.activeElement).toBe(select);
     expect(select.matches(':open')).toBe(false);
     await userEvent.click(icon);
+    // WebKit has no HTMLSelectElement.showPicker(), so the press only focuses the select (Field.tsx).
+    if (!('showPicker' in HTMLSelectElement.prototype)) {
+      expect(document.activeElement).toBe(select);
+      expect(select.matches(':open')).toBe(false);
+      return;
+    }
     await waitFor(() => expect(select.matches(':open')).toBe(true));
+    // Without a customizable select (Firefox) the picker is the browser's own popup, which a press on the
+    // page doesn't close in the test browser; closing it is the browser's, not Todae's.
+    if (!CSS.supports('appearance', 'base-select')) return;
     await userEvent.click(icon);
     await waitFor(() => expect(select.matches(':open')).toBe(false));
   });
@@ -374,6 +384,8 @@ describe('Field.ColorPicker in a browser', () => {
     const area = screen.getByRole('slider', { name: 'Saturation' }).parentElement!;
     await waitFor(() => expect(area.getBoundingClientRect().width).toBeGreaterThan(0));
     const rect = area.getBoundingClientRect();
+    // A press with a pointer id the engine may not know (Firefox's mouse is 0): capture can fail, and the
+    // press still picks.
     area.dispatchEvent(
       new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: rect.left + 1, clientY: rect.top + 1 }),
     );
@@ -535,7 +547,11 @@ describe('Field.ColorPicker in a browser', () => {
       // The swatch still opens the picker, and a picked color reaches the input.
       await userEvent.click(button);
       const hue = await screen.findByRole('slider', { name: 'Hue' });
-      hue.focus();
+      // Reach Hue by keyboard: Firefox shows a ring on the focus handed back to the swatch only once
+      // focus has moved by keyboard, where Chromium counts any key.
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'Saturation' })));
+      await userEvent.tab();
+      expect(document.activeElement).toBe(hue);
       await userEvent.keyboard('{Home}');
       expect((input as HTMLInputElement).value).toBe('#ff3333');
       await userEvent.keyboard('{Escape}');

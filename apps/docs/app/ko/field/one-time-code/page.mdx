@@ -26,7 +26,7 @@ import FieldOneTimeCode from '../../../../examples/field/one-time-code/FieldOneT
 
 ## 폼에서
 
-입력은 필드의 네이티브 검증 컨트롤이므로, 텍스트를 필드의 `name`으로 보내고 `required`와 다른 네이티브 속성을 받습니다. `maxLength`가 `length`와 같습니다. 비어 있지 않고 `length`보다 짧은 코드는 사용자가 입력했든 코드가 설정했든 너무 짧다고 표시되는데, 브라우저의 `tooShort`는 스크립트가 쓴 값을 건너뛰기 때문입니다. 빈 코드는 `required`의 몫입니다. 이 문제의 `kind`는 `'tooShort'`가 아니라 `'customError'`이고, 메시지는 `tooShort` 문자열입니다. 코드가 짧은 동안에는 이 메시지가 `Field.Root`의 `customValidity`보다 우선하는데, 가장 안쪽 소유자가 먼저이기 때문입니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지 언어로 표시되고("Use at least 8 characters" 같은 문구), 포커스는 입력으로 이동합니다.
+입력은 필드의 네이티브 검증 컨트롤이므로, 텍스트를 필드의 `name`으로 보내고 `required`와 다른 네이티브 속성을 받습니다. 비어 있지 않고 `length`보다 짧은 코드는 사용자가 입력했든 코드가 설정했든 너무 짧다고 표시되는데, 브라우저의 `tooShort`는 스크립트가 쓴 값을 건너뛰기 때문입니다. 빈 코드는 `required`의 몫입니다. 이 문제의 `kind`는 `'tooShort'`가 아니라 `'customError'`이고, 메시지는 `tooShort` 문자열입니다. 코드가 짧은 동안에는 이 메시지가 `Field.Root`의 `customValidity`보다 우선하는데, 가장 안쪽 소유자가 먼저이기 때문입니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지 언어로 표시되고("Use at least 8 characters" 같은 문구), 포커스는 입력으로 이동합니다.
 
 <Example of={FieldOneTimeCodeForm} block />
 

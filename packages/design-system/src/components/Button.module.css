@@ -162,6 +162,12 @@
       border-width: max(1px, var(--todae-button-border-width));
     }
 
+    /* Forcing puts the ring back to the browser's own color, which in Firefox is currentcolor: on a pressed
+       toggle that is HighlightText over Canvas, which can't be seen. */
+    .root:focus-visible {
+      outline-color: Highlight;
+    }
+
     .root[aria-pressed='true'],
     .root[aria-pressed='true']:is(:hover, :active, :focus-visible):not(:disabled, [aria-disabled='true']) {
       background: Highlight;
