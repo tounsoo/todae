@@ -391,6 +391,66 @@ describe('useCombobox', () => {
     expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['u7']);
   });
 
+  it("with a loader, keeps a picked row's loaded label over the one options lends", async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [{ value: 'a', label: 'Apple (loaded)' }];
+        },
+        options: [{ value: 'a', label: 'Apple' }],
+        presentation: 'popover',
+      }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    act(() => result.current.select('a'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Apple (loaded)');
+    expect(queries).toEqual(['']);
+  });
+
+  it('with a loader, reads the starting label from options as committed after a load names the value otherwise', async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [
+            { value: 'u7', label: 'Grace Hopper' },
+            { value: 'u42', label: 'Ada L.' },
+          ];
+        },
+        options: [{ value: 'u42', label: 'Ada Lovelace' }],
+        defaultValue: 'u42',
+        presentation: 'popover',
+      }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Ada Lovelace');
+    expect(result.current.query).toBe('');
+    expect(result.current.activeValue).toBe('u42');
+    act(() => result.current.select('u42'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Ada L.');
+    expect(result.current.activeValue).toBe('u42');
+    expect(queries).toEqual(['']);
+  });
+
   it('does not fall back to defaultValue for a controlled null value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),

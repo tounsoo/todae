@@ -60,7 +60,8 @@ type BaseOptions = {
    * Picks the rows of `options` to show, and their order, for the trimmed input text, which is
    * `''` while nothing is typed or the input shows the committed label. Default: the rows whose
    * label holds the text, ignoring case, in their own order. Return a ranked or capped list to put
-   * better matches first: new text makes the first enabled row it returns the active one, and the
+   * better matches first: each change of the trimmed text makes the first enabled row it returns
+   * the active one, and the
    * create row checks only the rows it returns. Ignored when `loadOptions` is set, since the loader
    * does the matching, and development warns.
    */
@@ -249,15 +250,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // chips and the committed input text do not fall back to raw values.
   // State, not a ref: a label a load brings in renders again, so the input that shows it reads as committed.
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
-  // With a loader, `options` only lends labels, such as the starting value's, and is never listed.
+  // With a loader, `options` only lends labels to values no load has brought in yet, such as the
+  // starting value's, and is never listed.
   const knownOptions = options.options ?? EMPTY_OPTIONS;
-  const committedLabel =
-    selectionMode === 'single' && singleValue ? labelOf(knownOptions, singleValue, labels) : '';
+  // The input reads as committed when it shows any label the value is known by: a loaded row's,
+  // or the one `options` lends, which may differ, since a pick writes the loaded one.
+  const committed =
+    selectionMode === 'single' &&
+    singleValue !== null &&
+    inputValue !== '' &&
+    (inputValue === labels.get(singleValue) ||
+      inputValue === knownOptions.find((option) => option.value === singleValue)?.label);
   // Empty while the input shows the committed label, so the list is the full one.
-  const filterQuery =
-    selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
-      ? ''
-      : inputValue;
+  const filterQuery = committed ? '' : inputValue;
   const trimmed = inputValue.trim();
   // The text the list is for. The committed label asks for no create row, since it names the value.
   const queryText = filterQuery.trim();
