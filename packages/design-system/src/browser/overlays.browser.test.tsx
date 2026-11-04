@@ -8,6 +8,7 @@ import { Button } from '../components/Button.js';
 import { Dialog, type DialogCloseReason } from '../components/Dialog.js';
 import { Drawer } from '../components/Drawer.js';
 import { Popover } from '../components/Popover.js';
+import { settle } from '../test/settle.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -206,6 +207,8 @@ describe('BottomSheet in a browser', () => {
     const onClose = vi.fn();
     render(<SheetHarness onClose={onClose} />);
     await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    // Press once the sheet has slid in, not while it waits below the test frame.
+    await settle();
     await userEvent.click(screen.getByText('Newest first'));
     // The sheet's own padding is the dialog element too, but inside its box.
     await userEvent.click(sheet(), { position: { x: 4, y: sheet().getBoundingClientRect().height - 4 } });
