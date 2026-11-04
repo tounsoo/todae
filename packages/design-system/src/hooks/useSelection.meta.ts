@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useSelection',
   description:
-    'useSelection(options) returns { value, isSelected, state, toggle, toggleAll, clear, getCheckboxProps, getSelectAllProps }. value is the selected keys in the order they were selected. state is "none", "some" or "all" over the enabled keys in keys, and "none" when there are none. getCheckboxProps(key, props?) returns { checked, disabled, onChange } and getSelectAllProps(props?) returns { checked, indeterminate, disabled, onChange }, to spread on Checkbox.Root. Shift held on a checkbox sets every enabled key between the last toggled key and it to its new state.',
+    'useSelection(options) returns { value, isSelected, state, toggle, toggleAll, clear, getCheckboxProps, getSelectAllProps }. value is the selected keys in the order they were selected. state is "none", "some" or "all" over the enabled keys in keys, and "none" when there are none. getCheckboxProps(key, props?) returns { checked, disabled, onKeyUp, onChange } and getSelectAllProps(props?) returns { checked, indeterminate, disabled, onChange }, to spread on Checkbox.Root. Shift held on a checkbox sets every enabled key between the last toggled key and it to its new state.',
   props: [
     {
       name: 'keys',

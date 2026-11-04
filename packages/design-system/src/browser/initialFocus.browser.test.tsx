@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { server, userEvent } from '@vitest/browser/context';
 import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
@@ -112,13 +112,19 @@ describe('default initial focus on a radio group', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Large' })));
   });
 
+  // Which radio claims a group whose checked radio can't take focus, or that reaches past the root or a
+  // modal, follows Chromium's forward Tab. Firefox and WebKit decide it differently (ARCHITECTURE "A
+  // named radio group is one tab stop"), so their Tab is compared only where nothing has to claim.
+  // getTabbables is checked in every engine.
+  const comparesTab = (claim: boolean) => !claim || server.browser === 'chromium';
+
   it.each([
-    ['a checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked>', 'Two'],
-    ['no checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two">', 'One'],
-    ['a disabled checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked disabled>', 'One'],
-    ['a hidden checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked style="display:none">', 'One'],
-    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked tabindex="-1">', 'One'],
-  ])('stops where the browser\'s forward Tab does, in a group with %s', async (_case, radios, name) => {
+    ['a checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked>', 'Two', false],
+    ['no checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two">', 'One', false],
+    ['a disabled checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked disabled>', 'One', true],
+    ['a hidden checked radio', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked style="display:none">', 'One', true],
+    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="One"><input type="radio" name="g" aria-label="Two" checked tabindex="-1">', 'One', true],
+  ])('stops where the browser\'s forward Tab does, in a group with %s', async (_case, radios, name, claim) => {
     const root = document.createElement('div');
     root.innerHTML = `<button type="button">Before</button>${radios}`;
     document.body.append(root);
@@ -126,7 +132,7 @@ describe('default initial focus on a radio group', () => {
       screen.getByRole('button', { name: 'Before' }).focus();
       await userEvent.keyboard('{Tab}');
       const landed = screen.getByRole('radio', { name });
-      expect(document.activeElement).toBe(landed);
+      if (comparesTab(claim)) expect(document.activeElement).toBe(landed);
       expect(getTabbables(root).filter((el) => el.localName === 'input')).toEqual([landed]);
     } finally {
       root.remove();
@@ -161,7 +167,7 @@ describe('default initial focus on a radio group', () => {
       screen.getByRole('button', { name: 'Before' }).focus();
       await userEvent.keyboard('{Tab}');
       const one = screen.getByRole('radio', { name: 'One' });
-      expect(document.activeElement).toBe(one);
+      if (comparesTab(true)) expect(document.activeElement).toBe(one);
       expect(getTabbables(dialog.firstElementChild as HTMLElement)).toContain(one);
     } finally {
       dialog.close();
@@ -171,12 +177,12 @@ describe('default initial focus on a radio group', () => {
   });
 
   it.each([
-    ['an unchecked radio before the root', '<input type="radio" name="g" aria-label="Outside">', 'One'],
-    ['a checked radio under aria-hidden', '<div aria-hidden="true"><input type="radio" name="g" aria-label="Outside" checked></div>', 'After'],
-    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="Outside" checked tabindex="-1">', 'One'],
-    ['a disabled checked radio', '<input type="radio" name="g" aria-label="Outside" checked disabled>', 'One'],
-    ['a checked radio in an inert region', '<div inert><input type="radio" name="g" aria-label="Outside" checked></div>', 'One'],
-  ])('matches forward Tab with %s', async (_case, page, name) => {
+    ['an unchecked radio before the root', '<input type="radio" name="g" aria-label="Outside">', 'One', true],
+    ['a checked radio under aria-hidden', '<div aria-hidden="true"><input type="radio" name="g" aria-label="Outside" checked></div>', 'After', false],
+    ['a checked radio with tabindex -1', '<input type="radio" name="g" aria-label="Outside" checked tabindex="-1">', 'One', true],
+    ['a disabled checked radio', '<input type="radio" name="g" aria-label="Outside" checked disabled>', 'One', true],
+    ['a checked radio in an inert region', '<div inert><input type="radio" name="g" aria-label="Outside" checked></div>', 'One', true],
+  ])('matches forward Tab with %s', async (_case, page, name, claim) => {
     const outside = document.createElement('div');
     outside.innerHTML = page;
     const root = document.createElement('div');
@@ -186,7 +192,7 @@ describe('default initial focus on a radio group', () => {
       screen.getByRole('button', { name: 'Before' }).focus();
       await userEvent.keyboard('{Tab}');
       const nameOf = (el: Element | null) => el?.getAttribute('aria-label') ?? el?.textContent;
-      expect(nameOf(document.activeElement)).toBe(name);
+      if (comparesTab(claim)) expect(nameOf(document.activeElement)).toBe(name);
       expect(getTabbables(root).map(nameOf)).toEqual(name === 'One' ? ['Before', 'One', 'After'] : ['Before', 'After']);
     } finally {
       root.remove();
@@ -205,7 +211,7 @@ describe('default initial focus on a radio group', () => {
       screen.getByRole('button', { name: 'Before' }).focus();
       await userEvent.keyboard('{Tab}');
       const one = screen.getByRole('radio', { name: 'One' });
-      expect(document.activeElement).toBe(one);
+      if (comparesTab(true)) expect(document.activeElement).toBe(one);
       expect(getTabbables(modal.querySelector('div')!)).toContain(one);
     } finally {
       modal.close();

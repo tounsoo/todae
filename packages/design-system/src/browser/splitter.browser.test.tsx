@@ -1,11 +1,15 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { page, userEvent } from '@vitest/browser/context';
 import type { CSSProperties } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Checkbox, ScrollArea, Splitter, type SplitterRootProps } from '../index.js';
 import { getTabbables } from '../overlay/tabbables.js';
 
 const probes: HTMLElement[] = [];
+
+// Room for the 600px layouts, so a drag's end stays inside the test frame: Chromium brings a captured
+// pointer back from outside the frame, and Firefox doesn't.
+beforeAll(() => page.viewport(800, 600));
 
 afterEach(() => {
   cleanup();
@@ -89,13 +93,15 @@ describe('Splitter with one panel shown', () => {
     const { rerender } = render(<Tall />);
     const [first, second] = [screen.getByTestId('first'), screen.getByTestId('second')];
     second.scrollTop = 100;
+    // Read back: an engine may snap the offset to a device pixel.
+    const kept = second.scrollTop;
     rerender(<Tall show="end" />);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     expect(getComputedStyle(first).display).toBe('none');
-    expect(second.scrollTop).toBe(100);
+    expect(second.scrollTop).toBe(kept);
     rerender(<Tall />);
     await waitFor(() => expect(first.getBoundingClientRect().width).toBe(200));
-    expect(second.scrollTop).toBe(100);
+    expect(second.scrollTop).toBe(kept);
   });
 
   it('shows a stacked root\'s panel down its whole height', () => {

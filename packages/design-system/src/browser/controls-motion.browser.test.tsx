@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { server, userEvent } from '@vitest/browser/context';
 import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Checkbox } from '../components/Checkbox.js';
@@ -84,11 +84,16 @@ describe('Tabs indicator motion', () => {
     await frame();
     await frame();
     const list = screen.getByRole('tablist');
-    expect(runningTransitionProperties(list).length).toBeGreaterThan(0);
-    const mid = indicatorAndSelectedTabRects();
-    const [from, to] = [start.tab.left, mid.tab.left].sort((a, b) => a - b) as [number, number];
-    expect(mid.indicator.left).toBeGreaterThan(from + 1);
-    expect(mid.indicator.left).toBeLessThan(to - 1);
+    // Firefox moves the indicator at once (Ben kept it until Firefox animates an anchor() inset whose
+    // anchor changed), and WebKit doesn't run the slide either; motion only has to work in Chrome
+    // (ARCHITECTURE "Motion"). Both still start and end under the selected tab.
+    if (server.browser === 'chromium') {
+      expect(runningTransitionProperties(list).length).toBeGreaterThan(0);
+      const mid = indicatorAndSelectedTabRects();
+      const [from, to] = [start.tab.left, mid.tab.left].sort((a, b) => a - b) as [number, number];
+      expect(mid.indicator.left).toBeGreaterThan(from + 1);
+      expect(mid.indicator.left).toBeLessThan(to - 1);
+    }
 
     await settle(list);
     const end = indicatorAndSelectedTabRects();

@@ -223,7 +223,9 @@ describe('state in forced colors', () => {
     expect(getComputedStyle(pear).outlineStyle).toBe('solid');
   });
 
-  it('outlines the focused option of an open select', async () => {
+  // Only a customizable select (appearance: base-select) draws its options in the page. Elsewhere, as in
+  // Firefox, the browser's own dropdown draws them, with no :focus-visible to style.
+  it.runIf(CSS.supports('appearance', 'base-select'))('outlines the focused option of an open select', async () => {
     render(
       <Themed>
         <Field.Root>

@@ -112,7 +112,8 @@ describe('ThemeProvider overrides in a browser', () => {
       </div>,
     );
     const text = screen.getByTestId('text');
-    expect(getComputedStyle(text).fontFamily).toBe('"Courier New"');
+    // Chromium quotes a family name with a space; Firefox and WebKit don't.
+    expect(getComputedStyle(text).fontFamily.replaceAll('"', '')).toBe('Courier New');
     expect(cssVar(text, '--todae-text-font-family')).toContain('Georgia');
   });
 

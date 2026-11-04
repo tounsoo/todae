@@ -423,11 +423,13 @@ describe('focus rings in a scrolling container', () => {
     await waitFor(() => expect(input.closest(':popover-open')).not.toBeNull());
     input.blur();
     area.scrollTop = 300;
+    // Read back: an engine may snap the offset to a device pixel.
+    const before = area.scrollTop;
     await userEvent.keyboard('{Shift}');
     input.focus({ preventScroll: true });
     expect(input.matches(':focus-visible')).toBe(true);
     // The top layer draws the popover at the top of the page, above the area.
     expect(cutEdges(input, area)).toContain('top');
-    expect(area.scrollTop).toBe(300);
+    expect(area.scrollTop).toBe(before);
   });
 });

@@ -181,7 +181,11 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
         if (disabled || event.button !== 0) return;
         // Keep focus off the area itself; it moves to the saturation input.
         event.preventDefault();
-        event.currentTarget.setPointerCapture?.(event.pointerId);
+        try {
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        } catch {
+          // The pointer may already be gone; the press still picks, only a drag can't follow it.
+        }
         moveTo(event);
         if (xRef.current) focusWithoutScroll(xRef.current);
       })}

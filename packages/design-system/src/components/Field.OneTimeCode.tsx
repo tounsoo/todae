@@ -234,11 +234,14 @@ export function OneTimeCode({
     el.addEventListener('compositionstart', onCompositionStart);
     el.addEventListener('compositionend', onCompositionEnd);
     doc.addEventListener('selectionchange', sync);
+    // Firefox and WebKit fire it at the input, where it bubbles but isn't composed, so from a shadow root it never reaches the document.
+    el.addEventListener('selectionchange', sync);
     return () => {
       el.removeEventListener('beforeinput', onBeforeInput);
       el.removeEventListener('compositionstart', onCompositionStart);
       el.removeEventListener('compositionend', onCompositionEnd);
       doc.removeEventListener('selectionchange', sync);
+      el.removeEventListener('selectionchange', sync);
     };
   }, []);
 

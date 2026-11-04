@@ -236,6 +236,17 @@ describe('useSelection prop getters', () => {
     expect(['a', 'b', 'c', 'd'].map((key) => box(`Select ${key}`).checked)).toEqual([true, true, true, false]);
   });
 
+  it('turn Space with Shift into a range when the click from Space carries no Shift, as in Firefox', () => {
+    render(<List />);
+    fireEvent.click(box('Select a'));
+    fireEvent.keyUp(box('Select c'), { key: ' ', shiftKey: true });
+    fireEvent.click(box('Select c'), { shiftKey: false });
+    expect(['a', 'b', 'c', 'd'].map((key) => box(`Select ${key}`).checked)).toEqual([true, true, true, false]);
+    // The noted Shift is used once.
+    fireEvent.click(box('Select e'));
+    expect(['d', 'e'].map((key) => box(`Select ${key}`).checked)).toEqual([false, true]);
+  });
+
   it('disable the box of a disabled key', () => {
     render(<List disabledKeys={['b']} />);
     expect(box('Select b').disabled).toBe(true);

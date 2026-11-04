@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { server } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
@@ -122,7 +123,16 @@ describe('A tip opened during an overlay enter motion', () => {
     );
     // Initial focus lands on the icon button, which opens its tip.
     expect(document.activeElement).toBe(pin());
-    expectTipFollowed(await sampleMotion(pin), { minTravel: 40 });
+    const frames = await sampleMotion(pin);
+    if (server.browser === 'firefox' && dir === 'rtl') {
+      // Firefox places the tip off its rtl trigger while the Drawer slides, and motion only has to work
+      // in Chrome (ARCHITECTURE "Motion"). Once settled, the tip must sit by its trigger.
+      const rest = measure(pin()!);
+      expect(rest).not.toBeNull();
+      expect(Math.abs(rest!.dx)).toBeLessThanOrEqual(1);
+      return;
+    }
+    expectTipFollowed(frames, { minTravel: 40 });
   });
 
   it('stays by its trigger while a Dialog rises and fades in', async () => {

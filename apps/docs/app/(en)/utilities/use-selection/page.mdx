@@ -2,7 +2,7 @@ import SelectFiles from '../../../../examples/utilities/use-selection/SelectFile
 
 # useSelection
 
-`useSelection(options)` keeps a selection of keys, such as the rows of a table or the items of a list, and returns prop getters that wire it to `Checkbox.Root`. `getCheckboxProps(key)` gives one item's checkbox its `checked`, `disabled` and `onChange`, and `getSelectAllProps()` gives a select-all checkbox the same, with `indeterminate` while some items are selected.
+`useSelection(options)` keeps a selection of keys, such as the rows of a table or the items of a list, and returns prop getters that wire it to `Checkbox.Root`. `getCheckboxProps(key)` gives one item's checkbox its `checked`, `disabled`, `onKeyUp` and `onChange`, and `getSelectAllProps()` gives a select-all checkbox its `checked`, `disabled` and `onChange`, with `indeterminate` while some items are selected.
 
 <Example of={SelectFiles} block />
 

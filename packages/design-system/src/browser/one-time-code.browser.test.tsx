@@ -301,7 +301,7 @@ describe('Field.OneTimeCode in a browser', () => {
     for (const type of ['dragEnter', 'dragOver', 'drop']) await session().send('Input.dispatchDragEvent', { type, ...at, data });
   }
 
-  it('lands a drop at the box it is dropped on', async () => {
+  chromiumIt('lands a drop at the box it is dropped on', async () => {
     const drop = dropAt;
     render(<Code initial="1234" />);
     await userEvent.click(input());
@@ -309,13 +309,13 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(input().value).toBe('19234'));
   });
 
-  it('lands a drop past the code after its last character', async () => {
+  chromiumIt('lands a drop past the code after its last character', async () => {
     render(<Code initial="1234" />);
     await dropAt(5);
     await vi.waitFor(() => expect(input().value).toBe('12349'));
   });
 
-  it('lands nothing when the product cancels the drop, in its onDrop or before it', async () => {
+  chromiumIt('lands nothing when the product cancels the drop, in its onDrop or before it', async () => {
     const onValueChange = vi.fn();
     const cancel = (event: DragEvent) => event.preventDefault();
     for (const view of [<Code initial="1234" onValueChange={onValueChange} onDrop={cancel} />, <div onDropCapture={cancel}><Code initial="1234" onValueChange={onValueChange} /></div>]) {
@@ -329,7 +329,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it('lands a drop on a full code over the box it is dropped on', async () => {
+  chromiumIt('lands a drop on a full code over the box it is dropped on', async () => {
     render(<Code initial="123456" />);
     await dropAt(2);
     await vi.waitFor(() => expect(input().value).toBe('129456'));
@@ -784,7 +784,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(onValueChange.mock.calls).toEqual([['123412']]);
   });
 
-  it('refuses a drop past a full code, and lands one past a partial code after it', async () => {
+  chromiumIt('refuses a drop past a full code, and lands one past a partial code after it', async () => {
     render(<Code initial="123456" />);
     const past = input().getBoundingClientRect().width - 4;
     await dropAt({ x: past });
@@ -803,7 +803,7 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(active()).toEqual([]);
   });
 
-  it('keeps the boxes left to right in a right-to-left page, with the room after the code past the last box', async () => {
+  chromiumIt('keeps the boxes left to right in a right-to-left page, with the room after the code past the last box', async () => {
     render(<Code initial="12" dir="rtl" />);
     const field = input().getBoundingClientRect();
     const last = boxes()[5]!.getBoundingClientRect();
@@ -873,12 +873,13 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(active().length).toBeGreaterThan(1);
   });
 
-  it('leaves the caret where it is when its label is clicked', async () => {
+  it('leaves the selection to the browser when its label is clicked, not to a box', async () => {
     render(<Code initial="123456" />);
     await userEvent.click(input());
     input().setSelectionRange(1, 1);
     await userEvent.click(screen.getByText('Verification code'));
-    expect([input().selectionStart, input().selectionEnd]).toEqual([1, 1]);
+    // Firefox selects a text input's whole text when its label is clicked, as on Tab; Chromium and WebKit keep the caret. Neither is a press on a box.
+    expect([input().selectionStart, input().selectionEnd]).toEqual(server.browser === 'firefox' ? [0, 6] : [1, 1]);
   });
 
   it('shows no caret and no hover border on a read-only code', async () => {

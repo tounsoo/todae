@@ -80,7 +80,7 @@ describe('token consistency across component styles', () => {
         '.oneTimeCodeInput:focus-visible + .slots .slot[data-active]',
       ],
       selection: ['.input:focus-visible + .indicator'],
-      ColorPicker: ['.area:has(.axis:focus-visible) > .thumb'],
+      ColorPicker: ['.axis:focus-visible ~ .thumb'],
       Tree: ['.item:focus-visible > .label'],
       ChipList: ['.more:focus-visible [data-overflow]'],
       BottomSheet: ['.grabber:focus-visible > .pill'],

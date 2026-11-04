@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useRef, type ChangeEvent } from 'react';
+import { useCallback, useMemo, useRef, type ChangeEvent, type KeyboardEvent } from 'react';
 import type { CheckboxRootProps } from '../components/Checkbox.js';
-import { composeHandlers } from '../internal/props.js';
+import { alongside, composeHandlers } from '../internal/props.js';
 import { useControlledState } from './useControlledState.js';
 
 export type SelectionState = 'none' | 'some' | 'all';
@@ -33,8 +33,11 @@ export type UseSelectionResult<K extends string | number> = {
   toggleAll: () => void;
   /** Empties the selection, including keys outside `keys`. */
   clear: () => void;
-  /** Props for the `Checkbox.Root` of one key: `checked`, `disabled` and an `onChange` that toggles it, as a range while Shift is held. Yours merge in, and your `onChange` runs first. */
-  getCheckboxProps: (key: K, props?: CheckboxProps) => CheckboxProps & Pick<Required<CheckboxProps>, 'checked' | 'disabled' | 'onChange'>;
+  /** Props for the `Checkbox.Root` of one key: `checked`, `disabled`, an `onKeyUp` that notes Shift on Space, and an `onChange` that toggles it, as a range while Shift is held. Yours merge in, and your `onKeyUp` and `onChange` run first. */
+  getCheckboxProps: (
+    key: K,
+    props?: CheckboxProps,
+  ) => CheckboxProps & Pick<Required<CheckboxProps>, 'checked' | 'disabled' | 'onKeyUp' | 'onChange'>;
   /** Props for the select-all `Checkbox.Root`: `checked` when all are selected, `indeterminate` when some are, and an `onChange` that calls `toggleAll`. Yours merge in, and your `onChange` runs first. */
   getSelectAllProps: (props?: CheckboxProps) => CheckboxProps & Pick<Required<CheckboxProps>, 'checked' | 'indeterminate' | 'disabled' | 'onChange'>;
 };
@@ -79,6 +82,8 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
   const uniqueKeys = useMemo(() => [...new Set(keys)], [keys]);
   const enabledKeys = useMemo(() => uniqueKeys.filter((key) => !disabled.has(key)), [uniqueKeys, disabled]);
   const anchor = useRef<K | null>(null);
+  // Whether Shift was held on the Space whose click toggles a checkbox now: Firefox's click from Space carries no modifier keys.
+  const spaceShift = useRef(false);
 
   const selectedCount = enabledKeys.filter((key) => selected.has(key)).length;
   const state: SelectionState =
@@ -109,10 +114,20 @@ export function useSelection<K extends string | number>(options: UseSelectionOpt
     ...props,
     checked: selected.has(key),
     disabled: !!props.disabled || disabled.has(key),
+    onKeyUp: alongside(props.onKeyUp, (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== ' ') return;
+      spaceShift.current = event.shiftKey;
+      // The Space's click runs after this, in the same task; forget the key once it has.
+      setTimeout(() => {
+        spaceShift.current = false;
+      });
+    }),
     onChange: composeHandlers(props.onChange, (event: ChangeEvent<HTMLInputElement>) => {
-      // React fires a checkbox's change from its click, which carries the modifier keys.
+      // React fires a checkbox's change from its click, which carries the modifier keys, except Firefox's click from Space.
       const click = event.nativeEvent;
-      toggle(key, { range: 'shiftKey' in click && click.shiftKey === true });
+      const shift = ('shiftKey' in click && click.shiftKey === true) || spaceShift.current;
+      spaceShift.current = false;
+      toggle(key, { range: shift });
     }),
   });
 

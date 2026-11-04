@@ -1277,7 +1277,7 @@ describe('Tooltip in a layer shown again', () => {
     await expectTipByTrigger(trigger);
 
     await userEvent.click(screen.getByRole('button', { name: 'Open' }));
-    const dialog = screen.getByRole('dialog', { name: 'Edit' }) as HTMLDialogElement;
+    const dialog = (await screen.findByRole('dialog', { name: 'Edit' })) as HTMLDialogElement;
     await waitFor(() => expect(dialog.contains(trigger)).toBe(true));
     await expectTipByTrigger(trigger);
 

@@ -279,12 +279,14 @@ describe('Conversation in a browser', () => {
     const viewport = screen.getByTestId('viewport');
     await frame();
     viewport.scrollTop = 100;
+    // Read back: an engine may snap the offset to a device pixel, and put it back to the nearest one.
+    const kept = viewport.scrollTop;
     await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
     rerender(<Hideable hidden />);
     await frame();
     rerender(<Hideable hidden={false} />);
     await frame();
-    expect(viewport.scrollTop).toBe(100);
+    expect(Math.abs(viewport.scrollTop - kept)).toBeLessThanOrEqual(1);
     expect(screen.getByTestId('scroll').hidden).toBe(false);
   });
 

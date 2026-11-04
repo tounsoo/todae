@@ -117,15 +117,20 @@ describe('Glyphs in a browser', () => {
       </Themed>,
     );
     const select = screen.getByRole('combobox', { name: 'Plan' });
-    const glyph = select.nextElementSibling!.querySelector('svg')!;
-    const field = select.parentElement!.getBoundingClientRect();
-    const chevron = glyph.getBoundingClientRect();
-    expect(chevron.width).toBeCloseTo(px(select, '--todae-field-icon-size'), 0);
-    expect(chevron.right).toBeLessThan(field.right);
-    expect(chevron.right).toBeGreaterThan(field.right - field.width / 4);
-    expect(chevron.top).toBeGreaterThan(field.top);
-    expect(chevron.bottom).toBeLessThan(field.bottom);
-    expect(getComputedStyle(select, '::picker-icon').visibility).toBe('hidden');
+    if (CSS.supports('selector(::picker-icon)')) {
+      const glyph = select.nextElementSibling!.querySelector('svg')!;
+      const field = select.parentElement!.getBoundingClientRect();
+      const chevron = glyph.getBoundingClientRect();
+      expect(chevron.width).toBeCloseTo(px(select, '--todae-field-icon-size'), 0);
+      expect(chevron.right).toBeLessThan(field.right);
+      expect(chevron.right).toBeGreaterThan(field.right - field.width / 4);
+      expect(chevron.top).toBeGreaterThan(field.top);
+      expect(chevron.bottom).toBeLessThan(field.bottom);
+      expect(getComputedStyle(select, '::picker-icon').visibility).toBe('hidden');
+    } else {
+      // No ::picker-icon (Firefox): the select keeps its own arrow, and the glyph stays hidden.
+      expect(getComputedStyle(select.nextElementSibling!).display).toBe('none');
+    }
     const closed = screen.getByTestId('closed').querySelector('[data-todae-glyph]')!;
     const open = screen.getByTestId('open').querySelector('[data-todae-glyph]')!;
     expect(getComputedStyle(closed).rotate).toBe('-90deg');

@@ -84,7 +84,14 @@ export default defineConfig({
       provider: 'playwright',
       headless: true,
       screenshotFailures: false,
-      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
+      instances: [
+        { browser: 'chromium' },
+        // A page tall enough for the 414x896 test frame, so Vitest doesn't scale the frame down. Scaled,
+        // Firefox snaps scroll offsets to device pixels and both engines land real input up to a pixel off.
+        // Chromium keeps the default page, which its screenshots were taken in.
+        { browser: 'firefox', context: { viewport: { width: 1280, height: 960 } } },
+        { browser: 'webkit', context: { viewport: { width: 1280, height: 960 } } },
+      ],
       commands: { scopedThemeCss, emulateMedia },
     },
   },

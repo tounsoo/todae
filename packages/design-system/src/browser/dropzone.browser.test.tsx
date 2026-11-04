@@ -87,7 +87,9 @@ describe('useDropzone in a browser', () => {
     data.items.add(png);
     const text = screen.getByTestId('text');
     text.focus();
-    const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: data });
+    const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+    // Firefox's ClipboardEvent constructor ignores clipboardData and makes its own, so the files go on the event.
+    Object.defineProperty(event, 'clipboardData', { value: data });
     expect(text.dispatchEvent(event)).toBe(false);
     expect(onFiles).toHaveBeenCalledWith([png], []);
     const input = screen.getByTestId('input') as HTMLInputElement;
