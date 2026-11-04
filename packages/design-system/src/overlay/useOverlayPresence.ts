@@ -3,7 +3,7 @@ import { cssTimeMs } from './cssTime.js';
 
 // Fallbacks for when the exit transition can't be read from computed style.
 // The real lengths come from the dialog, sheet and drawer motion tokens.
-export const DIALOG_EXIT_MS = 160;
+export const DIALOG_EXIT_MS = 200;
 export const SHEET_EXIT_MS = 240;
 export const DRAWER_EXIT_MS = 240;
 

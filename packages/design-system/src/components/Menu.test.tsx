@@ -1087,7 +1087,7 @@ describe('A context menu closing with an exit fade', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('stays anchored at the box it opened at until the fade ends', () => {
-    // Popover.module.css gives the menu its exit (160ms by default); jsdom reads no
+    // Popover.module.css gives the menu its exit (200ms by default); jsdom reads no
     // stylesheet, so supply the computed transition the browser would.
     const real = window.getComputedStyle.bind(window);
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {

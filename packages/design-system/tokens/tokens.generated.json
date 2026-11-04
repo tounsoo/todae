@@ -7532,8 +7532,8 @@
       "path": "dialog.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7546,8 +7546,8 @@
       "path": "dialog.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-dialog-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8092,8 +8092,8 @@
       "path": "popover.motion.duration.enter",
       "type": "duration",
       "cssVar": "--todae-popover-motion-duration-enter",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8106,8 +8106,8 @@
       "path": "popover.motion.duration.exit",
       "type": "duration",
       "cssVar": "--todae-popover-motion-duration-exit",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
       "layer": "contract",
       "context": null,
       "entry": {

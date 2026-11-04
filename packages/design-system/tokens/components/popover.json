@@ -15,8 +15,8 @@
     "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } },
     "motion": {
       "duration": {
-        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
-        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } }
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } }
       },
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },

@@ -5,7 +5,7 @@ import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo'
 
 Centered native `<dialog>` via `showModal()`. `open` is controlled, or `defaultOpen` leaves it uncontrolled. Escape and backdrop dismiss are opt-out. No sheet morph.
 
-Enter is an opacity fade over 200ms while the panel rises into place from `dialog.motion.offset` (`0.5rem`) below; exit fades it and lets it sink back. The panel moves by layout, not a transform, so a tooltip inside stays by its trigger. `@starting-style` where supported; `data-entered` is the fallback so unsupported engines still tween. Exit stays mounted until `transitionend` (160ms fallback). Under reduced motion the panel and scrim only fade.
+Enter is an opacity fade over 280ms while the panel rises into place from `dialog.motion.offset` (`0.5rem`) below; exit fades it and lets it sink back. The panel moves by layout, not a transform, so a tooltip inside stays by its trigger. `@starting-style` where supported; `data-entered` is the fallback so unsupported engines still tween. Exit stays mounted until `transitionend` (200ms fallback). Under reduced motion the panel and scrim only fade.
 
 <Example of={DialogBasic} />
 
