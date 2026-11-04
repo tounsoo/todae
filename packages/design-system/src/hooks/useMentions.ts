@@ -53,7 +53,7 @@ export type MentionTrigger = {
   filterOptions?: ComboboxFilterOptions;
   /**
    * Loads the rows for the typed word, and they show as it returns them. Stale responses are
-   * discarded. With it set, `options` and `filterOptions` are ignored, and development warns.
+   * discarded. With it set, `options` and `filterOptions` are ignored, and development warns about `filterOptions`.
    */
   loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
   /** One character that starts a suggestion word, such as `@` or `/`. */

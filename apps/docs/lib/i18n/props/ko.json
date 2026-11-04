@@ -2335,8 +2335,8 @@
       "ko": "single은 TextInput을, multiple은 ChipInput을 씁니다."
     },
     "options": {
-      "en": "Every row there is; filterOptions picks the ones to show. Ignored when loadOptions is set.",
-      "ko": "있는 모든 행입니다. 보여 줄 행은 filterOptions가 고릅니다. loadOptions가 설정되면 무시됩니다."
+      "en": "Every row there is; filterOptions picks the ones to show. With loadOptions, only lends labels, such as the starting value's.",
+      "ko": "있는 모든 행입니다. 보여 줄 행은 filterOptions가 고릅니다. loadOptions가 있으면 시작 값처럼 레이블만 빌려줍니다."
     },
     "filterOptions": {
       "en": "Returns the rows to show, in the order to show them, for the trimmed input text, which is \"\" while nothing is typed or the input shows the committed label. Rank or cap the list here. Ignored when loadOptions is set.",

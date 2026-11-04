@@ -50,20 +50,25 @@ export type {
 const CREATE_VALUE = '__create__';
 
 type BaseOptions = {
-  /** Every row there is. `filterOptions` picks the ones to show for the typed text. Ignored when `loadOptions` is set. */
+  /**
+   * Every row there is. `filterOptions` picks the ones to show for the typed text. With
+   * `loadOptions` set it is never listed, and only lends labels to values the loader has not
+   * returned yet, such as the starting value's, so the input can show it.
+   */
   options?: readonly ComboboxOption[];
   /**
    * Picks the rows of `options` to show, and their order, for the trimmed input text, which is
    * `''` while nothing is typed or the input shows the committed label. Default: the rows whose
    * label holds the text, ignoring case, in their own order. Return a ranked or capped list to put
-   * better matches first. The active row and the create row follow what it returns. Ignored when
-   * `loadOptions` is set, since the loader does the matching.
+   * better matches first: new text makes the first enabled row it returns the active one, and the
+   * create row checks only the rows it returns. Ignored when `loadOptions` is set, since the loader
+   * does the matching, and development warns.
    */
   filterOptions?: ComboboxFilterOptions;
   /**
    * Loads the rows for the trimmed input text, and they show as it returns them. A newer query
    * aborts `signal` and discards the older answer. Read at call time, so an inline function does
-   * not reload. With it set, `options` and `filterOptions` are ignored, and development warns.
+   * not reload. With it set, `filterOptions` is ignored and `options` only lends labels.
    */
   loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
   /** Reload when this changes. `loadOptions` is read at call time, so changes to it alone do not reload. */
@@ -186,8 +191,14 @@ function labelOf(
   options: readonly ComboboxOption[],
   value: string,
   cache?: ReadonlyMap<string, string>,
+  known: readonly ComboboxOption[] = EMPTY_OPTIONS,
 ): string {
-  return options.find((option) => option.value === value)?.label ?? cache?.get(value) ?? value;
+  return (
+    options.find((option) => option.value === value)?.label ??
+    cache?.get(value) ??
+    known.find((option) => option.value === value)?.label ??
+    value
+  );
 }
 
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
@@ -238,9 +249,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // chips and the committed input text do not fall back to raw values.
   // State, not a ref: a label a load brings in renders again, so the input that shows it reads as committed.
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
-  const syncOptions = options.loadOptions ? EMPTY_OPTIONS : (options.options ?? EMPTY_OPTIONS);
+  // With a loader, `options` only lends labels, such as the starting value's, and is never listed.
+  const knownOptions = options.options ?? EMPTY_OPTIONS;
   const committedLabel =
-    selectionMode === 'single' && singleValue ? labelOf(syncOptions, singleValue, labels) : '';
+    selectionMode === 'single' && singleValue ? labelOf(knownOptions, singleValue, labels) : '';
   // Empty while the input shows the committed label, so the list is the full one.
   const filterQuery =
     selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
@@ -263,15 +275,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       !shown.some((option) => option.label.toLowerCase() === queryText.toLowerCase())
         ? CREATE_VALUE
         : null,
-    // On open, the selected single value is the active row.
-    preferred: selectionMode === 'single' ? singleValue : null,
+    // The list that opens makes the selected single value the active row; typed text starts at
+    // the first row filterOptions or the loader returns, its best match.
+    preferred: selectionMode === 'single' && queryText === '' ? singleValue : null,
   });
   const { activeValue, activeId, listIsCurrent, highlight, move, reset: resetList, getOptionProps: optionProps } = list;
   const learned = new Map(labels);
   for (const option of list.options) learned.set(option.value, option.label);
   // Compared after the merge, so two rows sharing a value settle on the last label.
   if (list.options.some((option) => learned.get(option.value) !== labels.get(option.value))) setLabels(learned);
-  const labelFor = useCallback((raw: string) => labelOf(list.options, raw, labels), [labels, list.options]);
+  const labelFor = useCallback(
+    (raw: string) => labelOf(list.options, raw, labels, knownOptions),
+    [knownOptions, labels, list.options],
+  );
 
   // Each opening of a single combobox with a value starts from that value, whoever opens it,
   // unless a key opened it to move to an end. A move the owner's open refused is dropped.

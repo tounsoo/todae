@@ -102,10 +102,10 @@ export function useOptionList(config: OptionListConfig): OptionList {
   const scope = config.scope ?? '';
   const filterOptions = config.filterOptions ?? defaultFilterOptions;
   const hasLoader = Boolean(config.loadOptions);
-  if (process.env.NODE_ENV !== 'production' && hasLoader && (config.options !== undefined || config.filterOptions !== undefined)) {
+  if (process.env.NODE_ENV !== 'production' && hasLoader && config.filterOptions !== undefined) {
     warnOnce(
-      'option-list-sync-with-loader',
-      'todae: options and filterOptions are ignored while loadOptions is set. The rows show as the loader returns them, so match the query in the loader.',
+      'option-list-filter-with-loader',
+      'todae: filterOptions is ignored while loadOptions is set. The rows show as the loader returns them, so match the query in the loader.',
     );
   }
   const [gate] = useState(createAsyncGate);

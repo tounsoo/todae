@@ -352,6 +352,45 @@ describe('useCombobox', () => {
     expect(result.current.activeValue).toBe('redux');
   });
 
+  it('makes the first row filterOptions returns active for typed text, and the selected value active for the list that opens', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        defaultValue: 'react',
+        filterOptions: (options, query) => [...options.filter((option) => option.label.toLowerCase().includes(query))].reverse(),
+        presentation: 'popover',
+      }),
+    );
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('react');
+    act(() => result.current.setInputValue('re'));
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['redux', 'react']);
+    expect(result.current.activeValue).toBe('redux');
+  });
+
+  it('with a loader, takes the starting label from options without listing them, and loads the full list for it', async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [{ value: 'u7', label: 'Grace Hopper' }];
+        },
+        options: [{ value: 'u42', label: 'Ada Lovelace' }],
+        defaultValue: 'u42',
+        defaultOpen: true,
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.inputValue).toBe('Ada Lovelace');
+    expect(queries).toEqual(['']);
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['u7']);
+  });
+
   it('does not fall back to defaultValue for a controlled null value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),

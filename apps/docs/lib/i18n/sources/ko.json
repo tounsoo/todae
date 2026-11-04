@@ -676,7 +676,7 @@
     "## Popover · multi": "bc05a5e70fd0",
     "## Sheet": "6076d410b1a4",
     "## Auto": "4eba42da06ea",
-    "## Async": "6e100dda2bed",
+    "## Async": "29ed5105b770",
     "## Empty and create": "e2b8272c60fa",
     "## Highlight matches": "cde50cbc1379",
     "## Composition rules": "6eb89b3bf8e3",
@@ -1069,7 +1069,7 @@
   "utilities/use-combobox": {
     "(top)": "6872f0e2eb9b",
     "# useCombobox": "26c222e8eb67",
-    "## Filtering": "4f7acf3890c0",
+    "## Filtering": "1fbebab3ff18",
     "## Accessible composition": "e50d6f4197be",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",

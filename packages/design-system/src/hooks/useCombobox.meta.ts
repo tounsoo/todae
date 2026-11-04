@@ -16,7 +16,7 @@ export const meta = {
       name: 'options',
       type: 'readonly ComboboxOption[]',
       required: false,
-      description: 'Every row there is; filterOptions picks the ones to show. Ignored when loadOptions is set.',
+      description: 'Every row there is; filterOptions picks the ones to show. With loadOptions, only lends labels, such as the starting value\'s.',
     },
     {
       name: 'filterOptions',

@@ -12,7 +12,7 @@ import ComboboxSingle from '../../../../examples/recipes/combobox/ComboboxSingle
 
 With `options`, the hook picks the rows to show. `filterOptions(options, query)` returns them in the order to show them, and gets the input text trimmed, or `''` while nothing is typed or the input shows the committed label, so its answer to `''` is the list that opens. By default it keeps the rows whose label holds the text, ignoring case, in their own order. Return a ranked or capped list to put better matches first, as the [Command palette](/recipes/command-palette) does: each change of the text makes the first enabled row it returns the active one, even after the arrow keys moved the highlight, and `allowCreate` checks only the rows it returns for a label match.
 
-With `loadOptions`, the loader is called with the trimmed text and its rows show as it returns them, so the loader does the matching. `options` and `filterOptions` are ignored beside it, and development warns.
+With `loadOptions`, the loader is called with the trimmed text and its rows show as it returns them, so the loader does the matching. `filterOptions` is ignored beside it, and development warns. `options` then only lends labels to values the loader hasn't returned, such as the starting value's, so the input shows its label and the first load asks for the full list.
 
 ## Accessible composition
 

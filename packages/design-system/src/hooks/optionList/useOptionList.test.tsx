@@ -192,12 +192,14 @@ describe('useOptionList async options', () => {
     expect(calls.map((call) => call.query)).toEqual(['jo']);
   });
 
-  it('warns in development that sync options are ignored next to a loader', () => {
+  it('warns in development that filterOptions is ignored next to a loader, and not for options alone', () => {
     resetWarnOnce();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { loadOptions } = manualLoader();
-    setup({ loadOptions, options: ROWS, query: 'a' });
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignored while loadOptions is set'));
+    const { rerender } = setup({ loadOptions, options: ROWS, query: 'a' });
+    expect(warn).not.toHaveBeenCalled();
+    rerender({ loadOptions, filterOptions: (rows) => rows, query: 'a' });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('filterOptions is ignored while loadOptions is set'));
     warn.mockRestore();
   });
 
