@@ -15,7 +15,7 @@
         "exit": { "$type": "duration", "$description": "How long an anchored popup takes to shrink out.", "$value": { "$ref": "#/motion/duration/normal/$value" } }
       }
     },
-    "modal": {
+    "window": {
       "$description": "A window centered over the page: Dialog.",
       "duration": {
         "enter": { "$type": "duration", "$description": "How long a centered window takes to rise in.", "$value": { "$ref": "#/motion/duration/slow/$value" } },

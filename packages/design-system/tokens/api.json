@@ -2802,14 +2802,6 @@
       "type": "cubicBezier"
     },
     {
-      "path": "motion.modal.duration.enter",
-      "type": "duration"
-    },
-    {
-      "path": "motion.modal.duration.exit",
-      "type": "duration"
-    },
-    {
       "path": "motion.notice.duration.enter",
       "type": "duration"
     },
@@ -2839,6 +2831,14 @@
     },
     {
       "path": "motion.reveal.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "motion.window.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "motion.window.duration.exit",
       "type": "duration"
     },
     {
