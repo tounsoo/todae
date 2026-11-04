@@ -1086,6 +1086,51 @@ describe('Menu.ContextTrigger', () => {
 describe('A context menu closing with an exit fade', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('does not show a menu again for a context request after its trigger-opened fade ended', () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (el instanceof HTMLElement && el.getAttribute('role') === 'menu') {
+        return Object.assign(Object.create(style), {
+          transitionProperty: 'opacity, scale',
+          transitionDuration: '0.16s',
+          transitionDelay: '0s',
+        }) as CSSStyleDeclaration;
+      }
+      return style;
+    });
+    render(
+      <Menu.Root>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.ContextTrigger data-testid="region">Row</Menu.ContextTrigger>
+        <Menu.Content>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    });
+    const menu = screen.getByRole('menu', { hidden: true });
+    act(() => {
+      fireEvent.keyDown(menu, { key: 'Escape' });
+    });
+    act(() => {
+      menu.dispatchEvent(Object.assign(new Event('transitionend', { bubbles: true }), { propertyName: 'opacity' }));
+    });
+    expect(menu.hasAttribute('data-popover-open')).toBe(false);
+    const hide = vi.spyOn(menu, 'hidePopover');
+    act(() => {
+      fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 40, clientY: 50 });
+    });
+    expect(menu.hasAttribute('data-popover-open')).toBe(true);
+    expect(hide).not.toHaveBeenCalled();
+  });
+
   it('stays anchored at the box it opened at until the fade ends', () => {
     // Popover.module.css gives the menu its exit (200ms by default); jsdom reads no
     // stylesheet, so supply the computed transition the browser would.

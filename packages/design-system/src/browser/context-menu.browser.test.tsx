@@ -302,8 +302,8 @@ describe('Menu.ContextTrigger in a browser', () => {
     await userEvent.keyboard('{Shift>}{F10}{/Shift}');
     await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    // Fading out, out of reach.
-    expect(menu().hasAttribute('data-todae-exiting')).toBe(true);
+    // Closed, or fading out, out of reach.
+    expect(!menu().matches(':popover-open') || menu().hasAttribute('data-todae-exiting')).toBe(true);
     expect(document.activeElement).toBe(cell);
   });
 

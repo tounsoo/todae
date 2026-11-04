@@ -509,7 +509,6 @@ function Content({
     setWasOpen(open);
     setFading(!open && kept !== null);
   }
-  usePopoverSync(localRef, open, { onExited: () => setFading(false) });
   // A request that comes while it fades, and that its owner turns down, does
   // not move it.
   const at = !open && fading ? kept : ctx.context;
@@ -518,6 +517,13 @@ function Content({
   // is earlier in the top layer, so the menu is shown again in front of it,
   // keeping focus.
   const anchored = useRef({ shown: false, box: false });
+  usePopoverSync(localRef, open, {
+    onExited: () => {
+      // Hidden now, so a later context request needs no re-show.
+      anchored.current.shown = false;
+      setFading(false);
+    },
+  });
   useLayoutEffect(() => {
     const before = anchored.current;
     const el = localRef.current;
