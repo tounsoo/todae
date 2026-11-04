@@ -20,10 +20,18 @@ function toRgba(color: string): Rgba {
     if (!context) throw new Error('paintedContrast: no 2D canvas');
     context.globalCompositeOperation = 'copy';
   }
-  context.fillStyle = '#000';
-  context.fillStyle = color;
-  context.fillRect(0, 0, 1, 1);
-  const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+  const ink = context;
+  const paint = (start: string) => {
+    ink.fillStyle = start;
+    ink.fillStyle = color;
+    ink.fillRect(0, 0, 1, 1);
+    return ink.getImageData(0, 0, 1, 1).data;
+  };
+  // A canvas keeps its last fill style when it can't parse a color, so a color
+  // this engine's canvas can't read would come out as the start color.
+  const [r, g, b, a] = paint('#000');
+  const [r2, g2, b2] = paint('#fff');
+  if (r !== r2 || g !== g2 || b !== b2) throw new Error(`paintedContrast: this browser's canvas can't read the computed color ${color}`);
   return [r! / 255, g! / 255, b! / 255, a! / 255];
 }
 
