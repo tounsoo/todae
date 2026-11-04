@@ -123,7 +123,7 @@ Each component's enter and exit durations point at a motion role, which points a
 - `motion.panel`: a panel that slides in from an edge. Drawer and BottomSheet, 280ms in and 240ms out.
 - `motion.notice`: a short-lived message. Toast, 200ms in and 160ms out.
 
-Roles hold durations only. Drilldown, the loops, the two-state controls and BottomSheet's `sheet.motion.duration.resize` point at the core scale directly.
+Roles hold durations only. Drilldown, the two-state controls and BottomSheet's `sheet.motion.duration.resize` point at the core scale directly, and Loader, Progress and Skeleton keep their own loop lengths.
 
 When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Some components also skip their fades for now.
 

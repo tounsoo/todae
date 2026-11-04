@@ -1,6 +1,6 @@
 {
   "motion": {
-    "$description": "Motion roles: how long each kind of thing that appears and goes takes to enter and exit. Component motion tokens point at these, and these point at the core motion.duration scale, so a theme retimes a whole role in one place. A change between two states that both stay on screen, a loop, and a resize keep their own component tokens on the core scale.",
+    "$description": "Motion roles: how long each kind of thing that appears and goes takes to enter and exit. Component motion tokens point at these, and these point at the core motion.duration scale, so a theme retimes a whole role in one place. A change between two states that both stay on screen, Drilldown's slide and a resize point their own component tokens at the core scale, and a loop keeps its own cycle length.",
     "reveal": {
       "$description": "Content that opens in place inside the page: Disclosure, Nav and Tree groups, and Message's action row.",
       "duration": {

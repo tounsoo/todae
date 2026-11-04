@@ -123,7 +123,7 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 - `motion.panel`: 화면 가장자리에서 밀려 들어오는 패널입니다. Drawer와 BottomSheet이며, 들어올 때 280ms, 나갈 때 240ms입니다.
 - `motion.notice`: 잠깐 나타나는 메시지입니다. Toast이며, 들어올 때 200ms, 나갈 때 160ms입니다.
 
-역할에는 시간만 있습니다. Drilldown, 반복 애니메이션, 두 상태 사이를 움직이는 컨트롤과 BottomSheet의 `sheet.motion.duration.resize`는 코어 단계를 바로 가리킵니다.
+역할에는 시간만 있습니다. Drilldown, 두 상태 사이를 움직이는 컨트롤과 BottomSheet의 `sheet.motion.duration.resize`는 코어 단계를 바로 가리키고, Loader, Progress, Skeleton은 반복 한 번의 길이를 따로 가집니다.
 
 사용자가 동작 줄이기를 선호하면 미끄러지거나, 크기가 바뀌거나, 떠오르거나, 도는 것이 없고, 반복 애니메이션은 멈춥니다. 지금은 일부 컴포넌트가 페이드도 건너뜁니다.
 
