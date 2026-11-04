@@ -120,23 +120,22 @@ function movingKeyframes(css: string): Set<string> {
 /** A sheet can run keyframes another sheet defines, so collect them from every sheet. */
 const MOVING_KEYFRAMES = new Set(sheets.flatMap(({ css }) => [...movingKeyframes(css)]));
 
-/** Whether every selector in `prelude` styles a popover only while it is closed. */
-function closedPopoverOnly(prelude: string): boolean {
-  return splitTopLevel(prelude).every((part) => subject(part.trim()).includes(':not(:popover-open)'));
+/** Whether every selector in `prelude` styles an overlay only before it has entered, or as it exits. */
+function notEnteredOnly(prelude: string): boolean {
+  return splitTopLevel(prelude).every((part) => subject(part.trim()).includes(':not([data-entered])'));
 }
 
 /**
- * A scale a popover only has on its way in or out: the @starting-style it
- * opens from, or its closed state, which it shrinks to as it closes. An open
+ * A scale a popover only has on its way in or out: the style it shows with
+ * before it has entered, which it also shrinks back to as it closes. An open
  * popover is never scaled, and a tooltip that opens while its trigger still
  * scales waits for it to settle (transformsSettling), so no tip is placed
  * against a box that is still moving.
  */
 function isOpenCloseScale(property: string, stack: readonly Block[]): boolean {
   if (property !== 'scale') return false;
-  if (stack.some((b) => b.prelude === '@starting-style')) return true;
   const rule = [...stack].reverse().find((b) => !b.prelude.startsWith('@'));
-  return rule !== undefined && closedPopoverOnly(rule.prelude);
+  return rule !== undefined && notEnteredOnly(rule.prelude);
 }
 
 /**
@@ -191,26 +190,25 @@ describe('design-system styles', () => {
     ).toEqual(['.a { transform: none }', '.d::after, .e { rotate: 45deg }', '.f:popover-open { scale: 0.9 }']);
   });
 
-  it('allows only a scale on the way in or out: in @starting-style or on a closed popover', () => {
+  it('allows only a scale on the way in or out: before it has entered', () => {
     expect(
       containerMoves(`
-        .a:popover-open { @starting-style { scale: 0.9; } }
-        .b:not(:popover-open) { scale: 0.9; }
-        @media (prefers-reduced-motion: no-preference) { .c:not(:popover-open) { scale: 0.9; } }
+        .a:not([data-entered]) { scale: 0.9; }
+        @media (prefers-reduced-motion: no-preference) { .b:not([data-entered]) { scale: 0.9; } }
+        .c:popover-open { @starting-style { scale: 0.9; } }
         .d { @starting-style { translate: 0 4px; } }
-        .e { @starting-style { transform: scale(0.9); } }
-        .f:not(:popover-open) { translate: 0 4px; }
-        .g:not(:popover-open), .h { scale: 0.9; }
-        .i:not(:popover-open) .j { scale: 0.9; }
-        .k:popover-open { scale: 0.9; }
+        .e:not([data-entered]) { translate: 0 4px; }
+        .f:not([data-entered]), .g { scale: 0.9; }
+        .h:not([data-entered]) .i { scale: 0.9; }
+        .j[data-entered] { scale: 0.9; }
       `),
     ).toEqual([
+      '.c:popover-open { scale: 0.9 }',
       '.d { translate: 0 4px }',
-      '.e { transform: scale(0.9) }',
-      '.f:not(:popover-open) { translate: 0 4px }',
-      '.g:not(:popover-open), .h { scale: 0.9 }',
-      '.i:not(:popover-open) .j { scale: 0.9 }',
-      '.k:popover-open { scale: 0.9 }',
+      '.e:not([data-entered]) { translate: 0 4px }',
+      '.f:not([data-entered]), .g { scale: 0.9 }',
+      '.h:not([data-entered]) .i { scale: 0.9 }',
+      '.j[data-entered] { scale: 0.9 }',
     ]);
   });
 

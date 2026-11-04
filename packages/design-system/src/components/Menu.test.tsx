@@ -1094,7 +1094,7 @@ describe('A context menu closing with an exit fade', () => {
       const style = real(el, pseudo);
       if (el instanceof HTMLElement && el.getAttribute('role') === 'menu') {
         return Object.assign(Object.create(style), {
-          transitionProperty: 'opacity, scale, display, overlay',
+          transitionProperty: 'opacity, scale',
           transitionDuration: '0.16s',
           transitionDelay: '0s',
         }) as CSSStyleDeclaration;
@@ -1120,9 +1120,10 @@ describe('A context menu closing with an exit fade', () => {
     act(() => {
       fireEvent.keyDown(menu, { key: 'Escape' });
     });
-    expect(menu.hasAttribute('data-popover-open')).toBe(false);
-    // The browser keeps drawing the menu for its exit (display and
-    // overlay allow-discrete). It should still sit at the box meanwhile.
+    // It stays shown, out of reach, for its exit fade, and should still sit
+    // at the box meanwhile.
+    expect(menu.hasAttribute('data-todae-exiting')).toBe(true);
+    expect(menu.inert).toBe(true);
     expect(menu.style.getPropertyValue('position-anchor')).toBe(boxName);
     expect(document.querySelector('span[popover]')).not.toBeNull();
     expect(menu.hasAttribute('data-todae-unanchored')).toBe(false);
@@ -1141,7 +1142,7 @@ describe('Menu motion', () => {
       const style = real(el, pseudo);
       if (el instanceof HTMLElement && el.getAttribute('role') === 'menu') {
         return Object.assign(Object.create(style), {
-          transitionProperty: 'opacity, scale, display, overlay',
+          transitionProperty: 'opacity, scale',
           transitionDuration: '0.16s',
           transitionDelay: '0s',
         }) as CSSStyleDeclaration;
@@ -1289,7 +1290,7 @@ describe('Menu motion while it fades', () => {
       if (el instanceof HTMLElement && match(el)) {
         const none = el.hasAttribute('data-todae-unanchored');
         return Object.assign(Object.create(style), {
-          transitionProperty: none ? 'none' : 'opacity, scale, display, overlay',
+          transitionProperty: none ? 'none' : 'opacity, scale',
           transitionDuration: none ? '0s' : '0.16s',
           transitionDelay: '0s',
         }) as CSSStyleDeclaration;
@@ -1405,7 +1406,7 @@ describe('Menu motion while it fades', () => {
       act(() => {
         fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 300, clientY: 300 });
       });
-      expect(menu().hasAttribute('data-popover-open')).toBe(false);
+      expect(menu().hasAttribute('data-todae-exiting')).toBe(true);
       // Still fading: it should stay where it sat.
       expect(box().style.getPropertyValue('--_left')).toBe(firstLeft);
     });
@@ -1426,7 +1427,7 @@ describe('Menu motion while it fades', () => {
       act(() => {
         fireEvent.contextMenu(screen.getByTestId('region'), { button: 2, clientX: 300, clientY: 300 });
       });
-      expect(menu().hasAttribute('data-popover-open')).toBe(false);
+      expect(menu().hasAttribute('data-todae-exiting')).toBe(true);
       // Its exit fade by the trigger is still drawing: it should not re-anchor to a hidden box.
       expect(menu().style.getPropertyValue('position-anchor')).toBe(byTrigger);
     });

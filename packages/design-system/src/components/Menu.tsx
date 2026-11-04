@@ -28,7 +28,6 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
 import { anchoredContentStyle } from '../overlay/anchorName.js';
 import { aimPopoverOrigin } from '../overlay/popoverOrigin.js';
-import { whenExited } from '../overlay/whenExited.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
@@ -499,7 +498,6 @@ function Content({
   const { ref: wireRef, open, id, style: wireStyle, onPointerDown: wirePointerDown, onClick: wireClick } =
     ctx.popover.getPopoverProps();
   const localRef = useRef<HTMLDivElement | null>(null);
-  usePopoverSync(localRef, open);
   const boxRef = useRef<HTMLSpanElement | null>(null);
   // A menu at a context request's box keeps that box, shown, while its exit
   // fade runs, so it fades where it sat. Root drops the request as it closes.
@@ -511,9 +509,7 @@ function Content({
     setWasOpen(open);
     setFading(!open && kept !== null);
   }
-  useLayoutEffect(() => {
-    if (fading) return whenExited(localRef.current, 'opacity', () => setFading(false));
-  }, [fading]);
+  usePopoverSync(localRef, open, { onExited: () => setFading(false) });
   // A request that comes while it fades, and that its owner turns down, does
   // not move it.
   const at = !open && fading ? kept : ctx.context;

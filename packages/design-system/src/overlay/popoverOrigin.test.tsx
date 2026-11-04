@@ -200,7 +200,7 @@ function markAwareFade(match: (el: HTMLElement) => boolean) {
     if (el instanceof HTMLElement && match(el)) {
       const none = el.hasAttribute('data-todae-unanchored');
       return Object.assign(Object.create(style), {
-        transitionProperty: none ? 'none' : 'opacity, scale, display, overlay',
+        transitionProperty: none ? 'none' : 'opacity, scale',
         transitionDuration: none ? '0s' : '0.16s',
         transitionDelay: '0s',
       }) as CSSStyleDeclaration;

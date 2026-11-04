@@ -1,5 +1,6 @@
-import { useLayoutEffect, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { whenExited } from './whenExited.js';
 
 export function isPopoverOpen(el: HTMLElement): boolean {
   return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
@@ -9,24 +10,94 @@ export function isPopoverOpen(el: HTMLElement): boolean {
 // in front of it.
 const held = /* @__PURE__ */ new WeakSet<HTMLElement>();
 
-export function usePopoverSync(contentRef: RefObject<HTMLElement | null>, open: boolean): void {
+/** A popover that moves in and out, as Popover and Menu do. */
+export type PopoverPresence = {
+  /** Runs once a close finishes: its exit fade ended, or there was none. */
+  onExited?: () => void;
+};
+
+/**
+ * Shows and hides `contentRef`'s popover as `open` changes. With `presence`
+ * it moves in and out the way Dialog and Drawer do: `data-entered` lands two
+ * frames after it shows, so its closed style is drawn first and it
+ * transitions in, and as it closes it takes `data-todae-exiting` and stays
+ * shown, inert, until its opacity fade ends, then hides. Opening again inside
+ * the fade turns it back where it is. Unmounting drops the wait.
+ *
+ * Future: this stands in for the newer CSS, where a popover opens from
+ * `@starting-style` and stays drawn as it closes with `display` and `overlay`
+ * transitions under `transition-behavior: allow-discrete`. Safari has no
+ * `overlay`, so it hid a closing popover at once, and it ran the opening
+ * transition again as it re-resolved the popover's position fallbacks. Move
+ * back once Safari supports `overlay`:
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/overlay
+ */
+export function usePopoverSync(
+  contentRef: RefObject<HTMLElement | null>,
+  open: boolean,
+  presence?: PopoverPresence,
+): void {
+  const animated = presence !== undefined;
+  const onExitedRef = useRef(presence?.onExited);
+  onExitedRef.current = presence?.onExited;
+  const wasOpen = useRef(false);
+
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
+    const closing = wasOpen.current && !open;
+    wasOpen.current = open;
     if (!open) {
-      if (isPopoverOpen(el)) el.hidePopover();
-      return;
+      if (!isPopoverOpen(el)) {
+        if (closing) onExitedRef.current?.();
+        return;
+      }
+      if (!animated) {
+        el.hidePopover();
+        return;
+      }
+      el.removeAttribute('data-entered');
+      el.setAttribute('data-todae-exiting', '');
+      // Still shown while it fades, but out of reach: no press, focus or
+      // screen reader lands in it.
+      el.inert = true;
+      return whenExited(el, 'opacity', () => {
+        el.removeAttribute('data-todae-exiting');
+        el.inert = false;
+        if (isPopoverOpen(el)) el.hidePopover();
+        onExitedRef.current?.();
+      });
+    }
+    const returning = el.hasAttribute('data-todae-exiting');
+    if (returning) {
+      el.removeAttribute('data-todae-exiting');
+      el.inert = false;
     }
     if (!isPopoverOpen(el)) {
       // A close that lost its anchor went at once; this open fades in again.
       el.removeAttribute('data-todae-unanchored');
+      el.removeAttribute('data-entered');
       el.showPopover();
     }
     held.add(el);
+    let raf = 0;
+    if (animated && !el.hasAttribute('data-entered')) {
+      // Already drawn inside its fade: turn back from where it is.
+      if (returning) el.setAttribute('data-entered', '');
+      else {
+        raf = requestAnimationFrame(() => {
+          raf = requestAnimationFrame(() => {
+            raf = 0;
+            el.setAttribute('data-entered', '');
+          });
+        });
+      }
+    }
     return () => {
+      cancelAnimationFrame(raf);
       held.delete(el);
     };
-  }, [contentRef, open]);
+  }, [animated, contentRef, open]);
 }
 
 /**
