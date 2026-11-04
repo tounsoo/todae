@@ -101,6 +101,32 @@
     background: var(--todae-menu-item-check-fg);
   }
 
+  /* A submenu trigger's chevron, at the end of its line. It points down:
+     turn it toward the end, where the submenu opens. */
+  .submenuIndicator {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--todae-menu-item-indicator-scale) * 1em);
+    height: calc(var(--todae-menu-item-indicator-scale) * 1em);
+    margin-inline-start: auto;
+    line-height: 1;
+  }
+
+  .item[aria-haspopup='menu'] > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .item[aria-haspopup='menu']:dir(rtl) > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  .submenuIndicator > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
   .group {
     display: flex;
     flex-direction: column;

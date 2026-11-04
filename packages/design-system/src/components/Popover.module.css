@@ -84,4 +84,23 @@
       position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline;
     }
   }
+
+  /* Beside its anchor, as a submenu sits: past the anchor's end, its first
+     row level with the anchor, and its edge on the outer edge of the popover
+     the anchor sits in. It flips to the other side where there is no room,
+     and up where it would run off the bottom. Placed by position-area, not
+     anchor() insets: WebKit laid a submenu that flipped to the start side
+     over its own menu with anchor() insets. The self- keywords read its own
+     direction, as its logical margins do, so the two agree in right-to-left
+     text inside a left-to-right page. */
+  @supports (position-area: self-inline-end) {
+    .content.beside {
+      top: auto;
+      inset-inline-start: auto;
+      position-area: span-self-block-end self-inline-end;
+      margin-block-start: calc(-1 * (var(--todae-popover-padding-y) + var(--todae-popover-border-width)));
+      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+      position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
+    }
+  }
 }

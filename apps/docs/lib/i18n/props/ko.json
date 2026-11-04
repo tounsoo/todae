@@ -1341,8 +1341,8 @@
       "ko": "메뉴의 이름이 되는 요소의 id. 기본값은 트리거입니다."
     },
     "children": {
-      "en": "Items, groups and separators.",
-      "ko": "항목, 그룹, 구분선."
+      "en": "Items, groups, separators and submenus.",
+      "ko": "항목, 그룹, 구분선, 하위 메뉴."
     },
     "className": {
       "en": "Optional class.",
@@ -1482,6 +1482,52 @@
     }
   },
   "Menu.Separator": {
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Submenu": {
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires on open and close. reason is trigger, pointer, escape, arrow or parent. Leaving open unchanged is a veto.",
+      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, pointer, escape, arrow, parent 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
+    },
+    "children": {
+      "en": "One Menu.SubmenuTrigger and one Menu.SubmenuContent.",
+      "ko": "Menu.SubmenuTrigger 하나와 Menu.SubmenuContent 하나."
+    }
+  },
+  "Menu.SubmenuTrigger": {
+    "disabled": {
+      "en": "aria-disabled. Stays in the arrow-key order, so it is announced, but cannot open.",
+      "ko": "aria-disabled. 화살표 키 순서에 남아 있어 알려지지만, 열 수는 없습니다."
+    },
+    "textValue": {
+      "en": "Typeahead text when children are not plain text.",
+      "ko": "children이 일반 텍스트가 아닐 때 쓰는 타입어헤드 텍스트."
+    },
+    "children": {
+      "en": "Item label. It also names the submenu.",
+      "ko": "항목 레이블. 하위 메뉴의 이름도 됩니다."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.SubmenuContent": {
+    "children": {
+      "en": "Items, groups, separators and submenus.",
+      "ko": "항목, 그룹, 구분선, 하위 메뉴."
+    },
     "className": {
       "en": "Optional class.",
       "ko": "선택적 클래스."

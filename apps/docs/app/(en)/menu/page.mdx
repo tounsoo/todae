@@ -1,5 +1,6 @@
 import MenuContext from '../../../examples/menu/MenuContext';
 import MenuActions from '../../../examples/menu/MenuActions';
+import MenuSubmenu from '../../../examples/menu/MenuSubmenu';
 import { MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
@@ -20,7 +21,19 @@ An item's children are presentational to assistive technology, as ARIA defines f
   <MenuOptions />
 </Example>
 
-`onOpenChange(open, reason)` reports `trigger`, `context` (a `Menu.ContextTrigger`), `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
+`onOpenChange(open, reason)` reports `trigger`, `context` (a `Menu.ContextTrigger`), `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land.
+
+## Submenus
+
+`Menu.Submenu` puts a list inside a list. `Menu.SubmenuTrigger` is an item with `aria-haspopup="menu"` and a chevron at the end of its line, and `Menu.SubmenuContent` is the `role="menu"` it opens, named by the trigger. The submenu opens past the trigger's end with its first item level with the trigger, and flips to the other side, or up, where there is no room. A submenu can hold any item, a group or another submenu.
+
+<Example of={MenuSubmenu} />
+
+Right arrow, Enter or Space on the trigger opens the submenu on its first item; in a right-to-left page, Left arrow does. Left arrow (Right arrow in right-to-left) or Escape closes only that submenu and puts focus back on its trigger. Up, Down, Home, End and typeahead move within the submenu's own items. Choosing an item in it, or Tab, closes the whole menu, as in the menu itself. The pointer resting on the trigger for `menu.submenu.delay.show` opens the submenu and leaves focus on the trigger; a click or tap opens it at once. Focus moving to another item of the menu it sits in closes it.
+
+On its way from the trigger to the submenu, the pointer may cross other items. For `menu.submenu.delay.hide`, while the pointer stays inside the triangle between where it left the trigger and the submenu's near edge, those items leave focus where it is, so the submenu stays open. A pointer that stops, turns back or runs out of time focuses the item under it as usual.
+
+`Menu.Submenu` takes `open`, `defaultOpen` and `onOpenChange(open, reason)`, where reason is `trigger` (a click or key on the trigger), `pointer` (the pointer resting on it), `escape`, `arrow` (the arrow key toward the line's start) or `parent` (focus moved to another item, or the menu it sits in closed).
 
 ## Links
 
@@ -44,7 +57,7 @@ A right click or Shift+F10 in a text field inside the region leaves the browser'
 
 ## Icons
 
-`Menu.CheckboxItem` shows the `check` glyph while checked: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. An icon-only trigger takes an icon from any library in `Button.Icon`, and needs a name.
+`Menu.CheckboxItem` shows the `check` glyph while checked: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. `Menu.SubmenuTrigger` shows the `chevron` glyph, turned toward the end of the line. An icon-only trigger takes an icon from any library in `Button.Icon`, and needs a name.
 
 ```tsx
 import { Check, Ellipsis } from 'lucide-react';
@@ -67,7 +80,7 @@ import { Check, Ellipsis } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above. `Menu.ContextTrigger` handles the `contextmenu` event and Shift+F10 and the ContextMenu key, places the menu at the pointer or the focused element, and returns focus when it closes.
+**Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.SubmenuTrigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and names its submenu. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above. `Menu.ContextTrigger` handles the `contextmenu` event and Shift+F10 and the ContextMenu key, places the menu at the pointer or the focused element, and returns focus when it closes.
 
 **You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code or from a `Menu.ContextTrigger` with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby` (without one, `Menu.Content` logs an error in development when it opens), a context menu needs a visible `Menu.Trigger` too, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
 
@@ -90,7 +103,7 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu. A context menu that is the only way to reach its actions: a long press on iOS doesn't open it, and few people know Shift+F10. A context menu over content whose browser menu people need, such as links and images, since it replaces Open in new tab and Save image.
+**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu. A context menu that is the only way to reach its actions: a long press on iOS doesn't open it, and few people know Shift+F10. A context menu over content whose browser menu people need, such as links and images, since it replaces Open in new tab and Save image. Submenus nested more than two deep, which are hard to follow and to reach with a pointer.
 
 ## When to use
 
@@ -119,3 +132,9 @@ export function RowActions({ label, children }: { label: string; children: React
 <PropsTable name="Menu.RadioItem" />
 
 <PropsTable name="Menu.Separator" />
+
+<PropsTable name="Menu.Submenu" />
+
+<PropsTable name="Menu.SubmenuTrigger" />
+
+<PropsTable name="Menu.SubmenuContent" />

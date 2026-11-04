@@ -531,17 +531,18 @@
     "(section order)": "18b56400fd30"
   },
   "menu": {
-    "(top)": "0c62e828fd02",
+    "(top)": "1455a1ea9182",
     "# Menu": "3d86873445c0",
     "## Keyboard": "7a30a02ae4c8",
-    "## Checkbox and radio items": "57a69df768cd",
+    "## Checkbox and radio items": "b4f3965ba83f",
+    "## Submenus": "93805bf5d7d3",
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
-    "## Icons": "5a8e880339a4",
-    "## Accessible composition": "e1a78d0b6e24",
+    "## Icons": "57bbd70b0b4e",
+    "## Accessible composition": "0283a4a276ef",
     "## When to use": "9a102c1309d4",
-    "## Props": "b091052a4a0b",
-    "(section order)": "63bb3d9be625"
+    "## Props": "51a8cb6780b4",
+    "(section order)": "b64a64a1f9aa"
   },
   "message": {
     "(top)": "48f8b944fe60",

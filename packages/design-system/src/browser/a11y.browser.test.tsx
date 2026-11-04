@@ -13,6 +13,7 @@ import {
   ErrorMessage,
   Field,
   Label,
+  Menu,
   OptionList,
   Popover,
   RadioGroup,
@@ -252,6 +253,30 @@ describe.each(APPEARANCES)('axe in a browser, %s', (pass) => {
     await userEvent.click(screen.getByRole('combobox'));
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(screen.getByRole('listbox')).toBeTruthy());
+    await expectNoViolations();
+  });
+
+  it('finds nothing in an open menu with a submenu open', async () => {
+    render(
+      <Themed>
+        <Menu.Root>
+          <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Rename</Menu.Item>
+            <Menu.Submenu>
+              <Menu.SubmenuTrigger>Share</Menu.SubmenuTrigger>
+              <Menu.SubmenuContent>
+                <Menu.Item>Copy link</Menu.Item>
+                <Menu.Item>Email</Menu.Item>
+              </Menu.SubmenuContent>
+            </Menu.Submenu>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    await waitFor(() => expect(document.activeElement?.textContent).toBe('Copy link'));
     await expectNoViolations();
   });
 
