@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, useState, type ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BottomSheet,
   Button,
@@ -39,13 +39,24 @@ async function violations(root: Element = document.body): Promise<string[]> {
   );
 }
 
+/**
+ * Waits for every finite animation and transition to finish, so an overlay is
+ * checked open, not partway through its entry motion, then checks.
+ */
 async function expectNoViolations() {
+  const running = document.getAnimations().filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime ?? Infinity));
+  await Promise.race([Promise.allSettled(running.map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 2000))]);
   expect(await violations()).toEqual([]);
 }
 
+const APPEARANCES = ['light', 'dark'] as const;
+
+// The appearance the running pass renders in, set before each test.
+let appearance: (typeof APPEARANCES)[number] = 'light';
+
 function Themed({ children }: { children: ReactNode }) {
   return (
-    <main data-appearance="light" data-density="comfortable">
+    <main data-appearance={appearance} data-density="comfortable">
       {children}
     </main>
   );
@@ -169,7 +180,11 @@ function OverlayHarness() {
   );
 }
 
-describe('axe in a browser', () => {
+describe.each(APPEARANCES)('axe in a browser, %s', (pass) => {
+  beforeEach(() => {
+    appearance = pass;
+  });
+
   it('reports a real violation, so a clean run means something', async () => {
     render(
       <Themed>
