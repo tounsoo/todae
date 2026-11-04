@@ -85,28 +85,29 @@
   @supports (top: anchor(bottom)) {
     .content.beside {
       top: calc(anchor(top) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-      inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+      inset-inline-start: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
     }
   }
 
   @position-try --todae-popover-beside-flip-block {
     top: unset;
     bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
-    inset-inline-start: calc(anchor(self-end) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+    inset-inline-start: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
   }
 
-  /* The start side is spelled out, not left to flip-inline: WebKit flips the
-     inset but keeps anchor(self-end), which lands it over its own menu. */
+  /* The far edge is anchor(outside), not anchor(self-end) or self-start, and
+     the start side is spelled out, not left to flip-inline: with the self-
+     keywords, WebKit laid a flipped submenu over its own menu. */
   @position-try --todae-popover-beside-start {
     inset-inline-start: unset;
-    inset-inline-end: calc(anchor(self-start) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+    inset-inline-end: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
   }
 
   @position-try --todae-popover-beside-start-flip-block {
     top: unset;
     bottom: calc(anchor(bottom) - var(--todae-popover-padding-y) - var(--todae-popover-border-width));
     inset-inline-start: unset;
-    inset-inline-end: calc(anchor(self-start) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+    inset-inline-end: calc(anchor(outside) + var(--todae-popover-padding-x) + var(--todae-popover-border-width));
   }
 
   @supports (position-try-fallbacks: --x) {
