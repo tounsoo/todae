@@ -166,7 +166,10 @@ for (const appearance of APPEARANCES) {
 
     describe('docs demos under axe, toasts showing', () => {
       // ToastDemo keeps its toaster at module scope, and its success toast never times out, so
-      // toasts outlive a test. Each test dismisses them before and after.
+      // toasts outlive a test. Each test dismisses them first, and again after, while its region
+      // is still mounted, so a failure leaves none behind for the next test.
+      afterEach(clearToasts);
+
       it('examples/toast/ToastDemo.tsx ToastDemo', async () => {
         const { container } = renderDemo(demo('ToastDemo'));
         await clearToasts();
@@ -192,7 +195,6 @@ for (const appearance of APPEARANCES) {
         await expect.poll(() => shownToastTitles()).toEqual(['Changes saved']);
         await settle();
         await expectAccessible(appearance, { overlay: true });
-        await clearToasts();
       });
     });
 
@@ -349,6 +351,8 @@ function shownToastTitles(): string[] {
 
 /** Dismisses every toast, one at a time, as the region brings held-back ones forward. */
 async function clearToasts() {
+  // The region shows no toast until it goes live, a task after it mounts.
+  await settle();
   for (let left = 20; left > 0 && document.querySelector('ol[aria-live] > li'); left--) {
     // A toast that is leaving has no button to press; settling lets it go.
     const toast = document.querySelector<HTMLElement>(TOASTS);
