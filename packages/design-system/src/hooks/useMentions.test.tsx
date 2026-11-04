@@ -92,6 +92,22 @@ describe('useMentions', () => {
     expect(el.hasAttribute('aria-expanded')).toBe(false);
   });
 
+  it("shows the rows a trigger's filterOptions returns for the word, in its order", () => {
+    let result!: UseMentionsResult;
+    const filterOptions = vi.fn((rows: readonly { value: string; label: string }[], query: string) =>
+      query === '' ? rows.slice(0, 1) : [...rows].reverse(),
+    );
+    render(<Harness triggers={[{ char: '@', options: people, filterOptions }]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'hi @');
+    expect(result.items.map((item) => item.option.value)).toEqual(['ada']);
+    type(el, 'hi @a');
+    expect(filterOptions).toHaveBeenLastCalledWith(people, 'a');
+    expect(result.items.map((item) => item.option.value)).toEqual(['alan', 'ada']);
+    expect(result.activeValue).toBe('alan');
+  });
+
   it('inserts a pick and tracks it as a token when the textarea cannot edit natively', () => {
     let result!: UseMentionsResult;
     const onChange = vi.fn();

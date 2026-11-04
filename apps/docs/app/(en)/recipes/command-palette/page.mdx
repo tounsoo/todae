@@ -4,11 +4,20 @@ import { CommandPalette } from '../../../../components/demos/CommandPaletteDemo'
 
 A recipe, not a package namespace. [Dialog](/dialog) holds the palette, and [useCombobox](/utilities/use-combobox) owns the input, filtering, the active option and ids. There is no `CommandPalette.*` export.
 
-Use the `dialog` presentation and spread `getDialogProps()` on `Dialog.Root`. When the palette opens, the hook clears the input and makes the top row active, and a command chosen while the palette closes does not run again. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected.
+Use the `dialog` presentation and spread `getDialogProps()` on `Dialog.Root`. When the palette opens, the hook clears the input and makes the top row active, and a command chosen while the palette closes does not run again. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected. `filterOptions` ranks the list: commands that start with the text come first, so the top row, which Enter runs, is the likeliest one.
 
 ```tsx
+// Commands that start with the text come first, then the others that hold it.
+const rankCommands: ComboboxFilterOptions = (options, query) => {
+  const needle = query.toLowerCase();
+  const holds = options.filter((option) => option.label.toLowerCase().includes(needle));
+  const starts = holds.filter((option) => option.label.toLowerCase().startsWith(needle));
+  return [...starts, ...holds.filter((option) => !starts.includes(option))];
+};
+
 const cb = useCombobox({
   options: commands,
+  filterOptions: rankCommands,
   presentation: 'dialog',
   value: null,
   onValueChange: (value: string | null) => { if (value) run(value); },

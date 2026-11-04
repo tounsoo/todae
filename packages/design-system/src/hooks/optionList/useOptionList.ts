@@ -1,23 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { OptionListOptionProps } from '../../components/OptionList.js';
 import { optionDomId } from '../../internal/optionDomId.js';
-import { defaultFilter, filterOptions } from './filter.js';
+import { warnOnce } from '../../internal/warnOnce.js';
+import { defaultFilterOptions } from './filter.js';
 import { createAsyncGate, type AsyncLoad } from './load.js';
-import type { ComboboxOption } from './types.js';
+import type { ComboboxFilterOptions, ComboboxOption } from './types.js';
 
 export type OptionListConfig = {
   /** The listbox's DOM id. Each row's id is built from it. */
   listboxId: string;
-  /** Sync options. Ignored when `loadOptions` is set. */
+  /** Sync options, narrowed by `filterOptions`. Ignored when `loadOptions` is set. */
   options?: readonly ComboboxOption[];
-  /** Async options for `query`. Read at call time, so an inline function does not reload. */
+  /** Async options for the trimmed `query`. Read at call time, so an inline function does not reload. */
   loadOptions?: AsyncLoad;
   /** Loads again when it changes, compared with `Object.is`. */
   loadKey?: string | number;
-  /** The text the list is for, or null while no list is asked for: nothing loads then. */
+  /**
+   * The text the list is for, or null while no list is asked for: nothing loads then. It is
+   * trimmed before the loader or `filterOptions` sees it, so surrounding spaces load nothing new.
+   */
   query: string | null;
-  /** Filters sync options. Loaded options show as the loader returns them. */
-  filter?: (option: ComboboxOption, query: string) => boolean;
+  /** Picks and orders the sync rows for the trimmed query. Loaded options show as the loader returns them. */
+  filterOptions?: ComboboxFilterOptions;
   /**
    * Which list this is, when one hook shows several, as each mention trigger
    * word does. Loaded rows and the highlight belong to one scope and never
@@ -93,10 +97,17 @@ const EMPTY: readonly ComboboxOption[] = [];
  * the keys that pick.
  */
 export function useOptionList(config: OptionListConfig): OptionList {
-  const { listboxId, query, loadKey, canPick, preferred = null } = config;
+  const { listboxId, loadKey, canPick, preferred = null } = config;
+  const query = config.query === null ? null : config.query.trim();
   const scope = config.scope ?? '';
-  const filter = config.filter ?? defaultFilter;
+  const filterOptions = config.filterOptions ?? defaultFilterOptions;
   const hasLoader = Boolean(config.loadOptions);
+  if (process.env.NODE_ENV !== 'production' && hasLoader && config.filterOptions !== undefined) {
+    warnOnce(
+      'option-list-filter-with-loader',
+      'todae: filterOptions is ignored while loadOptions is set. The rows show as the loader returns them, so match the query in the loader.',
+    );
+  }
   const [gate] = useState(createAsyncGate);
   // Bumped by retry and reset, so the same query loads again.
   const [run, setRun] = useState(0);
@@ -145,8 +156,8 @@ export function useOptionList(config: OptionListConfig): OptionList {
 
   const source = hasLoader ? (ownScope?.options ?? EMPTY) : (config.options ?? EMPTY);
   const options = useMemo(
-    () => (query === null ? EMPTY : hasLoader ? source : filterOptions(source, query, filter)),
-    [filter, hasLoader, query, source],
+    () => (query === null ? EMPTY : hasLoader ? source : filterOptions(source, query)),
+    [filterOptions, hasLoader, query, source],
   );
   const trailing = listIsCurrent && query !== null && config.trailing ? config.trailing(options) : null;
   const enabledValues = useMemo(() => {
@@ -157,9 +168,12 @@ export function useOptionList(config: OptionListConfig): OptionList {
     return values;
   }, [canPick, options, trailing]);
 
-  // A highlight is forgotten once its row leaves the list, so it does not come back with it.
-  const chosen = active !== null && active.scope === scope ? active.value : null;
-  if (chosen !== null && !enabledValues.includes(chosen)) setActive(null);
+  // A highlight belongs to the text it was chosen under: new text starts again at its own first
+  // row, so a ranking filterOptions puts its best match under Enter. It is also forgotten once its
+  // row leaves the list, so it does not come back with it.
+  const own = active !== null && active.scope === scope ? active : null;
+  const chosen = own !== null && own.query === query && enabledValues.includes(own.value) ? own.value : null;
+  if (own !== null && chosen === null) setActive(null);
   // Until this query's own list is in, no row is active unless one was chosen while it loads.
   const activeValue =
     chosen !== null && enabledValues.includes(chosen) && (listIsCurrent || active?.query === query)

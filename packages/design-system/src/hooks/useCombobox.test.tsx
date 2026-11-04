@@ -322,7 +322,7 @@ describe('useCombobox', () => {
       useCombobox({
         options: OPTIONS,
         defaultInputValue: 're',
-        filter: (option) => option.value === 'vue',
+        filterOptions: (options) => options.filter((option) => option.value === 'vue'),
         presentation: 'sheet',
       }),
     );
@@ -330,6 +330,135 @@ describe('useCombobox', () => {
       'vue',
     ]);
     expect(result.current.items).not.toEqual(custom.result.current.items);
+  });
+
+  it('asks filterOptions with the trimmed text, and with an empty query while the input shows the committed label', () => {
+    const filterOptions = vi.fn((options: readonly ComboboxOption[], query: string) =>
+      query === '' ? options : [...options.filter((option) => option.label.toLowerCase().includes(query))].reverse(),
+    );
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, defaultValue: 'vue', filterOptions, allowCreate: true, presentation: 'popover' }),
+    );
+    expect(filterOptions).toHaveBeenLastCalledWith(OPTIONS, '');
+    act(() => result.current.setInputValue('  re '));
+    expect(filterOptions).toHaveBeenLastCalledWith(OPTIONS, 're');
+    // Its order is the list's order and the active row, and the create row follows what it returns.
+    expect(result.current.items.map((item) => (item.kind === 'option' ? item.option.value : item.kind))).toEqual([
+      'redux',
+      'react',
+      'create',
+    ]);
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('redux');
+  });
+
+  it('makes the first row filterOptions returns active for typed text, and the selected value active for the list that opens', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        defaultValue: 'react',
+        filterOptions: (options, query) => [...options.filter((option) => option.label.toLowerCase().includes(query))].reverse(),
+        presentation: 'popover',
+      }),
+    );
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBe('react');
+    act(() => result.current.setInputValue('re'));
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['redux', 'react']);
+    expect(result.current.activeValue).toBe('redux');
+  });
+
+  it('with a loader, takes the starting label from options without listing them, and loads the full list for it', async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [{ value: 'u7', label: 'Grace Hopper' }];
+        },
+        options: [{ value: 'u42', label: 'Ada Lovelace' }],
+        defaultValue: 'u42',
+        defaultOpen: true,
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.inputValue).toBe('Ada Lovelace');
+    expect(queries).toEqual(['']);
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual(['u7']);
+  });
+
+  it("with a loader, keeps a picked row's loaded label over the one options lends", async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [{ value: 'a', label: 'Apple (loaded)' }];
+        },
+        options: [{ value: 'a', label: 'Apple' }],
+        presentation: 'popover',
+      }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    act(() => result.current.select('a'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Apple (loaded)');
+    expect(queries).toEqual(['']);
+  });
+
+  it('with a loader, reads the starting label from options as committed after a load names the value otherwise', async () => {
+    const queries: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          queries.push(query);
+          return [
+            { value: 'u7', label: 'Grace Hopper' },
+            { value: 'u42', label: 'Ada L.' },
+          ];
+        },
+        options: [{ value: 'u42', label: 'Ada Lovelace' }],
+        defaultValue: 'u42',
+        presentation: 'popover',
+      }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Ada Lovelace');
+    expect(result.current.query).toBe('');
+    expect(result.current.activeValue).toBe('u42');
+    act(() => result.current.select('u42'));
+    act(() => result.current.setOpen(true));
+    await flush();
+    expect(result.current.inputValue).toBe('Ada L.');
+    expect(result.current.activeValue).toBe('u42');
+    expect(queries).toEqual(['']);
+  });
+
+  it('reads a value nothing names, shown as its raw text, as committed: no create row and the full list', () => {
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, value: 'Rust', defaultInputValue: 'Rust', allowCreate: true, presentation: 'popover' }),
+    );
+    act(() => result.current.setOpen(true));
+    expect(result.current.query).toBe('');
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.items).toHaveLength(OPTIONS.length);
   });
 
   it('does not fall back to defaultValue for a controlled null value', () => {

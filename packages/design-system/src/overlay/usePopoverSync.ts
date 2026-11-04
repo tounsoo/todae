@@ -14,6 +14,14 @@ const held = /* @__PURE__ */ new WeakSet<HTMLElement>();
 // set stays.
 const madeInert = /* @__PURE__ */ new WeakSet<HTMLElement>();
 
+// The exit each closing popover waits on, so one whose anchor went away as it closed can end it at once.
+const exitsUnderWay = /* @__PURE__ */ new WeakMap<HTMLElement, () => void>();
+
+/** Ends `el`'s exit fade now, if one runs: its anchor went away as it closed. */
+export function endExitNow(el: HTMLElement): void {
+  exitsUnderWay.get(el)?.();
+}
+
 function setExitInert(el: HTMLElement, on: boolean): void {
   if (on) {
     if (el.inert) return;
@@ -79,12 +87,27 @@ export function usePopoverSync(
       // Still shown while it fades, but out of reach: no press, focus or
       // screen reader lands in it.
       setExitInert(el, true);
-      return whenExited(el, 'opacity', () => {
+      let ended = false;
+      const end = () => {
+        if (ended) return;
+        ended = true;
+        exitsUnderWay.delete(el);
         el.removeAttribute('data-todae-exiting');
         setExitInert(el, false);
         if (isPopoverOpen(el)) el.hidePopover();
         onExitedRef.current?.();
-      });
+      };
+      const stopWaiting = whenExited(el, 'opacity', end);
+      if (!ended) {
+        exitsUnderWay.set(el, () => {
+          stopWaiting();
+          end();
+        });
+      }
+      return () => {
+        exitsUnderWay.delete(el);
+        stopWaiting();
+      };
     }
     const returning = el.hasAttribute('data-todae-exiting');
     if (returning) {

@@ -478,7 +478,8 @@ describe('Menu.ContextTrigger in a browser', () => {
     await userEvent.click(region, { button: 'right', position: { x: 250, y: 80 } });
     await waitFor(() => expect(menu().matches(':popover-open')).toBe(true));
     const r = region.getBoundingClientRect();
-    expect(Math.abs(menu().getBoundingClientRect().left - (r.left + 250))).toBeLessThanOrEqual(1);
+    // Read once the open scale has settled, so the box measured is where the menu sits.
+    await waitFor(() => expect(Math.abs(menu().getBoundingClientRect().left - (r.left + 250))).toBeLessThanOrEqual(1));
     expect(region.hasAttribute('data-open')).toBe(true);
   });
 

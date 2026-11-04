@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -36,6 +36,7 @@ import {
   Tree,
   VisuallyHidden,
 } from '../index.js';
+import { emulateMedia } from '../test/media.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -841,10 +842,6 @@ describe('Prose.Root in a browser', () => {
     expect(style('empty-2').marginBlockStart).toBe('8px');
   });
 });
-
-function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
-}
 
 describe('Disclosure', () => {
   function Reasoning({ open }: { open: boolean }) {

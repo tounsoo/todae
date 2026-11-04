@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { resetWarnOnce } from '../../internal/warnOnce.js';
 import type { ComboboxOption } from './types.js';
 import { useOptionList, type OptionListConfig } from './useOptionList.js';
 
@@ -68,6 +69,21 @@ describe('useOptionList sync options', () => {
     expect(result.current.getOptionProps(ROWS[2]!).disabled).toBe(true);
   });
 
+  it('shows the rows filterOptions returns, in its order, and makes its first enabled row active', () => {
+    const filterOptions = vi.fn((rows: readonly ComboboxOption[], query: string) =>
+      [...rows.filter((row) => row.label.toLowerCase().includes(query))].reverse().slice(0, 2),
+    );
+    const { result } = setup({ options: ROWS, query: '  a ', filterOptions });
+    expect(filterOptions).toHaveBeenLastCalledWith(ROWS, 'a');
+    expect(result.current.options.map((row) => row.value)).toEqual(['grace', 'barbara']);
+    expect(result.current.activeValue).toBe('grace');
+  });
+
+  it('asks filterOptions for the open list with an empty query', () => {
+    const { result } = setup({ options: ROWS, query: ' ', filterOptions: (rows, query) => (query === '' ? rows.slice(0, 1) : rows) });
+    expect(result.current.options.map((row) => row.value)).toEqual(['ada']);
+  });
+
   it('makes the preferred row active while nothing is chosen, if it is enabled', () => {
     const { result, rerender } = setup({ options: ROWS, query: '', preferred: 'grace' });
     expect(result.current.activeValue).toBe('grace');
@@ -122,6 +138,25 @@ describe('useOptionList keys', () => {
     expect(result.current.activeValue).toBe('ada');
   });
 
+  it('starts new text at its own first row, even when the highlighted row is still listed', () => {
+    const rank = (rows: readonly ComboboxOption[], query: string) =>
+      [...rows.filter((row) => row.label.toLowerCase().includes(query))].sort(
+        (a, b) => Number(!a.label.toLowerCase().startsWith(query)) - Number(!b.label.toLowerCase().startsWith(query)),
+      );
+    const { result, rerender } = setup({ options: ROWS, query: '', filterOptions: rank });
+    act(() => result.current.highlight('grace'));
+    rerender({ options: ROWS, query: 'g', filterOptions: rank });
+    expect(result.current.activeValue).toBe('grace');
+    act(() => result.current.move(1));
+    rerender({ options: ROWS, query: 'a', filterOptions: rank });
+    expect(result.current.options.map((row) => row.value)).toEqual(['ada', 'alan', 'barbara', 'grace']);
+    expect(result.current.activeValue).toBe('ada');
+    // Spaces around the text leave it the same text, so the highlight stays.
+    act(() => result.current.highlight('grace'));
+    rerender({ options: ROWS, query: 'a ', filterOptions: rank });
+    expect(result.current.activeValue).toBe('grace');
+  });
+
   it('keeps a highlight to its own scope', () => {
     const { result, rerender } = setup({ options: ROWS, query: '', scope: 'one' });
     act(() => result.current.highlight('grace'));
@@ -150,13 +185,31 @@ describe('useOptionList async options', () => {
     expect(result.current.loading).toBe(false);
   });
 
+  it('loads for the trimmed query, so surrounding spaces load nothing new', async () => {
+    const { calls, loadOptions } = manualLoader();
+    const { rerender } = setup({ loadOptions, query: ' jo' });
+    rerender({ loadOptions, query: 'jo ' });
+    expect(calls.map((call) => call.query)).toEqual(['jo']);
+  });
+
+  it('warns in development that filterOptions is ignored next to a loader, and not for options alone', () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { loadOptions } = manualLoader();
+    const { rerender } = setup({ loadOptions, options: ROWS, query: 'a' });
+    expect(warn).not.toHaveBeenCalled();
+    rerender({ loadOptions, filterOptions: (rows) => rows, query: 'a' });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('filterOptions is ignored while loadOptions is set'));
+    warn.mockRestore();
+  });
+
   it('shows loaded rows as the loader returns them, without the sync filter', async () => {
     const { loadOptions, settle } = manualLoader();
-    const filter = vi.fn(() => false);
-    const { result } = setup({ loadOptions, query: 'jdoe', filter });
+    const filterOptions = vi.fn(() => []);
+    const { result } = setup({ loadOptions, query: 'jdoe', filterOptions });
     await settle(0, (call) => call.resolve([{ value: 'john', label: 'John Doe' }]));
     expect(result.current.options.map((row) => row.value)).toEqual(['john']);
-    expect(filter).not.toHaveBeenCalled();
+    expect(filterOptions).not.toHaveBeenCalled();
   });
 
   it('keeps the last rows of its scope on show while the next query loads, with no row active', async () => {

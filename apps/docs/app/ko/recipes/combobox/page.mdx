@@ -50,7 +50,7 @@ import { ComboboxAuto, ComboboxCreate, ComboboxCreateMulti, ComboboxEmpty } from
 
 ## 비동기
 
-`loadOptions(query, signal)`이 옵션을 불러옵니다. 새 쿼리는 이전 컨트롤러를 중단하고 오래된 결과를 버립니다. 훅은 `loading`이 true인 동안 이전 목록을 유지합니다. 디바운스, 로딩, 다시 시도 외형은 레시피에 둡니다. 훅은 디바운스하지 않습니다.
+`loadOptions(query, signal)`이 앞뒤 공백을 뺀 텍스트에 맞는 옵션을 불러오고, 반환한 그대로 보여 줍니다. 그래서 일치 여부는 로더가 판단하며, 함께 넘긴 `filterOptions`는 무시되고 `options`는 시작 값처럼 레이블만 빌려줍니다. 새 쿼리는 이전 컨트롤러를 중단하고 오래된 결과를 버립니다. 훅은 `loading`이 true인 동안 이전 목록을 유지합니다. 디바운스, 로딩, 다시 시도 외형은 레시피에 둡니다. 훅은 디바운스하지 않습니다.
 
 `fail`을 입력하면 오류 행을 볼 수 있습니다.
 

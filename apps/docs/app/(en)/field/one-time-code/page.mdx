@@ -26,7 +26,7 @@ A press on a box selects its character, so typing replaces it. A press on an emp
 
 ## In a form
 
-The input is the field's native, validated control, so it sends its text under the field's `name` and takes `required` and the other native attributes. It has `maxLength` equal to `length`. A code that is not empty and shorter than `length` is flagged as too short, whether a person typed it or your code set it, because the browser's own `tooShort` skips a value a script writes. An empty code is the job of `required`. The problem has `kind: 'customError'`, not `'tooShort'`, and its message is the `tooShort` string. While the code is short, that message wins over a `Field.Root` `customValidity`, since the innermost owner comes first. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, such as "Use at least 8 characters", and focus goes to the input.
+The input is the field's native, validated control, so it sends its text under the field's `name` and takes `required` and the other native attributes. A code that is not empty and shorter than `length` is flagged as too short, whether a person typed it or your code set it, because the browser's own `tooShort` skips a value a script writes. An empty code is the job of `required`. The problem has `kind: 'customError'`, not `'tooShort'`, and its message is the `tooShort` string. While the code is short, that message wins over a `Field.Root` `customValidity`, since the innermost owner comes first. Inside a [Form.Root](/form) the problem shows in the field's `ErrorMessage.Root` in the page's language, such as "Use at least 8 characters", and focus goes to the input.
 
 <Example of={FieldOneTimeCodeForm} block />
 

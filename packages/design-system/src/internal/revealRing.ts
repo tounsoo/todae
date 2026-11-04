@@ -96,5 +96,7 @@ export function revealRing(area: HTMLElement, target: EventTarget | null) {
       : box.right + pad('Right') > portRight
         ? box.right + pad('Right') - portRight
         : 0;
-  if (dx || dy) area.scrollBy({ left: dx / scale, top: dy / scale, behavior: 'instant' });
+  // Whole pixels, rounded away from zero: WebKit truncates a scroll offset, which would leave a ring on a fractional position cut by up to a pixel.
+  const whole = (d: number) => Math.sign(d) * Math.ceil(Math.abs(d) - 0.01);
+  if (dx || dy) area.scrollBy({ left: whole(dx / scale), top: whole(dy / scale), behavior: 'instant' });
 }

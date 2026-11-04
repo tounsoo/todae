@@ -1,5 +1,4 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp } from '@vitest/browser/context';
 import { Activity, useState, type ReactNode } from 'react';
 import { expect } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
@@ -11,12 +10,6 @@ import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
-export function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
-    features,
-  });
-}
-
 export function Themed({ dir, children }: { dir?: 'rtl'; children: ReactNode }) {
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir}>

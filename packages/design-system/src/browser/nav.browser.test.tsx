@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
 import { Nav } from '../components/Nav.js';
 import { ScrollArea } from '../components/ScrollArea.js';
+import { emulateMedia } from '../test/media.js';
 
 function Docs({ dir }: { dir?: 'rtl' }) {
   return (
@@ -38,13 +39,6 @@ function Docs({ dir }: { dir?: 'rtl' }) {
 }
 
 const box = (el: Element) => el.getBoundingClientRect();
-
-/** vitest types the session without its methods; Playwright's session has `send`. */
-function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
-    features,
-  });
-}
 
 const toggle = (name: string) => screen.getByText(name).closest('summary')!;
 

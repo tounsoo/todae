@@ -50,7 +50,7 @@ export type RegionPointerHandlers = {
  * which the browser has already aimed at what was under the finger. While
  * such a pointer is down on the region, `pressed` holds the timers. Each
  * pointer counts on its own: a mouse can rest on the stack while a finger
- * taps it. `syncHovered` reads hover again a frame later, for a resting
+ * taps it. `syncHovered` reads hover again a frame later (and once more, if it still shows), for a resting
  * pointer that something moved or removed from under it, which sends no
  * pointerleave; it runs by itself when `listKey` changes.
  */
@@ -71,15 +71,24 @@ export function useRegionPointer(
   const syncHovered = useCallback(() => {
     const section = sectionRef.current;
     if (!section) return;
-    const frame = requestAnimationFrame(() => {
-      try {
-        if (section.matches(':hover')) return;
-        hoverIds.current.clear();
-        setHovered(false);
-      } catch {
-        // An engine without :hover keeps what the pointer events said.
-      }
-    });
+    let frame = 0;
+    // Hover follows the pointer only after the engine's next synthesized move, which Firefox runs after
+    // this frame's callbacks, so a hover still shown is read once more a frame later.
+    const check = (again: boolean) => {
+      frame = requestAnimationFrame(() => {
+        try {
+          if (section.matches(':hover')) {
+            if (again) check(false);
+            return;
+          }
+          hoverIds.current.clear();
+          setHovered(false);
+        } catch {
+          // An engine without :hover keeps what the pointer events said.
+        }
+      });
+    };
+    check(true);
     return () => cancelAnimationFrame(frame);
   }, [sectionRef]);
 

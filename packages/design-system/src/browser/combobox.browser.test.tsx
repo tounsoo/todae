@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   BottomSheet,
@@ -36,6 +36,9 @@ async function axNames(role: string): Promise<string[]> {
 
 afterEach(cleanup);
 
+// For tests that read Chromium's own accessibility tree over CDP. Firefox and WebKit have no CDP to read theirs.
+const axIt = it.runIf(server.browser === 'chromium');
+
 const FRAMEWORKS: ComboboxOption[] = [
   { value: 'react', label: 'React' },
   { value: 'redux', label: 'Redux' },
@@ -61,7 +64,7 @@ function LabelledBox() {
 }
 
 describe('useCombobox listbox name', () => {
-  it('names the listbox by the label, not by the typed text', async () => {
+  axIt('names the listbox by the label, not by the typed text', async () => {
     render(<LabelledBox />);
     await userEvent.click(screen.getByRole('combobox'));
     await userEvent.keyboard('re');
@@ -112,14 +115,14 @@ function PaletteBox() {
 }
 
 describe('useCombobox listbox name in a sheet or dialog', () => {
-  it('names a sheet\'s listbox by the label beside the trigger', async () => {
+  axIt('names a sheet\'s listbox by the label beside the trigger', async () => {
     render(<SheetBox />);
     await userEvent.click(screen.getByText('Choose'));
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
     await expect.poll(() => axNames('listbox')).toEqual(['Framework']);
   });
 
-  it('names a listbox with no visible label by the aria-label passed to getListboxProps', async () => {
+  axIt('names a listbox with no visible label by the aria-label passed to getListboxProps', async () => {
     render(<PaletteBox />);
     await userEvent.click(screen.getByRole('button', { name: 'Open palette' }));
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
@@ -129,7 +132,7 @@ describe('useCombobox listbox name in a sheet or dialog', () => {
 });
 
 describe('useCombobox trigger name', () => {
-  it('names a sheet trigger by the label and its own text', async () => {
+  axIt('names a sheet trigger by the label and its own text', async () => {
     render(<SheetBox />);
     await expect.poll(() => axNames('button')).toContain('Framework Choose');
   });

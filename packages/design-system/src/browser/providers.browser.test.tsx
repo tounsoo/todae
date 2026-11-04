@@ -1,16 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, Card, Checkbox, DensityProvider, ThemeProvider, type ThemeOverride } from '../index.js';
 import { measureContrast } from '../providers/overrideContrast.js';
-
-/** vitest types the session without its methods; Playwright's session has `send`. */
-function emulateMedia(features: { name: string; value: string }[]) {
-  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
-    features,
-  });
-}
+import { emulateMedia } from '../test/media.js';
 
 function cssVar(element: Element, name: string): string {
   return getComputedStyle(element).getPropertyValue(name).trim();
@@ -118,7 +112,8 @@ describe('ThemeProvider overrides in a browser', () => {
       </div>,
     );
     const text = screen.getByTestId('text');
-    expect(getComputedStyle(text).fontFamily).toBe('"Courier New"');
+    // Chromium quotes a family name with a space; Firefox and WebKit don't.
+    expect(getComputedStyle(text).fontFamily.replaceAll('"', '')).toBe('Courier New');
     expect(cssVar(text, '--todae-text-font-family')).toContain('Georgia');
   });
 

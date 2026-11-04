@@ -1,16 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import type { CSSProperties } from 'react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import { Avatar, Message, Prose } from '../index.js';
-
-/** vitest types the session without its methods; Playwright's session has `send`. */
-const session = () => cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
-
-function emulateMedia(features: { name: string; value: string }[]) {
-  return session().send('Emulation.setEmulatedMedia', { features });
-}
+import { emulateMedia } from '../test/media.js';
 
 const LARGE = { '--todae-avatar-size': '2.5rem' } as CSSProperties;
 

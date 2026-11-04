@@ -412,6 +412,7 @@ export {
 export {
   useCombobox,
   type ComboboxCloseReason,
+  type ComboboxFilterOptions,
   type ComboboxItem,
   type ComboboxOption,
   type UseComboboxMultipleOptions,

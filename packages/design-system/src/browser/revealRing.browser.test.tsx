@@ -1,6 +1,6 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover.js';
@@ -15,6 +15,7 @@ import { ScrollArea } from '../components/ScrollArea.js';
 import { Switch } from '../components/Switch.js';
 import { Tree } from '../components/Tree.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { emulateMedia } from '../test/media.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -201,8 +202,7 @@ describe('focus rings in a scrolling container', () => {
     });
 
     it(`scrolls ${name} to show the whole ring of a Field.OneTimeCode box in forced colors`, async () => {
-      const session = cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
-      await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] });
+      await emulateMedia([{ name: 'forced-colors', value: 'active' }]);
       try {
         render(
           <Themed>
@@ -230,7 +230,7 @@ describe('focus rings in a scrolling container', () => {
         });
         expect(cutEdges(slot, area())).toEqual([]);
       } finally {
-        await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: '' }] });
+        await emulateMedia([]);
       }
     });
 
@@ -423,11 +423,13 @@ describe('focus rings in a scrolling container', () => {
     await waitFor(() => expect(input.closest(':popover-open')).not.toBeNull());
     input.blur();
     area.scrollTop = 300;
+    // Read back: an engine may snap the offset to a device pixel.
+    const before = area.scrollTop;
     await userEvent.keyboard('{Shift}');
     input.focus({ preventScroll: true });
     expect(input.matches(':focus-visible')).toBe(true);
     // The top layer draws the popover at the top of the page, above the area.
     expect(cutEdges(input, area)).toContain('top');
-    expect(area.scrollTop).toBe(300);
+    expect(area.scrollTop).toBe(before);
   });
 });
