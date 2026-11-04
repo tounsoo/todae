@@ -401,8 +401,12 @@ function revealInScrollBox(option: HTMLElement) {
   const style = doc.defaultView!.getComputedStyle(box);
   const boxRect = box.getBoundingClientRect();
   // Measured boxes are scaled while a popover grows open; layout lengths and
-  // scrollTop are not, so measured lengths are divided back by the scale.
-  const scale = box instanceof HTMLElement && box.offsetHeight > 0 ? boxRect.height / box.offsetHeight : 1;
+  // scrollTop are not, so measured lengths are divided back by the scale. A
+  // height off by less than a pixel is offsetHeight's rounding, not a scale.
+  const scale =
+    box instanceof HTMLElement && box.offsetHeight > 0 && Math.abs(boxRect.height - box.offsetHeight) > 1
+      ? boxRect.height / box.offsetHeight
+      : 1;
   const inset = box.clientTop + px(style.paddingTop) + scrollPadding(style.scrollPaddingTop, box);
   const top = boxRect.top + inset * scale;
   const bottom =

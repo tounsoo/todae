@@ -69,8 +69,9 @@ export function revealRing(area: HTMLElement, target: EventTarget | null) {
   const box = ringed.getBoundingClientRect();
   const port = area.getBoundingClientRect();
   // Rects are on screen, sizes and scrolling are not: a popover still growing
-  // open is scaled, so measure in screen pixels and scroll in its own.
-  const scale = area.offsetHeight > 0 && port.height > 0 ? port.height / area.offsetHeight : 1;
+  // open is scaled, so measure in screen pixels and scroll in its own. A
+  // height off by less than a pixel is offsetHeight's rounding, not a scale.
+  const scale = area.offsetHeight > 0 && Math.abs(port.height - area.offsetHeight) > 1 ? port.height / area.offsetHeight : 1;
   const pad = (side: 'Top' | 'Right' | 'Bottom' | 'Left') =>
     Math.max(room, Number.parseFloat(style[`scrollPadding${side}`]) || 0) * scale;
   const portTop = port.top + area.clientTop * scale;
