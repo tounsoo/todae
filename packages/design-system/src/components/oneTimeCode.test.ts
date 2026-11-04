@@ -144,7 +144,7 @@ describe('reconcile', () => {
         for (let end = start; end <= value.length; end++) {
           for (const text of ['a', 'b', 'aa', 'ab', 'aab', 'ba-b', 'abababa']) {
             const edit = editOf(value, { start, end }, text, options);
-            // What a composition leaves in the input, which has no maxLength while it runs.
+            // What a composition leaves in the input, which has no maxlength.
             const typed = value.slice(0, start) + text + value.slice(end);
             expect(reconcile(value, typed, options, { start, end })).toBe(edit ? applyEdit(value, edit) : value);
             if (edit) expect(reconcile(value, applyEdit(value, edit), options)).toBe(applyEdit(value, edit));

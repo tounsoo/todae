@@ -177,7 +177,7 @@ export function OneTimeCode({
     const el = input.current;
     if (!el) return;
     const doc = el.ownerDocument;
-    // Every insert goes through the rule, typing too, so maxLength never decides where text lands.
+    // Every insert goes through the rule, typing too, and the input has no maxlength.
     function onBeforeInput(event: InputEvent) {
       const { inputType } = event;
       insertAt.current = !inserting.current && inputType.startsWith('insert') ? { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 } : null;
@@ -195,15 +195,12 @@ export function OneTimeCode({
     }
     function onCompositionStart() {
       composition.current = { start: latest.current.value, selection: { start: el!.selectionStart ?? 0, end: el!.selectionEnd ?? 0 }, reported: null, heard: [] };
-      // Chromium cuts the whole commit on a full code otherwise. Set on the element, not through React, so it is gone before the first composed text lands.
-      el!.removeAttribute('maxlength');
     }
     function onCompositionEnd() {
       const saved = composition.current;
       // Cleared first, so the write below reaches onChange as an edit.
       composition.current = null;
       const { characters, length, value } = latest.current;
-      el!.setAttribute('maxlength', String(length));
       // Before any return, so the boxes never stay on a composition that ended. React then writes `value` over the live text, which also clears the input's undo history.
       setComposing(null);
       if (!saved) return;
@@ -341,7 +338,8 @@ export function OneTimeCode({
         type="text"
         inputMode={characters === 'digits' ? 'numeric' : 'text'}
         autoComplete={autoComplete}
-        maxLength={length}
+        // No maxlength: WebKit cuts typed text to it before beforeinput, so a key at a caret inside a full code
+        // would reach the rule as nothing, and Chromium cuts a whole composition. editOf and reconcile keep the length.
         pattern={characters === 'digits' ? '[0-9]*' : '[A-Za-z0-9]*'}
         spellCheck={false}
         autoCorrect="off"

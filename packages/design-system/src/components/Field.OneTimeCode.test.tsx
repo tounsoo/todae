@@ -52,7 +52,8 @@ describe('Field.OneTimeCode', () => {
     expect(input().type).toBe('text');
     expect(input().autocomplete).toBe('one-time-code');
     expect(input().getAttribute('inputmode')).toBe('numeric');
-    expect(input().maxLength).toBe(6);
+    // No maxlength: the component keeps the length itself (ARCHITECTURE).
+    expect(input().maxLength).toBe(-1);
     expect(input().minLength).toBe(-1);
     expect(input().pattern).toBe('[0-9]*');
     expect(input().getAttribute('spellcheck')).toBe('false');
@@ -63,7 +64,7 @@ describe('Field.OneTimeCode', () => {
   it('takes its length and characters from props', () => {
     render(<Code length={4} characters="alphanumeric" />);
     expect(input().getAttribute('inputmode')).toBe('text');
-    expect(input().maxLength).toBe(4);
+    expect(input().maxLength).toBe(-1);
     expect(input().pattern).toBe('[A-Za-z0-9]*');
   });
 
