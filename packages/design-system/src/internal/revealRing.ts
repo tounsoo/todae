@@ -66,18 +66,21 @@ export function revealRing(area: HTMLElement, target: EventTarget | null) {
 
   const { ringed, room } = ringOf(area, target);
   const style = getComputedStyle(area);
-  const pad = (side: 'Top' | 'Right' | 'Bottom' | 'Left') =>
-    Math.max(room, Number.parseFloat(style[`scrollPadding${side}`]) || 0);
   const box = ringed.getBoundingClientRect();
   const port = area.getBoundingClientRect();
-  const portTop = port.top + area.clientTop;
-  const portLeft = port.left + area.clientLeft;
-  const portBottom = portTop + area.clientHeight;
-  const portRight = portLeft + area.clientWidth;
+  // Rects are on screen, sizes and scrolling are not: a popover still growing
+  // open is scaled, so measure in screen pixels and scroll in its own.
+  const scale = area.offsetHeight > 0 && port.height > 0 ? port.height / area.offsetHeight : 1;
+  const pad = (side: 'Top' | 'Right' | 'Bottom' | 'Left') =>
+    Math.max(room, Number.parseFloat(style[`scrollPadding${side}`]) || 0) * scale;
+  const portTop = port.top + area.clientTop * scale;
+  const portLeft = port.left + area.clientLeft * scale;
+  const portBottom = portTop + area.clientHeight * scale;
+  const portRight = portLeft + area.clientWidth * scale;
   // Like Chrome, leave an axis alone when the box and its ring can't fit, so a
   // tall list or panel keeps the part in view instead of jumping to an edge.
-  const fitsY = box.height + pad('Top') + pad('Bottom') <= area.clientHeight;
-  const fitsX = box.width + pad('Left') + pad('Right') <= area.clientWidth;
+  const fitsY = box.height + pad('Top') + pad('Bottom') <= area.clientHeight * scale;
+  const fitsX = box.width + pad('Left') + pad('Right') <= area.clientWidth * scale;
   const dy = !fitsY
     ? 0
     : box.top - pad('Top') < portTop
@@ -92,5 +95,5 @@ export function revealRing(area: HTMLElement, target: EventTarget | null) {
       : box.right + pad('Right') > portRight
         ? box.right + pad('Right') - portRight
         : 0;
-  if (dx || dy) area.scrollBy({ left: dx, top: dy, behavior: 'instant' });
+  if (dx || dy) area.scrollBy({ left: dx / scale, top: dy / scale, behavior: 'instant' });
 }

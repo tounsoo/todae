@@ -48,6 +48,12 @@ function cutEdges(el: HTMLElement, area: HTMLElement): string[] {
   return edges;
 }
 
+/** Waits out open animations, such as a popover growing open, so rects and sizes agree. */
+async function motionSettled() {
+  const finite = document.getAnimations().filter((a) => a.effect?.getComputedTiming().endTime !== Infinity);
+  await Promise.all(finite.map((a) => a.finished.catch(() => undefined)));
+}
+
 /** Scrolls `area` so `el`'s own box ends a pixel inside its bottom edge: wholly visible, so focus does not scroll it. */
 function justFit(area: HTMLElement, el: HTMLElement) {
   const port = area.getBoundingClientRect();
@@ -141,6 +147,7 @@ describe('focus rings in a scrolling container', () => {
       render(<Themed>{ui(<>{spacer}{field}{tail}</>)}</Themed>);
       const input = await screen.findByRole('textbox', { name: 'Name' });
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      await motionSettled();
       justFit(area(), input);
       const before = area().scrollTop;
       await keyboardFocus(input);
@@ -155,6 +162,7 @@ describe('focus rings in a scrolling container', () => {
       render(<Themed>{ui(<>{spacer}<Checkbox.Root>Archived</Checkbox.Root>{tail}</>)}</Themed>);
       const box = await screen.findByRole('checkbox', { name: 'Archived' });
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      await motionSettled();
       justFit(area(), box);
       await keyboardFocus(box);
       const indicator = box.nextElementSibling as HTMLElement;
@@ -178,6 +186,7 @@ describe('focus rings in a scrolling container', () => {
       );
       const input = await screen.findByRole('textbox', { name: 'Code' });
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      await motionSettled();
       // Without the area's own scroll padding, only the reveal makes room for the ring.
       area().style.scrollPadding = '0';
       justFit(area(), input);
@@ -210,6 +219,7 @@ describe('focus rings in a scrolling container', () => {
         );
         const input = await screen.findByRole('textbox', { name: 'Code' });
         await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+        await motionSettled();
         area().style.scrollPadding = '0';
         justFit(area(), input);
         await keyboardFocus(input);
@@ -240,6 +250,7 @@ describe('focus rings in a scrolling container', () => {
       );
       const axis = await screen.findByRole('slider', { name: 'Saturation' });
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      await motionSettled();
       // The input is a pixel at the area's top-left corner; the thumb sits well below it.
       justFit(area(), axis);
       await keyboardFocus(axis);
@@ -261,6 +272,7 @@ describe('focus rings in a scrolling container', () => {
       );
       const tall = await screen.findByLabelText('Tall');
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      await motionSettled();
       area().scrollTop = 1000;
       await keyboardFocus(tall);
       expect(tall.matches(':focus-visible')).toBe(true);
