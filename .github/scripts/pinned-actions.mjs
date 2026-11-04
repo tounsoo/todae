@@ -24,6 +24,9 @@ export function findUnpinned(text) {
     const deref = (node) => (isAlias(node) ? node.resolve(doc) : node);
     const map = (node) => (isMap(deref(node)) ? deref(node) : null);
     const check = (owner) => {
+      // GitHub doesn't read merge keys, and a merged uses: would hide here, so a merge key fails.
+      const merge = owner?.items.find((item) => isScalar(item.key) && item.key.value === '<<');
+      if (merge) hits.push({ line: lineCounter.linePos(merge.key.range[0]).line, ref: '<< (merge key)' });
       const pair = owner?.items.find((item) => isScalar(item.key) && item.key.value === 'uses');
       if (!pair) return;
       const value = deref(pair.value);

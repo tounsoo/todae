@@ -83,6 +83,14 @@ test('anchored steps and composite action steps are read, with the line of the u
   assert.deepEqual(findUnpinned(composite), [{ line: 5, ref: 'actions/setup-node@v4' }]);
 });
 
+test('a merge key in a job or step fails, so it cannot hide a uses:', () => {
+  const merged = 'x: &s {uses: actions/checkout@v4}\njobs:\n  a:\n    steps:\n      - <<: *s\n        name: m\n  b:\n    <<: *s\n';
+  assert.deepEqual(findUnpinned(merged), [
+    { line: 5, ref: '<< (merge key)' },
+    { line: 8, ref: '<< (merge key)' },
+  ]);
+});
+
 test('a file that is not YAML is reported, not skipped', () => {
   const dir = mkdtempSync(join(tmpdir(), 'pinned-actions-'));
   try {
