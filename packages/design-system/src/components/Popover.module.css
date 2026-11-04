@@ -35,10 +35,10 @@
   /* Its first frames as it shows, and its fade as it closes. */
   .content:not([data-entered]) {
     opacity: 0;
-    pointer-events: none;
   }
 
   .content[data-todae-exiting] {
+    pointer-events: none;
     transition-duration: var(--todae-popover-motion-duration-exit);
     transition-timing-function: var(--todae-popover-motion-easing-exit);
   }

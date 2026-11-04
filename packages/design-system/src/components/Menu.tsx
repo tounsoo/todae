@@ -513,15 +513,16 @@ function Content({
   // A request that comes while it fades, and that its owner turns down, does
   // not move it.
   const at = !open && fading ? kept : ctx.context;
-  // A context request that comes while the menu is already open shows its box
-  // after the menu, which can only anchor to what is earlier in the top
-  // layer, so the menu is shown again in front of it, keeping focus.
-  const anchored = useRef({ open: false, box: false });
+  // A context request that comes while the menu is already shown, open or
+  // fading out, shows its box after the menu, which can only anchor to what
+  // is earlier in the top layer, so the menu is shown again in front of it,
+  // keeping focus.
+  const anchored = useRef({ shown: false, box: false });
   useLayoutEffect(() => {
     const before = anchored.current;
-    anchored.current = { open, box: Boolean(at) };
     const el = localRef.current;
-    if (!el || !open || !at || !before.open || before.box || !isPopoverOpen(el)) return;
+    anchored.current = { shown: Boolean(el && isPopoverOpen(el)), box: Boolean(at) };
+    if (!el || !open || !at || !before.shown || before.box || !isPopoverOpen(el)) return;
     const active = document.activeElement;
     el.hidePopover();
     el.showPopover();

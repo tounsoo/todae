@@ -1089,6 +1089,11 @@ describe('A context menu closing with an exit fade', () => {
   it('stays anchored at the box it opened at until the fade ends', () => {
     // Popover.module.css gives the menu its exit (200ms by default); jsdom reads no
     // stylesheet, so supply the computed transition the browser would.
+    // The menu is drawn two frames after it shows; pass them at once.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
     const real = window.getComputedStyle.bind(window);
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
       const style = real(el, pseudo);
@@ -1137,6 +1142,11 @@ describe('A context menu closing with an exit fade', () => {
 
 describe('Menu motion', () => {
   function fakeExit() {
+    // The menu is drawn two frames after it shows; pass them at once.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
     const real = window.getComputedStyle.bind(window);
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
       const style = real(el, pseudo);
@@ -1284,6 +1294,11 @@ describe('Menu motion while it fades', () => {
 
   /** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
   function markAwareFade(match: (el: HTMLElement) => boolean) {
+    // The menu is drawn two frames after it shows; pass them at once.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
     const real = window.getComputedStyle.bind(window);
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
       const style = real(el, pseudo);

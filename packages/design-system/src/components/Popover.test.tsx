@@ -227,6 +227,11 @@ describe('Popover closing with an exit fade', () => {
   });
 
   function stubOpacityFade() {
+    // The popover is drawn two frames after it shows; pass them at once.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
     const real = window.getComputedStyle.bind(window);
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element) => {
       const style = real(el);

@@ -60,6 +60,25 @@ describe('Menu.ContextTrigger in a browser', () => {
     expect(region.hasAttribute('data-open')).toBe(true);
   });
 
+  it('opens at the pointer when asked inside the fade of a trigger-opened close', async () => {
+    render(
+      <Themed>
+        <FileMenu withTrigger />
+      </Themed>,
+    );
+    const region = screen.getByTestId('region');
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+    await waitFor(() => expect(menu().hasAttribute('data-entered')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    expect(menu().hasAttribute('data-todae-exiting')).toBe(true);
+    await userEvent.click(region, { button: 'right', position: { x: 150, y: 40 } });
+    await waitFor(() => expect(menu().hasAttribute('data-todae-exiting')).toBe(false));
+    // Shown again after its box, so it can anchor there, not by the trigger.
+    const r = region.getBoundingClientRect();
+    await waitFor(() => expect(Math.abs(menu().getBoundingClientRect().left - (r.left + 150))).toBeLessThanOrEqual(1));
+    expect(menu().getBoundingClientRect().top).toBeLessThan(r.top + 40 + 16);
+  });
+
   it('keeps the point under a transformed ancestor', async () => {
     render(
       <Themed>

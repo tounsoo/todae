@@ -125,10 +125,45 @@ describe('usePopoverSync with presence', () => {
     expect(el.hasAttribute('data-todae-entering')).toBe(false);
   });
 
-  it('drops its entering mark when it closes inside those frames', () => {
+  it('hides at once and tells when it closes inside those frames, never drawn', () => {
+    fade('0.2s');
+    const onExited = vi.fn();
+    const { getByTestId, rerender } = render(<Moving open onExited={onExited} />);
+    rerender(<Moving open={false} onExited={onExited} />);
+    const el = getByTestId('p');
+    expect(el.hasAttribute('data-todae-entering')).toBe(false);
+    expect(el.hasAttribute('data-popover-open')).toBe(false);
+    expect(el.inert).toBe(false);
+    expect(onExited).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an inert its owner set through a close and a reopen', async () => {
+    fade('0.2s');
+    function Owned({ open }: { open: boolean }) {
+      const ref = useRef<HTMLDivElement>(null);
+      usePopoverSync(ref, open, {});
+      return <div ref={ref} popover="manual" data-testid="p" inert />;
+    }
+    const { getByTestId, rerender } = render(<Owned open />);
+    const el = getByTestId('p');
+    await act(frames);
+    rerender(<Owned open={false} />);
+    rerender(<Owned open />);
+    expect(el.inert).toBe(true);
+    rerender(<Owned open={false} />);
+    endFade(el);
+    expect(el.inert).toBe(true);
+  });
+
+  it('fades again after turning back from a close that lost its anchor', async () => {
+    fade('0.2s');
     const { getByTestId, rerender } = render(<Moving open />);
+    const el = getByTestId('p');
+    await act(frames);
     rerender(<Moving open={false} />);
-    expect(getByTestId('p').hasAttribute('data-todae-entering')).toBe(false);
+    el.setAttribute('data-todae-unanchored', '');
+    rerender(<Moving open />);
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
   });
 
   it('stays shown and inert through its exit fade, then hides and tells', async () => {

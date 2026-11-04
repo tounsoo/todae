@@ -10,6 +10,20 @@ export function isPopoverOpen(el: HTMLElement): boolean {
 // in front of it.
 const held = /* @__PURE__ */ new WeakSet<HTMLElement>();
 
+// The popovers this hook made inert for their exit, so an inert the owner
+// set stays.
+const madeInert = /* @__PURE__ */ new WeakSet<HTMLElement>();
+
+function setExitInert(el: HTMLElement, on: boolean): void {
+  if (on) {
+    if (el.inert) return;
+    el.inert = true;
+    madeInert.add(el);
+  } else if (madeInert.delete(el)) {
+    el.inert = false;
+  }
+}
+
 /** A popover that moves in and out, as Popover and Menu do. */
 export type PopoverPresence = {
   /** Runs once a close finishes: its exit fade ended, or there was none. */
@@ -53,18 +67,21 @@ export function usePopoverSync(
         if (closing) onExitedRef.current?.();
         return;
       }
-      if (!animated) {
+      // One that closes inside its first frames was never drawn: nothing
+      // to fade.
+      if (!animated || !el.hasAttribute('data-entered')) {
         el.hidePopover();
+        if (animated && closing) onExitedRef.current?.();
         return;
       }
       el.removeAttribute('data-entered');
       el.setAttribute('data-todae-exiting', '');
       // Still shown while it fades, but out of reach: no press, focus or
       // screen reader lands in it.
-      el.inert = true;
+      setExitInert(el, true);
       return whenExited(el, 'opacity', () => {
         el.removeAttribute('data-todae-exiting');
-        el.inert = false;
+        setExitInert(el, false);
         if (isPopoverOpen(el)) el.hidePopover();
         onExitedRef.current?.();
       });
@@ -72,7 +89,9 @@ export function usePopoverSync(
     const returning = el.hasAttribute('data-todae-exiting');
     if (returning) {
       el.removeAttribute('data-todae-exiting');
-      el.inert = false;
+      // A close that lost its anchor turns back with its fade.
+      el.removeAttribute('data-todae-unanchored');
+      setExitInert(el, false);
     }
     if (!isPopoverOpen(el)) {
       // A close that lost its anchor went at once; this open fades in again.

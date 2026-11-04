@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, useState } from 'react';
@@ -173,7 +173,8 @@ describe('mention peek in a browser', () => {
     await userEvent.click(mention);
     expect(screen.getByRole('dialog', { name: 'Mina Park' })).toBeTruthy();
     await userEvent.click(mention);
-    expect(screen.queryByRole('dialog')).toBeNull();
+    // It fades out, then goes.
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   it('anchors the list, the caret peek, and the sent peek to the mention', async () => {
