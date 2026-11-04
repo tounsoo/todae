@@ -45,6 +45,8 @@ const rootMenu = () => screen.getByRole('menu', { name: 'Actions', hidden: true 
 // By its trigger's aria-controls: a closed submenu is hidden, so it has no
 // accessible name to find it by.
 const submenu = () => document.getElementById(item('Share').getAttribute('aria-controls')!)!;
+/** Waits out the open scale on both menus, so a box measured is where the menu sits. */
+const settled = () => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
 const shown = (el: HTMLElement) => el.matches(':popover-open') && el.hasAttribute('data-entered');
 
 /** Opens the menu from its trigger with a click, then moves focus to Share. */
@@ -66,6 +68,7 @@ describe('Menu submenus in a browser', () => {
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(shown(submenu())).toBe(true));
     expect(document.activeElement).toBe(item('Copy link'));
+    await settled();
     const outer = rootMenu().getBoundingClientRect();
     const sub = submenu().getBoundingClientRect();
     const share = item('Share').getBoundingClientRect();
@@ -83,6 +86,7 @@ describe('Menu submenus in a browser', () => {
     await openOnShare();
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(shown(submenu())).toBe(true));
+    await settled();
     const outer = rootMenu().getBoundingClientRect();
     const sub = submenu().getBoundingClientRect();
     expect(Math.abs(sub.right - outer.left)).toBeLessThanOrEqual(1);
@@ -101,6 +105,7 @@ describe('Menu submenus in a browser', () => {
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => expect(shown(submenu())).toBe(true));
     expect(document.activeElement).toBe(item('Copy link'));
+    await settled();
     const outer = rootMenu().getBoundingClientRect();
     const sub = submenu().getBoundingClientRect();
     expect(Math.abs(sub.right - outer.left)).toBeLessThanOrEqual(1);
