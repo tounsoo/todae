@@ -1,13 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { server, userEvent } from '@vitest/browser/context';
+import { userEvent } from '@vitest/browser/context';
 import { Activity, startTransition, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';
 import { Drilldown } from '../components/Drilldown.js';
 import { cleanupAll, dialog, openDialog, settled, SettingsDialog, Surfaced, surfaceOpen, Themed, view } from '../test/drilldown.js';
+import { settle } from '../test/settle.js';
 
-// In Firefox a click on a Drilldown trigger in a just-opened BottomSheet sometimes pushes nothing (#351).
-const skipBottomSheetInFirefox = (kind: string) => server.browser === 'firefox' && kind === 'BottomSheet';
+// Press only once the surface has entered. A BottomSheet holds still below the viewport for a couple of frames
+// before it slides up, so a press then counts it as stable and lands outside the page in Firefox (#351).
+async function openSurface() {
+  await waitFor(() => expect(surfaceOpen()).toBe(true));
+  await settle();
+}
 
 describe('Drilldown focus and surface reset in a browser', () => {
   it('focuses the first tab stop of a pushed view, or the view itself, and returns focus to the trigger', async () => {
@@ -25,11 +30,11 @@ describe('Drilldown focus and surface reset in a browser', () => {
   });
 
   for (const kind of ['Dialog', 'BottomSheet', 'Popover'] as const) {
-    it.skipIf(skipBottomSheetInFirefox(kind))(`starts an uncontrolled stack over with reason reset once the ${kind} around it finishes closing`, async () => {
+    it(`starts an uncontrolled stack over with reason reset once the ${kind} around it finishes closing`, async () => {
       const onValueChange = vi.fn();
       const ui = (open: boolean) => <Surfaced kind={kind} open={open} onValueChange={onValueChange} />;
       const { rerender } = render(ui(true));
-      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await openSurface();
       await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
       await settled();
       rerender(ui(false));
@@ -50,11 +55,11 @@ describe('Drilldown focus and surface reset in a browser', () => {
   }
 
   for (const kind of ['Dialog', 'BottomSheet', 'Popover'] as const) {
-    it.skipIf(skipBottomSheetInFirefox(kind))(`keeps the stack when the ${kind} around it opens again during its exit`, async () => {
+    it(`keeps the stack when the ${kind} around it opens again during its exit`, async () => {
       const onValueChange = vi.fn();
       const ui = (open: boolean) => <Surfaced kind={kind} open={open} onValueChange={onValueChange} />;
       const { rerender } = render(ui(true));
-      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await openSurface();
       await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
       await settled();
       rerender(ui(false));
@@ -66,18 +71,11 @@ describe('Drilldown focus and surface reset in a browser', () => {
       cleanupAll();
     });
 
-    it.skipIf(skipBottomSheetInFirefox(kind))(`reports no reset for a Drilldown the product unmounts or hides during the ${kind}'s exit`, async () => {
+    it(`reports no reset for a Drilldown the product unmounts or hides during the ${kind}'s exit`, async () => {
       for (const drilldown of ['gone', 'hidden'] as const) {
         const onValueChange = vi.fn();
         const { rerender } = render(<Surfaced kind={kind} open onValueChange={onValueChange} />);
-        await waitFor(() => expect(surfaceOpen()).toBe(true));
-        // A sheet still rising can move out from under the press in Firefox: press once it holds still.
-        await expect.poll(async () => {
-          const top = () => screen.getByRole('button', { name: 'Brand' }).getBoundingClientRect().top;
-          const before = top();
-          await new Promise(requestAnimationFrame);
-          return top() === before;
-        }).toBe(true);
+        await openSurface();
         await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
         await settled();
         rerender(<Surfaced kind={kind} open={false} onValueChange={onValueChange} />);
@@ -93,7 +91,7 @@ describe('Drilldown focus and surface reset in a browser', () => {
     ['BottomSheet', 'removed'],
     ['Dialog', 'hidden'],
   ] as const) {
-    it.skipIf(skipBottomSheetInFirefox(kind))(`reports no reset when the whole ${kind} is ${gone} during its exit`, async () => {
+    it(`reports no reset when the whole ${kind} is ${gone} during its exit`, async () => {
       const onValueChange = vi.fn();
       const ui = (open: boolean, mode: 'visible' | 'hidden' = 'visible') => (
         <Activity mode={mode}>
@@ -101,7 +99,7 @@ describe('Drilldown focus and surface reset in a browser', () => {
         </Activity>
       );
       const { rerender } = render(ui(true));
-      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await openSurface();
       await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
       await settled();
       rerender(ui(false));
@@ -121,7 +119,7 @@ describe('Drilldown focus and surface reset in a browser', () => {
     );
     const { rerender } = render(ui(true));
     try {
-      await waitFor(() => expect(surfaceOpen()).toBe(true));
+      await openSurface();
       await userEvent.click(screen.getByRole('button', { name: 'Brand' }));
       await settled();
       rerender(ui(false));

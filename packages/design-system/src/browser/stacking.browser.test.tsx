@@ -10,6 +10,7 @@ import { Popover } from '../components/Popover.js';
 import { Tooltip } from '../components/Tooltip.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { useTooltip } from '../hooks/useTooltip.js';
+import { settle } from '../test/settle.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -190,7 +191,9 @@ describe('BottomSheet drag in a browser', () => {
     const onClose = vi.fn();
     render(<DraggableSheet onClose={onClose} />);
     const grabber = await screen.findByRole('button', { name: 'Resize sheet' });
-    await waitFor(() => expect(grabber.getBoundingClientRect().height).toBeGreaterThan(0));
+    // Drag once the sheet has slid in. Before that it holds still below the viewport, where a drag in Firefox
+    // starts outside the page and never reaches the grabber (#356).
+    await settle();
     await userEvent.dragAndDrop(grabber, screen.getByTestId('floor'));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('drag'));
   });
