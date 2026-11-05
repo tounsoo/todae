@@ -1,0 +1,308 @@
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useRef, useState, type ReactNode } from 'react';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import * as api from '../index.js';
+import { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './Coachmark.js';
+import { inertOutside } from '../overlay/inertOutside.js';
+
+afterEach(cleanup);
+
+function Harness({
+  open: initial = true,
+  onOpenChange,
+  dismissOnBackdrop,
+  children,
+}: {
+  open?: boolean;
+  onOpenChange?: CoachmarkRootProps['onOpenChange'];
+  dismissOnBackdrop?: boolean;
+  children?: ReactNode;
+}) {
+  const target = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(initial);
+  return (
+    <>
+      <main>
+        <button type="button" data-testid="before">
+          Before
+        </button>
+        <section>
+          <button type="button" ref={target} onClick={() => setOpen(true)}>
+            Export
+          </button>
+          <button type="button">Beside</button>
+        </section>
+      </main>
+      <Coachmark.Root
+        targetRef={target}
+        open={open}
+        dismissOnBackdrop={dismissOnBackdrop}
+        onOpenChange={(next, reason) => {
+          onOpenChange?.(next, reason);
+          setOpen(next);
+        }}
+      >
+        <Coachmark.Title>New: export</Coachmark.Title>
+        <Coachmark.Description>Save the report as a file.</Coachmark.Description>
+        <Coachmark.Footer>{children ?? <Coachmark.Close>Got it</Coachmark.Close>}</Coachmark.Footer>
+      </Coachmark.Root>
+    </>
+  );
+}
+
+describe('Coachmark exports', () => {
+  it('exports its parts and close reasons', () => {
+    expect(api.Coachmark).toBe(Coachmark);
+    expect(Object.keys(Coachmark)).toEqual(['Root', 'Title', 'Description', 'Footer', 'Close']);
+    expectTypeOf<CoachmarkCloseReason>().toEqualTypeOf<'escape' | 'backdrop' | 'close-button'>();
+    expectTypeOf<CoachmarkRootProps>().toHaveProperty('targetRef');
+  });
+});
+
+describe('Coachmark', () => {
+  it('opens a named, described dialog beside the target, with no aria-modal', () => {
+    render(<Harness />);
+    const popup = screen.getByRole('dialog', { name: 'New: export' });
+    expect(document.getElementById(popup.getAttribute('aria-describedby')!)?.textContent).toBe('Save the report as a file.');
+    expect(popup.hasAttribute('aria-modal')).toBe(false);
+    expect(popup.hasAttribute('data-popover-open')).toBe(true);
+    const target = screen.getByRole('button', { name: 'Export' });
+    const name = target.style.getPropertyValue('anchor-name');
+    expect(name).toMatch(/^--todae-coachmark-/);
+    expect(popup.style.getPropertyValue('position-anchor')).toBe(name);
+  });
+
+  it('makes the page inert except the target, and lifts it on close', () => {
+    render(<Harness />);
+    const target = screen.getByRole('button', { name: 'Export' });
+    expect(target.closest('[inert]')).toBeNull();
+    expect(screen.getByTestId('before').hasAttribute('inert')).toBe(true);
+    expect(screen.getByText('Beside').hasAttribute('inert')).toBe(true);
+    expect(screen.getByRole('dialog').closest('[inert]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    // The anchor stays while it fades out, and goes with the coachmark.
+    expect(target.style.getPropertyValue('anchor-name')).toMatch(/^--todae-coachmark-/);
+  });
+
+  it('takes its anchor off the target as it unmounts', () => {
+    const { unmount } = render(<Harness />);
+    const target = screen.getByRole('button', { name: 'Export' });
+    unmount();
+    expect(target.style.getPropertyValue('anchor-name')).toBe('');
+  });
+
+  it('moves the anchor, the inert page and lost focus with a tour step', () => {
+    function Tour() {
+      const one = useRef<HTMLButtonElement>(null);
+      const two = useRef<HTMLButtonElement>(null);
+      const [at, setAt] = useState(0);
+      return (
+        <>
+          <button type="button" ref={one} onClick={() => setAt(1)}>
+            One
+          </button>
+          <button type="button" ref={two}>
+            Two
+          </button>
+          <Coachmark.Root targetRef={at === 0 ? one : two} defaultOpen>
+            <Coachmark.Title>Step {at + 1}</Coachmark.Title>
+            <Coachmark.Close>Got it</Coachmark.Close>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<Tour />);
+    const one = screen.getByRole('button', { name: 'One' });
+    const two = screen.getByRole('button', { name: 'Two' });
+    expect(two.hasAttribute('inert')).toBe(true);
+    expect(one.hasAttribute('inert')).toBe(false);
+    one.focus();
+    fireEvent.click(one);
+    const popup = screen.getByRole('dialog', { name: 'Step 2' });
+    expect(one.hasAttribute('inert')).toBe(true);
+    expect(two.hasAttribute('inert')).toBe(false);
+    expect(one.style.getPropertyValue('anchor-name')).toBe('');
+    expect(two.style.getPropertyValue('anchor-name')).toBe(popup.style.getPropertyValue('position-anchor'));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Got it' }));
+  });
+
+  it('keeps the target’s own popovers, such as its tooltip, usable', async () => {
+    function WithTip() {
+      const target = useRef<HTMLButtonElement>(null);
+      const [tip, setTip] = useState(false);
+      return (
+        <>
+          <span>
+            <button type="button" ref={target} onClick={() => setTip(true)}>
+              Export
+            </button>
+            {tip && <span popover="manual">Tip</span>}
+          </span>
+          <button type="button">Other</button>
+          <Coachmark.Root targetRef={target} defaultOpen aria-label="Tip">
+            <Coachmark.Close />
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<WithTip />);
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await act(async () => {});
+    expect(screen.getByText('Tip', { selector: 'span' }).hasAttribute('inert')).toBe(false);
+    expect(screen.getByText('Other').hasAttribute('inert')).toBe(true);
+  });
+
+  it('warns once in development when nothing names it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    function Unnamed() {
+      const target = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          <button type="button" ref={target}>
+            Export
+          </button>
+          <Coachmark.Root targetRef={target} defaultOpen>
+            <Coachmark.Close />
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<Unnamed />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes('Coachmark.Root has no name'))).toBe(true);
+    cleanup();
+    warn.mockClear();
+    render(<Harness />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes('no name'))).toBe(false);
+    warn.mockRestore();
+  });
+
+  it('moves focus into the popup and back where it was on close', async () => {
+    render(<Harness open={false} />);
+    const target = screen.getByRole('button', { name: 'Export' });
+    target.focus();
+    fireEvent.click(target);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Got it' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    await act(async () => {});
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('cycles Tab through the popup and the target only', () => {
+    render(
+      <Harness>
+        <button type="button">Back</button>
+        <button type="button">Next</button>
+      </Harness>,
+    );
+    const back = screen.getByRole('button', { name: 'Back' });
+    const next = screen.getByRole('button', { name: 'Next' });
+    const target = screen.getByRole('button', { name: 'Export' });
+    expect(document.activeElement).toBe(back);
+    fireEvent.keyDown(back, { key: 'Tab' });
+    expect(document.activeElement).toBe(next);
+    fireEvent.keyDown(next, { key: 'Tab' });
+    expect(document.activeElement).toBe(target);
+    fireEvent.keyDown(target, { key: 'Tab' });
+    expect(document.activeElement).toBe(back);
+    fireEvent.keyDown(back, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('closes on Escape and on its close part, with reasons', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<Harness onOpenChange={onOpenChange} />);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
+    unmount();
+    render(<Harness onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'close-button');
+  });
+
+  it('leaves a press on the dim page alone unless dismissOnBackdrop is set', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<Harness onOpenChange={onOpenChange} />);
+    fireEvent.pointerDown(document.body);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Export' }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    unmount();
+    render(<Harness onOpenChange={onOpenChange} dismissOnBackdrop />);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Export' }));
+    fireEvent.pointerDown(screen.getByRole('dialog'));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.pointerDown(document.body);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'backdrop');
+  });
+
+  it('keeps what the target opens, by aria-controls, usable', () => {
+    function WithMenu() {
+      const target = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          <button type="button" ref={target} aria-controls="menu">
+            Menu
+          </button>
+          <div id="menu">
+            <button type="button">Item</button>
+          </div>
+          <button type="button">Other</button>
+          <Coachmark.Root targetRef={target} defaultOpen aria-label="Tip">
+            <Coachmark.Close />
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<WithMenu />);
+    expect(screen.getByText('Item').closest('[inert]')).toBeNull();
+    expect(screen.getByText('Other').hasAttribute('inert')).toBe(true);
+    expect(screen.getByRole('dialog', { name: 'Tip' })).toBeTruthy();
+  });
+
+  it('gives the hole the target’s corners, grown by its padding', () => {
+    render(<Harness />);
+    const scrim = document.querySelector<HTMLElement>('[aria-hidden="true"][popover="manual"]');
+    expect(scrim?.style.borderTopLeftRadius).toContain('var(--_pad)');
+  });
+});
+
+describe('inertOutside', () => {
+  it('leaves an inert the page set, marks siblings added later, and unmarks only its own', async () => {
+    document.body.innerHTML = '<div id="a" inert></div><div id="b"></div><div><p id="keep"></p><p id="near"></p></div>';
+    const keep = document.getElementById('keep')!;
+    const release = inertOutside(() => [keep]);
+    expect(document.getElementById('b')!.hasAttribute('inert')).toBe(true);
+    expect(document.getElementById('near')!.hasAttribute('inert')).toBe(true);
+    const late = document.createElement('p');
+    keep.parentElement!.append(late);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(late.hasAttribute('inert')).toBe(true);
+    release();
+    expect(document.getElementById('a')!.hasAttribute('inert')).toBe(true);
+    expect(document.getElementById('b')!.hasAttribute('inert')).toBe(false);
+    expect(late.hasAttribute('inert')).toBe(false);
+    document.body.innerHTML = '';
+  });
+
+  it('keeps guest layers usable', () => {
+    document.body.innerHTML = '<div id="toast" data-todae-guest-layer></div><p id="keep"></p>';
+    const release = inertOutside(() => [document.getElementById('keep')!]);
+    expect(document.getElementById('toast')!.hasAttribute('inert')).toBe(false);
+    release();
+    document.body.innerHTML = '';
+  });
+
+  it('reaches a kept element in a shadow root', () => {
+    document.body.innerHTML = '<div id="host"></div><p id="other"></p>';
+    const host = document.getElementById('host')!;
+    const root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = '<button id="keep"></button><button id="near"></button>';
+    const release = inertOutside(() => [root.getElementById('keep')!]);
+    expect(host.hasAttribute('inert')).toBe(false);
+    expect(root.getElementById('near')!.hasAttribute('inert')).toBe(true);
+    expect(document.getElementById('other')!.hasAttribute('inert')).toBe(true);
+    release();
+    expect(root.getElementById('near')!.hasAttribute('inert')).toBe(false);
+    document.body.innerHTML = '';
+  });
+});

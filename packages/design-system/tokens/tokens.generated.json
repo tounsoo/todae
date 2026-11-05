@@ -7554,7 +7554,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "overlay.motion.easing.exit",
@@ -7568,7 +7568,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "overlay.scrim.bg",
@@ -7582,7 +7582,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they, Toast and Popover (with Menu) enter and exit with."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
     },
     {
       "path": "dialog.bg",
@@ -8367,6 +8367,90 @@
         "name": "contract"
       },
       "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it. It opens by growing from its trigger (motion.scale) and closes by shrinking back."
+    },
+    {
+      "path": "coachmark.cutout.padding",
+      "type": "dimension",
+      "cssVar": "--todae-coachmark-cutout-padding",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The gap between the highlighted element and the edge of the hole. The hole never leaves less room than the element's focus ring needs."
+    },
+    {
+      "path": "coachmark.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-coachmark-max-width",
+      "cssValue": "20rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The popup's widest, so a long description wraps."
+    },
+    {
+      "path": "coachmark.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-coachmark-motion-duration-enter",
+      "cssValue": "var(--todae-motion-popup-duration-enter)",
+      "ref": "motion.popup.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+    },
+    {
+      "path": "coachmark.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-coachmark-motion-duration-exit",
+      "cssValue": "var(--todae-motion-popup-duration-exit)",
+      "ref": "motion.popup.duration.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+    },
+    {
+      "path": "coachmark.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-coachmark-motion-easing-enter",
+      "cssValue": "var(--todae-overlay-motion-easing-enter)",
+      "ref": "overlay.motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+    },
+    {
+      "path": "coachmark.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-coachmark-motion-easing-exit",
+      "cssValue": "var(--todae-overlay-motion-easing-exit)",
+      "ref": "overlay.motion.easing.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
     },
     {
       "path": "tooltip.bg",

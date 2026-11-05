@@ -1,0 +1,55 @@
+@layer todae.components {
+  /* The dim page: a box over the target, grown by the hole's padding, whose
+     shadow covers the rest of the screen. Presses pass through it, so the
+     target under the hole stays usable; the page around is inert. */
+  .scrim {
+    /* Never less room than the target's focus ring takes, so the ring shows. */
+    --_pad: max(var(--todae-coachmark-cutout-padding), calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset)));
+    /* How far the shadow reaches past the hole: well past any screen, so a
+       target near an edge, or scrolled a screen away, still dims it all. */
+    --_reach: calc(100vmax * 3);
+
+    position: fixed;
+    inset: unset;
+    /* Sized by its four anchored edges, not the popover's fit-content. */
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    pointer-events: none;
+    box-shadow: 0 0 0 var(--_reach) var(--todae-overlay-scrim-bg);
+    transition: opacity var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter);
+  }
+
+  .scrim:not([data-entered]) {
+    opacity: 0;
+  }
+
+  .scrim[data-todae-exiting] {
+    transition-duration: var(--todae-coachmark-motion-duration-exit);
+    transition-timing-function: var(--todae-coachmark-motion-easing-exit);
+  }
+
+  @supports (top: anchor(top)) {
+    .scrim {
+      top: calc(anchor(top) - var(--_pad));
+      right: calc(anchor(right) - var(--_pad));
+      bottom: calc(anchor(bottom) - var(--_pad));
+      left: calc(anchor(left) - var(--_pad));
+    }
+  }
+
+  /* Forced colors drop box shadows, so the hole gets an outline instead. */
+  @media (forced-colors: active) {
+    .scrim {
+      outline: var(--todae-focus-ring-width) solid CanvasText;
+    }
+  }
+
+  .popup {
+    max-inline-size: var(--todae-coachmark-max-width);
+  }
+}

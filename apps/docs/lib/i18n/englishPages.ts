@@ -19,6 +19,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'checkbox': () => import('../../app/(en)/checkbox/page.mdx'),
   'chip': () => import('../../app/(en)/chip/page.mdx'),
   'chip-list': () => import('../../app/(en)/chip-list/page.mdx'),
+  'coachmark': () => import('../../app/(en)/coachmark/page.mdx'),
   'code': () => import('../../app/(en)/code/page.mdx'),
   'color-picker': () => import('../../app/(en)/color-picker/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),

@@ -1,0 +1,19 @@
+{
+  "coachmark": {
+    "$description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens.",
+    "max-width": { "$type": "dimension", "$description": "The popup's widest, so a long description wraps.", "$value": { "value": 20, "unit": "rem" } },
+    "cutout": {
+      "padding": { "$type": "dimension", "$description": "The gap between the highlighted element and the edge of the hole. The hole never leaves less room than the element's focus ring needs.", "$value": { "$ref": "#/space/1/$value" } }
+    },
+    "motion": {
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/popup/duration/enter/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/popup/duration/exit/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/exit/$value" } }
+      }
+    }
+  }
+}

@@ -1118,6 +1118,30 @@
       "type": "color"
     },
     {
+      "path": "coachmark.cutout.padding",
+      "type": "dimension"
+    },
+    {
+      "path": "coachmark.max-width",
+      "type": "dimension"
+    },
+    {
+      "path": "coachmark.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "coachmark.motion.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "coachmark.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "coachmark.motion.easing.exit",
+      "type": "cubicBezier"
+    },
+    {
       "path": "code.block.bg",
       "type": "color"
     },

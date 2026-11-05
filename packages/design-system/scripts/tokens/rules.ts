@@ -20,6 +20,7 @@ export const RESERVED_ROOTS = [
   'dialog',
   'sheet',
   'popover',
+  'coachmark',
   'tooltip',
   'option',
   'menu',

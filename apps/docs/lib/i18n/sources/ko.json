@@ -121,6 +121,15 @@
     "## Props": "f1197757b3d6",
     "(section order)": "a3d54a508f96"
   },
+  "coachmark": {
+    "(top)": "34d4c39eb81d",
+    "# Coachmark": "86bb5972fd10",
+    "## A tour": "6f6425c69b1a",
+    "## Accessible composition": "f410853d4390",
+    "## When to use": "854c00834705",
+    "## Props": "29e518df81be",
+    "(section order)": "ee737dd90e41"
+  },
   "code": {
     "(top)": "f442cb431459",
     "# Code and Kbd": "7a928f5103b0",
@@ -587,7 +596,7 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "32a9fd630592",
+    "# Native platform": "590404e7953e",
     "(section order)": "4d06dc5f1974"
   },
   "popover": {

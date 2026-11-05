@@ -171,6 +171,7 @@ export {
   type MenuTriggerProps,
 } from './components/Menu.js';
 export { Popover, type PopoverRootProps } from './components/Popover.js';
+export { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './components/Coachmark.js';
 export {
   usePopover,
   type PopoverCloseReason,
