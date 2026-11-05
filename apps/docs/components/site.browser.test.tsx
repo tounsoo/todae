@@ -41,6 +41,21 @@ const frame = () => new Promise((resolve) => requestAnimationFrame(() => request
 // page scroll starts, so a failure names the part to fix. An element that a box
 // clipping or scrolling its overflow holds in, such as a wide table in a
 // ScrollArea, can't widen the page, so it isn't counted.
+// What gives an absolute box a containing block besides a position.
+function makesContainingBlock(style: CSSStyleDeclaration): boolean {
+  return (
+    style.transform !== 'none' ||
+    style.translate !== 'none' ||
+    style.rotate !== 'none' ||
+    style.scale !== 'none' ||
+    style.perspective !== 'none' ||
+    style.filter !== 'none' ||
+    style.backdropFilter !== 'none' ||
+    /transform|filter|perspective/.test(style.willChange) ||
+    /layout|paint|strict|content/.test(style.contain)
+  );
+}
+
 function pastEdge(): string[] {
   const edge = innerWidth + 0.5;
   // Whether a box that clips its overflow, such as a ScrollArea, holds el in.
@@ -52,7 +67,8 @@ function pastEdge(): string[] {
     if (position === 'fixed') return true;
     for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
       const style = getComputedStyle(box);
-      const contains = position !== 'absolute' || style.position !== 'static' || style.transform !== 'none';
+      if (style.position === 'fixed') return true;
+      const contains = position !== 'absolute' || style.position !== 'static' || makesContainingBlock(style);
       if (!contains) continue;
       if (style.overflowX !== 'visible') return true;
       position = style.position;
