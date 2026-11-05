@@ -251,11 +251,13 @@ describe('Drilldown focus and surface reset in a browser', () => {
       await settled();
       const scroller = screen.getByTestId('scroller');
       scroller.scrollTop = 150;
+      // Read back: an engine may snap the offset to a device pixel.
+      const kept = scroller.scrollTop;
       rerender(ui('hidden'));
       await waitFor(() => expect(document.activeElement).toBe(document.body));
       rerender(ui('visible'));
       expect(document.activeElement).not.toBe(version);
-      expect(scroller.scrollTop).toBe(150);
+      expect(scroller.scrollTop).toBe(kept);
       await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'About' }));
     } finally {

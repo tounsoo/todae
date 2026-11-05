@@ -274,9 +274,11 @@ describe('focus rings in a scrolling container', () => {
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
       await motionSettled();
       area().scrollTop = 1000;
+      // Read back: an engine may snap the offset to a device pixel.
+      const before = area().scrollTop;
       await keyboardFocus(tall);
       expect(tall.matches(':focus-visible')).toBe(true);
-      expect(area().scrollTop).toBe(1000);
+      expect(area().scrollTop).toBe(before);
     });
   }
 
