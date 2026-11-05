@@ -300,6 +300,28 @@ describe('usePopoverSync with presence', () => {
     expect(onInnerExited).toHaveBeenCalledTimes(1);
   });
 
+  it('ends the fade of a popover inside it when it hides at once, never drawn', async () => {
+    fade('0.2s');
+    const tree = (open: boolean, inner: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={inner} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true, true));
+    const menu = container.querySelector<HTMLElement>('[data-name="menu"]')!;
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    // The inner one's owner holds it open while the outer one closes, then
+    // the outer one shows again and both close inside its first frames.
+    rerender(tree(false, true));
+    endFade(menu);
+    rerender(tree(true, true));
+    const calls = trackCalls();
+    rerender(tree(false, false));
+    expect(calls).toEqual(['hide submenu', 'hide menu']);
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
   it('leaves a popover inside it to its own fade while it is still shown', async () => {
     fade('0.2s');
     const onInnerExited = vi.fn();

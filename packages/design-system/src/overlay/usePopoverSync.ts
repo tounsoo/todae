@@ -22,6 +22,15 @@ export function endExitNow(el: HTMLElement): void {
   exitsUnderWay.get(el)?.();
 }
 
+/**
+ * Ends the fade of every popover still fading inside `el`, deepest first, as
+ * `el` hides. Each fades on its own clock, as a submenu does beside its menu,
+ * and nothing stays shown inside a popover that has hidden.
+ */
+function endExitsInside(el: HTMLElement): void {
+  for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) endExitNow(inner);
+}
+
 function setExitInert(el: HTMLElement, on: boolean): void {
   if (on) {
     if (el.inert) return;
@@ -45,8 +54,8 @@ export type PopoverPresence = {
  * transitions in, and `data-todae-entering` marks those frames, so a tooltip
  * inside waits for the growth that is about to start, and as it closes it takes `data-todae-exiting` and stays
  * shown, inert, until its opacity fade ends, then hides. A popover still
- * fading inside it ends its fade then too, so it never outlasts the popover
- * it sits in. Opening again inside the fade turns it back where it is.
+ * fading inside it ends its fade whenever it hides, so it never outlasts the
+ * popover it sits in. Opening again inside the fade turns it back where it is.
  * Unmounting drops the wait.
  *
  * Once its fade in ends it takes `data-todae-settled`, which drops its
@@ -81,12 +90,14 @@ export function usePopoverSync(
     wasOpen.current = open;
     if (!open) {
       if (!isPopoverOpen(el)) {
+        endExitsInside(el);
         if (closing) onExitedRef.current?.();
         return;
       }
       // One that closes inside its first frames was never drawn: nothing
       // to fade.
       if (!animated || !el.hasAttribute('data-entered')) {
+        endExitsInside(el);
         el.hidePopover();
         if (animated && closing) onExitedRef.current?.();
         return;
@@ -102,11 +113,7 @@ export function usePopoverSync(
         if (ended) return;
         ended = true;
         exitsUnderWay.delete(el);
-        // A popover still fading inside it, such as a submenu that closed
-        // with its menu, has nothing to sit by once this one hides. Its fade
-        // runs on its own clock, so end it first: nothing stays shown inside
-        // a popover that has hidden.
-        for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) endExitNow(inner);
+        endExitsInside(el);
         el.removeAttribute('data-todae-exiting');
         setExitInert(el, false);
         if (isPopoverOpen(el)) el.hidePopover();
