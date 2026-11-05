@@ -72,6 +72,51 @@ describe('scroll edge arrows', () => {
     await waitFor(() => expect(shownEdges(area)).toEqual(['block-start']));
   });
 
+  it('keep inside the scrollport on a fractional size, so they add no overflow of their own', async () => {
+    render(
+      <ScrollArea.Root arrows axis="both" data-testid="area" aria-label="Rows" style={{ blockSize: 101, inlineSize: 200.9, padding: 3.3 }}>
+        <div style={{ inlineSize: 400 }}>{rows(20)}</div>
+      </ScrollArea.Root>,
+    );
+    const area = screen.getByTestId('area');
+    await waitFor(() => expect(shownEdges(area)).toEqual(['block-end', 'inline-end']));
+    area.scrollTop = 30;
+    area.scrollLeft = 30;
+    await waitFor(() => expect(shownEdges(area)).toHaveLength(4));
+    // The padding box from the area's own fractional box, less its borders and
+    // any scrollbar, where clientWidth and clientHeight round to whole pixels.
+    const box = area.getBoundingClientRect();
+    const style = getComputedStyle(area);
+    const border = (side: 'Top' | 'Right' | 'Bottom' | 'Left') => Number.parseFloat(style[`border${side}Width`]);
+    const bar = (offset: number, client: number, a: number, b: number) => Math.max(0, Math.round(offset - a - b - client));
+    const port = {
+      left: box.left + border('Left'),
+      top: box.top + border('Top'),
+      right: box.right - border('Right') - bar(area.offsetWidth, area.clientWidth, border('Left'), border('Right')),
+      bottom: box.bottom - border('Bottom') - bar(area.offsetHeight, area.clientHeight, border('Top'), border('Bottom')),
+    };
+    for (const name of ['block-start', 'block-end', 'inline-start', 'inline-end']) {
+      const band = edge(area, name).getBoundingClientRect();
+      expect(band.left).toBeGreaterThanOrEqual(port.left - 0.02);
+      expect(band.top).toBeGreaterThanOrEqual(port.top - 0.02);
+      expect(band.right).toBeLessThanOrEqual(port.right + 0.02);
+      expect(band.bottom).toBeLessThanOrEqual(port.bottom + 0.02);
+    }
+  });
+
+  it('show none on a list that fits a fractional size', async () => {
+    render(
+      <ScrollArea.Root arrows axis="both" data-testid="area" aria-label="Rows" style={{ blockSize: 101, inlineSize: 200.9, padding: 3.3 }}>
+        {rows(2)}
+      </ScrollArea.Root>,
+    );
+    const area = screen.getByTestId('area');
+    await frames(3);
+    expect(area.scrollHeight).toBe(area.clientHeight);
+    expect(area.scrollWidth).toBe(area.clientWidth);
+    expect(shownEdges(area)).toEqual([]);
+  });
+
   it('show none while the content fits', async () => {
     render(
       <ScrollArea.Root arrows data-testid="area" aria-label="Rows" style={{ blockSize: 400 }}>
@@ -152,6 +197,36 @@ describe('scroll edge arrows', () => {
     edge(area, 'block-end').dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
   });
 
+  it('start for a pointer whose moves report no movement, going by where it was', async () => {
+    render(
+      <ScrollArea.Root arrows data-testid="area" aria-label="Rows" style={{ blockSize: 100 }}>
+        {rows(60)}
+      </ScrollArea.Root>,
+    );
+    const area = screen.getByTestId('area');
+    await waitFor(() => expect(shownEdges(area)).toEqual(['block-end']));
+    const end = edge(area, 'block-end');
+    const box = end.getBoundingClientRect();
+    const at = { clientX: box.left + 10, clientY: box.top + 10 };
+    // Some browsers report movementX and movementY as 0 for every move.
+    const move = (target: EventTarget, point: { clientX: number; clientY: number }) =>
+      target.dispatchEvent(new PointerEvent('pointermove', { pointerType: 'mouse', bubbles: true, ...point }));
+    // A pointer still at the same place, as when the arrow shows up under it,
+    // with a finger moving elsewhere in between.
+    move(document.body, at);
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'touch', pointerId: 7, bubbles: true, clientX: 5, clientY: 5 }),
+    );
+    move(end, at);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(area.scrollTop).toBe(0);
+    // The same pointer moving onto the arrow from elsewhere.
+    move(document.body, { clientX: at.clientX, clientY: at.clientY - 60 });
+    move(end, at);
+    await waitFor(() => expect(area.scrollTop).toBeGreaterThan(20));
+    end.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+  });
+
   it('run sideways, and from the right in a right-to-left scroller', async () => {
     render(
       <div dir="rtl">
@@ -171,6 +246,36 @@ describe('scroll edge arrows', () => {
     await userEvent.unhover(edge(area, 'inline-end'));
     await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
     expect(offsets(edge(area, 'inline-start'), area).right).toBeCloseTo(0, 0);
+  });
+
+  it('stay on the edges of a right-to-left scroller of fractional size, and after it turns left-to-right', async () => {
+    function Rows({ dir }: { dir: 'rtl' | 'ltr' }) {
+      return (
+        <div dir={dir}>
+          <ScrollArea.Root arrows axis="inline" data-testid="area" aria-label="Rows" style={{ inlineSize: 200.5, padding: 3, border: '1.5px solid' }}>
+            <div style={{ display: 'flex', gap: 8 }}>{rows(20)}</div>
+          </ScrollArea.Root>
+        </div>
+      );
+    }
+    const { rerender } = render(<Rows dir="rtl" />);
+    const area = screen.getByTestId('area');
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+    area.scrollLeft = -120;
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
+    // Sticky holds the rail here; a rounded measure must not move it.
+    const rail = area.querySelector<HTMLElement>('[data-todae-scroll-edges]')!;
+    expect(rail.style.translate).toBe('');
+    // Within the half pixel the browser's own layout may round to.
+    expect(Math.abs(offsets(edge(area, 'inline-start'), area).right)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(offsets(edge(area, 'inline-end'), area).left)).toBeLessThanOrEqual(0.5);
+    rerender(<Rows dir="ltr" />);
+    area.scrollLeft = 120;
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
+    await frames(2);
+    expect(Math.abs(offsets(edge(area, 'inline-start'), area).left)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(offsets(edge(area, 'inline-end'), area).right)).toBeLessThanOrEqual(0.5);
+    expect(rail.style.translate).toBe('');
   });
 
   it('leave the list where keys or a script put it when an arrow shows up under a still pointer', async () => {

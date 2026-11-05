@@ -46,6 +46,40 @@ function px(value: string): number {
   return Number.parseFloat(value) || 0;
 }
 
+// Where each mouse or pen was before its latest move, per window, so an arrow
+// can tell a pointer moving onto it from one it showed up under. Not every
+// browser reports movementX and movementY for every move, so this is the
+// fallback. It listens in the capture phase, before any part of the page can
+// stop the event, and keeps the place before the move the arrow sees. Touch
+// is left out, so a finger elsewhere says nothing about where a mouse rests.
+type Point = { x: number; y: number; before: { x: number; y: number } | null };
+const points = new WeakMap<Window, Map<number, Point>>();
+function watchPointer(win: Window) {
+  if (points.has(win)) return;
+  const byPointer = new Map<number, Point>();
+  points.set(win, byPointer);
+  win.addEventListener(
+    'pointermove',
+    (event) => {
+      if (event.pointerType === 'touch') return;
+      const last = byPointer.get(event.pointerId);
+      byPointer.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+        before: last ? { x: last.x, y: last.y } : null,
+      });
+    },
+    { capture: true, passive: true },
+  );
+}
+function moved(event: PointerEvent, win: Window): boolean {
+  if (event.movementX || event.movementY) return true;
+  // A pointer never seen before this move has no place to compare with.
+  const before = points.get(win)?.get(event.pointerId)?.before;
+  if (!before) return false;
+  return Math.abs(event.clientX - before.x) >= 0.5 || Math.abs(event.clientY - before.y) >= 0.5;
+}
+
 /**
  * Arrows at each edge of a scroller where its content is cut off. Render it as
  * the scroller's first child: a sticky box of no size keeps the arrows on the
@@ -64,11 +98,45 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     const own = rail.current;
     const el = own?.parentElement;
     if (!own || !el) return;
+    const win = el.ownerDocument.defaultView ?? window;
+    watchPointer(win);
     let rtl = false;
+    let padInline = 0;
+    let shift = 0;
+    let content: { inline: number; block: number } | null = null;
     let frame = 0;
     let resting: { edge: Edge; since: number; last: number; carry: number } | null = null;
 
+    // WebKit leaves a sticky box in place along the inline axis of a
+    // right-to-left scroller, so the rail would scroll away with the content.
+    // Where the rail has moved off the content box's start edge, move it back.
+    const align = (style: CSSStyleDeclaration) => {
+      if (!rtl || el.scrollWidth <= el.clientWidth) {
+        if (shift) own.style.translate = '';
+        shift = 0;
+        return;
+      }
+      // The padding box's right edge from the scroller's fractional box, less
+      // its right border and a scrollbar on the right, if any: clientWidth
+      // rounds, which would move a rail that sticky already holds.
+      const port = el.getBoundingClientRect();
+      const borders = px(style.borderLeftWidth) + px(style.borderRightWidth);
+      const bar = Math.max(0, Math.round(el.offsetWidth - borders - el.clientWidth));
+      const barRight = el.clientLeft - px(style.borderLeftWidth) < 0.5 ? bar : 0;
+      const want = port.right - px(style.borderRightWidth) - barRight - padInline;
+      const off = want - own.getBoundingClientRect().right;
+      if (Math.abs(off) < 0.5) return;
+      shift += off;
+      own.style.translate = shift ? `${shift}px 0` : '';
+    };
     const show = () => {
+      const style = getComputedStyle(el);
+      // A change of direction resizes nothing, so the observers miss it.
+      if ((style.direction === 'rtl') !== rtl) {
+        measure();
+        return;
+      }
+      align(style);
       const off = own.hasAttribute('data-off');
       for (const node of own.children) {
         const edge = (node as HTMLElement).dataset.edge as Edge;
@@ -80,10 +148,18 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       const style = getComputedStyle(el);
       rtl = style.direction === 'rtl';
       // The rail sits at the content box's start corner; the arrows reach
-      // back over the padding to the scrollport's edges.
-      own.style.setProperty('--_port-inline', `${el.clientWidth}px`);
-      own.style.setProperty('--_port-block', `${el.clientHeight}px`);
-      own.style.setProperty('--_pad-inline', `${px(rtl ? style.paddingRight : style.paddingLeft)}px`);
+      // back over the padding to the scrollport's edges. The scrollport's
+      // size comes from the content box a ResizeObserver reports, which keeps
+      // its fraction: clientWidth and clientHeight round, and a band half a
+      // pixel past the scrollport makes overflow of its own in Firefox.
+      const padding = {
+        inline: px(style.paddingLeft) + px(style.paddingRight),
+        block: px(style.paddingTop) + px(style.paddingBottom),
+      };
+      own.style.setProperty('--_port-inline', `${content ? content.inline + padding.inline : el.clientWidth}px`);
+      own.style.setProperty('--_port-block', `${content ? content.block + padding.block : el.clientHeight}px`);
+      padInline = px(rtl ? style.paddingRight : style.paddingLeft);
+      own.style.setProperty('--_pad-inline', `${padInline}px`);
       own.style.setProperty('--_pad-block', `${px(style.paddingTop)}px`);
       // A grid would give the rail a cell of its own and move every item, so
       // a grid scroller shows no arrows; a grid inside the scroller is fine.
@@ -121,7 +197,7 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     // up under a pointer left still, as keys or a wheel scroll the list, gets
     // a pointerenter too, and must not pull the list back.
     const enter = (event: PointerEvent) => {
-      if (event.pointerType === 'touch' || (!event.movementX && !event.movementY)) return;
+      if (event.pointerType === 'touch' || !moved(event, win)) return;
       const edge = (event.currentTarget as HTMLElement).dataset.edge as Edge;
       if (resting?.edge === edge || room(el, edge, rtl) < 1) return;
       const now = performance.now();
@@ -145,7 +221,16 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     let mutations: MutationObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       // The scroller's own size, and its content's, which can grow without it.
-      const sized = new ResizeObserver(measure);
+      const sized = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.target !== el) continue;
+          const size = entry.contentBoxSize?.[0];
+          content = size
+            ? { inline: size.inlineSize, block: size.blockSize }
+            : { inline: entry.contentRect.width, block: entry.contentRect.height };
+        }
+        measure();
+      });
       resize = sized;
       const watch = () => {
         sized.disconnect();
