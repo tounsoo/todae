@@ -3386,6 +3386,18 @@
       "type": "dimension"
     },
     {
+      "path": "scroll.arrow.bg",
+      "type": "color"
+    },
+    {
+      "path": "scroll.arrow.fg",
+      "type": "color"
+    },
+    {
+      "path": "scroll.arrow.size",
+      "type": "dimension"
+    },
+    {
       "path": "scroll.ring.focus",
       "type": "color"
     },

@@ -1,0 +1,139 @@
+@layer todae.components {
+  /* A box of no size at the scroller's content-box start corner, stuck there
+     on both axes, so the arrows inside stay on the scroller's edges while its
+     content scrolls. It takes no room in block or flex layout; in a flex
+     scroller its margin takes back the gap that follows it. */
+  .rail {
+    position: sticky;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: 1;
+    display: block;
+    flex: none;
+    align-self: flex-start;
+    inline-size: 0;
+    block-size: 0;
+    margin: 0;
+    margin-block-end: calc(-1 * var(--_gap, 0px));
+  }
+
+  /* A grid scroller would give the rail a cell; it shows no arrows. */
+  .rail[data-off] {
+    display: none;
+  }
+
+  .rail[data-row] {
+    margin-block-end: 0;
+    margin-inline-end: calc(-1 * var(--_gap, 0px));
+  }
+
+  /* A band across the edge, as thick as the arrow size, filled with the
+     surface the scroller sits on so it hides the row it covers. */
+  .edge {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--_scroll-surface, var(--todae-scroll-arrow-bg));
+    color: var(--todae-scroll-arrow-fg);
+    pointer-events: auto;
+    user-select: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--todae-motion-duration-fast) var(--todae-motion-easing-enter),
+      visibility 0s linear var(--todae-motion-duration-fast);
+  }
+
+  .edge[data-shown] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--todae-motion-duration-fast) var(--todae-motion-easing-enter);
+  }
+
+  .edge:is([data-edge='block-start'], [data-edge='block-end']) {
+    inset-inline-start: calc(-1 * var(--_pad-inline, 0px));
+    inline-size: var(--_port-inline, 0px);
+    block-size: var(--todae-scroll-arrow-size);
+  }
+
+  .edge:is([data-edge='inline-start'], [data-edge='inline-end']) {
+    inset-block-start: calc(-1 * var(--_pad-block, 0px));
+    inline-size: var(--todae-scroll-arrow-size);
+    block-size: var(--_port-block, 0px);
+  }
+
+  .edge[data-edge='block-start'] {
+    inset-block-start: calc(-1 * var(--_pad-block, 0px));
+  }
+
+  .edge[data-edge='block-end'] {
+    inset-block-start: calc(var(--_port-block, 0px) - var(--_pad-block, 0px) - var(--todae-scroll-arrow-size));
+  }
+
+  .edge[data-edge='inline-start'] {
+    inset-inline-start: calc(-1 * var(--_pad-inline, 0px));
+  }
+
+  .edge[data-edge='inline-end'] {
+    inset-inline-start: calc(var(--_port-inline, 0px) - var(--_pad-inline, 0px) - var(--todae-scroll-arrow-size));
+  }
+
+  .glyph {
+    display: flex;
+  }
+
+  /* The chevron points down, toward the block end. */
+  .edge[data-edge='block-start'] > [data-todae-glyph] {
+    rotate: 180deg;
+  }
+
+  .edge[data-edge='inline-start'] > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  .edge[data-edge='inline-end'] > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .edge[data-edge='inline-start']:dir(rtl) > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .edge[data-edge='inline-end']:dir(rtl) > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  /* Focus moving through the list scrolls a row clear of a shown arrow, past
+     the room every Todae scroller keeps for a focus ring. */
+  :has(> .rail > .edge[data-edge='block-start'][data-shown]) {
+    scroll-padding-block-start: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-scroll-arrow-size));
+  }
+
+  :has(> .rail > .edge[data-edge='block-end'][data-shown]) {
+    scroll-padding-block-end: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-scroll-arrow-size));
+  }
+
+  :has(> .rail > .edge[data-edge='inline-start'][data-shown]) {
+    scroll-padding-inline-start: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-scroll-arrow-size));
+  }
+
+  :has(> .rail > .edge[data-edge='inline-end'][data-shown]) {
+    scroll-padding-inline-end: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-scroll-arrow-size));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .edge,
+    .edge[data-shown] {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .edge {
+      background: Canvas;
+      color: CanvasText;
+    }
+  }
+}

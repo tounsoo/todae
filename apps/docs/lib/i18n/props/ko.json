@@ -1735,6 +1735,10 @@
     "role": {
       "en": "Non-modal dialog role. Requires aria-label or aria-labelledby. Does not set aria-modal.",
       "ko": "비모달 dialog role. aria-label이나 aria-labelledby가 필요합니다. aria-modal은 설정하지 않습니다."
+    },
+    "arrows": {
+      "en": "Whether an arrow shows at its top or bottom edge while what it holds is cut off there. Resting a mouse or pen on one scrolls toward it. On by default, as a popover holds its list and scrolls past its max height.",
+      "ko": "위나 아래 가장자리에서 내용이 잘린 동안 화살표를 보여 줄지 정합니다. 마우스나 펜을 올려 두면 그쪽으로 스크롤합니다. 팝오버는 목록을 담고 최대 높이를 넘으면 스크롤하므로 기본으로 켜져 있습니다."
     }
   },
   "Progress.Root": {
@@ -2681,6 +2685,10 @@
     "focusable": {
       "en": "Whether it takes a Tab stop, so a keyboard can scroll it, while its content overflows. Without it, only when nothing inside can take focus. Name it with aria-label or aria-labelledby when it can take one.",
       "ko": "콘텐츠가 넘치는 동안 키보드로 스크롤할 수 있도록 Tab 정지점이 될지 정합니다. 주지 않으면 안에 포커스를 받을 요소가 없을 때만 됩니다. 정지점이 될 수 있으면 aria-label이나 aria-labelledby로 이름을 붙이세요."
+    },
+    "arrows": {
+      "en": "Whether an arrow shows at each edge where its content is cut off, while there is more to scroll that way. Resting a mouse or pen on one scrolls toward it. The arrows are for the pointer only: touch and keys scroll as before, and assistive technology never meets them.",
+      "ko": "콘텐츠가 잘린 가장자리마다, 그쪽으로 더 스크롤할 것이 있는 동안 화살표를 보여 줄지 정합니다. 마우스나 펜을 올려 두면 그쪽으로 스크롤합니다. 화살표는 포인터 전용입니다. 터치와 키는 그대로 스크롤하며, 보조 기술에는 드러나지 않습니다."
     }
   },
   "Tree.Root": {

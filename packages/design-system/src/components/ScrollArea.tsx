@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type ComponentPropsWithRef, type FocusEvent } from 'react';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
+import { ScrollEdges } from './scrollEdges.js';
 import { useScrollTabStop, type ScrollAxis } from './scrollTabStop.js';
 import styles from './ScrollArea.module.css';
 
@@ -23,9 +24,16 @@ export type ScrollAreaRootProps = {
    * with aria-label or aria-labelledby when it can take one.
    */
   focusable?: boolean;
+  /**
+   * Whether an arrow shows at each edge where its content is cut off, while
+   * there is more to scroll that way. Resting a mouse or pen on one scrolls
+   * toward it. The arrows are for the pointer only: touch and keys scroll as
+   * before, and assistive technology never meets them.
+   */
+  arrows?: boolean;
 } & ComponentPropsWithRef<'div'>;
 
-function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, children, ...props }: ScrollAreaRootProps) {
+function Root({ axis = 'block', focusable, arrows = false, className, ref, onFocus, onBlur, children, ...props }: ScrollAreaRootProps) {
   const own = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(own, ref);
@@ -52,6 +60,7 @@ function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, chil
         if (event.target === event.currentTarget) setFocused(false);
       })}
     >
+      {arrows && <ScrollEdges axis={axis} />}
       <div ref={content} className={styles.content}>
         {children}
       </div>

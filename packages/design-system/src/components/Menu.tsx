@@ -35,6 +35,7 @@ import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useDomId } from '../internal/domId.js';
 import { CheckGlyph, ChevronGlyph, glyphOr } from './glyphs.js';
+import { ScrollEdges } from './scrollEdges.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
@@ -709,6 +710,7 @@ function Content({
         }}
         onKeyDown={container.onKeyDown}
       >
+        <ScrollEdges axis="block" />
         <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
       </div>
     </>
@@ -1175,6 +1177,7 @@ function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerM
         sub.parent.grace.current = null;
       })}
     >
+      <ScrollEdges axis="block" />
       <MenuLevelContext.Provider value={sub.level}>{children}</MenuLevelContext.Provider>
     </div>
   );

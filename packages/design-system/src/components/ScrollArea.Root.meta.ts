@@ -19,5 +19,13 @@ export const meta = {
       description:
         'Whether it takes a Tab stop, so a keyboard can scroll it, while its content overflows. Without it, only when nothing inside can take focus. Name it with aria-label or aria-labelledby when it can take one.',
     },
+    {
+      name: 'arrows',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description:
+        'Whether an arrow shows at each edge where its content is cut off, while there is more to scroll that way. Resting a mouse or pen on one scrolls toward it. The arrows are for the pointer only: touch and keys scroll as before, and assistive technology never meets them.',
+    },
   ],
 } as const satisfies ComponentMeta;
