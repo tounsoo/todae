@@ -29,6 +29,7 @@ import {
   Slider,
   Loader,
   GlyphsProvider,
+  Grid,
   Stack,
   ThemeProvider,
   Table,
@@ -648,6 +649,42 @@ describe('content parts in a browser', () => {
     expect(style('neutral').backgroundColor).not.toBe(style('critical').backgroundColor);
     expect(style('card').borderTopStyle).toBe('solid');
     expect(style('card').paddingTop).not.toBe('0px');
+  });
+
+  it('lines up the footers of equal-height cards in a row, and keeps a class on the body', () => {
+    const plan = (id: string, body: ReactNode) => (
+      <Card.Root data-testid={`${id}-card`}>
+        <Card.Header>
+          <Text.Root as="h3">Plan</Text.Root>
+        </Card.Header>
+        <Card.Body data-testid={`${id}-body`} className="product-body">
+          {body}
+        </Card.Body>
+        <Card.Footer data-testid={`${id}-footer`}>
+          <Button.Root>Choose</Button.Root>
+        </Card.Footer>
+      </Card.Root>
+    );
+    render(
+      <Themed>
+        <Grid.Root columns={2} style={{ inlineSize: '40rem' }}>
+          {plan('short', 'Billed yearly.')}
+          {plan(
+            'long',
+            <>
+              <p>Billed yearly.</p>
+              <p>Unlimited projects.</p>
+              <p>Priority support.</p>
+              <p>Audit log.</p>
+            </>,
+          )}
+        </Grid.Root>
+      </Themed>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('short-card').height).toBeCloseTo(box('long-card').height, 1);
+    expect(box('short-footer').top).toBeCloseTo(box('long-footer').top, 1);
+    expect(screen.getByTestId('short-body').classList).toContain('product-body');
   });
 
   it('colors category badges and avatars from tokens, and recolors them in dark mode', () => {

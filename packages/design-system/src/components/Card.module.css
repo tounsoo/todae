@@ -17,6 +17,12 @@
     margin: 0;
   }
 
+  /* The body takes the card's free height, so in a row of equal-height cards
+     every footer sits at the bottom edge. */
+  .body {
+    flex-grow: 1;
+  }
+
   .footer {
     display: flex;
     flex-wrap: wrap;
