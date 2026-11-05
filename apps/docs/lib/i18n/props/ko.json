@@ -2010,6 +2010,10 @@
     }
   },
   "Tabs.List": {
+    "arrows": {
+      "en": "Whether a horizontal list shows an arrow at each edge where tabs are cut off, while there is more to scroll that way. Resting a mouse or pen on one scrolls toward it. The arrows are for the pointer only: touch, a wheel and the arrow keys scroll the list as before, and assistive technology never meets them. A vertical list never scrolls, so it shows none.",
+      "ko": "가로 목록에서 탭이 잘린 가장자리마다, 그쪽으로 더 스크롤할 것이 있는 동안 화살표를 보여 줄지 정합니다. 마우스나 펜을 올려 두면 그쪽으로 스크롤합니다. 화살표는 포인터 전용입니다. 터치, 휠, 화살표 키는 목록을 그대로 스크롤하며, 보조 기술에는 드러나지 않습니다. 세로 목록은 스크롤하지 않으므로 화살표를 보여 주지 않습니다."
+    },
     "aria-label": {
       "en": "Names the tablist when no visible caption exists.",
       "ko": "보이는 캡션이 없을 때 tablist의 이름을 붙입니다."

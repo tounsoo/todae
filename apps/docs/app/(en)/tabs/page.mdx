@@ -11,6 +11,8 @@ The list holds one tab stop, on the selected tab. Arrow keys, Home and End move 
 
 The indicator slides from the old tab to the new one over `tabs.motion.duration`, in browsers with CSS anchor positioning. In other browsers, and when the user prefers reduced motion, it moves at once.
 
+A horizontal list that holds more tabs than fit scrolls sideways, in one row. An arrow shows at each edge where tabs are cut off; resting a mouse or pen on it scrolls that way. The arrows are for the pointer only: touch, a wheel and the arrow keys scroll the list as before, a tab that takes focus scrolls clear of them, and assistive technology never meets them. Pass `arrows={false}` to leave them out. A selected tab past the edge, on the first render or chosen by your code, scrolls into view. A vertical list doesn't scroll.
+
 `activation="automatic"` (default) selects a tab as soon as focus moves to it from another tab. Focus entering the list from outside selects nothing, even when it lands on a fallback tab because the selected one is disabled. Use `activation="manual"` when a panel is slow to render: arrow keys only move focus, and Enter, Space or a click selects. When focus leaves the list, its tab stop returns to the selected tab. `orientation="vertical"` puts the list beside the panels and moves with Up and Down.
 
 The root takes `value` with `onValueChange`, or `defaultValue`. One tab is always selected, so there is no empty state. Only the selected panel renders its children; pass `keepMounted` to keep a hidden panel's state, such as a half-filled form. A panel is a Tab stop by default, so a screen reader user reaches its text; pass `tabIndex={-1}` when the panel starts with a control of its own.

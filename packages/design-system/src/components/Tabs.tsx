@@ -16,6 +16,7 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { domSafe, useDomId } from '../internal/domId.js';
+import { ScrollEdges } from './scrollEdges.js';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';
@@ -38,6 +39,14 @@ export type TabsRootProps = TabsValue & {
 } & Omit<ComponentPropsWithRef<'div'>, 'children' | 'defaultValue' | 'onChange'>;
 
 export type TabsListProps = {
+  /**
+   * Whether a horizontal list shows an arrow at each edge where tabs are cut
+   * off, while there is more to scroll that way. Resting a mouse or pen on one
+   * scrolls toward it. The arrows are for the pointer only: touch, a wheel and
+   * the arrow keys scroll the list as before, and assistive technology never
+   * meets them. A vertical list never scrolls, so it shows none.
+   */
+  arrows?: boolean;
   children?: ReactNode;
   className?: string;
   'aria-label'?: string;
@@ -131,11 +140,31 @@ function Root({
   );
 }
 
-function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListProps) {
+function List({ arrows = true, children, className, ref, onBlur, onFocus, ...props }: TabsListProps) {
   const ctx = useTabs('List');
   const container = ctx.roving.getContainerProps(props);
   const focusLeave = useFocusLeave(ctx.leave);
-  const refs = useComposedRefs(container.ref, ref);
+  const own = useRef<HTMLDivElement>(null);
+  const refs = useComposedRefs(own, container.ref, ref);
+  const horizontal = ctx.orientation === 'horizontal';
+  // A horizontal list scrolls sideways, so a selected tab past its edge, on
+  // the first render or chosen by the owner, is scrolled into view, clear of
+  // a shown arrow. Only the list scrolls, never the page around it. Focus
+  // moving to a tab scrolls it into view the browser's own way.
+  useLayoutEffect(() => {
+    const list = own.current;
+    if (!list || !horizontal || list.scrollWidth <= list.clientWidth) return;
+    const id = tabId(ctx.baseId, ctx.value);
+    const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
+    if (!tab) return;
+    const style = getComputedStyle(list);
+    const port = list.getBoundingClientRect();
+    const start = port.left + list.clientLeft + (Number.parseFloat(style.scrollPaddingLeft) || 0);
+    const end = port.left + list.clientLeft + list.clientWidth - (Number.parseFloat(style.scrollPaddingRight) || 0);
+    const box = tab.getBoundingClientRect();
+    if (box.left < start) list.scrollLeft -= start - box.left;
+    else if (box.right > end) list.scrollLeft += Math.min(box.left - start, box.right - end);
+  }, [horizontal, ctx.baseId, ctx.value]);
   return (
     <div
       {...container}
@@ -155,6 +184,7 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
         focusLeave.onBlur(event);
       }}
     >
+      {arrows && horizontal && <ScrollEdges axis="inline" />}
       {children}
     </div>
   );

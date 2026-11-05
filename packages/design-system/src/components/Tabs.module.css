@@ -3,6 +3,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--todae-tabs-gap);
+    /* In a flex or grid layout the tabs shrink to the room there is, and the
+       list scrolls, rather than widening the layout to fit every tab. */
+    min-inline-size: 0;
   }
 
   .root[data-orientation='vertical'] {
@@ -12,12 +15,27 @@
   .list {
     display: flex;
     gap: var(--todae-tabs-gap);
-    border-bottom: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
+  }
+
+  /* A horizontal list scrolls sideways when its tabs don't fit. A scroller
+     clips what it holds at its padding box, so the line under the tabs is a
+     background at the foot of the padding box, below the tabs, and the
+     indicator still lies on it. The background stays put while the tabs
+     scroll, so the line spans the list. */
+  .list[data-orientation='horizontal'] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block-end: var(--todae-tabs-border-width);
+    background: linear-gradient(var(--todae-tabs-border), var(--todae-tabs-border)) bottom / 100% var(--todae-tabs-border-width) no-repeat;
+  }
+
+  /* The arrows at the list's ends leave the line showing. */
+  .list > [data-todae-scroll-edges] {
+    --_scroll-rule: var(--todae-tabs-border-width);
   }
 
   .list[data-orientation='vertical'] {
     flex-direction: column;
-    border-bottom: 0;
     border-inline-end: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
   }
 
@@ -153,11 +171,18 @@
     display: none !important;
   }
 
-  /* Forced colors drop backgrounds, so paint the indicator with a system color. */
+  /* Forced colors drop backgrounds, so paint the indicator with a system
+     color, and draw the line under a horizontal list as a border, just below
+     the indicator. */
   @media (forced-colors: active) {
     .tab[data-selected]::after,
     .list:has(.tab[data-selected])::after {
       background: Highlight;
+    }
+
+    .list[data-orientation='horizontal'] {
+      border-block-end: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
+      background: none;
     }
   }
 }

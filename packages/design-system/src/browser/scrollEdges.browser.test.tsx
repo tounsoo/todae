@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getTabbables } from '../overlay/tabbables.js';
-import { Button, Menu, Popover, ScrollArea, usePopover } from '../index.js';
+import { Button, Menu, Popover, ScrollArea, Tabs, usePopover } from '../index.js';
 import { emulateMedia } from '../test/media.js';
 
 afterEach(async () => {
@@ -337,6 +337,150 @@ describe('scroll edge arrows', () => {
     await waitFor(() => expect(shownEdges(area)).toEqual(['block-end']));
     expect(area.querySelector('[data-edge]')!.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(getTabbables(area).every((node) => node.tagName === 'BUTTON')).toBe(true);
+  });
+
+  describe('in a tab list', () => {
+    function Sections({ count = 12, arrows, defaultValue = 's1', dir, inlineSize = 260 }: { count?: number; arrows?: boolean; defaultValue?: string; dir?: 'rtl'; inlineSize?: number }) {
+      return (
+        <div dir={dir} data-testid="frame" style={{ display: 'flex', inlineSize }}>
+          <Tabs.Root defaultValue={defaultValue} data-testid="tabs">
+            <Tabs.List aria-label="Sections" arrows={arrows}>
+              {Array.from({ length: count }, (_, i) => (
+                <Tabs.Tab key={i} value={`s${i + 1}`}>
+                  Section {i + 1}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+            {Array.from({ length: count }, (_, i) => (
+              <Tabs.Panel key={i} value={`s${i + 1}`}>
+                Panel {i + 1}
+              </Tabs.Panel>
+            ))}
+          </Tabs.Root>
+        </div>
+      );
+    }
+    const tab = (n: number) => screen.getByRole('tab', { name: `Section ${n}` });
+    /** The list's scrollport, less the band of each arrow that shows. */
+    function clear(list: HTMLElement) {
+      const box = list.getBoundingClientRect();
+      const left = box.left + list.clientLeft;
+      const right = left + list.clientWidth;
+      const band = (name: string) => (edge(list, name).hasAttribute('data-shown') ? edge(list, name).getBoundingClientRect() : null);
+      const rtl = getComputedStyle(list).direction === 'rtl';
+      const [atLeft, atRight] = rtl ? [band('inline-end'), band('inline-start')] : [band('inline-start'), band('inline-end')];
+      return { left: atLeft?.right ?? left, right: atRight?.left ?? right };
+    }
+    /** Where the list's indicator is drawn on screen, from its computed place in the scrolled content. */
+    function indicator(list: HTMLElement) {
+      const style = getComputedStyle(list, '::after');
+      const box = list.getBoundingClientRect();
+      const left = box.left + list.clientLeft + Number.parseFloat(style.left) - list.scrollLeft;
+      return { left, right: left + Number.parseFloat(style.width) };
+    }
+
+    it('scroll sideways inside the room there is, with arrows on by default and the line under the tabs left showing', async () => {
+      render(<Sections />);
+      const list = screen.getByRole('tablist');
+      expect(screen.getByTestId('tabs').getBoundingClientRect().width).toBeLessThanOrEqual(260.5);
+      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      // The tabs stay one row.
+      expect(tab(12).getBoundingClientRect().top).toBeCloseTo(tab(1).getBoundingClientRect().top, 0);
+      // The band stops above the line, which runs the list's whole width.
+      const band = edge(list, 'inline-end').getBoundingClientRect();
+      const port = list.getBoundingClientRect();
+      const rule = Number.parseFloat(getComputedStyle(list).paddingBottom);
+      expect(rule).toBeGreaterThan(0);
+      expect(band.bottom).toBeCloseTo(port.top + list.clientTop + list.clientHeight - rule, 0);
+      expect(tab(1).getBoundingClientRect().bottom).toBeLessThanOrEqual(band.bottom + 0.5);
+    });
+
+    it('show none when asked, and none on a list that fits', async () => {
+      const { unmount } = render(<Sections arrows={false} />);
+      const list = screen.getByRole('tablist');
+      expect(list.querySelector('[data-edge]')).toBeNull();
+      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+      unmount();
+      render(<Sections count={2} />);
+      await frames(3);
+      expect(shownEdges(screen.getByRole('tablist'))).toEqual([]);
+    });
+
+    it.each([undefined, 'rtl'] as const)('keep a tab that arrow keys focus in view, clear of the arrows, dir %s', async (dir) => {
+      render(<Sections dir={dir} />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      tab(1).focus();
+      for (let n = 2; n <= 12; n++) {
+        await userEvent.keyboard(dir === 'rtl' ? '{ArrowLeft}' : '{ArrowRight}');
+        expect(document.activeElement).toBe(tab(n));
+        await frames(1);
+        const box = tab(n).getBoundingClientRect();
+        const room = clear(list);
+        expect(box.left).toBeGreaterThanOrEqual(room.left - 0.5);
+        expect(box.right).toBeLessThanOrEqual(room.right + 0.5);
+      }
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-start']));
+      await userEvent.keyboard('{Home}');
+      expect(document.activeElement).toBe(tab(1));
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+    });
+
+    it.each([undefined, 'rtl'] as const)('keep the indicator under the selected tab while the list is scrolled, dir %s', async (dir) => {
+      render(<Sections dir={dir} />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      list.scrollLeft = dir === 'rtl' ? -200 : 200;
+      await frames(2);
+      await userEvent.click(tab(5));
+      await Promise.all(list.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => undefined)));
+      await frames(1);
+      const box = tab(5).getBoundingClientRect();
+      const line = indicator(list);
+      expect(line.left).toBeCloseTo(box.left, 0);
+      expect(line.right).toBeCloseTo(box.right, 0);
+    });
+
+    it.each([undefined, 'rtl'] as const)('scroll a selected tab past the edge into view on the first render, and not the page, dir %s', async (dir) => {
+      const top = window.scrollY;
+      render(<Sections dir={dir} defaultValue="s10" />);
+      const list = screen.getByRole('tablist');
+      await frames(2);
+      const box = tab(10).getBoundingClientRect();
+      const room = clear(list);
+      expect(box.left).toBeGreaterThanOrEqual(room.left - 0.5);
+      expect(box.right).toBeLessThanOrEqual(room.right + 0.5);
+      expect(window.scrollY).toBe(top);
+    });
+
+    it('show none on a vertical list', async () => {
+      render(
+        <Tabs.Root defaultValue="a" orientation="vertical">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab value="a">Alpha</Tabs.Tab>
+            <Tabs.Tab value="b">Beta</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a">Alpha panel</Tabs.Panel>
+          <Tabs.Panel value="b">Beta panel</Tabs.Panel>
+        </Tabs.Root>,
+      );
+      expect(screen.getByRole('tablist').querySelector('[data-edge]')).toBeNull();
+    });
+
+    it('draw the line as a border in forced colors, with the indicator whole above it', async () => {
+      await emulateMedia([{ name: 'forced-colors', value: 'active' }]);
+      render(<Sections />);
+      const list = screen.getByRole('tablist');
+      const style = getComputedStyle(list);
+      expect(Number.parseFloat(style.borderBottomWidth)).toBeGreaterThan(0);
+      expect(style.backgroundImage).toBe('none');
+      const line = getComputedStyle(list, '::after');
+      const box = list.getBoundingClientRect();
+      const top = box.top + list.clientTop + Number.parseFloat(line.top);
+      expect(Number.parseFloat(line.height)).toBeGreaterThan(0);
+      expect(top + Number.parseFloat(line.height)).toBeLessThanOrEqual(box.top + list.clientTop + list.clientHeight + 0.5);
+    });
   });
 
   describe('in a menu', () => {
