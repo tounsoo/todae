@@ -149,19 +149,21 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
   const horizontal = ctx.orientation === 'horizontal';
   // A horizontal list scrolls sideways, so a selected tab past its edge, on
   // the first render, chosen by the owner, in a list that was hidden until
-  // now, or among tabs that arrive late, is scrolled into view, clear of a shown arrow. Only the list scrolls,
-  // never the page around it. It measures in the list's own layout (offsets
-  // and scroll positions), so a transform on an ancestor, such as a popover
-  // growing in, changes nothing. Focus moving to a tab scrolls it into view
-  // the browser's own way.
+  // now, or among tabs that arrive late, is scrolled into view, clear of a
+  // shown arrow. Only the list scrolls, never the page around it. It measures
+  // in the list's own layout (offsets and scroll positions), so a transform
+  // on an ancestor, such as a popover growing in, changes nothing. Focus
+  // moving to a tab scrolls it into view the browser's own way.
   useLayoutEffect(() => {
     const list = own.current;
     if (!list || !horizontal) return;
     const id = tabId(ctx.baseId, ctx.value);
-    const reveal = () => {
-      if (list.scrollWidth <= list.clientWidth) return;
+    // Scrolls the selected tab into view, or returns false while it can't be
+    // measured: not rendered yet, or in a list with no box.
+    const measure = () => {
       const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
-      if (!tab || tab.offsetParent !== list) return;
+      if (!tab || list.clientWidth === 0 || tab.offsetParent !== list) return false;
+      if (list.scrollWidth <= list.clientWidth) return true;
       const style = getComputedStyle(list);
       // The scrollport in the content's own coordinates, where a right-to-left
       // list's scrollLeft runs negative.
@@ -169,32 +171,45 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       const end = list.scrollLeft + list.clientWidth - (Number.parseFloat(style.scrollPaddingRight) || 0);
       const left = tab.offsetLeft;
       const right = left + tab.offsetWidth;
-      if (left >= start && right <= end) return;
+      if (left >= start && right <= end) return true;
       // A tab wider than the room shows its inline start.
       if (right - left > end - start) list.scrollLeft += style.direction === 'rtl' ? right - end : left - start;
       else list.scrollLeft += left < start ? left - start : right - end;
+      return true;
+    };
+    // Once per selection, and again each time the list shows after being
+    // hidden, which resets its scroll; never after, so the list stays where
+    // the user scrolls it.
+    let done = false;
+    let frame = 0;
+    const reveal = () => {
+      if (done || !measure()) return;
+      done = true;
+      // Scrolling away from an end shows that end's arrow, which takes room
+      // the first pass couldn't see; settle once more after it shows.
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
     };
     reveal();
-    // Scrolling away from an end shows that end's arrow, which takes room the
-    // first pass couldn't see; settle once more after it shows.
-    const frame = requestAnimationFrame(reveal);
-    if (typeof ResizeObserver === 'undefined') return () => cancelAnimationFrame(frame);
-    // A list shown after it was hidden had no size to scroll in until now.
-    let width = list.clientWidth;
-    const shown = new ResizeObserver(() => {
-      const was = width;
-      width = list.clientWidth;
-      if (was === 0 && width > 0) reveal();
-    });
-    shown.observe(list);
     // Tabs that arrive after the first render, as from loaded data, may hold
     // the selected one.
     const added = new MutationObserver(reveal);
     added.observe(list, { childList: true });
+    let shown: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      let width = list.clientWidth;
+      shown = new ResizeObserver(() => {
+        const was = width;
+        width = list.clientWidth;
+        if (width === 0) done = false;
+        else if (was === 0) reveal();
+      });
+      shown.observe(list);
+    }
     return () => {
       cancelAnimationFrame(frame);
-      shown.disconnect();
       added.disconnect();
+      shown?.disconnect();
     };
   }, [horizontal, ctx.baseId, ctx.value]);
   return (

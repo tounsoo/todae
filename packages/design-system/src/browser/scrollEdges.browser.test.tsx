@@ -487,6 +487,34 @@ describe('scroll edge arrows', () => {
       });
     });
 
+    it('leave a list the user scrolled where it is when another control joins it', async () => {
+      function Growing({ extra }: { extra: boolean }) {
+        return (
+          <div style={{ display: 'flex', inlineSize: 260 }}>
+            <Tabs.Root defaultValue="s10">
+              <Tabs.List aria-label="Sections">
+                {Array.from({ length: 12 }, (_, i) => (
+                  <Tabs.Tab key={i} value={`s${i + 1}`}>
+                    Section {i + 1}
+                  </Tabs.Tab>
+                ))}
+                {extra && <Button.Root>Add</Button.Root>}
+              </Tabs.List>
+            </Tabs.Root>
+          </div>
+        );
+      }
+      const { rerender } = render(<Growing extra={false} />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => expect(shownEdges(list)).toContain('inline-start'));
+      await frames(2);
+      list.scrollLeft = 0;
+      await frames(2);
+      rerender(<Growing extra />);
+      await frames(3);
+      expect(list.scrollLeft).toBe(0);
+    });
+
     it('keep the whole ring of another control in the list, such as an add button', async () => {
       render(
         <div style={{ display: 'flex', inlineSize: 260 }}>
