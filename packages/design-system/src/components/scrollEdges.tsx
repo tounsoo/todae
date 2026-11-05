@@ -47,6 +47,41 @@ function px(value: string): number {
   return Number.parseFloat(value) || 0;
 }
 
+// Whether this engine leaves a sticky box in place along the inline axis of a
+// right-to-left scroller, as WebKit does. A hidden probe of each layout the
+// rail sits in finds out once per document, so engines whose sticky boxes
+// hold, such as Chromium and Firefox, never have the rail moved by hand.
+const drifting = new WeakMap<Document, boolean>();
+function stickyDrifts(doc: Document): boolean {
+  const known = drifting.get(doc);
+  if (known !== undefined) return known;
+  // Null when the probe could not scroll, as in a document not rendered. It
+  // sets its own writing mode and direction, which a page could change.
+  const probe = (display: 'block' | 'flex'): boolean | null => {
+    const box = doc.createElement('div');
+    box.dir = 'rtl';
+    box.style.cssText = `position:absolute;inset-block-start:0;inset-inline-start:0;margin:0;padding:0;border:0;writing-mode:horizontal-tb;direction:rtl;visibility:hidden;pointer-events:none;overflow:auto;inline-size:100px;block-size:40px;display:${display}`;
+    const rail = doc.createElement('span');
+    rail.style.cssText = 'position:sticky;inset-inline-start:0;display:block;flex:none;inline-size:0;block-size:0';
+    const wide = doc.createElement('span');
+    wide.style.cssText = 'display:block;flex:none;inline-size:300px;block-size:1px';
+    box.append(rail, wide);
+    doc.body.append(box);
+    box.scrollBy({ left: -100, behavior: 'instant' });
+    const drifts = box.scrollLeft === 0 ? null : Math.abs(box.getBoundingClientRect().right - rail.getBoundingClientRect().right) >= 0.5;
+    box.remove();
+    return drifts;
+  };
+  const block = probe('block');
+  const flex = probe('flex');
+  // A probe that could not scroll proves nothing: keep the fix, and ask again
+  // next time.
+  if (block === null || flex === null) return true;
+  const drifts = block || flex;
+  drifting.set(doc, drifts);
+  return drifts;
+}
+
 // Where each mouse or pen was before its latest move, per window, so an arrow
 // can tell a pointer moving onto it from one it showed up under. Not every
 // browser reports movementX and movementY for every move, so this is the
@@ -111,8 +146,10 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     // WebKit leaves a sticky box in place along the inline axis of a
     // right-to-left scroller, so the rail would scroll away with the content.
     // Where the rail has moved off the content box's start edge, move it back.
+    // Only in an engine the probe finds drifting: elsewhere sticky holds, and
+    // a rail moved by hand could change how far the scroller can scroll.
     const align = (style: CSSStyleDeclaration) => {
-      if (!rtl || el.scrollWidth <= el.clientWidth) {
+      if (!rtl || el.scrollWidth <= el.clientWidth || !stickyDrifts(el.ownerDocument)) {
         if (shift) own.style.translate = '';
         shift = 0;
         return;

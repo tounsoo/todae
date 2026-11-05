@@ -361,6 +361,23 @@ describe('scroll edge arrows', () => {
       );
     }
     const tab = (n: number) => screen.getByRole('tab', { name: `Section ${n}` });
+    /** The list's scroll numbers, for a failure to report what the browser did. */
+    function where(list: HTMLElement) {
+      const rail = list.querySelector<HTMLElement>('[data-todae-scroll-edges]');
+      const first = tab(1).getBoundingClientRect();
+      const last = screen.getAllByRole('tab').at(-1)!.getBoundingClientRect();
+      const box = list.getBoundingClientRect();
+      return [
+        `scrollLeft ${list.scrollLeft}`,
+        `scrollWidth ${list.scrollWidth}`,
+        `clientWidth ${list.clientWidth}`,
+        `list ${box.left}..${box.right}`,
+        `first tab ${first.left}..${first.right}`,
+        `last tab ${last.left}..${last.right}`,
+        `rail right ${rail?.getBoundingClientRect().right}`,
+        `rail translate '${rail?.style.translate ?? ''}'`,
+      ].join(', ');
+    }
     /** The list's scrollport, less the band of each arrow that shows. */
     function clear(list: HTMLElement) {
       const box = list.getBoundingClientRect();
@@ -427,7 +444,7 @@ describe('scroll edge arrows', () => {
     it.each([undefined, 'rtl'] as const)('keep a tab that arrow keys focus in view, clear of the arrows, dir %s', async (dir) => {
       render(<Sections dir={dir} />);
       const list = screen.getByRole('tablist');
-      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      await waitFor(() => expect(shownEdges(list), where(list)).toEqual(['inline-end']));
       tab(1).focus();
       for (let n = 2; n <= 12; n++) {
         await userEvent.keyboard(dir === 'rtl' ? '{ArrowLeft}' : '{ArrowRight}');
@@ -438,10 +455,10 @@ describe('scroll edge arrows', () => {
         expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
         expect(box.right).toBeLessThanOrEqual(room.right + 1);
       }
-      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-start']));
+      await waitFor(() => expect(shownEdges(list), where(list)).toEqual(['inline-start']));
       await userEvent.keyboard('{Home}');
       expect(document.activeElement).toBe(tab(1));
-      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      await waitFor(() => expect(shownEdges(list), where(list)).toEqual(['inline-end']));
     });
 
     it.each([undefined, 'rtl'] as const)('keep the indicator under the selected tab while the list is scrolled, dir %s', async (dir) => {
