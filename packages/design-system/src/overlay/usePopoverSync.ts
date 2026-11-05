@@ -22,6 +22,16 @@ export function endExitNow(el: HTMLElement): void {
   exitsUnderWay.get(el)?.();
 }
 
+/**
+ * Ends the fade of every popover still fading inside `el`, deepest first, as
+ * `el` hides. Each fades on its own clock, as a submenu does beside its menu,
+ * so without this a fade could outlast the popover it sits in. One its owner
+ * keeps open is left alone.
+ */
+function endExitsInside(el: HTMLElement): void {
+  for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) endExitNow(inner);
+}
+
 function setExitInert(el: HTMLElement, on: boolean): void {
   if (on) {
     if (el.inert) return;
@@ -44,8 +54,10 @@ export type PopoverPresence = {
  * frames after it shows, so its closed style is drawn first and it
  * transitions in, and `data-todae-entering` marks those frames, so a tooltip
  * inside waits for the growth that is about to start, and as it closes it takes `data-todae-exiting` and stays
- * shown, inert, until its opacity fade ends, then hides. Opening again inside
- * the fade turns it back where it is. Unmounting drops the wait.
+ * shown, inert, until its opacity fade ends, then hides. A popover still
+ * fading inside it ends its fade whenever it hides, so it never outlasts the
+ * popover it sits in. Opening again inside the fade turns it back where it is.
+ * Unmounting drops the wait.
  *
  * Once its fade in ends it takes `data-todae-settled`, which drops its
  * transition until it closes. Safari re-resolves an open popover's position
@@ -79,12 +91,14 @@ export function usePopoverSync(
     wasOpen.current = open;
     if (!open) {
       if (!isPopoverOpen(el)) {
+        endExitsInside(el);
         if (closing) onExitedRef.current?.();
         return;
       }
       // One that closes inside its first frames was never drawn: nothing
       // to fade.
       if (!animated || !el.hasAttribute('data-entered')) {
+        endExitsInside(el);
         el.hidePopover();
         if (animated && closing) onExitedRef.current?.();
         return;
@@ -100,6 +114,7 @@ export function usePopoverSync(
         if (ended) return;
         ended = true;
         exitsUnderWay.delete(el);
+        endExitsInside(el);
         el.removeAttribute('data-todae-exiting');
         setExitInert(el, false);
         if (isPopoverOpen(el)) el.hidePopover();

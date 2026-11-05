@@ -254,6 +254,111 @@ describe('usePopoverSync with presence', () => {
     }
   });
 
+  function Layer({
+    name,
+    open,
+    onExited,
+    children,
+  }: {
+    name: string;
+    open: boolean;
+    onExited?: () => void;
+    children?: ReactNode;
+  }) {
+    const ref = useRef<HTMLDivElement>(null);
+    usePopoverSync(ref, open, { onExited });
+    return (
+      <div ref={ref} popover="manual" data-testid="p" data-name={name}>
+        {children}
+      </div>
+    );
+  }
+
+  it('ends the fade of a popover still fading inside it, which goes first, as it hides', async () => {
+    fade('0.2s');
+    const onInnerExited = vi.fn();
+    // A submenu that closes with its menu: both fade, each on its own clock.
+    const tree = (open: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={open} onExited={onInnerExited} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true));
+    const menu = container.querySelector<HTMLElement>('[data-name="menu"]')!;
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    rerender(tree(false));
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(true);
+    const calls = trackCalls();
+    endFade(menu);
+    expect(calls).toEqual(['hide submenu', 'hide menu']);
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
+    expect(submenu.inert).toBe(false);
+    expect(onInnerExited).toHaveBeenCalledTimes(1);
+    // Its own fade ending afterwards tells nothing more.
+    endFade(submenu);
+    expect(onInnerExited).toHaveBeenCalledTimes(1);
+  });
+
+  it('ends the fade of a popover inside it when it hides at once, never drawn', async () => {
+    fade('0.2s');
+    const tree = (open: boolean, inner: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={inner} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true, true));
+    const menu = container.querySelector<HTMLElement>('[data-name="menu"]')!;
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    // The inner one's owner holds it open while the outer one closes, then
+    // the outer one shows again and both close inside its first frames.
+    rerender(tree(false, true));
+    endFade(menu);
+    rerender(tree(true, true));
+    const calls = trackCalls();
+    rerender(tree(false, false));
+    expect(calls).toEqual(['hide submenu', 'hide menu']);
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('ends the fade of a popover inside it when it closes already hidden', async () => {
+    fade('0.2s');
+    const tree = (open: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={open} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true));
+    const menu = container.querySelector<HTMLElement>('[data-name="menu"]')!;
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    // Something hid it without a close, as a move does.
+    menu.hidePopover();
+    rerender(tree(false));
+    expect(submenu.hasAttribute('data-popover-open')).toBe(false);
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('leaves a popover inside it to its own fade while it is still shown', async () => {
+    fade('0.2s');
+    const onInnerExited = vi.fn();
+    const tree = (open: boolean, inner: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={inner} onExited={onInnerExited} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true, true));
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    rerender(tree(true, false));
+    expect(submenu.hasAttribute('data-popover-open')).toBe(true);
+    endFade(submenu);
+    expect(submenu.hasAttribute('data-popover-open')).toBe(false);
+    expect(container.querySelector('[data-name="menu"]')!.hasAttribute('data-popover-open')).toBe(true);
+    expect(onInnerExited).toHaveBeenCalledTimes(1);
+  });
+
   it('hides at once and tells when it has no fade', async () => {
     fade(null);
     const onExited = vi.fn();
