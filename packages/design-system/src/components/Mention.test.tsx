@@ -145,6 +145,29 @@ describe('Mention.Root', () => {
     }
   });
 
+  it('keeps what the peek showed once it closes, so it fades out with it rather than empty', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<Mention.Root source={peopleSource()} id="mina">@Mina Park</Mention.Root>);
+      const button = screen.getByRole('button', { name: '@Mina Park' });
+      // Nothing renders in the closed peek before it first opens.
+      const peek = document.querySelector<HTMLElement>('[popover]')!;
+      expect(peek.textContent).toBe('');
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(peek.textContent).toBe('Mina Park');
+      fireEvent.pointerDown(document.body);
+      fireEvent.pointerUp(document.body);
+      await act(async () => {});
+      expect(button.getAttribute('aria-describedby')).toBeNull();
+      expect(peek.textContent).toBe('Mina Park');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("runs the consumer's focus, blur and pointer handlers, and keeps their aria-describedby", () => {
     vi.useFakeTimers();
     try {
