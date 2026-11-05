@@ -24,8 +24,6 @@ const EVEN_SPEED = 0.2;
 
 // How far the scroller can still go toward an edge, in pixels. An RTL
 // scroller's scrollLeft runs from 0 at its start down to negative numbers.
-// Browsers round scrollWidth and scrollLeft separately, so at an end this can
-// read 1; an arrow shows only for more than that.
 function room(el: HTMLElement, edge: Edge, rtl: boolean): number {
   switch (edge) {
     case 'block-start':
@@ -143,9 +141,9 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       const off = own.hasAttribute('data-off');
       for (const node of own.children) {
         const edge = (node as HTMLElement).dataset.edge as Edge;
-        node.toggleAttribute('data-shown', !off && room(el, edge, rtl) > 1);
+        node.toggleAttribute('data-shown', !off && room(el, edge, rtl) >= 1);
       }
-      if (resting && room(el, resting.edge, rtl) <= 1) stop();
+      if (resting && room(el, resting.edge, rtl) < 1) stop();
     };
     const measure = () => {
       const style = getComputedStyle(el);
@@ -183,10 +181,7 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       // Browsers round a scroll position, so a frame's share under a pixel
       // would be lost each frame on a fast display: carry it to the next.
       resting.carry += speed * (now - resting.last);
-      const left = room(el, resting.edge, rtl);
-      let by = Math.min(left, Math.floor(resting.carry));
-      // The arrow hides with a pixel or less to go, so take that last bit too.
-      if (by > 0 && left - by <= 1) by = left;
+      const by = Math.min(room(el, resting.edge, rtl), Math.floor(resting.carry));
       if (by > 0) {
         step(el, resting.edge, rtl, by);
         resting.carry -= by;
@@ -205,7 +200,7 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     const enter = (event: PointerEvent) => {
       if (event.pointerType === 'touch' || !moved(event, win)) return;
       const edge = (event.currentTarget as HTMLElement).dataset.edge as Edge;
-      if (resting?.edge === edge || room(el, edge, rtl) <= 1) return;
+      if (resting?.edge === edge || room(el, edge, rtl) < 1) return;
       const now = performance.now();
       stop();
       resting = { edge, since: now, last: now, carry: 0 };
