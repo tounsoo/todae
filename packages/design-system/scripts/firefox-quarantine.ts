@@ -137,7 +137,7 @@ export function summary(verdict: Verdict): string {
   );
   if (verdict.blocking.length) lines.push('', ...verdict.blocking.map((line) => `- ${cell(line)}`));
   if (rows.length) {
-    lines.push('', 'Quarantined tests warn instead of failing the job. Firefox goes back to fully blocking before 1.0.', '');
+    lines.push('', 'Quarantined tests warn instead of failing the job. By 1.0 the quarantine must be empty and Firefox fully blocking again.', '');
     lines.push('| Test | This run | Why |', '| --- | --- | --- |');
     for (const [entry, result] of rows) lines.push(`| ${cell(label(entry.file, entry.test))} | ${cell(result)} | ${cell(entry.reason)} ([issue](${entry.issue})) |`);
   }
