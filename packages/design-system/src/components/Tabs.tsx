@@ -158,11 +158,17 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
     const list = own.current;
     if (!list || !horizontal) return;
     const id = tabId(ctx.baseId, ctx.value);
+    let done = false;
+    let kept = 0;
+    let frame = 0;
     // Scrolls the selected tab into view, or returns false while there is
     // nothing to reveal yet: not rendered, in a list with no box, or in a list
     // that still fits, which tabs arriving later can push it out of.
     const measure = () => {
       const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
+      // With the selected tab gone, as while tabs reload, the next one to
+      // arrive is revealed afresh, wherever the list was clamped to.
+      if (!tab) done = false;
       if (!tab || list.clientWidth === 0 || tab.offsetParent !== list) return false;
       if (list.scrollWidth <= list.clientWidth) return false;
       const style = getComputedStyle(list);
@@ -182,9 +188,6 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
     // hidden, which resets its scroll. After that, tabs that join or leave
     // reveal it again only while the list is where this left it, so once the
     // user scrolls, the list stays where they put it.
-    let done = false;
-    let kept = 0;
-    let frame = 0;
     const moved = () => done && list.scrollLeft !== kept;
     // Scrolling away from an end shows that end's arrow, which takes room
     // the first pass couldn't see; settle once more after it shows.

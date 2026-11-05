@@ -41,7 +41,7 @@
      indicator has nothing to slide from. */
   .list[data-orientation='horizontal'] > [data-todae-scroll-edges] {
     margin-block-end: 0;
-    margin-inline-end: calc(-1 * var(--todae-tabs-gap));
+    margin-inline-end: calc(-1 * var(--_gap, var(--todae-tabs-gap)));
   }
 
   .list[data-orientation='vertical'] {

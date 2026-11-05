@@ -183,7 +183,10 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       // Browsers round a scroll position, so a frame's share under a pixel
       // would be lost each frame on a fast display: carry it to the next.
       resting.carry += speed * (now - resting.last);
-      const by = Math.min(room(el, resting.edge, rtl), Math.floor(resting.carry));
+      const left = room(el, resting.edge, rtl);
+      let by = Math.min(left, Math.floor(resting.carry));
+      // The arrow hides with a pixel or less to go, so take that last bit too.
+      if (by > 0 && left - by <= 1) by = left;
       if (by > 0) {
         step(el, resting.edge, rtl, by);
         resting.carry -= by;
