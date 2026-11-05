@@ -37,21 +37,34 @@ async function violations(): Promise<string[]> {
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-// Each element that reaches past the viewport's end while its parent doesn't:
-// where a sideways page scroll starts, so a failure names the part to fix. An
-// element inside a box that clips or scrolls its overflow, such as a wide table
-// in a ScrollArea, can't widen the page, so it isn't counted.
+// The outermost elements that reach past the viewport's end: where a sideways
+// page scroll starts, so a failure names the part to fix. An element that a box
+// clipping or scrolling its overflow holds in, such as a wide table in a
+// ScrollArea, can't widen the page, so it isn't counted.
 function pastEdge(): string[] {
   const edge = innerWidth + 0.5;
-  const clipped = (el: Element) => {
+  // Whether a box that clips its overflow, such as a ScrollArea, holds el in.
+  // Only the boxes el is positioned against count: an absolute box, such as a
+  // VisuallyHidden, passes over every unpositioned box on its way up, so a
+  // scroller that isn't positioned doesn't clip it. A fixed box never widens the page.
+  const clipped = (el: HTMLElement) => {
+    let position = getComputedStyle(el).position;
+    if (position === 'fixed') return true;
     for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
-      if (getComputedStyle(box).overflowX !== 'visible') return true;
+      const style = getComputedStyle(box);
+      const contains = position !== 'absolute' || style.position !== 'static' || style.transform !== 'none';
+      if (!contains) continue;
+      if (style.overflowX !== 'visible') return true;
+      position = style.position;
     }
     return false;
   };
-  return [...document.body.querySelectorAll<HTMLElement>('*')]
-    .filter((el) => el.getBoundingClientRect().right > edge && el.parentElement!.getBoundingClientRect().right <= edge)
-    .filter((el) => !clipped(el))
+  const past = new Set(
+    [...document.body.querySelectorAll<HTMLElement>('*')].filter((el) => el.getBoundingClientRect().right > edge && !clipped(el)),
+  );
+  // The outermost of each: where the sideways scroll starts.
+  return [...past]
+    .filter((el) => !past.has(el.parentElement!))
     .map((el) => {
       const name = [el.localName, ...el.classList].join('.');
       const text = el.textContent!.trim().replace(/\s+/g, ' ').slice(0, 40);

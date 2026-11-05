@@ -2,6 +2,10 @@
   .root {
     --_room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
 
+    /* Positioned, so it is the containing block of what it holds: a
+       VisuallyHidden or other absolute box inside scrolls and clips with the
+       rest, where it would otherwise sit past the area's edge and widen the page. */
+    position: relative;
     min-inline-size: 0;
     min-block-size: 0;
     scroll-padding: var(--_room);

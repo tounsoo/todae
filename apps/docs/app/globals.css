@@ -1107,9 +1107,7 @@ table {
   scroll-snap-type: x proximity;
 }
 
-/* Positioned, so each card's visually hidden radio scrolls with it instead of widening the sheet. */
 .pg-sheet .preset {
-  position: relative;
   scroll-snap-align: start;
 }
 
