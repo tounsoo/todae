@@ -1154,8 +1154,12 @@ table {
 }
 
 /* The preview inside the stage reads the stage's tokens only. */
+/* One explicit minmax(0, 1fr) column in each of these grids: an implicit auto
+   column grows to its widest item's min-content, so a long placeholder or a
+   wide table would push the preview past a phone's edge. */
 .preview {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   max-inline-size: 70rem;
   margin-inline: auto;
@@ -1268,6 +1272,7 @@ table {
 .preview-form,
 .preview-stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 

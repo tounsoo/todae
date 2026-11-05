@@ -37,6 +37,19 @@ async function violations(): Promise<string[]> {
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+// Each element that reaches past the viewport's end while its parent doesn't:
+// where a sideways page scroll starts, so a failure names the part to fix.
+function pastEdge(): string[] {
+  const edge = innerWidth + 0.5;
+  return [...document.body.querySelectorAll<HTMLElement>('*')]
+    .filter((el) => el.getBoundingClientRect().right > edge && el.parentElement!.getBoundingClientRect().right <= edge)
+    .map((el) => {
+      const name = [el.localName, ...el.classList].join('.');
+      const text = el.textContent!.trim().replace(/\s+/g, ' ').slice(0, 40);
+      return `${name} "${text}" ends at ${Math.round(el.getBoundingClientRect().right)}`;
+    });
+}
+
 describe('docs site chrome under axe', () => {
   it('home page', async () => {
     render(
@@ -154,6 +167,7 @@ describe('narrow screens', () => {
     const lead = screen.getByText(/Start from a preset/);
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
     expect(stage.getBoundingClientRect().top).toBeLessThan(innerHeight / 3);
+    expect(pastEdge()).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
     // The page keeps the bar's height free at its end, under the stage and the footer.
     expect(getComputedStyle(document.querySelector('.shell')!).paddingBlockEnd).toBe(
