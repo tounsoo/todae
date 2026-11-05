@@ -487,6 +487,35 @@ describe('scroll edge arrows', () => {
       });
     });
 
+    it('scroll a selected tab into view once tabs that arrive later push it past the edge', async () => {
+      function Arriving({ all }: { all: boolean }) {
+        const values = all ? Array.from({ length: 12 }, (_, i) => i + 1) : [10];
+        return (
+          <div style={{ display: 'flex', inlineSize: 260 }}>
+            <Tabs.Root defaultValue="s10">
+              <Tabs.List aria-label="Sections">
+                {values.map((n) => (
+                  <Tabs.Tab key={n} value={`s${n}`}>
+                    Section {n}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs.Root>
+          </div>
+        );
+      }
+      const { rerender } = render(<Arriving all={false} />);
+      await frames(2);
+      rerender(<Arriving all />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => {
+        const box = tab(10).getBoundingClientRect();
+        const room = clear(list);
+        expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+        expect(box.right).toBeLessThanOrEqual(room.right + 1);
+      });
+    });
+
     it('leave a list the user scrolled where it is when another control joins it', async () => {
       function Growing({ extra }: { extra: boolean }) {
         return (

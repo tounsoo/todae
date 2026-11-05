@@ -158,12 +158,13 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
     const list = own.current;
     if (!list || !horizontal) return;
     const id = tabId(ctx.baseId, ctx.value);
-    // Scrolls the selected tab into view, or returns false while it can't be
-    // measured: not rendered yet, or in a list with no box.
+    // Scrolls the selected tab into view, or returns false while there is
+    // nothing to reveal yet: not rendered, in a list with no box, or in a list
+    // that still fits, which tabs arriving later can push it out of.
     const measure = () => {
       const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
       if (!tab || list.clientWidth === 0 || tab.offsetParent !== list) return false;
-      if (list.scrollWidth <= list.clientWidth) return true;
+      if (list.scrollWidth <= list.clientWidth) return false;
       const style = getComputedStyle(list);
       // The scrollport in the content's own coordinates, where a right-to-left
       // list's scrollLeft runs negative.
