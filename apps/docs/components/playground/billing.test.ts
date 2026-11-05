@@ -18,15 +18,21 @@ const START = startBilling(
 
 describe('billing', () => {
   it('marks an invoice paid, and Undo puts it and the activity back as they were', () => {
-    const before = START.invoices[1]!;
     const paid = billingReducer(START, { type: 'markPaid', id: 'INV-2' });
     expect(paid.invoices[1]?.status).toBe('paid');
     expect(paid.activity).toEqual([{ kind: 'paid', id: 'INV-2', customer: 'Customer INV-2' }]);
     // A paid invoice is paid once.
     expect(billingReducer(paid, { type: 'markPaid', id: 'INV-2' })).toBe(paid);
-    const undone = billingReducer(paid, { type: 'restore', invoice: before });
+    const undone = billingReducer(paid, { type: 'unpay', id: 'INV-2', status: 'overdue' });
     expect(undone.invoices).toEqual(START.invoices);
     expect(undone.activity).toEqual([]);
+  });
+
+  it('keeps a flag set after Mark paid when Mark paid is undone', () => {
+    const paid = billingReducer(START, { type: 'markPaid', id: 'INV-2' });
+    const flagged = billingReducer(paid, { type: 'flag', id: 'INV-2', flagged: true });
+    const undone = billingReducer(flagged, { type: 'unpay', id: 'INV-2', status: 'overdue' });
+    expect(undone.invoices[1]).toMatchObject({ status: 'overdue', flagged: true });
   });
 
   it('sends only a draft', () => {
@@ -49,7 +55,8 @@ describe('billing', () => {
     expect(nextInvoiceId(archived)).toBe('INV-4');
     const created = billingReducer(archived, { type: 'create', invoice: invoice('INV-4', 'due', 40) });
     expect(created.invoices[0]?.id).toBe('INV-4');
-    expect(billingReducer(created, { type: 'remove', id: 'INV-4' }).activity).toEqual(archived.activity);
+    const reminded = billingReducer(created, { type: 'remind', id: 'INV-4' });
+    expect(billingReducer(reminded, { type: 'remove', id: 'INV-4' }).activity).toEqual(archived.activity);
   });
 
   it('flags and files an invoice', () => {

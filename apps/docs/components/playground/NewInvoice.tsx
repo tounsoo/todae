@@ -31,6 +31,8 @@ export function NewInvoice({
   const { copy, locale } = kit;
   const ids = { customer: useId(), amount: useId(), due: useId() };
   const today = Temporal.PlainDate.from(TODAY);
+  // A new key gives a fresh Form.Root, which forgets the last submit and shows no errors until the next.
+  const [attempt, setAttempt] = useState(0);
   const [customer, setCustomer] = useState('');
   const [amount, setAmount] = useState<number | null>(null);
   // Undefined until the date is touched, so it follows the terms; null once it is cleared.
@@ -41,6 +43,7 @@ export function NewInvoice({
     setCustomer('');
     setAmount(null);
     setDue(undefined);
+    setAttempt((count) => count + 1);
   };
 
   return (
@@ -57,6 +60,7 @@ export function NewInvoice({
       </Dialog.Header>
       <Dialog.Description>{copy.form.description}</Dialog.Description>
       <Form.Root
+        key={attempt}
         onSubmit={(event) => {
           event.preventDefault();
           if (amount === null || dueDate === null) return;

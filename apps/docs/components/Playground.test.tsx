@@ -168,6 +168,13 @@ describe('Playground', { timeout: 15_000 }, () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create invoice' }));
     expect(screen.queryByText('INV-1046 created')).toBeNull();
     expect(screen.getByRole('dialog', { name: 'New invoice' })).toBe(dialog);
+    // Customer and Amount, each in the summary and under its field.
+    expect(within(dialog).getAllByText('This field is required')).toHaveLength(4);
+    // Closed and opened again, it starts clean.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New invoice' })).toBeNull());
+    fireEvent.click(preview.getByRole('button', { name: 'New invoice' }));
+    expect(within(dialog).queryByText('This field is required')).toBeNull();
     fireEvent.change(within(dialog).getByLabelText('Customer'), { target: { value: 'Globex' } });
     const amount = within(dialog).getByLabelText('Amount');
     fireEvent.change(amount, { target: { value: '500' } });

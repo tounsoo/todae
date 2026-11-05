@@ -40,7 +40,7 @@ export type BillingAction =
   | { type: 'create'; invoice: Invoice }
   | { type: 'remove'; id: string }
   | { type: 'markPaid'; id: string }
-  | { type: 'restore'; invoice: Invoice }
+  | { type: 'unpay'; id: string; status: InvoiceStatus }
   | { type: 'send'; id: string }
   | { type: 'remind'; id: string }
   | { type: 'flag'; id: string; flagged: boolean }
@@ -72,7 +72,8 @@ export function billingReducer(state: BillingState, action: BillingAction): Bill
       return {
         ...state,
         invoices: state.invoices.filter((invoice) => invoice.id !== action.id),
-        activity: state.activity.filter((entry) => !(entry.kind === 'created' && entry.id === action.id)),
+        // Undo of Create: the invoice never was, so nothing done to it stays in the activity.
+        activity: state.activity.filter((entry) => entry.id !== action.id),
       };
     case 'markPaid': {
       const invoice = find(state, action.id);
@@ -83,12 +84,12 @@ export function billingReducer(state: BillingState, action: BillingAction): Bill
         activity: [{ kind: 'paid', id: invoice.id, customer: invoice.customer }, ...state.activity],
       };
     }
-    case 'restore': {
-      // Undo of Mark paid: the invoice goes back as it was, and its Paid line leaves the activity.
-      const first = state.activity.findIndex((entry) => entry.kind === 'paid' && entry.id === action.invoice.id);
+    case 'unpay': {
+      // Undo of Mark paid: only the status goes back, so a flag or a move made since stays.
+      const first = state.activity.findIndex((entry) => entry.kind === 'paid' && entry.id === action.id);
       return {
         ...state,
-        invoices: update(state, action.invoice.id, () => action.invoice),
+        invoices: update(state, action.id, (it) => ({ ...it, status: action.status })),
         activity: first === -1 ? state.activity : state.activity.filter((_, index) => index !== first),
       };
     }

@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge, Button, Card, Link, Menu, Pagination, ScrollArea, Table, Text, ToggleGroup, VisuallyHidden, type TableSort } from '@tounsoo/todae';
-import { useState, type ReactNode } from 'react';
+import { Badge, Button, Card, Menu, Pagination, ScrollArea, Table, Text, ToggleGroup, VisuallyHidden, type TableSort } from '@tounsoo/todae';
+import { useRef, useState, type ReactNode } from 'react';
 import { sortInvoices, type Folder, type Invoice, type Sort, type SortColumn } from './billing';
 import { STATUS_TONE, type InvoiceActions, type Kit } from './kit';
 
@@ -77,6 +77,17 @@ export function InvoiceTable({
   const [sort, setSort] = useState<Sort>({ column: 'id', direction: 'descending' });
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<Filter>('all');
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // Archive, or Mark paid under Unpaid, takes the row and its menu away. Focus
+  // that went with them comes back to the card's heading, not the page's start.
+  const keepFocus = (act: (id: string) => void) => (id: string) => {
+    act(id);
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (!active || active === document.body) headingRef.current?.focus();
+    });
+  };
+  const rowActions: InvoiceActions = { ...actions, archive: keepFocus(actions.archive), markPaid: keepFocus(actions.markPaid) };
   const listed = invoices.filter((invoice) => FILTERS[filter](invoice));
   const pages = Math.max(1, Math.ceil(listed.length / PAGE_SIZE));
   // A page that emptied, such as after an archive, falls back to the last one there is.
@@ -103,7 +114,9 @@ export function InvoiceTable({
     <Card.Root className={className}>
       <Card.Header>
         <div className="preview-card-title">
-          <Text.Root as="h3">{copy.invoiceList}</Text.Root>
+          <Text.Root as="h3" ref={headingRef} tabIndex={-1}>
+            {copy.invoiceList}
+          </Text.Root>
           <ToggleGroup.Root
             aria-label={copy.invoiceFilter}
             value={filter}
@@ -121,7 +134,8 @@ export function InvoiceTable({
         </div>
       </Card.Header>
       <Card.Body>
-        <ScrollArea.Root axis="inline" aria-label={copy.invoiceList}>
+        {/* Focusable, so it stays a named region that keys can scroll though the table holds buttons. */}
+        <ScrollArea.Root axis="inline" focusable aria-label={copy.invoiceList}>
           <Table.Root>
             <Table.Head>
               <Table.Row>
@@ -139,16 +153,10 @@ export function InvoiceTable({
               {rows.map((invoice) => (
                 <Table.Row key={invoice.id}>
                   <Table.HeaderCell scope="row">
-                    {/* Styled as a link, it opens the details in place, so it is a button. */}
-                    <Link.Root
-                      render={({ className, children }) => (
-                        <button type="button" className={`${className ?? ''} preview-row-link`} onClick={() => actions.open(invoice.id)}>
-                          {children}
-                        </button>
-                      )}
-                    >
+                    {/* It opens the details in place, so it is a button, painted with the link tokens. */}
+                    <button type="button" className="preview-row-link" onClick={() => actions.open(invoice.id)}>
                       {invoice.id}
-                    </Link.Root>
+                    </button>
                   </Table.HeaderCell>
                   <Table.Cell>
                     <span className="preview-customer">
@@ -163,7 +171,7 @@ export function InvoiceTable({
                   </Table.Cell>
                   <Table.Cell className="preview-num">{kit.money(invoice.amount)}</Table.Cell>
                   <Table.Cell className="preview-row-menu">
-                    <RowMenu invoice={invoice} kit={kit} actions={actions} more={more} />
+                    <RowMenu invoice={invoice} kit={kit} actions={rowActions} more={more} />
                   </Table.Cell>
                 </Table.Row>
               ))}

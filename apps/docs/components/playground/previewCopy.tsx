@@ -393,7 +393,7 @@ const KO: PreviewCopy = {
     input: '청구서와 명령 검색',
     placeholder: '청구서, 고객, 명령을 입력하세요',
     empty: '일치하는 항목이 없습니다.',
-    open: (invoice) => `${invoice.id} 열기, ${invoice.customer}`,
+    open: (invoice) => `${invoice.id}, ${invoice.customer} 열기`,
   },
   revenue: '매출',
   collected: '수금',
@@ -422,7 +422,7 @@ const KO: PreviewCopy = {
   invoiceFilter: '보기',
   unpaid: '미결제',
   noInvoices: '표시할 청구서가 없습니다.',
-  statuses: { draft: '임시 저장', due: '대기', overdue: '연체', paid: '결제 완료' },
+  statuses: { draft: '임시 저장', due: '결제 대기', overdue: '연체', paid: '결제 완료' },
   folders: KO_FOLDERS,
   flagged: '표시됨',
   row: {
@@ -442,15 +442,15 @@ const KO: PreviewCopy = {
     overdue: '연체',
     overdueBody: (days) => `결제가 ${days}일 늦었습니다.`,
     folder: '폴더',
-    inbox: '받은 청구서',
+    inbox: '분류 없음',
   },
   toasts: {
     undo: '실행 취소',
-    paid: (id) => `${id}를 결제 완료로 표시했습니다`,
-    sent: (invoice) => `${invoice.id}를 ${invoice.customer}에 보냈습니다`,
+    paid: (id) => `${id} 청구서를 결제 완료로 표시했습니다`,
+    sent: (invoice) => `${invoice.id} 청구서를 ${invoice.customer}에 보냈습니다`,
     reminded: (invoice) => `${invoice.customer}에 알림을 보냈습니다`,
-    created: (id) => `${id}를 만들었습니다`,
-    archived: (id) => `${id}를 보관했습니다`,
+    created: (id) => `${id} 청구서를 만들었습니다`,
+    archived: (id) => `${id} 청구서를 보관했습니다`,
     exported: (file) => `${file} 파일이 준비되었습니다`,
     printed: '프린터로 보냈습니다',
   },
@@ -517,17 +517,17 @@ const KO: PreviewCopy = {
   activityLine: (entry) => {
     switch (entry.kind) {
       case 'paid':
-        return `${entry.customer}에서 ${entry.id}를 결제했습니다`;
+        return `${entry.customer}에서 ${entry.id} 청구서를 결제했습니다`;
       case 'reminded':
         return `${entry.customer}에 알림을 보냈습니다`;
       case 'sent':
-        return `${entry.id}를 ${entry.customer}에 보냈습니다`;
+        return `${entry.id} 청구서를 ${entry.customer}에 보냈습니다`;
       case 'created':
-        return `${entry.customer}의 ${entry.id}를 만들었습니다`;
+        return `${entry.customer}의 ${entry.id} 청구서를 만들었습니다`;
       case 'moved':
-        return `${entry.id}를 ${KO_FOLDERS[entry.folder]} 폴더로 옮겼습니다`;
+        return `${entry.id} 청구서를 ${KO_FOLDERS[entry.folder]} 폴더로 옮겼습니다`;
       case 'archived':
-        return `${entry.id}를 보관했습니다`;
+        return `${entry.id} 청구서를 보관했습니다`;
     }
   },
   activityBadge: { paid: '결제 완료', reminded: '보냄', sent: '보냄', created: '새 항목', moved: '이동', archived: '보관' },
@@ -549,7 +549,7 @@ const KO: PreviewCopy = {
   questions: '자주 묻는 질문',
   faq: [
     { question: '언제 청구되나요?', answer: '매월 1일에, 사용한 좌석만큼 청구됩니다.' },
-    { question: '나중에 요금제를 바꿀 수 있나요?', answer: '네, 언제든지요. 새 요금은 다음 청구서부터 적용됩니다.' },
+    { question: '나중에 요금제를 바꿀 수 있나요?', answer: '네, 언제든지 바꿀 수 있습니다. 새 요금은 다음 청구서부터 적용됩니다.' },
   ],
   maintenance: { title: '정기 점검', body: '일요일 02:00부터 03:00(UTC)까지 결제는 읽기 전용입니다.' },
   cardExpiry: { title: '카드 만료 예정', body: '요금제를 유지하려면 2026년 11월 1일 전에 카드를 바꾸세요.' },

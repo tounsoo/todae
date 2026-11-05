@@ -12,6 +12,7 @@ import {
   useSheetPresentation,
   type StepsStatus,
 } from '@tounsoo/todae';
+import { useEffect, useRef } from 'react';
 import type { Invoice } from './billing';
 import { daysLate, STATUS_TONE, type InvoiceActions, type Kit } from './kit';
 
@@ -110,6 +111,18 @@ export function InvoiceDetail({
 }) {
   const { isSheet } = useSheetPresentation();
   const shown = open && invoice !== undefined;
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const status = invoice?.status;
+  // Mark paid takes the footer, and the focused button in it, away. Focus that
+  // went with it moves to Close, so it stays in the open panel.
+  useEffect(() => {
+    if (!shown) return;
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (!active || active === document.body) closeRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [shown, status]);
   const title = invoice ? `${invoice.id}, ${invoice.customer}` : '';
 
   if (isSheet) {
@@ -118,7 +131,7 @@ export function InvoiceDetail({
         <BottomSheet.Grabber />
         <BottomSheet.Header>
           <BottomSheet.Title>{title}</BottomSheet.Title>
-          <BottomSheet.Close />
+          <BottomSheet.Close ref={closeRef} />
         </BottomSheet.Header>
         {invoice ? (
           <>
@@ -140,7 +153,7 @@ export function InvoiceDetail({
     <Drawer.Root open={shown} onOpenChange={(next) => onOpenChange(next)}>
       <Drawer.Header>
         <Drawer.Title>{title}</Drawer.Title>
-        <Drawer.Close />
+        <Drawer.Close ref={closeRef} />
       </Drawer.Header>
       {invoice ? (
         <>

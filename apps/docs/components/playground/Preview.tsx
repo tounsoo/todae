@@ -100,7 +100,7 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
       const before = find(id);
       if (!before) return;
       dispatch({ type: 'markPaid', id });
-      undoable(copy.toasts.paid(id), () => dispatch({ type: 'restore', invoice: before }));
+      undoable(copy.toasts.paid(id), () => dispatch({ type: 'unpay', id, status: before.status }));
     },
     send: (id) => {
       const invoice = find(id);
@@ -127,7 +127,11 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
     dispatch({ type: 'create', invoice });
     setCreating(false);
     setShowDrafts(true);
-    undoable(copy.toasts.created(invoice.id), () => dispatch({ type: 'remove', id: invoice.id }));
+    undoable(copy.toasts.created(invoice.id), () => {
+      dispatch({ type: 'remove', id: invoice.id });
+      // Its details close with it, so a new invoice that takes the same number doesn't open them.
+      setDetail((current) => (current?.id === invoice.id ? { ...current, open: false } : current));
+    });
   };
 
   const exportAs = (kind: 'csv' | 'pdf') => toaster.add({ tone: 'success', title: copy.toasts.exported(`invoices.${kind}`) });

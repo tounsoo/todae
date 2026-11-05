@@ -1294,13 +1294,30 @@ table {
   padding: var(--todae-space-3);
 }
 
-/* The invoice number opens its details: a button that reads as a link. */
+/* The invoice number opens its details: a button that reads as a link. Link
+   styles only an `a` with an href, so the button takes the link tokens here. */
 .preview-row-link {
   padding: 0;
   border: 0;
   background: none;
   font: inherit;
   cursor: pointer;
+  color: var(--todae-link-fg-default);
+  text-decoration-line: underline;
+  text-decoration-color: var(--todae-link-decoration-default);
+  text-decoration-thickness: var(--todae-link-decoration-thickness-default);
+  text-underline-offset: var(--todae-link-decoration-offset);
+}
+
+.preview-row-link:hover {
+  color: var(--todae-link-fg-hover);
+  text-decoration-color: var(--todae-link-decoration-hover);
+}
+
+.preview-row-link:focus-visible {
+  outline: var(--todae-focus-ring-width) solid var(--todae-link-ring-focus);
+  outline-offset: var(--todae-focus-ring-offset);
+  border-radius: var(--todae-link-ring-radius);
 }
 
 .preview-customer {
