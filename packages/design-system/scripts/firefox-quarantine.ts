@@ -46,6 +46,12 @@ export const firefoxQuarantine: readonly QuarantineEntry[] = [
     issue: ISSUE,
     reason: 'An anchor-centered tip lands far from its trigger in a right-to-left Drawer.',
   },
+  {
+    file: 'src/browser/scrollEdges.browser.test.tsx',
+    test: 'scroll edge arrows > in a tab list > keep a tab that arrow keys focus in view, clear of the arrows, dir rtl',
+    issue: ISSUE,
+    reason: 'Arrows go stale after keyboard focus scrolls a right-to-left tab list: back at its start, it still shows only the start arrow.',
+  },
 ];
 
 type Test = BrowserResults['tests'][number];
