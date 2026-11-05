@@ -3,7 +3,7 @@ import { afterEach } from 'vitest';
 // The site installs this shim in Providers; components rendered without Providers, such as the Playground's preview, need it too.
 import 'temporal-polyfill/global';
 
-// jsdom has no Popover API. Toast and the preview's note call showPopover on mount.
+// jsdom has no Popover API. Toast and the preview's popovers call showPopover.
 if (typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.showPopover !== 'function') {
   HTMLElement.prototype.showPopover = function showPopover() {
     this.setAttribute('data-popover-open', '');
@@ -30,7 +30,7 @@ if (typeof Element !== 'undefined' && typeof Element.prototype.checkVisibility !
   };
 }
 
-// jsdom's dialog has no showModal. Opening the preview's dialog calls it.
+// jsdom's dialog has no showModal. Opening the preview's dialogs and drawer calls it.
 const dialogProto = globalThis.HTMLDialogElement?.prototype;
 if (dialogProto && typeof dialogProto.showModal !== 'function') {
   Object.defineProperty(dialogProto, 'open', {
