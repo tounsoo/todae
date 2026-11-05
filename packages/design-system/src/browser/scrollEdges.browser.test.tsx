@@ -474,6 +474,53 @@ describe('scroll edge arrows', () => {
       });
     });
 
+    it('scroll a selected tab into view once tabs that arrive late hold it', async () => {
+      const { rerender } = render(<Sections count={0} defaultValue="s10" />);
+      await frames(2);
+      rerender(<Sections defaultValue="s10" />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => {
+        const box = tab(10).getBoundingClientRect();
+        const room = clear(list);
+        expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+        expect(box.right).toBeLessThanOrEqual(room.right + 1);
+      });
+    });
+
+    it('keep the whole ring of another control in the list, such as an add button', async () => {
+      render(
+        <div style={{ display: 'flex', inlineSize: 260 }}>
+          <Tabs.Root defaultValue="s1">
+            <Tabs.List aria-label="Sections">
+              {Array.from({ length: 8 }, (_, i) => (
+                <Tabs.Tab key={i} value={`s${i + 1}`}>
+                  Section {i + 1}
+                </Tabs.Tab>
+              ))}
+              <Button.Root>Add</Button.Root>
+            </Tabs.List>
+          </Tabs.Root>
+        </div>,
+      );
+      const list = screen.getByRole('tablist');
+      tab(1).focus();
+      await userEvent.keyboard('{End}');
+      await userEvent.tab();
+      const add = screen.getByRole('button', { name: 'Add' });
+      expect(document.activeElement).toBe(add);
+      await frames(2);
+      const style = getComputedStyle(add);
+      const reach = Number.parseFloat(style.outlineWidth) + Number.parseFloat(style.outlineOffset);
+      const box = add.getBoundingClientRect();
+      const port = list.getBoundingClientRect();
+      const top = port.top + list.clientTop;
+      const left = port.left + list.clientLeft;
+      expect(box.top - reach).toBeGreaterThanOrEqual(top - 0.5);
+      expect(box.bottom + reach).toBeLessThanOrEqual(top + list.clientHeight + 0.5);
+      expect(box.left - reach).toBeGreaterThanOrEqual(left - 0.5);
+      expect(box.right + reach).toBeLessThanOrEqual(left + list.clientWidth + 0.5);
+    });
+
     it('scroll a selected tab into view in a popover that grows in', async () => {
       function InPopover() {
         const popover = usePopover();

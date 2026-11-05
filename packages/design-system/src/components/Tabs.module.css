@@ -153,6 +153,12 @@
     outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
+  /* A horizontal list clips at its edges, as a scroller does, so another
+     control in it, such as an add button, draws its ring inside itself too. */
+  .list[data-orientation='horizontal'] :focus-visible:not([role='tab']) {
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
   .tab:disabled {
     color: var(--todae-tabs-fg-disabled);
     cursor: not-allowed;

@@ -148,8 +148,8 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
   const refs = useComposedRefs(own, container.ref, ref);
   const horizontal = ctx.orientation === 'horizontal';
   // A horizontal list scrolls sideways, so a selected tab past its edge, on
-  // the first render, chosen by the owner, or in a list that was hidden until
-  // now, is scrolled into view, clear of a shown arrow. Only the list scrolls,
+  // the first render, chosen by the owner, in a list that was hidden until
+  // now, or among tabs that arrive late, is scrolled into view, clear of a shown arrow. Only the list scrolls,
   // never the page around it. It measures in the list's own layout (offsets
   // and scroll positions), so a transform on an ancestor, such as a popover
   // growing in, changes nothing. Focus moving to a tab scrolls it into view
@@ -187,9 +187,14 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       if (was === 0 && width > 0) reveal();
     });
     shown.observe(list);
+    // Tabs that arrive after the first render, as from loaded data, may hold
+    // the selected one.
+    const added = new MutationObserver(reveal);
+    added.observe(list, { childList: true });
     return () => {
       cancelAnimationFrame(frame);
       shown.disconnect();
+      added.disconnect();
     };
   }, [horizontal, ctx.baseId, ctx.value]);
   return (
