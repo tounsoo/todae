@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { createRoot } from 'react-dom/client';
-import { useState, type CSSProperties } from 'react';
+import { memo, useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
@@ -235,7 +235,35 @@ describe('A popover whose caller stops naming its anchor as it closes', () => {
     rerender(<Harness open={false} word />);
     expect(el.hasAttribute('data-todae-exiting')).toBe(true);
     expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
-    rerender(<Harness open={false} word={false} />);
+    await act(async () => rerender(<Harness open={false} word={false} />));
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('goes at once when that anchor goes away while it fades, though nothing renders it again', async () => {
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    const Peek = memo(function Peek({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: open ? '--word' : null });
+      return (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Peek">
+          x
+        </Popover.Root>
+      );
+    });
+    function Harness({ open, word }: { open: boolean; word: boolean }) {
+      return (
+        <>
+          {word ? <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span> : null}
+          <Peek open={open} />
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open word />);
+    const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    rerender(<Harness open={false} word />);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(true);
+    await act(async () => rerender(<Harness open={false} word={false} />));
     expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
     expect(el.hasAttribute('data-todae-exiting')).toBe(false);
   });

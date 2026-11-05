@@ -107,7 +107,10 @@ export type UseMentionsResult = {
   trigger: MentionTrigger | null;
   /** The text after the trigger character, up to the end of the word. */
   query: string;
-  /** The rows for the word being typed. A closed list keeps its last rows, to fade out with. */
+  /**
+   * The rows for the word being typed. A closed list keeps its last rows, and
+   * whether they were loading, failed or too long to fit, to fade out with.
+   */
   items: MentionItem[];
   isEmpty: boolean;
   activeId: string | null;
@@ -139,10 +142,18 @@ type ShownList = {
   isEmpty: boolean;
   name: string;
   active: string | null;
+  /** Rows the list showed as too long to fit. */
+  blocked: readonly string[];
+  loading: boolean;
+  error: unknown | null;
   at: { start: number; end: number } | null;
   /** The text `at` points into. */
   text: string;
 };
+
+function sameValues(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
 
 function sameRows(a: readonly MentionItem[], b: readonly MentionItem[]): boolean {
   return (
@@ -358,19 +369,43 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // What the list last showed, and the word it showed it for. A list closes
   // as its word stops being typed, so it keeps these to fade out with, rows
   // and all, at that word.
-  const [last, setLast] = useState<ShownList>({ items: liveItems, isEmpty: list.isEmpty, name: liveName, active: null, at: null, text: value });
+  const [last, setLast] = useState<ShownList>({
+    items: liveItems,
+    isEmpty: list.isEmpty,
+    name: liveName,
+    active: null,
+    blocked: [],
+    loading: false,
+    error: null,
+    at: null,
+    text: value,
+  });
   // Rows compare by what they show: options built inline are new on every render.
+  const blocked = query ? liveItems.filter((item) => !item.option.disabled && !fits(item.option)).map((item) => item.option.value) : [];
   if (
     query &&
     (!sameRows(last.items, liveItems) ||
       last.isEmpty !== list.isEmpty ||
       last.name !== liveName ||
       last.active !== activeValue ||
+      !sameValues(last.blocked, blocked) ||
+      last.loading !== list.loading ||
+      last.error !== error ||
       last.at?.start !== query.start ||
       last.at?.end !== query.end ||
       last.text !== value)
   ) {
-    setLast({ items: liveItems, isEmpty: list.isEmpty, name: liveName, active: activeValue, at: { start: query.start, end: query.end }, text: value });
+    setLast({
+      items: liveItems,
+      isEmpty: list.isEmpty,
+      name: liveName,
+      active: activeValue,
+      blocked,
+      loading: list.loading,
+      error,
+      at: { start: query.start, end: query.end },
+      text: value,
+    });
   }
   const items = open ? liveItems : last.items;
   const isEmpty = open ? list.isEmpty : last.isEmpty;
@@ -556,11 +591,17 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const fadeAt = useMemo(() => {
     if (open || !last.at) return null;
     if (last.text === value) return last.at;
-    const start = shiftIndex(last.text, value, last.at.start);
+    const was = last.at.start;
+    // An edit that takes the word's start away leaves no place to fade out at,
+    // unless a token now starts there with the text before it unchanged: the
+    // token a pick put there, whatever text it shows.
+    const start =
+      shiftIndex(last.text, value, was) ??
+      (tokens.some((token) => token.start === was) && value.slice(0, was) === last.text.slice(0, was) ? was : null);
     if (start === null) return null;
     const end = shiftIndex(last.text, value, last.at.end);
     return { start, end: end === null || end <= start ? start + 1 : end };
-  }, [last, open, value]);
+  }, [last, open, tokens, value]);
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
     // Only the same token: one with its text elsewhere is another mention.
     const peekAt = caretToken ?? (peeked ? (tokens.find((token) => sameToken(token, peeked)) ?? null) : null);
@@ -614,7 +655,12 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     'aria-label': listName,
   });
 
-  const getOptionProps = (item: MentionItem): OptionListOptionProps => list.getOptionProps(item.option);
+  const getOptionProps = (item: MentionItem): OptionListOptionProps => {
+    const props = list.getOptionProps(item.option);
+    // A closed list keeps the rows it showed as too long disabled as it fades out.
+    if (open || props.disabled || !last.blocked.includes(item.option.value)) return props;
+    return { ...props, disabled: true };
+  };
 
   return {
     value: shown,
@@ -625,8 +671,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     isEmpty,
     activeId,
     activeValue: open ? activeValue : null,
-    loading: list.loading,
-    error,
+    loading: open ? list.loading : last.loading,
+    error: open ? error : last.error,
     retry: list.retry,
     ids,
     textareaRef,
