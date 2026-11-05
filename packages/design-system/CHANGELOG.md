@@ -1,5 +1,84 @@
 # @tounsoo/todae
 
+## 0.7.0
+
+### Minor Changes
+
+- BottomSheet comes back to its snap height when the owner turns down a drag-to-dismiss, instead of staying open with no height while the page stays blocked, and its grabber now resizes the sheet on a press, so screen reader, switch and touch users can change its height too. ([#338](https://github.com/tounsoo/todae/pull/338))
+  
+  - A press on `BottomSheet.Grabber` toggles between `mid` and `full`, and the button reports `aria-expanded` (true at `full`). Tests that click the grabber and expect nothing to change need updating.
+  - With a single entry in `snapPoints`, the grabber is a decorative mark, not a focusable button, so it is no longer the sheet's first tab stop and ArrowDown on it no longer closes a `mid`-only sheet. Escape, the backdrop and `BottomSheet.Close` still close it.
+  - `onSnapChange` no longer fires when the snap doesn't change, such as ArrowUp on a sheet already at `full`.
+  - A drag-dismiss the owner accepts now slides off from where the drag let go, and a drag that ends on the grabber or a close part in the header no longer also presses it.
+
+- useCombobox and useMentions triggers replace `filter` with `filterOptions(options, query)`, which returns the rows to show in order, so it can rank or cap them, and each change of the trimmed text starts the highlight at the first row. ([#349](https://github.com/tounsoo/todae/pull/349))
+  
+  - Rename `filter` to `filterOptions` and return the rows instead of a yes or no per row: `filterOptions: (options, query) => options.filter((option) => yourTest(option, query))`.
+  - `filterOptions` and `loadOptions` get the text trimmed, so drop your own `trim()`, and a loader no longer runs again for added spaces.
+  - `filterOptions` gets `''` while nothing is typed; return what the open list should show.
+
+- Fixes found by running the browser tests in Firefox and WebKit as well as Chromium. ([#347](https://github.com/tounsoo/todae/pull/347))
+  
+  - `Field.OneTimeCode`'s input no longer has `maxLength`. Safari cut a key typed at a caret inside a full code to nothing before the component saw it; the component keeps the code to `length` itself, as before. Code that read `maxLength` from the input gets -1.
+  - `Button`: in forced colors the focus ring is `Highlight`. Firefox drew a pressed toggle's ring in `HighlightText`, which can't be seen on the page; Chrome's ring may change color too.
+  - `useSelection`: Shift+Space on a row checkbox selects a range in Firefox too. Firefox's click from Space carries no Shift, so `getCheckboxProps` now also returns an `onKeyUp` that notes it.
+  - `Field.OneTimeCode` inside a shadow root: the box that shows the caret follows arrow keys in Firefox and Safari, which don't send the input's `selectionchange` out of the shadow root.
+  - `ColorPicker`: a press in the area still picks a color when the browser refuses pointer capture, instead of throwing. The thumb's focus ring comes from a sibling selector rather than `:has()`, so Safari has it in place when a scroll container brings the ring into view.
+  - `ChipList`: the +N panel stays on screen when neither its start nor its end can line up with +N.
+  - A Popover or Menu whose anchor went away as it closed, such as the mention list after a pick, now goes at once in Firefox and Safari, as it does in Chrome.
+  - A picker that fails the browser's own check outside a `Form.Root` takes the focus in Safari too, instead of leaving it in the hidden date input.
+  - A focus ring that a scroll container brings into view is no longer cut by a pixel in Safari.
+  - Toasts start timing again in Firefox when the toast under a resting pointer is removed.
+
+- Popover padding drops two steps to the new density token `space.popover.padding` (12px comfortable, 8px compact, 16px spacious), so Popover.Root and the field pickers sit two steps tighter than dialogs and cards. ([#278](https://github.com/tounsoo/todae/pull/278))
+  
+  - A company token build with its own density context must declare `space.popover.padding` in it.
+
+- Every component that animates as it opens and closes now has `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter` and `motion.easing.exit` tokens, and the core `motion.easing.exit` curve speeds up as it leaves (`cubic-bezier(0.4, 0, 1, 1)`), so Dialog, Drawer, BottomSheet, Toast, Disclosure, Nav, Tree and Message close faster at the end. ([#337](https://github.com/tounsoo/todae/pull/337))
+  
+  - Rename `dialog.motion.enter` and `exit`, `drawer.motion.enter` and `exit`, `sheet.motion.enter`, `exit` and `resize`, and `toast.motion.enter` and `exit` to `<component>.motion.duration.enter`, `exit` and `resize`, in token packages, `ThemeProvider` overrides and `--todae-*` reads.
+  - Replace `disclosure.motion.duration`, `nav.motion.duration`, `tree.motion.duration` and `message.actions.motion.duration` with their `.enter` and `.exit` tokens.
+  - Dialog, Drawer, BottomSheet and Toast now read their own `<component>.motion.easing.enter` and `exit`, which point at `overlay.motion.easing.*`. CSS that read `--todae-overlay-motion-easing-*` to match them still works.
+
+- Focus ring, Link, Disclosure, Form summary link and ColorPicker thumb tokens no longer name a sub-property where a state goes: a width, offset, radius or thickness joins its property with a hyphen (`focus.ring-width`), and a ring or border color is the bare property (`focus.ring`). ([#341](https://github.com/tounsoo/todae/pull/341))
+  
+  - Rename `focus.ring.color` to `focus.ring`, and read `--todae-focus-ring` instead of `--todae-focus-ring-color`.
+  - Rename `focus.ring.width` and `focus.ring.offset` to `focus.ring-width` and `focus.ring-offset`. Their `--todae-*` names don't change.
+  - Rename `link.ring.radius`, `disclosure.ring.radius` and `form.summary.link.ring.radius` to `link.ring-radius`, `disclosure.ring-radius` and `form.summary.link.ring-radius`. Their `--todae-*` names don't change.
+  - Rename `link.decoration.thickness` to `link.decoration-thickness.default` and `link.decoration.current-thickness` to `link.decoration-thickness.current`, and read `--todae-link-decoration-thickness-default` and `--todae-link-decoration-thickness-current`.
+  - Rename `link.decoration.offset`, `form.summary.link.decoration.thickness` and `form.summary.link.decoration.offset` to `link.decoration-offset`, `form.summary.link.decoration-thickness` and `form.summary.link.decoration-offset`. Their `--todae-*` names don't change.
+  - Rename `picker.thumb.border.color` to `picker.thumb.border`, and read `--todae-picker-thumb-border` instead of `--todae-picker-thumb-border-color`. Rename `picker.thumb.border.width` to `picker.thumb.border-width`; its `--todae-*` name doesn't change.
+  - Make each rename in token packages and `ThemeProvider` overrides too. A token package now fails to build when it declares a token under another token, such as the old `focus.ring.color` under `focus.ring`, or two tokens that write one `--todae-*` variable, such as `brand.gap.x` and `brand.gap-x`.
+
+- Menu gets nested submenus: Menu.Submenu, Menu.SubmenuTrigger and Menu.SubmenuContent, opened by the arrow toward the line end, Enter, Space, a click or the pointer resting on the trigger, with a safe path toward the submenu timed by the new menu.submenu.delay.show and menu.submenu.delay.hide tokens. ([#358](https://github.com/tounsoo/todae/pull/358))
+
+### Patch Changes
+
+- useMentions' suggestion list and its caret peek now fade out where they sat as they close, as Popover and Menu do, instead of vanishing at once. ([#370](https://github.com/tounsoo/todae/pull/370))
+  A closed list keeps its last rows, and its `loading` and `error`, until the next word, so it fades out showing what it showed.
+
+- Popover and Menu now fade and grow from their trigger (popover.motion.* tokens, scale 0.96, 240ms in and 200ms out) and shrink back as they close, in Safari too, and Dialog's panel rises into place (dialog.motion.offset) while Dialog slows from 200ms in and 160ms out to 280ms in and 200ms out; under reduced motion Dialog keeps its fades, and a tooltip inside a growing popover waits for it to settle. ([#343](https://github.com/tounsoo/todae/pull/343))
+
+- A `Mention.Root` peek keeps what it showed once it closes, so the card fades out with its content instead of as an empty box. Before its first open the peek still renders nothing, so server HTML holds an empty span. ([#371](https://github.com/tounsoo/todae/pull/371))
+
+- Switch: the thumb now has an edge, from the new `selection.thumb.border` token (default `color.border.default`), so it shows on the off track, and a contrast pair checks that edge against `selection.track.bg`. ([#340](https://github.com/tounsoo/todae/pull/340))
+
+- Add the motion role tokens `motion.reveal`, `motion.popup`, `motion.window`, `motion.panel` and `motion.notice` `.duration.enter` and `.duration.exit`, and point the enter and exit durations of Disclosure, Nav, Tree, Message's action row, Popover, Dialog, Drawer, BottomSheet and Toast at them, with every timing unchanged. ([#345](https://github.com/tounsoo/todae/pull/345))
+
+- Card.Body now grows into the card's free height, so the footers of equal-height cards in a row line up at the bottom. ([#364](https://github.com/tounsoo/todae/pull/364))
+
+- Popover and Menu no longer dip and fade in a second time in Safari as they finish opening. Once the opening fade ends, the popover takes `data-todae-settled` and drops its transition until it closes, so Safari's re-resolution of the position fallbacks has nothing to run again. ([#355](https://github.com/tounsoo/todae/pull/355))
+
+- Mention.Root no longer ships the caret peek code that no public API could reach, and MentionPeekContext says that `mode: 'caret'` is for a caret peek you build, as the chat composer recipe does. ([#339](https://github.com/tounsoo/todae/pull/339))
+
+- `ScrollArea.Root` is positioned, so a `VisuallyHidden` or other absolute box inside it scrolls and clips with its content instead of widening the page. ([#371](https://github.com/tounsoo/todae/pull/371))
+
+- A Menu submenu that closes with its menu now hides with it, never a moment after, since a popover still fading inside one that hides ends its fade then too. ([#368](https://github.com/tounsoo/todae/pull/368))
+
+- Switch's thumb now slides, Checkbox's check and Radio's dot grow in, and the Tabs indicator slides between tabs, timed by the new selection.motion.duration, selection.motion.easing, tabs.motion.duration and tabs.motion.easing tokens; under reduced motion nothing slides or grows, but colors still fade. ([#342](https://github.com/tounsoo/todae/pull/342))
+
+- A tooltip opens on focus only when the focus came from keys. Focus that follows a press, such as a click on the trigger or a menu closed by a click handing focus back to its trigger, no longer opens the trigger's tip and holds it there. Hover still shows the tip, and keyboard focus still opens it at once. On a coarse pointer, which has no hover, a tap no longer opens a tip; only keyboard focus does. ([#371](https://github.com/tounsoo/todae/pull/371))
+
 ## 0.6.0
 
 ### Minor Changes
