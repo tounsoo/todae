@@ -263,9 +263,10 @@ describe('scroll edge arrows', () => {
     await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
     area.scrollLeft = -120;
     await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
-    // Sticky holds the rail here; a rounded measure must not move it.
+    // Where sticky holds the rail, a rounded measure must not move it; where
+    // WebKit lets it scroll away, it moves back by exactly the scroll.
     const rail = area.querySelector<HTMLElement>('[data-todae-scroll-edges]')!;
-    expect(rail.style.translate).toBe('');
+    expect([0, area.scrollLeft]).toContain(Number.parseFloat(rail.style.translate || '0'));
     // Within the half pixel the browser's own layout may round to.
     expect(Math.abs(offsets(edge(area, 'inline-start'), area).right)).toBeLessThanOrEqual(0.5);
     expect(Math.abs(offsets(edge(area, 'inline-end'), area).left)).toBeLessThanOrEqual(0.5);
@@ -375,6 +376,27 @@ describe('scroll edge arrows', () => {
         const focused = (document.activeElement as HTMLElement).getBoundingClientRect();
         expect(focused.bottom).toBeLessThanOrEqual(band.top + 0.5);
       }
+    });
+
+    it('move a row that takes keyboard focus under an arrow clear of it, even where the browser leaves it', async () => {
+      render(<Long />);
+      await userEvent.click(screen.getByRole('button', { name: 'Fonts' }));
+      const menu = screen.getByTestId('menu');
+      await waitFor(() => expect(shownEdges(menu)).toEqual(['block-end']));
+      await settled();
+      await userEvent.keyboard('{ArrowDown}');
+      const band = edge(menu, 'block-end').getBoundingClientRect();
+      // The first row whose bottom sits under the band, though inside the scrollport.
+      const port = menu.getBoundingClientRect().top + menu.clientTop + menu.clientHeight;
+      const under = screen.getAllByRole('menuitem').find((item) => {
+        const box = item.getBoundingClientRect();
+        return box.bottom > band.top + 0.5 && box.bottom <= port;
+      });
+      expect(under).toBeDefined();
+      // Focus that doesn't scroll, as Firefox's own reveal leaves such a row.
+      under!.focus({ preventScroll: true });
+      expect(under!.matches(':focus-visible')).toBe(true);
+      expect(under!.getBoundingClientRect().bottom).toBeLessThanOrEqual(edge(menu, 'block-end').getBoundingClientRect().top + 0.5);
     });
 
     it('scroll the menu without moving focus while the pointer rests on one', async () => {

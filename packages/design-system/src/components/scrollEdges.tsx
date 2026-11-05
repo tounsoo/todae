@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
+import { revealRing } from '../internal/revealRing.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import type { ScrollAxis } from './scrollTabStop.js';
@@ -215,6 +216,10 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       node.addEventListener('mousedown', press);
     }
     el.addEventListener('scroll', show, { passive: true });
+    // Firefox can leave a newly focused row under a shown arrow, inside the
+    // scrollport, so the scroll padding the arrow adds is honored here too.
+    const focused = (event: FocusEvent) => revealRing(el, event.target);
+    el.addEventListener('focusin', focused);
     measure();
 
     let resize: ResizeObserver | undefined;
@@ -246,6 +251,7 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       resize?.disconnect();
       mutations?.disconnect();
       el.removeEventListener('scroll', show);
+      el.removeEventListener('focusin', focused);
       for (const node of own.children) {
         node.removeEventListener('pointermove', enter as EventListener);
         node.removeEventListener('pointerleave', stop);
