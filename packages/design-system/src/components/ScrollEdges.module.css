@@ -58,10 +58,13 @@
     block-size: var(--todae-scroll-arrow-size);
   }
 
+  /* A scroller that draws a rule along its block end, as a tab list does,
+     sets --_scroll-rule on the rail to its thickness, and these bands stop
+     above it. */
   .edge:is([data-edge='inline-start'], [data-edge='inline-end']) {
     inset-block-start: calc(-1 * var(--_pad-block, 0px));
     inline-size: var(--todae-scroll-arrow-size);
-    block-size: var(--_port-block, 0px);
+    block-size: calc(var(--_port-block, 0px) - var(--_scroll-rule, 0px));
   }
 
   .edge[data-edge='block-start'] {
