@@ -148,22 +148,49 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
   const refs = useComposedRefs(own, container.ref, ref);
   const horizontal = ctx.orientation === 'horizontal';
   // A horizontal list scrolls sideways, so a selected tab past its edge, on
-  // the first render or chosen by the owner, is scrolled into view, clear of
-  // a shown arrow. Only the list scrolls, never the page around it. Focus
-  // moving to a tab scrolls it into view the browser's own way.
+  // the first render, chosen by the owner, or in a list that was hidden until
+  // now, is scrolled into view, clear of a shown arrow. Only the list scrolls,
+  // never the page around it. It measures in the list's own layout (offsets
+  // and scroll positions), so a transform on an ancestor, such as a popover
+  // growing in, changes nothing. Focus moving to a tab scrolls it into view
+  // the browser's own way.
   useLayoutEffect(() => {
     const list = own.current;
-    if (!list || !horizontal || list.scrollWidth <= list.clientWidth) return;
+    if (!list || !horizontal) return;
     const id = tabId(ctx.baseId, ctx.value);
-    const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
-    if (!tab) return;
-    const style = getComputedStyle(list);
-    const port = list.getBoundingClientRect();
-    const start = port.left + list.clientLeft + (Number.parseFloat(style.scrollPaddingLeft) || 0);
-    const end = port.left + list.clientLeft + list.clientWidth - (Number.parseFloat(style.scrollPaddingRight) || 0);
-    const box = tab.getBoundingClientRect();
-    if (box.left < start) list.scrollLeft -= start - box.left;
-    else if (box.right > end) list.scrollLeft += Math.min(box.left - start, box.right - end);
+    const reveal = () => {
+      if (list.scrollWidth <= list.clientWidth) return;
+      const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
+      if (!tab || tab.offsetParent !== list) return;
+      const style = getComputedStyle(list);
+      // The scrollport in the content's own coordinates, where a right-to-left
+      // list's scrollLeft runs negative.
+      const start = list.scrollLeft + (Number.parseFloat(style.scrollPaddingLeft) || 0);
+      const end = list.scrollLeft + list.clientWidth - (Number.parseFloat(style.scrollPaddingRight) || 0);
+      const left = tab.offsetLeft;
+      const right = left + tab.offsetWidth;
+      if (left >= start && right <= end) return;
+      // A tab wider than the room shows its inline start.
+      if (right - left > end - start) list.scrollLeft += style.direction === 'rtl' ? right - end : left - start;
+      else list.scrollLeft += left < start ? left - start : right - end;
+    };
+    reveal();
+    // Scrolling away from an end shows that end's arrow, which takes room the
+    // first pass couldn't see; settle once more after it shows.
+    const frame = requestAnimationFrame(reveal);
+    if (typeof ResizeObserver === 'undefined') return () => cancelAnimationFrame(frame);
+    // A list shown after it was hidden had no size to scroll in until now.
+    let width = list.clientWidth;
+    const shown = new ResizeObserver(() => {
+      const was = width;
+      width = list.clientWidth;
+      if (was === 0 && width > 0) reveal();
+    });
+    shown.observe(list);
+    return () => {
+      cancelAnimationFrame(frame);
+      shown.disconnect();
+    };
   }, [horizontal, ctx.baseId, ctx.value]);
   return (
     <div

@@ -23,6 +23,8 @@
      indicator still lies on it. The background stays put while the tabs
      scroll, so the line spans the list. */
   .list[data-orientation='horizontal'] {
+    /* Positioned, so the tabs' offsets are measured from it. */
+    position: relative;
     overflow-x: auto;
     overflow-y: hidden;
     padding-block-end: var(--todae-tabs-border-width);
@@ -183,6 +185,11 @@
     .list[data-orientation='horizontal'] {
       border-block-end: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
       background: none;
+    }
+
+    /* The line is a border now, outside the bands' reach. */
+    .list > [data-todae-scroll-edges] {
+      --_scroll-rule: 0px;
     }
   }
 }

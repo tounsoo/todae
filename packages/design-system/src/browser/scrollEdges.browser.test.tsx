@@ -418,8 +418,8 @@ describe('scroll edge arrows', () => {
         await frames(1);
         const box = tab(n).getBoundingClientRect();
         const room = clear(list);
-        expect(box.left).toBeGreaterThanOrEqual(room.left - 0.5);
-        expect(box.right).toBeLessThanOrEqual(room.right + 0.5);
+        expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+        expect(box.right).toBeLessThanOrEqual(room.right + 1);
       }
       await waitFor(() => expect(shownEdges(list)).toEqual(['inline-start']));
       await userEvent.keyboard('{Home}');
@@ -449,9 +449,52 @@ describe('scroll edge arrows', () => {
       await frames(2);
       const box = tab(10).getBoundingClientRect();
       const room = clear(list);
-      expect(box.left).toBeGreaterThanOrEqual(room.left - 0.5);
-      expect(box.right).toBeLessThanOrEqual(room.right + 0.5);
+      expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+      expect(box.right).toBeLessThanOrEqual(room.right + 1);
       expect(window.scrollY).toBe(top);
+    });
+
+    it('scroll a selected tab into view once a list that mounted hidden shows', async () => {
+      function Later({ open }: { open: boolean }) {
+        return (
+          <div hidden={!open}>
+            <Sections defaultValue="s10" />
+          </div>
+        );
+      }
+      const { rerender } = render(<Later open={false} />);
+      await frames(2);
+      rerender(<Later open />);
+      const list = screen.getByRole('tablist');
+      await waitFor(() => {
+        const box = tab(10).getBoundingClientRect();
+        const room = clear(list);
+        expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+        expect(box.right).toBeLessThanOrEqual(room.right + 1);
+      });
+    });
+
+    it('scroll a selected tab into view in a popover that grows in', async () => {
+      function InPopover() {
+        const popover = usePopover();
+        return (
+          <>
+            <Button.Root {...popover.getTriggerProps()}>Sections</Button.Root>
+            <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Sections" style={{ inlineSize: 260 }}>
+              <Sections defaultValue="s10" inlineSize={240} />
+            </Popover.Root>
+          </>
+        );
+      }
+      render(<InPopover />);
+      await userEvent.click(screen.getByRole('button', { name: 'Sections' }));
+      await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+      await frames(2);
+      const list = screen.getByRole('tablist');
+      const box = tab(10).getBoundingClientRect();
+      const room = clear(list);
+      expect(box.left).toBeGreaterThanOrEqual(room.left - 1);
+      expect(box.right).toBeLessThanOrEqual(room.right + 1);
     });
 
     it('show none on a vertical list', async () => {
@@ -480,6 +523,31 @@ describe('scroll edge arrows', () => {
       const top = box.top + list.clientTop + Number.parseFloat(line.top);
       expect(Number.parseFloat(line.height)).toBeGreaterThan(0);
       expect(top + Number.parseFloat(line.height)).toBeLessThanOrEqual(box.top + list.clientTop + list.clientHeight + 0.5);
+      // The bands reach down to the border.
+      await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
+      expect(edge(list, 'inline-end').getBoundingClientRect().bottom).toBeCloseTo(box.top + list.clientTop + list.clientHeight, 0);
+    });
+
+    it('show the start of a selected tab wider than the room, clear of the start arrow', async () => {
+      render(
+        <div style={{ display: 'flex', inlineSize: 200 }}>
+          <Tabs.Root defaultValue="wide">
+            <Tabs.List aria-label="Sections">
+              {['One', 'Two', 'Three', 'Four'].map((name) => (
+                <Tabs.Tab key={name} value={name}>
+                  {name}
+                </Tabs.Tab>
+              ))}
+              <Tabs.Tab value="wide">A selected tab whose name runs far past the list</Tabs.Tab>
+            </Tabs.List>
+          </Tabs.Root>
+        </div>,
+      );
+      const list = screen.getByRole('tablist');
+      const wide = screen.getByRole('tab', { name: /far past/ });
+      await waitFor(() => expect(shownEdges(list)).toContain('inline-start'));
+      await frames(2);
+      expect(wide.getBoundingClientRect().left).toBeGreaterThanOrEqual(edge(list, 'inline-start').getBoundingClientRect().right - 1);
     });
   });
 
