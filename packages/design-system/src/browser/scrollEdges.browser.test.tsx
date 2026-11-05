@@ -371,11 +371,19 @@ describe('scroll edge arrows', () => {
       const [atLeft, atRight] = rtl ? [band('inline-end'), band('inline-start')] : [band('inline-start'), band('inline-end')];
       return { left: atLeft?.right ?? left, right: atRight?.left ?? right };
     }
-    /** Where the list's indicator is drawn on screen, from its computed place in the scrolled content. */
+    /**
+     * Where the list's indicator is drawn on screen. Its computed insets are
+     * from its containing block, the list's scrolled content, whose origin a
+     * box at left 0 finds in every engine and direction.
+     */
     function indicator(list: HTMLElement) {
       const style = getComputedStyle(list, '::after');
-      const box = list.getBoundingClientRect();
-      const left = box.left + list.clientLeft + Number.parseFloat(style.left) - list.scrollLeft;
+      const probe = document.createElement('span');
+      probe.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0';
+      list.append(probe);
+      const origin = probe.getBoundingClientRect().left;
+      probe.remove();
+      const left = origin + Number.parseFloat(style.left);
       return { left, right: left + Number.parseFloat(style.width) };
     }
 
@@ -392,7 +400,8 @@ describe('scroll edge arrows', () => {
       const port = list.getBoundingClientRect();
       const rule = Number.parseFloat(getComputedStyle(list).paddingBottom);
       expect(rule).toBeGreaterThan(0);
-      expect(band.bottom).toBeCloseTo(port.top + list.clientTop + list.clientHeight - rule, 0);
+      // clientTop and clientHeight round, so allow a pixel.
+      expect(Math.abs(band.bottom - (port.top + list.clientTop + list.clientHeight - rule))).toBeLessThanOrEqual(1);
       expect(tab(1).getBoundingClientRect().bottom).toBeLessThanOrEqual(band.bottom + 0.5);
     });
 
@@ -629,7 +638,7 @@ describe('scroll edge arrows', () => {
       expect(top + Number.parseFloat(line.height)).toBeLessThanOrEqual(box.top + list.clientTop + list.clientHeight + 0.5);
       // The bands reach down to the border.
       await waitFor(() => expect(shownEdges(list)).toEqual(['inline-end']));
-      expect(edge(list, 'inline-end').getBoundingClientRect().bottom).toBeCloseTo(box.top + list.clientTop + list.clientHeight, 0);
+      expect(Math.abs(edge(list, 'inline-end').getBoundingClientRect().bottom - (box.top + list.clientTop + list.clientHeight))).toBeLessThanOrEqual(1);
     });
 
     it('show the start of a selected tab wider than the room, clear of the start arrow', async () => {

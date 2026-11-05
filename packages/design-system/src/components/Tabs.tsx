@@ -179,17 +179,26 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       return true;
     };
     // Once per selection, and again each time the list shows after being
-    // hidden, which resets its scroll; never after, so the list stays where
-    // the user scrolls it.
+    // hidden, which resets its scroll. After that, tabs that join or leave
+    // reveal it again only while the list is where this left it, so once the
+    // user scrolls, the list stays where they put it.
     let done = false;
+    let kept = 0;
     let frame = 0;
+    const moved = () => done && list.scrollLeft !== kept;
+    // Scrolling away from an end shows that end's arrow, which takes room
+    // the first pass couldn't see; settle once more after it shows.
+    const settle = () => {
+      if (moved()) return;
+      measure();
+      kept = list.scrollLeft;
+    };
     const reveal = () => {
-      if (done || !measure()) return;
+      if (moved() || !measure()) return;
       done = true;
-      // Scrolling away from an end shows that end's arrow, which takes room
-      // the first pass couldn't see; settle once more after it shows.
+      kept = list.scrollLeft;
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
+      frame = requestAnimationFrame(settle);
     };
     reveal();
     // Tabs that arrive after the first render, as from loaded data, may hold

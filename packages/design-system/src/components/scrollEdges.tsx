@@ -24,6 +24,8 @@ const EVEN_SPEED = 0.2;
 
 // How far the scroller can still go toward an edge, in pixels. An RTL
 // scroller's scrollLeft runs from 0 at its start down to negative numbers.
+// Browsers round scrollWidth and scrollLeft separately, so at an end this can
+// read 1; an arrow shows only for more than that.
 function room(el: HTMLElement, edge: Edge, rtl: boolean): number {
   switch (edge) {
     case 'block-start':
@@ -141,9 +143,9 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
       const off = own.hasAttribute('data-off');
       for (const node of own.children) {
         const edge = (node as HTMLElement).dataset.edge as Edge;
-        node.toggleAttribute('data-shown', !off && room(el, edge, rtl) >= 1);
+        node.toggleAttribute('data-shown', !off && room(el, edge, rtl) > 1);
       }
-      if (resting && room(el, resting.edge, rtl) < 1) stop();
+      if (resting && room(el, resting.edge, rtl) <= 1) stop();
     };
     const measure = () => {
       const style = getComputedStyle(el);
@@ -200,7 +202,7 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     const enter = (event: PointerEvent) => {
       if (event.pointerType === 'touch' || !moved(event, win)) return;
       const edge = (event.currentTarget as HTMLElement).dataset.edge as Edge;
-      if (resting?.edge === edge || room(el, edge, rtl) < 1) return;
+      if (resting?.edge === edge || room(el, edge, rtl) <= 1) return;
       const now = performance.now();
       stop();
       resting = { edge, since: now, last: now, carry: 0 };

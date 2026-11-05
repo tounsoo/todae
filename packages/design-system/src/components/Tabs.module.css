@@ -36,6 +36,14 @@
     --_scroll-rule: var(--todae-tabs-border-width);
   }
 
+  /* The rail takes back the gap after it from the first layout, before it
+     measures the list, so the first tab never starts a gap in and the
+     indicator has nothing to slide from. */
+  .list[data-orientation='horizontal'] > [data-todae-scroll-edges] {
+    margin-block-end: 0;
+    margin-inline-end: calc(-1 * var(--todae-tabs-gap));
+  }
+
   .list[data-orientation='vertical'] {
     flex-direction: column;
     border-inline-end: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
