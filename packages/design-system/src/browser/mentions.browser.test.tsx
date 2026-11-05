@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
 import axe from 'axe-core';
@@ -89,7 +89,8 @@ describe('useMentions in a browser', () => {
     expect(onSend).not.toHaveBeenCalled();
     expect(field().value).toBe('Hi @Alan Turing ');
     expect(field().selectionStart).toBe(16);
-    expect(screen.queryByRole('listbox')).toBeNull();
+    // It fades out at the new token, then goes.
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
     await userEvent.keyboard('there{Enter}');
     expect(onSend).toHaveBeenCalledWith('Hi @Alan Turing there', [
       { start: 3, end: 15, char: '@', value: 'alan', text: '@Alan Turing' },

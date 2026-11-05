@@ -192,6 +192,30 @@ describe('A popover whose anchor goes away as it closes', () => {
   });
 });
 
+describe('A popover whose caller stops naming its anchor as it closes', () => {
+  it('keeps sitting at that anchor to fade out, and goes where it is told on its next open', () => {
+    function Harness({ open, name }: { open: boolean; name: string | null }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: name });
+      return (
+        <>
+          <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span>
+          <span style={{ anchorName: '--other' } as CSSProperties}>@bo</span>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Peek">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open name="--word" />);
+    const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
+    rerender(<Harness open={false} name={null} />);
+    expect(el.style.getPropertyValue('--todae-popover-anchor')).toBe('--word');
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+    rerender(<Harness open name="--other" />);
+    expect(el.style.getPropertyValue('--todae-popover-anchor')).toBe('--other');
+  });
+});
+
 /** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
 function markAwareFade(match: (el: HTMLElement) => boolean) {
   const real = window.getComputedStyle.bind(window);

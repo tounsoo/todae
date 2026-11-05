@@ -4,6 +4,8 @@ import { renderToString } from 'react-dom/server';
 import { StrictMode, startTransition, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field.js';
+import { OptionList } from '../components/OptionList.js';
+import { Popover } from '../components/Popover.js';
 import { useMentions, type MentionDraft, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions.js';
 
 afterEach(cleanup);
@@ -671,5 +673,101 @@ describe('useMentions edge cases', () => {
       container.remove();
       hasFocus.mockRestore();
     }
+  });
+});
+
+describe('useMentions as the list closes', () => {
+  /** A composer with its list in a popover, as a product renders it. */
+  function Composer({ expose }: { expose: (result: UseMentionsResult) => void }) {
+    const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+    const mentions = useMentions({ triggers: [{ char: '@', options: people }], value: draft, onValueChange: setDraft });
+    expose(mentions);
+    return (
+      <>
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+        <Popover.Root {...mentions.getPopoverProps()}>
+          <OptionList.Root {...mentions.getListboxProps()}>
+            {mentions.items.map((item) => (
+              <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+        <button type="button" onClick={() => setDraft({ text: 'yo @Bob', tokens: [{ start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' }] })}>
+          Load
+        </button>
+      </>
+    );
+  }
+
+  function listPopover(result: UseMentionsResult): HTMLElement {
+    const el = document.getElementById(result.ids.listbox)?.closest<HTMLElement>('[popover]');
+    if (!el) throw new Error('no list popover');
+    return el;
+  }
+
+  /** The highlight span the list's popover is placed at, if one is in the page. */
+  function anchorOfList(popover: HTMLElement): HTMLElement | null {
+    const name = popover.style.getPropertyValue('--todae-popover-anchor');
+    return (
+      [...document.querySelectorAll<HTMLElement>('span[style*="anchor-name"]')].find((span) =>
+        span.style.getPropertyValue('anchor-name').split(',').some((part) => part.trim() === name),
+      ) ?? null
+    );
+  }
+
+  function openList() {
+    let result!: UseMentionsResult;
+    render(<Composer expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'yo @a');
+    expect(result.open).toBe(true);
+    return { el, get result() { return result; } };
+  }
+
+  it('keeps its rows and its word after Escape, so it fades out there', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    expect(composer.result.open).toBe(false);
+    expect(composer.result.items.map((item) => item.option.value)).toEqual(['ada', 'alan']);
+    expect(anchorOfList(popover)?.textContent).toBe('@a');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('keeps its word after a blur', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.blur(composer.el);
+    expect(composer.result.open).toBe(false);
+    expect(anchorOfList(popover)?.textContent).toBe('@a');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('fades out at the token a pick puts where the word was', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Enter' });
+    expect(composer.el.value).toBe('yo @Ada Lovelace ');
+    expect(composer.result.open).toBe(false);
+    expect(anchorOfList(popover)?.textContent).toBe('@Ada Lovelace');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('gives way to a token that later takes the place of the word', () => {
+    const composer = openList();
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Load' }));
+    const drawn = [...document.querySelectorAll('[data-kind="@"]')];
+    expect(drawn.map((span) => span.textContent)).toEqual(['@Bob']);
+  });
+
+  it('starts empty, with no word, before the list first opens', () => {
+    let result!: UseMentionsResult;
+    render(<Composer expose={(r) => (result = r)} />);
+    expect(result.items).toEqual([]);
+    expect(document.querySelectorAll('span[style*="anchor-name"]')).toHaveLength(0);
   });
 });

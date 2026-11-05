@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type HTMLAttributes,
   type MouseEvent,
@@ -103,6 +104,12 @@ export function usePopoverInternal(
     anchorName: contentAnchor,
   } = options;
   const [open, setOpen] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
+  // A popover keeps the anchor it sat at while it closes, so it fades out
+  // there, though the caller stops naming it as it closes, as a caret peek
+  // does once the caret leaves its word. Its next open goes where it is told.
+  const [placedAt, setPlacedAt] = useState<string | null>(contentAnchor ?? null);
+  if (open && placedAt !== (contentAnchor ?? null)) setPlacedAt(contentAnchor ?? null);
+  const sitsAt = open ? contentAnchor : (contentAnchor ?? placedAt);
   const uid = useDomId();
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;
@@ -237,11 +244,11 @@ export function usePopoverInternal(
       id: contentId,
       open,
       ref: setPopover,
-      style: anchoredContentStyle('--todae-popover-anchor', contentAnchor ?? anchorName),
+      style: anchoredContentStyle('--todae-popover-anchor', sitsAt ?? anchorName),
       onPointerDown: stopBubble,
       onClick: stopBubble,
     }),
-    [anchorName, contentAnchor, contentId, open, setPopover],
+    [anchorName, contentId, open, setPopover, sitsAt],
   );
 
   return useMemo(
