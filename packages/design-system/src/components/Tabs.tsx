@@ -164,11 +164,9 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
     // Scrolls the selected tab into view, or returns false while there is
     // nothing to reveal yet: not rendered, in a list with no box, or in a list
     // that still fits, which tabs arriving later can push it out of.
+    const selected = () => [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
     const measure = () => {
-      const tab = [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((node) => node.id === id);
-      // With the selected tab gone, as while tabs reload, the next one to
-      // arrive is revealed afresh, wherever the list was clamped to.
-      if (!tab) done = false;
+      const tab = selected();
       if (!tab || list.clientWidth === 0 || tab.offsetParent !== list) return false;
       if (list.scrollWidth <= list.clientWidth) return false;
       const style = getComputedStyle(list);
@@ -197,6 +195,9 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       kept = list.scrollLeft;
     };
     const reveal = () => {
+      // With the selected tab gone, as while tabs reload, the next one to
+      // arrive is revealed afresh, wherever the list was clamped to.
+      if (!selected()) done = false;
       if (moved() || !measure()) return;
       done = true;
       kept = list.scrollLeft;
