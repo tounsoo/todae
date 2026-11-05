@@ -121,6 +121,15 @@
     "## Props": "f1197757b3d6",
     "(section order)": "a3d54a508f96"
   },
+  "coachmark": {
+    "(top)": "61bfa5251333",
+    "# Coachmark": "f69be1cbd86b",
+    "## A tour": "7213c657532d",
+    "## Accessible composition": "f410853d4390",
+    "## When to use": "854c00834705",
+    "## Props": "29e518df81be",
+    "(section order)": "ee737dd90e41"
+  },
   "code": {
     "(top)": "f442cb431459",
     "# Code and Kbd": "7a928f5103b0",
@@ -587,7 +596,7 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "32a9fd630592",
+    "# Native platform": "590404e7953e",
     "(section order)": "4d06dc5f1974"
   },
   "popover": {
@@ -763,6 +772,16 @@
     "## Accessible composition": "d1afeb5d572d",
     "## When to use": "148d25ddb4dd",
     "(section order)": "5d35f792f9bf"
+  },
+  "recipes/product-tour": {
+    "(top)": "f2c5ca5a60ca",
+    "# Product tour": "be2db27440c4",
+    "## Steps": "0b955bb35bb4",
+    "## Focus on each step": "5dafc42a114d",
+    "## Remembering the tour": "6da517b0599d",
+    "## Accessible composition": "ccf1e71bd054",
+    "## When to use": "a677e9fd0ef6",
+    "(section order)": "f421299d4447"
   },
   "recipes/reasoning": {
     "(top)": "9fa20780fc44",

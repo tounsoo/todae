@@ -1,0 +1,43 @@
+import CoachmarkBasic from '../../../examples/coachmark/CoachmarkBasic';
+
+# Coachmark
+
+`Coachmark.Root`는 페이지의 요소 하나를 짚어 줍니다. 주변 페이지는 어두워지고 inert가 되며, 요소 자체는 어두운 페이지에 뚫린 구멍을 통해 그대로 쓸 수 있고, 옆의 팝업이 그 요소가 하는 일을 알려 줍니다. 요소는 `targetRef`로 넘깁니다. `open`으로 제어하거나, `defaultOpen`으로 비제어 방식으로 둘 수 있습니다.
+
+한 번에 한 단계를 보여 줍니다. 투어, 단계의 순서, 사용자가 이미 보았는지는 폼의 오류 문구처럼 제품이 맡습니다. [Product tour](/recipes/product-tour)처럼 `Coachmark.Root` 하나를 렌더링하고 단계마다 `targetRef`와 내용을 바꾸세요.
+
+<Example of={CoachmarkBasic} />
+
+팝업은 `role="dialog"`인 [Popover](/popover) 표면으로, CSS 앵커로 대상 옆에 놓이고 공간이 없으면 뒤집히므로 페이지가 스크롤되어도 대상을 따라갑니다. 어두운 페이지는 대상 위에 놓인 별도의 최상위 레이어 상자입니다. 이 상자는 `coachmark.cutout.padding`(`0.25rem`)만큼, 그리고 포커스 링에 필요한 만큼은 반드시 커지고, `overlay.scrim.bg` 색의 그림자로 화면의 나머지를 덮습니다. 누르기는 이 상자를 통과하므로 대상이 받습니다. 구멍의 모서리는 대상의 모서리를 따르므로, 알약 모양 버튼에는 알약 모양 구멍이 생깁니다. 팝업의 너비는 최대 `coachmark.max-width`(`20rem`)입니다.
+
+열릴 때 대상이 화면 안으로 스크롤되고, 어두운 페이지는 팝업 모션 역할과 공유 오버레이 이징을 가리키는 `coachmark.motion.duration.enter`와 `easing.enter` 토큰으로 페이드 인하며, 팝업은 Popover처럼 커지며 나타납니다. 닫힐 때는 `exit` 쌍으로 둘 다 페이드 아웃합니다. 투어처럼 열린 채로 `targetRef`가 바뀌면, 구멍과 팝업이 `coachmark.motion.duration.move`와 `easing.move`로 새 대상까지 미끄러지듯 옮겨 갑니다. 동작 줄이기를 선호하면 팝업은 페이드만 하고, 새 대상으로는 바로 옮겨 가며, 스크롤은 즉시 일어납니다.
+
+## 투어
+
+몇 단계짜리 투어는 `Coachmark.Root` 하나로 만드는 레시피입니다. [Product tour](/recipes/product-tour)는 단계를 상태로 들고, 단계가 바뀌어도 포커스를 Next에 두며, 스크린 리더가 새 단계를 읽게 합니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 팝업은 `Coachmark.Title`로 이름이 붙고 `Coachmark.Description`으로 설명되는 대화 상자입니다. 직접 넘긴 `aria-labelledby`나 `aria-describedby`가 우선합니다. 바깥의 대상을 계속 쓸 수 있으므로 `aria-modal`은 아닙니다. 열려 있는 동안 대상, 대상이 `aria-controls`로 가리키는 요소(메뉴 등), 대상의 툴팁 같은 팝오버, 토스트 영역을 뺀 페이지의 나머지는 모두 `inert`입니다. 트리거가 inert인 팝오버는 열리지 않습니다. 열리면 포커스는 `initialFocusRef`로, 없으면 팝업의 첫 번째 탭 정지로, 그것도 없으면 팝업으로 갑니다. Tab과 Shift+Tab은 팝업의 탭 정지를 돈 뒤 대상의 탭 정지로 갑니다. 대상이 연 메뉴 안의 포커스는 그 메뉴가 맡습니다. Escape는 닫기를 요청하고, `Coachmark.Close`도, `dismissOnBackdrop`을 켜면 어두운 페이지를 누르는 것도 마찬가지입니다. 새 단계가 이전 대상처럼 포커스가 있던 요소를 inert로 만들면 포커스는 팝업 안으로 옮겨 갑니다. 닫히면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다.
+
+**직접 제공할 것:** 포커스와 누르기를 받을 수 있도록 `Button.Root`처럼 진짜 컨트롤인 대상입니다. 이름도 필요합니다. `Coachmark.Title`을 렌더링하거나 `aria-label`을 넘기세요. `Coachmark.Close` 같은 나가는 길도 필요하며, `dismissOnEscape`가 false일 때는 특히 그렇습니다. 대상을 눌렀을 때 일어날 일도 정하세요. 핸들러가 닫거나 다음 단계로 넘기지 않으면 코치마크는 열린 채로 있습니다.
+
+**주의할 점:** CSS 앵커 포지셔닝이 없는 브라우저에서는 [Platform](/platform)에 나온 대로 어두운 페이지에 구멍이 없고 팝업이 대상 옆에 놓이지 않습니다. 코치마크가 열린 채로 대상이 언마운트되면 팝업이 붙을 곳이 없어집니다. 먼저 닫거나 다음 단계로 넘기세요. 팝업 문구는 대상의 이름을 되풀이하지 말고 대상이 하는 일을 말해야 합니다. 사용자가 작업하는 도중에 요청하지 않은 코치마크를 열지 마세요. 페이지의 나머지가 inert가 됩니다.
+
+## 언제 쓰나요
+
+**언제:** 새롭거나 놓치기 쉬운 컨트롤 하나를 짚어 줄 때, 또는 몇 개를 짧은 투어로 안내할 때.
+
+**쓰지 않을 때:** 호버나 포커스 때의 짧은 힌트 → [Tooltip](/tooltip). 페이지 전체를 비켜야 하는 작업 → [Dialog](/dialog). 사용자가 직접 연 비모달 패널 → [Popover](/popover).
+
+## Props
+
+<PropsTable name="Coachmark.Root" />
+
+<PropsTable name="Coachmark.Title" />
+
+<PropsTable name="Coachmark.Description" />
+
+<PropsTable name="Coachmark.Footer" />
+
+<PropsTable name="Coachmark.Close" />

@@ -403,6 +403,70 @@
       "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 StringsProvider의 moreChipsPanel 문자열이며, 영어로는 {n} more chips(1개일 때 1 more chip)입니다."
     }
   },
+  "Coachmark.Close": {
+    "aria-label": {
+      "en": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+      "ko": "접근 가능한 이름. \"Got it\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
+    },
+    "onClick": {
+      "en": "Runs before the close request. Call event.preventDefault() to keep the coachmark open.",
+      "ko": "닫기 요청 전에 실행됩니다. 코치마크를 열어 두려면 event.preventDefault()를 호출하세요."
+    }
+  },
+  "Coachmark.Description": {
+    "children": {
+      "en": "What the highlighted element does, or what to do with it.",
+      "ko": "강조된 요소가 하는 일, 또는 그 요소로 할 일."
+    }
+  },
+  "Coachmark.Root": {
+    "targetRef": {
+      "en": "The element to highlight. It stays usable through the hole, it is scrolled into view as the coachmark opens, and the popup sits beside it.",
+      "ko": "강조할 요소. 구멍을 통해 계속 쓸 수 있고, 코치마크가 열릴 때 화면 안으로 스크롤되며, 팝업이 그 옆에 놓입니다."
+    },
+    "open": {
+      "en": "Controlled open state. Leave it out for an uncontrolled coachmark.",
+      "ko": "제어되는 열림 상태. 비제어 코치마크에서는 생략합니다."
+    },
+    "defaultOpen": {
+      "en": "Shows the coachmark on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
+      "ko": "비제어일 때 마운트되면 코치마크를 보여 줍니다. 트리거 부분이 없으므로 한 번 닫히면 다시 마운트될 때만 다시 열립니다."
+    },
+    "onOpenChange": {
+      "en": "Dismiss requests. When controlled, staying open keeps the coachmark open. Reasons: escape, backdrop, close-button.",
+      "ko": "닫기 요청. 제어될 때 열린 상태를 유지하면 코치마크는 열려 있습니다. 이유: escape, backdrop, close-button."
+    },
+    "dismissOnEscape": {
+      "en": "Escape calls onOpenChange(false, \"escape\").",
+      "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."
+    },
+    "dismissOnBackdrop": {
+      "en": "A press on the dim page calls onOpenChange(false, \"backdrop\"). Off by default, so a stray press doesn’t end a tour.",
+      "ko": "어두운 페이지를 누르면 onOpenChange(false, \"backdrop\")를 호출합니다. 실수로 누른 것이 투어를 끝내지 않도록 기본으로 꺼져 있습니다."
+    },
+    "initialFocusRef": {
+      "en": "Where focus goes as it opens. Without it, the popup’s first tab stop, else the popup.",
+      "ko": "열릴 때 포커스가 갈 곳. 없으면 팝업의 첫 번째 탭 정지로, 그것도 없으면 팝업으로 갑니다."
+    },
+    "restoreFocusRef": {
+      "en": "Where focus goes as it closes. Without it, back to what had focus before it opened.",
+      "ko": "닫힐 때 포커스가 갈 곳. 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다."
+    },
+    "aria-label": {
+      "en": "Name when Coachmark.Title is omitted.",
+      "ko": "Coachmark.Title을 생략할 때의 이름."
+    },
+    "arrows": {
+      "en": "Whether arrows show at the popup’s cut-off edges when it scrolls, as on Popover.Root.",
+      "ko": "팝업이 스크롤될 때 잘린 가장자리에 화살표를 보여 줄지 여부. Popover.Root와 같습니다."
+    }
+  },
+  "Coachmark.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
   "CodeBlock.Root": {
     "tabIndex": {
       "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",

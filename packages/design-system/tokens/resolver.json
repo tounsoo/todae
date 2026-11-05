@@ -41,6 +41,7 @@
         { "$ref": "./components/dialog.json" },
         { "$ref": "./components/sheet.json" },
         { "$ref": "./components/popover.json" },
+        { "$ref": "./components/coachmark.json" },
         { "$ref": "./components/tooltip.json" },
         { "$ref": "./components/option.json" },
         { "$ref": "./components/menu.json" },

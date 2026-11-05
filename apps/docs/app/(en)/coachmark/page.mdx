@@ -1,0 +1,43 @@
+import CoachmarkBasic from '../../../examples/coachmark/CoachmarkBasic';
+
+# Coachmark
+
+`Coachmark.Root` points out one element on the page. The page around it dims and goes inert, the element itself stays usable through a hole in the dim page, and a popup beside it says what it does. Pass the element as `targetRef`. `open` is controlled, or `defaultOpen` leaves it uncontrolled.
+
+It shows one step. A tour, the order of its steps, and whether the person has seen it are the product's, the same way a form's error text is: render one `Coachmark.Root` and change its `targetRef` and content from step to step, as [Product tour](/recipes/product-tour) does.
+
+<Example of={CoachmarkBasic} />
+
+The popup is a [Popover](/popover) surface with `role="dialog"`, placed by CSS anchors beside the target and flipped where there is no room, so it follows the target as the page scrolls. The dim page is its own top-layer box over the target, grown by `coachmark.cutout.padding` (`0.25rem`) and never by less than the focus ring needs, whose shadow in `overlay.scrim.bg` covers the rest of the screen. Presses pass through that box, so the target takes them. The hole's corners follow the target's own, so a pill button gets a pill hole. The popup is at most `coachmark.max-width` (`20rem`) wide.
+
+As it opens, the target scrolls into view, and the dim page fades in with the `coachmark.motion.duration.enter` and `easing.enter` tokens, which point at the popup motion role and the shared overlay easing, while the popup grows in as a Popover does; closing fades both out with the `exit` pair. When `targetRef` changes while it is open, as in a tour, the hole and the popup slide to the new target with `coachmark.motion.duration.move` and `easing.move`. Under reduced motion the popup only fades, a new target is reached at once, and the scroll is instant.
+
+## A tour
+
+A tour of a few steps is a recipe built on one `Coachmark.Root`: [Product tour](/recipes/product-tour) keeps the step in state, keeps focus on Next from step to step, and has screen readers read each new step.
+
+## Accessible composition
+
+**Todae handles:** The popup is a dialog named by `Coachmark.Title` and described by `Coachmark.Description`; an `aria-labelledby` or `aria-describedby` you pass wins. It is not `aria-modal`, since the target outside it stays usable. While it is open, everything else on the page is `inert`, except the target, the elements the target names in `aria-controls`, popovers, such as the target's own tooltip, and the toast region. A popover whose trigger is inert can't open. On open, focus goes to `initialFocusRef`, else the popup's first tab stop, else the popup. Tab and Shift+Tab go round the popup's tab stops and then the target's; focus in a menu the target opened belongs to that menu. Escape asks to close, as does `Coachmark.Close`, and a press on the dim page does too with `dismissOnBackdrop`. When a new step makes the element that had focus inert, such as the old target, focus moves into the popup. On close, focus goes to `restoreFocusRef`, else back to what had focus before it opened.
+
+**You supply:** A target that is a real control, such as `Button.Root`, so it can take focus and presses. A name: render `Coachmark.Title`, or pass `aria-label`. A way out, such as `Coachmark.Close`, above all when `dismissOnEscape` is false. What happens when the target is pressed: the coachmark stays open unless your handler closes it or moves on a step.
+
+**Watch for:** In a browser without CSS anchor positioning, the dim page has no hole and the popup is not placed beside the target, as [Platform](/platform) says. A target that unmounts while the coachmark is open leaves the popup with nothing to sit by; close it or move on a step first. Text in the popup should say what the target does, not repeat the target's own name. Don't open a coachmark the person didn't ask for while they are in the middle of a task: it makes the rest of the page inert.
+
+## When to use
+
+**When:** Pointing out one control that is new or easy to miss, or walking through a few of them as a short tour.
+
+**When not:** A short hint on hover or focus → [Tooltip](/tooltip). A task that needs the whole page out of the way → [Dialog](/dialog). A non-modal panel the person opened themselves → [Popover](/popover).
+
+## Props
+
+<PropsTable name="Coachmark.Root" />
+
+<PropsTable name="Coachmark.Title" />
+
+<PropsTable name="Coachmark.Description" />
+
+<PropsTable name="Coachmark.Footer" />
+
+<PropsTable name="Coachmark.Close" />

@@ -849,6 +849,124 @@
       ]
     },
     {
+      "name": "Coachmark.Close",
+      "description": "Ghost Button.Root that requests close-button dismiss. Pass variant=\"primary\" for a \"Got it\" button.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+          "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before the close request. Call event.preventDefault() to keep the coachmark open."
+        }
+      ]
+    },
+    {
+      "name": "Coachmark.Description",
+      "description": "Text.Root paragraph. Wires aria-describedby on the popup.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "What the highlighted element does, or what to do with it."
+        }
+      ]
+    },
+    {
+      "name": "Coachmark.Footer",
+      "description": "Action row: a Stack.Root row packed at the end that wraps. Put a step count or Back and Next buttons here.",
+      "props": []
+    },
+    {
+      "name": "Coachmark.Root",
+      "description": "Dims the page around one element and points a popup at it. The element stays usable through a hole in the dim page; the rest is inert. One step only: a tour is the product’s sequence of coachmarks.",
+      "props": [
+        {
+          "name": "targetRef",
+          "type": "React.RefObject<HTMLElement | null>",
+          "required": true,
+          "description": "The element to highlight. It stays usable through the hole, it is scrolled into view as the coachmark opens, and the popup sits beside it."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state. Leave it out for an uncontrolled coachmark."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Shows the coachmark on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
+          "default": "false"
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: CoachmarkCloseReason) => void",
+          "required": false,
+          "description": "Dismiss requests. When controlled, staying open keeps the coachmark open. Reasons: escape, backdrop, close-button."
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnBackdrop",
+          "type": "boolean",
+          "required": false,
+          "description": "A press on the dim page calls onOpenChange(false, \"backdrop\"). Off by default, so a stray press doesn’t end a tour.",
+          "default": "false"
+        },
+        {
+          "name": "initialFocusRef",
+          "type": "React.RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Where focus goes as it opens. Without it, the popup’s first tab stop, else the popup."
+        },
+        {
+          "name": "restoreFocusRef",
+          "type": "React.RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Where focus goes as it closes. Without it, back to what had focus before it opened."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when Coachmark.Title is omitted."
+        },
+        {
+          "name": "arrows",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether arrows show at the popup’s cut-off edges when it scrolls, as on Popover.Root.",
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "Coachmark.Title",
+      "description": "Bold Text.Root paragraph. Wires aria-labelledby on the popup.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ]
+    },
+    {
       "name": "Code.Root",
       "description": "A native code styled from the code tokens: inline, in the text color around it, on a box tinted from that color. Takes native code attributes.",
       "props": [
