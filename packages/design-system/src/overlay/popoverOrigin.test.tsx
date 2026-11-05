@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { createRoot } from 'react-dom/client';
-import { useState, type CSSProperties } from 'react';
+import { memo, useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
@@ -191,6 +191,141 @@ describe('A popover whose anchor goes away as it closes', () => {
     expect(screen.getByRole('dialog', { name: 'List', hidden: true }).hasAttribute('data-todae-unanchored')).toBe(false);
   });
 });
+
+describe('A popover whose caller stops naming its anchor as it closes', () => {
+  it('keeps sitting at that anchor to fade out, and goes where it is told on its next open', () => {
+    function Harness({ open, name }: { open: boolean; name: string | null }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: name });
+      return (
+        <>
+          <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span>
+          <span style={{ anchorName: '--other' } as CSSProperties}>@bo</span>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Peek">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open name="--word" />);
+    const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
+    rerender(<Harness open={false} name={null} />);
+    expect(el.style.getPropertyValue('--todae-popover-anchor')).toBe('--word');
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+    rerender(<Harness open name="--other" />);
+    expect(el.style.getPropertyValue('--todae-popover-anchor')).toBe('--other');
+  });
+
+  it('goes at once when that anchor goes away while it fades', async () => {
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    function Harness({ open, word }: { open: boolean; word: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: open ? '--word' : null });
+      return (
+        <>
+          {word ? <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span> : null}
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Peek">
+            x
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open word />);
+    const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
+    // Two frames in, it has entered, so closing fades it.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    rerender(<Harness open={false} word />);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(true);
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
+    await act(async () => rerender(<Harness open={false} word={false} />));
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('goes at once when that anchor goes away while it fades, though nothing renders it again', async () => {
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    const Peek = memo(function Peek({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined, anchorName: open ? '--word' : null });
+      return (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Peek">
+          x
+        </Popover.Root>
+      );
+    });
+    function Harness({ open, word }: { open: boolean; word: boolean }) {
+      return (
+        <>
+          {word ? <span style={{ anchorName: '--word' } as CSSProperties}>@ann</span> : null}
+          <Peek open={open} />
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open word />);
+    const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    rerender(<Harness open={false} word />);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(true);
+    await act(async () => rerender(<Harness open={false} word={false} />));
+    expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
+    expect(el.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
+  it('stops watching the page once its content is taken out mid-fade', async () => {
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    function Owner({ open, content }: { open: boolean; content: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined });
+      return (
+        <>
+          <button type="button" {...popover.getTriggerProps()}>
+            Open
+          </button>
+          {content ? (
+            <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Panel">
+              x
+            </Popover.Root>
+          ) : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Owner open content />);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    const observers = trackObservers();
+    try {
+      rerender(<Owner open={false} content />);
+      expect(observers.live()).toBe(1);
+      rerender(<Owner open={false} content={false} />);
+      for (let i = 0; i < 3; i++) {
+        await act(async () => document.body.append(document.createElement('div')));
+      }
+      expect(observers.live()).toBe(0);
+    } finally {
+      observers.restore();
+    }
+  });
+});
+
+/** Counts the page's mutation observers that are watching, and how often they wake. */
+function trackObservers() {
+  const Real = window.MutationObserver;
+  const live = new Set<MutationObserver>();
+  let calls = 0;
+  class Tracked extends Real {
+    constructor(callback: MutationCallback) {
+      super((records, observer) => {
+        calls += 1;
+        callback(records, observer);
+      });
+    }
+    override observe(target: Node, options?: MutationObserverInit) {
+      live.add(this);
+      super.observe(target, options);
+    }
+    override disconnect() {
+      live.delete(this);
+      super.disconnect();
+    }
+  }
+  vi.stubGlobal('MutationObserver', Tracked);
+  return { live: () => live.size, calls: () => calls, restore: () => vi.unstubAllGlobals() };
+}
 
 /** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
 function markAwareFade(match: (el: HTMLElement) => boolean) {
