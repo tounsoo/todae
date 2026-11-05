@@ -665,7 +665,7 @@
     "# Citations": "c1e97aef2ff3",
     "## The marker": "f9b664cf52e8",
     "## The sources list": "ab0461f88a19",
-    "## Accessible composition": "88e29406f3af",
+    "## Accessible composition": "f77eb571388f",
     "## When to use": "64d20eb01e2d",
     "(section order)": "776f0285dccb"
   },
@@ -973,12 +973,12 @@
   },
   "tooltip": {
     "(top)": "a7b2b64c27f9",
-    "# Tooltip": "a6dda7750684",
+    "# Tooltip": "cc3e77a9909e",
     "## Warm-up": "7709775a8918",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "7811d0a484f4",
-    "## Accessible composition": "da1671bee85f",
+    "## Accessible composition": "72ac241e0ecc",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "21c10c21c07e"
@@ -1194,8 +1194,8 @@
   },
   "utilities/use-tooltip": {
     "(top)": "16e325d3e8e7",
-    "# useTooltip": "a973213ffbfd",
-    "## Accessible composition": "3e48aa93d4d0",
+    "# useTooltip": "f37272308fbd",
+    "## Accessible composition": "8e988d651ea2",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
     "(section order)": "292f5c8b4f13"

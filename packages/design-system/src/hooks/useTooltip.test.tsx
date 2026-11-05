@@ -138,6 +138,7 @@ describe('useTooltip exports', () => {
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
+        '../internal/inputModality.js',
         '../internal/props.js',
         '../internal/domId.js',
         './anchorName.js',

@@ -8,7 +8,7 @@ import { Table } from '@tounsoo/todae/table';
 
 [useTooltip](/utilities/use-tooltip) is the open machine. Spread `getTriggerProps` on the trigger. Spread `getTooltipProps` on `Tooltip.Root`. `Tooltip.Root` is tip chrome only: `children`, `className`, `style`, and a dialog name when interactive. There is no `Tooltip.Trigger` or `Tooltip.Content`. Do not set `interactive` on `Tooltip.Root`.
 
-Default is text-only `role="tooltip"`. Hover waits for the `tooltip.delay.show` token, 300ms by default. Focus opens at once. A coarse pointer uses focus only. While a hover tip is open, and for the next tip's `skipDelay` milliseconds after the last hover tip closes, that next hover tip opens at once. `skipDelay` defaults to 300. The hide delay still runs before that window starts. Focus does not start the window.
+Default is text-only `role="tooltip"`. Hover waits for the `tooltip.delay.show` token, 300ms by default. Focus from keys, such as Tab, opens at once. Focus that follows a press opens no tip, such as a click's, or what a menu closed by a click hands back. A coarse pointer has no hover, so there only keyboard focus opens a tip. While a hover tip is open, and for the next tip's `skipDelay` milliseconds after the last hover tip closes, that next hover tip opens at once. `skipDelay` defaults to 300. The hide delay still runs before that window starts. Focus does not start the window.
 
 Pass `interactive: true` to [useTooltip](/utilities/use-tooltip). The surface is a non-modal tip dialog. It uses `popover="manual"` and `role="dialog"`. React Aria PreviewTrigger with Popover also forces `role="dialog"` on a hover tip that is not a modal. It never uses `role="tooltip"`. Set exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
 
@@ -101,11 +101,11 @@ Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-lab
 
 ## Accessible composition
 
-**Todae handles:** The behaviour above. A text tip is `role="tooltip"`, mounted only while open, and while it is open `getTriggerProps` adds its id to the trigger's `aria-describedby`, after the trigger's own ids. It opens on focus as well as hover, and Escape closes it. An interactive tip is `role="dialog"` with no focus trap, and Escape from inside it sends focus back to the trigger. In development, Todae logs an error when a text tip holds anything tabbable, an interactive one holds anything but links, or either holds an element that would close a paragraph, such as a `<p>`, `<div>` or `<li>`.
+**Todae handles:** The behaviour above. A text tip is `role="tooltip"`, mounted only while open, and while it is open `getTriggerProps` adds its id to the trigger's `aria-describedby`, after the trigger's own ids. It opens on keyboard focus as well as hover, and Escape closes it. An interactive tip is `role="dialog"` with no focus trap, and Escape from inside it sends focus back to the trigger. In development, Todae logs an error when a text tip holds anything tabbable, an interactive one holds anything but links, or either holds an element that would close a paragraph, such as a `<p>`, `<div>` or `<li>`.
 
 **You supply:** The trigger's accessible name. The tip describes the trigger and never names it, so an icon-only trigger needs its own `aria-label` or `aria-labelledby`. A trigger that takes focus: give a wrap that is not tabbable `tabIndex={0}`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`.
 
-**Watch for:** Keep what a person needs out of the tip: on a coarse pointer it opens on focus only. Pass your own `aria-describedby` and your focus and pointer handlers through `getTriggerProps(props)`; put after the spread, they replace the tip's. Buttons and menus belong in a [Popover](/popover) or [Menu](/menu), not a tip.
+**Watch for:** Keep what a person needs out of the tip: on a coarse pointer, a tap opens no tip; only keyboard focus does. Pass your own `aria-describedby` and your focus and pointer handlers through `getTriggerProps(props)`; put after the spread, they replace the tip's. Buttons and menus belong in a [Popover](/popover) or [Menu](/menu), not a tip.
 
 ## When to use
 

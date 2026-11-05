@@ -2,7 +2,7 @@ import TooltipOverflow from '../../../../examples/utilities/use-tooltip/TooltipO
 
 # useTooltip
 
-`useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay`, or else the `tooltip.delay.show` token (300ms by default), focus opens at once, and a coarse pointer uses focus only. While a hover tip is open, and for the next tip's `skipDelay` milliseconds after the last hover tip closes, that next hover tip opens at once. `skipDelay` defaults to 300, and a `skipDelay` of 0 turns skipping off, so that tip always waits. Focus does not start that window. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
+`useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay`, or else the `tooltip.delay.show` token (300ms by default), focus from keys opens at once, focus that follows a press, such as a click's, opens no tip, and on a coarse pointer only keyboard focus opens one. While a hover tip is open, and for the next tip's `skipDelay` milliseconds after the last hover tip closes, that next hover tip opens at once. `skipDelay` defaults to 300, and a `skipDelay` of 0 turns skipping off, so that tip always waits. Focus does not start that window. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
 
 A `+N` count chip and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
 
@@ -10,7 +10,7 @@ A `+N` count chip and other non-button triggers use the hook directly. Mark a no
 
 ## Accessible composition
 
-**Todae handles:** `getTriggerProps` adds pointer and focus handlers and, while the tip is open, adds the tip's id to the trigger's `aria-describedby`, after any ids you passed. Focus opens the tip at once, so keyboard users get it too. `Tooltip.Root` adds `role="tooltip"`, or `role="dialog"` with `interactive: true`. Escape closes the tip, and from inside an interactive one sends focus back to the trigger.
+**Todae handles:** `getTriggerProps` adds pointer and focus handlers and, while the tip is open, adds the tip's id to the trigger's `aria-describedby`, after any ids you passed. Focus from keys opens the tip at once, so keyboard users get it too. Focus that follows a press, such as a click's or what a menu closed by a click hands back, opens no tip; the pointer has the hover tip. `Tooltip.Root` adds `role="tooltip"`, or `role="dialog"` with `interactive: true`. Escape closes the tip, and from inside an interactive one sends focus back to the trigger.
 
 **You supply:** A trigger that takes focus. The getter adds no `tabIndex` or role, so give a wrap that is not tabbable `tabIndex={0}`, as above. A name for the trigger itself: `aria-describedby` makes the tip a description, not a name, so an icon-only trigger needs `aria-label`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`, and only links inside.
 

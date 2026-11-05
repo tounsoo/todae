@@ -277,6 +277,39 @@ describe('Tooltip', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Archive');
   });
 
+  it('opens on focus that shows a ring, and not on focus that draws none', () => {
+    render(<DefaultTip />);
+    const button = screen.getByRole('button', { name: 'Hint' });
+    // jsdom matches :focus-visible on every focus; a browser leaves it off for
+    // focus a click put there, or a menu closed by a click hands back.
+    const matches = Element.prototype.matches;
+    const spy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function (this: Element, selector: string) {
+      return selector === ':focus-visible' ? false : matches.call(this, selector);
+    });
+    try {
+      act(() => button.focus());
+      expect(screen.queryByRole('tooltip')).toBeNull();
+      act(() => button.blur());
+    } finally {
+      spy.mockRestore();
+    }
+    act(() => button.focus());
+    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
+  });
+
+  it('opens on focus after a key, and not on focus right after a press', () => {
+    render(<DefaultTip />);
+    const button = screen.getByRole('button', { name: 'Hint' });
+    // A browser may still draw a ring for focus a script moves after a press.
+    fireEvent.pointerDown(button);
+    act(() => button.focus());
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    act(() => button.blur());
+    fireEvent.keyDown(document, { key: 'Tab' });
+    act(() => button.focus());
+    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
+  });
+
   it('ignores hover on coarse pointers and still opens on focus', () => {
     setMatchMedia('(pointer: coarse)', true);
     render(<DefaultTip />);

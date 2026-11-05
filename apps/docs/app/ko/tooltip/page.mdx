@@ -8,7 +8,7 @@ import { Table } from '@tounsoo/todae/table';
 
 [useTooltip](/utilities/use-tooltip)이 열림 상태 머신입니다. 트리거에 `getTriggerProps`를 펼치세요. `Tooltip.Root`에 `getTooltipProps`를 펼치세요. `Tooltip.Root`는 팁 외형만 담당합니다. `children`, `className`, `style`, 그리고 인터랙티브일 때의 다이얼로그 이름입니다. `Tooltip.Trigger`나 `Tooltip.Content`는 없습니다. `Tooltip.Root`에 `interactive`를 설정하지 마세요.
 
-기본값은 텍스트만 담는 `role="tooltip"`입니다. 호버는 `tooltip.delay.show` 토큰만큼(기본 300ms) 기다립니다. 포커스는 즉시 엽니다. 거친 포인터에서는 포커스만 씁니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 다음 팁의 `skipDelay` 밀리초 동안에는 그 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 그 창은 숨김 지연이 끝난 뒤에 시작합니다. 포커스는 이 창을 시작하지 않습니다.
+기본값은 텍스트만 담는 `role="tooltip"`입니다. 호버는 `tooltip.delay.show` 토큰만큼(기본 300ms) 기다립니다. Tab처럼 키로 옮긴 포커스는 즉시 엽니다. 클릭이 준 포커스나 클릭으로 닫힌 메뉴가 돌려준 포커스처럼 누른 뒤에 온 포커스는 팁을 열지 않습니다. 거친 포인터에는 호버가 없으므로, 그곳에서는 키보드 포커스만 팁을 엽니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 다음 팁의 `skipDelay` 밀리초 동안에는 그 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 그 창은 숨김 지연이 끝난 뒤에 시작합니다. 포커스는 이 창을 시작하지 않습니다.
 
 [useTooltip](/utilities/use-tooltip)에 `interactive: true`를 넘기세요. 표면은 비모달 팁 다이얼로그가 됩니다. `popover="manual"`과 `role="dialog"`를 씁니다. React Aria의 PreviewTrigger와 Popover도 모달이 아닌 호버 팁에 `role="dialog"`를 강제합니다. `role="tooltip"`은 절대 쓰지 않습니다. `Tooltip.Root`에 `aria-label`이나 `aria-labelledby` 중 정확히 하나를 설정하세요. 링크를 넣을 수 있습니다. Tab은 그 링크로 이동합니다. 호버는 패널로 넘어갈 수 있습니다. Escape는 포커스를 트리거로 돌려보내며, 키를 뗄 때까지 다시 열지 않습니다. 포커스 트랩은 없습니다.
 
@@ -101,11 +101,11 @@ const tooltip = useTooltip({ interactive: true });
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 위에서 설명한 동작입니다. 텍스트 팁은 `role="tooltip"`이고 열린 동안에만 마운트되며, 열린 동안 `getTriggerProps`가 트리거의 `aria-describedby`에 팁의 id를 더합니다. 트리거가 직접 가진 id 뒤에 붙습니다. 호버뿐 아니라 포커스로도 열리고, Escape로 닫힙니다. 인터랙티브 팁은 포커스 트랩이 없는 `role="dialog"`이고, 그 안에서 Escape를 누르면 포커스가 트리거로 돌아갑니다. 개발 환경에서는 텍스트 팁에 탭 가능한 것이 있거나, 인터랙티브 팁에 링크가 아닌 것이 있거나, 어느 팁이든 `<p>`, `<div>`, `<li>`처럼 문단을 닫게 되는 요소가 있으면 Todae가 오류를 기록합니다.
+**Todae가 맡는 것:** 위에서 설명한 동작입니다. 텍스트 팁은 `role="tooltip"`이고 열린 동안에만 마운트되며, 열린 동안 `getTriggerProps`가 트리거의 `aria-describedby`에 팁의 id를 더합니다. 트리거가 직접 가진 id 뒤에 붙습니다. 호버뿐 아니라 키보드 포커스로도 열리고, Escape로 닫힙니다. 인터랙티브 팁은 포커스 트랩이 없는 `role="dialog"`이고, 그 안에서 Escape를 누르면 포커스가 트리거로 돌아갑니다. 개발 환경에서는 텍스트 팁에 탭 가능한 것이 있거나, 인터랙티브 팁에 링크가 아닌 것이 있거나, 어느 팁이든 `<p>`, `<div>`, `<li>`처럼 문단을 닫게 되는 요소가 있으면 Todae가 오류를 기록합니다.
 
 **직접 제공할 것:** 트리거의 접근 가능한 이름입니다. 팁은 트리거를 설명할 뿐 이름을 붙이지 않으므로, 아이콘 전용 트리거에는 자체 `aria-label`이나 `aria-labelledby`가 필요합니다. 포커스를 받는 트리거도 필요합니다. 탭할 수 없는 래퍼에는 `tabIndex={0}`을 주세요. `interactive: true`라면 `Tooltip.Root`에 `aria-label`과 `aria-labelledby` 중 정확히 하나를 주세요.
 
-**주의할 점:** 꼭 필요한 정보는 팁에 넣지 마세요. 거친 포인터에서는 포커스로만 열립니다. 직접 쓰는 `aria-describedby`와 포커스, 포인터 핸들러는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 팁의 것을 덮어씁니다. 버튼과 메뉴는 팁이 아니라 [Popover](/popover)나 [Menu](/menu)에 둡니다.
+**주의할 점:** 꼭 필요한 정보는 팁에 넣지 마세요. 거친 포인터에서는 탭해도 팁이 열리지 않고, 키보드 포커스로만 열립니다. 직접 쓰는 `aria-describedby`와 포커스, 포인터 핸들러는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 팁의 것을 덮어씁니다. 버튼과 메뉴는 팁이 아니라 [Popover](/popover)나 [Menu](/menu)에 둡니다.
 
 ## 언제 쓰나요
 
