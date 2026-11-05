@@ -44,8 +44,10 @@ export type PopoverPresence = {
  * frames after it shows, so its closed style is drawn first and it
  * transitions in, and `data-todae-entering` marks those frames, so a tooltip
  * inside waits for the growth that is about to start, and as it closes it takes `data-todae-exiting` and stays
- * shown, inert, until its opacity fade ends, then hides. Opening again inside
- * the fade turns it back where it is. Unmounting drops the wait.
+ * shown, inert, until its opacity fade ends, then hides. A popover still
+ * fading inside it ends its fade then too, so it never outlasts the popover
+ * it sits in. Opening again inside the fade turns it back where it is.
+ * Unmounting drops the wait.
  *
  * Once its fade in ends it takes `data-todae-settled`, which drops its
  * transition until it closes. Safari re-resolves an open popover's position
@@ -100,6 +102,11 @@ export function usePopoverSync(
         if (ended) return;
         ended = true;
         exitsUnderWay.delete(el);
+        // A popover still fading inside it, such as a submenu that closed
+        // with its menu, has nothing to sit by once this one hides. Its fade
+        // runs on its own clock, so end it first: nothing stays shown inside
+        // a popover that has hidden.
+        for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) endExitNow(inner);
         el.removeAttribute('data-todae-exiting');
         setExitInert(el, false);
         if (isPopoverOpen(el)) el.hidePopover();
