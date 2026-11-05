@@ -181,6 +181,19 @@ export function usePopoverInternal(
     if (anchor && anchored) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);
 
+  // An anchor that goes away while the popover fades out, such as a word a
+  // send clears from the field, takes the popover with it at once, since it
+  // has nowhere left to sit.
+  useLayoutEffect(() => {
+    const el = popoverRef.current;
+    if (!el || open || !satByAnchor.current || !el.hasAttribute('data-todae-exiting')) return;
+    const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
+    const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
+    if (anchor?.isConnected) return;
+    el.setAttribute('data-todae-unanchored', '');
+    endExitNow(el);
+  });
+
   useEffect(() => {
     if (!open || !enabled) return;
     function onPointerDown(event: globalThis.PointerEvent) {

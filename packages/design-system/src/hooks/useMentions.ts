@@ -134,7 +134,25 @@ export type UseMentionsResult = {
 };
 
 /** The rows a list showed, and the range of the word it showed them for. */
-type ShownList = { items: MentionItem[]; isEmpty: boolean; name: string; at: { start: number; end: number } | null };
+type ShownList = {
+  items: MentionItem[];
+  isEmpty: boolean;
+  name: string;
+  active: string | null;
+  at: { start: number; end: number } | null;
+  /** The text `at` points into. */
+  text: string;
+};
+
+function sameRows(a: readonly MentionItem[], b: readonly MentionItem[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((item, i) => {
+      const other = b[i]!;
+      return item.id === other.id && item.option.label === other.option.label && Boolean(item.option.disabled) === Boolean(other.option.disabled);
+    })
+  );
+}
 
 const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
 const SPACE = /\s/;
@@ -178,17 +196,6 @@ export function tokenAtCaret(tokens: readonly MentionToken[], caret: number): Me
 
 function sameToken(a: MentionToken, b: MentionToken | null): boolean {
   return b !== null && a.start === b.start && a.end === b.end && a.value === b.value && a.text === b.text;
-}
-
-/** The token that is `token`, moved by an edit before it: the nearest with its value and text. */
-function likeToken(tokens: readonly MentionToken[], token: MentionToken | null): MentionToken | null {
-  if (!token) return null;
-  let best: MentionToken | null = null;
-  for (const candidate of tokens) {
-    if (candidate.value !== token.value || candidate.text !== token.text) continue;
-    if (!best || Math.abs(candidate.start - token.start) < Math.abs(best.start - token.start)) best = candidate;
-  }
-  return best;
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsResult {
@@ -351,16 +358,19 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // What the list last showed, and the word it showed it for. A list closes
   // as its word stops being typed, so it keeps these to fade out with, rows
   // and all, at that word.
-  const [last, setLast] = useState<ShownList>({ items: liveItems, isEmpty: list.isEmpty, name: liveName, at: null });
+  const [last, setLast] = useState<ShownList>({ items: liveItems, isEmpty: list.isEmpty, name: liveName, active: null, at: null, text: value });
+  // Rows compare by what they show: options built inline are new on every render.
   if (
     query &&
-    (last.items !== liveItems ||
+    (!sameRows(last.items, liveItems) ||
       last.isEmpty !== list.isEmpty ||
       last.name !== liveName ||
+      last.active !== activeValue ||
       last.at?.start !== query.start ||
-      last.at?.end !== query.end)
+      last.at?.end !== query.end ||
+      last.text !== value)
   ) {
-    setLast({ items: liveItems, isEmpty: list.isEmpty, name: liveName, at: { start: query.start, end: query.end } });
+    setLast({ items: liveItems, isEmpty: list.isEmpty, name: liveName, active: activeValue, at: { start: query.start, end: query.end }, text: value });
   }
   const items = open ? liveItems : last.items;
   const isEmpty = open ? list.isEmpty : last.isEmpty;
@@ -542,9 +552,18 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const [peeked, setPeeked] = useState<MentionToken | null>(null);
   if (caretToken && !sameToken(caretToken, peeked)) setPeeked(caretToken);
   // The word a closed list last sat at, which it fades out at.
-  const fadeAt = open ? null : last.at;
+  // Edits since then move it, and one that touches its start takes it away.
+  const fadeAt = useMemo(() => {
+    if (open || !last.at) return null;
+    if (last.text === value) return last.at;
+    const start = shiftIndex(last.text, value, last.at.start);
+    if (start === null) return null;
+    const end = shiftIndex(last.text, value, last.at.end);
+    return { start, end: end === null || end <= start ? start + 1 : end };
+  }, [last, open, value]);
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
-    const peekAt = caretToken ?? likeToken(tokens, peeked);
+    // Only the same token: one with its text elsewhere is another mention.
+    const peekAt = caretToken ?? (peeked ? (tokens.find((token) => sameToken(token, peeked)) ?? null) : null);
     const list: FieldTextareaHighlight[] = tokens.map((token) => {
       let name = token === peekAt ? peekName : undefined;
       // A pick puts its token where the word was, so the list fades out at the token.
@@ -587,6 +606,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
 
   const getListboxProps = (): Omit<OptionListSingleProps, 'children'> => ({
     ...list.listboxProps,
+    // A closed list keeps its highlighted row as it fades out.
+    activeValue: open ? list.listboxProps.activeValue : last.active,
     selectionMode: 'single',
     value: null,
     onValueChange: select,
