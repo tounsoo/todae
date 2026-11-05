@@ -83,8 +83,10 @@ describe('Coachmark in a browser', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start tour' })));
-    expect(document.querySelector('[inert]')).toBeNull();
+    // The page is usable again at once; the popup and the hole stay inert only while they fade out.
+    expect(document.querySelector('[inert]:not([popover])')).toBeNull();
     await settle();
     expect(scrim().matches(':popover-open')).toBe(false);
+    expect(document.querySelector('[inert]')).toBeNull();
   });
 });
