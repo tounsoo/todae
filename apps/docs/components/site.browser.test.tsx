@@ -38,11 +38,20 @@ async function violations(): Promise<string[]> {
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
 // Each element that reaches past the viewport's end while its parent doesn't:
-// where a sideways page scroll starts, so a failure names the part to fix.
+// where a sideways page scroll starts, so a failure names the part to fix. An
+// element inside a box that clips or scrolls its overflow, such as a wide table
+// in a ScrollArea, can't widen the page, so it isn't counted.
 function pastEdge(): string[] {
   const edge = innerWidth + 0.5;
+  const clipped = (el: Element) => {
+    for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+      if (getComputedStyle(box).overflowX !== 'visible') return true;
+    }
+    return false;
+  };
   return [...document.body.querySelectorAll<HTMLElement>('*')]
     .filter((el) => el.getBoundingClientRect().right > edge && el.parentElement!.getBoundingClientRect().right <= edge)
+    .filter((el) => !clipped(el))
     .map((el) => {
       const name = [el.localName, ...el.classList].join('.');
       const text = el.textContent!.trim().replace(/\s+/g, ' ').slice(0, 40);
