@@ -377,6 +377,14 @@ describe('scroll edge arrows', () => {
      * box at left 0 finds in every engine and direction.
      */
     function indicator(list: HTMLElement) {
+      if (list.hasAttribute('data-flat-indicator')) {
+        // Each tab's own indicator, placed in the selected tab.
+        const selected = screen.getByRole('tab', { selected: true });
+        const own = getComputedStyle(selected, '::after');
+        expect(own.content).not.toBe('none');
+        const left = selected.getBoundingClientRect().left + selected.clientLeft + Number.parseFloat(own.left);
+        return { left, right: left + Number.parseFloat(own.width) };
+      }
       const style = getComputedStyle(list, '::after');
       const probe = document.createElement('span');
       probe.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0';
@@ -445,6 +453,8 @@ describe('scroll edge arrows', () => {
       await userEvent.click(tab(5));
       await Promise.all(list.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => undefined)));
       await frames(1);
+      // Right to left, an overflowing list draws each tab's own indicator.
+      expect(list.hasAttribute('data-flat-indicator')).toBe(dir === 'rtl');
       const box = tab(5).getBoundingClientRect();
       const line = indicator(list);
       expect(line.left).toBeCloseTo(box.left, 0);

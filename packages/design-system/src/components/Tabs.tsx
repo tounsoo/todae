@@ -204,21 +204,38 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(settle);
     };
+    // Chromium places an anchor-positioned box in a right-to-left scroller
+    // that overflows off by the whole scroll range, so there the indicator
+    // falls back to each tab's own, which can't slide but sits right.
+    const flat = () => list.toggleAttribute('data-flat-indicator', getComputedStyle(list).direction === 'rtl' && list.scrollWidth > list.clientWidth);
+    flat();
     reveal();
+    let shown: ResizeObserver | undefined;
+    const watch = () => {
+      if (!shown) return;
+      shown.disconnect();
+      shown.observe(list);
+      for (const child of list.children) shown.observe(child);
+    };
     // Tabs that arrive after the first render, as from loaded data, may hold
     // the selected one.
-    const added = new MutationObserver(reveal);
+    const added = new MutationObserver(() => {
+      watch();
+      flat();
+      reveal();
+    });
     added.observe(list, { childList: true });
-    let shown: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       let width = list.clientWidth;
+      // The list's size, and its tabs', which can change what overflows.
       shown = new ResizeObserver(() => {
+        flat();
         const was = width;
         width = list.clientWidth;
         if (width === 0) done = false;
         else if (was === 0) reveal();
       });
-      shown.observe(list);
+      watch();
     }
     return () => {
       cancelAnimationFrame(frame);

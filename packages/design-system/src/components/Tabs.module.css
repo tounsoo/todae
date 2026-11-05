@@ -154,6 +154,16 @@
         transition: none;
       }
     }
+
+    /* Chromium misplaces an anchored box in a right-to-left scroller that
+       overflows, so such a list draws each tab's own indicator instead. */
+    .list[data-flat-indicator]:has(.tab[data-selected])::after {
+      content: none;
+    }
+
+    .list[data-flat-indicator] .tab[data-selected]::after {
+      content: '';
+    }
   }
 
   .tab:focus-visible {
