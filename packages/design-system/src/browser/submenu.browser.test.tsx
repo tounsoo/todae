@@ -171,6 +171,9 @@ describe('Menu submenus in a browser', () => {
     expect(document.activeElement).toBe(item('Share'));
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(shown(submenu())).toBe(true));
+    // Both lists fully in, so both run the whole exit and end together: the
+    // submenu must not outlast the menu it sits in.
+    await settled();
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(rootMenu().matches(':popover-open')).toBe(false));
     expect(submenu().matches(':popover-open')).toBe(false);

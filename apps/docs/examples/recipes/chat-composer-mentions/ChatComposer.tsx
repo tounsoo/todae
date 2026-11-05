@@ -114,6 +114,11 @@ function useCaretPeek(mentions: UseMentionsResult) {
   }, [id]);
 
   const open = focused && key !== null && person !== undefined && dismissed !== key;
+  // What the peek last showed. It keeps it while it fades out, after the caret has left the mention.
+  const [shown, setShown] = useState<{ key: string; id: string; person: Person } | null>(null);
+  if (open && token && key !== null && person && (shown?.key !== key || shown.person !== person)) {
+    setShown({ key, id: token.value, person });
+  }
   const popover = usePopover({
     open,
     anchorName: mentions.caretPeekAnchorName,
@@ -135,8 +140,8 @@ function useCaretPeek(mentions: UseMentionsResult) {
     peek: (
       <>
         <Popover.Root {...wire} inert>
-          {token && person && people.renderPeek
-            ? people.renderPeek(person, { id: token.value, mode: 'caret', close: () => setDismissed(key) })
+          {shown && people.renderPeek
+            ? people.renderPeek(shown.person, { id: shown.id, mode: 'caret', close: () => setDismissed(shown.key) })
             : null}
         </Popover.Root>
         {open && person ? (

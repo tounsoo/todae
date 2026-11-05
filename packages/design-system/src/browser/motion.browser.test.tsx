@@ -117,8 +117,6 @@ describe('A tip opened during an overlay enter motion', () => {
     ['end', 'ltr'],
     ['start', 'rtl'],
   ] as const)('stays by its trigger while a Drawer at %s slides in, %s', async (side: DrawerSide, dir) => {
-    // Firefox places an anchor-centered tip far from its trigger in a right-to-left Drawer, even at rest.
-    if (server.browser === 'firefox' && dir === 'rtl') return;
     render(
       <Themed dir={dir} style={slowEnter}>
         <Drawer.Root open onOpenChange={() => undefined} side={side} aria-label="Filters">

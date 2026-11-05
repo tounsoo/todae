@@ -25,6 +25,7 @@ import type { ComboboxFilterOptions, ComboboxOption } from './optionList/types.j
 import { useOptionList } from './optionList/useOptionList.js';
 import { useControlledState } from './useControlledState.js';
 import {
+  changedSpan,
   findQuery,
   sameTokens,
   shiftIndex,
@@ -35,6 +36,7 @@ import {
   type MentionTriggerPosition,
 } from './useMentions.detect.js';
 import { usePopoverInternal } from '../overlay/popover.js';
+import { mergeAnchorNames } from '../overlay/anchorName.js';
 
 export type { MentionToken, MentionTriggerPosition } from './useMentions.detect.js';
 
@@ -106,11 +108,17 @@ export type UseMentionsResult = {
   trigger: MentionTrigger | null;
   /** The text after the trigger character, up to the end of the word. */
   query: string;
+  /**
+   * The rows for the word being typed. A closed list keeps its last rows, and
+   * whether they were loading, failed or too long to fit, to fade out with.
+   */
   items: MentionItem[];
   isEmpty: boolean;
   activeId: string | null;
   activeValue: string | null;
+  /** Whether the word's rows are loading. A closed list keeps what it last showed until the next word. */
   loading: boolean;
+  /** Why the word's rows failed to load. A closed list keeps what it last showed until the next word. */
   error: unknown | null;
   retry: () => void;
   ids: { listbox: string };
@@ -125,10 +133,40 @@ export type UseMentionsResult = {
   /**
    * CSS anchor name on the token the caret is inside, while the suggestion
    * list is closed, and null otherwise. Pass it as `usePopover`'s
-   * `anchorName` to show a peek at that token.
+   * `anchorName` to show a peek at that token. The token keeps the name
+   * after the caret leaves it, so a peek closing then fades out there.
    */
   caretPeekAnchorName: string | null;
 };
+
+/** The rows a list showed, and the range of the word it showed them for. */
+type ShownList = {
+  items: MentionItem[];
+  isEmpty: boolean;
+  name: string;
+  active: string | null;
+  /** Rows the list showed as too long to fit. */
+  blocked: readonly string[];
+  loading: boolean;
+  error: unknown | null;
+  at: { start: number; end: number } | null;
+  /** The text `at` points into. */
+  text: string;
+};
+
+function sameValues(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
+function sameRows(a: readonly MentionItem[], b: readonly MentionItem[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((item, i) => {
+      const other = b[i]!;
+      return item.id === other.id && item.option.label === other.option.label && Boolean(item.option.disabled) === Boolean(other.option.disabled);
+    })
+  );
+}
 
 const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
 const SPACE = /\s/;
@@ -168,6 +206,10 @@ export function tokenAtCaret(tokens: readonly MentionToken[], caret: number): Me
     if (caret > token.start && caret <= token.end) match = token;
   }
   return match;
+}
+
+function sameToken(a: MentionToken, b: MentionToken | null): boolean {
+  return b !== null && a.start === b.start && a.end === b.end && a.value === b.value && a.text === b.text;
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsResult {
@@ -314,7 +356,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     canPick: fits,
   });
   const { activeValue, activeId: listActiveId, listIsCurrent, enabledValues, error, highlight, move } = list;
-  const items = useMemo<MentionItem[]>(
+  const liveItems = useMemo<MentionItem[]>(
     () => list.options.map((option) => ({ option, id: optionDomId(ids.listbox, option.value) })),
     [ids.listbox, list.options],
   );
@@ -326,7 +368,51 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     highlight(null);
   }
 
-  const listName = trigger?.label ?? strings.suggestions;
+  const liveName = trigger?.label ?? strings.suggestions;
+  // What the list last showed, and the word it showed it for. A list closes
+  // as its word stops being typed, so it keeps these to fade out with, rows
+  // and all, at that word.
+  const [last, setLast] = useState<ShownList>({
+    items: liveItems,
+    isEmpty: list.isEmpty,
+    name: liveName,
+    active: null,
+    blocked: [],
+    loading: false,
+    error: null,
+    at: null,
+    text: value,
+  });
+  // Rows compare by what they show: options built inline are new on every render.
+  const blocked = query ? liveItems.filter((item) => !item.option.disabled && !fits(item.option)).map((item) => item.option.value) : [];
+  if (
+    query &&
+    (!sameRows(last.items, liveItems) ||
+      last.isEmpty !== list.isEmpty ||
+      last.name !== liveName ||
+      last.active !== activeValue ||
+      !sameValues(last.blocked, blocked) ||
+      last.loading !== list.loading ||
+      last.error !== error ||
+      last.at?.start !== query.start ||
+      last.at?.end !== query.end ||
+      last.text !== value)
+  ) {
+    setLast({
+      items: liveItems,
+      isEmpty: list.isEmpty,
+      name: liveName,
+      active: activeValue,
+      blocked,
+      loading: list.loading,
+      error,
+      at: { start: query.start, end: query.end },
+      text: value,
+    });
+  }
+  const items = open ? liveItems : last.items;
+  const isEmpty = open ? list.isEmpty : last.isEmpty;
+  const listName = open ? liveName : last.name;
   // A failed load is not "no suggestions", so it announces nothing.
   const count = open && listIsCurrent && error == null ? items.length : null;
   const announced = useRef<string | null>(null);
@@ -497,23 +583,51 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const queryStart = query?.start;
   const queryEnd = query?.end;
   const caretToken = !open && caret !== null ? tokenAtCaret(tokens, caret) : null;
-  const caretPeekAnchorName = caretToken ? `--todae-mention-peek-${autoId}` : null;
+  const peekName = `--todae-mention-peek-${autoId}`;
+  const caretPeekAnchorName = caretToken ? peekName : null;
+  // The token the caret last rested in keeps the peek's name once the caret
+  // leaves it, so a peek that closes then fades out at it.
+  const [peeked, setPeeked] = useState<MentionToken | null>(null);
+  if (caretToken && !sameToken(caretToken, peeked)) setPeeked(caretToken);
+  // The word a closed list last sat at, which it fades out at.
+  // Edits since then move it, and one that touches its start takes it away.
+  const fadeAt = useMemo(() => {
+    if (open || !last.at) return null;
+    if (last.text === value) return last.at;
+    const was = last.at.start;
+    // An edit that takes the word's start away leaves no place to fade out at,
+    // unless the edit put a token there: the token a pick made of the word,
+    // whatever text it shows. A token that only slid there is another mention.
+    const edit = changedSpan(last.text, value);
+    const start =
+      shiftIndex(last.text, value, was) ??
+      (edit.from === was && tokens.some((token) => token.start === was && token.start < edit.nextTo) ? was : null);
+    if (start === null) return null;
+    const end = shiftIndex(last.text, value, last.at.end);
+    return { start, end: end === null || end <= start ? start + 1 : end };
+  }, [last, open, tokens, value]);
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
-    const list: FieldTextareaHighlight[] = tokens.map((token) => ({
-      start: token.start,
-      end: token.end,
-      kind: token.char,
-      anchorName:
-        caretToken && token.start === caretToken.start && token.end === caretToken.end && token.value === caretToken.value
-          ? caretPeekAnchorName ?? undefined
-          : undefined,
-    }));
+    // Only the same token: one with its text elsewhere is another mention.
+    const peekAt = caretToken ?? (peeked ? (tokens.find((token) => sameToken(token, peeked)) ?? null) : null);
+    const list: FieldTextareaHighlight[] = tokens.map((token) => {
+      let name = token === peekAt ? peekName : undefined;
+      // A pick puts its token where the word was, so the list fades out at the token.
+      if (fadeAt && token.start <= fadeAt.start && fadeAt.start < token.end) name = mergeAnchorNames(name, anchorName);
+      return { start: token.start, end: token.end, kind: token.char, anchorName: name };
+    });
     // The word being typed carries the anchor the list sits at, and is not drawn.
     if (queryStart !== undefined && queryEnd !== undefined) {
       list.push({ start: queryStart, end: Math.max(queryEnd, queryStart + 1), anchorName, draw: false });
+    } else if (fadeAt) {
+      // A word left as text, after Escape or a blur, keeps it. One a token now
+      // overlaps gives way, so every token is still drawn.
+      const end = Math.max(fadeAt.end, fadeAt.start + 1);
+      if (!tokens.some((token) => token.start < end && fadeAt.start < token.end)) {
+        list.push({ start: fadeAt.start, end, anchorName, draw: false });
+      }
     }
     return list.sort((a, b) => a.start - b.start);
-  }, [anchorName, caretPeekAnchorName, caretToken, queryEnd, queryStart, tokens]);
+  }, [anchorName, caretToken, fadeAt, peekName, peeked, queryEnd, queryStart, tokens]);
 
   const getTextareaProps = <P extends UseMentionsTextareaProps>(props?: P): Omit<P, keyof TextareaWire> & TextareaWire => {
     const user = (props ?? {}) as P;
@@ -537,13 +651,20 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
 
   const getListboxProps = (): Omit<OptionListSingleProps, 'children'> => ({
     ...list.listboxProps,
+    // A closed list keeps its highlighted row as it fades out.
+    activeValue: open ? list.listboxProps.activeValue : last.active,
     selectionMode: 'single',
     value: null,
     onValueChange: select,
     'aria-label': listName,
   });
 
-  const getOptionProps = (item: MentionItem): OptionListOptionProps => list.getOptionProps(item.option);
+  const getOptionProps = (item: MentionItem): OptionListOptionProps => {
+    const props = list.getOptionProps(item.option);
+    // A closed list keeps the rows it showed as too long disabled as it fades out.
+    if (open || props.disabled || !last.blocked.includes(item.option.value)) return props;
+    return { ...props, disabled: true };
+  };
 
   return {
     value: shown,
@@ -551,11 +672,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     trigger,
     query: query?.query ?? '',
     items,
-    isEmpty: list.isEmpty,
+    isEmpty,
     activeId,
     activeValue: open ? activeValue : null,
-    loading: list.loading,
-    error,
+    loading: open ? list.loading : last.loading,
+    error: open ? error : last.error,
     retry: list.retry,
     ids,
     textareaRef,

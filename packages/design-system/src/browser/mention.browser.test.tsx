@@ -106,6 +106,10 @@ function MentionField({
   );
 }
 
+function isShown(el: HTMLElement): boolean {
+  return el.hasAttribute('data-popover-open') || el.matches(':popover-open');
+}
+
 function openPopover() {
   const el = document.querySelector<HTMLElement>('[popover][data-popover-open], [popover]:popover-open');
   if (!el) throw new Error('no open popover');
@@ -196,6 +200,8 @@ describe('mention peek in a browser', () => {
     const list = openPopover();
     expectBeside(list, anchorOf(list));
     await userEvent.keyboard('{Enter}');
+    // The list fades out at the token the pick put in, then goes.
+    await waitFor(() => expect(isShown(list)).toBe(false));
     field.setSelectionRange(2, 2);
     field.dispatchEvent(new Event('select', { bubbles: true }));
     await wait(50);
@@ -248,6 +254,7 @@ describe('mention peek in a browser', () => {
     const lowList = openPopover();
     expect(lowList.getBoundingClientRect().bottom).toBeLessThanOrEqual(anchorOf(lowList).getBoundingClientRect().top + 1);
     await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(isShown(lowList)).toBe(false));
     lowField.setSelectionRange(2, 2);
     lowField.dispatchEvent(new Event('select', { bubbles: true }));
     await wait(50);
