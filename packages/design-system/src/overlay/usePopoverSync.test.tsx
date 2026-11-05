@@ -322,6 +322,24 @@ describe('usePopoverSync with presence', () => {
     expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
   });
 
+  it('ends the fade of a popover inside it when it closes already hidden', async () => {
+    fade('0.2s');
+    const tree = (open: boolean) => (
+      <Layer name="menu" open={open}>
+        <Layer name="submenu" open={open} />
+      </Layer>
+    );
+    const { container, rerender } = render(tree(true));
+    const menu = container.querySelector<HTMLElement>('[data-name="menu"]')!;
+    const submenu = container.querySelector<HTMLElement>('[data-name="submenu"]')!;
+    await act(frames);
+    // Something hid it without a close, as a move does.
+    menu.hidePopover();
+    rerender(tree(false));
+    expect(submenu.hasAttribute('data-popover-open')).toBe(false);
+    expect(submenu.hasAttribute('data-todae-exiting')).toBe(false);
+  });
+
   it('leaves a popover inside it to its own fade while it is still shown', async () => {
     fade('0.2s');
     const onInnerExited = vi.fn();
