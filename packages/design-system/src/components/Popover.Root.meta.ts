@@ -5,6 +5,14 @@ export const meta = {
   description: 'Surface chrome. Spread getPopoverProps for wire.',
   props: [
     {
+      name: 'arrows',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description:
+        'Whether an arrow shows at its top or bottom edge while what it holds is cut off there. Resting a mouse or pen on one scrolls toward it. On by default, as a popover holds its list and scrolls past its max height.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

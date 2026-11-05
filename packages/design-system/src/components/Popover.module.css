@@ -12,6 +12,8 @@
        as ScrollArea has. */
     scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     background: var(--todae-popover-bg);
+    /* The fill scroll arrows inside take, so they hide the row they cover. */
+    --_scroll-surface: var(--todae-popover-bg);
     color: var(--todae-popover-fg);
     border: var(--todae-popover-border-width) solid var(--todae-popover-border);
     border-radius: var(--todae-popover-radius);

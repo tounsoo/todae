@@ -60,6 +60,8 @@
     padding-left: max(var(--todae-drawer-padding-x), env(safe-area-inset-left));
     padding-right: max(var(--todae-drawer-padding-x), env(safe-area-inset-right));
     background: var(--todae-drawer-bg);
+    /* The fill scroll arrows inside take, so they hide the row they cover. */
+    --_scroll-surface: var(--todae-drawer-bg);
     border: 0 solid var(--todae-drawer-border);
     border-inline-end-width: var(--todae-drawer-border-width);
     box-shadow: var(--todae-drawer-shadow);

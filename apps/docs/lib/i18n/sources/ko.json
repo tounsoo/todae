@@ -539,7 +539,7 @@
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
     "## Icons": "57bbd70b0b4e",
-    "## Accessible composition": "0283a4a276ef",
+    "## Accessible composition": "b3fa00b10aa9",
     "## When to use": "9a102c1309d4",
     "## Props": "51a8cb6780b4",
     "(section order)": "b64a64a1f9aa"
@@ -595,7 +595,7 @@
     "# Popover": "08e9d3206595",
     "## Examples": "14cb85aebea2",
     "## What goes where": "29b404e398a5",
-    "## Accessible composition": "3195d8b658e7",
+    "## Accessible composition": "71f70ec143b8",
     "## When to use": "3e7e1aacc083",
     "## Props": "006d4b103b83",
     "(section order)": "072dc2a8b6df"
@@ -824,13 +824,14 @@
     "(section order)": "58e398659b7f"
   },
   "scroll-area": {
-    "(top)": "e45d2da6ea8b",
+    "(top)": "18323585376f",
     "# ScrollArea": "b476bea92e53",
     "## A Tab stop for content with no controls": "6ba98ff1d4df",
-    "## Accessible composition": "db4c5063665c",
+    "## Arrows at a cut-off edge": "1b06b91f61a2",
+    "## Accessible composition": "b065a93af26a",
     "## When to use": "ca7297f65849",
     "## Props": "fc86f0416810",
-    "(section order)": "5078874aa1c2"
+    "(section order)": "a6432ac664c5"
   },
   "separator": {
     "(top)": "22fb42766186",

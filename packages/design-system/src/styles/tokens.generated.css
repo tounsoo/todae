@@ -1249,6 +1249,9 @@
   --todae-pagination-radius: var(--_todae-pagination-radius, var(--todae-radius-md));
   --todae-pagination-ring-focus: var(--_todae-pagination-ring-focus, var(--todae-focus-ring));
   --todae-pagination-size: var(--_todae-pagination-size, 2rem);
+  --todae-scroll-arrow-bg: var(--_todae-scroll-arrow-bg, var(--todae-color-bg-surface));
+  --todae-scroll-arrow-fg: var(--_todae-scroll-arrow-fg, var(--todae-color-fg-muted));
+  --todae-scroll-arrow-size: var(--_todae-scroll-arrow-size, var(--todae-space-8));
   --todae-scroll-ring-focus: var(--_todae-scroll-ring-focus, var(--todae-focus-ring));
   --todae-tree-chevron-fg: var(--_todae-tree-chevron-fg, var(--todae-color-fg-muted));
   --todae-tree-chevron-size: var(--_todae-tree-chevron-size, 1rem);

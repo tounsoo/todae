@@ -53,6 +53,8 @@
     gap: var(--todae-dialog-gap);
     padding: var(--todae-dialog-padding-y) var(--todae-dialog-padding-x);
     background: var(--todae-dialog-bg);
+    /* The fill scroll arrows inside take, so they hide the row they cover. */
+    --_scroll-surface: var(--todae-dialog-bg);
     color: var(--todae-dialog-fg);
     border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
     border-radius: var(--todae-dialog-radius);

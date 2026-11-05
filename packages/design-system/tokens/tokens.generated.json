@@ -15439,6 +15439,48 @@
       "description": "Pagination.Root: page number links with previous and next."
     },
     {
+      "path": "scroll.arrow.bg",
+      "type": "color",
+      "cssVar": "--todae-scroll-arrow-bg",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The band's fill on a plain page. On a popover, dialog, drawer, sheet or card, the band takes that surface's own fill."
+    },
+    {
+      "path": "scroll.arrow.fg",
+      "type": "color",
+      "cssVar": "--todae-scroll-arrow-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The arrow's chevron."
+    },
+    {
+      "path": "scroll.arrow.size",
+      "type": "dimension",
+      "cssVar": "--todae-scroll-arrow-size",
+      "cssValue": "var(--todae-space-8)",
+      "ref": "space.8",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How thick the band an arrow sits in is."
+    },
+    {
       "path": "scroll.ring.focus",
       "type": "color",
       "cssVar": "--todae-scroll-ring-focus",
@@ -15450,7 +15492,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ScrollArea.Root: a scrolling region that is focusable when it overflows."
+      "description": "ScrollArea.Root: a scrolling region that is focusable when it overflows, and the arrows that show at a cut-off edge of a scrolling list."
     },
     {
       "path": "tree.chevron.fg",

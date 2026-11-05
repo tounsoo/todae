@@ -14,6 +14,7 @@ import {
 import { htmlDateTime, valueBounds } from './htmlValue.js';
 import { PickerShell, type PickerButtonProps, type PickerCloseReason } from './Field.PickerShell.js';
 import { timeSlots, TimeList } from './Field.TimePicker.js';
+import { ScrollEdges } from './scrollEdges.js';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
 export type FieldDateTimePickerCloseReason = PickerCloseReason;
@@ -150,6 +151,7 @@ function DateTimePanel({
         <CalendarParts.Grid />
       </CalendarParts.Root>
       <div className={styles.dateTimeTimes}>
+        <ScrollEdges axis="block" />
         <TimeList
           value={time}
           step={step}

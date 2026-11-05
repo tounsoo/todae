@@ -5,9 +5,16 @@ import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
 import type { PopoverWire } from '../overlay/popoverWire.js';
 import { cx } from '../internal/cx.js';
+import { ScrollEdges } from './scrollEdges.js';
 import styles from './Popover.module.css';
 
 type PopoverBase = {
+  /**
+   * Whether an arrow shows at its top or bottom edge while what it holds is
+   * cut off there. Resting a mouse or pen on one scrolls toward it. On by
+   * default, as a popover holds its list and scrolls past its max height.
+   */
+  arrows?: boolean;
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -61,6 +68,7 @@ export function PopoverSurface({
   onClick,
   onFocus,
   children,
+  arrows = true,
   className,
   role,
   'aria-label': ariaLabel,
@@ -93,6 +101,7 @@ export function PopoverSurface({
       'aria-label': role ? ariaLabel : undefined,
       'aria-labelledby': role ? ariaLabelledby : undefined,
     },
+    arrows && <ScrollEdges axis="block" />,
     <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>,
   );
 }

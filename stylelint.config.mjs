@@ -21,6 +21,8 @@ export default {
         // Components read contract tokens only. These sheets still read a core
         // spacing step for an anchor offset or a gap fallback.
         coreReads: {
+          // Scroll arrows fade in at the motion scale's fast step.
+          ScrollEdges: ['motion'],
           ChipList: ['space'],
           Field: ['space'],
         },
@@ -41,6 +43,7 @@ export default {
           // Progress and meter share one sheet.
           Progress: ['progress', 'meter'],
           ScrollArea: ['scroll'],
+          ScrollEdges: ['scroll'],
           ColorPicker: ['picker'],
           // A code block reads code.block and the font Code.Root shares.
           CodeBlock: ['code'],
