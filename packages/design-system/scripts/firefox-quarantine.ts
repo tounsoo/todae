@@ -24,7 +24,7 @@ export interface QuarantineEntry {
  * still fails it, and Chromium and WebKit treat these tests like any other.
  *
  * An entry comes off when its fix lands, or when the run summary shows it
- * passing run after run. Before 1.0 this list must be empty and Firefox
+ * passing run after run. By 1.0 this list must be empty and Firefox
  * fully blocking again.
  */
 export const firefoxQuarantine: readonly QuarantineEntry[] = [
@@ -94,13 +94,14 @@ export function judge(results: BrowserResults, list: readonly QuarantineEntry[],
   for (const [id, entry] of entries) {
     if (!seen.has(id)) verdict.blocking.push(`The quarantine lists ${label(entry.file, entry.test)}, which this run has no test for. Fix its name or take it off the list.`);
   }
-  for (const module of results.modules) verdict.blocking.push(`${module.file} failed outside its tests: ${firstLine(module.errors)}`);
+  for (const { file, suite, errors } of results.outside) verdict.blocking.push(`${suite ? label(file, suite) : file} failed outside its tests: ${firstLine(errors)}`);
   for (const error of results.unhandledErrors) verdict.blocking.push(`Unhandled error: ${firstLine([error])}`);
   if (results.reason === 'interrupted') verdict.blocking.push('The run was interrupted before every test finished.');
   if (results.tests.length === 0) verdict.blocking.push('The run reported no tests.');
-  // A failure the results don't show, such as a crash after the last test, still fails the job.
-  if (vitestExit !== 0 && failures === 0 && verdict.blocking.length === 0) {
-    verdict.blocking.push(`Vitest exited with ${vitestExit}, but no test failed in its results.`);
+  // A failure the results don't show still fails the job. Vitest exits with 1 when a test fails, so a
+  // quarantined failure can explain a 1, but no other code.
+  if (vitestExit !== 0 && verdict.blocking.length === 0 && (failures === 0 || vitestExit !== 1)) {
+    verdict.blocking.push(`Vitest exited with ${vitestExit}, which its results don't explain.`);
   }
   return verdict;
 }
@@ -161,7 +162,7 @@ function main(argv: string[]): number {
     return 0;
   }
   const exit = Number(values['vitest-exit']);
-  if (!values.results || values['vitest-exit'] === undefined || !Number.isInteger(exit)) {
+  if (!values.results || !/^\d+$/.test(values['vitest-exit'] ?? '')) {
     process.stderr.write(USAGE);
     return 2;
   }

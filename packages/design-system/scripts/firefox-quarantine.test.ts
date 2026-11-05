@@ -6,7 +6,7 @@ const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
 
 function run(tests: BrowserResults['tests'], extra: Partial<BrowserResults> = {}): BrowserResults {
-  return { reason: tests.some((test) => test.state === 'failed') ? 'failed' : 'passed', unhandledErrors: [], modules: [], tests, ...extra };
+  return { reason: tests.some((test) => test.state === 'failed') ? 'failed' : 'passed', unhandledErrors: [], outside: [], tests, ...extra };
 }
 
 describe('the Firefox quarantine gate', () => {
@@ -68,10 +68,14 @@ describe('the Firefox quarantine gate', () => {
   it('fails the run on errors outside any test, even with only quarantined failures', () => {
     const results = run([{ file: listed.file, name: listed.test, state: 'failed', errors: ['Error: known'] }], {
       unhandledErrors: ['TypeError: late\n    at x'],
-      modules: [{ file: 'src/browser/c.browser.test.tsx', errors: ['SyntaxError: bad import'] }],
+      outside: [
+        { file: 'src/browser/c.browser.test.tsx', suite: '', errors: ['SyntaxError: bad import'] },
+        { file: listed.file, suite: 'A', errors: ['Error: afterAll broke'] },
+      ],
     });
     expect(judge(results, [listed], 1).blocking).toEqual([
       'src/browser/c.browser.test.tsx failed outside its tests: SyntaxError: bad import',
+      'src/browser/a.browser.test.tsx > A failed outside its tests: Error: afterAll broke',
       'Unhandled error: TypeError: late',
     ]);
   });
@@ -81,7 +85,10 @@ describe('the Firefox quarantine gate', () => {
       'The run was interrupted before every test finished.',
     ]);
     expect(judge(run([]), [], 0).blocking).toEqual(['The run reported no tests.']);
-    expect(judge(run([{ ...other, state: 'passed', errors: [] }]), [], 1).blocking).toEqual(['Vitest exited with 1, but no test failed in its results.']);
+    expect(judge(run([{ ...other, state: 'passed', errors: [] }]), [], 1).blocking).toEqual(["Vitest exited with 1, which its results don't explain."]);
+    const quarantinedFailure = run([{ file: listed.file, name: listed.test, state: 'failed', errors: ['Error: known'] }]);
+    expect(judge(quarantinedFailure, [listed], 1).blocking).toEqual([]);
+    expect(judge(quarantinedFailure, [listed], 130).blocking).toEqual(["Vitest exited with 130, which its results don't explain."]);
   });
 
   it('fails a list that names one test twice', () => {

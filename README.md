@@ -83,7 +83,7 @@ Checked against public browser support data on 2026-10-16, these are the first v
 
 CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code. Todae's component browser tests run in Chromium, Firefox and WebKit through Playwright, which ship builds newer than these floors, so the floors themselves are not tested.
 
-Chromium and WebKit are fully supported, and a browser test that fails in either fails CI. Firefox is supported with known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Before 1.0, every Firefox failure fails CI again.
+Chromium and WebKit are fully supported, and a browser test that fails in either fails CI. Firefox is supported with known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Firefox goes back to failing CI on every failure before 1.0 ships.
 
 ## Contributing
 

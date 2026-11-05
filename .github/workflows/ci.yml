@@ -198,7 +198,7 @@ jobs:
       # other's clicks, so it runs one file at a time.
       # Tests on the Firefox quarantine (packages/design-system/scripts/firefox-quarantine.ts, issue 367)
       # still run, but their failures warn instead of failing the job. Any other failure still fails it,
-      # and the job summary lists each quarantined test's result. Before 1.0 the quarantine is empty and
+      # and the job summary lists each quarantined test's result. By 1.0 the quarantine must be empty and
       # Firefox fully blocking again.
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
