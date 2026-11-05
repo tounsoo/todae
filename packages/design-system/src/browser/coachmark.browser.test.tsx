@@ -1,10 +1,15 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
-import { useRef, useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { server, userEvent } from '@vitest/browser/context';
+import { useRef, useState, type CSSProperties } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button.js';
 import { Coachmark, type CoachmarkCloseReason } from '../components/Coachmark.js';
+import { emulateMedia } from '../test/media.js';
 import { settle } from '../test/settle.js';
+
+afterEach(async () => {
+  await emulateMedia([]);
+});
 
 function Harness({ onTarget, onClose }: { onTarget?: () => void; onClose?: (reason: CoachmarkCloseReason) => void }) {
   const target = useRef<HTMLButtonElement>(null);
@@ -44,6 +49,41 @@ function scrim(): HTMLElement {
   return document.querySelector<HTMLElement>('[aria-hidden="true"][popover]')!;
 }
 
+// A slow, even slide, so a look partway finds it between the two targets.
+const slowMove = {
+  padding: '4rem',
+  display: 'flex',
+  gap: '12rem',
+  ['--_todae-coachmark-motion-duration-move' as string]: '1s',
+  ['--_todae-coachmark-motion-easing-move' as string]: 'linear',
+} satisfies CSSProperties;
+
+const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
+function Tour() {
+  const first = useRef<HTMLButtonElement>(null);
+  const second = useRef<HTMLButtonElement>(null);
+  const [step, setStep] = useState(0);
+  return (
+    <div data-appearance="light" data-density="comfortable" style={slowMove}>
+      <Button.Root ref={first} variant="secondary">
+        Filter
+      </Button.Root>
+      <Button.Root ref={second} variant="secondary">
+        Export
+      </Button.Root>
+      <Coachmark.Root targetRef={step === 0 ? first : second} defaultOpen>
+        <Coachmark.Title>{step === 0 ? 'Filter' : 'Export'}</Coachmark.Title>
+        <Coachmark.Footer>
+          <Button.Root variant="primary" onClick={() => setStep(1)}>
+            Next
+          </Button.Root>
+        </Coachmark.Footer>
+      </Coachmark.Root>
+    </div>
+  );
+}
+
 describe('Coachmark in a browser', () => {
   it('cuts the hole around the target, with room for its focus ring, and shows the popup in front', async () => {
     render(<Harness />);
@@ -67,6 +107,51 @@ describe('Coachmark in a browser', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Export' }));
     expect(onTarget).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Start tour', hidden: true }).closest('[inert]')).not.toBeNull();
+  });
+
+  async function openTourAndStep() {
+    render(<Tour />);
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter' }).matches(':popover-open')).toBe(true));
+    await settle();
+    const before = { hole: scrim().getBoundingClientRect().left, popup: screen.getByRole('dialog').getBoundingClientRect().left };
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await frame();
+    await frame();
+    return before;
+  }
+
+  function expectAtExport() {
+    const target = screen.getByRole('button', { name: 'Export' }).getBoundingClientRect();
+    // coachmark.cutout.padding and the focus ring's room are both 4px in the base theme.
+    expect(scrim().getBoundingClientRect().left).toBeCloseTo(target.left - 4, 0);
+    expect(screen.getByRole('dialog', { name: 'Export' }).getBoundingClientRect().left).toBeCloseTo(target.left, 0);
+  }
+
+  it("slides the hole and the popup to a tour's next target, then stops", async () => {
+    const before = await openTourAndStep();
+    // WebKit and Firefox move them at once, as they do the Tabs indicator; motion only has to
+    // work in Chrome (ARCHITECTURE "Motion"). All three end at the new target.
+    if (server.browser === 'chromium') {
+      const target = screen.getByRole('button', { name: 'Export' }).getBoundingClientRect();
+      expect(scrim().hasAttribute('data-todae-moving')).toBe(true);
+      const hole = scrim().getBoundingClientRect().left;
+      const popup = screen.getByRole('dialog').getBoundingClientRect().left;
+      expect(hole).toBeGreaterThan(before.hole + 1);
+      expect(hole).toBeLessThan(target.left - 5);
+      expect(popup).toBeGreaterThan(before.popup + 1);
+      expect(popup).toBeLessThan(target.left - 1);
+    }
+    await settle();
+    expectAtExport();
+    expect(scrim().hasAttribute('data-todae-moving')).toBe(false);
+    expect(screen.getByRole('dialog').hasAttribute('data-todae-moving')).toBe(false);
+  });
+
+  it('moves them at once under reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    await openTourAndStep();
+    expect(scrim().hasAttribute('data-todae-moving')).toBe(false);
+    expectAtExport();
   });
 
   it('moves focus in, cycles Tab between the popup and the target, and returns focus on Escape', async () => {

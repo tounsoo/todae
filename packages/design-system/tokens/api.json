@@ -1134,11 +1134,19 @@
       "type": "duration"
     },
     {
+      "path": "coachmark.motion.duration.move",
+      "type": "duration"
+    },
+    {
       "path": "coachmark.motion.easing.enter",
       "type": "cubicBezier"
     },
     {
       "path": "coachmark.motion.easing.exit",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "coachmark.motion.easing.move",
       "type": "cubicBezier"
     },
     {

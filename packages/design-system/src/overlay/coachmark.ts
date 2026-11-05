@@ -96,6 +96,37 @@ export function useCoachmark({
   // step moves the anchor, the hole and the inert page with it.
   const target = useRefElement(targetRef);
 
+  // A tour's next step slides the popup and the hole to the new target, by
+  // layout, as the Tabs indicator slides: data-todae-moving turns on the
+  // transitions of their anchored edges until they end. It is set before the
+  // anchor name moves, so the style that moves them already holds the
+  // transitions. Opening, closing and reduced motion move nothing.
+  const shown = useRef<{ open: boolean; target: HTMLElement | null }>({ open: false, target: null });
+  useLayoutEffect(() => {
+    const last = shown.current;
+    shown.current = { open, target: target ?? last.target };
+    if (!open || !last.open || !target || !last.target || last.target === target || reducedMotion()) return;
+    const parts = [popupRef.current, scrimRef.current].filter((el): el is HTMLElement => el != null);
+    for (const el of parts) el.setAttribute('data-todae-moving', '');
+    let done = false;
+    // Two frames on, once a layout has resolved the new anchor and started
+    // the slide, wait for what runs; a browser that slides nothing ends it then.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        const running = parts.flatMap((el) => el.getAnimations?.() ?? []);
+        void Promise.all(running.map((animation) => animation.finished.catch(() => undefined))).then(() => {
+          if (done) return;
+          for (const el of parts) el.removeAttribute('data-todae-moving');
+        });
+      });
+    });
+    return () => {
+      done = true;
+      cancelAnimationFrame(frame);
+      for (const el of parts) el.removeAttribute('data-todae-moving');
+    };
+  }, [open, target]);
+
   // The target carries the anchor name the popup and the hole sit at, beside
   // any name it has already, such as its own tooltip's. It keeps it while
   // closed, so the popup and the hole stay put as they fade out.

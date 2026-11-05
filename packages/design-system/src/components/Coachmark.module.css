@@ -52,4 +52,25 @@
   .popup {
     max-inline-size: var(--todae-coachmark-max-width);
   }
+
+  /* A tour's next step: the hole and the popup slide to the new target by
+     their anchored edges, as the Tabs indicator slides, so a tooltip in the
+     popup stays by its trigger. The engine sets data-todae-moving until the
+     slide ends, which also keeps an open popup's settled state from turning
+     the slide off. Under reduced motion they move at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .scrim[data-todae-moving] {
+      transition:
+        opacity var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
+        inset var(--todae-coachmark-motion-duration-move) var(--todae-coachmark-motion-easing-move),
+        border-radius var(--todae-coachmark-motion-duration-move) var(--todae-coachmark-motion-easing-move);
+    }
+
+    .popup[data-entered][data-todae-moving]:not([data-todae-exiting]) {
+      transition:
+        opacity var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
+        scale var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
+        inset var(--todae-coachmark-motion-duration-move) var(--todae-coachmark-motion-easing-move);
+    }
+  }
 }

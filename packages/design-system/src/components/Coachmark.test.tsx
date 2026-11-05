@@ -1,11 +1,15 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRef, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './Coachmark.js';
 import { inertOutside } from '../overlay/inertOutside.js';
+import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetMatchMedia();
+});
 
 function Harness({
   open: initial = true,
@@ -125,6 +129,39 @@ describe('Coachmark', () => {
     expect(one.style.getPropertyValue('anchor-name')).toBe('');
     expect(two.style.getPropertyValue('anchor-name')).toBe(popup.style.getPropertyValue('position-anchor'));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Got it' }));
+  });
+
+  it.each([false, true])('marks the popup and the hole as moving for a tour step only, reduced motion %s', async (reduce) => {
+    setMatchMedia('(prefers-reduced-motion: reduce)', reduce);
+    function Tour() {
+      const one = useRef<HTMLButtonElement>(null);
+      const two = useRef<HTMLButtonElement>(null);
+      const [at, setAt] = useState(0);
+      return (
+        <>
+          <button type="button" ref={one} onClick={() => setAt(1)}>
+            One
+          </button>
+          <button type="button" ref={two}>
+            Two
+          </button>
+          <Coachmark.Root targetRef={at === 0 ? one : two} defaultOpen>
+            <Coachmark.Title>Step {at + 1}</Coachmark.Title>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<Tour />);
+    const popup = screen.getByRole('dialog');
+    const scrim = document.querySelector('[aria-hidden="true"][popover]')!;
+    // Opening moves nothing.
+    expect(popup.hasAttribute('data-todae-moving')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'One' }));
+    expect(popup.hasAttribute('data-todae-moving')).toBe(!reduce);
+    expect(scrim.hasAttribute('data-todae-moving')).toBe(!reduce);
+    // With nothing running, as here, it ends once the slide would have started.
+    await waitFor(() => expect(scrim.hasAttribute('data-todae-moving')).toBe(false));
+    expect(popup.hasAttribute('data-todae-moving')).toBe(false);
   });
 
   it('keeps the target’s own popovers, such as its tooltip, usable', async () => {

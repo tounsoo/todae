@@ -5,9 +5,10 @@ import { useRef, useState, type RefObject } from 'react';
 
 type Step = { title: string; text: string; target: RefObject<HTMLButtonElement | null> };
 
-// An example, not a component: the steps, their order and whether the person
-// has seen the tour are the product's. Each step is one Coachmark.Root.
-export default function CoachmarkTour() {
+// A recipe, not a component: the steps, their order and whether the person
+// has seen the tour are the product's. One Coachmark.Root shows every step,
+// and the tour changes its target and text.
+export default function ProductTour() {
   const searchRef = useRef<HTMLButtonElement>(null);
   const filterRef = useRef<HTMLButtonElement>(null);
   const shareRef = useRef<HTMLButtonElement>(null);

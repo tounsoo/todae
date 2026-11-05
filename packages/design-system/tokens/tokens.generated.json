@@ -8425,6 +8425,20 @@
       "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
     },
     {
+      "path": "coachmark.motion.duration.move",
+      "type": "duration",
+      "cssVar": "--todae-coachmark-motion-duration-move",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long the popup and the hole take to slide to a tour's next target. Under reduced motion they move at once."
+    },
+    {
       "path": "coachmark.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-coachmark-motion-easing-enter",
@@ -8444,6 +8458,20 @@
       "cssVar": "--todae-coachmark-motion-easing-exit",
       "cssValue": "var(--todae-overlay-motion-easing-exit)",
       "ref": "overlay.motion.easing.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+    },
+    {
+      "path": "coachmark.motion.easing.move",
+      "type": "cubicBezier",
+      "cssVar": "--todae-coachmark-motion-easing-move",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
