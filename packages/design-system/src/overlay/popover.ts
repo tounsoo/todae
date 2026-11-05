@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type HTMLAttributes,
   type MouseEvent,
@@ -103,6 +104,12 @@ export function usePopoverInternal(
     anchorName: contentAnchor,
   } = options;
   const [open, setOpen] = useControlledState(openProp, defaultOpen ?? false, onOpenChange);
+  // A popover keeps the anchor it sat at while it closes, so it fades out
+  // there, though the caller stops naming it as it closes, as a caret peek
+  // does once the caret leaves its word. Its next open goes where it is told.
+  const [placedAt, setPlacedAt] = useState<string | null>(contentAnchor ?? null);
+  if (open && placedAt !== (contentAnchor ?? null)) setPlacedAt(contentAnchor ?? null);
+  const sitsAt = open ? contentAnchor : (contentAnchor ?? placedAt);
   const uid = useDomId();
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;
@@ -149,6 +156,7 @@ export function usePopoverInternal(
 
   const wasOpen = useRef(open);
   const satByAnchor = useRef(false);
+  const watchingFade = useRef<MutationObserver | null>(null);
   // The popover grows from where it sits by its anchor as it shows, and
   // shrinks back toward where it sits then as it closes, since it may have
   // flipped while open. Its anchor is its trigger, or the element that
@@ -163,16 +171,39 @@ export function usePopoverInternal(
     const closing = wasOpen.current && !open;
     wasOpen.current = open;
     const anchored = Boolean(anchor?.isConnected);
+    if (open || closing) {
+      watchingFade.current?.disconnect();
+      watchingFade.current = null;
+    }
     if (closing && satByAnchor.current && !anchored) {
       el.setAttribute('data-todae-unanchored', '');
       // The content's exit began in its own layout effect, which runs before this one and can't see the
       // anchor. End it here: Chromium sends the cut-short fade's transitioncancel within a frame, Firefox
       // a frame later, and WebKit not in time.
       endExitNow(el);
+    } else if (closing && satByAnchor.current && el.hasAttribute('data-todae-exiting')) {
+      // An anchor that goes away while the popover fades out, such as a word a send clears from the
+      // field, takes the popover with it at once, since it has nowhere left to sit. The page is watched
+      // only while the fade lasts, and a change is seen before the next frame is drawn, whoever made it.
+      const watch = new MutationObserver(() => {
+        // A popover taken out of the page mid-fade has no fade left to watch.
+        if (el.isConnected && el.hasAttribute('data-todae-exiting')) {
+          const at = el.style.getPropertyValue('--todae-popover-anchor');
+          const now = at === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, at);
+          if (now?.isConnected) return;
+          el.setAttribute('data-todae-unanchored', '');
+          endExitNow(el);
+        }
+        watch.disconnect();
+        if (watchingFade.current === watch) watchingFade.current = null;
+      });
+      watch.observe(el.getRootNode(), { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'data-todae-exiting'] });
+      watchingFade.current = watch;
     }
     if (open) satByAnchor.current = anchored;
     if (anchor && anchored) aimPopoverOrigin(el, anchor);
   }, [anchorName, anchorRef, open]);
+  useEffect(() => () => watchingFade.current?.disconnect(), []);
 
   useEffect(() => {
     if (!open || !enabled) return;
@@ -237,11 +268,11 @@ export function usePopoverInternal(
       id: contentId,
       open,
       ref: setPopover,
-      style: anchoredContentStyle('--todae-popover-anchor', contentAnchor ?? anchorName),
+      style: anchoredContentStyle('--todae-popover-anchor', sitsAt ?? anchorName),
       onPointerDown: stopBubble,
       onClick: stopBubble,
     }),
-    [anchorName, contentAnchor, contentId, open, setPopover],
+    [anchorName, contentId, open, setPopover, sitsAt],
   );
 
   return useMemo(

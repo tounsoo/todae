@@ -337,8 +337,9 @@ describe('MentionText', () => {
 });
 
 describe('caret anchor', () => {
-  it('sits on the token the caret is in, moves with the caret, and is absent while the list is open', () => {
+  it('sits on the token the caret is in, moves with the caret, and stays on it for a closing peek while the list is open', () => {
     const source = peopleSource();
+    let peekName: string | null = null;
     function Harness() {
       const [draft, setDraft] = useState<MentionDraft>({
         text: '@Mina Park @Min-jun Choi',
@@ -348,6 +349,7 @@ describe('caret anchor', () => {
         ],
       });
       const api = useMentions({ triggers: [source], value: draft, onValueChange: setDraft });
+      peekName = api.caretPeekAnchorName;
       return (
         <Field.Root aria-label="Message">
           <Field.Textarea {...api.getTextareaProps()} />
@@ -376,7 +378,10 @@ describe('caret anchor', () => {
     expect(named()[0]?.textContent).toBe('@Min-jun Choi');
     field.setSelectionRange(field.value.length, field.value.length);
     type(field, `${field.value} @mi`);
-    expect(named()).toHaveLength(0);
+    // No peek opens while the list is, but the token keeps the name, so a peek closing there fades out at it.
+    expect(peekName).toBeNull();
+    expect(named()).toHaveLength(1);
+    expect(named()[0]?.textContent).toBe('@Min-jun Choi');
   });
 });
 

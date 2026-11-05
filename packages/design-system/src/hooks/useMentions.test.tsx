@@ -4,6 +4,9 @@ import { renderToString } from 'react-dom/server';
 import { StrictMode, startTransition, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field.js';
+import { OptionList } from '../components/OptionList.js';
+import { Popover } from '../components/Popover.js';
+import { usePopover } from './usePopover.js';
 import { useMentions, type MentionDraft, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions.js';
 
 afterEach(cleanup);
@@ -671,5 +674,326 @@ describe('useMentions edge cases', () => {
       container.remove();
       hasFocus.mockRestore();
     }
+  });
+});
+
+describe('useMentions as the list closes', () => {
+  /** A composer with its list in a popover, as a product renders it. */
+  function Composer({ expose }: { expose: (result: UseMentionsResult) => void }) {
+    const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+    const mentions = useMentions({ triggers: [{ char: '@', options: people }], value: draft, onValueChange: setDraft });
+    expose(mentions);
+    return (
+      <>
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+        <Popover.Root {...mentions.getPopoverProps()}>
+          <OptionList.Root {...mentions.getListboxProps()}>
+            {mentions.items.map((item) => (
+              <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+        <button type="button" onClick={() => setDraft({ text: 'yo @Bob', tokens: [{ start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' }] })}>
+          Load
+        </button>
+      </>
+    );
+  }
+
+  function listPopover(result: UseMentionsResult): HTMLElement {
+    const el = document.getElementById(result.ids.listbox)?.closest<HTMLElement>('[popover]');
+    if (!el) throw new Error('no list popover');
+    return el;
+  }
+
+  /** The highlight span the list's popover is placed at, if one is in the page. */
+  function anchorOfList(popover: HTMLElement): HTMLElement | null {
+    const name = popover.style.getPropertyValue('--todae-popover-anchor');
+    return (
+      [...document.querySelectorAll<HTMLElement>('span[style*="anchor-name"]')].find((span) =>
+        span.style.getPropertyValue('anchor-name').split(',').some((part) => part.trim() === name),
+      ) ?? null
+    );
+  }
+
+  function openList() {
+    let result!: UseMentionsResult;
+    render(<Composer expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'yo @a');
+    expect(result.open).toBe(true);
+    return { el, get result() { return result; } };
+  }
+
+  it('keeps its rows and its word after Escape, so it fades out there', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    expect(composer.result.open).toBe(false);
+    expect(composer.result.items.map((item) => item.option.value)).toEqual(['ada', 'alan']);
+    expect(anchorOfList(popover)?.textContent).toBe('@a');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('keeps its word after a blur', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.blur(composer.el);
+    expect(composer.result.open).toBe(false);
+    expect(anchorOfList(popover)?.textContent).toBe('@a');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('fades out at the token a pick puts where the word was', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Enter' });
+    expect(composer.el.value).toBe('yo @Ada Lovelace ');
+    expect(composer.result.open).toBe(false);
+    expect(anchorOfList(popover)?.textContent).toBe('@Ada Lovelace');
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(false);
+  });
+
+  it('moves its word with an edit before it', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    fireEvent.change(composer.el, { target: { value: 'Hey yo @a', selectionStart: 4, selectionEnd: 4 } });
+    expect(composer.result.open).toBe(false);
+    const anchor = anchorOfList(popover);
+    expect(anchor?.textContent).toBe('@a');
+    expect(anchor?.previousSibling?.textContent).toBe('Hey yo ');
+  });
+
+  it('lets its word go when an edit takes it out', () => {
+    const composer = openList();
+    const popover = listPopover(composer.result);
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    fireEvent.change(composer.el, { target: { value: 'yo', selectionStart: 2, selectionEnd: 2 } });
+    expect(anchorOfList(popover)).toBeNull();
+  });
+
+  it('gives way to a token that later takes the place of the word', () => {
+    const composer = openList();
+    fireEvent.keyDown(composer.el, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Load' }));
+    const drawn = [...document.querySelectorAll('[data-kind="@"]')];
+    expect(drawn.map((span) => span.textContent)).toEqual(['@Bob']);
+  });
+
+  it('starts empty, with no word, before the list first opens', () => {
+    let result!: UseMentionsResult;
+    render(<Composer expose={(r) => (result = r)} />);
+    expect(result.items).toEqual([]);
+    expect(document.querySelectorAll('span[style*="anchor-name"]')).toHaveLength(0);
+  });
+});
+
+describe('useMentions as a peek or list closes, edge cases', () => {
+  it('opens with trigger options and filterOptions built inline on every render', () => {
+    function Inline({ mode }: { mode: 'filter' | 'options' }) {
+      const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+      const mentions = useMentions({
+        triggers: [
+          mode === 'filter'
+            ? { char: '@', options: people, filterOptions: (rows, q) => rows.filter((row) => row.label.toLowerCase().startsWith(q.toLowerCase())) }
+            : { char: '@', options: people.filter((row) => row.value !== 'x') },
+        ],
+        value: draft,
+        onValueChange: setDraft,
+      });
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    for (const mode of ['filter', 'options'] as const) {
+      render(<Inline mode={mode} />);
+      const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+      fireEvent.focus(el);
+      expect(() => type(el, '@a')).not.toThrow();
+      expect(el.value).toBe('@a');
+      cleanup();
+    }
+  });
+
+  it.each([
+    ['deleted', '@Ada and ', 9],
+    ['broken by Backspace', '@Ada and @Ad', 12],
+  ] as const)('lets a caret peek go at once when its token is %s, though a twin mention stays', (_how, text, at) => {
+    function Composer() {
+      const [draft, setDraft] = useState<MentionDraft>({
+        text: '@Ada and @Ada',
+        tokens: [
+          { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' },
+          { start: 9, end: 13, char: '@', value: 'ada', text: '@Ada' },
+        ],
+      });
+      const mentions = useMentions({ triggers: [{ char: '@', options: short }], value: draft, onValueChange: setDraft });
+      const peek = usePopover({ open: mentions.caretPeekAnchorName !== null, onOpenChange: () => {}, anchorName: mentions.caretPeekAnchorName });
+      return (
+        <>
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} />
+          </Field.Root>
+          <Popover.Root {...peek.getPopoverProps()} role="dialog" aria-label="Peek">
+            peek
+          </Popover.Root>
+        </>
+      );
+    }
+    render(<Composer />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    const popover = screen.getByRole('dialog', { hidden: true });
+    fireEvent.focus(el);
+    el.setSelectionRange(13, 13);
+    fireEvent.select(el);
+    const name = popover.style.getPropertyValue('--todae-popover-anchor');
+    const holders = () =>
+      [...document.querySelectorAll<HTMLElement>('span[style*="anchor-name"]')].filter((span) =>
+        span.style.getPropertyValue('anchor-name').split(',').some((part) => part.trim() === name),
+      );
+    expect(holders()).toHaveLength(1);
+    fireEvent.change(el, { target: { value: text, selectionStart: at, selectionEnd: at } });
+    expect(holders()).toHaveLength(0);
+    expect(popover.hasAttribute('data-todae-unanchored')).toBe(true);
+  });
+
+  it('keeps the highlighted row of a list that closes', () => {
+    let result!: UseMentionsResult;
+    function Composer() {
+      const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+      result = useMentions({ triggers: [{ char: '@', options: people }], value: draft, onValueChange: setDraft });
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...result.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    render(<Composer />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    fireEvent.keyDown(el, { key: 'ArrowDown' });
+    expect(result.getListboxProps().activeValue).toBe('alan');
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.open).toBe(false);
+    expect(result.getListboxProps().activeValue).toBe('alan');
+    expect(result.activeValue).toBeNull();
+  });
+});
+
+describe('useMentions as its list fades out, what it showed', () => {
+  function Composer({
+    triggers,
+    maxLength,
+    initial = { text: '', tokens: [] },
+    expose,
+  }: {
+    triggers: MentionTrigger[];
+    maxLength?: number;
+    initial?: MentionDraft;
+    expose: (result: UseMentionsResult) => void;
+  }) {
+    const [draft, setDraft] = useState<MentionDraft>(initial);
+    const mentions = useMentions({ triggers, value: draft, onValueChange: setDraft, maxLength });
+    expose(mentions);
+    return (
+      <>
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+        <Popover.Root {...mentions.getPopoverProps()}>
+          <OptionList.Root {...mentions.getListboxProps()}>
+            {mentions.items.map((item) => (
+              <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+      </>
+    );
+  }
+
+  function placedAt(result: UseMentionsResult): HTMLElement | null {
+    const popover = document.getElementById(result.ids.listbox)?.closest<HTMLElement>('[popover]');
+    const name = popover?.style.getPropertyValue('--todae-popover-anchor');
+    return (
+      [...document.querySelectorAll<HTMLElement>('span[style*="anchor-name"]')].find((span) =>
+        span.style.getPropertyValue('anchor-name').split(',').some((part) => part.trim() === name),
+      ) ?? null
+    );
+  }
+
+  it.each([
+    ['an emoji', { char: ':', options: [{ value: 'smile', label: 'smile' }], text: () => '😄' }, '😄'],
+    ['a name with no @', { char: '@', options: people, text: (option: { label: string }) => option.label }, 'Ada Lovelace'],
+  ] as const)('fades out at the token a pick put there, for %s', (_label, trigger, shown) => {
+    let result!: UseMentionsResult;
+    render(<Composer triggers={[trigger as MentionTrigger]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, `yo ${trigger.char}`);
+    fireEvent.keyDown(el, { key: 'Enter' });
+    expect(result.open).toBe(false);
+    expect(placedAt(result)?.textContent).toBe(shown);
+  });
+
+  it('keeps no place at another mention that an edit slid to where the word was', () => {
+    let result!: UseMentionsResult;
+    const bob = { start: 6, end: 10, char: '@', value: 'bob', text: '@Bob' };
+    const emoji = { char: ':', options: [{ value: 'smile', label: 'smile' }] };
+    render(<Composer triggers={[emoji, { char: '@', options: people }]} initial={{ text: 'x :sm @Bob', tokens: [bob] }} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    el.setSelectionRange(5, 5);
+    fireEvent.select(el);
+    expect(result.open).toBe(true);
+    // Select ':sm ', which closes the list, then delete it.
+    el.setSelectionRange(2, 6);
+    fireEvent.select(el);
+    fireEvent.change(el, { target: { value: 'x @Bob', selectionStart: 2, selectionEnd: 2 } });
+    expect(result.value.tokens).toEqual([{ ...bob, start: 2, end: 6 }]);
+    expect(placedAt(result)).toBeNull();
+  });
+
+  it('keeps the rows it showed as too long disabled', () => {
+    let result!: UseMentionsResult;
+    // Either name would take 'yo @a' past 14 characters.
+    render(<Composer triggers={[{ char: '@', options: people }]} maxLength={14} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'yo @a');
+    const open = result.items.map((item) => result.getOptionProps(item).disabled ?? false);
+    expect(open).toContain(true);
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.items.map((item) => result.getOptionProps(item).disabled ?? false)).toEqual(open);
+  });
+
+  it('keeps showing a failed load as failed', async () => {
+    let result!: UseMentionsResult;
+    render(<Composer triggers={[{ char: '@', loadOptions: () => Promise.reject(new Error('down')) }]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'yo @a');
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    expect(result.error).not.toBeNull();
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.error).not.toBeNull();
+    expect(result.loading).toBe(false);
+  });
+
+  it('keeps showing a load under way as loading', () => {
+    let result!: UseMentionsResult;
+    render(<Composer triggers={[{ char: '@', loadOptions: () => new Promise(() => undefined) }]} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'yo @a');
+    expect(result.loading).toBe(true);
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.loading).toBe(true);
   });
 });
