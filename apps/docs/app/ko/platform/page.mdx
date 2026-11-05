@@ -33,6 +33,8 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 
 CSS 앵커 포지셔닝이 모든 브라우저에서 하한을 정합니다. Chrome과 Edge의 하한은 `position-try-fallbacks`이며, 128에서 들어왔습니다. iOS와 iPadOS에서는 모든 브라우저가 Safari 엔진을 쓰므로, 그곳의 Chrome과 Edge는 Safari 행을 따릅니다. 버전은 코드에 고정되어 있지 않습니다. 컴포넌트 브라우저 테스트는 Chromium, Firefox, WebKit에서 실행되지만 이 하한보다 새로운 빌드이므로, 하한 버전 자체는 테스트하지 않습니다.
 
+Chromium과 WebKit은 완전히 지원하며, 둘 중 어디서든 브라우저 테스트가 실패하면 CI가 실패합니다. Firefox는 지원하지만 알려진 문제가 있으며, [이슈 367](https://github.com/tounsoo/todae/issues/367)에서 추적합니다. 그 문제로 깨지는 Firefox 테스트도 CI에서 계속 실행되지만, 실패하면 CI를 실패시키는 대신 경고로 표시되고, 그 밖의 Firefox 실패는 이전처럼 CI를 실패시킵니다. 1.0이 나오기 전에 모든 Firefox 실패가 다시 CI를 실패시키도록 되돌립니다.
+
 - **[CSS 앵커 포지셔닝](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: 팝오버와 툴팁을 트리거 옆에 배치하고, `position-try-fallbacks`로 뷰포트 가장자리에서 뒤집고, `Field.Textarea`의 하이라이트를 textarea 위에 배치합니다. 없으면: 표면이 트리거 옆에 배치되지 않고 뷰포트 왼쪽 위 모서리 근처에 놓이며, 하이라이트는 그려지지 않습니다.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: `Popover.Root`와 `Tooltip.Root`를 최상위 레이어에 표시합니다. Todae에 필수입니다.
 - **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog)와 `showModal()`**: `Dialog.Root`와 `BottomSheet.Root`의 최상위 레이어, `::backdrop`, inert가 되는 뒤 페이지, Escape, `<form method="dialog">`에 씁니다. Todae에 필수입니다. 스크림은 `::backdrop`에서 Todae의 사용자 정의 속성을 읽으며, 현재 브라우저에서는 `::backdrop`이 다이얼로그에서 이를 상속합니다. 상속하지 않는 오래된 엔진에서는 스크림 색이 보이지 않습니다.

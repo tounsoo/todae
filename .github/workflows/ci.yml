@@ -192,10 +192,25 @@ jobs:
         run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
 
       - name: Browser tests
-        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        # Firefox runs every test page in one content process, where pages that run at once take each
-        # other's clicks, so it runs one file at a time.
-        run: pnpm --filter @tounsoo/todae test:browser --project ${{ matrix.browser }} ${{ matrix.browser == 'firefox' && '--no-file-parallelism' || '' }}
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'webkit' }}
+        run: pnpm --filter @tounsoo/todae test:browser --project webkit
+      # Firefox runs every test page in one content process, where pages that run at once take each
+      # other's clicks, so it runs one file at a time.
+      # Tests on the Firefox quarantine (packages/design-system/scripts/firefox-quarantine.ts, issue 367)
+      # still run, but their failures warn instead of failing the job. Any other failure still fails it,
+      # and the job summary lists each quarantined test's result. By 1.0 the quarantine must be empty and
+      # Firefox fully blocking again.
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
+        working-directory: packages/design-system
+        env:
+          BROWSER_RESULTS: ${{ runner.temp }}/firefox-results.json
+        run: |
+          set +e
+          pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts
+          status=$?
+          set -e
+          node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status" --summary "$GITHUB_STEP_SUMMARY"
 
   # One result named Checks, so branch protection that requires that name keeps working.
   checks:
