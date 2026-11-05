@@ -186,7 +186,8 @@ export function usePopoverInternal(
       // field, takes the popover with it at once, since it has nowhere left to sit. The page is watched
       // only while the fade lasts, and a change is seen before the next frame is drawn, whoever made it.
       const watch = new MutationObserver(() => {
-        if (el.hasAttribute('data-todae-exiting')) {
+        // A popover taken out of the page mid-fade has no fade left to watch.
+        if (el.isConnected && el.hasAttribute('data-todae-exiting')) {
           const at = el.style.getPropertyValue('--todae-popover-anchor');
           const now = at === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, at);
           if (now?.isConnected) return;

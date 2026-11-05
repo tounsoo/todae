@@ -267,7 +267,65 @@ describe('A popover whose caller stops naming its anchor as it closes', () => {
     expect(el.hasAttribute('data-todae-unanchored')).toBe(true);
     expect(el.hasAttribute('data-todae-exiting')).toBe(false);
   });
+
+  it('stops watching the page once its content is taken out mid-fade', async () => {
+    markAwareFade((el) => el.getAttribute('role') === 'dialog');
+    function Owner({ open, content }: { open: boolean; content: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => undefined });
+      return (
+        <>
+          <button type="button" {...popover.getTriggerProps()}>
+            Open
+          </button>
+          {content ? (
+            <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Panel">
+              x
+            </Popover.Root>
+          ) : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Owner open content />);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    const observers = trackObservers();
+    try {
+      rerender(<Owner open={false} content />);
+      expect(observers.live()).toBe(1);
+      rerender(<Owner open={false} content={false} />);
+      for (let i = 0; i < 3; i++) {
+        await act(async () => document.body.append(document.createElement('div')));
+      }
+      expect(observers.live()).toBe(0);
+    } finally {
+      observers.restore();
+    }
+  });
 });
+
+/** Counts the page's mutation observers that are watching, and how often they wake. */
+function trackObservers() {
+  const Real = window.MutationObserver;
+  const live = new Set<MutationObserver>();
+  let calls = 0;
+  class Tracked extends Real {
+    constructor(callback: MutationCallback) {
+      super((records, observer) => {
+        calls += 1;
+        callback(records, observer);
+      });
+    }
+    override observe(target: Node, options?: MutationObserverInit) {
+      live.add(this);
+      super.observe(target, options);
+    }
+    override disconnect() {
+      live.delete(this);
+      super.disconnect();
+    }
+  }
+  vi.stubGlobal('MutationObserver', Tracked);
+  return { live: () => live.size, calls: () => calls, restore: () => vi.unstubAllGlobals() };
+}
 
 /** The computed exit a browser gives `.content`: a fade, or none once the lost-anchor mark is on. */
 function markAwareFade(match: (el: HTMLElement) => boolean) {

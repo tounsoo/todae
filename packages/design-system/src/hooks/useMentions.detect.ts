@@ -77,7 +77,7 @@ type Span = { from: number; prevTo: number; nextTo: number };
  * token, not inside it. Without one, or when the texts don't fit it, the
  * longest common start and end decide.
  */
-function changedSpan(prev: string, next: string, caret?: number | null): Span {
+export function changedSpan(prev: string, next: string, caret?: number | null): Span {
   if (caret != null) {
     const nextTo = caret;
     const prevTo = caret - (next.length - prev.length);

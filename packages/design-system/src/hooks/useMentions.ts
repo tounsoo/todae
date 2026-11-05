@@ -25,6 +25,7 @@ import type { ComboboxFilterOptions, ComboboxOption } from './optionList/types.j
 import { useOptionList } from './optionList/useOptionList.js';
 import { useControlledState } from './useControlledState.js';
 import {
+  changedSpan,
   findQuery,
   sameTokens,
   shiftIndex,
@@ -115,7 +116,9 @@ export type UseMentionsResult = {
   isEmpty: boolean;
   activeId: string | null;
   activeValue: string | null;
+  /** Whether the word's rows are loading. A closed list keeps what it last showed until the next word. */
   loading: boolean;
+  /** Why the word's rows failed to load. A closed list keeps what it last showed until the next word. */
   error: unknown | null;
   retry: () => void;
   ids: { listbox: string };
@@ -593,11 +596,12 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     if (last.text === value) return last.at;
     const was = last.at.start;
     // An edit that takes the word's start away leaves no place to fade out at,
-    // unless a token now starts there with the text before it unchanged: the
-    // token a pick put there, whatever text it shows.
+    // unless the edit put a token there: the token a pick made of the word,
+    // whatever text it shows. A token that only slid there is another mention.
+    const edit = changedSpan(last.text, value);
     const start =
       shiftIndex(last.text, value, was) ??
-      (tokens.some((token) => token.start === was) && value.slice(0, was) === last.text.slice(0, was) ? was : null);
+      (edit.from === was && tokens.some((token) => token.start === was && token.start < edit.nextTo) ? was : null);
     if (start === null) return null;
     const end = shiftIndex(last.text, value, last.at.end);
     return { start, end: end === null || end <= start ? start + 1 : end };

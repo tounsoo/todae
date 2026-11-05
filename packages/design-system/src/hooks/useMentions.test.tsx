@@ -888,8 +888,18 @@ describe('useMentions as a peek or list closes, edge cases', () => {
 });
 
 describe('useMentions as its list fades out, what it showed', () => {
-  function Composer({ triggers, maxLength, expose }: { triggers: MentionTrigger[]; maxLength?: number; expose: (result: UseMentionsResult) => void }) {
-    const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+  function Composer({
+    triggers,
+    maxLength,
+    initial = { text: '', tokens: [] },
+    expose,
+  }: {
+    triggers: MentionTrigger[];
+    maxLength?: number;
+    initial?: MentionDraft;
+    expose: (result: UseMentionsResult) => void;
+  }) {
+    const [draft, setDraft] = useState<MentionDraft>(initial);
     const mentions = useMentions({ triggers, value: draft, onValueChange: setDraft, maxLength });
     expose(mentions);
     return (
@@ -930,6 +940,24 @@ describe('useMentions as its list fades out, what it showed', () => {
     fireEvent.keyDown(el, { key: 'Enter' });
     expect(result.open).toBe(false);
     expect(placedAt(result)?.textContent).toBe(shown);
+  });
+
+  it('keeps no place at another mention that an edit slid to where the word was', () => {
+    let result!: UseMentionsResult;
+    const bob = { start: 6, end: 10, char: '@', value: 'bob', text: '@Bob' };
+    const emoji = { char: ':', options: [{ value: 'smile', label: 'smile' }] };
+    render(<Composer triggers={[emoji, { char: '@', options: people }]} initial={{ text: 'x :sm @Bob', tokens: [bob] }} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    el.setSelectionRange(5, 5);
+    fireEvent.select(el);
+    expect(result.open).toBe(true);
+    // Select ':sm ', which closes the list, then delete it.
+    el.setSelectionRange(2, 6);
+    fireEvent.select(el);
+    fireEvent.change(el, { target: { value: 'x @Bob', selectionStart: 2, selectionEnd: 2 } });
+    expect(result.value.tokens).toEqual([{ ...bob, start: 2, end: 6 }]);
+    expect(placedAt(result)).toBeNull();
   });
 
   it('keeps the rows it showed as too long disabled', () => {
