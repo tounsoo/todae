@@ -25,7 +25,8 @@ export function endExitNow(el: HTMLElement): void {
 /**
  * Ends the fade of every popover still fading inside `el`, deepest first, as
  * `el` hides. Each fades on its own clock, as a submenu does beside its menu,
- * and nothing stays shown inside a popover that has hidden.
+ * so without this a fade could outlast the popover it sits in. One its owner
+ * keeps open is left alone.
  */
 function endExitsInside(el: HTMLElement): void {
   for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) endExitNow(inner);
