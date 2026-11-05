@@ -24,6 +24,7 @@ import { hoverShowSkipsDelay, releaseHoverTip, retainHoverTip } from './tooltipW
 import type { TooltipWire } from './tooltipWire.js';
 import { firstTabbable } from './tabbables.js';
 import { useEscapeKey } from './useEscapeKey.js';
+import { lastInputWasPointer, watchInputModality } from '../internal/inputModality.js';
 import { composeHandlers, useComposedRefs, useStableComposedRef } from '../internal/props.js';
 import { useDomId } from '../internal/domId.js';
 import { anchoredContentStyle, anchorTriggerStyle } from './anchorName.js';
@@ -142,6 +143,18 @@ export function applyTooltipCommands(
       }
     }
   }
+}
+
+/**
+ * Whether focus on `el` came from a pointer, not from keys: the last input was
+ * a press, or the browser left `:focus-visible` off. Focus a click put there,
+ * or that a menu or other overlay closed by a click hands back, opens no tip;
+ * the pointer has the hover tip. Focus from keys, or handed back after keys,
+ * still opens it. The press is read as well as the ring because browsers
+ * differ on the ring for focus a script moves after a press.
+ */
+function pointerFocus(el: Element): boolean {
+  return lastInputWasPointer() || (el.matches(':focus') && !el.matches(':focus-visible'));
 }
 
 /** `ids` with `id` added at the end, unless it already lists it. */
@@ -304,6 +317,9 @@ export function useTooltipInternal<I extends boolean = false>(
 
   useEscapeKey(open, enabled, onEscape, tooltipRef, { closeRequests: false });
 
+  // Focus after a press opens no tip, so the page's presses and keys are watched.
+  useEffect(() => watchInputModality(), []);
+
   useLayoutEffect(() => {
     if (restoreEpoch === 0 || open) return;
     const trigger = triggerRef.current;
@@ -398,8 +414,8 @@ export function useTooltipInternal<I extends boolean = false>(
           user.onPointerLeave?.(event);
           releaseHover(event.relatedTarget);
         },
-        onFocus: composeHandlers(user.onFocus, () => {
-          if (enabled) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+        onFocus: composeHandlers(user.onFocus, (event: FocusEvent<HTMLElement>) => {
+          if (enabled && !(event.target instanceof Element && pointerFocus(event.target))) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
         }),
         onBlur: (event: FocusEvent<HTMLElement>) => {
           user.onBlur?.(event);

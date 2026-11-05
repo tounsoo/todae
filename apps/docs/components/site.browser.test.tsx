@@ -37,6 +37,57 @@ async function violations(): Promise<string[]> {
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+// The outermost elements that reach past the viewport's end: where a sideways
+// page scroll starts, so a failure names the part to fix. An element that a box
+// clipping or scrolling its overflow holds in, such as a wide table in a
+// ScrollArea, can't widen the page, so it isn't counted.
+// What gives an absolute box a containing block besides a position.
+function makesContainingBlock(style: CSSStyleDeclaration): boolean {
+  return (
+    style.transform !== 'none' ||
+    style.translate !== 'none' ||
+    style.rotate !== 'none' ||
+    style.scale !== 'none' ||
+    style.perspective !== 'none' ||
+    style.filter !== 'none' ||
+    style.backdropFilter !== 'none' ||
+    /transform|filter|perspective/.test(style.willChange) ||
+    /layout|paint|strict|content/.test(style.contain)
+  );
+}
+
+function pastEdge(): string[] {
+  const edge = innerWidth + 0.5;
+  // Whether a box that clips its overflow, such as a ScrollArea, holds el in.
+  // Only the boxes el is positioned against count: an absolute box, such as a
+  // VisuallyHidden, passes over every unpositioned box on its way up, so a
+  // scroller that isn't positioned doesn't clip it. A fixed box never widens the page.
+  const clipped = (el: HTMLElement) => {
+    let position = getComputedStyle(el).position;
+    if (position === 'fixed') return true;
+    for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+      const style = getComputedStyle(box);
+      if (style.position === 'fixed') return true;
+      const contains = position !== 'absolute' || style.position !== 'static' || makesContainingBlock(style);
+      if (!contains) continue;
+      if (style.overflowX !== 'visible') return true;
+      position = style.position;
+    }
+    return false;
+  };
+  const past = new Set(
+    [...document.body.querySelectorAll<HTMLElement>('*')].filter((el) => el.getBoundingClientRect().right > edge && !clipped(el)),
+  );
+  // The outermost of each: where the sideways scroll starts.
+  return [...past]
+    .filter((el) => !past.has(el.parentElement!))
+    .map((el) => {
+      const name = [el.localName, ...el.classList].join('.');
+      const text = el.textContent!.trim().replace(/\s+/g, ' ').slice(0, 40);
+      return `${name} "${text}" ends at ${Math.round(el.getBoundingClientRect().right)}`;
+    });
+}
+
 describe('docs site chrome under axe', () => {
   it('home page', async () => {
     render(
@@ -154,6 +205,7 @@ describe('narrow screens', () => {
     const lead = screen.getByText(/Start from a preset/);
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
     expect(stage.getBoundingClientRect().top).toBeLessThan(innerHeight / 3);
+    expect(pastEdge()).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
     // The page keeps the bar's height free at its end, under the stage and the footer.
     expect(getComputedStyle(document.querySelector('.shell')!).paddingBlockEnd).toBe(

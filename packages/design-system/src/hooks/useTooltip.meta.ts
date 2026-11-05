@@ -35,7 +35,7 @@ export const meta = {
       type: 'number',
       required: false,
       default: 'tooltip.delay.show (300ms)',
-      description: "Hover show delay in milliseconds. Without it, the tooltip.delay.show token as the trigger computes it. Focus shows at once.",
+      description: "Hover show delay in milliseconds. Without it, the tooltip.delay.show token as the trigger computes it. Focus from keys shows at once.",
     },
     {
       name: 'hideDelay',

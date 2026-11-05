@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, ScrollArea } from '../index.js';
+import { Field, ScrollArea, VisuallyHidden } from '../index.js';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -213,6 +213,20 @@ describe('ScrollArea.Root', () => {
       </ScrollArea.Root>,
     );
     await waitFor(() => expect(area.tabIndex).toBe(0));
+  });
+
+  it('keeps a visually hidden box at the far end of its content from widening the page', () => {
+    render(
+      <ScrollArea.Root axis="both" aria-label="Wide" style={{ width: 200, height: 80 }}>
+        <div style={{ width: 4000, height: 4000, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+          <span>
+            <VisuallyHidden.Root>Last</VisuallyHidden.Root>
+          </span>
+        </div>
+      </ScrollArea.Root>,
+    );
+    const page = document.documentElement;
+    expect({ width: page.scrollWidth <= innerWidth, height: page.scrollHeight <= innerHeight }).toEqual({ width: true, height: true });
   });
 
   it('asks for a name once it takes a Tab stop', async () => {

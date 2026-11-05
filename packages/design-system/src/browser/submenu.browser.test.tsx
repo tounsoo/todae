@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { server, userEvent } from '@vitest/browser/context';
 import type { CSSProperties, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { Button } from '../components/Button.js';
 import { Menu, type MenuSubmenuOpenChangeReason } from '../components/Menu.js';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
@@ -178,5 +179,57 @@ describe('Menu submenus in a browser', () => {
     await waitFor(() => expect(rootMenu().matches(':popover-open')).toBe(false));
     expect(submenu().matches(':popover-open')).toBe(false);
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Actions' }));
+  });
+});
+
+describe('An icon-only menu trigger with a tip, as focus comes back', () => {
+  function RowMenu() {
+    return (
+      // Room above for the tip.
+      <div style={{ paddingBlockStart: 64, paddingInline: 48 }}>
+        <Menu.Root>
+          <Menu.Trigger variant="ghost" aria-label="Actions for INV-1044" tooltip>
+            <Button.Icon>*</Button.Icon>
+          </Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Open</Menu.Item>
+            <Menu.Submenu>
+              <Menu.SubmenuTrigger>Move to</Menu.SubmenuTrigger>
+              <Menu.SubmenuContent>
+                <Menu.Item>Review</Menu.Item>
+              </Menu.SubmenuContent>
+            </Menu.Submenu>
+          </Menu.Content>
+        </Menu.Root>
+        <button type="button">Away</button>
+      </div>
+    );
+  }
+  const trigger = () => screen.getByRole('button', { name: 'Actions for INV-1044' });
+  const openTip = () => document.querySelector('[role="tooltip"]:popover-open');
+
+  it('shows no tip when a click on an item in the submenu hands focus back', async () => {
+    render(<RowMenu />);
+    await userEvent.click(trigger());
+    await waitFor(() => expect(item('Move to').checkVisibility()).toBe(true));
+    await userEvent.hover(item('Move to'));
+    await waitFor(() => expect(item('Review').checkVisibility()).toBe(true));
+    await userEvent.click(item('Review'));
+    await waitFor(() => expect(document.activeElement).toBe(trigger()));
+    // The pointer is away from the trigger, and focus that follows a press
+    // holds no tip, whether or not the browser draws a ring for it.
+    await new Promise((done) => setTimeout(done, 400));
+    expect(openTip()).toBeNull();
+  });
+
+  it('shows the tip again when keys pick the item and focus comes back', async () => {
+    render(<RowMenu />);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(trigger());
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(document.activeElement).toBe(item('Open')));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(document.activeElement).toBe(trigger()));
+    await waitFor(() => expect(openTip()?.textContent).toBe('Actions for INV-1044'));
   });
 });

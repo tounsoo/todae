@@ -1,4 +1,4 @@
-import { createElement, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { createElement, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { useMentionPeek } from '../hooks/useMentionPeek.js';
 import type { MentionSource } from '../mentions/source.js';
 import { mergeDescribedBy } from './Field.context.js';
@@ -55,9 +55,12 @@ function Root<T>({
   );
   // The peek is a span, a phrasing element, so a mention can sit inside a
   // paragraph: it stays mounted while closed, and a closed <div> would make
-  // the HTML parser end a server-rendered <p> early. Its content renders only
-  // while it is open, so server HTML holds an empty span.
-  const body = peek.open ? (
+  // the HTML parser end a server-rendered <p> early. Its content renders from
+  // its first open, so server HTML holds an empty span, and it stays once the
+  // peek closes, so the card fades out with what it showed, not empty.
+  const [opened, setOpened] = useState(peek.open);
+  if (peek.open && !opened) setOpened(true);
+  const body = opened ? (
     <>
       {peek.loading ? <span data-loading="" aria-hidden="true" /> : null}
       {peek.entity !== undefined ? source.renderPeek?.(peek.entity, peek.context) : null}
