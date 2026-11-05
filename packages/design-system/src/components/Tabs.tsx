@@ -241,6 +241,7 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
       cancelAnimationFrame(frame);
       added.disconnect();
       shown?.disconnect();
+      list.removeAttribute('data-flat-indicator');
     };
   }, [horizontal, ctx.baseId, ctx.value]);
   return (
