@@ -497,6 +497,39 @@ describe('Text from the main entry', () => {
     expect(reads.mock.calls.length).toBeLessThanOrEqual(4);
   });
 
+  it('still measures under an animation when frames come slowly', async () => {
+    const queue: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => queue.push(run));
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    render(
+      <div>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    const panel = el.parentElement!;
+    let step = 0;
+    const animate = () => {
+      panel.style.opacity = String(step++ % 2);
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+    for (let frame = 0; frame < 40; frame++) {
+      now += 300;
+      // Each callback, the animation's first, then the microtasks it queued, as a browser runs them.
+      for (const run of queue.splice(0)) await act(async () => run(0));
+    }
+    // About one measure every 12 frames over 40 frames.
+    expect(reads.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(reads.mock.calls.length).toBeLessThanOrEqual(5);
+  });
+
   it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {
     const frame = document.createElement('iframe');
     document.body.append(frame);

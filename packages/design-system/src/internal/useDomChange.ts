@@ -51,18 +51,22 @@ let changedNow = new Set<() => void>();
 let waiting = new Map<() => void, number>();
 // The pending frame: when and from what it was asked for. A frame asked for
 // through a scheduler that has since been swapped, as a test's fake timers do,
-// or more than 250ms ago, as in a background tab, is asked for again rather
-// than waited on.
+// or more than 250ms ago, as in a background tab, is asked for again with the
+// next change rather than waited on.
 let pending: { at: number; from: unknown } | null = null;
+// Counts the frames handled. Of the frames asked for between two, the first to
+// come handles the next and the rest do nothing, so there is only ever one
+// chain of frames, and a slow frame asked for again is never cancelled.
+let handled = 0;
 
-// A frame asked for again replaces the one before it, which then does nothing
-// if it comes after all, so there is only ever one chain of frames.
 function request() {
-  const ask: { at: number; from: unknown } = { at: Date.now(), from: null };
-  pending = ask;
-  ask.from = nextFrame(() => {
-    if (pending === ask) onFrame();
-  });
+  const since = handled;
+  pending = {
+    at: Date.now(),
+    from: nextFrame(() => {
+      if (handled === since) onFrame();
+    }),
+  };
 }
 
 function later(run: () => void) {
@@ -77,6 +81,7 @@ function cancel(run: () => void) {
 }
 
 function onFrame() {
+  handled++;
   pending = null;
   const due = new Set<() => void>();
   const next = new Map<() => void, number>();
