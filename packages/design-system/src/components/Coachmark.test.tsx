@@ -3,6 +3,10 @@ import { useRef, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './Coachmark.js';
+import { Field } from './Field.js';
+import { OptionList } from './OptionList.js';
+import { Popover } from './Popover.js';
+import { useCombobox } from '../hooks/useCombobox.js';
 import { inertOutside } from '../overlay/inertOutside.js';
 import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 
@@ -362,5 +366,43 @@ describe('inertOutside', () => {
     release();
     expect(root.getElementById('near')!.hasAttribute('inert')).toBe(false);
     document.body.innerHTML = '';
+  });
+});
+
+describe('Coachmark on a closed combobox', () => {
+  function TourOnCombobox() {
+    const cb = useCombobox({ options: [{ value: 'react', label: 'React' }, { value: 'vue', label: 'Vue' }], presentation: 'popover' });
+    const input = cb.getInputProps();
+    return (
+      <>
+        <section>
+          <label {...cb.getLabelProps()}>Framework</label>
+          <Field.Root {...cb.getAnchorProps()}>
+            <Field.TextInput {...input} />
+          </Field.Root>
+        </section>
+        <div data-testid="layer">
+          <Popover.Root {...cb.getPopoverProps()}>
+            <OptionList.Root {...cb.getListboxProps()}>
+              {cb.items.map((item) => (
+                <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </div>
+        <Coachmark.Root targetRef={input.ref} defaultOpen aria-label="Try it">
+          <Coachmark.Title>Pick a framework</Coachmark.Title>
+        </Coachmark.Root>
+      </>
+    );
+  }
+
+  it('keeps the listbox usable when the combobox first opens beside it', async () => {
+    render(<TourOnCombobox />);
+    expect(screen.getByTestId('layer').hasAttribute('inert')).toBe(true);
+    fireEvent.focus(screen.getByRole('combobox'));
+    // The listbox mounts as the popover first opens, and the combobox names it then.
+    await act(async () => {});
+    expect(screen.getByRole('listbox').closest('[inert]')).toBeNull();
   });
 });

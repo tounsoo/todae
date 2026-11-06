@@ -161,14 +161,23 @@ export function useCoachmark({
     }
     target.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: reducedMotion() ? 'instant' : 'smooth' });
     if (scrim) Object.assign(scrim.style, cutoutCorners(target));
-    const release = inertOutside(() =>
-      [target, ...controlledBy(target), popup, scrim].filter((el): el is HTMLElement => el != null),
-    );
+    const keep = () => [target, ...controlledBy(target), popup, scrim].filter((el): el is HTMLElement => el != null);
+    let release = inertOutside(keep);
+    // What the target controls can mount later, as a combobox's listbox does
+    // when its popover first opens and names it in aria-controls: keep it too.
+    const controls = new MutationObserver(() => {
+      release();
+      release = inertOutside(keep);
+    });
+    controls.observe(target, { attributes: true, attributeFilter: ['aria-controls'] });
     const active = target.ownerDocument.activeElement;
     if (popup && active instanceof HTMLElement && (active === target.ownerDocument.body || active.closest('[inert]'))) {
       focusWithoutScroll(initialFocusTarget(popup, initialFocusRef));
     }
-    return release;
+    return () => {
+      controls.disconnect();
+      release();
+    };
   }, [initialFocusRef, open, target, targetRef]);
 
   // Focus moves in as it opens, without scrolling the page, so it doesn't cut

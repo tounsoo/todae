@@ -282,8 +282,9 @@ function OptionListRoot(props: OptionListRootProps) {
   // view: scroll its nearest scroll box, never the page. Reveal when the
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
   // highlight; never on mount. A requested option that has not rendered yet,
-  // such as an async result, is revealed when it renders enabled, also one
-  // requested as the list mounts: a list in a popover mounts as it first opens.
+  // such as an async result, is revealed when it renders enabled. In a popover
+  // or dialog, so is one requested as the list mounts, since such a list
+  // mounts as its surface first opens; an inline list's mount scrolls nothing.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
   const pending = useRef<string | null>(null);
@@ -293,7 +294,8 @@ function OptionListRoot(props: OptionListRootProps) {
     if (!mounted.current) {
       mounted.current = true;
       const list = listRef.current;
-      if (target && list && !findOption(list, optionDomId(listId, target))) pending.current = target;
+      const inSurface = list?.closest('[popover], dialog') != null;
+      if (target && list && inSurface && !findOption(list, optionDomId(listId, target))) pending.current = target;
       return;
     }
     const changed = lastTarget.current !== target;
