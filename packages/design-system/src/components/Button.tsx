@@ -237,7 +237,9 @@ function Root({
     (el: HTMLSpanElement | null) => {
       if (!el || !tooltip) return;
       labels.current.add(el);
-      if (typeof ResizeObserver !== 'undefined') {
+      // A new observer reports the label's size once it observes it.
+      if (typeof ResizeObserver === 'undefined') measure();
+      else {
         resizes.current ??= new ResizeObserver(measure);
         resizes.current.observe(el);
       }

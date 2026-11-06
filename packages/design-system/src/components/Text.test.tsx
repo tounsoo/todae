@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs, type TextRootProps } from './Text.js';
@@ -196,6 +196,24 @@ describe('Text from the main entry', () => {
     expect(el.hasAttribute('data-todae-cut')).toBe(true);
   });
 
+  it('measures a clamped text again when an attribute around it, such as a selected row, cuts it', async () => {
+    const row = (selected: boolean) => (
+      <div className={selected ? 'selected' : undefined} aria-selected={selected}>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>
+    );
+    const { rerender } = render(row(false));
+    const el = screen.getByTestId('t');
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.closest('.selected') ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    rerender(row(true));
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    rerender(row(false));
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(false));
+  });
+
   it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {
     const made = vi.fn();
     vi.stubGlobal(
@@ -219,21 +237,21 @@ describe('Text from the main entry', () => {
         }
       },
     );
-    const page = (n: number) => (
-      <div data-n={n}>
+    const page = () => (
+      <div>
         <ClientText.Root lines={1} data-testid="t">
           Quarterly revenue report
         </ClientText.Root>
       </div>
     );
-    const { rerender } = render(page(0));
+    const { rerender } = render(page());
     const el = screen.getByTestId('t');
     const reads = vi.fn(() => 0);
     for (const prop of ['scrollWidth', 'clientWidth', 'scrollHeight', 'clientHeight']) {
       Object.defineProperty(el, prop, { configurable: true, get: reads });
     }
     made.mockClear();
-    rerender(page(1));
+    rerender(page());
     expect(made).not.toHaveBeenCalled();
     expect(reads).not.toHaveBeenCalled();
   });

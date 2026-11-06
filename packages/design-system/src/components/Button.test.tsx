@@ -369,6 +369,28 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
   });
 
+  it('measures a cut label when tooltip turns on, with no ResizeObserver to report it', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    const { rerender } = render(
+      <Button.Root tooltip={false}>
+        <Button.Icon>+</Button.Icon>
+        Save every archived thread
+      </Button.Root>,
+    );
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(
+      <Button.Root>
+        <Button.Icon>+</Button.Icon>
+        Save every archived thread
+      </Button.Root>,
+    );
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save every archived thread' }));
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+  });
+
   it('builds no observer and reads no layout when a parent renders it again unchanged', () => {
     const made = vi.fn();
     const StubResizeObserver = globalThis.ResizeObserver;
@@ -391,21 +413,21 @@ describe('Button auto-tip', () => {
         }
       },
     );
-    const page = (n: number) => (
-      <div data-n={n}>
+    const page = () => (
+      <div>
         <Button.Root>
           <Button.Icon>+</Button.Icon>
           Save
         </Button.Root>
       </div>
     );
-    const { rerender } = render(page(0));
+    const { rerender } = render(page());
     const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
     const reads = vi.fn(() => 0);
     Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
     Object.defineProperty(label, 'clientWidth', { configurable: true, get: reads });
     made.mockClear();
-    rerender(page(1));
+    rerender(page());
     expect(made).not.toHaveBeenCalled();
     expect(reads).not.toHaveBeenCalled();
   });

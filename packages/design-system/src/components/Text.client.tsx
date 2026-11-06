@@ -10,7 +10,7 @@ import { useTooltipInternal, type TooltipInternalResult } from '../overlay/toolt
 import { canFocusNow } from '../overlay/tabbables.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from '../internal/domId.js';
-import { useDomChange } from '../internal/useDomChange.js';
+import { useDomChange, type DomChangeOptions } from '../internal/useDomChange.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
@@ -23,12 +23,15 @@ export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 // shows the first one's: querySelector reads in document order.
 const CUT_ATTR = 'data-todae-cut';
 
-const TEXT_CHANGES: MutationObserverInit = {
+// The box of a clamp keeps its size as its text is cut, so a class or an
+// attribute around it that product CSS restyles it by counts too.
+const TEXT_CHANGES: DomChangeOptions = {
   childList: true,
   subtree: true,
   characterData: true,
   attributes: true,
   attributeFilter: ['class', 'style'],
+  ancestors: true,
 };
 
 /** The text of `el` as one line. innerText leaves out text that isn't rendered, such as `display: none`; jsdom has no innerText. */
@@ -99,8 +102,8 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
   }, [target]);
 
   // A child can change the text from its own state without Text rendering
-  // again, and a variant, weight or lines change can cut the text without
-  // changing its box.
+  // again, and a variant, weight or lines change, or a selected row around
+  // it, can cut the text without changing its box.
   useDomChange(target, check, TEXT_CHANGES);
 
   useLayoutEffect(() => {
