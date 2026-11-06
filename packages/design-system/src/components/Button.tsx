@@ -235,10 +235,12 @@ function Root({
   }, []);
   const labelRef = useCallback(
     (el: HTMLSpanElement | null) => {
-      if (!el || !tooltip || typeof ResizeObserver === 'undefined') return;
+      if (!el || !tooltip) return;
       labels.current.add(el);
-      resizes.current ??= new ResizeObserver(measure);
-      resizes.current.observe(el);
+      if (typeof ResizeObserver !== 'undefined') {
+        resizes.current ??= new ResizeObserver(measure);
+        resizes.current.observe(el);
+      }
       return () => {
         labels.current.delete(el);
         resizes.current?.unobserve(el);
