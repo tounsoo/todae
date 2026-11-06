@@ -89,6 +89,36 @@ describe('observeMutations', () => {
     watcher.stop();
   });
 
+  it('hears an attribute change to a node removed in the same batch without asking for children', async () => {
+    const root = document.createElement('div');
+    const child = document.createElement('div');
+    root.append(child);
+    const heard: string[] = [];
+    const watcher = observeMutations(root, { subtree: true, attributes: true }, (records) =>
+      heard.push(...kinds(records)),
+    );
+    child.hidden = true;
+    child.remove();
+    await settle();
+    expect(heard).toEqual(['attr:hidden']);
+    watcher.stop();
+  });
+
+  it('keeps a change made before a listener joined from it, as an observer made after would', async () => {
+    const target = document.createElement('div');
+    const first = observeMutations(target, { childList: true }, () => {});
+    target.append(document.createElement('i'));
+    const heard: string[] = [];
+    const late = observeMutations(target, { childList: true }, (records) => heard.push(...kinds(records)));
+    await settle();
+    expect(heard).toEqual([]);
+    target.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['childList']);
+    first.stop();
+    late.stop();
+  });
+
   it('hands a listener its records at once on flush, and the others theirs a microtask later', async () => {
     const a = document.createElement('div');
     const b = document.createElement('div');

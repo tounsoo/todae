@@ -11,6 +11,10 @@
 // sees the same records it would have on its own. A listener can hear a
 // record about a node that has since moved into another listener's tree; the
 // parts using this take a record outside their tree as nothing new.
+// Routing knows only the removals of the records it routes together, so a
+// change inside a removed subtree after a flush took the removal, which an
+// observer of its own would still hear until its next report, reaches no one;
+// the removal itself already told each listener the subtree left.
 //
 // A test may swap the global observer for a stand-in, so the registry keeps
 // the constructor it was built with, and a watch that starts after a swap
@@ -190,12 +194,9 @@ function widest(subscriptions: Iterable<Subscription>): MutationObserverInit {
     if (!watch.attributeFilter) filter = null;
     else for (const name of watch.attributeFilter) filter?.add(name);
   }
-  const init: MutationObserverInit = {
-    childList,
-    characterData,
-    subtree,
-    attributes,
-  };
+  // A subtree is watched for removals even when nobody asks for children,
+  // since a record about a node removed in the same batch is routed by them.
+  const init: MutationObserverInit = { childList: childList || subtree, characterData, subtree, attributes };
   if (attributes && filter) init.attributeFilter = [...filter].sort();
   return init;
 }
@@ -223,12 +224,11 @@ export type MutationWatcher = {
 export function observeMutations(target: Node, watch: MutationWatch, listener: Listener): MutationWatcher {
   const reg = registry();
   if (!reg) return { stop: () => {}, flush: () => {} };
-  const subscription: Subscription = {
-    target,
-    watch,
-    run: listener,
-    live: true,
-  };
+  // Records already waiting happened before this listener, which an observer
+  // of its own wouldn't hear, so they go to the others first.
+  route(reg, reg.observer.takeRecords());
+  deliverSoon(reg);
+  const subscription: Subscription = { target, watch, run: listener, live: true };
   let own = reg.listeners.get(target);
   if (!own) reg.listeners.set(target, (own = new Set()));
   own.add(subscription);
