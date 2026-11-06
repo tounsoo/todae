@@ -190,6 +190,8 @@ describe('Text.Root lines', () => {
     await userEvent.hover(el);
     await waitFor(() => expect(openTip()?.textContent).toBe(phrase));
     expect(el.hasAttribute('data-todae-cut')).toBe(true);
+    // A pointer left over the next test's text would enter it as it renders.
+    await userEvent.unhover(el);
   });
 
   it('tips at the next hover after a class around the text cuts it without changing its box', async () => {
@@ -224,6 +226,7 @@ describe('Text.Root lines', () => {
       await userEvent.hover(el);
       await waitFor(() => expect(openTip()?.textContent).toBe(phrase));
       expect(el.hasAttribute('data-todae-cut')).toBe(true);
+      await userEvent.unhover(el);
     } finally {
       sheet.remove();
     }
@@ -249,6 +252,7 @@ describe('Text.Root lines', () => {
     rerender(box());
     expect(screen.getByTestId('t')).toBe(el);
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    await userEvent.unhover(el);
   });
 
   it('shows no tip when a container focused by script takes focus, and one for a tab stop', async () => {
@@ -429,21 +433,26 @@ describe('Text.Root lines', () => {
     await userEvent.hover(cut);
     await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
     expect(cut.hasAttribute('data-todae-cut')).toBe(true);
+    await userEvent.unhover(cut);
   });
 
   it('shows no tip at the next hover once the text comes to fit', async () => {
     render(
-      <div style={{ inlineSize: '12rem' }} data-testid="box">
-        <Text.Root lines={1} data-testid="cut">
-          {LONG}
-        </Text.Root>
-      </div>,
+      <>
+        <div style={{ inlineSize: '12rem' }} data-testid="box">
+          <Text.Root lines={1} data-testid="cut">
+            {LONG}
+          </Text.Root>
+        </div>
+        <div style={{ blockSize: '4rem' }} data-testid="away" />
+      </>,
     );
     const cut = screen.getByTestId('cut');
     await userEvent.hover(cut);
     await waitFor(() => expect(openTip()).not.toBeNull());
-    await userEvent.unhover(cut);
+    await userEvent.hover(screen.getByTestId('away'));
     await waitFor(() => expect(openTip()).toBeNull());
+    // The pointer waits below the box, so the wider text doesn't grow under it.
     screen.getByTestId('box').style.inlineSize = '200rem';
     await userEvent.hover(cut);
     await new Promise((resolve) => setTimeout(resolve, 600));
