@@ -282,12 +282,20 @@ function OptionListRoot(props: OptionListRootProps) {
   // view: scroll its nearest scroll box, never the page. Reveal when the
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
   // highlight; never on mount. A requested option that has not rendered yet,
-  // such as an async result, is revealed when it renders enabled.
+  // such as an async result, is revealed when it renders enabled, also one
+  // requested as the list mounts: a list in a popover mounts as it first opens.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
   const pending = useRef<string | null>(null);
+  const mounted = useRef(false);
   // Every commit, as the requested option can render later than the request.
   useLayoutEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      const list = listRef.current;
+      if (target && list && !findOption(list, optionDomId(listId, target))) pending.current = target;
+      return;
+    }
     const changed = lastTarget.current !== target;
     if (changed) {
       lastTarget.current = target;
