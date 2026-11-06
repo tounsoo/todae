@@ -5,6 +5,7 @@ import * as api from '../index.js';
 import { BottomSheet } from './BottomSheet.js';
 import { Button } from './Button.js';
 import { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './Coachmark.js';
+import { Dialog } from './Dialog.js';
 import { Field } from './Field.js';
 import { OptionList } from './OptionList.js';
 import { Popover } from './Popover.js';
@@ -348,6 +349,19 @@ describe('inertOutside', () => {
     document.body.innerHTML = '';
   });
 
+  it('leaves a dialog as it is, like a popover, also one added later', async () => {
+    document.body.innerHTML = '<dialog id="settings"><button>Save</button></dialog><p id="keep"></p>';
+    const keep = document.getElementById('keep')!;
+    const release = inertOutside(() => [keep]);
+    expect(document.getElementById('settings')!.hasAttribute('inert')).toBe(false);
+    const late = document.createElement('dialog');
+    document.body.append(late);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(late.hasAttribute('inert')).toBe(false);
+    release();
+    document.body.innerHTML = '';
+  });
+
   it('keeps guest layers usable', () => {
     document.body.innerHTML = '<div id="toast" data-todae-guest-layer></div><p id="keep"></p>';
     const release = inertOutside(() => [document.getElementById('keep')!]);
@@ -478,5 +492,76 @@ describe('Coachmark on a closed combobox', () => {
     expect(screen.getByRole('listbox', { hidden: true }).closest('[inert]')).toBeNull();
     expect(screen.getByTestId('search').closest('[inert]')).toBeNull();
     expect(document.querySelector('[data-todae-sheet-drag-handle]')?.closest('[inert]')).toBeNull();
+  });
+
+  it('lets the search field of a dialog the target opens take focus as it opens', async () => {
+    // Where focus lands, and whether that field was usable then: jsdom moves
+    // focus into an inert element, which a browser does not.
+    const landed: { inert: boolean }[] = [];
+    function DialogTour() {
+      const cb = useCombobox({ options: [{ value: 'react', label: 'React' }], presentation: 'dialog' });
+      const ref = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          <label {...cb.getLabelProps()}>Framework</label>
+          <Button.Root {...cb.getTriggerProps({ ref })} data-testid="choose">
+            Choose
+          </Button.Root>
+          <Dialog.Root {...cb.getDialogProps()}>
+            <Field.Root id={cb.ids.input} aria-label="Framework">
+              <Field.TextInput
+                {...cb.getInputProps()}
+                data-testid="search"
+                onFocus={(event) => landed.push({ inert: event.currentTarget.closest('[inert]') !== null })}
+              />
+            </Field.Root>
+            <OptionList.Root {...cb.getListboxProps()}>
+              {cb.items.map((item) => (
+                <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Dialog.Root>
+          <Coachmark.Root targetRef={ref} defaultOpen aria-label="Try it">
+            <Coachmark.Title>Pick a framework</Coachmark.Title>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<DialogTour />);
+    await act(async () => {});
+    fireEvent.click(screen.getByTestId('choose'));
+    await act(async () => {});
+    expect(document.activeElement).toBe(screen.getByTestId('search'));
+    expect(landed).toEqual([{ inert: false }]);
+  });
+});
+
+describe('Coachmark on a button that opens a dialog', () => {
+  it('leaves the dialog usable, though the button names nothing it controls', async () => {
+    function SettingsTour() {
+      const ref = useRef<HTMLButtonElement>(null);
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Button.Root ref={ref} onClick={() => setOpen(true)}>
+            Settings
+          </Button.Root>
+          <Dialog.Root open={open} onOpenChange={setOpen} aria-label="Settings">
+            <Field.Root aria-label="Name">
+              <Field.TextInput value="" onValueChange={() => {}} data-testid="name" />
+            </Field.Root>
+          </Dialog.Root>
+          <Coachmark.Root targetRef={ref} defaultOpen aria-label="Settings moved">
+            <Coachmark.Title>Settings moved here</Coachmark.Title>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<SettingsTour />);
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await act(async () => {});
+    expect(screen.getByTestId('name').closest('[inert]')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByTestId('name'));
   });
 });

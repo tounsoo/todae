@@ -17,16 +17,19 @@ export function holds(outer: Element, inner: Element): boolean {
 /**
  * Makes everything in `keep`'s document inert except the elements `keep`
  * returns, what they hold, the elements around them, guest layers such as
- * Toast.Region's host, and popovers. It walks from each kept element up to
- * the body, through shadow roots, and marks every sibling on the way that
- * holds nothing kept, so a kept element stays usable while the rest of the
- * page can't be pressed, focused or read. An element added beside the path
- * while it holds, such as a sibling a product renders later, is marked too,
- * unless `keep` returns it or it is a guest layer or a popover by then.
+ * Toast.Region's host, popovers and dialogs. It walks from each kept element
+ * up to the body, through shadow roots, and marks every sibling on the way
+ * that holds nothing kept, so a kept element stays usable while the rest of
+ * the page can't be pressed, focused or read. An element added beside the
+ * path while it holds, such as a sibling a product renders later, is marked
+ * too, unless `keep` returns it or it is a guest layer, a popover or a dialog
+ * by then.
  *
- * A popover stays as it is because its own trigger opens it: one that an
- * inert trigger owns can't open, and one the kept element owns, such as its
- * tooltip or its menu, has to stay usable beside it.
+ * A popover or a `<dialog>` stays as it is because its own trigger opens it:
+ * one that an inert trigger owns can't open, and one the kept element owns,
+ * such as its tooltip, its menu or the dialog it opens, has to stay usable
+ * beside it. A dialog has to be usable the moment it opens, too: it moves
+ * focus in as it opens, and focus can't land in an inert dialog.
  *
  * Only elements it marked itself are unmarked by the returned call: an
  * `inert` the page set stays.
@@ -38,7 +41,7 @@ export function inertOutside(keep: () => readonly Element[]): () => void {
   const kept = () => [...keep(), ...doc.querySelectorAll(`[${GUEST_LAYER_ATTRIBUTE}]`)];
   const marked = new Set<Element>();
   const mark = (el: Element, now: readonly Element[]) => {
-    if (el.hasAttribute('inert') || el.hasAttribute('popover') || el.hasAttribute(GUEST_LAYER_ATTRIBUTE)) return;
+    if (el.hasAttribute('inert') || el.hasAttribute('popover') || el.localName === 'dialog' || el.hasAttribute(GUEST_LAYER_ATTRIBUTE)) return;
     // What a kept element holds stays usable, such as the rest of a kept
     // popover that another kept element, like a coachmark inside it, sits in.
     if (now.some((kept) => holds(el, kept) || holds(kept, el))) return;
