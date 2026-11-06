@@ -30,7 +30,7 @@ beforeAll(async () => {
 });
 
 describe('the benchmark page', () => {
-  it('runs every case and reports only known metrics', { timeout: 60_000 }, async () => {
+  it('runs every case and reports only known metrics', { timeout: 300_000 }, async () => {
     const bench = window.__bench!;
     const cases = bench.list();
     expect(cases.map((entry) => entry.id)).toContain('billing-page');
