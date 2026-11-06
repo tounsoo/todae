@@ -36,6 +36,8 @@ export const METRICS: Record<string, Spec> = {
   componentsRenderedOnMount: count,
   componentsRenderedOnUpdate: count,
   componentsRenderedOnInteract: count,
+  nodesAddedOnInteract: count,
+  observersCreatedOnInteract: count,
   leakedListeners: count,
   leakedObservers: count,
 };

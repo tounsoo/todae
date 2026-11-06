@@ -27,7 +27,7 @@ Each case renders 10, 100 and 1,000 copies of one part, except the billing case,
 
 - **Time, in ms:** mount, update (every copy's label changes) and unmount, each with and without a forced layout, and one interaction, such as opening the first Menu, up to its layout. Chromium's own style, layout and script time on mount. These compare only between records from the same machine type.
 - **Browser counts:** style recalculations and layouts on mount, and how much the JS heap grows on mount, measured after a forced garbage collection on both sides. These compare only within the same Chromium major version.
-- **Exact counts:** DOM nodes, text nodes included; listeners on `document` and `window`; live Resize, Mutation and Intersection observers; observers created on mount and on update; components React rendered on mount, update and interaction; and listeners and observers left after unmount. These compare against any record.
+- **Exact counts:** DOM nodes, text nodes included; listeners on `document` and `window`; live Resize, Mutation and Intersection observers; observers created on mount, on update and on the interaction; nodes the interaction adds; components React rendered on mount, update and interaction; and listeners and observers left after unmount. These compare against any record.
 - **Bundle bytes:** for `import * from '@tounsoo/todae'` and for each common part alone, minified and gzipped, with React left out, and for `todae.css` as built and gzipped. Exact counts too.
 
 Some limits on what the numbers mean:
@@ -40,7 +40,7 @@ Some limits on what the numbers mean:
 
 ## Read a comparison
 
-The table lists only the metrics that changed. A timing is called faster or slower, and a browser count fewer or more, only when every run on one side beats every run on the other and the medians differ by at least 5%. Anything else is noise. A record with fewer than five runs gets no such verdict, and the comparison says so. Between two runs of the same code, five runs each still split cleanly by chance for about one metric in 125, so a full compare may show one or two such calls; rerun with `--cases` on that case and `--runs 10` before acting on one. `--all` lists every metric. When the two records came from different machine types the table leaves timings out and says so, and when the runs settings differ it warns.
+The table lists only the metrics that changed. A timing is called faster or slower, and a browser count fewer or more, only when every run on one side beats every run on the other and the medians differ by at least 5%. Anything else is noise. A record with fewer than five runs gets no such verdict, and the comparison says so. Between two runs of the same code, five runs each still split cleanly by chance for about one metric in 125, so a full compare may show one or two such calls; rerun with `--cases` on that case and `--runs 10` before acting on one. `--all` lists every metric. A work move shows on both sides: a part that defers observers from mount to its first open has fewer `observersCreatedOnMount` and more `observersCreatedOnInteract`. Bundle bytes can move by a few bytes in a part nobody touched, because a change elsewhere renames minified identifiers across the package. When the two records came from different machine types the table leaves timings out and says so, and when the runs settings differ it warns.
 
 ## Records
 

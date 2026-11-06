@@ -167,6 +167,9 @@ async function measure(
     check();
     const acted = probe();
     sample.componentsRenderedOnInteract = acted.rendered - beforeAction.rendered;
+    // Work a part defers from mount to its first open shows here, not in the mount counts.
+    sample.nodesAddedOnInteract = acted.nodes - beforeAction.nodes;
+    sample.observersCreatedOnInteract = acted.observersCreated - beforeAction.observersCreated;
   }
 
   start = now();
