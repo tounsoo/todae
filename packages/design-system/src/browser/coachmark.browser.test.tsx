@@ -4,6 +4,10 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button.js';
 import { Coachmark, type CoachmarkCloseReason } from '../components/Coachmark.js';
+import { Dialog } from '../components/Dialog.js';
+import { Field } from '../components/Field.js';
+import { OptionList } from '../components/OptionList.js';
+import { useCombobox } from '../hooks/useCombobox.js';
 import { emulateMedia } from '../test/media.js';
 import { settle } from '../test/settle.js';
 
@@ -173,5 +177,66 @@ describe('Coachmark in a browser', () => {
     await settle();
     expect(scrim().matches(':popover-open')).toBe(false);
     expect(document.querySelector('[inert]')).toBeNull();
+  });
+});
+
+function DialogComboboxTour({ wrapped = false }: { wrapped?: boolean }) {
+  const cb = useCombobox({
+    options: [
+      { value: 'react', label: 'React' },
+      { value: 'vue', label: 'Vue' },
+    ],
+    presentation: 'dialog',
+  });
+  const ref = useRef<HTMLButtonElement>(null);
+  const dialog = (
+    <Dialog.Root {...cb.getDialogProps()}>
+      <Field.Root id={cb.ids.input} aria-label="Search frameworks">
+        <Field.TextInput {...cb.getInputProps()} />
+      </Field.Root>
+      <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Frameworks' })}>
+        {cb.items.map((item) => (
+          <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+        ))}
+      </OptionList.Root>
+    </Dialog.Root>
+  );
+  return (
+    <div data-appearance="light" data-density="comfortable" style={{ padding: '4rem' }}>
+      <label {...cb.getLabelProps()}>Framework</label>
+      <Button.Root {...cb.getTriggerProps({ ref })} variant="secondary">
+        Choose
+      </Button.Root>
+      {wrapped ? (
+        <div>
+          <span>Beside the dialog</span>
+          {dialog}
+        </div>
+      ) : (
+        dialog
+      )}
+      <Coachmark.Root targetRef={ref} defaultOpen dismissOnBackdrop>
+        <Coachmark.Title>Pick a framework</Coachmark.Title>
+      </Coachmark.Root>
+    </div>
+  );
+}
+
+describe('Coachmark on the trigger of a combobox that opens in a dialog', () => {
+  it.each([false, true])('moves focus into the dialog as it opens, and the search field takes typing (wrapped: %s)', async (wrapped) => {
+    render(<DialogComboboxTour wrapped={wrapped} />);
+    const coachmark = await screen.findByRole('dialog', { name: 'Pick a framework' });
+    await waitFor(() => expect(coachmark.matches(':popover-open')).toBe(true));
+    await settle();
+    // The trigger is named by its label and itself; testing-library's name for it
+    // drops its own text in real browsers, so find it by that text.
+    await userEvent.click(screen.getByText('Choose'));
+    const search = await screen.findByRole('combobox');
+    await waitFor(() => expect(document.activeElement).toBe(search));
+    await userEvent.keyboard('vu');
+    await waitFor(() => expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Vue']));
+    // A press in the dialog isn't a press on the dim page.
+    await userEvent.click(search);
+    expect(coachmark.matches(':popover-open')).toBe(true);
   });
 });

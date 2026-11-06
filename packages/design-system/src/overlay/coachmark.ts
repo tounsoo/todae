@@ -4,7 +4,7 @@ import { useDomId } from '../internal/domId.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeAnchorNames, removeAnchorName } from './anchorName.js';
 import { eventInside } from './eventInside.js';
-import { holds, inertOutside } from './inertOutside.js';
+import { holds, inertOutside, liftedDialogOf } from './inertOutside.js';
 import { aimPopoverOrigin } from './popoverOrigin.js';
 import { getTabbables, GUEST_LAYER_ATTRIBUTE } from './tabbables.js';
 import { useControlledOpen, type OverlayCloseReason } from './useControlledOpen.js';
@@ -236,8 +236,8 @@ export function useCoachmark({
     return () => doc.removeEventListener('keydown', onKeyDown);
   }, [open, targetRef]);
 
-  // A press on the dim page, outside the target, the popup and what the
-  // target opened, asks to close when the owner allows it.
+  // A press on the dim page, outside the target, the popup, what the target
+  // opened and a dialog that opened, asks to close when the owner allows it.
   useEffect(() => {
     if (!open || !dismissOnBackdrop) return;
     const doc = popupRef.current?.ownerDocument ?? document;
@@ -247,6 +247,11 @@ export function useCoachmark({
       if (target && controlledBy(target).some((el) => eventInside(el, event))) return;
       const at = event.target;
       if (at instanceof Element && at.closest(`[${GUEST_LAYER_ATTRIBUTE}]`)) return;
+      // A dialog that opened, such as one the target opened, sits apart from
+      // the dim page, unless the coachmark sits in it and dims the rest of it.
+      const dialog = liftedDialogOf(event);
+      const popup = popupRef.current;
+      if (dialog && !(popup && holds(dialog, popup)) && !(target && holds(dialog, target))) return;
       requestClose('backdrop');
     }
     doc.addEventListener('pointerdown', onPointerDown, true);

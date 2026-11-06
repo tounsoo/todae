@@ -1,4 +1,5 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
+import { liftDialog } from './inertOutside.js';
 import { dropModal } from './modalStack.js';
 import { inGuestLayerWithin } from './tabbables.js';
 import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
@@ -69,6 +70,8 @@ export function useModalDialog({
     // Not while exiting: an element closed natively on its way out stays closed.
     if (present && open && !el.open) {
       const resume = lastFocus.current;
+      // Out of a coachmark's dim page first, so focus can land in it.
+      liftDialog(el);
       el.showModal();
       // In front of the popovers already open inside it, such as a tooltip
       // held open, which go back in front of it.
