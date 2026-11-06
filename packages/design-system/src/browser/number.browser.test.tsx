@@ -77,6 +77,24 @@ function Quantity({
 }
 
 const input = () => screen.getByRole('spinbutton') as HTMLInputElement;
+
+// Every key, edit and selection change the input saw, with the text, the selection and the focus after it, so a failure says where the typing went.
+function keyTrace(el: HTMLInputElement) {
+  const log: string[] = [];
+  const start = performance.now();
+  const note = (event: Event) => {
+    const detail =
+      event instanceof KeyboardEvent
+        ? `${event.ctrlKey ? 'Ctrl+' : ''}${event.key}${event.repeat ? ' repeat' : ''}${event.defaultPrevented ? ' prevented' : ''}`
+        : event instanceof InputEvent
+          ? `${event.inputType} ${JSON.stringify(event.data)}`
+          : '';
+    const focus = document.activeElement === el ? '' : ` focus on ${document.activeElement?.tagName}`;
+    log.push(`${Math.round(performance.now() - start)}ms ${event.type} ${detail}: "${el.value}" ${el.selectionStart}..${el.selectionEnd}${focus}`);
+  };
+  for (const type of ['keydown', 'keypress', 'keyup', 'beforeinput', 'input', 'select', 'selectionchange', 'focus', 'blur']) el.addEventListener(type, note, true);
+  return () => `\n${log.join('\n')}\n`;
+}
 const valueOf = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!.value;
 
 describe('Field.NumberInput in a browser', () => {
@@ -206,19 +224,21 @@ describe('Field.NumberInput in a browser', () => {
     await waitFor(() => expect(document.activeElement).toBe(input()));
   });
 
-  it('steps with the arrows and the page keys, and snaps and clamps a typed number', async () => {
+  // DIAGNOSTIC, to come out before review: repeats in Firefox to catch the run where the typed 37 commits as 75.
+  it('steps with the arrows and the page keys, and snaps and clamps a typed number', { repeats: server.browser === 'firefox' ? 60 : 0 }, async () => {
     render(<Quantity min={0} max={100} step={5} />);
+    const trace = keyTrace(input());
     await userEvent.click(input());
     await userEvent.keyboard('{ArrowUp}');
-    expect(input().value).toBe('0');
+    expect(input().value, trace()).toBe('0');
     await userEvent.keyboard('{ArrowUp}{ArrowUp}');
-    expect(input().value).toBe('10');
+    expect(input().value, trace()).toBe('10');
     await userEvent.keyboard('{ArrowDown}');
-    expect(input().value).toBe('5');
+    expect(input().value, trace()).toBe('5');
     await userEvent.keyboard('{PageUp}');
-    expect(input().value).toBe('55');
+    expect(input().value, trace()).toBe('55');
     await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
-    expect(input().value).toBe('35');
+    expect(input().value, trace()).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
   });
 
