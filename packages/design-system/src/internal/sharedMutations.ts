@@ -8,9 +8,15 @@
 // inside a subtree removed from its target (the browser's transient
 // observers). A record about such a subtree is routed the same way: to every
 // listener that watched the subtree the removed node left, so a listener
-// sees the same records it would have on its own. A listener can hear a
-// record about a node that has since moved into another listener's tree; the
-// parts using this take a record outside their tree as nothing new.
+// sees the same records it would have on its own.
+//
+// Records are routed by where a node is when they're read, so a listener can
+// also hear a record about a node from before it moved into or out of its
+// tree. The parts using this read the DOM again on any record, so such a
+// record costs one extra look. And a subtree listener that doesn't ask for
+// children stops hearing a removed subtree at the observer's next report,
+// where an observer of its own would keep hearing it until its own next
+// record; every part that watches a subtree asks for children.
 //
 // A test may swap the global observer for a stand-in, so the registry keeps
 // the constructor it was built with, and a watch that starts after a swap
@@ -248,12 +254,33 @@ function widest(subscriptions: Iterable<Subscription>): MutationObserverInit {
   return init;
 }
 
-function observe(registry: Registry, target: Node, subscriptions: Set<Subscription>) {
-  const init = widest(subscriptions);
+// Observes a target with the widest options of its own listeners and of the
+// trees it was removed from since the last report. Observing a target again
+// drops the browser's transient observers under it, so what it removed is
+// first routed, and then observed in its own right until the next report,
+// when the browser would have dropped them too.
+function observe(registry: Registry, target: Node, again = true) {
+  const own = registry.listeners.get(target) ?? NONE;
+  const gone = registry.removed.get(target);
+  const init = widest(gone ? [...own, ...gone] : own);
   const key = JSON.stringify(init);
-  if (registry.observed.get(target) === key) return;
+  const before = registry.observed.get(target);
+  if (before === key) return;
+  const drops = again && before !== undefined;
+  if (drops) {
+    route(registry, registry.observer.takeRecords());
+    deliverSoon(registry);
+  }
   registry.observed.set(target, key);
   registry.observer.observe(target, init);
+  if (drops) keepRemoved(registry);
+}
+
+// Observes every node removed since the last report, with the options of the
+// trees it left, for the transient observers a re-observe or restart dropped.
+// The observer holds its nodes weakly, so these cost nothing once they're gone.
+function keepRemoved(registry: Registry) {
+  for (const node of registry.removed.keys()) observe(registry, node, false);
 }
 
 export type MutationWatcher = {
@@ -280,7 +307,7 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
   let own = reg.listeners.get(target);
   if (!own) reg.listeners.set(target, (own = new Set()));
   own.add(subscription);
-  observe(reg, target, own);
+  observe(reg, target);
   const watched = own;
   return {
     take: () => {
@@ -297,7 +324,7 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       reg.pending.delete(subscription);
       watched.delete(subscription);
       // Narrower options for the listeners left on this target.
-      if (watched.size) return observe(reg, target, watched);
+      if (watched.size) return observe(reg, target);
       reg.listeners.delete(target);
       if (!reg.listeners.size) {
         reg.observer.disconnect();
@@ -316,9 +343,9 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       deliverSoon(reg);
       reg.observer.disconnect();
       reg.observed.clear();
-      reg.removed.clear();
       reg.dropped = 0;
-      for (const [node, subscriptions] of reg.listeners) observe(reg, node, subscriptions);
+      for (const node of reg.listeners.keys()) observe(reg, node, false);
+      keepRemoved(reg);
     },
   };
 }
