@@ -81,7 +81,14 @@ describe('Coachmark', () => {
     const popup = document.querySelector<HTMLElement>('[popover="manual"][role="dialog"]')!;
     expect(screen.queryByText('Save the report as a file.')).toBeNull();
     expect(popup.textContent).toBe('');
+    // The name and description are on the popup as focus moves into it, though the parts mount in that commit.
+    const atFocus: (string | null)[] = [];
+    const onFocusIn = () => atFocus.push(popup.getAttribute('aria-labelledby'), popup.getAttribute('aria-describedby'));
+    document.addEventListener('focusin', onFocusIn);
     fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    document.removeEventListener('focusin', onFocusIn);
+    expect(atFocus.length).toBeGreaterThan(0);
+    expect(atFocus.slice(0, 2).every((id) => id !== null && document.getElementById(id) !== null)).toBe(true);
     expect(screen.getByRole('dialog', { name: 'New: export' })).toBe(popup);
     expect(document.getElementById(popup.getAttribute('aria-describedby')!)?.textContent).toBe('Save the report as a file.');
     fireEvent.click(screen.getByRole('button', { name: 'Got it' }));

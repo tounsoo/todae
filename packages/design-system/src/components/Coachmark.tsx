@@ -60,6 +60,7 @@ type CoachmarkContextValue = {
   requestClose: (reason: CoachmarkCloseReason) => void;
   setLabelledBy: (id: string | undefined) => void;
   setDescribedBy: (id: string | undefined) => void;
+  popupRef: RefObject<HTMLElement | null>;
 };
 
 const CoachmarkContext = /* @__PURE__ */ createContext<CoachmarkContextValue | null>(null);
@@ -124,7 +125,10 @@ function CoachmarkRoot({
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
   const refs = useComposedRefs<HTMLElement>(popupRef, ref as Ref<HTMLElement> | undefined);
-  const ctx = useMemo<CoachmarkContextValue>(() => ({ requestClose, setLabelledBy, setDescribedBy }), [requestClose]);
+  const ctx = useMemo<CoachmarkContextValue>(
+    () => ({ requestClose, setLabelledBy, setDescribedBy, popupRef }),
+    [requestClose, popupRef],
+  );
   const name = ariaLabelledby ?? labelledBy;
   // role="dialog" takes a name; the type asks for one, and a coachmark with no
   // title and no aria-label is named by nothing.
@@ -159,25 +163,51 @@ function CoachmarkRoot({
   );
 }
 
-/** Registers `id` as the popup's name or description while it is mounted. */
-function useRegisteredId(idProp: string | undefined, register: (id: string | undefined) => void): string {
+/**
+ * Registers `id` as the popup's name or description while it is mounted. The
+ * parts mount as the popup first opens, and the popup moves focus in, in the
+ * same commit, before Root renders the registered id. So unless Root already
+ * has one, the id goes on the popup's attribute here too, before that focus,
+ * and a screen reader hears the name as focus lands. Root's next render writes
+ * the same value.
+ */
+function useRegisteredId(
+  idProp: string | undefined,
+  register: (id: string | undefined) => void,
+  attribute: 'aria-labelledby' | 'aria-describedby',
+  popupRef: RefObject<HTMLElement | null>,
+): string {
   const uid = useDomId();
   const id = idProp ?? uid;
   useLayoutEffect(() => {
+    const popup = popupRef.current;
+    const wrote = popup !== null && !popup.hasAttribute(attribute);
+    if (wrote) popup.setAttribute(attribute, id);
     register(id);
-    return () => register(undefined);
-  }, [id, register]);
+    return () => {
+      register(undefined);
+      if (wrote && popup.getAttribute(attribute) === id) popup.removeAttribute(attribute);
+    };
+  }, [attribute, id, popupRef, register]);
   return id;
 }
 
 function CoachmarkTitle({ id, ...props }: Omit<TextRootProps, 'as'>) {
-  const { setLabelledBy } = useCoachmarkContext();
-  return <Text.Root weight="bold" {...props} as="p" id={useRegisteredId(id, setLabelledBy)} data-todae-coachmark-title="" />;
+  const { setLabelledBy, popupRef } = useCoachmarkContext();
+  return (
+    <Text.Root
+      weight="bold"
+      {...props}
+      as="p"
+      id={useRegisteredId(id, setLabelledBy, 'aria-labelledby', popupRef)}
+      data-todae-coachmark-title=""
+    />
+  );
 }
 
 function CoachmarkDescription({ id, ...props }: Omit<TextRootProps, 'as'>) {
-  const { setDescribedBy } = useCoachmarkContext();
-  return <Text.Root {...props} as="p" id={useRegisteredId(id, setDescribedBy)} />;
+  const { setDescribedBy, popupRef } = useCoachmarkContext();
+  return <Text.Root {...props} as="p" id={useRegisteredId(id, setDescribedBy, 'aria-describedby', popupRef)} />;
 }
 
 function CoachmarkFooter(props: Omit<StackRootProps, 'direction'>) {
