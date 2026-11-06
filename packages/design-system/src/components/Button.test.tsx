@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
@@ -432,7 +432,7 @@ describe('Button auto-tip', () => {
     expect(reads).not.toHaveBeenCalled();
   });
 
-  it('builds no observer for Buttons of text and icons, and one mutation observer for all the others', () => {
+  it('builds no observer for any Button, whatever its children', () => {
     const made = vi.fn();
     const StubResizeObserver = globalThis.ResizeObserver;
     vi.stubGlobal(
@@ -476,7 +476,7 @@ describe('Button auto-tip', () => {
         ))}
       </div>,
     );
-    expect(made.mock.calls.map(([kind]) => kind)).toEqual(['mutation']);
+    expect(made).not.toHaveBeenCalled();
   });
 
   it('reads no layout until the pointer or keys reach the button', () => {
@@ -609,7 +609,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../overlay/tooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/useDomChange.js']),
+      new Set(['react', '../hooks/useControlledState.js', '../overlay/tooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js']),
     );
   });
 
@@ -712,22 +712,23 @@ describe('Button toggle writes', () => {
 describe('Button measure', () => {
   afterEach(cleanup);
 
-  it('reads its content once, when it ends, for an animation that writes an inline style inside it each frame', async () => {
-    render(
-      <Button.Root>
+  it('reads nothing while an animation writes an inline style inside it, and reads its content at its next render', async () => {
+    const view = (label: string) => (
+      <Button.Root aria-label={label}>
         <span aria-hidden="true" data-testid="spinner" />
         Save every archived thread
-      </Button.Root>,
+      </Button.Root>
     );
+    const { rerender } = render(view('Save'));
     const reads = vi.spyOn(document, 'createTreeWalker');
     const spinner = screen.getByTestId('spinner');
     for (let frame = 0; frame < 10; frame++) {
       spinner.style.transform = `rotate(${frame * 36}deg)`;
       await new Promise((done) => requestAnimationFrame(done));
     }
-    expect(reads).not.toHaveBeenCalled();
-    await waitFor(() => expect(reads).toHaveBeenCalled());
     await new Promise((done) => setTimeout(done, 50));
+    expect(reads).not.toHaveBeenCalled();
+    rerender(view('Save all'));
     expect(reads).toHaveBeenCalledTimes(1);
     reads.mockRestore();
   });

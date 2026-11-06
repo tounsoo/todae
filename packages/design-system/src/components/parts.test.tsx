@@ -1046,22 +1046,26 @@ describe('wrapped parts', () => {
 });
 
 describe('wrapped parts that change on their own', () => {
-  it('re-reads a button whose child swaps an icon for text from its own state', async () => {
+  it('re-reads a button whose child swaps an icon for text at the button\'s next render', () => {
     let swap: () => void = noop;
     function Toggle() {
       const [text, setText] = useState(false);
       swap = () => setText(true);
       return text ? <>Saved</> : <Button.Icon>+</Button.Icon>;
     }
-    render(
-      <Button.Root aria-label="Save" data-testid="btn">
+    const view = (label: string) => (
+      <Button.Root aria-label={label} data-testid="btn">
         <Toggle />
-      </Button.Root>,
+      </Button.Root>
     );
+    const { rerender } = render(view('Save'));
     const button = screen.getByTestId('btn');
     expect(button.hasAttribute('data-icon-only')).toBe(true);
     act(() => swap());
-    await waitFor(() => expect(button.hasAttribute('data-icon-only')).toBe(false));
+    // Nothing watches the button between its own renders.
+    expect(button.hasAttribute('data-icon-only')).toBe(true);
+    rerender(view('Save now'));
+    expect(button.hasAttribute('data-icon-only')).toBe(false);
   });
 
   it('re-sorts options that a wrapper reorders from its own state', async () => {

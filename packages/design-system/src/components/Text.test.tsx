@@ -1,9 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createElement, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { createElement, StrictMode } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs, type TextRootProps } from './Text.js';
@@ -180,380 +179,171 @@ describe('Text from the main entry', () => {
     expect(el.style.getPropertyValue('anchor-name')).toBe('');
   });
 
-  it('measures a clamped text again when a weight change cuts it without changing its box', () => {
-    const { rerender } = render(
+  function size(el: HTMLElement, scroll: number, client = 40) {
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, value: scroll });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: client });
+  }
+
+  function advance(ms: number) {
+    act(() => {
+      vi.advanceTimersByTime(ms);
+    });
+  }
+
+  it('reads no layout on mount and tips only when a hover finds the text cut', () => {
+    vi.useFakeTimers();
+    render(
       <ClientText.Root lines={1} data-testid="t">
         Quarterly revenue report
       </ClientText.Root>,
     );
     const el = screen.getByTestId('t');
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, value: 120 });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    rerender(
-      <ClientText.Root lines={1} weight="bold" data-testid="t">
-        Quarterly revenue report
-      </ClientText.Root>,
-    );
+    size(el, 120);
+    // A cut that no one reaches stays unmeasured.
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    fireEvent.pointerEnter(el);
     expect(el.hasAttribute('data-todae-cut')).toBe(true);
+    advance(300);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    vi.useRealTimers();
   });
 
-  it('measures a clamped text again when an attribute around it, such as a selected row, cuts it', async () => {
-    const row = (selected: boolean) => (
-      <div className={selected ? 'selected' : undefined} aria-selected={selected}>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>
-    );
-    const { rerender } = render(row(false));
-    const el = screen.getByTestId('t');
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.closest('.selected') ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    rerender(row(true));
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    rerender(row(false));
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(false));
-  });
-
-  it('measures a clamped text again when an inline style around it, such as a font size, cuts it', async () => {
-    const { rerender } = render(
-      <div style={{ fontSize: 14 }}>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>,
-    );
-    const el = screen.getByTestId('t');
-    const wrap = el.parentElement!;
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (wrap.style.fontSize === '20px' ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    rerender(
-      <div style={{ fontSize: 20 }}>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>,
-    );
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-  });
-
-  it('measures a clamped text in a shadow root again when its host is restyled', async () => {
-    const host = document.createElement('div');
-    document.body.append(host);
-    const container = document.createElement('div');
-    host.attachShadow({ mode: 'open' }).append(container);
+  it('shows no tip and sets no marker for a hover on text that fits', () => {
+    vi.useFakeTimers();
     render(
       <ClientText.Root lines={1} data-testid="t">
         Quarterly revenue report
       </ClientText.Root>,
-      { container },
-    );
-    const el = container.querySelector('[data-testid="t"]') as HTMLElement;
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (host.classList.contains('selected') ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    host.classList.add('selected');
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    host.remove();
-  });
-
-  it('reads no layout when a list around a clamped text moves its active option', async () => {
-    const list = (active: string) => (
-      <div role="listbox" aria-activedescendant={active}>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-        <div id="a" />
-        <div id="b" />
-      </div>
-    );
-    const { rerender } = render(list('a'));
-    const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    rerender(list('b'));
-    el.parentElement!.setAttribute('data-probe', '1');
-    await waitFor(() => expect(reads).toHaveBeenCalled());
-    reads.mockClear();
-    rerender(list('a'));
-    await new Promise((done) => setTimeout(done, 50));
-    expect(reads).not.toHaveBeenCalled();
-  });
-
-  it('stops measuring when product CSS keyed on the cut marker would uncut the text', async () => {
-    render(
-      <div className="row">
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>,
     );
     const el = screen.getByTestId('t');
-    // Like `.row:has([data-todae-cut]) .meta { display: none }`, which frees the room the text needs.
-    const reads = vi.fn(() => (el.hasAttribute('data-todae-cut') ? 40 : 120));
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    el.parentElement!.className = 'row wide';
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    await new Promise((done) => setTimeout(done, 200));
-    expect(reads.mock.calls.length).toBeLessThanOrEqual(2);
+    size(el, 40);
+    fireEvent.pointerEnter(el);
+    advance(300);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    vi.useRealTimers();
   });
 
-  it('measures a clamped text again when a commit shows a hidden part of it', () => {
-    const line = (more: boolean) => (
-      <ClientText.Root lines={1} data-testid="t">
-        Report <span hidden={!more}>with a much longer tail</span>
+  it('tips at the next hover after a weight change cuts it', () => {
+    vi.useFakeTimers();
+    const view = (weight?: 'bold') => (
+      <ClientText.Root lines={1} weight={weight} data-testid="t">
+        Quarterly revenue report
       </ClientText.Root>
     );
-    const { rerender } = render(line(false));
+    const { rerender } = render(view());
     const el = screen.getByTestId('t');
-    const tail = el.querySelector('span')!;
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (tail.hidden ? 40 : 120) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    rerender(line(true));
+    size(el, 40);
+    fireEvent.pointerEnter(el);
+    fireEvent.pointerLeave(el);
+    size(el, 120);
+    rerender(view('bold'));
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    fireEvent.pointerEnter(el);
+    advance(300);
     expect(el.hasAttribute('data-todae-cut')).toBe(true);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    vi.useRealTimers();
   });
 
-  it('measures a clamped text once when its own class changes', async () => {
+  it('drops its tip and marker when a later hover finds the text fits', () => {
+    vi.useFakeTimers();
     render(
       <ClientText.Root lines={1} data-testid="t">
         Quarterly revenue report
       </ClientText.Root>,
     );
     const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    el.classList.add('changed');
-    await waitFor(() => expect(reads).toHaveBeenCalled());
-    await new Promise((done) => setTimeout(done, 50));
-    expect(reads).toHaveBeenCalledTimes(1);
+    size(el, 120);
+    fireEvent.pointerEnter(el);
+    advance(300);
+    expect(screen.getByRole('tooltip', { hidden: true })).toBeTruthy();
+    fireEvent.pointerLeave(el);
+    advance(300);
+    size(el, 40);
+    fireEvent.pointerEnter(el);
+    advance(300);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    vi.useRealTimers();
   });
 
-  it('measures once, when it ends, for an animation that writes an inline style around a clamped text each frame', async () => {
+  it('reads nothing when the consumer prevents the pointer enter', () => {
     render(
-      <div>
-        <ClientText.Root lines={1} data-testid="t">
+      <ClientText.Root lines={1} data-testid="t" onPointerEnter={(event) => event.preventDefault()}>
+        Quarterly revenue report
+      </ClientText.Root>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 120);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    fireEvent.pointerEnter(el);
+    expect(reads).not.toHaveBeenCalled();
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+  });
+
+  it('tips the first cut text when keys move focus to the row that holds it', () => {
+    vi.useFakeTimers();
+    render(
+      <div tabIndex={0} data-testid="row">
+        <ClientText.Root lines={1} data-testid="a">
+          Fits
+        </ClientText.Root>
+        <ClientText.Root lines={1} data-testid="b">
           Quarterly revenue report
+        </ClientText.Root>
+        <ClientText.Root lines={1} data-testid="c">
+          Annual revenue report
         </ClientText.Root>
       </div>,
     );
-    const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    const panel = el.parentElement!;
-    for (let frame = 0; frame < 10; frame++) {
-      panel.style.transform = `translateX(${frame}px)`;
-      await new Promise((done) => requestAnimationFrame(done));
-    }
-    expect(reads).not.toHaveBeenCalled();
-    await waitFor(() => expect(reads).toHaveBeenCalled());
-    await new Promise((done) => setTimeout(done, 50));
-    expect(reads).toHaveBeenCalledTimes(1);
+    size(screen.getByTestId('a'), 40);
+    size(screen.getByTestId('b'), 120);
+    size(screen.getByTestId('c'), 120);
+    const row = screen.getByTestId('row');
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => {
+      row.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    expect(screen.getByTestId('c').hasAttribute('data-todae-cut')).toBe(false);
+    act(() => {
+      row.blur();
+    });
+    advance(300);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    vi.useRealTimers();
   });
 
-  it('measures a clamped text again while an animation elsewhere on the page runs', async () => {
-    const row = (selected: boolean) => (
-      <div>
-        <div data-testid="spinner" />
-        <div className={selected ? 'selected' : undefined}>
+  it('closes a tip that keyboard focus opened when that focus leaves, under StrictMode', () => {
+    vi.useFakeTimers();
+    render(
+      <StrictMode>
+        <div tabIndex={0} data-testid="row">
           <ClientText.Root lines={1} data-testid="t">
             Quarterly revenue report
           </ClientText.Root>
         </div>
-      </div>
+      </StrictMode>,
     );
-    const { rerender } = render(row(false));
-    const el = screen.getByTestId('t');
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.parentElement!.className ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    const spinner = screen.getByTestId('spinner');
-    let spinning = true;
-    const spin = (turn: number) => {
-      spinner.style.transform = `rotate(${turn}deg)`;
-      if (spinning) requestAnimationFrame(() => spin(turn + 1));
-    };
-    spin(0);
-    rerender(row(true));
-    // A frame to see the row change and a quiet one after it, not the long wait an animation gets.
-    for (let frame = 0; frame < 4; frame++) await new Promise((done) => requestAnimationFrame(done));
-    expect(el.hasAttribute('data-todae-cut')).toBe(true);
-    spinning = false;
-  });
-
-  it('measures once, when it ends, for an animation that writes an inline style inside a clamped text each frame', async () => {
-    render(
-      <ClientText.Root lines={1} data-testid="t">
-        Report <span>with a tail</span>
-      </ClientText.Root>,
-    );
-    const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    const tail = el.querySelector('span')!;
-    for (let frame = 0; frame < 10; frame++) {
-      tail.style.opacity = String(frame / 10);
-      await new Promise((done) => requestAnimationFrame(done));
-    }
-    expect(reads).not.toHaveBeenCalled();
-    await waitFor(() => expect(reads).toHaveBeenCalled());
-    await new Promise((done) => setTimeout(done, 50));
-    expect(reads).toHaveBeenCalledTimes(1);
-  });
-
-  it('measures a change inside a clamped text while an animation around it never ends', async () => {
-    function Tail() {
-      const [long, setLong] = useState(false);
-      useEffect(() => {
-        const id = setTimeout(() => setLong(true), 30);
-        return () => clearTimeout(id);
-      }, []);
-      return <span>{long ? ' with a much longer tail' : ''}</span>;
-    }
-    render(
-      <div data-testid="pulse">
-        <ClientText.Root lines={1} data-testid="t">
-          Report
-          <Tail />
-        </ClientText.Root>
-      </div>,
-    );
-    const el = screen.getByTestId('t');
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.textContent!.length > 10 ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    const pulse = screen.getByTestId('pulse');
-    let pulsing = true;
-    const beat = (step: number) => {
-      pulse.style.opacity = String(step % 2);
-      if (pulsing) requestAnimationFrame(() => beat(step + 1));
-    };
-    beat(0);
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    pulsing = false;
-  });
-
-  it('measures again after a frame that fake timers dropped', async () => {
-    function Tail({ long }: { long: boolean }) {
-      return <span>{long ? ' with a much longer tail' : ''}</span>;
-    }
-    const { rerender } = render(<span />);
-    vi.useFakeTimers({ toFake: ['setTimeout', 'requestAnimationFrame', 'Date'] });
-    const first = render(
-      <ClientText.Root lines={1}>
-        Report <span data-testid="a" />
-      </ClientText.Root>,
-    );
-    first.getByTestId('a').setAttribute('data-x', '1');
-    await Promise.resolve();
+    size(screen.getByTestId('t'), 120);
+    const row = screen.getByTestId('row');
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => {
+      row.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    act(() => {
+      row.blur();
+    });
+    advance(300);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
     vi.useRealTimers();
-    first.unmount();
-    rerender(
-      <ClientText.Root lines={1} data-testid="t">
-        Report
-        <Tail long={false} />
-      </ClientText.Root>,
-    );
-    const el = screen.getByTestId('t');
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.textContent!.length > 10 ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    el.querySelector('span')!.textContent = ' with a much longer tail';
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
-  it('keeps one chain of frames when a frame is asked for again after a long task', async () => {
-    const queue: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => queue.push(run));
-    const frame = async () => {
-      const runs = queue.splice(0);
-      await act(async () => {
-        for (const run of runs) run(0);
-      });
-    };
-    let now = 1_000;
-    vi.spyOn(Date, 'now').mockImplementation(() => now);
-    render(
-      <div>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>,
-    );
-    const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    const panel = el.parentElement!;
-    const write = async (step: number) => {
-      panel.style.opacity = String(step % 2);
-      await act(async () => {});
-    };
-    await write(1);
-    now += 300;
-    await write(2);
-    for (let step = 3; step < 40; step++) {
-      await write(step);
-      await frame();
-    }
-    // About one measure every 12 frames over 37 frames, not one every other frame.
-    expect(reads.mock.calls.length).toBeLessThanOrEqual(4);
-  });
-
-  it('still measures under an animation when frames come slowly', async () => {
-    const queue: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => queue.push(run));
-    let now = 1_000;
-    vi.spyOn(Date, 'now').mockImplementation(() => now);
-    render(
-      <div>
-        <ClientText.Root lines={1} data-testid="t">
-          Quarterly revenue report
-        </ClientText.Root>
-      </div>,
-    );
-    const el = screen.getByTestId('t');
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    const panel = el.parentElement!;
-    let step = 0;
-    const animate = () => {
-      panel.style.opacity = String(step++ % 2);
-      requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-    for (let frame = 0; frame < 40; frame++) {
-      now += 300;
-      // Each callback, the animation's first, then the microtasks it queued, as a browser runs them.
-      for (const run of queue.splice(0)) await act(async () => run(0));
-    }
-    // About one measure every 12 frames over 40 frames.
-    expect(reads.mock.calls.length).toBeGreaterThanOrEqual(2);
-    expect(reads.mock.calls.length).toBeLessThanOrEqual(5);
-  });
-
-  it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {
-    const frame = document.createElement('iframe');
-    document.body.append(frame);
-    const body = frame.contentDocument!.body;
-    const row = (selected: boolean) =>
-      createPortal(
-        <div className={selected ? 'selected' : undefined}>
-          <ClientText.Root lines={1} data-testid="t">
-            Quarterly revenue report
-          </ClientText.Root>
-        </div>,
-        body,
-      );
-    const { rerender, unmount } = render(row(false));
-    const el = body.querySelector('[data-testid="t"]') as HTMLElement;
-    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.parentElement!.className ? 120 : 40) });
-    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
-    rerender(row(true));
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    unmount();
-    frame.remove();
-  });
-
-  it('shares its observers across every clamped text on the page', () => {
+  it('builds no observer for any clamped text on the page', () => {
     const made = vi.fn();
     vi.stubGlobal(
       'ResizeObserver',
@@ -585,8 +375,7 @@ describe('Text from the main entry', () => {
         ))}
       </div>,
     );
-    // The text's own changes, the attributes around it, and sizes: one each.
-    expect(made.mock.calls.map(([kind]) => kind).sort()).toEqual(['mutation', 'mutation', 'resize']);
+    expect(made).not.toHaveBeenCalled();
   });
 
   it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {

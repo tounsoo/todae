@@ -22,7 +22,6 @@ import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
-import { useDomChange, type DomChangeOptions } from '../internal/useDomChange.js';
 
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A
@@ -97,14 +96,6 @@ export type ButtonGroupProps = {
 
 const ICON_ATTR = 'data-todae-button-icon';
 
-const BUTTON_CHANGES: DomChangeOptions = {
-  childList: true,
-  subtree: true,
-  characterData: true,
-  attributes: true,
-  attributeFilter: ['class', 'style', 'data-button-variant'],
-};
-
 // Media outside an icon is content too: an <img alt> or a spinner can name or
 // fill the button.
 const MEDIA = /* @__PURE__ */ new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
@@ -144,8 +135,9 @@ const isPlain = (child: ReactNode) => typeof child === 'string' || typeof child 
 // overflow tooltip), and whether the button is icon-only. When every child is
 // a string, a number or a Button.Icon, that is exact: the button renders just
 // those, so nothing needs reading. Otherwise it is a server-render hint used
-// until the button can be read, and the read after layout decides, seeing
-// icons inside wrappers and content a child renders from its own state.
+// until the button can be read, and the read after each commit decides,
+// seeing icons inside wrappers. A child that swaps an icon for text from its
+// own state is read at the button's next commit.
 function hint(children: ReactNode, rendered: boolean): { exact: boolean; iconOnly: boolean; text: string } {
   const items = Children.toArray(children);
   const isIcon = (child: ReactNode) => isValidElement(child) && child.type === Icon;
@@ -161,9 +153,6 @@ function hint(children: ReactNode, rendered: boolean): { exact: boolean; iconOnl
     text,
   };
 }
-
-// No element: what a Button whose content is exact watches.
-const NO_ELEMENT: { current: null } = { current: null };
 
 // aria-disabled is a string or a boolean in React's types.
 const isAriaDisabled = (value: unknown) => value === true || value === 'true';
@@ -249,9 +238,12 @@ function Root({
     };
   }, []);
 
-  // A child can swap an icon for text from its own state without this
-  // component rendering again. Exact content can't, so it is not watched.
-  useDomChange(direct.exact ? NO_ELEMENT : buttonRef, readButton, BUTTON_CHANGES);
+  // Content other than strings, numbers and Button.Icons is read after each
+  // commit; nothing watches it between commits.
+  const exact = direct.exact;
+  useLayoutEffect(() => {
+    if (!exact) readButton();
+  });
 
   const ariaLabel = typeof props['aria-label'] === 'string' ? props['aria-label'].trim() : '';
   const iconName = iconOnly ? ariaLabel || (typeof labelledbyText === 'string' ? labelledbyText : null) : null;
