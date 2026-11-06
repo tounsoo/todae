@@ -230,7 +230,21 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     // scrollport, so the scroll padding the arrow adds is honored here too.
     const focused = (event: FocusEvent) => revealRing(el, event.target);
     el.addEventListener('focusin', focused);
-    measure();
+    // An overlay shows its popover in its own layout effect, which runs after
+    // this one, so on an open the scroller is still display: none here and
+    // reads as neither flex nor grid. Measured now, the rail would take no
+    // gap, and the first resize callback would put the gap back and resize
+    // the scroller it observes: a second layout in the open's frame, and
+    // Chromium's "ResizeObserver loop" report. Measure once the commit has
+    // shown it, still before the frame.
+    let waiting = getComputedStyle(el).display === 'none';
+    if (waiting) {
+      queueMicrotask(() => {
+        if (!waiting) return;
+        waiting = false;
+        measure();
+      });
+    } else measure();
 
     let resize: ResizeObserver | undefined;
     let mutations: MutationObserver | undefined;
@@ -257,6 +271,7 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
       mutations.observe(el, { childList: true });
     }
     return () => {
+      waiting = false;
       stop();
       resize?.disconnect();
       mutations?.disconnect();

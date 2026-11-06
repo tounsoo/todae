@@ -8,6 +8,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium, type BrowserContext, type Page } from 'playwright';
+import { isResizeLoop } from '../app/resizeLoop.ts';
 import { APP_DIR } from './app.ts';
 import { toCase } from './metrics.ts';
 import { matchesCase, type CaseResult } from './record.ts';
@@ -41,7 +42,10 @@ function withTimeout<T>(promise: Promise<T>, what: string): Promise<T> {
 async function openPage(context: BrowserContext, url: string): Promise<{ page: Page; errors: string[] }> {
   const page = await context.newPage();
   const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  // The page counts Chromium's resize loop report itself; it is no error.
+  page.on('pageerror', (error) => {
+    if (!isResizeLoop(error.message)) errors.push(error.message);
+  });
   const cdp = await context.newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.exposeFunction('__benchEngine', async () => {

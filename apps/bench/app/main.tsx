@@ -10,6 +10,7 @@
 import '@tounsoo/todae/todae.css';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
+import { isResizeLoop } from './resizeLoop.ts';
 import { SCENARIOS, type Scenario } from './scenarios.tsx';
 
 type Probe = {
@@ -74,18 +75,26 @@ async function iterate(): Promise<Sample> {
   // React 19 reports a render error instead of throwing it from flushSync, and
   // an event handler's error only reaches window. Either fails the run, so a
   // case whose part is missing or broken is reported as failed, not measured.
+  // Chromium's resize loop report reaches window too, but nothing threw: it is
+  // counted, so a part whose resize callback resizes what it observes shows.
   let failure: unknown;
+  let resizeLoops = 0;
   const fail = (error: unknown) => {
     failure ??= error;
   };
-  const onError = (event: ErrorEvent) => fail(event.error ?? event.message);
+  const onError = (event: ErrorEvent) => {
+    if (isResizeLoop(event.message)) resizeLoops += 1;
+    else fail(event.error ?? event.message);
+  };
   window.addEventListener('error', onError);
   const check = () => {
     if (failure !== undefined) throw failure instanceof Error ? failure : new Error(String(failure));
   };
   const root = createRoot(host, { onUncaughtError: fail });
   try {
-    return await measure(scenario, copies, host, root, check);
+    const sample = await measure(scenario, copies, host, root, check);
+    sample.resizeObserverLoops = resizeLoops;
+    return sample;
   } finally {
     window.removeEventListener('error', onError);
     if (host.isConnected) {

@@ -40,6 +40,7 @@ export const METRICS: Record<string, Spec> = {
   observersCreatedOnInteract: count,
   leakedListeners: count,
   leakedObservers: count,
+  resizeObserverLoops: count,
 };
 
 /** Builds one case result from the samples of its runs. */
