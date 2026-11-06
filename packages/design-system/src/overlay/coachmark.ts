@@ -4,7 +4,7 @@ import { useDomId } from '../internal/domId.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeAnchorNames, removeAnchorName } from './anchorName.js';
 import { eventInside } from './eventInside.js';
-import { inertOutside } from './inertOutside.js';
+import { holds, inertOutside } from './inertOutside.js';
 import { aimPopoverOrigin } from './popoverOrigin.js';
 import { getTabbables, GUEST_LAYER_ATTRIBUTE } from './tabbables.js';
 import { useControlledOpen, type OverlayCloseReason } from './useControlledOpen.js';
@@ -42,7 +42,7 @@ function controlledBy(target: HTMLElement): HTMLElement[] {
     .filter((el): el is HTMLElement => el !== null)
     .map((el) => {
       const surface = el.closest<HTMLElement>('[popover], dialog');
-      return surface && !surface.contains(target) ? surface : el;
+      return surface && !holds(surface, target) ? surface : el;
     });
 }
 

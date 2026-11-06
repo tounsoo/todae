@@ -299,7 +299,13 @@ function OptionListRoot(props: OptionListRootProps) {
       // Its surface shows after it mounts, in the same commit: a list that
       // mounts later inside one already open is inline, like any other.
       const surface = list?.closest<HTMLElement>('[popover], dialog');
-      const opening = surface != null && !isPopoverOpen(surface) && !(surface instanceof HTMLDialogElement && surface.open);
+      // One still fading out is opening again too. A surface the owner shows
+      // itself before the list renders counts as already shown.
+      const shown =
+        surface != null &&
+        !surface.hasAttribute('data-todae-exiting') &&
+        (isPopoverOpen(surface) || (surface instanceof HTMLDialogElement && surface.open));
+      const opening = surface != null && !shown;
       if (target && list && opening && !findOption(list, optionDomId(listId, target))) pending.current = target;
       return;
     }
