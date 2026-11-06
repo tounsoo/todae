@@ -213,6 +213,37 @@ describe('A tip in a popover that grows open', () => {
   });
 });
 
+describe('A popover about as wide as its trigger, in right-to-left text', () => {
+  // One pixel wider than its trigger and lined up with its right edge. Scaled
+  // toward its default left top as it starts to grow, its left edge would
+  // measure closer to the trigger's than its right.
+  function Wide() {
+    const popover = usePopover({ defaultOpen: true });
+    const props = popover.getPopoverProps();
+    const triggerProps = popover.getTriggerProps();
+    return (
+      <Themed dir="rtl" style={{ ['--_todae-popover-motion-duration-enter' as string]: '1s', paddingBlockStart: 64, paddingInline: 48 }}>
+        <Button.Root {...triggerProps} style={{ ...triggerProps.style, inlineSize: 100 }}>
+          Open
+        </Button.Root>
+        <Popover.Root {...props} style={{ ...props.style, inlineSize: 101 }} role="dialog" aria-label="Wide">
+          Body
+        </Popover.Root>
+      </Themed>
+    );
+  }
+
+  it('grows from the right corner it lines up with', async () => {
+    render(<Wide />);
+    const content = screen.getByRole('dialog', { name: 'Wide' });
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(true));
+    expect(content.style.getPropertyValue('--_origin')).toBe('right top');
+    // So its right edge stays on the trigger's while it grows.
+    expect(Math.abs(content.getBoundingClientRect().right - trigger.getBoundingClientRect().right)).toBeLessThan(1);
+  });
+});
+
 describe('A popover that has opened', () => {
   function Opened() {
     const popover = usePopover({ defaultOpen: true });
