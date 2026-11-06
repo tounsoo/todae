@@ -17,16 +17,16 @@ export const RECORDS_DIR = join(BENCH_DIR, 'records');
 export const OUT_DIR = join(BENCH_DIR, 'out');
 
 const HELP = `pnpm bench [options]          Run every case in Chromium and write a record
-pnpm bench compare <a> <b>    Compare two saved records (a is before)
+pnpm bench compare <a> <b>    Compare two records, saved or in apps/bench/out (a is before)
 pnpm bench list               List saved records and local ones in apps/bench/out
 
 Run options:
   --against <ref>    Also build <ref> (a branch, tag or SHA) and run it beside this checkout,
                      alternating their runs, then print the comparison
-  --compare <name>   After the run, compare with a saved record (a name, a path, or a SHA it was taken at)
+  --compare <name>   After the run, compare with a record (a name, a path, or a SHA it was taken at)
   --save             Also write the record to apps/bench/records/, to commit
   --name <name>      Record name (default: date, ref and short SHA)
-  --runs <n>         Measured runs per case (default 5)
+  --runs <n>         Measured runs per case (default 5; fewer gives no timing verdict)
   --warmups <n>      Unmeasured runs first (default 1)
   --sizes <list>     Copies per case (default 10,100,1000)
   --cases <list>     Only these cases: menu picks every case starting with menu, button/100 that size only
@@ -127,7 +127,8 @@ async function bench(values: Record<string, string | boolean | undefined>) {
     .split(',')
     .map((size) => positiveInt(size.trim(), 0, '--sizes'))
     .filter((size) => size > 0);
-  const runs = Math.max(1, positiveInt(values.runs as string | undefined, 5, '--runs'));
+  const runs = positiveInt(values.runs as string | undefined, 5, '--runs');
+  if (runs < 1) throw new Error('--runs needs at least 1.');
   const warmups = positiveInt(values.warmups as string | undefined, 1, '--warmups');
   const only = String(values.cases ?? '')
     .split(',')

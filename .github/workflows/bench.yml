@@ -19,7 +19,7 @@ on:
         required: false
         type: string
       runs:
-        description: Measured runs per case.
+        description: Measured runs per case. Fewer than 5 gives no timing verdict in a comparison.
         required: false
         type: string
         default: '5'
@@ -102,8 +102,9 @@ jobs:
           echo "The record:"
           cat "apps/bench/out/$name.json"
 
-      # Hands the record to the save job, as the CI workflow hands dist/ to Fernway. The path and key
-      # stay the same across attempts, so re-running only the save job still finds the record.
+      # Hands the record to the save job, as the CI workflow hands dist/ to Fernway. Each attempt saves
+      # its own key, and the save job takes the newest attempt's, so re-running all jobs saves the new
+      # record and re-running only the save job still finds the last one.
       - if: ${{ inputs.save }}
         env:
           NAME: ${{ steps.run.outputs.name }}
@@ -112,7 +113,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/bench-record
-          key: bench-record-${{ github.run_id }}
+          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
 
   # Only this job can write, and it runs no package code: it commits the record and pushes a branch.
   save:
@@ -130,7 +131,8 @@ jobs:
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/bench-record
-          key: bench-record-${{ github.run_id }}
+          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: bench-record-${{ github.run_id }}-
           fail-on-cache-miss: true
       - name: Push the record branch
         env:
@@ -138,7 +140,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # The name comes from the restored file, which is the record the first attempt saved.
+          # The name comes from the restored file, the record of the newest attempt that ran the bench.
           file=$(find "$RUNNER_TEMP/bench-record" -name '*.json' | head -n 1)
           NAME=$(basename "$file" .json)
           if [ -e "apps/bench/records/$NAME.json" ]; then
@@ -146,7 +148,8 @@ jobs:
             exit 1
           fi
           branch="bench-record/$NAME"
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+          # The full ref, since ls-remote matches a bare pattern against the end of every ref.
+          if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
             echo "::error::A $branch branch already exists. Merge or delete it, or run again with another name."
             exit 1
           fi
