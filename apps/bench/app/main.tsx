@@ -46,6 +46,15 @@ declare global {
 const now = () => performance.now();
 const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 const microtasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+/**
+ * React runs a discrete event's update in a microtask, and work its commit
+ * queues, such as a measure that waits for a popover to show, runs in the
+ * microtasks after that. A few hops let both in before a forced layout,
+ * without letting a frame in.
+ */
+const afterCommit = async () => {
+  for (let hop = 0; hop < 3; hop += 1) await Promise.resolve();
+};
 /** Forces style and layout now, so the time includes them. */
 const layout = () => document.body.getBoundingClientRect().height;
 
@@ -168,8 +177,7 @@ async function measure(
     const beforeAction = probe();
     start = now();
     scenario.interact(host);
-    // React runs a discrete event's update in a microtask.
-    await Promise.resolve();
+    await afterCommit();
     layout();
     sample.interactWithLayoutMs = now() - start;
     await frame();
