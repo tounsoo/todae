@@ -8,10 +8,10 @@ const ancestorRegistries = new WeakMap<Node, AncestorRegistry>();
 
 // Attributes that cut no text but change often: a list's
 // `aria-activedescendant` and a roving `tabindex` on every arrow key,
-// `aria-busy` while results load, a popover's open and motion markers, and the
-// ones a cut text's measure writes itself, `data-todae-cut` and
-// `aria-describedby`, so CSS keyed on the cut marker can't make it measure
-// again for its own answer.
+// `aria-busy` while results load, a popover's open and motion markers, a tip
+// trigger's `aria-describedby`, and the cut marker a measure writes,
+// `data-todae-cut`, so CSS keyed on it can't make a text measure again for its
+// own answer.
 const QUIET = new Set([
   'aria-activedescendant',
   'aria-busy',
@@ -43,19 +43,26 @@ const scheduler = () => (typeof requestAnimationFrame === 'function' ? requestAn
 // without another, so an animation that writes an attribute or inline style
 // each frame costs one measure when it ends, and a burst costs one. Each
 // element waits on its own changes, so an animation elsewhere holds up nothing.
-// One that never ends, such as a looping pulse or a ticking clock, is measured
-// every `MAX_WAIT` frames, so a change under it is still seen.
+// One that runs longer, such as a looping pulse or a ticking clock, is measured
+// about every `MAX_WAIT` frames, so a change under it is still seen.
 const MAX_WAIT = 12;
 let changedNow = new Set<() => void>();
 // Each waiting run, and the frames it has waited.
 let waiting = new Map<() => void, number>();
-// The pending frame: when and from what it was asked for. A frame that never
-// comes, such as one a test's fake timers dropped, is asked for again rather
+// The pending frame: when and from what it was asked for. A frame asked for
+// through a scheduler that has since been swapped, as a test's fake timers do,
+// or more than 250ms ago, as in a background tab, is asked for again rather
 // than waited on.
 let pending: { at: number; from: unknown } | null = null;
 
+// A frame asked for again replaces the one before it, which then does nothing
+// if it comes after all, so there is only ever one chain of frames.
 function request() {
-  pending = { at: Date.now(), from: nextFrame(onFrame) };
+  const ask: { at: number; from: unknown } = { at: Date.now(), from: null };
+  pending = ask;
+  ask.from = nextFrame(() => {
+    if (pending === ask) onFrame();
+  });
 }
 
 function later(run: () => void) {
@@ -71,13 +78,13 @@ function cancel(run: () => void) {
 
 function onFrame() {
   pending = null;
-  const due: (() => void)[] = [];
+  const due = new Set<() => void>();
   const next = new Map<() => void, number>();
   for (const [run, frames] of waiting) {
-    if (!changedNow.has(run) || frames + 1 >= MAX_WAIT) due.push(run);
+    if (!changedNow.has(run) || frames + 1 >= MAX_WAIT) due.add(run);
     else next.set(run, frames + 1);
   }
-  for (const run of changedNow) if (!next.has(run) && !due.includes(run)) next.set(run, 0);
+  for (const run of changedNow) if (!next.has(run) && !due.has(run)) next.set(run, 0);
   waiting = next;
   changedNow = new Set();
   if (waiting.size) request();
@@ -181,8 +188,9 @@ export type DomChangeOptions = MutationObserverInit & {
 /**
  * Calls `onChange` when the element in `ref` mounts or is replaced, and when
  * it, its subtree or, with `ancestors`, an element around it changes as
- * `options` describes, apart from the quiet attributes above. A change made by
- * a commit is handled in that commit's layout phase, before paint; a commit
+ * `options` describes, apart from the quiet attributes above. A change a
+ * commit made to the element or inside it is handled in that commit's layout
+ * phase, before paint; a change around it waits a frame, like one no commit made. A commit
  * that leaves the element as it was costs one `takeRecords()` and calls
  * nothing. A change made outside a render, such as a child's own state or an
  * animation's inline style, is handled once the element has gone a frame

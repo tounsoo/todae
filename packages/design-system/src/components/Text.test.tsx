@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs, type TextRootProps } from './Text.js';
@@ -12,6 +12,7 @@ import styles from './Text.module.css';
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 function classesOf(el: Element) {
@@ -294,8 +295,8 @@ describe('Text from the main entry', () => {
     Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
     el.parentElement!.className = 'row wide';
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
-    await new Promise((done) => setTimeout(done, 20));
-    expect(reads.mock.calls.length).toBeLessThan(5);
+    await new Promise((done) => setTimeout(done, 200));
+    expect(reads.mock.calls.length).toBeLessThanOrEqual(2);
   });
 
   it('measures a clamped text again when a commit shows a hidden part of it', () => {
@@ -373,7 +374,9 @@ describe('Text from the main entry', () => {
     };
     spin(0);
     rerender(row(true));
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    // A frame to see the row change and a quiet one after it, not the long wait an animation gets.
+    for (let frame = 0; frame < 4; frame++) await new Promise((done) => requestAnimationFrame(done));
+    expect(el.hasAttribute('data-todae-cut')).toBe(true);
     spinning = false;
   });
 
@@ -454,6 +457,44 @@ describe('Text from the main entry', () => {
     Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
     el.querySelector('span')!.textContent = ' with a much longer tail';
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+  });
+
+  it('keeps one chain of frames when a frame is asked for again after a long task', async () => {
+    const queue: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => queue.push(run));
+    const frame = async () => {
+      const runs = queue.splice(0);
+      await act(async () => {
+        for (const run of runs) run(0);
+      });
+    };
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    render(
+      <div>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    const panel = el.parentElement!;
+    const write = async (step: number) => {
+      panel.style.opacity = String(step % 2);
+      await act(async () => {});
+    };
+    await write(1);
+    now += 300;
+    await write(2);
+    for (let step = 3; step < 40; step++) {
+      await write(step);
+      await frame();
+    }
+    // About one measure every 12 frames over 37 frames, not one every other frame.
+    expect(reads.mock.calls.length).toBeLessThanOrEqual(4);
   });
 
   it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {
