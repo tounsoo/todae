@@ -19,6 +19,7 @@ import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
+import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './OptionList.module.css';
 
@@ -283,8 +284,9 @@ function OptionListRoot(props: OptionListRootProps) {
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
   // highlight; never on mount. A requested option that has not rendered yet,
   // such as an async result, is revealed when it renders enabled. In a popover
-  // or dialog, so is one requested as the list mounts, since such a list
-  // mounts as its surface first opens; an inline list's mount scrolls nothing.
+  // or dialog that is not shown yet, so is one requested as the list mounts,
+  // since that list mounts as its surface first opens; any other mount,
+  // inline or in a surface already open, scrolls nothing.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
   const pending = useRef<string | null>(null);
@@ -294,8 +296,11 @@ function OptionListRoot(props: OptionListRootProps) {
     if (!mounted.current) {
       mounted.current = true;
       const list = listRef.current;
-      const inSurface = list?.closest('[popover], dialog') != null;
-      if (target && list && inSurface && !findOption(list, optionDomId(listId, target))) pending.current = target;
+      // Its surface shows after it mounts, in the same commit: a list that
+      // mounts later inside one already open is inline, like any other.
+      const surface = list?.closest<HTMLElement>('[popover], dialog');
+      const opening = surface != null && !isPopoverOpen(surface) && !(surface instanceof HTMLDialogElement && surface.open);
+      if (target && list && opening && !findOption(list, optionDomId(listId, target))) pending.current = target;
       return;
     }
     const changed = lastTarget.current !== target;

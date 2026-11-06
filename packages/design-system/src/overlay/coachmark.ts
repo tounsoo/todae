@@ -28,11 +28,22 @@ export type UseCoachmarkOptions = {
   restoreFocusRef?: RefObject<HTMLElement | null>;
 };
 
-/** The elements the target opens, by its `aria-controls`, such as a menu: they stay usable beside it. */
+/**
+ * The elements the target opens, by its `aria-controls`, such as a menu: they
+ * stay usable beside it. One in a popover or dialog of its own, such as a
+ * combobox's listbox in its popover or sheet, brings that whole surface, so
+ * the search field, status and handle beside it stay usable too.
+ */
 function controlledBy(target: HTMLElement): HTMLElement[] {
   const ids = (target.getAttribute('aria-controls') ?? '').split(/\s+/).filter(Boolean);
   const doc = target.ownerDocument;
-  return ids.map((id) => doc.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+  return ids
+    .map((id) => doc.getElementById(id))
+    .filter((el): el is HTMLElement => el !== null)
+    .map((el) => {
+      const surface = el.closest<HTMLElement>('[popover], dialog');
+      return surface && !surface.contains(target) ? surface : el;
+    });
 }
 
 /** The target and the tab stops inside it, in document order. */

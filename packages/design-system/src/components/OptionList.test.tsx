@@ -341,4 +341,42 @@ describe('OptionList inline, with its requested option arriving after mount', ()
       rect.mockRestore();
     }
   });
+  it('scrolls nothing when it mounts later inside a dialog already open', () => {
+    // A wizard's second step: the dialog was open before the list mounted.
+    function Step({ items }: { items: string[] }) {
+      return (
+        <dialog open>
+          <main data-testid="main" style={{ overflowY: 'auto' }}>
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue="Fruit 30" aria-label="Fruit">
+              {items.map((item) => (
+                <OptionList.Option key={item} value={item}>
+                  {item}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </main>
+        </dialog>
+      );
+    }
+    const height = vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.tagName === 'MAIN' ? 1600 : 0;
+    });
+    const client = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.tagName === 'MAIN' ? 200 : 0;
+    });
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (this.tagName === 'MAIN') return new DOMRect(0, 0, 300, 200);
+      if (this.getAttribute('role') === 'option') return new DOMRect(0, [...this.parentElement!.children].indexOf(this) * 40, 300, 40);
+      return new DOMRect(0, 0, 0, 0);
+    });
+    try {
+      const { rerender } = render(<Step items={[]} />);
+      rerender(<Step items={ITEMS} />);
+      expect(screen.getByTestId('main').scrollTop).toBe(0);
+    } finally {
+      height.mockRestore();
+      client.mockRestore();
+      rect.mockRestore();
+    }
+  });
 });
