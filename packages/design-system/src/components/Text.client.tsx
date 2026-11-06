@@ -23,16 +23,9 @@ export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 // shows the first one's: querySelector reads in document order.
 const CUT_ATTR = 'data-todae-cut';
 
-// The box of a clamp keeps its size as its text is cut, so a class or an
-// attribute around it that product CSS restyles it by counts too.
-const TEXT_CHANGES: DomChangeOptions = {
-  childList: true,
-  subtree: true,
-  characterData: true,
-  attributes: true,
-  attributeFilter: ['class', 'style'],
-  ancestors: true,
-};
+// The box of a clamp keeps its size as its text is cut, so any attribute in
+// it, on it or around it that product CSS restyles it by counts too.
+const TEXT_CHANGES: DomChangeOptions = { childList: true, subtree: true, characterData: true, attributes: true, ancestors: true };
 
 /** The text of `el` as one line. innerText leaves out text that isn't rendered, such as `display: none`; jsdom has no innerText. */
 function fullText(el: HTMLElement): string {

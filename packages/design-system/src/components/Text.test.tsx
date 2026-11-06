@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
+import { createPortal } from 'react-dom';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Text as ClientText } from './Text.client.js';
@@ -274,13 +275,11 @@ describe('Text from the main entry', () => {
     await waitFor(() => expect(reads).toHaveBeenCalled());
     reads.mockClear();
     rerender(list('a'));
-    el.parentElement!.setAttribute('inert', '');
-    el.parentElement!.setAttribute('aria-hidden', 'true');
-    await new Promise((done) => setTimeout(done, 0));
+    await new Promise((done) => setTimeout(done, 50));
     expect(reads).not.toHaveBeenCalled();
   });
 
-  it('settles when product CSS keyed on the cut marker uncuts the text', async () => {
+  it('stops measuring when product CSS keyed on the cut marker would uncut the text', async () => {
     render(
       <div className="row">
         <ClientText.Root lines={1} data-testid="t">
@@ -297,6 +296,81 @@ describe('Text from the main entry', () => {
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
     await new Promise((done) => setTimeout(done, 20));
     expect(reads.mock.calls.length).toBeLessThan(5);
+  });
+
+  it('measures a clamped text again when a commit shows a hidden part of it', () => {
+    const line = (more: boolean) => (
+      <ClientText.Root lines={1} data-testid="t">
+        Report <span hidden={!more}>with a much longer tail</span>
+      </ClientText.Root>
+    );
+    const { rerender } = render(line(false));
+    const el = screen.getByTestId('t');
+    const tail = el.querySelector('span')!;
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (tail.hidden ? 40 : 120) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    rerender(line(true));
+    expect(el.hasAttribute('data-todae-cut')).toBe(true);
+  });
+
+  it('measures a clamped text once when its own class changes', async () => {
+    render(
+      <ClientText.Root lines={1} data-testid="t">
+        Quarterly revenue report
+      </ClientText.Root>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    el.classList.add('changed');
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(reads).toHaveBeenCalledTimes(1);
+  });
+
+  it('measures once, when it ends, for an animation that writes an inline style around a clamped text each frame', async () => {
+    render(
+      <div>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    const panel = el.parentElement!;
+    for (let frame = 0; frame < 10; frame++) {
+      panel.style.transform = `translateX(${frame}px)`;
+      await new Promise((done) => requestAnimationFrame(done));
+    }
+    expect(reads).not.toHaveBeenCalled();
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(reads).toHaveBeenCalledTimes(1);
+  });
+
+  it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const body = frame.contentDocument!.body;
+    const row = (selected: boolean) =>
+      createPortal(
+        <div className={selected ? 'selected' : undefined}>
+          <ClientText.Root lines={1} data-testid="t">
+            Quarterly revenue report
+          </ClientText.Root>
+        </div>,
+        body,
+      );
+    const { rerender, unmount } = render(row(false));
+    const el = body.querySelector('[data-testid="t"]') as HTMLElement;
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.parentElement!.className ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    rerender(row(true));
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    unmount();
+    frame.remove();
   });
 
   it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {

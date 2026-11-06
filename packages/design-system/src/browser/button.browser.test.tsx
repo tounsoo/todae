@@ -15,29 +15,32 @@ describe('Button.Root auto-tip', () => {
     const sheet = document.createElement('style');
     sheet.textContent = '.selected button { font-weight: 700; letter-spacing: 0.05em; }';
     document.head.append(sheet);
-    const row = (selected: boolean, width: string | number) => (
-      <div className={selected ? 'selected' : undefined} style={{ inlineSize: width }}>
-        <Button.Root variant="secondary">{label}</Button.Root>
-      </div>
-    );
-    const probe = render(row(false, '40rem'));
-    const regularWidth = screen.getByRole('button').getBoundingClientRect().width;
-    probe.rerender(row(true, '40rem'));
-    const boldWidth = screen.getByRole('button').getBoundingClientRect().width;
-    probe.unmount();
-    expect(regularWidth).toBeLessThan(boldWidth);
+    try {
+      const row = (selected: boolean, width: string | number) => (
+        <div className={selected ? 'selected' : undefined} style={{ inlineSize: width }}>
+          <Button.Root variant="secondary">{label}</Button.Root>
+        </div>
+      );
+      const probe = render(row(false, '40rem'));
+      const regularWidth = screen.getByRole('button').getBoundingClientRect().width;
+      probe.rerender(row(true, '40rem'));
+      const boldWidth = screen.getByRole('button').getBoundingClientRect().width;
+      probe.unmount();
+      expect(regularWidth).toBeLessThan(boldWidth);
 
-    const { rerender } = render(row(false, Math.ceil((regularWidth + boldWidth) / 2)));
-    const button = screen.getByRole('button');
-    await userEvent.hover(button);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    expect(openTip()).toBeNull();
-    await userEvent.unhover(button);
+      const { rerender } = render(row(false, Math.ceil((regularWidth + boldWidth) / 2)));
+      const button = screen.getByRole('button');
+      await userEvent.hover(button);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(openTip()).toBeNull();
+      await userEvent.unhover(button);
 
-    rerender(row(true, Math.ceil((regularWidth + boldWidth) / 2)));
-    await userEvent.hover(button);
-    await waitFor(() => expect(openTip()?.textContent).toBe(label));
-    await userEvent.unhover(button);
-    sheet.remove();
+      rerender(row(true, Math.ceil((regularWidth + boldWidth) / 2)));
+      await userEvent.hover(button);
+      await waitFor(() => expect(openTip()?.textContent).toBe(label));
+      await userEvent.unhover(button);
+    } finally {
+      sheet.remove();
+    }
   });
 });
