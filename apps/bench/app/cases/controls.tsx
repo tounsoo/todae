@@ -5,18 +5,15 @@ import {
   ChipList,
   ColorPicker,
   defineMentionSource,
-  Field,
   Mention,
   OptionList,
-  Popover,
   RadioGroup,
   Slider,
   ToggleGroup,
-  useMentions,
-  type MentionDraft,
+  type MentionSource,
 } from '@tounsoo/todae';
 import { useState } from 'react';
-import { click, first, many, PAGE_SIZES, range, type CoverageGroup, type ItemProps } from './types.tsx';
+import { click, many, PAGE_SIZES, range, type CoverageGroup, type ItemProps } from './types.tsx';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'react', 'density'];
 
@@ -109,48 +106,28 @@ const DIRECTORY: Record<string, Person> = {
   mira: { name: 'Mira Seo' },
 };
 
-const people = defineMentionSource<Person>({
-  char: '@',
-  label: 'People',
-  options: Object.entries(DIRECTORY).map(([value, person]) => ({ value, label: person.name })),
-  resolve: (id) => DIRECTORY[id],
-  peekLabel: (person) => person.name,
-  renderPeek: (person) => person.name,
-});
+// Made on first use, not at import, so a build that lacks defineMentionSource fails only this case.
+let peopleSource: MentionSource<Person> | undefined;
+const people = () =>
+  (peopleSource ??= defineMentionSource<Person>({
+    char: '@',
+    label: 'People',
+    options: Object.entries(DIRECTORY).map(([value, person]) => ({ value, label: person.name })),
+    resolve: (id) => DIRECTORY[id],
+    peekLabel: (person) => person.name,
+    renderPeek: (person) => person.name,
+  }));
 
-const NO_TRIGGER_TEXT: MentionDraft = { text: '', tokens: [] };
-
+/** A sent message that mentions someone, as a chat shows it. The peek opens on click. */
 function MentionItem({ index, tick }: ItemProps) {
-  const [draft, setDraft] = useState(NO_TRIGGER_TEXT);
-  const mentions = useMentions({ triggers: [people], value: draft, onValueChange: setDraft });
   return (
-    <div>
-      <Field.Root aria-label={`Message ${index} ${tick}`}>
-        <Field.Textarea {...mentions.getTextareaProps({ spellCheck: false })} placeholder={`Type @ to mention ${tick}`} />
-      </Field.Root>
-      <Popover.Root {...mentions.getPopoverProps()}>
-        <OptionList.Root {...mentions.getListboxProps()} hidden={mentions.isEmpty}>
-          {mentions.items.map((item) => (
-            <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
-          ))}
-        </OptionList.Root>
-      </Popover.Root>
-      <Mention.Root source={people} id="mina">
-        @Mina Park {tick}
+    <p>
+      Message {index} {tick} for{' '}
+      <Mention.Root source={people()} id="mina">
+        @Mina Park
       </Mention.Root>
-    </div>
+    </p>
   );
-}
-
-/** Types the trigger as a user would: the value through the native setter, then an input event, so React sees the edit. */
-function typeInto(selector: string, text: string) {
-  return (container: HTMLElement) => {
-    const field = first<HTMLTextAreaElement>(container, selector);
-    field.focus();
-    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(field, text);
-    field.setSelectionRange(text.length, text.length);
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-  };
 }
 
 export const CONTROLS = {
@@ -229,7 +206,8 @@ export const CONTROLS = {
       id: 'mention',
       title: 'Mention',
       Case: many(MentionItem),
-      interact: typeInto('textarea', '@'),
+      // Opens the first mention's peek, which renders its card from the first open.
+      interact: click('p button'),
     },
   ],
 } satisfies CoverageGroup;

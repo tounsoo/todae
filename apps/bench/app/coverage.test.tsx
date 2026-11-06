@@ -14,10 +14,10 @@ const isCases = (coverage: Coverage): coverage is readonly Scenario[] => Array.i
 
 function publicParts(): string[] {
   const parts: string[] = [];
-  for (const [name, value] of Object.entries(todae)) {
+  for (const name of Object.keys(todae)) {
     if (/^use[A-Z]/.test(name)) parts.push(name);
-    else if (name[0] !== name[0]?.toUpperCase()) continue;
-    else if (typeof value === 'function' || (typeof value === 'object' && value !== null && 'Root' in value)) parts.push(name);
+    // Same rule as the Component type: capitalized, and not a SCREAMING_CASE constant.
+    else if (name[0] === name[0]?.toUpperCase() && name !== name.toUpperCase()) parts.push(name);
   }
   parts.push(...Object.keys(todae.Field).map((member) => `Field.${member}`));
   return parts.sort();

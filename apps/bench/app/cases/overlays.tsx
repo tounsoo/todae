@@ -201,8 +201,18 @@ function ToastRegionCase({ copies, tick }: CaseProps) {
       for (const id of ids) toaster.remove(id);
     };
   }, [toaster, copies]);
+  // A region shows its toasts a task after it mounts, so the timed mount covers the empty region and the
+  // toasts land before the counts. The Save button adds one more to the live region, which the interaction times.
   return (
-    <Toast.Region toaster={toaster} limit={copies}>
+    <>
+      <button
+        type="button"
+        data-bench-trigger
+        onClick={() => toaster.add({ title: 'Draft saved', description: 'Synced to the cloud.', tone: 'success', duration: Infinity })}
+      >
+        Save {tick}
+      </button>
+      <Toast.Region toaster={toaster} limit={copies + 1}>
       {(toast) => (
         <Toast.Root>
           <Toast.Title>
@@ -212,7 +222,8 @@ function ToastRegionCase({ copies, tick }: CaseProps) {
           <Toast.Close />
         </Toast.Root>
       )}
-    </Toast.Region>
+      </Toast.Region>
+    </>
   );
 }
 
@@ -341,6 +352,7 @@ export const OVERLAYS = {
       id: 'toast-region',
       title: 'Toast region holding one toast per copy',
       Case: ToastRegionCase,
+      interact: click('[data-bench-trigger]'),
     },
   ],
   Drilldown: [

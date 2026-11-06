@@ -12,6 +12,7 @@ import {
   CodeBlock,
   DataList,
   defineMentionSource,
+  type MentionSource,
   EmptyState,
   Kbd,
   Link,
@@ -64,13 +65,15 @@ function AttachmentItem({ index, tick }: ItemProps) {
   );
 }
 
-const people = defineMentionSource({
+// Made on first use, not at import, so a build that lacks defineMentionSource fails only this case.
+let peopleSource: MentionSource | undefined;
+const people = () => (peopleSource ??= defineMentionSource({
   char: "@",
   options: [
     { value: "ada", label: "Ada Lovelace" },
     { value: "grace", label: "Grace Hopper" },
   ],
-});
+}));
 
 const MENTION_TEXT = "Ask @Ada Lovelace and @Grace Hopper to review";
 const mentionDraft = {
@@ -370,7 +373,7 @@ export const BASICS = {
       title: "MentionText",
       Case: many(({ index, tick }) => (
         <>
-          {index} {tick} <MentionText value={mentionDraft} sources={[people]} />
+          {index} {tick} <MentionText value={mentionDraft} sources={[people()]} />
         </>
       )),
     },

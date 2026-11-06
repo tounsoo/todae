@@ -24,20 +24,13 @@ type Name = Extract<keyof Exports, string>;
 export type Hook = Extract<Name, `use${string}`>;
 
 /**
- * Every public component: a capitalized export that is a part namespace (it
- * has `Root`) or a function, such as `MentionText` or a provider. Capitalized
- * constants, such as `CATEGORY_TONES`, are neither.
+ * Every public component: a capitalized export that isn't a SCREAMING_CASE
+ * constant such as `CATEGORY_TONES` or `SHEET_NARROW_WIDTH`. That counts part
+ * namespaces, functions such as `MentionText` and providers, and any future
+ * namespace or object component, whatever its shape.
  */
 export type Component = {
-  [K in Name]: K extends Hook
-    ? never
-    : K extends Capitalize<K>
-      ? Exports[K] extends { Root: unknown }
-        ? K
-        : Exports[K] extends (...args: never[]) => unknown
-          ? K
-          : never
-      : never;
+  [K in Name]: K extends Hook ? never : K extends Capitalize<K> ? (K extends Uppercase<K> ? never : K) : never;
 }[Name];
 
 /** Field's members are separate controls, such as `Field.DatePicker`, so each one counts on its own. */

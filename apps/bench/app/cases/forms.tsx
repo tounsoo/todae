@@ -566,7 +566,8 @@ export const FORMS = {
       id: 'label',
       title: 'Label',
       Case: many(LabelItem),
-      interact: focus('input'),
+      // A click on the label moves focus to its control.
+      interact: click('label'),
     },
   ],
   Description: [
@@ -574,7 +575,6 @@ export const FORMS = {
       id: 'description',
       title: 'Description',
       Case: many(DescriptionItem),
-      interact: focus('input'),
     },
   ],
   ErrorMessage: [
