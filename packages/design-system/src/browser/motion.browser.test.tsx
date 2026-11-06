@@ -210,9 +210,10 @@ describe('A popover about as wide as its trigger, in right-to-left text', () => 
   function Wide() {
     const popover = usePopover({ defaultOpen: true });
     const props = popover.getPopoverProps();
+    const triggerProps = popover.getTriggerProps();
     return (
       <Themed dir="rtl" style={{ ['--_todae-popover-motion-duration-enter' as string]: '1s', paddingBlockStart: 64, paddingInline: 48 }}>
-        <Button.Root {...popover.getTriggerProps()} style={{ inlineSize: 100 }}>
+        <Button.Root {...triggerProps} style={{ ...triggerProps.style, inlineSize: 100 }}>
           Open
         </Button.Root>
         <Popover.Root {...props} style={{ ...props.style, inlineSize: 101 }} role="dialog" aria-label="Wide">
