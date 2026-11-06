@@ -35,5 +35,17 @@ it('passes a list scrolled a little, whose top ring the scroll box already hides
 
 it('reports a ring the scroll box cuts while the list is in view', () => {
   mount({ scrollerPadding: 0, scrollTop: 0 });
-  expect(clippedRings()).toContainEqual(expect.stringMatching(/^div\.list in div\.scroller: top\b/));
+  expect(clippedRings()).toContainEqual(expect.stringMatching(/^div\.list in div\.scroller: .*\btop\b/));
+});
+
+it('still reports a cut when a nearer overflow box does not clip the control', () => {
+  // The button is absolute against the clip box, so the unpositioned scroll box between them
+  // doesn't clip it, and can't hide its bottom ring from the clip box.
+  document.body.innerHTML = `
+    <div class="clip" style="position: relative; overflow: hidden; width: 200px; height: 100px">
+      <div class="inner" style="overflow: hidden; height: 40px">
+        <button class="ctrl" style="position: absolute; top: 90px; left: 20px; box-sizing: border-box; width: 20px; height: 8px; padding: 0; border: 0; outline: 2px solid; outline-offset: 2px"></button>
+      </div>
+    </div>`;
+  expect(clippedRings()).toContainEqual(expect.stringMatching(/^button\.ctrl in div\.clip: .*\bbottom\b/));
 });

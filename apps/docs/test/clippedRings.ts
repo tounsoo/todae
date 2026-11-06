@@ -15,6 +15,21 @@ function ringOf(el: HTMLElement): { ringed: HTMLElement; box: DOMRect; room: num
 }
 
 /**
+ * Whether `c` clips `el` at all. It doesn't when `el`, or an ancestor below
+ * `c`, is positioned against a box outside `c`, such as an absolute control in
+ * an unpositioned overflow box, or a fixed one.
+ */
+function clipsBox(c: HTMLElement, el: HTMLElement): boolean {
+  for (let n: HTMLElement | null = el; n && n !== c; n = n.parentElement) {
+    const { position } = getComputedStyle(n);
+    if (position !== 'absolute' && position !== 'fixed') continue;
+    const block = n.offsetParent;
+    if (!block || (block !== c && !c.contains(block))) return false;
+  }
+  return true;
+}
+
+/**
  * Focuses each tabbable control under `root` as a keyboard would and lists
  * each ring on the control or a close ancestor that a scroll or clip container
  * cuts (not a ring drawn on a sibling, such as a Checkbox indicator): a container whose overflow
@@ -50,18 +65,20 @@ export function clippedRings(root: ParentNode = document): string[] {
         const right = left + c.clientWidth;
         const bottom = top + c.clientHeight;
         const edges: string[] = [];
+        // Only a container that clips the control can hide an edge from the ones further out.
+        const hides = clipsBox(c, el);
         // Within half a pixel, for layouts that land on fractions.
         if (style.overflowX !== 'visible') {
           if (!hidden.left && own.left >= left - 0.5 && box.left - room < left - 0.5) edges.push('left');
           if (!hidden.right && own.right <= right + 0.5 && box.right + room > right + 0.5) edges.push('right');
-          hidden.left ||= own.left < left - 0.5;
-          hidden.right ||= own.right > right + 0.5;
+          hidden.left ||= hides && own.left < left - 0.5;
+          hidden.right ||= hides && own.right > right + 0.5;
         }
         if (style.overflowY !== 'visible') {
           if (!hidden.top && own.top >= top - 0.5 && box.top - room < top - 0.5) edges.push('top');
           if (!hidden.bottom && own.bottom <= bottom + 0.5 && box.bottom + room > bottom + 0.5) edges.push('bottom');
-          hidden.top ||= own.top < top - 0.5;
-          hidden.bottom ||= own.bottom > bottom + 0.5;
+          hidden.top ||= hides && own.top < top - 0.5;
+          hidden.bottom ||= hides && own.bottom > bottom + 0.5;
         }
         if (edges.length) cut.push(`${name(el)} in ${name(c)}: ${edges.join(', ')}`);
       }
