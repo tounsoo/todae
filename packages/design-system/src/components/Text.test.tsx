@@ -350,6 +350,53 @@ describe('Text from the main entry', () => {
     expect(reads).toHaveBeenCalledTimes(1);
   });
 
+  it('measures a clamped text again while an animation elsewhere on the page runs', async () => {
+    const row = (selected: boolean) => (
+      <div>
+        <div data-testid="spinner" />
+        <div className={selected ? 'selected' : undefined}>
+          <ClientText.Root lines={1} data-testid="t">
+            Quarterly revenue report
+          </ClientText.Root>
+        </div>
+      </div>
+    );
+    const { rerender } = render(row(false));
+    const el = screen.getByTestId('t');
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.parentElement!.className ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    const spinner = screen.getByTestId('spinner');
+    let spinning = true;
+    const spin = (turn: number) => {
+      spinner.style.transform = `rotate(${turn}deg)`;
+      if (spinning) requestAnimationFrame(() => spin(turn + 1));
+    };
+    spin(0);
+    rerender(row(true));
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    spinning = false;
+  });
+
+  it('measures once, when it ends, for an animation that writes an inline style inside a clamped text each frame', async () => {
+    render(
+      <ClientText.Root lines={1} data-testid="t">
+        Report <span>with a tail</span>
+      </ClientText.Root>,
+    );
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    const tail = el.querySelector('span')!;
+    for (let frame = 0; frame < 10; frame++) {
+      tail.style.opacity = String(frame / 10);
+      await new Promise((done) => requestAnimationFrame(done));
+    }
+    expect(reads).not.toHaveBeenCalled();
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(reads).toHaveBeenCalledTimes(1);
+  });
+
   it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {
     const frame = document.createElement('iframe');
     document.body.append(frame);

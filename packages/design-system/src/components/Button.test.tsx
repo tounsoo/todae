@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
@@ -559,5 +559,31 @@ describe('Button toggle writes', () => {
     });
     expect(onPressedChange.mock.calls).toEqual([[true], [false]]);
     expect(button.getAttribute('aria-pressed')).toBe('false');
+  });
+});
+
+describe('Button measure', () => {
+  afterEach(cleanup);
+
+  it('measures once, when it ends, for an animation that writes an inline style inside it each frame', async () => {
+    render(
+      <Button.Root>
+        <span aria-hidden="true" data-testid="spinner" />
+        Save every archived thread
+      </Button.Root>,
+    );
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    const spinner = screen.getByTestId('spinner');
+    for (let frame = 0; frame < 10; frame++) {
+      spinner.style.transform = `rotate(${frame * 36}deg)`;
+      await new Promise((done) => requestAnimationFrame(done));
+    }
+    expect(reads).not.toHaveBeenCalled();
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(reads).toHaveBeenCalledTimes(1);
   });
 });
