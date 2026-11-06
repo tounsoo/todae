@@ -68,6 +68,28 @@ describe('Mention.Root', () => {
     vi.useRealTimers();
   });
 
+  it('renders no peek until it first opens, though its entity resolves at once', () => {
+    vi.useFakeTimers();
+    try {
+      const renderPeek = vi.fn((person: Person) => <p>{person.name}</p>);
+      render(
+        <Mention.Root source={peopleSource({ renderPeek, href: (id) => `/people/${id}` })} id="mina">
+          @Mina Park
+        </Mention.Root>,
+      );
+      expect(renderPeek).not.toHaveBeenCalled();
+      const link = screen.getByRole('link', { name: '@Mina Park' });
+      act(() => link.focus());
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(renderPeek).toHaveBeenCalled();
+      expect(document.getElementById(link.getAttribute('aria-describedby')!)?.textContent).toBe('Mina Park');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('opens on hover without moving focus, and closes when the pointer leaves', () => {
     vi.useFakeTimers();
     try {

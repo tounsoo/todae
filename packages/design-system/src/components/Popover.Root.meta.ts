@@ -16,7 +16,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Popover contents.',
+      description: 'Popover contents. Mounted on the first open, and kept after it.',
     },
     {
       name: 'className',

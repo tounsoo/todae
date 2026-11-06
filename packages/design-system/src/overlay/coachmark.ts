@@ -4,7 +4,7 @@ import { useDomId } from '../internal/domId.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeAnchorNames, removeAnchorName } from './anchorName.js';
 import { eventInside } from './eventInside.js';
-import { inertOutside } from './inertOutside.js';
+import { holds, inertOutside } from './inertOutside.js';
 import { aimPopoverOrigin } from './popoverOrigin.js';
 import { getTabbables, GUEST_LAYER_ATTRIBUTE } from './tabbables.js';
 import { useControlledOpen, type OverlayCloseReason } from './useControlledOpen.js';
@@ -28,11 +28,24 @@ export type UseCoachmarkOptions = {
   restoreFocusRef?: RefObject<HTMLElement | null>;
 };
 
-/** The elements the target opens, by its `aria-controls`, such as a menu: they stay usable beside it. */
+/**
+ * The elements the target opens, by its `aria-controls`, such as a menu: they
+ * stay usable beside it. One in a popover or dialog of its own, such as a
+ * combobox's listbox in its popover or sheet, brings that whole surface, so
+ * the search field, status and handle beside it stay usable too.
+ */
 function controlledBy(target: HTMLElement): HTMLElement[] {
   const ids = (target.getAttribute('aria-controls') ?? '').split(/\s+/).filter(Boolean);
   const doc = target.ownerDocument;
-  return ids.map((id) => doc.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+  return ids
+    .map((id) => doc.getElementById(id))
+    // One that holds the target, such as a sidebar its own collapse button
+    // controls, stays dimmed but for the target, or the whole page would stay usable.
+    .filter((el): el is HTMLElement => el !== null && !holds(el, target))
+    .map((el) => {
+      const surface = el.closest<HTMLElement>('[popover], dialog');
+      return surface && !holds(surface, target) ? surface : el;
+    });
 }
 
 /** The target and the tab stops inside it, in document order. */
@@ -161,14 +174,23 @@ export function useCoachmark({
     }
     target.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: reducedMotion() ? 'instant' : 'smooth' });
     if (scrim) Object.assign(scrim.style, cutoutCorners(target));
-    const release = inertOutside(() =>
-      [target, ...controlledBy(target), popup, scrim].filter((el): el is HTMLElement => el != null),
-    );
+    const keep = () => [target, ...controlledBy(target), popup, scrim].filter((el): el is HTMLElement => el != null);
+    let release = inertOutside(keep);
+    // What the target controls can mount later, as a combobox's listbox does
+    // when its popover first opens and names it in aria-controls: keep it too.
+    const controls = new MutationObserver(() => {
+      release();
+      release = inertOutside(keep);
+    });
+    controls.observe(target, { attributes: true, attributeFilter: ['aria-controls'] });
     const active = target.ownerDocument.activeElement;
     if (popup && active instanceof HTMLElement && (active === target.ownerDocument.body || active.closest('[inert]'))) {
       focusWithoutScroll(initialFocusTarget(popup, initialFocusRef));
     }
-    return release;
+    return () => {
+      controls.disconnect();
+      release();
+    };
   }, [initialFocusRef, open, target, targetRef]);
 
   // Focus moves in as it opens, without scrolling the page, so it doesn't cut

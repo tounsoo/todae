@@ -2,7 +2,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { useRef, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
+import { BottomSheet } from './BottomSheet.js';
+import { Button } from './Button.js';
 import { Coachmark, type CoachmarkCloseReason, type CoachmarkRootProps } from './Coachmark.js';
+import { Field } from './Field.js';
+import { OptionList } from './OptionList.js';
+import { Popover } from './Popover.js';
+import { useCombobox } from '../hooks/useCombobox.js';
 import { inertOutside } from '../overlay/inertOutside.js';
 import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 
@@ -74,6 +80,27 @@ describe('Coachmark', () => {
     const name = target.style.getPropertyValue('anchor-name');
     expect(name).toMatch(/^--todae-coachmark-/);
     expect(popup.style.getPropertyValue('position-anchor')).toBe(name);
+  });
+
+  it('mounts its content on the first open, and keeps its name and description after it closes', async () => {
+    render(<Harness open={false} />);
+    const popup = document.querySelector<HTMLElement>('[popover="manual"][role="dialog"]')!;
+    expect(screen.queryByText('Save the report as a file.')).toBeNull();
+    expect(popup.textContent).toBe('');
+    // The name and description are on the popup as focus moves into it, though the parts mount in that commit.
+    const atFocus: (string | null)[] = [];
+    const onFocusIn = () => atFocus.push(popup.getAttribute('aria-labelledby'), popup.getAttribute('aria-describedby'));
+    document.addEventListener('focusin', onFocusIn);
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    document.removeEventListener('focusin', onFocusIn);
+    expect(atFocus.length).toBeGreaterThan(0);
+    expect(atFocus.slice(0, 2).every((id) => id !== null && document.getElementById(id) !== null)).toBe(true);
+    expect(screen.getByRole('dialog', { name: 'New: export' })).toBe(popup);
+    expect(document.getElementById(popup.getAttribute('aria-describedby')!)?.textContent).toBe('Save the report as a file.');
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    await waitFor(() => expect(popup.hasAttribute('data-popover-open')).toBe(false));
+    expect(screen.getByRole('dialog', { name: 'New: export', hidden: true })).toBe(popup);
+    expect(popup.getAttribute('aria-describedby')).not.toBeNull();
   });
 
   it('makes the page inert except the target, and lifts it on close', () => {
@@ -341,5 +368,115 @@ describe('inertOutside', () => {
     release();
     expect(root.getElementById('near')!.hasAttribute('inert')).toBe(false);
     document.body.innerHTML = '';
+  });
+});
+
+describe('Coachmark on a closed combobox', () => {
+  function TourOnCombobox() {
+    const cb = useCombobox({ options: [{ value: 'react', label: 'React' }, { value: 'vue', label: 'Vue' }], presentation: 'popover' });
+    const input = cb.getInputProps();
+    return (
+      <>
+        <section>
+          <label {...cb.getLabelProps()}>Framework</label>
+          <Field.Root {...cb.getAnchorProps()}>
+            <Field.TextInput {...input} />
+          </Field.Root>
+        </section>
+        <div data-testid="layer">
+          <Popover.Root {...cb.getPopoverProps()}>
+            <OptionList.Root {...cb.getListboxProps()}>
+              {cb.items.map((item) => (
+                <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </div>
+        <Coachmark.Root targetRef={input.ref} defaultOpen aria-label="Try it">
+          <Coachmark.Title>Pick a framework</Coachmark.Title>
+        </Coachmark.Root>
+      </>
+    );
+  }
+
+  it('keeps the listbox usable when the combobox first opens beside it', async () => {
+    render(<TourOnCombobox />);
+    expect(screen.getByTestId('layer').hasAttribute('inert')).toBe(true);
+    fireEvent.focus(screen.getByRole('combobox'));
+    // The listbox mounts as the popover first opens, and the combobox names it then.
+    await act(async () => {});
+    expect(screen.getByRole('listbox').closest('[inert]')).toBeNull();
+  });
+
+  it('keeps what sits beside the listbox in its popover readable', async () => {
+    function EmptyTour() {
+      const cb = useCombobox({
+        options: [{ value: 'react', label: 'React' }],
+        presentation: 'popover',
+        defaultInputValue: 'zz',
+      });
+      const input = cb.getInputProps();
+      return (
+        <>
+          <Field.Root {...cb.getAnchorProps()} aria-label="Framework">
+            <Field.TextInput {...input} />
+          </Field.Root>
+          <div>
+            <Popover.Root {...cb.getPopoverProps()}>
+              <p role="status">{cb.isEmpty ? 'No matches' : ''}</p>
+              <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
+                {cb.items.map((item) => (
+                  <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+                ))}
+              </OptionList.Root>
+            </Popover.Root>
+          </div>
+          <Coachmark.Root targetRef={input.ref} defaultOpen aria-label="Try it">
+            <Coachmark.Title>Pick a framework</Coachmark.Title>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<EmptyTour />);
+    fireEvent.focus(screen.getByRole('combobox'));
+    await act(async () => {});
+    expect(screen.getByText('No matches').closest('[inert]')).toBeNull();
+  });
+
+  it('keeps the search field of a sheet the target opens usable', async () => {
+    function SheetTour() {
+      const cb = useCombobox({ options: [{ value: 'react', label: 'React' }], presentation: 'sheet' });
+      const ref = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          <label {...cb.getLabelProps()}>Framework</label>
+          <Button.Root {...cb.getTriggerProps({ ref })} data-testid="choose">
+            Choose
+          </Button.Root>
+          <BottomSheet.Root {...cb.getSheetProps()}>
+            <BottomSheet.Body>
+              <Field.Root id={cb.ids.input} aria-label="Framework">
+                <Field.TextInput {...cb.getInputProps()} data-testid="search" />
+              </Field.Root>
+              <OptionList.Root {...cb.getListboxProps()}>
+                {cb.items.map((item) => (
+                  <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+                ))}
+              </OptionList.Root>
+            </BottomSheet.Body>
+          </BottomSheet.Root>
+          <Coachmark.Root targetRef={ref} defaultOpen aria-label="Try it">
+            <Coachmark.Title>Pick a framework</Coachmark.Title>
+          </Coachmark.Root>
+        </>
+      );
+    }
+    render(<SheetTour />);
+    await act(async () => {});
+    fireEvent.click(screen.getByTestId('choose'));
+    await act(async () => {});
+    expect(screen.getByRole('listbox', { hidden: true }).closest('[inert]')).toBeNull();
+    expect(screen.getByTestId('search').closest('[inert]')).toBeNull();
+    expect(document.querySelector('[data-todae-sheet-drag-handle]')?.closest('[inert]')).toBeNull();
   });
 });
