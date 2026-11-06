@@ -111,7 +111,9 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     watchPointer(win);
     let rtl = false;
     let padInline = 0;
-    let shift = 0;
+    // The shift an earlier open left on the rail, which keeps it through
+    // the exit fade and is where the next open starts from.
+    let shift = px(own.style.translate);
     let content: { inline: number; block: number } | null = null;
     let frame = 0;
     let resting: { edge: Edge; since: number; last: number; carry: number } | null = null;

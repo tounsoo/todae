@@ -99,6 +99,20 @@ function CoachmarkHarness() {
   );
 }
 
+function Wide() {
+  const popover = usePopover();
+  return (
+    <>
+      <button type="button" {...popover.getTriggerProps()}>
+        Table
+      </button>
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Table" style={{ direction: 'rtl' }}>
+        <p>Wide content</p>
+      </Popover.Root>
+    </>
+  );
+}
+
 describe('A closed overlay does no open-state work', () => {
   it('mounts closed popovers with no scroll arrows, observers or layout reads', () => {
     const reads = layoutReads(() => {
@@ -168,5 +182,50 @@ describe('A closed overlay does no open-state work', () => {
     );
     expect(rails()).toHaveLength(1);
     expect(arrowObservers()).toBeGreaterThan(0);
+  });
+
+  // WebKit leaves a sticky rail in place along the inline axis of an RTL
+  // scroller: with inline overflow the rail drifts `drift` px left of the
+  // scrollport's right edge (300), and ScrollEdges moves it back with a translate.
+  it('keeps the rail on the scrollport edge across a close and reopen in an RTL scroller', () => {
+    render(<Wide />);
+    const trigger = screen.getByRole('button', { name: 'Table' });
+    const el = document.getElementById(trigger.getAttribute('aria-controls')!)!;
+    let wide = 500;
+    let drift = 40;
+    Object.defineProperty(el, 'clientWidth', { configurable: true, get: () => 200 });
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => wide });
+    const real = Element.prototype.getBoundingClientRect;
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (this === el) return DOMRect.fromRect({ x: 100, y: 0, width: 200, height: 100 });
+      if ((this as HTMLElement).hasAttribute?.('data-todae-scroll-edges')) {
+        const t = Number.parseFloat((this as HTMLElement).style.translate || '0') || 0;
+        const right = 300 - (wide > 200 ? drift : 0) + t;
+        return DOMRect.fromRect({ x: right, y: 0, width: 0, height: 0 });
+      }
+      return real.call(this);
+    });
+    const railRight = () => el.querySelector(':scope > [data-todae-scroll-edges]')!.getBoundingClientRect().right;
+
+    act(() => fireEvent.click(trigger));
+    act(() => fireEvent.scroll(el));
+    expect(getComputedStyle(el).direction).toBe('rtl');
+    expect(railRight()).toBe(300);
+
+    // Close, then scroll further while open again: the drift grows to 60.
+    act(() => fireEvent.click(trigger));
+    act(() => fireEvent.click(trigger));
+    drift = 60;
+    act(() => fireEvent.scroll(el));
+    const afterScroll = railRight();
+
+    // Close, the content narrows so nothing overflows inline, and reopen.
+    act(() => fireEvent.click(trigger));
+    wide = 200;
+    act(() => fireEvent.click(trigger));
+    act(() => fireEvent.scroll(el));
+    const afterNarrow = railRight();
+
+    expect({ afterScroll, afterNarrow }).toEqual({ afterScroll: 300, afterNarrow: 300 });
   });
 });
