@@ -16,6 +16,9 @@ export function holds(outer: Element, inner: Element): boolean {
 
 // Dialogs that opened, through `liftDialog`, and haven't closed yet.
 const lifted = /* @__PURE__ */ new Set<Element>();
+// Those of the page's own, lifted on `beforetoggle` while a call held: they
+// are part of the page again once no call holds.
+const pageLifted = /* @__PURE__ */ new Set<Element>();
 // What each inertOutside call that holds does to unmark its elements, then mark again.
 const holding = /* @__PURE__ */ new Set<{ unmark: () => void; walk: () => void }>();
 
@@ -25,25 +28,32 @@ function rewalk(): void {
   for (const call of holding) call.walk();
 }
 
+function onLiftedClose(event: Event): void {
+  const dialog = event.currentTarget as Element;
+  // A browser sends close a task later, so the dialog may be open again by
+  // then, as when its owner shows it again: it stays lifted until it closes.
+  if (dialog.hasAttribute('open')) {
+    dialog.addEventListener('close', onLiftedClose, { once: true });
+    return;
+  }
+  lifted.delete(dialog);
+  pageLifted.delete(dialog);
+  rewalk();
+}
+
 /**
  * Lifts `dialog` out of what an `inertOutside` call holds inert, until it
  * closes. Call it right before the dialog opens: a dialog moves focus in as
  * it opens, and focus can't land in an inert element, so one a coachmark's
  * target opens, such as a combobox's dialog, has to be usable by then,
  * wherever it sits. Todae's modal surfaces call it themselves, and a dialog
- * of the page's own that a browser reports with `beforetoggle` is lifted too.
+ * of the page's own that a browser reports with `beforetoggle` is lifted too,
+ * while a call holds.
  */
 export function liftDialog(dialog: Element): void {
   if (lifted.has(dialog)) return;
   lifted.add(dialog);
-  dialog.addEventListener(
-    'close',
-    () => {
-      lifted.delete(dialog);
-      rewalk();
-    },
-    { once: true },
-  );
+  dialog.addEventListener('close', onLiftedClose, { once: true });
   rewalk();
 }
 
@@ -52,12 +62,13 @@ function isLifted(dialog: Element): boolean {
 }
 
 /**
- * The dialog `event` happened in, through shadow roots too, when it opened
- * as `liftDialog` says and so stands apart from the dim page.
+ * The innermost dialog `event` happened in, through shadow roots too, that
+ * opened as `liftDialog` says and so stands apart from the dim page, such as
+ * the one holding a dialog of its own that never opened through it.
  */
 export function liftedDialogOf(event: Event): Element | null {
   for (const at of event.composedPath()) {
-    if (at instanceof Element && at.localName === 'dialog') return isLifted(at) ? at : null;
+    if (at instanceof Element && at.localName === 'dialog' && isLifted(at)) return at;
   }
   return null;
 }
@@ -153,7 +164,9 @@ export function inertOutside(keep: () => readonly Element[]): () => void {
   // moves focus in.
   const onBeforeToggle = (event: Event) => {
     const el = event.target;
-    if (el instanceof Element && el.localName === 'dialog' && (event as Event & { newState?: string }).newState === 'open') liftDialog(el);
+    if (!(el instanceof Element) || el.localName !== 'dialog' || (event as Event & { newState?: string }).newState !== 'open') return;
+    if (!lifted.has(el)) pageLifted.add(el);
+    liftDialog(el);
   };
   holding.add(call);
   call.walk();
@@ -162,5 +175,17 @@ export function inertOutside(keep: () => readonly Element[]): () => void {
     doc.removeEventListener('beforetoggle', onBeforeToggle, true);
     holding.delete(call);
     call.unmark();
+    // What this call marked, others skipped as inert already: they mark it now.
+    if (holding.size > 0) rewalk();
+    // After the task's own work, as a call can end only to start again, as
+    // a coachmark's does when its target names something new.
+    queueMicrotask(() => {
+      if (holding.size > 0) return;
+      for (const el of pageLifted) {
+        lifted.delete(el);
+        el.removeEventListener('close', onLiftedClose);
+      }
+      pageLifted.clear();
+    });
   };
 }

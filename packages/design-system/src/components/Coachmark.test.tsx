@@ -388,6 +388,49 @@ describe('inertOutside', () => {
     document.body.innerHTML = '';
   });
 
+  it('dims a dialog of the page lifted under one call again under a later one', async () => {
+    document.body.innerHTML = '<dialog id="own"><button>Send</button></dialog><p id="keep"></p>';
+    const keep = document.getElementById('keep')!;
+    const own = document.getElementById('own')!;
+    const release = inertOutside(() => [keep]);
+    own.dispatchEvent(Object.assign(new Event('beforetoggle'), { newState: 'open' }));
+    own.setAttribute('open', '');
+    release();
+    await Promise.resolve();
+    // Still open, though not modal: part of the page under the next call.
+    const again = inertOutside(() => [keep]);
+    expect(own.closest('[inert]')).not.toBeNull();
+    again();
+    document.body.innerHTML = '';
+  });
+
+  it('keeps a dialog lifted when a late close arrives after it opened again', () => {
+    document.body.innerHTML = '<div><dialog id="d"></dialog></div><p id="keep"></p>';
+    const release = inertOutside(() => [document.getElementById('keep')!]);
+    const d = document.getElementById('d') as HTMLDialogElement;
+    liftDialog(d);
+    d.showModal();
+    // A browser queues close, so it can land once the owner showed it again.
+    d.dispatchEvent(new Event('close'));
+    expect(d.closest('[inert]')).toBeNull();
+    d.close();
+    expect(d.closest('[inert]')).not.toBeNull();
+    release();
+    document.body.innerHTML = '';
+  });
+
+  it('keeps the page inert under one call when another ends', () => {
+    document.body.innerHTML = '<p id="a"></p><p id="b"></p><p id="other"></p>';
+    const first = inertOutside(() => [document.getElementById('a')!]);
+    const second = inertOutside(() => [document.getElementById('b')!]);
+    first();
+    expect(document.getElementById('other')!.hasAttribute('inert')).toBe(true);
+    expect(document.getElementById('a')!.hasAttribute('inert')).toBe(true);
+    second();
+    expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    document.body.innerHTML = '';
+  });
+
   it('marks only what comes beside a kept element added later', async () => {
     document.body.innerHTML = '<p id="keep"></p>';
     const release = inertOutside(() => [document.getElementById('keep')!]);
@@ -627,6 +670,9 @@ describe('Coachmark on a button that opens a dialog', () => {
             <Field.Root aria-label="Name">
               <Field.TextInput value="" onValueChange={() => {}} data-testid="name" />
             </Field.Root>
+            <dialog open aria-label="Note">
+              <button type="button">Got it</button>
+            </dialog>
           </Dialog.Root>
           <dialog open aria-label="Chat">
             <button type="button">Send</button>
@@ -647,7 +693,11 @@ describe('Coachmark on a button that opens a dialog', () => {
     expect(document.activeElement).toBe(screen.getByTestId('name'));
     // A press in the dialog the target opened isn't a press on the dim page.
     fireEvent.pointerDown(screen.getByTestId('name'));
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Got it' }));
     expect(onOpenChange).not.toHaveBeenCalled();
+    // A press on the page's own open dialog is a press on the dim page.
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Send', hidden: true }));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'backdrop');
   });
 
   it('still closes on a press on the dim part of a modal dialog the coachmark sits in', async () => {
