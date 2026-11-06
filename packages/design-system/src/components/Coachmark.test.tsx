@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { BottomSheet } from './BottomSheet.js';
@@ -349,15 +350,39 @@ describe('inertOutside', () => {
     document.body.innerHTML = '';
   });
 
-  it('leaves a dialog as it is, like a popover, also one added later', async () => {
-    document.body.innerHTML = '<dialog id="settings"><button>Save</button></dialog><p id="keep"></p>';
+  it('leaves a closed or modal dialog usable wherever it sits, also one added later', async () => {
+    document.body.innerHTML = [
+      '<dialog id="settings"><button>Save</button></dialog>',
+      '<div id="layer"><span id="near"></span><dialog id="wrapped"></dialog></div>',
+      '<dialog id="modal" open aria-modal="true"></dialog>',
+      '<dialog id="chat" open><button>Send</button></dialog>',
+      '<p id="keep"></p>',
+    ].join('');
     const keep = document.getElementById('keep')!;
     const release = inertOutside(() => [keep]);
-    expect(document.getElementById('settings')!.hasAttribute('inert')).toBe(false);
+    const inert = (id: string) => document.getElementById(id)!.hasAttribute('inert');
+    expect(inert('settings')).toBe(false);
+    expect(inert('layer')).toBe(false);
+    expect(inert('near')).toBe(true);
+    expect(inert('wrapped')).toBe(false);
+    expect(inert('modal')).toBe(false);
+    // An open dialog that isn't modal is part of the page.
+    expect(inert('chat')).toBe(true);
     const late = document.createElement('dialog');
-    document.body.append(late);
+    const lateLayer = document.createElement('div');
+    lateLayer.append(document.createElement('dialog'));
+    document.body.append(late, lateLayer);
     await new Promise((resolve) => setTimeout(resolve));
     expect(late.hasAttribute('inert')).toBe(false);
+    expect(lateLayer.hasAttribute('inert')).toBe(false);
+    release();
+    document.body.innerHTML = '';
+  });
+
+  it('dims the rest of a modal dialog that holds the kept element', () => {
+    document.body.innerHTML = '<dialog open aria-modal="true"><p id="keep"></p><p id="other"></p></dialog>';
+    const release = inertOutside(() => [document.getElementById('keep')!]);
+    expect(document.getElementById('other')!.hasAttribute('inert')).toBe(true);
     release();
     document.body.innerHTML = '';
   });
@@ -494,19 +519,18 @@ describe('Coachmark on a closed combobox', () => {
     expect(document.querySelector('[data-todae-sheet-drag-handle]')?.closest('[inert]')).toBeNull();
   });
 
-  it('lets the search field of a dialog the target opens take focus as it opens', async () => {
-    // Where focus lands, and whether that field was usable then: jsdom moves
-    // focus into an inert element, which a browser does not.
-    const landed: { inert: boolean }[] = [];
-    function DialogTour() {
-      const cb = useCombobox({ options: [{ value: 'react', label: 'React' }], presentation: 'dialog' });
-      const ref = useRef<HTMLButtonElement>(null);
-      return (
-        <>
-          <label {...cb.getLabelProps()}>Framework</label>
-          <Button.Root {...cb.getTriggerProps({ ref })} data-testid="choose">
-            Choose
-          </Button.Root>
+  it.each(['beside the trigger', 'in a wrapper', 'in a portal'] as const)(
+    'lets the search field of a dialog the target opens take focus as it opens, %s',
+    async (where) => {
+      // Where focus lands, and whether that field was usable then: jsdom moves
+      // focus into an inert element, which a browser does not.
+      const landed: { inert: boolean }[] = [];
+      const portal = document.createElement('div');
+      document.body.append(portal);
+      function DialogTour() {
+        const cb = useCombobox({ options: [{ value: 'react', label: 'React' }], presentation: 'dialog' });
+        const ref = useRef<HTMLButtonElement>(null);
+        const dialog = (
           <Dialog.Root {...cb.getDialogProps()}>
             <Field.Root id={cb.ids.input} aria-label="Framework">
               <Field.TextInput
@@ -521,23 +545,42 @@ describe('Coachmark on a closed combobox', () => {
               ))}
             </OptionList.Root>
           </Dialog.Root>
-          <Coachmark.Root targetRef={ref} defaultOpen aria-label="Try it">
-            <Coachmark.Title>Pick a framework</Coachmark.Title>
-          </Coachmark.Root>
-        </>
-      );
-    }
-    render(<DialogTour />);
-    await act(async () => {});
-    fireEvent.click(screen.getByTestId('choose'));
-    await act(async () => {});
-    expect(document.activeElement).toBe(screen.getByTestId('search'));
-    expect(landed).toEqual([{ inert: false }]);
-  });
+        );
+        return (
+          <>
+            <label {...cb.getLabelProps()}>Framework</label>
+            <Button.Root {...cb.getTriggerProps({ ref })} data-testid="choose">
+              Choose
+            </Button.Root>
+            {where === 'beside the trigger' ? dialog : null}
+            {where === 'in a wrapper' ? (
+              <div>
+                <span data-testid="beside" />
+                {dialog}
+              </div>
+            ) : null}
+            {where === 'in a portal' ? createPortal(dialog, portal) : null}
+            <Coachmark.Root targetRef={ref} defaultOpen aria-label="Try it">
+              <Coachmark.Title>Pick a framework</Coachmark.Title>
+            </Coachmark.Root>
+          </>
+        );
+      }
+      render(<DialogTour />);
+      await act(async () => {});
+      if (where === 'in a wrapper') expect(screen.getByTestId('beside').closest('[inert]')).not.toBeNull();
+      fireEvent.click(screen.getByTestId('choose'));
+      await act(async () => {});
+      expect(document.activeElement).toBe(screen.getByTestId('search'));
+      expect(landed).toEqual([{ inert: false }]);
+      portal.remove();
+    },
+  );
 });
 
 describe('Coachmark on a button that opens a dialog', () => {
   it('leaves the dialog usable, though the button names nothing it controls', async () => {
+    const onOpenChange = vi.fn();
     function SettingsTour() {
       const ref = useRef<HTMLButtonElement>(null);
       const [open, setOpen] = useState(false);
@@ -551,7 +594,10 @@ describe('Coachmark on a button that opens a dialog', () => {
               <Field.TextInput value="" onValueChange={() => {}} data-testid="name" />
             </Field.Root>
           </Dialog.Root>
-          <Coachmark.Root targetRef={ref} defaultOpen aria-label="Settings moved">
+          <dialog open aria-label="Chat">
+            <button type="button">Send</button>
+          </dialog>
+          <Coachmark.Root targetRef={ref} defaultOpen dismissOnBackdrop onOpenChange={onOpenChange} aria-label="Settings moved">
             <Coachmark.Title>Settings moved here</Coachmark.Title>
           </Coachmark.Root>
         </>
@@ -559,9 +605,14 @@ describe('Coachmark on a button that opens a dialog', () => {
     }
     render(<SettingsTour />);
     await act(async () => {});
+    // The page's own open dialog that isn't modal is dimmed with the page.
+    expect(screen.getByRole('button', { name: 'Send', hidden: true }).closest('[inert]')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await act(async () => {});
     expect(screen.getByTestId('name').closest('[inert]')).toBeNull();
     expect(document.activeElement).toBe(screen.getByTestId('name'));
+    // A press in the dialog the target opened isn't a press on the dim page.
+    fireEvent.pointerDown(screen.getByTestId('name'));
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
