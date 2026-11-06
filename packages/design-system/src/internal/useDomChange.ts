@@ -219,16 +219,17 @@ export function useDomChange(ref: RefObject<Element | null>, onChange: () => voi
       stop(current, run);
       watch.current = null;
       if (!el) return;
-      const { ancestors, ...init } = options;
       watch.current = {
         el,
+        // The options as given, `ancestors` and all, which the watch ignores,
+        // so every element watched alike shares one object rather than a copy each.
         mutations:
           typeof MutationObserver === 'undefined'
             ? null
-            : observeMutations(el, init, (records) => {
+            : observeMutations(el, options, (records) => {
                 if (records.some(isLoud)) later(run);
               }),
-        stopAncestors: ancestors ? watchAncestors(el, run) : null,
+        stopAncestors: options.ancestors ? watchAncestors(el, run) : null,
       };
     }
     // This measure covers any change still waiting.

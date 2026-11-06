@@ -47,12 +47,17 @@ type Subscription = {
   order: number;
 };
 
+// A target's listeners, and the options it is observed with now, to skip a
+// re-observe that changes nothing. A page of 1,000 Buttons keeps 1,000 of
+// these, so each is kept small: a list rather than a set, since a target has
+// one or two listeners, and the options as a key shared by every target
+// observed alike.
+type Target = { subscriptions: Subscription[]; key: string };
+
 type Registry = {
   make: typeof MutationObserver;
   observer: MutationObserver;
-  listeners: Map<Node, Set<Subscription>>;
-  // The options each target is observed with now, to skip a re-observe that changes nothing.
-  observed: Map<Node, string>;
+  listeners: Map<Node, Target>;
   // Targets the observer still watches that nobody listens to any more, since
   // a MutationObserver can't stop watching one node alone.
   dropped: number;
@@ -139,7 +144,7 @@ function route(registry: Registry, records: MutationRecord[]) {
     }
     for (let i = path.length - 1; i >= 0; i--) {
       const node = path[i]!;
-      const own = registry.listeners.get(node);
+      const own = registry.listeners.get(node)?.subscriptions;
       const gone = removals.has(node) || registry.removed.has(node) ? leftFrom(node) : NONE;
       if (own || gone.size) {
         const next = new Set(found);
@@ -219,7 +224,6 @@ function registry(): Registry | null {
   const created: Registry = {
     make: MutationObserver,
     listeners: new Map(),
-    observed: new Map(),
     dropped: 0,
     pending: new Map(),
     scheduled: false,
@@ -260,12 +264,19 @@ function widest(subscriptions: Iterable<Subscription>): MutationObserverInit {
   return init;
 }
 
-function observe(registry: Registry, target: Node, subscriptions: Set<Subscription>) {
-  const init = widest(subscriptions);
-  const key = JSON.stringify(init);
-  if (registry.observed.get(target) === key) return;
-  registry.observed.set(target, key);
-  registry.observer.observe(target, init);
+// One string for each set of options in use, so targets observed alike share
+// their key rather than keeping a copy each.
+const keys = new Map<string, string>();
+
+function observe(registry: Registry, node: Node, target: Target) {
+  const init = widest(target.subscriptions);
+  let key = JSON.stringify(init);
+  if (target.key === key) return;
+  const known = keys.get(key);
+  if (known) key = known;
+  else keys.set(key, key);
+  target.key = key;
+  registry.observer.observe(node, init);
 }
 
 export type MutationWatcher = {
@@ -290,8 +301,10 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
   deliverSoon(reg);
   const subscription: Subscription = { target, watch, run: listener, live: true, order: ++started };
   let own = reg.listeners.get(target);
-  if (!own) reg.listeners.set(target, (own = new Set()));
-  own.add(subscription);
+  // A list made with its one listener holds one, where pushing onto an
+  // empty list makes room for 17.
+  if (!own) reg.listeners.set(target, (own = { subscriptions: [subscription], key: '' }));
+  else own.subscriptions.push(subscription);
   observe(reg, target, own);
   const watched = own;
   return {
@@ -307,9 +320,9 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       if (!subscription.live) return;
       subscription.live = false;
       reg.pending.delete(subscription);
-      watched.delete(subscription);
+      watched.subscriptions.splice(watched.subscriptions.indexOf(subscription), 1);
       // Narrower options for the listeners left on this target.
-      if (watched.size) return observe(reg, target, watched);
+      if (watched.subscriptions.length) return observe(reg, target, watched);
       reg.listeners.delete(target);
       if (!reg.listeners.size) {
         reg.observer.disconnect();
@@ -327,10 +340,12 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       route(reg, reg.observer.takeRecords());
       deliverSoon(reg);
       reg.observer.disconnect();
-      reg.observed.clear();
       reg.removed.clear();
       reg.dropped = 0;
-      for (const [node, subscriptions] of reg.listeners) observe(reg, node, subscriptions);
+      for (const [node, live] of reg.listeners) {
+        live.key = '';
+        observe(reg, node, live);
+      }
     },
   };
 }
