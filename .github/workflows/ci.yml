@@ -165,6 +165,10 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     name: Engines (${{ matrix.browser }})
     runs-on: ubuntu-24.04
+    # The image the docs job uses, with the browsers and every system package they need already in it.
+    # Installing WebKit's packages on the runner meant 114 MB from Ubuntu's mirror on every run, and when
+    # that mirror slowed down the install outlasted the job's timeout. apps/docs/test/image.test.ts checks the version.
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -179,18 +183,6 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # Keyed on the lockfile, which pins Playwright and so its browser builds.
-      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
-        id: playwright-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
-        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}
-      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
-
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'webkit' }}
         run: pnpm --filter @tounsoo/todae test:browser --project webkit
@@ -203,9 +195,12 @@ jobs:
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
         working-directory: packages/design-system
+        # Firefox refuses to launch as root when HOME is owned by another user.
         env:
-          BROWSER_RESULTS: ${{ runner.temp }}/firefox-results.json
+          HOME: /root
+        # RUNNER_TEMP, not runner.temp, which names the runner's path rather than the container's.
         run: |
+          export BROWSER_RESULTS="$RUNNER_TEMP/firefox-results.json"
           set +e
           pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts
           status=$?
