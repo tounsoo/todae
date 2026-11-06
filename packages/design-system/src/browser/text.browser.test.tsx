@@ -452,9 +452,10 @@ describe('Text.Root lines', () => {
     await waitFor(() => expect(openTip()).not.toBeNull());
     await userEvent.hover(screen.getByTestId('away'));
     await waitFor(() => expect(openTip()).toBeNull());
-    // The pointer waits below the box, so the wider text doesn't grow under it.
+    // The pointer waits below the box, so the wider text doesn't grow under it,
+    // and comes back near the start: the middle of the wide text is past the frame.
     screen.getByTestId('box').style.inlineSize = '200rem';
-    await userEvent.hover(cut);
+    await userEvent.hover(cut, { position: { x: 8, y: 4 } });
     await new Promise((resolve) => setTimeout(resolve, 600));
     expect(openTip()).toBeNull();
     expect(cut.hasAttribute('data-todae-cut')).toBe(false);
