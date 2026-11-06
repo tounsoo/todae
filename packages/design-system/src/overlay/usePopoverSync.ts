@@ -91,8 +91,11 @@ export function usePopoverSync(
     wasOpen.current = open;
     if (!open) {
       if (!isPopoverOpen(el)) {
-        endExitsInside(el);
-        if (closing) onExitedRef.current?.();
+        // One that was never open has nothing fading inside it to end.
+        if (closing) {
+          endExitsInside(el);
+          onExitedRef.current?.();
+        }
         return;
       }
       // One that closes inside its first frames was never drawn: nothing

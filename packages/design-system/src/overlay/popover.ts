@@ -166,15 +166,16 @@ export function usePopoverInternal(
   useLayoutEffect(() => {
     const el = popoverRef.current;
     if (!el) return;
-    const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
-    const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
     const closing = wasOpen.current && !open;
     wasOpen.current = open;
+    // One that stays closed, as it mounts, has no anchor to find and no
+    // growth to aim, so a page of closed popovers reads no layout.
+    if (!open && !closing) return;
+    const placedAt = el.style.getPropertyValue('--todae-popover-anchor');
+    const anchor = placedAt === anchorName ? (anchorRef?.current ?? triggerRef.current) : anchorNamed(el, placedAt);
     const anchored = Boolean(anchor?.isConnected);
-    if (open || closing) {
-      watchingFade.current?.disconnect();
-      watchingFade.current = null;
-    }
+    watchingFade.current?.disconnect();
+    watchingFade.current = null;
     if (closing && satByAnchor.current && !anchored) {
       el.setAttribute('data-todae-unanchored', '');
       // The content's exit began in its own layout effect, which runs before this one and can't see the

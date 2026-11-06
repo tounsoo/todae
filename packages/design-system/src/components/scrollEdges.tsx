@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { revealRing } from '../internal/revealRing.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
@@ -89,13 +89,21 @@ function moved(event: PointerEvent, win: Window): boolean {
  * or pen resting on it scrolls that way, faster the longer it rests. Touch
  * and keys scroll as before, so the arrows are hidden from assistive
  * technology and never take focus.
+ *
+ * An overlay passes `active` as its open state, so a closed one does no
+ * work: the rail mounts on its first open, and it measures and watches only
+ * while open. On close it stops where it is, so the arrows fade out with the
+ * overlay as they were.
  */
-export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
+export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?: boolean }) {
   const rail = useRef<HTMLSpanElement>(null);
   const { chevron } = useGlyphs();
   const edges = EDGES[axis];
+  const [mounted, setMounted] = useState(active);
+  if (active && !mounted) setMounted(true);
 
   useLayoutEffect(() => {
+    if (!active) return;
     const own = rail.current;
     const el = own?.parentElement;
     if (!own || !el) return;
@@ -103,7 +111,9 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
     watchPointer(win);
     let rtl = false;
     let padInline = 0;
-    let shift = 0;
+    // The shift an earlier open left on the rail, which keeps it through
+    // the exit fade and is where the next open starts from.
+    let shift = px(own.style.translate);
     let content: { inline: number; block: number } | null = null;
     let frame = 0;
     let resting: { edge: Edge; since: number; last: number; carry: number } | null = null;
@@ -259,8 +269,9 @@ export function ScrollEdges({ axis }: { axis: ScrollAxis }) {
         node.removeEventListener('mousedown', press);
       }
     };
-  }, [edges]);
+  }, [active, edges]);
 
+  if (!mounted) return null;
   return (
     <span ref={rail} aria-hidden="true" data-todae-scroll-edges="" className={styles.rail}>
       {edges.map((edge) => (
