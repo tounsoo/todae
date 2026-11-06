@@ -52,6 +52,25 @@ jobs:
 
       - uses: ./.github/actions/setup
 
+      # A save that would collide stops here, before the long run. The save job checks again for a
+      # name the run picks itself.
+      - name: Check the record name is free
+        if: ${{ inputs.save && inputs.name != '' }}
+        env:
+          NAME: ${{ inputs.name }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          name=$(node --experimental-strip-types --no-warnings=ExperimentalWarning --input-type=module \
+            -e "import { slug } from './apps/bench/src/record.ts'; console.log(slug(process.env.NAME));")
+          if [ -z "$name" ]; then echo "::error::The name leaves no usable record name."; exit 1; fi
+          if git cat-file -e "origin/$BASE:apps/bench/records/$name.json" 2>/dev/null; then
+            echo "::error::$BASE already has a record named $name. Run again with another name."; exit 1
+          fi
+          if git rev-parse --verify --quiet "refs/remotes/origin/bench-record/$name" >/dev/null; then
+            echo "::error::A bench-record/$name branch already exists. Merge or delete it, or pick another name."; exit 1
+          fi
+
       # Keyed like Fernway's, which uses the same Playwright and so the same Chromium build.
       - id: playwright-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -83,12 +102,17 @@ jobs:
           echo "The record:"
           cat "apps/bench/out/$name.json"
 
-      # Hands the record to the save job, as the CI workflow hands dist/ to Fernway.
+      # Hands the record to the save job, as the CI workflow hands dist/ to Fernway. The path and key
+      # stay the same across attempts, so re-running only the save job still finds the record.
+      - if: ${{ inputs.save }}
+        env:
+          NAME: ${{ steps.run.outputs.name }}
+        run: mkdir -p "$RUNNER_TEMP/bench-record" && cp "apps/bench/out/$NAME.json" "$RUNNER_TEMP/bench-record/"
       - if: ${{ inputs.save }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: apps/bench/out/${{ steps.run.outputs.name }}.json
-          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bench-record
+          key: bench-record-${{ github.run_id }}
 
   # Only this job can write, and it runs no package code: it commits the record and pushes a branch.
   save:
@@ -105,25 +129,29 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: apps/bench/out/${{ needs.bench.outputs.name }}.json
-          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bench-record
+          key: bench-record-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Push the record branch
         env:
-          NAME: ${{ needs.bench.outputs.name }}
           BASE: ${{ github.event.repository.default_branch }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          # The name comes from the restored file, which is the record the first attempt saved.
+          file=$(find "$RUNNER_TEMP/bench-record" -name '*.json' | head -n 1)
+          NAME=$(basename "$file" .json)
           if [ -e "apps/bench/records/$NAME.json" ]; then
             echo "::error::$BASE already has a record named $NAME. Run again with another name."
             exit 1
           fi
           branch="bench-record/$NAME"
-          # A rerun under the same name gets its own branch instead of failing the push.
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then branch="$branch-$GITHUB_RUN_ID"; fi
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "::error::A $branch branch already exists. Merge or delete it, or run again with another name."
+            exit 1
+          fi
           mkdir -p apps/bench/records
-          cp "apps/bench/out/$NAME.json" "apps/bench/records/$NAME.json"
+          cp "$file" "apps/bench/records/$NAME.json"
           git config user.name 'github-actions[bot]'
           git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
           git switch -c "$branch"

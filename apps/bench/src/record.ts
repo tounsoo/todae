@@ -99,10 +99,11 @@ export function slug(text: string): string {
     .replace(/[^a-z0-9.]+/g, '-')
     .replace(/\.{2,}/g, '.')
     .slice(0, 60);
-  // git refuses a part that starts or ends with a dot or ends in .lock.
+  // git refuses a part that starts or ends with a dot or ends in .lock, and a
+  // name ending in .json would read as a path when looked up.
   for (let previous = ''; previous !== name; ) {
     previous = name;
-    name = name.replace(/^[-.]+|[-.]+$/g, '').replace(/\.lock$/, '');
+    name = name.replace(/^[-.]+|[-.]+$/g, '').replace(/\.(lock|json)$/, '');
   }
   return name;
 }
@@ -122,7 +123,9 @@ export function recordName(record: Pick<BenchRecord, 'date' | 'todae'>, label?: 
   const day = record.date.slice(0, 10);
   const short = record.todae.sha.slice(0, 7);
   const ref = slug(label ?? record.todae.ref);
-  return [day, ref === short ? '' : ref, short].filter(Boolean).join('-');
+  // A ref that is the SHA itself, short or full, would only repeat it.
+  const isSha = ref.length >= 7 && record.todae.sha.startsWith(ref);
+  return [day, isSha ? '' : ref, short].filter(Boolean).join('-');
 }
 
 /** Throws with a readable message when a parsed file is not a record this code can read. */

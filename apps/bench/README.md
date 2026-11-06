@@ -19,7 +19,7 @@ pnpm bench --help
 
 On GitHub, open Actions, pick **Bench**, press **Run workflow** and choose the branch or tag to measure. Its inputs match the flags: `against`, `save`, `name`, `runs` and `cases`. The comparison or a summary lands on the run's page, and the log prints the record.
 
-An entry in `--cases` without a slash picks every case whose id starts with it. One with a slash picks that case, so `button/100` doesn't also run `button/1000`. `--cases bundle` measures only bundle sizes and needs no browser.
+A record path is relative to the folder you run pnpm in, which is the repo root with `pnpm -w`. An entry in `--cases` without a slash picks every case whose id starts with it. One with a slash picks that case, so `button/100` doesn't also run `button/1000`. `--cases bundle` measures only bundle sizes and needs no browser.
 
 ## What it measures
 

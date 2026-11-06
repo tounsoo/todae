@@ -135,7 +135,7 @@ async function bench(values: Record<string, string | boolean | undefined>) {
     .filter(Boolean);
   const summary = values.summary as string | undefined;
   const name = typeof values.name === 'string' ? slug(values.name) : undefined;
-  if (name === '') throw new Error(`--name ${values.name} has no letters or digits to name a record with.`);
+  if (name === '') throw new Error(`--name ${values.name} leaves no usable record name; use letters, digits, dots and dashes.`);
   if (values.save && name && (await savedRecord(name))) throw new Error(`A saved record is already named ${name}. Pick another --name.`);
 
   if (values.build !== false) await buildCurrent(log);

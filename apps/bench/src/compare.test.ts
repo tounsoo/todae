@@ -131,6 +131,7 @@ describe('records', () => {
     );
     expect(recordName(record(), 'v0.7.0')).toBe('2026-11-06-v0.7.0-aaaaaaa');
     expect(recordName(record({ todae: { version: '0.7.0', sha: 'abcdef1234', ref: 'abcdef1', dirty: false } }))).toBe('2026-11-06-abcdef1');
+    expect(recordName(record({ todae: { version: '0.7.0', sha: 'abcdef1234', ref: 'abcdef1234', dirty: false } }))).toBe('2026-11-06-abcdef1');
   });
 });
 
@@ -158,6 +159,7 @@ describe('slug', () => {
     expect(slug('x.lock')).toBe('x');
     expect(slug('a.lock-')).toBe('a');
     expect(slug('x.lock.lock')).toBe('x');
+    expect(slug('v1.json')).toBe('v1');
     expect(slug('!!!')).toBe('');
   });
 });
