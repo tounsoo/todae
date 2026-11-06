@@ -367,3 +367,58 @@ describe('Tabs indicator anchor', () => {
     expect(tab('Alpha').textContent).toBe('Alpha');
   });
 });
+
+describe('Tabs on a page of many', () => {
+  it('shares one resize observer and one child-list observer across every list and its arrows', async () => {
+    let resizeObservers = 0;
+    let mutationObservers = 0;
+    const watched = new Set<Element>();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor() {
+          resizeObservers++;
+        }
+        observe(target: Element) {
+          watched.add(target);
+        }
+        unobserve(target: Element) {
+          watched.delete(target);
+        }
+        disconnect() {
+          watched.clear();
+        }
+      },
+    );
+    const Native = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends Native {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          mutationObservers++;
+        }
+      },
+    );
+    try {
+      const copies = 20;
+      const { unmount } = render(
+        <>
+          {Array.from({ length: copies }, (_, index) => (
+            <Example key={index} />
+          ))}
+        </>,
+      );
+      await act(async () => {});
+      expect(resizeObservers).toBe(1);
+      // The shared child-list observer, and each list's roving focus.
+      expect(mutationObservers).toBe(copies + 1);
+      // Each list and its children, the arrow rail among them, once.
+      expect(watched.size).toBe(copies * 5);
+      unmount();
+      expect(watched.size).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

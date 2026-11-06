@@ -17,17 +17,18 @@ class FakeResizeObserver {
     watched.add(target);
     alive.set(this, watched);
   }
-  unobserve() {}
+  unobserve(target: Element) {
+    alive.get(this)?.delete(target);
+  }
   disconnect() {
     alive.delete(this);
   }
 }
 
-/** Live observers watching a scroller that holds scroll arrows. */
+/** Scrollers holding scroll arrows that a live observer watches. */
 const arrowObservers = () =>
-  [...alive.values()].filter((watched) =>
-    [...watched].some((el) => el.querySelector(':scope > [data-todae-scroll-edges]')),
-  ).length;
+  new Set([...alive.values()].flatMap((watched) => [...watched]).filter((el) => el.querySelector(':scope > [data-todae-scroll-edges]')))
+    .size;
 
 beforeEach(() => {
   alive.clear();
