@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
@@ -432,6 +432,153 @@ describe('Button auto-tip', () => {
     expect(reads).not.toHaveBeenCalled();
   });
 
+  it('builds no observer for any Button, whatever its children', () => {
+    const made = vi.fn();
+    const StubResizeObserver = globalThis.ResizeObserver;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class extends StubResizeObserver {
+        constructor(callback: ResizeObserverCallback) {
+          super(callback);
+          made('resize');
+        }
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    const { unmount } = render(
+      <div>
+        {Array.from({ length: 50 }, (_, i) => (
+          <Button.Root key={i}>
+            <Button.Icon>+</Button.Icon>
+            Save draft {i}
+          </Button.Root>
+        ))}
+      </div>,
+    );
+    expect(made).not.toHaveBeenCalled();
+    unmount();
+    render(
+      <div>
+        {Array.from({ length: 50 }, (_, i) => (
+          <Button.Root key={i}>
+            <span aria-hidden="true" />
+            Save draft {i}
+          </Button.Root>
+        ))}
+      </div>,
+    );
+    expect(made).not.toHaveBeenCalled();
+  });
+
+  it('reads no layout until the pointer or keys reach the button', () => {
+    render(<Button.Root>Save every archived thread</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    const label = button.querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 120);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    advance(1000);
+    expect(reads).not.toHaveBeenCalled();
+    fireEvent.pointerEnter(button);
+    expect(reads).toHaveBeenCalledTimes(1);
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+  });
+
+  it('tips a cut label when keys move focus to it', () => {
+    render(<Button.Root>Save every archived thread</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    overflow(button.querySelector('span:not([aria-hidden])') as HTMLElement);
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => {
+      button.focus();
+    });
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+    act(() => {
+      button.blur();
+    });
+    advance(300);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('tips no cut label for focus a press put there', () => {
+    render(<Button.Root>Save every archived thread</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    overflow(button.querySelector('span:not([aria-hidden])') as HTMLElement);
+    fireEvent.pointerDown(button);
+    act(() => {
+      button.focus();
+    });
+    advance(300);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it.each([
+    ['pointer enter', 'onPointerEnter', (el: HTMLElement) => fireEvent.pointerEnter(el)],
+    ['focus', 'onFocus', (el: HTMLElement) => {
+      fireEvent.keyDown(document.body, { key: 'Tab' });
+      act(() => {
+        el.focus();
+      });
+    }],
+  ] as const)('tips no cut label when the consumer prevents %s', (_label, handler, reach) => {
+    render(
+      <Button.Root {...{ [handler]: (event: Event) => event.preventDefault() }}>Save every archived thread</Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    const label = button.querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 120);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    reach(button);
+    advance(300);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(reads).not.toHaveBeenCalled();
+  });
+
+  it('tips no cut label when its focus handler moves focus on', () => {
+    render(
+      <>
+        <Button.Root onFocus={() => document.getElementById('next')?.focus()}>Save every archived thread</Button.Root>
+        <button id="next">Next</button>
+      </>,
+    );
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    overflow(button.querySelector('span:not([aria-hidden])') as HTMLElement);
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => {
+      button.focus();
+    });
+    advance(300);
+    expect(document.activeElement?.id).toBe('next');
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('drops the tip once a label that was cut fits again', () => {
+    render(<Button.Root>Save draft</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save draft' });
+    const label = button.querySelector('span:not([aria-hidden])') as HTMLElement;
+    overflow(label);
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
+    fireEvent.pointerLeave(button);
+    advance(300);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 40 });
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('opts out with tooltip={false}', () => {
     render(
       <Button.Root tooltip={false} aria-label="Archive">
@@ -453,8 +600,8 @@ describe('Button auto-tip', () => {
     expect(ref.current).toBe(screen.getByRole('button', { name: 'Archive' }));
   });
 
-  it('wires one useTooltip machine and does not import Trigger', () => {
-    expect(source).toContain("from '../hooks/useTooltip.js'");
+  it('wires one tooltip machine and does not import Trigger', () => {
+    expect(source).toContain("from '../overlay/tooltip.js'");
     expect(source).toContain("from './Tooltip.js'");
     expect(source).not.toContain('Tooltip.Trigger');
     expect(source).not.toContain('createIntent');
@@ -462,7 +609,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/useDomChange.js']),
+      new Set(['react', '../hooks/useControlledState.js', '../overlay/tooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js']),
     );
   });
 
@@ -565,25 +712,24 @@ describe('Button toggle writes', () => {
 describe('Button measure', () => {
   afterEach(cleanup);
 
-  it('measures once, when it ends, for an animation that writes an inline style inside it each frame', async () => {
-    render(
-      <Button.Root>
+  it('reads nothing while an animation writes an inline style inside it, and reads its content at its next render', async () => {
+    const view = (label: string) => (
+      <Button.Root aria-label={label}>
         <span aria-hidden="true" data-testid="spinner" />
         Save every archived thread
-      </Button.Root>,
+      </Button.Root>
     );
-    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
-    const reads = vi.fn(() => 40);
-    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
-    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    const { rerender } = render(view('Save'));
+    const reads = vi.spyOn(document, 'createTreeWalker');
     const spinner = screen.getByTestId('spinner');
     for (let frame = 0; frame < 10; frame++) {
       spinner.style.transform = `rotate(${frame * 36}deg)`;
       await new Promise((done) => requestAnimationFrame(done));
     }
-    expect(reads).not.toHaveBeenCalled();
-    await waitFor(() => expect(reads).toHaveBeenCalled());
     await new Promise((done) => setTimeout(done, 50));
+    expect(reads).not.toHaveBeenCalled();
+    rerender(view('Save all'));
     expect(reads).toHaveBeenCalledTimes(1);
+    reads.mockRestore();
   });
 });

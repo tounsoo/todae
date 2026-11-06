@@ -153,7 +153,7 @@ describe('Text.Root lines', () => {
     expect(document.activeElement).toBe(screen.getByTestId('link'));
   });
 
-  it('measures again when a prop change cuts the text without changing its box', async () => {
+  it('tips at the next hover after a prop change cuts the text without changing its box', async () => {
     const phrase = 'Revenue report for the northern region, final copy';
     const textWidth = (el: HTMLElement) => {
       const range = document.createRange();
@@ -187,10 +187,14 @@ describe('Text.Root lines', () => {
     expect(regularWidth).toBeLessThan(boldWidth);
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
     rerender(box('bold'));
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    await userEvent.hover(el);
+    await waitFor(() => expect(openTip()?.textContent).toBe(phrase));
+    expect(el.hasAttribute('data-todae-cut')).toBe(true);
+    // A pointer left over the next test's text would enter it as it renders.
+    await userEvent.unhover(el);
   });
 
-  it('measures again when a class around the text cuts it without changing its box', async () => {
+  it('tips at the next hover after a class around the text cuts it without changing its box', async () => {
     const phrase = 'Revenue report for the northern region, final copy';
     const sheet = document.createElement('style');
     sheet.textContent = '.selected [data-testid] { font-weight: 700; }';
@@ -219,7 +223,10 @@ describe('Text.Root lines', () => {
       expect(regularWidth).toBeLessThan(boldWidth);
       expect(el.hasAttribute('data-todae-cut')).toBe(false);
       rerender(row(true, room));
-      await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+      await userEvent.hover(el);
+      await waitFor(() => expect(openTip()?.textContent).toBe(phrase));
+      expect(el.hasAttribute('data-todae-cut')).toBe(true);
+      await userEvent.unhover(el);
     } finally {
       sheet.remove();
     }
@@ -237,11 +244,15 @@ describe('Text.Root lines', () => {
     const el = screen.getByTestId('t');
     rerender(box(1));
     expect(screen.getByTestId('t')).toBe(el);
-    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
     expect(screen.getByTestId('box').childElementCount).toBe(1);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    await userEvent.hover(el);
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+    expect(el.hasAttribute('data-todae-cut')).toBe(true);
     rerender(box());
     expect(screen.getByTestId('t')).toBe(el);
     expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    await userEvent.unhover(el);
   });
 
   it('shows no tip when a container focused by script takes focus, and one for a tab stop', async () => {
@@ -419,24 +430,35 @@ describe('Text.Root lines', () => {
     rerender(view('span'));
     const cut = screen.getByTestId('cut');
     expect(cut.tagName).toBe('SPAN');
-    await waitFor(() => expect(cut.hasAttribute('data-todae-cut')).toBe(true));
     await userEvent.hover(cut);
     await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+    expect(cut.hasAttribute('data-todae-cut')).toBe(true);
+    await userEvent.unhover(cut);
   });
 
-  it('drops the tip when the text comes to fit', async () => {
+  it('shows no tip at the next hover once the text comes to fit', async () => {
     render(
-      <div style={{ inlineSize: '12rem' }} data-testid="box">
-        <Text.Root lines={1} data-testid="cut">
-          {LONG}
-        </Text.Root>
-      </div>,
+      <>
+        <div style={{ inlineSize: '12rem' }} data-testid="box">
+          <Text.Root lines={1} data-testid="cut">
+            {LONG}
+          </Text.Root>
+        </div>
+        <div style={{ blockSize: '4rem' }} data-testid="away" />
+      </>,
     );
     const cut = screen.getByTestId('cut');
     await userEvent.hover(cut);
     await waitFor(() => expect(openTip()).not.toBeNull());
-    screen.getByTestId('box').style.inlineSize = '200rem';
+    await userEvent.hover(screen.getByTestId('away'));
     await waitFor(() => expect(openTip()).toBeNull());
+    // The pointer waits below the box, so the wider text doesn't grow under it,
+    // and comes back near the start: the middle of the wide text is past the frame.
+    screen.getByTestId('box').style.inlineSize = '200rem';
+    await userEvent.hover(cut, { position: { x: 8, y: 4 } });
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(openTip()).toBeNull();
+    expect(cut.hasAttribute('data-todae-cut')).toBe(false);
   });
 
   it('draws no tip with tooltip={false}', async () => {

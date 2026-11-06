@@ -18,9 +18,9 @@ type SizeListener = (entry: ResizeObserverEntry) => void;
 // by an earlier listener in the same report hears nothing more. A listener
 // that throws doesn't keep the others from hearing; its error is thrown
 // after, as it would be from an observer of its own.
-function notify<T>(subscribed: Set<T>, call: (subscription: T) => void) {
+function notify<T>(subscribed: readonly T[], call: (subscription: T) => void) {
   for (const subscription of [...subscribed]) {
-    if (!subscribed.has(subscription)) continue;
+    if (!subscribed.includes(subscription)) continue;
     try {
       call(subscription);
     } catch (error) {
@@ -30,17 +30,27 @@ function notify<T>(subscribed: Set<T>, call: (subscription: T) => void) {
     }
   }
 }
+
+// Takes `item` out of `list`, and says whether it was there.
+function remove<T>(list: T[], item: T): boolean {
+  const at = list.indexOf(item);
+  if (at >= 0) list.splice(at, 1);
+  return at >= 0;
+}
+
 type SizeRegistry = {
   make: typeof ResizeObserver;
   observer: ResizeObserver;
-  listeners: Map<Element, Set<{ run: SizeListener }>>;
+  // A list rather than a set for each target, since a page of 1,000 Buttons
+  // keeps 1,000, and a target has one or two listeners.
+  listeners: Map<Element, { run: SizeListener }[]>;
 };
 let sizes: SizeRegistry | null = null;
 
 function sizeRegistry(): SizeRegistry | null {
   if (typeof ResizeObserver === 'undefined') return null;
   if (sizes?.make === ResizeObserver) return sizes;
-  const listeners = new Map<Element, Set<{ run: SizeListener }>>();
+  const listeners = new Map<Element, { run: SizeListener }[]>();
   const created: SizeRegistry = {
     make: ResizeObserver,
     listeners,
@@ -66,17 +76,19 @@ function sizeRegistry(): SizeRegistry | null {
 export function observeSize(target: Element, listener: SizeListener): () => void {
   const registry = sizeRegistry();
   if (!registry) return () => {};
-  let own = registry.listeners.get(target);
-  if (!own) {
-    own = new Set();
-    registry.listeners.set(target, own);
-  } else registry.observer.unobserve?.(target);
-  registry.observer.observe(target);
   // Each call subscribes on its own, the same function twice included.
   const subscription = { run: listener };
-  own.add(subscription);
+  let watched = registry.listeners.get(target);
+  // A list made with its one listener holds one, where pushing onto an
+  // empty list makes room for 17.
+  if (!watched) registry.listeners.set(target, (watched = [subscription]));
+  else {
+    registry.observer.unobserve?.(target);
+    watched.push(subscription);
+  }
+  registry.observer.observe(target);
   return () => {
-    if (!own.delete(subscription) || own.size) return;
+    if (!remove(watched, subscription) || watched.length) return;
     registry.listeners.delete(target);
     // A test's stand-in may have no unobserve; a target nobody hears then
     // stays observed, and its reports reach no one.
@@ -104,7 +116,7 @@ type ScrollerListener = {
   children?: () => void;
 };
 type Scroller = {
-  listeners: Set<{ run: ScrollerListener }>;
+  listeners: { run: ScrollerListener }[];
   box: ScrollerBox | null;
   stops: Map<Element, () => void>;
   stopChildren: () => void;
@@ -121,7 +133,7 @@ const scrollers = new WeakMap<Element, Scroller>();
 export function watchScroller(el: Element, listener: ScrollerListener): { stop: () => void; box: () => ScrollerBox | null } {
   let scroller = scrollers.get(el);
   if (!scroller) {
-    const created: Scroller = { listeners: new Set(), box: null, stops: new Map(), stopChildren: () => {} };
+    const created: Scroller = { listeners: [], box: null, stops: new Map(), stopChildren: () => {} };
     const resized = () => {
       notify(created.listeners, (own) => own.run.resized?.(created.box));
     };
@@ -154,11 +166,11 @@ export function watchScroller(el: Element, listener: ScrollerListener): { stop: 
   }
   const watched = scroller;
   const subscription = { run: listener };
-  watched.listeners.add(subscription);
+  watched.listeners.push(subscription);
   return {
     box: () => watched.box,
     stop: () => {
-      if (!watched.listeners.delete(subscription) || watched.listeners.size) return;
+      if (!remove(watched.listeners, subscription) || watched.listeners.length) return;
       for (const stop of watched.stops.values()) stop();
       watched.stopChildren();
       if (scrollers.get(el) === watched) scrollers.delete(el);

@@ -68,14 +68,26 @@ export type UseTooltipOptions<I extends boolean = false> = {
 export type TooltipInternalOptions = {
   anchorName?: string;
   holdsFocus?: (focused: Element) => boolean;
+  /**
+   * For a tip that turns on as focus reaches an element around it: called as
+   * the `holdsFocus` watch starts, and an element it returns that
+   * `holdsFocus` accepts holds the tip as a focusin on it would.
+   */
+  focusedAtStart?: () => Element | null;
   /** Focus waits for the show delay. Tooltips leave this off. */
   delayFocus?: boolean;
 };
 
-/** Hover holds for a trigger that wires its own pointer handlers. */
+/**
+ * Holds for a trigger that wires its own handlers, or that turns its tip on
+ * only once the person reaches it. `holdFocus` holds the tip for focus
+ * already on `target`, unless a pointer put it there, as the trigger's own
+ * focus handler would.
+ */
 export type TooltipInternalResult = {
   holdHover: () => void;
   releaseHover: (relatedTarget: EventTarget | null) => void;
+  holdFocus: (target: Element) => void;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -168,7 +180,7 @@ export function useTooltipInternal<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
   internal: TooltipInternalOptions = {},
 ): UseTooltipResult<I> & TooltipInternalResult {
-  const { anchorName: anchorNameOption, holdsFocus, delayFocus = false } = internal;
+  const { anchorName: anchorNameOption, holdsFocus, focusedAtStart, delayFocus = false } = internal;
   const {
     interactive = false as I,
     showDelay,
@@ -203,6 +215,7 @@ export function useTooltipInternal<I extends boolean = false>(
   const countedHoverRef = useRef(false);
   const enabledRef = useRef(enabled);
   const holdsFocusRef = useRef(holdsFocus);
+  const focusedAtStartRef = useRef(focusedAtStart);
   const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
   openRef.current = open;
   onOpenChangeRef.current = onOpenChange;
@@ -212,6 +225,7 @@ export function useTooltipInternal<I extends boolean = false>(
   delayFocusRef.current = delayFocus;
   enabledRef.current = enabled;
   holdsFocusRef.current = holdsFocus;
+  focusedAtStartRef.current = focusedAtStart;
 
   // Each commit replaces one still waiting for its trigger to settle.
   const commitSeq = useRef(0);
@@ -348,8 +362,9 @@ export function useTooltipInternal<I extends boolean = false>(
 
   // Focus on an element that holdsFocus accepts holds the tip as focus on the
   // trigger does. The element itself is the composed path's first entry, so
-  // one inside a shadow root counts. Only a focusin acquires, so a tip never
-  // opens without the person moving focus, and the hold ends when focus
+  // one inside a shadow root counts. Only a focusin acquires, or the focus
+  // that `focusedAtStart` reports as having just turned the tip on, so a tip
+  // never opens without the person moving focus, and the hold ends when focus
   // leaves that element, even if holdsFocus no longer accepts it by then.
   const hasHolder = holdsFocus !== undefined;
   useEffect(() => {
@@ -370,6 +385,15 @@ export function useTooltipInternal<I extends boolean = false>(
     }
     doc.addEventListener('focusin', onFocusIn);
     doc.addEventListener('focusout', onFocusOut);
+    const start = focusedAtStartRef.current?.() ?? null;
+    if (start !== null && holderAccepts(start)) {
+      held = start;
+      dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+    } else if (doc.activeElement !== null && holderAccepts(doc.activeElement)) {
+      // A focus hold an earlier run of this effect took, as StrictMode runs
+      // it twice, is still released when that focus leaves.
+      held = doc.activeElement;
+    }
     return () => {
       doc.removeEventListener('focusin', onFocusIn);
       doc.removeEventListener('focusout', onFocusOut);
@@ -383,6 +407,12 @@ export function useTooltipInternal<I extends boolean = false>(
       if (!pairContains(relatedTarget)) dispatch({ kind: 'release', hold: 'hover' });
     },
     [dispatch, pairContains],
+  );
+  const holdFocus = useCallback(
+    (target: Element) => {
+      if (!pointerFocus(target)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+    },
+    [dispatch],
   );
 
   useEffect(
@@ -461,5 +491,6 @@ export function useTooltipInternal<I extends boolean = false>(
     getTooltipProps,
     holdHover,
     releaseHover,
+    holdFocus,
   };
 }

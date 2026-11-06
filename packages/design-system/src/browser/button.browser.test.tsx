@@ -8,8 +8,8 @@ afterEach(cleanup);
 const openTip = () => document.querySelector<HTMLElement>('[role="tooltip"]:popover-open');
 
 describe('Button.Root auto-tip', () => {
-  // Button watches no attribute around it: its label is a shrink-to-fit flex
-  // item, so a class that widens the label past its room also resizes it.
+  // Button watches nothing around it: it reads whether the label is cut when
+  // the pointer reaches it.
   it('shows the full label once a class around the button cuts it', async () => {
     const label = 'Save every archived thread';
     const sheet = document.createElement('style');
