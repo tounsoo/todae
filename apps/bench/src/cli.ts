@@ -3,7 +3,7 @@
  */
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { BENCH_DIR, buildPage, serve } from './app.ts';
 import { measureBundles } from './bundle.ts';
@@ -64,11 +64,15 @@ async function listRecords(): Promise<{ file: string; record: BenchRecord }[]> {
   return found;
 }
 
+/** pnpm runs the script in apps/bench; a path the user typed is relative to where they ran pnpm. */
+const fromUser = (path: string) => resolve(process.env.INIT_CWD ?? process.cwd(), path);
+
 /** Finds a record by path, by name (saved records first) or by the SHA it was taken at. */
 export async function findRecord(query: string): Promise<BenchRecord> {
-  if (query.endsWith('.json')) return readRecord(query);
+  if (query.endsWith('.json')) return readRecord(fromUser(query));
   const all = await listRecords();
-  const byName = all.find(({ record, file }) => record.name === query || file.endsWith(`/${query}.json`));
+  const name = slug(query);
+  const byName = all.find(({ record }) => record.name === query || record.name === name);
   if (byName) return byName.record;
   const sha = await git(['rev-parse', '--verify', '--quiet', `${query}^{commit}`]).catch(() => query);
   const bySha = all.filter(({ record }) => record.todae.sha.startsWith(sha));
@@ -89,7 +93,7 @@ async function writeRecord(record: BenchRecord, dir: string): Promise<string> {
 
 async function report(text: string, summary: string | undefined) {
   process.stdout.write(`${text}\n`);
-  if (summary) await writeFile(summary, `${text}\n\n`, { flag: 'a' });
+  if (summary) await writeFile(fromUser(summary), `${text}\n\n`, { flag: 'a' });
 }
 
 const wanted = (id: string, only: readonly string[]) => only.length === 0 || only.some((entry) => matchesCase(id, entry));
@@ -177,6 +181,8 @@ async function bench(values: Record<string, string | boolean | undefined>) {
     for (const record of records) log(`Wrote ${await writeRecord(record, OUT_DIR)}`);
     if (values.save) {
       if (current.todae.dirty) log('Warning: todae has local changes, so the saved record is not the commit it names.');
+      const existing = (await listRecords()).find(({ record, file }) => record.name === current.name && file.startsWith(RECORDS_DIR));
+      if (existing) throw new Error(`A saved record is already named ${current.name}. Pick another --name; the new record is in apps/bench/out.`);
       log(`Saved ${await writeRecord(current, RECORDS_DIR)}`);
     }
     if (records.length === 2) {

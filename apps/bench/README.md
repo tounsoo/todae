@@ -54,7 +54,7 @@ Records worth keeping go in [`records/`](records), committed. Keep one per relea
 
 The machine type names the runner's image, CPU model and core count. GitHub doesn't always give the same CPU, so two release records compare on timings only when their types match; counts always compare. For a timing call between two releases, `--against` on one run is the sure way.
 
-`pnpm bench --save` writes a local record to `records/` as well, but a laptop's timings compare only with that laptop's records. Set `BENCH_MACHINE` to give a machine a stable name.
+A name is lowercased into a safe file and branch name, and a save refuses a name `records/` already has. `pnpm bench --save` writes a local record to `records/` as well, but a laptop's timings compare only with that laptop's records. Set `BENCH_MACHINE` to give a machine a stable name.
 
 ## Compare with an older build
 

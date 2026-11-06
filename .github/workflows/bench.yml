@@ -115,7 +115,13 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          if [ -e "apps/bench/records/$NAME.json" ]; then
+            echo "::error::$BASE already has a record named $NAME. Run again with another name."
+            exit 1
+          fi
           branch="bench-record/$NAME"
+          # A rerun under the same name gets its own branch instead of failing the push.
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then branch="$branch-$GITHUB_RUN_ID"; fi
           mkdir -p apps/bench/records
           cp "apps/bench/out/$NAME.json" "apps/bench/records/$NAME.json"
           git config user.name 'github-actions[bot]'

@@ -38,7 +38,8 @@ export type Checkout = { ref: string; sha: string; dirty: boolean };
 export async function describeCheckout(): Promise<Checkout> {
   const sha = await git(['rev-parse', 'HEAD']);
   const branch = process.env.GITHUB_REF_NAME || (await git(['rev-parse', '--abbrev-ref', 'HEAD']));
-  const status = await git(['status', '--porcelain', '--', 'packages/design-system', 'apps/bench/app']);
+  // The billing case renders the docs playground, so its files count too.
+  const status = await git(['status', '--porcelain', '--', 'packages/design-system', 'apps/bench/app', 'apps/docs/components']);
   return { ref: branch === 'HEAD' ? sha.slice(0, 7) : branch, sha, dirty: status.length > 0 };
 }
 
@@ -66,9 +67,16 @@ export async function buildRef(ref: string, log: (line: string) => void): Promis
   const worktree = join(dir, 'todae');
   await git(['worktree', 'add', '--detach', worktree, sha]);
   const cleanup = async () => {
+    process.off('SIGINT', interrupted).off('SIGTERM', interrupted);
     await git(['worktree', 'remove', '--force', worktree]).catch(() => undefined);
     await rm(dir, { recursive: true, force: true });
   };
+  // Ctrl-C skips every finally, which would leave the worktree registered and its install on disk.
+  const interrupted = (signal: NodeJS.Signals) => {
+    log(`Stopped by ${signal}; removing the ${ref} worktree`);
+    void cleanup().finally(() => process.exit(signal === 'SIGINT' ? 130 : 143));
+  };
+  process.once('SIGINT', interrupted).once('SIGTERM', interrupted);
   try {
     await run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline'], worktree, log);
     await run('pnpm', ['build:ds'], worktree, log);
