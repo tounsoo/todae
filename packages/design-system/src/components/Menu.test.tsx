@@ -53,12 +53,47 @@ describe('Menu', () => {
     expect(menu().getAttribute('aria-labelledby')).toBe(button.id);
     expect(menu().getAttribute('popover')).toBe('manual');
     expect(isOpen()).toBe(false);
+    // A closed menu mounts no items until it first opens.
+    expect(menu().childElementCount).toBe(0);
+    fireEvent.click(button);
     expect(item('Duplicate').getAttribute('aria-disabled')).toBe('true');
     expect(item('Show grid').getAttribute('role')).toBe('menuitemcheckbox');
     expect(item('Show grid').getAttribute('aria-checked')).toBe('false');
     expect(item('Name').getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('group', { name: 'Sort', hidden: true })).toBeTruthy();
     expect(screen.getByRole('separator', { hidden: true })).toBeTruthy();
+  });
+
+  it('mounts its items on the first open and keeps them after it closes', async () => {
+    function Uncontrolled() {
+      return (
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.CheckboxItem>Show grid</Menu.CheckboxItem>
+            <Menu.RadioGroup aria-label="Sort" defaultValue="name">
+              <Menu.RadioItem value="name">Name</Menu.RadioItem>
+              <Menu.RadioItem value="date">Date</Menu.RadioItem>
+            </Menu.RadioGroup>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    render(<Uncontrolled />);
+    expect(screen.queryByText('Show grid')).toBeNull();
+    fireEvent.click(trigger());
+    await raf();
+    fireEvent.click(item('Show grid'));
+    fireEvent.click(item('Date'));
+    key('Escape');
+    await settle();
+    expect(isOpen()).toBe(false);
+    // Still mounted while closed, so what was chosen holds for the next open.
+    expect(item('Show grid').getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(trigger());
+    await raf();
+    expect(item('Show grid').getAttribute('aria-checked')).toBe('true');
+    expect(item('Date').getAttribute('aria-checked')).toBe('true');
   });
 
   it('opens on click and focuses the first item', async () => {

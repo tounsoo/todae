@@ -1405,8 +1405,8 @@
       "ko": "메뉴의 이름이 되는 요소의 id. 기본값은 트리거입니다."
     },
     "children": {
-      "en": "Items, groups, separators and submenus.",
-      "ko": "항목, 그룹, 구분선, 하위 메뉴."
+      "en": "Items, groups, separators and submenus. Mounted on the first open, and kept after it.",
+      "ko": "항목, 그룹, 구분선, 하위 메뉴. 처음 열릴 때 마운트되고, 그 뒤로도 유지됩니다."
     },
     "className": {
       "en": "Optional class.",
@@ -1589,8 +1589,8 @@
   },
   "Menu.SubmenuContent": {
     "children": {
-      "en": "Items, groups, separators and submenus.",
-      "ko": "항목, 그룹, 구분선, 하위 메뉴."
+      "en": "Items, groups, separators and submenus. Mounted on the first open, and kept after it.",
+      "ko": "항목, 그룹, 구분선, 하위 메뉴. 처음 열릴 때 마운트되고, 그 뒤로도 유지됩니다."
     },
     "className": {
       "en": "Optional class.",

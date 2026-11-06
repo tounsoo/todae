@@ -461,7 +461,7 @@ const cases: Case[] = [
       (p) => {
         const Part = Menu[part] as (props: Native & { children?: ReactNode }) => ReactNode;
         return (
-          <Menu.Root>
+          <Menu.Root defaultOpen>
             <Menu.Content aria-label="m">
               <Part {...p}>x</Part>
             </Menu.Content>
@@ -471,21 +471,21 @@ const cases: Case[] = [
     ],
   ),
   ['Menu.Group', (p) => (
-    <Menu.Root>
+    <Menu.Root defaultOpen>
       <Menu.Content aria-label="m">
         <Menu.Group {...p} aria-label="g" />
       </Menu.Content>
     </Menu.Root>
   )],
   ['Menu.RadioGroup', (p) => (
-    <Menu.Root>
+    <Menu.Root defaultOpen>
       <Menu.Content aria-label="m">
         <Menu.RadioGroup {...p} aria-label="g" />
       </Menu.Content>
     </Menu.Root>
   )],
   ['Menu.RadioItem', (p) => (
-    <Menu.Root>
+    <Menu.Root defaultOpen>
       <Menu.Content aria-label="m">
         <Menu.RadioGroup aria-label="g">
           <Menu.RadioItem {...p} value="a">

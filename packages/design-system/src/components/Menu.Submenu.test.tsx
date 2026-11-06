@@ -65,8 +65,9 @@ async function onShare() {
 }
 
 describe('Menu submenus', () => {
-  it('wires the trigger and the submenu', () => {
+  it('wires the trigger and the submenu', async () => {
     render(<Actions />);
+    await onShare();
     const share = item('Share');
     expect(share.getAttribute('role')).toBe('menuitem');
     expect(share.getAttribute('aria-haspopup')).toBe('menu');
@@ -76,6 +77,8 @@ describe('Menu submenus', () => {
     expect(sub.getAttribute('popover')).toBe('manual');
     expect(sub.getAttribute('aria-labelledby')).toBe(share.id);
     expect(isOpen(sub)).toBe(false);
+    // A closed submenu mounts no items until it first opens.
+    expect(screen.queryByText('Copy link')).toBeNull();
     // The chevron is drawn, not read.
     expect(share.querySelector('[data-todae-glyph]')?.getAttribute('aria-hidden')).toBe('true');
   });
