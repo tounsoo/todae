@@ -45,6 +45,33 @@ describe('the benchmark page', () => {
     }
   });
 
+  it("takes each hook case's interaction through the hook", async () => {
+    const bench = window.__bench!;
+    // A case whose interaction misses its hook would time nothing but the event.
+    for (const id of ['use-combobox', 'use-roving-focus', 'use-inline-edit']) {
+      await bench.prepare(id, 3);
+      const sample = await bench.iterate();
+      expect(sample.componentsRenderedOnInteract, id).toBeGreaterThan(0);
+    }
+  });
+
+  it("moves focus with the roving focus case's arrow key", async () => {
+    // Focusing the first item alone renders too, so check where the arrow key left focus.
+    // Imported here, since React must load after the probe.
+    const { flushSync } = await import('react-dom');
+    const { createRoot } = await import('react-dom/client');
+    const { SCENARIOS } = await import('./scenarios.tsx');
+    const scenario = SCENARIOS.find((entry) => entry.id === 'use-roving-focus')!;
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = createRoot(host);
+    flushSync(() => root.render(<scenario.Case copies={2} tick={0} />));
+    flushSync(() => scenario.interact!(host));
+    expect(document.activeElement?.textContent).toBe('Italic');
+    flushSync(() => root.unmount());
+    host.remove();
+  });
+
   it("counts Chromium's resize loop report instead of failing the run", async () => {
     const bench = window.__bench!;
     await bench.prepare('menu-closed', 3);
