@@ -10,7 +10,7 @@ import { measureBundles } from './bundle.ts';
 import { compare, format } from './compare.ts';
 import { buildCurrent, buildRef, describeCheckout, git, PACKAGE_DIR, packageVersion, type BuiltRef } from './git.ts';
 import { describeMachine } from './machine.ts';
-import { assertRecord, recordName, slug, type BenchRecord, type CaseResult } from './record.ts';
+import { assertRecord, matchesCase, recordName, slug, type BenchRecord, type CaseResult } from './record.ts';
 import { runBrowser, type RunOptions, type RunOutput } from './run.ts';
 
 export const RECORDS_DIR = join(BENCH_DIR, 'records');
@@ -29,7 +29,7 @@ Run options:
   --runs <n>         Measured runs per case (default 5)
   --warmups <n>      Unmeasured runs first (default 1)
   --sizes <list>     Copies per case (default 10,100,1000)
-  --cases <list>     Only cases whose id starts with one of these, such as menu,button/100
+  --cases <list>     Only these cases: menu picks every case starting with menu, button/100 that size only
   --no-build         Use the package's existing dist/ instead of running pnpm build:ds
   --summary <file>   Append the report to this Markdown file (CI passes $GITHUB_STEP_SUMMARY)
   --all              List unchanged metrics too
@@ -72,8 +72,11 @@ export async function findRecord(query: string): Promise<BenchRecord> {
   if (byName) return byName.record;
   const sha = await git(['rev-parse', '--verify', '--quiet', `${query}^{commit}`]).catch(() => query);
   const bySha = all.filter(({ record }) => record.todae.sha.startsWith(sha));
-  const newest = bySha.sort((a, b) => b.record.date.localeCompare(a.record.date))[0];
+  // The newest record with browser cases, before a bundle-only one.
+  const browserRun = ({ record }: { record: BenchRecord }) => (record.browser.version === 'not run' ? 1 : 0);
+  const newest = bySha.sort((a, b) => browserRun(a) - browserRun(b) || b.record.date.localeCompare(a.record.date))[0];
   if (!newest) throw new Error(`No record named ${query} or taken at ${sha}. pnpm bench list shows them.`);
+  log(`Using ${newest.record.name} for ${query}`);
   return newest.record;
 }
 
@@ -89,7 +92,7 @@ async function report(text: string, summary: string | undefined) {
   if (summary) await writeFile(summary, `${text}\n\n`, { flag: 'a' });
 }
 
-const wanted = (id: string, only: readonly string[]) => only.length === 0 || only.some((prefix) => id.startsWith(prefix));
+const wanted = (id: string, only: readonly string[]) => only.length === 0 || only.some((entry) => matchesCase(id, entry));
 
 type Side = { label: string; todaeDir: string; ref: string; sha: string; dirty: boolean };
 
@@ -125,6 +128,8 @@ async function bench(values: Record<string, string | boolean | undefined>) {
     .map((entry) => entry.trim())
     .filter(Boolean);
   const summary = values.summary as string | undefined;
+  const name = typeof values.name === 'string' ? slug(values.name) : undefined;
+  if (name === '') throw new Error(`--name ${values.name} has no letters or digits to name a record with.`);
 
   if (values.build !== false) await buildCurrent(log);
   const checkout = await describeCheckout();
@@ -161,9 +166,11 @@ async function bench(values: Record<string, string | boolean | undefined>) {
         cases,
       };
       const isCurrent = side.label === 'current';
-      const name = isCurrent && typeof values.name === 'string' ? slug(values.name) : recordName(base);
-      records.push({ ...base, name });
+      records.push({ ...base, name: (isCurrent && name) || recordName(base) });
     }
+    // Both sides of --against share a date, so the same ref on both would share a name.
+    const [first, last] = [records[0]!, records[records.length - 1]!];
+    if (records.length > 1 && first.name === last.name) first.name = `${first.name}-against`;
 
     const current = records[records.length - 1]!;
     if (current.cases.length === 0) throw new Error(`No case matches --cases ${only.join(',')}.`);

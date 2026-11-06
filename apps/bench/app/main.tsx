@@ -69,10 +69,44 @@ let current: { scenario: Scenario; copies: number } | undefined;
 async function iterate(): Promise<Sample> {
   if (!current) throw new Error('call prepare() first');
   const { scenario, copies } = current;
-  const { Case } = scenario;
   const host = document.createElement('div');
   document.body.append(host);
-  const root = createRoot(host);
+  // React 19 reports a render error instead of throwing it from flushSync, and
+  // an event handler's error only reaches window. Either fails the run, so a
+  // case whose part is missing or broken is reported as failed, not measured.
+  let failure: unknown;
+  const fail = (error: unknown) => {
+    failure ??= error;
+  };
+  const onError = (event: ErrorEvent) => fail(event.error ?? event.message);
+  window.addEventListener('error', onError);
+  const check = () => {
+    if (failure !== undefined) throw failure instanceof Error ? failure : new Error(String(failure));
+  };
+  const root = createRoot(host, { onUncaughtError: fail });
+  try {
+    return await measure(scenario, copies, host, root, check);
+  } finally {
+    window.removeEventListener('error', onError);
+    if (host.isConnected) {
+      try {
+        flushSync(() => root.unmount());
+      } catch {
+        // The run already failed; the next one starts from a fresh root.
+      }
+      host.remove();
+    }
+  }
+}
+
+async function measure(
+  scenario: Scenario,
+  copies: number,
+  host: HTMLElement,
+  root: ReturnType<typeof createRoot>,
+  check: () => void,
+): Promise<Sample> {
+  const { Case } = scenario;
   const sample: Sample = {};
   await frame();
 
@@ -85,6 +119,7 @@ async function iterate(): Promise<Sample> {
   sample.mountMs = now() - start;
   layout();
   sample.mountWithLayoutMs = now() - start;
+  check();
 
   const engineMounted = await engine();
   // Work a component defers to the next frame, such as a first measure, lands before the counts.
@@ -114,6 +149,7 @@ async function iterate(): Promise<Sample> {
   sample.updateMs = now() - start;
   layout();
   sample.updateWithLayoutMs = now() - start;
+  check();
   await frame();
   const updated = probe();
   sample.componentsRenderedOnUpdate = updated.rendered - beforeUpdate.rendered;
@@ -128,6 +164,7 @@ async function iterate(): Promise<Sample> {
     layout();
     sample.interactWithLayoutMs = now() - start;
     await frame();
+    check();
     const acted = probe();
     sample.componentsRenderedOnInteract = acted.rendered - beforeAction.rendered;
   }
@@ -138,6 +175,7 @@ async function iterate(): Promise<Sample> {
   host.remove();
   await microtasks();
   await frame();
+  check();
   const after = probe();
   // What stays attached after unmount.
   sample.leakedListeners = after.documentListeners + after.windowListeners - before.documentListeners - before.windowListeners;

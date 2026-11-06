@@ -6,7 +6,7 @@
 
 ## Decision
 
-`apps/bench` measures todae in Chromium when someone asks: `pnpm bench` locally, or the manual Bench workflow in GitHub Actions. It never runs on a push, a pull request or a schedule, and it fails no check. Each run writes a JSON record, and the records worth keeping, one per release from the GitHub runner, are committed in `apps/bench/records`. Exact counts (DOM nodes, listeners, observers, components rendered, bundle bytes) compare against any record. Timings compare only between records from the same machine type, and browser engine counts only within the same browser major version. `--against <ref>` builds an older ref beside the current code for a close call.
+`apps/bench` measures todae in Chromium when someone asks: `pnpm bench` locally, or the manual Bench workflow in GitHub Actions. The benchmark never runs on a push, a pull request or a schedule, and no check depends on its numbers. CI only type-checks it and runs its unit tests. Each run writes a JSON record, and the records worth keeping, one per release from the GitHub runner, are committed in `apps/bench/records`. Exact counts (DOM nodes, listeners, observers, components rendered, bundle bytes) compare against any record. Timings compare only between records from the same machine type, and browser engine counts only within the same browser major version. `--against <ref>` builds an older ref beside the current code for a close call.
 
 ## Why
 

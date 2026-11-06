@@ -114,6 +114,15 @@
     },
   };
 
+  // Every node in the document, text and comments included, as React splits a
+  // label like `Save {index}` into several text nodes.
+  const countNodes = () => {
+    const walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
+    let count = 0;
+    while (walker.nextNode()) count += 1;
+    return count;
+  };
+
   const sum = (byKey) => [...byKey.values()].reduce((total, set) => total + set.size, 0);
   window.__probe = {
     snapshot() {
@@ -126,7 +135,7 @@
         observersCreated: created,
         commits,
         rendered,
-        nodes: document.getElementsByTagName('*').length,
+        nodes: countNodes(),
       };
     },
   };

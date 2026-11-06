@@ -57,7 +57,9 @@ export async function buildRef(ref: string, log: (line: string) => void): Promis
   let sha = await git(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]).catch(() => '');
   if (!sha) {
     log(`Fetching ${ref} from origin`);
-    await git(['fetch', '--depth=1', 'origin', ref]).catch(() => git(['fetch', '--depth=1', 'origin', `refs/tags/${ref}:refs/tags/${ref}`]));
+    // --depth on a full clone would make it shallow, so only a shallow clone fetches shallow.
+    const depth = (await git(['rev-parse', '--is-shallow-repository'])) === 'true' ? ['--depth=1'] : [];
+    await git(['fetch', ...depth, 'origin', ref]).catch(() => git(['fetch', ...depth, 'origin', `refs/tags/${ref}:refs/tags/${ref}`]));
     sha = await git(['rev-parse', '--verify', `FETCH_HEAD^{commit}`]);
   }
   const dir = await mkdtemp(join(tmpdir(), 'todae-bench-'));

@@ -92,19 +92,33 @@ export function metric(kind: MetricKind, unit: string, samples: readonly number[
 }
 
 /** Turns a ref or label into a safe file-name part. */
+/** A lower-case name that is safe as a file name and as one part of a git branch name. */
 export function slug(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
+    .replace(/\.{2,}/g, '.')
+    .slice(0, 60)
+    .replace(/\.lock$/, '')
+    .replace(/^[-.]+|[-.]+$/g, '');
+}
+
+/**
+ * Whether a case id is picked by a `--cases` entry. An entry with a slash names
+ * whole id parts, so `button/100` picks `button/100` and not `button/1000`. One
+ * without a slash is a prefix, so `menu` picks every `menu-closed` size.
+ */
+export function matchesCase(id: string, entry: string): boolean {
+  if (!entry.includes('/')) return id.startsWith(entry);
+  return id === entry || id.startsWith(`${entry}/`);
 }
 
 /** The default record name: date, then the version or ref, then the short SHA. */
 export function recordName(record: Pick<BenchRecord, 'date' | 'todae'>, label?: string): string {
   const day = record.date.slice(0, 10);
   const short = record.todae.sha.slice(0, 7);
-  return [day, slug(label ?? record.todae.ref), short].filter(Boolean).join('-');
+  const ref = slug(label ?? record.todae.ref);
+  return [day, ref === short ? '' : ref, short].filter(Boolean).join('-');
 }
 
 /** Throws with a readable message when a parsed file is not a record this code can read. */

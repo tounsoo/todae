@@ -4,7 +4,8 @@
  * instance, so the update step re-renders all of them.
  *
  * The cases use todae's public API only, so the same file also measures an
- * older build (`--against`). A case whose parts that build lacks fails on its
+ * older build (`--against`). The billing case renders this checkout's docs
+ * demo on either build, so it compares todae under today's demo code. A case whose parts that build lacks fails on its
  * own and is reported as failed; the rest still run.
  */
 import {
@@ -34,7 +35,7 @@ export type Scenario = {
   /** Instance counts to run. Leave it out to run every size the run asks for. */
   copies?: readonly number[];
   Case: (props: CaseProps) => ReactElement;
-  /** One user action on the first instance. Its time runs until the next frame. */
+  /** One user action on the first instance. Its time runs through React's update and a forced layout. */
   interact?: (container: HTMLElement) => void;
 };
 
@@ -76,10 +77,10 @@ function TooltipCase({ index, tick }: { index: number; tick: number }) {
   return (
     <>
       <button type="button" {...tip.getTriggerProps()}>
-        Info {index}
+        Info {index} {tick}
       </button>
       <Tooltip.Root {...tip.getTooltipProps()}>
-        Details {index} {tick}
+        Details {index}
       </Tooltip.Root>
     </>
   );

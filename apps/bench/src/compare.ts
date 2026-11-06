@@ -48,11 +48,22 @@ export const TIMING_FLOOR = 0.05;
 
 const major = (version: string) => version.split('.')[0] ?? version;
 
+/** Fewer runs than this give no verdict on a timing or browser count. */
+export const MIN_RUNS = 3;
+
+/**
+ * A timing or browser count changed only when every run of one side beats
+ * every run of the other and the medians differ by TIMING_FLOOR or more. For
+ * two sides of the same code, five runs each split cleanly by chance about
+ * once in 125 metrics (2 of the 252 ways to order ten runs), and ten runs each
+ * about once in 90,000.
+ */
 function spreadVerdict(before: Metric, after: Metric, lower: Verdict, higher: Verdict): Verdict {
-  const overlap = after.p25 <= before.p75 && before.p25 <= after.p75;
+  if (before.n < MIN_RUNS || after.n < MIN_RUNS) return 'noise';
+  const apart = after.max < before.min || before.max < after.min;
   const base = Math.abs(before.median) || 1;
   const small = Math.abs(after.median - before.median) / base < TIMING_FLOOR;
-  if (overlap || small) return 'noise';
+  if (!apart || small) return 'noise';
   return after.median < before.median ? lower : higher;
 }
 
@@ -149,7 +160,7 @@ const number = (value: number, unit: string) => {
 function cell(value: Metric | undefined, unit: string): string {
   if (!value) return '–';
   const main = number(value.median, unit);
-  return value.kind === 'count' ? main : `${main} (${number(value.p25, unit)}–${number(value.p75, unit)})`;
+  return value.kind === 'count' ? main : `${main} (${number(value.min, unit)}–${number(value.max, unit)})`;
 }
 
 function change(row: Row): string {
@@ -191,7 +202,7 @@ export function format(comparison: Comparison, options: { all?: boolean; title?:
   }
   lines.push(
     '',
-    'Timings and browser counts show the median with the middle half of the runs in brackets. A change counts only when those ranges don\'t overlap and the medians differ by 5% or more.',
+    'Timings and browser counts show the median with the fastest and slowest run in brackets. A change counts only when those ranges don\'t overlap and the medians differ by 5% or more.',
   );
   return lines.join('\n');
 }

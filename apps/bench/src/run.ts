@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { chromium, type BrowserContext, type Page } from 'playwright';
 import { APP_DIR } from './app.ts';
 import { toCase } from './metrics.ts';
-import type { CaseResult } from './record.ts';
+import { matchesCase, type CaseResult } from './record.ts';
 
 export type Side = { label: string; url: string };
 
@@ -63,7 +63,7 @@ export function selectJobs(scenarios: readonly ScenarioMeta[], sizes: readonly n
   for (const scenario of scenarios) {
     for (const copies of scenario.copies ?? sizes) {
       const id = `${scenario.id}/${copies}`;
-      if (only.length > 0 && !only.some((prefix) => id.startsWith(prefix))) continue;
+      if (only.length > 0 && !only.some((entry) => matchesCase(id, entry))) continue;
       jobs.push({ id, scenario, copies });
     }
   }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { changed, compare, format } from './compare.ts';
 import { describeMachine } from './machine.ts';
-import { metric, recordName, stats, type BenchRecord, type Metric } from './record.ts';
+import { metric, recordName, slug, stats, type BenchRecord, type Metric } from './record.ts';
 import { selectJobs } from './run.ts';
 
 function record(overrides: Partial<BenchRecord> & { metrics?: Record<string, Metric> } = {}): BenchRecord {
@@ -49,13 +49,20 @@ describe('compare', () => {
     expect(result.rows[0]).toMatchObject({ metric: 'nodes', verdict: 'fewer', delta: -200 });
   });
 
-  it('calls a timing change only when the middle halves stop overlapping', () => {
+  it('calls a timing change only when no run of one side overlaps the other', () => {
     const before = record({ metrics: { mountMs: time(100, 102, 104, 106, 108) } });
-    const overlapping = record({ metrics: { mountMs: time(103, 105, 107, 109, 111) } });
+    // The middle halves don't overlap, but the slowest before run is slower than the fastest after run.
+    const overlapping = record({ metrics: { mountMs: time(107, 120, 121, 122, 123) } });
     const faster = record({ metrics: { mountMs: time(50, 51, 52, 53, 54) } });
     expect(compare(before, overlapping).rows[0]?.verdict).toBe('noise');
     expect(compare(before, faster).rows[0]?.verdict).toBe('faster');
     expect(compare(faster, before).rows[0]?.verdict).toBe('slower');
+  });
+
+  it('gives no timing verdict on fewer than three runs', () => {
+    const before = record({ metrics: { mountMs: time(100, 100) } });
+    const after = record({ metrics: { mountMs: time(50, 50) } });
+    expect(compare(before, after).rows[0]?.verdict).toBe('noise');
   });
 
   it('treats a tiny timing shift as noise even with no overlap', () => {
@@ -113,6 +120,7 @@ describe('records', () => {
       '2026-11-06-feature-bench-thing-9859e16',
     );
     expect(recordName(record(), 'v0.7.0')).toBe('2026-11-06-v0.7.0-aaaaaaa');
+    expect(recordName(record({ todae: { version: '0.7.0', sha: 'abcdef1234', ref: 'abcdef1', dirty: false } }))).toBe('2026-11-06-abcdef1');
   });
 });
 
@@ -132,6 +140,16 @@ describe('machine', () => {
   });
 });
 
+describe('slug', () => {
+  it('gives a name that is safe as part of a branch name', () => {
+    expect(slug('Release 0.8.0')).toBe('release-0.8.0');
+    expect(slug('release..1')).toBe('release.1');
+    expect(slug('v1.')).toBe('v1');
+    expect(slug('x.lock')).toBe('x');
+    expect(slug('!!!')).toBe('');
+  });
+});
+
 describe('selectJobs', () => {
   const scenarios = [
     { id: 'menu-closed', title: 'Menu' },
@@ -144,5 +162,9 @@ describe('selectJobs', () => {
 
   it('keeps only cases whose id starts with a --cases entry', () => {
     expect(selectJobs(scenarios, [10, 100], ['menu-closed/100', 'billing']).map((job) => job.id)).toEqual(['menu-closed/100', 'billing-page/1']);
+  });
+
+  it('takes an entry with a size as that size only', () => {
+    expect(selectJobs(scenarios, [10, 100, 1000], ['menu-closed/10']).map((job) => job.id)).toEqual(['menu-closed/10']);
   });
 });

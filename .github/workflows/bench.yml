@@ -24,7 +24,7 @@ on:
         type: string
         default: '5'
       cases:
-        description: Only cases whose id starts with one of these, comma separated, such as menu,button/100. Empty runs every case.
+        description: Only these cases, comma separated. menu picks every case whose id starts with menu; button/100 picks that size only. Empty runs every case.
         required: false
         type: string
 
