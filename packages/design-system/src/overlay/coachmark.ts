@@ -39,7 +39,9 @@ function controlledBy(target: HTMLElement): HTMLElement[] {
   const doc = target.ownerDocument;
   return ids
     .map((id) => doc.getElementById(id))
-    .filter((el): el is HTMLElement => el !== null)
+    // One that holds the target, such as a sidebar its own collapse button
+    // controls, stays dimmed but for the target, or the whole page would stay usable.
+    .filter((el): el is HTMLElement => el !== null && !holds(el, target))
     .map((el) => {
       const surface = el.closest<HTMLElement>('[popover], dialog');
       return surface && !holds(surface, target) ? surface : el;
