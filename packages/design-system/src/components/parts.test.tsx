@@ -1154,7 +1154,10 @@ it('tips only the overflowing label text, not nested badges', () => {
     </Button.Root>,
   );
   const button = screen.getByRole('button');
-  fireEvent.focus(button);
+  fireEvent.keyDown(document.body, { key: 'Tab' });
+  act(() => {
+    button.focus();
+  });
   expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save changes');
   widths.mockRestore();
   client.mockRestore();

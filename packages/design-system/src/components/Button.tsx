@@ -8,19 +8,20 @@ import {
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
   type HTMLAttributes,
+  type FocusEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
   type Ref,
   type RefCallback,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { useTooltip } from '../hooks/useTooltip.js';
+import { useTooltipInternal } from '../overlay/tooltip.js';
 import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
-import { observeSize } from '../internal/sharedObservers.js';
 import { useDomChange, type DomChangeOptions } from '../internal/useDomChange.js';
 
 /**
@@ -137,20 +138,32 @@ function isIconOnly(content: Content): boolean {
   return content.hasIcon && content.text === '' && !content.media;
 }
 
+const isPlain = (child: ReactNode) => typeof child === 'string' || typeof child === 'number';
+
 // From direct children: the label text that can overflow (and so feeds the
-// overflow tooltip), and a server-render icon-only hint used until the button
-// can be read. The read after layout decides icon-only, and it also sees icons
-// inside wrappers.
-function hint(children: ReactNode): { iconOnly: boolean; text: string } {
+// overflow tooltip), and whether the button is icon-only. When every child is
+// a string, a number or a Button.Icon, that is exact: the button renders just
+// those, so nothing needs reading. Otherwise it is a server-render hint used
+// until the button can be read, and the read after layout decides, seeing
+// icons inside wrappers and content a child renders from its own state.
+function hint(children: ReactNode, rendered: boolean): { exact: boolean; iconOnly: boolean; text: string } {
   const items = Children.toArray(children);
+  const isIcon = (child: ReactNode) => isValidElement(child) && child.type === Icon;
+  const text = items
+    .map((child) => (isPlain(child) ? String(child) : ''))
+    .join('')
+    .trim();
+  // `render` draws the element, so it could add content of its own.
+  const exact = !rendered && items.every((child) => isPlain(child) || isIcon(child));
   return {
-    iconOnly: items.length > 0 && items.every((child) => isValidElement(child) && child.type === Icon),
-    text: items
-      .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
-      .join('')
-      .trim(),
+    exact,
+    iconOnly: exact ? text === '' && items.some(isIcon) : items.length > 0 && items.every(isIcon),
+    text,
   };
 }
+
+// No element: what a Button whose content is exact watches.
+const NO_ELEMENT: { current: null } = { current: null };
 
 // aria-disabled is a string or a boolean in React's types.
 const isAriaDisabled = (value: unknown) => value === true || value === 'true';
@@ -194,10 +207,11 @@ function Root({
     composedClick(event);
   };
   const [read, setRead] = useState<Content | null>(null);
-  const direct = hint(children);
-  const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
+  const direct = hint(children, render !== undefined);
+  const iconOnly = !direct.exact && read ? isIconOnly(read) : direct.iconOnly;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
-  const [overflowing, setOverflowing] = useState(false);
+  // The label text last found cut, when the person reached the button.
+  const [cutText, setCutText] = useState<string | null>(null);
   const labelledby = props['aria-labelledby'];
 
   useLayoutEffect(() => {
@@ -225,40 +239,19 @@ function Root({
     );
   }, []);
 
-  // The labels the overflow tip reads. Only their own resize, or a change to
-  // the button, can cut them.
+  // The labels the overflow tip reads.
   const labels = useRef(new Set<HTMLElement>());
-  const measure = useCallback(() => {
-    let cut = false;
-    for (const el of labels.current) cut ||= el.scrollWidth > el.clientWidth;
-    setOverflowing(cut);
+  const labelRef = useCallback((el: HTMLSpanElement | null) => {
+    if (!el) return;
+    labels.current.add(el);
+    return () => {
+      labels.current.delete(el);
+    };
   }, []);
-  const labelRef = useCallback(
-    (el: HTMLSpanElement | null) => {
-      if (!el || !tooltip) return;
-      labels.current.add(el);
-      // The page's one observer reports the label's size once it observes it.
-      if (typeof ResizeObserver === 'undefined') measure();
-      const stop = observeSize(el, measure);
-      return () => {
-        labels.current.delete(el);
-        stop();
-      };
-    },
-    [measure, tooltip],
-  );
 
   // A child can swap an icon for text from its own state without this
-  // component rendering again, and a variant or class can cut a label
-  // without changing its box.
-  useDomChange(
-    buttonRef,
-    () => {
-      readButton();
-      measure();
-    },
-    BUTTON_CHANGES,
-  );
+  // component rendering again. Exact content can't, so it is not watched.
+  useDomChange(direct.exact ? NO_ELEMENT : buttonRef, readButton, BUTTON_CHANGES);
 
   const ariaLabel = typeof props['aria-label'] === 'string' ? props['aria-label'].trim() : '';
   const iconName = iconOnly ? ariaLabel || (typeof labelledbyText === 'string' ? labelledbyText : null) : null;
@@ -282,21 +275,64 @@ function Root({
   }, [rendersElement]);
 
   const textName = iconOnly ? null : direct.text;
-  const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
-  const tip = useTooltip({ enabled: tipText != null });
+  const tipText = !tooltip ? null : iconOnly ? iconName : textName && cutText === textName ? textName : null;
+  const tip = useTooltipInternal({ enabled: tipText != null });
   const refs = useComposedRefs(buttonRef, ref);
+
+  // Whether a label is cut is read when the person reaches the button, by
+  // pointer or by keys, not kept up to date: a label is cut or not only to
+  // someone looking at it. A cut label turns the tip on, and the hold that
+  // found it waits for that render, since a tip that is off ignores holds; a
+  // label found to fit again turns it off and takes no hold.
+  const { holdHover, holdFocus } = tip;
+  const tipped = tipText != null;
+  // The holds waiting for that render: the pointer, and the element focus reached.
+  const reached = useRef<{ hover: boolean; focus: Element | null }>({ hover: false, focus: null });
+  const reach = (hover: boolean, focus: Element | null) => {
+    let cut = false;
+    for (const el of labels.current) cut ||= el.scrollWidth > el.clientWidth;
+    if (cut && tipped) {
+      if (hover) holdHover();
+      else if (focus) holdFocus(focus);
+    } else if (cut) {
+      if (hover) reached.current.hover = true;
+      else reached.current.focus = focus;
+      setCutText(textName);
+    } else if (tipped) setCutText(null);
+  };
+  useLayoutEffect(() => {
+    const { hover, focus } = reached.current;
+    reached.current = { hover: false, focus: null };
+    if (!tipped) return;
+    if (hover) holdHover();
+    // Focus a product handler moved on takes no hold.
+    if (focus?.matches(':focus')) holdFocus(focus);
+  }, [holdFocus, holdHover, tipped]);
+
+  const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
+  const wired = tipped ? tip.getTriggerProps({ ...base, 'aria-describedby': props['aria-describedby'] }) : base;
+  // A button with a label reads it on reach and takes its holds from there;
+  // leaving and blurring stay the tip's own once it is on.
   const trigger =
-    tipText != null
-      ? tip.getTriggerProps({
-          ref: refs as Ref<HTMLElement | null>,
-          style,
-          'aria-describedby': props['aria-describedby'],
-          onPointerEnter,
-          onPointerLeave,
-          onFocus,
-          onBlur,
-        })
-      : { ref: refs, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
+    !tooltip || !textName
+      ? wired
+      : {
+          ...wired,
+          onPointerEnter: composeHandlers(onPointerEnter, () => reach(true, null)),
+          onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => reach(false, event.target)),
+          ...(tipped
+            ? null
+            : {
+                onPointerLeave: (event: PointerEvent<HTMLElement>) => {
+                  (onPointerLeave as ((event: PointerEvent<HTMLElement>) => void) | undefined)?.(event);
+                  reached.current.hover = false;
+                },
+                onBlur: (event: FocusEvent<HTMLElement>) => {
+                  (onBlur as ((event: FocusEvent<HTMLElement>) => void) | undefined)?.(event);
+                  reached.current.focus = null;
+                },
+              }),
+        };
 
   // Always mapped: switching between mapped and raw children would re-key
   // and remount them whenever icon-only detection changes.
@@ -311,7 +347,7 @@ function Root({
     return child;
   });
 
-  const own = {
+  const element = {
     ...props,
     ...trigger,
     onClick: handleClick,
@@ -321,10 +357,10 @@ function Root({
     children: rendered,
   };
   const button = render ? (
-    render(own as ButtonRenderProps)
+    render(element as ButtonRenderProps)
   ) : (
     <button
-      {...(own as ButtonHTMLAttributes<HTMLButtonElement>)}
+      {...(element as ButtonHTMLAttributes<HTMLButtonElement>)}
       ref={trigger.ref as Ref<HTMLButtonElement>}
       type={type ?? 'button'}
       aria-pressed={toggle ? pressed : props['aria-pressed']}

@@ -24,6 +24,8 @@ export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 // shows the first one's: querySelector reads in document order.
 const CUT_ATTR = 'data-todae-cut';
 
+type HoverHolds = Pick<TooltipInternalResult, 'holdHover' | 'releaseHover'>;
+
 // The box of a clamp keeps its size as its text is cut, so any attribute in
 // it, on it or around it that product CSS restyles it by counts too.
 const TEXT_CHANGES: DomChangeOptions = { childList: true, subtree: true, characterData: true, attributes: true, ancestors: true };
@@ -62,7 +64,7 @@ function isCut(el: HTMLElement): boolean {
 type ClampTipProps = {
   target: RefObject<HTMLElement | null>;
   anchor: string;
-  hoverRef: RefObject<TooltipInternalResult | null>;
+  hoverRef: RefObject<HoverHolds | null>;
 };
 
 /**
@@ -145,7 +147,7 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
 
 function Root({ lines, tooltip = true, style, onPointerEnter, onPointerLeave, ref, ...props }: TextRootProps) {
   const elRef = useRef<HTMLElement | null>(null);
-  const hoverRef = useRef<TooltipInternalResult | null>(null);
+  const hoverRef = useRef<HoverHolds | null>(null);
   const refs = useComposedRefs(elRef, ref);
   const anchor = `--todae-text-${useDomId()}`;
   const tipped = tooltip && clampLines(lines) !== undefined;

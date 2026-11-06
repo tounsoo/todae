@@ -72,10 +72,16 @@ export type TooltipInternalOptions = {
   delayFocus?: boolean;
 };
 
-/** Hover holds for a trigger that wires its own pointer handlers. */
+/**
+ * Holds for a trigger that wires its own handlers, or that turns its tip on
+ * only once the person reaches it. `holdFocus` holds the tip for focus
+ * already on `target`, unless a pointer put it there, as the trigger's own
+ * focus handler would.
+ */
 export type TooltipInternalResult = {
   holdHover: () => void;
   releaseHover: (relatedTarget: EventTarget | null) => void;
+  holdFocus: (target: Element) => void;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -384,6 +390,12 @@ export function useTooltipInternal<I extends boolean = false>(
     },
     [dispatch, pairContains],
   );
+  const holdFocus = useCallback(
+    (target: Element) => {
+      if (!pointerFocus(target)) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
+    },
+    [dispatch],
+  );
 
   useEffect(
     () => () => {
@@ -461,5 +473,6 @@ export function useTooltipInternal<I extends boolean = false>(
     getTooltipProps,
     holdHover,
     releaseHover,
+    holdFocus,
   };
 }

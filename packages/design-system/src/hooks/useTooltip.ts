@@ -17,6 +17,6 @@ export type {
 export function useTooltip<I extends boolean = false>(
   options: UseTooltipOptions<I> = {} as UseTooltipOptions<I>,
 ): UseTooltipResult<I> {
-  const { holdHover: _holdHover, releaseHover: _releaseHover, ...result } = useTooltipInternal(options);
+  const { holdHover: _holdHover, releaseHover: _releaseHover, holdFocus: _holdFocus, ...result } = useTooltipInternal(options);
   return result;
 }
