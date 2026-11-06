@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useStableComposedRef } from '../internal/props.js';
+import { observeSize } from '../internal/sharedObservers.js';
 import { isReachable } from '../overlay/tabbables.js';
 import { useControlledState } from './useControlledState.js';
 
@@ -313,23 +314,20 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     // A size change catches the group itself being shown or hidden, say by
     // an ancestor opening, which no mutation inside it reports.
     // Only a change between no size and some size matters, not every resize.
+    // One observer for the page, shared with every group and scroller.
     let shown: boolean | null = null;
-    const resize =
-      typeof ResizeObserver === 'undefined'
-        ? null
-        : new ResizeObserver((entries) => {
-            const rect = entries.at(-1)?.contentRect;
-            const now = rect ? rect.width > 0 || rect.height > 0 : true;
-            if (now === shown) return;
-            shown = now;
-            latestSync.current();
-          });
-    resize?.observe(node);
+    const stopResize = observeSize(node, (entry) => {
+      const rect = entry.contentRect;
+      const now = rect.width > 0 || rect.height > 0;
+      if (now === shown) return;
+      shown = now;
+      latestSync.current();
+    });
     observer.current = {
       node,
       disconnect: () => {
         watcher.disconnect();
-        resize?.disconnect();
+        stopResize();
         cancelAnimationFrame(frame);
       },
       flush: () => handle(watcher.takeRecords()),

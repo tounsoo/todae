@@ -28,6 +28,36 @@ const focused = () => document.activeElement?.textContent;
 // Lets DOM changes made outside a render reach the observer first.
 const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
+/**
+ * Swaps in a ResizeObserver that reports only when told, and returns a call
+ * that reports a size for everything observed, as the browser would.
+ */
+function fakeResize() {
+  const observers: { cb: ResizeObserverCallback; targets: Set<Element> }[] = [];
+  globalThis.ResizeObserver = class {
+    own: { cb: ResizeObserverCallback; targets: Set<Element> };
+    constructor(cb: ResizeObserverCallback) {
+      this.own = { cb, targets: new Set() };
+      observers.push(this.own);
+    }
+    observe(target: Element) {
+      this.own.targets.add(target);
+    }
+    unobserve(target: Element) {
+      this.own.targets.delete(target);
+    }
+    disconnect() {
+      this.own.targets.clear();
+    }
+  } as unknown as typeof ResizeObserver;
+  return (width: number, height: number) => {
+    for (const { cb, targets } of observers) {
+      const entries = [...targets].map((target) => ({ target, contentRect: { width, height } }));
+      if (entries.length) cb(entries as unknown as ResizeObserverEntry[], {} as ResizeObserver);
+    }
+  };
+}
+
 describe('useRovingFocus', () => {
   it('keeps one tab stop, on the first enabled item by default', () => {
     render(<Group items={[{ value: 'a', disabled: true }, { value: 'b' }, { value: 'c' }]} />);
@@ -450,16 +480,8 @@ describe('useRovingFocus', () => {
   });
 
   it('re-reads items when the group itself is shown, through its size', () => {
-    const callbacks: ((entries: { contentRect: { width: number; height: number } }[]) => void)[] = [];
     const OriginalRO = globalThis.ResizeObserver;
-    globalThis.ResizeObserver = class {
-      constructor(cb: (entries: { contentRect: { width: number; height: number } }[]) => void) {
-        callbacks.push(cb);
-      }
-      observe() {}
-      disconnect() {}
-      unobserve() {}
-    } as unknown as typeof ResizeObserver;
+    const resize = fakeResize();
     const original = HTMLElement.prototype.checkVisibility;
     let shown = false;
     HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
@@ -467,10 +489,10 @@ describe('useRovingFocus', () => {
     };
     try {
       render(<Group activeValue="banana" />);
-      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 0, height: 0 } }])));
+      act(() => resize(0, 0));
       expect(tabStops()).toEqual(['banana']);
       shown = true;
-      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 200, height: 40 } }])));
+      act(() => resize(200, 40));
       expect(tabStops()).toEqual(['apple']);
     } finally {
       HTMLElement.prototype.checkVisibility = original;
@@ -479,22 +501,14 @@ describe('useRovingFocus', () => {
   });
 
   it('ignores a resize that keeps the group shown', () => {
-    const callbacks: ((entries: { contentRect: { width: number; height: number } }[]) => void)[] = [];
     const OriginalRO = globalThis.ResizeObserver;
-    globalThis.ResizeObserver = class {
-      constructor(cb: (entries: { contentRect: { width: number; height: number } }[]) => void) {
-        callbacks.push(cb);
-      }
-      observe() {}
-      disconnect() {}
-      unobserve() {}
-    } as unknown as typeof ResizeObserver;
+    const resize = fakeResize();
     const query = vi.spyOn(HTMLElement.prototype, 'querySelectorAll');
     try {
       render(<Group />);
-      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 200, height: 40 } }])));
+      act(() => resize(200, 40));
       query.mockClear();
-      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 300, height: 40 } }])));
+      act(() => resize(300, 40));
       expect(query).not.toHaveBeenCalled();
     } finally {
       query.mockRestore();

@@ -16,6 +16,8 @@ import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFoc
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { domSafe, useDomId } from '../internal/domId.js';
+import { cancelLayout, queueLayout, STAGE } from '../internal/layoutBatch.js';
+import { watchScroller } from '../internal/sharedObservers.js';
 import { ScrollEdges } from './scrollEdges.js';
 import styles from './Tabs.module.css';
 
@@ -208,39 +210,45 @@ function List({ arrows = true, children, className, ref, onBlur, onFocus, ...pro
     // that overflows off by the whole scroll range, so there the indicator
     // falls back to each tab's own, which can't slide but sits right.
     const flat = () => list.toggleAttribute('data-flat-indicator', getComputedStyle(list).direction === 'rtl' && list.scrollWidth > list.clientWidth);
-    flat();
-    reveal();
-    let shown: ResizeObserver | undefined;
-    const watch = () => {
-      if (!shown) return;
-      shown.disconnect();
-      shown.observe(list);
-      for (const child of list.children) shown.observe(child);
-    };
-    // Tabs that arrive after the first render, as from loaded data, may hold
-    // the selected one.
-    const added = new MutationObserver(() => {
-      watch();
-      flat();
-      reveal();
-    });
-    added.observe(list, { childList: true });
-    if (typeof ResizeObserver !== 'undefined') {
-      let width = list.clientWidth;
-      // The list's size, and its tabs', which can change what overflows.
-      shown = new ResizeObserver(() => {
-        flat();
-        const was = width;
-        width = list.clientWidth;
-        if (width === 0) done = false;
-        else if (was === 0) reveal();
+    // The list's width when last seen, or null before the first look, and
+    // whether tabs have joined or left since.
+    let width: number | null = null;
+    let arrived = false;
+    // Each look runs with every other tab list's on the page that looks in
+    // this commit or this observer callback, after the scroll arrows have
+    // measured and shown, so the lists share one layout and a selected tab is
+    // revealed clear of the arrows. A look writes only what changed.
+    const key = {};
+    const look = () =>
+      queueLayout(key, STAGE.reveal, {
+        read: () => {
+          flat();
+          const was = width;
+          const joined = arrived;
+          width = list.clientWidth;
+          arrived = false;
+          if (width === 0) done = false;
+          // The first look, a list that was hidden showing, and tabs that
+          // arrive after the first render, as from loaded data, which may
+          // hold the selected one.
+          else if (!was || joined) reveal();
+        },
       });
-      watch();
-    }
+    // The list's size, and its tabs', which can change what overflows, and
+    // tabs coming and going. The scroll arrows watch the same, and share
+    // the watch.
+    const watch = watchScroller(list, {
+      resized: look,
+      children: () => {
+        arrived = true;
+        look();
+      },
+    });
+    look();
     return () => {
       cancelAnimationFrame(frame);
-      added.disconnect();
-      shown?.disconnect();
+      cancelLayout(key);
+      watch.stop();
       list.removeAttribute('data-flat-indicator');
     };
   }, [horizontal, ctx.baseId, ctx.value]);
