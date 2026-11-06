@@ -45,6 +45,18 @@ describe('the benchmark page', () => {
     }
   });
 
+  it("counts Chromium's resize loop report instead of failing the run", async () => {
+    const bench = window.__bench!;
+    await bench.prepare('menu-closed', 3);
+    const run = bench.iterate();
+    // Chromium dispatches it on window, with no error object, during a frame of the run.
+    window.dispatchEvent(new ErrorEvent('error', { message: 'ResizeObserver loop completed with undelivered notifications.' }));
+    const sample = await run;
+    expect(sample.resizeObserverLoops).toBe(1);
+    expect(sample.nodes).toBeGreaterThan(0);
+    expect((await bench.iterate()).resizeObserverLoops).toBe(0);
+  });
+
   it('counts listeners and observers that a case leaves attached', async () => {
     const probe = window.__probe!;
     const before = probe.snapshot();

@@ -730,6 +730,49 @@ describe('scroll edge arrows', () => {
       }
     });
 
+    it('open, and open again, without resizing the menu from a resize callback', async () => {
+      // A resize callback that resizes what it observes makes the browser lay
+      // the frame out again and report a resize loop on window, with no error
+      // object, so nothing else fails on it.
+      const loops: string[] = [];
+      const onError = (event: ErrorEvent) => {
+        if (event.message.startsWith('ResizeObserver loop')) loops.push(event.message);
+      };
+      window.addEventListener('error', onError);
+      try {
+        // A short menu, sized by its items: the gap the rail takes back
+        // changes its height, where a long one's max size holds it still.
+        render(
+          <Menu.Root>
+            <Menu.Trigger variant="secondary">Fonts</Menu.Trigger>
+            <Menu.Content data-testid="menu">
+              <Menu.Item>Serif</Menu.Item>
+              <Menu.Item>Sans</Menu.Item>
+              <Menu.Item>Mono</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>,
+        );
+        const trigger = screen.getByRole('button', { name: 'Fonts' });
+        for (let open = 0; open < 2; open++) {
+          await userEvent.click(trigger);
+          const menu = screen.getByTestId('menu');
+          await waitFor(() => expect(menu.matches(':popover-open')).toBe(true));
+          await frames(3);
+          await settled();
+          // The rail takes back the gap that follows it, so the first item sits at the padding.
+          const pad = Number.parseFloat(getComputedStyle(menu).paddingTop);
+          const first = screen.getAllByRole('menuitem')[0]!;
+          expect(first.getBoundingClientRect().top - menu.getBoundingClientRect().top - menu.clientTop).toBeCloseTo(pad, 0);
+          await userEvent.keyboard('{Escape}');
+          // Hidden again, so the next open shows it from display: none.
+          await waitFor(() => expect(menu.matches(':popover-open')).toBe(false));
+        }
+        expect(loops).toEqual([]);
+      } finally {
+        window.removeEventListener('error', onError);
+      }
+    });
+
     it('move a row that takes keyboard focus under an arrow clear of it, even where the browser leaves it', async () => {
       render(<Long />);
       await userEvent.click(screen.getByRole('button', { name: 'Fonts' }));
