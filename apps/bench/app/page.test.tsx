@@ -55,6 +55,23 @@ describe('the benchmark page', () => {
     }
   });
 
+  it("moves focus with the roving focus case's arrow key", async () => {
+    // Focusing the first item alone renders too, so check where the arrow key left focus.
+    // Imported here, since React must load after the probe.
+    const { flushSync } = await import('react-dom');
+    const { createRoot } = await import('react-dom/client');
+    const { SCENARIOS } = await import('./scenarios.tsx');
+    const scenario = SCENARIOS.find((entry) => entry.id === 'use-roving-focus')!;
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = createRoot(host);
+    flushSync(() => root.render(<scenario.Case copies={2} tick={0} />));
+    flushSync(() => scenario.interact!(host));
+    expect(document.activeElement?.textContent).toBe('Italic');
+    flushSync(() => root.unmount());
+    host.remove();
+  });
+
   it("counts Chromium's resize loop report instead of failing the run", async () => {
     const bench = window.__bench!;
     await bench.prepare('menu-closed', 3);

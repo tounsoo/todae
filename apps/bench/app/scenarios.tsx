@@ -120,7 +120,7 @@ const PLANS: ComboboxOption[] = [
   { value: 'enterprise', label: 'Enterprise' },
 ];
 
-/** A closed single-select combobox, wired the way the useCombobox docs wire it. */
+/** A closed single-select combobox with Field, Popover and OptionList, and a plain label. */
 function ComboboxHookCase({ index, tick }: { index: number; tick: number }) {
   const cb = useCombobox({ options: PLANS, presentation: 'popover' });
   return (
