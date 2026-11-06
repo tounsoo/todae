@@ -346,6 +346,70 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Very long archive label');
   });
 
+  it('measures again when new label text overflows a box that kept its size', () => {
+    const { rerender } = render(<Button.Root>Save</Button.Root>);
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(<Button.Root>Save every archived thread</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+  });
+
+  it('measures again when a variant change cuts the label', () => {
+    const { rerender } = render(<Button.Root>Save draft</Button.Root>);
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(<Button.Root variant="secondary">Save draft</Button.Root>);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save draft' }));
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
+  });
+
+  it('builds no observer and reads no layout when a parent renders it again unchanged', () => {
+    const made = vi.fn();
+    const StubResizeObserver = globalThis.ResizeObserver;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class extends StubResizeObserver {
+        constructor(callback: ResizeObserverCallback) {
+          super(callback);
+          made('resize');
+        }
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    const page = (n: number) => (
+      <div data-n={n}>
+        <Button.Root>
+          <Button.Icon>+</Button.Icon>
+          Save
+        </Button.Root>
+      </div>
+    );
+    const { rerender } = render(page(0));
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 0);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, get: reads });
+    made.mockClear();
+    rerender(page(1));
+    expect(made).not.toHaveBeenCalled();
+    expect(reads).not.toHaveBeenCalled();
+  });
+
   it('opts out with tooltip={false}', () => {
     render(
       <Button.Root tooltip={false} aria-label="Archive">
@@ -376,7 +440,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js']),
+      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/useDomChange.js']),
     );
   });
 

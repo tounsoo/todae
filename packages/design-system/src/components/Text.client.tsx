@@ -10,6 +10,7 @@ import { useTooltipInternal, type TooltipInternalResult } from '../overlay/toolt
 import { canFocusNow } from '../overlay/tabbables.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from '../internal/domId.js';
+import { useDomChange } from '../internal/useDomChange.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
 import { Tooltip } from './Tooltip.js';
@@ -21,6 +22,14 @@ export type TextRootProps = ServerTextRootProps & { tooltip?: boolean };
 // Marks a cut text that shows a tip, so a focused element that holds several
 // shows the first one's: querySelector reads in document order.
 const CUT_ATTR = 'data-todae-cut';
+
+const TEXT_CHANGES: MutationObserverInit = {
+  childList: true,
+  subtree: true,
+  characterData: true,
+  attributes: true,
+  attributeFilter: ['class', 'style'],
+};
 
 /** The text of `el` as one line. innerText leaves out text that isn't rendered, such as `display: none`; jsdom has no innerText. */
 function fullText(el: HTMLElement): string {
@@ -89,16 +98,14 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
     setText(isCut(el) ? fullText(el) || null : null);
   }, [target]);
 
-  // Every render, since a variant, weight or lines change can cut the text
-  // without changing its box.
-  useLayoutEffect(check);
+  // A child can change the text from its own state without Text rendering
+  // again, and a variant, weight or lines change can cut the text without
+  // changing its box.
+  useDomChange(target, check, TEXT_CHANGES);
 
   useLayoutEffect(() => {
     const el = target.current;
     if (!el) return;
-    // A child can change the text from its own state without Text rendering again.
-    const mutations = typeof MutationObserver === 'undefined' ? null : new MutationObserver(check);
-    mutations?.observe(el, { childList: true, subtree: true, characterData: true });
     const resizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check);
     resizes?.observe(el);
     // A web font that loads late changes the text's width, not the box of a
@@ -107,7 +114,6 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
     const fonts = 'fonts' in doc ? doc.fonts : null;
     fonts?.addEventListener('loadingdone', check);
     return () => {
-      mutations?.disconnect();
       resizes?.disconnect();
       fonts?.removeEventListener('loadingdone', check);
     };

@@ -8,7 +8,10 @@ import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs, type TextRootProps } from './Text.js';
 import styles from './Text.module.css';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 function classesOf(el: Element) {
   return [...el.classList];
@@ -173,5 +176,65 @@ describe('Text from the main entry', () => {
       </ClientText.Root>,
     );
     expect(el.style.getPropertyValue('anchor-name')).toBe('');
+  });
+
+  it('measures a clamped text again when a weight change cuts it without changing its box', () => {
+    const { rerender } = render(
+      <ClientText.Root lines={1} data-testid="t">
+        Quarterly revenue report
+      </ClientText.Root>,
+    );
+    const el = screen.getByTestId('t');
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    rerender(
+      <ClientText.Root lines={1} weight="bold" data-testid="t">
+        Quarterly revenue report
+      </ClientText.Root>,
+    );
+    expect(el.hasAttribute('data-todae-cut')).toBe(true);
+  });
+
+  it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {
+    const made = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor() {
+          made('resize');
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    const page = (n: number) => (
+      <div data-n={n}>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>
+    );
+    const { rerender } = render(page(0));
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 0);
+    for (const prop of ['scrollWidth', 'clientWidth', 'scrollHeight', 'clientHeight']) {
+      Object.defineProperty(el, prop, { configurable: true, get: reads });
+    }
+    made.mockClear();
+    rerender(page(1));
+    expect(made).not.toHaveBeenCalled();
+    expect(reads).not.toHaveBeenCalled();
   });
 });
