@@ -7,6 +7,12 @@
  * older build (`--against`). The billing case renders this checkout's docs
  * demo on either build, so it compares todae under today's demo code. A case whose parts that build lacks fails on its
  * own and is reported as failed; the rest still run.
+ *
+ * The `use-` cases measure public hooks that consumers call on their own,
+ * without a todae component that wraps them. They wire each hook to plain
+ * HTML where it allows, so the numbers are the hook's own cost. Hooks that
+ * only reach consumers through a component are measured by that component's
+ * case.
  */
 import {
   Badge,
@@ -16,13 +22,20 @@ import {
   Coachmark,
   Field,
   Menu,
+  OptionList,
   Popover,
   Switch,
   Tabs,
   Text,
   Tooltip,
+  useCombobox,
+  useHighlight,
+  useHotkey,
+  useInlineEdit,
   usePopover,
+  useRovingFocus,
   useTooltip,
+  type ComboboxOption,
 } from '@tounsoo/todae';
 import { useRef, useState, type ReactElement } from 'react';
 import { Preview } from '../../docs/components/playground/Preview.tsx';
@@ -99,6 +112,113 @@ function CoachmarkCase({ index, tick }: { index: number; tick: number }) {
     </>
   );
 }
+
+const PLANS: ComboboxOption[] = [
+  { value: 'free', label: 'Free' },
+  { value: 'team', label: 'Team' },
+  { value: 'business', label: 'Business' },
+  { value: 'enterprise', label: 'Enterprise' },
+];
+
+/** A closed single-select combobox, wired the way the useCombobox docs wire it. */
+function ComboboxHookCase({ index, tick }: { index: number; tick: number }) {
+  const cb = useCombobox({ options: PLANS, presentation: 'popover' });
+  return (
+    <div>
+      <label {...cb.getLabelProps()}>
+        Plan {index} {tick}
+      </label>
+      <Field.Root {...cb.getAnchorProps()}>
+        <Field.TextInput {...cb.getInputProps()} />
+      </Field.Root>
+      <Popover.Root {...cb.getPopoverProps()}>
+        <OptionList.Root {...cb.getListboxProps()}>
+          {cb.items.map((item) => (
+            <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList.Root>
+      </Popover.Root>
+    </div>
+  );
+}
+
+/** A three-button toolbar of plain buttons. */
+function RovingFocusHookCase({ index, tick }: { index: number; tick: number }) {
+  const roving = useRovingFocus({ orientation: 'horizontal' });
+  return (
+    <div role="toolbar" aria-label={`Format ${index}`} {...roving.getContainerProps()}>
+      <button type="button" data-bench-trigger {...roving.getItemProps('bold')}>
+        Bold {tick}
+      </button>
+      <button type="button" {...roving.getItemProps('italic')}>
+        Italic
+      </button>
+      <button type="button" {...roving.getItemProps('underline')}>
+        Underline
+      </button>
+    </div>
+  );
+}
+
+const noop = () => {};
+
+/** A plain button with its own keyboard shortcut. */
+function HotkeyHookCase({ index, tick }: { index: number; tick: number }) {
+  const keys = ['Control+K', 'Meta+K'];
+  useHotkey(keys, noop);
+  return (
+    <button type="button" aria-keyshortcuts={keys.join(' ')}>
+      Search {index} {tick}
+    </button>
+  );
+}
+
+/** A paragraph that highlights a search term, under its own highlight name as the docs ask. */
+function HighlightHookCase({ index, tick }: { index: number; tick: number }) {
+  const found = useHighlight({ name: `bench-search-${index}`, query: 'invoice' });
+  return (
+    <p ref={found.ref} data-matches={found.matches.length}>
+      Invoice {index} for the order of a customer, version {tick}
+    </p>
+  );
+}
+
+/** A name with a Rename button that opens a plain input in place. */
+function InlineEditHookCase({ index, tick }: { index: number; tick: number }) {
+  const [name, setName] = useState(`Report ${index}`);
+  const edit = useInlineEdit({ value: name, onCommit: setName });
+  if (edit.editing) {
+    return (
+      <div {...edit.getGroupProps()}>
+        <input aria-label="Name" {...edit.getInputProps()} />
+        <button type="button" onClick={edit.commit}>
+          Save
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <span>
+        {name} {tick}
+      </span>
+      <button type="button" data-bench-trigger {...edit.getTriggerProps()}>
+        Rename
+      </button>
+    </div>
+  );
+}
+
+const many = (Item: (props: { index: number; tick: number }) => ReactElement) =>
+  function ManyCase({ copies, tick }: CaseProps) {
+    return (
+      <>
+        {range(copies).map((index) => (
+          <Item key={index} index={index} tick={tick} />
+        ))}
+      </>
+    );
+  };
 
 export const SCENARIOS: readonly Scenario[] = [
   {
@@ -277,6 +397,43 @@ export const SCENARIOS: readonly Scenario[] = [
         ))}
       </>
     ),
+  },
+  {
+    id: 'use-combobox',
+    title: 'useCombobox, closed, with Field, Popover and OptionList',
+    Case: many(ComboboxHookCase),
+    // Focus opens the list.
+    interact: (container) => first<HTMLInputElement>(container, 'input').focus(),
+  },
+  {
+    id: 'use-roving-focus',
+    title: 'useRovingFocus on a toolbar of three plain buttons',
+    Case: many(RovingFocusHookCase),
+    interact: (container) => {
+      const item = first<HTMLElement>(container, '[data-bench-trigger]');
+      item.focus();
+      item.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+    },
+  },
+  {
+    id: 'use-hotkey',
+    title: 'useHotkey on a plain button',
+    Case: many(HotkeyHookCase),
+    // A key no hotkey matches, as when someone types on the page: every copy's listener checks it.
+    interact: () => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }));
+    },
+  },
+  {
+    id: 'use-highlight',
+    title: 'useHighlight on a paragraph',
+    Case: many(HighlightHookCase),
+  },
+  {
+    id: 'use-inline-edit',
+    title: 'useInlineEdit on a name with a Rename button',
+    Case: many(InlineEditHookCase),
+    interact: click('[data-bench-trigger]'),
   },
   {
     id: 'billing-page',

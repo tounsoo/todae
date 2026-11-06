@@ -23,7 +23,9 @@ A record path is relative to the folder you run pnpm in, which is the repo root 
 
 ## What it measures
 
-Each case renders 10, 100 and 1,000 copies of one part, except the billing case, which renders the docs playground's billing page once. `html-button` is a plain `<button>`, as a floor to read the rest against. Each case is measured over `--runs` runs (5 by default) after one warmup, and every metric keeps its median, middle half and range.
+Each case renders 10, 100 and 1,000 copies of one part, except the billing case, which renders the docs playground's billing page once. `html-button` is a plain `<button>`, as a floor to read the rest against. Counts are totals for all the copies, so divide by the copies for one instance's share.
+
+The `use-` cases measure public hooks that apps call on their own, with no todae component around them: `useCombobox`, `useRovingFocus`, `useHotkey`, `useHighlight` and `useInlineEdit`. Each copy wires the hook to plain HTML where it can, so the numbers are the hook's own. `useCombobox` takes Field, Popover and OptionList, as its docs wire it. A hook that reaches apps through a component, such as `usePopover` in the Popover case, is measured by that component's case, and so are hooks a component calls inside. `pnpm bench --cases use-` runs only the hook cases. Each case is measured over `--runs` runs (5 by default) after one warmup, and every metric keeps its median, middle half and range.
 
 - **Time, in ms:** mount, update (every copy's label changes) and unmount, each with and without a forced layout, and one interaction, such as opening the first Menu, up to its layout. Chromium's own style, layout and script time on mount. These compare only between records from the same machine type.
 - **Browser counts:** style recalculations and layouts on mount, and how much the JS heap grows on mount, measured after a forced garbage collection on both sides. These compare only within the same Chromium major version.
@@ -63,4 +65,4 @@ A name is lowercased into a safe file and branch name, and a save refuses a name
 
 ## Add a case
 
-Add it to `SCENARIOS` in [`app/scenarios.tsx`](app/scenarios.tsx), using only todae's public exports. `tick` changes on update, so put it in each copy's label. `interact` acts on the first copy. `pnpm --filter bench test` renders every case once in jsdom to catch a broken case before a browser run.
+Add it to `SCENARIOS` in [`app/scenarios.tsx`](app/scenarios.tsx), using only todae's public exports. `tick` changes on update, so put it in each copy's label. `interact` acts on the first copy. A hook case's id starts with `use-`, and it wires the hook to plain HTML where it can. `pnpm --filter bench test` renders every case once in jsdom to catch a broken case before a browser run.

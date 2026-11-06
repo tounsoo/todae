@@ -45,6 +45,16 @@ describe('the benchmark page', () => {
     }
   });
 
+  it("takes each hook case's interaction through the hook", async () => {
+    const bench = window.__bench!;
+    // A case whose interaction misses its hook would time nothing but the event.
+    for (const id of ['use-combobox', 'use-roving-focus', 'use-inline-edit']) {
+      await bench.prepare(id, 3);
+      const sample = await bench.iterate();
+      expect(sample.componentsRenderedOnInteract, id).toBeGreaterThan(0);
+    }
+  });
+
   it("counts Chromium's resize loop report instead of failing the run", async () => {
     const bench = window.__bench!;
     await bench.prepare('menu-closed', 3);
