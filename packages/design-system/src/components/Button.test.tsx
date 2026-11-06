@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
@@ -346,6 +346,92 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Very long archive label');
   });
 
+  it('measures again when new label text overflows a box that kept its size', () => {
+    const { rerender } = render(<Button.Root>Save</Button.Root>);
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(<Button.Root>Save every archived thread</Button.Root>);
+    const button = screen.getByRole('button', { name: 'Save every archived thread' });
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+  });
+
+  it('measures again when a variant change cuts the label', () => {
+    const { rerender } = render(<Button.Root>Save draft</Button.Root>);
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(<Button.Root variant="secondary">Save draft</Button.Root>);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save draft' }));
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
+  });
+
+  it('measures a cut label when tooltip turns on, with no ResizeObserver to report it', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    const { rerender } = render(
+      <Button.Root tooltip={false}>
+        <Button.Icon>+</Button.Icon>
+        Save every archived thread
+      </Button.Root>,
+    );
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    rerender(
+      <Button.Root>
+        <Button.Icon>+</Button.Icon>
+        Save every archived thread
+      </Button.Root>,
+    );
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save every archived thread' }));
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+  });
+
+  it('builds no observer and reads no layout when a parent renders it again unchanged', () => {
+    const made = vi.fn();
+    const StubResizeObserver = globalThis.ResizeObserver;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class extends StubResizeObserver {
+        constructor(callback: ResizeObserverCallback) {
+          super(callback);
+          made('resize');
+        }
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    const page = () => (
+      <div>
+        <Button.Root>
+          <Button.Icon>+</Button.Icon>
+          Save
+        </Button.Root>
+      </div>
+    );
+    const { rerender } = render(page());
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 0);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, get: reads });
+    made.mockClear();
+    rerender(page());
+    expect(made).not.toHaveBeenCalled();
+    expect(reads).not.toHaveBeenCalled();
+  });
+
   it('opts out with tooltip={false}', () => {
     render(
       <Button.Root tooltip={false} aria-label="Archive">
@@ -376,7 +462,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js']),
+      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/useDomChange.js']),
     );
   });
 
@@ -473,5 +559,31 @@ describe('Button toggle writes', () => {
     });
     expect(onPressedChange.mock.calls).toEqual([[true], [false]]);
     expect(button.getAttribute('aria-pressed')).toBe('false');
+  });
+});
+
+describe('Button measure', () => {
+  afterEach(cleanup);
+
+  it('measures once, when it ends, for an animation that writes an inline style inside it each frame', async () => {
+    render(
+      <Button.Root>
+        <span aria-hidden="true" data-testid="spinner" />
+        Save every archived thread
+      </Button.Root>,
+    );
+    const label = screen.getByRole('button').querySelector('span:not([aria-hidden])') as HTMLElement;
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(label, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
+    const spinner = screen.getByTestId('spinner');
+    for (let frame = 0; frame < 10; frame++) {
+      spinner.style.transform = `rotate(${frame * 36}deg)`;
+      await new Promise((done) => requestAnimationFrame(done));
+    }
+    expect(reads).not.toHaveBeenCalled();
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(reads).toHaveBeenCalledTimes(1);
   });
 });

@@ -20,6 +20,7 @@ import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
+import { useDomChange } from '../internal/useDomChange.js';
 
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A
@@ -93,6 +94,14 @@ export type ButtonGroupProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
 const ICON_ATTR = 'data-todae-button-icon';
+
+const BUTTON_CHANGES: MutationObserverInit = {
+  childList: true,
+  subtree: true,
+  characterData: true,
+  attributes: true,
+  attributeFilter: ['class', 'style', 'data-button-variant'],
+};
 
 // Media outside an icon is content too: an <img alt> or a spinner can name or
 // fill the button.
@@ -188,7 +197,6 @@ function Root({
   const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
-  const labelRef = useRef<HTMLSpanElement | null>(null);
   const labelledby = props['aria-labelledby'];
 
   useLayoutEffect(() => {
@@ -216,37 +224,44 @@ function Root({
     );
   }, []);
 
-  useLayoutEffect(readButton);
+  // The labels the overflow tip reads. Only their own resize, or a change to
+  // the button, can cut them.
+  const labels = useRef(new Set<HTMLElement>());
+  const resizes = useRef<ResizeObserver | null>(null);
+  const measure = useCallback(() => {
+    let cut = false;
+    for (const el of labels.current) cut ||= el.scrollWidth > el.clientWidth;
+    setOverflowing(cut);
+  }, []);
+  const labelRef = useCallback(
+    (el: HTMLSpanElement | null) => {
+      if (!el || !tooltip) return;
+      labels.current.add(el);
+      // A new observer reports the label's size once it observes it.
+      if (typeof ResizeObserver === 'undefined') measure();
+      else {
+        resizes.current ??= new ResizeObserver(measure);
+        resizes.current.observe(el);
+      }
+      return () => {
+        labels.current.delete(el);
+        resizes.current?.unobserve(el);
+      };
+    },
+    [measure, tooltip],
+  );
 
   // A child can swap an icon for text from its own state without this
-  // component rendering again.
-  useLayoutEffect(() => {
-    const button = buttonRef.current;
-    if (!button || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(readButton);
-    observer.observe(button, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    return () => observer.disconnect();
-  }, [readButton]);
-
-  useLayoutEffect(() => {
-    const el = labelRef.current;
-    if (!el) {
-      setOverflowing(false);
-      return;
-    }
-    const check = () => {
-      setOverflowing(el.scrollWidth > el.clientWidth);
-    };
-    check();
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [children, iconOnly]);
+  // component rendering again, and a variant or class can cut a label
+  // without changing its box.
+  useDomChange(
+    buttonRef,
+    () => {
+      readButton();
+      measure();
+    },
+    BUTTON_CHANGES,
+  );
 
   const ariaLabel = typeof props['aria-label'] === 'string' ? props['aria-label'].trim() : '';
   const iconName = iconOnly ? ariaLabel || (typeof labelledbyText === 'string' ? labelledbyText : null) : null;
