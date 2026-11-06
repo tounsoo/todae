@@ -3,6 +3,7 @@ import { SurfaceChildren, useSurfaceClosedSignal } from '../overlay/surfaceConte
 import { usePopoverSync } from '../overlay/usePopoverSync.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { revealRing } from '../internal/revealRing.js';
+import { useOpenedOnce } from '../internal/useOpenedOnce.js';
 import type { PopoverWire } from '../overlay/popoverWire.js';
 import { cx } from '../internal/cx.js';
 import { ScrollEdges } from './scrollEdges.js';
@@ -84,6 +85,11 @@ export function PopoverSurface({
   // holds keeps its place and focus has somewhere to land.
   const [closedListeners, closed] = useSurfaceClosedSignal();
   usePopoverSync(localRef, open, { onExited: closed });
+  // What it holds mounts on its first open and stays after it, as a Menu's
+  // items do: the popover element itself is always there, so ids that point
+  // at it resolve, but a page of closed comboboxes, chip lists and coachmarks
+  // renders none of their content until one opens.
+  const opened = useOpenedOnce(open);
   return createElement(
     as,
     {
@@ -102,7 +108,7 @@ export function PopoverSurface({
       'aria-labelledby': role ? ariaLabelledby : undefined,
     },
     arrows && <ScrollEdges axis="block" active={open} />,
-    <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>,
+    <SurfaceChildren listeners={closedListeners}>{opened ? children : null}</SurfaceChildren>,
   );
 }
 

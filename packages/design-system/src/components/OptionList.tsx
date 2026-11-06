@@ -19,6 +19,7 @@ import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
+import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './OptionList.module.css';
 
@@ -282,12 +283,32 @@ function OptionListRoot(props: OptionListRootProps) {
   // view: scroll its nearest scroll box, never the page. Reveal when the
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
   // highlight; never on mount. A requested option that has not rendered yet,
-  // such as an async result, is revealed when it renders enabled.
+  // such as an async result, is revealed when it renders enabled. In a popover
+  // or dialog that is not shown yet, so is one requested as the list mounts,
+  // since that list mounts as its surface first opens; any other mount,
+  // inline or in a surface already open, scrolls nothing.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
   const pending = useRef<string | null>(null);
+  const mounted = useRef(false);
   // Every commit, as the requested option can render later than the request.
   useLayoutEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      const list = listRef.current;
+      // Its surface shows after it mounts, in the same commit: a list that
+      // mounts later inside one already open is inline, like any other.
+      const surface = list?.closest<HTMLElement>('[popover], dialog');
+      // One still fading out is opening again too. A surface the owner shows
+      // itself before the list renders counts as already shown.
+      const shown =
+        surface != null &&
+        !surface.hasAttribute('data-todae-exiting') &&
+        (isPopoverOpen(surface) || (surface instanceof HTMLDialogElement && surface.open));
+      const opening = surface != null && !shown;
+      if (target && list && opening && !findOption(list, optionDomId(listId, target))) pending.current = target;
+      return;
+    }
     const changed = lastTarget.current !== target;
     if (changed) {
       lastTarget.current = target;

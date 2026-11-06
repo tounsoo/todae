@@ -96,6 +96,8 @@ beforeEach(() => {
         display: 'inline',
         visibility: 'visible',
         content: 'none',
+        scale: 'none',
+        transformOrigin: '0px 0px',
         getPropertyValue(name: string) {
           if (name === 'min-width') return minWidth;
           if (name === 'column-gap' || name === 'gap') return '8px';
@@ -1029,6 +1031,8 @@ describe('chip list recipe', () => {
     expect([...list.querySelectorAll<HTMLElement>('[role="listitem"]')].some((item) => item.style.maxWidth)).toBe(
       false,
     );
+    // The panel holds its chips from its first open on.
+    fireEvent.click(list.querySelector<HTMLElement>('button[aria-haspopup]')!);
     const dialog = screen.getByRole('dialog', { name: '2 more tags' });
     expect(dialog.textContent).toContain('Beta');
     expect(removes(dialog).map((button) => button.getAttribute('aria-label'))).toContain('Remove Beta');

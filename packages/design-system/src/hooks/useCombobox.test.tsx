@@ -151,6 +151,19 @@ describe('useCombobox', () => {
     expect(input.getAttribute('aria-haspopup')).toBeNull();
   });
 
+  it('mounts no listbox until the popover first opens', () => {
+    render(<SingleBox />);
+    const input = screen.getByRole('combobox');
+    // The popover is there, so its id resolves, but a closed list renders no options.
+    expect(screen.queryByRole('listbox', { hidden: true })).toBeNull();
+    expect(screen.queryAllByRole('option', { hidden: true })).toHaveLength(0);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.focus(input);
+    const list = screen.getByRole('listbox');
+    expect(input.getAttribute('aria-controls')).toBe(list.id);
+    expect(screen.getAllByRole('option')).toHaveLength(OPTIONS.length);
+  });
+
   it('closes on an outside press and stays closed', () => {
     render(<SingleBox defaultOpen />);
     const input = screen.getByRole('combobox');

@@ -6,8 +6,8 @@ function containerOf(node: Node): Element | ShadowRoot | null {
   return parent instanceof Element || parent instanceof ShadowRoot ? parent : null;
 }
 
-// Whether `outer` is or holds `inner`, through shadow roots too.
-function holds(outer: Element, inner: Element): boolean {
+/** Whether `outer` is or holds `inner`, through shadow roots too. */
+export function holds(outer: Element, inner: Element): boolean {
   for (let at: Node | null = inner; at; at = at instanceof ShadowRoot ? at.host : at.parentNode) {
     if (at === outer) return true;
   }
@@ -39,7 +39,9 @@ export function inertOutside(keep: () => readonly Element[]): () => void {
   const marked = new Set<Element>();
   const mark = (el: Element, now: readonly Element[]) => {
     if (el.hasAttribute('inert') || el.hasAttribute('popover') || el.hasAttribute(GUEST_LAYER_ATTRIBUTE)) return;
-    if (now.some((kept) => holds(el, kept))) return;
+    // What a kept element holds stays usable, such as the rest of a kept
+    // popover that another kept element, like a coachmark inside it, sits in.
+    if (now.some((kept) => holds(el, kept) || holds(kept, el))) return;
     el.setAttribute('inert', '');
     marked.add(el);
   };

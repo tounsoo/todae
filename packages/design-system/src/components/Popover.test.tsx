@@ -97,6 +97,35 @@ describe('Popover', () => {
     expect(document.querySelector('[popover="manual"]')).not.toBeNull();
   });
 
+  it('mounts what it holds on the first open and keeps it after it closes', () => {
+    function Uncontrolled({ open }: { open: boolean }) {
+      const popover = usePopover({ open, onOpenChange: () => {} });
+      return (
+        <>
+          <button type="button" {...popover.getTriggerProps()}>
+            Filters
+          </button>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters" arrows={false}>
+            <input aria-label="Search" defaultValue="" />
+          </Popover.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Uncontrolled open={false} />);
+    const surface = screen.getByLabelText('Filters', { selector: '[popover]' });
+    // Closed and never opened: the surface is there, so its id resolves, and it holds nothing.
+    expect(document.getElementById(surface.id)).toBe(surface);
+    expect(surface.childElementCount).toBe(0);
+    rerender(<Uncontrolled open />);
+    const search = screen.getByLabelText<HTMLInputElement>('Search');
+    fireEvent.change(search, { target: { value: 'paid' } });
+    rerender(<Uncontrolled open={false} />);
+    // Kept while closed, so what was typed holds for the next open.
+    expect(screen.getByLabelText<HTMLInputElement>('Search', { selector: 'input' }).value).toBe('paid');
+    rerender(<Uncontrolled open />);
+    expect(screen.getByLabelText<HTMLInputElement>('Search')).toBe(search);
+  });
+
   it('anchors in CSS with the popover.offset gap, at the inline start', () => {
     expect(css).not.toMatch(/--todae-popover-offset:/);
     expect(css).toMatch(/top:\s*calc\(anchor\(bottom\) \+ var\(--todae-popover-offset\)\)/);
@@ -160,7 +189,7 @@ describe('Popover', () => {
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync.js', '../overlay/popoverWire.js', './Popover.module.css', '../internal/props.js', '../internal/revealRing.js', '../internal/cx.js', '../overlay/surfaceContext.js', './scrollEdges.js']),
+      new Set(['react', '../overlay/usePopoverSync.js', '../overlay/popoverWire.js', './Popover.module.css', '../internal/props.js', '../internal/revealRing.js', '../internal/useOpenedOnce.js', '../internal/cx.js', '../overlay/surfaceContext.js', './scrollEdges.js']),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');

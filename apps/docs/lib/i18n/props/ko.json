@@ -1777,8 +1777,8 @@
   },
   "Popover.Root": {
     "children": {
-      "en": "Popover contents.",
-      "ko": "Popover 내용."
+      "en": "Popover contents. Mounted on the first open, and kept after it.",
+      "ko": "Popover 내용. 처음 열릴 때 마운트되고, 그 뒤로도 유지됩니다."
     },
     "className": {
       "en": "Class name for the surface.",

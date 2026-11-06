@@ -543,7 +543,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     () => ({
       role: 'combobox' as const,
       'aria-expanded': open,
-      'aria-controls': ids.listbox,
+      // The listbox mounts as its popover, sheet or dialog first opens, so it is named only while open.
+      'aria-controls': open ? ids.listbox : undefined,
       'aria-activedescendant': open ? activeId ?? undefined : undefined,
       'aria-autocomplete': 'list' as const,
       autoComplete: 'off',
@@ -571,7 +572,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         disabled: options.disabled || props.disabled,
         'aria-haspopup': 'dialog',
         'aria-expanded': open,
-        'aria-controls': ids.listbox,
+        'aria-controls': open ? ids.listbox : undefined,
         onClick: composeHandlers(props.onClick, () => setOpen(!open, 'trigger')),
       };
     },
