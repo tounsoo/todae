@@ -4,7 +4,7 @@ import { cdp, server, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 import { blurBeforeCleanup } from '../test/focus.js';
 
@@ -77,6 +77,36 @@ function Quantity({
 }
 
 const input = () => screen.getByRole('spinbutton') as HTMLInputElement;
+
+// Every key, edit and selection change the input saw, with the text, the selection and the focus after it, so a failure says where the typing went.
+function keyTrace(el: HTMLInputElement) {
+  const log: string[] = [];
+  const start = performance.now();
+  const note = (event: Event) => {
+    const detail =
+      event instanceof KeyboardEvent
+        ? `${event.ctrlKey ? 'Ctrl+' : ''}${event.key}${event.repeat ? ' repeat' : ''}${event.defaultPrevented ? ' prevented' : ''}`
+        : event instanceof InputEvent
+          ? `${event.inputType} ${JSON.stringify(event.data)}`
+          : '';
+    const focus = document.activeElement === el ? '' : ` focus on ${document.activeElement?.tagName}`;
+    log.push(`${Math.round(performance.now() - start)}ms ${event.type} ${detail}: "${el.value}" ${el.selectionStart}..${el.selectionEnd}${focus}`);
+  };
+  for (const type of ['keydown', 'keypress', 'keyup', 'beforeinput', 'input', 'select', 'selectionchange', 'focus', 'blur']) el.addEventListener(type, note, true);
+  // Focus moving anywhere in the page, or leaving the frame, which a stray focus() or Firefox's form popup would show.
+  const elsewhere = (event: Event) => {
+    const target = event.target instanceof Element ? `${event.target.tagName}${event.target.hasAttribute('data-todae-value-input') ? ' value input' : ''}` : event.target === window ? 'window' : 'document';
+    log.push(`${Math.round(performance.now() - start)}ms page ${event.type} ${target}: "${el.value}" ${el.selectionStart}..${el.selectionEnd}`);
+  };
+  for (const type of ['focusin', 'focusout']) document.addEventListener(type, elsewhere, true);
+  for (const type of ['focus', 'blur']) window.addEventListener(type, elsewhere);
+  onTestFinished(() => {
+    for (const type of ['focusin', 'focusout']) document.removeEventListener(type, elsewhere, true);
+    for (const type of ['focus', 'blur']) window.removeEventListener(type, elsewhere);
+  });
+  log.push(`0ms start: focus on ${document.activeElement?.tagName}, frame ${document.hasFocus() ? 'focused' : 'not focused'}`);
+  return () => `\n${log.join('\n')}\n`;
+}
 const valueOf = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!.value;
 
 describe('Field.NumberInput in a browser', () => {
@@ -206,19 +236,21 @@ describe('Field.NumberInput in a browser', () => {
     await waitFor(() => expect(document.activeElement).toBe(input()));
   });
 
+  // Every value check carries the trace, so a failure in Firefox, where 37 once committed as 75, says where the typing went.
   it('steps with the arrows and the page keys, and snaps and clamps a typed number', async () => {
     render(<Quantity min={0} max={100} step={5} />);
+    const trace = keyTrace(input());
     await userEvent.click(input());
     await userEvent.keyboard('{ArrowUp}');
-    expect(input().value).toBe('0');
+    expect(input().value, trace()).toBe('0');
     await userEvent.keyboard('{ArrowUp}{ArrowUp}');
-    expect(input().value).toBe('10');
+    expect(input().value, trace()).toBe('10');
     await userEvent.keyboard('{ArrowDown}');
-    expect(input().value).toBe('5');
+    expect(input().value, trace()).toBe('5');
     await userEvent.keyboard('{PageUp}');
-    expect(input().value).toBe('55');
+    expect(input().value, trace()).toBe('55');
     await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
-    expect(input().value).toBe('35');
+    expect(input().value, trace()).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
   });
 

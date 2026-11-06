@@ -46,17 +46,27 @@ function measure(trigger: HTMLElement): Frame | null {
   return { dx: (t.left + t.right) / 2 - (a.left + a.right) / 2, gap: above ? a.top - t.bottom : t.top - a.bottom, x: a.left, y: a.top };
 }
 
-/** Every frame's offset, from now until no transition is left running. */
-async function sampleMotion(trigger: () => HTMLElement | null): Promise<Frame[]> {
+/**
+ * Every frame's offset, from now until no transition is left running. An
+ * overlay's enter starts two frames after it shows, and then only once React
+ * renders data-entered, which a busy runner can put off by another frame. So
+ * the frames before any motion runs don't count as quiet: they would end the
+ * sampling before the motion starts. Pass `waitForStart: false` where the
+ * motion is already over.
+ */
+async function sampleMotion(trigger: () => HTMLElement | null, { waitForStart = true } = {}): Promise<Frame[]> {
   const frames: Frame[] = [];
   const start = performance.now();
+  let started = !waitForStart;
   let quiet = 0;
   while (performance.now() - start < 2000) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
     const el = trigger();
     const frame = el ? measure(el) : null;
     if (frame) frames.push(frame);
-    quiet = document.getAnimations().length === 0 ? quiet + 1 : 0;
+    const running = document.getAnimations().length > 0;
+    started ||= running;
+    quiet = started && !running ? quiet + 1 : 0;
     if (quiet > 2) break;
   }
   return frames;
@@ -190,7 +200,7 @@ describe('A tip in a popover that grows open', () => {
     await waitFor(() => expect(tipOf(pin()!)).not.toBeNull(), { timeout: 3000 });
     expect(scaling(content)).toBe(false);
     expect(getComputedStyle(content).scale).toBe('none');
-    const frames = await sampleMotion(pin);
+    const frames = await sampleMotion(pin, { waitForStart: false });
     expect(frames.length).toBeGreaterThanOrEqual(1);
     for (const f of frames) expect(Math.abs(f.dx)).toBeLessThanOrEqual(1);
   });

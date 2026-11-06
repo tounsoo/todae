@@ -40,7 +40,8 @@ jobs:
     # The same image as Fernway, so Playwright's Chromium installs. A record names the machine type,
     # and timings compare only between records from the same one.
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # Every public part has a case, and --against runs each one on both builds.
+    timeout-minutes: 180
     outputs:
       name: ${{ steps.run.outputs.name }}
     steps:
