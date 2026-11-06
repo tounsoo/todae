@@ -228,7 +228,9 @@ describe('Coachmark on the trigger of a combobox that opens in a dialog', () => 
     const coachmark = await screen.findByRole('dialog', { name: 'Pick a framework' });
     await waitFor(() => expect(coachmark.matches(':popover-open')).toBe(true));
     await settle();
-    await userEvent.click(screen.getByRole('button', { name: /Choose/ }));
+    // The trigger is named by its label and itself; testing-library's name for it
+    // drops its own text in real browsers, so find it by that text.
+    await userEvent.click(screen.getByText('Choose'));
     const search = await screen.findByRole('combobox');
     await waitFor(() => expect(document.activeElement).toBe(search));
     await userEvent.keyboard('vu');
