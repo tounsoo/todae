@@ -1,5 +1,7 @@
-// Fails when a workflow or composite action uses a remote action that is not pinned to a full commit SHA.
-// A local action (./...) passes, and a docker:// image passes only when pinned to a sha256 digest.
+// Fails when a workflow or composite action uses a remote action that is not pinned to a full commit SHA,
+// or a job runs an image that is not pinned to a digest.
+// A local action (./...) passes, and a docker:// image passes only when pinned to a sha256 digest. So does the
+// image of a job's container or service, because a tag can be pushed again with other contents.
 // With no arguments it scans .github/workflows and .github/actions. Each argument is a file to scan instead.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -14,7 +16,12 @@ export function isPinned(ref) {
   return /^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/.test(ref);
 }
 
-// Each `uses:` a workflow job, a workflow step or a composite action step names, with its line.
+export function isPinnedImage(ref) {
+  return /^[^\s@$]+@sha256:[0-9a-f]{64}$/.test(ref);
+}
+
+// Each `uses:` a workflow job, a workflow step or a composite action step names, and each job container or
+// service image, with its line.
 export function findUnpinned(text) {
   const lineCounter = new LineCounter();
   const docs = parseAllDocuments(text, { lineCounter });
@@ -40,11 +47,29 @@ export function findUnpinned(text) {
       if (!isSeq(list)) return;
       for (const step of list.items) check(map(step));
     };
+    // A container or service is its image, or a map whose image key names it.
+    const image = (node) => {
+      const value = deref(node);
+      const owner = map(value);
+      const named = owner ? deref(owner.get('image', true)) : value;
+      const ref = isScalar(named) ? String(named.value ?? '') : String(named ?? '');
+      if (isPinnedImage(ref)) return;
+      const offset = (named?.range ?? value?.range ?? [0])[0];
+      hits.push({ line: lineCounter.linePos(offset).line, ref });
+    };
     const top = map(doc.contents);
     const jobs = map(top?.get('jobs', true));
     for (const job of jobs?.items ?? []) {
-      check(map(job.value));
-      steps(map(job.value));
+      const body = map(job.value);
+      check(body);
+      steps(body);
+      if (body?.has('container')) image(body.get('container', true));
+      if (body?.has('services')) {
+        // An expression in place of the services map would hide its images, so anything but a map fails.
+        const services = map(body.get('services', true));
+        if (services) for (const service of services.items) image(service.value);
+        else image(body.get('services', true));
+      }
     }
     steps(map(top?.get('runs', true)));
   }
@@ -89,7 +114,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (lines.length > 0) {
     for (const line of lines) console.error(line);
     console.error(
-      'pinned-actions: pin each action above to a full commit SHA, with its version in a comment, such as actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0. Dependabot keeps the pins current.',
+      'pinned-actions: pin each action above to a full commit SHA, with its version in a comment, such as actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0. Dependabot keeps the pins current. Pin each container or service image to its digest, such as alpine:3.20@sha256:<64 hex digits>.',
     );
     process.exit(1);
   }
