@@ -20,8 +20,10 @@ function ringOf(el: HTMLElement): { ringed: HTMLElement; box: DOMRect; room: num
  * cuts (not a ring drawn on a sibling, such as a Checkbox indicator): a container whose overflow
  * is not visible, on an edge the ring crosses while the control itself is
  * inside that edge. A control the container has scrolled out of view does not
- * count. The ring can sit on an ancestor wider than the control, such as a
- * Field shell, so whether the control is in view is judged by its own box.
+ * count, and neither does that edge for any container further out, since the
+ * nearer one already hides it. The ring can sit on an ancestor wider than the
+ * control, such as a Field shell, so whether the control is in view is judged
+ * by its own box.
  */
 export function clippedRings(root: ParentNode = document): string[] {
   const cut: string[] = [];
@@ -35,6 +37,9 @@ export function clippedRings(root: ParentNode = document): string[] {
     if (ring && ring.box.width > 0 && ring.box.height > 0) {
       const { ringed, box, room } = ring;
       const own = el.getBoundingClientRect();
+      // Edges a nearer container has scrolled the control past. Its ring there is already hidden,
+      // so a container further out, such as the popover around a scrolled list, can't cut it.
+      const hidden = { left: false, right: false, top: false, bottom: false };
       // Only containers around the ringed element clip its outline.
       for (let c = ringed.parentElement; c && c !== document.documentElement; c = c.parentElement) {
         const style = getComputedStyle(c);
@@ -47,12 +52,16 @@ export function clippedRings(root: ParentNode = document): string[] {
         const edges: string[] = [];
         // Within half a pixel, for layouts that land on fractions.
         if (style.overflowX !== 'visible') {
-          if (own.left >= left - 0.5 && box.left - room < left - 0.5) edges.push('left');
-          if (own.right <= right + 0.5 && box.right + room > right + 0.5) edges.push('right');
+          if (!hidden.left && own.left >= left - 0.5 && box.left - room < left - 0.5) edges.push('left');
+          if (!hidden.right && own.right <= right + 0.5 && box.right + room > right + 0.5) edges.push('right');
+          hidden.left ||= own.left < left - 0.5;
+          hidden.right ||= own.right > right + 0.5;
         }
         if (style.overflowY !== 'visible') {
-          if (own.top >= top - 0.5 && box.top - room < top - 0.5) edges.push('top');
-          if (own.bottom <= bottom + 0.5 && box.bottom + room > bottom + 0.5) edges.push('bottom');
+          if (!hidden.top && own.top >= top - 0.5 && box.top - room < top - 0.5) edges.push('top');
+          if (!hidden.bottom && own.bottom <= bottom + 0.5 && box.bottom + room > bottom + 0.5) edges.push('bottom');
+          hidden.top ||= own.top < top - 0.5;
+          hidden.bottom ||= own.bottom > bottom + 0.5;
         }
         if (edges.length) cut.push(`${name(el)} in ${name(c)}: ${edges.join(', ')}`);
       }

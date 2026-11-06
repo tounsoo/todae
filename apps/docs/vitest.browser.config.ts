@@ -30,6 +30,8 @@ export default defineConfig({
   css: { modules: { generateScopedName: 'todae_[local]_[hash:hex:6]' } },
   test: {
     env: testLocaleEnv,
+    // Every test sees the same now, so a picker that opens at today or the next time looks the same whenever CI runs.
+    setupFiles: ['./test/fixedClock.ts'],
     include: ['**/*.browser.test.tsx'],
     exclude: ['**/node_modules/**', '.next/**'],
     browser: {
