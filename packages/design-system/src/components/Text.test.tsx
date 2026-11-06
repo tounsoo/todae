@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createElement } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -395,6 +395,65 @@ describe('Text from the main entry', () => {
     await waitFor(() => expect(reads).toHaveBeenCalled());
     await new Promise((done) => setTimeout(done, 50));
     expect(reads).toHaveBeenCalledTimes(1);
+  });
+
+  it('measures a change inside a clamped text while an animation around it never ends', async () => {
+    function Tail() {
+      const [long, setLong] = useState(false);
+      useEffect(() => {
+        const id = setTimeout(() => setLong(true), 30);
+        return () => clearTimeout(id);
+      }, []);
+      return <span>{long ? ' with a much longer tail' : ''}</span>;
+    }
+    render(
+      <div data-testid="pulse">
+        <ClientText.Root lines={1} data-testid="t">
+          Report
+          <Tail />
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.textContent!.length > 10 ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    const pulse = screen.getByTestId('pulse');
+    let pulsing = true;
+    const beat = (step: number) => {
+      pulse.style.opacity = String(step % 2);
+      if (pulsing) requestAnimationFrame(() => beat(step + 1));
+    };
+    beat(0);
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    pulsing = false;
+  });
+
+  it('measures again after a frame that fake timers dropped', async () => {
+    function Tail({ long }: { long: boolean }) {
+      return <span>{long ? ' with a much longer tail' : ''}</span>;
+    }
+    const { rerender } = render(<span />);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'requestAnimationFrame', 'Date'] });
+    const first = render(
+      <ClientText.Root lines={1}>
+        Report <span data-testid="a" />
+      </ClientText.Root>,
+    );
+    first.getByTestId('a').setAttribute('data-x', '1');
+    await Promise.resolve();
+    vi.useRealTimers();
+    first.unmount();
+    rerender(
+      <ClientText.Root lines={1} data-testid="t">
+        Report
+        <Tail long={false} />
+      </ClientText.Root>,
+    );
+    const el = screen.getByTestId('t');
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (el.textContent!.length > 10 ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    el.querySelector('span')!.textContent = ' with a much longer tail';
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
   it('measures a clamped text portaled into an iframe again when a class around it cuts it', async () => {

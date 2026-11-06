@@ -27,24 +27,41 @@ const QUIET = new Set([
 
 const isLoud = (record: MutationRecord) => record.type !== 'attributes' || !QUIET.has(record.attributeName ?? '');
 
-const nextFrame = (run: () => void): void => {
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
-  else setTimeout(run, 16);
+// Asks for one frame, and returns the scheduler it asked, so a frame that
+// test timers swapped out can be told from one still to come.
+const nextFrame = (run: () => void): unknown => {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(run);
+    return requestAnimationFrame;
+  }
+  setTimeout(run, 16);
+  return setTimeout;
 };
+const scheduler = () => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : setTimeout);
 
 // A change that no commit made waits until its element has gone a frame
 // without another, so an animation that writes an attribute or inline style
 // each frame costs one measure when it ends, and a burst costs one. Each
 // element waits on its own changes, so an animation elsewhere holds up nothing.
+// One that never ends, such as a looping pulse or a ticking clock, is measured
+// every `MAX_WAIT` frames, so a change under it is still seen.
+const MAX_WAIT = 12;
 let changedNow = new Set<() => void>();
-let waiting = new Set<() => void>();
-let scheduled = false;
+// Each waiting run, and the frames it has waited.
+let waiting = new Map<() => void, number>();
+// The pending frame: when and from what it was asked for. A frame that never
+// comes, such as one a test's fake timers dropped, is asked for again rather
+// than waited on.
+let pending: { at: number; from: unknown } | null = null;
+
+function request() {
+  pending = { at: Date.now(), from: nextFrame(onFrame) };
+}
 
 function later(run: () => void) {
   changedNow.add(run);
-  if (scheduled) return;
-  scheduled = true;
-  nextFrame(onFrame);
+  if (pending && pending.from === scheduler() && Date.now() - pending.at < 250) return;
+  request();
 }
 
 function cancel(run: () => void) {
@@ -53,12 +70,27 @@ function cancel(run: () => void) {
 }
 
 function onFrame() {
-  const quiet = [...waiting].filter((run) => !changedNow.has(run));
-  waiting = changedNow;
+  pending = null;
+  const due: (() => void)[] = [];
+  const next = new Map<() => void, number>();
+  for (const [run, frames] of waiting) {
+    if (!changedNow.has(run) || frames + 1 >= MAX_WAIT) due.push(run);
+    else next.set(run, frames + 1);
+  }
+  for (const run of changedNow) if (!next.has(run) && !due.includes(run)) next.set(run, 0);
+  waiting = next;
   changedNow = new Set();
-  scheduled = waiting.size > 0;
-  if (scheduled) nextFrame(onFrame);
-  for (const run of quiet) run();
+  if (waiting.size) request();
+  for (const run of due) {
+    // One measure that throws doesn't keep the rest from running.
+    try {
+      run();
+    } catch (error) {
+      setTimeout(() => {
+        throw error;
+      });
+    }
+  }
 }
 
 // The element around `node`, through a shadow root to its host. `nodeType`
