@@ -553,6 +553,42 @@ describe('Text from the main entry', () => {
     frame.remove();
   });
 
+  it('shares its observers across every clamped text on the page', () => {
+    const made = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor() {
+          made('resize');
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    render(
+      <div>
+        {Array.from({ length: 50 }, (_, i) => (
+          <ClientText.Root key={i} lines={1}>
+            Quarterly revenue report {i}
+          </ClientText.Root>
+        ))}
+      </div>,
+    );
+    // The text's own changes, the attributes around it, and sizes: one each.
+    expect(made.mock.calls.map(([kind]) => kind).sort()).toEqual(['mutation', 'mutation', 'resize']);
+  });
+
   it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {
     const made = vi.fn();
     vi.stubGlobal(

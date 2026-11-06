@@ -10,6 +10,7 @@ import { useTooltipInternal, type TooltipInternalResult } from '../overlay/toolt
 import { canFocusNow } from '../overlay/tabbables.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from '../internal/domId.js';
+import { observeSize } from '../internal/sharedObservers.js';
 import { useDomChange, type DomChangeOptions } from '../internal/useDomChange.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { clampLines, DEFAULT_AS, Text as ServerText, type TextRootProps as ServerTextRootProps } from './Text.js';
@@ -102,15 +103,14 @@ function ClampTip({ target, anchor, hoverRef }: ClampTipProps) {
   useLayoutEffect(() => {
     const el = target.current;
     if (!el) return;
-    const resizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check);
-    resizes?.observe(el);
+    const stopResizes = observeSize(el, check);
     // A web font that loads late changes the text's width, not the box of a
     // one-line clamp. jsdom has no document.fonts.
     const doc = el.ownerDocument;
     const fonts = 'fonts' in doc ? doc.fonts : null;
     fonts?.addEventListener('loadingdone', check);
     return () => {
-      resizes?.disconnect();
+      stopResizes();
       fonts?.removeEventListener('loadingdone', check);
     };
   }, [check, target]);

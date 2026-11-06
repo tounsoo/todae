@@ -432,6 +432,38 @@ describe('Button auto-tip', () => {
     expect(reads).not.toHaveBeenCalled();
   });
 
+  it('shares one resize and one mutation observer across every Button on the page', () => {
+    const made = vi.fn();
+    const StubResizeObserver = globalThis.ResizeObserver;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class extends StubResizeObserver {
+        constructor(callback: ResizeObserverCallback) {
+          super(callback);
+          made('resize');
+        }
+      },
+    );
+    const RealMutationObserver = globalThis.MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends RealMutationObserver {
+        constructor(callback: MutationCallback) {
+          super(callback);
+          made('mutation');
+        }
+      },
+    );
+    render(
+      <div>
+        {Array.from({ length: 50 }, (_, i) => (
+          <Button.Root key={i}>Save draft {i}</Button.Root>
+        ))}
+      </div>,
+    );
+    expect(made.mock.calls.map(([kind]) => kind).sort()).toEqual(['mutation', 'resize']);
+  });
+
   it('opts out with tooltip={false}', () => {
     render(
       <Button.Root tooltip={false} aria-label="Archive">
@@ -462,7 +494,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/useDomChange.js']),
+      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js', '../internal/sharedObservers.js', '../internal/useDomChange.js']),
     );
   });
 

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
+import { observeMutations, type MutationWatch, type MutationWatcher } from './sharedMutations.js';
 
-type Watch = { el: Element; observer: MutationObserver | null; stopAncestors: (() => void) | null };
+type Watch = { el: Element; mutations: MutationWatcher | null; stopAncestors: (() => void) | null };
 
 type AncestorWatch = { el: Element; run: () => void };
 type AncestorRegistry = { observer: MutationObserver; watches: Set<AncestorWatch> };
@@ -185,7 +186,7 @@ function watchAncestors(el: Element, run: () => void): (() => void) | null {
   };
 }
 
-export type DomChangeOptions = MutationObserverInit & {
+export type DomChangeOptions = MutationWatch & {
   /** Also call `onChange` when an attribute changes on an element around it, out through shadow hosts. */
   ancestors?: boolean;
 };
@@ -193,9 +194,10 @@ export type DomChangeOptions = MutationObserverInit & {
 /**
  * Calls `onChange` when the element in `ref` mounts or is replaced, and when
  * it, its subtree or, with `ancestors`, an element around it changes as
- * `options` describes, apart from the quiet attributes above. A change a
- * commit made to the element or inside it is handled in that commit's layout
- * phase, before paint; a change around it waits a frame, like one no commit made. A commit
+ * `options` describes, apart from the quiet attributes above. One observer,
+ * shared by every watch on the page, sees the change. A change a commit made
+ * to the element or inside it is handled in that commit's layout phase,
+ * before paint; a change around it waits a frame, like one no commit made. A commit
  * that leaves the element as it was costs one `takeRecords()` and calls
  * nothing. A change made outside a render, such as a child's own state or an
  * animation's inline style, is handled once the element has gone a frame
@@ -212,20 +214,22 @@ export function useDomChange(ref: RefObject<Element | null>, onChange: () => voi
     const el = ref.current;
     const current = watch.current;
     if (current?.el === el) {
-      if (current.observer && !current.observer.takeRecords().some(isLoud)) return;
+      if (current.mutations && !current.mutations.take().some(isLoud)) return;
     } else {
       stop(current, run);
       watch.current = null;
       if (!el) return;
       const { ancestors, ...init } = options;
-      const observer =
-        typeof MutationObserver === 'undefined'
-          ? null
-          : new MutationObserver((records) => {
-              if (records.some(isLoud)) later(run);
-            });
-      observer?.observe(el, init);
-      watch.current = { el, observer, stopAncestors: ancestors ? watchAncestors(el, run) : null };
+      watch.current = {
+        el,
+        mutations:
+          typeof MutationObserver === 'undefined'
+            ? null
+            : observeMutations(el, init, (records) => {
+                if (records.some(isLoud)) later(run);
+              }),
+        stopAncestors: ancestors ? watchAncestors(el, run) : null,
+      };
     }
     // This measure covers any change still waiting.
     cancel(run);
@@ -242,7 +246,7 @@ export function useDomChange(ref: RefObject<Element | null>, onChange: () => voi
 }
 
 function stop(watch: Watch | null, run: () => void) {
-  watch?.observer?.disconnect();
+  watch?.mutations?.stop();
   watch?.stopAncestors?.();
   cancel(run);
 }

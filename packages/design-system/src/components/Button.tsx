@@ -20,7 +20,8 @@ import { cx } from '../internal/cx.js';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
-import { useDomChange } from '../internal/useDomChange.js';
+import { observeSize } from '../internal/sharedObservers.js';
+import { useDomChange, type DomChangeOptions } from '../internal/useDomChange.js';
 
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A
@@ -95,7 +96,7 @@ export type ButtonGroupProps = {
 
 const ICON_ATTR = 'data-todae-button-icon';
 
-const BUTTON_CHANGES: MutationObserverInit = {
+const BUTTON_CHANGES: DomChangeOptions = {
   childList: true,
   subtree: true,
   characterData: true,
@@ -227,7 +228,6 @@ function Root({
   // The labels the overflow tip reads. Only their own resize, or a change to
   // the button, can cut them.
   const labels = useRef(new Set<HTMLElement>());
-  const resizes = useRef<ResizeObserver | null>(null);
   const measure = useCallback(() => {
     let cut = false;
     for (const el of labels.current) cut ||= el.scrollWidth > el.clientWidth;
@@ -237,15 +237,12 @@ function Root({
     (el: HTMLSpanElement | null) => {
       if (!el || !tooltip) return;
       labels.current.add(el);
-      // A new observer reports the label's size once it observes it.
+      // The page's one observer reports the label's size once it observes it.
       if (typeof ResizeObserver === 'undefined') measure();
-      else {
-        resizes.current ??= new ResizeObserver(measure);
-        resizes.current.observe(el);
-      }
+      const stop = observeSize(el, measure);
       return () => {
         labels.current.delete(el);
-        resizes.current?.unobserve(el);
+        stop();
       };
     },
     [measure, tooltip],
