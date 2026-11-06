@@ -4,9 +4,10 @@
  * above the anchor, and the edge it lines up with. Physical, as
  * `transform-origin` is. Call it once the popover shows. It compares the box
  * the popover lays out in, with any scale under way taken back out: scaled
- * toward its default left top origin, a right-aligned popover about as wide
- * as its trigger would measure closer on the left and grow from the wrong
- * side, in right-to-left text above all.
+ * toward its default left top origin, a popover lined up with its trigger's
+ * right edge and about as wide as it would measure closer on the left and
+ * grow from the wrong side. That is every such popover in right-to-left
+ * text, and one that flipped to the other side in left-to-right text.
  */
 export function aimPopoverOrigin(popover: HTMLElement, anchor: Element): void {
   const p = unscaledBox(popover);
