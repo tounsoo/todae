@@ -162,13 +162,15 @@ describe('Drilldown motion, height and scroll in a browser', () => {
       expect(view('Account').offsetHeight - heightBefore).toBeGreaterThan(50);
       if (second === 'push') screen.getByRole('button', { name: 'Email' }).click();
       else screen.getByRole('button', { name: 'Back to Settings' }).click();
-      // Read as the change commits, before a frame moves the new slide on.
+      // Read as the change commits, before a frame moves the new slide on:
+      // inside the callback, since waitFor resolves a task later, and a frame
+      // can run before that task.
       const after = await waitFor(() => {
         expect(view('Account').getAttribute('data-leaving')).toBe(second === 'push' ? 'forward' : 'back');
-        return offsets(watched);
+        return { offsets: offsets(watched), height: viewport().getBoundingClientRect().height };
       });
-      after.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
-      expect(Math.abs(viewport().getBoundingClientRect().height - heightBefore)).toBeLessThan(2);
+      after.offsets.forEach((offset, i) => expect(Math.abs(offset - before[i]!)).toBeLessThan(2));
+      expect(Math.abs(after.height - heightBefore)).toBeLessThan(2);
       cleanupAll();
     }
   });
