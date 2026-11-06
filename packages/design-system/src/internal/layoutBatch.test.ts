@@ -53,4 +53,49 @@ describe('queueLayout', () => {
       vi.useRealTimers();
     }
   });
+
+  it('skips the write of a job cancelled during the batch, or whose read threw', async () => {
+    vi.useFakeTimers();
+    try {
+      const log: string[] = [];
+      const a = {};
+      const b = {};
+      queueLayout(a, STAGE.measure, { read: () => log.push('read a'), write: () => cancelLayout(b) });
+      queueLayout(b, STAGE.measure, { read: () => log.push('read b'), write: () => log.push('write b') });
+      queueLayout({}, STAGE.measure, {
+        read: () => {
+          throw new Error('boom');
+        },
+        write: () => log.push('write after a throw'),
+      });
+      await settle();
+      expect(log).toEqual(['read a', 'read b']);
+      expect(() => vi.runAllTimers()).toThrow('boom');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('gives the page a turn when a job keeps queueing itself', async () => {
+    vi.useFakeTimers();
+    try {
+      const key = {};
+      let runs = 0;
+      const job = {
+        write: () => {
+          runs++;
+          if (runs < 50) queueLayout(key, STAGE.measure, job);
+        },
+      };
+      queueLayout(key, STAGE.measure, job);
+      await settle();
+      expect(runs).toBe(20);
+      vi.runOnlyPendingTimers();
+      expect(runs).toBe(40);
+      vi.runOnlyPendingTimers();
+      expect(runs).toBe(50);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

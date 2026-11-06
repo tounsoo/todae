@@ -28,38 +28,53 @@ export type LayoutJob = {
 const queues: Map<object, LayoutJob>[] = [new Map(), new Map(), new Map()];
 let scheduled = false;
 // A job that queues itself again from its own write would run forever in one
-// microtask; after this many passes the rest waits for the next one.
+// microtask; after this many passes the rest waits for a task of its own, so
+// the page gets a turn first.
 const MAX_PASSES = 20;
 
-function attempt(run: (() => void) | undefined) {
-  if (!run) return;
-  // One job that throws doesn't keep the rest from running.
+// Runs `run`, and says whether it finished. One job that throws doesn't keep
+// the rest from running; its error is thrown after.
+function attempt(run: (() => void) | undefined): boolean {
+  if (!run) return true;
   try {
     run();
+    return true;
   } catch (error) {
     setTimeout(() => {
       throw error;
     });
+    return false;
   }
 }
 
+// The jobs of the pass under way, so a part cancelled during it, as by a
+// write that unmounts it, writes nothing.
+let running: Map<object, LayoutJob> | null = null;
+
+// Jobs queued while the batch runs join it, so `scheduled` stays set until
+// it ends.
 function flush() {
-  scheduled = false;
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     const queue = queues.find((jobs) => jobs.size > 0);
-    if (!queue) return;
-    const jobs = [...queue.values()];
+    if (!queue) break;
+    const jobs = new Map(queue);
     queue.clear();
-    for (const job of jobs) attempt(job.read);
-    for (const job of jobs) attempt(job.write);
+    running = jobs;
+    const failed = new Set<object>();
+    for (const [key, job] of jobs) if (jobs.has(key) && !attempt(job.read)) failed.add(key);
+    // A write goes by its own read, so one whose read threw is skipped.
+    for (const [key, job] of jobs) if (jobs.has(key) && !failed.has(key)) attempt(job.write);
+    running = null;
   }
-  if (queues.some((jobs) => jobs.size > 0)) schedule();
+  scheduled = false;
+  if (queues.some((jobs) => jobs.size > 0)) schedule(true);
 }
 
-function schedule() {
+function schedule(yieldFirst = false) {
   if (scheduled) return;
   scheduled = true;
-  queueMicrotask(flush);
+  if (yieldFirst) setTimeout(flush);
+  else queueMicrotask(flush);
 }
 
 /**
@@ -75,4 +90,5 @@ export function queueLayout(key: object, stage: Stage, job: LayoutJob) {
 /** Drops whatever `key` has queued, as a part does when it stops. */
 export function cancelLayout(key: object) {
   for (const jobs of queues) jobs.delete(key);
+  running?.delete(key);
 }

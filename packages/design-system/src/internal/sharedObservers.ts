@@ -11,24 +11,41 @@
 // builds a new registry with the new one.
 
 type SizeListener = (entry: ResizeObserverEntry) => void;
+
+// Calls each listener still subscribed when its turn comes, so one stopped
+// by an earlier listener in the same report hears nothing more. A listener
+// that throws doesn't keep the others from hearing; its error is thrown
+// after, as it would be from an observer of its own.
+function notify<T>(subscribed: Set<T>, call: (subscription: T) => void) {
+  for (const subscription of [...subscribed]) {
+    if (!subscribed.has(subscription)) continue;
+    try {
+      call(subscription);
+    } catch (error) {
+      setTimeout(() => {
+        throw error;
+      });
+    }
+  }
+}
 type SizeRegistry = {
   make: typeof ResizeObserver;
   observer: ResizeObserver;
-  listeners: Map<Element, Set<SizeListener>>;
+  listeners: Map<Element, Set<{ run: SizeListener }>>;
 };
 let sizes: SizeRegistry | null = null;
 
 function sizeRegistry(): SizeRegistry | null {
   if (typeof ResizeObserver === 'undefined') return null;
   if (sizes?.make === ResizeObserver) return sizes;
-  const listeners = new Map<Element, Set<SizeListener>>();
+  const listeners = new Map<Element, Set<{ run: SizeListener }>>();
   const created: SizeRegistry = {
     make: ResizeObserver,
     listeners,
     observer: new ResizeObserver((entries) => {
       for (const entry of entries) {
         const own = listeners.get(entry.target);
-        if (own) for (const listener of [...own]) listener(entry);
+        if (own) notify(own, (subscription) => subscription.run(entry));
       }
     }),
   };
@@ -37,9 +54,12 @@ function sizeRegistry(): SizeRegistry | null {
 }
 
 /**
- * Calls `listener` with each resize the browser reports for `target`. The
- * first listener on a target observes it, so the browser reports its size
- * once; a later one hears from the next change. Returns the stop.
+ * Calls `listener` with each resize the browser reports for `target`,
+ * starting with its size now, as an observer of its own would. A target is
+ * observed once however many listen; a listener that joins one already
+ * observed has it observed afresh, so the browser reports its size again to
+ * every listener, which take a report of an unchanged size as nothing new.
+ * Returns the stop.
  */
 export function observeSize(target: Element, listener: SizeListener): () => void {
   const registry = sizeRegistry();
@@ -48,11 +68,13 @@ export function observeSize(target: Element, listener: SizeListener): () => void
   if (!own) {
     own = new Set();
     registry.listeners.set(target, own);
-    registry.observer.observe(target);
-  }
-  own.add(listener);
+  } else registry.observer.unobserve(target);
+  registry.observer.observe(target);
+  // Each call subscribes on its own, the same function twice included.
+  const subscription = { run: listener };
+  own.add(subscription);
   return () => {
-    if (!own.delete(listener) || own.size) return;
+    if (!own.delete(subscription) || own.size) return;
     registry.listeners.delete(target);
     if (registry.listeners.size) {
       registry.observer.unobserve(target);
@@ -66,7 +88,7 @@ export function observeSize(target: Element, listener: SizeListener): () => void
 type ChildRegistry = {
   make: typeof MutationObserver;
   observer: MutationObserver;
-  listeners: Map<Node, Set<() => void>>;
+  listeners: Map<Node, Set<{ run: () => void }>>;
   // Targets the observer still watches that nobody listens to any more, since
   // a MutationObserver can't stop watching one node alone.
   dropped: number;
@@ -78,7 +100,7 @@ function deliver(registry: ChildRegistry, records: MutationRecord[]) {
   for (const record of records) changed.add(record.target);
   for (const target of changed) {
     const own = registry.listeners.get(target);
-    if (own) for (const listener of [...own]) listener();
+    if (own) notify(own, (subscription) => subscription.run());
   }
 }
 
@@ -105,9 +127,10 @@ export function observeChildren(target: Node, listener: () => void): () => void 
     registry.listeners.set(target, own);
     registry.observer.observe(target, { childList: true });
   }
-  own.add(listener);
+  const subscription = { run: listener };
+  own.add(subscription);
   return () => {
-    if (!own.delete(listener) || own.size) return;
+    if (!own.delete(subscription) || own.size) return;
     registry.listeners.delete(target);
     if (!registry.listeners.size) {
       registry.observer.disconnect();
@@ -137,7 +160,7 @@ type ScrollerListener = {
   children?: () => void;
 };
 type Scroller = {
-  listeners: Set<ScrollerListener>;
+  listeners: Set<{ run: ScrollerListener }>;
   box: ScrollerBox | null;
   stops: Map<Element, () => void>;
   stopChildren: () => void;
@@ -156,7 +179,7 @@ export function watchScroller(el: Element, listener: ScrollerListener): { stop: 
   if (!scroller) {
     const created: Scroller = { listeners: new Set(), box: null, stops: new Map(), stopChildren: () => {} };
     const resized = () => {
-      for (const own of [...created.listeners]) own.resized?.(created.box);
+      notify(created.listeners, (own) => own.run.resized?.(created.box));
     };
     created.stops.set(
       el,
@@ -180,17 +203,18 @@ export function watchScroller(el: Element, listener: ScrollerListener): { stop: 
     follow();
     created.stopChildren = observeChildren(el, () => {
       follow();
-      for (const own of [...created.listeners]) own.children?.();
+      notify(created.listeners, (own) => own.run.children?.());
     });
     scrollers.set(el, created);
     scroller = created;
   }
   const watched = scroller;
-  watched.listeners.add(listener);
+  const subscription = { run: listener };
+  watched.listeners.add(subscription);
   return {
     box: () => watched.box,
     stop: () => {
-      if (!watched.listeners.delete(listener) || watched.listeners.size) return;
+      if (!watched.listeners.delete(subscription) || watched.listeners.size) return;
       for (const stop of watched.stops.values()) stop();
       watched.stopChildren();
       if (scrollers.get(el) === watched) scrollers.delete(el);

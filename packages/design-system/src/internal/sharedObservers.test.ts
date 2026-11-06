@@ -69,6 +69,34 @@ describe('observeSize', () => {
   });
 });
 
+describe('a shared report', () => {
+  it('reaches every other listener when one throws, and none stopped earlier in the report', () => {
+    vi.useFakeTimers();
+    try {
+      const a = document.createElement('div');
+      const b = document.createElement('div');
+      const heard: string[] = [];
+      let stopLater = () => {};
+      const stopThrowing = observeSize(a, () => {
+        stopLater();
+        throw new Error('boom');
+      });
+      stopLater = observeSize(a, () => heard.push('stopped'));
+      const twice = () => heard.push('b');
+      const stopFirst = observeSize(b, twice);
+      const stopSecond = observeSize(b, twice);
+      stopFirst();
+      made[0]!.report([a, b]);
+      expect(heard).toEqual(['b']);
+      expect(() => vi.runAllTimers()).toThrow('boom');
+      stopThrowing();
+      stopSecond();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('observeChildren', () => {
   it('hears each target’s own child changes, and keeps hearing the live ones after stops', async () => {
     const lists = Array.from({ length: 4 }, () => document.createElement('div'));
