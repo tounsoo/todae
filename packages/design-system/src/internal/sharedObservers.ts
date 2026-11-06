@@ -68,7 +68,7 @@ export function observeSize(target: Element, listener: SizeListener): () => void
   if (!own) {
     own = new Set();
     registry.listeners.set(target, own);
-  } else registry.observer.unobserve(target);
+  } else registry.observer.unobserve?.(target);
   registry.observer.observe(target);
   // Each call subscribes on its own, the same function twice included.
   const subscription = { run: listener };
@@ -76,8 +76,10 @@ export function observeSize(target: Element, listener: SizeListener): () => void
   return () => {
     if (!own.delete(subscription) || own.size) return;
     registry.listeners.delete(target);
+    // A test's stand-in may have no unobserve; a target nobody hears then
+    // stays observed, and its reports reach no one.
     if (registry.listeners.size) {
-      registry.observer.unobserve(target);
+      registry.observer.unobserve?.(target);
       return;
     }
     registry.observer.disconnect();

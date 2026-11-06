@@ -219,7 +219,12 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
         align(style);
         readShown();
         writeShown();
-      } else queueLayout(showKey, STAGE.show, { read: readShown, write: writeShown });
+      } else {
+        // A turn to left-to-right drops the shift WebKit's fix left.
+        if (shift) own.style.translate = '';
+        shift = 0;
+        queueLayout(showKey, STAGE.show, { read: readShown, write: writeShown });
+      }
     };
     // Measures with every other rail and tab list on the page that measures
     // in this commit or this observer callback, so they share one layout.
@@ -287,6 +292,9 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
         content = box;
         measure();
       },
+      // Children leaving can end the overflow with nothing resized, as when
+      // tabs close in a list sized by its container.
+      children: measure,
     });
     content = watch.box();
     measure();
