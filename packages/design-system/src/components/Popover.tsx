@@ -101,7 +101,7 @@ export function PopoverSurface({
       'aria-label': role ? ariaLabel : undefined,
       'aria-labelledby': role ? ariaLabelledby : undefined,
     },
-    arrows && <ScrollEdges axis="block" />,
+    arrows && <ScrollEdges axis="block" active={open} />,
     <SurfaceChildren listeners={closedListeners}>{children}</SurfaceChildren>,
   );
 }

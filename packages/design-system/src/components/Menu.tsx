@@ -710,7 +710,7 @@ function Content({
         }}
         onKeyDown={container.onKeyDown}
       >
-        <ScrollEdges axis="block" />
+        <ScrollEdges axis="block" active={open} />
         <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
       </div>
     </>
@@ -1177,7 +1177,7 @@ function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerM
         sub.parent.grace.current = null;
       })}
     >
-      <ScrollEdges axis="block" />
+      <ScrollEdges axis="block" active={sub.open} />
       <MenuLevelContext.Provider value={sub.level}>{children}</MenuLevelContext.Provider>
     </div>
   );
