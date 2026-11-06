@@ -91,6 +91,29 @@ test('a merge key in a job or step fails, so it cannot hide a uses:', () => {
   ]);
 });
 
+test('a job container or service image passes only when pinned to a digest', () => {
+  const job = (body) => `jobs:\n  a:\n    runs-on: ubuntu-24.04\n${body}\n    steps:\n      - run: echo hi\n`;
+  for (const body of [
+    `    container: mcr.microsoft.com/playwright:v1.64.1-noble@${digest}`,
+    `    container:\n      image: alpine@${digest}\n      options: --user 1001`,
+    `    services:\n      db:\n        image: postgres:17@${digest}`,
+  ]) {
+    assert.deepEqual(refs(job(body)), [], body);
+  }
+  for (const [body, ref] of [
+    ['    container: mcr.microsoft.com/playwright:v1.64.1-noble', 'mcr.microsoft.com/playwright:v1.64.1-noble'],
+    ['    container:\n      image: alpine:3.20', 'alpine:3.20'],
+    ['    container: ${{ matrix.image }}', '${{ matrix.image }}'],
+    [`    container: alpine@sha256:${'0'.repeat(63)}`, `alpine@sha256:${'0'.repeat(63)}`],
+    ['    services:\n      db:\n        image: postgres:17', 'postgres:17'],
+    ['    services:\n      db: postgres:17', 'postgres:17'],
+    ['    services: ${{ fromJSON(inputs.services) }}', '${{ fromJSON(inputs.services) }}'],
+  ]) {
+    assert.deepEqual(refs(job(body)), [ref], body);
+  }
+  assert.deepEqual(findUnpinned(job('    container: alpine:3.20')), [{ line: 4, ref: 'alpine:3.20' }]);
+});
+
 test('a file that is not YAML is reported, not skipped', () => {
   const dir = mkdtempSync(join(tmpdir(), 'pinned-actions-'));
   try {

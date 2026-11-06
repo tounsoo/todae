@@ -4,7 +4,7 @@ import docs from '../package.json';
 import designSystem from '../../../packages/design-system/package.json';
 
 // The docs and WebKit CI jobs run in Playwright's image, and its browsers fit only its own Playwright version.
-it('runs the docs and WebKit CI jobs in the Docker image of the pinned Playwright version', () => {
+it('runs the docs and WebKit CI jobs in one digest-pinned Docker image of the pinned Playwright version', () => {
   const ci = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const version = docs.devDependencies['@playwright/test'];
   const image = `mcr.microsoft.com/playwright:v${version}-noble`;
@@ -16,8 +16,15 @@ it('runs the docs and WebKit CI jobs in the Docker image of the pinned Playwrigh
       .slice(1)
       .map((block) => [block.slice(2, block.indexOf(':')), block]),
   );
-  for (const job of ['docs', 'webkit']) expect(jobs.get(job)).toContain(`\n    container: ${image}\n`);
-  for (const [, other] of [...ci.matchAll(/^\s*container:[ \t]*(\S*)/gm)]) expect(other).toBe(image);
+  // Each image is pinned to a digest, so a tag pushed again can't change what runs. The digest itself
+  // can't be checked here, so the two jobs have to name the same one. A version bump that keeps the old
+  // digest still runs the old image, and Playwright then refuses to launch any browser that image lacks,
+  // naming the image it needs.
+  const pinned = new RegExp(`\\n {4}container: (${image.replaceAll('.', '\\.')}@sha256:[0-9a-f]{64})[ \\t]*(?:#.*)?\\n`);
+  const [docsImage, webkitImage] = ['docs', 'webkit'].map((job) => jobs.get(job)?.match(pinned)?.[1]);
+  expect(docsImage).toBeDefined();
+  expect(webkitImage).toBe(docsImage);
+  for (const [, other] of [...ci.matchAll(/^\s*container:[ \t]*(\S*)/gm)]) expect(other).toBe(docsImage);
   expect(docs.devDependencies.playwright).toBe(version);
   expect(designSystem.devDependencies.playwright).toBe(version);
 });
