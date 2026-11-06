@@ -21,7 +21,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Items, groups, separators and submenus.',
+      description: 'Items, groups, separators and submenus. Mounted on the first open, and kept after it.',
     },
     {
       name: 'className',

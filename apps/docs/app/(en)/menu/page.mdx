@@ -5,7 +5,7 @@ import { MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
-A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `aria-haspopup="menu"` and `aria-expanded`. `Menu.Content` is a `role="menu"` in a non-modal popover anchored to the trigger with CSS anchor positioning, the same surface as [Popover](/popover). The menu is named by its trigger unless it gets `aria-label` or `aria-labelledby`.
+A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `aria-haspopup="menu"` and `aria-expanded`. `Menu.Content` is a `role="menu"` in a non-modal popover anchored to the trigger with CSS anchor positioning, the same surface as [Popover](/popover). The menu is named by its trigger unless it gets `aria-label` or `aria-labelledby`. Its items mount on the first open and stay mounted after it, so a page of row menus that never open renders no items; a submenu's items mount on its own first open.
 
 <Example of={MenuActions} />
 

@@ -163,7 +163,7 @@ describe('GlyphsProvider', () => {
       withIcons(
         <>
           <Checkbox.Root>Terms</Checkbox.Root>
-          <Menu.Root>
+          <Menu.Root defaultOpen>
             <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Content>
               <Menu.CheckboxItem checked>Grid</Menu.CheckboxItem>

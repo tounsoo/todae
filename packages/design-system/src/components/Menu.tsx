@@ -554,6 +554,13 @@ function BoxAnchor({
   );
 }
 
+/** True from the render where `open` first turns true, and from then on. */
+function useOpenedOnce(open: boolean): boolean {
+  const [opened, setOpened] = useState(open);
+  if (open && !opened) setOpened(true);
+  return opened || open;
+}
+
 function Content({
   children,
   className,
@@ -579,6 +586,10 @@ function Content({
   const [kept, setKept] = useState(ctx.context);
   const [fading, setFading] = useState(false);
   const [wasOpen, setWasOpen] = useState(open);
+  // Items mount on the first open and stay mounted after it: a page can hold
+  // many row menus, and one that never opens should cost no items. Kept after,
+  // so the exit motion has its items and uncontrolled items keep their state.
+  const opened = useOpenedOnce(open);
   if (open && ctx.context !== kept) setKept(ctx.context);
   if (wasOpen !== open) {
     setWasOpen(open);
@@ -711,7 +722,7 @@ function Content({
         onKeyDown={container.onKeyDown}
       >
         <ScrollEdges axis="block" active={open} />
-        <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
+        <ToolbarContext.Provider value={null}>{opened ? children : null}</ToolbarContext.Provider>
       </div>
     </>
   );
@@ -1127,6 +1138,7 @@ function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerM
   const sub = useSubmenu('SubmenuContent');
   const refs = useComposedRefs<HTMLDivElement>(sub.contentRef, ref);
   usePopoverSync(sub.contentRef, sub.open, {});
+  const opened = useOpenedOnce(sub.open);
   // It grows from its trigger, and an open asked for by a key or a click with
   // no pointer focuses its first item. This runs after it shows.
   const { roving } = sub.level;
@@ -1178,7 +1190,8 @@ function SubmenuContent({ children, className, style, ref, onKeyDown, onPointerM
       })}
     >
       <ScrollEdges axis="block" active={sub.open} />
-      <MenuLevelContext.Provider value={sub.level}>{children}</MenuLevelContext.Provider>
+      {/* Its items too mount on its first open, as the menu's do. */}
+      {opened ? <MenuLevelContext.Provider value={sub.level}>{children}</MenuLevelContext.Provider> : null}
     </div>
   );
 }

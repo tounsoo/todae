@@ -5,7 +5,7 @@ import { MenuOptions } from '../../../components/demos/MenuDemo';
 
 # Menu
 
-동작 목록을 여는 버튼입니다. `Menu.Trigger`는 `aria-haspopup="menu"`와 `aria-expanded`를 가진 `Button.Root`입니다. `Menu.Content`는 CSS 앵커 포지셔닝으로 트리거에 고정된 비모달 팝오버 안의 `role="menu"`이며, [Popover](/popover)와 같은 표면입니다. 메뉴는 `aria-label`이나 `aria-labelledby`를 받지 않으면 트리거로 이름이 붙습니다.
+동작 목록을 여는 버튼입니다. `Menu.Trigger`는 `aria-haspopup="menu"`와 `aria-expanded`를 가진 `Button.Root`입니다. `Menu.Content`는 CSS 앵커 포지셔닝으로 트리거에 고정된 비모달 팝오버 안의 `role="menu"`이며, [Popover](/popover)와 같은 표면입니다. 메뉴는 `aria-label`이나 `aria-labelledby`를 받지 않으면 트리거로 이름이 붙습니다. 항목은 처음 열릴 때 마운트되고 그 뒤로도 마운트된 채 남으므로, 한 번도 열리지 않는 행 메뉴가 많은 페이지는 항목을 하나도 렌더링하지 않습니다. 하위 메뉴의 항목은 그 하위 메뉴가 처음 열릴 때 마운트됩니다.
 
 <Example of={MenuActions} />
 
