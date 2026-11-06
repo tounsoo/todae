@@ -178,6 +178,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      # The job runs as root, but the runner's user owns the workspace, so git refuses it until it's trusted.
+      # Without this, Classify the diff can't read the commits and runs every test on a prose-only change.
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - *classify-diff
 
