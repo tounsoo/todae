@@ -119,7 +119,7 @@ describe('observeMutations', () => {
     late.stop();
   });
 
-  it('hands a listener its records at once on flush, and the others theirs a microtask later', async () => {
+  it('hands a listener its records at once on take, and the others theirs a microtask later', async () => {
     const a = document.createElement('div');
     const b = document.createElement('div');
     const heard: string[] = [];
@@ -127,7 +127,7 @@ describe('observeMutations', () => {
     const second = observeMutations(b, { childList: true }, () => heard.push('b'));
     a.append(document.createElement('i'));
     b.append(document.createElement('i'));
-    first.flush();
+    heard.push(...first.take().map(() => 'a'));
     expect(heard).toEqual(['a']);
     await Promise.resolve();
     expect(heard).toEqual(['a', 'b']);
@@ -136,6 +136,57 @@ describe('observeMutations', () => {
     expect(heard).toEqual(['a', 'b']);
     first.stop();
     second.stop();
+  });
+
+  it('calls listeners in the order they started, as observers of their own are', async () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    outer.append(inner);
+    const heard: string[] = [];
+    // A child's effect runs first, so its watch starts first.
+    const first = observeMutations(inner, { childList: true }, () => heard.push('inner'));
+    const second = observeMutations(outer, { childList: true, subtree: true }, () => heard.push('outer'));
+    inner.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['inner', 'outer']);
+    first.stop();
+    second.stop();
+  });
+
+  it('hands a listener taking inside another listener its records in the order they happened', async () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    const heard: string[] = [];
+    let take = (): MutationRecord[] => [];
+    const first = observeMutations(a, { childList: true }, () => {
+      b.title = 'changed';
+      heard.push(...take().map((record) => `took ${kinds([record]).join()}`));
+    });
+    const later = observeMutations(b, { childList: true, attributes: true }, (records) => heard.push(...kinds(records)));
+    take = later.take;
+    b.append(document.createElement('i'));
+    a.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['took childList', 'took attr:title']);
+    first.stop();
+    later.stop();
+  });
+
+  it('routes a batch of nested removals in one walk, however deep', async () => {
+    const root = document.createElement('div');
+    const chain: HTMLElement[] = [];
+    let node: HTMLElement = root;
+    for (let i = 0; i < 500; i++) chain.push((node = node.appendChild(document.createElement('div'))));
+    let heard = 0;
+    const watcher = observeMutations(root, { childList: true, subtree: true }, () => {});
+    const parentNode = vi.spyOn(Node.prototype, 'parentNode', 'get');
+    for (const el of chain.reverse()) el.remove();
+    heard = watcher.take().length;
+    expect(heard).toBe(500);
+    // Each node's parent is read about once, not once per level.
+    expect(parentNode.mock.calls.length).toBeLessThan(5 * 500);
+    parentNode.mockRestore();
+    watcher.stop();
   });
 
   it('keeps hearing the live targets after stops, and starts over once most targets are dropped', async () => {
@@ -203,7 +254,7 @@ describe('observeMutations', () => {
     vi.stubGlobal('MutationObserver', undefined);
     const watcher = observeMutations(document.createElement('div'), { childList: true }, () => {});
     expect(() => {
-      watcher.flush();
+      expect(watcher.take()).toEqual([]);
       watcher.stop();
     }).not.toThrow();
   });

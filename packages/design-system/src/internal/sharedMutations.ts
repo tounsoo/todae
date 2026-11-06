@@ -11,10 +11,6 @@
 // sees the same records it would have on its own. A listener can hear a
 // record about a node that has since moved into another listener's tree; the
 // parts using this take a record outside their tree as nothing new.
-// Routing knows only the removals of the records it routes together, so a
-// change inside a removed subtree after a flush took the removal, which an
-// observer of its own would still hear until its next report, reaches no one;
-// the removal itself already told each listener the subtree left.
 //
 // A test may swap the global observer for a stand-in, so the registry keeps
 // the constructor it was built with, and a watch that starts after a swap
@@ -35,6 +31,8 @@ type Subscription = {
   watch: MutationWatch;
   run: Listener;
   live: boolean;
+  // When it started, since observers of their own are called in the order they were made.
+  order: number;
 };
 
 type Registry = {
@@ -49,8 +47,14 @@ type Registry = {
   // Records taken for listeners not yet called, in the order they came.
   pending: Map<Subscription, MutationRecord[]>;
   scheduled: boolean;
+  // The subtree listeners of the trees each node was removed from since the
+  // last report, for records a take left behind it, as the browser keeps its
+  // transient observers until the next report.
+  removed: Map<Node, ReadonlySet<Subscription>>;
+  forgetting: boolean;
 };
 let shared: Registry | null = null;
+let started = 0;
 
 const NONE: ReadonlySet<Subscription> = new Set();
 
@@ -66,64 +70,93 @@ function hears(subscription: Subscription, record: MutationRecord): boolean {
 /** Hands each record to the listeners whose tree it happened in, onto `pending`. */
 function route(registry: Registry, records: MutationRecord[]) {
   if (!records.length) return;
-  // The subtree listeners each removed node was taken from, in this batch.
-  const removedFrom = new Map<Node, Set<Subscription>>();
-  let routes: ReadonlySet<Subscription>[] = [];
-  // A removal can make an earlier record, about a node inside what was
-  // removed, belong to the tree it left, so route again until nothing new is
-  // learnt. Each pass only adds, and most batches need one or two.
-  for (let changed = true; changed; ) {
-    changed = false;
-    // The listeners of every tree a node sits in, shared by every record
-    // under it, so a batch walks each ancestor once.
-    const around = new Map<Node, ReadonlySet<Subscription>>();
-    const listenersAt = (start: Node): ReadonlySet<Subscription> => {
-      const path: Node[] = [];
-      let found: ReadonlySet<Subscription> = NONE;
-      for (let node: Node | null = start; node; node = node.parentNode) {
-        const known = around.get(node);
-        if (known) {
-          found = known;
-          break;
-        }
-        path.push(node);
-      }
-      for (let i = path.length - 1; i >= 0; i--) {
-        const node = path[i]!;
-        const own = registry.listeners.get(node);
-        const left = removedFrom.get(node);
-        if (own || left) {
-          const next = new Set(found);
-          for (const subscription of own ?? NONE) next.add(subscription);
-          for (const subscription of left ?? NONE) next.add(subscription);
-          found = next;
-        }
-        around.set(node, found);
-      }
-      return found;
-    };
-    routes = records.map((record) => listenersAt(record.target));
-    records.forEach((record, index) => {
-      if (record.type !== 'childList' || !record.removedNodes.length) return;
-      for (const subscription of routes[index]!) {
-        if (!subscription.watch.subtree) continue;
-        for (const node of record.removedNodes) {
-          let left = removedFrom.get(node);
-          if (!left) removedFrom.set(node, (left = new Set()));
-          if (left.has(subscription)) continue;
-          left.add(subscription);
-          changed = true;
-        }
-      }
-    });
+  // The records that removed each node, in this batch.
+  const removals = new Map<Node, MutationRecord[]>();
+  for (const record of records) {
+    if (record.type !== 'childList') continue;
+    for (const node of record.removedNodes) {
+      const own = removals.get(node);
+      if (own) own.push(record);
+      else removals.set(node, [record]);
+    }
   }
-  records.forEach((record, index) => {
-    for (const subscription of routes[index]!) {
+  // The listeners of every tree a node sits in or was removed from, worked
+  // out once per node, so a batch costs about one walk of each ancestor
+  // however its removals nest or come in order.
+  const around = new Map<Node, ReadonlySet<Subscription>>();
+  const resolving = new Set<Node>();
+  const left = new Map<Node, ReadonlySet<Subscription>>();
+  // Of a tree's listeners, those watching its subtree, shared by every node
+  // removed from the same place, so clearing a long list costs no set per row.
+  const subtrees = new Map<ReadonlySet<Subscription>, ReadonlySet<Subscription>>();
+  const subtreeOf = (listeners: ReadonlySet<Subscription>): ReadonlySet<Subscription> => {
+    let found = subtrees.get(listeners);
+    if (!found) subtrees.set(listeners, (found = new Set([...listeners].filter(({ watch }) => watch.subtree))));
+    return found;
+  };
+  // The subtree listeners of the trees `node` was removed from.
+  const leftFrom = (node: Node): ReadonlySet<Subscription> => {
+    const known = left.get(node);
+    if (known) return known;
+    const earlier = registry.removed.get(node);
+    const by = removals.get(node);
+    // A node moved under what it left leads back to itself; stop there.
+    if (!by || resolving.has(node)) return earlier ?? NONE;
+    resolving.add(node);
+    let found: ReadonlySet<Subscription>;
+    if (!earlier && by.length === 1) found = subtreeOf(listenersAt(by[0]!.target));
+    else {
+      const all = new Set(earlier ?? NONE);
+      for (const record of by) for (const subscription of subtreeOf(listenersAt(record.target))) all.add(subscription);
+      found = all;
+    }
+    resolving.delete(node);
+    left.set(node, found);
+    return found;
+  };
+  const listenersAt = (start: Node): ReadonlySet<Subscription> => {
+    const path: Node[] = [];
+    let found: ReadonlySet<Subscription> = NONE;
+    for (let node: Node | null = start; node; node = node.parentNode) {
+      const known = around.get(node);
+      if (known) {
+        found = known;
+        break;
+      }
+      path.push(node);
+    }
+    for (let i = path.length - 1; i >= 0; i--) {
+      const node = path[i]!;
+      const own = registry.listeners.get(node);
+      const gone = removals.has(node) || registry.removed.has(node) ? leftFrom(node) : NONE;
+      if (own || gone.size) {
+        const next = new Set(found);
+        for (const subscription of own ?? NONE) next.add(subscription);
+        for (const subscription of gone) next.add(subscription);
+        found = next;
+      }
+      around.set(node, found);
+    }
+    return found;
+  };
+  for (const record of records) {
+    for (const subscription of listenersAt(record.target)) {
       if (!hears(subscription, record)) continue;
       const own = registry.pending.get(subscription);
       if (own) own.push(record);
       else registry.pending.set(subscription, [record]);
     }
+  }
+  for (const node of removals.keys()) {
+    const from = leftFrom(node);
+    if (from.size) registry.removed.set(node, from);
+  }
+  // A page that goes quiet after a take lets go of what it removed.
+  if (!registry.removed.size || registry.forgetting) return;
+  registry.forgetting = true;
+  setTimeout(() => {
+    registry.forgetting = false;
+    registry.removed.clear();
   });
 }
 
@@ -141,11 +174,21 @@ function call(subscription: Subscription, records: MutationRecord[]) {
   }
 }
 
+// Calls listeners in the order they started. Each one's records are taken
+// from `pending` as its turn comes, so one that an earlier listener's take
+// already handed its records to isn't called with them again, nor with the
+// older ones after the newer.
 function deliver(registry: Registry) {
   registry.scheduled = false;
-  const due = [...registry.pending];
-  registry.pending.clear();
-  for (const [subscription, records] of due) call(subscription, records);
+  while (registry.pending.size) {
+    const due = [...registry.pending.keys()].sort((a, b) => a.order - b.order);
+    for (const subscription of due) {
+      const records = registry.pending.get(subscription);
+      if (!records) continue;
+      registry.pending.delete(subscription);
+      call(subscription, records);
+    }
+  }
 }
 
 // Records taken early for others reach them a microtask later, as their own
@@ -168,8 +211,12 @@ function registry(): Registry | null {
     dropped: 0,
     pending: new Map(),
     scheduled: false,
+    removed: new Map(),
+    forgetting: false,
     observer: new MutationObserver((records) => {
       route(created, records);
+      // The browser has dropped its transient observers for this report.
+      created.removed.clear();
       deliver(created);
     }),
   };
@@ -212,36 +259,37 @@ function observe(registry: Registry, target: Node, subscriptions: Set<Subscripti
 export type MutationWatcher = {
   /** Stops listening. */
   stop: () => void;
-  /** Calls the listener now with any records waiting for it, as `takeRecords()` would hand them. */
-  flush: () => void;
+  /** Hands back the records waiting for this listener, which it then won't hear, as `takeRecords()` would. */
+  take: () => MutationRecord[];
 };
 
 /**
  * Calls `listener` with the mutation records `watch` asks for at `target`,
  * as an observer of its own would, a microtask after they happen. Every
- * target shares one observer.
+ * target shares one observer, so a take hands the other listeners what it
+ * took for them a microtask later.
  */
 export function observeMutations(target: Node, watch: MutationWatch, listener: Listener): MutationWatcher {
   const reg = registry();
-  if (!reg) return { stop: () => {}, flush: () => {} };
+  if (!reg) return { stop: () => {}, take: () => [] };
   // Records already waiting happened before this listener, which an observer
   // of its own wouldn't hear, so they go to the others first.
   route(reg, reg.observer.takeRecords());
   deliverSoon(reg);
-  const subscription: Subscription = { target, watch, run: listener, live: true };
+  const subscription: Subscription = { target, watch, run: listener, live: true, order: ++started };
   let own = reg.listeners.get(target);
   if (!own) reg.listeners.set(target, (own = new Set()));
   own.add(subscription);
   observe(reg, target, own);
   const watched = own;
   return {
-    flush: () => {
-      if (!subscription.live) return;
+    take: () => {
+      if (!subscription.live) return [];
       route(reg, reg.observer.takeRecords());
-      const records = reg.pending.get(subscription);
+      const records = reg.pending.get(subscription) ?? [];
       reg.pending.delete(subscription);
       deliverSoon(reg);
-      if (records) call(subscription, records);
+      return records;
     },
     stop: () => {
       if (!subscription.live) return;
@@ -268,6 +316,7 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       deliverSoon(reg);
       reg.observer.disconnect();
       reg.observed.clear();
+      reg.removed.clear();
       reg.dropped = 0;
       for (const [node, subscriptions] of reg.listeners) observe(reg, node, subscriptions);
     },

@@ -334,7 +334,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         stopResize();
         cancelAnimationFrame(frame);
       },
-      flush: watcher.flush,
+      flush: () => handle(watcher.take()),
     };
     latestSync.current();
   }, [scope]);
