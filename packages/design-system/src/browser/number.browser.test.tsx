@@ -4,7 +4,7 @@ import { cdp, server, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { Button, ErrorMessage, Field, Form, Label, type NumberFormatOptions } from '../index.js';
 import { blurBeforeCleanup } from '../test/focus.js';
 
@@ -100,6 +100,10 @@ function keyTrace(el: HTMLInputElement) {
   };
   for (const type of ['focusin', 'focusout']) document.addEventListener(type, elsewhere, true);
   for (const type of ['focus', 'blur']) window.addEventListener(type, elsewhere);
+  onTestFinished(() => {
+    for (const type of ['focusin', 'focusout']) document.removeEventListener(type, elsewhere, true);
+    for (const type of ['focus', 'blur']) window.removeEventListener(type, elsewhere);
+  });
   log.push(`0ms start: focus on ${document.activeElement?.tagName}, frame ${document.hasFocus() ? 'focused' : 'not focused'}`);
   return () => `\n${log.join('\n')}\n`;
 }
@@ -222,9 +226,7 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().getAttribute('aria-invalid')).toBeNull();
   });
 
-  it('blocks Enter on a required empty field, shows the message and keeps focus in the input', blocksEmptyEnter);
-
-  async function blocksEmptyEnter() {
+  it('blocks Enter on a required empty field, shows the message and keeps focus in the input', async () => {
     const onSubmit = vi.fn();
     render(<Quantity onSubmit={onSubmit} required />);
     await userEvent.click(input());
@@ -232,19 +234,10 @@ describe('Field.NumberInput in a browser', () => {
     expect(onSubmit).not.toHaveBeenCalled();
     await screen.findByText('This field is required');
     await waitFor(() => expect(document.activeElement).toBe(input()));
-  }
-
-  it('steps with the arrows and the page keys, and snaps and clamps a typed number', stepsAndSnaps);
-
-  // DIAGNOSTIC, to come out before review: the test passed 61 times in a row alone, so this runs it after the test before it, which leaves a failed form check, 40 times in Firefox.
-  describe.runIf(server.browser === 'firefox')('DIAGNOSTIC: stepping after a blocked Enter', () => {
-    for (let run = 1; run <= 40; run++) {
-      it(`blocks Enter, run ${run}`, blocksEmptyEnter);
-      it(`then steps and snaps, run ${run}`, stepsAndSnaps);
-    }
   });
 
-  async function stepsAndSnaps() {
+  // Every value check carries the trace, so a failure in Firefox, where 37 once committed as 75, says where the typing went.
+  it('steps with the arrows and the page keys, and snaps and clamps a typed number', async () => {
     render(<Quantity min={0} max={100} step={5} />);
     const trace = keyTrace(input());
     await userEvent.click(input());
@@ -259,7 +252,7 @@ describe('Field.NumberInput in a browser', () => {
     await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
     expect(input().value, trace()).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
-  }
+  });
 
   it('refuses a letter as it is typed', async () => {
     render(<Quantity locale="en" />);
