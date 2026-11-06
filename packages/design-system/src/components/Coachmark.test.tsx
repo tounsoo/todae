@@ -11,7 +11,7 @@ import { Field } from './Field.js';
 import { OptionList } from './OptionList.js';
 import { Popover } from './Popover.js';
 import { useCombobox } from '../hooks/useCombobox.js';
-import { inertOutside } from '../overlay/inertOutside.js';
+import { inertOutside, liftDialog } from '../overlay/inertOutside.js';
 import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 
 afterEach(() => {
@@ -350,40 +350,74 @@ describe('inertOutside', () => {
     document.body.innerHTML = '';
   });
 
-  it('leaves a closed or modal dialog usable wherever it sits, also one added later', async () => {
+  it('dims a dialog with the page until it opens, then lifts it wherever it sits', () => {
     document.body.innerHTML = [
       '<dialog id="settings"><button>Save</button></dialog>',
       '<div id="layer"><span id="near"></span><dialog id="wrapped"></dialog></div>',
-      '<dialog id="modal" open aria-modal="true"></dialog>',
-      '<dialog id="chat" open><button>Send</button></dialog>',
+      '<dialog id="chat" open aria-modal="true"><button>Send</button></dialog>',
       '<p id="keep"></p>',
     ].join('');
     const keep = document.getElementById('keep')!;
     const release = inertOutside(() => [keep]);
-    const inert = (id: string) => document.getElementById(id)!.hasAttribute('inert');
-    expect(inert('settings')).toBe(false);
-    expect(inert('layer')).toBe(false);
-    expect(inert('near')).toBe(true);
-    expect(inert('wrapped')).toBe(false);
-    expect(inert('modal')).toBe(false);
+    const inert = (id: string) => document.getElementById(id)!.closest('[inert]') !== null;
+    expect(inert('settings')).toBe(true);
+    expect(inert('wrapped')).toBe(true);
     // An open dialog that isn't modal is part of the page.
     expect(inert('chat')).toBe(true);
-    const late = document.createElement('dialog');
-    const lateLayer = document.createElement('div');
-    lateLayer.append(document.createElement('dialog'));
-    document.body.append(late, lateLayer);
-    await new Promise((resolve) => setTimeout(resolve));
-    expect(late.hasAttribute('inert')).toBe(false);
-    expect(lateLayer.hasAttribute('inert')).toBe(false);
+    const wrapped = document.getElementById('wrapped') as HTMLDialogElement;
+    liftDialog(wrapped);
+    wrapped.showModal();
+    expect(inert('wrapped')).toBe(false);
+    expect(inert('near')).toBe(true);
+    expect(inert('settings')).toBe(true);
+    wrapped.close();
+    expect(inert('wrapped')).toBe(true);
+    release();
+    expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    document.body.innerHTML = '';
+  });
+
+  it('lifts a dialog of the page that the browser says is opening', () => {
+    document.body.innerHTML = '<div id="layer"><dialog id="own"></dialog></div><p id="keep"></p>';
+    const release = inertOutside(() => [document.getElementById('keep')!]);
+    const own = document.getElementById('own')!;
+    expect(own.closest('[inert]')).not.toBeNull();
+    own.dispatchEvent(Object.assign(new Event('beforetoggle'), { newState: 'open' }));
+    expect(own.closest('[inert]')).toBeNull();
     release();
     document.body.innerHTML = '';
   });
 
-  it('dims the rest of a modal dialog that holds the kept element', () => {
-    document.body.innerHTML = '<dialog open aria-modal="true"><p id="keep"></p><p id="other"></p></dialog>';
+  it('marks only what comes beside a kept element added later', async () => {
+    document.body.innerHTML = '<p id="keep"></p>';
+    const release = inertOutside(() => [document.getElementById('keep')!]);
+    const layer = document.createElement('div');
+    const guest = document.createElement('div');
+    guest.setAttribute('data-todae-guest-layer', '');
+    const beside = document.createElement('button');
+    layer.append(guest, beside);
+    document.body.append(layer);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(layer.hasAttribute('inert')).toBe(false);
+    expect(beside.hasAttribute('inert')).toBe(true);
+    const later = document.createElement('p');
+    layer.append(later);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(later.hasAttribute('inert')).toBe(true);
+    release();
+    expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    document.body.innerHTML = '';
+  });
+
+  it('dims the rest of an open dialog that holds the kept element', () => {
+    document.body.innerHTML = '<dialog id="host"><p id="keep"></p><p id="other"></p></dialog>';
+    const host = document.getElementById('host') as HTMLDialogElement;
+    liftDialog(host);
+    host.showModal();
     const release = inertOutside(() => [document.getElementById('keep')!]);
     expect(document.getElementById('other')!.hasAttribute('inert')).toBe(true);
     release();
+    host.close();
     document.body.innerHTML = '';
   });
 
@@ -615,4 +649,85 @@ describe('Coachmark on a button that opens a dialog', () => {
     fireEvent.pointerDown(screen.getByTestId('name'));
     expect(onOpenChange).not.toHaveBeenCalled();
   });
+
+  it('still closes on a press on the dim part of a modal dialog the coachmark sits in', async () => {
+    const onOpenChange = vi.fn();
+    function DialogTip() {
+      const ref = useRef<HTMLButtonElement>(null);
+      return (
+        <Dialog.Root open onOpenChange={() => {}} aria-label="Settings">
+          <Button.Root ref={ref}>Export</Button.Root>
+          <p data-testid="other">Other settings</p>
+          <Coachmark.Root targetRef={ref} defaultOpen dismissOnBackdrop onOpenChange={onOpenChange} aria-label="New: export">
+            <Coachmark.Title>New: export</Coachmark.Title>
+          </Coachmark.Root>
+        </Dialog.Root>
+      );
+    }
+    render(<DialogTip />);
+    await act(async () => {});
+    expect(screen.getByTestId('other').closest('[inert]')).not.toBeNull();
+    fireEvent.pointerDown(screen.getByTestId('other'));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'backdrop');
+  });
+
+  it.each(['a sheet in a wrapper', 'a dialog portalled on open'] as const)(
+    'lets %s that mounts as it opens take focus', async (what) => {
+      const landed: { inert: boolean }[] = [];
+      const overlays = document.createElement('div');
+      document.body.append(overlays);
+      function MountTour() {
+        const ref = useRef<HTMLButtonElement>(null);
+        const [open, setOpen] = useState(false);
+        const field = (
+          <Field.Root aria-label="Name">
+            <Field.TextInput
+              value=""
+              onValueChange={() => {}}
+              data-testid="name"
+              onFocus={(event) => landed.push({ inert: event.currentTarget.closest('[inert]') !== null })}
+            />
+          </Field.Root>
+        );
+        return (
+          <>
+            <main>
+              <Button.Root ref={ref} onClick={() => setOpen(true)}>
+                Filters
+              </Button.Root>
+            </main>
+            {what === 'a sheet in a wrapper' ? (
+              <aside>
+                <span>Beside the sheet</span>
+                <BottomSheet.Root open={open} onOpenChange={setOpen} aria-label="Filters">
+                  <BottomSheet.Body>{field}</BottomSheet.Body>
+                </BottomSheet.Root>
+              </aside>
+            ) : null}
+            {what === 'a dialog portalled on open' && open
+              ? createPortal(
+                  <Dialog.Root open onOpenChange={setOpen} aria-label="Filters">
+                    {field}
+                  </Dialog.Root>,
+                  overlays,
+                )
+              : null}
+            <Coachmark.Root targetRef={ref} defaultOpen aria-label="Filters moved">
+              <Coachmark.Title>Filters moved here</Coachmark.Title>
+            </Coachmark.Root>
+          </>
+        );
+      }
+      render(<MountTour />);
+      await act(async () => {});
+      fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+      await act(async () => {});
+      const name = screen.getByTestId('name');
+      expect(name.closest('[inert]')).toBeNull();
+      name.focus();
+      expect(landed.at(-1)).toEqual({ inert: false });
+      if (what === 'a sheet in a wrapper') expect(screen.getByText('Beside the sheet').closest('[inert]')).not.toBeNull();
+      overlays.remove();
+    },
+  );
 });
