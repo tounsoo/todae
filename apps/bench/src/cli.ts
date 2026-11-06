@@ -18,7 +18,7 @@ export const OUT_DIR = join(BENCH_DIR, 'out');
 
 const HELP = `pnpm bench [options]          Run every case in Chromium and write a record
 pnpm bench compare <a> <b>    Compare two saved records (a is before)
-pnpm bench list               List saved records
+pnpm bench list               List saved records and local ones in apps/bench/out
 
 Run options:
   --against <ref>    Also build <ref> (a branch, tag or SHA) and run it beside this checkout,
@@ -63,6 +63,8 @@ async function listRecords(): Promise<{ file: string; record: BenchRecord }[]> {
   }
   return found;
 }
+
+const savedRecord = async (name: string) => (await listRecords()).some(({ record, file }) => record.name === name && file.startsWith(RECORDS_DIR));
 
 /** pnpm runs the script in apps/bench; a path the user typed is relative to where they ran pnpm. */
 const fromUser = (path: string) => resolve(process.env.INIT_CWD ?? process.cwd(), path);
@@ -134,6 +136,7 @@ async function bench(values: Record<string, string | boolean | undefined>) {
   const summary = values.summary as string | undefined;
   const name = typeof values.name === 'string' ? slug(values.name) : undefined;
   if (name === '') throw new Error(`--name ${values.name} has no letters or digits to name a record with.`);
+  if (values.save && name && (await savedRecord(name))) throw new Error(`A saved record is already named ${name}. Pick another --name.`);
 
   if (values.build !== false) await buildCurrent(log);
   const checkout = await describeCheckout();
@@ -181,8 +184,7 @@ async function bench(values: Record<string, string | boolean | undefined>) {
     for (const record of records) log(`Wrote ${await writeRecord(record, OUT_DIR)}`);
     if (values.save) {
       if (current.todae.dirty) log('Warning: todae has local changes, so the saved record is not the commit it names.');
-      const existing = (await listRecords()).find(({ record, file }) => record.name === current.name && file.startsWith(RECORDS_DIR));
-      if (existing) throw new Error(`A saved record is already named ${current.name}. Pick another --name; the new record is in apps/bench/out.`);
+      if (await savedRecord(current.name)) throw new Error(`A saved record is already named ${current.name}. Pick another --name; the new record is in apps/bench/out.`);
       log(`Saved ${await writeRecord(current, RECORDS_DIR)}`);
     }
     if (records.length === 2) {

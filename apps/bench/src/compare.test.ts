@@ -59,15 +59,25 @@ describe('compare', () => {
     expect(compare(faster, before).rows[0]?.verdict).toBe('slower');
   });
 
-  it('gives no timing verdict on fewer than three runs', () => {
-    const before = record({ metrics: { mountMs: time(100, 100) } });
-    const after = record({ metrics: { mountMs: time(50, 50) } });
-    expect(compare(before, after).rows[0]?.verdict).toBe('noise');
+  it('gives no timing verdict on fewer than five runs, and says so', () => {
+    const settings = { runs: 3, warmups: 1, sizes: [10] };
+    const before = record({ settings, metrics: { mountMs: time(100, 100, 100) } });
+    const after = record({ settings, metrics: { mountMs: time(50, 50, 50) } });
+    const result = compare(before, after);
+    expect(result.rows[0]?.verdict).toBe('noise');
+    expect(result.warnings.join(' ')).toMatch(/needs 5/);
+  });
+
+  it('gives the same verdict whichever record comes first', () => {
+    const a = record({ metrics: { mountMs: time(99, 99.5, 100, 100.5, 101) } });
+    const b = record({ metrics: { mountMs: time(93, 94, 95.2, 96, 97) } });
+    expect(compare(a, b).rows[0]?.verdict).toBe('noise');
+    expect(compare(b, a).rows[0]?.verdict).toBe('noise');
   });
 
   it('treats a tiny timing shift as noise even with no overlap', () => {
-    const before = record({ metrics: { mountMs: time(100, 100, 100) } });
-    const after = record({ metrics: { mountMs: time(102, 102, 102) } });
+    const before = record({ metrics: { mountMs: time(100, 100, 100, 100, 100) } });
+    const after = record({ metrics: { mountMs: time(102, 102, 102, 102, 102) } });
     expect(compare(before, after).rows[0]?.verdict).toBe('noise');
   });
 
@@ -146,6 +156,8 @@ describe('slug', () => {
     expect(slug('release..1')).toBe('release.1');
     expect(slug('v1.')).toBe('v1');
     expect(slug('x.lock')).toBe('x');
+    expect(slug('a.lock-')).toBe('a');
+    expect(slug('x.lock.lock')).toBe('x');
     expect(slug('!!!')).toBe('');
   });
 });

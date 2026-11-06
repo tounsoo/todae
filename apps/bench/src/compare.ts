@@ -49,7 +49,7 @@ export const TIMING_FLOOR = 0.05;
 const major = (version: string) => version.split('.')[0] ?? version;
 
 /** Fewer runs than this give no verdict on a timing or browser count. */
-export const MIN_RUNS = 3;
+export const MIN_RUNS = 5;
 
 /**
  * A timing or browser count changed only when every run of one side beats
@@ -61,7 +61,8 @@ export const MIN_RUNS = 3;
 function spreadVerdict(before: Metric, after: Metric, lower: Verdict, higher: Verdict): Verdict {
   if (before.n < MIN_RUNS || after.n < MIN_RUNS) return 'noise';
   const apart = after.max < before.min || before.max < after.min;
-  const base = Math.abs(before.median) || 1;
+  // Against the larger median, so the verdict doesn't depend on which side is before.
+  const base = Math.max(Math.abs(before.median), Math.abs(after.median)) || 1;
   const small = Math.abs(after.median - before.median) / base < TIMING_FLOOR;
   if (!apart || small) return 'noise';
   return after.median < before.median ? lower : higher;
@@ -89,6 +90,10 @@ export function compare(before: BenchRecord, after: BenchRecord): Comparison {
     warnings.push(
       `Browser counts left out: the records come from different browsers (${before.browser.name} ${before.browser.version} and ${after.browser.name} ${after.browser.version}).`,
     );
+  }
+  const fewest = Math.min(before.settings.runs, after.settings.runs);
+  if (fewest < MIN_RUNS && (timings || engine)) {
+    warnings.push(`Timings and browser counts get no verdict: a record took ${fewest} runs per case, and a verdict needs ${MIN_RUNS}.`);
   }
   if (before.settings.runs !== after.settings.runs) {
     warnings.push(`The records took a different number of runs per case (${before.settings.runs} and ${after.settings.runs}).`);

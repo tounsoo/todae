@@ -94,13 +94,17 @@ export function metric(kind: MetricKind, unit: string, samples: readonly number[
 /** Turns a ref or label into a safe file-name part. */
 /** A lower-case name that is safe as a file name and as one part of a git branch name. */
 export function slug(text: string): string {
-  return text
+  let name = text
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, '-')
     .replace(/\.{2,}/g, '.')
-    .slice(0, 60)
-    .replace(/\.lock$/, '')
-    .replace(/^[-.]+|[-.]+$/g, '');
+    .slice(0, 60);
+  // git refuses a part that starts or ends with a dot or ends in .lock.
+  for (let previous = ''; previous !== name; ) {
+    previous = name;
+    name = name.replace(/^[-.]+|[-.]+$/g, '').replace(/\.lock$/, '');
+  }
+  return name;
 }
 
 /**
