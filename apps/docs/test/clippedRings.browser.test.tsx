@@ -7,10 +7,12 @@ afterEach(() => {
 
 // A clip box around a scroll box around a tall focusable list, like the date-time picker's
 // popover around its time list. The list's ring is 2px wide with a 2px offset, so it needs 4px.
+// Like the time list, the scroll box's scroll padding matches its padding, so focusing the list
+// keeps that room rather than scrolling the list's top to the box's edge.
 function mount({ scrollerPadding, scrollTop }: { scrollerPadding: number; scrollTop: number }) {
   document.body.innerHTML = `
     <div class="clip" style="overflow: hidden; padding: 2px; width: 200px">
-      <div class="scroller" style="overflow-y: auto; height: 40px; padding: ${scrollerPadding}px">
+      <div class="scroller" style="overflow-y: auto; height: 40px; padding: ${scrollerPadding}px; scroll-padding: ${scrollerPadding}px">
         <div class="list" tabindex="0" style="height: 100px; outline: 2px solid; outline-offset: 2px"></div>
       </div>
     </div>`;
