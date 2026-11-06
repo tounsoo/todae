@@ -190,6 +190,38 @@ describe('Text.Root lines', () => {
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
   });
 
+  it('measures again when a class around the text cuts it without changing its box', async () => {
+    const phrase = 'Revenue report for the northern region, final copy';
+    const sheet = document.createElement('style');
+    sheet.textContent = '.selected [data-testid] { font-weight: 700; }';
+    document.head.append(sheet);
+    const textWidth = (el: HTMLElement) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().width;
+    };
+    const row = (selected: boolean, width: string | number) => (
+      <div className={selected ? 'selected' : undefined} style={{ inlineSize: width }}>
+        <Text.Root lines={1} data-testid="t">
+          {phrase}
+        </Text.Root>
+      </div>
+    );
+    const probe = render(row(false, '40rem'));
+    const regularWidth = textWidth(screen.getByTestId('t'));
+    probe.rerender(row(true, '40rem'));
+    const boldWidth = textWidth(screen.getByTestId('t'));
+    probe.unmount();
+    const room = Math.ceil((regularWidth + boldWidth) / 2);
+    const { rerender } = render(row(false, room));
+    const el = screen.getByTestId('t');
+    expect(regularWidth).toBeLessThan(boldWidth);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    rerender(row(true, room));
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    sheet.remove();
+  });
+
   it('keeps the same element when lines comes and goes, and adds nothing after the text until the tip opens', async () => {
     const box = (lines?: number) => (
       <div style={{ inlineSize: '12rem' }} data-testid="box">

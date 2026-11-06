@@ -2,20 +2,40 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 
 type Watch = { el: Element; observer: MutationObserver | null; stopAncestors: (() => void) | null };
 
-type AncestorWatch = { el: Element; onChange: () => void };
+type AncestorWatch = { el: Element; ownCovers: (name: string) => boolean; onChange: () => void };
 type AncestorRegistry = { observer: MutationObserver; watches: Set<AncestorWatch> };
 const ancestorRegistries = new WeakMap<Node, AncestorRegistry>();
 
-// An inline style on an ancestor is most often motion (a transform or an
-// opacity written each frame), which cuts no text, so it is left out.
+// Attributes that cut no text but change often: a list moves
+// `aria-activedescendant` and a roving `tabindex` on every arrow key, a modal
+// layer sets `inert` and `aria-hidden` on the rest of the page, and a cut
+// text's own `tabindex`, `aria-describedby` and `data-todae-cut` come from its
+// measure, so watching them would measure it again for its own answer.
+const QUIET = new Set(['aria-activedescendant', 'aria-describedby', 'aria-hidden', 'data-todae-cut', 'inert', 'tabindex']);
+
+// The element around `node`, through a shadow root to its host.
+function around(node: Element): Element | null {
+  const parent = node.parentNode;
+  if (parent instanceof Element) return parent;
+  return parent && 'host' in parent ? (parent as ShadowRoot).host : null;
+}
+
 function onAncestorRecords(registry: AncestorRegistry, records: MutationRecord[]) {
-  const changed = new Set<Node>();
-  for (const record of records) if (record.attributeName !== 'style') changed.add(record.target);
+  const changed = new Map<Node, string[]>();
+  for (const record of records) {
+    const name = record.attributeName ?? '';
+    if (QUIET.has(name)) continue;
+    const names = changed.get(record.target);
+    if (names) names.push(name);
+    else changed.set(record.target, [name]);
+  }
   if (!changed.size) return;
   const hit: AncestorWatch[] = [];
   for (const watch of registry.watches) {
-    for (let node: Element | null = watch.el; node; node = node.parentElement) {
-      if (changed.has(node)) {
+    for (let node: Element | null = watch.el; node; node = around(node)) {
+      const names = changed.get(node);
+      // The element's own observer already reports the attributes it watches.
+      if (names && (node !== watch.el || names.some((name) => !watch.ownCovers(name)))) {
         hit.push(watch);
         break;
       }
@@ -24,38 +44,53 @@ function onAncestorRecords(registry: AncestorRegistry, records: MutationRecord[]
   for (const watch of hit) watch.onChange();
 }
 
-/**
- * Calls `onChange` when an attribute changes on `el` or an element around it
- * in its tree, such as a selected row's class that product CSS bolds its text
- * with. One observer per tree, shared by every watch, sees the change, and
- * only the watches inside the changed element are called.
- */
-function watchAncestors(el: Element, onChange: () => void): (() => void) | null {
-  if (typeof MutationObserver === 'undefined') return null;
-  const root = el.getRootNode();
-  let registry = ancestorRegistries.get(root);
-  if (!registry) {
-    const created: AncestorRegistry = {
-      observer: new MutationObserver((records) => onAncestorRecords(created, records)),
-      watches: new Set(),
-    };
-    created.observer.observe(root, { attributes: true, subtree: true });
-    ancestorRegistries.set(root, created);
-    registry = created;
+// The trees an element sits in: its own, and each shadow host's, out to the document.
+function treesOf(el: Element): Node[] {
+  const trees: Node[] = [];
+  for (let root: Node = el.getRootNode(); ; root = (root as ShadowRoot).host.getRootNode()) {
+    trees.push(root);
+    if (!('host' in root)) return trees;
   }
-  const watch: AncestorWatch = { el, onChange };
-  registry.watches.add(watch);
-  const owner = registry;
+}
+
+/**
+ * Calls `onChange` when an attribute changes on `el` or an element around it,
+ * through shadow hosts, such as a selected row's class that product CSS bolds
+ * its text with. One observer per tree, shared by every watch, sees the
+ * change, and only the watches inside the changed element are called.
+ */
+function watchAncestors(el: Element, ownCovers: (name: string) => boolean, onChange: () => void): (() => void) | null {
+  if (typeof MutationObserver === 'undefined') return null;
+  const watch: AncestorWatch = { el, ownCovers, onChange };
+  const owners = treesOf(el).map((root) => {
+    let registry = ancestorRegistries.get(root);
+    if (!registry) {
+      const created: AncestorRegistry = {
+        observer: new MutationObserver((records) => onAncestorRecords(created, records)),
+        watches: new Set(),
+      };
+      created.observer.observe(root, { attributes: true, subtree: true });
+      ancestorRegistries.set(root, created);
+      registry = created;
+    }
+    registry.watches.add(watch);
+    return [root, registry] as const;
+  });
   return () => {
-    owner.watches.delete(watch);
-    if (owner.watches.size) return;
-    owner.observer.disconnect();
-    ancestorRegistries.delete(root);
+    for (const [root, registry] of owners) {
+      registry.watches.delete(watch);
+      if (registry.watches.size) continue;
+      registry.observer.disconnect();
+      ancestorRegistries.delete(root);
+    }
   };
 }
 
 export type DomChangeOptions = MutationObserverInit & {
-  /** Also call `onChange` when any attribute other than `style` changes on the element or around it. */
+  /**
+   * Also call `onChange` when an attribute changes on the element or an element
+   * around it, out through shadow hosts, except the few that change often and cut no text.
+   */
   ancestors?: boolean;
 };
 
@@ -84,7 +119,8 @@ export function useDomChange(ref: RefObject<Element | null>, onChange: () => voi
       const { ancestors, ...init } = options;
       const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => latest.current());
       observer?.observe(el, init);
-      watch.current = { el, observer, stopAncestors: ancestors ? watchAncestors(el, () => latest.current()) : null };
+      const ownCovers = (name: string) => !!init.attributes && (!init.attributeFilter || init.attributeFilter.includes(name));
+      watch.current = { el, observer, stopAncestors: ancestors ? watchAncestors(el, ownCovers, () => latest.current()) : null };
     }
     onChange();
   });

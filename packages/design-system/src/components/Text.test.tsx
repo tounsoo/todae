@@ -214,6 +214,91 @@ describe('Text from the main entry', () => {
     await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(false));
   });
 
+  it('measures a clamped text again when an inline style around it, such as a font size, cuts it', async () => {
+    const { rerender } = render(
+      <div style={{ fontSize: 14 }}>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    const wrap = el.parentElement!;
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (wrap.style.fontSize === '20px' ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    rerender(
+      <div style={{ fontSize: 20 }}>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+  });
+
+  it('measures a clamped text in a shadow root again when its host is restyled', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const container = document.createElement('div');
+    host.attachShadow({ mode: 'open' }).append(container);
+    render(
+      <ClientText.Root lines={1} data-testid="t">
+        Quarterly revenue report
+      </ClientText.Root>,
+      { container },
+    );
+    const el = container.querySelector('[data-testid="t"]') as HTMLElement;
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => (host.classList.contains('selected') ? 120 : 40) });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    host.classList.add('selected');
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    host.remove();
+  });
+
+  it('reads no layout when a list around a clamped text moves its active option', async () => {
+    const list = (active: string) => (
+      <div role="listbox" aria-activedescendant={active}>
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+        <div id="a" />
+        <div id="b" />
+      </div>
+    );
+    const { rerender } = render(list('a'));
+    const el = screen.getByTestId('t');
+    const reads = vi.fn(() => 40);
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    rerender(list('b'));
+    el.parentElement!.setAttribute('data-probe', '1');
+    await waitFor(() => expect(reads).toHaveBeenCalled());
+    reads.mockClear();
+    rerender(list('a'));
+    el.parentElement!.setAttribute('inert', '');
+    el.parentElement!.setAttribute('aria-hidden', 'true');
+    await new Promise((done) => setTimeout(done, 0));
+    expect(reads).not.toHaveBeenCalled();
+  });
+
+  it('settles when product CSS keyed on the cut marker uncuts the text', async () => {
+    render(
+      <div className="row">
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    const el = screen.getByTestId('t');
+    // Like `.row:has([data-todae-cut]) .meta { display: none }`, which frees the room the text needs.
+    const reads = vi.fn(() => (el.hasAttribute('data-todae-cut') ? 40 : 120));
+    Object.defineProperty(el, 'scrollWidth', { configurable: true, get: reads });
+    Object.defineProperty(el, 'clientWidth', { configurable: true, value: 40 });
+    el.parentElement!.className = 'row wide';
+    await waitFor(() => expect(el.hasAttribute('data-todae-cut')).toBe(true));
+    await new Promise((done) => setTimeout(done, 20));
+    expect(reads.mock.calls.length).toBeLessThan(5);
+  });
+
   it('builds no observer and reads no layout when a parent renders a clamped text again unchanged', () => {
     const made = vi.fn();
     vi.stubGlobal(
