@@ -96,6 +96,8 @@ beforeEach(() => {
         display: 'inline',
         visibility: 'visible',
         content: 'none',
+        scale: 'none',
+        transformOrigin: '0px 0px',
         getPropertyValue(name: string) {
           if (name === 'min-width') return minWidth;
           if (name === 'column-gap' || name === 'gap') return '8px';
