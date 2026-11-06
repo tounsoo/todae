@@ -12,7 +12,7 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 
 - `pnpm check` runs lint, typecheck, and Stylelint. The Static job runs it.
 - `pnpm test` runs the unit tests. The Build job runs it.
-- `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job installs Playwright Chromium and runs them with `--project chromium`; the Engines job runs the package's in Firefox and WebKit. In Firefox, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job.
+- `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job installs Playwright Chromium and runs them with `--project chromium`; the Engines jobs run the package's in Firefox and in WebKit, WebKit's inside Playwright's Docker image. In Firefox, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
 - The docs job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
 

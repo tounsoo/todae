@@ -148,7 +148,7 @@ jobs:
       - name: Build the package
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
         run: pnpm build:ds
-      # Firefox and WebKit run the package's browser tests in the Engines job.
+      # Firefox and WebKit run the package's browser tests in the Engines jobs.
       - name: Browser tests
         if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
         run: pnpm test:browser --project chromium
@@ -165,15 +165,60 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     name: Engines (${{ matrix.browser }})
     runs-on: ubuntu-24.04
-    # The image the docs job uses, with the browsers and every system package they need already in it.
-    # Installing WebKit's packages on the runner meant 114 MB from Ubuntu's mirror on every run, and when
-    # that mirror slowed down the install outlasted the job's timeout. apps/docs/test/image.test.ts checks the version.
-    container: mcr.microsoft.com/playwright:v1.64.1-noble
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        browser: [firefox, webkit]
+        # WebKit runs in its own job below, in Playwright's image.
+        browser: [firefox]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
+
+      # Keyed on the lockfile, which pins Playwright and so its browser builds.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
+
+      # Firefox runs every test page in one content process, where pages that run at once take each
+      # other's clicks, so it runs one file at a time.
+      # Tests on the Firefox quarantine (packages/design-system/scripts/firefox-quarantine.ts, issue 367)
+      # still run, but their failures warn instead of failing the job. Any other failure still fails it,
+      # and the job summary lists each quarantined test's result. By 1.0 the quarantine must be empty and
+      # Firefox fully blocking again.
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
+        working-directory: packages/design-system
+        env:
+          BROWSER_RESULTS: ${{ runner.temp }}/firefox-results.json
+        run: |
+          set +e
+          pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts
+          status=$?
+          set -e
+          node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status" --summary "$GITHUB_STEP_SUMMARY"
+
+  # The image the docs job uses, with WebKit and every system package it needs already in it. Installing
+  # those packages on the runner meant 114 MB from Ubuntu's mirror on every run, and when that mirror slowed
+  # down the install outlasted the job's timeout. apps/docs/test/image.test.ts checks the image's version.
+  webkit:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Engines (webkit)
+    runs-on: ubuntu-24.04
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -187,39 +232,35 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      - name: Browser tests
-        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'webkit' }}
-        run: pnpm --filter @tounsoo/todae test:browser --project webkit
-      # Firefox runs every test page in one content process, where pages that run at once take each
-      # other's clicks, so it runs one file at a time.
-      # Tests on the Firefox quarantine (packages/design-system/scripts/firefox-quarantine.ts, issue 367)
-      # still run, but their failures warn instead of failing the job. Any other failure still fails it,
-      # and the job summary lists each quarantined test's result. By 1.0 the quarantine must be empty and
-      # Firefox fully blocking again.
-      - name: Browser tests
-        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
-        working-directory: packages/design-system
-        # Firefox refuses to launch as root when HOME is owned by another user.
-        env:
-          HOME: /root
-        # RUNNER_TEMP, not runner.temp, which names the runner's path rather than the container's.
+      # The image's sans-serif is WenQuanYi Zen Hei, which has no bold face, so bold text would measure
+      # as wide as regular. Liberation Sans, already in the image, has one, as every real system font does.
+      - name: Use a sans-serif with a bold face
         run: |
-          export BROWSER_RESULTS="$RUNNER_TEMP/firefox-results.json"
-          set +e
-          pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts
-          status=$?
-          set -e
-          node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status" --summary "$GITHUB_STEP_SUMMARY"
+          cat > /etc/fonts/local.conf <<'EOF'
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <alias binding="same">
+              <family>sans-serif</family>
+              <prefer><family>Liberation Sans</family></prefer>
+            </alias>
+          </fontconfig>
+          EOF
+          fc-match sans-serif:bold
+
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm --filter @tounsoo/todae test:browser --project webkit
 
   # One result named Checks, so branch protection that requires that name keeps working.
   checks:
     name: Checks
-    needs: [static, build, fernway, engines]
+    needs: [static, build, fernway, engines, webkit]
     if: ${{ always() && !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require static, build, fernway, and engines
+      - name: Require static, build, fernway, engines, and webkit
         run: |
           set -euo pipefail
           needs='${{ toJSON(needs) }}'
