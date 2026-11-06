@@ -62,38 +62,4 @@ describe('observeMutations with transient observers', () => {
   it('hears a change inside a subtree just removed from its target', () => {
     expect(compare(() => () => () => {})).toEqual(both);
   });
-
-  it('still hears it after another listener on the target starts with wider options', () => {
-    expect(
-      compare((root) => () => {
-        const wider = observeMutations(root, { subtree: true, characterData: true }, () => {});
-        return wider.stop;
-      }),
-    ).toEqual(both);
-  });
-
-  it('still hears it after another listener on the target stops and the options narrow', () => {
-    expect(
-      compare((root) => {
-        const wider = observeMutations(root, { subtree: true, characterData: true }, () => {});
-        return () => {
-          wider.stop();
-          return () => {};
-        };
-      }),
-    ).toEqual(both);
-  });
-
-  it('still hears it after the observer starts over once most targets are dropped', () => {
-    expect(
-      compare(() => {
-        const others = [1, 2, 3].map(() => observeMutations(document.createElement('div'), { childList: true }, () => {}));
-        return () => {
-          // The third stop starts the observer over.
-          for (const other of others) other.stop();
-          return () => {};
-        };
-      }),
-    ).toEqual(both);
-  });
 });

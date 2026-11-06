@@ -10,13 +10,19 @@
 // listener that watched the subtree the removed node left, so a listener
 // sees the same records it would have on its own.
 //
-// Records are routed by where a node is when they're read, so a listener can
-// also hear a record about a node from before it moved into or out of its
-// tree. The parts using this read the DOM again on any record, so such a
-// record costs one extra look. And a subtree listener that doesn't ask for
-// children stops hearing a removed subtree at the observer's next report,
-// where an observer of its own would keep hearing it until its own next
-// record; every part that watches a subtree asks for children.
+// Where it can't match an observer of its own, it hears more or less only
+// about nodes outside a listener's tree, which the parts using this don't
+// look at, since they read the DOM again on any record:
+// - Records are routed by where a node is when they're read, so a listener can
+//   hear a record about a node from before it moved into or out of its tree.
+// - Observing a target again, when a listener with other options starts or
+//   stops on it, or starting over after many stops, drops the browser's
+//   transient observers, so later changes inside a subtree removed before
+//   then go unheard. An observer of its own would hear them until its next
+//   report. Holding those nodes would keep removed subtrees alive.
+// - A subtree listener that doesn't ask for children stops hearing a removed
+//   subtree at the observer's next report, where an observer of its own would
+//   until its own next record.
 //
 // A test may swap the global observer for a stand-in, so the registry keeps
 // the constructor it was built with, and a watch that starts after a swap
@@ -254,33 +260,12 @@ function widest(subscriptions: Iterable<Subscription>): MutationObserverInit {
   return init;
 }
 
-// Observes a target with the widest options of its own listeners and of the
-// trees it was removed from since the last report. Observing a target again
-// drops the browser's transient observers under it, so what it removed is
-// first routed, and then observed in its own right until the next report,
-// when the browser would have dropped them too.
-function observe(registry: Registry, target: Node, again = true) {
-  const own = registry.listeners.get(target) ?? NONE;
-  const gone = registry.removed.get(target);
-  const init = widest(gone ? [...own, ...gone] : own);
+function observe(registry: Registry, target: Node, subscriptions: Set<Subscription>) {
+  const init = widest(subscriptions);
   const key = JSON.stringify(init);
-  const before = registry.observed.get(target);
-  if (before === key) return;
-  const drops = again && before !== undefined;
-  if (drops) {
-    route(registry, registry.observer.takeRecords());
-    deliverSoon(registry);
-  }
+  if (registry.observed.get(target) === key) return;
   registry.observed.set(target, key);
   registry.observer.observe(target, init);
-  if (drops) keepRemoved(registry);
-}
-
-// Observes every node removed since the last report, with the options of the
-// trees it left, for the transient observers a re-observe or restart dropped.
-// The observer holds its nodes weakly, so these cost nothing once they're gone.
-function keepRemoved(registry: Registry) {
-  for (const node of registry.removed.keys()) observe(registry, node, false);
 }
 
 export type MutationWatcher = {
@@ -307,7 +292,7 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
   let own = reg.listeners.get(target);
   if (!own) reg.listeners.set(target, (own = new Set()));
   own.add(subscription);
-  observe(reg, target);
+  observe(reg, target, own);
   const watched = own;
   return {
     take: () => {
@@ -324,7 +309,7 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       reg.pending.delete(subscription);
       watched.delete(subscription);
       // Narrower options for the listeners left on this target.
-      if (watched.size) return observe(reg, target);
+      if (watched.size) return observe(reg, target, watched);
       reg.listeners.delete(target);
       if (!reg.listeners.size) {
         reg.observer.disconnect();
@@ -343,9 +328,9 @@ export function observeMutations(target: Node, watch: MutationWatch, listener: L
       deliverSoon(reg);
       reg.observer.disconnect();
       reg.observed.clear();
+      reg.removed.clear();
       reg.dropped = 0;
-      for (const node of reg.listeners.keys()) observe(reg, node, false);
-      keepRemoved(reg);
+      for (const [node, subscriptions] of reg.listeners) observe(reg, node, subscriptions);
     },
   };
 }
