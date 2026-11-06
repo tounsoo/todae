@@ -177,12 +177,10 @@ describe('observeMutations', () => {
     const chain: HTMLElement[] = [];
     let node: HTMLElement = root;
     for (let i = 0; i < 500; i++) chain.push((node = node.appendChild(document.createElement('div'))));
-    let heard = 0;
     const watcher = observeMutations(root, { childList: true, subtree: true }, () => {});
     const parentNode = vi.spyOn(Node.prototype, 'parentNode', 'get');
     for (const el of chain.reverse()) el.remove();
-    heard = watcher.take().length;
-    expect(heard).toBe(500);
+    expect(watcher.take()).toHaveLength(500);
     // Each node's parent is read about once, not once per level.
     expect(parentNode.mock.calls.length).toBeLessThan(5 * 500);
     parentNode.mockRestore();
