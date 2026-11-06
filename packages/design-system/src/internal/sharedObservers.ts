@@ -1,14 +1,16 @@
-// One ResizeObserver and one child-list MutationObserver for every part on
-// the page that watches a scroller, instead of one or two per part. A page of
+// One ResizeObserver and one MutationObserver (sharedMutations.ts) for every
+// part on the page that watches a scroller, instead of one or two per part. A page of
 // 1,000 tab lists built 6,000 observers before: the list's own pair, its
 // scroll arrows' pair and its roving focus's pair. Each target is observed
 // once however many parts watch it, and every report of one browser callback
 // reaches its listeners in that one callback, so the parts can batch what
 // they measure (see layoutBatch.ts).
 //
-// A test may swap the global observer for a stand-in, so each registry keeps
+// A test may swap the global observer for a stand-in, so the registry keeps
 // the constructor it was built with, and a watch that starts after a swap
 // builds a new registry with the new one.
+
+import { observeMutations } from './sharedMutations.js';
 
 type SizeListener = (entry: ResizeObserverEntry) => void;
 
@@ -87,69 +89,9 @@ export function observeSize(target: Element, listener: SizeListener): () => void
   };
 }
 
-type ChildRegistry = {
-  make: typeof MutationObserver;
-  observer: MutationObserver;
-  listeners: Map<Node, Set<{ run: () => void }>>;
-  // Targets the observer still watches that nobody listens to any more, since
-  // a MutationObserver can't stop watching one node alone.
-  dropped: number;
-};
-let childLists: ChildRegistry | null = null;
-
-function deliver(registry: ChildRegistry, records: MutationRecord[]) {
-  const changed = new Set<Node>();
-  for (const record of records) changed.add(record.target);
-  for (const target of changed) {
-    const own = registry.listeners.get(target);
-    if (own) notify(own, (subscription) => subscription.run());
-  }
-}
-
-function childRegistry(): ChildRegistry | null {
-  if (typeof MutationObserver === 'undefined') return null;
-  if (childLists?.make === MutationObserver) return childLists;
-  const created: ChildRegistry = {
-    make: MutationObserver,
-    listeners: new Map(),
-    dropped: 0,
-    observer: new MutationObserver((records) => deliver(created, records)),
-  };
-  childLists = created;
-  return created;
-}
-
 /** Calls `listener` after children are added to or removed from `target`. Returns the stop. */
 export function observeChildren(target: Node, listener: () => void): () => void {
-  const registry = childRegistry();
-  if (!registry) return () => {};
-  let own = registry.listeners.get(target);
-  if (!own) {
-    own = new Set();
-    registry.listeners.set(target, own);
-    registry.observer.observe(target, { childList: true });
-  }
-  const subscription = { run: listener };
-  own.add(subscription);
-  return () => {
-    if (!own.delete(subscription) || own.size) return;
-    registry.listeners.delete(target);
-    if (!registry.listeners.size) {
-      registry.observer.disconnect();
-      if (childLists === registry) childLists = null;
-      return;
-    }
-    // Once the targets nobody hears outnumber the rest, start over with the
-    // live ones, handing on what is pending first. Each restart follows as
-    // many stops as it re-observes, so a page unmounting 1,000 lists costs
-    // about 2,000 observes in all.
-    registry.dropped++;
-    if (registry.dropped <= registry.listeners.size) return;
-    deliver(registry, registry.observer.takeRecords());
-    registry.observer.disconnect();
-    registry.dropped = 0;
-    for (const node of registry.listeners.keys()) registry.observer.observe(node, { childList: true });
-  };
+  return observeMutations(target, { childList: true }, () => listener()).stop;
 }
 
 /** A scroller's content box from its resize report, fraction kept. */

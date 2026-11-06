@@ -369,7 +369,7 @@ describe('Tabs indicator anchor', () => {
 });
 
 describe('Tabs on a page of many', () => {
-  it('shares one resize observer and one child-list observer across every list and its arrows', async () => {
+  it('shares one resize observer and one mutation observer across every list and its arrows', async () => {
     let resizeObservers = 0;
     let mutationObservers = 0;
     const watched = new Set<Element>();
@@ -411,8 +411,8 @@ describe('Tabs on a page of many', () => {
       );
       await act(async () => {});
       expect(resizeObservers).toBe(1);
-      // The shared child-list observer, and each list's roving focus.
-      expect(mutationObservers).toBe(copies + 1);
+      // One for the page: every list's children and roving focus share it.
+      expect(mutationObservers).toBe(1);
       // Each list and its children, the arrow rail among them, once.
       expect(watched.size).toBe(copies * 5);
       unmount();
