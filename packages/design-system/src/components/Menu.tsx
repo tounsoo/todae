@@ -26,6 +26,7 @@ import { useControlledState } from '../hooks/useControlledState.js';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../overlay/popover.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { isPopoverOpen, reshowHeldInside, usePopoverSync } from '../overlay/usePopoverSync.js';
+import { useOpenedOnce } from '../internal/useOpenedOnce.js';
 import { anchoredContentStyle, anchorTriggerStyle } from '../overlay/anchorName.js';
 import { tokenMs } from '../overlay/cssTime.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
@@ -552,13 +553,6 @@ function BoxAnchor({
       }
     />
   );
-}
-
-/** True from the render where `open` first turns true, and from then on. */
-function useOpenedOnce(open: boolean): boolean {
-  const [opened, setOpened] = useState(open);
-  if (open && !opened) setOpened(true);
-  return opened || open;
 }
 
 function Content({

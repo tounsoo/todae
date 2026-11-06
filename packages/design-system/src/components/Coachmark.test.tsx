@@ -76,6 +76,20 @@ describe('Coachmark', () => {
     expect(popup.style.getPropertyValue('position-anchor')).toBe(name);
   });
 
+  it('mounts its content on the first open, and keeps its name and description after it closes', async () => {
+    render(<Harness open={false} />);
+    const popup = document.querySelector<HTMLElement>('[popover="manual"][role="dialog"]')!;
+    expect(screen.queryByText('Save the report as a file.')).toBeNull();
+    expect(popup.textContent).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    expect(screen.getByRole('dialog', { name: 'New: export' })).toBe(popup);
+    expect(document.getElementById(popup.getAttribute('aria-describedby')!)?.textContent).toBe('Save the report as a file.');
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    await waitFor(() => expect(popup.hasAttribute('data-popover-open')).toBe(false));
+    expect(screen.getByRole('dialog', { name: 'New: export', hidden: true })).toBe(popup);
+    expect(popup.getAttribute('aria-describedby')).not.toBeNull();
+  });
+
   it('makes the page inert except the target, and lifts it on close', () => {
     render(<Harness />);
     const target = screen.getByRole('button', { name: 'Export' });

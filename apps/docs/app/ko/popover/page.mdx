@@ -11,6 +11,8 @@ import { Table } from '@tounsoo/todae/table';
 
 비모달 `popover="manual"`입니다. 바깥 클릭과 Escape는 `onOpenChange(false, reason)`을 호출합니다. `hidePopover()`는 `open`이 false가 된 뒤에만 실행되므로, 거부하면 계속 표시됩니다.
 
+표면은 항상 페이지에 있으므로 이를 가리키는 id는 찾을 수 있지만, 그 안의 내용은 처음 열릴 때 마운트되고 그 뒤로도 마운트된 채 남습니다. 닫힌 콤보박스, 칩 목록, 코치마크가 많은 페이지도 하나가 열리기 전까지는 그 내용을 렌더링하지 않으며, 내용은 열릴 때마다 상태를 유지합니다. 처음 열리기 전에 내용을 읽는 코드나 테스트는 먼저 팝오버를 열어야 합니다.
+
 포커스 트랩, `aria-modal`, 스크롤 잠금이 없고, 열려 있는 동안 inert도 없습니다. 포털도 없습니다. 표면이 React 트리 안에 머물러 `ThemeProvider` 변수를 상속합니다.
 
 위치는 CSS 앵커로만 정합니다. `getTriggerProps`가 `anchor-name`을 설정합니다. 트리거가 앵커가 아닐 때(Combobox의 Field)는 `anchorRef`가 같은 일을 합니다. 콘텐츠는 `position-anchor`와 `top: calc(anchor(bottom) + var(--todae-popover-offset))`을 씁니다. 간격은 `popover.offset` 토큰(`--todae-popover-offset`)이며, `space.1`(`0.25rem`)을 가리킵니다. 뒤집기는 `@position-try --todae-popover-flip-block`과 `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`입니다. JS 고정, `getBoundingClientRect` 추적, rAF 스크롤 연결은 없습니다.

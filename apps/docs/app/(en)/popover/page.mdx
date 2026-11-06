@@ -11,6 +11,8 @@ import { Table } from '@tounsoo/todae/table';
 
 Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
 
+The surface is always in the page, so ids that point at it resolve, but what it holds mounts on the first open and stays mounted after it. A page of closed comboboxes, chip lists and coachmarks renders none of their content until one opens, and the content keeps its state between opens. Code or tests that read the content before the first open should open the popover first.
+
 No focus trap, no `aria-modal`, no scroll lock, and no inert while open. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
 
 Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))`. The gap is the `popover.offset` token (`--todae-popover-offset`), which points at `space.1` (`0.25rem`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.
