@@ -28,6 +28,7 @@
     "tokens:api:check": "pnpm --filter @tounsoo/todae tokens:api:check",
     "test": "node --test stylelint/*.test.mjs eslint/*.test.mjs .claude/skills/verify/verify.test.mjs .github/scripts/*.test.mjs && pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
+    "bench": "pnpm --filter bench bench",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "stylelint": "stylelint \"packages/design-system/src/**/*.css\"",
