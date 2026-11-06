@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useStableComposedRef } from '../internal/props.js';
+import { observeMutations } from '../internal/sharedMutations.js';
 import { observeSize } from '../internal/sharedObservers.js';
 import { isReachable } from '../overlay/tabbables.js';
 import { useControlledState } from './useControlledState.js';
@@ -293,24 +294,27 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       if (now) syncNow();
       else if (later && !frame) frame = requestAnimationFrame(syncNow);
     };
-    const watcher = new MutationObserver(handle);
-    watcher.observe(node, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      // class and style too: either can hide an item.
-      attributeFilter: [
-        'data-todae-roving-disabled',
-        'data-todae-roving-value',
-        'hidden',
-        'inert',
-        'disabled',
-        // A tree item opening or closing shows or hides the items inside it.
-        'aria-expanded',
-        'class',
-        'style',
-      ],
-    });
+    // One observer for the page, shared with every group and scroller.
+    const watcher = observeMutations(
+      node,
+      {
+        childList: true,
+        subtree: true,
+        // class and style too: either can hide an item.
+        attributeFilter: [
+          'data-todae-roving-disabled',
+          'data-todae-roving-value',
+          'hidden',
+          'inert',
+          'disabled',
+          // A tree item opening or closing shows or hides the items inside it.
+          'aria-expanded',
+          'class',
+          'style',
+        ],
+      },
+      handle,
+    );
     // A size change catches the group itself being shown or hidden, say by
     // an ancestor opening, which no mutation inside it reports.
     // Only a change between no size and some size matters, not every resize.
@@ -326,11 +330,11 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     observer.current = {
       node,
       disconnect: () => {
-        watcher.disconnect();
+        watcher.stop();
         stopResize();
         cancelAnimationFrame(frame);
       },
-      flush: () => handle(watcher.takeRecords()),
+      flush: () => handle(watcher.take()),
     };
     latestSync.current();
   }, [scope]);

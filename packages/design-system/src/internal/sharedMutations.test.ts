@@ -1,0 +1,259 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { observeMutations } from './sharedMutations.js';
+
+let made = 0;
+const NativeMutationObserver = globalThis.MutationObserver;
+class CountedMutationObserver extends NativeMutationObserver {
+  constructor(callback: MutationCallback) {
+    super(callback);
+    made++;
+  }
+}
+
+beforeEach(() => {
+  made = 0;
+  vi.stubGlobal('MutationObserver', CountedMutationObserver);
+});
+afterEach(() => vi.unstubAllGlobals());
+
+const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+const kinds = (records: MutationRecord[]) =>
+  records.map((record) => (record.type === 'attributes' ? `attr:${record.attributeName}` : record.type));
+
+describe('observeMutations', () => {
+  it('watches every target with one observer, and each listener hears its own tree only', async () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    document.body.append(a, b);
+    const heard: string[] = [];
+    const stops = [a, b].map(
+      (target, index) =>
+        observeMutations(target, { childList: true, subtree: true }, (records) =>
+          heard.push(`${index}:${kinds(records).join()}`),
+        ).stop,
+    );
+    expect(made).toBe(1);
+    a.append(document.createElement('span'));
+    await settle();
+    expect(heard).toEqual(['0:childList']);
+    for (const stop of stops) stop();
+    a.remove();
+    b.remove();
+  });
+
+  it('gives each listener only the records its own options ask for, on a target or nested inside another', async () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    const text = document.createTextNode('one');
+    inner.append(text);
+    outer.append(inner);
+    const heard: Record<string, string[]> = { outer: [], inner: [], self: [] };
+    const stops = [
+      observeMutations(outer, { subtree: true, characterData: true }, (records) => heard.outer!.push(...kinds(records))),
+      observeMutations(inner, { subtree: true, attributeFilter: ['hidden'] }, (records) =>
+        heard.inner!.push(...kinds(records)),
+      ),
+      // Not subtree: only changes to the inner element itself.
+      observeMutations(inner, { attributes: true }, (records) => heard.self!.push(...kinds(records))),
+    ].map((watcher) => watcher.stop);
+    text.data = 'two';
+    inner.hidden = true;
+    inner.title = 'x';
+    const span = document.createElement('span');
+    inner.append(span);
+    span.className = 'c';
+    await settle();
+    expect(heard.outer).toEqual(['characterData']);
+    expect(heard.inner).toEqual(['attr:hidden']);
+    expect(heard.self).toEqual(['attr:hidden', 'attr:title']);
+    for (const stop of stops) stop();
+  });
+
+  it('hears changes inside a subtree removed in the same batch, as an observer of its own would', async () => {
+    const root = document.createElement('div');
+    const parent = document.createElement('p');
+    const text = document.createTextNode('one');
+    parent.append(text);
+    root.append(parent);
+    const heard: MutationRecord[][] = [];
+    const watcher = observeMutations(root, { subtree: true, childList: true, characterData: true }, (records) =>
+      heard.push(records),
+    );
+    text.data = 'two';
+    text.remove();
+    parent.remove();
+    await settle();
+    expect(heard).toHaveLength(1);
+    expect(heard[0]!.map((record) => record.type)).toEqual(['characterData', 'childList', 'childList']);
+    expect(heard[0]![1]!.removedNodes[0]).toBe(text);
+    watcher.stop();
+  });
+
+  it('hears an attribute change to a node removed in the same batch without asking for children', async () => {
+    const root = document.createElement('div');
+    const child = document.createElement('div');
+    root.append(child);
+    const heard: string[] = [];
+    const watcher = observeMutations(root, { subtree: true, attributes: true }, (records) =>
+      heard.push(...kinds(records)),
+    );
+    child.hidden = true;
+    child.remove();
+    await settle();
+    expect(heard).toEqual(['attr:hidden']);
+    watcher.stop();
+  });
+
+  it('keeps a change made before a listener joined from it, as an observer made after would', async () => {
+    const target = document.createElement('div');
+    const first = observeMutations(target, { childList: true }, () => {});
+    target.append(document.createElement('i'));
+    const heard: string[] = [];
+    const late = observeMutations(target, { childList: true }, (records) => heard.push(...kinds(records)));
+    await settle();
+    expect(heard).toEqual([]);
+    target.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['childList']);
+    first.stop();
+    late.stop();
+  });
+
+  it('hands a listener its records at once on take, and the others theirs a microtask later', async () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    const heard: string[] = [];
+    const first = observeMutations(a, { childList: true }, () => heard.push('a'));
+    const second = observeMutations(b, { childList: true }, () => heard.push('b'));
+    a.append(document.createElement('i'));
+    b.append(document.createElement('i'));
+    heard.push(...first.take().map(() => 'a'));
+    expect(heard).toEqual(['a']);
+    await Promise.resolve();
+    expect(heard).toEqual(['a', 'b']);
+    // Nothing is heard twice.
+    await settle();
+    expect(heard).toEqual(['a', 'b']);
+    first.stop();
+    second.stop();
+  });
+
+  it('calls listeners in the order they started, as observers of their own are', async () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    outer.append(inner);
+    const heard: string[] = [];
+    // A child's effect runs first, so its watch starts first.
+    const first = observeMutations(inner, { childList: true }, () => heard.push('inner'));
+    const second = observeMutations(outer, { childList: true, subtree: true }, () => heard.push('outer'));
+    inner.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['inner', 'outer']);
+    first.stop();
+    second.stop();
+  });
+
+  it('hands a listener taking inside another listener its records in the order they happened', async () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    const heard: string[] = [];
+    let take = (): MutationRecord[] => [];
+    const first = observeMutations(a, { childList: true }, () => {
+      b.title = 'changed';
+      heard.push(...take().map((record) => `took ${kinds([record]).join()}`));
+    });
+    const later = observeMutations(b, { childList: true, attributes: true }, (records) => heard.push(...kinds(records)));
+    take = later.take;
+    b.append(document.createElement('i'));
+    a.append(document.createElement('i'));
+    await settle();
+    expect(heard).toEqual(['took childList', 'took attr:title']);
+    first.stop();
+    later.stop();
+  });
+
+  it('routes a batch of nested removals in one walk, however deep', async () => {
+    const root = document.createElement('div');
+    const chain: HTMLElement[] = [];
+    let node: HTMLElement = root;
+    for (let i = 0; i < 500; i++) chain.push((node = node.appendChild(document.createElement('div'))));
+    const watcher = observeMutations(root, { childList: true, subtree: true }, () => {});
+    const parentNode = vi.spyOn(Node.prototype, 'parentNode', 'get');
+    for (const el of chain.reverse()) el.remove();
+    expect(watcher.take()).toHaveLength(500);
+    // Each node's parent is read about once, not once per level.
+    expect(parentNode.mock.calls.length).toBeLessThan(5 * 500);
+    parentNode.mockRestore();
+    watcher.stop();
+  });
+
+  it('keeps hearing the live targets after stops, and starts over once most targets are dropped', async () => {
+    const lists = Array.from({ length: 4 }, () => document.createElement('div'));
+    const observe = vi.spyOn(CountedMutationObserver.prototype, 'observe');
+    const heard: number[] = [];
+    const stops = lists.map(
+      (list, index) => observeMutations(list, { childList: true }, () => heard.push(index)).stop,
+    );
+    expect(observe).toHaveBeenCalledTimes(4);
+    stops[0]!();
+    stops[1]!();
+    expect(observe).toHaveBeenCalledTimes(4);
+    // Three dropped against one live: the live one is observed afresh.
+    stops[2]!();
+    expect(observe).toHaveBeenCalledTimes(5);
+    for (const list of lists) list.append(document.createElement('span'));
+    await settle();
+    expect(heard).toEqual([3]);
+    stops[3]!();
+    observe.mockRestore();
+  });
+
+  it('narrows a target’s options when a listener with wider ones stops', async () => {
+    const el = document.createElement('div');
+    const observe = vi.spyOn(CountedMutationObserver.prototype, 'observe');
+    const wide = observeMutations(el, { attributes: true }, () => {});
+    const narrow = observeMutations(el, { attributeFilter: ['hidden'] }, () => {});
+    // Every attribute already covers the filter.
+    expect(observe).toHaveBeenCalledTimes(1);
+    wide.stop();
+    expect(observe).toHaveBeenLastCalledWith(el, expect.objectContaining({ attributeFilter: ['hidden'] }));
+    narrow.stop();
+    observe.mockRestore();
+  });
+
+  it('reaches every other listener when one throws, and none stopped earlier in the same report', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const a = document.createElement('div');
+      const b = document.createElement('div');
+      const c = document.createElement('div');
+      const heard: string[] = [];
+      let third = () => {};
+      const stops = [
+        observeMutations(a, { childList: true }, () => {
+          heard.push('a');
+          third();
+          throw new Error('boom');
+        }).stop,
+        observeMutations(b, { childList: true }, () => heard.push('b')).stop,
+      ];
+      third = observeMutations(c, { childList: true }, () => heard.push('c')).stop;
+      for (const el of [a, b, c]) el.append(document.createElement('i'));
+      await Promise.resolve();
+      expect(heard).toEqual(['a', 'b']);
+      expect(() => vi.runAllTimers()).toThrow('boom');
+      for (const stop of stops) stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does nothing where MutationObserver is missing', () => {
+    vi.stubGlobal('MutationObserver', undefined);
+    const watcher = observeMutations(document.createElement('div'), { childList: true }, () => {});
+    expect(() => {
+      expect(watcher.take()).toEqual([]);
+      watcher.stop();
+    }).not.toThrow();
+  });
+});

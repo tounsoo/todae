@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { observeMutations } from '../internal/sharedMutations.js';
 
 export type UseHighlightOptions = {
   /** Name to style with ::highlight(name). Give each hook its own name. */
@@ -157,12 +158,10 @@ export function useHighlight({
       setMatches((prev) => (sameRanges(prev, next) ? prev : next.length === 0 ? NO_MATCHES : next));
     };
     publish();
-    if (typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver((records) => {
+    // One observer for the page, shared with every other watch.
+    return observeMutations(node, { subtree: true, childList: true, characterData: true }, (records) => {
       if (search.update(records)) publish();
-    });
-    observer.observe(node, { subtree: true, childList: true, characterData: true });
-    return () => observer.disconnect();
+    }).stop;
   }, [node, source, flags]);
 
   // One Highlight for the hook's whole life, so its priority and type survive
