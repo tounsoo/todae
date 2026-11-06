@@ -93,6 +93,14 @@ function keyTrace(el: HTMLInputElement) {
     log.push(`${Math.round(performance.now() - start)}ms ${event.type} ${detail}: "${el.value}" ${el.selectionStart}..${el.selectionEnd}${focus}`);
   };
   for (const type of ['keydown', 'keypress', 'keyup', 'beforeinput', 'input', 'select', 'selectionchange', 'focus', 'blur']) el.addEventListener(type, note, true);
+  // Focus moving anywhere in the page, or leaving the frame, which a stray focus() or Firefox's form popup would show.
+  const elsewhere = (event: Event) => {
+    const target = event.target instanceof Element ? `${event.target.tagName}${event.target.hasAttribute('data-todae-value-input') ? ' value input' : ''}` : event.target === window ? 'window' : 'document';
+    log.push(`${Math.round(performance.now() - start)}ms page ${event.type} ${target}: "${el.value}" ${el.selectionStart}..${el.selectionEnd}`);
+  };
+  for (const type of ['focusin', 'focusout']) document.addEventListener(type, elsewhere, true);
+  for (const type of ['focus', 'blur']) window.addEventListener(type, elsewhere);
+  log.push(`0ms start: focus on ${document.activeElement?.tagName}, frame ${document.hasFocus() ? 'focused' : 'not focused'}`);
   return () => `\n${log.join('\n')}\n`;
 }
 const valueOf = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!.value;
@@ -214,7 +222,9 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().getAttribute('aria-invalid')).toBeNull();
   });
 
-  it('blocks Enter on a required empty field, shows the message and keeps focus in the input', async () => {
+  it('blocks Enter on a required empty field, shows the message and keeps focus in the input', blocksEmptyEnter);
+
+  async function blocksEmptyEnter() {
     const onSubmit = vi.fn();
     render(<Quantity onSubmit={onSubmit} required />);
     await userEvent.click(input());
@@ -222,10 +232,19 @@ describe('Field.NumberInput in a browser', () => {
     expect(onSubmit).not.toHaveBeenCalled();
     await screen.findByText('This field is required');
     await waitFor(() => expect(document.activeElement).toBe(input()));
+  }
+
+  it('steps with the arrows and the page keys, and snaps and clamps a typed number', stepsAndSnaps);
+
+  // DIAGNOSTIC, to come out before review: the test passed 61 times in a row alone, so this runs it after the test before it, which leaves a failed form check, 40 times in Firefox.
+  describe.runIf(server.browser === 'firefox')('DIAGNOSTIC: stepping after a blocked Enter', () => {
+    for (let run = 1; run <= 40; run++) {
+      it(`blocks Enter, run ${run}`, blocksEmptyEnter);
+      it(`then steps and snaps, run ${run}`, stepsAndSnaps);
+    }
   });
 
-  // DIAGNOSTIC, to come out before review: repeats in Firefox to catch the run where the typed 37 commits as 75.
-  it('steps with the arrows and the page keys, and snaps and clamps a typed number', { repeats: server.browser === 'firefox' ? 60 : 0 }, async () => {
+  async function stepsAndSnaps() {
     render(<Quantity min={0} max={100} step={5} />);
     const trace = keyTrace(input());
     await userEvent.click(input());
@@ -240,7 +259,7 @@ describe('Field.NumberInput in a browser', () => {
     await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
     expect(input().value, trace()).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
-  });
+  }
 
   it('refuses a letter as it is typed', async () => {
     render(<Quantity locale="en" />);
