@@ -4,6 +4,7 @@ These files record dated decisions. Design-system rules stay in [ARCHITECTURE.md
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
+- [0011. Performance is measured by an on-demand benchmark](0011-on-demand-benchmark.md). Active, 2026-11-06.
 - [0010. The pixel screenshot baselines are removed](0010-pixel-baselines-removed.md). Active, 2026-11-04.
 - [0009. Each docs example is one file, shown as its own code](0009-docs-example-files.md). Active, 2026-11-03.
 - [0008. The bundle size check is removed](0008-bundle-size-check-removed.md). Active, 2026-11-02.
