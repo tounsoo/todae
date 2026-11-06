@@ -7,10 +7,10 @@
 import * as todae from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
 import { COVERAGE, GROUPS } from './coverage.ts';
-import type { Coverage } from './cases/types.tsx';
+import type { Coverage, Scenario } from './cases/types.tsx';
 import { SCENARIOS } from './scenarios.tsx';
 
-const isCases = (coverage: Coverage) => Array.isArray(coverage);
+const isCases = (coverage: Coverage): coverage is readonly Scenario[] => Array.isArray(coverage);
 
 function publicParts(): string[] {
   const parts: string[] = [];
@@ -39,7 +39,7 @@ describe('bench coverage', () => {
   });
 
   it('points every via at a part with cases of its own', () => {
-    for (const [part, coverage] of Object.entries(COVERAGE)) {
+    for (const [part, coverage] of Object.entries<Coverage>(COVERAGE)) {
       if (isCases(coverage) || !('via' in coverage)) continue;
       const target = COVERAGE[coverage.via];
       expect(isCases(target) && target.length > 0, `${part} is measured via ${coverage.via}, which has no cases`).toBe(true);
@@ -47,7 +47,7 @@ describe('bench coverage', () => {
   });
 
   it('gives every skip a reason and every listed part a case', () => {
-    for (const [part, coverage] of Object.entries(COVERAGE)) {
+    for (const [part, coverage] of Object.entries<Coverage>(COVERAGE)) {
       if (isCases(coverage)) expect(coverage.length, part).toBeGreaterThan(0);
       else if ('skip' in coverage) expect(coverage.skip.trim(), part).not.toBe('');
     }
@@ -56,7 +56,7 @@ describe('bench coverage', () => {
   it('keeps case ids unique and hook case ids under use-', () => {
     const ids = SCENARIOS.map((scenario) => scenario.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const [part, coverage] of Object.entries(COVERAGE)) {
+    for (const [part, coverage] of Object.entries<Coverage>(COVERAGE)) {
       if (!isCases(coverage) || !part.startsWith('use')) continue;
       for (const scenario of coverage) expect(scenario.id, part).toMatch(/^use-/);
     }
