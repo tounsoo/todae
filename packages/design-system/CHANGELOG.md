@@ -1,5 +1,47 @@
 # @tounsoo/todae
 
+## 0.8.0
+
+### Minor Changes
+
+- Menu.Content and Menu.SubmenuContent now mount their items on the first open and keep them mounted after it, so a page of closed row menus renders no items until one opens. ([#385](https://github.com/tounsoo/todae/pull/385))
+  
+  - A menu's items are no longer in the DOM before it first opens. Code or tests that find an item, or read a ref to one, before the menu opens should open it first, or pass `defaultOpen` to `Menu.Root` (and to `Menu.Submenu` for a submenu's items).
+
+- Popover.Root, Coachmark.Root and the ChipList panel now mount their content on the first open and keep it mounted after it, so a page of closed comboboxes, chip lists and coachmarks renders none of their content until one opens. ([#393](https://github.com/tounsoo/todae/pull/393))
+  
+  - What a popover holds is no longer in the DOM before it first opens, though the popover element and its id are. Code or tests that find content inside a closed popover, such as a combobox's listbox and options, a coachmark's title, or ChipList's folded chips, or that read a ref to it, should open it first: pass `open` or `defaultOpen` to the hook that drives it, or press ChipList's +N button.
+  - `useCombobox` sets `aria-controls` on its input, and on its trigger in a sheet or dialog, only while the list is open, since the listbox is no longer in the page before the first open.
+  - Form fields placed inside a `Popover.Root` that never opened are not in the page, so until it has opened once a form around it neither submits their values nor checks them, and a `required` field there no longer blocks the submit. Keep fields a form needs outside the popover, or validate them yourself.
+
+- Tabs.List: a horizontal list that holds more tabs than fit now scrolls sideways in one row, with scroll arrows at its cut-off edges on by default (`arrows={false}` leaves them out), and scrolls a selected tab past its edge into view. ([#374](https://github.com/tounsoo/todae/pull/374))
+  
+  - If your CSS set `border-bottom` on a horizontal `Tabs.List`, the line under the tabs is now a background at the foot of the list: change its color and thickness with the `tabs.border` and `tabs.border-width` tokens instead.
+
+### Patch Changes
+
+- Button.Root and a clamped Text.Root no longer watch themselves. They read whether a label or text is cut only when the pointer enters it or keyboard focus reaches it (for Text, also focus on a link, row or other holder around it), so a page of 1,000 Buttons or clamped Texts runs no observer instead of 2,000, and a clamped Text mounts its tip only once it is needed. Two things change: `data-todae-cut` now marks a clamped Text only while its tip is on, after a hover or keyboard focus found it cut, rather than whenever it is cut; and a Button child that swaps an icon for text from its own state, without the Button rendering again, changes the Button's icon-only look at the Button's next render rather than at once. ([#394](https://github.com/tounsoo/todae/pull/394))
+
+- A closed Popover, Menu, Menu submenu or Coachmark no longer does open-state work: its scroll-edge arrows mount on the first open and measure and watch only while it is open, and a popover reads its anchor's position only as it opens or closes, so pages with many closed menus or popovers mount faster. ([#377](https://github.com/tounsoo/todae/pull/377))
+
+- A Dialog, Drawer or BottomSheet that opens under an open Coachmark.Root, such as a combobox's dialog its target opens, now takes focus as it opens and stays usable wherever it sits, even when the target names nothing in `aria-controls`; before, it opened inert and focus stayed on the trigger. A page's own `<dialog>` is lifted the same way where the browser sends `beforetoggle`. With `dismissOnBackdrop`, a press in such a dialog no longer closes the coachmark. A closed dialog, and one that was already open without being modal before a coachmark opened, is still dimmed with the page. ([#396](https://github.com/tounsoo/todae/pull/396))
+
+- Button.Root and a clamped Text.Root no longer rebuild their observers or read layout when they render again unchanged. Button now measures again when a variant, class or style change cuts its label, and a clamped Text measures again when an attribute or inline style around it, including a shadow host's, cuts it. ([#380](https://github.com/tounsoo/todae/pull/380))
+
+- Menu no longer resizes itself from a resize callback when it opens, which laid the frame out twice and made Chromium report a ResizeObserver loop. ([#382](https://github.com/tounsoo/todae/pull/382))
+
+- New `Coachmark`: `Coachmark.Root` dims the page around one element, which stays usable through a hole in the dim page, makes the rest inert, and points a dialog popup with `Coachmark.Title`, `Coachmark.Description`, `Coachmark.Footer` and `Coachmark.Close` at it; new tokens `coachmark.max-width`, `coachmark.cutout.padding` and `coachmark.motion.*`, whose `move` pair slides the hole and the popup to a tour's next target. The multi-step tour is a new Product tour recipe in the docs. ([#376](https://github.com/tounsoo/todae/pull/376))
+
+- `useRovingFocus` and `useHighlight` now share one page-wide MutationObserver with each other and with Tabs and scroll arrows, instead of building one per copy, so a page of 1,000 tab lists or toolbars has one MutationObserver in place of 1,001. What each hook notices is unchanged. ([#391](https://github.com/tounsoo/todae/pull/391))
+
+- A Popover, Menu or Coachmark lined up with its trigger's right edge, as it is in right-to-left text, and about as wide as the trigger now grows open from that right corner instead of the left one, because it measures where it sits with its opening scale taken out. ([#390](https://github.com/tounsoo/todae/pull/390))
+
+- Arrows at a scroller's cut-off edges. `ScrollArea.Root` takes `arrows` to show an arrow at each edge where its content is cut off, and resting a mouse or pen on one scrolls that way, faster the longer it rests (one even speed under reduced motion). Popover (`arrows`, on by default), Menu and its submenus, and the DateTimePicker time list show them when they scroll. New tokens `scroll.arrow.size`, `scroll.arrow.fg` and `scroll.arrow.bg`. ([#372](https://github.com/tounsoo/todae/pull/372))
+
+- Tabs.List, scroll-edge arrows and useRovingFocus now share one ResizeObserver and one child-list MutationObserver for the whole page, and the arrows and tab lists measure together before paint instead of one at a time, so a page of many tab lists mounts without laying the page out again for each one. ([#386](https://github.com/tounsoo/todae/pull/386))
+  
+  Code that reads a tab list's scroll position in its own layout effect now sees it before the list scrolls to a newly selected tab; the scroll is still in place before the browser paints.
+
 ## 0.7.0
 
 ### Minor Changes
