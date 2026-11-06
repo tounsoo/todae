@@ -1,4 +1,4 @@
-/** Form parts: Field and its controls, choice controls, pickers and form structure. */
+/** Field, its controls and sub-parts, and the form structure around them. */
 import { Checkbox, Field, Switch } from '@tounsoo/todae';
 import { useState } from 'react';
 import { click, focus, many, range, type CoverageGroup, type ItemProps } from './types.tsx';
