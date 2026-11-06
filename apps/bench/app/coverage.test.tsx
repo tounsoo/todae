@@ -7,7 +7,10 @@
 import * as todae from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
 import { COVERAGE, GROUPS } from './coverage.ts';
+import type { Coverage } from './cases/types.tsx';
 import { SCENARIOS } from './scenarios.tsx';
+
+const isCases = (coverage: Coverage) => Array.isArray(coverage);
 
 function publicParts(): string[] {
   const parts: string[] = [];
@@ -37,16 +40,16 @@ describe('bench coverage', () => {
 
   it('points every via at a part with cases of its own', () => {
     for (const [part, coverage] of Object.entries(COVERAGE)) {
-      if (!('via' in coverage)) continue;
+      if (isCases(coverage) || !('via' in coverage)) continue;
       const target = COVERAGE[coverage.via];
-      expect(Array.isArray(target) && target.length > 0, `${part} is measured via ${coverage.via}, which has no cases`).toBe(true);
+      expect(isCases(target) && target.length > 0, `${part} is measured via ${coverage.via}, which has no cases`).toBe(true);
     }
   });
 
   it('gives every skip a reason and every listed part a case', () => {
     for (const [part, coverage] of Object.entries(COVERAGE)) {
-      if ('skip' in coverage) expect(coverage.skip.trim(), part).not.toBe('');
-      if (Array.isArray(coverage)) expect(coverage.length, part).toBeGreaterThan(0);
+      if (isCases(coverage)) expect(coverage.length, part).toBeGreaterThan(0);
+      else if ('skip' in coverage) expect(coverage.skip.trim(), part).not.toBe('');
     }
   });
 
@@ -54,7 +57,7 @@ describe('bench coverage', () => {
     const ids = SCENARIOS.map((scenario) => scenario.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const [part, coverage] of Object.entries(COVERAGE)) {
-      if (!Array.isArray(coverage) || !part.startsWith('use')) continue;
+      if (!isCases(coverage) || !part.startsWith('use')) continue;
       for (const scenario of coverage) expect(scenario.id, part).toMatch(/^use-/);
     }
   });
