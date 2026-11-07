@@ -106,15 +106,26 @@
           opacity var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
           inset-block-start var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
           block-size var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
-          margin-block-end var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
+          margin-block-end var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          margin-block-start var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
       }
 
+      /* The gap it gives back is the one on the side away from the edge, so
+         it shrinks toward the edge it sits by. Without a minimum it can
+         shrink below its content, as a flex item. */
       .region[data-layout='list'] .item[data-todae-exiting] {
         block-size: 0;
+        min-block-size: 0;
         margin-block-end: calc(-1 * var(--todae-toast-stack-gap));
+        /* Physical, as Chrome has no overflow-block. */
         overflow-y: clip;
         transition-duration: var(--todae-toast-motion-duration-exit);
         transition-timing-function: var(--todae-toast-motion-easing-exit);
+      }
+
+      .region[data-layout='list'][data-placement^='bottom'] .item[data-todae-exiting] {
+        margin-block-end: 0;
+        margin-block-start: calc(-1 * var(--todae-toast-stack-gap));
       }
     }
   }

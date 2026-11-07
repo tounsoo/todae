@@ -134,38 +134,50 @@
     rotate: 90deg;
   }
 
-  /* Where the engine can size to auto (Chrome), a branch's links open and
-     close by their height and fade, so the rows below slide by layout. They
-     clip only while they move, as Disclosure's content does, with room for a
-     focus ring inside the clip that the negative margin takes back from the
-     layout, and the padding keeps the list's margin inside, so the height holds
-     it throughout. Elsewhere, and under reduced motion, they show and hide at
-     once. */
+  /* A branch's links fade in and out, closing with the exit curve and opening
+     with the enter curve. The fade keeps its tokens under reduced motion, as it
+     moves nothing. */
+  .branch::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit),
+      content-visibility var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit) allow-discrete;
+  }
+
+  .branch[open]::details-content {
+    opacity: 1;
+    transition-duration: var(--todae-nav-motion-duration-enter);
+    transition-timing-function: var(--todae-nav-motion-easing-enter);
+  }
+
+  /* Where the engine can size to auto (Chrome), they also open and close by
+     their height, so the rows below slide by layout. They clip only while they
+     move, as Disclosure's content does, and as a flow root it keeps the list's
+     margin inside, so the height holds it throughout. Elsewhere, and under
+     reduced motion, they take their height at once. */
   @supports (block-size: calc-size(auto, size)) {
     @media (prefers-reduced-motion: no-preference) {
       .branch::details-content {
-        --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+        display: flow-root;
         block-size: 0;
-        margin: calc(-1 * var(--_ring-room));
-        padding: var(--_ring-room);
-        overflow: clip;
-        opacity: 0;
+        /* Physical, as Chrome has no overflow-block. Only the block axis clips,
+           so nothing overflows a narrow scroller sideways. */
+        overflow-y: clip;
         transition:
           opacity var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit),
           block-size var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit),
           content-visibility var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit) allow-discrete,
-          overflow 0s allow-discrete;
+          overflow-y 0s allow-discrete;
       }
 
       .branch[open]::details-content {
         block-size: calc-size(auto, size);
-        overflow: visible;
-        opacity: 1;
+        overflow-y: visible;
         transition:
           opacity var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
           block-size var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
           content-visibility var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter) allow-discrete,
-          overflow 0s var(--todae-nav-motion-duration-enter) allow-discrete;
+          overflow-y 0s var(--todae-nav-motion-duration-enter) allow-discrete;
       }
     }
   }

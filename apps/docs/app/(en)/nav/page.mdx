@@ -36,7 +36,7 @@ The branch is a native `<details>`. `open` sets whether it is open when it rende
 
 The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed branch turns it toward the end of its row.
 
-In Chrome a branch's links also fade and grow to their height as it opens, and shrink as it closes, over `nav.motion.duration.enter` and `nav.motion.duration.exit`, so the rows below slide; other browsers, and reduced motion, show and hide them at once.
+A branch's links fade in over `nav.motion.duration.enter` and out over `nav.motion.duration.exit`. In Chrome they also grow to their height as it opens and shrink as it closes, so the rows below slide; other browsers, and reduced motion, keep the fade and change the height at once.
 
 ## Accessible composition
 

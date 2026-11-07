@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Disclosure } from '../components/Disclosure.js';
@@ -80,6 +80,8 @@ describe('Disclosure content height', () => {
     const open = height(screen.getByTestId('reference'));
     moving.open = true;
     await frames(2);
+    // No margin arrives at once: it starts from where it was.
+    expect(height(moving) - closed).toBeLessThan(3);
     await wait(400);
     const partway = height(moving);
     expect(partway).toBeGreaterThan(closed + 0.5);
@@ -91,11 +93,14 @@ describe('Disclosure content height', () => {
   it.runIf(sizesToAuto)('ends at the height of one that was always open, and stops clipping', async () => {
     render(<Disclosures />);
     const moving = screen.getByTestId('moving') as HTMLDetailsElement;
+    // Read closed first, so the browser has a style to move from.
+    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
     moving.open = true;
-    await wait(500);
     // Its children's margins are inside from the first frame, so it ends where the twin sits.
-    expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
-    expect(hits(screen.getByTestId('sticks-out'))).toBe(true);
+    await waitFor(() => {
+      expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
+      expect(hits(screen.getByTestId('sticks-out'))).toBe(true);
+    });
   });
 
   it.runIf(sizesToAuto)('shrinks to nothing as it closes, clipped at once', async () => {
@@ -106,6 +111,8 @@ describe('Disclosure content height', () => {
     expect(open).toBeCloseTo(height(screen.getByTestId('reference')), 0);
     moving.open = false;
     await frames(2);
+    // No margin leaves at once: it starts from where it was.
+    expect(open - height(moving)).toBeLessThan(3);
     await wait(400);
     const partway = height(moving);
     expect(partway).toBeLessThan(open - 0.5);
@@ -117,6 +124,7 @@ describe('Disclosure content height', () => {
     await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     render(<Disclosures style={slow('disclosure')} />);
     const moving = screen.getByTestId('moving') as HTMLDetailsElement;
+    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
     moving.open = true;
     await frames(2);
     expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
@@ -125,6 +133,7 @@ describe('Disclosure content height', () => {
   it.skipIf(sizesToAuto)('opens to its full height at once where the engine cannot size to auto', async () => {
     render(<Disclosures style={slow('disclosure')} />);
     const moving = screen.getByTestId('moving') as HTMLDetailsElement;
+    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
     moving.open = true;
     await frames(2);
     expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
@@ -132,42 +141,78 @@ describe('Disclosure content height', () => {
 });
 
 describe('Nav branch height', () => {
-  it.runIf(sizesToAuto)('grows from nothing to its links as it opens', async () => {
-    render(
-      <Themed style={slow('nav')}>
+  function Branches({ style, open }: { style?: CSSProperties; open?: boolean }) {
+    const links = (
+      <>
+        <Nav.Item>
+          <Nav.Link href="#usage">Usage</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link href="#billing">Billing</Nav.Link>
+        </Nav.Item>
+      </>
+    );
+    return (
+      <Themed style={style}>
         <Nav.Root aria-label="Docs">
           <Nav.Item>
-            <Nav.Branch label="Reports" data-testid="moving">
-              <Nav.Item>
-                <Nav.Link href="#usage">Usage</Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link href="#billing">Billing</Nav.Link>
-              </Nav.Item>
+            <Nav.Branch label="Reports" data-testid="moving" open={open}>
+              {links}
             </Nav.Branch>
           </Nav.Item>
           <Nav.Item>
             <Nav.Branch label="Reports" data-testid="reference" open>
-              <Nav.Item>
-                <Nav.Link href="#usage">Usage</Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link href="#billing">Billing</Nav.Link>
-              </Nav.Item>
+              {links}
+            </Nav.Branch>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Branch label="Reports" data-testid="closed">
+              {links}
             </Nav.Branch>
           </Nav.Item>
         </Nav.Root>
-      </Themed>,
+      </Themed>
     );
+  }
+
+  it.runIf(sizesToAuto)('grows from nothing to its links as it opens', async () => {
+    render(<Branches style={slow('nav')} />);
     const moving = screen.getByTestId('moving') as HTMLDetailsElement;
     const closed = height(moving);
     const open = height(screen.getByTestId('reference'));
     moving.open = true;
     await frames(2);
+    // No margin arrives at once: it starts from where it was.
+    expect(height(moving) - closed).toBeLessThan(3);
     await wait(400);
     const partway = height(moving);
     expect(partway).toBeGreaterThan(closed + 0.5);
     expect(partway).toBeLessThan(open - 1);
+  });
+
+  it.runIf(sizesToAuto)('shrinks to nothing as it closes', async () => {
+    render(<Branches style={slow('nav')} open />);
+    const moving = screen.getByTestId('moving') as HTMLDetailsElement;
+    const closed = height(screen.getByTestId('closed'));
+    const open = height(moving);
+    moving.open = false;
+    await frames(2);
+    // No margin leaves at once: it starts from where it was.
+    expect(open - height(moving)).toBeLessThan(3);
+    await wait(400);
+    const partway = height(moving);
+    expect(partway).toBeLessThan(open - 0.5);
+    expect(partway).toBeGreaterThan(closed + 1);
+  });
+
+  it('shows its links at once under reduced motion, and where the engine cannot size to auto', async () => {
+    if (sizesToAuto) await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    render(<Branches style={slow('nav')} />);
+    const moving = screen.getByTestId('moving') as HTMLDetailsElement;
+    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
+    moving.open = true;
+    await frames(2);
+    expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
   });
 });
 
@@ -203,14 +248,16 @@ describe('Toast list gap', () => {
     const top = item('Oldest').getBoundingClientRect().top;
     const gone = item('Newest').getBoundingClientRect();
     const step = gone.bottom - item('Middle').getBoundingClientRect().bottom;
-    return { toaster, newest, item, top, step };
+    return { toaster, newest, item, top, step, start: gone.height };
   }
 
   it.runIf(sizesToAuto)('slides the others into the gap a leaving toast gives back', async () => {
-    const { toaster, newest, item, top, step } = await three(slow('toast', ['exit']));
+    const { toaster, newest, item, top, step, start } = await three(slow('toast', ['exit']));
     act(() => toaster.dismiss(newest));
     await frames(2);
     await wait(400);
+    // The leaving toast itself shrinks, not only the gap after it.
+    expect(height(item('Newest'))).toBeLessThan(start * 0.95);
     const moved = item('Oldest').getBoundingClientRect().top - top;
     expect(moved).toBeGreaterThan(0.5);
     expect(moved).toBeLessThan(step - 1);
@@ -222,7 +269,9 @@ describe('Toast list gap', () => {
     act(() => toaster.dismiss(newest));
     await frames(2);
     await wait(400);
-    // In place while the leaving toast is there, or where it left them once it is gone.
+    // In place while the leaving toast is there, or where it left them once it
+    // is gone; never partway. Today the exit is instant there, so this mostly
+    // guards that the height rules stay out of reduced motion.
     const moved = item('Oldest').getBoundingClientRect().top - top;
     expect(Math.min(Math.abs(moved), Math.abs(moved - step))).toBeLessThan(0.5);
   });
