@@ -103,16 +103,11 @@
     margin-block-end: var(--todae-conversation-scroll-button-inset);
   }
 
-  /* It fades in and out rather than popping. Under reduced motion too, since
-     a fade moves nothing. */
-  .scrollButton {
-    transition:
-      opacity var(--todae-conversation-motion-duration-enter) var(--todae-conversation-motion-easing-enter),
-      display var(--todae-conversation-motion-duration-enter) var(--todae-conversation-motion-easing-enter) allow-discrete;
-
-    @starting-style {
-      opacity: 0;
-    }
+  /* It fades in and out rather than popping, under reduced motion too, since
+     a fade moves nothing. In by an animation and out by a transition on the
+     hidden state alone, so Button's own transitions stand while it shows. */
+  .scrollButton:not([hidden]) {
+    animation: todae-conversation-arrive var(--todae-conversation-motion-duration-enter) var(--todae-conversation-motion-easing-enter);
   }
 
   /* Button.Root's display beats the UA [hidden] rule. While it fades out,
@@ -121,8 +116,9 @@
     display: none;
     opacity: 0;
     pointer-events: none;
-    transition-duration: var(--todae-conversation-motion-duration-exit);
-    transition-timing-function: var(--todae-conversation-motion-easing-exit);
+    transition:
+      opacity var(--todae-conversation-motion-duration-exit) var(--todae-conversation-motion-easing-exit),
+      display var(--todae-conversation-motion-duration-exit) var(--todae-conversation-motion-easing-exit) allow-discrete;
   }
 
   /* Inside its own edge, which its parent may clip. */

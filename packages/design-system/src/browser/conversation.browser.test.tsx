@@ -418,12 +418,12 @@ describe('Conversation in a browser', () => {
       expect(el.hidden).toBe(false);
       return el;
     });
-    const fading = () => button.getAnimations().filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity');
-    expect(fading()).toHaveLength(1);
+    expect(button.getAnimations().filter((animation) => animation instanceof CSSAnimation)).toHaveLength(1);
     await settled();
     act(() => button.click());
     await waitFor(() => expect(button.hidden).toBe(true));
     // Still drawn while it fades out, but presses go through it.
+    expect(button.getAnimations().filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')).toHaveLength(1);
     expect(getComputedStyle(button).display).not.toBe('none');
     expect(getComputedStyle(button).pointerEvents).toBe('none');
     await settled();
