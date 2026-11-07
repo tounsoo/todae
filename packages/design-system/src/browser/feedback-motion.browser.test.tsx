@@ -57,11 +57,12 @@ function SaveAlert() {
 }
 
 function EmailForm() {
+  const [email, setEmail] = useState('');
   return (
     <Form.Root aria-label="Sign up" onSubmit={(event) => event.preventDefault()}>
       <Field.Group>
         <Field.Root id="email" name="email">
-          <Field.TextInput aria-label="Work email" required />
+          <Field.TextInput aria-label="Work email" required value={email} onValueChange={setEmail} />
         </Field.Root>
         <ErrorMessage.Root />
       </Field.Group>
