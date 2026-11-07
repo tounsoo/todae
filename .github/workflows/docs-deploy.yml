@@ -87,10 +87,10 @@ jobs:
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     env:
-      # Not secrets: the project and team ids are in .cursor/skills/verify/SKILL.md. Repository variables
-      # of the same names override them.
-      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
-      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
+      # The ids aren't secret (.cursor/skills/verify/SKILL.md names both), so they work as secrets or as
+      # repository variables of these names, and fall back to the ids that file names.
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
       TARGET: ${{ needs.gate.outputs.target }}
       # The pull request's head, not the merge commit checkout picks by default, so the deployment's
       # githubCommitSha is the head the verify skills compare it with.

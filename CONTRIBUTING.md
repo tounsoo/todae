@@ -191,7 +191,7 @@ GitHub Actions builds the docs and Vercel only hosts them. `.github/workflows/do
 
 The Vercel project's Root Directory is `apps/docs`. `apps/docs/vercel.json` installs from the repository root, builds `@tounsoo/todae`, then builds the docs app; `vercel build` runs those commands on the runner. Its `ignoreCommand` applies only to Vercel's own Git builds, and skips the changesets action's `changesets-ghcommit-temp/` branches and `bench-record/` branches. Those Git builds still run beside the workflow until [0012](docs/decisions/0012-docs-build-in-github.md)'s switch-off step turns them off.
 
-The workflow needs one repository secret, `VERCEL_TOKEN`: a token made at vercel.com/account/tokens, scoped to the team that owns the `todae` project, with the shortest expiry you're willing to renew. The team and project ids are in the workflow; the repository variables `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` override them. Without the secret, the workflow skips with a notice instead of failing.
+The workflow needs one repository secret, `VERCEL_TOKEN`: a token made at vercel.com/account/tokens, scoped to the team that owns the `todae` project, with the shortest expiry you're willing to renew. `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`, as secrets or repository variables, name the team and the project; without them the workflow uses the ids in `.cursor/skills/verify/SKILL.md`. Without the secret, the workflow skips with a notice instead of failing.
 
 ## Docs MCP server
 
