@@ -26,8 +26,9 @@ export default {
           ChipList: ['space'],
           Field: ['space'],
         },
-        // Contract groups every component shares.
-        sharedRoots: ['overlay', 'focus'],
+        // Contract groups several components share: the focus ring, overlay
+        // surfaces, and the hover fade of Button, Chip, Link and Pagination.
+        sharedRoots: ['overlay', 'focus', 'control'],
         // Which component's tokens each sheet reads, when its name is not the root.
         ownRoots: {
           BottomSheet: ['sheet'],

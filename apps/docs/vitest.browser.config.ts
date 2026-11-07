@@ -31,7 +31,9 @@ export default defineConfig({
   test: {
     env: testLocaleEnv,
     // Every test sees the same now, so a picker that opens at today or the next time looks the same whenever CI runs.
-    setupFiles: ['./test/fixedClock.ts'],
+    // The hover fade of Button, Chip, Link and Pagination is off, so a check that reads colors right after a
+    // theme change or a hover sees the colors it lands on.
+    setupFiles: ['./test/fixedClock.ts', './test/noControlFade.ts'],
     include: ['**/*.browser.test.tsx'],
     exclude: ['**/node_modules/**', '.next/**'],
     browser: {
