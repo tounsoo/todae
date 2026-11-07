@@ -1,6 +1,8 @@
 import { Table } from '@tounsoo/todae/table';
 import { ScrollRegion } from '../../../../components/ScrollRegion';
 
+export const description = 'StringsProvider는 아이콘만 있는 Dialog.Close의 이름이나 스크린 리더 메시지처럼 Todae가 스스로 쓰는 텍스트를 정합니다.';
+
 # StringsProvider
 
 `StringsProvider`는 Todae가 스스로 쓰는 텍스트를 그 안의 모든 요소에 대해 설정합니다. 아이콘만 있는 `Dialog.Close`처럼 자체 글자가 없는 파트의 기본 이름과, `Field.Counter`의 메시지 같은 스크린 리더 메시지가 여기에 속합니다. Todae는 영어만 제공합니다. 바꿀 키만 전달하세요. 생략한 키는 가장 가까운 상위 `StringsProvider`에서, 없으면 영어에서 가져옵니다. 요소는 렌더링하지 않습니다.

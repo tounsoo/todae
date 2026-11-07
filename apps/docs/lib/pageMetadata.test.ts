@@ -14,8 +14,8 @@ import { isTranslated } from './i18n/pages';
 import { coreColor, oklchToHex } from './og/colors';
 import { estimateEms, TEXT_WIDTH, TITLE_HEIGHT, titleSize } from './og/OgCard';
 import { ogPages } from './og/pages';
-import { DESCRIPTION_LIMIT, pageSummary, summarize } from './pageSummary.mjs';
-import remarkPageMetadata, { pageOf } from './remarkPageMetadata.mjs';
+import { DESCRIPTION_LIMIT, DESCRIPTION_MIN, descriptionWidth, pageSummary, summarize } from './pageSummary.mjs';
+import remarkPageMetadata, { ownDescription, pageOf } from './remarkPageMetadata.mjs';
 
 const APP = join(process.cwd(), 'app');
 const LOCALE_DIRS = { en: '(en)', ko: 'ko' } as const;
@@ -46,14 +46,18 @@ describe('page metadata', () => {
     expect(pageOf(join(APP, '..', 'components', 'page.mdx'), APP)).toBeNull();
   });
 
-  it('cuts a long paragraph at a sentence, or at a word with an ellipsis', () => {
+  it('keeps the whole sentences that fit, and never cuts one', () => {
     expect(summarize('Short.  Two\nlines.')).toBe('Short. Two lines.');
-    const sentences = `${'A'.repeat(120)}. ${'B'.repeat(120)}.`;
-    expect(summarize(sentences)).toBe(`${'A'.repeat(120)}.`);
-    const words = Array.from({ length: 60 }, () => 'word').join(' ');
-    const cut = summarize(words);
-    expect(cut.endsWith('word…')).toBe(true);
-    expect(cut.length).toBeLessThanOrEqual(DESCRIPTION_LIMIT + 1);
+    const sentence = `${'A'.repeat(70)}.`;
+    expect(summarize(`${sentence} ${sentence} ${sentence}`)).toBe(`${sentence} ${sentence}`);
+    expect(summarize(`${'word '.repeat(40)}end.`)).toBe('');
+    expect(summarize(`${'word '.repeat(40)}end.`, Infinity)).toBe(`${'word '.repeat(40)}end.`);
+  });
+
+  it('counts a Hangul character as two Latin letters wide', () => {
+    expect(descriptionWidth('Todae')).toBe(5);
+    expect(descriptionWidth('토대')).toBe(4);
+    expect(summarize(`${'가'.repeat(50)}입니다. ${'나'.repeat(50)}입니다.`)).toBe(`${'가'.repeat(50)}입니다.`);
   });
 
   it('reads code as text and drops link targets and JSX', () => {
@@ -74,10 +78,24 @@ describe('page metadata', () => {
       const fields = injected(run(join(dir, page.slug, 'page.mdx'), page.markdown));
       // The social image draws the same title the metadata names.
       expect(fields, page.slug).toMatchObject({ locale, slug: page.slug, title: page.title });
-      const description = fields?.description ?? '';
-      expect(description.length, page.slug).toBeGreaterThan(20);
-      expect(description.length, page.slug).toBeLessThanOrEqual(DESCRIPTION_LIMIT + 1);
+      const width = descriptionWidth(fields?.description ?? '');
+      expect(width, page.slug).toBeGreaterThanOrEqual(DESCRIPTION_MIN);
+      expect(width, page.slug).toBeLessThanOrEqual(DESCRIPTION_LIMIT);
     }
+  });
+
+  it('takes a page\'s own description over its intro', () => {
+    const mdx = "export const description = 'A description the page wrote for search results and link previews.';\n\n# Page\n\nIntro.\n";
+    expect(ownDescription(parse(mdx))).toBe('A description the page wrote for search results and link previews.');
+    expect(injected(run(join(APP, '(en)', 'page-x', 'page.mdx'), mdx))?.description).toBe('A description the page wrote for search results and link previews.');
+    expect(ownDescription(parse('# Page\n\nIntro.\n'))).toBeNull();
+  });
+
+  it('refuses a page whose description is too short or too wide', () => {
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), '# Page\n\nToo short.\n')).toThrow(/export const description/);
+    const long = `export const description = '${'word '.repeat(40)}';\n\n# Page\n\nIntro.\n`;
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), long)).toThrow(/its own is \d+ wide/);
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), 'export const description = `x${1}`;\n\n# Page\n\nIntro.\n')).toThrow(/plain string/);
   });
 
   it("keeps a page's own metadata export", () => {

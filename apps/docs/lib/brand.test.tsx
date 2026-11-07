@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { GET as touchIcon } from '../app/brand/mark-180.png/route';
+import { GET as icoFavicon } from '../app/favicon.ico/route';
 import { GET as pngFavicon } from '../app/brand/mark-32.png/route';
 import { GET as svgFavicon } from '../app/brand/mark.svg/route';
 import { BrandMark, faviconSvg, RIDGE_MIN_SIZE } from './brand';
@@ -67,5 +68,17 @@ describe('brand icon routes', () => {
       expect(response.headers.get('content-type')).toBe('image/png');
       expect(await pngSize(response)).toEqual([size, size]);
     }
+  });
+
+  it('serves /favicon.ico as the 32px PNG favicon in an ICO file', async () => {
+    const response = await icoFavicon();
+    expect(response.headers.get('content-type')).toBe('image/x-icon');
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const ico = new DataView(bytes.buffer);
+    expect([ico.getUint16(0, true), ico.getUint16(2, true), ico.getUint16(4, true)]).toEqual([0, 1, 1]);
+    expect([ico.getUint8(6), ico.getUint8(7)]).toEqual([32, 32]);
+    expect(ico.getUint32(18, true)).toBe(22);
+    expect(ico.getUint32(14, true)).toBe(bytes.byteLength - 22);
+    expect(await pngSize(new Response(bytes.slice(22)))).toEqual([32, 32]);
   });
 });

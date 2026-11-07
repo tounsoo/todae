@@ -1,5 +1,7 @@
 import RelativeTimeList from '../../../../examples/utilities/format-relative-time/RelativeTimeList';
 
+export const description = 'formatRelativeTime writes how long before or after now a time is, such as 3 minutes ago or in 2 weeks, with Intl.RelativeTimeFormat.';
+
 # formatRelativeTime
 
 `formatRelativeTime(value, now, options?)` returns how long before or after `now` the time `value` is, as the locale writes it, such as `3 minutes ago`, `yesterday` or `in 2 weeks` in `en` and `3분 전`, `어제` or `2주 후` in `ko`. Use it for when a message was sent, a file was edited or an item expires. It writes text with `Intl.RelativeTimeFormat` and keeps no clock, so the product passes `now` and decides when the text changes. Keeping it current, below, shows a timer.

@@ -1,6 +1,8 @@
 import FieldDateTimePicked from '../../../../examples/field/date-time-picker/FieldDateTimePicked';
 import { FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
 
+export const description = 'A button inside a Field that opens a Calendar and a list of times in a Popover. Its value is a Temporal.PlainDateTime or null.';
+
 # Field.DateTimePicker
 
 `Field.DateTimePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) and a list of times in a [Popover](/popover), side by side, or the list under the calendar on a narrow screen. Its `value` is a `Temporal.PlainDateTime` or `null`. `onValueChange` gets the date and time each time a pick leaves a date the calendar offers and a time in range for it. Picking a time while the calendar holds a date it offers closes the popover. It works like [Field.DatePicker](/field/date-picker) and [Field.TimePicker](/field/time-picker), and takes the same props where they mean the same thing. A `PlainDateTime` has no time zone: it is the date and time on the user's clock. To store an instant, combine it with a time zone in your own code, such as `value.toZonedDateTime(zone)`.

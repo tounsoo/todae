@@ -1,6 +1,6 @@
 import { relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pageSummary } from './pageSummary.mjs';
+import { DESCRIPTION_LIMIT, DESCRIPTION_MIN, descriptionWidth, pageSummary } from './pageSummary.mjs';
 
 // Plain JavaScript: next.config.mjs loads it before TypeScript is compiled.
 
@@ -64,10 +64,28 @@ function metadataExport(fields) {
   return { type: 'mdxjsEsm', value: '', data: { estree: program } };
 }
 
+/** The string a page exports as `description`, or null when it exports none. */
+export function ownDescription(tree) {
+  for (const node of tree.children) {
+    if (node.type !== 'mdxjsEsm') continue;
+    for (const statement of node.data?.estree?.body ?? []) {
+      const declarations = statement.type === 'ExportNamedDeclaration' ? (statement.declaration?.declarations ?? []) : [];
+      const own = declarations.find((declaration) => declaration.id?.name === 'description');
+      if (!own) continue;
+      if (own.init?.type !== 'Literal' || typeof own.init.value !== 'string') throw new Error('`export const description` must be a plain string');
+      return own.init.value;
+    }
+  }
+  return null;
+}
+
 /**
  * Gives every docs page its own `metadata` export, built by `pageMetadata` from
- * the page's own title and intro paragraph, so a link to it previews with what
- * it says. A page that exports `metadata` itself keeps its own.
+ * the page's own title and description, so a link to it previews with what it
+ * says. The description is the page's `export const description`, else the
+ * opening sentences of its intro paragraph that fit a search result. A page
+ * whose intro gives none that fit, or too short a one, must export its own.
+ * A page that exports `metadata` itself keeps its own.
  */
 export default function remarkPageMetadata() {
   return (tree, file) => {
@@ -79,6 +97,15 @@ export default function remarkPageMetadata() {
     if (exportsMetadata) return;
     const summary = pageSummary(tree);
     if (!summary) throw new Error(`${file.path} has no # title to describe it by`);
-    tree.children.push(metadataExport({ ...page, ...summary }));
+    const own = ownDescription(tree);
+    const description = own ?? summary.description;
+    const width = descriptionWidth(description);
+    if (width < DESCRIPTION_MIN || width > DESCRIPTION_LIMIT) {
+      const why = own === null ? "its intro paragraph's opening sentences don't make one" : `its own is ${width} wide`;
+      throw new Error(
+        `${file.path} needs a description ${DESCRIPTION_MIN} to ${DESCRIPTION_LIMIT} wide (a Hangul or CJK character counts as 2), and ${why}. Write one as \`export const description = '…';\` under the imports.`,
+      );
+    }
+    tree.children.push(metadataExport({ ...page, title: summary.title, description }));
   };
 }
