@@ -5868,7 +5868,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name to style with ::highlight(name). Give each hook its own name."
+          "description": "Name to style with ::highlight(name). Hooks that share a name paint together under it."
         },
         {
           "name": "query",

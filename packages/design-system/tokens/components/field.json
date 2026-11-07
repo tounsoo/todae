@@ -65,7 +65,15 @@
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
       },
       "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } },
+      "motion": {
+        "duration": {
+          "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } }
+        },
+        "easing": {
+          "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+        }
+      }
     },
     "messages": {
       "gap": { "$type": "dimension", "$value": { "value": 0.2, "unit": "rem" } }

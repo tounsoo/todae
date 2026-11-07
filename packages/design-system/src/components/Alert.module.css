@@ -13,6 +13,17 @@
     color: var(--_tone-fg);
     font-size: var(--todae-alert-font-size);
     line-height: var(--todae-alert-leading);
+    /* Fades in as it appears, and goes at once. Opacity only, so nothing
+       around it moves, and the text is in the page, and announced, from the
+       first frame. It fades under reduced motion too, since a fade moves
+       nothing. */
+    transition: opacity var(--todae-alert-motion-duration-enter) var(--todae-alert-motion-easing-enter);
+  }
+
+  @starting-style {
+    .root {
+      opacity: 0;
+    }
   }
 
   .root[data-tone='info'] {

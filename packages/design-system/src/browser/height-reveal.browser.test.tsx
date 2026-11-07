@@ -62,6 +62,19 @@ function Disclosures({ style, open }: { style?: CSSProperties; open?: boolean })
   );
 }
 
+/**
+ * Opens `moving` and checks it takes the height of `reference`, which was always
+ * open, in the same task, before any frame, so the check never rests on when the
+ * browser starts a transition, and that it still has it two frames later.
+ */
+async function opensAtOnce(moving: HTMLDetailsElement, reference: Element) {
+  expect(height(moving)).toBeLessThan(height(reference));
+  moving.open = true;
+  expect(height(moving)).toBeCloseTo(height(reference), 0);
+  await frames(2);
+  expect(height(moving)).toBeCloseTo(height(reference), 0);
+}
+
 /** Whether a press at the middle of `el` lands on it. */
 function hits(el: Element): boolean {
   const r = el.getBoundingClientRect();
@@ -123,20 +136,12 @@ describe('Disclosure content height', () => {
   it('takes its full height at once under reduced motion', async () => {
     await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     render(<Disclosures style={slow('disclosure')} />);
-    const moving = screen.getByTestId('moving') as HTMLDetailsElement;
-    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
-    moving.open = true;
-    await frames(2);
-    expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
+    await opensAtOnce(screen.getByTestId('moving') as HTMLDetailsElement, screen.getByTestId('reference'));
   });
 
   it.skipIf(sizesToAuto)('opens to its full height at once where the engine cannot size to auto', async () => {
     render(<Disclosures style={slow('disclosure')} />);
-    const moving = screen.getByTestId('moving') as HTMLDetailsElement;
-    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
-    moving.open = true;
-    await frames(2);
-    expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
+    await opensAtOnce(screen.getByTestId('moving') as HTMLDetailsElement, screen.getByTestId('reference'));
   });
 });
 
@@ -208,11 +213,7 @@ describe('Nav branch height', () => {
   it('shows its links at once under reduced motion, and where the engine cannot size to auto', async () => {
     if (sizesToAuto) await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     render(<Branches style={slow('nav')} />);
-    const moving = screen.getByTestId('moving') as HTMLDetailsElement;
-    expect(height(moving)).toBeLessThan(height(screen.getByTestId('reference')));
-    moving.open = true;
-    await frames(2);
-    expect(height(moving)).toBeCloseTo(height(screen.getByTestId('reference')), 0);
+    await opensAtOnce(screen.getByTestId('moving') as HTMLDetailsElement, screen.getByTestId('reference'));
   });
 });
 

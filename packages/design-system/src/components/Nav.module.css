@@ -136,7 +136,9 @@
 
   /* A branch's links fade in and out, closing with the exit curve and opening
      with the enter curve. The fade keeps its tokens under reduced motion, as it
-     moves nothing. */
+     moves nothing. Closing keeps them drawn until the fade ends. Opening draws
+     them at once, with no content-visibility transition: one would hold them
+     hidden, and out of the layout, until the browser started it. */
   .branch::details-content {
     opacity: 0;
     transition:
@@ -146,8 +148,7 @@
 
   .branch[open]::details-content {
     opacity: 1;
-    transition-duration: var(--todae-nav-motion-duration-enter);
-    transition-timing-function: var(--todae-nav-motion-easing-enter);
+    transition: opacity var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter);
   }
 
   /* Where the engine can size to auto (Chrome), they also open and close by
@@ -176,7 +177,6 @@
         transition:
           opacity var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
           block-size var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
-          content-visibility var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter) allow-discrete,
           overflow-y 0s var(--todae-nav-motion-duration-enter) allow-discrete;
       }
     }

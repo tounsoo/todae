@@ -14,6 +14,7 @@ import {
   type UIEvent,
 } from 'react';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
+import { observeMutations } from '../internal/sharedMutations.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -47,6 +48,12 @@ const GLIDE_SHARE = 0.18;
 const GLIDE_MIN_STEP = 4;
 // The longest a glide runs before it lands at the end.
 const GLIDE_MS = 500;
+// Marks a message added at the end until its entrance animation ends.
+const ENTERING = 'data-todae-entering';
+const isMessage = (node: Node): node is Element => node.nodeName === 'ARTICLE';
+// The most messages added at once that still animate: a message and its
+// reply. More is history.
+const HISTORY = 2;
 
 type ConversationContext = {
   viewport: RefObject<HTMLElement | null>;
@@ -265,6 +272,51 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
   // Read when a message changes, so a new provider's text is used.
   const text = useRef(strings);
   text.current = strings;
+
+  // Marks the messages, its `article` children as Message.Root renders,
+  // added after it mounted below one that was already there, so they animate
+  // in: what was there first stays still, and so do messages that move and
+  // older messages added above. Other children, such as a typing indicator,
+  // a "load earlier" button or a day separator, don't count either way. Into
+  // a conversation with no messages yet, the first message and its reply
+  // animate. Messages that replace every message, as when another
+  // conversation opens, and more than two at once, as when history loads,
+  // stay still. The mark lasts until the animation ends, so a conversation
+  // hidden and shown again, as in a drawer, doesn't play it again.
+  useEffect(() => {
+    const el = context.content.current;
+    if (!el) return;
+    const settle = (event: AnimationEvent) => {
+      const target = event.target as Element;
+      if (target.parentNode === el) target.removeAttribute(ENTERING);
+    };
+    el.addEventListener('animationend', settle);
+    el.addEventListener('animationcancel', settle);
+    const watcher = observeMutations(el, { childList: true }, (records) => {
+      // A node removed and added again in one batch moved, as React moves a
+      // keyed message, and was there before.
+      const added = new Set<Node>();
+      const removed = new Set<Node>();
+      for (const record of records) {
+        for (const node of record.removedNodes) removed.add(node);
+        for (const node of record.addedNodes) if (!removed.delete(node)) added.add(node);
+      }
+      for (const node of removed) added.delete(node);
+      const messages = [...el.children].filter(isMessage);
+      const fresh = messages.filter((message) => added.has(message));
+      if (!fresh.length || fresh.length > HISTORY) return;
+      let below = fresh.length === messages.length && ![...removed].some(isMessage);
+      for (const message of messages) {
+        if (!added.has(message)) below = true;
+        else if (below) message.setAttribute(ENTERING, '');
+      }
+    });
+    return () => {
+      watcher.stop();
+      el.removeEventListener('animationend', settle);
+      el.removeEventListener('animationcancel', settle);
+    };
+  }, [context.content]);
 
   useEffect(() => {
     const el = context.content.current;

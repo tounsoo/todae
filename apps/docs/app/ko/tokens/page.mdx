@@ -113,7 +113,7 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 ## 모션
 
-열리고 닫힐 때 움직이는 컴포넌트에는 자기 모션 토큰이 있습니다. `dialog.motion.duration.enter`처럼 `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter`, `motion.easing.exit`이며, Tooltip처럼 나타날 때만 페이드하는 컴포넌트에는 들어올 때의 쌍만 있습니다. 얼마나 움직이는지도 시간 옆에 있는 토큰이며, `popover.motion.scale`, `dialog.motion.offset`, `toast.motion.offset`이 그 예입니다. 다른 컴포넌트 위에 그려지는 부분은 Menu와 필드 피커가 Popover의 토큰대로 움직이듯 그 컴포넌트의 토큰대로 움직이며, 자기 모션 토큰이 있으면 그 토큰을 따릅니다. Coachmark의 팝업은 Popover 표면이지만 어두운 페이지와 함께 `coachmark.motion`으로 움직입니다. 모든 `motion.easing.enter`는 자리를 잡으며 느려지는 코어 `motion.easing.enter`(`cubic-bezier(0.2, 0.8, 0.2, 1)`)를 가리키고, 모든 `motion.easing.exit`는 떠나며 빨라지는 코어 `motion.easing.exit`(`cubic-bezier(0.4, 0, 1, 1)`)를 가리킵니다. 코어 곡선을 바꾸면 모든 컴포넌트의 곡선이 바뀌고, 컴포넌트 하나의 곡선 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 나가는 시간은 들어오는 시간과 같거나 더 짧습니다.
+열리고 닫힐 때 움직이는 컴포넌트에는 자기 모션 토큰이 있습니다. `dialog.motion.duration.enter`처럼 `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter`, `motion.easing.exit`이며, Tooltip, Alert, ErrorMessage처럼 나타날 때만 페이드하는 컴포넌트에는 들어올 때의 쌍만 있습니다. 얼마나 움직이는지도 시간 옆에 있는 토큰이며, `popover.motion.scale`, `dialog.motion.offset`, `toast.motion.offset`이 그 예입니다. 다른 컴포넌트 위에 그려지는 부분은 Menu와 필드 피커가 Popover의 토큰대로 움직이듯 그 컴포넌트의 토큰대로 움직이며, 자기 모션 토큰이 있으면 그 토큰을 따릅니다. Coachmark의 팝업은 Popover 표면이지만 어두운 페이지와 함께 `coachmark.motion`으로 움직입니다. 모든 `motion.easing.enter`는 자리를 잡으며 느려지는 코어 `motion.easing.enter`(`cubic-bezier(0.2, 0.8, 0.2, 1)`)를 가리키고, 모든 `motion.easing.exit`는 떠나며 빨라지는 코어 `motion.easing.exit`(`cubic-bezier(0.4, 0, 1, 1)`)를 가리킵니다. 코어 곡선을 바꾸면 모든 컴포넌트의 곡선이 바뀌고, 컴포넌트 하나의 곡선 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 나가는 시간은 들어오는 시간과 같거나 더 짧습니다.
 
 각 컴포넌트의 들어오고 나가는 시간은 모션 역할을 가리키고, 모션 역할은 코어 `motion.duration` 단계를 가리킵니다. 역할의 `duration.enter`나 `duration.exit`를 바꾸면 그 역할의 모든 컴포넌트 타이밍이 바뀌고, 컴포넌트 하나의 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 아래 카탈로그에서 각 컴포넌트의 토큰이 어느 역할을 가리키는지, 각 역할이 얼마나 걸리는지 볼 수 있습니다.
 
@@ -124,6 +124,8 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 - `motion.notice`: 잠깐 나타나는 메시지입니다.
 
 역할에는 시간만 있습니다. 토글의 thumb, 화면 사이의 슬라이드, 크기 변화, 호버 페이드처럼 화면에 남아 있는 두 상태 사이의 변화는 역할 대신 코어 단계를 `motion.duration`으로 가리키고, 반복 애니메이션은 반복 한 번의 길이를 따로 가집니다. 컨트롤의 호버 페이드는 누르기, 키보드 포커스, 눌린 토글, 현재 페이지, 비활성 상태에서는 바로 멈추고, 그 상태가 끝나면 서서히 돌아오며, 포커스 링은 페이드하지 않습니다.
+
+같은 규칙을 따르는 모션이 두 가지 더 있습니다. Progress와 Meter는 새 값으로 채움을 `progress.motion.fill.duration`과 `progress.motion.fill.easing`으로 미끄러지듯 옮기며, 이는 두 상태 사이의 변화이고 동작 줄이기에서는 바로 바뀝니다. Alert와 ErrorMessage는 나타날 때 `alert.motion.duration.enter`와 `alert.motion.easing.enter`, `field.error.motion.duration.enter`와 `field.error.motion.easing.enter`로 서서히 나타납니다. 사라질 때는 바로 사라지므로 나가는 토큰이 없고, 동작 줄이기에서도 계속 서서히 나타납니다.
 
 사용자가 동작 줄이기를 선호하면 미끄러지거나, 크기가 바뀌거나, 떠오르거나, 도는 것이 없고, 반복 애니메이션은 멈춥니다. 페이드는 아무것도 움직이지 않으므로 토큰대로 남습니다.
 
