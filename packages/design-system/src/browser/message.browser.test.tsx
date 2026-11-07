@@ -366,17 +366,19 @@ describe('Message.Root in a browser', () => {
     );
     const opacity = () => getComputedStyle(screen.getByTestId('actions')).opacity;
     try {
+      // The row still fades under reduced motion, since a fade moves nothing.
       await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+      expect(getComputedStyle(screen.getByTestId('actions')).transitionProperty).toBe('opacity');
       await userEvent.hover(screen.getByRole('button', { name: 'Elsewhere' }));
-      expect(opacity()).toBe('0');
+      await expect.poll(opacity).toBe('0');
       await userEvent.hover(screen.getByTestId('message'));
-      expect(opacity()).toBe('1');
+      await expect.poll(opacity).toBe('1');
       await userEvent.hover(screen.getByRole('button', { name: 'Elsewhere' }));
-      expect(opacity()).toBe('0');
+      await expect.poll(opacity).toBe('0');
       screen.getByRole('button', { name: 'Copy' }).focus();
-      expect(opacity()).toBe('1');
+      await expect.poll(opacity).toBe('1');
       screen.getByRole('button', { name: 'Elsewhere' }).focus();
-      expect(opacity()).toBe('0');
+      await expect.poll(opacity).toBe('0');
     } finally {
       await emulateMedia([]);
     }

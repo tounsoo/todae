@@ -16,6 +16,14 @@
     "delay": {
       "show": { "$type": "duration", "$value": { "value": 300, "unit": "ms" } },
       "hide": { "$type": "duration", "$value": { "value": 100, "unit": "ms" } }
+    },
+    "motion": {
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/popup/duration/enter/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+      }
     }
   }
 }

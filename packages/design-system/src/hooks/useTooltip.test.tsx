@@ -68,7 +68,7 @@ function Pair(options: UseTooltipOptions) {
         A
       </button>
       {first.open ? (
-        <div role="tooltip" id={firstWire.id} ref={firstWire.ref} style={firstWire.style}>
+        <div role="tooltip" id={firstWire.id} ref={firstWire.ref} style={firstWire.style} data-warm={firstWire.warm ? '' : undefined}>
           Tip A
         </div>
       ) : null}
@@ -76,7 +76,7 @@ function Pair(options: UseTooltipOptions) {
         B
       </button>
       {second.open ? (
-        <div role="tooltip" id={secondWire.id} ref={secondWire.ref} style={secondWire.style}>
+        <div role="tooltip" id={secondWire.id} ref={secondWire.ref} style={secondWire.style} data-warm={secondWire.warm ? '' : undefined}>
           Tip B
         </div>
       ) : null}
@@ -366,6 +366,36 @@ describe('useTooltip', () => {
     closeHover(first, 40);
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
     expect(screen.getByRole('tooltip', { name: 'Tip B' })).toBeTruthy();
+  });
+
+  it('marks only a tip that opened warm, so a cold one fades in', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = openHover('A', 200);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' }).hasAttribute('data-warm')).toBe(false);
+    fireEvent.pointerLeave(first);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip B' }).hasAttribute('data-warm')).toBe(true);
+    closeHover(screen.getByRole('button', { name: 'B' }), 40);
+    advance(80);
+    // Past the window, the next tip waits its delay and opens cold.
+    openHover('A', 200);
+    expect(screen.getByRole('tooltip', { name: 'Tip A' }).hasAttribute('data-warm')).toBe(false);
+  });
+
+  it('opens cold by focus inside the warm window', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={80} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    fireEvent.focus(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByRole('tooltip', { name: 'Tip B' }).hasAttribute('data-warm')).toBe(false);
+  });
+
+  it('never opens warm with skipDelay 0', () => {
+    render(<Pair showDelay={200} hideDelay={40} skipDelay={0} />);
+    const first = openHover('A', 200);
+    closeHover(first, 40);
+    openHover('B', 200);
+    expect(screen.getByRole('tooltip', { name: 'Tip B' }).hasAttribute('data-warm')).toBe(false);
   });
 
   it('waits the show delay once the warm window has passed', () => {
