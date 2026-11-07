@@ -292,6 +292,8 @@ export function useTooltipInternal<I extends boolean = false>(
         event.hold === 'hover' &&
         hoverShowSkipsDelay(Date.now(), skipDelayRef.current ?? SHOW_DELAY_MS);
       if (event.kind === 'acquire' && event.hold === 'hover') warmHoverRef.current = warm;
+      // An open that waited out its show delay is cold, whatever acquired since.
+      if (event.kind === 'delay-elapsed') warmHoverRef.current = false;
       const result = step({
         policy: warm ? { ...policy, skipHoverShowDelay: true } : policy,
         state: intentRef.current,
