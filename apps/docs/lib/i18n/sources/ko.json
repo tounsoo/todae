@@ -215,7 +215,7 @@
   "disclosure": {
     "(top)": "3036525bad11",
     "# Disclosure": "11352d1b4588",
-    "## Accordion": "1e8a05d05fc3",
+    "## Accordion": "cca02016182c",
     "## Icons": "90cd4835c3a3",
     "## Accessible composition": "e839ad32dbc4",
     "## When to use": "e742af5b01d9",
@@ -569,7 +569,7 @@
     "(top)": "f3777a2592e3",
     "# Nav": "03d97deeff10",
     "## Current page": "4db24a1d9192",
-    "## Branches": "e44d9b43cdac",
+    "## Branches": "ff72b756acd6",
     "## Accessible composition": "0b3bb78c8bfa",
     "## When to use": "574a226bd17e",
     "## Props": "7bf17a447639",
@@ -597,8 +597,8 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "f2000423780b",
-    "## What Safari and Firefox do differently": "5d20bc743e89",
+    "# Native platform": "b94ff107af5a",
+    "## What Safari and Firefox do differently": "fb68583b26df",
     "(section order)": "838d852d6965"
   },
   "popover": {
