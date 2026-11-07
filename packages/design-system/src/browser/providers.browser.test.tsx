@@ -124,7 +124,7 @@ describe('ThemeProvider overrides in a browser', () => {
       </ThemeProvider>,
     );
     const inside = screen.getByTestId('inside');
-    for (const component of ['overlay', 'disclosure', 'nav', 'tree']) {
+    for (const component of ['dialog', 'drawer', 'sheet', 'toast', 'popover', 'coachmark', 'disclosure', 'nav', 'tree']) {
       expect(cssVar(inside, `--todae-${component}-motion-easing-enter`)).toBe('cubic-bezier(0, 0, 0.2, 1)');
       expect(cssVar(inside, `--todae-${component}-motion-easing-exit`)).toBe('cubic-bezier(0.4, 0, 1, 1)');
     }
