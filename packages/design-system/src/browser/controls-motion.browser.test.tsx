@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { server, userEvent } from '@vitest/browser/context';
 import type { CSSProperties, ReactNode } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useState } from 'react';
 import { Button } from '../components/Button.js';
 import { Checkbox } from '../components/Checkbox.js';
@@ -290,6 +290,11 @@ describe('Switch, Checkbox and Radio motion', () => {
 });
 
 describe('Button, Chip, Link and Pagination hover fades', () => {
+  // The pointer stays where the last test left it, which may be where these controls render.
+  beforeEach(async () => {
+    await userEvent.unhover(document.body);
+  });
+
   it('fades a button to its hover colors and back, and takes keyboard focus at once', async () => {
     render(
       <Themed>
