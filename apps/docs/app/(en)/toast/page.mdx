@@ -30,6 +30,8 @@ Each new toast shows the region again, so it lands in front of a Popover or Menu
 
 `layout="list"` shows each toast in full. `layout="stack"` puts the toasts behind the newest one, peeking out by `toast.peek`, and spreads them out while the pointer is over them or keyboard focus is inside. A tap with a finger, or a pen that isn't hovering, spreads them until a press outside the region or until no toast is left. The newest toast sits nearest the edge `placement` names.
 
+In a list in Chrome, a toast that leaves also gives back its height and the gap beside it over `toast.motion.duration.exit`, so the toasts behind it slide into place; other browsers, and reduced motion, move them once it is gone.
+
 `limit` caps how many toasts show at once. Toasts added past it wait their turn and show as others leave.
 
 The region sets these variables on each `li` for your own stack styles: `--toast-index` (0 for the newest), `--toast-offset` (the height of the toasts in front of it), and on the list `--toast-front-height` and `--toast-count`.

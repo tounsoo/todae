@@ -70,7 +70,44 @@
     transition-timing-function: var(--todae-disclosure-motion-easing-enter);
   }
 
-  .root[open] > :not(summary):last-child {
+  /* Where the engine can size to auto (Chrome), the content also opens and
+     closes by its height, so what follows slides by layout. It clips only
+     while it moves: at once as it closes, and until its height has grown as it
+     opens, so a product's own dropdown inside an open one isn't cut. As a flow
+     root it keeps its children's margins inside it, so its height holds them
+     from the first frame to the last rather than jumping by a margin; the gap
+     after its last child then no longer collapses with what follows. Elsewhere, and under reduced
+     motion, it takes its height at once. */
+  @supports (block-size: calc-size(auto, size)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .root::details-content {
+        display: flow-root;
+        block-size: 0;
+        /* Physical, as Chrome has no overflow-block. Only the block axis clips,
+           so nothing overflows a narrow scroller sideways. */
+        overflow-y: clip;
+        transition:
+          opacity var(--todae-disclosure-motion-duration-exit) var(--todae-disclosure-motion-easing-exit),
+          block-size var(--todae-disclosure-motion-duration-exit) var(--todae-disclosure-motion-easing-exit),
+          content-visibility var(--todae-disclosure-motion-duration-exit) var(--todae-disclosure-motion-easing-exit) allow-discrete,
+          overflow-y 0s allow-discrete;
+      }
+
+      .root[open]::details-content {
+        block-size: calc-size(auto, size);
+        overflow-y: visible;
+        transition:
+          opacity var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter),
+          block-size var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter),
+          content-visibility var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter) allow-discrete,
+          overflow-y 0s var(--todae-disclosure-motion-duration-enter) allow-discrete;
+      }
+    }
+  }
+
+  /* Not only while open: closed content isn't drawn, and the gap then stays
+     through a closing height or fade instead of leaving at its start. */
+  .root > :not(summary):last-child {
     margin-block-end: var(--todae-disclosure-gap);
   }
 
