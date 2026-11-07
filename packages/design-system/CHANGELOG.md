@@ -1,5 +1,21 @@
 # @tounsoo/todae
 
+## 0.8.1
+
+### Patch Changes
+
+- Disclosure, Message, Toast, Drawer, BottomSheet, Drilldown and scroll edge arrows now keep their opacity and color fades under prefers-reduced-motion, dropping only slides and shifts. ([#401](https://github.com/tounsoo/todae/pull/401))
+
+- Tooltip fades in when it opens cold, timed by the new tooltip.motion.duration.enter and tooltip.motion.easing.enter tokens; a warm tip inside the skipDelay window still shows at once, and useTooltip's tooltip props gain warm. ([#399](https://github.com/tounsoo/todae/pull/399))
+
+- Progress and Meter fills glide to a new value with the new progress.motion.fill tokens, and Alert and ErrorMessage fade in as they appear with the new alert.motion and field.error.motion enter tokens. ([#400](https://github.com/tounsoo/todae/pull/400))
+
+- Disclosure and Nav.Branch content now opens and closes by its height in Chrome, and a Toast leaving a list slides the others into its place. ([#404](https://github.com/tounsoo/todae/pull/404))
+
+- Button, Chip, Link and Pagination now fade between their resting and hover colors, timed by the new `control.motion.duration` and `control.motion.easing` tokens; presses, keyboard focus and other states still change at once. ([#402](https://github.com/tounsoo/todae/pull/402))
+
+- Disclosure and Nav.Branch now lay out their content on the frame they open, instead of up to a few frames later while the fade in starts. ([#408](https://github.com/tounsoo/todae/pull/408))
+
 ## 0.8.0
 
 ### Minor Changes
