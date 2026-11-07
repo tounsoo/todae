@@ -212,7 +212,7 @@ jobs:
   # Uploads the built output. Holds the token; runs only the Vercel CLI, with no checkout.
   deploy:
     name: Deploy
-    needs: [gate, build]
+    needs: [gate, settings, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
@@ -223,6 +223,7 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
       TARGET: ${{ needs.gate.outputs.target }}
+      ROOT_DIR: ${{ fromJSON(needs.settings.outputs.settings).rootDirectory }}
       SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
@@ -260,6 +261,12 @@ jobs:
               *) echo "::error::$link points outside the output."; exit 1 ;;
             esac
           done < <(find site -type l -print0)
+          # The CLI stops unless the project's Root Directory exists where it runs, though a prebuilt
+          # deploy reads nothing from it. An empty one does.
+          if [ -n "$ROOT_DIR" ]; then
+            [[ $ROOT_DIR =~ ^[A-Za-z0-9._/-]+$ && $ROOT_DIR != *..* && $ROOT_DIR != /* ]] || { echo "::error::The Root Directory setting isn't a plain relative path."; exit 1; }
+            mkdir -p "site/$ROOT_DIR"
+          fi
       - name: Install the Vercel CLI
         run: npm install --global --ignore-scripts "vercel@$VERCEL_CLI_VERSION"
       - id: deploy
