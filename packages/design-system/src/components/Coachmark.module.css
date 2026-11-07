@@ -49,7 +49,14 @@
     }
   }
 
+  /* The popup draws on Popover but times its fades and growth with
+     coachmark.motion, as the scrim does, so the two move in step. */
   .popup {
+    --_motion-duration-enter: var(--todae-coachmark-motion-duration-enter);
+    --_motion-duration-exit: var(--todae-coachmark-motion-duration-exit);
+    --_motion-easing-enter: var(--todae-coachmark-motion-easing-enter);
+    --_motion-easing-exit: var(--todae-coachmark-motion-easing-exit);
+
     max-inline-size: var(--todae-coachmark-max-width);
   }
 

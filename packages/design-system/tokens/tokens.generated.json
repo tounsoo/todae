@@ -7571,34 +7571,6 @@
       "description": "The curve of a control's hover fade."
     },
     {
-      "path": "overlay.motion.easing.enter",
-      "type": "cubicBezier",
-      "cssVar": "--todae-overlay-motion-easing-enter",
-      "cssValue": "var(--todae-motion-easing-enter)",
-      "ref": "motion.easing.enter",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
-    },
-    {
-      "path": "overlay.motion.easing.exit",
-      "type": "cubicBezier",
-      "cssVar": "--todae-overlay-motion-easing-exit",
-      "cssValue": "var(--todae-motion-easing-exit)",
-      "ref": "motion.easing.exit",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
-    },
-    {
       "path": "overlay.scrim.bg",
       "type": "color",
       "cssVar": "--todae-overlay-scrim-bg",
@@ -7610,7 +7582,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with."
+      "description": "The scrim a modal overlay dims the page with."
     },
     {
       "path": "dialog.bg",
@@ -7728,8 +7700,8 @@
       "path": "dialog.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-dialog-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -7742,8 +7714,8 @@
       "path": "dialog.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-dialog-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8036,8 +8008,8 @@
       "path": "sheet.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-sheet-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8050,8 +8022,8 @@
       "path": "sheet.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-sheet-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8288,8 +8260,8 @@
       "path": "popover.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-popover-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8302,8 +8274,8 @@
       "path": "popover.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-popover-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -8436,7 +8408,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg. The popup is a Popover.Root and takes the popover tokens for its look and the size it grows from; the scrim and the popup both time their fades with coachmark.motion, so they move in step."
     },
     {
       "path": "coachmark.motion.duration.exit",
@@ -8450,7 +8422,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg. The popup is a Popover.Root and takes the popover tokens for its look and the size it grows from; the scrim and the popup both time their fades with coachmark.motion, so they move in step."
     },
     {
       "path": "coachmark.motion.duration.move",
@@ -8470,29 +8442,29 @@
       "path": "coachmark.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-coachmark-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
         "kind": "set",
         "name": "contract"
       },
-      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg. The popup is a Popover.Root and takes the popover tokens for its look and the size it grows from; the scrim and the popup both time their fades with coachmark.motion, so they move in step."
     },
     {
       "path": "coachmark.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-coachmark-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
         "kind": "set",
         "name": "contract"
       },
-      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg. The popup is a Popover.Root and takes the popover tokens for its look and the size it grows from; the scrim and the popup both time their fades with coachmark.motion, so they move in step."
     },
     {
       "path": "coachmark.motion.easing.move",
@@ -8506,7 +8478,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg and fades in step with its popup, which is a Popover.Root and reads the popover tokens."
+      "description": "Coachmark.Root: dims the page around one element, which stays usable through a hole in the scrim, and points a popup at it. The scrim reads overlay.scrim.bg. The popup is a Popover.Root and takes the popover tokens for its look and the size it grows from; the scrim and the popup both time their fades with coachmark.motion, so they move in step."
     },
     {
       "path": "tooltip.bg",
@@ -10553,20 +10525,6 @@
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
     },
     {
-      "path": "toast.enter-offset",
-      "type": "dimension",
-      "cssVar": "--todae-toast-enter-offset",
-      "cssValue": "var(--todae-space-2)",
-      "ref": "space.2",
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
-    },
-    {
       "path": "toast.font.size",
       "type": "dimension",
       "cssVar": "--todae-toast-font-size",
@@ -10710,8 +10668,8 @@
       "path": "toast.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-toast-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10724,8 +10682,8 @@
       "path": "toast.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-toast-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10733,6 +10691,20 @@
         "name": "contract"
       },
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
+    },
+    {
+      "path": "toast.motion.offset",
+      "type": "dimension",
+      "cssVar": "--todae-toast-motion-offset",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How far a toast rises into place as it appears."
     },
     {
       "path": "toast.padding.x",
@@ -14588,8 +14560,8 @@
       "path": "drawer.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-drawer-motion-easing-enter",
-      "cssValue": "var(--todae-overlay-motion-easing-enter)",
-      "ref": "overlay.motion.easing.enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -14602,8 +14574,8 @@
       "path": "drawer.motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-drawer-motion-easing-exit",
-      "cssValue": "var(--todae-overlay-motion-easing-exit)",
-      "ref": "overlay.motion.easing.exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "entry": {

@@ -1,14 +1,8 @@
 {
   "overlay": {
-    "$description": "Shared by overlays: the scrim of Dialog, BottomSheet, Drawer and Coachmark, and the easing they, Toast and Popover (with Menu) enter and exit with.",
+    "$description": "The scrim a modal overlay dims the page with.",
     "scrim": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
-    },
-    "motion": {
-      "easing": {
-        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
-        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
-      }
     }
   }
 }

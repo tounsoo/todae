@@ -5,7 +5,6 @@
     "inset": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
     "stack-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "peek": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
-    "enter-offset": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
@@ -55,9 +54,10 @@
         "exit": { "$type": "duration", "$value": { "$ref": "#/motion/notice/duration/exit/$value" } }
       },
       "easing": {
-        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },
-        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/exit/$value" } }
-      }
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      },
+      "offset": { "$type": "dimension", "$description": "How far a toast rises into place as it appears.", "$value": { "$ref": "#/space/2/$value" } }
     }
   }
 }

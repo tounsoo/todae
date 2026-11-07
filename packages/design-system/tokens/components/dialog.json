@@ -25,8 +25,8 @@
         "exit": { "$type": "duration", "$value": { "$ref": "#/motion/window/duration/exit/$value" } }
       },
       "easing": {
-        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/enter/$value" } },
-        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/overlay/motion/easing/exit/$value" } }
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
       },
       "offset": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } }
     }
