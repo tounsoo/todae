@@ -70,7 +70,7 @@ jobs:
           if [ "$EVENT_NAME" = pull_request ]; then
             # GitHub gives a fork's pull request no secrets, and its code must never meet the token.
             [ "$HEAD_REPO" = "$REPOSITORY" ] || skip "Pull requests from forks get no preview. Push the branch to this repository to get one."
-            # Bench record pull requests only add a JSON record, as vercel.json's ignoreCommand had it.
+            # Bench record pull requests only add a JSON record, as vercel.json's ignoreCommand once skipped them.
             case "$HEAD_REF" in
               bench-record/*|changesets-ghcommit-temp/*) skip "Branch $HEAD_REF gets no docs preview." ;;
             esac

@@ -11,7 +11,7 @@
 The switch happens in two steps, so previews never stop:
 
 1. This workflow ships while Vercel's own Git builds still run. Without the `VERCEL_TOKEN` secret it skips with a notice.
-2. Once the secret is set and the workflow has deployed a pull request preview, a `main` preview and a `docs-stable` production deployment, a follow-up pull request adds `"git": { "deploymentEnabled": false }` to `apps/docs/vercel.json` and drops its `ignoreCommand`. From then on Vercel builds nothing.
+2. Once the secret is set and the workflow has deployed a pull request preview, a `main` preview and a `docs-stable` production deployment, a follow-up pull request adds `"git": { "deploymentEnabled": false }` to `apps/docs/vercel.json` and drops its `ignoreCommand`. From then on Vercel builds nothing. Ben asked for it on 2026-11-07 ("Do it as a PR") once the pull request and `main` deployments had come from the workflow.
 
 ## Why
 
