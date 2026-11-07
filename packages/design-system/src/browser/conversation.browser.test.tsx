@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { server } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -444,6 +445,11 @@ describe('Conversation in a browser', () => {
     await settled();
     act(() => button.click());
     await waitFor(() => expect(button.hidden).toBe(true));
+    if (server.browser === 'firefox') {
+      // Firefox can't keep a hidden element drawn while it fades yet, so it hides at once.
+      expect(getComputedStyle(button).display).toBe('none');
+      return;
+    }
     // Still drawn while it fades out, but presses go through it.
     expect(button.getAnimations().filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')).toHaveLength(1);
     expect(getComputedStyle(button).display).not.toBe('none');
