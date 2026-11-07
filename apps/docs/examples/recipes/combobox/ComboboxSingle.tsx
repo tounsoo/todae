@@ -7,6 +7,7 @@ import {
   OptionList,
   Popover,
   useCombobox,
+  useHighlight,
   type ComboboxOption,
 } from '@tounsoo/todae';
 
@@ -29,6 +30,7 @@ export default function ComboboxSingle() {
     presentation: 'popover',
     defaultValue: 'react',
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <>
       <Field.Group>
@@ -41,7 +43,7 @@ export default function ComboboxSingle() {
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        <OptionList.Root {...cb.getListboxProps()}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>

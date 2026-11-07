@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   useCombobox,
+  useHighlight,
   type ComboboxOption,
 } from '@tounsoo/todae';
 
@@ -38,6 +39,7 @@ export function ComboboxAuto() {
     options: FRAMEWORKS,
     presentation: 'auto',
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <Stack.Root>
       <Text.Root tone="muted">
@@ -58,7 +60,7 @@ export function ComboboxAuto() {
               <Field.Root id={cb.ids.input} aria-label="Framework">
                 <Field.TextInput {...cb.getInputProps()} />
               </Field.Root>
-              <OptionList.Root {...cb.getListboxProps()}>
+              <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
                 {optionNodes(cb.items, cb.getOptionProps)}
               </OptionList.Root>
             </BottomSheet.Body>
@@ -73,7 +75,7 @@ export function ComboboxAuto() {
             </Field.Root>
           </Field.Group>
           <Popover.Root {...cb.getPopoverProps()}>
-            <OptionList.Root {...cb.getListboxProps()}>
+            <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
               {optionNodes(cb.items, cb.getOptionProps)}
             </OptionList.Root>
           </Popover.Root>
@@ -88,6 +90,7 @@ export function ComboboxEmpty() {
     options: PACKAGES,
     presentation: 'popover',
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <>
       <Field.Group>
@@ -102,7 +105,7 @@ export function ComboboxEmpty() {
       <Popover.Root {...cb.getPopoverProps()}>
         <Text.Root role="status">{cb.isEmpty ? 'No matches' : ''}</Text.Root>
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
-        <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
@@ -137,6 +140,7 @@ export function ComboboxCreate() {
       return saved;
     },
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <>
       <Field.Group>
@@ -149,7 +153,7 @@ export function ComboboxCreate() {
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        <OptionList.Root {...cb.getListboxProps()}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
         {/* Under the create row; a load error would go in its own status. */}
@@ -174,6 +178,7 @@ export function ComboboxCreateMulti() {
       return label;
     },
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <>
       <Field.Group>
@@ -186,7 +191,7 @@ export function ComboboxCreateMulti() {
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        <OptionList.Root {...cb.getListboxProps()}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>

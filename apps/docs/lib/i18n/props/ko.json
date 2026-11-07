@@ -2491,8 +2491,8 @@
   },
   "useHighlight": {
     "name": {
-      "en": "Name to style with ::highlight(name). Give each hook its own name.",
-      "ko": "::highlight(name)으로 스타일을 줄 이름. 훅마다 다른 이름을 주세요."
+      "en": "Name to style with ::highlight(name). Hooks that share a name paint together under it.",
+      "ko": "::highlight(name)으로 스타일을 줄 이름. 같은 이름을 쓰는 훅들은 그 이름 아래 함께 칠합니다."
     },
     "query": {
       "en": "Text to find inside the element on ref. A list matches any of its terms; empty strings are skipped.",

@@ -1,8 +1,8 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { observeMutations } from '../internal/sharedMutations.js';
 
 export type UseHighlightOptions = {
-  /** Name to style with ::highlight(name). Give each hook its own name. */
+  /** Name to style with ::highlight(name). Hooks that share a name paint together under it. */
   name: string;
   /** Text to find inside the element on ref. A list matches any of its terms; empty strings are skipped. */
   query?: string | readonly string[];
@@ -92,28 +92,69 @@ function createSearch(root: HTMLElement, pattern: RegExp) {
   return { update, matches };
 }
 
-type Holder = { highlight: Highlight; order: number };
+/** One hook's part of a name: what it paints, and the look it asks for. */
+type Member = {
+  order: number;
+  priority: number;
+  type: HighlightType;
+  matches: readonly AbstractRange[];
+  ranges: readonly AbstractRange[];
+};
 
-// Hooks holding each name, in the order they first mounted. The latest-mounted
-// one is registered; when it unmounts, the one before it takes the name back.
-const holders = /* @__PURE__ */ new Map<string, Holder[]>();
+/** One Highlight per name, shared by every hook that uses the name. */
+type Shared = { highlight: Highlight; members: Member[] };
+
+// Hooks holding each name, in the order they first mounted. They paint
+// together into the name's one Highlight, which goes when the last one leaves.
+const shared = /* @__PURE__ */ new Map<string, Shared>();
 let mountCount = 0;
 
-function claim(name: string, holder: Holder): void {
-  const list = [...(holders.get(name) ?? []), holder].sort((a, b) => a.order - b.order);
-  holders.set(name, list);
-  if (list.at(-1) === holder) CSS.highlights.set(name, holder.highlight);
+/** Repaints the name from every member, in mount order, each in document order. */
+function paint(entry: Shared): void {
+  entry.highlight.clear();
+  for (const member of entry.members) {
+    for (const range of member.matches) entry.highlight.add(range);
+    for (const range of member.ranges) entry.highlight.add(range);
+  }
 }
 
-function release(name: string, holder: Holder): void {
-  const list = (holders.get(name) ?? []).filter((held) => held !== holder);
-  if (list.length > 0) holders.set(name, list);
-  else holders.delete(name);
+/** A Highlight has one priority and type, so the latest-mounted member sets them. */
+function restyle(entry: Shared): void {
+  const latest = entry.members.at(-1)!;
+  entry.highlight.priority = latest.priority;
+  entry.highlight.type = latest.type;
+}
+
+function join(name: string, member: Member): void {
+  let entry = shared.get(name);
+  if (!entry) {
+    entry = { highlight: new Highlight(), members: [] };
+    shared.set(name, entry);
+    CSS.highlights.set(name, entry.highlight);
+  }
+  entry.members = [...entry.members, member].sort((a, b) => a.order - b.order);
+  restyle(entry);
+  paint(entry);
+}
+
+function leave(name: string, member: Member): void {
+  const entry = shared.get(name);
+  if (!entry) return;
+  entry.members = entry.members.filter((held) => held !== member);
+  if (entry.members.length > 0) {
+    restyle(entry);
+    paint(entry);
+    return;
+  }
+  shared.delete(name);
   // Page code removed or replaced the name since; leave its choice alone.
-  if (CSS.highlights.get(name) !== holder.highlight) return;
-  const previous = list.at(-1);
-  if (previous) CSS.highlights.set(name, previous.highlight);
-  else CSS.highlights.delete(name);
+  if (CSS.highlights.get(name) === entry.highlight) CSS.highlights.delete(name);
+}
+
+/** The name's entry, when this member is in it. */
+function joined(name: string, member: Member): Shared | undefined {
+  const entry = shared.get(name);
+  return entry?.members.includes(member) ? entry : undefined;
 }
 
 const sameItems = (a: readonly AbstractRange[], b: readonly AbstractRange[]) =>
@@ -132,7 +173,7 @@ const sameRanges = (a: readonly Range[], b: readonly Range[]) =>
 /**
  * Paints text matches with the CSS Custom Highlight API: no <mark> elements,
  * so the DOM, selection and focus stay as they are. Style the result with
- * `::highlight(name)`.
+ * `::highlight(name)`; every hook with the same name paints into it.
  */
 export function useHighlight({
   name,
@@ -164,39 +205,36 @@ export function useHighlight({
     }).stop;
   }, [node, source, flags]);
 
-  // One Highlight for the hook's whole life, so its priority and type survive
-  // every change of ranges.
+  // The hook's part of its name for its whole life, so its order survives a rename.
   // order is set on the first mount, not at render, so a discarded render doesn't count.
-  const [holder] = useState<Holder | null>(() => (supported() ? { highlight: new Highlight(), order: 0 } : null));
-  const highlight = holder?.highlight ?? null;
-  const painted = useRef<{ matches: readonly AbstractRange[]; ranges: readonly AbstractRange[] }>({
-    matches: NO_MATCHES,
-    ranges: NO_MATCHES,
-  });
+  const [member] = useState<Member | null>(() =>
+    supported() ? { order: 0, priority: 0, type: 'highlight', matches: NO_MATCHES, ranges: NO_MATCHES } : null,
+  );
 
   useLayoutEffect(() => {
-    if (!holder) return;
-    if (holder.order === 0) holder.order = ++mountCount;
-    claim(name, holder);
-    return () => release(name, holder);
-  }, [holder, name]);
+    if (!member) return;
+    if (member.order === 0) member.order = ++mountCount;
+    join(name, member);
+    return () => leave(name, member);
+  }, [member, name]);
 
   useLayoutEffect(() => {
-    if (!highlight) return;
-    highlight.priority = priority ?? 0;
-    highlight.type = type ?? 'highlight';
-  }, [highlight, priority, type]);
+    if (!member) return;
+    member.priority = priority ?? 0;
+    member.type = type ?? 'highlight';
+    const entry = joined(name, member);
+    if (entry) restyle(entry);
+  }, [member, name, priority, type]);
 
   useLayoutEffect(() => {
-    if (!highlight) return;
+    if (!member) return;
     const extra = ranges ?? NO_MATCHES;
-    const last = painted.current;
     // `ranges={[current]}` is a new array each render; skip the repaint when its items are the same.
-    if (sameItems(last.matches, matches) && sameItems(last.ranges, extra)) return;
-    highlight.clear();
-    for (const range of matches) highlight.add(range);
-    for (const range of extra) highlight.add(range);
-    painted.current = { matches, ranges: extra };
+    if (sameItems(member.matches, matches) && sameItems(member.ranges, extra)) return;
+    member.matches = matches;
+    member.ranges = extra;
+    const entry = joined(name, member);
+    if (entry) paint(entry);
   });
 
   return { ref: setNode, matches };
