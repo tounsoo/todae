@@ -9,7 +9,7 @@ The list holds one tab stop, on the selected tab. Arrow keys, Home and End move 
 
 <Example of={TabsBasic} block />
 
-The indicator slides from the old tab to the new one over `tabs.motion.duration`, in browsers with CSS anchor positioning. In other browsers, in a right-to-left list that scrolls, and when the user prefers reduced motion, it moves at once.
+The indicator slides from the old tab to the new one over `tabs.motion.duration`, in Chrome. In Safari and Firefox, in a right-to-left list that scrolls, and when the user prefers reduced motion, it moves at once.
 
 A horizontal list that holds more tabs than fit scrolls sideways, in one row. An arrow shows at each edge where tabs are cut off; resting a mouse or pen on it scrolls that way. The arrows are for the pointer only: touch, a wheel and the arrow keys scroll the list as before, a tab that takes focus scrolls clear of them, and assistive technology never meets them. Pass `arrows={false}` to leave them out. A selected tab past the edge scrolls into view: on the first render, when your code picks it, and once a list that was hidden shows. Another control in the list, such as an add button, draws its focus ring inside itself, as the tabs do. A vertical list doesn't scroll.
 

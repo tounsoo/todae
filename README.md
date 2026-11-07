@@ -69,6 +69,8 @@ The docs are in English and [Korean](https://todae.omsoo.design/ko).
 
 ## Browser support
 
+Chrome is Todae's target, along with the other browsers on Chromium, such as Edge. Safari and Firefox are supported too, on one condition: nothing may break there. Every component works in them, but some polish is Chrome-only, and [What Safari and Firefox do differently](#what-safari-and-firefox-do-differently) lists it.
+
 Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so its support follows those features rather than a list it maintains. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
 Calendar, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`, `parseDate`, `parseDateRange`, `parseTime` and `parseDateTime` read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
@@ -81,9 +83,25 @@ Checked against public browser support data on 2026-10-16, these are the first v
 | Firefox | 147 | 147 |
 | Safari and iOS Safari | 26 | Not shipped; load a polyfill |
 
-CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code. Todae's component browser tests run in Chromium, Firefox and WebKit through Playwright, which ship builds newer than these floors, so the floors themselves are not tested.
+CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row, and the Safari lines below. The versions are not pinned in code. Todae's component browser tests run in Chromium, Firefox and WebKit through Playwright, which ship builds newer than these floors, so the floors themselves are not tested.
 
-Chromium and WebKit are fully supported, and a browser test that fails in either fails CI. Firefox is supported with known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Firefox goes back to failing CI on every failure before 1.0 ships.
+A browser test that fails in Chromium or WebKit fails CI. Firefox has known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Firefox goes back to failing CI on every failure before 1.0 ships.
+
+### What Safari and Firefox do differently
+
+Each line says what Chrome does and what Safari and Firefox do instead. Motion only has to work in Chrome, as [ARCHITECTURE.md](ARCHITECTURE.md#platform) records, and under reduced motion every browser skips the motion below. Some of these need a newer Chrome than the floor above, up to Chrome 140, and an older Chrome does what Safari and Firefox do.
+
+- **Disclosure and Nav branches**: grow and shrink to their height as they open and close. Safari and Firefox fade the content and change the height at once.
+- **Toast**: in a list, gives back its height as it leaves, so the toasts behind it slide into place. Safari and Firefox move them once it is gone.
+- **Conversation's newest message**: grows into place. Safari and Firefox fade it in at full size.
+- **`Conversation.ScrollButton`**: fades out. Firefox hides it at once.
+- **Tabs**: the indicator slides to the new tab. Safari and Firefox move it at once.
+- **Coachmark**: the hole and popup slide to a tour's next target. Safari and Firefox move them at once.
+- **Progress and Meter**: the fill glides to a new value. Firefox jumps.
+- **`Field.Select`**: draws its button and list from Todae's tokens, as Safari 27 does too. Firefox and Safari 26 show the browser's own list, with the same value and keys, and keep the browser's arrow instead of the `chevron` glyph.
+- **`Field.Select` in a field**: a press beside the select, such as on an `Icon`, opens its list. Safari only focuses the select.
+- **Contents**: marks the current link from CSS as well, before its script runs. Safari and Firefox mark it once the script runs.
+- **EmptyState's description**: avoids a lone last word, as Safari does too. Firefox breaks its lines raggedly.
 
 ## Contributing
 

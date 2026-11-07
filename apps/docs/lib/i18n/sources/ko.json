@@ -123,7 +123,7 @@
   },
   "coachmark": {
     "(top)": "61bfa5251333",
-    "# Coachmark": "f69be1cbd86b",
+    "# Coachmark": "45eddeeedc0c",
     "## A tour": "7213c657532d",
     "## Accessible composition": "dcfe5a5803cd",
     "## When to use": "854c00834705",
@@ -597,8 +597,9 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "590404e7953e",
-    "(section order)": "4d06dc5f1974"
+    "# Native platform": "f2000423780b",
+    "## What Safari and Firefox do differently": "5d20bc743e89",
+    "(section order)": "838d852d6965"
   },
   "popover": {
     "(top)": "3e89bd45eeb2",
@@ -924,7 +925,7 @@
   },
   "tabs": {
     "(top)": "4f8d6cab6ed9",
-    "# Tabs": "70f5039a5f7a",
+    "# Tabs": "630aebbfbfa5",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",

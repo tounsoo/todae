@@ -2,6 +2,8 @@ import { Table } from '@tounsoo/todae/table';
 
 # 네이티브 플랫폼
 
+Todae의 목표 브라우저는 Chrome이며, Edge처럼 Chromium 기반의 다른 브라우저도 포함합니다. Safari와 Firefox도 지원하지만, 조건이 하나 있습니다. 그곳에서 아무것도 깨지면 안 됩니다. 모든 컴포넌트가 두 브라우저에서 동작하지만, 일부 다듬은 효과는 Chrome에서만 보이며, 이 페이지의 마지막 섹션에 그 목록이 있습니다.
+
 Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니다. 아래 기능을 JavaScript 대체 구현 없이 사용하므로, 이 기능들이 있는 브라우저가 곧 Todae가 지원하는 브라우저입니다. 이 페이지는 그 기능을 나열합니다. 버전 하한은 저장소 README의 [Browser support](https://github.com/tounsoo/todae/blob/main/README.md#browser-support) 표이며, 2026-10-16에 확인했습니다.
 
 <Table.Root>
@@ -31,9 +33,9 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
   </Table.Body>
 </Table.Root>
 
-CSS 앵커 포지셔닝이 모든 브라우저에서 하한을 정합니다. Chrome과 Edge의 하한은 `position-try-fallbacks`이며, 128에서 들어왔습니다. iOS와 iPadOS에서는 모든 브라우저가 Safari 엔진을 쓰므로, 그곳의 Chrome과 Edge는 Safari 행을 따릅니다. 버전은 코드에 고정되어 있지 않습니다. 컴포넌트 브라우저 테스트는 Chromium, Firefox, WebKit에서 실행되지만 이 하한보다 새로운 빌드이므로, 하한 버전 자체는 테스트하지 않습니다.
+CSS 앵커 포지셔닝이 모든 브라우저에서 하한을 정합니다. Chrome과 Edge의 하한은 `position-try-fallbacks`이며, 128에서 들어왔습니다. iOS와 iPadOS에서는 모든 브라우저가 Safari 엔진을 쓰므로, 그곳의 Chrome과 Edge는 Safari 행과 아래의 Safari 항목을 따릅니다. 버전은 코드에 고정되어 있지 않습니다. 컴포넌트 브라우저 테스트는 Chromium, Firefox, WebKit에서 실행되지만 이 하한보다 새로운 빌드이므로, 하한 버전 자체는 테스트하지 않습니다.
 
-Chromium과 WebKit은 완전히 지원하며, 둘 중 어디서든 브라우저 테스트가 실패하면 CI가 실패합니다. Firefox는 지원하지만 알려진 문제가 있으며, [이슈 367](https://github.com/tounsoo/todae/issues/367)에서 추적합니다. 그 문제로 깨지는 Firefox 테스트도 CI에서 계속 실행되지만, 실패하면 CI를 실패시키는 대신 경고로 표시되고, 그 밖의 Firefox 실패는 이전처럼 CI를 실패시킵니다. 1.0이 나오기 전에 모든 Firefox 실패가 다시 CI를 실패시키도록 되돌립니다.
+Chromium이나 WebKit에서 브라우저 테스트가 실패하면 CI가 실패합니다. Firefox에는 알려진 문제가 있으며, [이슈 367](https://github.com/tounsoo/todae/issues/367)에서 추적합니다. 그 문제로 깨지는 Firefox 테스트도 CI에서 계속 실행되지만, 실패하면 CI를 실패시키는 대신 경고로 표시되고, 그 밖의 Firefox 실패는 이전처럼 CI를 실패시킵니다. 1.0이 나오기 전에 모든 Firefox 실패가 다시 CI를 실패시키도록 되돌립니다.
 
 - **[CSS 앵커 포지셔닝](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: 팝오버와 툴팁을 트리거 옆에 배치하고, `position-try-fallbacks`로 뷰포트 가장자리에서 뒤집고, `Field.Textarea`의 하이라이트를 textarea 위에 배치하고, `Coachmark.Root`의 팝업과 어두운 페이지의 구멍을 대상 위에 배치합니다. 없으면: 표면이 트리거 옆에 배치되지 않고 뷰포트 왼쪽 위 모서리 근처에 놓이며, 하이라이트는 그려지지 않고, 코치마크는 구멍 없이 대상까지 페이지 전체를 어둡게 합니다.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: `Popover.Root`와 `Tooltip.Root`를 최상위 레이어에 표시합니다. Todae에 필수입니다.
@@ -63,3 +65,19 @@ Chromium과 WebKit은 완전히 지원하며, 둘 중 어디서든 브라우저 
 - **[`dvh` 단위](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: 모바일 브라우저 UI를 따르는 `Dialog`와 `BottomSheet` 높이. Todae에 필수입니다.
 
 가장 중요한 동작은 실제 브라우저(Playwright를 통한 Chromium, Firefox, WebKit)에서 테스트합니다. 겹쳐 쌓인 오버레이 사이의 Escape 순서, 모달 포커스와 복원, 뷰포트 가장자리에서의 뒤집기, 칩 오버플로 측정, 바텀 시트 드래그입니다. 모든 문서 예시도 Chromium에서 axe로 검사합니다.
+
+## Safari와 Firefox에서 다른 점
+
+각 항목은 Chrome이 하는 일과 Safari와 Firefox가 대신 하는 일을 적습니다. 모션은 Chrome에서만 동작하면 되며, 동작 줄이기를 선호하면 모든 브라우저가 아래 모션을 건너뜁니다. 일부는 위의 하한보다 새로운 Chrome, 최대 Chrome 140이 필요하며, 그보다 오래된 Chrome은 Safari와 Firefox처럼 동작합니다.
+
+- **[Disclosure](/disclosure)와 [Nav](/nav) 브랜치**: 열리고 닫힐 때 높이만큼 커지고 줄어듭니다. Safari와 Firefox는 내용을 페이드하고 높이는 바로 바꿉니다.
+- **[Toast](/toast)**: 목록 안에서 사라질 때 자기 높이를 돌려주므로, 뒤의 토스트가 제자리로 미끄러집니다. Safari와 Firefox는 토스트가 사라진 뒤에 한 번에 옮깁니다.
+- **[Conversation](/conversation)의 새 메시지**: 제자리로 커지며 들어옵니다. Safari와 Firefox는 원래 크기로 페이드 인합니다.
+- **`Conversation.ScrollButton`**: 페이드 아웃합니다. Firefox는 바로 숨깁니다.
+- **[Tabs](/tabs)**: 인디케이터가 새 탭으로 미끄러집니다. Safari와 Firefox는 바로 옮깁니다.
+- **[Coachmark](/coachmark)**: 투어의 다음 대상으로 구멍과 팝업이 미끄러집니다. Safari와 Firefox는 바로 옮깁니다.
+- **[Progress](/progress)와 Meter**: 새 값까지 채움이 부드럽게 늘어납니다. Firefox는 바로 건너뜁니다.
+- **[`Field.Select`](/field/select)**: 버튼과 목록을 Todae 토큰으로 그리며, Safari 27도 마찬가지입니다. Firefox와 Safari 26은 같은 값과 키 조작으로 브라우저 자체 목록을 보여 주고, `chevron` 글리프 대신 브라우저의 화살표를 유지합니다.
+- **필드 안의 `Field.Select`**: `Icon`처럼 select 옆을 눌러도 목록이 열립니다. Safari는 select에 포커스만 줍니다.
+- **[Contents](/contents)**: 스크립트가 실행되기 전에도 CSS로 현재 링크를 표시합니다. Safari와 Firefox는 스크립트가 실행되면 표시합니다.
+- **[EmptyState](/empty-state)의 설명**: 마지막 줄에 단어 하나만 남지 않게 하며, Safari도 마찬가지입니다. Firefox는 줄을 고르지 않게 나눕니다.
