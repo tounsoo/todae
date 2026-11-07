@@ -7,6 +7,11 @@
     },
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    },
+    "motion": {
+      "duration": {
+        "glide": { "$type": "duration", "$description": "The longest Conversation.ScrollButton's glide to the end runs before it lands there. Under reduced motion it jumps.", "$value": { "value": 500, "unit": "ms" } }
+      }
     }
   }
 }

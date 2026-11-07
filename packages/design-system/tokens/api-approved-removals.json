@@ -26,6 +26,10 @@
       "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
     {
+      "path": "field.code.caret.blink-duration",
+      "approved": "Renamed to field.code.caret.motion.duration, so the caret's blink is named as every other loop's cycle is. Ben approved the rename on 2026-11-07 ('Do both'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of this path."
+    },
+    {
       "path": "focus.ring.color",
       "approved": "Renamed to focus.ring, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },

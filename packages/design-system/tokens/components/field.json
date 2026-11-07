@@ -129,7 +129,9 @@
       "caret": {
         "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
         "color": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-        "blink-duration": { "$type": "duration", "$value": { "value": 1000, "unit": "ms" } }
+        "motion": {
+          "duration": { "$type": "duration", "$description": "How long one blink of the caret takes, on and off.", "$value": { "value": 1000, "unit": "ms" } }
+        }
       }
     }
   }

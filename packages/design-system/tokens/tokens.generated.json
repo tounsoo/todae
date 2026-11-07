@@ -5583,20 +5583,6 @@
       "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
-      "path": "field.code.caret.blink-duration",
-      "type": "duration",
-      "cssVar": "--todae-field-code-caret-blink-duration",
-      "cssValue": "1000ms",
-      "ref": null,
-      "layer": "contract",
-      "context": null,
-      "entry": {
-        "kind": "set",
-        "name": "contract"
-      },
-      "description": "Field.OneTimeCode: the boxes drawn over its input, and the caret in the box waiting for the next character. Box colors are the field's own."
-    },
-    {
       "path": "field.code.caret.color",
       "type": "color",
       "cssVar": "--todae-field-code-caret-color",
@@ -5609,6 +5595,20 @@
         "name": "contract"
       },
       "description": "Field.OneTimeCode: the boxes drawn over its input, and the caret in the box waiting for the next character. Box colors are the field's own."
+    },
+    {
+      "path": "field.code.caret.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-field-code-caret-motion-duration",
+      "cssValue": "1000ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long one blink of the caret takes, on and off."
     },
     {
       "path": "field.code.caret.width",
@@ -13435,6 +13435,20 @@
         "name": "contract"
       },
       "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
+    },
+    {
+      "path": "conversation.motion.duration.glide",
+      "type": "duration",
+      "cssVar": "--todae-conversation-motion-duration-glide",
+      "cssValue": "500ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The longest Conversation.ScrollButton's glide to the end runs before it lands there. Under reduced motion it jumps."
     },
     {
       "path": "conversation.ring.focus",

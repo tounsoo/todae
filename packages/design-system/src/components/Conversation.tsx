@@ -14,6 +14,8 @@ import {
   type UIEvent,
 } from 'react';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
+import { warnOnce } from '../internal/warnOnce.js';
+import { tokenMs } from '../overlay/cssTime.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -22,6 +24,7 @@ import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { focusWithoutScroll, revealRing } from '../internal/revealRing.js';
 import { useScrollTabStop } from './scrollTabStop.js';
+import { GLIDE_FRAME_MS, glideStep } from './conversationGlide.js';
 import styles from './Conversation.module.css';
 
 export type ConversationRootProps = ComponentPropsWithRef<'div'> & {
@@ -41,12 +44,17 @@ export type ConversationScrollButtonProps = ButtonActionProps;
 // How far from the end still counts as at the end, for fractional scroll
 // positions at some zoom levels.
 const END_SLACK = 1;
-// The share of the distance left that a glide covers each frame, and its
-// smallest step in pixels.
-const GLIDE_SHARE = 0.18;
-const GLIDE_MIN_STEP = 4;
-// The longest a glide runs before it lands at the end.
+// Default of conversation.motion.duration.glide, the longest a glide runs
+// before it lands at the end, for a viewport that can't read it.
 const GLIDE_MS = 500;
+
+function glideMs(viewport: HTMLElement): number {
+  const ms = tokenMs(viewport, '--todae-conversation-motion-duration-glide');
+  if (ms === null) {
+    warnOnce('conversation-motion-duration-glide', `Conversation: --todae-conversation-motion-duration-glide can't be read, so the scroll button's glide lands after ${GLIDE_MS}ms at most. Load Todae's stylesheet or set the token.`);
+  }
+  return ms ?? GLIDE_MS;
+}
 
 type ConversationContext = {
   viewport: RefObject<HTMLElement | null>;
@@ -153,7 +161,7 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
 
   // Each frame covers a share of what is left, so it slows into an end that
   // may still be moving away while a message grows, and it lands after
-  // GLIDE_MS at most.
+  // conversation.motion.duration.glide at most.
   const scrollToEnd = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
@@ -165,21 +173,26 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
       expected.current = el.scrollTop;
       return;
     }
+    const limit = glideMs(el);
     const start = performance.now();
+    // The first step moves as one 60Hz frame would.
+    let last = start - GLIDE_FRAME_MS;
     const step = () => {
+      const now = performance.now();
       const left = distanceToEnd(el);
       if (left <= END_SLACK) {
         glideFrame.current = 0;
         return;
       }
       // Past its time, it lands, however fast the end is still moving.
-      if (performance.now() - start >= GLIDE_MS) {
+      if (now - start >= limit) {
         glideFrame.current = 0;
         jump(el, el.scrollHeight);
         expected.current = el.scrollTop;
         return;
       }
-      jump(el, el.scrollTop + Math.max(left * GLIDE_SHARE, GLIDE_MIN_STEP));
+      jump(el, el.scrollTop + glideStep(left, now - last));
+      last = now;
       expected.current = el.scrollTop;
       glideFrame.current = requestAnimationFrame(step);
     };

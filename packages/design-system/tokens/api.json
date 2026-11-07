@@ -1738,6 +1738,10 @@
       "type": "dimension"
     },
     {
+      "path": "conversation.motion.duration.glide",
+      "type": "duration"
+    },
+    {
       "path": "conversation.ring.focus",
       "type": "color"
     },
@@ -2090,12 +2094,12 @@
       "type": "color"
     },
     {
-      "path": "field.code.caret.blink-duration",
-      "type": "duration"
-    },
-    {
       "path": "field.code.caret.color",
       "type": "color"
+    },
+    {
+      "path": "field.code.caret.motion.duration",
+      "type": "duration"
     },
     {
       "path": "field.code.caret.width",
