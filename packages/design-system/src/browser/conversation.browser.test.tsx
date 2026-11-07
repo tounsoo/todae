@@ -358,7 +358,10 @@ describe('Conversation in a browser', () => {
     expect(getComputedStyle(viewport).overflowAnchor).toBe('none');
   });
 
-  it('grows a message added at the end into place, so the messages above slide up', async () => {
+  // WebKit and Firefox can't animate a height to auto yet, so there it only fades.
+  const grows = CSS.supports('interpolate-size', 'allow-keywords');
+
+  it.runIf(grows)('grows a message added at the end into place, so the messages above slide up', async () => {
     const { rerender } = render(<Thread count={10} />);
     const viewport = screen.getByTestId('viewport');
     await frame();
@@ -384,6 +387,24 @@ describe('Conversation in a browser', () => {
     expect(added.hasAttribute('data-todae-entering')).toBe(false);
     expect(getComputedStyle(added).overflowY).toBe('visible');
     expect(added.offsetHeight).toBe(added.scrollHeight);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it.skipIf(grows)('fades a message added at the end in at full size where a height cannot animate to auto', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Thread count={11} />);
+    const added = screen.getByRole('article', { name: 'Message 11' });
+    await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+    const animations = added.getAnimations();
+    expect(animations).toHaveLength(1);
+    const properties = animations[0]!.effect instanceof KeyframeEffect ? animations[0]!.effect.getKeyframes().flatMap(Object.keys) : [];
+    expect(properties).toContain('opacity');
+    expect(properties).not.toContain('blockSize');
+    expect(getComputedStyle(added).overflowY).toBe('visible');
+    await settled();
+    expect(added.hasAttribute('data-todae-entering')).toBe(false);
     expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
   });
 
