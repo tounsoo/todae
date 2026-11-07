@@ -123,7 +123,7 @@ Each component's enter and exit durations point at a motion role, which points a
 - `motion.panel`: a panel that slides in from an edge.
 - `motion.notice`: a short-lived message.
 
-Roles hold durations only. A change between two states that both stay on screen, such as a toggle's thumb, a slide between views, a resize or a hover fade, points its `motion.duration` at the core scale instead of a role, and a loop keeps its own cycle length. A control's hover fade stops at once for a press, keyboard focus, a pressed toggle, the current page or a disabled state, fades back when that ends, and never fades the focus ring.
+Roles hold durations only. A change between two states that both stay on screen, such as a toggle's thumb, a slide between views, a resize or a hover fade, points its `motion.duration` at the core scale instead of a role, and a loop keeps its own cycle length and may keep its own curve, as Skeleton's pulse does with `skeleton.motion.easing`, since a pulse eases both ways. A control's hover fade stops at once for a press, keyboard focus, a pressed toggle, the current page or a disabled state, fades back when that ends, and never fades the focus ring.
 
 Two more kinds of motion follow the same rules. Progress and Meter glide their fill to a new value with `progress.motion.fill.duration` and `progress.motion.fill.easing`, a change between two states, and jump under reduced motion. Alert and ErrorMessage fade in as they appear with `alert.motion.duration.enter` and `alert.motion.easing.enter`, and `field.error.motion.duration.enter` and `field.error.motion.easing.enter`; they go at once, so they have no exit pair, and they keep fading under reduced motion.
 

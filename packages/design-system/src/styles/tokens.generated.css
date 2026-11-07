@@ -545,8 +545,8 @@
   --todae-field-border-hover: var(--_todae-field-border-hover, var(--todae-color-border-default));
   --todae-field-border-invalid: var(--_todae-field-border-invalid, var(--todae-color-danger-default));
   --todae-field-border-width: var(--_todae-field-border-width, var(--todae-border-width));
-  --todae-field-code-caret-blink-duration: var(--_todae-field-code-caret-blink-duration, 1000ms);
   --todae-field-code-caret-color: var(--_todae-field-code-caret-color, var(--todae-color-fg-default));
+  --todae-field-code-caret-motion-duration: var(--_todae-field-code-caret-motion-duration, 1000ms);
   --todae-field-code-caret-width: var(--_todae-field-code-caret-width, 2px);
   --todae-field-code-gap: var(--_todae-field-code-gap, var(--todae-space-field-gap));
   --todae-field-code-slot-block-size: var(--_todae-field-code-slot-block-size, 3.25rem);
@@ -1112,6 +1112,7 @@
   --todae-conversation-gap: var(--_todae-conversation-gap, var(--todae-space-stack-gap-spacious));
   --todae-conversation-motion-duration-enter: var(--_todae-conversation-motion-duration-enter, var(--todae-motion-reveal-duration-enter));
   --todae-conversation-motion-duration-exit: var(--_todae-conversation-motion-duration-exit, var(--todae-motion-reveal-duration-exit));
+  --todae-conversation-motion-duration-glide: var(--_todae-conversation-motion-duration-glide, 500ms);
   --todae-conversation-motion-easing-enter: var(--_todae-conversation-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-conversation-motion-easing-exit: var(--_todae-conversation-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-conversation-ring-focus: var(--_todae-conversation-ring-focus, var(--todae-focus-ring));

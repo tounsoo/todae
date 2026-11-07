@@ -11,7 +11,8 @@
     "motion": {
       "duration": {
         "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } },
-        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/exit/$value" } }
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/exit/$value" } },
+        "glide": { "$type": "duration", "$description": "How long Conversation.ScrollButton's glide to the end runs; if it hasn't arrived by then, the next frame lands it there. Under reduced motion it jumps.", "$value": { "value": 500, "unit": "ms" } }
       },
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },

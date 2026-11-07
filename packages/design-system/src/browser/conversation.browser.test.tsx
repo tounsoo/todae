@@ -95,6 +95,23 @@ describe('Conversation in a browser', () => {
     }
   });
 
+  it('lands the glide by conversation.motion.duration.glide', async () => {
+    // A glide given no time lands in the press, where the default would take
+    // a share of the way in this frame.
+    document.documentElement.style.setProperty('--_todae-conversation-motion-duration-glide', '0ms');
+    try {
+      render(<Thread count={40} />);
+      const viewport = screen.getByTestId('viewport');
+      await frame();
+      viewport.scrollTop = 0;
+      await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+      act(() => screen.getByTestId('scroll').click());
+      expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    } finally {
+      document.documentElement.style.removeProperty('--_todae-conversation-motion-duration-glide');
+    }
+  });
+
   it('reaches the end from the button while a message keeps growing', async () => {
     function Growing() {
       const [count, setCount] = useState(40);

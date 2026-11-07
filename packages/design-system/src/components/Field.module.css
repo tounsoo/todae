@@ -903,7 +903,7 @@
     inline-size: var(--todae-field-code-caret-width);
     block-size: 1lh;
     background: var(--todae-field-code-caret-color);
-    animation: todae-code-caret var(--todae-field-code-caret-blink-duration) steps(1) infinite;
+    animation: todae-code-caret var(--todae-field-code-caret-motion-duration) steps(1) infinite;
   }
 
   @keyframes todae-code-caret {

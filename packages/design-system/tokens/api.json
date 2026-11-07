@@ -1754,6 +1754,10 @@
       "type": "duration"
     },
     {
+      "path": "conversation.motion.duration.glide",
+      "type": "duration"
+    },
+    {
       "path": "conversation.motion.easing.enter",
       "type": "cubicBezier"
     },
@@ -2114,12 +2118,12 @@
       "type": "color"
     },
     {
-      "path": "field.code.caret.blink-duration",
-      "type": "duration"
-    },
-    {
       "path": "field.code.caret.color",
       "type": "color"
+    },
+    {
+      "path": "field.code.caret.motion.duration",
+      "type": "duration"
     },
     {
       "path": "field.code.caret.width",
