@@ -115,11 +115,8 @@
     border-block-end: var(--todae-disclosure-border-width) solid var(--todae-disclosure-border);
   }
 
+  /* The content still fades: it moves nothing. */
   @media (prefers-reduced-motion: reduce) {
-    .root::details-content {
-      transition: none;
-    }
-
     .marker {
       transition: none;
     }
