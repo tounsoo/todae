@@ -12,10 +12,30 @@
     border: var(--todae-tooltip-border-width) solid var(--todae-tooltip-border);
     border-radius: var(--todae-tooltip-radius);
     box-shadow: var(--todae-tooltip-shadow);
+    /* It fades in by opacity alone, as usePopoverSync marks it data-entered,
+       standing in for @starting-style as on Popover. It never moves, since it
+       sits by a trigger that may sit in many places, and it closes at once. */
+    transition: opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
   }
 
   .content:not([data-open]) {
     display: none;
+  }
+
+  /* Its first frames as it opens cold. A warm tip, opening inside the skip
+     window while another is open or has just closed, shows at once, so a
+     sweep across a toolbar never lags. */
+  .content:not([data-entered], [data-todae-warm]) {
+    opacity: 0;
+  }
+
+  /* Warm, closing, or open and still: no transition. Safari re-resolves the
+     position fallbacks right after the opening transition ends and runs it
+     again, as on Popover. */
+  .content[data-todae-warm],
+  .content[data-todae-exiting],
+  .content[data-entered][data-todae-settled] {
+    transition: none;
   }
 
   .content[data-surface='tip'] {

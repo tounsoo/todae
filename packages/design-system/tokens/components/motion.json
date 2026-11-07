@@ -9,7 +9,7 @@
       }
     },
     "popup": {
-      "$description": "A surface anchored to its trigger: Popover, and Menu and the field pickers, which draw on it.",
+      "$description": "A surface anchored to its trigger: Popover, and Menu and the field pickers, which draw on it, and Tooltip, which only fades in.",
       "duration": {
         "enter": { "$type": "duration", "$description": "How long an anchored popup takes to grow in.", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
         "exit": { "$type": "duration", "$description": "How long an anchored popup takes to shrink out.", "$value": { "$ref": "#/motion/duration/normal/$value" } }
