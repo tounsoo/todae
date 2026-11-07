@@ -1,0 +1,204 @@
+name: Docs deploy
+
+# Builds the docs site on GitHub's runners and hands Vercel the finished output, so Vercel runs no build.
+# Pull requests and main get preview deployments; docs-stable, which only release.yml moves, deploys to
+# production. Without the VERCEL_TOKEN secret, and on pull requests from forks, which get no secrets, the
+# Gate job explains why and the deploy is skipped, not failed.
+permissions:
+  contents: read
+
+on:
+  # Drafts get a preview too. ready_for_review is left out because it changes no code.
+  pull_request:
+    types: [opened, synchronize, reopened]
+    # The same paths as ci.yml: a markdown-only change starts no job.
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/README.md'
+      - 'packages/design-system/CHANGELOG.md'
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
+  push:
+    branches: [main, docs-stable]
+  # Redeploys a branch by hand. Run on docs-stable, it deploys production.
+  workflow_dispatch:
+
+# A new push to a pull request cancels its older deploy; main and docs-stable deploys always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # An exact version, so a new CLI release can't change a deploy. Dependabot doesn't move it: bump it by hand.
+  VERCEL_CLI_VERSION: 65.2.0
+  VERCEL_TELEMETRY_DISABLED: '1'
+
+jobs:
+  gate:
+    name: Gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      enabled: ${{ steps.gate.outputs.enabled }}
+      target: ${{ steps.gate.outputs.target }}
+    steps:
+      - id: gate
+        name: Decide whether to deploy
+        env:
+          HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          skip() {
+            echo "::notice title=No docs deploy::$1"
+            printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          if [ "$EVENT_NAME" = pull_request ]; then
+            # GitHub gives a fork's pull request no secrets. Building it with them would hand its code the token.
+            [ "$HEAD_REPO" = "$REPOSITORY" ] || skip "Pull requests from forks get no preview. Push the branch to this repository to get one."
+            # Bench record pull requests only add a JSON record, as vercel.json's ignoreCommand had it.
+            case "$HEAD_REF" in
+              bench-record/*|changesets-ghcommit-temp/*) skip "Branch $HEAD_REF gets no docs preview." ;;
+            esac
+          fi
+          [ "$HAS_TOKEN" = true ] || skip "The VERCEL_TOKEN repository secret isn't set, so nothing was deployed. CONTRIBUTING.md (Deploy the docs) says how to add it."
+          if [ "$REF" = refs/heads/docs-stable ] && [ "$EVENT_NAME" != pull_request ]; then
+            echo "target=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=preview" >> "$GITHUB_OUTPUT"
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Build and deploy
+    needs: gate
+    if: ${{ needs.gate.outputs.enabled == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      # Not secrets: the project and team ids are in .cursor/skills/verify/SKILL.md. Repository variables
+      # of the same names override them.
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
+      TARGET: ${{ needs.gate.outputs.target }}
+      # The pull request's head, not the merge commit checkout picks by default, so the deployment's
+      # githubCommitSha is the head the verify skills compare it with.
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+
+      # Next's webpack cache is about 800 MB and cuts the compile from about 60 s to about 35 s. Only main
+      # saves it, once per lockfile, so it can't crowd CI's caches out of the repository's 10 GB; other
+      # runs restore that copy. A stale copy is still safe, since webpack checks each module's hash.
+      - name: Restore the Next build cache
+        id: next-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/docs/.next/cache
+          key: docs-next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install the Vercel CLI
+        run: npm install --global "vercel@$VERCEL_CLI_VERSION"
+
+      # The token is in this step's and the deploy step's environment only, never in the build's.
+      - name: Pull the project settings
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          # next.config.mjs points canonical and link preview URLs at this host. Vercel sets it on its own
+          # builders; if the pulled settings leave it out, use the docs' production domain.
+          env_file=".vercel/.env.$TARGET.local"
+          if ! grep -qE '^VERCEL_PROJECT_PRODUCTION_URL="?[^"[:space:]]' "$env_file" 2>/dev/null; then
+            echo "::notice::The pulled settings have no VERCEL_PROJECT_PRODUCTION_URL, so the build uses todae.omsoo.design."
+            export VERCEL_PROJECT_PRODUCTION_URL=todae.omsoo.design
+          fi
+          if [ "$TARGET" = production ]; then
+            vercel build --prod
+          else
+            vercel build
+          fi
+
+      # Without the production host, every canonical link and link preview card would point at localhost.
+      - name: Pages name the production site
+        run: |
+          set -euo pipefail
+          if grep -rl --include='*.html' 'http://localhost:3000' .vercel/output; then
+            echo "::error::These pages link to http://localhost:3000, so the build had no production host."
+            exit 1
+          fi
+
+      - name: Save the Next build cache
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.next-cache.outputs.cache-hit != 'true' }}
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/docs/.next/cache
+          key: docs-next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - id: deploy
+        name: Deploy the prebuilt output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          args=(deploy --prebuilt --yes --token="$VERCEL_TOKEN" --meta "githubCommitSha=$SHA" --meta "githubCommitRef=$BRANCH")
+          [ "$TARGET" = production ] && args+=(--prod)
+          out=$(vercel "${args[@]}")
+          printf '%s\n' "$out"
+          url=$(printf '%s\n' "$out" | grep -oE 'https://[a-z0-9-]+\.vercel\.app' | head -n 1 || true)
+          if [ -z "$url" ]; then
+            echo "::error::The deploy printed no deployment URL."
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          printf 'Docs %s deployment for %s: %s\n' "$TARGET" "$SHA" "$url" >> "$GITHUB_STEP_SUMMARY"
+
+  # Its own job, with no checkout, so the pull request write permission never meets the pull request's code.
+  comment:
+    name: Preview comment
+    needs: deploy
+    if: ${{ github.event_name == 'pull_request' && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post or update the preview comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ needs.deploy.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ $URL =~ ^https://[a-z0-9-]+\.vercel\.app$ ]] || { echo "::error::Unexpected deployment URL"; exit 1; }
+          marker='<!-- todae-docs-preview -->'
+          body=$(printf '%s\nDocs preview for %s: %s\n\nVercel asks you to sign in to open it.' "$marker" "$SHA" "$URL")
+          id=$(gh api --paginate "repos/$REPOSITORY/issues/$PR/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPOSITORY/issues/comments/$id" -f body="$body" --silent
+          else
+            gh api -X POST "repos/$REPOSITORY/issues/$PR/comments" -f body="$body" --silent
+          fi
