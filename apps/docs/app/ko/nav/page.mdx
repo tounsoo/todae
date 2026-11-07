@@ -36,6 +36,8 @@ import NextLink from 'next/link';
 
 chevron은 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)에서 `chevron`을 설정하면 아이콘 라이브러리로 그립니다. 아래쪽을 가리키게 그리세요. 닫힌 가지는 이를 행의 끝 쪽으로 돌립니다.
 
+Chrome에서는 가지가 열릴 때 그 링크들이 `nav.motion.duration.enter` 동안 서서히 나타나며 제 높이까지 늘어나고, 닫힐 때 `nav.motion.duration.exit` 동안 줄어들어 아래 행이 미끄러지듯 움직입니다. 다른 브라우저와 동작 줄이기에서는 바로 보이고 숨겨집니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** `nav` 랜드마크입니다. 각 그룹은 레이블이 `aria-labelledby`로 이름을 붙이는 `ul role="list"`이고, 각 항목은 목록 항목입니다. 가지는 `<details>`이며, 브라우저는 그 `<summary>`를 열림 상태가 있는 버튼으로 노출하고 `label`이 이름을 붙입니다. 링크 뒤에서는 레이블이 화면에서 숨겨지지만 여전히 토글의 이름이 됩니다. chevron은 `aria-hidden`입니다. 포커스 링은 행 안쪽에 그려지므로, 행의 옆을 자르는 스크롤 컨테이너 안에서도 온전히 보입니다.

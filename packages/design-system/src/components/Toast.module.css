@@ -93,6 +93,32 @@
     transition-timing-function: var(--todae-toast-motion-easing-exit);
   }
 
+  /* In a list, a toast that leaves also gives back its height and the gap
+     after it, so the toasts behind it slide into place by layout. It clips
+     along the block axis as it shrinks. Where the engine can size from auto
+     (Chrome); elsewhere, and under reduced motion, the others move once it is
+     gone. */
+  @supports (block-size: calc-size(auto, size)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .region[data-layout='list'] .item {
+        block-size: calc-size(auto, size);
+        transition:
+          opacity var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          inset-block-start var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          block-size var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          margin-block-end var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
+      }
+
+      .region[data-layout='list'] .item[data-todae-exiting] {
+        block-size: 0;
+        margin-block-end: calc(-1 * var(--todae-toast-stack-gap));
+        overflow-y: clip;
+        transition-duration: var(--todae-toast-motion-duration-exit);
+        transition-timing-function: var(--todae-toast-motion-easing-exit);
+      }
+    }
+  }
+
   /* Stack: every toast in one grid cell, the newest in front and the rest
      peeking out behind it by toast.peek a step, each a little narrower than
      the one in front, until hovered or focused. */

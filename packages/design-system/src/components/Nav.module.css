@@ -134,6 +134,42 @@
     rotate: 90deg;
   }
 
+  /* Where the engine can size to auto (Chrome), a branch's links open and
+     close by their height and fade, so the rows below slide by layout. They
+     clip only while they move, as Disclosure's content does, with room for a
+     focus ring inside the clip that the negative margin takes back from the
+     layout, and the padding keeps the list's margin inside, so the height holds
+     it throughout. Elsewhere, and under reduced motion, they show and hide at
+     once. */
+  @supports (block-size: calc-size(auto, size)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .branch::details-content {
+        --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+        block-size: 0;
+        margin: calc(-1 * var(--_ring-room));
+        padding: var(--_ring-room);
+        overflow: clip;
+        opacity: 0;
+        transition:
+          opacity var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit),
+          block-size var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit),
+          content-visibility var(--todae-nav-motion-duration-exit) var(--todae-nav-motion-easing-exit) allow-discrete,
+          overflow 0s allow-discrete;
+      }
+
+      .branch[open]::details-content {
+        block-size: calc-size(auto, size);
+        overflow: visible;
+        opacity: 1;
+        transition:
+          opacity var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
+          block-size var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter),
+          content-visibility var(--todae-nav-motion-duration-enter) var(--todae-nav-motion-easing-enter) allow-discrete,
+          overflow 0s var(--todae-nav-motion-duration-enter) allow-discrete;
+      }
+    }
+  }
+
   /* After a link, the toggle is a chevron button at the end of the link's row,
      and its label only names it. The link leaves the toggle room. */
   .item:has(> .link + .branch) > .link {

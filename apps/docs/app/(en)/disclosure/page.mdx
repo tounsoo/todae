@@ -17,6 +17,8 @@ Give disclosures the same `name` and the browser keeps at most one of them open:
 
 The marker is the browser's own and turns as the disclosure opens; to draw an icon instead, see Icons below. Content fades in over `disclosure.motion.duration.enter` and out over `disclosure.motion.duration.exit`, and does not move when the user prefers reduced motion.
 
+In Chrome the content also grows to its height as it opens and shrinks as it closes, over the same tokens, so what follows slides into place; other browsers show the fade alone. Under reduced motion the height changes at once.
+
 ## Icons
 
 With a `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider), the summary draws that icon in place of the browser's marker. Draw it pointing down: a closed disclosure turns it toward the text. `Disclosure` from the `@tounsoo/todae/disclosure` server entry reads no provider and keeps the browser's marker.

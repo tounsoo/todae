@@ -36,6 +36,8 @@ The branch is a native `<details>`. `open` sets whether it is open when it rende
 
 The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed branch turns it toward the end of its row.
 
+In Chrome a branch's links also fade and grow to their height as it opens, and shrink as it closes, over `nav.motion.duration.enter` and `nav.motion.duration.exit`, so the rows below slide; other browsers, and reduced motion, show and hide them at once.
+
 ## Accessible composition
 
 **Todae handles:** A `nav` landmark. Each group is a `ul role="list"` named through `aria-labelledby` by its label, and each item a list item. A branch is a `<details>` whose `<summary>` the browser exposes as a button with its expanded state, named by `label`. After a link, the label is visually hidden but still names the toggle. The chevron is `aria-hidden`. Focus rings are drawn inside the row, so a scroll container that clips the row's sides keeps them whole.
