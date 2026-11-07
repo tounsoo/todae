@@ -116,11 +116,15 @@ describe.skipIf(server.browser === 'firefox')('Progress and Meter fill motion', 
   it.each(['no-preference', 'reduce'] as const)('glides the fill to a new value, motion %s', async (value) => {
     await emulateMedia([{ name: 'prefers-reduced-motion', value }]);
     const { rerender } = render(<Bars value={0} />);
+    const bars = [screen.getByLabelText('Upload'), screen.getByLabelText('Storage')];
+    // A transition starts only from a style the empty fill already had. A frame callback runs
+    // before that frame's style pass, so lay the bars out first rather than trust one frame.
+    for (const bar of bars) void bar.offsetWidth;
     await frame();
     rerender(<Bars value={100} />);
     await frame();
     await frame();
-    for (const bar of [screen.getByLabelText('Upload'), screen.getByLabelText('Storage')]) {
+    for (const bar of bars) {
       // A 20s glide has barely started, so three quarters along still shows track; reduced motion jumps.
       expect(await filledAtThreeQuarters(bar)).toBe(value === 'reduce');
     }
