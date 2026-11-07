@@ -53,26 +53,65 @@ describe('Conversation.Content entrance', () => {
     expect(names(await marks())).toEqual(['Message 1', 'Message 2']);
   });
 
+  function Framed({ ids, header = false, typing = false }: { ids: number[]; header?: boolean; typing?: boolean }) {
+    return (
+      <Conversation.Root>
+        <Conversation.Viewport>
+          <Conversation.Content>
+            {header && <button type="button">Load earlier</button>}
+            {ids.map((id) => (
+              <Message.Root key={id} aria-label={`Message ${id}`}>
+                <Message.Content>Message {id}</Message.Content>
+              </Message.Root>
+            ))}
+            {typing && <div>Typing</div>}
+          </Conversation.Content>
+        </Conversation.Viewport>
+      </Conversation.Root>
+    );
+  }
+
   it('marks a message added before something that stays at the end', async () => {
-    function Typing({ ids }: { ids: number[] }) {
+    const { rerender } = render(<Framed ids={[1, 2]} typing />);
+    rerender(<Framed ids={[1, 2, 3]} typing />);
+    expect(names(await marks())).toEqual(['Message 3']);
+  });
+
+  it('marks the first message and its reply before a typing indicator', async () => {
+    const { rerender } = render(<Framed ids={[]} typing />);
+    rerender(<Framed ids={[1, 2]} typing />);
+    expect(names(await marks())).toEqual(['Message 1', 'Message 2']);
+  });
+
+  it('leaves older messages loaded under a header still', async () => {
+    const { rerender } = render(<Framed ids={range(3, 5)} header />);
+    rerender(<Framed ids={range(1, 5)} header />);
+    expect(await marks()).toEqual([]);
+  });
+
+  it('counts messages, not the other children added with them', async () => {
+    function Dated({ ids }: { ids: number[] }) {
       return (
         <Conversation.Root>
           <Conversation.Viewport>
             <Conversation.Content>
+              <Message.Root aria-label="Message 1">
+                <Message.Content>Message 1</Message.Content>
+              </Message.Root>
+              {ids.length > 0 && <div role="separator">Tuesday</div>}
               {ids.map((id) => (
                 <Message.Root key={id} aria-label={`Message ${id}`}>
                   <Message.Content>Message {id}</Message.Content>
                 </Message.Root>
               ))}
-              <div>Typing</div>
             </Conversation.Content>
           </Conversation.Viewport>
         </Conversation.Root>
       );
     }
-    const { rerender } = render(<Typing ids={[1, 2]} />);
-    rerender(<Typing ids={[1, 2, 3]} />);
-    expect(names(await marks())).toEqual(['Message 3']);
+    const dated = render(<Dated ids={[]} />);
+    dated.rerender(<Dated ids={[2, 3]} />);
+    expect(names(await marks())).toEqual(['Message 2', 'Message 3']);
   });
 
   it('leaves history that fills an empty or replaced list still', async () => {

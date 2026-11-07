@@ -50,6 +50,7 @@ const GLIDE_MIN_STEP = 4;
 const GLIDE_MS = 500;
 // Marks a message added at the end until its entrance animation ends.
 const ENTERING = 'data-todae-entering';
+const isMessage = (node: Node): node is Element => node.nodeName === 'ARTICLE';
 // The most messages added at once that still animate: a message and its
 // reply. More is history.
 const HISTORY = 2;
@@ -272,15 +273,16 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
   const text = useRef(strings);
   text.current = strings;
 
-  // Marks the messages added after it mounted below one that was already
-  // there, so they animate in: what was there first stays still, and so do
-  // messages that move and older messages added above. A message added before
-  // something that stays at the end, such as a typing indicator, still counts,
-  // and so do the first message and its reply in an empty list. Another
-  // conversation replacing every message, and more than two at once, as when
-  // history loads, stay still.
-  // The mark lasts until the animation ends, so a conversation hidden and
-  // shown again, as in a drawer, doesn't play it again.
+  // Marks the messages, its `article` children as Message.Root renders,
+  // added after it mounted below one that was already there, so they animate
+  // in: what was there first stays still, and so do messages that move and
+  // older messages added above. Other children, such as a typing indicator,
+  // a "load earlier" button or a day separator, don't count either way. Into
+  // a conversation with no messages yet, the first message and its reply
+  // animate. Messages that replace every message, as when another
+  // conversation opens, and more than two at once, as when history loads,
+  // stay still. The mark lasts until the animation ends, so a conversation
+  // hidden and shown again, as in a drawer, doesn't play it again.
   useEffect(() => {
     const el = context.content.current;
     if (!el) return;
@@ -300,15 +302,13 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
         for (const node of record.addedNodes) if (!removed.delete(node)) added.add(node);
       }
       for (const node of removed) added.delete(node);
-      const children = [...el.children];
-      const fresh = children.filter((child) => added.has(child));
+      const messages = [...el.children].filter(isMessage);
+      const fresh = messages.filter((message) => added.has(message));
       if (!fresh.length || fresh.length > HISTORY) return;
-      // Into a list that was empty, not one whose messages all went, as when
-      // another conversation opens.
-      let below = fresh.length === children.length && ![...removed].some((node) => node.nodeType === Node.ELEMENT_NODE);
-      for (const child of children) {
-        if (!added.has(child)) below = true;
-        else if (below) child.setAttribute(ENTERING, '');
+      let below = fresh.length === messages.length && ![...removed].some(isMessage);
+      for (const message of messages) {
+        if (!added.has(message)) below = true;
+        else if (below) message.setAttribute(ENTERING, '');
       }
     });
     return () => {
