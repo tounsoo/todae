@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { GLIDE_FRAME_MS, glideStep } from './conversationGlide.js';
+import { glideStep } from './conversationGlide.js';
+
+const GLIDE_FRAME_MS = 1000 / 60;
 
 // Distance left after moving through `frames` frames of `ms` each.
 function leftAfter(start: number, ms: number, frames: number): number {

@@ -5,11 +5,13 @@
 // the same pace as a 60Hz one.
 const SHARE = 0.18;
 const MIN_STEP = 4;
-export const GLIDE_FRAME_MS = 1000 / 60;
+// Frames of a 60Hz screen per millisecond. A literal, so a bundle that
+// imports nothing from Todae keeps nothing of this module.
+const FRAMES_PER_MS = 0.06;
 
 /** How far to move in a frame `ms` long, with `left` pixels to the end. */
 export function glideStep(left: number, ms: number): number {
-  const frames = ms / GLIDE_FRAME_MS;
+  const frames = ms * FRAMES_PER_MS;
   const share = 1 - (1 - SHARE) ** frames;
   return Math.min(left, Math.max(left * share, MIN_STEP * frames));
 }

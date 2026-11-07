@@ -24,7 +24,7 @@ import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import { focusWithoutScroll, revealRing } from '../internal/revealRing.js';
 import { useScrollTabStop } from './scrollTabStop.js';
-import { GLIDE_FRAME_MS, glideStep } from './conversationGlide.js';
+import { glideStep } from './conversationGlide.js';
 import styles from './Conversation.module.css';
 
 export type ConversationRootProps = ComponentPropsWithRef<'div'> & {
@@ -176,7 +176,7 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     const limit = glideMs(el);
     const start = performance.now();
     // The first step moves as one 60Hz frame would.
-    let last = start - GLIDE_FRAME_MS;
+    let last = start - 1000 / 60;
     const step = () => {
       const now = performance.now();
       const left = distanceToEnd(el);
