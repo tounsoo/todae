@@ -276,8 +276,9 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
   // there, so they animate in: what was there first stays still, and so do
   // messages that move and older messages added above. A message added before
   // something that stays at the end, such as a typing indicator, still counts,
-  // and so do the first message and its reply in an empty list. More than two
-  // at once is history loading, or another conversation, so it stays still.
+  // and so do the first message and its reply in an empty list. Another
+  // conversation replacing every message, and more than two at once, as when
+  // history loads, stay still.
   // The mark lasts until the animation ends, so a conversation hidden and
   // shown again, as in a drawer, doesn't play it again.
   useEffect(() => {
@@ -302,7 +303,9 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
       const children = [...el.children];
       const fresh = children.filter((child) => added.has(child));
       if (!fresh.length || fresh.length > HISTORY) return;
-      let below = fresh.length === children.length;
+      // Into a list that was empty, not one whose messages all went, as when
+      // another conversation opens.
+      let below = fresh.length === children.length && ![...removed].some((node) => node.nodeType === Node.ELEMENT_NODE);
       for (const child of children) {
         if (!added.has(child)) below = true;
         else if (below) child.setAttribute(ENTERING, '');

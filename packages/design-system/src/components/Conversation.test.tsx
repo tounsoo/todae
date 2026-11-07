@@ -89,6 +89,14 @@ describe('Conversation.Content entrance', () => {
     expect(await marks()).toEqual([]);
   });
 
+  it('leaves one or two messages that replace every message still', async () => {
+    const { rerender } = render(<Thread ids={range(1, 3)} />);
+    rerender(<Thread ids={[4]} />);
+    expect(await marks()).toEqual([]);
+    rerender(<Thread ids={[6, 7]} />);
+    expect(await marks()).toEqual([]);
+  });
+
   it('leaves older messages added above still', async () => {
     const { rerender } = render(<Thread ids={range(3, 5)} />);
     rerender(<Thread ids={range(1, 5)} />);
