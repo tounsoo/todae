@@ -418,6 +418,17 @@ describe('Tooltip', () => {
     expect(panel.getAttribute('data-open')).toBeNull();
   });
 
+  it('closes an interactive panel at once, reachable again, after it fades in', () => {
+    const { rerender } = render(<InteractiveTip open onOpenChange={() => undefined} />);
+    const panel = document.querySelector('[data-surface="panel"]') as HTMLElement;
+    advance(50);
+    expect(panel.hasAttribute('data-entered')).toBe(true);
+    rerender(<InteractiveTip open={false} onOpenChange={() => undefined} />);
+    expect(panel.hasAttribute('data-todae-exiting')).toBe(false);
+    expect(panel.inert).toBe(false);
+    expect(panel.matches(':popover-open') || panel.hasAttribute('data-popover-open')).toBe(false);
+  });
+
   it('leaves focus on the link when Escape is vetoed', () => {
     const onOpenChange = vi.fn();
     render(<InteractiveTip open onOpenChange={onOpenChange} />);

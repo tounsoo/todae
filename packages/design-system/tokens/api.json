@@ -4418,6 +4418,14 @@
       "type": "dimension"
     },
     {
+      "path": "tooltip.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "tooltip.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
       "path": "tooltip.offset",
       "type": "dimension"
     },

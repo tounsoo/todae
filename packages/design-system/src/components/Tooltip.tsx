@@ -6,7 +6,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { usePopoverSync } from '../overlay/usePopoverSync.js';
+import { usePopoverSync, type PopoverPresence } from '../overlay/usePopoverSync.js';
 import {
   contentPolicyError,
   isMounted,
@@ -70,19 +70,24 @@ function useContentPolicy(surface: TipSurface | PanelSurface, contentRef: RefObj
   });
 }
 
+// Fades in as it opens, cold; closing stays instant, so the exit ends at once.
+const PRESENCE: PopoverPresence = {};
+
 function TooltipTip({
   className,
   style,
   children,
   surface,
   open,
+  warm,
   ref: setRef,
   ...props
-}: TooltipChrome & TooltipNativeProps & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
+}: TooltipChrome &
+  TooltipNativeProps & { surface: TipSurface; open: boolean; warm?: boolean; ref: TooltipWire['ref'] }) {
   const localRef = useRef<HTMLSpanElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
-  usePopoverSync(localRef, open);
+  usePopoverSync(localRef, open, PRESENCE);
   useContentPolicy(surface, localRef);
   return (
     <span
@@ -90,6 +95,7 @@ function TooltipTip({
       {...surface.attrs}
       ref={refs}
       data-open={open ? '' : undefined}
+      data-todae-warm={warm ? '' : undefined}
       className={cx(styles.content, className)}
       style={style}
     >
@@ -104,6 +110,7 @@ function TooltipPanel({
   children,
   surface,
   open,
+  warm,
   ref: setRef,
   onPointerEnter,
   onPointerLeave,
@@ -115,6 +122,7 @@ function TooltipPanel({
   TooltipContentName & {
     surface: PanelSurface;
     open: boolean;
+    warm?: boolean;
     ref: TooltipWire<true>['ref'];
     onPointerEnter: TooltipWire<true>['onPointerEnter'];
     onPointerLeave: TooltipWire<true>['onPointerLeave'];
@@ -122,7 +130,7 @@ function TooltipPanel({
   const localRef = useRef<HTMLSpanElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
-  usePopoverSync(localRef, open);
+  usePopoverSync(localRef, open, PRESENCE);
   useContentPolicy(surface, localRef);
   return (
     <span
@@ -131,6 +139,7 @@ function TooltipPanel({
       {...contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby })}
       ref={refs}
       data-open={open ? '' : undefined}
+      data-todae-warm={warm ? '' : undefined}
       className={cx(styles.content, className)}
       style={style}
       onPointerEnter={onPointerEnter}

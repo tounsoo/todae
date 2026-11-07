@@ -8579,6 +8579,34 @@
       "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
     },
     {
+      "path": "tooltip.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-motion-duration-enter",
+      "cssValue": "var(--todae-motion-popup-duration-enter)",
+      "ref": "motion.popup.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
+      "path": "tooltip.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tooltip-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
       "path": "tooltip.offset",
       "type": "dimension",
       "cssVar": "--todae-tooltip-offset",
