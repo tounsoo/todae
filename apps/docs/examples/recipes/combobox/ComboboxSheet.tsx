@@ -8,6 +8,7 @@ import {
   Label,
   OptionList,
   useCombobox,
+  useHighlight,
   type ComboboxOption,
 } from '@tounsoo/todae';
 
@@ -30,6 +31,7 @@ export default function ComboboxSheet() {
     presentation: 'sheet',
     defaultValue: 'sf',
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'Choose';
   return (
     <>
@@ -56,7 +58,7 @@ export default function ComboboxSheet() {
               <Field.TextInput {...cb.getInputProps()} placeholder="Filter cities" />
             </Field.Root>
           </Field.Group>
-          <OptionList.Root {...cb.getListboxProps()}>
+          <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
             {optionNodes(cb.items, cb.getOptionProps)}
           </OptionList.Root>
         </BottomSheet.Body>

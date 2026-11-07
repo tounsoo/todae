@@ -117,13 +117,15 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 각 컴포넌트의 들어오고 나가는 시간은 모션 역할을 가리키고, 모션 역할은 코어 `motion.duration` 단계를 가리킵니다. 역할의 `duration.enter`나 `duration.exit`를 바꾸면 그 역할의 모든 컴포넌트 타이밍이 바뀌고, 컴포넌트 하나의 토큰을 바꾸면 그 컴포넌트만 바뀝니다.
 
-- `motion.reveal`: 제자리에서 펼쳐지는 콘텐츠입니다. Disclosure, Nav, Tree와 Message의 액션 줄이며, 들어올 때 200ms, 나갈 때 200ms입니다.
+- `motion.reveal`: 제자리에서 펼쳐지는 콘텐츠입니다. Disclosure, Nav, Tree, Message의 액션 줄, 나타날 때의 Alert와 ErrorMessage, 그리고 Conversation의 가장 새 메시지와 스크롤 버튼이며, 들어올 때 200ms, 나갈 때 200ms입니다.
 - `motion.popup`: 트리거에 붙어 있는 표면입니다. Popover, Menu와 필드 피커이며, 들어올 때 240ms, 나갈 때 200ms입니다. Tooltip도 코어 `motion.easing.enter` 곡선으로 이 시간에 맞춰 나타나며, 팁은 바로 닫히므로 나가는 시간이 없습니다.
 - `motion.window`: 페이지 가운데에 뜨는 창입니다. Dialog이며, 들어올 때 280ms, 나갈 때 200ms입니다.
 - `motion.panel`: 화면 가장자리에서 밀려 들어오는 패널입니다. Drawer와 BottomSheet이며, 들어올 때 280ms, 나갈 때 240ms입니다.
 - `motion.notice`: 잠깐 나타나는 메시지입니다. Toast이며, 들어올 때 200ms, 나갈 때 160ms입니다.
 
 역할에는 시간만 있습니다. Drilldown, 두 상태 사이를 움직이는 컨트롤, `control` 호버 페이드와 BottomSheet의 `sheet.motion.duration.resize`는 코어 단계를 바로 가리키고, Loader, Progress, Skeleton은 반복 한 번의 길이를 따로 가집니다.
+
+같은 규칙을 따르는 모션이 두 가지 더 있습니다. Progress와 Meter는 새 값으로 채움을 `progress.motion.fill.duration`과 `progress.motion.fill.easing`(코어 들어오는 곡선으로 240ms)으로 미끄러지듯 옮기며, 이는 두 상태 사이의 변화이고 동작 줄이기에서는 바로 바뀝니다. Alert와 ErrorMessage는 나타날 때 `alert.motion.duration.enter`와 `alert.motion.easing.enter`, `field.error.motion.duration.enter`와 `field.error.motion.easing.enter`로 서서히 나타나며, 시간은 `motion.reveal`을 가리킵니다. 사라질 때는 바로 사라지므로 나가는 토큰이 없고, 동작 줄이기에서도 계속 서서히 나타납니다.
 
 사용자가 동작 줄이기를 선호하면 미끄러지거나, 크기가 바뀌거나, 떠오르거나, 도는 것이 없고, 반복 애니메이션은 멈춥니다. 페이드는 아무것도 움직이지 않으므로 토큰대로 남습니다.
 

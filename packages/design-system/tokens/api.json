@@ -46,6 +46,14 @@
       "type": "number"
     },
     {
+      "path": "alert.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "alert.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
       "path": "alert.padding.x",
       "type": "dimension"
     },
@@ -1738,8 +1746,24 @@
       "type": "dimension"
     },
     {
+      "path": "conversation.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "conversation.motion.duration.exit",
+      "type": "duration"
+    },
+    {
       "path": "conversation.motion.duration.glide",
       "type": "duration"
+    },
+    {
+      "path": "conversation.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "conversation.motion.easing.exit",
+      "type": "cubicBezier"
     },
     {
       "path": "conversation.ring.focus",
@@ -2168,6 +2192,14 @@
     {
       "path": "field.error.leading",
       "type": "number"
+    },
+    {
+      "path": "field.error.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "field.error.motion.easing.enter",
+      "type": "cubicBezier"
     },
     {
       "path": "field.fg.adornment",
@@ -3320,6 +3352,14 @@
     {
       "path": "progress.motion.duration",
       "type": "duration"
+    },
+    {
+      "path": "progress.motion.fill.duration",
+      "type": "duration"
+    },
+    {
+      "path": "progress.motion.fill.easing",
+      "type": "cubicBezier"
     },
     {
       "path": "progress.radius",

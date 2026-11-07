@@ -56,7 +56,10 @@
     border-radius: var(--todae-disclosure-ring-radius);
   }
 
-  /* Closing eases with the exit curve; opening, below, with the enter curve. */
+  /* Closing eases with the exit curve, and keeps the content drawn until the
+     fade ends; opening, below, eases with the enter curve and draws it at once,
+     with no content-visibility transition: one would hold it hidden, and out of
+     the layout, until the browser started it. */
   .root::details-content {
     opacity: 0;
     transition:
@@ -66,8 +69,7 @@
 
   .root[open]::details-content {
     opacity: 1;
-    transition-duration: var(--todae-disclosure-motion-duration-enter);
-    transition-timing-function: var(--todae-disclosure-motion-easing-enter);
+    transition: opacity var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter);
   }
 
   /* Where the engine can size to auto (Chrome), the content also opens and
@@ -99,7 +101,6 @@
         transition:
           opacity var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter),
           block-size var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter),
-          content-visibility var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter) allow-discrete,
           overflow-y 0s var(--todae-disclosure-motion-duration-enter) allow-discrete;
       }
     }

@@ -10,7 +10,13 @@
     },
     "motion": {
       "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/exit/$value" } },
         "glide": { "$type": "duration", "$description": "The longest Conversation.ScrollButton's glide to the end runs before it lands there. Under reduced motion it jumps.", "$value": { "value": 500, "unit": "ms" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
       }
     }
   }

@@ -117,13 +117,15 @@ A component that animates as it opens and closes has four motion tokens: `motion
 
 Each component's enter and exit durations point at a motion role, which points at the core `motion.duration` scale. Changing a role's `duration.enter` or `duration.exit` retimes every component in that role, and changing one component's own token retimes only that component.
 
-- `motion.reveal`: content that opens in place. Disclosure, Nav, Tree and Message's action row, 200ms in and 200ms out.
+- `motion.reveal`: content that opens in place. Disclosure, Nav, Tree, Message's action row, Alert and ErrorMessage as they appear, and Conversation's newest message and scroll button, 200ms in and 200ms out.
 - `motion.popup`: a surface anchored to its trigger. Popover, Menu and the field pickers, 240ms in and 200ms out. Tooltip fades in with it too, with the core `motion.easing.enter` curve, and has no exit, since a tip closes at once.
 - `motion.window`: a window centered over the page. Dialog, 280ms in and 200ms out.
 - `motion.panel`: a panel that slides in from an edge. Drawer and BottomSheet, 280ms in and 240ms out.
 - `motion.notice`: a short-lived message. Toast, 200ms in and 160ms out.
 
 Roles hold durations only. Drilldown, the two-state controls, the `control` hover fade and BottomSheet's `sheet.motion.duration.resize` point at the core scale directly, and Loader, Progress and Skeleton keep their own loop lengths.
+
+Two more kinds of motion follow the same rules. Progress and Meter glide their fill to a new value with `progress.motion.fill.duration` and `progress.motion.fill.easing` (240ms on the core enter curve), a change between two states, and jump under reduced motion. Alert and ErrorMessage fade in as they appear with `alert.motion.duration.enter` and `alert.motion.easing.enter`, and `field.error.motion.duration.enter` and `field.error.motion.easing.enter`, whose durations point at `motion.reveal`; they go at once, so they have no exit pair, and they keep fading under reduced motion.
 
 When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Fades keep their tokens, since they move nothing.
 

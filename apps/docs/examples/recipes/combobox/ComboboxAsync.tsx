@@ -9,6 +9,7 @@ import {
   Popover,
   Text,
   useCombobox,
+  useHighlight,
   type ComboboxOption,
 } from '@tounsoo/todae';
 
@@ -45,6 +46,7 @@ export default function ComboboxAsync() {
     loadOptions: loadPackages,
     presentation: 'popover',
   });
+  const found = useHighlight({ name: 'combobox-match', query: cb.query });
   return (
     <>
       <Field.Group>
@@ -65,7 +67,7 @@ export default function ComboboxAsync() {
           </Button.Root>
         ) : null}
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
-        <OptionList.Root {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>

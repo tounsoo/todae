@@ -7,6 +7,17 @@
     font-weight: var(--todae-field-error-font-weight);
     line-height: var(--todae-field-error-leading);
     color: var(--todae-field-error-fg);
+    /* Fades in as it appears, and goes at once. Opacity only, so a submit
+       that shows many errors moves nothing around them, and the text is in
+       the page for assistive technology from the first frame. It fades under
+       reduced motion too, since a fade moves nothing. */
+    transition: opacity var(--todae-field-error-motion-duration-enter) var(--todae-field-error-motion-easing-enter);
+  }
+
+  @starting-style {
+    .error {
+      opacity: 0;
+    }
   }
 
   :global([data-todae-description]) + .error {

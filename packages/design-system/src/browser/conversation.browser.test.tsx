@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { server } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -8,6 +9,13 @@ import { emulateMedia } from '../test/media.js';
 const politeRegion = () => document.querySelector<HTMLElement>('body > [data-todae-announcer] > [aria-live="polite"]');
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+// Once every animation on the page has run, such as a new message growing in,
+// and the viewport has followed the size it ends at.
+const settled = async () => {
+  await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  await frame();
+};
 
 afterEach(() => {
   for (const node of document.querySelectorAll('[data-todae-announcer]')) node.remove();
@@ -47,7 +55,7 @@ describe('Conversation in a browser', () => {
   it('follows the end while the content grows', async () => {
     const { rerender } = render(<Thread count={10} />);
     rerender(<Thread count={14} />);
-    await frame();
+    await settled();
     expect(distanceToEnd(screen.getByTestId('viewport'))).toBeLessThanOrEqual(1);
   });
 
@@ -127,9 +135,22 @@ describe('Conversation in a browser', () => {
     await frame();
     viewport.scrollTop = 0;
     await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
-    act(() => screen.getByTestId('grow').click());
-    act(() => screen.getByTestId('scroll').click());
-    await waitFor(() => expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1), { timeout: 2000 });
+    // Read the distance once the conversation has handled each resize, since
+    // resize observers run in the order they were made. A task between a new
+    // message and that handling sees the end one message away, and with a
+    // message every 16ms on a slow run, nearly every task falls there.
+    let left = Infinity;
+    const after = new ResizeObserver(() => {
+      left = distanceToEnd(viewport);
+    });
+    after.observe(screen.getAllByRole('article')[0]!.parentElement!);
+    try {
+      act(() => screen.getByTestId('grow').click());
+      act(() => screen.getByTestId('scroll').click());
+      await waitFor(() => expect(left).toBeLessThanOrEqual(1), { timeout: 2000 });
+    } finally {
+      after.disconnect();
+    }
     expect(screen.getByTestId('scroll').hidden).toBe(true);
   });
 
@@ -157,7 +178,7 @@ describe('Conversation in a browser', () => {
     rerender(<Thread count={1} />);
     await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(true));
     rerender(<Thread count={12} />);
-    await frame();
+    await settled();
     expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
   });
 
@@ -366,6 +387,105 @@ describe('Conversation in a browser', () => {
     viewport.scrollTop = viewport.scrollHeight;
     viewport.dispatchEvent(new Event('scroll'));
     expect(getComputedStyle(viewport).overflowAnchor).toBe('none');
+  });
+
+  // WebKit and Firefox can't animate a height to auto yet, so there it only fades.
+  const grows = CSS.supports('interpolate-size', 'allow-keywords');
+
+  it.runIf(grows)('grows a message added at the end into place, so the messages above slide up', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    const previous = screen.getByRole('article', { name: 'Message 10' });
+    const start = previous.getBoundingClientRect().top;
+    rerender(<Thread count={11} />);
+    const added = screen.getByRole('article', { name: 'Message 11' });
+    await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+    const [growth] = added.getAnimations();
+    expect(growth).toBeDefined();
+    growth!.pause();
+    growth!.currentTime = Number(growth!.effect!.getComputedTiming().duration) / 2;
+    await frame();
+    // Halfway, clipped, adding no scroll range for the part not yet shown,
+    // while the viewport keeps the end in view.
+    expect(added.offsetHeight).toBeGreaterThan(0);
+    expect(added.offsetHeight).toBeLessThan(added.scrollHeight);
+    expect(getComputedStyle(added).overflowY).toBe('clip');
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    expect(previous.getBoundingClientRect().top).toBeLessThan(start);
+    growth!.play();
+    await settled();
+    expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    expect(getComputedStyle(added).overflowY).toBe('visible');
+    expect(added.offsetHeight).toBe(added.scrollHeight);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it.skipIf(grows)('fades a message added at the end in at full size where a height cannot animate to auto', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Thread count={11} />);
+    const added = screen.getByRole('article', { name: 'Message 11' });
+    await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+    const animations = added.getAnimations();
+    expect(animations).toHaveLength(1);
+    const properties = animations[0]!.effect instanceof KeyframeEffect ? animations[0]!.effect.getKeyframes().flatMap(Object.keys) : [];
+    expect(properties).toContain('opacity');
+    expect(properties).not.toContain('blockSize');
+    expect(getComputedStyle(added).overflowY).toBe('visible');
+    await settled();
+    expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it('fades a new message in at full size under reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Thread count={10} />);
+      await frame();
+      rerender(<Thread count={11} />);
+      const added = screen.getByRole('article', { name: 'Message 11' });
+      await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+      const animations = added.getAnimations();
+      expect(animations).toHaveLength(1);
+      const properties = animations[0]!.effect instanceof KeyframeEffect ? animations[0]!.effect.getKeyframes().flatMap(Object.keys) : [];
+      expect(properties).toContain('opacity');
+      expect(properties).not.toContain('blockSize');
+      expect(getComputedStyle(added).overflowY).toBe('visible');
+      await settled();
+      expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('fades the scroll button in and out', async () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    // Read from style rather than the running animation, which a slow run can see end.
+    expect(getComputedStyle(button).animationName).toContain('todae-conversation-arrive');
+    await settled();
+    act(() => button.click());
+    await waitFor(() => expect(button.hidden).toBe(true));
+    if (server.browser === 'firefox') {
+      // Firefox can't keep a hidden element drawn while it fades yet, so it hides at once.
+      expect(getComputedStyle(button).display).toBe('none');
+      return;
+    }
+    // Still drawn while it fades out, but presses go through it.
+    expect(button.getAnimations().filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')).toHaveLength(1);
+    expect(getComputedStyle(button).display).not.toBe('none');
+    expect(getComputedStyle(button).pointerEvents).toBe('none');
+    await settled();
+    expect(getComputedStyle(button).display).toBe('none');
   });
 
   it('passes axe', async () => {
