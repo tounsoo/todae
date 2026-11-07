@@ -59,15 +59,28 @@ describe('Drilldown motion, height and scroll in a browser', () => {
     expect(rtl.fromRight).toBeGreaterThan(0);
   });
 
-  it('settles at once under reduced motion', async () => {
+  it('cross-fades the views in place under reduced motion, either way', async () => {
     await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     try {
       await openDialog(<SettingsDialog />);
+      const port = () => screen.getByTestId('viewport').getBoundingClientRect().left;
+      const fades = (label: string) => view(label).getAnimations().map((a) => (a as CSSTransition).transitionProperty);
       await userEvent.click(screen.getByRole('button', { name: 'Account' }));
-      expect(screen.getByTestId('viewport').hasAttribute('data-direction')).toBe(false);
-      expect(view('Settings').hidden).toBe(true);
-      expect(view('Account').getAnimations()).toEqual([]);
       expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Display name' }));
+      for (const label of ['Settings', 'Account']) {
+        expect(view(label).getBoundingClientRect().left).toBeCloseTo(port(), 0);
+        expect(fades(label)).toEqual(['opacity']);
+      }
+      await settled();
+      expect(view('Settings').hidden).toBe(true);
+      await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+      for (const label of ['Settings', 'Account']) {
+        expect(view(label).getBoundingClientRect().left).toBeCloseTo(port(), 0);
+        expect(fades(label)).toEqual(['opacity']);
+      }
+      await settled();
+      // A popped view leaves the tree once its fade ends.
+      expect(view('Account')).toBeNull();
     } finally {
       await emulateMedia([]);
     }

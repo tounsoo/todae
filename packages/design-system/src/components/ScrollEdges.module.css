@@ -126,13 +126,6 @@
     scroll-padding-inline-end: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-scroll-arrow-size));
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .edge,
-    .edge[data-shown] {
-      transition: none;
-    }
-  }
-
   @media (forced-colors: active) {
     .edge {
       background: Canvas;

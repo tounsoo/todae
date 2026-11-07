@@ -138,8 +138,14 @@
     justify-content: flex-end;
   }
 
+  /* The panel stays in place, as Dialog's stops rising; the scrim still
+     fades, so the drawer closes when its fade ends. */
   @media (prefers-reduced-motion: reduce) {
-    .drawer[open],
+    .panel,
+    .drawer[data-side='end'] .panel {
+      --_from: 0px;
+    }
+
     .panel {
       transition: none;
     }

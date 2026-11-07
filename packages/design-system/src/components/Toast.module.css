@@ -148,10 +148,8 @@
   }
 
   /* Hiding fades with the new toast in front fading in; showing is at once. */
-  @media (prefers-reduced-motion: no-preference) {
-    .region[data-layout='stack']:not([data-expanded]) .item:not([data-todae-exiting]) ~ .item .root > * {
-      transition: opacity var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
-    }
+  .region[data-layout='stack']:not([data-expanded]) .item:not([data-todae-exiting]) ~ .item .root > * {
+    transition: opacity var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
   }
 
   /* A tooltip held open on a back toast sits in the top layer, above the
@@ -202,10 +200,12 @@
     transition-timing-function: var(--todae-toast-motion-easing-exit);
   }
 
+  /* Toasts still fade, but take their place at once. Opacity is first in
+     each transition list, so its duration and easing stay its own. */
   @media (prefers-reduced-motion: reduce) {
     .item,
     .region[data-layout='stack'] .item {
-      transition: none;
+      transition-property: opacity;
     }
   }
 
