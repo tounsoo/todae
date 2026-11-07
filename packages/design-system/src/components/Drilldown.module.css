@@ -88,7 +88,7 @@
      change goes, so the view going away never covers the one coming in. */
   @media (prefers-reduced-motion: reduce) {
     .view:is([data-entering], [data-leaving]) {
-      --_shift: 0%;
+      --_shift: 0px;
       --_fade: 0;
     }
   }

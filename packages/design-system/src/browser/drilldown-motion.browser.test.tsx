@@ -79,7 +79,8 @@ describe('Drilldown motion, height and scroll in a browser', () => {
         expect(fades(label)).toEqual(['opacity']);
       }
       await settled();
-      expect(view('Account').hidden).toBe(true);
+      // A popped view leaves the tree once its fade ends.
+      expect(view('Account')).toBeNull();
     } finally {
       await emulateMedia([]);
     }

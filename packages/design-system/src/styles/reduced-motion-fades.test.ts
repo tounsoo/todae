@@ -14,7 +14,7 @@ const sheets = readdirSync(components)
 /** Properties whose transition only fades: it changes how something looks, never where it is or how big. */
 const FADES = new Set(['opacity', 'color', 'background-color', 'border-color', 'outline-color', 'fill', 'stroke', 'text-decoration-color']);
 
-const REDUCE = /prefers-reduced-motion:\s*reduce/;
+const REDUCE = /(?<!not\s*\()prefers-reduced-motion:\s*reduce/;
 const NO_PREFERENCE = /prefers-reduced-motion:\s*no-preference/;
 
 /** Splits on the commas that are not inside parentheses. */
@@ -172,14 +172,16 @@ describe('reduced motion keeps fades', () => {
             .f { transition: rotate 1s; }
             .g[data-moving] { transition: opacity 1s, inset 1s; }
           }
+          @media not (prefers-reduced-motion: reduce) { .h { transition: opacity 1s; } }
           @media (prefers-reduced-motion: reduce) {
+            .h { transition: none; }
             .a, .b { transition: none; }
             .c { transition-property: rotate; }
             .d { transition: none; }
           }
         }
       `),
-    ).toEqual(['.e: opacity only without reduced motion', '.a: opacity', '.b: background-color', '.c: color']);
+    ).toEqual(['.e: opacity only without reduced motion', '.h: opacity', '.a: opacity', '.b: background-color', '.c: color']);
   });
 
   it('allows a reduce block that keeps the fade and drops only the motion', () => {
