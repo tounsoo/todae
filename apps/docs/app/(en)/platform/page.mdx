@@ -2,6 +2,8 @@ import { Table } from '@tounsoo/todae/table';
 
 # Native platform
 
+Chrome is Todae's target, along with the other browsers on Chromium, such as Edge. Safari and Firefox are supported too, on one condition: nothing may break there. Every component works in them, apart from the known Firefox issues below, but some polish is Chrome-only, and the last section of this page lists it.
+
 Todae builds on the browser instead of reimplementing it. It uses the features below with no JavaScript fallbacks, so a browser that has them is a browser Todae supports. This page lists those features. The version floor is the [Browser support](https://github.com/tounsoo/todae/blob/main/README.md#browser-support) table in the repository README, checked on 2026-10-16.
 
 <Table.Root>
@@ -31,9 +33,9 @@ Todae builds on the browser instead of reimplementing it. It uses the features b
   </Table.Body>
 </Table.Root>
 
-CSS anchor positioning sets the floor in every browser. In Chrome and Edge the floor is `position-try-fallbacks`, which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row. The versions are not pinned in code. Component browser tests run in Chromium, Firefox and WebKit, in builds newer than these floors, so the floors themselves are not tested.
+CSS anchor positioning sets the floor in every browser. In Chrome and Edge the floor is `position-try-fallbacks`, which arrived in 128. On iOS and iPadOS, every browser uses Safari's engine, so Chrome and Edge there follow the Safari row, and the Safari lines below. The versions are not pinned in code. Component browser tests run in Chromium, Firefox and WebKit, in builds newer than these floors, so the floors themselves are not tested.
 
-Chromium and WebKit are fully supported, and a browser test that fails in either fails CI. Firefox is supported with known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Firefox goes back to failing CI on every failure before 1.0 ships.
+A browser test that fails in Chromium or WebKit fails CI. Firefox has known issues, tracked in [issue 367](https://github.com/tounsoo/todae/issues/367). The Firefox tests those issues break still run in CI, but their failures show as warnings instead of failing it, and any other Firefox failure fails it as before. Firefox goes back to failing CI on every failure before 1.0 ships.
 
 - **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`, placing `Field.Textarea`'s highlights over the textarea, and placing `Coachmark.Root`'s popup and the hole in its dim page over its target. Without it: the surface is not placed next to its trigger and sits near the top-left corner of the viewport, the highlights are not drawn, and a coachmark dims the whole page, its target too, with no hole.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: showing `Popover.Root` and `Tooltip.Root` in the top layer. Todae needs it.
@@ -63,3 +65,20 @@ Chromium and WebKit are fully supported, and a browser test that fails in either
 - **[`dvh` units](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: `Dialog` and `BottomSheet` heights that follow mobile browser chrome. Todae needs it.
 
 Behavior that matters most is tested in real browsers (Chromium, Firefox and WebKit, through Playwright): Escape order across stacked overlays, modal focus and restore, flip at the viewport edge, chip overflow measurement and bottom-sheet drag. Every docs example is also checked with axe in Chromium.
+
+## What Safari and Firefox do differently
+
+Each line says what Chrome does and what Safari and Firefox do instead. Motion only has to work in Chrome, and under reduced motion every browser skips the slides and height changes below. Some of these need a newer Chrome than the floor above, up to Chrome 140, and an older Chrome does what Safari and Firefox do.
+
+- **[Disclosure](/disclosure) and [Nav](/nav) branches**: grow and shrink to their height as they open and close. Both change the height at once: Safari fades the content in and out, and Firefox fades it in and hides it at once as it closes.
+- **[Toast](/toast)**: in a list, gives back its height as it leaves, so the toasts behind it slide into place. Safari and Firefox move them once it is gone.
+- **[Conversation](/conversation)'s newest message**: grows into place. Safari and Firefox fade it in at full size.
+- **`Conversation.ScrollButton`**: fades out. Firefox hides it at once.
+- **[Tabs](/tabs)**: the indicator slides to the new tab. Safari and Firefox move it at once.
+- **[Coachmark](/coachmark)**: the hole and popup slide to a tour's next target. Safari and Firefox move them at once.
+- **[Progress](/progress) and Meter**: the fill glides to a new value. Firefox jumps.
+- **[`Field.Select`](/field/select)**: draws its button and list from Todae's tokens, as Safari 27 does too. Firefox and Safari 26 show the browser's own list, with the same value and keys, and keep the browser's arrow instead of the `chevron` glyph.
+- **`Field.Textarea` with `autoGrow`**: grows with its text. Firefox before 152 and Safari before 26.2 keep its rows and scroll inside it.
+- **`Field.Select` in a field**: a press beside the select, such as on an `Icon`, opens its list. Safari only focuses the select.
+- **[Contents](/contents)**: marks the current link from CSS as well, before its script runs. Safari and Firefox mark it once the script runs.
+- **[EmptyState](/empty-state)'s description**: avoids a lone last word, as Safari does too. Firefox breaks its lines raggedly.
