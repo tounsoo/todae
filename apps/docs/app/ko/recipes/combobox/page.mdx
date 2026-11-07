@@ -92,6 +92,8 @@ const found = useHighlight({ name: 'combobox-match', query: cb.query });
 
 `loadOptions`를 쓰면 로더가 일치 여부를 정하므로, 로더가 돌려준 행에 입력한 텍스트가 없으면 표시도 없습니다.
 
+만들기 행의 레이블은 입력한 텍스트를 자신의 단어 안에 담으므로, 목록 전체를 검색하면 "Create" 같은 단어의 글자까지 표시됩니다. 만들기 데모는 훅의 `ref`를 옵션만 감싸는 `role="none"` 래퍼에 두고, 같은 이름을 쓰는 두 번째 훅으로 만들기 행을 표시합니다. 이 훅의 `ranges`는 레이블의 따옴표 사이 텍스트만 덮습니다.
+
 ## 조합 규칙
 
 - 형제 [Label](/label) + `Field.Root` id. `Field.Label`은 없습니다.

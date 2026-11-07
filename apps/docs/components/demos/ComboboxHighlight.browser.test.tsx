@@ -25,3 +25,21 @@ it('highlights the typed text in the options of any combobox sharing the name', 
   expect(screen.getByRole('option', { name: 'todae' })).toBeTruthy();
   expect(screen.getByRole('option', { name: 'tokens' })).toBeTruthy();
 });
+
+it('marks only the typed text in the create row, not its own word "Create"', async () => {
+  render(
+    <Providers>
+      <ComboboxCreate />
+    </Providers>,
+  );
+  await userEvent.click(screen.getByRole('combobox'));
+  // "e" is in todae, tokens and twice in "Create".
+  await userEvent.keyboard('e');
+  await expect
+    .poll(() => [...(CSS.highlights.get('combobox-match') ?? [])].map(String))
+    .toEqual(['e', 'e', 'e']);
+  const marks = [...CSS.highlights.get('combobox-match')!] as Range[];
+  const inRow = marks.filter((range) => range.startContainer.parentElement?.closest('[role="option"]')?.textContent === '+ Create "e"');
+  expect(inRow.map((range) => range.startOffset)).toEqual(['+ Create "'.length]);
+  expect(screen.getByRole('option', { name: '+ Create "e"' })).toBeTruthy();
+});
