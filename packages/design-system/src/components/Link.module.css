@@ -7,6 +7,10 @@
     text-decoration-color: var(--todae-link-decoration-default);
     text-decoration-thickness: var(--todae-link-decoration-thickness-default);
     text-underline-offset: var(--todae-link-decoration-offset);
+    /* The hover colors fade in and out; the focus ring never fades. */
+    transition-property: color, text-decoration-color;
+    transition-duration: var(--todae-control-motion-duration);
+    transition-timing-function: var(--todae-control-motion-easing);
   }
 
   /* The current page or step, as a router marks it with aria-current. Any
@@ -23,6 +27,11 @@
   .root:any-link:where(:hover) {
     color: var(--todae-link-fg-hover);
     text-decoration-color: var(--todae-link-decoration-hover);
+  }
+
+  /* A press and keyboard focus take their colors at once. */
+  .root:any-link:is(:active, :focus-visible) {
+    transition: none;
   }
 
   .root:any-link:focus-visible {

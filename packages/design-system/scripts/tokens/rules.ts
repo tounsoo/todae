@@ -8,6 +8,7 @@ export const RESERVED_ROOTS = [
   'border',
   'font',
   'motion',
+  'control',
   'z',
   'focus',
   'button',

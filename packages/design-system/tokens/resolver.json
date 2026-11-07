@@ -37,6 +37,7 @@
         { "$ref": "./components/field.json" },
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/motion.json" },
+        { "$ref": "./components/control.json" },
         { "$ref": "./components/overlay.json" },
         { "$ref": "./components/dialog.json" },
         { "$ref": "./components/sheet.json" },
