@@ -2,7 +2,7 @@
   "alert": {
     "(top)": "335443f515bf",
     "# Alert": "fc2d26b1bff9",
-    "## Announcements": "17fcafc8beb2",
+    "## Announcements": "a2781fb3e1ab",
     "## Icons": "a8e0adf621d1",
     "## Accessible composition": "4b8c6a4ab6d2",
     "## When to use": "93f223e4afba",
@@ -252,7 +252,7 @@
   },
   "errormessage": {
     "(top)": "87d2ffa541b2",
-    "# ErrorMessage": "658a3d8c21c6",
+    "# ErrorMessage": "80b7ad075964",
     "## In a Form": "237bc7fe9701",
     "## Accessible composition": "691b99f13212",
     "## When to use": "ecd653f836fe",
@@ -612,9 +612,9 @@
   "progress": {
     "(top)": "56f36d505164",
     "# Progress and Meter": "b75d3996d231",
-    "## Progress": "65085360fbd4",
-    "## Meter": "cf48c21160d2",
-    "## Accessible composition": "c35050e7f172",
+    "## Progress": "13047e16a5e4",
+    "## Meter": "c0e9f1194e4f",
+    "## Accessible composition": "6f65a1a2d462",
     "## When to use": "84020da8cdd5",
     "## Props": "b9e792e827ad",
     "(section order)": "eb8c827884bd"
@@ -978,7 +978,7 @@
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "c4641c4527e8",
-    "## Motion": "4ab1955a6053",
+    "## Motion": "21bfbf5dd26a",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "f02d196ecc83"
