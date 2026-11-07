@@ -168,20 +168,69 @@ describe('useHighlight', () => {
     text.remove();
   });
 
-  it('leaves the name to a later hook when an earlier one with that name unmounts', () => {
-    function Two({ first }: { first: boolean }) {
+  it('paints every hook that shares a name into one Highlight, in mount order', () => {
+    render(
+      <>
+        <Search query="apple" />
+        <Search query="pie" />
+      </>,
+    );
+    expect(highlights.size).toBe(1);
+    expect(painted('search')).toEqual(['Apple', 'apple', 'pie']);
+  });
+
+  it("keeps the others' matches and the Highlight when one hook with the name unmounts", () => {
+    function Two({ first, later }: { first: boolean; later: boolean }) {
       return (
         <>
           {first ? <Search query="apple" /> : null}
-          <Search query="pie" />
+          {later ? <Search query="pie" /> : null}
         </>
       );
     }
-    const { rerender } = render(<Two first />);
-    const later = highlights.get('search');
-    rerender(<Two first={false} />);
-    expect(highlights.get('search')).toBe(later);
+    const { rerender } = render(<Two first later />);
+    const highlight = highlights.get('search');
+    rerender(<Two first={false} later />);
+    expect(highlights.get('search')).toBe(highlight);
     expect(painted('search')).toEqual(['pie']);
+    rerender(<Two first later />);
+    rerender(<Two first later={false} />);
+    expect(highlights.get('search')).toBe(highlight);
+    expect(painted('search')).toEqual(['Apple', 'apple']);
+  });
+
+  it('removes the name only when the last hook holding it unmounts', () => {
+    function Two({ count }: { count: number }) {
+      return (
+        <>
+          {count > 0 ? <Search query="apple" /> : null}
+          {count > 1 ? <Search query="pie" /> : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Two count={2} />);
+    rerender(<Two count={1} />);
+    expect(highlights.has('search')).toBe(true);
+    rerender(<Two count={0} />);
+    expect(highlights.has('search')).toBe(false);
+  });
+
+  it('takes priority and type from the hook mounted last under the name', () => {
+    function Two({ later }: { later: boolean }) {
+      return (
+        <>
+          <Search query="apple" priority={1} />
+          {later ? <Search query="pie" priority={4} type="grammar-error" /> : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Two later />);
+    const highlight = highlights.get('search')!;
+    expect(highlight.priority).toBe(4);
+    expect(highlight.type).toBe('grammar-error');
+    rerender(<Two later={false} />);
+    expect(highlight.priority).toBe(1);
+    expect(highlight.type).toBe('highlight');
   });
 
   it('leaves the name removed when page code clears the registry', () => {
@@ -191,7 +240,7 @@ describe('useHighlight', () => {
     expect(highlights.has('search')).toBe(false);
   });
 
-  it('gives the name back to an earlier hook when a later one with that name unmounts', () => {
+  it('takes the name back when a later hook mounts after page code removed it', () => {
     function Two({ later }: { later: boolean }) {
       return (
         <>
@@ -200,13 +249,13 @@ describe('useHighlight', () => {
         </>
       );
     }
-    const { rerender } = render(<Two later />);
-    expect(painted('search')).toEqual(['pie']);
-    rerender(<Two later={false} />);
-    expect(painted('search')).toEqual(['Apple', 'apple']);
+    const { rerender } = render(<Two later={false} />);
+    highlights.delete('search');
+    rerender(<Two later />);
+    expect(painted('search')).toEqual(['Apple', 'apple', 'pie']);
   });
 
-  it('keeps the name with the later-mounted hook when an earlier one renames and comes back', () => {
+  it('keeps its mount order when it renames and comes back', () => {
     function Pair({ firstName }: { firstName: string }) {
       return (
         <>
@@ -217,8 +266,11 @@ describe('useHighlight', () => {
     }
     const { rerender } = render(<Pair firstName="search" />);
     rerender(<Pair firstName="other" />);
-    rerender(<Pair firstName="search" />);
     expect(painted('search')).toEqual(['pie']);
+    expect(painted('other')).toEqual(['Apple', 'apple']);
+    rerender(<Pair firstName="search" />);
+    expect(highlights.has('other')).toBe(false);
+    expect(painted('search')).toEqual(['Apple', 'apple', 'pie']);
   });
 
   it('rescans only the text a change touched', async () => {
@@ -290,12 +342,10 @@ describe('useHighlight', () => {
     expect(clear).not.toHaveBeenCalled();
   });
 
-  it('moves the same Highlight, with its priority, when the name changes', () => {
+  it('moves its matches, with its priority, when the name changes', () => {
     const { rerender } = render(<Search query="apple" priority={3} />);
-    const highlight = highlights.get('search');
     rerender(<Search query="apple" priority={3} name="other" />);
     expect(highlights.has('search')).toBe(false);
-    expect(highlights.get('other')).toBe(highlight);
     expect(highlights.get('other')!.priority).toBe(3);
     expect(painted('other')).toEqual(['Apple', 'apple']);
   });

@@ -1379,7 +1379,8 @@ table {
 /* ---------- Demo helpers ---------- */
 
 /* Ranges the useHighlight example and the combobox recipe paint. */
-::highlight(search) {
+::highlight(search),
+::highlight(combobox-match) {
   background-color: var(--todae-color-status-warning-bg);
   color: var(--todae-color-fg-default);
 }

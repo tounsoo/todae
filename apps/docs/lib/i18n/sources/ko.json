@@ -679,7 +679,7 @@
     "(section order)": "776f0285dccb"
   },
   "recipes/combobox": {
-    "(top)": "e01674e9a71e",
+    "(top)": "fedc394cf341",
     "# Combobox": "bdfd58ac5cfe",
     "## Presentation": "58f8fe7fca53",
     "## Popover · single": "db8ff77d3a0b",
@@ -688,7 +688,7 @@
     "## Auto": "4eba42da06ea",
     "## Async": "29ed5105b770",
     "## Empty and create": "e2b8272c60fa",
-    "## Highlight matches": "cde50cbc1379",
+    "## Highlight matches": "bcaed9e2f8e2",
     "## Composition rules": "6eb89b3bf8e3",
     "## Accessible composition": "adce8796fd84",
     "## When to use": "b78de5e656e3",
@@ -1130,8 +1130,8 @@
   },
   "utilities/use-highlight": {
     "(top)": "42a7d18814e7",
-    "# useHighlight": "832293813cf2",
-    "## Accessible composition": "75acde477e72",
+    "# useHighlight": "b8b16387f432",
+    "## Accessible composition": "33600f91e61d",
     "## When to use": "4b2cc31bf020",
     "## Props": "79050128b65f",
     "(section order)": "e2126a397a0e"
