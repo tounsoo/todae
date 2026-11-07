@@ -892,7 +892,9 @@ describe('Disclosure', () => {
 
   it('moves focus from its content straight to the summary when code closes it', async () => {
     // No fade, so the content hides as soon as it closes.
-    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    const style = document.createElement('style');
+    style.textContent = 'details::details-content { transition: none !important; }';
+    document.head.append(style);
     try {
       const { rerender } = render(<Reasoning open />);
       const link = screen.getByRole('link', { name: 'Source' });
@@ -905,7 +907,7 @@ describe('Disclosure', () => {
       // Focus never passed through the page.
       expect(moves).toEqual([summary]);
     } finally {
-      await emulateMedia([]);
+      style.remove();
     }
   });
 
