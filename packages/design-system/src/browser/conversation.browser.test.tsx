@@ -439,7 +439,8 @@ describe('Conversation in a browser', () => {
       expect(el.hidden).toBe(false);
       return el;
     });
-    expect(button.getAnimations().filter((animation) => animation instanceof CSSAnimation)).toHaveLength(1);
+    // Read from style rather than the running animation, which a slow run can see end.
+    expect(getComputedStyle(button).animationName).toContain('todae-conversation-arrive');
     await settled();
     act(() => button.click());
     await waitFor(() => expect(button.hidden).toBe(true));
