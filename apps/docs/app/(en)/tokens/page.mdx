@@ -125,7 +125,7 @@ Each component's enter and exit durations point at a motion role, which points a
 
 Roles hold durations only. Drilldown, the two-state controls and BottomSheet's `sheet.motion.duration.resize` point at the core scale directly, and Loader, Progress and Skeleton keep their own loop lengths.
 
-When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Some components also skip their fades for now.
+When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Fades keep their tokens, since they move nothing.
 
 ## Descriptions
 
