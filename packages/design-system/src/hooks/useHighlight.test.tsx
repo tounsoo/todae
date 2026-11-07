@@ -240,6 +240,21 @@ describe('useHighlight', () => {
     expect(highlights.has('search')).toBe(false);
   });
 
+  it('takes the name back when a later hook mounts after page code removed it', () => {
+    function Two({ later }: { later: boolean }) {
+      return (
+        <>
+          <Search query="apple" />
+          {later ? <Search query="pie" /> : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Two later={false} />);
+    highlights.delete('search');
+    rerender(<Two later />);
+    expect(painted('search')).toEqual(['Apple', 'apple', 'pie']);
+  });
+
   it('keeps its mount order when it renames and comes back', () => {
     function Pair({ firstName }: { firstName: string }) {
       return (

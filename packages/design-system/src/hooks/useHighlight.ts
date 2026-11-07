@@ -130,9 +130,10 @@ function join(name: string, member: Member): void {
   if (!entry) {
     entry = { highlight: new Highlight(), members: [] };
     shared.set(name, entry);
-    CSS.highlights.set(name, entry.highlight);
   }
   entry.members = [...entry.members, member].sort((a, b) => a.order - b.order);
+  // The latest-mounted hook claims the name, taking it back from page code that removed or replaced it.
+  if (entry.members.at(-1) === member) CSS.highlights.set(name, entry.highlight);
   restyle(entry);
   paint(entry);
 }
