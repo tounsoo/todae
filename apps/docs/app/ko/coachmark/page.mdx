@@ -10,7 +10,7 @@ import CoachmarkBasic from '../../../examples/coachmark/CoachmarkBasic';
 
 팝업은 `role="dialog"`인 [Popover](/popover) 표면으로, CSS 앵커로 대상 옆에 놓이고 공간이 없으면 뒤집히므로 페이지가 스크롤되어도 대상을 따라갑니다. 어두운 페이지는 대상 위에 놓인 별도의 최상위 레이어 상자입니다. 이 상자는 `coachmark.cutout.padding`(`0.25rem`)만큼, 그리고 포커스 링에 필요한 만큼은 반드시 커지고, `overlay.scrim.bg` 색의 그림자로 화면의 나머지를 덮습니다. 누르기는 이 상자를 통과하므로 대상이 받습니다. 구멍의 모서리는 대상의 모서리를 따르므로, 알약 모양 버튼에는 알약 모양 구멍이 생깁니다. 팝업의 너비는 최대 `coachmark.max-width`(`20rem`)입니다.
 
-열릴 때 대상이 화면 안으로 스크롤되고, 어두운 페이지는 팝업 모션 역할과 공유 오버레이 이징을 가리키는 `coachmark.motion.duration.enter`와 `easing.enter` 토큰으로 페이드 인하며, 팝업은 Popover처럼 커지며 나타납니다. 닫힐 때는 `exit` 쌍으로 둘 다 페이드 아웃합니다. 투어처럼 열린 채로 `targetRef`가 바뀌면, Chrome에서는 구멍과 팝업이 `coachmark.motion.duration.move`와 `easing.move`로 새 대상까지 미끄러지듯 옮겨 가고, Safari와 Firefox에서는 바로 옮겨 갑니다. 동작 줄이기를 선호하면 팝업은 페이드만 하고, 새 대상으로는 바로 옮겨 가며, 스크롤은 즉시 일어납니다.
+열릴 때 대상이 화면 안으로 스크롤되고, 어두운 페이지와 팝업은 팝업 모션 역할과 코어 들어오는 곡선을 가리키는 `coachmark.motion.duration.enter`와 `easing.enter` 토큰으로 함께 페이드 인하며, 팝업은 Popover처럼 `popover.motion.scale`에서 커지며 나타납니다. 닫힐 때는 `exit` 쌍으로 둘 다 페이드 아웃합니다. 투어처럼 열린 채로 `targetRef`가 바뀌면, Chrome에서는 구멍과 팝업이 `coachmark.motion.duration.move`와 `easing.move`로 새 대상까지 미끄러지듯 옮겨 가고, Safari와 Firefox에서는 바로 옮겨 갑니다. 동작 줄이기를 선호하면 팝업은 페이드만 하고, 새 대상으로는 바로 옮겨 가며, 스크롤은 즉시 일어납니다.
 
 ## 투어
 

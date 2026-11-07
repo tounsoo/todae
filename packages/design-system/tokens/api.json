@@ -3166,14 +3166,6 @@
       "type": "color"
     },
     {
-      "path": "overlay.motion.easing.enter",
-      "type": "cubicBezier"
-    },
-    {
-      "path": "overlay.motion.easing.exit",
-      "type": "cubicBezier"
-    },
-    {
       "path": "overlay.scrim.bg",
       "type": "color"
     },
@@ -4250,10 +4242,6 @@
       "type": "color"
     },
     {
-      "path": "toast.enter-offset",
-      "type": "dimension"
-    },
-    {
       "path": "toast.font.size",
       "type": "dimension"
     },
@@ -4300,6 +4288,10 @@
     {
       "path": "toast.motion.easing.exit",
       "type": "cubicBezier"
+    },
+    {
+      "path": "toast.motion.offset",
+      "type": "dimension"
     },
     {
       "path": "toast.padding.x",
