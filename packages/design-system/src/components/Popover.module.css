@@ -1,4 +1,15 @@
 @layer todae.components {
+  /* The timing a surface's fades and growth read. A surface that draws on
+     Popover with timing tokens of its own, as Coachmark's popup does, sets
+     these on its own class, which outranks this zero-specificity default.
+     Set on every popover, so a popover inside one never inherits them. */
+  :where(.content) {
+    --_motion-duration-enter: var(--todae-popover-motion-duration-enter);
+    --_motion-duration-exit: var(--todae-popover-motion-duration-exit);
+    --_motion-easing-enter: var(--todae-popover-motion-easing-enter);
+    --_motion-easing-exit: var(--todae-popover-motion-easing-exit);
+  }
+
   .content {
     box-sizing: border-box;
     position: fixed;
@@ -30,8 +41,8 @@
        Move back once Safari supports overlay:
        https://developer.mozilla.org/en-US/docs/Web/CSS/overlay */
     transition:
-      opacity var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter),
-      scale var(--todae-popover-motion-duration-enter) var(--todae-popover-motion-easing-enter);
+      opacity var(--_motion-duration-enter) var(--_motion-easing-enter),
+      scale var(--_motion-duration-enter) var(--_motion-easing-enter);
   }
 
   /* Its first frames as it shows, and its fade as it closes. */
@@ -41,8 +52,8 @@
 
   .content[data-todae-exiting] {
     pointer-events: none;
-    transition-duration: var(--todae-popover-motion-duration-exit);
-    transition-timing-function: var(--todae-popover-motion-easing-exit);
+    transition-duration: var(--_motion-duration-exit);
+    transition-timing-function: var(--_motion-easing-exit);
   }
 
   /* Open and still: no transition until it closes. Safari re-resolves the
