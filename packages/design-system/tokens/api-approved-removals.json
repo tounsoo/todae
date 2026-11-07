@@ -82,6 +82,14 @@
       "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
     {
+      "path": "overlay.motion.easing.enter",
+      "approved": "Folded into the core motion.easing.enter: each overlay's own motion.easing.enter points there, as every other component's does. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "overlay.motion.easing.exit",
+      "approved": "Folded into the core motion.easing.exit: each overlay's own motion.easing.exit points there, as every other component's does. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
       "path": "picker.thumb.border.color",
       "approved": "Renamed to picker.thumb.border, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
@@ -100,6 +108,10 @@
     {
       "path": "sheet.motion.resize",
       "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.enter-offset",
+      "approved": "Renamed to toast.motion.offset, beside its timing, as dialog.motion.offset is. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },
     {
       "path": "toast.motion.enter",
