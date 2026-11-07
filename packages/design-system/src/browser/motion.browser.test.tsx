@@ -9,6 +9,7 @@ import { Drawer, type DrawerSide } from '../components/Drawer.js';
 import { Popover } from '../components/Popover.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { HeldTip } from '../test/heldTip.js';
+import { emulateMedia } from '../test/media.js';
 
 afterEach(cleanup);
 
@@ -321,5 +322,43 @@ describe('A tip held open during an overlay exit motion', () => {
     rerender(<Overlay kind={kind} open={false} />);
     expect(overlay.hasAttribute('data-todae-exiting')).toBe(true);
     expectTipFollowed(await sampleMotion(held), { minFrames: 2, minTravel: kind === 'Dialog' ? 0 : 40 });
+  });
+});
+
+describe('A Drawer or BottomSheet under reduced motion', () => {
+  function Panel({ kind, open }: { kind: 'Drawer' | 'BottomSheet'; open: boolean }) {
+    const Parts = kind === 'Drawer' ? Drawer : BottomSheet;
+    return (
+      <Themed>
+        <Parts.Root open={open} onOpenChange={() => undefined}>
+          <Parts.Title>Panel</Parts.Title>
+          <Parts.Body data-testid="body">Body</Parts.Body>
+        </Parts.Root>
+      </Themed>
+    );
+  }
+
+  // The panel never moves, and the overlay stays open through the scrim's
+  // fade out, rather than closing at once.
+  it.each(['Drawer', 'BottomSheet'] as const)('%s holds its panel still while its scrim fades in and out', async (kind) => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Panel kind={kind} open />);
+      const overlay = screen.getByRole('dialog', { name: 'Panel' });
+      const body = screen.getByTestId('body');
+      const place = () => {
+        const box = body.getBoundingClientRect();
+        return { left: Math.round(box.left), top: Math.round(box.top) };
+      };
+      const first = place();
+      await waitFor(() => expect(overlay.hasAttribute('data-entered')).toBe(true));
+      expect(place()).toEqual(first);
+      rerender(<Panel kind={kind} open={false} />);
+      expect(overlay.hasAttribute('data-todae-exiting')).toBe(true);
+      expect(place()).toEqual(first);
+      await waitFor(() => expect(overlay.isConnected && overlay.hasAttribute('open')).toBe(false));
+    } finally {
+      await emulateMedia([]);
+    }
   });
 });
