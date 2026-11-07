@@ -111,8 +111,8 @@
       }
 
       /* The gap it gives back is the one on the side away from the edge, so
-         it shrinks toward the edge it sits by. Without a minimum it can
-         shrink below its content, as a flex item. */
+         it shrinks toward the edge it sits by. The zero minimum only guards
+         against a flex item's automatic minimum holding it at its content. */
       .region[data-layout='list'] .item[data-todae-exiting] {
         block-size: 0;
         min-block-size: 0;

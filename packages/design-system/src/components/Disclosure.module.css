@@ -74,9 +74,9 @@
      closes by its height, so what follows slides by layout. It clips only
      while it moves: at once as it closes, and until its height has grown as it
      opens, so a product's own dropdown inside an open one isn't cut. As a flow
-     root it keeps its children's margins inside it, and the gap after its last
-     child stays while it closes, so its height holds them from the first frame
-     to the last rather than jumping by a margin. Elsewhere, and under reduced
+     root it keeps its children's margins inside it, so its height holds them
+     from the first frame to the last rather than jumping by a margin; the gap
+     after its last child then no longer collapses with what follows. Elsewhere, and under reduced
      motion, it takes its height at once. */
   @supports (block-size: calc-size(auto, size)) {
     @media (prefers-reduced-motion: no-preference) {
@@ -102,14 +102,12 @@
           content-visibility var(--todae-disclosure-motion-duration-enter) var(--todae-disclosure-motion-easing-enter) allow-discrete,
           overflow-y 0s var(--todae-disclosure-motion-duration-enter) allow-discrete;
       }
-
-      .root > :not(summary):last-child {
-        margin-block-end: var(--todae-disclosure-gap);
-      }
     }
   }
 
-  .root[open] > :not(summary):last-child {
+  /* Not only while open: closed content isn't drawn, and the gap then stays
+     through a closing height or fade instead of leaving at its start. */
+  .root > :not(summary):last-child {
     margin-block-end: var(--todae-disclosure-gap);
   }
 

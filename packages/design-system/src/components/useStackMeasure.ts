@@ -6,7 +6,7 @@ import { useLayoutEffect, useState } from 'react';
  * `--toast-index`, `--toast-offset`, `--toast-front-height` and
  * `--toast-count`. Read from the toast inside each item, which the collapsed
  * layout clips to the front toast's height but never squeezes; an observer
- * reads it again as the stack narrows and widens it, which resizes the toast. `listKey` changes with
+ * reads it again as the stack narrows and widens it. `listKey` changes with
  * the items, which the observer doesn't see. Returns the list's ref.
  */
 export function useStackMeasure(listKey: string): (list: HTMLOListElement | null) => void {
@@ -28,10 +28,10 @@ export function useStackMeasure(listKey: string): (list: HTMLOListElement | null
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(measure);
-    // The toast inside each item, which is what it measures: the item's own
-    // height changes every frame as a listed toast leaves, and reading it again
-    // then would change nothing.
-    for (const item of list.children) observer.observe(item.firstElementChild ?? item);
+    for (const item of list.children) {
+      observer.observe(item);
+      if (item.firstElementChild) observer.observe(item.firstElementChild);
+    }
     return () => observer.disconnect();
   }, [list, listKey]);
   return setList;
