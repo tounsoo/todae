@@ -13521,6 +13521,62 @@
       "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
     },
     {
+      "path": "conversation.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-conversation-motion-duration-enter",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
+    },
+    {
+      "path": "conversation.motion.duration.exit",
+      "type": "duration",
+      "cssVar": "--todae-conversation-motion-duration-exit",
+      "cssValue": "var(--todae-motion-reveal-duration-exit)",
+      "ref": "motion.reveal.duration.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
+    },
+    {
+      "path": "conversation.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-conversation-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
+    },
+    {
+      "path": "conversation.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-conversation-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Conversation.Root: the scrolling message list and its jump-to-latest button."
+    },
+    {
       "path": "conversation.ring.focus",
       "type": "color",
       "cssVar": "--todae-conversation-ring-focus",
