@@ -41,7 +41,8 @@ describe('native element component styles', () => {
   });
 
   it('stop motion under reduced motion', () => {
-    expect(sheet('Disclosure')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root::details-content \{\s*transition: none;/);
+    // The marker stops turning; the content's fade stays, since it moves nothing.
+    expect(sheet('Disclosure')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.marker \{\s*transition: none;/);
     expect(sheet('Progress')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.progress:indeterminate \{\s*animation: none;/);
     expect(sheet('Progress')).toMatch(
       /prefers-reduced-motion: reduce\) \{[^@]*\.progress::-webkit-progress-value,\s*\.meter::-webkit-meter-optimum-value,\s*\.meter::-webkit-meter-suboptimum-value,\s*\.meter::-webkit-meter-even-less-good-value \{\s*transition: none;/,

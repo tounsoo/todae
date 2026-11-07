@@ -1734,6 +1734,14 @@
       "type": "dimension"
     },
     {
+      "path": "control.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "control.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "conversation.gap",
       "type": "dimension"
     },
@@ -4440,6 +4448,14 @@
     {
       "path": "tooltip.max-width",
       "type": "dimension"
+    },
+    {
+      "path": "tooltip.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "tooltip.motion.easing.enter",
+      "type": "cubicBezier"
     },
     {
       "path": "tooltip.offset",

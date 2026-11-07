@@ -151,12 +151,6 @@
     white-space: nowrap;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .actions[data-reveal='hover'] {
-      transition: none;
-    }
-  }
-
   @media (forced-colors: active) {
     .root[data-from='user'] > .content {
       border: var(--todae-message-user-border-width) solid CanvasText;

@@ -198,6 +198,9 @@ export function useTooltipInternal<I extends boolean = false>(
   // commit always renders again so the hover bookkeeping below settles, so the
   // tooltip calls onOpenChange itself rather than through useControlledState.
   const [controlledEpoch, setControlledEpoch] = useState(0);
+  // Whether the open showing now skipped its hover show delay because another
+  // tip was open or had just closed, so it shows at once instead of fading in.
+  const [warm, setWarm] = useState(false);
   const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
   const anchorName = anchorNameOption ?? `--todae-tooltip-${uid}`;
@@ -212,6 +215,7 @@ export function useTooltipInternal<I extends boolean = false>(
   const skipDelayRef = useRef(skipDelay);
   const delayFocusRef = useRef(delayFocus);
   const requestedHoverOpenRef = useRef(false);
+  const warmHoverRef = useRef(false);
   const countedHoverRef = useRef(false);
   const enabledRef = useRef(enabled);
   const holdsFocusRef = useRef(holdsFocus);
@@ -239,7 +243,9 @@ export function useTooltipInternal<I extends boolean = false>(
   const applyCommands = useCallback(
     (commands: readonly TooltipCommand[]) => {
       const commitNow = (next: boolean, reason: TooltipOpenReason) => {
-        requestedHoverOpenRef.current = next && (reason === 'hover' || reason === 'hover-bridge');
+        const hover = reason === 'hover' || reason === 'hover-bridge';
+        requestedHoverOpenRef.current = next && hover;
+        setWarm(next && hover && warmHoverRef.current);
         setValue(next);
         onOpenChangeRef.current?.(next, reason);
         if (openProp !== undefined) setControlledEpoch((epoch) => epoch + 1);
@@ -285,6 +291,9 @@ export function useTooltipInternal<I extends boolean = false>(
         event.kind === 'acquire' &&
         event.hold === 'hover' &&
         hoverShowSkipsDelay(Date.now(), skipDelayRef.current ?? SHOW_DELAY_MS);
+      if (event.kind === 'acquire' && event.hold === 'hover') warmHoverRef.current = warm;
+      // An open that waited out its show delay is cold, whatever acquired since.
+      if (event.kind === 'delay-elapsed') warmHoverRef.current = false;
       const result = step({
         policy: warm ? { ...policy, skipHoverShowDelay: true } : policy,
         state: intentRef.current,
@@ -343,7 +352,11 @@ export function useTooltipInternal<I extends boolean = false>(
 
   useLayoutEffect(() => {
     const count = open && requestedHoverOpenRef.current;
-    if (!open) requestedHoverOpenRef.current = false;
+    if (!open) {
+      requestedHoverOpenRef.current = false;
+      // An open the owner turned down leaves no warmth for one it makes itself.
+      setWarm(false);
+    }
     if (count === countedHoverRef.current) return;
     countedHoverRef.current = count;
     if (count) retainHoverTip();
@@ -463,6 +476,7 @@ export function useTooltipInternal<I extends boolean = false>(
     const wire = {
       id: contentId,
       open,
+      warm: open && warm,
       interactive,
       ref: setTooltip,
       style: anchoredContentStyle('--todae-tooltip-anchor', anchorName),
@@ -479,7 +493,7 @@ export function useTooltipInternal<I extends boolean = false>(
         }
       },
     } as TooltipWire<I>;
-  }, [anchorName, contentId, dispatch, enabled, interactive, open, pairContains, setTooltip]);
+  }, [anchorName, contentId, dispatch, enabled, interactive, open, pairContains, setTooltip, warm]);
 
   return {
     open,

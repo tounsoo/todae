@@ -4,9 +4,11 @@
   .sheet {
     --_rest-height: calc(var(--todae-sheet-snap-mid) * 100vh);
     --_rest-height: calc(var(--todae-sheet-snap-mid) * 100dvh);
+    /* Where it slides from and back to: just below the viewport. */
+    --_closed: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
     position: fixed;
     inset: auto 0 0;
-    bottom: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
+    bottom: var(--_closed);
     box-sizing: border-box;
     width: auto;
     max-width: none;
@@ -56,7 +58,7 @@
   }
 
   .sheet[data-todae-exiting] {
-    bottom: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
+    bottom: var(--_closed);
     transition: bottom var(--todae-sheet-motion-duration-exit) var(--todae-sheet-motion-easing-exit);
   }
 
@@ -183,10 +185,13 @@
     }
   }
 
+  /* The sheet stays in place and changes height at once, as Dialog's panel
+     stops rising; the scrim still fades. bottom keeps its transition, which
+     now moves nothing, so the sheet closes when the scrim's fade ends. */
   @media (prefers-reduced-motion: reduce) {
-    .sheet,
-    .sheet::backdrop {
-      transition: none;
+    .sheet {
+      --_closed: 0px;
+      transition: bottom var(--todae-sheet-motion-duration-enter) var(--todae-sheet-motion-easing-enter);
     }
   }
 }

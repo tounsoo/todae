@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { server } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -7,8 +7,11 @@ import { Button } from '../components/Button.js';
 import { Dialog } from '../components/Dialog.js';
 import { Drawer, type DrawerSide } from '../components/Drawer.js';
 import { Popover } from '../components/Popover.js';
+import { Tooltip } from '../components/Tooltip.js';
 import { usePopover } from '../hooks/usePopover.js';
+import { useTooltip } from '../hooks/useTooltip.js';
 import { HeldTip } from '../test/heldTip.js';
+import { emulateMedia } from '../test/media.js';
 
 afterEach(cleanup);
 
@@ -321,5 +324,109 @@ describe('A tip held open during an overlay exit motion', () => {
     rerender(<Overlay kind={kind} open={false} />);
     expect(overlay.hasAttribute('data-todae-exiting')).toBe(true);
     expectTipFollowed(await sampleMotion(held), { minFrames: 2, minTravel: kind === 'Dialog' ? 0 : 40 });
+  });
+});
+
+describe('A tooltip as it opens', () => {
+  function opacityRuns(name: string): { runs: string[]; stop: () => void } {
+    const runs: string[] = [];
+    const listen = (event: Event) => {
+      if (event.target instanceof HTMLElement && event.target.textContent === name) {
+        runs.push((event as TransitionEvent).propertyName);
+      }
+    };
+    document.addEventListener('transitionrun', listen, true);
+    return { runs, stop: () => document.removeEventListener('transitionrun', listen, true) };
+  }
+
+  function Pair() {
+    const a = useTooltip();
+    const b = useTooltip();
+    return (
+      <Themed style={{ paddingBlockStart: 64, paddingInline: 48, display: 'flex', gap: 8 }}>
+        <Button.Root tooltip={false} {...a.getTriggerProps()}>
+          A
+        </Button.Root>
+        <Tooltip.Root {...a.getTooltipProps()}>Tip A</Tooltip.Root>
+        <Button.Root tooltip={false} {...b.getTriggerProps()}>
+          B
+        </Button.Root>
+        <Tooltip.Root {...b.getTooltipProps()}>Tip B</Tooltip.Root>
+      </Themed>
+    );
+  }
+
+  it('fades in once when it opens cold, then holds still with no transition', async () => {
+    const watch = opacityRuns('Tip A');
+    try {
+      render(<Pair />);
+      fireEvent.pointerEnter(screen.getByRole('button', { name: 'A' }));
+      const tip = await screen.findByRole('tooltip', { name: 'Tip A' }, { timeout: 2000 });
+      expect(tip.hasAttribute('data-todae-warm')).toBe(false);
+      await waitFor(() => expect(tip.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(watch.runs.filter((name) => name === 'opacity')).toEqual(['opacity']);
+      expect(getComputedStyle(tip).transitionProperty).toBe('none');
+      expect(getComputedStyle(tip).opacity).toBe('1');
+    } finally {
+      watch.stop();
+    }
+  });
+
+  it('shows at once when it opens warm, as the pointer sweeps on from another tip', async () => {
+    const watch = opacityRuns('Tip B');
+    try {
+      render(<Pair />);
+      const a = screen.getByRole('button', { name: 'A' });
+      fireEvent.pointerEnter(a);
+      await screen.findByRole('tooltip', { name: 'Tip A' }, { timeout: 2000 });
+      fireEvent.pointerLeave(a);
+      fireEvent.pointerEnter(screen.getByRole('button', { name: 'B' }));
+      const tip = await screen.findByRole('tooltip', { name: 'Tip B' }, { timeout: 100 });
+      expect(tip.hasAttribute('data-todae-warm')).toBe(true);
+      expect(getComputedStyle(tip).opacity).toBe('1');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(watch.runs).toEqual([]);
+    } finally {
+      watch.stop();
+    }
+  });
+});
+
+describe('A Drawer or BottomSheet under reduced motion', () => {
+  function Panel({ kind, open }: { kind: 'Drawer' | 'BottomSheet'; open: boolean }) {
+    const Parts = kind === 'Drawer' ? Drawer : BottomSheet;
+    return (
+      <Themed>
+        <Parts.Root open={open} onOpenChange={() => undefined}>
+          <Parts.Title>Panel</Parts.Title>
+          <Parts.Body data-testid="body">Body</Parts.Body>
+        </Parts.Root>
+      </Themed>
+    );
+  }
+
+  // The panel never moves, and the overlay stays open through the scrim's
+  // fade out, rather than closing at once.
+  it.each(['Drawer', 'BottomSheet'] as const)('%s holds its panel still while its scrim fades in and out', async (kind) => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Panel kind={kind} open />);
+      const overlay = screen.getByRole('dialog', { name: 'Panel' });
+      const body = screen.getByTestId('body');
+      const place = () => {
+        const box = body.getBoundingClientRect();
+        return { left: Math.round(box.left), top: Math.round(box.top) };
+      };
+      const first = place();
+      await waitFor(() => expect(overlay.hasAttribute('data-entered')).toBe(true));
+      expect(place()).toEqual(first);
+      rerender(<Panel kind={kind} open={false} />);
+      expect(overlay.hasAttribute('data-todae-exiting')).toBe(true);
+      expect(place()).toEqual(first);
+      await waitFor(() => expect(overlay.isConnected && overlay.hasAttribute('open')).toBe(false));
+    } finally {
+      await emulateMedia([]);
+    }
   });
 });
