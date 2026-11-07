@@ -107,7 +107,7 @@ jobs:
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
 
-  # Vercel deploys the docs and their MCP server to production from docs-stable, so they only
+  # docs-deploy.yml deploys the docs and their MCP server to production from docs-stable, so they only
   # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
   # above went: to this commit when its package version is on npm and no changeset that releases
   # something is waiting, otherwise to the commit tagged with the latest version on npm. A failed
