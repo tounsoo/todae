@@ -564,6 +564,8 @@
   --todae-field-error-font-size: var(--_todae-field-error-font-size, var(--todae-font-size-2));
   --todae-field-error-font-weight: var(--_todae-field-error-font-weight, var(--todae-font-weight-regular));
   --todae-field-error-leading: var(--_todae-field-error-leading, var(--todae-font-leading-snug));
+  --todae-field-error-motion-duration-enter: var(--_todae-field-error-motion-duration-enter, var(--todae-motion-reveal-duration-enter));
+  --todae-field-error-motion-easing-enter: var(--_todae-field-error-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-field-fg-adornment: var(--_todae-field-fg-adornment, var(--todae-color-fg-placeholder));
   --todae-field-fg-default: var(--_todae-field-fg-default, var(--todae-color-fg-default));
   --todae-field-fg-disabled: var(--_todae-field-fg-disabled, var(--todae-color-fg-placeholder));
@@ -862,6 +864,8 @@
   --todae-alert-info-border: var(--_todae-alert-info-border, var(--todae-color-status-info-border));
   --todae-alert-info-fg: var(--_todae-alert-info-fg, var(--todae-color-status-info-fg));
   --todae-alert-leading: var(--_todae-alert-leading, var(--todae-font-leading-default));
+  --todae-alert-motion-duration-enter: var(--_todae-alert-motion-duration-enter, var(--todae-motion-reveal-duration-enter));
+  --todae-alert-motion-easing-enter: var(--_todae-alert-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-alert-padding-x: var(--_todae-alert-padding-x, var(--todae-space-control-x));
   --todae-alert-padding-y: var(--_todae-alert-padding-y, var(--todae-space-control-x));
   --todae-alert-radius: var(--_todae-alert-radius, var(--todae-radius-md));
@@ -1001,6 +1005,8 @@
   --todae-progress-fill: var(--_todae-progress-fill, var(--todae-color-accent-default));
   --todae-progress-height: var(--_todae-progress-height, 0.5rem);
   --todae-progress-motion-duration: var(--_todae-progress-motion-duration, 1200ms);
+  --todae-progress-motion-fill-duration: var(--_todae-progress-motion-fill-duration, var(--todae-motion-duration-moderate));
+  --todae-progress-motion-fill-easing: var(--_todae-progress-motion-fill-easing, var(--todae-motion-easing-enter));
   --todae-progress-radius: var(--_todae-progress-radius, var(--todae-radius-sm));
   --todae-progress-track: var(--_todae-progress-track, var(--todae-color-border-subtle));
   --todae-slider-fill: var(--_todae-slider-fill, var(--todae-color-accent-default));

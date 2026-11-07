@@ -5849,6 +5849,34 @@
       "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
+      "path": "field.error.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-field-error-motion-duration-enter",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.error.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-field-error-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
       "path": "field.fg.adornment",
       "type": "color",
       "cssVar": "--todae-field-fg-adornment",
@@ -10021,6 +10049,34 @@
       "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
     },
     {
+      "path": "alert.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-alert-motion-duration-enter",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
+    },
+    {
+      "path": "alert.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-alert-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
+    },
+    {
       "path": "alert.padding.x",
       "type": "dimension",
       "cssVar": "--todae-alert-padding-x",
@@ -11958,6 +12014,34 @@
       "cssVar": "--todae-progress-motion-duration",
       "cssValue": "1200ms",
       "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Progress.Root: a determinate or indeterminate progress bar."
+    },
+    {
+      "path": "progress.motion.fill.duration",
+      "type": "duration",
+      "cssVar": "--todae-progress-motion-fill-duration",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Progress.Root: a determinate or indeterminate progress bar."
+    },
+    {
+      "path": "progress.motion.fill.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-progress-motion-fill-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {

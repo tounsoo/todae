@@ -4,7 +4,7 @@ import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibl
 
 컨트롤 아래에 두는 검증 텍스트입니다. Field 파트가 아닌 형제 요소입니다. [Form](/form) 밖에서는 `id`가 필수입니다. 기본 `role="alert"`도 `aria-live`도 없습니다. `invalid`는 컨트롤이나 `Field.Root`에 둡니다.
 
-오류는 해당될 때만 마운트하고, 그때만 그 id를 `aria-describedby`에 포함하세요.
+오류는 해당될 때만 마운트하고, 그때만 그 id를 `aria-describedby`에 포함하세요. 마운트될 때 `field.error.motion.duration.enter`와 `field.error.motion.easing.enter`로 서서히 나타나며, 동작 줄이기에서도 그렇고, 사라질 때는 바로 사라집니다. 텍스트는 첫 프레임부터 페이지에 있으므로 페이드가 스크린 리더가 읽는 내용을 늦추지 않습니다.
 
 ErrorMessage는 자신의 간격을 직접 관리합니다. 컨트롤 다음에서는 `margin-block-start`가 `field.label.gap`(0.4rem)입니다. Description 다음에서는 형제 규칙이 이를 `field.messages.gap`(0.2rem)으로 줄입니다. `margin-block-end`는 0입니다.
 

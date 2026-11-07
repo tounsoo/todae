@@ -46,6 +46,14 @@
       "type": "number"
     },
     {
+      "path": "alert.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "alert.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
       "path": "alert.padding.x",
       "type": "dimension"
     },
@@ -2158,6 +2166,14 @@
       "type": "number"
     },
     {
+      "path": "field.error.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "field.error.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
       "path": "field.fg.adornment",
       "type": "color"
     },
@@ -3308,6 +3324,14 @@
     {
       "path": "progress.motion.duration",
       "type": "duration"
+    },
+    {
+      "path": "progress.motion.fill.duration",
+      "type": "duration"
+    },
+    {
+      "path": "progress.motion.fill.easing",
+      "type": "cubicBezier"
     },
     {
       "path": "progress.radius",

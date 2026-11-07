@@ -125,6 +125,8 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 역할에는 시간만 있습니다. Drilldown, 두 상태 사이를 움직이는 컨트롤과 BottomSheet의 `sheet.motion.duration.resize`는 코어 단계를 바로 가리키고, Loader, Progress, Skeleton은 반복 한 번의 길이를 따로 가집니다.
 
+모션 단계를 읽는 컴포넌트가 둘 더 있습니다. Progress와 Meter는 새 값으로 채움을 `progress.motion.fill.duration`과 `progress.motion.fill.easing`(코어 들어오는 곡선으로 240ms)으로 미끄러지듯 옮기며, 이는 두 상태 사이의 변화이고 동작 줄이기에서는 바로 바뀝니다. Alert와 ErrorMessage는 나타날 때 `alert.motion.duration.enter`와 `alert.motion.easing.enter`, `field.error.motion.duration.enter`와 `field.error.motion.easing.enter`로 서서히 나타나며, 시간은 `motion.reveal`을 가리킵니다. 사라질 때는 바로 사라지므로 나가는 토큰이 없고, 동작 줄이기에서도 계속 서서히 나타납니다.
+
 사용자가 동작 줄이기를 선호하면 미끄러지거나, 크기가 바뀌거나, 떠오르거나, 도는 것이 없고, 반복 애니메이션은 멈춥니다. 지금은 일부 컴포넌트가 페이드도 건너뜁니다.
 
 ## 설명

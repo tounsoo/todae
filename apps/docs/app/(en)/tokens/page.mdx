@@ -125,6 +125,8 @@ Each component's enter and exit durations point at a motion role, which points a
 
 Roles hold durations only. Drilldown, the two-state controls and BottomSheet's `sheet.motion.duration.resize` point at the core scale directly, and Loader, Progress and Skeleton keep their own loop lengths.
 
+Two more read the motion scale. Progress and Meter glide their fill to a new value with `progress.motion.fill.duration` and `progress.motion.fill.easing` (240ms on the core enter curve), a change between two states, and jump under reduced motion. Alert and ErrorMessage fade in as they appear with `alert.motion.duration.enter` and `alert.motion.easing.enter`, and `field.error.motion.duration.enter` and `field.error.motion.easing.enter`, whose durations point at `motion.reveal`; they go at once, so they have no exit pair, and they keep fading under reduced motion.
+
 When the user prefers reduced motion, nothing slides, scales, rises or turns, and loops hold still. Some components also skip their fades for now.
 
 ## Descriptions

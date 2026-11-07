@@ -43,8 +43,26 @@ describe('native element component styles', () => {
   it('stop motion under reduced motion', () => {
     expect(sheet('Disclosure')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root::details-content \{\s*transition: none;/);
     expect(sheet('Progress')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.progress:indeterminate \{\s*animation: none;/);
+    expect(sheet('Progress')).toMatch(
+      /prefers-reduced-motion: reduce\) \{[^@]*\.progress::-webkit-progress-value,\s*\.meter::-webkit-meter-optimum-value,\s*\.meter::-webkit-meter-suboptimum-value,\s*\.meter::-webkit-meter-even-less-good-value \{\s*transition: none;/,
+    );
     expect(sheet('Loader')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root,\s*progress\.root\[data-variant='dots'\] \{\s*animation: none;/);
     expect(sheet('Skeleton')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root \{\s*animation: none;/);
+  });
+
+  it('glide the progress and meter fills to a new value with the fill motion tokens', () => {
+    const progress = sheet('Progress');
+    const glide = 'transition: inline-size var(--todae-progress-motion-fill-duration) var(--todae-progress-motion-fill-easing);';
+    for (const part of [
+      '.progress::-webkit-progress-value',
+      '.meter::-webkit-meter-optimum-value',
+      '.meter::-webkit-meter-suboptimum-value',
+      '.meter::-webkit-meter-even-less-good-value',
+    ]) {
+      expect(rule(progress, part), part).toContain(glide);
+    }
+    // The indeterminate band keeps its own loop, and nothing else in the sheet transitions.
+    expect(progress.match(/transition:/g)).toHaveLength(5);
   });
 
   it('keep progress, spinner and skeleton visible in forced colors', () => {

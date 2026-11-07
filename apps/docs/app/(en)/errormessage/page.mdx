@@ -4,7 +4,7 @@ import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibl
 
 Validation text below a control. A sibling, not a Field part. `id` is required outside a [Form](/form). There is no default `role="alert"` and no `aria-live`. `invalid` lives on the control or on `Field.Root`.
 
-Mount the error only while it applies, and include its id in `aria-describedby` only then.
+Mount the error only while it applies, and include its id in `aria-describedby` only then. It fades in as it mounts, over `field.error.motion.duration.enter` and `field.error.motion.easing.enter`, under reduced motion too, and goes at once. The text is in the page from the first frame, so the fade delays nothing a screen reader reads.
 
 ErrorMessage owns its spacing. After a control, `margin-block-start` is `field.label.gap` (0.4rem). After Description, the sibling rule drops that to `field.messages.gap` (0.2rem). `margin-block-end` is 0.
 

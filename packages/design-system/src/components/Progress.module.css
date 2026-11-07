@@ -17,8 +17,14 @@
     background: var(--todae-progress-track);
   }
 
+  /* A new value glides the fill to its new length rather than jumping, in
+     the engines that draw the bar with these parts (Chrome and Safari). The
+     browser sets the fill's width itself, inside a bar of fixed size, so the
+     transition lays out nothing outside the bar and nothing runs while the
+     value holds. The indeterminate band is a background, not this fill. */
   .progress::-webkit-progress-value {
     background: var(--todae-progress-fill);
+    transition: inline-size var(--todae-progress-motion-fill-duration) var(--todae-progress-motion-fill-easing);
   }
 
   .progress::-moz-progress-bar {
@@ -64,14 +70,6 @@
     }
   }
 
-  /* Under reduced motion the band holds still in the middle, so the bar
-     still reads as busy rather than empty. */
-  @media (prefers-reduced-motion: reduce) {
-    .progress:indeterminate {
-      animation: none;
-      background-position: 50% 0;
-    }
-  }
 
   .meter::-webkit-meter-bar {
     block-size: 100%;
@@ -79,16 +77,21 @@
     background: var(--todae-progress-track);
   }
 
+  /* The meter's fill glides like the progress fill. Each state is its own
+     part, so each takes the transition. */
   .meter::-webkit-meter-optimum-value {
     background: var(--todae-meter-fill-optimum);
+    transition: inline-size var(--todae-progress-motion-fill-duration) var(--todae-progress-motion-fill-easing);
   }
 
   .meter::-webkit-meter-suboptimum-value {
     background: var(--todae-meter-fill-suboptimum);
+    transition: inline-size var(--todae-progress-motion-fill-duration) var(--todae-progress-motion-fill-easing);
   }
 
   .meter::-webkit-meter-even-less-good-value {
     background: var(--todae-meter-fill-critical);
+    transition: inline-size var(--todae-progress-motion-fill-duration) var(--todae-progress-motion-fill-easing);
   }
 
   .meter:where(:-moz-meter-optimum)::-moz-meter-bar {
@@ -101,6 +104,24 @@
 
   .meter:where(:-moz-meter-sub-sub-optimum)::-moz-meter-bar {
     background: var(--todae-meter-fill-critical);
+  }
+
+  /* Under reduced motion the band holds still in the middle, so the bar
+     still reads as busy rather than empty, and a new value jumps the fill to
+     its length, since a growing bar is a slide. */
+  @media (prefers-reduced-motion: reduce) {
+    .progress:indeterminate {
+      animation: none;
+      background-position: 50% 0;
+    }
+
+    /* WebKit parts only: Firefox, which drops the list, has no glide. */
+    .progress::-webkit-progress-value,
+    .meter::-webkit-meter-optimum-value,
+    .meter::-webkit-meter-suboptimum-value,
+    .meter::-webkit-meter-even-less-good-value {
+      transition: none;
+    }
   }
 
   /* Forced colors replace author backgrounds, which would draw the track and
