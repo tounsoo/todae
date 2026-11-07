@@ -83,6 +83,12 @@ describe('Conversation.Content entrance', () => {
     expect(await marks()).toEqual([]);
   });
 
+  it('leaves more than two messages added at once still, as history', async () => {
+    const { rerender } = render(<Thread ids={range(1, 2)} />);
+    rerender(<Thread ids={range(1, 5)} />);
+    expect(await marks()).toEqual([]);
+  });
+
   it('leaves older messages added above still', async () => {
     const { rerender } = render(<Thread ids={range(3, 5)} />);
     rerender(<Thread ids={range(1, 5)} />);

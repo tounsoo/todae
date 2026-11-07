@@ -50,8 +50,8 @@ const GLIDE_MIN_STEP = 4;
 const GLIDE_MS = 500;
 // Marks a message added at the end until its entrance animation ends.
 const ENTERING = 'data-todae-entering';
-// The most messages that fill an empty or replaced list and still animate: a
-// message and its reply. More is history.
+// The most messages added at once that still animate: a message and its
+// reply. More is history.
 const HISTORY = 2;
 
 type ConversationContext = {
@@ -274,12 +274,12 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
 
   // Marks the messages added after it mounted below one that was already
   // there, so they animate in: what was there first stays still, and so do
-  // older messages added above. A message added before something that stays
-  // at the end, such as a typing indicator, still counts. When nothing from
-  // before is left, a batch of more than two is history loading, or another
-  // conversation, so it stays still; one or two, such as the first message
-  // and its reply, animate. The mark lasts until the animation ends, so a
-  // conversation hidden and shown again, as in a drawer, doesn't play it again.
+  // messages that move and older messages added above. A message added before
+  // something that stays at the end, such as a typing indicator, still counts,
+  // and so do the first message and its reply in an empty list. More than two
+  // at once is history loading, or another conversation, so it stays still.
+  // The mark lasts until the animation ends, so a conversation hidden and
+  // shown again, as in a drawer, doesn't play it again.
   useEffect(() => {
     const el = context.content.current;
     if (!el) return;
@@ -301,8 +301,8 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
       for (const node of removed) added.delete(node);
       const children = [...el.children];
       const fresh = children.filter((child) => added.has(child));
-      if (!fresh.length) return;
-      let below = fresh.length === children.length && fresh.length <= HISTORY;
+      if (!fresh.length || fresh.length > HISTORY) return;
+      let below = fresh.length === children.length;
       for (const child of children) {
         if (!added.has(child)) below = true;
         else if (below) child.setAttribute(ENTERING, '');
