@@ -1,5 +1,4 @@
 import PresentationBadge from '../../../../examples/utilities/use-sheet-presentation/PresentationBadge';
-import ComboboxHighlight from '../../../../examples/recipes/combobox/ComboboxHighlight';
 import ComboboxAsync from '../../../../examples/recipes/combobox/ComboboxAsync';
 import ComboboxSheet from '../../../../examples/recipes/combobox/ComboboxSheet';
 import ComboboxMulti from '../../../../examples/recipes/combobox/ComboboxMulti';
@@ -74,9 +73,26 @@ import { ComboboxAuto, ComboboxCreate, ComboboxCreateMulti, ComboboxEmpty } from
 
 ## 일치 항목 강조
 
-[useHighlight](/utilities/use-highlight)는 옵션의 마크업을 바꾸지 않고 각 옵션에서 query를 표시합니다. 훅의 `query`(입력에 선택한 레이블이 보이는 동안은 비어 있음)를 넘기고, `ref`를 목록에 두고, `::highlight(search)`로 그 이름에 스타일을 주세요.
+이 페이지의 모든 데모는 [useHighlight](/utilities/use-highlight)로 옵션에서 입력한 텍스트를 표시합니다. 이 훅은 옵션의 마크업을 바꾸지 않고 칠하므로 각 옵션은 접근 가능한 이름을 그대로 유지합니다. 훅의 `query`(입력에 선택한 레이블이 보이는 동안은 비어 있으므로 그때는 아무것도 표시하지 않음)를 넘기고 `ref`를 목록에 두세요.
 
-<Example of={ComboboxHighlight} block />
+```tsx
+const found = useHighlight({ name: 'combobox-match', query: cb.query });
+
+<OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
+```
+
+같은 이름을 쓰는 훅들은 함께 칠하므로, 모든 콤보박스에 같은 이름을 주고 스타일은 한 번만 주세요.
+
+```css
+::highlight(combobox-match) {
+  background-color: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-fg-default);
+}
+```
+
+`loadOptions`를 쓰면 로더가 일치 여부를 정하므로, 로더가 돌려준 행에 입력한 텍스트가 없으면 표시도 없습니다.
+
+만들기 행의 레이블은 입력한 텍스트를 자신의 단어 안에 담으므로, 목록 전체를 검색하면 "Create" 같은 단어의 글자까지 표시됩니다. 만들기 데모는 훅의 `ref`를 옵션만 감싸는 `role="none"` 래퍼에 두고, 같은 이름을 쓰는 두 번째 훅으로 만들기 행을 표시합니다. 이 훅의 `ranges`는 레이블의 따옴표 사이 텍스트만 덮습니다.
 
 ## 조합 규칙
 

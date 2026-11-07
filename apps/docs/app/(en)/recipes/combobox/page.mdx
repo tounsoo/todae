@@ -1,5 +1,4 @@
 import PresentationBadge from '../../../../examples/utilities/use-sheet-presentation/PresentationBadge';
-import ComboboxHighlight from '../../../../examples/recipes/combobox/ComboboxHighlight';
 import ComboboxAsync from '../../../../examples/recipes/combobox/ComboboxAsync';
 import ComboboxSheet from '../../../../examples/recipes/combobox/ComboboxSheet';
 import ComboboxMulti from '../../../../examples/recipes/combobox/ComboboxMulti';
@@ -74,9 +73,26 @@ No matches render a status row. `allowCreate` adds one `Create "{query}"` option
 
 ## Highlight matches
 
-[useHighlight](/utilities/use-highlight) marks the query in each option without changing the options' markup. Pass the hook's `query` (empty while the input shows the selected label), put the `ref` on the list, and style the name with `::highlight(search)`.
+Every demo on this page marks the typed text in its options with [useHighlight](/utilities/use-highlight), which paints it without changing the options' markup, so each option keeps its accessible name. Pass the hook's `query` (empty while the input shows the selected label, so nothing is marked then) and put the `ref` on the list:
 
-<Example of={ComboboxHighlight} block />
+```tsx
+const found = useHighlight({ name: 'combobox-match', query: cb.query });
+
+<OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
+```
+
+Hooks that share a name paint together, so give every combobox the same name and style it once:
+
+```css
+::highlight(combobox-match) {
+  background-color: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-fg-default);
+}
+```
+
+With `loadOptions`, the loader does the matching, so a row it returns may not hold the typed text and shows no mark.
+
+A create row's label holds the typed text inside its own words, so a search of the whole list would also mark letters of a word like "Create". The create demos put the hook's `ref` on a `role="none"` wrapper around the options only, and mark the create row with a second hook under the same name, whose `ranges` cover just the text between the label's quotes.
 
 ## Composition rules
 
