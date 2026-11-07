@@ -118,9 +118,22 @@ describe('Conversation in a browser', () => {
     await frame();
     viewport.scrollTop = 0;
     await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
-    act(() => screen.getByTestId('grow').click());
-    act(() => screen.getByTestId('scroll').click());
-    await waitFor(() => expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1), { timeout: 2000 });
+    // Read the distance once the conversation has handled each resize, since
+    // resize observers run in the order they were made. A task between a new
+    // message and that handling sees the end one message away, and with a
+    // message every 16ms on a slow run, nearly every task falls there.
+    let left = Infinity;
+    const after = new ResizeObserver(() => {
+      left = distanceToEnd(viewport);
+    });
+    after.observe(screen.getAllByRole('article')[0]!.parentElement!);
+    try {
+      act(() => screen.getByTestId('grow').click());
+      act(() => screen.getByTestId('scroll').click());
+      await waitFor(() => expect(left).toBeLessThanOrEqual(1), { timeout: 2000 });
+    } finally {
+      after.disconnect();
+    }
     expect(screen.getByTestId('scroll').hidden).toBe(true);
   });
 
