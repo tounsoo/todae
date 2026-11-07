@@ -14,6 +14,7 @@ import {
   type UIEvent,
 } from 'react';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
+import { observeMutations } from '../internal/sharedMutations.js';
 import { reducedMotion } from '../overlay/useOverlayPresence.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -47,6 +48,8 @@ const GLIDE_SHARE = 0.18;
 const GLIDE_MIN_STEP = 4;
 // The longest a glide runs before it lands at the end.
 const GLIDE_MS = 500;
+// Marks a message added at the end until its entrance animation ends.
+const ENTERING = 'data-todae-entering';
 
 type ConversationContext = {
   viewport: RefObject<HTMLElement | null>;
@@ -265,6 +268,40 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
   // Read when a message changes, so a new provider's text is used.
   const text = useRef(strings);
   text.current = strings;
+
+  // Marks the messages added at the end, after it mounted, so they animate
+  // in: what was there first stays still. A run that fills a list with
+  // nothing left from before is history loading, or another conversation,
+  // unless it is one message, such as the first one sent. Older messages
+  // added above stay still too. The mark lasts until the animation ends, so a
+  // conversation hidden and shown again, as in a drawer, doesn't play it again.
+  useEffect(() => {
+    const el = context.content.current;
+    if (!el) return;
+    const settle = (event: AnimationEvent) => {
+      const target = event.target as Element;
+      if (target.parentNode === el) target.removeAttribute(ENTERING);
+    };
+    el.addEventListener('animationend', settle);
+    el.addEventListener('animationcancel', settle);
+    const watcher = observeMutations(el, { childList: true }, (records) => {
+      const added = new Set<Node>();
+      for (const record of records) for (const node of record.addedNodes) added.add(node);
+      const arrived: Element[] = [];
+      let message = el.lastElementChild;
+      while (message && added.has(message)) {
+        arrived.push(message);
+        message = message.previousElementSibling;
+      }
+      if (!message && arrived.length > 1) return;
+      for (const node of arrived) node.setAttribute(ENTERING, '');
+    });
+    return () => {
+      watcher.stop();
+      el.removeEventListener('animationend', settle);
+      el.removeEventListener('animationcancel', settle);
+    };
+  }, [context.content]);
 
   useEffect(() => {
     const el = context.content.current;

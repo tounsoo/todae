@@ -117,7 +117,7 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 각 컴포넌트의 들어오고 나가는 시간은 모션 역할을 가리키고, 모션 역할은 코어 `motion.duration` 단계를 가리킵니다. 역할의 `duration.enter`나 `duration.exit`를 바꾸면 그 역할의 모든 컴포넌트 타이밍이 바뀌고, 컴포넌트 하나의 토큰을 바꾸면 그 컴포넌트만 바뀝니다.
 
-- `motion.reveal`: 제자리에서 펼쳐지는 콘텐츠입니다. Disclosure, Nav, Tree와 Message의 액션 줄이며, 들어올 때 200ms, 나갈 때 200ms입니다.
+- `motion.reveal`: 제자리에서 펼쳐지는 콘텐츠입니다. Disclosure, Nav, Tree, Message의 액션 줄, Conversation의 가장 새 메시지와 스크롤 버튼이며, 들어올 때 200ms, 나갈 때 200ms입니다.
 - `motion.popup`: 트리거에 붙어 있는 표면입니다. Popover, Menu와 필드 피커이며, 들어올 때 240ms, 나갈 때 200ms입니다.
 - `motion.window`: 페이지 가운데에 뜨는 창입니다. Dialog이며, 들어올 때 280ms, 나갈 때 200ms입니다.
 - `motion.panel`: 화면 가장자리에서 밀려 들어오는 패널입니다. Drawer와 BottomSheet이며, 들어올 때 280ms, 나갈 때 240ms입니다.

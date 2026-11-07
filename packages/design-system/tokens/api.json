@@ -1730,6 +1730,22 @@
       "type": "dimension"
     },
     {
+      "path": "conversation.motion.duration.enter",
+      "type": "duration"
+    },
+    {
+      "path": "conversation.motion.duration.exit",
+      "type": "duration"
+    },
+    {
+      "path": "conversation.motion.easing.enter",
+      "type": "cubicBezier"
+    },
+    {
+      "path": "conversation.motion.easing.exit",
+      "type": "cubicBezier"
+    },
+    {
       "path": "conversation.ring.focus",
       "type": "color"
     },
