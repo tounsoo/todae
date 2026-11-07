@@ -4,6 +4,10 @@ name: Docs deploy
 # Pull requests and main get preview deployments; docs-stable, which only release.yml moves, deploys to
 # production. Without the VERCEL_TOKEN secret, and on pull requests from forks, which get no secrets, the
 # Gate job explains why and the deploy is skipped, not failed.
+#
+# The token never shares a job with the repository's code. Settings and Deploy hold it and run only the
+# Vercel CLI from npm, with no checkout. Build runs the install and the build, which run every dependency's
+# code, with no token: code there could write to $GITHUB_ENV or replace a binary for later steps of its job.
 permissions:
   contents: read
 
@@ -63,7 +67,7 @@ jobs:
             exit 0
           }
           if [ "$EVENT_NAME" = pull_request ]; then
-            # GitHub gives a fork's pull request no secrets. Building it with them would hand its code the token.
+            # GitHub gives a fork's pull request no secrets, and its code must never meet the token.
             [ "$HEAD_REPO" = "$REPOSITORY" ] || skip "Pull requests from forks get no preview. Push the branch to this repository to get one."
             # Bench record pull requests only add a JSON record, as vercel.json's ignoreCommand had it.
             case "$HEAD_REF" in
@@ -78,28 +82,62 @@ jobs:
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
 
-  deploy:
-    name: Build and deploy
+  # Reads the project's settings and production domain. Holds the token; runs no repository code.
+  settings:
+    name: Settings
     needs: gate
     if: ${{ needs.gate.outputs.enabled == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 5
     outputs:
-      url: ${{ steps.deploy.outputs.url }}
+      project: ${{ steps.pull.outputs.project }}
+      host: ${{ steps.pull.outputs.host }}
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - id: pull
+        name: Pull the project settings
+        working-directory: ${{ runner.temp }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TARGET: ${{ needs.gate.outputs.target }}
+          # The ids aren't secret (.cursor/skills/verify/SKILL.md names both), so they work as secrets or as
+          # repository variables of these names, and fall back to the ids that file names. Build reads the
+          # settings this job pulled instead, so it gets neither.
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
+        run: |
+          set -euo pipefail
+          npm install --global "vercel@$VERCEL_CLI_VERSION"
+          vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+          # Only the settings leave this job. The pulled environment file can hold tokens and stays here.
+          echo "project=$(jq -c . .vercel/project.json)" >> "$GITHUB_OUTPUT"
+          # next.config.mjs points canonical and link preview URLs at this host. If the pulled settings
+          # don't name it, the docs' production domain stands in.
+          host=$(sed -n 's/^VERCEL_PROJECT_PRODUCTION_URL="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' ".vercel/.env.$TARGET.local" 2>/dev/null | head -n 1)
+          if ! [[ $host =~ ^[a-z0-9.-]+$ ]]; then
+            echo "::notice::The pulled settings name no production domain, so the build uses todae.omsoo.design."
+            host=todae.omsoo.design
+          fi
+          echo "host=$host" >> "$GITHUB_OUTPUT"
+
+  # Runs the install and the build, with no token.
+  build:
+    name: Build
+    needs: [gate, settings]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     env:
-      # The ids aren't secret (.cursor/skills/verify/SKILL.md names both), so they work as secrets or as
-      # repository variables of these names, and fall back to the ids that file names.
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
       TARGET: ${{ needs.gate.outputs.target }}
+      HOST: ${{ needs.settings.outputs.host }}
+      VERCEL_PROJECT_PRODUCTION_URL: ${{ needs.settings.outputs.host }}
+    steps:
       # The pull request's head, not the merge commit checkout picks by default, so the deployment's
       # githubCommitSha is the head the verify skills compare it with.
-      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-      BRANCH: ${{ github.head_ref || github.ref_name }}
-    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.SHA }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: ./.github/actions/setup
 
@@ -113,39 +151,37 @@ jobs:
           path: apps/docs/.next/cache
           key: docs-next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install the Vercel CLI
-        run: npm install --global "vercel@$VERCEL_CLI_VERSION"
-
-      # The token is in this step's and the deploy step's environment only, never in the build's.
-      - name: Pull the project settings
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
-
+      # --standalone copies every file a function reads into the output, so Deploy needs no checkout.
       - name: Build
+        env:
+          PROJECT: ${{ needs.settings.outputs.project }}
         run: |
           set -euo pipefail
-          # next.config.mjs points canonical and link preview URLs at this host. Vercel sets it on its own
-          # builders; if the pulled settings leave it out, use the docs' production domain.
-          env_file=".vercel/.env.$TARGET.local"
-          if ! grep -qE '^VERCEL_PROJECT_PRODUCTION_URL="?[^"[:space:]]' "$env_file" 2>/dev/null; then
-            echo "::notice::The pulled settings have no VERCEL_PROJECT_PRODUCTION_URL, so the build uses todae.omsoo.design."
-            export VERCEL_PROJECT_PRODUCTION_URL=todae.omsoo.design
-          fi
+          npm install --global "vercel@$VERCEL_CLI_VERSION"
+          mkdir -p .vercel
+          printf '%s\n' "$PROJECT" > .vercel/project.json
           if [ "$TARGET" = production ]; then
-            vercel build --prod
+            vercel build --prod --standalone
           else
-            vercel build
+            vercel build --standalone
           fi
 
-      # Without the production host, every canonical link and link preview card would point at localhost.
+      # The host is a build-time constant that next.config.mjs inlines into the pages and the functions
+      # alike, so pages that name it show the functions do too.
       - name: Pages name the production site
         run: |
           set -euo pipefail
+          [ -d .vercel/output ] || { echo "::error::The build wrote no .vercel/output folder."; exit 1; }
+          pages=$({ grep -rl --include='*.html' "href=\"https://$HOST/" .vercel/output || true; } | wc -l)
+          if [ "$pages" -eq 0 ]; then
+            echo "::error::No page links to https://$HOST/."
+            exit 1
+          fi
           if grep -rl --include='*.html' 'http://localhost:3000' .vercel/output; then
             echo "::error::These pages link to http://localhost:3000, so the build had no production host."
             exit 1
           fi
+          echo "$pages pages link to https://$HOST/."
 
       - name: Save the Next build cache
         if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.next-cache.outputs.cache-hit != 'true' }}
@@ -155,12 +191,70 @@ jobs:
           path: apps/docs/.next/cache
           key: docs-next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
+      # One tar file keeps the output's relative symlinks and uploads faster than thousands of files.
+      - run: tar -cf "$RUNNER_TEMP/docs-output.tar" .vercel/output
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-output
+          path: ${{ runner.temp }}/docs-output.tar
+          retention-days: 1
+          if-no-files-found: error
+
+  # Uploads the built output. Holds the token; runs only the Vercel CLI, with no checkout.
+  deploy:
+    name: Deploy
+    needs: [gate, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      # The ids aren't secret (.cursor/skills/verify/SKILL.md names both), so they work as secrets or as
+      # repository variables of these names, and fall back to the ids that file names.
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
+      TARGET: ${{ needs.gate.outputs.target }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: docs-output
+          path: ${{ runner.temp }}
+      # The output came from a job that ran the repository's code. A link out of it, such as one to
+      # /proc/self/environ, would upload that file with the deployment, so only files, folders and links
+      # that stay inside it pass.
+      - name: Unpack the output
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          mkdir site
+          tar -xf docs-output.tar -C site --no-same-owner --no-same-permissions
+          [ -d site/.vercel/output ] && [ ! -L site/.vercel ] && [ ! -L site/.vercel/output ] || { echo "::error::The artifact has no .vercel/output folder."; exit 1; }
+          root=$(realpath site/.vercel/output)
+          odd=$(find site ! -type f ! -type d ! -type l | head -n 5)
+          if [ -n "$odd" ]; then
+            printf '::error::The output holds something other than files, folders and links:\n%s\n' "$odd"
+            exit 1
+          fi
+          while IFS= read -r -d '' link; do
+            target=$(realpath -m "$link")
+            case "$target" in
+              "$root"/*) ;;
+              *) echo "::error::$link points outside the output."; exit 1 ;;
+            esac
+          done < <(find site -type l -print0)
       - id: deploy
         name: Deploy the prebuilt output
+        working-directory: ${{ runner.temp }}/site
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
+          npm install --global "vercel@$VERCEL_CLI_VERSION"
           args=(deploy --prebuilt --yes --token="$VERCEL_TOKEN" --meta "githubCommitSha=$SHA" --meta "githubCommitRef=$BRANCH")
           [ "$TARGET" = production ] && args+=(--prod)
           out=$(vercel "${args[@]}")
