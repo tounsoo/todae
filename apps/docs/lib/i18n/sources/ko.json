@@ -2,7 +2,7 @@
   "alert": {
     "(top)": "335443f515bf",
     "# Alert": "fc2d26b1bff9",
-    "## Announcements": "17fcafc8beb2",
+    "## Announcements": "a2781fb3e1ab",
     "## Icons": "a8e0adf621d1",
     "## Accessible composition": "4b8c6a4ab6d2",
     "## When to use": "93f223e4afba",
@@ -215,7 +215,7 @@
   "disclosure": {
     "(top)": "3036525bad11",
     "# Disclosure": "11352d1b4588",
-    "## Accordion": "81daf0e76655",
+    "## Accordion": "1e8a05d05fc3",
     "## Icons": "90cd4835c3a3",
     "## Accessible composition": "e839ad32dbc4",
     "## When to use": "e742af5b01d9",
@@ -253,7 +253,7 @@
   },
   "errormessage": {
     "(top)": "87d2ffa541b2",
-    "# ErrorMessage": "658a3d8c21c6",
+    "# ErrorMessage": "80b7ad075964",
     "## In a Form": "237bc7fe9701",
     "## Accessible composition": "691b99f13212",
     "## When to use": "ecd653f836fe",
@@ -569,7 +569,7 @@
     "(top)": "f3777a2592e3",
     "# Nav": "03d97deeff10",
     "## Current page": "4db24a1d9192",
-    "## Branches": "c9ce14dec24c",
+    "## Branches": "e44d9b43cdac",
     "## Accessible composition": "0b3bb78c8bfa",
     "## When to use": "574a226bd17e",
     "## Props": "7bf17a447639",
@@ -613,9 +613,9 @@
   "progress": {
     "(top)": "56f36d505164",
     "# Progress and Meter": "b75d3996d231",
-    "## Progress": "65085360fbd4",
-    "## Meter": "cf48c21160d2",
-    "## Accessible composition": "c35050e7f172",
+    "## Progress": "13047e16a5e4",
+    "## Meter": "c0e9f1194e4f",
+    "## Accessible composition": "6f65a1a2d462",
     "## When to use": "84020da8cdd5",
     "## Props": "b9e792e827ad",
     "(section order)": "eb8c827884bd"
@@ -945,7 +945,7 @@
     "(top)": "3bf7683f147a",
     "# Toast": "6eb168f298fa",
     "## Toasts and modal dialogs": "fe09d74b1564",
-    "## Layouts": "75573fe700ef",
+    "## Layouts": "4168556aa1c7",
     "## Timing": "0d41a1543a4f",
     "## Keyboard and screen readers": "a035847bdda4",
     "## Icons": "cd98fd7f28ec",
@@ -979,7 +979,7 @@
     "## Category tones": "66f99d412c6c",
     "### CATEGORY_TONES": "2c1af907153b",
     "## Focus ring": "c4641c4527e8",
-    "## Motion": "1173fcfb6ee5",
+    "## Motion": "2e0e6e3272ea",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "f02d196ecc83"
@@ -994,7 +994,7 @@
   },
   "tooltip": {
     "(top)": "a7b2b64c27f9",
-    "# Tooltip": "cc3e77a9909e",
+    "# Tooltip": "003ec5ede25e",
     "## Warm-up": "7709775a8918",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",

@@ -8,7 +8,7 @@ import { Table } from '@tounsoo/todae/table';
 
 [useTooltip](/utilities/use-tooltip)이 열림 상태 머신입니다. 트리거에 `getTriggerProps`를 펼치세요. `Tooltip.Root`에 `getTooltipProps`를 펼치세요. `Tooltip.Root`는 팁 외형만 담당합니다. `children`, `className`, `style`, 그리고 인터랙티브일 때의 다이얼로그 이름입니다. `Tooltip.Trigger`나 `Tooltip.Content`는 없습니다. `Tooltip.Root`에 `interactive`를 설정하지 마세요.
 
-기본값은 텍스트만 담는 `role="tooltip"`입니다. 호버는 `tooltip.delay.show` 토큰만큼(기본 300ms) 기다립니다. Tab처럼 키로 옮긴 포커스는 즉시 엽니다. 클릭이 준 포커스나 클릭으로 닫힌 메뉴가 돌려준 포커스처럼 누른 뒤에 온 포커스는 팁을 열지 않습니다. 거친 포인터에는 호버가 없으므로, 그곳에서는 키보드 포커스만 팁을 엽니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 다음 팁의 `skipDelay` 밀리초 동안에는 그 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 그 창은 숨김 지연이 끝난 뒤에 시작합니다. 포커스는 이 창을 시작하지 않습니다.
+기본값은 텍스트만 담는 `role="tooltip"`입니다. 호버는 `tooltip.delay.show` 토큰만큼(기본 300ms) 기다립니다. Tab처럼 키로 옮긴 포커스는 즉시 엽니다. 클릭이 준 포커스나 클릭으로 닫힌 메뉴가 돌려준 포커스처럼 누른 뒤에 온 포커스는 팁을 열지 않습니다. 거친 포인터에는 호버가 없으므로, 그곳에서는 키보드 포커스만 팁을 엽니다. 호버 팁이 열려 있는 동안, 그리고 마지막 호버 팁이 닫힌 뒤 다음 팁의 `skipDelay` 밀리초 동안에는 그 다음 호버 팁이 바로 열립니다. `skipDelay`의 기본값은 300입니다. 그 창은 숨김 지연이 끝난 뒤에 시작합니다. 포커스는 이 창을 시작하지 않습니다. 지연이 끝난 뒤에 열린 팁, 포커스로 열린 팁, 주인이 연 팁은 `tooltip.motion.duration.enter` 동안 서서히 나타납니다. 그 창 안에서 바로 열린 팁은 페이드 없이 나타나므로 툴바를 훑어도 늦어지지 않고, 모든 팁은 바로 닫힙니다. 움직이는 것이 없으므로 모션 줄이기 설정에서도 페이드는 그대로입니다.
 
 [useTooltip](/utilities/use-tooltip)에 `interactive: true`를 넘기세요. 표면은 비모달 팁 다이얼로그가 됩니다. `popover="manual"`과 `role="dialog"`를 씁니다. React Aria의 PreviewTrigger와 Popover도 모달이 아닌 호버 팁에 `role="dialog"`를 강제합니다. `role="tooltip"`은 절대 쓰지 않습니다. `Tooltip.Root`에 `aria-label`이나 `aria-labelledby` 중 정확히 하나를 설정하세요. 링크를 넣을 수 있습니다. Tab은 그 링크로 이동합니다. 호버는 패널로 넘어갈 수 있습니다. Escape는 포커스를 트리거로 돌려보내며, 키를 뗄 때까지 다시 열지 않습니다. 포커스 트랩은 없습니다.
 

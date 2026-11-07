@@ -5849,6 +5849,34 @@
       "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
     },
     {
+      "path": "field.error.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-field-error-motion-duration-enter",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.error.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-field-error-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages."
+    },
+    {
       "path": "field.fg.adornment",
       "type": "color",
       "cssVar": "--todae-field-fg-adornment",
@@ -7543,6 +7571,34 @@
       "description": "How long a centered window takes to leave."
     },
     {
+      "path": "control.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-control-motion-duration",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a control's hover colors take to fade in and out."
+    },
+    {
+      "path": "control.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-control-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The curve of a control's hover fade."
+    },
+    {
       "path": "overlay.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-overlay-motion-easing-enter",
@@ -8570,6 +8626,34 @@
       "cssVar": "--todae-tooltip-max-width",
       "cssValue": "16rem",
       "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
+      "path": "tooltip.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-motion-duration-enter",
+      "cssValue": "var(--todae-motion-popup-duration-enter)",
+      "ref": "motion.popup.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
+      "path": "tooltip.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tooltip-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -10012,6 +10096,34 @@
       "cssVar": "--todae-alert-leading",
       "cssValue": "var(--todae-font-leading-default)",
       "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
+    },
+    {
+      "path": "alert.motion.duration.enter",
+      "type": "duration",
+      "cssVar": "--todae-alert-motion-duration-enter",
+      "cssValue": "var(--todae-motion-reveal-duration-enter)",
+      "ref": "motion.reveal.duration.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors."
+    },
+    {
+      "path": "alert.motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-alert-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {
@@ -11958,6 +12070,34 @@
       "cssVar": "--todae-progress-motion-duration",
       "cssValue": "1200ms",
       "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Progress.Root: a determinate or indeterminate progress bar."
+    },
+    {
+      "path": "progress.motion.fill.duration",
+      "type": "duration",
+      "cssVar": "--todae-progress-motion-fill-duration",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "Progress.Root: a determinate or indeterminate progress bar."
+    },
+    {
+      "path": "progress.motion.fill.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-progress-motion-fill-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
       "layer": "contract",
       "context": null,
       "entry": {

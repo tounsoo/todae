@@ -20,6 +20,14 @@
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       }
     },
+    "motion": {
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+      }
+    },
     "info": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/status/info/fg/$value" } },
       "bg": { "$type": "color", "$value": { "$ref": "#/color/status/info/bg/$value" } },

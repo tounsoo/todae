@@ -93,6 +93,43 @@
     transition-timing-function: var(--todae-toast-motion-easing-exit);
   }
 
+  /* In a list, a toast that leaves also gives back its height and the gap
+     after it, so the toasts behind it slide into place by layout. It clips
+     along the block axis as it shrinks. Where the engine can size from auto
+     (Chrome); elsewhere, and under reduced motion, the others move once it is
+     gone. */
+  @supports (block-size: calc-size(auto, size)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .region[data-layout='list'] .item {
+        block-size: calc-size(auto, size);
+        transition:
+          opacity var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          inset-block-start var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          block-size var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          margin-block-end var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter),
+          margin-block-start var(--todae-toast-motion-duration-enter) var(--todae-toast-motion-easing-enter);
+      }
+
+      /* The gap it gives back is the one on the side away from the edge, so
+         it shrinks toward the edge it sits by. The zero minimum only guards
+         against a flex item's automatic minimum holding it at its content. */
+      .region[data-layout='list'] .item[data-todae-exiting] {
+        block-size: 0;
+        min-block-size: 0;
+        margin-block-end: calc(-1 * var(--todae-toast-stack-gap));
+        /* Physical, as Chrome has no overflow-block. */
+        overflow-y: clip;
+        transition-duration: var(--todae-toast-motion-duration-exit);
+        transition-timing-function: var(--todae-toast-motion-easing-exit);
+      }
+
+      .region[data-layout='list'][data-placement^='bottom'] .item[data-todae-exiting] {
+        margin-block-end: 0;
+        margin-block-start: calc(-1 * var(--todae-toast-stack-gap));
+      }
+    }
+  }
+
   /* Stack: every toast in one grid cell, the newest in front and the rest
      peeking out behind it by toast.peek a step, each a little narrower than
      the one in front, until hovered or focused. */
