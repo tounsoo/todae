@@ -1,11 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { page, server, userEvent } from '@vitest/browser/context';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Alert } from '../components/Alert.js';
 import { ErrorMessage } from '../components/ErrorMessage.js';
 import { Field } from '../components/Field.js';
 import { Form } from '../components/Form.js';
+import { Meter } from '../components/Meter.js';
+import { Progress } from '../components/Progress.js';
 import { emulateMedia } from '../test/media.js';
 
 afterEach(async () => {
@@ -40,6 +42,43 @@ async function settle(el: Element) {
   await Promise.all(el.getAnimations().map((a) => a.finished));
 }
 
+// The fill is a part inside the bar's own shadow tree, which neither getAnimations nor
+// getComputedStyle reaches, so its length is read off a screenshot of the bar.
+const fillColors = {
+  ['--_todae-progress-track' as string]: 'rgb(0, 0, 255)',
+  ['--_todae-progress-fill' as string]: 'rgb(255, 0, 0)',
+  ['--_todae-meter-fill-optimum' as string]: 'rgb(255, 0, 0)',
+  ['--_todae-progress-motion-fill-duration' as string]: '20s',
+  ['--_todae-progress-motion-fill-easing' as string]: 'linear',
+  ['--_todae-progress-height' as string]: '1rem',
+  inlineSize: '20rem',
+} satisfies CSSProperties;
+
+/** Whether the bar shows fill, rather than track, three quarters of the way along. */
+async function filledAtThreeQuarters(bar: HTMLElement): Promise<boolean> {
+  const shot = await page.screenshot({ element: bar, save: false });
+  const image = new Image();
+  image.src = `data:image/png;base64,${shot}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d')!;
+  context.drawImage(image, 0, 0);
+  const [red, , blue] = context.getImageData(Math.floor(image.naturalWidth * 0.75), Math.floor(image.naturalHeight / 2), 1, 1).data;
+  expect(Math.abs(red! - blue!), 'the pixel is the fill or the track color').toBeGreaterThan(100);
+  return red! > blue!;
+}
+
+function Bars({ value }: { value: number }) {
+  return (
+    <div data-appearance="light" data-density="comfortable" style={fillColors}>
+      <Progress.Root aria-label="Upload" max={100} value={value} />
+      <Meter.Root aria-label="Storage" min={0} max={100} value={value} />
+    </div>
+  );
+}
+
 function SaveAlert() {
   const [saved, setSaved] = useState(false);
   return (
@@ -70,6 +109,23 @@ function EmailForm() {
     </Form.Root>
   );
 }
+
+// Firefox draws the fill with no part to transition, so it jumps; motion only has to work in
+// Chrome (ARCHITECTURE "Motion"), and Safari's engine draws the bar as Chrome does.
+describe.skipIf(server.browser === 'firefox')('Progress and Meter fill motion', () => {
+  it.each(['no-preference', 'reduce'] as const)('glides the fill to a new value, motion %s', async (value) => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value }]);
+    const { rerender } = render(<Bars value={0} />);
+    await frame();
+    rerender(<Bars value={100} />);
+    await frame();
+    await frame();
+    for (const bar of [screen.getByLabelText('Upload'), screen.getByLabelText('Storage')]) {
+      // A 20s glide has barely started, so three quarters along still shows track; reduced motion jumps.
+      expect(await filledAtThreeQuarters(bar)).toBe(value === 'reduce');
+    }
+  });
+});
 
 describe('Alert and ErrorMessage motion', () => {
   it.each(['no-preference', 'reduce'] as const)(
