@@ -1726,6 +1726,14 @@
       "type": "dimension"
     },
     {
+      "path": "control.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "control.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "conversation.gap",
       "type": "dimension"
     },

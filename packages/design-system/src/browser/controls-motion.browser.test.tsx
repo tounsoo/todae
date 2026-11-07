@@ -2,7 +2,12 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { server, userEvent } from '@vitest/browser/context';
 import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { useState } from 'react';
+import { Button } from '../components/Button.js';
 import { Checkbox } from '../components/Checkbox.js';
+import { Chip } from '../components/Chip.js';
+import { Link } from '../components/Link.js';
+import { Pagination } from '../components/Pagination.js';
 import { RadioGroup } from '../components/Radio.js';
 import { Switch } from '../components/Switch.js';
 import { Tabs } from '../components/Tabs.js';
@@ -20,6 +25,8 @@ const slow = {
   ['--_todae-selection-motion-easing' as string]: 'linear',
   ['--_todae-tabs-motion-duration' as string]: '1s',
   ['--_todae-tabs-motion-easing' as string]: 'linear',
+  ['--_todae-control-motion-duration' as string]: '1s',
+  ['--_todae-control-motion-easing' as string]: 'linear',
 } satisfies CSSProperties;
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
@@ -279,5 +286,99 @@ describe('Switch, Checkbox and Radio motion', () => {
     // The dot leaving the other radio fades at full size.
     expect(runningTransitionProperties(free.nextElementSibling!)).toContain('opacity');
     expect(getComputedStyle(free.nextElementSibling!, '::after').scale).toBe('1');
+  });
+});
+
+describe('Button, Chip, Link and Pagination hover fades', () => {
+  it('fades a button to its hover colors and back, and takes keyboard focus at once', async () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary">Save</Button.Root>
+      </Themed>,
+    );
+    const button = screen.getByRole('button', { name: 'Save' });
+    // Nothing fades on the first paint. Keyboard focus below turns the
+    // secondary border to the accent, which would fade if focus did.
+    await frame();
+    expect(runningTransitionProperties(button)).toEqual([]);
+
+    await userEvent.hover(button);
+    await frame();
+    const hovering = runningTransitionProperties(button);
+    expect(hovering).toContain('background-color');
+    expect(hovering.some((property) => property.startsWith('outline'))).toBe(false);
+    await settle(button);
+
+    await userEvent.unhover(button);
+    await frame();
+    expect(runningTransitionProperties(button)).toContain('background-color');
+    await settle(button);
+
+    await userEvent.tab();
+    await frame();
+    expect(document.activeElement).toBe(button);
+    expect(runningTransitionProperties(button)).toEqual([]);
+  });
+
+  it('keeps the hover fade under reduced motion, since it moves nothing', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    render(
+      <Themed>
+        <Button.Root variant="secondary">Save</Button.Root>
+      </Themed>,
+    );
+    const button = screen.getByRole('button', { name: 'Save' });
+    await userEvent.hover(button);
+    await frame();
+    expect(runningTransitionProperties(button)).toContain('background-color');
+  });
+
+  it('fades the hover colors of a chip and a link', async () => {
+    render(
+      <Themed>
+        <Chip.Root data-testid="chip">Draft</Chip.Root>
+        <Link.Root href="#docs">Docs</Link.Root>
+      </Themed>,
+    );
+    const chip = screen.getByTestId('chip');
+    await userEvent.hover(chip);
+    await frame();
+    // A neutral chip's border darkens under the pointer.
+    expect(runningTransitionProperties(chip)).toContain('border-top-color');
+
+    const link = screen.getByRole('link', { name: 'Docs' });
+    await userEvent.hover(link);
+    await frame();
+    // A link keeps its ink and darkens its underline.
+    expect(runningTransitionProperties(link)).toContain('text-decoration-color');
+  });
+
+  it("fades a page's hover fill but gives the page you pick its fill at once", async () => {
+    function Pages() {
+      const [page, setPage] = useState(1);
+      return (
+        <Themed>
+          <Pagination.Root aria-label="Pages">
+            {[1, 2, 3].map((n) => (
+              <Pagination.Item key={n}>
+                <button type="button" aria-current={n === page ? 'page' : undefined} onClick={() => setPage(n)}>
+                  {n}
+                </button>
+              </Pagination.Item>
+            ))}
+          </Pagination.Root>
+        </Themed>
+      );
+    }
+    render(<Pages />);
+    const page = (n: number) => screen.getByRole('button', { name: String(n) });
+    await userEvent.hover(page(3));
+    await frame();
+    expect(runningTransitionProperties(page(3))).toContain('background-color');
+
+    await userEvent.click(page(2));
+    await frame();
+    expect(page(2)).toHaveAttribute('aria-current', 'page');
+    expect(runningTransitionProperties(page(2))).toEqual([]);
   });
 });

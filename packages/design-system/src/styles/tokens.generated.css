@@ -685,6 +685,8 @@
   --todae-motion-reveal-duration-exit: var(--_todae-motion-reveal-duration-exit, var(--todae-motion-duration-normal));
   --todae-motion-window-duration-enter: var(--_todae-motion-window-duration-enter, var(--todae-motion-duration-slow));
   --todae-motion-window-duration-exit: var(--_todae-motion-window-duration-exit, var(--todae-motion-duration-normal));
+  --todae-control-motion-duration: var(--_todae-control-motion-duration, var(--todae-motion-duration-fast));
+  --todae-control-motion-easing: var(--_todae-control-motion-easing, var(--todae-motion-easing-enter));
   --todae-overlay-motion-easing-enter: var(--_todae-overlay-motion-easing-enter, var(--todae-motion-easing-enter));
   --todae-overlay-motion-easing-exit: var(--_todae-overlay-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-overlay-scrim-bg: var(--_todae-overlay-scrim-bg, var(--todae-color-bg-scrim));

@@ -7543,6 +7543,34 @@
       "description": "How long a centered window takes to leave."
     },
     {
+      "path": "control.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-control-motion-duration",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How long a control's hover colors take to fade in and out."
+    },
+    {
+      "path": "control.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-control-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "The curve of a control's hover fade."
+    },
+    {
       "path": "overlay.motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-overlay-motion-easing-enter",

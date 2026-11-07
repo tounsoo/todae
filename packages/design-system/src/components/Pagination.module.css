@@ -40,6 +40,15 @@
     background: transparent;
     text-decoration: none;
     cursor: pointer;
+    /* The hover fill fades in and out; a press, focus, the page you move to
+       and a step with nowhere to go take their colors at once. */
+    transition-property: background-color, color;
+    transition-duration: var(--todae-control-motion-duration);
+    transition-timing-function: var(--todae-control-motion-easing);
+  }
+
+  .item > :is(a, button):is(:active, :focus-visible, [aria-current]:not([aria-current='false' i], [aria-current='']), [aria-disabled='true'], :disabled) {
+    transition: none;
   }
 
   .item > :is(a, button):focus-visible {
