@@ -16,7 +16,7 @@ Give the root a height, or put it in a layout that gives it one, such as a flex 
 
 ## Following the end
 
-While the reader is at the end, the viewport goes back to the end each time its content or its own size changes, so a growing message stays in view. Scrolling up stops that, and scrolling back to the end, or pressing `Conversation.ScrollButton`, starts it again. The button scrolls smoothly, or at once under reduced motion.
+While the reader is at the end, the viewport goes back to the end each time its content or its own size changes, so a growing message stays in view. Scrolling up stops that, and scrolling back to the end, or pressing `Conversation.ScrollButton`, starts it again. The button glides to the end, slowing as it nears an end that may still be moving, and lands within `conversation.motion.duration.glide` (500ms) at the same pace on any screen; under reduced motion it jumps at once.
 
 ## Motion
 
