@@ -13560,7 +13560,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "The longest Conversation.ScrollButton's glide to the end runs before it lands there. Under reduced motion it jumps."
+      "description": "How long Conversation.ScrollButton's glide to the end runs; if it hasn't arrived by then, the next frame lands it there. Under reduced motion it jumps."
     },
     {
       "path": "conversation.motion.easing.enter",

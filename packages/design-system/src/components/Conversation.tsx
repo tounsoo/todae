@@ -45,8 +45,8 @@ export type ConversationScrollButtonProps = ButtonActionProps;
 // How far from the end still counts as at the end, for fractional scroll
 // positions at some zoom levels.
 const END_SLACK = 1;
-// Default of conversation.motion.duration.glide, the longest a glide runs
-// before it lands at the end, for a viewport that can't read it.
+// Default of conversation.motion.duration.glide, how long a glide runs before
+// the next frame lands it at the end, for a viewport that can't read it.
 const GLIDE_MS = 500;
 // Marks a message added at the end until its entrance animation ends.
 const ENTERING = 'data-todae-entering';
@@ -58,7 +58,7 @@ const HISTORY = 2;
 function glideMs(viewport: HTMLElement): number {
   const ms = tokenMs(viewport, '--todae-conversation-motion-duration-glide');
   if (ms === null) {
-    warnOnce('conversation-motion-duration-glide', `Conversation: --todae-conversation-motion-duration-glide can't be read, so the scroll button's glide lands after ${GLIDE_MS}ms at most. Load Todae's stylesheet or set the token.`);
+    warnOnce('conversation-motion-duration-glide', `Conversation: --todae-conversation-motion-duration-glide can't be read, so the scroll button's glide lands after ${GLIDE_MS}ms. Load Todae's stylesheet or set the token.`);
   }
   return ms ?? GLIDE_MS;
 }
@@ -167,8 +167,8 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   }, [setAtEnd, setFollowing]);
 
   // Each frame covers a share of what is left, so it slows into an end that
-  // may still be moving away while a message grows, and it lands after
-  // conversation.motion.duration.glide at most.
+  // may still be moving away while a message grows, and the first frame after
+  // conversation.motion.duration.glide lands it.
   const scrollToEnd = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
