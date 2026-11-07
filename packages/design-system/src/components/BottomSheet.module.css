@@ -185,13 +185,13 @@
     }
   }
 
-  /* The sheet stays in place and keeps its height at once, as Dialog's panel
+  /* The sheet stays in place and changes height at once, as Dialog's panel
      stops rising; the scrim still fades. bottom keeps its transition, which
      now moves nothing, so the sheet closes when the scrim's fade ends. */
   @media (prefers-reduced-motion: reduce) {
     .sheet {
       --_closed: 0px;
-      transition-duration: 0s, var(--todae-sheet-motion-duration-enter);
+      transition: bottom var(--todae-sheet-motion-duration-enter) var(--todae-sheet-motion-easing-enter);
     }
   }
 }
