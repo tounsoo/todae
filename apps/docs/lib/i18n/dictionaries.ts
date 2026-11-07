@@ -31,7 +31,8 @@ export type Dictionary = {
   release: string;
   changelog: string;
   /** The home page's opening section. */
-  hero: Record<'eyebrow' | 'title' | 'lead' | 'start' | 'playground' | 'showcase', string>;
+  /** `description` is the home page's description in search results and link previews: `lead` runs too wide for one. */
+  hero: Record<'eyebrow' | 'title' | 'lead' | 'description' | 'start' | 'playground' | 'showcase', string>;
   /** Copy inside the live panel on the home page. Component names in `docs` stay in English. */
   homeShowcase: {
     workspace: string;
@@ -127,6 +128,7 @@ const en: Dictionary = {
     eyebrow: 'Todae (토대) means foundation',
     title: 'The foundation your design system builds on.',
     lead: 'Todae gives you accessible components, headless hooks and DTCG tokens built on native HTML. Rename, restyle and extend them into your own system without forking.',
+    description: 'Accessible components, headless hooks and DTCG tokens built on native HTML, to rename, restyle and extend into your own system without forking.',
     start: 'Get started',
     playground: 'Open the playground',
     showcase: 'Todae components, live',
@@ -228,6 +230,7 @@ const ko: Dictionary = {
     eyebrow: '디자인 시스템의 토대',
     title: '회사의 디자인 시스템을 그 위에 세우세요.',
     lead: 'Todae는 네이티브 HTML 위에 만든 접근성 있는 컴포넌트, 헤드리스 훅, DTCG 토큰을 제공합니다. 포크하지 않고도 이름을 바꾸고, 스타일을 입히고, 확장해 자신만의 시스템으로 만들 수 있습니다.',
+    description: '네이티브 HTML 위에 만든 접근성 있는 컴포넌트, 헤드리스 훅, DTCG 토큰입니다. 포크하지 않고 자신만의 시스템으로 확장할 수 있습니다.',
     start: '시작하기',
     playground: '플레이그라운드 열기',
     showcase: '실제로 동작하는 Todae 컴포넌트',

@@ -186,7 +186,7 @@ jobs:
             echo "::error::No page links to https://$HOST/."
             exit 1
           fi
-          if grep -rl --include='*.html' --include='*.xml' --include='*.txt' 'http://localhost:3000' .vercel/output; then
+          if grep -rl --include='*.html' --include='*.xml' --include='*.txt' --include='*.body' 'http://localhost:3000' .vercel/output; then
             echo "::error::These files link to http://localhost:3000, so the build had no production host."
             exit 1
           fi

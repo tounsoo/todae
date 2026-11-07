@@ -5,8 +5,8 @@ import { pagePath } from '../lib/i18n/metadata';
 import { isTranslated } from '../lib/i18n/pages';
 import { DOCS_ORIGIN } from '../lib/origin';
 
-/** The full URL of a page in `locale`, as its canonical link names it. */
-const url = (locale: Locale, slug: string) => DOCS_ORIGIN + pagePath(locale, slug);
+/** The full URL of a page in `locale`, as its canonical link names it: the home page's has no trailing slash. */
+const url = (locale: Locale, slug: string) => DOCS_ORIGIN + pagePath(locale, slug).replace(/^\/$/, '');
 
 /**
  * Every page, once per language that has it, with its other languages as

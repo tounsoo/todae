@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DOCS_ORIGIN } from '../origin';
+import { DESCRIPTION_LIMIT, DESCRIPTION_MIN, descriptionWidth } from '../pageSummary.mjs';
 import { localizePath, type Locale } from './config';
 import { DICTIONARIES } from './dictionaries';
 
@@ -42,7 +43,7 @@ function social({ locale, slug, title, description }: Social, url?: string): Pic
 
 /** Metadata every page in `locale` shares. Each locale's root layout exports it, and pages without their own fall back to it. */
 export function localeMetadata(locale: Locale): Metadata {
-  const description = DICTIONARIES[locale].hero.lead;
+  const description = DICTIONARIES[locale].hero.description;
   const { openGraph, twitter } = social({ locale, slug: '', title: SITE_NAME, description });
   // No url or canonical here: this also covers the 404 page, which is no page's canonical.
   return {
@@ -69,6 +70,10 @@ export function localeMetadata(locale: Locale): Metadata {
  * without the locale prefix or leading slash, empty for the home page.
  */
 export function pageMetadata({ locale, slug, title, description }: Social): Metadata {
+  const width = descriptionWidth(description);
+  if (width < DESCRIPTION_MIN || width > DESCRIPTION_LIMIT) {
+    throw new Error(`The ${locale} page "${slug}" has a description ${width} wide; search results need ${DESCRIPTION_MIN} to ${DESCRIPTION_LIMIT}.`);
+  }
   const fullTitle = slug ? `${title} · ${SITE_NAME}` : title;
   return {
     title: { absolute: fullTitle },

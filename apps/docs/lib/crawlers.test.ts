@@ -19,7 +19,7 @@ describe('sitemap.xml', () => {
     const fallbacks = untranslatedSlugs('ko');
     const slugs = Object.keys(ENGLISH_PAGES);
     const expected = [
-      `${DOCS_ORIGIN}/`,
+      DOCS_ORIGIN,
       `${DOCS_ORIGIN}/ko`,
       ...slugs.map((slug) => `${DOCS_ORIGIN}/${slug}`),
       ...slugs.filter((slug) => !fallbacks.includes(slug)).map((slug) => `${DOCS_ORIGIN}/ko/${slug}`),
@@ -27,13 +27,13 @@ describe('sitemap.xml', () => {
     expect([...urls].sort()).toEqual(expected.sort());
   });
 
-  it('pairs a translated page with its other language, as its hreflang links do', () => {
+  it('pairs a translated page with its other language, as its hreflang links do, at its canonical URL', () => {
     const button = entries.find((entry) => entry.url === `${DOCS_ORIGIN}/ko/button`);
     expect(button?.alternates?.languages).toEqual({
       en: `${DOCS_ORIGIN}/button`,
       ko: `${DOCS_ORIGIN}/ko/button`,
       'x-default': `${DOCS_ORIGIN}/button`,
     });
-    expect(entries.find((entry) => entry.url === `${DOCS_ORIGIN}/`)?.alternates?.languages?.ko).toBe(`${DOCS_ORIGIN}/ko`);
+    expect(entries.find((entry) => entry.url === DOCS_ORIGIN)?.alternates?.languages?.ko).toBe(`${DOCS_ORIGIN}/ko`);
   });
 });

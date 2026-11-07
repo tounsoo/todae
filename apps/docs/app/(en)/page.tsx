@@ -6,7 +6,7 @@ export const metadata = pageMetadata({
   locale: 'en',
   slug: '',
   title: SITE_NAME,
-  description: DICTIONARIES.en.hero.lead,
+  description: DICTIONARIES.en.hero.description,
 });
 
 export default function HomePage() {

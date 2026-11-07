@@ -11,7 +11,7 @@ export const DESCRIPTION_LIMIT = 160;
 export const DESCRIPTION_MIN = 50;
 
 // Hangul, CJK and full-width forms draw about twice as wide as a Latin letter.
-const WIDE = /[ᄀ-ᇿ⺀-〿㄰-㆏㐀-鿿가-힯豈-﫿＀-｠￠-￦]/u;
+const WIDE = /[ᄀ-ᇿ⺀-鿿가-힯豈-﫿＀-｠￠-￦]/u;
 
 /** How wide `text` draws, counting a wide character as two Latin letters. */
 export function descriptionWidth(text) {
@@ -23,19 +23,31 @@ export function descriptionWidth(text) {
 /** A node's text as a reader sees it: code keeps its text, markup and JSX attributes drop out. */
 function plainText(node) {
   if (node.type === 'text' || node.type === 'inlineCode') return node.value;
+  if (node.type === 'break') return ' ';
+  // `{' '}` and other string literals in MDX text are text too.
+  if (node.type === 'mdxTextExpression') return /^\s*(['"])((?:\\.|(?!\1)[^\\])*)\1\s*$/s.exec(node.value)?.[2].replace(/\\(.)/g, '$1') ?? '';
   return (node.children ?? []).map(plainText).join('');
 }
 
+// A period after one of these ends an abbreviation, not a sentence.
+// The last sentence ends in . ! or ? (or their CJK forms), perhaps inside a closing quote or bracket.
+const SENTENCE_END = /[.!?。！？]["'”’)\]」』]*$/;
+
+const ABBREVIATION = /\b(?:e\.g|i\.e|vs|etc|cf|approx)$/i;
+
 /**
  * The paragraph's opening sentences, as many whole ones as fit in `limit`.
- * Empty when even the first sentence does not fit: a description never stops mid-sentence.
+ * Empty when even the first sentence does not fit: a description never stops
+ * mid-sentence. A paragraph that ends in anything else, such as a colon
+ * leading into a list, loses that unfinished part too.
  */
 export function summarize(text, limit = DESCRIPTION_LIMIT) {
   const flat = text.replace(/\s+/g, ' ').trim();
-  if (descriptionWidth(flat) <= limit) return flat;
+  if (descriptionWidth(flat) <= limit && SENTENCE_END.test(flat)) return flat;
   let fits = '';
-  for (const end of flat.matchAll(/[.!?](?= )/g)) {
-    const head = flat.slice(0, end.index + 1);
+  for (const end of flat.matchAll(/[.!?]["'”’)\]」』]*(?= )|[。！？]["'”’)\]」』]*/g)) {
+    const head = flat.slice(0, end.index + end[0].length).trimEnd();
+    if (ABBREVIATION.test(head.replace(/[.!?]["'”’)\]」』]*$/, ''))) continue;
     if (descriptionWidth(head) > limit) break;
     fits = head;
   }

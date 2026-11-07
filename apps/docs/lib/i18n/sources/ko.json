@@ -818,7 +818,7 @@
     "(section order)": "c83469f63441"
   },
   "recipes/suggestions": {
-    "(top)": "1caf7f51fa4b",
+    "(top)": "e5fb246a2346",
     "# Suggestions": "512827f3ead4",
     "## Suggested prompts": "18a738f51298",
     "## Versions of a reply": "201d818cbf71",
@@ -886,7 +886,7 @@
     "(section order)": "6d27abd98db6"
   },
   "stack": {
-    "(top)": "ee5946de009d",
+    "(top)": "f69457bae46b",
     "# Stack": "def423f89717",
     "## Gap": "60f023baac11",
     "## Alignment and wrapping": "1f421acff61f",
