@@ -30,7 +30,8 @@ on:
   # Redeploys a branch by hand. Run on docs-stable, it deploys production.
   workflow_dispatch:
 
-# A new push to a pull request cancels its older deploy; main and docs-stable deploys always finish.
+# A new push to a pull request cancels its older deploy. On main and docs-stable a running deploy finishes, and
+# GitHub drops a waiting one when a newer one queues, so the newest commit always deploys.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -90,12 +91,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
-      project: ${{ steps.pull.outputs.project }}
+      settings: ${{ steps.pull.outputs.settings }}
       host: ${{ steps.pull.outputs.host }}
     steps:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+      # In its own step, without the token, and with no install scripts: npm resolves the CLI's dependencies
+      # without a lockfile, so their scripts mustn't run where the token is.
+      - name: Install the Vercel CLI
+        run: npm install --global --ignore-scripts "vercel@$VERCEL_CLI_VERSION"
       - id: pull
         name: Pull the project settings
         working-directory: ${{ runner.temp }}
@@ -103,19 +108,19 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           TARGET: ${{ needs.gate.outputs.target }}
           # The ids aren't secret (.cursor/skills/verify/SKILL.md names both), so they work as secrets or as
-          # repository variables of these names, and fall back to the ids that file names. Build reads the
-          # settings this job pulled instead, so it gets neither.
+          # repository variables of these names, and fall back to the ids that file names.
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
         run: |
           set -euo pipefail
-          npm install --global "vercel@$VERCEL_CLI_VERSION"
           vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
-          # Only the settings leave this job. The pulled environment file can hold tokens and stays here.
-          echo "project=$(jq -c . .vercel/project.json)" >> "$GITHUB_OUTPUT"
+          # Only the settings leave this job. The pulled environment file can hold tokens and stays here. The
+          # ids stay too: GitHub drops a job output that holds a secret's value, so ids set as secrets would
+          # blank it.
+          echo "settings=$(jq -c .settings .vercel/project.json)" >> "$GITHUB_OUTPUT"
           # next.config.mjs points canonical and link preview URLs at this host. If the pulled settings
           # don't name it, the docs' production domain stands in.
-          host=$(sed -n 's/^VERCEL_PROJECT_PRODUCTION_URL="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' ".vercel/.env.$TARGET.local" 2>/dev/null | head -n 1)
+          host=$({ sed -n 's/^VERCEL_PROJECT_PRODUCTION_URL="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' ".vercel/.env.$TARGET.local" 2>/dev/null || true; } | head -n 1)
           if ! [[ $host =~ ^[a-z0-9.-]+$ ]]; then
             echo "::notice::The pulled settings name no production domain, so the build uses todae.omsoo.design."
             host=todae.omsoo.design
@@ -154,12 +159,16 @@ jobs:
       # --standalone copies every file a function reads into the output, so Deploy needs no checkout.
       - name: Build
         env:
-          PROJECT: ${{ needs.settings.outputs.project }}
+          SETTINGS: ${{ needs.settings.outputs.settings }}
+          # The build only names the project. Deploy sends the ids that count.
+          ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_8iiNJ83cVoixqY1F3xzd566X' }}
+          PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_EUJCIhRJSkC2BYTOnw5Blfu153Zm' }}
         run: |
           set -euo pipefail
           npm install --global "vercel@$VERCEL_CLI_VERSION"
           mkdir -p .vercel
-          printf '%s\n' "$PROJECT" > .vercel/project.json
+          jq -n --arg org "$ORG_ID" --arg project "$PROJECT_ID" --argjson settings "$SETTINGS" \
+            '{projectId: $project, orgId: $org, settings: $settings}' > .vercel/project.json
           if [ "$TARGET" = production ]; then
             vercel build --prod --standalone
           else
@@ -234,6 +243,10 @@ jobs:
           mkdir site
           tar -xf docs-output.tar -C site --no-same-owner --no-same-permissions
           [ -d site/.vercel/output ] && [ ! -L site/.vercel ] && [ ! -L site/.vercel/output ] || { echo "::error::The artifact has no .vercel/output folder."; exit 1; }
+          # Deploy runs the CLI in site, so nothing but the output may sit there for it to read.
+          if [ "$(ls -A site)" != .vercel ] || [ "$(ls -A site/.vercel)" != output ]; then
+            echo "::error::The artifact holds more than .vercel/output."; exit 1
+          fi
           root=$(realpath site/.vercel/output)
           odd=$(find site ! -type f ! -type d ! -type l | head -n 5)
           if [ -n "$odd" ]; then
@@ -247,6 +260,8 @@ jobs:
               *) echo "::error::$link points outside the output."; exit 1 ;;
             esac
           done < <(find site -type l -print0)
+      - name: Install the Vercel CLI
+        run: npm install --global --ignore-scripts "vercel@$VERCEL_CLI_VERSION"
       - id: deploy
         name: Deploy the prebuilt output
         working-directory: ${{ runner.temp }}/site
@@ -254,7 +269,6 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
-          npm install --global "vercel@$VERCEL_CLI_VERSION"
           args=(deploy --prebuilt --yes --token="$VERCEL_TOKEN" --meta "githubCommitSha=$SHA" --meta "githubCommitRef=$BRANCH")
           [ "$TARGET" = production ] && args+=(--prod)
           out=$(vercel "${args[@]}")

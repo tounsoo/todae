@@ -182,7 +182,7 @@ npm deprecate @tounsoo/todae@0.0.0-stage "Placeholder for staged publishing. Do 
 
 ## Deploy the docs
 
-GitHub Actions builds the docs and Vercel only hosts them. `.github/workflows/docs-deploy.yml` runs `vercel pull`, `vercel build` and `vercel deploy --prebuilt`, so Vercel receives the finished output, MCP server and link preview functions included, and spends no build minutes. The repository is public, so the runner minutes are free. [0012](docs/decisions/0012-docs-build-in-github.md) records why.
+GitHub Actions builds the docs and Vercel only hosts them. `.github/workflows/docs-deploy.yml` runs `vercel pull`, `vercel build` and `vercel deploy --prebuilt`, so Vercel receives the finished output, MCP server and link preview functions included, and spends no build minutes. The token never shares a job with the repository's code: one job pulls the project settings, a job without the token installs and builds, and a third deploys the output that job uploaded. The repository is public, so the runner minutes are free. [0012](docs/decisions/0012-docs-build-in-github.md) records why.
 
 - **Pull requests** get a preview deployment, drafts included, and one comment that the workflow edits on each push. A markdown-only change gets none, by the same paths as CI. Pull requests from forks get none either, since GitHub gives them no secrets: to preview one, push its branch to this repository. `bench-record/` branches get none, since they only add a record.
 - **`main`** gets a preview deployment on every push.
