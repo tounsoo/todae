@@ -1112,6 +1112,10 @@
   --todae-mention-radius: var(--_todae-mention-radius, var(--todae-radius-sm));
   --todae-mention-ring-focus: var(--_todae-mention-ring-focus, var(--todae-focus-ring));
   --todae-conversation-gap: var(--_todae-conversation-gap, var(--todae-space-stack-gap-spacious));
+  --todae-conversation-motion-duration-enter: var(--_todae-conversation-motion-duration-enter, var(--todae-motion-reveal-duration-enter));
+  --todae-conversation-motion-duration-exit: var(--_todae-conversation-motion-duration-exit, var(--todae-motion-reveal-duration-exit));
+  --todae-conversation-motion-easing-enter: var(--_todae-conversation-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-conversation-motion-easing-exit: var(--_todae-conversation-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-conversation-ring-focus: var(--_todae-conversation-ring-focus, var(--todae-focus-ring));
   --todae-conversation-scroll-button-inset: var(--_todae-conversation-scroll-button-inset, var(--todae-space-stack-gap));
   --todae-attachment-bg: var(--_todae-attachment-bg, var(--todae-color-bg-surface));
