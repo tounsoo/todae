@@ -113,7 +113,7 @@ const tones: readonly CategoryTone[] = CATEGORY_TONES;
 
 ## 모션
 
-열리고 닫힐 때 움직이는 컴포넌트에는 자기 모션 토큰이 있습니다. `dialog.motion.duration.enter`처럼 `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter`, `motion.easing.exit`이며, Tooltip처럼 나타날 때만 페이드하는 컴포넌트에는 들어올 때의 쌍만 있습니다. 얼마나 움직이는지도 시간 옆에 있는 토큰이며, `popover.motion.scale`, `dialog.motion.offset`, `toast.motion.offset`이 그 예입니다. Menu와 필드 피커가 Popover 위에 그려지듯, 다른 컴포넌트 위에 그려지는 부분은 그 컴포넌트의 토큰대로 움직입니다. 모든 `motion.easing.enter`는 자리를 잡으며 느려지는 코어 `motion.easing.enter`(`cubic-bezier(0.2, 0.8, 0.2, 1)`)를 가리키고, 모든 `motion.easing.exit`는 떠나며 빨라지는 코어 `motion.easing.exit`(`cubic-bezier(0.4, 0, 1, 1)`)를 가리킵니다. 코어 곡선을 바꾸면 모든 컴포넌트의 곡선이 바뀌고, 컴포넌트 하나의 곡선 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 나가는 시간은 들어오는 시간과 같거나 더 짧습니다.
+열리고 닫힐 때 움직이는 컴포넌트에는 자기 모션 토큰이 있습니다. `dialog.motion.duration.enter`처럼 `motion.duration.enter`, `motion.duration.exit`, `motion.easing.enter`, `motion.easing.exit`이며, Tooltip처럼 나타날 때만 페이드하는 컴포넌트에는 들어올 때의 쌍만 있습니다. 얼마나 움직이는지도 시간 옆에 있는 토큰이며, `popover.motion.scale`, `dialog.motion.offset`, `toast.motion.offset`이 그 예입니다. 다른 컴포넌트 위에 그려지는 부분은 Menu와 필드 피커가 Popover의 토큰대로 움직이듯 그 컴포넌트의 토큰대로 움직이며, 자기 모션 토큰이 있으면 그 토큰을 따릅니다. Coachmark의 팝업은 Popover 표면이지만 어두운 페이지와 함께 `coachmark.motion`으로 움직입니다. 모든 `motion.easing.enter`는 자리를 잡으며 느려지는 코어 `motion.easing.enter`(`cubic-bezier(0.2, 0.8, 0.2, 1)`)를 가리키고, 모든 `motion.easing.exit`는 떠나며 빨라지는 코어 `motion.easing.exit`(`cubic-bezier(0.4, 0, 1, 1)`)를 가리킵니다. 코어 곡선을 바꾸면 모든 컴포넌트의 곡선이 바뀌고, 컴포넌트 하나의 곡선 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 나가는 시간은 들어오는 시간과 같거나 더 짧습니다.
 
 각 컴포넌트의 들어오고 나가는 시간은 모션 역할을 가리키고, 모션 역할은 코어 `motion.duration` 단계를 가리킵니다. 역할의 `duration.enter`나 `duration.exit`를 바꾸면 그 역할의 모든 컴포넌트 타이밍이 바뀌고, 컴포넌트 하나의 토큰을 바꾸면 그 컴포넌트만 바뀝니다. 아래 카탈로그에서 각 컴포넌트의 토큰이 어느 역할을 가리키는지, 각 역할이 얼마나 걸리는지 볼 수 있습니다.
 
