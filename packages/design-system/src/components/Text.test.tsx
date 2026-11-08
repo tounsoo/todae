@@ -343,6 +343,39 @@ describe('Text from the main entry', () => {
     vi.useRealTimers();
   });
 
+  it('opens no tip when a tap focuses editable text, which shows the ring for any focus, and one when keys do', () => {
+    vi.useFakeTimers();
+    render(
+      <>
+        <ClientText.Root lines={1} contentEditable suppressContentEditableWarning data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+        <button type="button" data-testid="away">
+          Away
+        </button>
+      </>,
+    );
+    const el = screen.getByTestId('t');
+    size(el, 120);
+    fireEvent.pointerDown(el, { pointerType: 'touch' });
+    act(() => {
+      el.focus();
+    });
+    expect(el.matches(':focus-visible')).toBe(true);
+    advance(300);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    act(() => {
+      screen.getByTestId('away').focus();
+    });
+    fireEvent.keyDown(document.body, { key: 'Tab', shiftKey: true });
+    act(() => {
+      el.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    vi.useRealTimers();
+  });
+
   it('builds no observer for any clamped text on the page', () => {
     const made = vi.fn();
     vi.stubGlobal(
