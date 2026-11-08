@@ -66,9 +66,9 @@ A client that supports Streamable HTTP takes the URL as it is. A client that onl
 
 Components:
 
-- `list_components`: every component, part, hook and helper, with its description and docs page.
+- `list_components`: every component, part, hook and helper, with its description, parts and docs page, and `hasWhenToUse`, whether its page has "When to use" copy for it.
 - `get_component`: one component or part, with its props and parts.
-- `when_to_use`: the "When to use" section of a component's docs page. A page without one returns `status: "missing"`; the server doesn't write the copy itself.
+- `when_to_use`: the "When to use" and "When not to use" sections of a component's docs page, as `whenToUse` and `whenNotToUse`. `scope: "page"` marks copy that is the whole page's section, not the part's own. A page without the copy returns `status: "missing"` with a `note`, and a name with no docs page returns `status: "no-docs-page"`; the server doesn't write the copy itself.
 - `get_docs_page`: a docs page's source, with each live example's code above it, by the name of a component, part or hook it documents, such as `useTooltip`, or by its slug or `docsUrl`. The examples show how Todae's parts and hooks fit together, which the props alone don't.
 
 Recipes:

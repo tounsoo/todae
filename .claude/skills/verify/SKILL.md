@@ -94,7 +94,7 @@ Previews ask for Vercel SSO. When `VERCEL_AUTOMATION_BYPASS_SECRET` or `VERCEL_O
 - `<nn>-<step>.log` holds each step's full output.
 - `.verify/evidence/latest-claude` names the newest stamp.
 
-`.verify/` is ignored by git. Do not commit it, and do not commit a PNG outside `apps/docs/visual/baselines`.
+`.verify/` is ignored by git. Do not commit it, and do not commit a PNG anywhere: the Forbidden paths job fails any added or edited PNG.
 
 `body` turns the newest report into the lines under the pull request's Verification heading: the tested commit, the base the plan diffed against, the verdict, and each command with its result. It refuses when HEAD has moved since the run, so a pushed fix always gets a new run. Paste its output into the body that `.github/pull_request_template.md` lays out. Steps that ended `BLOCKED`, and any proof the helper can't give, such as the CI run link, go under Unverified checks.
 
