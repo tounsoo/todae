@@ -4,12 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { createElement, StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { resetInputModality } from '../internal/inputModality.js';
 import { Text as ClientText } from './Text.client.js';
 import { Text, type TextAs, type TextRootProps } from './Text.js';
 import styles from './Text.module.css';
 
 afterEach(() => {
   cleanup();
+  resetInputModality();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -340,6 +342,59 @@ describe('Text from the main entry', () => {
     });
     advance(300);
     expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('opens no tip when a tap focuses editable text, which shows the ring for any focus, and one when keys do', () => {
+    vi.useFakeTimers();
+    render(
+      <>
+        <ClientText.Root lines={1} contentEditable suppressContentEditableWarning data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+        <button type="button" data-testid="away">
+          Away
+        </button>
+      </>,
+    );
+    const el = screen.getByTestId('t');
+    size(el, 120);
+    fireEvent.pointerDown(el, { pointerType: 'touch' });
+    act(() => {
+      el.focus();
+    });
+    expect(el.matches(':focus-visible')).toBe(true);
+    advance(300);
+    expect(el.hasAttribute('data-todae-cut')).toBe(false);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    act(() => {
+      screen.getByTestId('away').focus();
+    });
+    fireEvent.keyDown(document.body, { key: 'Tab', shiftKey: true });
+    act(() => {
+      el.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
+    vi.useRealTimers();
+  });
+
+  it('tips a row that a shortcut focuses after a press, since only editable text rings for a press', () => {
+    vi.useFakeTimers();
+    render(
+      <div tabIndex={0} data-testid="row">
+        <ClientText.Root lines={1} data-testid="t">
+          Quarterly revenue report
+        </ClientText.Root>
+      </div>,
+    );
+    size(screen.getByTestId('t'), 120);
+    const row = screen.getByTestId('row');
+    fireEvent.pointerDown(document.body);
+    fireEvent.keyDown(document.body, { key: 'k', ctrlKey: true });
+    act(() => {
+      row.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Quarterly revenue report');
     vi.useRealTimers();
   });
 
