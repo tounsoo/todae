@@ -548,7 +548,15 @@ describe('get_docs_page', () => {
     });
     expect(page.markdown).toMatch(/```tsx\n[^`]*getTriggerProps[^`]*```\n\n<Example of=\{TooltipTime\} \/>/);
     expect(page.markdown).not.toMatch(/\]\(\//);
-    for (const query of ['utilities/use-tooltip', '/utilities/use-tooltip', `${DOCS_ORIGIN}/utilities/use-tooltip`, 'usetooltip']) {
+    for (const query of [
+      'utilities/use-tooltip',
+      'Utilities/Use-Tooltip',
+      '/utilities/use-tooltip/',
+      `${DOCS_ORIGIN}/utilities/use-tooltip`,
+      `${DOCS_ORIGIN}/utilities/use-tooltip#examples`,
+      `${DOCS_ORIGIN}/utilities/use-tooltip?x=1`,
+      'usetooltip',
+    ]) {
       expect(getDocsPage(query)).toEqual(page);
     }
     expect(getDocsPage('Tooltip.Root').slug).toBe('tooltip');
@@ -560,6 +568,20 @@ describe('get_docs_page', () => {
     for (const row of listComponents().components) {
       if (row.docsUrl) expect(getDocsPage(row.name).docsUrl).toBe(row.docsUrl);
     }
+  });
+
+  it('opens every docs link in a page it returns', () => {
+    const link = new RegExp(`\\]\\(${DOCS_ORIGIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/[^)\\s]*)\\)`, 'g');
+    let opened = 0;
+    for (const page of listPages()) {
+      for (const [, path] of getDocsPage(page.slug).markdown.matchAll(link)) {
+        // Pages with no MDX, such as the playground, are not docs pages the tool reads.
+        if (['/', '/playground'].includes(path!.replace(/[?#].*$/, ''))) continue;
+        expect(() => getDocsPage(`${DOCS_ORIGIN}${path}`), `${path} on ${page.slug}`).not.toThrow();
+        opened += 1;
+      }
+    }
+    expect(opened).toBeGreaterThan(100);
   });
 
   it('finds the same page for a query that is both a slug and a name', () => {

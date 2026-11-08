@@ -103,10 +103,13 @@ function pageNamed(name: string): PageDoc | null {
   return pageFor(resolved.kind === 'namespace' ? resolved.name : resolved.component.name);
 }
 
-/** The slug in a page's docsUrl or its path, so a link from another tool finds its page. */
+/** The slug in a docs link or path, so a link from another tool's output, anchor and all, finds its page. Slugs are lowercase. */
 function slugOf(query: string): string {
   const path = query.startsWith(`${DOCS_ORIGIN}/`) ? query.slice(DOCS_ORIGIN.length) : query;
-  return path.startsWith('/') ? path.slice(1) : path;
+  return path
+    .replace(/[?#].*$/s, '')
+    .replace(/^\/+|\/+$/g, '')
+    .toLowerCase();
 }
 
 /**
