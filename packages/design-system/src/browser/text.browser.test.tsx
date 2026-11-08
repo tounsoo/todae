@@ -418,6 +418,30 @@ describe('Text.Root lines', () => {
     expect(openTip()).toBeNull();
   });
 
+  it('shows no tip when a click focuses editable text, though the ring shows, and one when keys focus it', async () => {
+    render(
+      <div style={{ inlineSize: '12rem', paddingBlockStart: '4rem' }}>
+        <Text.Root lines={1} contentEditable suppressContentEditableWarning data-testid="cut">
+          {LONG}
+        </Text.Root>
+        <button type="button" data-testid="away">
+          Away
+        </button>
+      </div>,
+    );
+    const cut = screen.getByTestId('cut');
+    await userEvent.click(cut);
+    expect(document.activeElement).toBe(cut);
+    expect(cut.matches(':focus-visible')).toBe(true);
+    await userEvent.hover(screen.getByTestId('away'));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(openTip()).toBeNull();
+    screen.getByTestId('away').focus();
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(cut);
+    await waitFor(() => expect(openTip()?.textContent).toBe(LONG));
+  });
+
   it('follows a new element when as changes', async () => {
     const view = (as: 'p' | 'span') => (
       <div style={{ inlineSize: '12rem' }}>

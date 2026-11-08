@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useTooltipInternal, type TooltipInternalResult } from '../overlay/tooltip.js';
 import { canFocusNow } from '../overlay/tabbables.js';
+import { lastInputWasPointer, watchInputModality } from '../internal/inputModality.js';
 import { mergeAnchorNames } from '../overlay/anchorName.js';
 import { useDomId } from '../internal/domId.js';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
@@ -50,6 +51,17 @@ function holderOf(el: Element): Element | null {
   return node;
 }
 
+/**
+ * Whether focus on `el` came from keys, so it shows the ring. Browsers ring
+ * any focus on an editable element (`:read-write`), such as a contenteditable
+ * Text, so a tap or click there rings too; there the last input is read as
+ * well, so a press opens no tip, as it opens none for any tooltip, until a
+ * key that has no Ctrl, Meta or Alt held.
+ */
+function keyFocus(el: Element): boolean {
+  return el.matches(':focus-visible') && !(el.matches(':read-write') && lastInputWasPointer());
+}
+
 function isCut(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
 }
@@ -79,11 +91,11 @@ function inOrder(a: FocusWatch, b: FocusWatch): number {
 
 // Runs before any tip's own focus listeners, as a capture listener on the
 // document, so a tip that is already on sees the holder's answer for the same
-// focus. A click or a menu opened by one moves focus without :focus-visible,
-// and the pointer has the hover tip.
+// focus. Focus a tap or click put there opens no tip, even on an editable
+// text that shows the ring, and the pointer has the hover tip.
 function onFocusIn(watches: Set<FocusWatch>, event: globalThis.FocusEvent) {
   const focused = event.composedPath()[0] as Element | undefined;
-  if (focused?.nodeType !== 1 || !focused.matches(':focus-visible')) return;
+  if (focused?.nodeType !== 1 || !keyFocus(focused)) return;
   for (const watch of watches) {
     if (watch.target.current === focused) {
       watch.reach(focused);
@@ -107,6 +119,7 @@ function onFocusIn(watches: Set<FocusWatch>, event: globalThis.FocusEvent) {
 function watchFocus(watch: FocusWatch, doc: Document): () => void {
   let entry = focusWatches.get(doc);
   if (!entry) {
+    watchInputModality(doc);
     const watches = new Set<FocusWatch>();
     const listener = (event: globalThis.FocusEvent) => onFocusIn(watches, event);
     doc.addEventListener('focusin', listener, true);
@@ -146,7 +159,7 @@ function ClampTip({ target, anchor, text, hoverRef, waiting }: ClampTipProps) {
   const holdsFocus = useCallback(
     (focused: Element) => {
       const el = target.current;
-      if (el === null || !focused.matches(':focus-visible')) return false;
+      if (el === null || !keyFocus(focused)) return false;
       if (focused === el) return true;
       return isHolder(focused) && holderOf(el) === focused && shownBy.get(focused) === el;
     },
