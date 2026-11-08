@@ -1,4 +1,5 @@
-import { SignInExample, SignUpExample } from '../../../../components/demos/SignInDemo';
+import SignInExample from '../../../../examples/recipes/sign-in/SignInExample';
+import SignUpExample from '../../../../examples/recipes/sign-in/SignUpExample';
 
 export const description = 'A recipe for sign-in and sign-up: a Form with email and password Fields, a button that shows the password, and a Field.OneTimeCode step.';
 
@@ -8,9 +9,7 @@ A recipe, not a package namespace. A sign-in form is a [Form](/form) with an ema
 
 Sign in with `ben@example.com` and `correct horse`, the account the stand-in server knows, then enter `123456`. Any other password or code shows how a wrong one comes back.
 
-<Example block>
-  <SignInExample />
-</Example>
+<Example of={SignInExample} block />
 
 ## What the browser fills in
 
@@ -136,9 +135,7 @@ When the person asks for a new code, say that it went in words they can see and 
 
 A sign-up form takes a name, the email with `autoComplete="username"`, and a password with `autoComplete="new-password"` and the same show button. Put the password's rules in a `Description.Root` before the person types, and set the one the browser can check, such as `minLength`, so `Form.Root` words a short password in the page's language. The error joins the description, so word the rule differently from the error, or a screen reader hears the same sentence twice. Rules the browser can't check, such as a password found in a breach, come back from the server in `errors`. Ask for the password once: the show button lets a person check what they typed, so a second field to type it again adds work and no safety. The demo turns down an email that already has an account with an error on the email. If your product must not tell anyone which addresses have accounts, show the same confirmation either way and send the email to the address instead.
 
-<Example block>
-  <SignUpExample />
-</Example>
+<Example of={SignUpExample} block />
 
 ## Accessible composition
 

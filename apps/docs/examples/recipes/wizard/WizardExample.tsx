@@ -51,7 +51,7 @@ async function createWorkspace(answers: Answers): Promise<FormErrors> {
   return errors;
 }
 
-export function WizardExample() {
+export default function WizardExample() {
   const ids = { name: useId(), email: useId(), workspace: useId() };
   const headingId = useId();
   const [step, setStep] = useState(0);

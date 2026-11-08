@@ -1,4 +1,5 @@
-import { SignInExample, SignUpExample } from '../../../../components/demos/SignInDemo';
+import SignInExample from '../../../../examples/recipes/sign-in/SignInExample';
+import SignUpExample from '../../../../examples/recipes/sign-in/SignUpExample';
 
 export const description = '로그인과 가입 레시피입니다. 이메일·비밀번호 Field가 있는 Form, 비밀번호 보기 버튼, Field.OneTimeCode 단계로 만듭니다.';
 
@@ -8,9 +9,7 @@ export const description = '로그인과 가입 레시피입니다. 이메일·�
 
 임시 서버가 아는 계정인 `ben@example.com`과 `correct horse`로 로그인한 뒤 `123456`을 입력해 보세요. 다른 비밀번호나 코드를 넣으면 틀린 값이 어떻게 돌아오는지 볼 수 있습니다.
 
-<Example block>
-  <SignInExample />
-</Example>
+<Example of={SignInExample} block />
 
 ## 브라우저가 채우는 것
 
@@ -136,9 +135,7 @@ useEffect(() => {
 
 가입 폼은 이름, `autoComplete="username"`인 이메일, `autoComplete="new-password"`인 비밀번호와 같은 보기 버튼을 받습니다. 비밀번호 규칙은 입력하기 전에 보이도록 `Description.Root`에 두고, `minLength`처럼 브라우저가 확인할 수 있는 규칙은 설정해 `Form.Root`가 짧은 비밀번호를 페이지의 언어로 말하게 하세요. 오류는 설명에 덧붙으니, 규칙을 오류와 다른 말로 적으세요. 그러지 않으면 스크린 리더가 같은 문장을 두 번 읽습니다. 유출된 비밀번호처럼 브라우저가 확인할 수 없는 규칙은 서버가 `errors`로 돌려줍니다. 비밀번호는 한 번만 물으세요. 보기 버튼으로 입력한 것을 확인할 수 있으니, 한 번 더 입력하는 필드는 일만 늘리고 안전은 더하지 않습니다. 데모는 이미 계정이 있는 이메일을 이메일의 오류로 거절합니다. 어떤 주소에 계정이 있는지 아무에게도 알려서는 안 되는 제품이라면, 어느 경우든 같은 확인 화면을 보여 주고 그 주소로 이메일을 보내세요.
 
-<Example block>
-  <SignUpExample />
-</Example>
+<Example of={SignUpExample} block />
 
 ## 접근 가능한 구성
 

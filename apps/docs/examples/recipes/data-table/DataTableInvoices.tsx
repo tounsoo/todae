@@ -59,7 +59,7 @@ function compare(a: Invoice, b: Invoice, column: Column) {
 const pagesOf = (count: number) => Math.max(1, Math.ceil(count / PAGE_SIZE));
 const invoices = (count: number) => `${count} ${count === 1 ? 'invoice' : 'invoices'}`;
 
-export function DataTableInvoices() {
+export default function DataTableInvoices() {
   const searchId = useId();
   const search = useRef<HTMLInputElement>(null);
   const selectAll = useRef<HTMLInputElement>(null);

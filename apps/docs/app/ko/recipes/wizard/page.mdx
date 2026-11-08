@@ -1,4 +1,4 @@
-import { WizardExample } from '../../../../components/demos/WizardDemo';
+import WizardExample from '../../../../examples/recipes/wizard/WizardExample';
 
 export const description = '긴 폼 하나를 단계로 나누는 마법사 레시피입니다. Steps 목록이 현재 위치를 보여 주고, 단계마다 각자의 Form입니다.';
 
@@ -8,9 +8,7 @@ export const description = '긴 폼 하나를 단계로 나누는 마법사 레�
 
 단계를 차례로 지나가 보세요. 임시 서버가 아는 `ben@example.com` 주소와 `Todae` 워크스페이스 이름을 쓰면 마지막 단계에서 난 오류가 그것을 묻는 단계로 돌아오는 것을 볼 수 있습니다.
 
-<Example block>
-  <WizardExample />
-</Example>
+<Example of={WizardExample} block />
 
 ## 단계마다 폼 하나
 

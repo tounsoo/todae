@@ -165,7 +165,7 @@ function VersionSwitcher({
   );
 }
 
-export function SuggestionsExample() {
+export default function SuggestionsExample() {
   const [thread, setThread] = useState(start);
   const [value, setValue] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
