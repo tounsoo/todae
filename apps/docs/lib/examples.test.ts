@@ -107,9 +107,26 @@ describe('docs examples', () => {
     expect(withExampleCode(join(APP, '(en)', 'avatar', 'page.mdx'), mdx)).toContain(`\`\`\`css\n${readFileSync(SIZES_CSS, 'utf8').trimEnd()}\n\`\`\`\n\n<Example of={AvatarSizes} />`);
   });
 
-  it('refuses a stylesheet import that is not in the example’s folder', () => {
-    expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'Gone.tsx'), "import styles from './Gone.module.css';\n")).toThrow(/not in its folder/);
-    expect(exampleStylesheets(join(EXAMPLES, 'avatar', 'X.tsx'), "import styles from '../avatar/AvatarSizes.module.css';\n")).toEqual([]);
+  it('refuses a stylesheet the example’s folder does not have, or any other CSS import', () => {
+    expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'Gone.tsx'), "import styles from './Gone.module.css';\n")).toThrow(/no such file exists in its folder/);
+    for (const line of [
+      "import styles from '../avatar/AvatarSizes.module.css';",
+      "import './AvatarSizes.module.css';",
+      'import styles from "./AvatarSizes.module.css";',
+      "import styles from './AvatarSizes.module.css'",
+      "import { small } from './AvatarSizes.module.css';",
+      "import styles from '../../app/globals.css';",
+    ]) {
+      expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'X.tsx'), `${line}\n`), line).toThrow(/imports CSS only as/);
+    }
+  });
+
+  it('shows a stylesheet once on a page, after the first example that imports it', () => {
+    const page = join(APP, '(en)', 'recipes', 'avatar-group', 'page.mdx');
+    const mdx = "import AvatarGroupExample from '../../../../examples/recipes/avatar-group/AvatarGroupExample';\nimport AvatarGroupSizes from '../../../../examples/recipes/avatar-group/AvatarGroupSizes';\n\n<Example of={AvatarGroupExample} />\n\n<Example of={AvatarGroupSizes} />\n";
+    const langs = render(mdx, page).children.flatMap((node) => (node.type === 'code' ? [node.lang] : node.type === 'mdxJsxFlowElement' ? ['example'] : []));
+    expect(langs).toEqual(['tsx', 'css', 'example', 'tsx', 'example']);
+    expect(withExampleCode(page, mdx).match(/```css/g)).toHaveLength(1);
   });
 
   it('rebuilds a page when a stylesheet its example imports changes', () => {

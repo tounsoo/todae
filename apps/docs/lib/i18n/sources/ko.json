@@ -42,7 +42,7 @@
   "bottomsheet": {
     "(top)": "e0ed030a127b",
     "# BottomSheet": "24242a9acb87",
-    "## In a combobox": "489b2fb69c3a",
+    "## In a combobox": "cd753f0e73ed",
     "## Icons": "57e92e5df1aa",
     "## Accessible composition": "fae10aa8c01a",
     "## When to use": "79c9f4f301a8",
@@ -605,7 +605,7 @@
   "popover": {
     "(top)": "3e89bd45eeb2",
     "# Popover": "9c4cecc2fb3c",
-    "## Examples": "7a7b15df32b4",
+    "## Examples": "447a73474218",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "71f70ec143b8",
     "## When to use": "3e7e1aacc083",
@@ -656,9 +656,9 @@
   "recipes/avatar-group": {
     "(top)": "7a7089f8b2ac",
     "# Avatar group": "bfc491540fb1",
-    "## The stack": "8d8f385a72d6",
-    "## Sizes": "0acbff2b195c",
-    "## Wrapped avatars": "ddbab797c9cb",
+    "## The stack": "5496eb80da12",
+    "## Sizes": "1ffcc3d1bcba",
+    "## Wrapped avatars": "539c65fa41b7",
     "## Accessible composition": "0189b65fcffe",
     "## When to use": "763e187b5f3a",
     "(section order)": "4737a88ef46b"
@@ -770,7 +770,7 @@
     "(top)": "9bc13166d9e0",
     "# Message parts": "82729d4a6e41",
     "## The map": "c758e4138e32",
-    "## In the message": "ff481ecf7617",
+    "## In the message": "d94faf223511",
     "## While it streams": "61ed3670b470",
     "## Accessible composition": "d1afeb5d572d",
     "## When to use": "148d25ddb4dd",
@@ -998,7 +998,7 @@
     "(top)": "2a983f89762f",
     "# Tooltip": "003ec5ede25e",
     "## Warm-up": "e6ccde403145",
-    "## Examples": "7bd14507672b",
+    "## Examples": "01670f737427",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "7811d0a484f4",
     "## Accessible composition": "72ac241e0ecc",

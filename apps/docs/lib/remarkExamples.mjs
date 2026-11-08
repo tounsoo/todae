@@ -43,22 +43,30 @@ export function exampleFile(pagePath, imports, name) {
 
 /**
  * The stylesheets an example file imports from its own folder, as `import styles from './Name.module.css';`,
- * which a page shows after the example's code. For a recipe whose CSS is part of what a product copies.
+ * which a page shows after the example's code. For a recipe or component page whose CSS is part of what
+ * a product copies. Any other CSS import is refused, since the page could not show it.
  */
 export function exampleStylesheets(file, text) {
-  return [...text.matchAll(/^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/gm)].map((match) => {
-    const path = resolve(dirname(file), match[1]);
-    if (!existsSync(path)) throw new Error(`${file} imports ./${match[1]}, which is not in its folder`);
+  return [...text.matchAll(/^import\b[^;]*?['"]([^'"]+\.css)['"];?$/gm)].map((match) => {
+    const own = /^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/.exec(match[0]);
+    if (!own) throw new Error(`${file} imports ${match[1]}; an example imports CSS only as \`import styles from './Name.module.css';\` from its own folder`);
+    const path = resolve(dirname(file), own[1]);
+    if (!existsSync(path)) throw new Error(`${file} imports ./${own[1]}, but no such file exists in its folder`);
     return path;
   });
 }
 
-/** The code blocks a page shows for an example file: its code, then each stylesheet it imports from its folder. */
-export function exampleBlocks(file) {
+/**
+ * The code blocks a page shows for an example file: its code, then each stylesheet it imports from its
+ * folder that the page has not shown yet. `shown` holds the stylesheets already shown on the page.
+ */
+export function exampleBlocks(file, shown = new Set()) {
   const text = readFileSync(file, 'utf8');
+  const sheets = exampleStylesheets(file, text).filter((path) => !shown.has(path));
+  for (const path of sheets) shown.add(path);
   return [
     { lang: 'tsx', value: exampleSource(text) },
-    ...exampleStylesheets(file, text).map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() })),
+    ...sheets.map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() })),
   ];
 }
 
@@ -71,7 +79,7 @@ export function exampleImports(pagePath, text) {
 
 /**
  * Renders `<Example of={Name} />` as the code of the example `Name`, and any stylesheet it imports
- * from its folder, followed by the example itself,
+ * from its folder that the page has not shown yet, followed by the example itself,
  * and refuses an `<Example>` without `of`, whose demo would show with no code.
  * `Name` is a page's default import from a file in `apps/docs/examples`. The element becomes a code
  * block of that file's code and `<Example><Name locale="…" /></Example>`, with the page's locale.
@@ -81,6 +89,7 @@ export default function remarkExamples() {
   return (tree, file) => {
     if (!file.path) return;
     const imports = defaultImports(tree);
+    const shown = new Set();
     const visit = (parent) => {
       parent.children = (parent.children ?? []).flatMap((node) => {
         const isExample = (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Example';
@@ -97,7 +106,7 @@ export default function remarkExamples() {
         if (node.type !== 'mdxJsxFlowElement' || parent.type !== 'root') throw new Error(`<Example of={${name}}> goes on a line of its own at the top level of the page, outside other elements and lists`);
         if (node.children.length > 0) throw new Error(`<Example of={${name}}> renders its example itself, so it takes no children`);
         const locale = pageLocale(file.path);
-        const blocks = exampleBlocks(exampleFile(file.path, imports, name));
+        const blocks = exampleBlocks(exampleFile(file.path, imports, name), shown);
         const example = {
           ...node,
           attributes: node.attributes.filter((attribute) => attribute !== of),

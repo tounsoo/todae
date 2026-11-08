@@ -57,7 +57,7 @@ export function PinnedChannels({
       <Text.Root id={labelId} variant="label">
         Pinned channels
       </Text.Root>
-      <Stack.Root as="ol" gap='none' aria-labelledby={labelId}>
+      <Stack.Root as="ol" gap="none" aria-labelledby={labelId}>
         {channels.map((channel, index) => {
           const moves = [
             ['Move to top', 0],
@@ -77,7 +77,7 @@ export function PinnedChannels({
                     : undefined,
               }}
             >
-              <Stack.Root direction="row" align='center' gap="condensed">
+              <Stack.Root direction="row" align="center" gap="condensed">
                 <span
                   {...reorder.getHandleProps(index)}
                   aria-hidden

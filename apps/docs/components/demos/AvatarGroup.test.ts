@@ -12,16 +12,16 @@ function cssFences(path: string): string[] {
   });
 }
 
-// The examples show this stylesheet after their code; a rule quoted in prose must be one of its rules.
-const STACK = read('examples/recipes/avatar-group/AvatarGroup.module.css').trimEnd();
+// The first example shows this stylesheet after its code, so the page quotes none of it by hand,
+// and the size rules its prose names are in it.
+const STACK = read('examples/recipes/avatar-group/AvatarGroup.module.css');
 
 describe('avatar group recipe css', () => {
   it.each([
     'app/(en)/recipes/avatar-group/page.mdx',
     'app/ko/recipes/avatar-group/page.mdx',
-  ])('quotes, on %s, only rules the stylesheet has', (page) => {
-    const fences = cssFences(page);
-    expect(fences).toHaveLength(1);
-    for (const fence of fences) for (const rule of fence.split('\n\n')) expect(STACK.split('\n\n')).toContain(rule);
+  ])('quotes, on %s, no CSS beside the stylesheet the example shows', (page) => {
+    expect(cssFences(page)).toEqual([]);
+    for (const name of read(page).match(/`\.(small|large)`/g) ?? []) expect(STACK).toContain(`${name.slice(1, -1)} {`);
   });
 });
