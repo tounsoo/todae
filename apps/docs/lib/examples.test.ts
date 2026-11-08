@@ -116,6 +116,9 @@ describe('docs examples', () => {
       "import styles from './AvatarSizes.module.css'",
       "import { small } from './AvatarSizes.module.css';",
       "import styles from '../../app/globals.css';",
+      "import styles from './AvatarSizes.module.css'; // sizes",
+      "  import styles from './AvatarSizes.module.scss';",
+      "import styles from './AvatarSizes.module.css?inline';",
     ]) {
       expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'X.tsx'), `${line}\n`), line).toThrow(/imports CSS only as/);
     }

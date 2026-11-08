@@ -22,6 +22,8 @@ describe('avatar group recipe css', () => {
     'app/ko/recipes/avatar-group/page.mdx',
   ])('quotes, on %s, no CSS beside the stylesheet the example shows', (page) => {
     expect(cssFences(page)).toEqual([]);
-    for (const name of read(page).match(/`\.(small|large)`/g) ?? []) expect(STACK).toContain(`${name.slice(1, -1)} {`);
+    const named = read(page).match(/`\.(small|large)`/g) ?? [];
+    expect(named).toHaveLength(2);
+    for (const name of named) expect(STACK).toContain(`${name.slice(1, -1)} {`);
   });
 });

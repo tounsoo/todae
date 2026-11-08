@@ -53,7 +53,7 @@ Each name in the first column is this page's. Yours can differ. Text is [Message
 
 Keep the reply as an array of parts, in the order your stream gives them. `Message.Root` spaces each child from the next, so a part needs no margin of its own.
 
-The switch in the example's code is the mapper. It stays in your app. A finished call uses the same status words as [Tool call](/recipes/tool-call), Done and Failed, from one map. A call that is still running, or waiting for approval, is that recipe. The example at the top of the page is a call that has finished. The duration uses the same formatter as [Reasoning](/recipes/reasoning). The words and the locale stay yours. A part type this switch does not list renders nothing.
+The switch in the code at the top of the page is the mapper. It stays in your app. A finished call uses the same status words as [Tool call](/recipes/tool-call), Done and Failed, from one map. A call that is still running, or waiting for approval, is that recipe. The example at the top of the page is a call that has finished. The duration uses the same formatter as [Reasoning](/recipes/reasoning). The words and the locale stay yours. A part type this switch does not list renders nothing.
 
 Render the array inside the message. Leave out `Attachment.Remove` for a file that is already in the reply.
 

@@ -12,8 +12,8 @@ export function exampleOf(node: Node): string | null {
 
 /**
  * The page at `pagePath` as a reader sees it: each `<Example of={Name} />` gets the code of its
- * example file, and of any stylesheet that file imports from its folder and the page has not shown yet,
- * in fences above it, as
+ * example file in a fence above it, followed by each stylesheet that file imports from its folder
+ * and the page has not shown yet, as
  * `remarkExamples` renders it. For tools that read the MDX itself, such as the MCP and the code
  * block checks.
  */

@@ -47,7 +47,7 @@ export function exampleFile(pagePath, imports, name) {
  * a product copies. Any other CSS import is refused, since the page could not show it.
  */
 export function exampleStylesheets(file, text) {
-  return [...text.matchAll(/^import\b[^;]*?['"]([^'"]+\.css)['"];?$/gm)].map((match) => {
+  return [...text.matchAll(/^[ \t]*import\b[^;]*?['"]([^'"]+\.(?:css|scss|sass|less)(?:\?[^'"]*)?)['"][^\n]*$/gm)].map((match) => {
     const own = /^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/.exec(match[0]);
     if (!own) throw new Error(`${file} imports ${match[1]}; an example imports CSS only as \`import styles from './Name.module.css';\` from its own folder`);
     const path = resolve(dirname(file), own[1]);
