@@ -51,6 +51,21 @@ In Next.js, the main entry is a client module: a Server Component can render the
 - `@tounsoo/todae/schema/components.json`: each component's parts and props.
 - The `todae-tokens` CLI and `@tounsoo/todae/tokens-builder`: build a company's tokens on top of Todae's. See [Build on Todae](https://todae.omsoo.design/guides/build-on-todae).
 
+## For AI agents
+
+An agent writing code with Todae can start here, since this README is also in `node_modules/@tounsoo/todae`.
+
+- **MCP server:** `https://todae.omsoo.design/api/mcp` looks up Todae's components, recipes, tokens and the changes between releases, with no sign-in. In Claude Code, run `claude mcp add --transport http todae https://todae.omsoo.design/api/mcp`. Before writing code with a component, call the server's `get_docs_page` tool with the component's or hook's name, such as `Tooltip` or `useTooltip`: it returns the docs page with each example's code, which shows how the parts and hooks fit together. [MCP server](https://todae.omsoo.design/mcp) covers other clients and lists every tool.
+- **Props for the installed version:** `@tounsoo/todae/schema/components.json` lists each part, hook and helper with its props. The MCP server describes the latest release, and on 0.x a minor release can break the API, so the installed schema wins where the two differ. The server's `get_changes` tool lists the breaking changes from the installed version to the latest.
+
+Five things that habits from other React libraries get wrong:
+
+1. Most components are namespaces of parts, such as `Button.Root` and `Dialog.Title`, so there is no plain `<Button>`. Providers such as `ThemeProvider` are plain components. The schema has the exact name of every part, hook and helper.
+2. Tooltip and Popover keep the open state in a hook. Spread `getTriggerProps()` from `useTooltip` or `usePopover` on the trigger, and `getTooltipProps()` or `getPopoverProps()` on `Tooltip.Root` or `Popover.Root`, which only draw the surface. There is no `Tooltip.Trigger`, `Tooltip.Content`, `Popover.Trigger` or `Popover.Content`. Menu is different: it has `Menu.Trigger` and `Menu.Content`.
+3. An icon-only `Button.Root` needs an `aria-label`, and it shows that label as its own tooltip, so it needs no Tooltip around it. To pair a button with `useTooltip`, pass `tooltip={false}`.
+4. Don't rely on a tap to open a tooltip: on a phone or tablet, a tap opens no tip from `useTooltip` or `Button.Root`. Put anything a touch user must see in a Popover.
+5. Recipes, such as a data table, a combobox or a command palette, are example code to copy, not exports: there is no `DataTable.*` or `Combobox.*`. Get a recipe's code with the server's `get_recipe` tool or from its docs page, such as [Data table](https://todae.omsoo.design/recipes/data-table).
+
 ## Browser support
 
 Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers, `parseDate`, `parseDateRange`, `parseTime` and `parseDateTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
