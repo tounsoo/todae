@@ -49,6 +49,11 @@ const drifted: [ComponentMeta, string][] = [
     meta('useAnnouncer', prop('message', 'string', true), prop('options.politeness', '"polite" | "assertive"', false, { default: '"assertive"' })),
     'useAnnouncer options.politeness: default is "assertive", the code defaults to "polite"',
   ],
+  // Unquoted, so it isn't a literal; the code still has one.
+  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost"', false, { default: 'ghost' })), "Button.Root variant: default ghost isn't a literal, the code defaults to \"primary\""],
+  // An `any` inside a type.
+  [meta('Field.ChipInput', prop('chips', 'readonly any[]', true)), 'Field.ChipInput chips: type is "readonly any[]", which allows anything'],
+  [meta('Button.Root.Whatever'), 'Button.Root.Whatever: no such export'],
 ];
 
 // Written correctly, these read each lookup rule and must raise nothing.

@@ -7,7 +7,8 @@ import styles from './Progress.module.css';
  * unknown, and a band sweeps the track. It keeps the progressbar role, so it needs a name.
  */
 export type ProgressRootProps = Omit<ComponentPropsWithRef<'progress'>, 'value'> & {
-  /** How far the task has come, from 0 to `max`. React's own type also takes a string list, which a progress can't show. */
+  // React's own type also takes a string list, which a progress can't show.
+  /** How far the task has come, from 0 to max. Leave it out when the end is unknown: a band sweeps the track. */
   value?: number | string;
 };
 

@@ -7,7 +7,8 @@ import styles from './Progress.module.css';
  * `optimum`, and the browser decides whether the value is good, fair or poor.
  */
 export type MeterRootProps = Omit<ComponentPropsWithRef<'meter'>, 'value'> & {
-  /** The measurement, from `min` to `max`. React's own type also takes a string list, which a meter can't show. */
+  // React's own type also takes a string list, which a meter can't show.
+  /** The measurement, between min and max. */
   value?: number | string;
 };
 

@@ -32,6 +32,12 @@ export const meta = {
       description: 'The value, with onChange. Use defaultValue to leave it to the input.',
     },
     {
+      name: 'defaultValue',
+      type: 'number | string',
+      required: false,
+      description: 'The starting value, when the input keeps it.',
+    },
+    {
       name: 'aria-valuetext',
       type: 'string',
       required: false,

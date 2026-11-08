@@ -83,7 +83,7 @@ A token path `a.b.c` becomes the custom property `--todae-a-b-c`.
 pnpm schema
 ```
 
-The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packages/design-system/schema/components.json`. Commit that file. Running `pnpm schema` again must leave no diff.
+The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packages/design-system/schema/components.json`. Commit that file. Running `pnpm schema` again must leave no diff. `pnpm test` also runs `scripts/meta-types.test.ts`, which fails when a meta prop's name, type, `required` or literal default disagrees with the TypeScript types.
 
 ## Lint
 

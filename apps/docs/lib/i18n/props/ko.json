@@ -1914,6 +1914,10 @@
       "en": "The value, with onChange. Use defaultValue to leave it to the input.",
       "ko": "onChange와 함께 쓰는 값. 입력 요소에 맡기려면 defaultValue를 쓰세요."
     },
+    "defaultValue": {
+      "en": "The starting value, when the input keeps it.",
+      "ko": "입력 요소가 값을 관리할 때의 시작 값."
+    },
     "aria-valuetext": {
       "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
       "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."

@@ -19,15 +19,18 @@
 //   names, such as `T` in `Toaster<T>`, stands for the export's own type
 //   parameter; one it doesn't name is read at its constraint.
 // - A type ending in `| …` lists only some members: each must be allowed.
-// - A type that resolves to `any` fails unless TypeScript's is `any` too.
+// - A type that is or holds `any`, such as `any[]`, fails unless TypeScript's
+//   does too.
 // - A code default is a literal, or a const the checker reads as one, set in
 //   the destructuring or the parameter, or put after `name ?? …` in the body.
 //   A meta must list a destructuring or parameter default. One found after
 //   `??` is checked only when the meta lists a default. A function with no
 //   default of its own that hands the prop on, as `{...props}`, `key={key}`
-//   or an argument, is read where the prop lands. Native attribute defaults,
-//   such as a slider's min, and defaults from StringsProvider aren't in code
-//   and go unchecked.
+//   or an argument, is read where the prop lands. A meta default that isn't a
+//   literal fails when the code has one. Native attribute defaults, such as a
+//   slider's min, and defaults from StringsProvider aren't in code and go
+//   unchecked. So does a default set only in a nested block or after
+//   `const {…} = props ?? {}` or a call on the props.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -138,7 +141,7 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
     meta.props.forEach((prop, p) => {
       const alias = `M${p}`;
       probe.props.push({ prop, alias, line: lines.length });
-      lines.push(`  export type ${alias} = ${prop.type.replace(ELLIPSIS, '').replace(/\s+/g, ' ')};`);
+      lines.push(`  export type ${alias} = ${prop.type.replace(ELLIPSIS, '').replace(/\s*\n\s*/g, ' ')};`);
     });
     lines.push('}');
   });
@@ -176,6 +179,10 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
     const body = spaces.get(probe.space)!;
     const fnStatement = body.statements.find(ts.isVariableStatement)!;
     const fnLine = source.getLineAndCharacterOfPosition(fnStatement.getStart()).line;
+    if (probe.meta.name.split('.').length > 2) {
+      report(`${probe.meta.name}: no such export (a name has at most two parts)`);
+      continue;
+    }
     if (errors.has(fnLine)) {
       report(`${probe.meta.name}: no such export (${errors.get(fnLine)})`);
       continue;
@@ -207,7 +214,10 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
         report(`${where}: required is ${prop.required}, TypeScript says ${required}`);
       }
       const declared = checker.getTypeAtLocation(aliases.get(alias)!.name);
-      if (declared.flags & ts.TypeFlags.Any && !present.some((f) => f.type.flags & ts.TypeFlags.Any)) {
+      // An `any` anywhere, as in `any[]`, passes both assignability checks, so look for the word.
+      const hasAny = (text: string) => /\bany\b/.test(text.replace(/"[^"]*"|'[^']*'/g, ''));
+      const codeHasAny = present.some((f) => hasAny(checker.typeToString(f.type, undefined, ts.TypeFormatFlags.NoTruncation)));
+      if ((declared.flags & ts.TypeFlags.Any || hasAny(prop.type)) && !codeHasAny) {
         report(`${where}: type is "${prop.type}", which allows anything; name the type`);
         continue;
       }
@@ -233,6 +243,9 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
       const code = present.map((f) => f.default).find((d) => d !== undefined);
       if (code !== undefined && literal !== undefined && code.value !== literal) {
         report(`${where}: default is ${prop.default}, the code defaults to ${code.value}`);
+      }
+      if (code !== undefined && literal === undefined && prop.default !== undefined) {
+        report(`${where}: default ${prop.default} isn't a literal, the code defaults to ${code.value}`);
       }
       if (code?.initializer && prop.default === undefined) {
         report(`${where}: has no default, the code defaults to ${code.value}`);
@@ -374,15 +387,19 @@ function bindingDefault(
     }
   }
   let local: string | undefined;
+  const nameOf = (element: ts.BindingElement) => {
+    const property = element.propertyName ?? element.name;
+    return ts.isIdentifier(property) || ts.isStringLiteral(property) ? property.text : undefined;
+  };
   for (const pattern of patterns) {
+    // A rest holds the prop only when the same pattern didn't take it out.
+    const takes = pattern.elements.some((element) => !element.dotDotDotToken && nameOf(element) === key);
     for (const element of pattern.elements) {
       if (element.dotDotDotToken && ts.isIdentifier(element.name)) {
-        holders.add(element.name.text);
+        if (!takes) holders.add(element.name.text);
         continue;
       }
-      const property = element.propertyName ?? element.name;
-      const propertyName = ts.isIdentifier(property) || ts.isStringLiteral(property) ? property.text : undefined;
-      if (propertyName !== key) continue;
+      if (nameOf(element) !== key) continue;
       if (element.initializer) return initializerDefault(checker, element.initializer);
       if (ts.isIdentifier(element.name)) local = element.name.text;
     }
@@ -509,6 +526,7 @@ function literalValue(checker: ts.TypeChecker, node: ts.Expression): string | un
 
 /** A literal written out, as JSON, such as `"primary"`, `false` or `300`; undefined for anything else. */
 function literalText(node: ts.Expression): string | undefined {
+  while (ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isParenthesizedExpression(node)) node = node.expression;
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return JSON.stringify(node.text);
   if (ts.isNumericLiteral(node)) return JSON.stringify(Number(node.text));
   if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(node.operand)) {
