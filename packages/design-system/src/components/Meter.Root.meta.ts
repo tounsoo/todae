@@ -6,20 +6,20 @@ export const meta = {
   props: [
     {
       name: 'value',
-      type: 'number',
+      type: 'number | string',
       required: false,
       description: 'The measurement, between min and max.',
     },
     {
       name: 'min',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '0',
       description: 'The low end of the range.',
     },
     {
       name: 'max',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '1',
       description: 'The high end of the range.',

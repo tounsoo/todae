@@ -6,28 +6,28 @@ export const meta = {
   props: [
     {
       name: 'min',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '0',
       description: 'The lowest value.',
     },
     {
       name: 'max',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '100',
       description: 'The highest value.',
     },
     {
       name: 'step',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '1',
       description: 'How far one arrow key moves the value.',
     },
     {
       name: 'value',
-      type: 'number',
+      type: 'number | string',
       required: false,
       description: 'The value, with onChange. Use defaultValue to leave it to the input.',
     },

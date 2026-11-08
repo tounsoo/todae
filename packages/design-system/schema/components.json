@@ -136,7 +136,7 @@
       "props": [
         {
           "name": "value",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "How far the upload has come, out of max. Leave it out when the end is unknown."
         }
@@ -1052,7 +1052,7 @@
         {
           "name": "...refs",
           "type": "(React.Ref<T> | undefined)[]",
-          "required": true,
+          "required": false,
           "description": "Object refs, callback refs or undefined."
         }
       ]
@@ -1087,7 +1087,7 @@
         },
         {
           "name": "aria-current",
-          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "type": "boolean | \"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
           "required": false,
           "description": "Set by Contents.Root to location on the link to the section being read. A value you pass wins."
         },
@@ -1848,7 +1848,7 @@
       "props": [
         {
           "name": "chips",
-          "type": "string[]",
+          "type": "readonly string[]",
           "required": true,
           "description": "Controlled chip labels."
         },
@@ -2599,7 +2599,7 @@
           "type": "boolean",
           "required": false,
           "description": "Grows with content up to maxRows using CSS only. No maxRows means no cap.",
-          "default": "\"false\""
+          "default": "false"
         },
         {
           "name": "highlights",
@@ -3058,7 +3058,7 @@
         },
         {
           "name": "aria-current",
-          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "type": "boolean | \"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
           "required": false,
           "description": "Marks the link to the current page or step; its underline thickens."
         },
@@ -3679,20 +3679,20 @@
       "props": [
         {
           "name": "value",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The measurement, between min and max."
         },
         {
           "name": "min",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The low end of the range.",
           "default": "0"
         },
         {
           "name": "max",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The high end of the range.",
           "default": "1"
@@ -3813,7 +3813,7 @@
         },
         {
           "name": "aria-current",
-          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "type": "boolean | \"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
           "required": false,
           "description": "Marks the link to the page you are on, which draws it as the current row."
         },
@@ -3899,7 +3899,7 @@
         },
         {
           "name": "onValueChange",
-          "type": "(value: string | string[]) => void",
+          "type": "((value: string) => void) | ((value: string[]) => void)",
           "required": true,
           "description": "Selection change. Single passes a string. Multiple passes the next array."
         },
@@ -4157,7 +4157,7 @@
         {
           "name": "style",
           "type": "React.CSSProperties",
-          "required": false,
+          "required": true,
           "description": "Style for the surface. Anchor position comes from getPopoverProps."
         },
         {
@@ -4186,13 +4186,13 @@
       "props": [
         {
           "name": "value",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "How far the task has come, from 0 to max. Leave it out when the end is unknown: a band sweeps the track."
         },
         {
           "name": "max",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The value at which the task is done.",
           "default": "1"
@@ -4392,28 +4392,28 @@
       "props": [
         {
           "name": "min",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The lowest value.",
           "default": "0"
         },
         {
           "name": "max",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The highest value.",
           "default": "100"
         },
         {
           "name": "step",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "How far one arrow key moves the value.",
           "default": "1"
         },
         {
           "name": "value",
-          "type": "number",
+          "type": "number | string",
           "required": false,
           "description": "The value, with onChange. Use defaultValue to leave it to the input."
         },
@@ -5040,7 +5040,7 @@
       "props": [
         {
           "name": "overrides",
-          "type": "ThemeOverride",
+          "type": "Readonly<Record<string, ThemeOverrideValue | undefined>> | null",
           "required": true,
           "description": "Token paths and typed values, as ThemeProvider takes them. null or undefined gives {}."
         },
@@ -5421,7 +5421,7 @@
         {
           "name": "style",
           "type": "React.CSSProperties",
-          "required": false,
+          "required": true,
           "description": "Style for the tip surface. Anchor position comes from getTooltipProps."
         },
         {
@@ -5488,7 +5488,8 @@
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Can't be selected. Still takes focus, so a screen reader announces it as unavailable, and still opens and closes."
+          "description": "Can't be selected. Still takes focus, so a screen reader announces it as unavailable, and still opens and closes.",
+          "default": "false"
         },
         {
           "name": "children",
@@ -5587,10 +5588,10 @@
           "description": "Text to read. The same message twice is read twice. An empty string clears the region."
         },
         {
-          "name": "politeness",
+          "name": "options.politeness",
           "type": "\"polite\" | \"assertive\"",
           "required": false,
-          "description": "Options field. polite waits for the screen reader to finish; assertive interrupts it.",
+          "description": "polite waits for the screen reader to finish; assertive interrupts it.",
           "default": "\"polite\""
         }
       ]
@@ -5606,7 +5607,7 @@
       "props": [
         {
           "name": "initialChips",
-          "type": "string[]",
+          "type": "readonly string[]",
           "required": false,
           "description": "Starting chips.",
           "default": "[]"
@@ -5922,10 +5923,10 @@
           "description": "Runs on a match. An inline function is fine; the latest one is read at key time."
         },
         {
-          "name": "enabled",
+          "name": "options.enabled",
           "type": "boolean",
           "required": false,
-          "description": "Listen only while true. Pass it in the options object.",
+          "description": "Listen only while true.",
           "default": "true"
         }
       ]

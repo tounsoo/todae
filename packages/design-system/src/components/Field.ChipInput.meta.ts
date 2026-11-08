@@ -6,7 +6,7 @@ export const meta = {
   props: [
     {
       name: 'chips',
-      type: 'string[]',
+      type: 'readonly string[]',
       required: true,
       description: 'Controlled chip labels.',
     },

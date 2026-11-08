@@ -7,7 +7,7 @@ export const meta = {
   props: [
     {
       name: 'value',
-      type: 'number',
+      type: 'number | string',
       required: false,
       description: 'How far the upload has come, out of max. Leave it out when the end is unknown.',
     },

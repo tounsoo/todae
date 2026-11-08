@@ -45,7 +45,7 @@ export const meta = {
       name: 'autoGrow',
       type: 'boolean',
       required: false,
-      default: '"false"',
+      default: 'false',
       description: 'Grows with content up to maxRows using CSS only. No maxRows means no cap.',
     },
     {

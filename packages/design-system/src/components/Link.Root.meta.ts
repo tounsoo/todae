@@ -18,7 +18,7 @@ export const meta = {
     },
     {
       name: 'aria-current',
-      type: '"page" | "step" | "location" | "date" | "time" | "true" | "false"',
+      type: 'boolean | "page" | "step" | "location" | "date" | "time" | "true" | "false"',
       required: false,
       description: 'Marks the link to the current page or step; its underline thickens.',
     },

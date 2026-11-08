@@ -20,7 +20,7 @@ export const meta = {
     },
     {
       name: 'onValueChange',
-      type: '(value: string | string[]) => void',
+      type: '((value: string) => void) | ((value: string[]) => void)',
       required: true,
       description: 'Selection change. Single passes a string. Multiple passes the next array.',
     },

@@ -20,7 +20,7 @@ export const meta = {
     {
       name: 'style',
       type: 'React.CSSProperties',
-      required: false,
+      required: true,
       description: 'Style for the tip surface. Anchor position comes from getTooltipProps.',
     },
     {
