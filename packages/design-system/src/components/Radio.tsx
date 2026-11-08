@@ -46,7 +46,7 @@ export type RadioGroupRootProps = {
   className?: string;
   ref?: Ref<HTMLDivElement>;
 } & RadioGroupName &
-  Omit<HTMLAttributes<HTMLDivElement>, 'role' | 'children' | 'aria-label' | 'aria-labelledby' | 'id'>;
+  Omit<HTMLAttributes<HTMLDivElement>, 'role' | 'children' | 'aria-label' | 'aria-labelledby' | 'id' | 'defaultValue'>;
 
 export type RadioGroupItemProps = {
   value: string;

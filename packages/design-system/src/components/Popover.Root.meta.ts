@@ -27,7 +27,7 @@ export const meta = {
     {
       name: 'style',
       type: 'React.CSSProperties',
-      required: false,
+      required: true,
       description: 'Style for the surface. Anchor position comes from getPopoverProps.',
     },
     {

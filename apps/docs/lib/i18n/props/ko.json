@@ -1914,6 +1914,10 @@
       "en": "The value, with onChange. Use defaultValue to leave it to the input.",
       "ko": "onChange와 함께 쓰는 값. 입력 요소에 맡기려면 defaultValue를 쓰세요."
     },
+    "defaultValue": {
+      "en": "The starting value, when the input keeps it.",
+      "ko": "입력 요소가 값을 관리할 때의 시작 값."
+    },
     "aria-valuetext": {
       "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
       "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
@@ -2410,9 +2414,9 @@
       "en": "Text to read. The same message twice is read twice. An empty string clears the region.",
       "ko": "읽을 텍스트. 같은 메시지를 두 번 보내면 두 번 읽습니다. 빈 문자열은 리전을 비웁니다."
     },
-    "politeness": {
-      "en": "Options field. polite waits for the screen reader to finish; assertive interrupts it.",
-      "ko": "옵션 필드. polite는 스크린 리더가 읽기를 마칠 때까지 기다리고, assertive는 끊고 읽습니다."
+    "options.politeness": {
+      "en": "polite waits for the screen reader to finish; assertive interrupts it.",
+      "ko": "polite는 스크린 리더가 읽기를 마칠 때까지 기다리고, assertive는 끊고 읽습니다."
     }
   },
   "useChipField": {
@@ -2524,9 +2528,9 @@
       "en": "Runs on a match. An inline function is fine; the latest one is read at key time.",
       "ko": "일치할 때 실행됩니다. 인라인 함수도 괜찮습니다. 키를 누를 때 최신 함수를 읽습니다."
     },
-    "enabled": {
-      "en": "Listen only while true. Pass it in the options object.",
-      "ko": "true인 동안만 듣습니다. options 객체로 넘기세요."
+    "options.enabled": {
+      "en": "Listen only while true.",
+      "ko": "true인 동안만 듣습니다."
     }
   },
   "useDropzone": {

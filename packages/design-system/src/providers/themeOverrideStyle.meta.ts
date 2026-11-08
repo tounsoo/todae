@@ -7,7 +7,7 @@ export const meta = {
   props: [
     {
       name: 'overrides',
-      type: 'ThemeOverride',
+      type: 'Readonly<Record<string, ThemeOverrideValue | undefined>> | null | undefined',
       required: true,
       description: 'Token paths and typed values, as ThemeProvider takes them. null or undefined gives {}.',
     },

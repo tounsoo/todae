@@ -6,13 +6,13 @@ export const meta = {
   props: [
     {
       name: 'value',
-      type: 'number',
+      type: 'number | string',
       required: false,
       description: 'How far the task has come, from 0 to max. Leave it out when the end is unknown: a band sweeps the track.',
     },
     {
       name: 'max',
-      type: 'number',
+      type: 'number | string',
       required: false,
       default: '1',
       description: 'The value at which the task is done.',

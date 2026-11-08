@@ -6,7 +6,7 @@ export const meta = {
   props: [
     {
       name: 'initialChips',
-      type: 'string[]',
+      type: 'readonly string[]',
       required: false,
       default: '[]',
       description: 'Starting chips.',

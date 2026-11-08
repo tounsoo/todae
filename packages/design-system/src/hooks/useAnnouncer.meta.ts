@@ -12,11 +12,11 @@ export const meta = {
       description: 'Text to read. The same message twice is read twice. An empty string clears the region.',
     },
     {
-      name: 'politeness',
+      name: 'options.politeness',
       type: '"polite" | "assertive"',
       required: false,
       default: '"polite"',
-      description: 'Options field. polite waits for the screen reader to finish; assertive interrupts it.',
+      description: 'polite waits for the screen reader to finish; assertive interrupts it.',
     },
   ],
 } as const satisfies ComponentMeta;

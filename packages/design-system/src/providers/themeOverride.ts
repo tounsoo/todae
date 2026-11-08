@@ -277,8 +277,8 @@ export function isThemeOverrideValue(key: ThemeOverrideKey, value: unknown): val
   return isValueOfType(themeOverrideType(key), value, key);
 }
 
-export function parseThemeColor(raw: string): ThemeColorValue | null {
-  const value = raw.trim();
+export function parseThemeColor(text: string): ThemeColorValue | null {
+  const value = text.trim();
   if (HEX.test(value)) return hexToOklch(value);
   const match = value.match(OKLCH);
   if (!match) return null;
@@ -290,9 +290,9 @@ export function parseThemeColor(raw: string): ThemeColorValue | null {
   return isThemeColorValue(color) ? color : null;
 }
 
-export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverrideValue | null {
+export function parseThemeValue(key: ThemeOverrideKey, text: string): ThemeOverrideValue | null {
   const type = themeOverrideType(key);
-  const value = raw.trim();
+  const value = text.trim();
   if (type === 'color') return parseThemeColor(value);
   if (type === 'dimension') {
     const match = value.match(REM);
@@ -364,7 +364,10 @@ function reject(message: string): void {
   if (DEV) throw new Error(message);
 }
 
-export function themeOverrideStyle(overrides: unknown, overrideTypes?: ThemeOverrideTypes): Record<string, string> {
+export function themeOverrideStyle(
+  overrides: Readonly<Record<string, ThemeOverrideValue | undefined>> | null | undefined,
+  overrideTypes?: ThemeOverrideTypes,
+): Record<string, string> {
   if (overrides == null) return {};
   if (!isRecord(overrides)) {
     reject('ThemeProvider overrides must be an object');

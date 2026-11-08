@@ -15,6 +15,7 @@ export const meta = {
       name: 'disabled',
       type: 'boolean',
       required: false,
+      default: 'false',
       description:
         "Can't be selected. Still takes focus, so a screen reader announces it as unavailable, and still opens and closes.",
     },

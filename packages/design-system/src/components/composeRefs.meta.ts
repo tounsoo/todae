@@ -8,7 +8,7 @@ export const meta = {
     {
       name: '...refs',
       type: '(React.Ref<T> | undefined)[]',
-      required: true,
+      required: false,
       description: 'Object refs, callback refs or undefined.',
     },
   ],

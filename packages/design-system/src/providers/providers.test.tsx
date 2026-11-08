@@ -337,7 +337,8 @@ describe('motion, font family, shadow and text transform overrides', () => {
       ['tabs.font.text-transform', 'uppercase; color: red'],
     ];
     for (const [key, value] of bad) {
-      expect(() => themeOverrideStyle({ [key]: value }, types), key).toThrow(/Invalid theme override value/);
+      // As a JavaScript caller would pass it, past the types.
+      expect(() => themeOverrideStyle({ [key]: value } as Record<string, never>, types), key).toThrow(/Invalid theme override value/);
     }
   });
 

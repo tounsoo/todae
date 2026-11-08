@@ -19,11 +19,11 @@ export const meta = {
       description: 'Runs on a match. An inline function is fine; the latest one is read at key time.',
     },
     {
-      name: 'enabled',
+      name: 'options.enabled',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Listen only while true. Pass it in the options object.',
+      description: 'Listen only while true.',
     },
   ],
 } as const satisfies ComponentMeta;

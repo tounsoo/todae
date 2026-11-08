@@ -32,7 +32,7 @@ export const meta = {
       name: 'rows',
       type: 'number',
       required: false,
-      default: '"3"',
+      default: '3',
       description: 'Starting height in rows. Also the native rows attribute and the drag floor.',
     },
     {
@@ -45,7 +45,7 @@ export const meta = {
       name: 'autoGrow',
       type: 'boolean',
       required: false,
-      default: '"false"',
+      default: 'false',
       description: 'Grows with content up to maxRows using CSS only. No maxRows means no cap.',
     },
     {
