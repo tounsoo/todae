@@ -1,5 +1,7 @@
 import { ReorderExample } from '../../../../components/demos/ReorderDemo';
 
+export const description = 'A recipe for reordering a list: a grip to drag each row through useReorder, and a Menu of moves for the keyboard and screen readers.';
+
 # Reorder
 
 A recipe, not a package namespace. Each row of an ordered list has a grip to drag it by, through [`useReorder`](/utilities/use-reorder), and a [Menu](/menu) with Move to top, Move up, Move down and Move to bottom for the keyboard, screen readers and anyone who can't drag. The new position is announced with [`useAnnouncer`](/utilities/use-announcer) either way. What the list holds and where its order is saved are up to your product. There is no `Reorder.*` export.

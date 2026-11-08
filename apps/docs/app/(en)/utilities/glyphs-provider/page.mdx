@@ -2,6 +2,8 @@ import { Table } from '@tounsoo/todae/table';
 import { ScrollRegion } from '../../../../components/ScrollRegion';
 import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
 
+export const description = "Todae ships no icon set. GlyphsProvider swaps the few glyphs Todae draws itself, such as a close button's cross, for your icon library's.";
+
 # GlyphsProvider
 
 Todae ships no icon set. A few parts still need a glyph to look whole, such as the cross on a close button or the check in a checkbox, so Todae draws those itself. `GlyphsProvider` sets them for everything inside it, so they can come from your icon library instead. Pass the keys you want to change; each key you leave out comes from the nearest `GlyphsProvider` above, and `null` brings back Todae's own. It renders no element.

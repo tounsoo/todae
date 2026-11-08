@@ -176,7 +176,7 @@ jobs:
           fi
 
       # The host is a build-time constant that next.config.mjs inlines into the pages and the functions
-      # alike, so pages that name it show the functions do too.
+      # alike, so pages that name it show the functions do too. robots.txt and sitemap.xml name it as well.
       - name: Pages name the production site
         run: |
           set -euo pipefail
@@ -186,8 +186,8 @@ jobs:
             echo "::error::No page links to https://$HOST/."
             exit 1
           fi
-          if grep -rl --include='*.html' 'http://localhost:3000' .vercel/output; then
-            echo "::error::These pages link to http://localhost:3000, so the build had no production host."
+          if grep -rl --include='*.html' --include='*.xml' --include='*.txt' --include='*.body' 'http://localhost:3000' .vercel/output; then
+            echo "::error::These files link to http://localhost:3000, so the build had no production host."
             exit 1
           fi
           echo "$pages pages link to https://$HOST/."

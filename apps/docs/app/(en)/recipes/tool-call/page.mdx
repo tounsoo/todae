@@ -1,5 +1,7 @@
 import { ToolCallExample } from '../../../../components/demos/ToolCallDemo';
 
+export const description = "A recipe for a tool call in a reply: a Disclosure that shows the tool's name and a status Badge, with its input and output in a DataList.";
+
 # Tool call
 
 A recipe, not a package namespace. A tool call in an assistant's reply is a [Disclosure](/disclosure) whose summary shows the tool's name and a [Badge](/badge) for its status, with the input and output in a [DataList](/data-list) inside. A call that waits for approval adds two [Button](/button)s. What the tool does and when it runs are up to your product. There is no `ToolCall.*` export.

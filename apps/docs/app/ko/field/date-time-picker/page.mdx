@@ -1,6 +1,8 @@
 import FieldDateTimePicked from '../../../../examples/field/date-time-picker/FieldDateTimePicked';
 import { FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
 
+export const description = 'Field 안에서 Popover에 Calendar와 시각 목록을 여는 버튼입니다. value는 Temporal.PlainDateTime이나 null입니다.';
+
 # Field.DateTimePicker
 
 `Field.DateTimePicker`는 [Field](/field) 안에서 [Popover](/popover)에 [Calendar](/calendar)와 시각 목록을 나란히, 좁은 화면에서는 목록을 달력 아래에 여는 버튼입니다. `value`는 `Temporal.PlainDateTime`이나 `null`입니다. `onValueChange`는 고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있을 때마다 그 날짜와 시각을 받습니다. 달력이 내놓는 날짜가 골라져 있을 때 시각을 고르면 팝오버가 닫힙니다. [Field.DatePicker](/field/date-picker), [Field.TimePicker](/field/time-picker)와 같은 방식으로 동작하고, 뜻이 같은 props는 같은 이름으로 받습니다. `PlainDateTime`에는 시간대가 없습니다. 사용자의 시계에 보이는 날짜와 시각입니다. 시점을 저장하려면 `value.toZonedDateTime(zone)`처럼 직접 작성한 코드에서 시간대와 합치세요.

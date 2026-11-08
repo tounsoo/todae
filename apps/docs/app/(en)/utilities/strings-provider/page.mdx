@@ -1,6 +1,8 @@
 import { Table } from '@tounsoo/todae/table';
 import { ScrollRegion } from '../../../../components/ScrollRegion';
 
+export const description = "StringsProvider sets the text Todae writes by itself, such as an icon-only Dialog.Close's name and screen reader messages. Todae ships English only.";
+
 # StringsProvider
 
 `StringsProvider` sets the text Todae writes by itself for everything inside it: the default names of parts with no words of their own, such as an icon-only `Dialog.Close`, and screen reader messages, such as those of `Field.Counter`. Todae ships English only. Pass the keys you want to change; each key you leave out comes from the nearest `StringsProvider` above, else English. It renders no element.

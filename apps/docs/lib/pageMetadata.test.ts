@@ -14,8 +14,8 @@ import { isTranslated } from './i18n/pages';
 import { coreColor, oklchToHex } from './og/colors';
 import { estimateEms, TEXT_WIDTH, TITLE_HEIGHT, titleSize } from './og/OgCard';
 import { ogPages } from './og/pages';
-import { DESCRIPTION_LIMIT, pageSummary, summarize } from './pageSummary.mjs';
-import remarkPageMetadata, { pageOf } from './remarkPageMetadata.mjs';
+import { DESCRIPTION_LIMIT, DESCRIPTION_MIN, descriptionWidth, pageSummary, summarize } from './pageSummary.mjs';
+import remarkPageMetadata, { ownDescription, pageOf } from './remarkPageMetadata.mjs';
 
 const APP = join(process.cwd(), 'app');
 const LOCALE_DIRS = { en: '(en)', ko: 'ko' } as const;
@@ -46,14 +46,39 @@ describe('page metadata', () => {
     expect(pageOf(join(APP, '..', 'components', 'page.mdx'), APP)).toBeNull();
   });
 
-  it('cuts a long paragraph at a sentence, or at a word with an ellipsis', () => {
+  it('keeps the whole sentences that fit, and never cuts one', () => {
     expect(summarize('Short.  Two\nlines.')).toBe('Short. Two lines.');
-    const sentences = `${'A'.repeat(120)}. ${'B'.repeat(120)}.`;
-    expect(summarize(sentences)).toBe(`${'A'.repeat(120)}.`);
-    const words = Array.from({ length: 60 }, () => 'word').join(' ');
-    const cut = summarize(words);
-    expect(cut.endsWith('word…')).toBe(true);
-    expect(cut.length).toBeLessThanOrEqual(DESCRIPTION_LIMIT + 1);
+    const sentence = `${'A'.repeat(70)}.`;
+    expect(summarize(`${sentence} ${sentence} ${sentence}`)).toBe(`${sentence} ${sentence}`);
+    expect(summarize(`${'word '.repeat(40)}end.`)).toBe('');
+    expect(summarize(`${'word '.repeat(40)}end.`, Infinity)).toBe(`${'word '.repeat(40)}end.`);
+  });
+
+  it('reads past an abbreviation, joins a line break with a space and drops a lead-in to a list', () => {
+    expect(summarize(`Field takes a plain value, e.g. a string. ${'word '.repeat(30)}end.`)).toBe('Field takes a plain value, e.g. a string.');
+    expect(summarize(`Field takes a plain value, e.g. ${'word '.repeat(30)}end.`)).toBe('');
+    expect(pageSummary(parse('# T\n\nFirst line\\\nsecond line.\n'))?.description).toBe('First line second line.');
+    expect(summarize('Todae sits in one layer. Inside it, in order:')).toBe('Todae sits in one layer.');
+    expect(summarize('Todae sits in one layer. A table of rows')).toBe('Todae sits in one layer.');
+    expect(summarize('It says "Done."')).toBe('It says "Done."');
+    expect(pageSummary(parse("# T\n\nOne{' '}word.\n"))?.description).toBe('One word.');
+    expect(descriptionWidth('かな')).toBe(4);
+    expect(summarize(`It is fast, vs. the old one. ${'word '.repeat(30)}end.`)).toBe('It is fast, vs. the old one.');
+    expect(summarize(`It says "Done." ${'word '.repeat(30)}end.`)).toBe('It says "Done."');
+    expect(summarize(`これは文です。${'次'.repeat(80)}。`)).toBe('これは文です。');
+    expect(pageSummary(parse("# T\n\nA {'it\\'s'} word.\n"))?.description).toBe("A it's word.");
+    expect(pageSummary(parse("# T\n\nA {'x' + 'y'} word.\n"))?.description).toBe('A word.');
+  });
+
+  it('refuses a page description outside the width search results show', () => {
+    expect(() => pageMetadata({ locale: 'en', slug: 'x', title: 'X', description: 'Too short.' })).toThrow(/10 wide/);
+    expect(() => pageMetadata({ locale: 'en', slug: 'x', title: 'X', description: `${'word '.repeat(40)}end.` })).toThrow(/204 wide/);
+  });
+
+  it('counts a Hangul character as two Latin letters wide', () => {
+    expect(descriptionWidth('Todae')).toBe(5);
+    expect(descriptionWidth('토대')).toBe(4);
+    expect(summarize(`${'가'.repeat(50)}입니다. ${'나'.repeat(50)}입니다.`)).toBe(`${'가'.repeat(50)}입니다.`);
   });
 
   it('reads code as text and drops link targets and JSX', () => {
@@ -74,10 +99,24 @@ describe('page metadata', () => {
       const fields = injected(run(join(dir, page.slug, 'page.mdx'), page.markdown));
       // The social image draws the same title the metadata names.
       expect(fields, page.slug).toMatchObject({ locale, slug: page.slug, title: page.title });
-      const description = fields?.description ?? '';
-      expect(description.length, page.slug).toBeGreaterThan(20);
-      expect(description.length, page.slug).toBeLessThanOrEqual(DESCRIPTION_LIMIT + 1);
+      const width = descriptionWidth(fields?.description ?? '');
+      expect(width, page.slug).toBeGreaterThanOrEqual(DESCRIPTION_MIN);
+      expect(width, page.slug).toBeLessThanOrEqual(DESCRIPTION_LIMIT);
     }
+  });
+
+  it('takes a page\'s own description over its intro', () => {
+    const mdx = "export const description = 'A description the page wrote for search results and link previews.';\n\n# Page\n\nIntro.\n";
+    expect(ownDescription(parse(mdx))).toBe('A description the page wrote for search results and link previews.');
+    expect(injected(run(join(APP, '(en)', 'page-x', 'page.mdx'), mdx))?.description).toBe('A description the page wrote for search results and link previews.');
+    expect(ownDescription(parse('# Page\n\nIntro.\n'))).toBeNull();
+  });
+
+  it('refuses a page whose description is too short or too wide', () => {
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), '# Page\n\nToo short.\n')).toThrow(/export const description/);
+    const long = `export const description = '${'word '.repeat(40)}';\n\n# Page\n\nIntro.\n`;
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), long)).toThrow(/its own is \d+ wide/);
+    expect(() => run(join(APP, '(en)', 'page-x', 'page.mdx'), 'export const description = `x${1}`;\n\n# Page\n\nIntro.\n')).toThrow(/plain string/);
   });
 
   it("keeps a page's own metadata export", () => {
@@ -91,10 +130,10 @@ describe('page metadata', () => {
   });
 
   it('points a Korean page at its own URL, language and image', () => {
-    const metadata = pageMetadata({ locale: 'ko', slug: 'utilities/use-modal-layer', title: 'useModalLayer', description: '설명' });
+    const metadata = pageMetadata({ locale: 'ko', slug: 'utilities/use-modal-layer', title: 'useModalLayer', description: DICTIONARIES.ko.hero.description });
     expect(metadata).toMatchObject({
       title: { absolute: 'useModalLayer · Todae' },
-      description: '설명',
+      description: DICTIONARIES.ko.hero.description,
       alternates: { canonical: '/ko/utilities/use-modal-layer' },
       openGraph: {
         url: '/ko/utilities/use-modal-layer',
@@ -104,7 +143,7 @@ describe('page metadata', () => {
       },
       twitter: { card: 'summary_large_image', images: [{ url: '/og/ko/utilities/use-modal-layer' }] },
     });
-    expect(pageMetadata({ locale: 'en', slug: '', title: 'Todae', description: 'x' })).toMatchObject({
+    expect(pageMetadata({ locale: 'en', slug: '', title: 'Todae', description: DICTIONARIES.en.hero.description })).toMatchObject({
       title: { absolute: 'Todae' },
       alternates: { canonical: '/' },
       openGraph: { url: '/', images: [{ url: '/og/en' }] },
@@ -115,7 +154,7 @@ describe('page metadata', () => {
     const metadata = localeMetadata('ko');
     expect(metadata.alternates).toBeUndefined();
     expect(metadata.openGraph).not.toHaveProperty('url');
-    expect(metadata.description).toBe(DICTIONARIES.ko.hero.lead);
+    expect(metadata.description).toBe(DICTIONARIES.ko.hero.description);
     expect(metadata.metadataBase?.href).toBe(`${DOCS_ORIGIN}/`);
   });
 });

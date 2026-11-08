@@ -6,7 +6,7 @@ export const metadata = pageMetadata({
   locale: 'ko',
   slug: '',
   title: SITE_NAME,
-  description: DICTIONARIES.ko.hero.lead,
+  description: DICTIONARIES.ko.hero.description,
 });
 
 export default function KoreanHomePage() {
