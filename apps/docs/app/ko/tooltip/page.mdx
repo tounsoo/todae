@@ -1,4 +1,4 @@
-import TooltipOverflow from '../../../examples/utilities/use-tooltip/TooltipOverflow';
+import TooltipTime from '../../../examples/utilities/use-tooltip/TooltipTime';
 import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
 import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
 import { Code } from '@tounsoo/todae/code';
@@ -45,10 +45,10 @@ function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; ski
 
 ## 예시
 
-오버플로 칩과 버튼이 아닌 다른 트리거는 [useTooltip](/utilities/use-tooltip)을 씁니다. 이 데모의 코드도 그곳에 있습니다. 탭으로 이동할 수 없는 래퍼에는 `tabIndex={0}`을 지정하세요.
+정확한 시각을 팁으로 보여 주는 상대 시간처럼 버튼이 아닌 트리거는 [useTooltip](/utilities/use-tooltip)을 씁니다. 이 데모의 코드도 그곳에 있습니다. 탭으로 이동할 수 없는 트리거에는 `tabIndex={0}`을 지정하세요. 탭하면 팁이 열리지 않으므로, 숨긴 칩을 나타내는 `+N`은 [ChipList](/chip-list)의 +N 버튼으로 만드세요. 이 버튼은 숨긴 칩을 팝오버로 엽니다.
 
 <Example>
-  <TooltipOverflow />
+  <TooltipTime locale="ko" />
 </Example>
 
 링크가 있는 인터랙티브 팁입니다. [useTooltip](/utilities/use-tooltip)에 `interactive: true`를 설정하세요. 훅이 상태 머신을 맡도록 `Button.Root`에 `tooltip={false}`를 설정하세요.

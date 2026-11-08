@@ -1,12 +1,12 @@
-import TooltipOverflow from '../../../../examples/utilities/use-tooltip/TooltipOverflow';
+import TooltipTime from '../../../../examples/utilities/use-tooltip/TooltipTime';
 
 # useTooltip
 
 `useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay`, or else the `tooltip.delay.show` token (300ms by default), focus from keys opens at once, focus that follows a press, such as a click's, opens no tip, and on a coarse pointer only keyboard focus opens one. While a hover tip is open, and for the next tip's `skipDelay` milliseconds after the last hover tip closes, that next hover tip opens at once. `skipDelay` defaults to 300, and a `skipDelay` of 0 turns skipping off, so that tip always waits. Focus does not start that window. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
 
-A `+N` count chip and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
+A non-button trigger, such as a relative time that tips its exact time, uses the hook directly. Mark a non-tabbable trigger with `tabIndex={0}`. A tap opens no tip, so keep the tip a hint: a `+N` that stands for hidden chips is [ChipList](/chip-list)'s +N button, which opens a popover with them. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
 
-<Example of={TooltipOverflow} />
+<Example of={TooltipTime} />
 
 ## Accessible composition
 

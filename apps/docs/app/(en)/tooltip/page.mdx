@@ -1,4 +1,4 @@
-import TooltipOverflow from '../../../examples/utilities/use-tooltip/TooltipOverflow';
+import TooltipTime from '../../../examples/utilities/use-tooltip/TooltipTime';
 import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
 import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
 import { Code } from '@tounsoo/todae/code';
@@ -45,10 +45,10 @@ function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; ski
 
 ## Examples
 
-Overflow chips and other non-button triggers use [useTooltip](/utilities/use-tooltip), which has this demo's code. Mark a non-tabbable wrap with `tabIndex={0}`.
+Non-button triggers, such as a relative time that tips its exact time, use [useTooltip](/utilities/use-tooltip), which has this demo's code. Mark a non-tabbable trigger with `tabIndex={0}`. A tap opens no tip, so a `+N` that stands for hidden chips is [ChipList](/chip-list)'s +N button, which opens a popover with them.
 
 <Example>
-  <TooltipOverflow />
+  <TooltipTime locale="en" />
 </Example>
 
 Interactive tip with a link. Set `interactive: true` on [useTooltip](/utilities/use-tooltip). Set `tooltip={false}` on `Button.Root` so the hook owns the machine.
