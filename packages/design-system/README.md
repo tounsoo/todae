@@ -55,7 +55,7 @@ In Next.js, the main entry is a client module: a Server Component can render the
 
 An agent writing code with Todae can start here, since this README is also in `node_modules/@tounsoo/todae`.
 
-- **MCP server:** `https://todae.omsoo.design/api/mcp` looks up Todae's components, recipes, tokens and the changes between releases, with no sign-in. In Claude Code, run `claude mcp add --transport http todae https://todae.omsoo.design/api/mcp`. [MCP server](https://todae.omsoo.design/mcp) covers other clients and lists every tool.
+- **MCP server:** `https://todae.omsoo.design/api/mcp` looks up Todae's components, recipes, tokens and the changes between releases, with no sign-in. In Claude Code, run `claude mcp add --transport http todae https://todae.omsoo.design/api/mcp`. Before writing code with a component, call the server's `get_docs_page` tool with the component's or hook's name, such as `Tooltip` or `useTooltip`: it returns the docs page with each example's code, which shows how the parts and hooks fit together. [MCP server](https://todae.omsoo.design/mcp) covers other clients and lists every tool.
 - **Props for the installed version:** `@tounsoo/todae/schema/components.json` lists each part, hook and helper with its props. The MCP server describes the latest release, and on 0.x a minor release can break the API, so the installed schema wins where the two differ. The server's `get_changes` tool lists the breaking changes from the installed version to the latest.
 
 Five things that habits from other React libraries get wrong:
