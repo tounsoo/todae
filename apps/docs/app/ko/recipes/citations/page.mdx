@@ -1,4 +1,4 @@
-import { CitationsExample } from '../../../../components/demos/CitationsDemo';
+import CitationsExample from '../../../../examples/recipes/citations/CitationsExample';
 
 export const description = '답의 인용 레시피입니다. 출처 목록으로 가는 번호 Link와, 그 출처를 미리 보여 주는 인터랙티브 Tooltip으로 만듭니다.';
 
@@ -8,44 +8,11 @@ export const description = '답의 인용 레시피입니다. 출처 목록으�
 
 번호 위에 포인터를 올리거나 포커스를 옮기면 출처를 미리 볼 수 있습니다. 번호를 따라가면 목록으로 이동합니다.
 
-<Example block>
-  <CitationsExample />
-</Example>
+<Example of={CitationsExample} block />
 
 ## 인용 표시
 
 표시마다 `interactive: true`를 준 [useTooltip](/utilities/use-tooltip)을 하나씩 쓰므로, 미리 보기에 출처 링크를 넣을 수 있고 포인터가 미리 보기로 건너갈 수 있습니다. 목록에서 해당 출처 항목을 가리키는 표시의 `Link.Root`에 `getTriggerProps`를 펼칩니다. 보이는 글자는 본문과 같은 크기의 괄호 속 번호로, Todae 기본 테마에서 약 18~22×20 CSS 픽셀입니다. 이는 WCAG 2.2 Target Size (Minimum)의 24×24보다 작지만, 이 기준은 문장 안의 대상을 예외로 두므로 표시는 그 예외로 기준을 충족합니다. 괄호는 `aria-hidden`이므로, 링크 이름은 앞의 시각적으로 숨긴 단어 덕분에 "Source 1"로 유지됩니다. 표시의 스타일을 바꿔도 괄호는 숨긴 채로 둡니다. `Tooltip.Root`는 `<span>`으로 렌더링되므로 표시와 미리 보기가 렌더러가 쓴 문단 안에 들어갑니다. 미리 보기의 내용은 링크, `<br />`, `Text.Root as="span"` 같은 구문 요소(phrasing content)로만 채웁니다. 개발 환경에서는 팁 안의 `<p>`나 `<div>`에 Todae가 오류를 기록합니다.
-
-```tsx
-import { Link, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
-import { useId } from 'react';
-
-type Source = { title: string; site: string; url: string };
-
-export function Citation({ number, source, href }: { number: number; source: Source; href: string }) {
-  const tooltip = useTooltip({ interactive: true });
-  const titleId = useId();
-  return (
-    <>
-      <Link.Root href={href} {...tooltip.getTriggerProps()}>
-        <VisuallyHidden.Root>Source </VisuallyHidden.Root>
-        <span aria-hidden>[</span>
-        {number}
-        <span aria-hidden>]</span>
-      </Link.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()} aria-labelledby={titleId}>
-        <Link.Root id={titleId} href={source.url}>
-          {source.title}
-        </Link.Root>
-        <br />
-        <Text.Root as="span" tone="muted">
-          {source.site}
-        </Text.Root>
-      </Tooltip.Root>
-    </>
-  );
-}
-```
 
 ## 출처 목록
 

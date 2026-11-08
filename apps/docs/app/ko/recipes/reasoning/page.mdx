@@ -1,4 +1,4 @@
-import { ReasoningExample } from '../../../../components/demos/ReasoningDemo';
+import ReasoningExample from '../../../../examples/recipes/reasoning/ReasoningExample';
 
 export const description = '모델 추론의 레시피입니다. 답의 Message.Root 안 Disclosure로, 추론이 오는 동안 열리고 답이 시작되면 닫힙니다.';
 
@@ -8,37 +8,11 @@ export const description = '모델 추론의 레시피입니다. 답의 Message.
 
 Ask again을 눌러 추론이 도착하고, 끝나면 닫히고, 답이 이어지는 모습을 보세요.
 
-<Example block>
-  <ReasoningExample />
-</Example>
+<Example of={ReasoningExample} block />
 
 ## 블록
 
 summary는 블록에 무엇이 있는지 말로 알립니다. 추론이 도착하는 동안에는 "Thinking", 그 뒤에는 걸린 시간입니다. "Thinking" 옆의 Loader `dots`는 스크린 리더에서 숨깁니다. 단어가 이미 같은 것을 말하기 때문입니다. 문구와 걸린 시간의 로케일은 제품의 것이므로 제품의 문자열에서 가져오세요. 블록은 `Message.Content` 앞에 두고, 추론은 [Text](/text)에 담아 넘기거나 markdown이면 [Prose](/prose)에 담아 넘기세요.
-
-```tsx
-import { Disclosure, Loader } from '@tounsoo/todae';
-import type { ReactNode } from 'react';
-
-const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
-
-export function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds: number; children: ReactNode }) {
-  return (
-    <Disclosure.Root open={thinking}>
-      <Disclosure.Summary>
-        {thinking ? 'Thinking' : `Thought for ${duration.format(seconds)}`}
-        {thinking && (
-          <>
-            {' '}
-            <Loader.Root variant="dots" aria-hidden="true" />
-          </>
-        )}
-      </Disclosure.Summary>
-      {children}
-    </Disclosure.Root>
-  );
-}
-```
 
 ## 생각하는 동안 열기
 

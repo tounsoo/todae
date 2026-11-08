@@ -133,7 +133,7 @@ function PartView({ part }: { part: Part }) {
   }
 }
 
-export function MessagePartsExample() {
+export default function MessagePartsExample() {
   return (
     <Message.Root aria-label="Assistant" style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
       {PARTS.map((part) => (

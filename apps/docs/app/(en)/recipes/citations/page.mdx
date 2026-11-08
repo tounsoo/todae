@@ -1,4 +1,4 @@
-import { CitationsExample } from '../../../../components/demos/CitationsDemo';
+import CitationsExample from '../../../../examples/recipes/citations/CitationsExample';
 
 export const description = "A recipe for citations in a reply: a numbered Link to the reply's sources, with an interactive Tooltip that previews each source.";
 
@@ -8,44 +8,11 @@ A recipe, not a package namespace. A citation in a reply is a numbered [Link](/l
 
 Hover over a number or move focus to it to preview its source. Follow it to jump to the list.
 
-<Example block>
-  <CitationsExample />
-</Example>
+<Example of={CitationsExample} block />
 
 ## The marker
 
 Each marker is its own [useTooltip](/utilities/use-tooltip) with `interactive: true`, so the preview can hold the source's link and the pointer can cross onto it. Spread `getTriggerProps` on the marker's `Link.Root`, which points at the source's item in the list. The visible text is the number in brackets at the text's own size, about 18 to 22 by 20 CSS pixels in Todae's base theme. That is under the 24 by 24 of WCAG 2.2's Target Size (Minimum), which exempts a target in a sentence, so the marker meets it through that exception. The brackets are `aria-hidden`, so the link's name stays "Source 1" from the visually hidden word in front; keep them hidden if you restyle the marker. `Tooltip.Root` renders a `<span>`, so the marker and its preview sit inside the paragraph your renderer writes. Keep the preview's content to phrasing elements, such as a link, `<br />` and `Text.Root as="span"`; in development, Todae logs an error for a `<p>` or `<div>` in a tip.
-
-```tsx
-import { Link, Text, Tooltip, useTooltip, VisuallyHidden } from '@tounsoo/todae';
-import { useId } from 'react';
-
-type Source = { title: string; site: string; url: string };
-
-export function Citation({ number, source, href }: { number: number; source: Source; href: string }) {
-  const tooltip = useTooltip({ interactive: true });
-  const titleId = useId();
-  return (
-    <>
-      <Link.Root href={href} {...tooltip.getTriggerProps()}>
-        <VisuallyHidden.Root>Source </VisuallyHidden.Root>
-        <span aria-hidden>[</span>
-        {number}
-        <span aria-hidden>]</span>
-      </Link.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()} aria-labelledby={titleId}>
-        <Link.Root id={titleId} href={source.url}>
-          {source.title}
-        </Link.Root>
-        <br />
-        <Text.Root as="span" tone="muted">
-          {source.site}
-        </Text.Root>
-      </Tooltip.Root>
-    </>
-  );
-}
-```
 
 ## The sources list
 

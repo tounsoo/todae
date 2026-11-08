@@ -61,7 +61,7 @@ function Citation({ number, source, href }: { number: number; source: Source; hr
   );
 }
 
-export function CitationsExample() {
+export default function CitationsExample() {
   const id = useId();
   const sourceId = (source: Source) => `${id}-source-${SOURCES.indexOf(source) + 1}`;
   return (

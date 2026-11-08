@@ -122,7 +122,7 @@ function ToolCall({ call, onDecide }: { call: ToolCallData; onDecide: (approved:
   );
 }
 
-export function ToolCallExample() {
+export default function ToolCallExample() {
   const [calls, setCalls] = useState(CALLS);
   const [replying, setReplying] = useState(false);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());

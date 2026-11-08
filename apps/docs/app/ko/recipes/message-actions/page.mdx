@@ -1,4 +1,4 @@
-import { MessageActionsExample } from '../../../../components/demos/MessageActionsDemo';
+import MessageActionsExample from '../../../../examples/recipes/message-actions/MessageActionsExample';
 
 export const description = '채팅 메시지 아래 버튼의 레시피입니다. Message.Actions 안 Toolbar에 넣은 Button이고, 할 일은 제품이 정합니다.';
 
@@ -8,30 +8,11 @@ export const description = '채팅 메시지 아래 버튼의 레시피입니다
 
 질문 위에 포인터를 올리거나 그 안으로 포커스를 옮기면 동작이 보입니다. 복사, 편집, 다시 생성, 평가를 눌러 보세요.
 
-<Example block>
-  <MessageActionsExample />
-</Example>
+<Example of={MessageActionsExample} block />
 
 ## 복사
 
 [useClipboard](/utilities/use-clipboard)가 텍스트를 쓰고 결과를 알립니다. 렌더링한 HTML이 아니라 markdown처럼 메시지의 원본 텍스트를 복사하세요. 아이콘이 체크 표시로 바뀌는 동안에도 이름은 "Copy"로 남으므로, 스크린 리더는 알림을 듣습니다.
-
-```tsx
-import { Button, useClipboard } from '@tounsoo/todae';
-import { Check, Copy } from 'lucide-react';
-
-export function CopyButton({ text }: { text: string }) {
-  const clipboard = useClipboard();
-  const copied = clipboard.status === 'copied' && clipboard.text === text;
-  return (
-    <Button.Root variant="ghost" aria-label="Copy" onClick={() => clipboard.copy(text)}>
-      <Button.Icon>
-        {copied ? <Check /> : <Copy />}
-      </Button.Icon>
-    </Button.Root>
-  );
-}
-```
 
 ## 다시 생성과 평가
 

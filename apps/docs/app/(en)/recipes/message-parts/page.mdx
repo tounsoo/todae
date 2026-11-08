@@ -1,4 +1,4 @@
-import { MessagePartsExample } from '../../../../components/demos/MessagePartsDemo';
+import MessagePartsExample from '../../../../examples/recipes/message-parts/MessagePartsExample';
 import { Table } from '@tounsoo/todae/table';
 
 # Message parts
@@ -7,9 +7,7 @@ A recipe, not a package namespace. Todae knows no agent SDK's message shape. You
 
 The message below is one assistant reply inside `Message.Root`. Its pieces come from a local array, and the part types in that array are this page's. Use your SDK's names in their place. `Message.Avatar`, `Message.Header`, `Message.Content`, `Message.Time` and `Message.Actions` are the slots on the [Message](/message) page. A message can hold more than one `Message.Content`, with these pieces between them.
 
-<Example block>
-  <MessagePartsExample />
-</Example>
+<Example of={MessagePartsExample} block />
 
 ## The map
 
@@ -55,115 +53,7 @@ Each name in the first column is this page's. Yours can differ. Text is [Message
 
 Keep the reply as an array of parts, in the order your stream gives them. `Message.Root` spaces each child from the next, so a part needs no margin of its own.
 
-```tsx
-type Part =
-  | { type: 'text'; id: string; text: string }
-  | { type: 'reasoning'; id: string; text: string; thinking: boolean; seconds: number }
-  | {
-      type: 'tool-call';
-      id: string;
-      name: string;
-      input: Record<string, unknown>;
-      status: 'done';
-      output: unknown;
-    }
-  | {
-      type: 'tool-call';
-      id: string;
-      name: string;
-      input: Record<string, unknown>;
-      status: 'error';
-      error: string;
-    }
-  | { type: 'attachment'; id: string; name: string; size: string };
-```
-
 The switch is the mapper. It stays in your app. A finished call uses the same status words as [Tool call](/recipes/tool-call), Done and Failed, from one map. A call that is still running, or waiting for approval, is that recipe. The sample below is a call that has finished. The duration uses the same formatter as [Reasoning](/recipes/reasoning). The words and the locale stay yours. A part type this switch does not list renders nothing.
-
-```tsx
-import { Attachment, Badge, Code, CodeBlock, DataList, Disclosure, Message, Prose, Text, type BadgeTone } from '@tounsoo/todae';
-import { FileText } from 'lucide-react';
-
-const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
-
-const FINISHED: Record<'done' | 'error', { label: string; tone: BadgeTone }> = {
-  done: { label: 'Done', tone: 'success' },
-  error: { label: 'Failed', tone: 'critical' },
-};
-
-function PartView({ part }: { part: Part }) {
-  switch (part.type) {
-    case 'text':
-      return (
-        <Message.Content>
-          <Prose.Root>
-            <p>{part.text}</p>
-          </Prose.Root>
-        </Message.Content>
-      );
-    case 'reasoning':
-      return (
-        <Disclosure.Root open={part.thinking}>
-          <Disclosure.Summary>{part.thinking ? 'Thinking' : `Thought for ${duration.format(part.seconds)}`}</Disclosure.Summary>
-          <Text.Root tone="muted">
-            {part.text}
-          </Text.Root>
-        </Disclosure.Root>
-      );
-    case 'tool-call': {
-      const status = FINISHED[part.status];
-      return (
-        <Disclosure.Root>
-          <Disclosure.Summary>
-            <Code.Root>{part.name}</Code.Root> <Badge.Root tone={status.tone}>{status.label}</Badge.Root>
-          </Disclosure.Summary>
-          <DataList.Root orientation="vertical">
-            <DataList.Item>
-              <DataList.Term>Input</DataList.Term>
-              <DataList.Details>
-                <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} input`}>
-                  {JSON.stringify(part.input, null, 2)}
-                </CodeBlock.Root>
-              </DataList.Details>
-            </DataList.Item>
-            {part.status === 'done' && (
-              <DataList.Item>
-                <DataList.Term>Output</DataList.Term>
-                <DataList.Details>
-                  <CodeBlock.Root tabIndex={0} role="region" aria-label={`${part.name} output`} style={{ maxBlockSize: '16rem' }}>
-                    {JSON.stringify(part.output, null, 2)}
-                  </CodeBlock.Root>
-                </DataList.Details>
-              </DataList.Item>
-            )}
-            {part.status === 'error' && (
-              <DataList.Item>
-                <DataList.Term>Error</DataList.Term>
-                <DataList.Details>{part.error}</DataList.Details>
-              </DataList.Item>
-            )}
-          </DataList.Root>
-        </Disclosure.Root>
-      );
-    }
-    case 'attachment':
-      return (
-        <Attachment.Root status="ready">
-          <Attachment.Preview>
-            <FileText aria-hidden />
-          </Attachment.Preview>
-          <Attachment.Name>{part.name}</Attachment.Name>
-          <Attachment.Meta>{part.size}</Attachment.Meta>
-        </Attachment.Root>
-      );
-    default: {
-      const _exhaustive: never = part;
-      void _exhaustive;
-      return null;
-    }
-  }
-}
-```
 
 Render the array inside the message. Leave out `Attachment.Remove` for a file that is already in the reply.
 

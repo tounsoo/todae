@@ -32,7 +32,7 @@ function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds
   );
 }
 
-export function ReasoningExample() {
+export default function ReasoningExample() {
   const [phase, setPhase] = useState<Phase>('done');
   const [reasoning, setReasoning] = useState(REASONING);
   const [answer, setAnswer] = useState(ANSWER);

@@ -13,7 +13,6 @@ import {
 } from '@tounsoo/todae';
 import { Check, Copy, Pencil, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useLocale } from '../../lib/i18n/useLocale';
 
 const SENT = '2026-10-14T09:41:00+09:00[Asia/Seoul]';
 
@@ -34,8 +33,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export function MessageActionsExample() {
-  const locale = useLocale();
+export default function MessageActionsExample({ locale }: { locale: string }) {
   const sent = Temporal.ZonedDateTime.from(SENT);
   const [question, setQuestion] = useState('How do I name an icon-only button?');
   const [editing, setEditing] = useState(false);

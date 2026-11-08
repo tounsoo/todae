@@ -38,7 +38,7 @@ const PAGES = [
 const pad = { padding: 'var(--todae-space-3)' };
 
 /** A product's frame in a box. The links stay on this page: a click marks one current, as a router would. */
-export function AppShellExample() {
+export default function AppShellExample() {
   const wide = useWide();
   const mainId = useId();
   const headingId = useId();

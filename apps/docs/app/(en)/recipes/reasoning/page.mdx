@@ -1,4 +1,4 @@
-import { ReasoningExample } from '../../../../components/demos/ReasoningDemo';
+import ReasoningExample from '../../../../examples/recipes/reasoning/ReasoningExample';
 
 export const description = "A recipe for a model's reasoning: a Disclosure in the reply's Message.Root, open while reasoning arrives and closed once the answer starts.";
 
@@ -8,37 +8,11 @@ A recipe, not a package namespace. A model's reasoning is a [Disclosure](/disclo
 
 Ask again to watch the reasoning arrive, close up when it is done, and the answer follow.
 
-<Example block>
-  <ReasoningExample />
-</Example>
+<Example of={ReasoningExample} block />
 
 ## The block
 
 The summary says in words what the block holds: "Thinking" while the reasoning arrives, then how long it took. Loader's `dots` beside "Thinking" is hidden from screen readers, since the word already says it. The words and the locale of the duration are your product's, from its own strings. Put the block before `Message.Content`, and pass the reasoning in a [Text](/text), or in a [Prose](/prose) when it is markdown.
-
-```tsx
-import { Disclosure, Loader } from '@tounsoo/todae';
-import type { ReactNode } from 'react';
-
-const duration = new Intl.NumberFormat('en', { style: 'unit', unit: 'second', unitDisplay: 'long' });
-
-export function Reasoning({ thinking, seconds, children }: { thinking: boolean; seconds: number; children: ReactNode }) {
-  return (
-    <Disclosure.Root open={thinking}>
-      <Disclosure.Summary>
-        {thinking ? 'Thinking' : `Thought for ${duration.format(seconds)}`}
-        {thinking && (
-          <>
-            {' '}
-            <Loader.Root variant="dots" aria-hidden="true" />
-          </>
-        )}
-      </Disclosure.Summary>
-      {children}
-    </Disclosure.Root>
-  );
-}
-```
 
 ## Open while it thinks
 

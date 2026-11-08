@@ -47,7 +47,7 @@ const NONE: Filters = { status: [], priority: [], assignee: [] };
 const TONES: Record<Status, BadgeTone> = { Open: 'info', 'In progress': 'warning', Closed: 'neutral' };
 const countOf = (count: number) => `${count} ${count === 1 ? 'issue' : 'issues'}`;
 
-export function FilterBarIssues() {
+export default function FilterBarIssues() {
   const announce = useAnnouncer();
   const firstFilter = useRef<HTMLButtonElement>(null);
   const [filters, setFilters] = useState<Filters>(NONE);

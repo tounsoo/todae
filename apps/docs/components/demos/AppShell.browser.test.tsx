@@ -3,7 +3,7 @@ import { page, userEvent } from '@vitest/browser/context';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { AppShellExample } from './AppShellDemo';
+import AppShellExample from '../../examples/recipes/app-shell/AppShellExample';
 
 beforeEach(async () => {
   await page.viewport(1280, 800);
