@@ -30,8 +30,8 @@ const rankCommands: ComboboxFilterOptions = (options, query) => {
   return [...starts, ...holds.filter((option) => !starts.includes(option))];
 };
 
-/** `onRun` lets tests count runs; the page renders it without props. */
-export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = {}) {
+/** `onRun` is called with the value of each command that runs. */
+export default function CommandPalette({ onRun }: { onRun?: (value: string) => void } = {}) {
   const [ran, setRan] = useState<string | null>(null);
   const cb = useCombobox({
     options: COMMANDS,

@@ -3,7 +3,7 @@
 import { Button, Stack, Text, useFocusHandoff } from '@tounsoo/todae';
 import { useRef, useState } from 'react';
 
-export function FocusHandoffRequest() {
+export default function FocusHandoffRequest() {
   const [answer, setAnswer] = useState<'allowed' | 'denied' | null>(null);
   const allow = useRef<HTMLButtonElement>(null);
   const askAgain = useRef<HTMLButtonElement>(null);

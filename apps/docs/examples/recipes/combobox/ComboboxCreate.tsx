@@ -3,24 +3,15 @@
 import { ChevronDown } from 'lucide-react';
 import { useLayoutEffect, useState } from 'react';
 import {
-  BottomSheet,
-  Button,
   Field,
   Label,
   OptionList,
   Popover,
-  Stack,
   Text,
   useCombobox,
   useHighlight,
   type ComboboxOption,
 } from '@tounsoo/todae';
-
-const FRAMEWORKS: ComboboxOption[] = [
-  { value: 'react', label: 'React' },
-  { value: 'redux', label: 'Redux' },
-  { value: 'svelte', label: 'Svelte' },
-];
 
 const PACKAGES: ComboboxOption[] = [
   { value: 'todae', label: 'todae' },
@@ -32,85 +23,6 @@ function optionNodes(
   getOptionProps: ReturnType<typeof useCombobox>['getOptionProps'],
 ) {
   return items.map((item) => <OptionList.Option key={item.id} {...getOptionProps(item)} />);
-}
-
-export function ComboboxAuto() {
-  const cb = useCombobox({
-    options: FRAMEWORKS,
-    presentation: 'auto',
-  });
-  const found = useHighlight({ name: 'combobox-match', query: cb.query });
-  return (
-    <Stack.Root>
-      <Text.Root tone="muted">
-        presentation: {cb.presentation}
-      </Text.Root>
-      {cb.isSheet ? (
-        <>
-          <Field.Group>
-            <Label.Root {...cb.getLabelProps()}>
-              Framework
-            </Label.Root>
-            <Button.Root {...cb.getTriggerProps()} variant="secondary">
-              {FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Choose'}
-            </Button.Root>
-          </Field.Group>
-          <BottomSheet.Root {...cb.getSheetProps()}>
-            <BottomSheet.Body>
-              <Field.Root id={cb.ids.input} aria-label="Framework">
-                <Field.TextInput {...cb.getInputProps()} />
-              </Field.Root>
-              <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
-                {optionNodes(cb.items, cb.getOptionProps)}
-              </OptionList.Root>
-            </BottomSheet.Body>
-          </BottomSheet.Root>
-        </>
-      ) : (
-        <>
-          <Field.Group>
-            <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
-            <Field.Root {...cb.getAnchorProps()}>
-              <Field.TextInput {...cb.getInputProps()} />
-            </Field.Root>
-          </Field.Group>
-          <Popover.Root {...cb.getPopoverProps()}>
-            <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
-              {optionNodes(cb.items, cb.getOptionProps)}
-            </OptionList.Root>
-          </Popover.Root>
-        </>
-      )}
-    </Stack.Root>
-  );
-}
-
-export function ComboboxEmpty() {
-  const cb = useCombobox({
-    options: PACKAGES,
-    presentation: 'popover',
-  });
-  const found = useHighlight({ name: 'combobox-match', query: cb.query });
-  return (
-    <>
-      <Field.Group>
-        <Label.Root {...cb.getLabelProps()}>Package</Label.Root>
-        <Field.Root {...cb.getAnchorProps()}>
-          <Field.TextInput {...cb.getInputProps()} />
-          <Field.Icon>
-            <ChevronDown />
-          </Field.Icon>
-        </Field.Root>
-      </Field.Group>
-      <Popover.Root {...cb.getPopoverProps()}>
-        <Text.Root role="status">{cb.isEmpty ? 'No matches' : ''}</Text.Root>
-        {/* Keep the listbox mounted: the input's aria-controls points at it. */}
-        <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
-          {optionNodes(cb.items, cb.getOptionProps)}
-        </OptionList.Root>
-      </Popover.Root>
-    </>
-  );
 }
 
 /** The create row's words. The typed text sits between its quotes. */
@@ -171,7 +83,7 @@ function savePackage(label: string): Promise<string> {
   });
 }
 
-export function ComboboxCreate() {
+export default function ComboboxCreate() {
   const [options, setOptions] = useState(PACKAGES);
   const cb = useCombobox({
     options,
@@ -203,39 +115,6 @@ export function ComboboxCreate() {
         <Text.Root role="status">
           {cb.creating ? 'Creating…' : cb.createError ? 'Couldn’t create that package.' : ''}
         </Text.Root>
-      </Popover.Root>
-    </>
-  );
-}
-
-export function ComboboxCreateMulti() {
-  const [options, setOptions] = useState(PACKAGES);
-  const cb = useCombobox({
-    selectionMode: 'multiple',
-    options,
-    allowCreate: true,
-    presentation: 'popover',
-    createLabel,
-    onCreate: (label) => {
-      setOptions((current) => appendCreated(current, label));
-      return label;
-    },
-  });
-  return (
-    <>
-      <Field.Group>
-        <Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
-        <Field.Root {...cb.getAnchorProps()}>
-          <Field.ChipInput {...cb.getChipInputProps()} />
-          <Field.Icon>
-            <ChevronDown />
-          </Field.Icon>
-        </Field.Root>
-      </Field.Group>
-      <Popover.Root {...cb.getPopoverProps()}>
-        <OptionList.Root {...cb.getListboxProps()}>
-          <MarkedOptions cb={cb} />
-        </OptionList.Root>
       </Popover.Root>
     </>
   );

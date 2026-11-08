@@ -3,8 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { PinnedChannels } from './PinnedChannels';
-import { ReorderExample } from './ReorderDemo';
+import ReorderExample, { PinnedChannels } from '../../examples/recipes/reorder/ReorderExample';
 
 afterEach(cleanup);
 

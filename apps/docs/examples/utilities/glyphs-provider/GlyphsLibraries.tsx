@@ -15,46 +15,69 @@ import {
   ToggleGroup,
   type Glyphs,
 } from '@tounsoo/todae';
+import { Check as PhCheck, X as PhX, CaretDown, CaretRight, DotsThree, Info as PhInfo } from '@phosphor-icons/react';
+import { IconCheck, IconChevronDown, IconChevronRight, IconDots, IconInfoCircle, IconX } from '@tabler/icons-react';
+import { Check, ChevronDown, ChevronRight, Ellipsis, Info, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';
+
+/** The glyphs the parts below draw, and an icon for the alert, from each library. */
+const LIBRARIES: { id: string; name: string; glyphs: Glyphs; info: ReactNode }[] = [
+  {
+    id: 'lucide',
+    name: 'Lucide',
+    glyphs: {
+      close: <X />,
+      check: <Check />,
+      chevron: <ChevronDown />,
+      separator: <ChevronRight />,
+      ellipsis: <Ellipsis />,
+    },
+    info: <Info />,
+  },
+  {
+    id: 'phosphor',
+    name: 'Phosphor',
+    glyphs: {
+      close: <PhX />,
+      check: <PhCheck weight="bold" />,
+      chevron: <CaretDown />,
+      separator: <CaretRight />,
+      ellipsis: <DotsThree weight="bold" />,
+    },
+    info: <PhInfo />,
+  },
+  {
+    id: 'tabler',
+    name: 'Tabler',
+    glyphs: {
+      close: <IconX />,
+      check: <IconCheck />,
+      chevron: <IconChevronDown />,
+      separator: <IconChevronRight />,
+      ellipsis: <IconDots />,
+    },
+    info: <IconInfoCircle />,
+  },
+];
 
 const NO_GLYPHS: Glyphs = {};
 
-/** Picks Todae's own glyphs or one of the three libraries. */
-export function LibraryPicker({
-  value,
-  onChange,
-  label,
-}: {
-  value: string;
-  onChange: (id: string) => void;
-  label: string;
-}) {
-  return (
-    <ToggleGroup.Root aria-label={label} value={value} onValueChange={(next) => next && onChange(next)}>
-      <ToggleGroup.Item value="todae">Todae</ToggleGroup.Item>
-      {ICON_LIBRARIES.map((library) => (
-        <ToggleGroup.Item key={library.id} value={library.id}>
-          {library.name}
-        </ToggleGroup.Item>
-      ))}
-    </ToggleGroup.Root>
-  );
-}
-
-export function libraryById(id: string): IconLibrary | undefined {
-  return ICON_LIBRARIES.find((library) => library.id === id);
-}
-
 /** Every part that draws a glyph, under the glyphs the picker chose. */
-export function GlyphsLibraries() {
+export default function GlyphsLibraries() {
   const [id, setId] = useState('lucide');
-  const library = libraryById(id);
+  const library = LIBRARIES.find((each) => each.id === id);
   return (
     <Stack.Root>
-      <LibraryPicker label="Icon library" value={id} onChange={setId} />
+      <ToggleGroup.Root aria-label="Icon library" value={id} onValueChange={(next) => next && setId(next)}>
+        <ToggleGroup.Item value="todae">Todae</ToggleGroup.Item>
+        {LIBRARIES.map((each) => (
+          <ToggleGroup.Item key={each.id} value={each.id}>
+            {each.name}
+          </ToggleGroup.Item>
+        ))}
+      </ToggleGroup.Root>
       <GlyphsProvider glyphs={library?.glyphs ?? NO_GLYPHS}>
-        <GlyphParts icon={library?.icons.info} />
+        <GlyphParts icon={library?.info} />
       </GlyphsProvider>
     </Stack.Root>
   );

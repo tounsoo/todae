@@ -3,7 +3,10 @@ import ComboboxAsync from '../../../../examples/recipes/combobox/ComboboxAsync';
 import ComboboxSheet from '../../../../examples/recipes/combobox/ComboboxSheet';
 import ComboboxMulti from '../../../../examples/recipes/combobox/ComboboxMulti';
 import ComboboxSingle from '../../../../examples/recipes/combobox/ComboboxSingle';
-import { ComboboxAuto, ComboboxCreate, ComboboxCreateMulti, ComboboxEmpty } from '../../../../components/demos/ComboboxDemo';
+import ComboboxAuto from '../../../../examples/recipes/combobox/ComboboxAuto';
+import ComboboxEmpty from '../../../../examples/recipes/combobox/ComboboxEmpty';
+import ComboboxCreate from '../../../../examples/recipes/combobox/ComboboxCreate';
+import ComboboxCreateMulti from '../../../../examples/recipes/combobox/ComboboxCreateMulti';
 
 # Combobox
 
@@ -17,9 +20,7 @@ If presentation flips while the list is open, the hook closes with `blur`.
 
 The badge shows what [useSheetPresentation](/utilities/use-sheet-presentation) picks here; `isSheet` is not `isTouch`.
 
-<Example>
-  <PresentationBadge />
-</Example>
+<Example of={PresentationBadge} />
 
 ## Popover · single
 
@@ -43,9 +44,7 @@ The closed control is `Button.Root`. Search Field lives inside the sheet. Same `
 
 One hook. The tree flips with the presentation. Force `presentation` when you need a still frame.
 
-<Example block>
-  <ComboboxAuto />
-</Example>
+<Example of={ComboboxAuto} block />
 
 ## Async
 
@@ -59,17 +58,11 @@ Type `fail` to see the error row.
 
 No matches render a status row. `allowCreate` adds one `Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected. It may return a promise: `creating` is true until it settles. What it throws or rejects with lands in `createError` while the text still asks for that label. Show both in a status element next to the create row, as the first create demo does; type `fail` there to see it.
 
-<Example block>
-  <ComboboxEmpty />
-</Example>
+<Example of={ComboboxEmpty} block />
 
-<Example block>
-  <ComboboxCreate />
-</Example>
+<Example of={ComboboxCreate} block />
 
-<Example block>
-  <ComboboxCreateMulti />
-</Example>
+<Example of={ComboboxCreateMulti} block />
 
 ## Highlight matches
 

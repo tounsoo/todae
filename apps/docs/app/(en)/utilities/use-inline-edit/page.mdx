@@ -1,4 +1,4 @@
-import { InlineEditExample } from '../../../../components/demos/InlineEditDemo';
+import InlineEditExample from '../../../../examples/recipes/inline-edit/InlineEditExample';
 
 # useInlineEdit
 
@@ -30,9 +30,7 @@ const edit = useInlineEdit({ value: name, onCommit: setName });
 
 Press Rename, type a new name, then press Enter to save or Escape to put the name back. Clear the name to see an edit that is turned down.
 
-<Example>
-  <InlineEditExample />
-</Example>
+<Example of={InlineEditExample} />
 
 `start()`, which the trigger calls, opens the edit from `value`, focuses the input and selects its text, so typing replaces the name. `start(draft)` opens it with another text, such as a name a failed save should offer again. Neither does anything while the edit is open.
 

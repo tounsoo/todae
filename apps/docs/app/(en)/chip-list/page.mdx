@@ -1,4 +1,6 @@
-import { ChipListDemo } from '../../../components/demos/ChipListDemo';
+import ChipListOneRow from '../../../examples/chip-list/ChipListOneRow';
+import ChipListTwoRows from '../../../examples/chip-list/ChipListTwoRows';
+import ChipListReadOnly from '../../../examples/chip-list/ChipListReadOnly';
 
 # ChipList
 
@@ -21,13 +23,9 @@ In the popover, Tab past the last chip goes on to the control after +N, Shift+Ta
 
 ## One row / Two rows
 
-<Example>
-  <ChipListDemo maxRows={1} />
-</Example>
+<Example of={ChipListOneRow} />
 
-<Example>
-  <ChipListDemo maxRows={2} />
-</Example>
+<Example of={ChipListTwoRows} />
 
 ## Read-only
 
@@ -37,9 +35,7 @@ Leave out `onRemove`, and the chips have no remove buttons.
 <ChipList.Root aria-label="Tags" chips={tags} maxRows={1} />
 ```
 
-<Example>
-  <ChipListDemo maxRows={1} readOnly />
-</Example>
+<Example of={ChipListReadOnly} />
 
 ## Icons
 

@@ -2,7 +2,6 @@
 
 import { Field, Label, Stack, ToggleGroup, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
-import { useLocale } from '../../lib/i18n/useLocale';
 
 const PRESETS: { id: string; label: string; range: (today: Temporal.PlainDate) => DateRange }[] = [
   { id: 'last-7', label: 'Last 7 days', range: (today) => ({ start: today.subtract({ days: 6 }), end: today }) },
@@ -26,9 +25,8 @@ function presetOf(range: DateRange | null, pressed: string | null) {
   return PRESETS.find((each) => isRangeOf(each, range, today))?.id ?? null;
 }
 
-export function DateRangePresets() {
+export default function DateRangePresets({ locale }: { locale: string }) {
   const id = useId();
-  const locale = useLocale();
   const [range, setRange] = useState<DateRange | null>(null);
   const [pressed, setPressed] = useState<string | null>(null);
   return (

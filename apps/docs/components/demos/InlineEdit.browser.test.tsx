@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { InlineEditExample } from './InlineEditDemo';
+import InlineEditExample from '../../examples/recipes/inline-edit/InlineEditExample';
 
 afterEach(cleanup);
 

@@ -1,4 +1,4 @@
-import { CommandPalette } from '../../../../components/demos/CommandPaletteDemo';
+import CommandPalette from '../../../../examples/recipes/command-palette/CommandPalette';
 
 # Command palette
 
@@ -6,43 +6,7 @@ A recipe, not a package namespace. [Dialog](/dialog) holds the palette, and [use
 
 Use the `dialog` presentation and spread `getDialogProps()` on `Dialog.Root`. When the palette opens, the hook clears the input and makes the top row active, and a command chosen while the palette closes does not run again. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected. `filterOptions` ranks the list: commands that start with the text come first, so the top row, which Enter runs, is the likeliest one.
 
-```tsx
-// Commands that start with the text come first, then the others that hold it.
-const rankCommands: ComboboxFilterOptions = (options, query) => {
-  const needle = query.toLowerCase();
-  const holds = options.filter((option) => option.label.toLowerCase().includes(needle));
-  const starts = holds.filter((option) => option.label.toLowerCase().startsWith(needle));
-  return [...starts, ...holds.filter((option) => !starts.includes(option))];
-};
-
-const cb = useCombobox({
-  options: commands,
-  filterOptions: rankCommands,
-  presentation: 'dialog',
-  value: null,
-  onValueChange: (value: string | null) => { if (value) run(value); },
-});
-useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true));
-
-<Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
-  Search commands
-</Button.Root>
-<Dialog.Root {...cb.getDialogProps()} aria-label="Commands">
-  <Field.Root id={cb.ids.input} aria-label="Command">
-    <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
-  </Field.Root>
-  <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Commands' })} hidden={cb.isEmpty}>
-    {cb.items.map((item) => (
-      <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
-    ))}
-  </OptionList.Root>
-  <Text.Root role="status">{cb.isEmpty ? 'No matching commands.' : ''}</Text.Root>
-</Dialog.Root>
-```
-
-<Example>
-  <CommandPalette />
-</Example>
+<Example of={CommandPalette} />
 
 The shortcut is [useHotkey](/utilities/use-hotkey), which opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
 

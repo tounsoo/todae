@@ -4,7 +4,7 @@ import { Button, ErrorMessage, Field, Stack, Text, useInlineEdit } from '@tounso
 import { Check, Pencil, X } from 'lucide-react';
 import { useId, useState } from 'react';
 
-export function InlineEditExample() {
+export default function InlineEditExample() {
   const [name, setName] = useState('Q3 report');
   const nameId = useId();
   const errorId = useId();
