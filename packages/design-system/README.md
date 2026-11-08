@@ -60,10 +60,10 @@ An agent writing code with Todae can start here, since this README is also in `n
 
 Five things that habits from other React libraries get wrong:
 
-1. Most components are namespaces of parts, such as `Button.Root` and `Dialog.Title`, so there is no plain `<Button>`. Providers such as `ThemeProvider` are plain components. The schema has every exact name.
+1. Most components are namespaces of parts, such as `Button.Root` and `Dialog.Title`, so there is no plain `<Button>`. Providers such as `ThemeProvider` are plain components. The schema has the exact name of every part, hook and helper.
 2. Tooltip and Popover keep the open state in a hook. Spread `getTriggerProps()` from `useTooltip` or `usePopover` on the trigger, and `getTooltipProps()` or `getPopoverProps()` on `Tooltip.Root` or `Popover.Root`, which only draw the surface. There is no `Tooltip.Trigger`, `Tooltip.Content`, `Popover.Trigger` or `Popover.Content`. Menu is different: it has `Menu.Trigger` and `Menu.Content`.
 3. An icon-only `Button.Root` needs an `aria-label`, and it shows that label as its own tooltip, so it needs no Tooltip around it. To pair a button with `useTooltip`, pass `tooltip={false}`.
-4. A tap never opens a tooltip. Put anything a phone user must see in a Popover.
+4. Don't rely on a tap to open a tooltip: on a phone or tablet it never does. Put anything a touch user must see in a Popover.
 5. Recipes, such as a data table, a combobox or a command palette, are example code to copy, not exports: there is no `DataTable.*` or `Combobox.*`. Get a recipe's code with the server's `get_recipe` tool or from its docs page, such as [Data table](https://todae.omsoo.design/recipes/data-table).
 
 ## Browser support
