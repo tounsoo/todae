@@ -1,6 +1,7 @@
 import TooltipTime from '../../../examples/utilities/use-tooltip/TooltipTime';
 import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
-import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
+import TooltipPolicy from '../../../examples/tooltip/TooltipPolicy';
+import TooltipWarmup from '../../../examples/tooltip/TooltipWarmup';
 import { Code } from '@tounsoo/todae/code';
 import { Table } from '@tounsoo/todae/table';
 
@@ -18,55 +19,17 @@ Placement is CSS anchors. The tip sits above the trigger and flips below when it
 
 Slide from One to Three and each tip after the first opens at once, then land on Waits, which has `skipDelay={0}` and always waits, even straight from an open tip.
 
-<Example>
-  <TooltipWarmup />
-</Example>
-
-```tsx
-function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; skipDelay?: number }) {
-  const tooltip = useTooltip({ showDelay: 300, hideDelay: 0, skipDelay });
-  return (
-    <>
-      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
-        {label}
-      </Button.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()}>{tip}</Tooltip.Root>
-    </>
-  );
-}
-
-<Stack.Root direction="row" gap="none">
-  <WarmButton label="One" tip="Opens after a pause" />
-  <WarmButton label="Two" tip="Opens at once" />
-  <WarmButton label="Three" tip="Opens at once" />
-  <WarmButton label="Waits" tip="Waits again" skipDelay={0} />
-</Stack.Root>
-```
+<Example of={TooltipWarmup} />
 
 ## Examples
 
 Non-button triggers, such as a relative time that tips its exact time, use [useTooltip](/utilities/use-tooltip), which has this demo's code. Mark a non-tabbable trigger with `tabIndex={0}`. A tap opens no tip, so a `+N` that stands for hidden chips is [ChipList](/chip-list)'s +N button, which opens a popover with them.
 
-<Example>
-  <TooltipTime locale="en" />
-</Example>
+<Example of={TooltipTime} />
 
 Interactive tip with a link. Set `interactive: true` on [useTooltip](/utilities/use-tooltip). Set `tooltip={false}` on `Button.Root` so the hook owns the machine.
 
-```tsx
-const tooltip = useTooltip({ interactive: true });
-
-<Button.Root variant="ghost" tooltip={false} {...tooltip.getTriggerProps()}>
-  Policy
-</Button.Root>
-<Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
-  Interactive tips allow links. <Link.Root href="/policy">Read the policy</Link.Root>
-</Tooltip.Root>
-```
-
-<Example>
-  <TooltipPolicy />
-</Example>
+<Example of={TooltipPolicy} />
 
 ## What goes where
 

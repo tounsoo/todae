@@ -3,7 +3,7 @@
 import { Stack, Tabs, Text } from '@tounsoo/todae';
 import { useState } from 'react';
 
-export function TabsManualVertical() {
+export default function TabsManualVertical() {
   const [value, setValue] = useState('overview');
   return (
     <Stack.Root>

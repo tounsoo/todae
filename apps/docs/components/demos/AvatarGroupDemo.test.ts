@@ -13,7 +13,8 @@ function cssFences(path: string): string[] {
 }
 
 const STACK = read('components/demos/AvatarGroupDemo.module.css');
-const SIZES = read('components/demos/AvatarDemo.module.css');
+// The avatar page's size rule is one of the group stylesheet's.
+const SIZES = STACK;
 
 describe('avatar group recipe css', () => {
   it.each(['app/(en)/recipes/avatar-group/page.mdx', 'app/ko/recipes/avatar-group/page.mdx'])(

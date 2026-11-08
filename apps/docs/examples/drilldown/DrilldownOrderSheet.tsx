@@ -23,7 +23,7 @@ const ORDER = [
   { id: 'rug', name: 'Wool rug', detail: '160 × 230 cm, undyed wool. Ships in 1 week.' },
 ];
 
-export function DrilldownOrderSheet() {
+export default function DrilldownOrderSheet() {
   const [open, setOpen] = useState(false);
   return (
     <>

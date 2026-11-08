@@ -2,7 +2,7 @@
 
 import { Badge, Stack, Text } from '@tounsoo/todae';
 
-export function StackGaps() {
+export default function StackGaps() {
   return (
     <Stack.Root gap="spacious">
       {(['none', 'condensed', 'normal', 'spacious'] as const).map((gap) => (

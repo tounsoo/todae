@@ -3,7 +3,7 @@
 import { Menu } from '@tounsoo/todae';
 import { useState } from 'react';
 
-export function MenuOptions() {
+export default function MenuOptions() {
   const [grid, setGrid] = useState(true);
   const [rulers, setRulers] = useState(false);
   const [sort, setSort] = useState('name');

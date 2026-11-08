@@ -1,6 +1,7 @@
 import TooltipTime from '../../../examples/utilities/use-tooltip/TooltipTime';
 import TooltipArchive from '../../../examples/tooltip/TooltipArchive';
-import { TooltipPolicy, TooltipWarmup } from '../../../components/demos/TooltipDemo';
+import TooltipPolicy from '../../../examples/tooltip/TooltipPolicy';
+import TooltipWarmup from '../../../examples/tooltip/TooltipWarmup';
 import { Code } from '@tounsoo/todae/code';
 import { Table } from '@tounsoo/todae/table';
 
@@ -18,55 +19,17 @@ import { Table } from '@tounsoo/todae/table';
 
 One에서 Three까지 이어서 지나가면 첫 팁 다음부터는 바로 열리고, `skipDelay={0}`인 Waits에 닿으면 열린 팁에서 곧바로 넘어와도 항상 다시 기다립니다.
 
-<Example>
-  <TooltipWarmup />
-</Example>
-
-```tsx
-function WarmButton({ label, tip, skipDelay }: { label: string; tip: string; skipDelay?: number }) {
-  const tooltip = useTooltip({ showDelay: 300, hideDelay: 0, skipDelay });
-  return (
-    <>
-      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
-        {label}
-      </Button.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()}>{tip}</Tooltip.Root>
-    </>
-  );
-}
-
-<Stack.Root direction="row" gap="none">
-  <WarmButton label="One" tip="Opens after a pause" />
-  <WarmButton label="Two" tip="Opens at once" />
-  <WarmButton label="Three" tip="Opens at once" />
-  <WarmButton label="Waits" tip="Waits again" skipDelay={0} />
-</Stack.Root>
-```
+<Example of={TooltipWarmup} />
 
 ## 예시
 
 정확한 시각을 팁으로 보여 주는 상대 시간처럼 버튼이 아닌 트리거는 [useTooltip](/utilities/use-tooltip)을 씁니다. 이 데모의 코드도 그곳에 있습니다. 탭으로 이동할 수 없는 트리거에는 `tabIndex={0}`을 지정하세요. 탭하면 팁이 열리지 않으므로, 숨긴 칩을 나타내는 `+N`은 [ChipList](/chip-list)의 +N 버튼으로 만드세요. 이 버튼은 숨긴 칩을 팝오버로 엽니다.
 
-<Example>
-  <TooltipTime locale="ko" />
-</Example>
+<Example of={TooltipTime} />
 
 링크가 있는 인터랙티브 팁입니다. [useTooltip](/utilities/use-tooltip)에 `interactive: true`를 설정하세요. 훅이 상태 머신을 맡도록 `Button.Root`에 `tooltip={false}`를 설정하세요.
 
-```tsx
-const tooltip = useTooltip({ interactive: true });
-
-<Button.Root variant="ghost" tooltip={false} {...tooltip.getTriggerProps()}>
-  Policy
-</Button.Root>
-<Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
-  Interactive tips allow links. <Link.Root href="/policy">Read the policy</Link.Root>
-</Tooltip.Root>
-```
-
-<Example>
-  <TooltipPolicy />
-</Example>
+<Example of={TooltipPolicy} />
 
 ## 무엇을 어디에 두나요
 

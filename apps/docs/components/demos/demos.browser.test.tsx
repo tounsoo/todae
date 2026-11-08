@@ -214,7 +214,7 @@ for (const appearance of APPEARANCES) {
         ['TooltipWarmup', 'One'],
         ['TooltipPolicy', 'Policy'],
       ] as const) {
-        it(`TooltipDemo.tsx ${name}`, async () => {
+        it(`examples/tooltip/${name}.tsx ${name}`, async () => {
           const { container } = renderDemo(demo(name));
           await userEvent.hover(within(container).getByRole('button', { name: trigger }));
           // An interactive tooltip, one that holds a link, is a non-modal dialog.
@@ -285,12 +285,9 @@ for (const appearance of APPEARANCES) {
 
 // Demo files, and folders of example files, whose demos open an overlay.
 const OVERLAY_DEMOS = [
-  'DialogDemo.tsx',
   'ComboboxDemo.tsx',
-  'MenuDemo.tsx',
   'CommandPaletteDemo.tsx',
   'DateRangePresetsDemo.tsx',
-  'DrilldownDemo.tsx',
   'examples/bottomsheet/',
   'examples/dialog/',
   'examples/drawer/',
@@ -307,7 +304,7 @@ const OVERLAY_DEMOS = [
 ];
 
 // Demos whose overlay holds a Drilldown.
-const DRILLDOWN_DEMOS = ['DrilldownDemo.tsx', 'examples/drilldown/'];
+const DRILLDOWN_DEMOS = ['examples/drilldown/'];
 
 const overlayGroup = (file: string) => OVERLAY_DEMOS.find((group) => (group.endsWith('/') ? file.startsWith(group) : file === group));
 

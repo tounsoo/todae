@@ -1,4 +1,5 @@
-import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
+import LinkCurrent from '../../../examples/link/LinkCurrent';
+import LinkInText from '../../../examples/link/LinkInText';
 
 # Link
 
@@ -8,9 +9,7 @@ import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
 <Link.Root href="/billing">Billing</Link.Root>
 ```
 
-<Example>
-  <LinkInText />
-</Example>
+<Example of={LinkInText} />
 
 Server Components can import it from `@tounsoo/todae/link`. Restyle every link through the `link.fg.*`, `link.decoration.*`, `link.decoration-thickness.*`, `link.decoration-offset`, `link.ring.focus` and `link.ring-radius` tokens. The `link.fg.current`, `link.decoration.current` and `link.decoration-thickness.current` tokens style the current link.
 
@@ -30,9 +29,7 @@ In a Server Component, import `Link` from `@tounsoo/todae/link` to pass `render`
 
 Mark the link to the page you are on with `aria-current="page"`, or another `aria-current` value such as `step`. Its underline turns thicker, so it stands out without a hover. Your router sets the attribute: Next.js and React Router both let you pass it, and React Router's `NavLink` adds it for you.
 
-<Example>
-  <LinkCurrent />
-</Example>
+<Example of={LinkCurrent} />
 
 ## Accessible composition
 

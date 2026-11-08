@@ -1,7 +1,7 @@
 import { Breadcrumbs } from '@tounsoo/todae/breadcrumbs';
 import { Link } from '@tounsoo/todae/link';
 
-export function BreadcrumbsChevron() {
+export default function BreadcrumbsChevron() {
   return (
     <Breadcrumbs.Root separator="›" aria-label="이동 경로" lang="ko">
       <Breadcrumbs.Item>
