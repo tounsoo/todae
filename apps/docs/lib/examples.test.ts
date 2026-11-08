@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, matchesGlob, relative } from 'node:path';
 import type { Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
-import { withExampleCode } from './exampleCode';
+import { exampleOf, withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { exampleStylesheets, pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { defaultImports, exampleFile, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -155,6 +155,23 @@ describe('docs examples', () => {
       expect(left).toEqual([]);
     }
     expect(shown).toBeGreaterThan(200);
+  });
+
+  it('ships every example file and stylesheet an English page shows with the MCP route', async () => {
+    const { default: config } = await import('../next.config.mjs');
+    const globs = (config.outputFileTracingIncludes['/api/[transport]'] as string[]).map((glob) => join(process.cwd(), glob));
+    const read = pages(join(APP, '(en)')).flatMap((page) => {
+      const tree = parseMdx(readFileSync(page, 'utf8'));
+      const imports = defaultImports(tree);
+      return tree.children.flatMap((node) => {
+        const name = exampleOf(node);
+        if (!name) return [];
+        const file = exampleFile(page, imports, name);
+        return [file, ...exampleStylesheets(file, readFileSync(file, 'utf8'))];
+      });
+    });
+    expect(read.some((file) => file.endsWith('.css'))).toBe(true);
+    expect(read.filter((file) => !globs.some((glob) => matchesGlob(file, glob))).map((file) => relative(EXAMPLES, file))).toEqual([]);
   });
 
   it('uses no class name that only the docs stylesheet defines', () => {
