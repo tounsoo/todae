@@ -6,7 +6,8 @@
 type Modality = 'pointer' | 'keyboard' | null;
 
 let last: Modality = null;
-let listening = false;
+// The documents watched, so a press in a frame counts as much as one in the page.
+const watched = new WeakSet<Document>();
 
 function onPointerDown() {
   last = 'pointer';
@@ -19,10 +20,10 @@ function onKeyDown(event: KeyboardEvent) {
   last = 'keyboard';
 }
 
-/** Starts watching presses and keys on the page, once. */
+/** Starts watching presses and keys in `doc`, once for each document. */
 export function watchInputModality(doc: Document | undefined = globalThis.document): void {
-  if (listening || !doc) return;
-  listening = true;
+  if (!doc || watched.has(doc)) return;
+  watched.add(doc);
   doc.addEventListener('pointerdown', onPointerDown, true);
   doc.addEventListener('keydown', onKeyDown, true);
 }

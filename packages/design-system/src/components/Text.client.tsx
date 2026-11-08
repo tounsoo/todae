@@ -52,13 +52,13 @@ function holderOf(el: Element): Element | null {
 }
 
 /**
- * Whether focus on `el` came from keys: it shows the ring, and no press came
- * since the last key. Browsers show the ring for any focus on an editable
- * element, such as a contenteditable Text, so a tap or click there shows it
- * too; the press is read so that focus opens no tip, as for every tooltip.
+ * Whether focus on `el` came from keys, so it shows the ring. Browsers ring
+ * any focus on an editable element (`:read-write`), such as a contenteditable
+ * Text, so a tap or click there rings too; there the last input is read as
+ * well, so a press opens no tip, as it opens none for any tooltip.
  */
 function keyFocus(el: Element): boolean {
-  return el.matches(':focus-visible') && !lastInputWasPointer();
+  return el.matches(':focus-visible') && !(el.matches(':read-write') && lastInputWasPointer());
 }
 
 function isCut(el: HTMLElement): boolean {
