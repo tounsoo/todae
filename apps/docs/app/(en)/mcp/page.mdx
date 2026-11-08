@@ -69,6 +69,7 @@ Components:
 - `list_components`: every component, part, hook and helper, with its description and docs page.
 - `get_component`: one component or part, with its props and parts.
 - `when_to_use`: the "When to use" section of a component's docs page. A page without one returns `status: "missing"`; the server doesn't write the copy itself.
+- `get_docs_page`: a docs page's source, with each live example's code above it, by the name of a component, part or hook it documents, such as `useTooltip`, or by its slug or `docsUrl`. The examples show how Todae's parts and hooks fit together, which the props alone don't.
 
 Recipes:
 

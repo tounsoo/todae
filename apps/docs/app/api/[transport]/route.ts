@@ -7,13 +7,14 @@ import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
-import { getComponent, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
+import { getComponent, getDocsPage, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
 import { RELEASE } from '../../../lib/version';
 
 // Longer than build_tokens' own time limit, so a stopped build can still report it.
 export const maxDuration = 30;
 
 const name = z.string().trim().min(1).max(80);
+const pageQuery = z.string().trim().min(1).max(200);
 const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 const oklch = z.tuple([z.number().min(0).max(1), z.number().min(0).max(0.5), z.number().min(0).max(360)]);
@@ -57,7 +58,7 @@ const handler = createMcpHandler(
     });
     server.tool(
       'get_component',
-      'Get one component or namespace (props and parts) from the docs schema.',
+      'Get one component or namespace (props and parts) from the docs schema. For the docs page, with the example code that shows how its parts and hooks fit together, call get_docs_page.',
       { name },
       async ({ name: componentName }) => {
         try {
@@ -74,6 +75,18 @@ const handler = createMcpHandler(
       async ({ name: componentName }) => {
         try {
           return ok(whenToUse(componentName));
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    );
+    server.tool(
+      'get_docs_page',
+      'Read the English docs page for a component, part, hook or helper (such as "Tooltip" or "useTooltip"), or any page by slug (such as "utilities/use-tooltip") or docsUrl, as MDX source with absolute links. Each live example\'s code is inlined in a tsx fence above it, so the page shows how Todae composes the parts and hooks, which props alone do not. propsTables lists the names on the page whose props get_component returns.',
+      { name: pageQuery },
+      async ({ name: query }) => {
+        try {
+          return ok(getDocsPage(query));
         } catch (error) {
           return fail(error);
         }

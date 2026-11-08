@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { listPages, loadPages, missingWhenNote, parseWhen } from './mdx';
-import { getComponent, listComponents, whenToUse } from './tools';
+import { docsUrlFor, listPages, loadPages, missingWhenNote, parseWhen } from './mdx';
+import { listComponentMeta } from './meta';
+import { getRecipe } from './recipes';
+import { getComponent, getDocsPage, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
 
@@ -439,6 +441,10 @@ describe('docs mcp tools', () => {
     }
   });
 
+  it('tells an agent Tooltip is no place for what a touch user needs', () => {
+    expect(whenToUse('Tooltip.Root').whenNotToUse).toContain('a tap opens no tip');
+  });
+
   it('errors on an unknown name', () => {
     expect(() => getComponent('Nope')).toThrow('Unknown component "Nope". Call list_components.');
     expect(() => whenToUse('Nope')).toThrow('Unknown component "Nope". Call list_components.');
@@ -527,5 +533,68 @@ describe('docs mcp tools', () => {
     expect(result.whenNotToUse).toBeTruthy();
     expect(result.whenNotToUse).toContain('Checkbox / Button.Root');
     expect(result.whenNotToUse).toContain('/recipes/combobox');
+  });
+});
+
+describe('get_docs_page', () => {
+  it('returns the page a name, slug, path or docsUrl points to, with example code inlined', () => {
+    const page = getDocsPage('useTooltip');
+    expect(page).toMatchObject({
+      slug: 'utilities/use-tooltip',
+      title: 'useTooltip',
+      docsUrl: `${DOCS_ORIGIN}/utilities/use-tooltip`,
+      propsTables: ['useTooltip'],
+      source: 'todae-docs',
+    });
+    expect(page.markdown).toMatch(/```tsx\n[^`]*getTriggerProps[^`]*```\n\n<Example of=\{TooltipTime\} \/>/);
+    expect(page.markdown).not.toMatch(/\]\(\//);
+    for (const query of [
+      'utilities/use-tooltip',
+      'Utilities/Use-Tooltip',
+      '/utilities/use-tooltip/',
+      `${DOCS_ORIGIN}/utilities/use-tooltip`,
+      `${DOCS_ORIGIN}/utilities/use-tooltip#examples`,
+      `${DOCS_ORIGIN}/utilities/use-tooltip?x=1`,
+      'usetooltip',
+    ]) {
+      expect(getDocsPage(query)).toEqual(page);
+    }
+    expect(getDocsPage('Tooltip.Root').slug).toBe('tooltip');
+    expect(getDocsPage('RadioGroup').slug).toBe('radio');
+    expect(getDocsPage('recipes/data-table').title).toBe(getRecipe('data-table').title);
+  });
+
+  it('opens the page every listed docsUrl names', () => {
+    for (const row of listComponents().components) {
+      if (row.docsUrl) expect(getDocsPage(row.name).docsUrl).toBe(row.docsUrl);
+    }
+  });
+
+  it('opens every docs link in a page it returns', () => {
+    const link = new RegExp(`\\]\\(${DOCS_ORIGIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/[^)\\s]*)\\)`, 'g');
+    let opened = 0;
+    for (const page of listPages()) {
+      for (const [, path] of getDocsPage(page.slug).markdown.matchAll(link)) {
+        // Pages with no MDX, such as the playground, are not docs pages the tool reads.
+        if (['/', '/playground'].includes(path!.replace(/[?#].*$/, ''))) continue;
+        expect(() => getDocsPage(`${DOCS_ORIGIN}${path}`), `${path} on ${page.slug}`).not.toThrow();
+        opened += 1;
+      }
+    }
+    expect(opened).toBeGreaterThan(100);
+  });
+
+  it('finds the same page for a query that is both a slug and a name', () => {
+    for (const page of listPages()) {
+      expect(getDocsPage(page.slug).slug).toBe(page.slug);
+      const named = listComponentMeta().find((row) => row.name.toLowerCase() === page.slug);
+      if (named) expect(docsUrlFor(named.name)).toBe(`${DOCS_ORIGIN}/${page.slug}`);
+    }
+  });
+
+  it('refuses unknown names and paths outside the docs pages', () => {
+    for (const query of ['Nope', '../tooltip', 'tooltip/..', '/etc/passwd', 'https://example.com/tooltip', `${DOCS_ORIGIN}`, '']) {
+      expect(() => getDocsPage(query)).toThrow(`No docs page for "${query}".`);
+    }
   });
 });
