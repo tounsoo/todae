@@ -5,7 +5,7 @@ import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
 import { defaultImports, exampleFile } from './remarkExamples.mjs';
 
-/** The name an `<Example of={Name}>` element shows, or null for an `<Example>` with children. */
+/** The name an `<Example of={Name}>` element shows, or null for any other node. */
 export function exampleOf(node: Node): string | null {
   if (node.type !== 'mdxJsxFlowElement' || (node as MdxJsxFlowElement).name !== 'Example') return null;
   const of = (node as MdxJsxFlowElement).attributes.find((attribute) => attribute.type === 'mdxJsxAttribute' && attribute.name === 'of');

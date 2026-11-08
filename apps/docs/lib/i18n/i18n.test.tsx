@@ -394,7 +394,7 @@ describe('docs locales', () => {
 
   it('localizes every same-site link in a page or demo', () => {
     // MDX maps markdown links to LocalizedLink, but not a JSX <a>, so those must use LocalizedLink themselves.
-    const files = [join(APP, '(en)'), join(APP, 'ko'), join(process.cwd(), 'components/demos')].flatMap((dir) =>
+    const files = [join(APP, '(en)'), join(APP, 'ko'), join(process.cwd(), 'components/demos'), join(process.cwd(), 'examples')].flatMap((dir) =>
       readdirSync(dir, { recursive: true, encoding: 'utf8' })
         .filter((file) => /\.(mdx|tsx)$/.test(file) && !file.includes('.test.'))
         .map((file) => join(dir, file)),

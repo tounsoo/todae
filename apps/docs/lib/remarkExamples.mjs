@@ -49,7 +49,8 @@ export function exampleImports(pagePath, text) {
 }
 
 /**
- * Renders `<Example of={Name} />` as the code of the example `Name` followed by the example itself.
+ * Renders `<Example of={Name} />` as the code of the example `Name` followed by the example itself,
+ * and refuses an `<Example>` without `of`, whose demo would show with no code.
  * `Name` is a page's default import from a file in `apps/docs/examples`. The element becomes a code
  * block of that file's code and `<Example><Name locale="…" /></Example>`, with the page's locale.
  * Pages also go through `exampleDependencyLoader.mjs`, so a change to the file rebuilds the page.
@@ -60,14 +61,14 @@ export default function remarkExamples() {
     const imports = defaultImports(tree);
     const visit = (parent) => {
       parent.children = (parent.children ?? []).flatMap((node) => {
-        const of =
-          (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Example'
-            ? node.attributes.find((attribute) => attribute.type === 'mdxJsxAttribute' && attribute.name === 'of')
-            : undefined;
-        if (!of) {
+        const isExample = (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Example';
+        if (!isExample) {
           visit(node);
           return [node];
         }
+        const of = node.attributes.find((attribute) => attribute.type === 'mdxJsxAttribute' && attribute.name === 'of');
+        // Without `of` the demo would show with no code, on the page and in the docs MCP.
+        if (!of) throw new Error('<Example> needs of={Name}, an example file in apps/docs/examples that the page imports, so its code shows with it');
         const name = typeof of.value === 'object' ? of.value?.value.trim() : undefined;
         if (!name || !/^[A-Z]\w*$/.test(name)) throw new Error('<Example of={…}> takes the name of an imported example, such as of={FieldDatePicked}');
         // Tools that read the MDX put the code above the element, which only works at the top level.

@@ -44,9 +44,10 @@ describe('docs examples', () => {
     expect(korean.children[2]).toMatchObject({ children: [{ attributes: [{ value: 'ko' }] }] });
   });
 
-  it('leaves an Example with children as it is', () => {
-    const mdx = '<Example>\n  <Demo />\n</Example>\n';
-    expect(render(mdx)).toEqual(parseMdx(mdx));
+  it('refuses an Example without of, since its demo would show no code', () => {
+    for (const mdx of ['<Example>\n  <Demo />\n</Example>\n', '<Example block>\n  <Demo />\n</Example>\n', '<Example />\n', '- <Example>\n    <Demo />\n  </Example>\n', 'See <Example><Demo /></Example> here.\n']) {
+      expect(() => render(mdx), mdx).toThrow(/<Example> needs of=\{Name\}/);
+    }
   });
 
   it('shows the code without the client directive', () => {
