@@ -159,7 +159,7 @@ describe('docs examples', () => {
 
   it('ships every example file and stylesheet an English page shows with the MCP route', async () => {
     const { default: config } = await import('../next.config.mjs');
-    const globs = (config.outputFileTracingIncludes['/api/[transport]'] as string[]).map((glob) => join(process.cwd(), glob));
+    const globs = (config.outputFileTracingIncludes?.['/api/[transport]'] ?? []).map((glob) => join(process.cwd(), glob));
     const read = pages(join(APP, '(en)')).flatMap((page) => {
       const tree = parseMdx(readFileSync(page, 'utf8'));
       const imports = defaultImports(tree);
