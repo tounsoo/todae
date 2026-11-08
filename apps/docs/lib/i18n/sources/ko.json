@@ -20,10 +20,10 @@
     "(section order)": "a6f04dcc4c06"
   },
   "avatar": {
-    "(top)": "c7cce4aa15ea",
+    "(top)": "1c4394914385",
     "# Avatar": "925b0922f022",
     "## Naming": "c9dec0ceedfc",
-    "## Sizes": "a4a2ea9cc9cb",
+    "## Sizes": "8bfc7792b185",
     "## Colors": "3e66c991ca45",
     "## Stacked avatars": "e673413d3feb",
     "## Accessible composition": "a4759450c7bd",
@@ -42,7 +42,7 @@
   "bottomsheet": {
     "(top)": "e0ed030a127b",
     "# BottomSheet": "24242a9acb87",
-    "## In a combobox": "c5ae345f314b",
+    "## In a combobox": "489b2fb69c3a",
     "## Icons": "57e92e5df1aa",
     "## Accessible composition": "fae10aa8c01a",
     "## When to use": "79c9f4f301a8",
@@ -50,8 +50,8 @@
     "(section order)": "26c197f1a8cd"
   },
   "breadcrumbs": {
-    "(top)": "2616153128e8",
-    "# Breadcrumbs": "35827c405d58",
+    "(top)": "8d4f19f141bc",
+    "# Breadcrumbs": "fd25c84c17c1",
     "## Icons": "2df7cf6bb8cf",
     "## Accessible composition": "bd7b617b4ead",
     "## When to use": "f29e8862cbe5",
@@ -59,12 +59,12 @@
     "(section order)": "c4f257cb60ff"
   },
   "button": {
-    "(top)": "20ccba7081fc",
-    "# Button": "77c5959f3359",
+    "(top)": "21f9bbd314e1",
+    "# Button": "fb3e7be52720",
     "## Toggle": "e5bd3c655eca",
     "## Button.Group": "f0ded5f40ad7",
     "## Icons": "52d0a9d4863a",
-    "## Links": "efe167041072",
+    "## Links": "8287503072f1",
     "## Accessible composition": "c71c476a91d8",
     "## When to use": "d57fe8233a0b",
     "### Button.Root": "188c84737d40",
@@ -111,10 +111,10 @@
     "(section order)": "fb0efba9a567"
   },
   "chip-list": {
-    "(top)": "a9e5001350e4",
+    "(top)": "0e9a7a2236b3",
     "# ChipList": "f4078bd144e8",
-    "## One row / Two rows": "4ea8a7cdc9c2",
-    "## Read-only": "bf8f7bba4f06",
+    "## One row / Two rows": "1383a6e09570",
+    "## Read-only": "6dfccce735a6",
     "## Icons": "b76e9ef78246",
     "## Accessible composition": "0e767dafb800",
     "## When to use": "6a15b8ea4b6c",
@@ -150,10 +150,10 @@
     "(section order)": "5b4b04f4c6fa"
   },
   "composition": {
-    "(top)": "daa9c66a4c98",
+    "(top)": "e66a1e01a539",
     "# Composition": "654c6a27af86",
     "## Placing something new": "7535f6400597",
-    "## Components": "9db230c231a6",
+    "## Components": "c1a7ce81bb89",
     "## Recipes": "0ccacf69fdb0",
     "## Hook": "4c2a5e2fd3a4",
     "## Never": "683d91a3b1f8",
@@ -203,9 +203,9 @@
     "(section order)": "99b29f254b91"
   },
   "dialog": {
-    "(top)": "9e340174dde7",
-    "# Dialog": "da9e4655d247",
-    "## Alert dialog": "fcf3468d12fe",
+    "(top)": "e7e6fc366a28",
+    "# Dialog": "9acf06b85273",
+    "## Alert dialog": "6ce81842f302",
     "## Icons": "53e5ccf42b18",
     "## Accessible composition": "dc6752e3f750",
     "## When to use": "7a8f3c9d3228",
@@ -231,10 +231,10 @@
     "(section order)": "d183e3412ad2"
   },
   "drilldown": {
-    "(top)": "3401c79a79b7",
+    "(top)": "66d07cd39dac",
     "# Drilldown": "f67ab11f11cc",
     "## The stack": "35171b9d3583",
-    "## Escape and the back gesture": "4b5508144b49",
+    "## Escape and the back gesture": "26843dd718ac",
     "## Motion": "91bab400395a",
     "## Accessible composition": "11f6dae2074f",
     "## When to use": "2cc0c220f4a0",
@@ -261,13 +261,13 @@
     "(section order)": "e713a72d85de"
   },
   "field": {
-    "(top)": "141fc3198f14",
-    "# Field": "6664ca3c53ae",
+    "(top)": "d89f05fe9907",
+    "# Field": "e457fa430114",
     "## Inputs": "462b408a9a86",
-    "## Label": "494b9aa90466",
+    "## Label": "f0107f3d6acb",
     "## Messages": "191840710a8d",
-    "## Counter": "ca3bd330d359",
-    "## Row": "3c9d633e538f",
+    "## Counter": "76d4100641e2",
+    "## Row": "34fb1d21484e",
     "## Custom controls": "edafb0ec7ed8",
     "## Icons": "4a52c267d4a7",
     "## Accessible composition": "421616bf383e",
@@ -282,11 +282,11 @@
     "(section order)": "aeb03827a487"
   },
   "field/chip-input": {
-    "(top)": "1740cb1a0113",
+    "(top)": "2abd137910d0",
     "# Field.ChipInput": "f2300db488d2",
-    "## Commit keys": "6abd72f00908",
-    "## Rows": "9b376e3a521a",
-    "## States": "c13eefed8eee",
+    "## Commit keys": "31f46bde8b29",
+    "## Rows": "6323984e5921",
+    "## States": "a99b2804dbf6",
     "## Icons": "00fd1faa869f",
     "## Required": "db9c990dff87",
     "## Accessible composition": "37bb9df73b33",
@@ -305,10 +305,10 @@
     "(section order)": "124193e3094a"
   },
   "field/date-picker": {
-    "(top)": "8906ddf9545e",
+    "(top)": "b4ceeb3285d1",
     "# Field.DatePicker": "b11e4df2c1e9",
     "## Typed dates {/*#typed-dates*/}": "12673b4fe38c",
-    "## On its own": "b1d2f5440119",
+    "## On its own": "421c4ccd54ad",
     "## Accessible composition": "d44831dbbcd9",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "f853e4b26b27",
@@ -318,10 +318,10 @@
     "(section order)": "4eba0aaed1f8"
   },
   "field/date-range-picker": {
-    "(top)": "3d019a7c1a33",
+    "(top)": "9ab0422ec4a8",
     "# Field.DateRangePicker": "e33b527c4194",
     "## Typed ranges": "158ae98b8c71",
-    "## On its own": "20d9d620aa29",
+    "## On its own": "22c2e90f8091",
     "## Accessible composition": "0f3deea8054b",
     "## When to use": "d57fe8233a0b",
     "### Field.DateRangePicker": "180461c4d1c7",
@@ -331,10 +331,10 @@
     "(section order)": "83afd8a304e4"
   },
   "field/date-time-picker": {
-    "(top)": "e0e5e02c26af",
+    "(top)": "bd1f3a45c620",
     "# Field.DateTimePicker": "9ea0695cb096",
     "## Typed dates and times": "0bf3c1d5c09e",
-    "## On its own": "411d07eab154",
+    "## On its own": "4b1057efd9fd",
     "## Temporal": "427eeb71dd9c",
     "## Accessible composition": "dff5e1f9dcc6",
     "## When to use": "d57fe8233a0b",
@@ -394,10 +394,10 @@
     "(section order)": "7de09df07162"
   },
   "field/textarea": {
-    "(top)": "557b27e44e5d",
+    "(top)": "04d6bef0e278",
     "# Field.Textarea": "c274817b9338",
-    "## Height": "1059d379bd69",
-    "## Density and states": "bdbe9831349f",
+    "## Height": "69e8a97aecaf",
+    "## Density and states": "afe85ad7da31",
     "## Highlights": "e18e517ab4bb",
     "## Accessible composition": "a5629b389560",
     "## When to use": "d57fe8233a0b",
@@ -406,10 +406,10 @@
     "(section order)": "fca6b71e7c11"
   },
   "field/time-picker": {
-    "(top)": "13d78231c00f",
+    "(top)": "46d1b160c093",
     "# Field.TimePicker": "336f59a51505",
     "## Typed times {/*#typed-times*/}": "de0dcce61750",
-    "## On its own": "45bd56452ca5",
+    "## On its own": "496ae92f1663",
     "## Temporal": "d7c947f6ad86",
     "## Accessible composition": "80c06e4918c3",
     "## When to use": "d57fe8233a0b",
@@ -420,22 +420,22 @@
     "(section order)": "80fe48d8edaa"
   },
   "fieldset": {
-    "(top)": "9178fb210790",
-    "# Fieldset": "fc5805f54b0b",
+    "(top)": "82e538c1aadd",
+    "# Fieldset": "531426581dce",
     "## Accessible composition": "8aff64058273",
     "## When to use": "400414abe505",
     "## Props": "cfc1221a511f",
     "(section order)": "e9205f3d4fc9"
   },
   "form": {
-    "(top)": "2ab0e9662b5e",
-    "# Form": "cc7c8a37488c",
+    "(top)": "48c113835ece",
+    "# Form": "ce909a3e846d",
     "## When a problem shows": "0f542d520d7f",
     "## What a problem says": "c8019d5f7405",
     "## Submit": "a2ac8ded7ff0",
     "## Summary": "3da0810ca127",
     "## Server errors {/*#server-errors*/}": "ab3d98d18868",
-    "## Rules the browser can't check": "99253d6a0c4e",
+    "## Rules the browser can't check": "371f7dee88f4",
     "## Scopes": "3515f52b9bc1",
     "## Accessible composition": "680240fe79fe",
     "## When to use": "d57fe8233a0b",
@@ -497,10 +497,10 @@
     "(section order)": "553694b4d2b0"
   },
   "link": {
-    "(top)": "b3c68dc2ae25",
-    "# Link": "a5eb13eb9233",
+    "(top)": "029a2cf4031c",
+    "# Link": "1f2a890f4015",
     "## Router links": "72885f5c533c",
-    "## Current page": "46ace89018d8",
+    "## Current page": "827a602336c2",
     "## Accessible composition": "3b651dd29c72",
     "## When to use": "2b03dd520366",
     "## Props": "f78033c7396f",
@@ -532,8 +532,8 @@
     "(section order)": "e12b559a1ab2"
   },
   "mention": {
-    "(top)": "a6444b7f1ffd",
-    "# Mention": "78fb19b2fdb0",
+    "(top)": "a7a059661448",
+    "# Mention": "478806fc3c2d",
     "## Keyboard": "48905170ff18",
     "## Peek": "adab7a3f6652",
     "## When to use": "6df850afecb4",
@@ -542,10 +542,10 @@
     "(section order)": "18b56400fd30"
   },
   "menu": {
-    "(top)": "1455a1ea9182",
+    "(top)": "c9cd602f82c7",
     "# Menu": "4defd60a5176",
     "## Keyboard": "7a30a02ae4c8",
-    "## Checkbox and radio items": "b4f3965ba83f",
+    "## Checkbox and radio items": "832117e3e828",
     "## Submenus": "93805bf5d7d3",
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
@@ -605,7 +605,7 @@
   "popover": {
     "(top)": "3e89bd45eeb2",
     "# Popover": "9c4cecc2fb3c",
-    "## Examples": "14cb85aebea2",
+    "## Examples": "7a7b15df32b4",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "71f70ec143b8",
     "## When to use": "3e7e1aacc083",
@@ -643,8 +643,8 @@
     "(section order)": "b7619809f1fa"
   },
   "recipes/app-shell": {
-    "(top)": "71e5c320c4be",
-    "# App shell": "931a2df39007",
+    "(top)": "0925aab010f4",
+    "# App shell": "bbc530eedcdb",
     "## Layout": "47eef9c988e0",
     "## Sidebar": "6f65cf807545",
     "## Narrow screens": "3331910a4c05",
@@ -654,10 +654,10 @@
     "(section order)": "cbe0ddccb14a"
   },
   "recipes/avatar-group": {
-    "(top)": "cfbf106e9766",
-    "# Avatar group": "d32a36b995cd",
-    "## The stack": "bd91c061c493",
-    "## Sizes": "0cde43d1d448",
+    "(top)": "7a7089f8b2ac",
+    "# Avatar group": "bfc491540fb1",
+    "## The stack": "8d8f385a72d6",
+    "## Sizes": "0acbff2b195c",
     "## Wrapped avatars": "ddbab797c9cb",
     "## Accessible composition": "0189b65fcffe",
     "## When to use": "763e187b5f3a",
@@ -673,24 +673,24 @@
     "(section order)": "92d2fb4f1d2f"
   },
   "recipes/citations": {
-    "(top)": "e9305eed58c0",
-    "# Citations": "c1e97aef2ff3",
-    "## The marker": "f9b664cf52e8",
+    "(top)": "2bea12122be2",
+    "# Citations": "062ac823923b",
+    "## The marker": "309fce05532e",
     "## The sources list": "ab0461f88a19",
     "## Accessible composition": "f77eb571388f",
     "## When to use": "64d20eb01e2d",
     "(section order)": "776f0285dccb"
   },
   "recipes/combobox": {
-    "(top)": "fedc394cf341",
+    "(top)": "22608a2a61c3",
     "# Combobox": "bdfd58ac5cfe",
-    "## Presentation": "58f8fe7fca53",
+    "## Presentation": "8652e8a1e1b8",
     "## Popover · single": "db8ff77d3a0b",
     "## Popover · multi": "bc05a5e70fd0",
     "## Sheet": "6076d410b1a4",
-    "## Auto": "4eba42da06ea",
+    "## Auto": "7bc1f1d18ab8",
     "## Async": "29ed5105b770",
-    "## Empty and create": "e2b8272c60fa",
+    "## Empty and create": "4af001a33a42",
     "## Highlight matches": "bcaed9e2f8e2",
     "## Composition rules": "6eb89b3bf8e3",
     "## Accessible composition": "adce8796fd84",
@@ -699,15 +699,15 @@
     "(section order)": "fde5bd9f01d3"
   },
   "recipes/command-palette": {
-    "(top)": "b133afb40440",
-    "# Command palette": "7def548cf7a3",
+    "(top)": "7487060d337d",
+    "# Command palette": "fe3f93694987",
     "## Accessible composition": "0bca0504d409",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
   },
   "recipes/data-table": {
-    "(top)": "91255b853e6f",
-    "# Data table": "1f645bbafc0a",
+    "(top)": "c3ee208f537c",
+    "# Data table": "ccdf4cfd5a35",
     "## Rows": "4289246c4520",
     "## Sorting": "16c6b547a2b7",
     "## Selecting across pages": "e36e7d634cff",
@@ -719,10 +719,10 @@
     "(section order)": "6cc1bf0c30c5"
   },
   "recipes/date-range-presets": {
-    "(top)": "981d70dacfee",
-    "# Date range with presets": "35ad4762b89e",
-    "## Presets": "2d2dfd4f2c47",
-    "## The field": "0220ad580a2f",
+    "(top)": "4a9f984fa895",
+    "# Date range with presets": "73f929f4f662",
+    "## Presets": "8cee44cb4b25",
+    "## The field": "e0ef64f38440",
     "## Accessible composition": "81e5d354604a",
     "## When to use": "5fe4b9e27636",
     "(section order)": "f42ec7b6c387"
@@ -737,8 +737,8 @@
     "(section order)": "4bf10e81c190"
   },
   "recipes/filter-bar": {
-    "(top)": "bb53475adf71",
-    "# Filter bar": "8062d11edffa",
+    "(top)": "2717203a86ff",
+    "# Filter bar": "73c9c354d1f0",
     "## Filters": "24d88e2c6c9e",
     "## Filter menus": "1f3d4b07d34c",
     "## Active filters": "193caeededba",
@@ -748,8 +748,8 @@
     "(section order)": "c439ccbc50b3"
   },
   "recipes/inline-edit": {
-    "(top)": "89db7894a8df",
-    "# Inline edit": "199d2e5da2df",
+    "(top)": "d438e85010a9",
+    "# Inline edit": "09f2ec793af6",
     "## Saving and cancelling": "fde5c50a40f1",
     "## Saving to a server": "671323387f41",
     "## Accessible composition": "01e9d8e4fbc7",
@@ -757,9 +757,9 @@
     "(section order)": "808446d2e9ad"
   },
   "recipes/message-actions": {
-    "(top)": "be13aa0c505d",
-    "# Message actions": "392d9e0335fc",
-    "## Copy": "f7fba79f4b69",
+    "(top)": "e6aebc3720e6",
+    "# Message actions": "9499c3178053",
+    "## Copy": "2d5d9e1d3bdc",
     "## Regenerate and rate": "88352ed724ed",
     "## Edit": "ebcd46bb2db8",
     "## Accessible composition": "b737b3facda9",
@@ -767,10 +767,10 @@
     "(section order)": "6486b947abab"
   },
   "recipes/message-parts": {
-    "(top)": "bd1a8a13d324",
-    "# Message parts": "b5ab2ae71e64",
+    "(top)": "9bc13166d9e0",
+    "# Message parts": "82729d4a6e41",
     "## The map": "c758e4138e32",
-    "## In the message": "d1b1a10b6678",
+    "## In the message": "ff481ecf7617",
     "## While it streams": "61ed3670b470",
     "## Accessible composition": "d1afeb5d572d",
     "## When to use": "148d25ddb4dd",
@@ -787,18 +787,18 @@
     "(section order)": "f421299d4447"
   },
   "recipes/reasoning": {
-    "(top)": "dbe8c780a442",
-    "# Reasoning": "10634b450405",
-    "## The block": "5e20fe67fa9c",
+    "(top)": "95299f181f41",
+    "# Reasoning": "2ff428e9c76b",
+    "## The block": "312a57d84a73",
     "## Open while it thinks": "1d886c1d51db",
     "## Accessible composition": "a8e1011be55b",
     "## When to use": "b26ad7526faf",
     "(section order)": "a801d5b444ff"
   },
   "recipes/reorder": {
-    "(top)": "1af8d2939bb6",
-    "# Reorder": "d1929d1c6807",
-    "## The move menu": "984f7932fd1c",
+    "(top)": "685206a12dc5",
+    "# Reorder": "faa00c223919",
+    "## The move menu": "03270099c955",
     "## Dragging": "b4c71ef5fa59",
     "## Saving the order": "ccbed730f477",
     "## Accessible composition": "87e67664f2d5",
@@ -806,20 +806,20 @@
     "(section order)": "21628fd2b383"
   },
   "recipes/sign-in": {
-    "(top)": "fe38d7abd50a",
-    "# Sign-in and sign-up": "7bcd6f83a06c",
+    "(top)": "0ebf549745ef",
+    "# Sign-in and sign-up": "429983be4180",
     "## What the browser fills in": "3dbf9be1164d",
     "## Showing the password": "f51997618847",
     "## A wrong email or password": "86e4f421e270",
     "## The code step": "fac60beda3a2",
-    "## Sign-up": "72ef85887913",
+    "## Sign-up": "c159ec942da8",
     "## Accessible composition": "7b77ef03410e",
     "## When to use": "380bfe85e2f2",
     "(section order)": "c83469f63441"
   },
   "recipes/suggestions": {
-    "(top)": "e5fb246a2346",
-    "# Suggestions": "512827f3ead4",
+    "(top)": "7001c36b9085",
+    "# Suggestions": "b027d5d23f9d",
     "## Suggested prompts": "18a738f51298",
     "## Versions of a reply": "201d818cbf71",
     "## Accessible composition": "68a64f2a9155",
@@ -827,8 +827,8 @@
     "(section order)": "d07108b52651"
   },
   "recipes/tool-call": {
-    "(top)": "cbae73983e36",
-    "# Tool call": "fff9ba9cd0f7",
+    "(top)": "fd49eedc4848",
+    "# Tool call": "8726febe75c9",
     "## The call": "01397268497d",
     "## Approval": "08e6fe8aeac5",
     "## Accessible composition": "7f59895fd94c",
@@ -836,8 +836,8 @@
     "(section order)": "e092ab2bb711"
   },
   "recipes/wizard": {
-    "(top)": "a434650ea173",
-    "# Wizard": "9cd56741f4a9",
+    "(top)": "aabd1af416d7",
+    "# Wizard": "2846efddb4e8",
     "## A form per step": "d90d2c2b5bc4",
     "## Focus on each step": "9b2ef43cc108",
     "## Errors from the last step": "91d1e42a0626",
@@ -886,9 +886,9 @@
     "(section order)": "6d27abd98db6"
   },
   "stack": {
-    "(top)": "f69457bae46b",
+    "(top)": "d8795d82ed66",
     "# Stack": "def423f89717",
-    "## Gap": "60f023baac11",
+    "## Gap": "92018f65b6a6",
     "## Alignment and wrapping": "1f421acff61f",
     "## Accessible composition": "32bfac7e4ef4",
     "## When to use": "e4f17f5fa29d",
@@ -925,8 +925,8 @@
     "(section order)": "b9352e4b95f2"
   },
   "tabs": {
-    "(top)": "4f8d6cab6ed9",
-    "# Tabs": "630aebbfbfa5",
+    "(top)": "25fccfe8fb48",
+    "# Tabs": "c3d918b6787d",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",
@@ -995,10 +995,10 @@
     "(section order)": "26fee290bbab"
   },
   "tooltip": {
-    "(top)": "26d9417c2feb",
+    "(top)": "2a983f89762f",
     "# Tooltip": "003ec5ede25e",
-    "## Warm-up": "7709775a8918",
-    "## Examples": "55af653c35a7",
+    "## Warm-up": "e6ccde403145",
+    "## Examples": "7bd14507672b",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "7811d0a484f4",
     "## Accessible composition": "72ac241e0ecc",
@@ -1031,8 +1031,8 @@
     "(section order)": "dbe6ee6c2910"
   },
   "utilities/glyphs-provider": {
-    "(top)": "1e64f39df7f5",
-    "# GlyphsProvider": "d545d6d246f4",
+    "(top)": "4dc074f7d584",
+    "# GlyphsProvider": "fb53ee08b435",
     "## Glyphs": "0b475ed62a9e",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
@@ -1075,8 +1075,8 @@
     "(section order)": "8f63b9364d59"
   },
   "utilities/use-chip-list": {
-    "(top)": "c9de0d3dd8c7",
-    "# useChipList": "b79ad997f886",
+    "(top)": "61b8cf0ba51f",
+    "# useChipList": "557449acf0e2",
     "## Accessible composition": "b4dfd443a9c5",
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
@@ -1124,8 +1124,8 @@
     "(section order)": "cdd5be9159bd"
   },
   "utilities/use-focus-handoff": {
-    "(top)": "c39294d70c41",
-    "# useFocusHandoff": "5d3528e5e173",
+    "(top)": "39e244110e25",
+    "# useFocusHandoff": "0547967ba283",
     "## Accessible composition": "7baa96756f90",
     "## When to use": "9d9b3610001a",
     "## Props": "0966ab575439",
@@ -1148,8 +1148,8 @@
     "(section order)": "3ea24d982f40"
   },
   "utilities/use-inline-edit": {
-    "(top)": "89db7894a8df",
-    "# useInlineEdit": "e4701b67f349",
+    "(top)": "d438e85010a9",
+    "# useInlineEdit": "ddb80e3267ff",
     "## Accessible composition": "791953511028",
     "## When to use": "6811b76102a1",
     "## Props": "020d1345d4d7",
@@ -1182,8 +1182,8 @@
     "(section order)": "59d900639520"
   },
   "utilities/use-reorder": {
-    "(top)": "d54efa3b4b16",
-    "# useReorder": "147c5ba5818f",
+    "(top)": "2fb0345ed302",
+    "# useReorder": "5b86b472d87e",
     "## Touch": "55459a623454",
     "## Accessible composition": "b7931bd53749",
     "## When to use": "096cd31b6ac9",
