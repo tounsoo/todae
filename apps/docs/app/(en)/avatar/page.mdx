@@ -21,18 +21,6 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 
 Avatar has no `size` prop. Todae does not ship a size scale. An avatar draws at `avatar.size`, 2rem. To change one, set `--todae-avatar-size`, or `inline-size` and `block-size`, on the avatar or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. The fallback text scales with `--todae-avatar-size` through `avatar.font.scale`.
 
-```tsx
-<Avatar.Root className={styles.small} label="Ada Lovelace">
-  <Avatar.Fallback>AL</Avatar.Fallback>
-</Avatar.Root>
-```
-
-```css
-.small {
-  --todae-avatar-size: 1.5rem;
-}
-```
-
 <Example of={AvatarSizes} />
 
 To change every avatar in a product, set `avatar.size` in your theme or in `ThemeProvider` overrides.

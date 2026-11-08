@@ -41,6 +41,27 @@ export function exampleFile(pagePath, imports, name) {
   return file;
 }
 
+/**
+ * The stylesheets an example file imports from its own folder, as `import styles from './Name.module.css';`,
+ * which a page shows after the example's code. For a recipe whose CSS is part of what a product copies.
+ */
+export function exampleStylesheets(file, text) {
+  return [...text.matchAll(/^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/gm)].map((match) => {
+    const path = resolve(dirname(file), match[1]);
+    if (!existsSync(path)) throw new Error(`${file} imports ./${match[1]}, which is not in its folder`);
+    return path;
+  });
+}
+
+/** The code blocks a page shows for an example file: its code, then each stylesheet it imports from its folder. */
+export function exampleBlocks(file) {
+  const text = readFileSync(file, 'utf8');
+  return [
+    { lang: 'tsx', value: exampleSource(text) },
+    ...exampleStylesheets(file, text).map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() })),
+  ];
+}
+
 /** The example files a page's import lines name, for the loader that rebuilds the page when one changes. */
 export function exampleImports(pagePath, text) {
   return [...text.matchAll(/^import\s[^'"]*?\sfrom\s*(['"])([^'"]+)\1/gm)]
@@ -49,7 +70,8 @@ export function exampleImports(pagePath, text) {
 }
 
 /**
- * Renders `<Example of={Name} />` as the code of the example `Name` followed by the example itself,
+ * Renders `<Example of={Name} />` as the code of the example `Name`, and any stylesheet it imports
+ * from its folder, followed by the example itself,
  * and refuses an `<Example>` without `of`, whose demo would show with no code.
  * `Name` is a page's default import from a file in `apps/docs/examples`. The element becomes a code
  * block of that file's code and `<Example><Name locale="…" /></Example>`, with the page's locale.
@@ -75,13 +97,13 @@ export default function remarkExamples() {
         if (node.type !== 'mdxJsxFlowElement' || parent.type !== 'root') throw new Error(`<Example of={${name}}> goes on a line of its own at the top level of the page, outside other elements and lists`);
         if (node.children.length > 0) throw new Error(`<Example of={${name}}> renders its example itself, so it takes no children`);
         const locale = pageLocale(file.path);
-        const code = exampleSource(readFileSync(exampleFile(file.path, imports, name), 'utf8'));
+        const blocks = exampleBlocks(exampleFile(file.path, imports, name));
         const example = {
           ...node,
           attributes: node.attributes.filter((attribute) => attribute !== of),
           children: [{ type: 'mdxJsxFlowElement', name, attributes: [{ type: 'mdxJsxAttribute', name: 'locale', value: locale }], children: [] }],
         };
-        return [{ type: 'code', lang: 'tsx', meta: null, value: code }, example];
+        return [...blocks.map(({ lang, value }) => ({ type: 'code', lang, meta: null, value })), example];
       });
     };
     visit(tree);

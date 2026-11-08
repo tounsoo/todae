@@ -6,7 +6,7 @@ import { withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -14,6 +14,7 @@ const EXAMPLES = join(process.cwd(), 'examples');
 const EN_PAGE = join(APP, '(en)', 'text', 'page.mdx');
 const KO_PAGE = join(APP, 'ko', 'text', 'page.mdx');
 const TONES = join(EXAMPLES, 'text', 'TextTones.tsx');
+const SIZES_CSS = join(EXAMPLES, 'avatar', 'AvatarSizes.module.css');
 
 function render(mdx: string, path = EN_PAGE): Root {
   const tree = parseMdx(mdx);
@@ -94,6 +95,30 @@ describe('docs examples', () => {
     }
   });
 
+  it('shows a stylesheet the example imports from its folder after its code', () => {
+    const tree = render("import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n\n<Example of={AvatarSizes} />\n", join(APP, '(en)', 'avatar', 'page.mdx'));
+    expect(tree.children.slice(1).map((node) => [node.type, 'lang' in node ? node.lang : undefined])).toEqual([
+      ['code', 'tsx'],
+      ['code', 'css'],
+      ['mdxJsxFlowElement', undefined],
+    ]);
+    expect(tree.children[2]).toMatchObject({ value: readFileSync(SIZES_CSS, 'utf8').trimEnd() });
+    const mdx = "import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n\n<Example of={AvatarSizes} />\n";
+    expect(withExampleCode(join(APP, '(en)', 'avatar', 'page.mdx'), mdx)).toContain(`\`\`\`css\n${readFileSync(SIZES_CSS, 'utf8').trimEnd()}\n\`\`\`\n\n<Example of={AvatarSizes} />`);
+  });
+
+  it('refuses a stylesheet import that is not in the example’s folder', () => {
+    expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'Gone.tsx'), "import styles from './Gone.module.css';\n")).toThrow(/not in its folder/);
+    expect(exampleStylesheets(join(EXAMPLES, 'avatar', 'X.tsx'), "import styles from '../avatar/AvatarSizes.module.css';\n")).toEqual([]);
+  });
+
+  it('rebuilds a page when a stylesheet its example imports changes', () => {
+    const added: string[] = [];
+    const page = join(APP, '(en)', 'avatar', 'page.mdx');
+    exampleDependencyLoader.call({ resourcePath: page, addDependency: (file: string) => added.push(file) }, "import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n");
+    expect(added).toEqual([join(EXAMPLES, 'avatar', 'AvatarSizes.tsx'), SIZES_CSS]);
+  });
+
   it('gives tools that read the MDX the code a reader sees', () => {
     const mdx = "import TextTones from '../../../examples/text/TextTones';\n\n# Text\n\n<Example of={TextTones} />\n";
     expect(withExampleCode(EN_PAGE, mdx)).toBe(
@@ -144,8 +169,8 @@ describe('docs examples', () => {
     expect(docsOnly).toEqual([]);
   });
 
-  it('imports only what a product has: the package, React and icon libraries', () => {
-    const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react)$/;
+  it('imports only what a product has: the package, React, icon libraries and a stylesheet of its own', () => {
+    const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react|\.\/[\w-]+\.module\.css)$/;
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
     const outside = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]

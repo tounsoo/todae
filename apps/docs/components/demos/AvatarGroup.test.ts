@@ -12,21 +12,16 @@ function cssFences(path: string): string[] {
   });
 }
 
-const STACK = read('components/demos/AvatarGroupDemo.module.css');
-// The avatar page's size rule is one of the group stylesheet's.
-const SIZES = STACK;
+// The examples show this stylesheet after their code; a rule quoted in prose must be one of its rules.
+const STACK = read('examples/recipes/avatar-group/AvatarGroup.module.css').trimEnd();
 
 describe('avatar group recipe css', () => {
-  it.each(['app/(en)/recipes/avatar-group/page.mdx', 'app/ko/recipes/avatar-group/page.mdx'])(
-    'shows, on %s, the stylesheet the demo imports',
-    (page) => {
-      expect(cssFences(page).join('\n\n') + '\n').toBe(STACK);
-    },
-  );
-
-  it.each(['app/(en)/avatar/page.mdx', 'app/ko/avatar/page.mdx'])('shows, on %s, a rule the stylesheet has', (page) => {
+  it.each([
+    'app/(en)/recipes/avatar-group/page.mdx',
+    'app/ko/recipes/avatar-group/page.mdx',
+  ])('quotes, on %s, only rules the stylesheet has', (page) => {
     const fences = cssFences(page);
     expect(fences).toHaveLength(1);
-    expect(SIZES.split('\n\n')).toContain(fences[0]);
+    for (const fence of fences) for (const rule of fence.split('\n\n')) expect(STACK.split('\n\n')).toContain(rule);
   });
 });
