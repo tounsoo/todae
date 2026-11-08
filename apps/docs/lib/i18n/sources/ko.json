@@ -995,10 +995,10 @@
     "(section order)": "26fee290bbab"
   },
   "tooltip": {
-    "(top)": "a7b2b64c27f9",
+    "(top)": "26d9417c2feb",
     "# Tooltip": "003ec5ede25e",
     "## Warm-up": "7709775a8918",
-    "## Examples": "b05e92ffd780",
+    "## Examples": "55af653c35a7",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "7811d0a484f4",
     "## Accessible composition": "72ac241e0ecc",
@@ -1216,8 +1216,8 @@
     "(section order)": "6d31ec8b55f3"
   },
   "utilities/use-tooltip": {
-    "(top)": "16e325d3e8e7",
-    "# useTooltip": "f37272308fbd",
+    "(top)": "491037d492f3",
+    "# useTooltip": "537342c5f4da",
     "## Accessible composition": "8e988d651ea2",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
