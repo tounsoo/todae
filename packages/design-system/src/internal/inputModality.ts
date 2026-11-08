@@ -6,7 +6,7 @@
 type Modality = 'pointer' | 'keyboard' | null;
 
 let last: Modality = null;
-// The documents watched, so a press in a frame counts as much as one in the page.
+// The documents watched, each once, so a press or key in any of them counts.
 const watched = new WeakSet<Document>();
 
 function onPointerDown() {

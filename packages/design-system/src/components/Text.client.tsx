@@ -55,7 +55,8 @@ function holderOf(el: Element): Element | null {
  * Whether focus on `el` came from keys, so it shows the ring. Browsers ring
  * any focus on an editable element (`:read-write`), such as a contenteditable
  * Text, so a tap or click there rings too; there the last input is read as
- * well, so a press opens no tip, as it opens none for any tooltip.
+ * well, so a press opens no tip, as it opens none for any tooltip, until a
+ * key that has no Ctrl, Meta or Alt held.
  */
 function keyFocus(el: Element): boolean {
   return el.matches(':focus-visible') && !(el.matches(':read-write') && lastInputWasPointer());
