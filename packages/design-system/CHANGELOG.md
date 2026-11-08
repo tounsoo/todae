@@ -1,5 +1,36 @@
 # @tounsoo/todae
 
+## 0.9.0
+
+### Minor Changes
+
+- Field.OneTimeCode's caret blink reads field.code.caret.motion.duration, and Conversation.ScrollButton's glide reads the new conversation.motion.duration.glide and keeps the same pace at any refresh rate. ([#411](https://github.com/tounsoo/todae/pull/411))
+  
+  - Rename the `field.code.caret.blink-duration` theme override to `field.code.caret.motion.duration`, and `--todae-field-code-caret-blink-duration` to `--todae-field-code-caret-motion-duration`.
+
+- The overlay motion tokens are simpler: Dialog, Drawer, BottomSheet, Toast, Popover and Coachmark now point their own `motion.easing.enter` and `exit` straight at the core `motion.easing.*`, Toast's rise is `toast.motion.offset`, and Coachmark's popup times its fades with `coachmark.motion.*`, as its scrim does. Nothing looks different. ([#410](https://github.com/tounsoo/todae/pull/410))
+  
+  - `overlay.motion.easing.enter` and `overlay.motion.easing.exit` are gone. A theme that set them sets the core `motion.easing.enter` and `exit` to change every curve, or a component's own `<component>.motion.easing.*` to change one.
+  - `toast.enter-offset` is now `toast.motion.offset`, and `--todae-toast-enter-offset` is now `--todae-toast-motion-offset`.
+
+- useHighlight hooks that share a name now paint together into one Highlight, so one `::highlight(name)` rule styles them all, such as every combobox on a page; the name goes when the last hook holding it unmounts, and the hook mounted last sets its priority and type. Before, only the hook mounted last painted and the others lost their marks. ([#409](https://github.com/tounsoo/todae/pull/409))
+
+### Patch Changes
+
+- Conversation: a message added at the end fades in and grows into place, so the messages above slide up, and Conversation.ScrollButton fades in and out, timed by the new conversation.motion tokens. ([#403](https://github.com/tounsoo/todae/pull/403))
+
+- Disclosure, Message, Toast, Drawer, BottomSheet, Drilldown and scroll edge arrows now keep their opacity and color fades under prefers-reduced-motion, dropping only slides and shifts. ([#401](https://github.com/tounsoo/todae/pull/401))
+
+- Tooltip fades in when it opens cold, timed by the new tooltip.motion.duration.enter and tooltip.motion.easing.enter tokens; a warm tip inside the skipDelay window still shows at once, and useTooltip's tooltip props gain warm. ([#399](https://github.com/tounsoo/todae/pull/399))
+
+- Progress and Meter fills glide to a new value with the new progress.motion.fill tokens, and Alert and ErrorMessage fade in as they appear with the new alert.motion and field.error.motion enter tokens. ([#400](https://github.com/tounsoo/todae/pull/400))
+
+- Disclosure and Nav.Branch content now opens and closes by its height in Chrome, and a Toast leaving a list slides the others into its place. ([#404](https://github.com/tounsoo/todae/pull/404))
+
+- Button, Chip, Link and Pagination now fade between their resting and hover colors, timed by the new `control.motion.duration` and `control.motion.easing` tokens; presses, keyboard focus and other states still change at once. ([#402](https://github.com/tounsoo/todae/pull/402))
+
+- Disclosure and Nav.Branch now lay out their content on the frame they open, instead of up to a few frames later while the fade in starts. ([#408](https://github.com/tounsoo/todae/pull/408))
+
 ## 0.8.0
 
 ### Minor Changes
