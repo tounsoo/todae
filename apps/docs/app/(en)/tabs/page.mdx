@@ -1,5 +1,5 @@
 import TabsBasic from '../../../examples/tabs/TabsBasic';
-import { TabsManualVertical } from '../../../components/demos/TabsDemo';
+import TabsManualVertical from '../../../examples/tabs/TabsManualVertical';
 
 # Tabs
 
@@ -17,9 +17,7 @@ A horizontal list that holds more tabs than fit scrolls sideways, in one row. An
 
 The root takes `value` with `onValueChange`, or `defaultValue`. One tab is always selected, so there is no empty state. Only the selected panel renders its children; pass `keepMounted` to keep a hidden panel's state, such as a half-filled form. A panel is a Tab stop by default, so a screen reader user reaches its text; pass `tabIndex={-1}` when the panel starts with a control of its own.
 
-<Example block>
-  <TabsManualVertical />
-</Example>
+<Example of={TabsManualVertical} block />
 
 There is no native tabs element. An exclusive `<details name>` group looks similar but has no tab semantics or arrow keys, so it is an accordion, not tabs.
 

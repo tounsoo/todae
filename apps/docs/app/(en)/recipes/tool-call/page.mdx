@@ -1,4 +1,4 @@
-import { ToolCallExample } from '../../../../components/demos/ToolCallDemo';
+import ToolCallExample from '../../../../examples/recipes/tool-call/ToolCallExample';
 
 export const description = "A recipe for a tool call in a reply: a Disclosure that shows the tool's name and a status Badge, with its input and output in a DataList.";
 
@@ -8,9 +8,7 @@ A recipe, not a package namespace. A tool call in an assistant's reply is a [Dis
 
 Open a call to read its input and output. The last call waits for approval: approve it to watch it run, or deny it.
 
-<Example block>
-  <ToolCallExample />
-</Example>
+<Example of={ToolCallExample} block />
 
 ## The call
 

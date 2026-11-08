@@ -1,5 +1,5 @@
 import TabsBasic from '../../../examples/tabs/TabsBasic';
-import { TabsManualVertical } from '../../../components/demos/TabsDemo';
+import TabsManualVertical from '../../../examples/tabs/TabsManualVertical';
 
 # Tabs
 
@@ -17,9 +17,7 @@ import { TabsManualVertical } from '../../../components/demos/TabsDemo';
 
 루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받습니다. 탭 하나는 항상 선택되어 있으므로 빈 상태가 없습니다. 선택된 패널만 자식을 렌더링합니다. 반쯤 채운 폼처럼 숨겨진 패널의 상태를 유지하려면 `keepMounted`를 넘기세요. 패널은 기본적으로 Tab 정지점이므로 스크린 리더 사용자가 그 텍스트에 닿을 수 있습니다. 패널이 자체 컨트롤로 시작하면 `tabIndex={-1}`을 넘기세요.
 
-<Example block>
-  <TabsManualVertical />
-</Example>
+<Example of={TabsManualVertical} block />
 
 네이티브 탭 요소는 없습니다. 배타적인 `<details name>` 그룹은 비슷해 보이지만 탭 시맨틱과 화살표 키가 없으므로, 탭이 아니라 아코디언입니다.
 

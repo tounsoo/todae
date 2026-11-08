@@ -1,5 +1,5 @@
 import FieldDateTimePicked from '../../../../examples/field/date-time-picker/FieldDateTimePicked';
-import { FieldDateTimePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDateTimePickerAlone from '../../../../examples/field/date-time-picker/FieldDateTimePickerAlone';
 
 export const description = 'A button inside a Field that opens a Calendar and a list of times in a Popover. Its value is a Temporal.PlainDateTime or null.';
 
@@ -21,9 +21,7 @@ In the example, text that isn't a date and time clears the value, so the form se
 
 On its own, `Field.DateTimePicker` is the field's control. It shows the date in the locale's medium date style and the time in its short time style, or its medium style when the time has seconds, or `placeholder` while there is no value, and a press elsewhere in the field opens the popover. With a `name` on the Root, the form sends the value the way HTML writes one, such as `2026-10-13T09:30`.
 
-<Example block>
-  <FieldDateTimePickerAlone />
-</Example>
+<Example of={FieldDateTimePickerAlone} block />
 
 The popover opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a picked time makes the value, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the calendar takes focus on the date, or else today or the nearest date in range. Picking a date moves focus to the list of times, and picking a time before any date moves it to the calendar. Escape closes the popover, and focus goes back to where it was before it opened.
 

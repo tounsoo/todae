@@ -1,6 +1,6 @@
 import { Table } from '@tounsoo/todae/table';
 import { ScrollRegion } from '../../../../components/ScrollRegion';
-import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
+import GlyphsLibraries from '../../../../examples/utilities/glyphs-provider/GlyphsLibraries';
 
 export const description = "Todae ships no icon set. GlyphsProvider swaps the few glyphs Todae draws itself, such as a close button's cross, for your icon library's.";
 
@@ -26,9 +26,7 @@ import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
 
 The same parts with Todae's own glyphs and with Lucide, Phosphor and Tabler:
 
-<Example block>
-  <GlyphsLibraries />
-</Example>
+<Example of={GlyphsLibraries} block />
 
 A part's own content still wins: children of a close part, `removeIcon` on `Chip.Root` and `ChipList.Root`, `chipRemoveIcon` on `Field.ChipInput`, children of `Pagination.Ellipsis`, and `separator` on `Breadcrumbs.Root`. `useGlyphs()` returns the glyphs in effect, for your own components.
 

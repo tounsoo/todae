@@ -1,4 +1,4 @@
-import { FocusHandoffRequest } from '../../../../components/demos/FocusHandoffDemo';
+import FocusHandoffRequest from '../../../../examples/utilities/use-focus-handoff/FocusHandoffRequest';
 
 # useFocusHandoff
 
@@ -23,9 +23,7 @@ const handoff = useFocusHandoff({ to: summary });
 
 Press Allow or Deny with the keyboard, then Ask again: focus stays on the buttons that take their place.
 
-<Example>
-  <FocusHandoffRequest />
-</Example>
+<Example of={FocusHandoffRequest} />
 
 The hand-off waits until React has finished the update, so `to` can point at an element that mounts in the same update, as Ask again does here. It does nothing when focus is already on another element in the page by then, such as a field that took `autoFocus`, or when the element in `to` is not in the page. It reacts only to the element leaving the page: for one hidden with CSS or kept in a hidden Activity, it does nothing, and the browser decides where focus goes.
 

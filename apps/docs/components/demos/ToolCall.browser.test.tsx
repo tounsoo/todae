@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { ToolCallExample } from './ToolCallDemo';
+import ToolCallExample from '../../examples/recipes/tool-call/ToolCallExample';
 
 afterEach(cleanup);
 

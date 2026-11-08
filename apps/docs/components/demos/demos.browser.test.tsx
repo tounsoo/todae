@@ -22,22 +22,13 @@ declare global {
   }
 }
 
-// Every demo module in this folder, where each exported component is one docs example, and every
-// example file in apps/docs/examples, whose default export is one. Pages pass an example their locale.
-const modules = import.meta.glob<Record<string, unknown>>(['./*Demo.tsx'], { eager: true });
+// Every example file in apps/docs/examples, whose default export is one docs example. Pages pass an example their locale.
 const examples = import.meta.glob<{ default: ComponentType<{ locale: string }> }>(['../../examples/**/*.tsx'], { eager: true });
 
-const demos = [
-  ...Object.entries(modules).flatMap(([file, mod]) =>
-    Object.entries(mod)
-      .filter((entry): entry is [string, ComponentType] => /^[A-Z]/.test(entry[0]) && typeof entry[1] === 'function')
-      .map(([name, Demo]) => ({ file: file.replace('./', ''), name, Demo })),
-  ),
-  ...Object.entries(examples).map(([file, mod]) => {
-    const Shown = mod.default;
-    return { file: file.replace('../../', ''), name: Shown.name, Demo: () => <Shown locale="en" /> };
-  }),
-];
+const demos = Object.entries(examples).map(([file, mod]) => {
+  const Shown = mod.default;
+  return { file: file.replace('../../', ''), name: Shown.name, Demo: () => <Shown locale="en" /> };
+});
 
 async function violations(): Promise<string[]> {
   return describeViolations(await axe.run(document.body, AXE_OPTIONS));
@@ -214,7 +205,7 @@ for (const appearance of APPEARANCES) {
         ['TooltipWarmup', 'One'],
         ['TooltipPolicy', 'Policy'],
       ] as const) {
-        it(`TooltipDemo.tsx ${name}`, async () => {
+        it(`examples/tooltip/${name}.tsx ${name}`, async () => {
           const { container } = renderDemo(demo(name));
           await userEvent.hover(within(container).getByRole('button', { name: trigger }));
           // An interactive tooltip, one that holds a link, is a non-modal dialog.
@@ -226,7 +217,7 @@ for (const appearance of APPEARANCES) {
     });
 
     describe('docs demos under axe, no matches', () => {
-      it('ComboboxDemo.tsx ComboboxEmpty', async () => {
+      it('examples/recipes/combobox/ComboboxEmpty.tsx ComboboxEmpty', async () => {
         const { container } = renderDemo(demo('ComboboxEmpty'));
         const field = within(container).getByRole('combobox');
         await userEvent.click(field);
@@ -283,14 +274,8 @@ for (const appearance of APPEARANCES) {
   });
 }
 
-// Demo files, and folders of example files, whose demos open an overlay.
+// Folders of example files whose demos open an overlay.
 const OVERLAY_DEMOS = [
-  'DialogDemo.tsx',
-  'ComboboxDemo.tsx',
-  'MenuDemo.tsx',
-  'CommandPaletteDemo.tsx',
-  'DateRangePresetsDemo.tsx',
-  'DrilldownDemo.tsx',
   'examples/bottomsheet/',
   'examples/dialog/',
   'examples/drawer/',
@@ -303,11 +288,13 @@ const OVERLAY_DEMOS = [
   'examples/menu/',
   'examples/popover/',
   'examples/recipes/combobox/',
+  'examples/recipes/command-palette/',
+  'examples/recipes/date-range-presets/',
   'examples/utilities/use-popover/',
 ];
 
 // Demos whose overlay holds a Drilldown.
-const DRILLDOWN_DEMOS = ['DrilldownDemo.tsx', 'examples/drilldown/'];
+const DRILLDOWN_DEMOS = ['examples/drilldown/'];
 
 const overlayGroup = (file: string) => OVERLAY_DEMOS.find((group) => (group.endsWith('/') ? file.startsWith(group) : file === group));
 

@@ -1,5 +1,6 @@
 import DialogBasic from '../../../examples/dialog/DialogBasic';
-import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo';
+import DialogAlert from '../../../examples/dialog/DialogAlert';
+import DialogThemed from '../../../examples/dialog/DialogThemed';
 
 # Dialog
 
@@ -11,9 +12,7 @@ import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo'
 
 다크, compact, 배경 클릭으로 닫기 꺼짐.
 
-<Example>
-  <DialogThemed />
-</Example>
+<Example of={DialogThemed} />
 
 오버레이는 `ThemeProvider` / `DensityProvider`에서 토큰을 상속합니다. 프로바이더 노드에 붙은 추가 클래스는 상속하지 않습니다.
 
@@ -23,31 +22,9 @@ iOS에서는 열린 오버레이 뒤의 페이지가 여전히 고무줄처럼 �
 
 `role="alertdialog"`는 파괴적인 작업을 확인할 때처럼 흐름을 끊고 응답을 요구하는 대화 상자를 나타냅니다. 배경을 클릭해도 닫히지 않고, Escape로는 여전히 닫힙니다. 열리면 첫 번째 닫기 파트로 포커스가 가므로, Cancel이라고 적힌 `Dialog.Close`가 `initialFocusRef` 없이도 포커스를 받습니다. 메시지가 필요합니다. `Dialog.Description`을 렌더하거나 `aria-describedby`를 전달하세요. 그렇지 않으면 개발 환경에서 오류를 기록합니다. 헤더의 닫기 버튼은 빼세요. 빠져나가는 길은 Cancel입니다.
 
-```tsx
-const restoreRef = useRef<HTMLButtonElement>(null);
-
-{deleted ? (
-  <Button.Root ref={restoreRef} variant="secondary" onClick={restore}>
-    Restore report.pdf
-  </Button.Root>
-) : (
-  <Button.Root onClick={() => setOpen(true)}>Delete report.pdf</Button.Root>
-)}
-<Dialog.Root role="alertdialog" open={open} onOpenChange={setOpen} restoreFocusRef={restoreRef}>
-  <Dialog.Title>Delete report.pdf?</Dialog.Title>
-  <Dialog.Description>The file is removed for everyone in this project.</Dialog.Description>
-  <Dialog.Footer>
-    <Dialog.Close>Cancel</Dialog.Close>
-    <Button.Root onClick={remove}>Delete</Button.Root>
-  </Dialog.Footer>
-</Dialog.Root>
-```
-
 삭제하면 대화 상자를 연 버튼이 사라지므로, `restoreFocusRef`로 닫힌 뒤 포커스가 갈 곳을 지정합니다. Cancel은 연 버튼을 그대로 두므로 포커스가 그 버튼으로 돌아갑니다. 무엇이 파괴적인 작업인지와 문구는 제품이 정합니다.
 
-<Example>
-  <DialogAlert />
-</Example>
+<Example of={DialogAlert} />
 
 ## 아이콘
 

@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { FocusHandoffRequest } from './FocusHandoffDemo';
+import FocusHandoffRequest from '../../examples/utilities/use-focus-handoff/FocusHandoffRequest';
 
 afterEach(cleanup);
 

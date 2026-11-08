@@ -1,4 +1,6 @@
-import { ChipListDemo } from '../../../components/demos/ChipListDemo';
+import ChipListOneRow from '../../../examples/chip-list/ChipListOneRow';
+import ChipListTwoRows from '../../../examples/chip-list/ChipListTwoRows';
+import ChipListReadOnly from '../../../examples/chip-list/ChipListReadOnly';
 
 # ChipList
 
@@ -21,13 +23,9 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
 
 ## 한 줄 / 두 줄
 
-<Example>
-  <ChipListDemo maxRows={1} />
-</Example>
+<Example of={ChipListOneRow} />
 
-<Example>
-  <ChipListDemo maxRows={2} />
-</Example>
+<Example of={ChipListTwoRows} />
 
 ## 읽기 전용
 
@@ -37,9 +35,7 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
 <ChipList.Root aria-label="Tags" chips={tags} maxRows={1} />
 ```
 
-<Example>
-  <ChipListDemo maxRows={1} readOnly />
-</Example>
+<Example of={ChipListReadOnly} />
 
 ## 아이콘
 

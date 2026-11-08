@@ -1,4 +1,4 @@
-import { MessageActionsExample } from '../../../../components/demos/MessageActionsDemo';
+import MessageActionsExample from '../../../../examples/recipes/message-actions/MessageActionsExample';
 
 export const description = 'A recipe for the buttons under a chat message: Buttons in a Toolbar inside Message.Actions, each doing what your product decides.';
 
@@ -8,30 +8,11 @@ A recipe, not a package namespace. The buttons under a chat message are [Button]
 
 Hover over the question or move focus into it to show its actions, then try copy, edit, regenerate and the ratings.
 
-<Example block>
-  <MessageActionsExample />
-</Example>
+<Example of={MessageActionsExample} block />
 
 ## Copy
 
 [useClipboard](/utilities/use-clipboard) writes the text and announces the result. Copy the message's source text, such as its markdown, not the rendered HTML. The name stays "Copy" while the icon shows a check, so the announcement is what screen readers hear.
-
-```tsx
-import { Button, useClipboard } from '@tounsoo/todae';
-import { Check, Copy } from 'lucide-react';
-
-export function CopyButton({ text }: { text: string }) {
-  const clipboard = useClipboard();
-  const copied = clipboard.status === 'copied' && clipboard.text === text;
-  return (
-    <Button.Root variant="ghost" aria-label="Copy" onClick={() => clipboard.copy(text)}>
-      <Button.Icon>
-        {copied ? <Check /> : <Copy />}
-      </Button.Icon>
-    </Button.Root>
-  );
-}
-```
 
 ## Regenerate and rate
 

@@ -1,5 +1,5 @@
 import FieldsetCheckboxes from '../../../examples/fieldset/FieldsetCheckboxes';
-import { FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
+import FieldsetDisabled from '../../../examples/fieldset/FieldsetDisabled';
 
 # Fieldset
 
@@ -11,9 +11,7 @@ import { FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
 
 `disabled`는 네이티브 속성입니다. 브라우저가 안의 모든 폼 컨트롤을 비활성화하고, Todae 컨트롤은 비활성 스타일을 보여 줍니다. 비활성 fieldset 안의 fieldset도 비활성입니다. invalid fieldset 안에서는 컨트롤이나 중첩된 fieldset이 `invalid={false}`를 주지 않는 한 invalid입니다. 올바르게 입력한 필드에 쓰세요. 첫 번째 `Fieldset.Legend` 안의 컨트롤은 브라우저가 그러듯이 활성 상태로 남습니다.
 
-<Example block>
-  <FieldsetDisabled />
-</Example>
+<Example of={FieldsetDisabled} block />
 
 파트는 `fieldset.gap` 간격으로 쌓입니다. 컨트롤을 나란히 두려면 `Stack.Root direction="row"` 안에 넣으세요.
 

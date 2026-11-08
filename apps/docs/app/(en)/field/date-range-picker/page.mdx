@@ -1,5 +1,5 @@
 import FieldDateRangePicked from '../../../../examples/field/date-range-picker/FieldDateRangePicked';
-import { FieldDateRangePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDateRangePickerAlone from '../../../../examples/field/date-range-picker/FieldDateRangePickerAlone';
 
 # Field.DateRangePicker
 
@@ -21,9 +21,7 @@ Presets such as "Last 7 days" are not part of the picker. They are the [Date ran
 
 On its own, `Field.DateRangePicker` is the field's control. It shows the range in `locale`'s medium style through `Intl.DateTimeFormat`'s `formatRange`, such as `Oct 3 – 10, 2026`, a one-day range as one date, or `placeholder` while there is none. A press elsewhere in the field opens the calendar. With a `name` on the Root, the form sends the range as an ISO 8601 interval, such as `2026-10-03/2026-10-10`.
 
-<Example block>
-  <FieldDateRangePickerAlone />
-</Example>
+<Example of={FieldDateRangePickerAlone} block />
 
 The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when the range's second date is picked, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the calendar puts focus on the range's start, else on today or the nearest date in range. After the first pick, Escape, or a modal's close request such as the Android back gesture, drops it and the calendar stays open; with no first pick, Escape closes the calendar, and focus goes back to where it was before it opened. A first pick is dropped when the calendar closes.
 

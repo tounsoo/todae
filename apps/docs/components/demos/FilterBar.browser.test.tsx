@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { FilterBarIssues } from './FilterBarDemo';
+import FilterBarIssues from '../../examples/recipes/filter-bar/FilterBarIssues';
 
 const observers: MutationObserver[] = [];
 

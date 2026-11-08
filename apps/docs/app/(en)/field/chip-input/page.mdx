@@ -1,5 +1,8 @@
 import ChipInputControlled from '../../../../examples/field/chip-input/ChipInputControlled';
-import { ChipInputCommitKeys, ChipInputLabel, ChipInputMaxRows, ChipInputStates } from '../../../../components/demos/FieldDemo';
+import ChipInputCommitKeys from '../../../../examples/field/chip-input/ChipInputCommitKeys';
+import ChipInputLabel from '../../../../examples/field/chip-input/ChipInputLabel';
+import ChipInputMaxRows from '../../../../examples/field/chip-input/ChipInputMaxRows';
+import ChipInputStates from '../../../../examples/field/chip-input/ChipInputStates';
 
 # Field.ChipInput
 
@@ -23,9 +26,7 @@ Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key
 
 `commitKeys={['Enter', ',']}`. Unknown keys are dropped.
 
-<Example block>
-  <ChipInputCommitKeys />
-</Example>
+<Example of={ChipInputCommitKeys} block />
 
 ## Rows
 
@@ -33,21 +34,15 @@ When `maxRows` is set, the flow clamps to that many token-derived rows from the 
 
 `maxRows={1}` and `{2}` under compact and comfortable.
 
-<Example block>
-  <ChipInputMaxRows />
-</Example>
+<Example of={ChipInputMaxRows} block />
 
 ## States
 
 Disabled and invalid live on `Field.Root`.
 
-<Example block>
-  <ChipInputStates />
-</Example>
+<Example of={ChipInputStates} block />
 
-<Example block>
-  <ChipInputLabel />
-</Example>
+<Example of={ChipInputLabel} block />
 
 ## Icons
 

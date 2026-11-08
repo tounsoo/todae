@@ -1,4 +1,4 @@
-import { DateRangePresets } from '../../../../components/demos/DateRangePresetsDemo';
+import DateRangePresets from '../../../../examples/recipes/date-range-presets/DateRangePresets';
 
 export const description = '"Last 7 days" 같은 기간 프리셋 레시피입니다. Field.DateRangePicker 옆에서 그 값을 정하는 단일 선택 ToggleGroup입니다.';
 
@@ -8,85 +8,15 @@ export const description = '"Last 7 days" 같은 기간 프리셋 레시피입�
 
 프리셋을 누른 다음, 달력에서 직접 범위를 골라 보세요.
 
-<Example block>
-  <DateRangePresets />
-</Example>
+<Example of={DateRangePresets} block />
 
 ## 프리셋
 
 프리셋마다 오늘을 받아 `DateRange`를 돌려주는 함수이므로, 그 날짜는 누른 날을 따라갑니다. 오늘은 페이지를 불러올 때 한 번이 아니라, 프리셋을 누르거나 토글이 렌더링될 때 `Temporal.Now.plainDateISO()`로 읽으세요. 여기서 "Last 7 days"와 "Last 30 days"는 오늘에서 끝나고, "This month"는 그 달의 첫날부터 오늘까지입니다.
 
-```ts
-import type { DateRange } from '@tounsoo/todae';
-
-const PRESETS: { id: string; label: string; range: (today: Temporal.PlainDate) => DateRange }[] = [
-  { id: 'last-7', label: 'Last 7 days', range: (today) => ({ start: today.subtract({ days: 6 }), end: today }) },
-  { id: 'last-30', label: 'Last 30 days', range: (today) => ({ start: today.subtract({ days: 29 }), end: today }) },
-  { id: 'this-month', label: 'This month', range: (today) => ({ start: today.with({ day: 1 }), end: today }) },
-];
-
-function isRangeOf(preset: (typeof PRESETS)[number], range: DateRange, today: Temporal.PlainDate) {
-  const { start, end } = preset.range(today);
-  return start.equals(range.start) && end.equals(range.end);
-}
-
-// The preset whose range is the value today, or null for a custom range. Two presets can give the
-// same range on some days, such as "This month" and "Last 7 days" on the 7th, so the last one
-// pressed wins while the value is still its range.
-function presetOf(range: DateRange | null, pressed: string | null) {
-  if (!range) return null;
-  const today = Temporal.Now.plainDateISO();
-  const last = PRESETS.find((each) => each.id === pressed);
-  if (last && isRangeOf(last, range, today)) return last.id;
-  return PRESETS.find((each) => isRangeOf(each, range, today))?.id ?? null;
-}
-```
-
 ## 필드
 
 범위가 기준입니다. 토글의 `value`는 범위에서 계산하므로, 달력에서 하루씩 고른 범위를 포함해 값이 어떤 프리셋의 범위와 같으면 그 프리셋을 보여 주고, 그 밖의 범위에서는 아무것도 보여 주지 않습니다. 마지막으로 누른 프리셋의 id는 범위가 같은 프리셋이 여럿일 때 가르는 용도로만 범위 옆에 두며, 범위가 아직 그 프리셋의 것일 때만 쓰입니다. 눌린 프리셋을 다시 누르면 `null`이 오는데, 핸들러가 이를 무시하므로 범위는 그대로입니다.
-
-```tsx
-import { Field, Label, Stack, ToggleGroup, type DateRange } from '@tounsoo/todae';
-import { useId, useState } from 'react';
-// Your app's hook for the page's language; the docs site's own is useLocale.
-import { useLocale } from './useLocale';
-
-// PRESETS and presetOf are the ones above.
-export function DateRangePresets() {
-  const id = useId();
-  const locale = useLocale();
-  const [range, setRange] = useState<DateRange | null>(null);
-  const [pressed, setPressed] = useState<string | null>(null);
-  return (
-    <Stack.Root gap="condensed">
-      <Field.Group>
-        <Label.Root htmlFor={id}>Report dates</Label.Root>
-        <Field.Root id={id}>
-          <Field.DateRangePicker value={range} onValueChange={setRange} locale={locale} placeholder="Pick dates" />
-        </Field.Root>
-      </Field.Group>
-      <ToggleGroup.Root
-        aria-label="Preset ranges"
-        value={presetOf(range, pressed)}
-        onValueChange={(next) => {
-          // Pressing the pressed preset again gives null, which keeps its range.
-          const preset = PRESETS.find((each) => each.id === next);
-          if (!preset) return;
-          setRange(preset.range(Temporal.Now.plainDateISO()));
-          setPressed(preset.id);
-        }}
-      >
-        {PRESETS.map((preset) => (
-          <ToggleGroup.Item key={preset.id} value={preset.id}>
-            {preset.label}
-          </ToggleGroup.Item>
-        ))}
-      </ToggleGroup.Root>
-    </Stack.Root>
-  );
-}
-```
 
 `Field.Root`에 `name`을 주면 폼은 선택기가 다른 범위를 보낼 때처럼 범위를 `2026-03-06/2026-03-12` 같은 ISO 8601 구간으로 보내므로, 프리셋 때문에 서버가 읽는 값이 달라지지 않습니다.
 

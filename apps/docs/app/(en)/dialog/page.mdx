@@ -1,5 +1,6 @@
 import DialogBasic from '../../../examples/dialog/DialogBasic';
-import { DialogAlert, DialogThemed } from '../../../components/demos/DialogDemo';
+import DialogAlert from '../../../examples/dialog/DialogAlert';
+import DialogThemed from '../../../examples/dialog/DialogThemed';
 
 # Dialog
 
@@ -11,9 +12,7 @@ Enter is an opacity fade over 280ms while the panel rises into place from `dialo
 
 Dark compact, backdrop dismiss off.
 
-<Example>
-  <DialogThemed />
-</Example>
+<Example of={DialogThemed} />
 
 Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not inherit extra classes on the provider node.
 
@@ -23,31 +22,9 @@ iOS may still rubber-band the page behind an open overlay. Chrome may ignore `ca
 
 `role="alertdialog"` marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click no longer closes it; Escape still does. On open, focus goes to its first close part, so a `Dialog.Close` that says Cancel takes it without an `initialFocusRef`. It needs a message: render `Dialog.Description` or pass `aria-describedby`, or it logs an error in development. Leave out the header close: Cancel is the way out.
 
-```tsx
-const restoreRef = useRef<HTMLButtonElement>(null);
-
-{deleted ? (
-  <Button.Root ref={restoreRef} variant="secondary" onClick={restore}>
-    Restore report.pdf
-  </Button.Root>
-) : (
-  <Button.Root onClick={() => setOpen(true)}>Delete report.pdf</Button.Root>
-)}
-<Dialog.Root role="alertdialog" open={open} onOpenChange={setOpen} restoreFocusRef={restoreRef}>
-  <Dialog.Title>Delete report.pdf?</Dialog.Title>
-  <Dialog.Description>The file is removed for everyone in this project.</Dialog.Description>
-  <Dialog.Footer>
-    <Dialog.Close>Cancel</Dialog.Close>
-    <Button.Root onClick={remove}>Delete</Button.Root>
-  </Dialog.Footer>
-</Dialog.Root>
-```
-
 Deleting removes the button that opened the dialog, so `restoreFocusRef` names where focus goes after the exit. Cancel leaves the opener in place, and focus goes back to it. What counts as destructive, and the wording, are the product's.
 
-<Example>
-  <DialogAlert />
-</Example>
+<Example of={DialogAlert} />
 
 ## Icons
 

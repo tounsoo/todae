@@ -1,4 +1,4 @@
-import { FocusHandoffRequest } from '../../../../components/demos/FocusHandoffDemo';
+import FocusHandoffRequest from '../../../../examples/utilities/use-focus-handoff/FocusHandoffRequest';
 
 # useFocusHandoff
 
@@ -23,9 +23,7 @@ const handoff = useFocusHandoff({ to: summary });
 
 키보드로 Allow나 Deny를 누른 다음 Ask again을 눌러 보세요. 포커스는 그 자리를 대신하는 버튼에 머뭅니다.
 
-<Example>
-  <FocusHandoffRequest />
-</Example>
+<Example of={FocusHandoffRequest} />
 
 넘겨주기는 React가 업데이트를 마칠 때까지 기다리므로, 여기의 Ask again처럼 `to`가 같은 업데이트에서 마운트되는 요소를 가리켜도 됩니다. 그때 이미 `autoFocus`를 받은 필드처럼 페이지의 다른 요소에 포커스가 있거나, `to`의 요소가 페이지에 없으면 아무것도 하지 않습니다. 요소가 페이지에서 빠질 때만 반응합니다. CSS로 숨기거나 숨겨진 Activity에 남은 요소에는 아무것도 하지 않고, 포커스가 갈 곳은 브라우저가 정합니다.
 

@@ -1,4 +1,4 @@
-import { WizardExample } from '../../../../components/demos/WizardDemo';
+import WizardExample from '../../../../examples/recipes/wizard/WizardExample';
 
 export const description = 'A recipe for a wizard that splits one long form into steps: a Steps list shows where the person is, and each step is its own Form.';
 
@@ -8,9 +8,7 @@ A recipe, not a package namespace. A wizard splits one long form into steps: a [
 
 Go through the steps, or use `ben@example.com` and the workspace name `Todae`, which the stand-in server knows, to see errors from the last step come back to the steps that ask for them.
 
-<Example block>
-  <WizardExample />
-</Example>
+<Example of={WizardExample} block />
 
 ## A form per step
 

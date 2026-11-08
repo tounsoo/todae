@@ -1,4 +1,5 @@
-import { FormRule, FormSignUp } from '../../../components/demos/FormDemo';
+import FormRule from '../../../examples/form/FormRule';
+import FormSignUp from '../../../examples/form/FormSignUp';
 
 # Form
 
@@ -6,35 +7,9 @@ A native `<form>` that checks its controls before it submits and shows each prob
 
 Each [`Field.Group`](/field) or [`Fieldset.Root`](/fieldset) inside a `Form.Root` is a validation scope. An `ErrorMessage.Root` with no `id` inside it shows the scope's first problem and wires the controls to it.
 
-```tsx
-const nameId = useId();
-const emailId = useId();
-
-<Form.Root errors={errors} onSubmit={onSubmit}>
-  <Form.Summary />
-  <Field.Group>
-    <Label.Root htmlFor={nameId}>Name</Label.Root>
-    <Field.Root id={nameId} name="name">
-      <Field.TextInput required minLength={2} value={name} onValueChange={setName} />
-    </Field.Root>
-    <ErrorMessage.Root />
-  </Field.Group>
-  <Field.Group>
-    <Label.Root htmlFor={emailId}>Work email</Label.Root>
-    <Field.Root id={emailId} name="email">
-      <Field.TextInput type="email" required value={email} onValueChange={setEmail} />
-    </Field.Root>
-    <ErrorMessage.Root />
-  </Field.Group>
-  <Button.Root type="submit">Create account</Button.Root>
-</Form.Root>
-```
-
 Submit the empty form below, or enter `ben@example.com`, an address the stand-in server knows.
 
-<Example block>
-  <FormSignUp />
-</Example>
+<Example of={FormSignUp} block />
 
 ## When a problem shows
 
@@ -108,9 +83,7 @@ After a send, a reply is a commit whose `errors` content differs from the commit
 
 `customValidity` on `Field.Root`, `Fieldset.Root`, `Checkbox.Root` and `RadioGroup.Root` sets a message with the browser's `setCustomValidity`, so it blocks a submit and follows the timing above. An empty string means the rule holds. If your code changes the message with `setCustomValidity`, Todae sets its own again at the next commit while the rule holds, and when the rule goes it clears the message only if it is still the one Todae set. On a `Field.Root` it goes to the field's control, on a `Fieldset.Root` to the first control of its own that takes part in validation, or, when all its controls sit in nested groups, to the first one at any depth, whose message then shows where that control's error shows, and on a `RadioGroup.Root` to its first radio that does. Controls that share one element do not clobber each other: the element gets the first non-empty message, from its own part, then each fieldset outward, so a `Fieldset.Root` with an empty `customValidity` leaves a nested field's message alone. It works without a `Form.Root` too, as the native API, and picks the same control.
 
-<Example block>
-  <FormRule />
-</Example>
+<Example of={FormRule} block />
 
 ## Scopes
 

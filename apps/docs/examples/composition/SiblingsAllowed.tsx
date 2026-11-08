@@ -1,0 +1,38 @@
+'use client';
+
+import { Button, Field, OptionList, Popover, usePopover } from '@tounsoo/todae';
+import { useState } from 'react';
+
+export default function SiblingsAllowed() {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [sort, setSort] = useState<string | null>(null);
+  const popover = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
+  return (
+    <>
+      <Field.Root aria-label="Filter">
+        <Field.TextInput
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Filter"
+        />
+      </Field.Root>
+      <Button.Root tooltip={false} {...popover.getTriggerProps()}>
+        {sort ?? 'Sort'}
+      </Button.Root>
+      <Popover.Root {...popover.getPopoverProps()}>
+        <OptionList.Root
+          aria-label="Sort"
+          value={sort}
+          onValueChange={(next) => {
+            setSort(next);
+            setOpen(false);
+          }}
+        >
+          <OptionList.Option value="name">Name</OptionList.Option>
+          <OptionList.Option value="recent">Recent</OptionList.Option>
+        </OptionList.Root>
+      </Popover.Root>
+    </>
+  );
+}

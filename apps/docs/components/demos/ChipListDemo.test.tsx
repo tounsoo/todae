@@ -6,7 +6,37 @@ import { renderToString } from 'react-dom/server';
 import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChipList, Field } from '@tounsoo/todae';
-import { ChipListDemo } from './ChipListDemo';
+import ChipListOneRow from '../../examples/chip-list/ChipListOneRow';
+import ChipListReadOnly from '../../examples/chip-list/ChipListReadOnly';
+import ChipListTwoRows from '../../examples/chip-list/ChipListTwoRows';
+
+const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-stays-put', 'react', 'density', 'dark mode', 'docs'];
+
+// The examples take no props, so this is the same list as theirs with the chips, rows and removal
+// as props, for the cases below that need other chips than the example's.
+function ChipListDemo({
+  maxRows,
+  initialChips = TAGS,
+  readOnly = false,
+}: {
+  maxRows: number;
+  initialChips?: readonly string[];
+  readOnly?: boolean;
+}) {
+  const [chips, setChips] = useState(initialChips);
+  return (
+    <div style={{ width: '100%', maxWidth: '18rem', minWidth: 0 }}>
+      <ChipList.Root
+        aria-label="Tags"
+        chips={chips}
+        maxRows={maxRows}
+        overflowLabel={(n) => `+${n} more`}
+        panelLabel={(n) => `${n} more ${n === 1 ? 'tag' : 'tags'}`}
+        onRemove={readOnly ? undefined : (index) => setChips((current) => current.filter((_, i) => i !== index))}
+      />
+    </div>
+  );
+}
 
 const require = createRequire(import.meta.url);
 const EIGHT = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh'];
@@ -113,6 +143,21 @@ beforeEach(() => {
     if (this.querySelector?.(':scope > input') || this.getAttribute('role') === 'list') return rect(400, 32);
     if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100);
     return rect(0, 0);
+  });
+});
+
+describe('chip list examples', () => {
+  it('render the page examples: the one-row and two-row lists remove, the read-only one does not', () => {
+    const one = render(<ChipListOneRow />);
+    const oneRemoves = removes(one.getByRole('list', { name: 'Tags' }));
+    expect(oneRemoves.length).toBeGreaterThan(0);
+    expect(one.container.textContent).toMatch(/\+\d+ more/);
+    one.unmount();
+    const two = render(<ChipListTwoRows />);
+    expect(removes(two.getByRole('list', { name: 'Tags' })).length).toBeGreaterThan(oneRemoves.length);
+    two.unmount();
+    const readOnly = render(<ChipListReadOnly />);
+    expect(removes(readOnly.getByRole('list', { name: 'Tags' }))).toHaveLength(0);
   });
 });
 

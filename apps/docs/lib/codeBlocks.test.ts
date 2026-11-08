@@ -19,11 +19,14 @@ function pages(dir: string): string[] {
   });
 }
 
-/** Each fenced block as its language and body, named by its page and its place on the page, and the code of each example file. */
+/** Each fenced block as its language and body, named by its page and its place on the page, and the code and stylesheets of each example file. */
 function blocks(): { name: string; lang: string; body: string }[] {
   const examples = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' })
-    .filter((file) => file.endsWith('.tsx'))
-    .map((file) => ({ name: `examples/${file}`, lang: 'tsx', body: exampleSource(readFileSync(join(EXAMPLES, file), 'utf8')) }));
+    .filter((file) => file.endsWith('.tsx') || file.endsWith('.css'))
+    .map((file) => {
+      const text = readFileSync(join(EXAMPLES, file), 'utf8');
+      return file.endsWith('.css') ? { name: `examples/${file}`, lang: 'css', body: text } : { name: `examples/${file}`, lang: 'tsx', body: exampleSource(text) };
+    });
   return [...examples, ...pages(APP)
     .filter((path) => !PENDING.has(relative(APP, path).split(sep).slice(1, -1).join('/')))
     .flatMap((path) =>

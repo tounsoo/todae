@@ -3,7 +3,8 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { SignInExample, SignUpExample } from './SignInDemo';
+import SignInExample from '../../examples/recipes/sign-in/SignInExample';
+import SignUpExample from '../../examples/recipes/sign-in/SignUpExample';
 
 afterEach(cleanup);
 

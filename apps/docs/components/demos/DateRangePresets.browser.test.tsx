@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { DateRangePresets } from './DateRangePresetsDemo';
+import DateRangePresets from '../../examples/recipes/date-range-presets/DateRangePresets';
 
 afterEach(() => {
   cleanup();
@@ -29,7 +29,7 @@ async function pick(date: Temporal.PlainDate) {
 it('sets the range from a preset, and presses the preset that matches the range, if any', async () => {
   render(
     <Providers>
-      <DateRangePresets />
+      <DateRangePresets locale="en" />
     </Providers>,
   );
   const today = Temporal.Now.plainDateISO();
@@ -65,7 +65,7 @@ it('presses the preset that was pressed when two presets give the same range', a
   vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(Temporal.PlainDate.from('2026-03-07'));
   render(
     <Providers>
-      <DateRangePresets />
+      <DateRangePresets locale="en" />
     </Providers>,
   );
   await userEvent.click(screen.getByRole('button', { name: 'This month' }));

@@ -1,4 +1,4 @@
-import { ToolCallExample } from '../../../../components/demos/ToolCallDemo';
+import ToolCallExample from '../../../../examples/recipes/tool-call/ToolCallExample';
 
 export const description = '답 속 도구 호출 레시피입니다. 도구 이름과 상태 Badge를 보여 주는 Disclosure 안의 DataList에 입력과 출력을 담습니다.';
 
@@ -8,9 +8,7 @@ export const description = '답 속 도구 호출 레시피입니다. 도구 이
 
 호출을 열어 입력과 출력을 읽어 보세요. 마지막 호출은 승인을 기다립니다. 승인하면 실행되는 모습을 볼 수 있고, 거부할 수도 있습니다.
 
-<Example block>
-  <ToolCallExample />
-</Example>
+<Example of={ToolCallExample} block />
 
 ## 호출
 

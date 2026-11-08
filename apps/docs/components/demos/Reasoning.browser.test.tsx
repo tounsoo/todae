@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import { ReasoningExample } from './ReasoningDemo';
+import ReasoningExample from '../../examples/recipes/reasoning/ReasoningExample';
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });

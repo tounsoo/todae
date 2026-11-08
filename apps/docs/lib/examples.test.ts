@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, matchesGlob, relative } from 'node:path';
 import type { Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
-import { withExampleCode } from './exampleCode';
+import { exampleOf, withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { defaultImports, exampleFile, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -14,6 +14,7 @@ const EXAMPLES = join(process.cwd(), 'examples');
 const EN_PAGE = join(APP, '(en)', 'text', 'page.mdx');
 const KO_PAGE = join(APP, 'ko', 'text', 'page.mdx');
 const TONES = join(EXAMPLES, 'text', 'TextTones.tsx');
+const SIZES_CSS = join(EXAMPLES, 'avatar', 'AvatarSizes.module.css');
 
 function render(mdx: string, path = EN_PAGE): Root {
   const tree = parseMdx(mdx);
@@ -44,9 +45,10 @@ describe('docs examples', () => {
     expect(korean.children[2]).toMatchObject({ children: [{ attributes: [{ value: 'ko' }] }] });
   });
 
-  it('leaves an Example with children as it is', () => {
-    const mdx = '<Example>\n  <Demo />\n</Example>\n';
-    expect(render(mdx)).toEqual(parseMdx(mdx));
+  it('refuses an Example without of, since its demo would show no code', () => {
+    for (const mdx of ['<Example>\n  <Demo />\n</Example>\n', '<Example block>\n  <Demo />\n</Example>\n', '<Example />\n', '- <Example>\n    <Demo />\n  </Example>\n', 'See <Example><Demo /></Example> here.\n']) {
+      expect(() => render(mdx), mdx).toThrow(/<Example> needs of=\{Name\}/);
+    }
   });
 
   it('shows the code without the client directive', () => {
@@ -93,6 +95,50 @@ describe('docs examples', () => {
     }
   });
 
+  it('shows a stylesheet the example imports from its folder after its code', () => {
+    const tree = render("import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n\n<Example of={AvatarSizes} />\n", join(APP, '(en)', 'avatar', 'page.mdx'));
+    expect(tree.children.slice(1).map((node) => [node.type, 'lang' in node ? node.lang : undefined])).toEqual([
+      ['code', 'tsx'],
+      ['code', 'css'],
+      ['mdxJsxFlowElement', undefined],
+    ]);
+    expect(tree.children[2]).toMatchObject({ value: readFileSync(SIZES_CSS, 'utf8').trimEnd() });
+    const mdx = "import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n\n<Example of={AvatarSizes} />\n";
+    expect(withExampleCode(join(APP, '(en)', 'avatar', 'page.mdx'), mdx)).toContain(`\`\`\`css\n${readFileSync(SIZES_CSS, 'utf8').trimEnd()}\n\`\`\`\n\n<Example of={AvatarSizes} />`);
+  });
+
+  it('refuses a stylesheet the example’s folder does not have, or any other CSS import', () => {
+    expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'Gone.tsx'), "import styles from './Gone.module.css';\n")).toThrow(/no such file exists in its folder/);
+    for (const line of [
+      "import styles from '../avatar/AvatarSizes.module.css';",
+      "import './AvatarSizes.module.css';",
+      'import styles from "./AvatarSizes.module.css";',
+      "import styles from './AvatarSizes.module.css'",
+      "import { small } from './AvatarSizes.module.css';",
+      "import styles from '../../app/globals.css';",
+      "import styles from './AvatarSizes.module.css'; // sizes",
+      "  import styles from './AvatarSizes.module.scss';",
+      "import styles from './AvatarSizes.module.css?inline';",
+    ]) {
+      expect(() => exampleStylesheets(join(EXAMPLES, 'avatar', 'X.tsx'), `${line}\n`), line).toThrow(/imports CSS only as/);
+    }
+  });
+
+  it('shows a stylesheet once on a page, after the first example that imports it', () => {
+    const page = join(APP, '(en)', 'recipes', 'avatar-group', 'page.mdx');
+    const mdx = "import AvatarGroupExample from '../../../../examples/recipes/avatar-group/AvatarGroupExample';\nimport AvatarGroupSizes from '../../../../examples/recipes/avatar-group/AvatarGroupSizes';\n\n<Example of={AvatarGroupExample} />\n\n<Example of={AvatarGroupSizes} />\n";
+    const langs = render(mdx, page).children.flatMap((node) => (node.type === 'code' ? [node.lang] : node.type === 'mdxJsxFlowElement' ? ['example'] : []));
+    expect(langs).toEqual(['tsx', 'css', 'example', 'tsx', 'example']);
+    expect(withExampleCode(page, mdx).match(/```css/g)).toHaveLength(1);
+  });
+
+  it('rebuilds a page when a stylesheet its example imports changes', () => {
+    const added: string[] = [];
+    const page = join(APP, '(en)', 'avatar', 'page.mdx');
+    exampleDependencyLoader.call({ resourcePath: page, addDependency: (file: string) => added.push(file) }, "import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n");
+    expect(added).toEqual([join(EXAMPLES, 'avatar', 'AvatarSizes.tsx'), SIZES_CSS]);
+  });
+
   it('gives tools that read the MDX the code a reader sees', () => {
     const mdx = "import TextTones from '../../../examples/text/TextTones';\n\n# Text\n\n<Example of={TextTones} />\n";
     expect(withExampleCode(EN_PAGE, mdx)).toBe(
@@ -131,6 +177,23 @@ describe('docs examples', () => {
     expect(shown).toBeGreaterThan(200);
   });
 
+  it('ships every example file and stylesheet an English page shows with the MCP route', async () => {
+    const { default: config } = await import('../next.config.mjs');
+    const globs = (config.outputFileTracingIncludes?.['/api/[transport]'] ?? []).map((glob) => join(process.cwd(), glob));
+    const read = pages(join(APP, '(en)')).flatMap((page) => {
+      const tree = parseMdx(readFileSync(page, 'utf8'));
+      const imports = defaultImports(tree);
+      return tree.children.flatMap((node) => {
+        const name = exampleOf(node);
+        if (!name) return [];
+        const file = exampleFile(page, imports, name);
+        return [file, ...exampleStylesheets(file, readFileSync(file, 'utf8'))];
+      });
+    });
+    expect(read.some((file) => file.endsWith('.css'))).toBe(true);
+    expect(read.filter((file) => !globs.some((glob) => matchesGlob(file, glob))).map((file) => relative(EXAMPLES, file))).toEqual([]);
+  });
+
   it('uses no class name that only the docs stylesheet defines', () => {
     const docsCss = readFileSync(join(APP, 'globals.css'), 'utf8');
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
@@ -143,8 +206,8 @@ describe('docs examples', () => {
     expect(docsOnly).toEqual([]);
   });
 
-  it('imports only what a product has: the package, React and icon libraries', () => {
-    const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react)$/;
+  it('imports only what a product has: the package, React, icon libraries and a stylesheet of its own', () => {
+    const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react|\.\/[\w-]+\.module\.css)$/;
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
     const outside = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]
