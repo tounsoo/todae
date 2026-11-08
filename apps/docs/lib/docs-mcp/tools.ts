@@ -1,5 +1,5 @@
 import { DOCS_ORIGIN } from '../origin';
-import { docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
+import { absolutize, docsUrlFor, missingWhenNote, ownsPage, pageBySlug, pageFor, parseWhen, type PageDoc } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 
 const SOURCE = 'todae-docs' as const;
@@ -89,6 +89,39 @@ export function whenToUse(name: string) {
     docsUrl: `${DOCS_ORIGIN}/${page.slug}`,
     section: 'When to use',
     ...(scope ? { scope } : {}),
+    source: SOURCE,
+  };
+}
+
+function pageNamed(name: string): PageDoc | null {
+  let resolved;
+  try {
+    resolved = resolveName(name);
+  } catch {
+    return null;
+  }
+  return pageFor(resolved.kind === 'namespace' ? resolved.name : resolved.component.name);
+}
+
+/** The slug in a page's docsUrl or its path, so a link from another tool finds its page. */
+function slugOf(query: string): string {
+  const path = query.startsWith(`${DOCS_ORIGIN}/`) ? query.slice(DOCS_ORIGIN.length) : query;
+  return path.startsWith('/') ? path.slice(1) : path;
+}
+
+/**
+ * An English docs page by slug, such as "tooltip" or "utilities/use-tooltip", by its docsUrl, or by a
+ * name it documents, such as "useTooltip", with each example's code inlined above it.
+ */
+export function getDocsPage(query: string) {
+  const page = pageBySlug(slugOf(query)) ?? pageNamed(query);
+  if (!page) throw new Error(`No docs page for "${query}". Pass a page slug such as "tooltip", or a name from list_components.`);
+  return {
+    slug: page.slug,
+    title: page.title,
+    markdown: absolutize(page.markdown),
+    propsTables: page.props,
+    docsUrl: `${DOCS_ORIGIN}/${page.slug}`,
     source: SOURCE,
   };
 }
