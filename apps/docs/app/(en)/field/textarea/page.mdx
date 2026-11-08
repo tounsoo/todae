@@ -1,6 +1,10 @@
 import TextareaAutoGrow from '../../../../examples/field/textarea/TextareaAutoGrow';
 import TextareaRows from '../../../../examples/field/textarea/TextareaRows';
-import { TextareaDark, TextareaDensity, TextareaMaxRows, TextareaMessages, TextareaResize } from '../../../../components/demos/FieldDemo';
+import TextareaDark from '../../../../examples/field/textarea/TextareaDark';
+import TextareaDensity from '../../../../examples/field/textarea/TextareaDensity';
+import TextareaMaxRows from '../../../../examples/field/textarea/TextareaMaxRows';
+import TextareaMessages from '../../../../examples/field/textarea/TextareaMessages';
+import TextareaResize from '../../../../examples/field/textarea/TextareaResize';
 
 # Field.Textarea
 
@@ -18,35 +22,25 @@ import { TextareaDark, TextareaDensity, TextareaMaxRows, TextareaMessages, Texta
 
 `maxRows` without `rows` starts at `min(3, maxRows)`.
 
-<Example block>
-  <TextareaMaxRows />
-</Example>
+<Example of={TextareaMaxRows} block />
 
 Drag-resize with `autoGrow` off stops at `rows` and at `maxRows`.
 
-<Example block>
-  <TextareaResize />
-</Example>
+<Example of={TextareaResize} block />
 
 ## Density and states
 
 Compact, comfortable, and spacious.
 
-<Example block>
-  <TextareaDensity />
-</Example>
+<Example of={TextareaDensity} block />
 
 Dark appearance, for the native scrollbar.
 
-<Example block>
-  <TextareaDark />
-</Example>
+<Example of={TextareaDark} block />
 
 Label, description, error, invalid, and disabled.
 
-<Example block>
-  <TextareaMessages />
-</Example>
+<Example of={TextareaMessages} block />
 
 ## Highlights
 

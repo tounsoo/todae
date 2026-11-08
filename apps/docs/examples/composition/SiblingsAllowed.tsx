@@ -3,20 +3,7 @@
 import { Button, Field, OptionList, Popover, usePopover } from '@tounsoo/todae';
 import { useState } from 'react';
 
-export function FieldPartsAllowed() {
-  const [value, setValue] = useState('12');
-  return (
-    <Field.Root aria-label="Amount">
-      <Field.Icon>
-        <span>⌕</span>
-      </Field.Icon>
-      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
-      <Field.Affix>USD</Field.Affix>
-    </Field.Root>
-  );
-}
-
-export function SiblingsAllowed() {
+export default function SiblingsAllowed() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [sort, setSort] = useState<string | null>(null);

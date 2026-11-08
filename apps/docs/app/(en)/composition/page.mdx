@@ -1,4 +1,5 @@
-import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/CompositionDemo';
+import FieldPartsAllowed from '../../../examples/composition/FieldPartsAllowed';
+import SiblingsAllowed from '../../../examples/composition/SiblingsAllowed';
 
 # Composition
 
@@ -25,15 +26,11 @@ Public siblings, for example `Field`, [Label](/label), [Description](/descriptio
 
 `Field.Root` is chrome only. [Label](/label) is a sibling component. Adornments follow DOM order. No `side` prop.
 
-<Example block>
-  <FieldPartsAllowed />
-</Example>
+<Example of={FieldPartsAllowed} block />
 
 A Popover you add to a Field sits next to it. Neither wraps the other.
 
-<Example>
-  <SiblingsAllowed />
-</Example>
+<Example of={SiblingsAllowed} />
 
 Field shell is not a button. This tree is never allowed.
 

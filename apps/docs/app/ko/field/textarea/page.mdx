@@ -1,6 +1,10 @@
 import TextareaAutoGrow from '../../../../examples/field/textarea/TextareaAutoGrow';
 import TextareaRows from '../../../../examples/field/textarea/TextareaRows';
-import { TextareaDark, TextareaDensity, TextareaMaxRows, TextareaMessages, TextareaResize } from '../../../../components/demos/FieldDemo';
+import TextareaDark from '../../../../examples/field/textarea/TextareaDark';
+import TextareaDensity from '../../../../examples/field/textarea/TextareaDensity';
+import TextareaMaxRows from '../../../../examples/field/textarea/TextareaMaxRows';
+import TextareaMessages from '../../../../examples/field/textarea/TextareaMessages';
+import TextareaResize from '../../../../examples/field/textarea/TextareaResize';
 
 # Field.Textarea
 
@@ -18,35 +22,25 @@ import { TextareaDark, TextareaDensity, TextareaMaxRows, TextareaMessages, Texta
 
 `rows` 없이 `maxRows`만 주면 `min(3, maxRows)`에서 시작합니다.
 
-<Example block>
-  <TextareaMaxRows />
-</Example>
+<Example of={TextareaMaxRows} block />
 
 `autoGrow`를 끈 상태에서 드래그로 크기를 바꾸면 `rows`와 `maxRows`에서 멈춥니다.
 
-<Example block>
-  <TextareaResize />
-</Example>
+<Example of={TextareaResize} block />
 
 ## 밀도와 상태
 
 compact, comfortable, spacious.
 
-<Example block>
-  <TextareaDensity />
-</Example>
+<Example of={TextareaDensity} block />
 
 네이티브 스크롤바를 위한 다크 appearance.
 
-<Example block>
-  <TextareaDark />
-</Example>
+<Example of={TextareaDark} block />
 
 레이블, 설명, 오류, invalid, disabled.
 
-<Example block>
-  <TextareaMessages />
-</Example>
+<Example of={TextareaMessages} block />
 
 ## 하이라이트
 

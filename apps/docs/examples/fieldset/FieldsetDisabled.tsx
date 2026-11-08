@@ -3,7 +3,7 @@
 import { Checkbox, Fieldset, Stack, Switch } from '@tounsoo/todae';
 import { useState } from 'react';
 
-export function FieldsetDisabled() {
+export default function FieldsetDisabled() {
   const [paused, setPaused] = useState(true);
   return (
     <Stack.Root>

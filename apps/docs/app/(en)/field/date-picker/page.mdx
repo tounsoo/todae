@@ -1,5 +1,5 @@
 import FieldDatePicked from '../../../../examples/field/date-picker/FieldDatePicked';
-import { FieldDatePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldDatePickerAlone from '../../../../examples/field/date-picker/FieldDatePickerAlone';
 
 # Field.DatePicker
 
@@ -19,9 +19,7 @@ In the example, text that isn't a date clears the date, so the form sends no dat
 
 On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, the form sends the date the way HTML writes one, such as `2026-10-13`.
 
-<Example block>
-  <FieldDatePickerAlone />
-</Example>
+<Example of={FieldDatePickerAlone} block />
 
 The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a date is picked, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the calendar puts focus on the date, else on today or the nearest date in range. Escape closes it, and focus goes back to where it was before it opened.
 

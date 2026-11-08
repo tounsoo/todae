@@ -1,4 +1,5 @@
-import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/CompositionDemo';
+import FieldPartsAllowed from '../../../examples/composition/FieldPartsAllowed';
+import SiblingsAllowed from '../../../examples/composition/SiblingsAllowed';
 
 # 조합
 
@@ -25,15 +26,11 @@ Todae가 UI를 만들기 위해 제공하는 것은 세 종류로 나뉩니다. 
 
 `Field.Root`는 외형만 담당합니다. [Label](/label)은 형제 컴포넌트입니다. 장식 요소는 DOM 순서를 따릅니다. `side` prop은 없습니다.
 
-<Example block>
-  <FieldPartsAllowed />
-</Example>
+<Example of={FieldPartsAllowed} block />
 
 Field에 더하는 Popover는 Field 옆에 놓입니다. 어느 쪽도 다른 쪽을 감싸지 않습니다.
 
-<Example>
-  <SiblingsAllowed />
-</Example>
+<Example of={SiblingsAllowed} />
 
 Field 셸은 버튼이 아닙니다. 이런 트리는 절대 허용되지 않습니다.
 

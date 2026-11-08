@@ -1,5 +1,5 @@
 import FieldTimePicked from '../../../../examples/field/time-picker/FieldTimePicked';
-import { FieldTimePickerAlone } from '../../../../components/demos/FieldDemo';
+import FieldTimePickerAlone from '../../../../examples/field/time-picker/FieldTimePickerAlone';
 
 # Field.TimePicker
 
@@ -19,9 +19,7 @@ import { FieldTimePickerAlone } from '../../../../components/demos/FieldDemo';
 
 단독으로 쓰면 `Field.TimePicker`가 필드의 컨트롤입니다. 시각을 `formatTime`이 `locale`로 쓰는 대로, 시각이 없으면 `placeholder`를 보여 주고, 필드의 다른 곳을 누르면 목록이 열립니다. Root에 `name`이 있으면 폼이 HTML이 쓰는 형식으로 시각을 보냅니다. 예: `09:30`, 초가 있으면 `09:30:15`.
 
-<Example block>
-  <FieldTimePickerAlone />
-</Example>
+<Example of={FieldTimePickerAlone} block />
 
 목록은 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유를 받습니다. 시각을 고르면 `'select'`, 그 밖에는 `'escape'`, `'outside'`, `'trigger'`, 필드가 비활성화되면 `'disabled'`입니다. 열리면 목록이 포커스를 받고, 그 시각에서, 없으면 지금 다음 시각에서, 그것도 없으면 첫 시각에서 시작합니다. Escape를 누르면 닫히고, 포커스는 열리기 전에 있던 곳으로 돌아갑니다.
 
