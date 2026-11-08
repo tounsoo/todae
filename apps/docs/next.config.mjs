@@ -1,6 +1,8 @@
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import createMDX from '@next/mdx';
 import { remarkPlugins } from './lib/remarkPlugins.mjs';
+import { stableBuild } from './lib/stableBuild.mjs';
 
 // The non-default locales in lib/i18n/config.ts, as URL prefixes.
 const LOCALE_PREFIXES = ['/ko'];
@@ -20,7 +22,18 @@ const REDIRECTS = [
 // `env` inlines it at build, so client components read the same origin as the server.
 const PRODUCTION_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 
+// Next stamps the build id into every prerendered page. The commit's id lets a rebuild of the same commit write
+// the same pages. Outside a git checkout, null lets Next pick a random one.
+function commitId() {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 const nextConfig = {
+  generateBuildId: commitId,
   env: { DOCS_ORIGIN: PRODUCTION_HOST ? `https://${PRODUCTION_HOST}` : '' },
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.
   // Lightning CSS compiles Todae's CSS Modules: Next's default compiler leaves the class in
@@ -31,13 +44,14 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   // tsconfig paths point the package at its source, whose relative imports name the emitted .js
   // files. The alias is scoped to that source, so dependencies resolve as they publish.
-  webpack: (config) => {
+  webpack: (config, { dev }) => {
     config.module.rules.push({ test: /\.mdx$/, enforce: 'pre', use: [fileURLToPath(new URL('./lib/exampleDependencyLoader.mjs', import.meta.url))] });
     config.module.rules.push({
       include: fileURLToPath(new URL('../../packages/design-system/src', import.meta.url)),
       resolve: { extensionAlias: { '.js': ['.ts', '.tsx', '.js'] } },
     });
-    return config;
+    // Two builds of the same code would otherwise differ in about a thousand files. Dev writes nothing to deploy.
+    return dev ? config : stableBuild(config);
   },
   outputFileTracingIncludes: {
     // The MCP reads English pages only, with the example files and stylesheets they show, builds company tokens on Todae's token

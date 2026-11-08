@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/sort-prerender-manifest.ts",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
