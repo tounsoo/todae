@@ -2586,7 +2586,7 @@
           "type": "number",
           "required": false,
           "description": "Starting height in rows. Also the native rows attribute and the drag floor.",
-          "default": "\"3\""
+          "default": "3"
         },
         {
           "name": "maxRows",
@@ -2928,13 +2928,15 @@
           "name": "options.style",
           "type": "'long' | 'short' | 'narrow'",
           "required": false,
-          "description": "How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set."
+          "description": "How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set.",
+          "default": "\"long\""
         },
         {
           "name": "options.numeric",
           "type": "'auto' | 'always'",
           "required": false,
-          "description": "auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set."
+          "description": "auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set.",
+          "default": "\"auto\""
         },
         {
           "name": "options.firstDayOfWeek",
@@ -5040,7 +5042,7 @@
       "props": [
         {
           "name": "overrides",
-          "type": "Readonly<Record<string, ThemeOverrideValue | undefined>> | null",
+          "type": "Readonly<Record<string, ThemeOverrideValue | undefined>> | null | undefined",
           "required": true,
           "description": "Token paths and typed values, as ThemeProvider takes them. null or undefined gives {}."
         },

@@ -1,7 +1,7 @@
 // Checks every hand-written prop in src/**/*.meta.ts against the TypeScript
 // type of the export it describes: the prop must exist, `required` must match,
 // the `type` string must name the same type, and a literal `default` must match
-// a literal default in the code. `src/metaTypes.test.ts` runs it.
+// a literal default in the code. `scripts/meta-types.test.ts` runs it.
 //
 // How a meta prop name finds its TypeScript prop, for an export `X` or a part `X.Y`:
 // - Each call signature, and each member of a union first parameter, is one
@@ -19,6 +19,15 @@
 //   names, such as `T` in `Toaster<T>`, stands for the export's own type
 //   parameter; one it doesn't name is read at its constraint.
 // - A type ending in `| …` lists only some members: each must be allowed.
+// - A type that resolves to `any` fails unless TypeScript's is `any` too.
+// - A code default is a literal, or a const the checker reads as one, set in
+//   the destructuring or the parameter, or put after `name ?? …` in the body.
+//   A meta must list a destructuring or parameter default. One found after
+//   `??` is checked only when the meta lists a default. A function with no
+//   default of its own that hands the prop on, as `{...props}`, `key={key}`
+//   or an argument, is read where the prop lands. Native attribute defaults,
+//   such as a slider's min, and defaults from StringsProvider aren't in code
+//   and go unchecked.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -198,6 +207,10 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
         report(`${where}: required is ${prop.required}, TypeScript says ${required}`);
       }
       const declared = checker.getTypeAtLocation(aliases.get(alias)!.name);
+      if (declared.flags & ts.TypeFlags.Any && !present.some((f) => f.type.flags & ts.TypeFlags.Any)) {
+        report(`${where}: type is "${prop.type}", which allows anything; name the type`);
+        continue;
+      }
       const partial = ELLIPSIS.test(prop.type);
       const covers = partial || present.every((f) => defined(f.type).every((part) => checker.isTypeAssignableTo(part, declared)));
       const allowed = defined(declared).every((part) => present.some((f) => checker.isTypeAssignableTo(part, f.type)));
@@ -205,13 +218,24 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
         const actual = present.map((f) => checker.typeToString(f.type, undefined, ts.TypeFormatFlags.NoTruncation));
         report(`${where}: type is "${prop.type}", TypeScript has "${[...new Set(actual)].join('" or "')}"`);
       }
-      const literal = parseLiteral(prop.default);
-      const code = present.map((f) => f.default).find((d) => d !== undefined);
-      if (code !== undefined && literal !== undefined && code !== literal) {
-        report(`${where}: default is ${prop.default}, the code defaults to ${code}`);
+      if (prop.required && required) {
+        // Optional props take undefined anyway; a required one takes it only when its type says so.
+        const takes = (type: ts.Type) => (type.isUnion() ? type.types : [type]).some((part) => part.flags & ts.TypeFlags.Undefined);
+        if (takes(declared) !== present.some((f) => takes(f.type))) {
+          report(`${where}: type is "${prop.type}", TypeScript ${takes(declared) ? "doesn't take" : 'also takes'} undefined`);
+        }
       }
-      if (code !== undefined && prop.default === undefined) {
-        report(`${where}: has no default, the code defaults to ${code}`);
+      const literal = parseLiteral(prop.default);
+      const literalType = literal === undefined ? undefined : literalTypeOf(checker, literal);
+      if (literalType && !present.some((f) => checker.isTypeAssignableTo(literalType, f.type))) {
+        report(`${where}: default ${prop.default} isn't a value of its type`);
+      }
+      const code = present.map((f) => f.default).find((d) => d !== undefined);
+      if (code !== undefined && literal !== undefined && code.value !== literal) {
+        report(`${where}: default is ${prop.default}, the code defaults to ${code.value}`);
+      }
+      if (code?.initializer && prop.default === undefined) {
+        report(`${where}: has no default, the code defaults to ${code.value}`);
       }
     }
   }
@@ -219,23 +243,50 @@ export function checkMetaTypes(metas: readonly ComponentMeta[]): MetaTypeProblem
 }
 
 type Shape = { params: readonly ts.Symbol[]; first: ts.Type | undefined; declaration: ts.SignatureDeclaration | undefined };
-type Found = { type: ts.Type; optional: boolean; default: string | undefined };
+/** A literal default in the code, as JSON. `initializer` is false for one found only after `?? `, which a meta may leave out. */
+type Default = { value: string; initializer: boolean };
+type Found = { type: ts.Type; optional: boolean; default: Default | undefined };
 
 function shapesOf(checker: ts.TypeChecker, fnType: ts.Type, at: ts.Node): Shape[] {
   let signatures = fnType.getCallSignatures();
+  // The function the code returns, when the returned type is only an alias, so its defaults can be read.
+  let returnedFunction: ts.SignatureDeclaration | undefined;
   // A hook that takes nothing and returns a function is described by that function.
   if (signatures.length > 0 && signatures.every((s) => s.getParameters().length === 0)) {
     const returned = signatures.flatMap((s) => s.getReturnType().getCallSignatures());
-    if (returned.length > 0) signatures = returned;
+    if (returned.length > 0) {
+      returnedFunction = returnedImplementation(checker, signatures);
+      signatures = returned;
+    }
   }
   return signatures.flatMap((signature): Shape[] => {
     const params = signature.getParameters();
-    const declaration = signature.getDeclaration() as ts.SignatureDeclaration | undefined;
+    const own = signature.getDeclaration() as ts.SignatureDeclaration | undefined;
+    const declaration = implementationOf(own) ? own : (returnedFunction ?? own);
     const firstParam = params[0];
     if (!firstParam) return [{ params, first: undefined, declaration }];
     const firstType = checker.getTypeOfSymbolAtLocation(firstParam, at);
     return defined(firstType).map((first) => ({ params, first, declaration }));
   });
+}
+
+/** The one function declaration the hook's body returns by name, such as `return announce`. */
+function returnedImplementation(checker: ts.TypeChecker, signatures: readonly ts.Signature[]): ts.SignatureDeclaration | undefined {
+  const found = new Set<ts.SignatureDeclaration>();
+  for (const signature of signatures) {
+    const body = implementationOf(signature.getDeclaration() as ts.SignatureDeclaration | undefined)?.body;
+    if (!body) continue;
+    const visit = (node: ts.Node) => {
+      if (ts.isFunctionLike(node)) return;
+      if (ts.isReturnStatement(node) && node.expression && ts.isIdentifier(node.expression)) {
+        const declaration = checker.getSymbolAtLocation(node.expression)?.valueDeclaration;
+        if (declaration && implementationOf(declaration as ts.SignatureDeclaration)) found.add(declaration as ts.SignatureDeclaration);
+      }
+      ts.forEachChild(node, visit);
+    };
+    ts.forEachChild(body, visit);
+  }
+  return found.size === 1 ? [...found][0] : undefined;
 }
 
 function defined(type: ts.Type): ts.Type[] {
@@ -253,7 +304,7 @@ function lookup(checker: ts.TypeChecker, shape: Shape, name: string, at: ts.Node
   const field = !rest && shape.first && isObject(shape.first) ? shape.first.getProperty(head!) : undefined;
   if (field) {
     found = { type: checker.getTypeOfSymbolAtLocation(field, at), optional: (field.flags & ts.SymbolFlags.Optional) !== 0, default: undefined };
-    if (tail.length === 0) found.default = bindingDefault(shape.declaration, 0, head!);
+    if (tail.length === 0) found.default = bindingDefault(checker, shape.declaration, 0, head!);
   } else {
     const index = shape.params.findIndex((p) => p.name === head);
     const param = shape.params[index];
@@ -262,7 +313,7 @@ function lookup(checker: ts.TypeChecker, shape: Shape, name: string, at: ts.Node
     found = {
       type: checker.getTypeOfSymbolAtLocation(param, at),
       optional: rest || checker.isOptionalParameter(declaration),
-      default: declaration.initializer ? literalText(declaration.initializer) : undefined,
+      default: paramDefault(checker, shape.declaration, index),
     };
     if (tail.length === 1) {
       const member: ts.Symbol | undefined = defined(found.type).map((t) => t.getProperty(tail[0]!)).find(Boolean);
@@ -270,7 +321,7 @@ function lookup(checker: ts.TypeChecker, shape: Shape, name: string, at: ts.Node
       found = {
         type: checker.getTypeOfSymbolAtLocation(member, at),
         optional: found.optional || (member.flags & ts.SymbolFlags.Optional) !== 0,
-        default: bindingDefault(shape.declaration, index, tail[0]!),
+        default: bindingDefault(checker, shape.declaration, index, tail[0]!),
       };
       return defined(found.type).length > 0 ? found : undefined;
     }
@@ -287,32 +338,135 @@ function lookup(checker: ts.TypeChecker, shape: Shape, name: string, at: ts.Node
   return defined(found.type).length > 0 ? found : undefined;
 }
 
-/** The literal default the code gives `key` of parameter `index`, in the parameter itself or a top-level `const { key = … } = param`. */
-function bindingDefault(declaration: ts.SignatureDeclaration | undefined, index: number, key: string): string | undefined {
+/**
+ * The literal default the code gives `key` of parameter `index`: in the
+ * parameter's destructuring, in a top-level `const { key = … } = param`, or as
+ * the one literal the body puts after `key ?? …`. When the function has none
+ * and hands the prop on, to a component as `{...props}` or `key={key}` or to a
+ * function as an argument, the default is the one that function gives.
+ */
+function bindingDefault(
+  checker: ts.TypeChecker,
+  declaration: ts.SignatureDeclaration | undefined,
+  index: number,
+  key: string,
+  depth = 0,
+): Default | undefined {
   const implementation = implementationOf(declaration);
   const param = implementation?.parameters[index];
   if (!implementation || !param) return undefined;
   const patterns: ts.ObjectBindingPattern[] = [];
+  // Names that hold the whole props object, or the rest of it.
+  const holders = new Set<string>();
   if (ts.isObjectBindingPattern(param.name)) patterns.push(param.name);
-  else if (ts.isIdentifier(param.name) && implementation.body && ts.isBlock(implementation.body)) {
-    const paramName = param.name.text;
-    for (const statement of implementation.body.statements) {
-      if (!ts.isVariableStatement(statement)) continue;
-      for (const variable of statement.declarationList.declarations) {
-        if (ts.isObjectBindingPattern(variable.name) && variable.initializer && ts.isIdentifier(variable.initializer) && variable.initializer.text === paramName) {
-          patterns.push(variable.name);
+  else if (ts.isIdentifier(param.name)) {
+    holders.add(param.name.text);
+    if (implementation.body && ts.isBlock(implementation.body)) {
+      const paramName = param.name.text;
+      for (const statement of implementation.body.statements) {
+        if (!ts.isVariableStatement(statement)) continue;
+        for (const variable of statement.declarationList.declarations) {
+          if (ts.isObjectBindingPattern(variable.name) && variable.initializer && ts.isIdentifier(variable.initializer) && variable.initializer.text === paramName) {
+            patterns.push(variable.name);
+          }
         }
       }
     }
   }
+  let local: string | undefined;
   for (const pattern of patterns) {
     for (const element of pattern.elements) {
+      if (element.dotDotDotToken && ts.isIdentifier(element.name)) {
+        holders.add(element.name.text);
+        continue;
+      }
       const property = element.propertyName ?? element.name;
       const propertyName = ts.isIdentifier(property) || ts.isStringLiteral(property) ? property.text : undefined;
-      if (propertyName === key && element.initializer) return literalText(element.initializer);
+      if (propertyName !== key) continue;
+      if (element.initializer) return initializerDefault(checker, element.initializer);
+      if (ts.isIdentifier(element.name)) local = element.name.text;
     }
   }
-  return undefined;
+  const own = coalesceDefault(checker, implementation, (node) =>
+    (local !== undefined && ts.isIdentifier(node) && node.text === local) ||
+    ((ts.isPropertyAccessExpression(node) || ts.isPropertyAccessChain(node)) && node.name.text === key && ts.isIdentifier(node.expression) && holders.has(node.expression.text)),
+  );
+  if (own || depth >= 3 || !implementation.body) return own;
+  // The prop is handed on: read the default where it lands.
+  const found = new Map<string, Default>();
+  const follow = (target: ts.Node, at: number) => {
+    const signatures = checker.getTypeAtLocation(target).getCallSignatures();
+    for (const signature of signatures) {
+      const next = bindingDefault(checker, signature.getDeclaration() as ts.SignatureDeclaration | undefined, at, key, depth + 1);
+      if (next) found.set(`${next.value}:${next.initializer}`, next);
+    }
+  };
+  const isHolder = (node: ts.Node) => ts.isIdentifier(node) && holders.has(node.text);
+  const isLocal = (node: ts.Node | undefined) => node !== undefined && ts.isIdentifier(node) && node.text === local;
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
+      const hands = node.attributes.properties.some(
+        (attribute) =>
+          (ts.isJsxSpreadAttribute(attribute) && isHolder(attribute.expression)) ||
+          (ts.isJsxAttribute(attribute) &&
+            ts.isIdentifier(attribute.name) &&
+            attribute.name.text === key &&
+            attribute.initializer !== undefined &&
+            ts.isJsxExpression(attribute.initializer) &&
+            isLocal(attribute.initializer.expression)),
+      );
+      if (hands) follow(node.tagName, 0);
+    } else if (ts.isCallExpression(node)) {
+      node.arguments.forEach((argument, at) => {
+        const hands =
+          isHolder(argument) ||
+          (ts.isObjectLiteralExpression(argument) &&
+            argument.properties.some(
+              (property) =>
+                (ts.isSpreadAssignment(property) && isHolder(property.expression)) ||
+                (ts.isShorthandPropertyAssignment(property) && property.name.text === key && local === key) ||
+                (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.text === key && isLocal(property.initializer)),
+            ));
+        if (hands) follow(node.expression, at);
+      });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(implementation.body);
+  return found.size === 1 ? [...found.values()][0] : undefined;
+}
+
+/** The literal default the code gives parameter `index`, as its initializer or after `name ?? …` in the body. */
+function paramDefault(checker: ts.TypeChecker, declaration: ts.SignatureDeclaration | undefined, index: number): Default | undefined {
+  const implementation = implementationOf(declaration);
+  const param = implementation?.parameters[index];
+  if (!implementation || !param) return undefined;
+  if (param.initializer) return initializerDefault(checker, param.initializer);
+  const name = param.name;
+  return ts.isIdentifier(name) ? coalesceDefault(checker, implementation, (left) => ts.isIdentifier(left) && left.text === name.text) : undefined;
+}
+
+/** The one literal the body puts after `name ?? …`, such as `type ?? 'button'`; undefined when there is none or more than one. */
+function coalesceDefault(checker: ts.TypeChecker, implementation: ts.FunctionLikeDeclaration, matches: (left: ts.Expression) => boolean): Default | undefined {
+  const values = new Set<string | undefined>();
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken &&
+      matches(node.left)
+    ) {
+      values.add(literalValue(checker, node.right));
+    }
+    ts.forEachChild(node, visit);
+  };
+  if (implementation.body) visit(implementation.body);
+  const [only] = values;
+  return values.size === 1 && only !== undefined ? { value: only, initializer: false } : undefined;
+}
+
+function initializerDefault(checker: ts.TypeChecker, node: ts.Expression): Default | undefined {
+  const value = literalValue(checker, node);
+  return value === undefined ? undefined : { value, initializer: true };
 }
 
 /** The overload's implementation, which holds the parameter defaults. */
@@ -330,7 +484,30 @@ function implementationOf(declaration: ts.SignatureDeclaration | undefined): ts.
   return undefined;
 }
 
-/** A literal as JSON, such as `"primary"`, `false` or `300`; undefined for anything else. */
+/** A literal, or a name the checker reads as one, such as a `const` set to `"primary"`, as JSON; undefined for anything else. */
+function literalValue(checker: ts.TypeChecker, node: ts.Expression): string | undefined {
+  const text = literalText(node);
+  if (text !== undefined || !(ts.isIdentifier(node) || ts.isPropertyAccessExpression(node))) return text;
+  // A const such as `DEFAULT_AS: TextAs = 'p'` whose declared type is wider than its value.
+  const declaration = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(node) ? node.name : node)?.valueDeclaration;
+  if (
+    declaration &&
+    ts.isVariableDeclaration(declaration) &&
+    declaration.initializer &&
+    ts.isVariableDeclarationList(declaration.parent) &&
+    declaration.parent.flags & ts.NodeFlags.Const
+  ) {
+    const written = literalText(declaration.initializer);
+    if (written !== undefined) return written;
+  }
+  const type = checker.getTypeAtLocation(node);
+  if (type.isStringLiteral() || type.isNumberLiteral()) return JSON.stringify(type.value);
+  if (type.flags & ts.TypeFlags.BooleanLiteral) return checker.typeToString(type);
+  if (type.flags & ts.TypeFlags.Null) return 'null';
+  return undefined;
+}
+
+/** A literal written out, as JSON, such as `"primary"`, `false` or `300`; undefined for anything else. */
 function literalText(node: ts.Expression): string | undefined {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return JSON.stringify(node.text);
   if (ts.isNumericLiteral(node)) return JSON.stringify(Number(node.text));
@@ -340,6 +517,15 @@ function literalText(node: ts.Expression): string | undefined {
   if (node.kind === ts.SyntaxKind.TrueKeyword) return 'true';
   if (node.kind === ts.SyntaxKind.FalseKeyword) return 'false';
   if (node.kind === ts.SyntaxKind.NullKeyword) return 'null';
+  return undefined;
+}
+
+function literalTypeOf(checker: ts.TypeChecker, json: string): ts.Type | undefined {
+  const value: unknown = JSON.parse(json);
+  if (typeof value === 'string') return checker.getStringLiteralType(value);
+  if (typeof value === 'number') return checker.getNumberLiteralType(value);
+  if (typeof value === 'boolean') return value ? checker.getTrueType() : checker.getFalseType();
+  if (value === null) return checker.getNullType();
   return undefined;
 }
 

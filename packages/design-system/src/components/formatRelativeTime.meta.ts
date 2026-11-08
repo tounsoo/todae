@@ -27,12 +27,14 @@ export const meta = {
       name: 'options.style',
       type: "'long' | 'short' | 'narrow'",
       required: false,
+      default: '"long"',
       description: 'How long the words are, as Intl.RelativeTimeFormat takes it: long (3 minutes ago), short (3 min. ago) or narrow. long when not set.',
     },
     {
       name: 'options.numeric',
       type: "'auto' | 'always'",
       required: false,
+      default: '"auto"',
       description: 'auto writes words such as yesterday and now where the locale has them; always writes a number, such as 1 day ago. auto when not set.',
     },
     {

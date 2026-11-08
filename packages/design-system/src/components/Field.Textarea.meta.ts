@@ -32,7 +32,7 @@ export const meta = {
       name: 'rows',
       type: 'number',
       required: false,
-      default: '"3"',
+      default: '3',
       description: 'Starting height in rows. Also the native rows attribute and the drag floor.',
     },
     {

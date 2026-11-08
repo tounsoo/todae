@@ -29,6 +29,26 @@ const drifted: [ComponentMeta, string][] = [
   [meta('formatNumber', prop('value', 'number', true), prop('options.locale', 'number')), 'formatNumber options.locale: type is "number"'],
   [meta('useHotkey', prop('enabled', 'boolean')), 'useHotkey enabled: TypeScript has no such prop'],
   [meta('Button.Nope'), 'Button.Nope: no such export'],
+  [meta('Progress.Root', prop('value', 'any')), 'Progress.Root value: type is "any", which allows anything'],
+  // Button.Root has no destructuring default for type; the body writes `type ?? 'button'`.
+  [
+    meta('Button.Root', prop('type', '"button" | "submit" | "reset"', false, { default: '"submit"' })),
+    'Button.Root type: default is "submit", the code defaults to "button"',
+  ],
+  // Dialog.Root hands its props to the dialog shell, which sets the default.
+  [
+    meta('Dialog.Root', prop('dismissOnEscape', 'boolean', false, { default: 'false' })),
+    'Dialog.Root dismissOnEscape: default is false, the code defaults to true',
+  ],
+  [meta('Field.Textarea', prop('rows', 'number', false, { default: '"3"' })), 'Field.Textarea rows: default "3" isn\'t a value of its type'],
+  [meta('Field.ChipInput', prop('chips', 'readonly string[] | undefined', true)), "Field.ChipInput chips: type is \"readonly string[] | undefined\", TypeScript doesn't take undefined"],
+  // A const whose declared type is wider than its value: `DEFAULT_AS: TextAs = 'p'`.
+  [meta('Text.Root', prop('as', 'TextAs', false, { default: '"span"' })), 'Text.Root as: default is "span", the code defaults to "p"'],
+  // `options?.politeness ?? 'polite'` in the function useAnnouncer returns.
+  [
+    meta('useAnnouncer', prop('message', 'string', true), prop('options.politeness', '"polite" | "assertive"', false, { default: '"assertive"' })),
+    'useAnnouncer options.politeness: default is "assertive", the code defaults to "polite"',
+  ],
 ];
 
 // Written correctly, these read each lookup rule and must raise nothing.
