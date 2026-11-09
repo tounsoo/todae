@@ -791,10 +791,13 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     await screen.findByText('March 2027');
   });
 
-  it('draws the focus ring on the shell', async () => {
+  it('draws the focus ring on the shell, for the typed input and for the button', async () => {
     render(<Start />);
     await userEvent.tab();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start' }));
+    expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Choose date' }));
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
   });
 });
