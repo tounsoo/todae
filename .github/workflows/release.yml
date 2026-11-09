@@ -71,7 +71,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if [ "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA" ]; then
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$tip" = "$GITHUB_SHA" ]; then
             echo "tip=true" >> "$GITHUB_OUTPUT"
           else
             echo "main moved past $GITHUB_SHA, so its newer run updates the Version Packages pull request."
@@ -116,6 +117,8 @@ jobs:
     permissions:
       checks: read
       contents: read
+    outputs:
+      publish: ${{ steps.change.outputs.publish }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -123,7 +126,8 @@ jobs:
           # The diff needs the push's base commit.
           fetch-depth: 0
       # CI skips most checks on a push that is only Markdown or docs pages, so its Checks proves nothing
-      # about the package. Publishing from such a commit would ship whatever an earlier commit's CI failed.
+      # about the package. Publishing from such a commit would ship whatever an earlier commit's CI failed,
+      # so the run skips publishing. That is routine for a docs push, so it doesn't fail the run.
       - id: change
         name: Classify the diff
         env:
@@ -133,11 +137,14 @@ jobs:
         run: |
           set -euo pipefail
           bash .github/scripts/classify-diff.sh
-          if [ "$(sed -n 's/^class=//p' "$GITHUB_OUTPUT" | tail -n 1)" != all ]; then
-            echo "::error::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. Push a commit that changes code or a changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
-            exit 1
+          if [ "$(sed -n 's/^class=//p' "$GITHUB_OUTPUT" | tail -n 1)" = all ]; then
+            echo "publish=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code or a changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
+            echo "publish=false" >>"$GITHUB_OUTPUT"
           fi
-      - env:
+      - if: ${{ steps.change.outputs.publish == 'true' }}
+        env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -165,6 +172,7 @@ jobs:
   publish:
     name: Publish to npm
     needs: [pack, wait-for-ci]
+    if: needs.wait-for-ci.outputs.publish == 'true'
     runs-on: ubuntu-24.04
     # Waits behind a running publish, so a newer run that also found the version missing from npm finds
     # it published and skips.
@@ -195,7 +203,9 @@ jobs:
           set -euo pipefail
           package=@tounsoo/todae
           version=$(node -p "require('./packages/design-system/package.json').version")
-          if gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$package@$version" --jq '.[].ref' | grep -qxF "refs/tags/$package@$version"; then
+          # A failed read fails the step rather than reading as "no tag".
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$package@$version" --jq '.[].ref')
+          if printf '%s\n' "$refs" | grep -qxF "refs/tags/$package@$version"; then
             echo "The $package@$version tag exists, so an earlier run published it and this run doesn't publish it again."
             echo "missing=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -220,9 +230,11 @@ jobs:
 
   # docs-deploy.yml deploys the docs and their MCP server to production from docs-stable, so they only
   # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
-  # above went: to this commit when its package version is on npm, no changeset that releases
-  # something is waiting, and the package source is the same as at that version's tag; otherwise
-  # to the commit tagged with the latest version on npm. A failed publish so leaves the docs on the
+  # above went, and from the tip of main, not this run's commit: to the tip when its package version is
+  # on npm, no changeset that releases something is waiting, and the package source is the same as at
+  # that version's tag; to that version's tag when only the source differs; otherwise to the commit
+  # tagged with the latest version on npm. After a publish it first waits for npm to serve this run's
+  # version. A failed publish so leaves the docs on the
   # last release, and re-running this job catches up after one. With no tag to compare against, it
   # warns and leaves docs-stable where it is.
   docs:
@@ -258,17 +270,12 @@ jobs:
         run: |
           set -euo pipefail
           package=@tounsoo/todae
-          published=$(node -p "require('./packages/design-system/package.json').version")
-          git checkout -q --detach refs/remotes/origin/main
-          head=$(git rev-parse HEAD)
           version=$(node -p "require('./packages/design-system/package.json').version")
-          # Only this run's own version is worth waiting for npm to serve.
-          [ "$version" = "$published" ] || JUST_PUBLISHED=false
           # Whether npm has the version. Fails the job on any npm error but "not found".
           on_npm() {
             local out
-            if out=$(npm view "$package@$version" version 2>&1); then
-              [ "$out" = "$version" ]
+            if out=$(npm view "$package@$1" version 2>&1); then
+              [ "$out" = "$1" ]
             elif [[ $out == *E404* ]]; then
               return 1
             else
@@ -276,20 +283,30 @@ jobs:
               exit 1
             fi
           }
-          # A changeset that releases something names the package in its front matter; an empty one doesn't.
-          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
-          released=false
-          if [ -z "$waiting" ]; then
-            # The registry can take minutes to serve a version it just took.
+          # The registry can take minutes to serve a version it just took, so after a publish this waits
+          # until it serves this run's version, before reading what npm has.
+          if [ "$JUST_PUBLISHED" = true ]; then
+            served=false
             for attempt in $(seq 10); do
-              if on_npm; then released=true; break; fi
-              [ "$JUST_PUBLISHED" = true ] || break
+              if on_npm "$version"; then served=true; break; fi
               sleep 30
             done
-            if [ "$JUST_PUBLISHED" = true ] && [ "$released" = false ]; then
+            if [ "$served" = false ]; then
               echo "npm doesn't serve $package@$version yet; re-run this job" >&2
               exit 1
             fi
+          fi
+          # Checkout points origin/main at this run's commit, so fetch main's tip again. The repository is
+          # public, so the fetch needs no credentials.
+          git fetch -q origin +refs/heads/main:refs/remotes/origin/main
+          git checkout -q --detach refs/remotes/origin/main
+          head=$(git rev-parse HEAD)
+          version=$(node -p "require('./packages/design-system/package.json').version")
+          # A changeset that releases something names the package in its front matter; an empty one doesn't.
+          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
+          released=false
+          if [ -z "$waiting" ] && on_npm "$version"; then
+            released=true
           fi
           # The commit a version's tag points at, or nothing when the tag is missing.
           tagged() {
