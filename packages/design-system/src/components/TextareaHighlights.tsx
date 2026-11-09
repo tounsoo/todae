@@ -2,6 +2,7 @@ import {
   useCallback,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type ReactNode,
   type Ref,
@@ -9,6 +10,8 @@ import {
   type UIEvent,
 } from 'react';
 import { useDomId } from '../internal/domId.js';
+import { cancelLayout, queueLayout, STAGE, type LayoutJob } from '../internal/layoutBatch.js';
+import { observeSize } from '../internal/sharedObservers.js';
 import styles from './Field.module.css';
 
 export type FieldTextareaHighlight = {
@@ -92,40 +95,75 @@ export function useTextareaHighlights(
     div.scrollLeft = el.scrollLeft;
   }, [textarea]);
 
+  // Every layer on the page copies its textarea in one batch (layoutBatch.ts):
+  // all the reads of computed styles and sizes first, then all the writes, so
+  // the reads share one style recalc and one layout, where reading after each
+  // write recalculated the page 41 times per layer. The scroll goes in a later
+  // stage, as setting one lays the page out first, once for every layer.
+  const [jobs] = useState(() => {
+    let found: { styles: [string, string][]; lang: string | null } | null = null;
+    let offset: { top: number; left: number } | null = null;
+    const copy: LayoutJob = {
+      read: () => {
+        found = null;
+        const el = textarea.current;
+        const view = el?.ownerDocument.defaultView;
+        if (!el || !view || !layer.current) return;
+        const computed = view.getComputedStyle(el);
+        const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
+        const styles: [string, string][] = [];
+        for (const property of COPIED) if (property !== side) styles.push([property, computed.getPropertyValue(property)]);
+        // A scrollbar takes room from the textarea's text, not from the layer's.
+        const borders = px(computed.borderLeftWidth) + px(computed.borderRightWidth);
+        const scrollbar = Math.max(0, el.offsetWidth - el.clientWidth - borders);
+        styles.push([side, `${px(computed.getPropertyValue(side)) + scrollbar}px`]);
+        // The layer inherits the ancestors' lang; only the textarea's own one needs copying.
+        found = { styles, lang: el.getAttribute('lang') };
+      },
+      write: () => {
+        const div = layer.current;
+        if (!found || !div) return;
+        for (const [property, value] of found.styles) {
+          if (div.style.getPropertyValue(property) !== value) div.style.setProperty(property, value);
+        }
+        if (found.lang === null) div.removeAttribute('lang');
+        else if (div.getAttribute('lang') !== found.lang) div.setAttribute('lang', found.lang);
+      },
+    };
+    const reveal: LayoutJob = {
+      read: () => {
+        const el = textarea.current;
+        offset = el ? { top: el.scrollTop, left: el.scrollLeft } : null;
+      },
+      write: () => {
+        const div = layer.current;
+        if (!offset || !div) return;
+        div.scrollTop = offset.top;
+        div.scrollLeft = offset.left;
+      },
+    };
+    return { copy, reveal, key: { copy: {}, reveal: {} } };
+  });
+
   // Runs after every render, since an edit can change the direction (`dir="auto"`)
   // or show a scrollbar, and when the textarea changes size.
   const sync = useCallback(() => {
-    const el = textarea.current;
-    const div = layer.current;
-    if (!el || !div) return;
-    const view = el.ownerDocument.defaultView;
-    if (!view) return;
-    const computed = view.getComputedStyle(el);
-    const set = (property: string, value: string) => {
-      if (div.style.getPropertyValue(property) !== value) div.style.setProperty(property, value);
-    };
-    const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
-    for (const property of COPIED) if (property !== side) set(property, computed.getPropertyValue(property));
-    // The layer inherits the ancestors' lang; only the textarea's own one needs copying.
-    const lang = el.getAttribute('lang');
-    if (lang === null) div.removeAttribute('lang');
-    else if (div.getAttribute('lang') !== lang) div.setAttribute('lang', lang);
-    // A scrollbar takes room from the textarea's text, not from the layer's.
-    const borders = px(computed.borderLeftWidth) + px(computed.borderRightWidth);
-    const scrollbar = Math.max(0, el.offsetWidth - el.clientWidth - borders);
-    set(side, `${px(computed.getPropertyValue(side)) + scrollbar}px`);
-    scroll();
-  }, [scroll, textarea]);
+    queueLayout(jobs.key.copy, STAGE.measure, jobs.copy);
+    queueLayout(jobs.key.reveal, STAGE.reveal, jobs.reveal);
+  }, [jobs]);
 
   useLayoutEffect(() => {
     const el = textarea.current;
     if (!enabled || !el) return;
-    sync();
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => sync());
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [enabled, sync, textarea]);
+    // The browser reports the size now, too; one resize observer serves every
+    // textarea on the page (sharedObservers.ts).
+    const stop = observeSize(el, sync);
+    return () => {
+      stop();
+      cancelLayout(jobs.key.copy);
+      cancelLayout(jobs.key.reveal);
+    };
+  }, [enabled, sync, jobs, textarea]);
 
   useLayoutEffect(() => {
     if (enabled) sync();

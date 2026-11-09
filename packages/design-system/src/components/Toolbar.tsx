@@ -15,6 +15,7 @@ import { useComposedRefs } from '../internal/props.js';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from '../internal/toolbarContext.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { isTabbing, watchTabKey } from '../internal/tabKey.js';
 
 export type { ToolbarOrientation };
 
@@ -124,32 +125,8 @@ function Root({
   // Only the arrow keys, Home and End: Tab is steered below, and no tabindex is written.
   const roving = useRovingFocus({ orientation, loop, findItems: itemsOf });
 
-  // The Tab key press now under way, seen first at the window so stopped
-  // propagation cannot hide it. Dropped once the browser has moved focus.
-  const tabKey = useRef<globalThis.KeyboardEvent | null>(null);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
-      tabKey.current = event;
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        tabKey.current = null;
-      });
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      clearTimeout(timer);
-    };
-  }, []);
-  // Whether the focus now arriving is the browser's own Tab move: the key
-  // has finished dispatch unprevented. Focus a handler moves during the key,
-  // such as a menu returning focus to its trigger, does not count.
-  const tabbing = () => {
-    const key = tabKey.current;
-    return key !== null && key.eventPhase === Event.NONE && !key.defaultPrevented;
-  };
+  // Tab presses, seen first at the window by one listener every toolbar shares.
+  useEffect(watchTabKey, []);
 
   // Tab coming back into a run goes to the item Tab last left it from, when
   // that item can still take focus. Focus from a click, a script or a screen
@@ -160,7 +137,7 @@ function Root({
     // Focus inside a portaled layer still bubbles here through React.
     if (!root || !root.contains(event.target as Node)) return;
     // A move inside the toolbar that Tab did not make, such as an arrow key.
-    if (!tabbing() && root.contains(event.relatedTarget as Node | null)) return;
+    if (!isTabbing() && root.contains(event.relatedTarget as Node | null)) return;
     const target = event.target as HTMLElement;
     const run = runsOf(root).find((items) => items.includes(target));
     if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
@@ -169,7 +146,7 @@ function Root({
       if ((left.current.get(item) ?? -1) > (back ? left.current.get(back)! : -1)) back = item;
     }
     for (const item of run) left.current.delete(item);
-    if (!tabbing()) return;
+    if (!isTabbing()) return;
     // With nothing remembered, entry is on the first control, from either side.
     const to = back ?? run[0]!;
     if (to !== target) to.focus();

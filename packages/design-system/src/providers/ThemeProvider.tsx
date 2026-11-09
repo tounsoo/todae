@@ -22,13 +22,11 @@ export type ThemeProviderProps<Extra extends string = never> = {
 } & ComponentProps<'div'>;
 
 const QUERY = '(prefers-color-scheme: dark)';
-const DEV = process.env.NODE_ENV !== 'production';
 // `declared` is null with no provider above, so the outermost one defaults to system.
 const AppearanceContext = /* @__PURE__ */ createContext<{ declared: Appearance | null; resolved: ResolvedAppearance }>({
   declared: null,
   resolved: 'light',
 });
-const ThemeVarsContext = /* @__PURE__ */ createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(QUERY);
@@ -72,19 +70,27 @@ export function ThemeProvider<Extra extends string = never>({
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
   const context = useMemo(() => ({ declared: appearance, resolved }), [appearance, resolved]);
-  const vars = themeOverrideStyle(overrides, overrideTypes);
+  // Kept while the overrides and the style are the same objects, so a render
+  // of the provider for any other reason builds no new style.
+  const vars = useMemo(() => themeOverrideStyle(overrides, overrideTypes), [overrides, overrideTypes]);
   // Each override also sets its private --_todae-* input. Component tokens,
   // re-declared on every provider, read it first, so their overrides survive
   // nested providers; tokens that vary by appearance or density never read it.
-  const inputs = Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value]));
+  const inputs = useMemo(
+    () => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value])),
+    [vars],
+  );
+  const ownStyle = useMemo(() => ({ ...style, ...vars, ...inputs }) as CSSProperties, [style, vars, inputs]);
   const element = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(element, ref);
   // In development, check Todae's contrast pairs whenever the overrides change. The
   // key carries what the effect needs as one string, so it re-runs only on a change.
-  const contrastKey = DEV && Object.keys(vars).length > 0 ? JSON.stringify(contrastInputs(vars, inputs, style)) : '';
+  // Each check names NODE_ENV itself, so a production build drops the checker.
+  const contrastKey =
+    process.env.NODE_ENV !== 'production' && Object.keys(vars).length > 0 ? JSON.stringify(contrastInputs(vars, inputs, style)) : '';
   const warned = useRef<string | null>(null);
   useEffect(() => {
-    if (!DEV || !element.current) return;
+    if (process.env.NODE_ENV === 'production' || !element.current) return;
     if (contrastKey === '') {
       warned.current = null;
       return;
@@ -100,24 +106,18 @@ export function ThemeProvider<Extra extends string = never>({
   }, [contrastKey, appearance, resolved]);
   return (
     <AppearanceContext.Provider value={context}>
-      <ThemeVarsContext.Provider value={vars}>
-        <div
-          {...props}
-          ref={composedRef}
-          style={{ ...style, ...vars, ...inputs } as CSSProperties}
-          // "system" resolves in CSS through prefers-color-scheme, so a
-          // server-rendered page is dark from the first paint.
-          data-appearance={appearance}
-        />
-      </ThemeVarsContext.Provider>
+      <div
+        {...props}
+        ref={composedRef}
+        style={ownStyle}
+        // "system" resolves in CSS through prefers-color-scheme, so a
+        // server-rendered page is dark from the first paint.
+        data-appearance={appearance}
+      />
     </AppearanceContext.Provider>
   );
 }
 
 export function useAppearance(): ResolvedAppearance {
   return useContext(AppearanceContext).resolved;
-}
-
-export function useThemeVars(): Record<string, string> {
-  return useContext(ThemeVarsContext);
 }
