@@ -11,11 +11,12 @@ import {
   BUILD_TOOL_INPUT_ELEMENTS,
   MAX_REQUEST_BYTES,
   MAX_REQUEST_DEPTH,
+  MAX_REQUEST_ELEMENTS,
   MAX_REQUEST_TOOL_CALLS,
   TOOL_INPUT_ELEMENTS,
   countElements,
   hasMoreKeysThan,
-  nestsDeeperThan,
+  inspectBody,
   readBody,
   toolCalls,
 } from '../../../lib/docs-mcp/limits';
@@ -233,14 +234,17 @@ const toolHandler = createHandler(TOOL_INPUT_ELEMENTS);
 const buildHandler = createHandler(BUILD_TOOL_INPUT_ELEMENTS);
 
 // The endpoint's answers are for one caller and one call, so no cache keeps them.
+// no-transform keeps proxies from buffering or rewriting a streamed answer, as the SDK's own header asked.
+const NO_STORE = 'no-store, no-transform';
+
 function noStore(response: Response): Response {
   const headers = new Headers(response.headers);
-  headers.set('cache-control', 'no-store');
+  headers.set('cache-control', NO_STORE);
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 function jsonRpcError(status: number, code: number, message: string): Response {
-  return Response.json({ jsonrpc: '2.0', error: { code, message }, id: null }, { status, headers: { 'cache-control': 'no-store' } });
+  return Response.json({ jsonrpc: '2.0', error: { code, message }, id: null }, { status, headers: { 'cache-control': NO_STORE } });
 }
 
 async function POST(request: Request): Promise<Response> {
@@ -254,14 +258,25 @@ async function POST(request: Request): Promise<Response> {
   } catch {
     return jsonRpcError(400, -32700, 'Parse error: the request body is not JSON');
   }
-  if (nestsDeeperThan(body, MAX_REQUEST_DEPTH)) {
-    return jsonRpcError(400, -32600, `Request nests deeper than ${MAX_REQUEST_DEPTH} levels`);
-  }
   const calls = toolCalls(body);
   if (calls.length > MAX_REQUEST_TOOL_CALLS) {
     return jsonRpcError(400, -32600, `A request may make at most ${MAX_REQUEST_TOOL_CALLS} tool calls`);
   }
   const building = calls.length > 0 && calls.every((call) => call.name === BUILD_TOOL);
+  const files = new Set<object>();
+  for (const call of building ? calls : []) {
+    const value = (call.arguments as { files?: unknown } | null | undefined)?.files;
+    if (value && typeof value === 'object') files.add(value);
+  }
+  // The SDK checks every message before a tool's own limit runs, so the body is measured whole here, once.
+  switch (inspectBody(body, files)) {
+    case 'deep':
+      return jsonRpcError(400, -32600, `Request nests deeper than ${MAX_REQUEST_DEPTH} levels`);
+    case 'elements':
+      return jsonRpcError(400, -32600, `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files`);
+    case 'file-elements':
+      return jsonRpcError(400, -32602, `The files in this request hold more than ${BUILD_TOOL_INPUT_ELEMENTS} elements in all`);
+  }
   const elements = building ? BUILD_TOOL_INPUT_ELEMENTS : TOOL_INPUT_ELEMENTS;
   // The server checks each call on its own, so a batch's calls share one cap here.
   if (calls.length > 1 && countElements(calls.map((call) => call.arguments), elements) > elements) {

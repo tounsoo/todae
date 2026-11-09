@@ -1,6 +1,13 @@
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { MAX_BYTES } from '../../../lib/docs-mcp/build';
-import { BUILD_TOOL_INPUT_ELEMENTS, MAX_REQUEST_BYTES, MAX_REQUEST_DEPTH, MAX_REQUEST_TOOL_CALLS, TOOL_INPUT_ELEMENTS } from '../../../lib/docs-mcp/limits';
+import {
+  BUILD_TOOL_INPUT_ELEMENTS,
+  MAX_REQUEST_BYTES,
+  MAX_REQUEST_DEPTH,
+  MAX_REQUEST_ELEMENTS,
+  MAX_REQUEST_TOOL_CALLS,
+  TOOL_INPUT_ELEMENTS,
+} from '../../../lib/docs-mcp/limits';
 import { catalogTokens } from '../../../lib/docs-mcp/tokens';
 
 vi.useFakeTimers();
@@ -54,16 +61,9 @@ describe('docs MCP route', () => {
   });
 
   it('rejects a tools/call whose arguments exceed the element cap', async () => {
-    const text = await post({
-      jsonrpc: '2.0',
-      id: 2,
-      method: 'tools/call',
-      params: {
-        name: 'build_tokens',
-        arguments: { files: { 'x.json': Array(ELEMENT_CAP).fill(0) } },
-      },
-    });
-    expect(text).toContain(`maximum of ${ELEMENT_CAP} elements`);
+    const response = await send(JSON.stringify(call(2, 'build_tokens', { files: { 'x.json': Array(ELEMENT_CAP).fill(0) } })));
+    expect(response.status).toBe(400);
+    expect(await response.text()).toContain(`more than ${ELEMENT_CAP} elements in all`);
   });
 
   it('accepts a file that fills the byte budget', async () => {
@@ -116,7 +116,7 @@ describe('docs MCP route', () => {
     });
     const response = await send(stream);
     expect(response.status).toBe(413);
-    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('cache-control')).toBe('no-store, no-transform');
     expect(await response.json()).toMatchObject({ error: { message: `Request body is larger than ${MAX_REQUEST_BYTES / 1024} KB` } });
     expect(pulled).toBeLessThan(MAX_REQUEST_BYTES + 3 * chunk.byteLength);
   });
@@ -129,7 +129,7 @@ describe('docs MCP route', () => {
   it('tells caches not to store its answers', async () => {
     const response = await send(JSON.stringify(call(9, 'list_components', {})));
     expect(response.status).toBe(200);
-    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('cache-control')).toBe('no-store, no-transform');
   });
 
   it('accepts files within the byte budget sent with every non-ASCII character escaped', async () => {
@@ -190,5 +190,20 @@ describe('docs MCP route', () => {
     expect(await response.json()).toMatchObject({ error: { message: `A request may make at most ${MAX_REQUEST_TOOL_CALLS} tool calls` } });
     const allowed = await post(calls.slice(0, MAX_REQUEST_TOOL_CALLS));
     expect(allowed).toContain('"id":20');
+  });
+
+  it('refuses a body with many elements outside build_tokens files before the server walks them', async () => {
+    const keys = Object.fromEntries(Array.from({ length: 100_000 }, (_, i) => [`k${i}`, 0]));
+    const message = `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files`;
+    const bodies = [
+      call(30, 'list_components', keys),
+      call(31, 'build_tokens', { files: { 'x.json': {} }, ...keys }),
+      { ...call(32, 'list_components', {}), padding: Array(100_000).fill({}) },
+    ];
+    for (const body of bodies) {
+      const response = await send(JSON.stringify(body));
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ error: { message } });
+    }
   });
 });

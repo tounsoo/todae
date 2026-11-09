@@ -100,16 +100,51 @@ export function hasMoreKeysThan(value: unknown, max: number): boolean {
   return false;
 }
 
-/** Whether arrays and objects in `value` nest more than `max` levels deep, walked without recursion. */
-export function nestsDeeperThan(value: unknown, max: number): boolean {
-  const stack: [unknown, number][] = [[value, 0]];
+/**
+ * Array elements and object members a request may hold outside build_tokens files: the tool calls' shared
+ * TOOL_INPUT_ELEMENTS and as much again for the JSON-RPC messages around them. The SDK checks every message
+ * before any tool's own limit runs, and each element it walks costs CPU, so a body may carry no more than this
+ * where no tool reads it.
+ */
+export const MAX_REQUEST_ELEMENTS = 2 * TOOL_INPUT_ELEMENTS;
+
+/** Why a parsed body is refused before the server sees it. */
+export type BodyProblem = 'deep' | 'elements' | 'file-elements';
+
+/**
+ * Walks a parsed body once, without recursion, and stops at the first problem: nesting past MAX_REQUEST_DEPTH,
+ * more than MAX_REQUEST_ELEMENTS elements outside `files`, or more than BUILD_TOOL_INPUT_ELEMENTS inside them.
+ * `files` holds the files objects of the request's build_tokens calls. Returns null when the body may go on.
+ */
+export function inspectBody(body: unknown, files: ReadonlySet<object>): BodyProblem | null {
+  let outside = 0;
+  let inside = 0;
+  const stack: [unknown, number, boolean][] = [[body, 0, false]];
   while (stack.length > 0) {
-    const [node, depth] = stack.pop()!;
+    const [node, depth, inFiles] = stack.pop()!;
     if (node === null || typeof node !== 'object') continue;
-    if (depth >= max) return true;
-    for (const child of Array.isArray(node) ? node : Object.values(node)) {
-      if (child !== null && typeof child === 'object') stack.push([child, depth + 1]);
+    if (depth >= MAX_REQUEST_DEPTH) return 'deep';
+    const childInFiles = inFiles || files.has(node);
+    // Children are visited one at a time rather than copied out first, so a huge object stops at the cap.
+    const visit = (child: unknown): BodyProblem | null => {
+      if (childInFiles) {
+        if (++inside > BUILD_TOOL_INPUT_ELEMENTS) return 'file-elements';
+      } else if (++outside > MAX_REQUEST_ELEMENTS) return 'elements';
+      if (child !== null && typeof child === 'object') stack.push([child, depth + 1, childInFiles]);
+      return null;
+    };
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const problem = visit(child);
+        if (problem) return problem;
+      }
+    } else {
+      for (const key in node) {
+        if (!Object.prototype.hasOwnProperty.call(node, key)) continue;
+        const problem = visit((node as Record<string, unknown>)[key]);
+        if (problem) return problem;
+      }
     }
   }
-  return false;
+  return null;
 }
