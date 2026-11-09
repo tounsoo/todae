@@ -127,17 +127,19 @@ function mouseDrag(name: string, orientation?: Orientation) {
 }
 
 /** A finger on a handle, which drags on pointer events rather than the browser's drag. */
-function touch(name: string) {
-  const start = point(name, 'start');
-  const fire = (target: EventTarget, type: string, at: { clientX: number; clientY: number }) =>
+function touch(name: string, orientation?: Orientation) {
+  const start = point(name, 'start', orientation);
+  const fire = (target: EventTarget, type: string, at: { clientX: number; clientY: number }, pointerId = 7) =>
     act(() => {
-      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, ...at }));
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId, pointerType: 'touch', isPrimary: pointerId === 7, button: 0, ...at }));
     });
   fire(screen.getByTestId(`handle-${name}`), 'pointerdown', start);
   return {
     nudge: () => fire(window, 'pointermove', { clientX: start.clientX + 1, clientY: start.clientY + 1 }),
-    move: (target: string, side: 'start' | 'end') => fire(window, 'pointermove', point(target, side)),
-    up: (target: string, side: 'start' | 'end') => fire(window, 'pointerup', point(target, side)),
+    /** A move this far along x from the press. */
+    by: (dx: number) => fire(window, 'pointermove', { clientX: start.clientX + dx, clientY: start.clientY }),
+    move: (target: string, side: 'start' | 'end', pointerId?: number) => fire(window, 'pointermove', point(target, side, orientation), pointerId),
+    up: (target: string, side: 'start' | 'end', pointerId?: number) => fire(window, 'pointerup', point(target, side, orientation), pointerId),
   };
 }
 
@@ -192,7 +194,7 @@ it('ignores a drag it did not start, such as a file', () => {
   expect(onMove).not.toHaveBeenCalled();
 });
 
-it('ignores another drag, such as a file, over the list during its own', () => {
+it('ignores another drag, such as a file, over the list during its own, which goes on', () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
   const d = mouseDrag('A');
@@ -200,9 +202,12 @@ it('ignores another drag, such as a file, over the list during its own', () => {
   const over = fireDrag(item('C'), 'dragover', file, point('C', 'end'));
   expect(over.defaultPrevented).toBe(false);
   expect(item('C').getAttribute('data-drop')).toBeNull();
-  fireDrag(item('C'), 'drop', file, point('C', 'end'));
+  const drop = fireDrag(item('C'), 'drop', file, point('C', 'end'));
+  expect(drop.defaultPrevented).toBe(false);
   expect(onMove).not.toHaveBeenCalled();
-  d.end();
+  expect(item('A').getAttribute('data-dragging')).toBe('');
+  d.drop('C', 'end');
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
 });
 
 it('takes the side in a horizontal list from the text direction', () => {
@@ -221,6 +226,25 @@ it('takes the side in a horizontal list from the text direction', () => {
   expect(item('C').getAttribute('data-drop')).toBe('before');
   d.drop('C', 'start');
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
+});
+
+it('arms nothing while disabled, and drops the arming when disabled after a press', () => {
+  const { rerender } = render(<List />);
+  fireEvent.pointerDown(screen.getByTestId('handle-A'), { button: 0, pointerType: 'mouse' });
+  rerender(<List disabled />);
+  expect(item('A').getAttribute('draggable')).toBeNull();
+  // The browser can still start the drag it armed before the change; the list refuses it.
+  const dataTransfer = stubDataTransfer();
+  fireDrag(item('A'), 'dragstart', dataTransfer);
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  expect(dataTransfer.types).toEqual([]);
+  fireEvent.pointerUp(window);
+
+  // A press while disabled is forgotten, not armed for when the list is enabled again.
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'mouse' });
+  fireEvent.mouseDown(screen.getByTestId('handle-B'), { button: 0 });
+  rerender(<List />);
+  expect(item('B').getAttribute('draggable')).toBeNull();
 });
 
 it('starts no drag when disabled, and refuses the drop of one under way', () => {
@@ -250,6 +274,52 @@ it('moves an item a finger drags, once the finger moves off the press', () => {
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
   expect(item('A').getAttribute('data-dragging')).toBeNull();
+});
+
+it('starts a finger drag once the finger moves 4px from the press', () => {
+  render(<List orientation="horizontal" />);
+  const t = touch('A', 'horizontal');
+  t.by(3);
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  t.by(4);
+  expect(item('A').getAttribute('data-dragging')).toBe('');
+});
+
+it('takes the side in a horizontal finger drag from the text direction', () => {
+  render(<List orientation="horizontal" dir="rtl" />);
+  const t = touch('A', 'horizontal');
+  t.move('C', 'end');
+  expect(item('C').getAttribute('data-drop')).toBe('before');
+});
+
+it('follows only the finger that pressed', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const t = touch('A');
+  t.move('C', 'end', 9);
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  t.up('C', 'end', 9);
+  t.up('C', 'end');
+  expect(onMove).not.toHaveBeenCalled();
+});
+
+it('starts no finger drag once disabled, and refuses the drop of one under way', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<List onMove={onMove} />);
+  let t = touch('A');
+  rerender(<List onMove={onMove} disabled />);
+  t.move('C', 'end');
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  t.up('C', 'end');
+
+  rerender(<List onMove={onMove} />);
+  t = touch('A');
+  t.move('C', 'end');
+  expect(item('A').getAttribute('data-dragging')).toBe('');
+  rerender(<List onMove={onMove} disabled />);
+  t.up('C', 'end');
+  expect(onMove).not.toHaveBeenCalled();
+  expect(order()).toEqual(['A', 'B', 'C', 'D']);
 });
 
 it('starts no drag and drops nothing for a press that never moves past a small slop', () => {
