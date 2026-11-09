@@ -132,6 +132,26 @@
     min-height: var(--todae-popover-max-height);
   }
 
+  /* Kept on the fit try it was placed by, so it keeps its scroll: see
+     overlay/popoverFit.ts. The same declarations as the try, with no other
+     try to lay out. */
+  @supports (position-area: self-block-end) {
+    .content.fit[data-todae-fit] {
+      position-try-fallbacks: none;
+      /* A scroll past its end would scroll the page and place it again, back
+         at its top. */
+      overscroll-behavior: contain;
+      margin-block: var(--todae-popover-offset);
+      height: auto;
+      align-self: stretch;
+      min-height: var(--todae-popover-max-height);
+    }
+
+    .content.fit[data-todae-fit='above'] {
+      position-area: self-block-start span-self-inline-end;
+    }
+  }
+
   /* Beside its anchor, as a submenu sits: past the anchor's end, its first
      row level with the anchor, and its edge on the outer edge of the popover
      the anchor sits in. It flips to the other side where there is no room,

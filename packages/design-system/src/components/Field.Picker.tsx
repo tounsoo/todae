@@ -28,6 +28,7 @@ import { useStrings, type Strings } from '../providers/StringsProvider.js';
 import { CalendarGlyph, ChevronGlyph, ClockGlyph, glyphOr } from './glyphs.js';
 import { PICKER_FOCUS, PickContext } from './pickerDone.js';
 import { removeAnchorName } from '../overlay/anchorName.js';
+import { usePopoverFit } from '../overlay/popoverFit.js';
 
 /** Why Field.Picker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
 export type FieldPickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -175,6 +176,8 @@ export function Picker({
     haspopup: 'dialog',
   });
   popoverNode.current = popover.popoverRef;
+  // A panel taller than the room on either side scrolls, and keeps its scroll.
+  usePopoverFit(popover.popoverRef, shellRef, shown);
   toggleRef.current = () => {
     if (!control.disabled) setOpen(!shown, 'trigger');
   };
