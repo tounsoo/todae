@@ -158,7 +158,9 @@ describe('Firefox branches in browser tests', () => {
     ).toEqual([]);
   });
 
-  it('keeps no entry for a line that is gone, and gives each one a reason', () => {
+  it('keeps no entry for a line that is gone, none twice, and gives each one a reason', () => {
+    const keys = firefoxBranches.map(({ file, code }) => `${file} > ${code}`);
+    expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([]);
     for (const branch of firefoxBranches) {
       expect(
         found.some(({ file, text }) => file === branch.file && text.includes(branch.code)),
