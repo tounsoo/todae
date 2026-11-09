@@ -1,6 +1,8 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BrowserResults } from './browser-results-reporter.ts';
-import { annotations, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
+import { annotations, firefoxQuarantine, firefoxSkips, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
 
 const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 'A > flakes', issue: 'https://github.com/tounsoo/todae/issues/367', reason: 'Known.' };
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
@@ -58,6 +60,15 @@ describe('the Firefox quarantine gate', () => {
     expect(summary(verdict)).toContain('| src/browser/a.browser.test.tsx > A > flakes | Passed; take it off the list if it keeps passing |');
   });
 
+  it('fails the run when a quarantined test is skipped or never finishes, since then nothing shows its failure', () => {
+    for (const [state, said] of [['skipped', 'skipped'], ['pending', 'never finished']] as const) {
+      const verdict = judge(run([{ file: listed.file, name: listed.test, state, errors: [] }]), [listed], 0);
+      expect(verdict.blocking).toEqual([
+        `The quarantine lists src/browser/a.browser.test.tsx > A > flakes, which this run ${said}. A quarantined test must run; stop skipping it or take it off the list.`,
+      ]);
+    }
+  });
+
   it('fails the run when an entry names no test, so a renamed test cannot hide behind a stale entry', () => {
     const verdict = judge(run([{ ...other, state: 'passed', errors: [] }]), [listed], 0);
     expect(verdict.blocking).toEqual([
@@ -109,6 +120,35 @@ describe('the Firefox quarantine list', () => {
       expect(entry.file).toMatch(/^src\/browser\/[\w-]+\.browser\.test\.tsx$/);
       expect(entry.test).toContain(' > ');
       expect(entry.issue).toMatch(/^https:\/\/github\.com\/tounsoo\/todae\/issues\/\d+$/);
+      expect(entry.reason.trim()).not.toBe('');
+    }
+  });
+});
+
+describe('Firefox skips', () => {
+  // A `skipIf` or `runIf` whose condition names Firefox, and the name of the test or group it skips.
+  const skip = /\.(skipIf|runIf)\(([^)]*['"]firefox['"][^)]*)\)\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g;
+  const dir = join(import.meta.dirname, '../src/browser');
+  const found = readdirSync(dir)
+    .filter((name) => name.endsWith('.browser.test.tsx'))
+    .flatMap((name) =>
+      [...readFileSync(join(dir, name), 'utf8').matchAll(skip)].map((match) => ({
+        file: `src/browser/${name}`,
+        name: match[4]!,
+      })),
+    );
+
+  it('lists every browser test that skips Firefox, so a failure cannot be silenced by a skip', () => {
+    expect(found.length).toBeGreaterThan(0);
+    const listed = new Set(firefoxSkips.map(({ file, name }) => `${file} > ${name}`));
+    for (const { file, name } of found)
+      expect(listed, `${file} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toContain(`${file} > ${name}`);
+  });
+
+  it('keeps no entry for a skip that is gone, and gives each one a reason', () => {
+    const present = new Set(found.map(({ file, name }) => `${file} > ${name}`));
+    for (const entry of firefoxSkips) {
+      expect(present, `firefoxSkips lists "${entry.name}" in ${entry.file}, which no longer skips Firefox`).toContain(`${entry.file} > ${entry.name}`);
       expect(entry.reason.trim()).not.toBe('');
     }
   });

@@ -719,12 +719,13 @@ describe('Menu', () => {
       const [open, setOpen] = useState(false);
       return <Actions open={open} onOpenChange={(next) => setTimeout(() => setOpen(next), 1500)} />;
     }
+    // Fake only the owner's timeout, so the frames after it still run.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     render(<Later />);
     act(() => trigger().focus());
     key('ArrowUp');
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1600));
-    });
+    await act(() => vi.advanceTimersByTimeAsync(1600));
+    vi.useRealTimers();
     await raf();
     expect(document.activeElement).toBe(item('Date'));
   });
