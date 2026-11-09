@@ -458,6 +458,19 @@ describe('Dialog name check', () => {
     error.mockRestore();
   });
 
+  it('takes a Title whose id is a no-break space as a name', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title id={'\u00a0'}>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
   it('warns when its only name is a Title with a blank id', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
