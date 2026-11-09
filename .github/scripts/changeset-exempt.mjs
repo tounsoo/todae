@@ -1,6 +1,6 @@
 // Exits 0 when the only file under the published package that the changeset check counts is its package.json,
-// that file changed only in devDependencies the build never reads, and the pull request touches nothing in
-// .changeset/ but its README. Such a pull request, like most Dependabot updates of test tools, ships nothing and needs no changeset.
+// that file changed only in devDependencies that can't change what the build writes, and the pull request touches
+// nothing in .changeset/ but its README. Such a pull request, like most Dependabot updates of test tools, ships nothing and needs no changeset.
 // Exits 1 otherwise, and the Changeset step runs `changeset status` as usual, which also checks any changeset the
 // pull request brings.
 // Usage: node .github/scripts/changeset-exempt.mjs <base ref>
@@ -13,10 +13,12 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const pkgDir = 'packages/design-system';
 const manifest = `${pkgDir}/package.json`;
 
-// The devDependencies only the tests run. Anything else may reach what ships: Vite builds dist, and TypeScript
-// writes the published .d.ts files from the @types packages, which inline their types. A dependency missing from
-// this list needs a changeset, so add one here only when nothing under src/ outside the tests, nor the build,
-// imports it.
+// The devDependencies that can't change what ships. The tests run them, and the build loads only Vitest's
+// defineConfig (vite.config.ts imports it from vitest/config), which returns the config unchanged, so a Vitest bump
+// leaves dist as it was, and one that breaks the build fails CI. Anything else may reach what ships: Vite builds dist,
+// and TypeScript writes the published .d.ts files from the @types packages, which inline their types. A dependency
+// missing from this list needs a changeset, so add one here only when nothing under src/ outside the tests imports
+// it and the build at most loads it without changing its output.
 export const testOnly = ['vitest', '@vitest/*', '@testing-library/*', 'jsdom', 'axe-core', 'playwright', 'esbuild', 'temporal-polyfill'];
 
 // The files changeset status counts for the package: those under it matching a pattern in changedFilePatterns
