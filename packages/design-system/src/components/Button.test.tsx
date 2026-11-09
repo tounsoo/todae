@@ -250,16 +250,17 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
   });
 
-  it('wires no tip into an icon-only button until the pointer or keys reach it', () => {
+  it('names its tip anchor from the first render, before the pointer or keys reach it', () => {
     render(
       <Button.Root aria-label="Archive">
         <Button.Icon>+</Button.Icon>
       </Button.Root>,
     );
     const button = screen.getByRole('button', { name: 'Archive' });
-    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).toBe('');
+    const named = button.style.getPropertyValue('--todae-tooltip-anchor');
+    expect(named).not.toBe('');
     fireEvent.pointerEnter(button);
-    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).not.toBe('');
+    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).toBe(named);
     advance(300);
     expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
   });
@@ -281,6 +282,24 @@ describe('Button auto-tip', () => {
     });
     advance(300);
     expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+  });
+
+  it('drops a hover the tip was off for, so turning the tip back on opens nothing', () => {
+    const view = (tooltip: boolean) => (
+      <Button.Root aria-label="Archive" tooltip={tooltip}>
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>
+    );
+    const { rerender } = render(view(true));
+    const button = screen.getByRole('button', { name: 'Archive' });
+    fireEvent.pointerEnter(button);
+    advance(1000);
+    expect(screen.getByRole('tooltip', { hidden: true }).hasAttribute('data-open')).toBe(true);
+    rerender(view(false));
+    fireEvent.pointerLeave(button);
+    rerender(view(true));
+    advance(1000);
+    expect(screen.queryByRole('tooltip', { hidden: true })?.hasAttribute('data-open') ?? false).toBe(false);
   });
 
   it('keeps the tip out of the accessibility tree, so the name is read once', () => {

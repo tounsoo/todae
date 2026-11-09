@@ -313,19 +313,28 @@ function Root({
   };
 
   // Focus after a press opens no tip, so the page's presses and keys are
-  // watched before any tip mounts.
-  const watches = tooltip;
+  // watched before any tip mounts, by every Button, a press on one with no
+  // tip included.
   useEffect(() => {
-    if (watches) watchInputModality(buttonRef.current?.ownerDocument);
-  }, [watches]);
+    watchInputModality(buttonRef.current?.ownerDocument);
+  }, []);
+
+  // With the tip's handlers off, no leave or blur can drop a waiting hold, so
+  // none outlives them.
+  const listens = tooltip && (iconOnly || Boolean(textName));
+  useLayoutEffect(() => {
+    if (!listens) waiting.current = { hover: false, focus: null };
+  }, [listens]);
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
   const trigger =
-    !tooltip || !(iconOnly || textName)
+    !listens
       ? base
       : {
           ...base,
-          style: tipped ? anchorTriggerStyle('--todae-tooltip-anchor', anchor, style) : style,
+          // Named from the first render, so a later tip changes no style
+          // and keeps the names a Coachmark or popover added from code.
+          style: anchorTriggerStyle('--todae-tooltip-anchor', anchor, style),
           onPointerEnter: composeHandlers(onPointerEnter, () => reach(true, null)),
           onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => reach(false, event.target)),
           // Releases run even when the product's handler prevents the event,
@@ -402,7 +411,8 @@ type ButtonTipProps = {
  * through `holds`. The tip shows the button's own name, so it is for the eye
  * alone: it describes nothing, or a screen reader would read the name twice.
  * It takes the holds still `waiting` each time it mounts, so the one that
- * turned it on, and StrictMode's second mount, open it.
+ * turned it on, and StrictMode's second mount, open it; once it opens, none
+ * are left waiting.
  */
 function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
   const tip = useTooltipInternal({}, { anchorName: anchor });
@@ -422,6 +432,10 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
       holds.current = null;
     };
   }, [holdFocus, holdHover, holds, releaseFocus, releaseHover, triggerRef, waiting]);
+  // Once open, the tip has taken them, and a later tip takes only new ones.
+  useLayoutEffect(() => {
+    if (tip.open) waiting.current = { hover: false, focus: null };
+  }, [tip.open, waiting]);
   return (
     <Tooltip.Root {...tip.getTooltipProps()} aria-hidden="true">
       {text}

@@ -147,8 +147,6 @@ describe('Menu in a browser', () => {
       </Themed>,
     );
     const trigger = screen.getByRole('button', { name: 'More actions' });
-    // An icon-only Button mounts its tip, and the tip's anchor name, when the pointer first reaches it.
-    await userEvent.hover(trigger);
     await waitFor(() => expect(getComputedStyle(trigger).getPropertyValue('anchor-name').split(',').length).toBe(2));
     await userEvent.click(trigger);
     const menu = screen.getByRole('menu');

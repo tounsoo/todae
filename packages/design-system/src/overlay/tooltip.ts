@@ -235,6 +235,8 @@ export function useTooltipInternal<I extends boolean = false>(
 
   // Each commit replaces one still waiting for its trigger to settle.
   const commitSeq = useRef(0);
+  // A show waiting for its trigger to stop moving.
+  const settlingRef = useRef(false);
   useEffect(
     () => () => {
       commitSeq.current++;
@@ -261,6 +263,7 @@ export function useTooltipInternal<I extends boolean = false>(
           // holds it, the hold that asked or else the other, unless a show
           // delay is running.
           const settling = next ? transformsSettling(triggerRef.current) : null;
+          settlingRef.current = settling != null;
           if (!settling) {
             commitNow(next, reason);
             return;
@@ -268,8 +271,10 @@ export function useTooltipInternal<I extends boolean = false>(
           const asked = reason === 'focus' ? 'focus' : 'hover';
           void settling.then(() => {
             const intent = intentRef.current;
+            if (commitSeq.current !== seq) return;
+            settlingRef.current = false;
             // A show delay started since then opens it when it runs out.
-            if (commitSeq.current !== seq || intent.pending !== null) return;
+            if (intent.pending !== null) return;
             if (intent[asked] === 'held') commitNow(next, reason);
             else if (intent.focus === 'held') commitNow(next, 'focus');
             else if (intent.hover === 'held') commitNow(next, 'hover');
@@ -438,13 +443,16 @@ export function useTooltipInternal<I extends boolean = false>(
 
   useEffect(
     () => () => {
+      // Unmounting drops a pending show, a delay or a commit waiting for the
+      // trigger to stop moving. A closed tip then keeps no hold waiting on
+      // it, so a remount, as StrictMode runs one, can take the hold again.
+      const dropsShow = timerRef.current != null || settlingRef.current;
       if (timerRef.current != null) {
         window.clearTimeout(timerRef.current);
         timerRef.current = null;
-        // A closed tip whose show delay this cancels keeps no hold waiting on
-        // it, so a remount, as StrictMode runs one, can take the hold again.
-        if (!openRef.current) intentRef.current = { ...createIntent(), seq: intentRef.current.seq };
       }
+      settlingRef.current = false;
+      if (dropsShow && !openRef.current) intentRef.current = { ...createIntent(), seq: intentRef.current.seq };
       if (!countedHoverRef.current) return;
       countedHoverRef.current = false;
       releaseHoverTip(Date.now());
