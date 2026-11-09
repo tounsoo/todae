@@ -470,6 +470,15 @@ describe('Dialog name check', () => {
     expect(screen.getByRole('dialog', { hidden: true, name: 'Elsewhere' })).toBeTruthy();
   });
 
+  it('falls back to its Title when aria-labelledby is null', () => {
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={null as unknown as string}>
+        <Dialog.Title>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+  });
+
   it('takes a Title whose id is a no-break space as a name', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(

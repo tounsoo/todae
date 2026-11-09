@@ -216,7 +216,7 @@ export function DialogShellRoot({
   // A blank aria-labelledby falls back to the Title's id, and a blank
   // aria-label or id names nothing. Ids split on ASCII whitespace only, so a
   // no-break space is a real id.
-  const filled = (value: string | undefined) => value !== undefined && /[^ \t\n\f\r]/.test(value);
+  const filled = (value: string | null | undefined) => typeof value === 'string' && /[^ \t\n\f\r]/.test(value);
   const labelledByAttr = filled(props['aria-labelledby']) ? props['aria-labelledby'] : labelledBy;
   const named = Boolean(props['aria-label']?.trim()) || filled(labelledByAttr);
   useEffect(() => {
