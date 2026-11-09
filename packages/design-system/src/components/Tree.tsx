@@ -12,7 +12,6 @@ import {
   type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
-  type MouseEvent,
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
@@ -89,8 +88,7 @@ type TreeContextValue = {
 
 const TreeContext = /* @__PURE__ */ createContext<TreeContextValue | null>(null);
 
-// Holds nothing that changes as the item opens or closes, so its label
-// doesn't render then.
+// Holds nothing that changes as the tree is used.
 type ItemContextValue = {
   value: string;
   labelId: string;
@@ -98,13 +96,11 @@ type ItemContextValue = {
   disabled: boolean;
   /** Tree.Group calls this while it is mounted, which makes the item a branch. */
   registerGroup: () => () => void;
-  /** Whether the item showed open when it last committed. */
-  isOpen: () => boolean;
 };
 
 const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
 
-// Whether the nearest item is open, for its Tree.Group.
+// Whether the nearest item is open, for its label and group.
 const OpenContext = /* @__PURE__ */ createContext(false);
 
 // Depth of the items rendered here: 1 at the root, one more inside each group.
@@ -253,14 +249,9 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   }, [expanded]);
   const { ref, ...item } = tree.itemProps(value, props);
   const refs = useComposedRefs(node, ref);
-  const shownOpen = useRef(expanded);
-  useLayoutEffect(() => {
-    shownOpen.current = expanded;
-  }, [expanded]);
-  const isOpen = useCallback(() => shownOpen.current, []);
   const ctx = useMemo(
-    () => ({ value, labelId, branch, disabled, registerGroup, isOpen }),
-    [branch, disabled, isOpen, labelId, registerGroup, value],
+    () => ({ value, labelId, branch, disabled, registerGroup }),
+    [branch, disabled, labelId, registerGroup, value],
   );
   const selected = state.selected === value;
   return (
@@ -298,13 +289,13 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   );
 }
 
-function Label({ children, className, onClick, onClickCapture, ...props }: TreeLabelProps) {
+function Label({ children, className, onClick, ...props }: TreeLabelProps) {
   const tree = useTree('Label');
   const item = useItem('Label');
+  // Renders the label as its own item opens or closes, so a click opens or
+  // closes from how the item showed when the label last rendered.
+  const expanded = useContext(OpenContext);
   const { chevron } = useGlyphs();
-  // How the item showed as the click began, before any handler, the
-  // consumer's included, renders it: the click opens or closes from there.
-  const openAtClick = useRef(false);
   return (
     <div
       {...props}
@@ -312,13 +303,9 @@ function Label({ children, className, onClick, onClickCapture, ...props }: TreeL
       className={cx(styles.label, className)}
       data-todae-focus-ring=""
       // A click selects the item and opens or closes a branch.
-      onClickCapture={(event: MouseEvent<HTMLDivElement>) => {
-        openAtClick.current = item.isOpen();
-        onClickCapture?.(event);
-      }}
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        if (item.branch) tree.setExpanded(item.value, !openAtClick.current);
+        if (item.branch) tree.setExpanded(item.value, !expanded);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">

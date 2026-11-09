@@ -121,15 +121,15 @@ describe('Tree renders', () => {
     expect(content()).toEqual([]);
   });
 
-  it('renders only the group of the item that opens or closes, and no label', () => {
+  it('renders only the label and group of the item that opens or closes', () => {
     render(<Files />);
     rendered();
     fireEvent.click(screen.getByText('docs'));
     expect(item('docs').getAttribute('aria-expanded')).toBe('true');
-    expect(content()).toEqual(['Group docs']);
+    expect(content()).toEqual(['Group docs', 'Label docs']);
     fireEvent.click(screen.getByText('docs'));
     expect(item('docs').getAttribute('aria-expanded')).toBe('false');
-    expect(content()).toEqual(['Group docs']);
+    expect(content()).toEqual(['Group docs', 'Label docs']);
   });
 
   it('renders no label or group as the tab stop moves with focus', () => {
@@ -164,7 +164,7 @@ describe('Tree renders', () => {
     rendered();
     fireEvent.click(screen.getByText('a'));
     expect(item('a').getAttribute('aria-expanded')).toBe('true');
-    expect(content()).toEqual(['Group a']);
+    expect(content()).toEqual(['Group a', 'Label a']);
   });
 
   it('renders each item once as a click moves the selection', () => {

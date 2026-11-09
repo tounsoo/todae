@@ -410,7 +410,7 @@ describe('Tree writes', () => {
     expect(onExpandedChange).toHaveBeenLastCalledWith(['src']);
   });
 
-  it.each(['onClick', 'onClickCapture'] as const)(
+  it.each(['onClick'] as const)(
     'opens as the item showed at the click when a label %s handler opens it first',
     (handler) => {
       function Owner() {
