@@ -47,4 +47,40 @@ describe('watchTabKey', () => {
     first.stop();
     target.remove();
   });
+
+  it('hears an event object dispatched again after the watch started', () => {
+    const first = watchTabKey();
+    const target = document.body.appendChild(document.createElement('button'));
+    const press = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    target.dispatchEvent(press);
+    const late = watchTabKey();
+    expect(late.tabbing()).toBe(false);
+    target.dispatchEvent(press);
+    expect(late.tabbing()).toBe(true);
+    late.stop();
+    first.stop();
+    target.remove();
+  });
+
+  it('leaves out a press a window listener before the shared one is still handling', () => {
+    const first = watchTabKey();
+    let late: ReturnType<typeof watchTabKey> | undefined;
+    const early = () => {
+      late ??= watchTabKey();
+    };
+    // Added before the shared listener restarts, so it runs first.
+    first.stop();
+    window.addEventListener('keydown', early, true);
+    const again = watchTabKey();
+    const target = document.body.appendChild(document.createElement('button'));
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+    expect(again.tabbing()).toBe(true);
+    expect(late!.tabbing()).toBe(false);
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+    expect(late!.tabbing()).toBe(true);
+    window.removeEventListener('keydown', early, true);
+    late!.stop();
+    again.stop();
+    target.remove();
+  });
 });

@@ -4,12 +4,16 @@
 // to add its own: a page of 500 row toolbars ran 500 handlers per keystroke.
 
 let current: KeyboardEvent | null = null;
+// Counts the presses seen, so a watch can tell one that began after it
+// started, even when a page dispatches the same event object again.
+let presses = 0;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let watchers = 0;
 
 function onKey(event: KeyboardEvent) {
   if (event.key !== 'Tab') return;
   current = event;
+  presses++;
   clearTimeout(timer);
   timer = setTimeout(() => {
     current = null;
@@ -32,11 +36,22 @@ export type TabWatch = {
 /** Starts following Tab presses for one part. */
 export function watchTabKey(): TabWatch {
   if (watchers++ === 0) window.addEventListener('keydown', onKey, true);
-  const before = current;
+  // The first press this watch hears is the next one to reach the shared
+  // listener, unless a Tab press is still in an earlier window listener and
+  // has not reached it yet: a listener of the part's own, added now, would
+  // not have heard that one either.
+  const pending = window.event;
+  const late =
+    pending instanceof KeyboardEvent && pending.type === 'keydown' && pending.key === 'Tab' && pending !== current;
+  const first = presses + (late ? 2 : 1);
   let stopped = false;
   return {
     tabbing: () =>
-      !stopped && current !== null && current !== before && current.eventPhase === Event.NONE && !current.defaultPrevented,
+      !stopped &&
+      current !== null &&
+      presses >= first &&
+      current.eventPhase === Event.NONE &&
+      !current.defaultPrevented,
     stop: () => {
       if (stopped) return;
       stopped = true;
