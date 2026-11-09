@@ -32,7 +32,7 @@ It splits the text at each run of characters that are not letters or digits, and
 
 **When:** Reading a range someone typed.
 
-**When not:** An ISO 8601 interval from a form or an API, such as `2026-10-03/2026-10-10` → split it at `/` and read each half with `Temporal.PlainDate.from`.
+**When not:** An ISO 8601 interval from a form or an API, such as `2026-10-03/2026-10-10`. `parseDateRange` reads one, but it also reads typed forms that such data should never hold → split it at `/` and read each half with `Temporal.PlainDate.from`, which accepts only ISO.
 
 ## Props
 

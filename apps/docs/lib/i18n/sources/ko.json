@@ -335,7 +335,7 @@
     "## Typing and committing": "f8ac59311591",
     "## Keys": "c5c32418f906",
     "## Step buttons": "707442fce962",
-    "## Format": "73bbc205df78",
+    "## Format": "7342cb7eec8f",
     "## In a form": "db72067fad82",
     "## Accessible composition": "76353fe25891",
     "## When to use": "d57fe8233a0b",
@@ -1017,7 +1017,7 @@
   },
   "utilities/category-tone": {
     "(top)": "b62c54ba7d37",
-    "# categoryTone": "24ed4d870886",
+    "# categoryTone": "fe54925fb511",
     "## Keys and tones": "4a1bdb1457ab",
     "## Accessible composition": "f4f0ec7dc24b",
     "## When to use": "0cba3d1808ad",
@@ -1049,7 +1049,7 @@
     "## Accessible composition": "bce6d7d9a824",
     "## When to use": "d57fe8233a0b",
     "### formatDateRange": "07f2f1f26e53",
-    "### parseDateRange": "238d056ef780",
+    "### parseDateRange": "2ff325aecc7b",
     "## Props": "83f9e3105bd7",
     "(section order)": "3cde4e3fd64b"
   },
@@ -1067,8 +1067,8 @@
   },
   "utilities/format-number": {
     "(top)": "4d4dd24ba5b7",
-    "# formatNumber and parseNumber": "0600f94ae674",
-    "## What parseNumber reads {/*#reading-numbers*/}": "017e2bb2db5a",
+    "# formatNumber and parseNumber": "d4aea2fd2f80",
+    "## What parseNumber reads {/*#reading-numbers*/}": "344c94c92fa5",
     "## Accessible composition": "371415fbaee5",
     "## When to use": "d57fe8233a0b",
     "### formatNumber": "c5b4db8217f8",

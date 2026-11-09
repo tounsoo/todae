@@ -47,11 +47,11 @@ A percent style takes the number as a fraction: 0.125 shows `12.5%`, and typing 
 
 <Example of={FieldNumberPercent} block />
 
-To show or read the same number outside the input, use [formatNumber and parseNumber](/utilities/format-number) with the same `locale` and `formatOptions`.
-
 Without any digit option, a plain number shows all the digits it has, where `Intl.NumberFormat` alone stops at three, so the text and the number agree. With a style or a digit option and no `step`, a commit rounds to the digits the text shows, so the text, `aria-valuenow`, the number the form reads and `onValueChange` agree: `19.999` in USD commits `20`, and `7.5` in a percent commits `0.08`, which shows `8%`. `parseNumber` reads the percent sign, the currency sign or the unit that `formatOptions` writes, or its absence. It doesn't read compact or scientific notation, so `formatOptions` leaves `notation` and `compactDisplay` out. A commit doesn't follow significant digits or the rounding options either, so `formatOptions` leaves out `maximumSignificantDigits`, `minimumSignificantDigits`, `roundingMode`, `roundingIncrement` and `roundingPriority`. TypeScript rejects all of these, and plain JavaScript that passes one gets a warning in development: use fraction digits. With a currency, the sign is part of the text that people edit, which is one more reason to prefer an `Affix`.
 
 The input asks the phone for a numeric keypad for a whole grid, where `step` and `min` are whole numbers and `min` is 0 or more, in a format that shows no fraction digits, which includes the default format. It asks for a decimal keypad for any other `min` of 0 or more (so USD and a percent get it), and for the full keyboard otherwise, since the number keypads of iOS have no minus sign and the numeric one has no separator. The decimal keypad's separator follows the device, not `locale`. `inputMode` overrides it.
+
+To show or read the same number outside the input, use [formatNumber and parseNumber](/utilities/format-number) with the same `locale` and `formatOptions`.
 
 ## In a form
 

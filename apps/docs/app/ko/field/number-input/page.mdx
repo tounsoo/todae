@@ -47,11 +47,11 @@ percent style은 숫자를 비율로 받습니다. 0.125는 `12.5%`로 보이고
 
 <Example of={FieldNumberPercent} block />
 
-입력 밖에서 같은 숫자를 보여 주거나 읽으려면 같은 `locale`과 `formatOptions`로 [formatNumber와 parseNumber](/utilities/format-number)를 쓰세요.
-
 자릿수 옵션이 없으면 일반 숫자는 가진 자릿수를 모두 보여 줍니다. `Intl.NumberFormat`만 쓰면 세 자리에서 멈추므로, 이렇게 하면 텍스트와 숫자가 일치합니다. style이나 자릿수 옵션이 있고 `step`이 없으면 확정은 텍스트가 보여 주는 자릿수로 반올림되어, 텍스트, `aria-valuenow`, 폼이 읽는 숫자, `onValueChange`가 일치합니다. USD에서 `19.999`는 `20`으로, 퍼센트에서 `7.5`는 `8%`로 보이는 `0.08`로 확정됩니다. `parseNumber`는 `formatOptions`가 쓰는 퍼센트 기호, 통화 기호, 단위를 읽고, 없어도 읽습니다. compact 표기와 과학 표기는 읽지 않으므로 `formatOptions`에서 `notation`과 `compactDisplay`는 빠져 있습니다. 확정은 유효 숫자(significant digits)와 반올림 옵션도 따르지 않으므로 `maximumSignificantDigits`, `minimumSignificantDigits`, `roundingMode`, `roundingIncrement`, `roundingPriority`도 빠져 있습니다. TypeScript는 이 옵션들을 모두 거부하고, 일반 JavaScript에서 넘기면 개발 중에 경고합니다. 소수 자릿수 옵션을 쓰세요. 통화는 기호가 사용자가 편집하는 텍스트의 일부가 되므로, `Affix`를 선호하는 또 하나의 이유입니다.
 
 입력은 격자가 정수일 때, 곧 `step`과 `min`이 정수이고 `min`이 0 이상이며 형식이 소수 자릿수를 보여 주지 않으면(기본 형식도 해당합니다) 휴대전화에 숫자 키패드를, 그 밖에 `min`이 0 이상이면 소수점 키패드를(그래서 USD와 퍼센트는 이쪽입니다), 그 외에는 전체 키보드를 요청합니다. iOS의 숫자 키패드에는 마이너스 기호가 없고 숫자 키패드에는 구분 기호가 없기 때문입니다. 소수점 키패드의 구분 기호는 `locale`이 아니라 기기를 따릅니다. `inputMode`로 바꿀 수 있습니다.
+
+입력 밖에서 같은 숫자를 보여 주거나 읽으려면 같은 `locale`과 `formatOptions`로 [formatNumber와 parseNumber](/utilities/format-number)를 쓰세요.
 
 ## 폼에서
 

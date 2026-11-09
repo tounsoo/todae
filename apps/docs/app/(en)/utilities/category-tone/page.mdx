@@ -4,7 +4,7 @@ export const description = 'categoryTone returns one of eight category tones for
 
 # categoryTone
 
-`categoryTone(key)` returns one of the eight category tones, `category-1` to `category-8`, for a string such as a user id or a tag name. The same key returns the same tone on the server and in every browser, so a person or a tag keeps its color across pages and visits. [Badge](/badge), [Chip](/chip), [ChipList](/chip-list) and [Avatar](/avatar) take the tone as `tone`.
+`categoryTone(key)` returns one of the eight category tones, `category-1` to `category-8`, for a string such as a user id or a tag name. The same key returns the same tone on the server and in every browser, so a person or a tag keeps its color across pages and visits. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take the tone as `tone`, and [ChipList](/chip-list) takes `getTone`, such as `(value) => categoryTone(value)`.
 
 <Example of={CategoryToneTags} />
 
