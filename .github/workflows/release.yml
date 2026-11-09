@@ -2,7 +2,7 @@ name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
 # With none, publishes the versions that aren't on npm yet once Checks passes, unless the push only changed
-# Markdown or docs pages: merging that pull request releases.
+# Markdown or docs pages. So merging the Version Packages pull request releases.
 # Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm
 # and whose package source is the same as at that version's tag (the docs job below has the full rule).
 on:
@@ -236,7 +236,7 @@ jobs:
   # that version's tag; to that version's tag when only the source differs; otherwise to the commit
   # tagged with the latest version on npm. It waits for npm to serve this run's version after a
   # publish, and main's version when that is tagged but not served yet, as when this job displaced
-  # the publishing run's own. A failed publish so leaves the docs on the last release, and re-running
+  # the publishing run's own. A failed publish leaves the docs on the last release, and re-running
   # this job catches up after one. With no tag to compare against, it warns and leaves docs-stable
   # where it is.
   docs:
