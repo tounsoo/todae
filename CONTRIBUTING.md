@@ -97,7 +97,7 @@ Any of these fails `pnpm check` and CI.
 
 ## Check your change
 
-Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and runs `pnpm publish:check`, `pnpm ssr:smoke` and the unit tests in the Build job, runs the pinned actions check in the Static job, and runs the Docs build and pages job. Other Markdown does not start CI, except a changeset, the package README, the changelog, a file whose name ends in `-body.md`, or a file under `.audit/`.
+Run these before you open a pull request. CI runs them unless the pull request only edits docs pages or their translation stamp. That pull request still builds the package and runs `pnpm publish:check`, `pnpm ssr:smoke` and the unit tests in the Build job, runs the pinned actions check in the Static job, and runs the Token API, Token consumers, Forbidden paths and Docs build and pages jobs. Other Markdown does not start CI, except a changeset, the package README, the changelog, a file whose name ends in `-body.md`, or a file under `.audit/`.
 
 ```sh
 pnpm check
