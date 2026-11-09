@@ -37,7 +37,8 @@ concurrency:
 jobs:
   bench:
     name: Bench
-    # The same image as Fernway, so Playwright's Chromium installs. A record names the machine type,
+    # Ubuntu 24.04, where Playwright's Chromium installs. It stays on the runner, not Playwright's image as
+    # Fernway does, so new records compare with the saved ones. A record names the machine type,
     # and timings compare only between records from the same one.
     runs-on: ubuntu-24.04
     # Every public part has a case, and --against runs each one on both builds.

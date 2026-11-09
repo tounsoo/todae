@@ -4,7 +4,7 @@ This file is for anyone changing the repo, including agents. [CONTRIBUTING.md](C
 
 ## Set up
 
-Use Node 24. `.nvmrc` names that major version, and CI reads that file, so CI and releases run the newest Node 24 release. Install pnpm with Corepack so the version matches `packageManager` in the root `package.json`. Then run `pnpm install`. The [Set up](CONTRIBUTING.md#set-up) section has the rest.
+Use Node 24. `.nvmrc` names only that major version. CI reads that file, and `actions/setup-node` then uses the Node 24 the runner already has, or downloads the newest one when it has none. Install pnpm with Corepack so the version matches `packageManager` in the root `package.json`. Then run `pnpm install`. The [Set up](CONTRIBUTING.md#set-up) section has the rest.
 
 ## Build, test, and check
 

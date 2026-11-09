@@ -26,6 +26,7 @@ on:
       - '*-body.md'
       - '**/*-body.md'
       - '.audit/**'
+      - 'apps/docs/app/**'
   push:
     branches: [main, docs-stable]
   # Redeploys a branch by hand. Run on docs-stable, it deploys production.

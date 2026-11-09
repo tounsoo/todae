@@ -6,6 +6,8 @@ set -euo pipefail
 # so a scratch file still reaches Forbidden paths' full check.
 is_markdown() {
 	[[ "$1" == *.md ]] || return 1
+	# Next builds .md files under the docs app's routes as pages.
+	[[ "$1" == apps/docs/app/* ]] && return 1
 	[[ "$1" == .changeset/* || "$1" == .audit/* ]] && return 1
 	[[ "$1" == packages/design-system/README.md || "$1" == packages/design-system/CHANGELOG.md ]] && return 1
 	[[ "$1" != *-body.md ]]
@@ -78,6 +80,7 @@ self_test() {
 	check 'nested body file' all 'notes/pr-body.md'
 	check 'audit note' all '.audit/notes.md'
 	check 'mdx is not markdown' all 'apps/docs/components/Intro.mdx'
+	check 'markdown docs page' all 'apps/docs/app/(en)/slider/page.md'
 }
 
 if [ "${1:-}" = "--self-test" ]; then

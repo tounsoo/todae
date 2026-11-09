@@ -301,7 +301,7 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/token-consumers.ts --base "$BASE" --head "$HEAD" --summary "$GITHUB_STEP_SUMMARY"
 
-  # Drafts skip Checks and Docs. This job still runs, as Token API does, so a scratch file fails before review.
+  # Checks fails on drafts. This job still runs, as Token API does, so a scratch file fails before review.
   # It runs on Markdown-only changes too, since a *-body.md or .audit/ file is what it looks for.
   forbidden-paths:
     name: Forbidden paths

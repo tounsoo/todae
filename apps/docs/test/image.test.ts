@@ -17,7 +17,7 @@ it('runs the docs, Fernway (Chromium) and Engines (Firefox and WebKit) CI jobs i
       .map((block) => [block.slice(2, block.indexOf(':')), block]),
   );
   // Each image is pinned to a digest, so a tag pushed again can't change what runs. The digest itself
-  // can't be checked here, so the two jobs have to name the same one. A version bump that keeps the old
+  // can't be checked here, so the three jobs have to name the same one. A version bump that keeps the old
   // digest still runs the old image, and Playwright then refuses to launch any browser that image lacks,
   // naming the image it needs.
   const pinned = new RegExp(`\\n {4}container: (${image.replaceAll('.', '\\.')}@sha256:[0-9a-f]{64})[ \\t]*(?:#.*)?\\n`);
