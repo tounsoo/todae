@@ -47,3 +47,25 @@ test('a shipped file beside the manifest, or no manifest change, is not exempt',
   assert.equal(exempt([manifest], patterns, null, after), false);
   assert.equal(exempt([manifest], patterns, before, null), false);
 });
+
+test('reordering exports conditions needs a changeset, since resolution follows key order', () => {
+  const before = pkg({ exports: { '.': { types: './dist/index.d.ts', import: './dist/index.js' } }, devDependencies: { vitest: '^3.0.9' } });
+  const after = pkg({ exports: { '.': { import: './dist/index.js', types: './dist/index.d.ts' } }, devDependencies: { vitest: '^4.1.12' } });
+  assert.equal(exempt([manifest], patterns, before, after), false);
+});
+
+test('a bump of a build tool that writes dist or the .d.ts files needs a changeset', () => {
+  for (const name of ['vite', 'typescript']) {
+    const before = pkg({ devDependencies: { [name]: '^6.0.0', vitest: '^4.1.12' } });
+    const after = pkg({ devDependencies: { [name]: '^6.1.0', vitest: '^4.1.12' } });
+    assert.equal(exempt([manifest], patterns, before, after), false);
+  }
+});
+
+test('a pull request that adds or edits a changeset runs changeset status, which checks it', () => {
+  const before = pkg({ devDependencies: { vitest: '^3.0.9' } });
+  const after = pkg({ devDependencies: { vitest: '^4.1.12' } });
+  assert.equal(exempt([manifest, '.changeset/bad-name.md'], patterns, before, after), false);
+  assert.equal(exempt([manifest, '.changeset/README.md'], patterns, before, after), true);
+  assert.equal(exempt([manifest, '.changeset/config.json'], patterns, before, after), true);
+});
