@@ -1,6 +1,6 @@
 // Exits 0 when the only file under the published package that the changeset check counts is its package.json,
-// that file changed only in devDependencies the build never reads, and the pull request adds or edits no
-// changeset. Such a pull request, like most Dependabot updates of test tools, ships nothing and needs no changeset.
+// that file changed only in devDependencies the build never reads, and the pull request touches nothing in
+// .changeset/ but its README. Such a pull request, like most Dependabot updates of test tools, ships nothing and needs no changeset.
 // Exits 1 otherwise, and the Changeset step runs `changeset status` as usual, which also checks any changeset the
 // pull request brings.
 // Usage: node .github/scripts/changeset-exempt.mjs <base ref>
@@ -48,7 +48,8 @@ export function onlyDevDependencies(before, after) {
 
 // `files` lists every path the pull request changed under the package and under .changeset/.
 export function exempt(files, patterns, before, after) {
-  if (files.some((file) => file.startsWith('.changeset/') && file.endsWith('.md') && file !== '.changeset/README.md')) return false;
+  // changeset status also checks the changesets and the config, so a pull request that touches either runs it.
+  if (files.some((file) => file.startsWith('.changeset/') && file !== '.changeset/README.md')) return false;
   const changed = counted(files, patterns);
   if (changed.length !== 1 || changed[0] !== manifest) return false;
   if (before === null || after === null) return false;

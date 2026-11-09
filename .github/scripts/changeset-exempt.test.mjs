@@ -70,10 +70,11 @@ test('a bump of test-only tools alone is exempt', () => {
   assert.equal(exempt([manifest], patterns, before, after), true);
 });
 
-test('a pull request that adds or edits a changeset runs changeset status, which checks it', () => {
+test('a pull request that touches a changeset or the config runs changeset status, which checks them', () => {
   const before = pkg({ devDependencies: { vitest: '^3.0.9' } });
   const after = pkg({ devDependencies: { vitest: '^4.1.12' } });
   assert.equal(exempt([manifest, '.changeset/bad-name.md'], patterns, before, after), false);
   assert.equal(exempt([manifest, '.changeset/README.md'], patterns, before, after), true);
-  assert.equal(exempt([manifest, '.changeset/config.json'], patterns, before, after), true);
+  assert.equal(exempt([manifest, '.changeset/config.json'], patterns, before, after), false);
+  assert.equal(exempt([manifest, '.changeset/pre.json'], patterns, before, after), false);
 });
