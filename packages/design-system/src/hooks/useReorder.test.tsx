@@ -63,7 +63,7 @@ beforeEach(() => {
   const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
     return this.tagName === 'LI' ? rectOf(this) : new DOMRect(0, 0, 0, 0);
   });
-  const doc = document as Document & { elementFromPoint?: Document['elementFromPoint'] };
+  const doc = document as Omit<Document, 'elementFromPoint'> & { elementFromPoint?: Document['elementFromPoint'] };
   const had = Object.prototype.hasOwnProperty.call(doc, 'elementFromPoint');
   const previous = doc.elementFromPoint;
   doc.elementFromPoint = (x: number, y: number) =>

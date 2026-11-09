@@ -81,8 +81,6 @@ export const firefoxSkips: readonly FirefoxSkip[] = [
   },
 ];
 
-type Test = BrowserResults['tests'][number];
-
 export interface Verdict {
   /** What fails the job, one line each. */
   blocking: string[];
