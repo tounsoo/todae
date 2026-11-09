@@ -516,6 +516,24 @@ describe('Splitter dragging', () => {
     expect(handle().getAttribute('aria-valuenow')).toBe('300');
   });
 
+  it('ends a drag without pointer capture when the release is stopped on its way up', () => {
+    render(<Layout defaultValue={240} />);
+    Object.defineProperty(handle(), 'setPointerCapture', {
+      configurable: true,
+      value: () => {
+        throw new DOMException('No active pointer with the given id is found.', 'NotFoundError');
+      },
+    });
+    const stopper = document.createElement('div');
+    stopper.addEventListener('pointerup', (event) => event.stopPropagation());
+    document.body.append(stopper);
+    down(100);
+    move(160);
+    fireEvent.pointerUp(stopper, { pointerId: 1 });
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    stopper.remove();
+  });
+
   it('grows against the pointer for a panel at the end, and with the text direction', () => {
     const { unmount } = render(<Layout defaultValue={240} primary="end" />);
     down(100);

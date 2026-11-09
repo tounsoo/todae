@@ -268,14 +268,15 @@ function Root({
     if (!dragging) return;
     const view = handleRef.current?.ownerDocument.defaultView;
     if (!view) return;
+    // Capture phase, so a page handler that stops the release still ends the drag.
     const onRelease = (event: globalThis.PointerEvent) => {
       if (drag.current?.pointerId === event.pointerId) endDrag();
     };
-    view.addEventListener('pointerup', onRelease);
-    view.addEventListener('pointercancel', onRelease);
+    view.addEventListener('pointerup', onRelease, true);
+    view.addEventListener('pointercancel', onRelease, true);
     return () => {
-      view.removeEventListener('pointerup', onRelease);
-      view.removeEventListener('pointercancel', onRelease);
+      view.removeEventListener('pointerup', onRelease, true);
+      view.removeEventListener('pointercancel', onRelease, true);
     };
   }, [dragging, endDrag]);
 

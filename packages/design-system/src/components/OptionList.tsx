@@ -258,18 +258,15 @@ function OptionListRoot(props: OptionListRootProps) {
   const typed = useRef(emptyTypeahead());
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // A key from a field or control inside the list is that element's.
+    if (event.target !== event.currentTarget) return;
     // A key with Ctrl, Meta or Alt is a shortcut, the page's or the browser's.
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (enabled.length === 0) return;
     const index = activeValue ? enabled.indexOf(activeValue) : -1;
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
-    // A key from a field inside the list types into that field.
-    if (
-      isTypeaheadKey(event.key) &&
-      event.target === event.currentTarget &&
-      (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))
-    ) {
+    if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
       const texts = new Map([...registered.current].map((entry) => [entry.value, entry.text]));
       const text = (at: number) => (texts.get(enabled[at]!) ?? '').trim().toLowerCase();
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);

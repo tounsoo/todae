@@ -215,8 +215,8 @@ export function DialogShellRoot({
   const shown = present && open;
   // An empty aria-labelledby falls back to the Title's id, and a blank
   // aria-label or aria-labelledby names nothing.
-  const labelledByAttr = props['aria-labelledby'] || labelledBy;
-  const named = Boolean(props['aria-label']?.trim() || labelledByAttr?.trim());
+  const labelledByAttr = props['aria-labelledby']?.trim() ? props['aria-labelledby'] : labelledBy;
+  const named = Boolean(props['aria-label']?.trim() || labelledByAttr);
   useEffect(() => {
     if (process.env.NODE_ENV === 'production' || !shown || named) return;
     // A Title registers in a layout effect whose update renders after this

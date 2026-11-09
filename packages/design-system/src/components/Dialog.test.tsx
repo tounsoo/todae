@@ -458,13 +458,17 @@ describe('Dialog name check', () => {
     error.mockRestore();
   });
 
-  it('is named by its Title when aria-labelledby is empty', () => {
+  it.each(['', '  '])('is named by its Title when aria-labelledby is %j', async (labelledBy) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
-      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby="">
+      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={labelledBy}>
         <Dialog.Title>Saved</Dialog.Title>
       </Dialog.Root>,
     );
     expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });
 

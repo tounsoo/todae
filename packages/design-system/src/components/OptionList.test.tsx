@@ -254,6 +254,23 @@ describe('OptionList', () => {
       expect(active(list)).toBe(before);
     });
 
+    it.each([' ', 'Enter', 'ArrowDown', 'End'])('leaves %j in a field inside the list to that field', (key) => {
+      const onValueChange = vi.fn();
+      render(
+        <OptionList.Root value={null} onValueChange={onValueChange} aria-label="Fruit">
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+          <OptionList.Option value="banana">Banana</OptionList.Option>
+          <input aria-label="Filter" />
+        </OptionList.Root>,
+      );
+      const list = screen.getByRole('listbox');
+      fireEvent.keyDown(list, { key: 'ArrowDown' });
+      const before = active(list);
+      expect(fireEvent.keyDown(screen.getByLabelText('Filter'), { key })).toBe(true);
+      expect(active(list)).toBe(before);
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
     it('keeps the active option on a letter nothing starts with', () => {
       render(<Fruit />);
       const list = screen.getByRole('listbox');
