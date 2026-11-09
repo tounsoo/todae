@@ -74,6 +74,27 @@ describe('Button tip holds', () => {
     expect(tipOpen()).toBe(true);
   });
 
+  it('shows a second icon-only tip warm, at once, when the pointer moves on from an open one under StrictMode', () => {
+    render(
+      <StrictMode>
+        {['A', 'B'].map((name) => (
+          <Button.Root key={name} aria-label={name}>
+            <Button.Icon>+</Button.Icon>
+          </Button.Root>
+        ))}
+      </StrictMode>,
+    );
+    const [a, b] = screen.getAllByRole('button');
+    fireEvent.pointerEnter(a!);
+    advance(1000);
+    fireEvent.pointerLeave(a!, { relatedTarget: b });
+    fireEvent.pointerEnter(b!);
+    advance(0);
+    const tip = [...document.querySelectorAll('[role="tooltip"]')].find((el) => el.textContent === 'B')!;
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    expect(tip.hasAttribute('data-todae-warm')).toBe(true);
+  });
+
   it('keeps a cut-label tip closed by Escape from coming back when a new cut label is hovered and left', () => {
     const { rerender } = render(<Button.Root>Save every archived thread</Button.Root>);
     const button = screen.getByRole('button');
@@ -109,6 +130,42 @@ describe('Button tip holds', () => {
     rerender(<Pin busy={false} />);
     advance(1000);
     expect(tipOpen()).toBe(false);
+  });
+
+  it('takes no hover a press spent before the tip showed when a word the button showed while working turns back to its icon', () => {
+    // A word, not an svg, while it works, so its tip handlers stay on.
+    const Pin = ({ busy }: { busy: boolean }) => (
+      <Button.Root aria-label="Pin">{busy ? 'Pinning' : <Button.Icon>p</Button.Icon>}</Button.Root>
+    );
+    const { rerender } = render(<Pin busy={false} />);
+    const button = screen.getByRole('button', { name: 'Pin' });
+    fireEvent.pointerEnter(button);
+    advance(100);
+    fireEvent.pointerDown(button);
+    fireEvent.click(button);
+    rerender(<Pin busy />);
+    advance(3000);
+    rerender(<Pin busy={false} />);
+    advance(3000);
+    expect(tipOpen()).toBe(false);
+  });
+
+  it('keeps a cut label tip open by keyboard focus when the button collapses to its icon', () => {
+    const Collapse = ({ small }: { small: boolean }) => (
+      <Button.Root aria-label="Collapse the sidebar">{small ? <Button.Icon>c</Button.Icon> : 'Collapse the sidebar'}</Button.Root>
+    );
+    const { rerender } = render(<Collapse small={false} />);
+    const button = screen.getByRole('button');
+    cut(button);
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => button.focus());
+    expect(tipOpen()).toBe(true);
+    fireEvent.keyDown(button, { key: 'Enter' });
+    rerender(<Collapse small />);
+    advance(1000);
+    expect(document.activeElement).toBe(button);
+    expect(tipOpen()).toBe(true);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Collapse the sidebar');
   });
 
   // An icon-only Save that shows a spinner while it saves, so its tip

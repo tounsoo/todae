@@ -361,14 +361,16 @@ export function useTooltipInternal<I extends boolean = false>(
     const count = open && requestedHoverOpenRef.current;
     if (!open) {
       requestedHoverOpenRef.current = false;
-      // An open the owner turned down leaves no warmth for one it makes itself.
-      setWarm(false);
+      // An open the owner turned down leaves no warmth for one it makes
+      // itself. Only warmth this render shows: a warm open already asked for,
+      // as StrictMode's second mount sees it, keeps its warmth.
+      if (warm) setWarm(false);
     }
     if (count === countedHoverRef.current) return;
     countedHoverRef.current = count;
     if (count) retainHoverTip();
     else releaseHoverTip(Date.now());
-  }, [open, controlledEpoch]);
+  }, [open, controlledEpoch, warm]);
 
   useEffect(() => {
     if (!open || !enabled) return;

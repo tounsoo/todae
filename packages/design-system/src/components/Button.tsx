@@ -272,8 +272,9 @@ function Root({
   }, [rendersElement]);
 
   const textName = iconOnly ? null : direct.text;
-  // An icon-only button's tip turns on the first time the pointer or keys
-  // reach it, and stays on.
+  // An icon-only button's tip turns on once the pointer or keys have reached
+  // the button, as icon-only or not, and stays on, so a button held while
+  // it turns icon-only keeps its tip.
   const [reachedOnce, setReachedOnce] = useState(false);
   const tipText = !tooltip
     ? null
@@ -299,6 +300,7 @@ function Root({
   // and blurring drop them.
   const waiting = useRef<Waiting>({ hover: false, focus: null });
   const reach = (hover: boolean, focus: Element | null) => {
+    if (!reachedOnce) setReachedOnce(true);
     let wanted = iconOnly && iconName != null;
     if (!iconOnly) for (const el of labels.current) wanted ||= el.scrollWidth > el.clientWidth;
     if (wanted && tipped) {
@@ -308,8 +310,7 @@ function Root({
       if (hover) waiting.current.hover = true;
       // Focus a press put there takes no hold, now or when the tip mounts.
       else waiting.current.focus = focus && !pointerFocus(focus) ? focus : null;
-      if (iconOnly) setReachedOnce(true);
-      else setCutText(textName);
+      if (!iconOnly) setCutText(textName);
     } else if (tipped) setCutText(null);
   };
 
@@ -320,12 +321,14 @@ function Root({
     watchInputModality(buttonRef.current?.ownerDocument);
   }, []);
 
-  // With the tip's handlers off, no leave or blur can drop a waiting hold, so
-  // none outlives them.
+  // A tip that goes, as its handlers do with `tooltip` off or its text
+  // changing, takes the holds still waiting with it, so a later tip takes
+  // only new ones.
   const listens = tooltip && (iconOnly || Boolean(textName));
+  const untipped = tipText == null;
   useLayoutEffect(() => {
-    if (!listens) waiting.current = { hover: false, focus: null };
-  }, [listens]);
+    if (untipped) waiting.current = { hover: false, focus: null };
+  }, [untipped]);
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
   const trigger =
