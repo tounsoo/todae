@@ -734,12 +734,13 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     expect(box.top, placed).toBeGreaterThanOrEqual(0);
     expect(box.bottom, placed).toBeLessThanOrEqual(window.innerHeight + 1);
     expect(dialog.scrollHeight).toBeGreaterThan(dialog.clientHeight);
-    // The last time, under the calendar and past the room, picks once the popover is scrolled to its end,
-    // where its scroll arrow at the bottom goes away.
-    dialog.scrollTop = dialog.scrollHeight;
-    await waitFor(() => expect(dialog.querySelector('[data-edge="block-end"][data-shown]')).toBeNull());
-    await userEvent.click(screen.getByRole('option', { name: '11:45 PM' }));
-    expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 11:45 PM');
+    // A time far under the calendar, past the room, scrolls into the popover and picks. Centered, so the
+    // popover's scroll arrows at its edges don't cover it.
+    const evening = screen.getByRole('option', { name: '6:00 PM' });
+    expect(evening.getBoundingClientRect().top).toBeGreaterThan(box.bottom);
+    evening.scrollIntoView({ block: 'center' });
+    await userEvent.click(evening);
+    expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 6:00 PM');
   });
 
   it.each(['compact', 'comfortable', 'spacious'] as const)(
