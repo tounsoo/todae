@@ -130,24 +130,28 @@ export function useReach(
     });
     return () => cancelAnimationFrame(frame);
   }, [anchor, fresh, isDateDisabled, max, min, monthText]);
+  const reach = carried && carried.from === fresh ? carried.reach : fresh;
   // A new isDateDisabled on every render starts an unfinished scan over each time, so a far
   // day may never become reachable. In development, say so after a few such renders in a row.
-  const restarts = useRef<{ last: ReachLimits['isDateDisabled']; count: number; told: boolean }>({
+  const restarts = useRef<{ last: ReachLimits['isDateDisabled']; done: boolean; count: number; told: boolean }>({
     last: undefined,
+    done: true,
     count: 0,
     told: false,
   });
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;
     const seen = restarts.current;
-    const restarted = Boolean(fresh && !fresh.done && seen.last && seen.last !== isDateDisabled);
+    // Only a scan cut short by the new function counts, not one the frames had finished.
+    const restarted = Boolean(fresh && !fresh.done && !seen.done && seen.last && seen.last !== isDateDisabled);
     seen.count = restarted ? seen.count + 1 : 0;
     seen.last = isDateDisabled;
+    seen.done = reach?.done ?? true;
     if (seen.count < RESTARTS_TOLD || seen.told) return;
     seen.told = true;
     console.error(
       'Calendar.Root got a new isDateDisabled on each render, so a range scan starts over and far days may stay out of reach; keep it the same function, such as with useCallback',
     );
-  }, [fresh, isDateDisabled]);
-  return carried && carried.from === fresh ? carried.reach : fresh;
+  }, [fresh, isDateDisabled, reach]);
+  return reach;
 }

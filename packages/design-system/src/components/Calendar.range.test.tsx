@@ -324,6 +324,28 @@ describe('Calendar range mode', () => {
     }
   });
 
+  it('says nothing when a new isDateDisabled comes only after each far scan has finished', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      const { rerender } = render(<RangeControlled isDateDisabled={() => false} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      for (let parent = 0; parent < 6; parent++) {
+        for (let frame = 0; frame < 100 && vi.getTimerCount() > 0; frame++) act(() => vi.advanceTimersToNextFrame());
+        rerender(<RangeControlled isDateDisabled={() => false} />);
+      }
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
   it('says nothing when isDateDisabled stays the same through a far scan', () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
