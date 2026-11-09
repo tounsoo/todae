@@ -56,14 +56,16 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # Fails when the package changed outside its tests and no changeset was added.
+      # Fails when the package changed outside its tests and no changeset was added. A change to only the
+      # package's test-only devDependencies (listed in changeset-exempt.mjs), as in a Dependabot update of Vitest,
+      # ships nothing and passes without one.
       # The Version Packages pull request deletes the changesets, so it skips the check. Only the release
       # app's branch in this repository counts as that pull request, not a fork's branch of the same name.
       - name: Changeset
         if: ${{ needs.changes.outputs.class == 'all' && github.event_name == 'pull_request' && !(startsWith(github.head_ref, 'changeset-release/') && github.event.pull_request.head.repo.full_name == github.repository) }}
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: pnpm changeset status --since="origin/$BASE_REF"
+        run: node .github/scripts/changeset-exempt.mjs "origin/$BASE_REF" || pnpm changeset status --since="origin/$BASE_REF"
       - name: Tokens
         if: ${{ !cancelled() && needs.changes.outputs.class == 'all' }}
         run: pnpm tokens:check

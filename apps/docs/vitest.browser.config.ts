@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 
@@ -38,7 +39,7 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '.next/**'],
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       screenshotFailures: false,
       instances: [{ browser: 'chromium' }],

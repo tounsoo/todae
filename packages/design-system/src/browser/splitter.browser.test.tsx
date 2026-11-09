@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { page, userEvent } from '@vitest/browser/context';
+import { page, userEvent } from 'vitest/browser';
 import type { CSSProperties } from 'react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Checkbox, ScrollArea, Splitter, type SplitterRootProps } from '../index.js';
