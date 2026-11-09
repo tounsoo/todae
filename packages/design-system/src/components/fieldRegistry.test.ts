@@ -130,4 +130,71 @@ describe('createFieldRegistry', () => {
     expect(registry.firstValueInput()).toBeNull();
     shell.remove();
   });
+  it('answers every question before any part registers, and ignores a withdrawal of nothing', () => {
+    const registry = createFieldRegistry();
+    const listener = vi.fn();
+    registry.subscribe(listener);
+    expect(registry.hasControl()).toBe(false);
+    expect(registry.namedBy()).toBe(false);
+    expect(registry.focusTarget()).toBeNull();
+    expect(registry.lastPicker()).toBeNull();
+    expect(registry.toggleFor(node('button'))).toBeUndefined();
+    expect(registry.text()).toBeNull();
+    expect(registry.picks()).toBeNull();
+    expect(registry.stepper()).toBeNull();
+    expect(registry.firstValueInput()).toBeNull();
+    registry.setControl({}, null);
+    registry.publishText({}, null);
+    registry.publishPicks({}, null);
+    registry.withdrawStepper({});
+    registry.picked();
+    registry.editableChanged();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('serves the typed input that mounted last, and the rendered one only until one is committed', () => {
+    const registry = createFieldRegistry();
+    registry.seedPicks('date');
+    expect(registry.serverPicks()).toBe('date');
+    expect(registry.picks()).toBeNull();
+    const first = {};
+    const second = {};
+    registry.publishPicks(first, 'time');
+    registry.publishPicks(second, 'dateRange');
+    expect(registry.picks()).toBe('dateRange');
+    registry.seedPicks('date');
+    expect(registry.serverPicks()).toBe('dateRange');
+    registry.publishPicks(second, null);
+    expect(registry.picks()).toBe('time');
+  });
+
+  it('tells pick and editable listeners until they stop hearing', () => {
+    const registry = createFieldRegistry();
+    const onPick = vi.fn();
+    const onEditable = vi.fn();
+    const stopPick = registry.onPick(onPick);
+    const stopEditable = registry.onEditableChange(onEditable);
+    registry.picked();
+    registry.editableChanged();
+    expect(onPick).toHaveBeenCalledTimes(1);
+    expect(onEditable).toHaveBeenCalledTimes(1);
+    stopPick();
+    stopEditable();
+    registry.picked();
+    registry.editableChanged();
+    expect(onPick).toHaveBeenCalledTimes(1);
+    expect(onEditable).toHaveBeenCalledTimes(1);
+  });
+
+  it('finds the toggle of a picker in a field nested inside', () => {
+    const registry = createFieldRegistry();
+    const nested = createFieldRegistry();
+    const toggle = vi.fn();
+    const button = node('button');
+    nested.setControl({}, { node: button, role: 'picker', takesName: false, toggle });
+    const remove = registry.addChild(nested);
+    expect(registry.toggleFor(button)).toBe(toggle);
+    remove();
+    expect(registry.toggleFor(button)).toBeUndefined();
+  });
 });
