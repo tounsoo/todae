@@ -273,6 +273,32 @@ describe("a typed input's own messages in a Form.Root", () => {
     expect(screen.getByText('stay rangeUnderflow|Enter 10/5/2026 or later')).toBeTruthy();
   });
 
+  it.each([
+    ['required and empty', { required: true }, null],
+    ['below min', { min: date('2026-10-05') }, date('2026-10-03')],
+  ])('reports text that says no value as badInput, not as the committed value being %s', async (_, props, initial) => {
+    function Held() {
+      const [day, setDay] = useState<Temporal.PlainDate | null>(initial);
+      return (
+        <Form.Root data-testid="form">
+          <Field.Group>
+            <Label.Root htmlFor="day">Day</Label.Root>
+            <Field.Root id="day" name="day">
+              <Field.DateInput {...props} value={day} onValueChange={setDay} locale="en-US" />
+            </Field.Root>
+            <ErrorMessage.Root>{(error) => `day ${error.kind}|${error.message}`}</ErrorMessage.Root>
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Held />);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Day'), { target: { value: 'soon' } });
+    });
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('day badInput|Enter a valid value')).toBeTruthy();
+  });
+
   it('reports text that says no value as badInput', async () => {
     await mount(<Kinds />);
     await act(async () => {

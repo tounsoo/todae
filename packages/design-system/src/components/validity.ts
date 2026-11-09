@@ -127,11 +127,11 @@ function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, str
  */
 export function describeValidity(el: ValidityCarrier, strings: Strings): FormFieldError | null {
   if (!el.willValidate || el.validity.valid) return null;
+  // Todae's own message keeps its words, already in the page's language, and says the kind it stands for. It comes before the native flags, which read the value last committed: text that says no value is not a missing value.
+  const marked = el.validity.customError ? customKinds.get(el) : undefined;
+  if (marked && marked.message === el.validationMessage) return { kind: marked.kind, message: marked.message };
   const kind = FLAGS.find((flag) => el.validity[flag]);
   // A flag this list doesn't know yet still has the browser's text.
   if (!kind) return { kind: 'customError', message: el.validationMessage };
-  // Todae's own message keeps its words, already in the page's language, and says the kind it stands for.
-  const marked = kind === 'customError' ? customKinds.get(el) : undefined;
-  if (marked && marked.message === el.validationMessage) return { kind: marked.kind, message: marked.message };
   return { kind, message: message(el, kind, strings) };
 }

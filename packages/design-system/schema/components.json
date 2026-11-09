@@ -2368,7 +2368,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DateInput has. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as for a read-only Field.DateInput, which a form leaves unchecked while its value input still blocks a submit. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",

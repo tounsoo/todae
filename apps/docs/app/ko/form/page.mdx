@@ -81,7 +81,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 ## 브라우저가 검사할 수 없는 규칙
 
-`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. 코드가 `setCustomValidity`로 메시지를 바꾸더라도 규칙이 유지되는 동안은 다음 커밋에서 Todae가 자신의 메시지를 다시 설정하고, 규칙이 사라지면 Todae가 설정한 메시지가 그대로일 때만 지웁니다. `Field.Root`에서는 필드의 컨트롤에, `Fieldset.Root`에서는 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, 컨트롤이 모두 중첩된 그룹 안에 있으면 어느 깊이든 첫 컨트롤에(메시지는 그 컨트롤의 오류가 보이는 곳에 나타납니다), `RadioGroup.Root`에서는 검증에 참여하는 첫 라디오에 적용됩니다. 한 요소를 함께 쓰는 소유자끼리는 덮어쓰지 않습니다. 요소는 자기 부분에서 시작해 바깥 fieldset 순으로 비어 있지 않은 첫 메시지를 받으므로, 빈 `customValidity`를 가진 `Fieldset.Root`는 안쪽 필드의 메시지를 그대로 둡니다. `Form.Root` 없이도 네이티브 API로 동작하며 같은 컨트롤을 고릅니다.
+`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. 코드가 `setCustomValidity`로 메시지를 바꾸더라도 규칙이 유지되는 동안은 다음 커밋에서 Todae가 자신의 메시지를 다시 설정하고, 규칙이 사라지면 Todae가 설정한 메시지가 그대로일 때만 지웁니다. `Field.Root`에서는 필드의 컨트롤에(`Field.DateInput` 같은 텍스트 입력이 읽기 전용이면 그 값 입력에. 폼은 그 텍스트 입력을 검사하지 않지만 값 입력은 여전히 제출을 막습니다), `Fieldset.Root`에서는 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, 컨트롤이 모두 중첩된 그룹 안에 있으면 어느 깊이든 첫 컨트롤에(메시지는 그 컨트롤의 오류가 보이는 곳에 나타납니다), `RadioGroup.Root`에서는 검증에 참여하는 첫 라디오에 적용됩니다. 한 요소를 함께 쓰는 소유자끼리는 덮어쓰지 않습니다. 요소는 자기 부분에서 시작해 바깥 fieldset 순으로 비어 있지 않은 첫 메시지를 받으므로, 빈 `customValidity`를 가진 `Fieldset.Root`는 안쪽 필드의 메시지를 그대로 둡니다. `Form.Root` 없이도 네이티브 API로 동작하며 같은 컨트롤을 고릅니다.
 
 <Example of={FormRule} block />
 
