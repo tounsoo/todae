@@ -14,7 +14,7 @@ describe('docs resolves the design system from source', () => {
   // lacks and whose class names the docs' source CSS does not define.
   it('maps every module entry of @tounsoo/todae to its source file', () => {
     const modules = Object.entries(pkg.exports)
-      .filter(([, value]) => typeof value === 'object' && value !== null && 'import' in value)
+      .filter(([, value]) => typeof value === 'object' && value !== null && 'default' in value)
       .map(([key]) => (key === '.' ? '@tounsoo/todae' : `@tounsoo/todae/${key.slice(2)}`));
     expect(modules).toEqual(expect.arrayContaining(['@tounsoo/todae', '@tounsoo/todae/stack', '@tounsoo/todae/text']));
     for (const name of modules) {
