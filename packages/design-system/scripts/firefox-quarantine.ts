@@ -64,10 +64,12 @@ export interface FirefoxBranch {
 
 /**
  * Every line of browser test code that treats Firefox apart, by a skip, a
- * condition, an expected value or anything else that names Firefox or Gecko.
- * A failing Firefox test goes on the quarantine above instead, so it still runs
- * and shows. scripts/firefox-quarantine.test.ts reads the browser tests and
- * their helpers in src/test, and fails on a line no entry here names, so a
+ * condition, an expected value or anything else that names Firefox, Gecko,
+ * Mozilla or a `-moz-` or `Moz…` feature, or uses a value, function or class
+ * built from one. A failing Firefox test goes on the quarantine above instead,
+ * so it still runs and shows. scripts/firefox-quarantine.test.ts reads the
+ * browser tests and their helpers in src/test and src/browser, follows such
+ * values through the compiler, and fails on a line no entry here names, so a
  * Firefox failure can't be silenced without a reason. Each entry names one
  * line, so two lines alike need two entries.
  */

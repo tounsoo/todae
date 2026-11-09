@@ -231,7 +231,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
       const exportOf = (name: string) => exports.find((symbol) => symbol.escapedName === name);
       each(tree, (node) => {
         if (ts.isVariableDeclaration(node) && uses(node.initializer, tree)) taint(names(node.name));
-        else if (ts.isBindingElement(node) && uses(node.initializer, tree)) taint(names(node.name));
+        else if ((ts.isBindingElement(node) || ts.isParameter(node)) && uses(node.initializer, tree)) taint(names(node.name));
+        else if ((ts.isPropertyDeclaration(node) || ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node)) && ts.isIdentifier(node.name) && uses(node, tree)) taint([node.name]);
         else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) && uses(node, tree)) {
           if (node.name) taint([node.name]);
           else mark(exportOf('default'));
@@ -320,6 +321,12 @@ it('follows a value through shorthand properties, compound and destructuring ass
   expect(lines(["const slow = ['firefox'];", 'for (const engine of slow) {', "  it.skipIf(server.browser === engine)('a', () => {});", '}'])).toEqual([1, 2, 3]);
   expect(lines(["[server.browser === 'firefox'].forEach((skip) => {", "  it.skipIf(skip)('a', () => {});", '});'])).toEqual([1, 2]);
   expect(lines(['let skip = false;', "if (server.browser === 'firefox') {", '  skip = true;', '}', "it.skipIf(skip)('a', () => {});"])).toEqual([1, 2, 3, 5]);
+});
+
+it('follows a default parameter, and a class member read through this, along with the class and method built on it', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["function guard(cond = server.browser === 'firefox') {", "  it.skipIf(cond)('a', () => {});", '}'])).toEqual([1, 2]);
+  expect(lines(['class Probe {', "  ff = server.browser === 'firefox';", '  run() {', "    it.skipIf(this.ff)('a', () => {});", '  }', '}'])).toEqual([1, 2, 3, 4]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
