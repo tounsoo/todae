@@ -2851,8 +2851,8 @@
       "ko": "고를 수 있는 가장 늦은 날짜."
     },
     "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위 모드에서는 범위에 그런 날짜가 들어갈 수 없습니다."
+      "en": "Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one, and a new function checks the days to a range's far end again, so keep it the same between renders, such as with useCallback, until the days it rules out change.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위 모드에서는 범위에 그런 날짜가 들어갈 수 없고, 새 함수는 범위의 먼 끝까지 날짜를 다시 확인하므로, 제외하는 날이 바뀔 때까지는 useCallback 등으로 렌더링 사이에 같은 함수를 유지하세요."
     },
     "defaultMonth": {
       "en": "The month shown first when there is no value. Today's month when not set.",
