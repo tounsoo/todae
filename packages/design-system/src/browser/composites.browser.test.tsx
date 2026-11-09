@@ -719,7 +719,6 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
               </OptionList.Root>
             </Field.Picker>
           </Field.Root>
-          <div style={{ blockSize: '100vh' }} />
         </Themed>
       );
     }
@@ -734,11 +733,18 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     expect(box.top, placed).toBeGreaterThanOrEqual(0);
     expect(box.bottom, placed).toBeLessThanOrEqual(window.innerHeight + 1);
     expect(dialog.scrollHeight).toBeGreaterThan(dialog.clientHeight);
-    // A time far under the calendar, past the room, scrolls into the popover and picks. Centered, so the
-    // popover's scroll arrows at its edges don't cover it.
+    // A time far under the calendar, past the room, scrolls into the popover and picks. Only the popover
+    // scrolls, never the page, and the time sits in its middle, so the scroll arrows at its edges don't
+    // cover it.
     const evening = screen.getByRole('option', { name: '6:00 PM' });
-    expect(evening.getBoundingClientRect().top).toBeGreaterThan(box.bottom);
-    evening.scrollIntoView({ block: 'center' });
+    const far = evening.getBoundingClientRect();
+    expect(far.top).toBeGreaterThan(box.bottom);
+    dialog.scrollTop += far.top - box.top - (dialog.clientHeight - far.height) / 2;
+    await waitFor(() => {
+      const shown = evening.getBoundingClientRect();
+      expect(shown.top).toBeGreaterThan(box.top);
+      expect(shown.bottom).toBeLessThan(box.bottom);
+    });
     await userEvent.click(evening);
     expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 6:00 PM');
   });
