@@ -1,0 +1,45 @@
+import TimeRoundTrip from '../../../../examples/utilities/format-time/TimeRoundTrip';
+
+export const description = 'formatTime writes a time of day in the locale\'s own style, and parseTime reads a typed time back into a Temporal.PlainTime.';
+
+# formatTime and parseTime
+
+`formatTime(time, { locale })` writes a time in the locale's short time style, such as `9:30 PM` in `en-US`, `21:30` in `de` and `오후 9:30` in `ko`, or in its medium style, with seconds, when the time has seconds. `parseTime(text, { locale })` reads typed text back into a `Temporal.PlainTime`, or returns `null` when the text is not a time. Without `locale`, both use the runtime's own. [Field.TimeInput](/field/time-input) reads and writes its text with them, and [timeOptions](/utilities/time-options) writes its labels with `formatTime`.
+
+<Example of={TimeRoundTrip} />
+
+## What parseTime reads {/*#reading-times*/}
+
+It reads an hour, an hour and minutes, or an hour, minutes and seconds, such as `9`, `9:30`, `21.30.15` or `0930`, with the locale's own word for the part of the day before or after them, such as `9:30 pm` in `en-US` or `오후 9:30` in `ko`. Letter case doesn't matter, digits may be in any script, and the numbers may be separated by any punctuation, symbols or spaces, or by words the locale writes between them, such as `21 h 30` in `fr-CA`. Without a word for the part of the day, the hour is 0 to 23.
+
+## Temporal
+
+Todae ships no Temporal polyfill. Both use `Temporal.PlainTime`, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
+
+## Accessible composition
+
+**Todae handles:** Text in the `locale` you pass, or the runtime's own when you pass none.
+
+**You supply:** A `locale` that matches the page's, and the same one for writing and reading. A message near the input when `parseTime` returns `null`.
+
+**Watch for:** On a server with no `locale`, the text uses the server's locale.
+
+## When to use
+
+### formatTime
+
+**When:** Writing a time as text for a locale, such as into a text input of your own.
+
+**When not:** A time in another style, such as with a time zone → `Intl.DateTimeFormat`.
+
+### parseTime
+
+**When:** Reading a time someone typed.
+
+**When not:** Text in a fixed format such as `09:30` → `Temporal.PlainTime.from`.
+
+## Props
+
+<PropsTable name="formatTime" />
+
+<PropsTable name="parseTime" />

@@ -56,12 +56,6 @@ function listed(key: ThemeOverrideKey) {
 
 **쓰지 않을 때:** 간격 → CSS에서 밀도를 따르는 토큰.
 
-### categoryTone
-
-**언제:** 사용자 id나 태그 이름 같은 키마다 늘 같은 카테고리 톤이 필요할 때.
-
-**쓰지 않을 때:** 상태처럼 의미가 있는 톤 → 직접 고르세요.
-
 ## 대비
 
 토큰 빌드는 텍스트 쌍을 WCAG 2 비율이 아니라 APCA로 측정합니다. 각 쌍은 텍스트 색상, 배경, 허용하는 최저 Lc를 지정합니다. 예를 들어 `color.bg.elevated` 위의 `color.fg.muted`는 Lc 60입니다. 선택된 행처럼 배경이 반투명한 쌍은 그 배경이 놓일 수 있는 불투명한 표면을 `over`에 나열하며, 표면마다 측정됩니다. 어느 appearance에서든 쌍이 기준에 못 미치면 빌드가 실패하고, 통과할 가장 가까운 텍스트 또는 배경 색의 명도를 알려 줍니다.
@@ -86,19 +80,7 @@ DTCG 2025.10에는 대소문자를 위한 타입이 없어서 Todae가 `textTran
 
 ## 카테고리 톤
 
-여덟 가지 톤이 태그나 사람 같은 카테고리를 구분합니다. `color.category.1`부터 `color.category.8`까지이며, 각각 appearance마다 `fg`, `bg`, `border`가 있습니다. 색조 이름이 아니라 번호를 붙였기 때문에 회사는 이름을 바꾸지 않고도 토큰 패키지에서 색조를 바꿀 수 있습니다. 빌드는 `bg` 위의 `fg`를 Lc 75로 검사합니다. [Badge](/badge), [Chip](/chip), [Avatar](/avatar)는 이 톤을 `category-1`부터 `category-8`로 받고, `categoryTone(key)`는 문자열에서 톤 하나를 고릅니다.
-
-### CATEGORY_TONES
-
-`CATEGORY_TONES`는 `category-1`부터 `category-8`까지 여덟 개 이름의 튜플입니다. `CategoryTone`은 그 튜플의 한 원소입니다. `categoryTone(key)`는 문자열에 해당하는 원소를 돌려줍니다. 같은 키는 서버와 브라우저에서 같은 톤을 돌려줍니다. 튜플은 `category-8`에서 끝납니다.
-
-```tsx
-import { CATEGORY_TONES, categoryTone, type CategoryTone } from '@tounsoo/todae';
-
-const tones: readonly CategoryTone[] = CATEGORY_TONES;
-
-<Avatar.Root label={name} tone={categoryTone(userId)} />
-```
+여덟 가지 톤이 태그나 사람 같은 카테고리를 구분합니다. `color.category.1`부터 `color.category.8`까지이며, 각각 appearance마다 `fg`, `bg`, `border`가 있습니다. 색조 이름이 아니라 번호를 붙였기 때문에 회사는 이름을 바꾸지 않고도 토큰 패키지에서 색조를 바꿀 수 있습니다. 빌드는 `bg` 위의 `fg`를 Lc 75로 검사합니다. [Badge](/badge), [Chip](/chip), [Avatar](/avatar)는 이 톤을 `category-1`부터 `category-8`로 받고, [categoryTone](/utilities/category-tone)은 사용자 id 같은 문자열에서 톤 하나를 고릅니다.
 
 ## 포커스 링
 

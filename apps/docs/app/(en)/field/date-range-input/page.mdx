@@ -11,7 +11,7 @@ Here a [Field.Picker](/field/picker) beside the input opens a [Calendar](/calend
 
 ## Typed ranges
 
-`formatDateRange(range, { locale })` writes both dates as [`formatDate`](/field/date-input#typed-dates) writes them, with the locale's range separator between them, such as `10/3/2026 – 10/10/2026` in `en-US` and `2026. 10. 3. ~ 2026. 10. 10.` in `ko`. `parseDateRange(text, { locale })` reads typed text back into a `DateRange`, or returns `null` when the text is not a range. It splits the text at each run of characters that are not letters or digits, and at the locale's range separator, and reads a date on each side with `parseDate`. It returns the range when exactly one split reads as two dates, so it reads `10/3/2026 - 10/10/2026`, `Oct 3, 2026 – Oct 10, 2026` and an ISO 8601 interval such as `2026-10-03/2026-10-10`. Each date needs its year, as `formatDateRange` writes them, so it returns `null` for `Oct 3 – Oct 10, 2026`. A range typed end first reads with the earlier date as its start, as the calendar picks it. Without `locale`, both use the runtime's own.
+`formatDateRange` writes both dates as `formatDate` writes them, with the locale's range separator between them, such as `10/3/2026 – 10/10/2026` in `en-US`, and `parseDateRange` reads two dates typed with a separator between them, such as `Oct 3, 2026 – Oct 10, 2026` or `2026-10-03/2026-10-10`. [formatDateRange and parseDateRange](/utilities/format-date-range) says what each writes and reads.
 
 `Field.DateRangeInput` reads its text with `parseDateRange` and writes it with `formatDateRange`, in its `locale`. Empty text commits `null`. Text that is not a range stays as it was typed, `onValueChange` is not called, and the field is marked invalid once a commit has tried to read it; until the text is a range or empty, the form can't be submitted.
 
@@ -41,22 +41,6 @@ The range goes with a form in a native text input beside the text input, under t
 
 **When not:** One date → [Field.DateInput](/field/date-input). A range picked from a calendar shown on the page → [Calendar](/calendar) with `mode="range"`. A start and an end that people set apart, such as a start date and a separate deadline → two `Field.DateInput`s.
 
-### formatDateRange
-
-**When:** Writing a range as text for a locale, such as into a text input of your own.
-
-**When not:** A range to read rather than type, such as `Oct 3 – 10, 2026` → `Intl.DateTimeFormat`'s `formatRange`.
-
-### parseDateRange
-
-**When:** Reading a range someone typed.
-
-**When not:** An ISO 8601 interval from a form or an API, such as `2026-10-03/2026-10-10` → split it at `/` and read each half with `Temporal.PlainDate.from`.
-
 ## Props
 
 <PropsTable name="Field.DateRangeInput" />
-
-<PropsTable name="formatDateRange" />
-
-<PropsTable name="parseDateRange" />

@@ -1,0 +1,48 @@
+import NumberRoundTrip from '../../../../examples/utilities/format-number/NumberRoundTrip';
+
+export const description = 'formatNumber는 숫자를 로캘의 형식으로 쓰고, parseNumber는 Field.NumberInput처럼 입력한 텍스트를 숫자로 읽습니다.';
+
+# formatNumber와 parseNumber
+
+`formatNumber(value, { locale, formatOptions })`는 [Field.NumberInput](/field/number-input)과 같은 방식으로 숫자를 씁니다. 예: `en`에서는 `1,234.5`, `de`에서는 `1.234,5`. `parseNumber(text, { locale, formatOptions })`는 텍스트를 숫자로 읽거나, 숫자가 아니면 `null`을 돌려줍니다. `formatOptions`는 `Intl.NumberFormat`이 받는 값을 받으므로 퍼센트, 통화, 단위는 style 하나면 됩니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다. 입력 밖에서 같은 숫자를 보여 주거나 읽을 때 쓰세요.
+
+<Example of={NumberRoundTrip} />
+
+```tsx
+formatNumber(0.125, { locale: 'de', formatOptions: { style: 'percent', maximumFractionDigits: 1 } }); // "12,5 %"
+parseNumber('12,5 %', { locale: 'de', formatOptions: { style: 'percent' } }); // 0.125
+```
+
+## parseNumber가 읽는 것 {/*#reading-numbers*/}
+
+`parseNumber`는 로캘의 구분 기호, 마이너스 기호, 숫자를 `Intl.NumberFormat`에서 알아냅니다. 그래서 `de`의 `1.234,5`, `fr`의 좁은 줄바꿈 없는 공백이 든 `1 234,5`, `ar-EG`의 `١٬٢٣٤٫٥`가 모두 1234.5로 읽히고, 전각 숫자는 ASCII로 바뀝니다. 묶음 구분 없이도 읽지만, 묶음 구분 기호는 로캘이 놓는 자리에서만 받습니다. 그래서 `de`의 `1.234`는 1234이고 `en`의 `1,5`는 숫자가 아닙니다. 마침표는 마침표로 묶지 않는 로캘, 예를 들어 `fr`에서는 소수점입니다.
+
+`formatOptions`가 쓰는 퍼센트 기호, 통화 기호, 단위를 읽고, 없어도 읽습니다. compact 표기와 과학 표기는 읽지 않으므로 `formatOptions`에서 `notation`과 `compactDisplay`는 빠져 있고, TypeScript가 거부합니다. percent style은 숫자를 비율로 받습니다. `formatNumber`는 0.125를 `12.5%`로 쓰고, `parseNumber`는 `13%`를 0.13으로 읽습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 넘긴 `locale`로 쓴 텍스트. 넘기지 않으면 런타임의 로캘입니다.
+
+**직접 제공할 것:** 페이지와 맞는 `locale`, 그리고 쓸 때와 읽을 때 같은 `locale`과 `formatOptions`. `parseNumber`가 `null`을 돌려줄 때 입력 가까이에 둘 메시지.
+
+**주의할 점:** `locale` 없이 서버에서 렌더링하면 텍스트는 서버의 로캘로 쓰이므로, 일치하지 않으면 hydration 경고가 날 수 있습니다.
+
+## 언제 쓰나요
+
+### formatNumber
+
+**언제:** 숫자 입력 옆의 표 셀처럼, 숫자를 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** `formatOptions`로 쓸 수 없는 스타일의 숫자, 예를 들어 compact 표기 → `Intl.NumberFormat`.
+
+### parseNumber
+
+**언제:** 입력이 쓰는 로캘과 형식으로 사용자가 입력한 숫자를 읽을 때.
+
+**쓰지 않을 때:** `1234.5`처럼 형식이 고정된 텍스트 → `Number`.
+
+## Props
+
+<PropsTable name="formatNumber" />
+
+<PropsTable name="parseNumber" />

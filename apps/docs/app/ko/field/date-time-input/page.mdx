@@ -13,7 +13,7 @@ import DateTimePicker from '../../../../examples/recipes/date-time-picker/DateTi
 
 ## 입력한 날짜와 시각
 
-`formatDateTime(value, { locale })`은 날짜를 `formatDate`처럼 숫자로, 시각을 시와 분으로, 초가 있으면 초까지 씁니다. 예: `en-US`에서는 `10/13/2026, 9:30 PM`, `de`에서는 `13.10.2026, 21:30`, `ko`에서는 `2026. 10. 13. 오후 9:30`. `parseDateTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainDateTime`으로 읽고, 날짜와 시각이 아니면 `null`을 돌려줍니다. 날짜는 [`parseDate`](/field/date-input#typed-dates)처럼 읽되 연도는 전부 쓰거나 끝의 두 자리로 쓰고, 이어서 시각은 [`parseTime`](/field/time-input#typed-times)처럼 로캘이 쓰는 순서로 읽고, 로캘이 둘 사이에 쓰는 단어는 있어도 없어도 됩니다. 예: `en-US`에서는 `Oct 13, 2026 at 9:30 PM`이나 `10/13/2026 9:30 pm`. 시각에는 `21:30`이나 `2130`처럼 분이 있거나 `9 pm`처럼 단어가 있어야 하므로, `13.10.2026 21`처럼 시만 있는 텍스트는 읽지 않고, 시각이 없는 날짜도 읽지 않습니다. `en-US`의 `10/13 12 05 pm`처럼 연도 없는 월과 일, 그리고 시각으로도 읽히는 텍스트는 읽지 않습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+`formatDateTime`은 `en-US`의 `10/13/2026, 9:30 PM`처럼 날짜를 숫자로, 시각을 시와 분으로 쓰고, `parseDateTime`은 `Oct 13, 2026 at 9:30 PM`처럼 로캘이 쓰는 순서로 입력한 날짜와 시각을 읽습니다. 각각 무엇을 쓰고 읽는지는 [formatDateTime과 parseDateTime](/utilities/format-date-time)에 있습니다.
 
 `Field.DateTimeInput`은 자신의 `locale`로 텍스트를 `parseDateTime`으로 읽고 `formatDateTime`으로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 날짜와 시각이 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 날짜와 시각이거나 비어 있을 때까지 폼은 제출되지 않습니다.
 
@@ -41,22 +41,6 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. 입력의 값과 `form
 
 **쓰지 않을 때:** 날짜만 → [Field.DateInput](/field/date-input). 시각만 → [Field.TimeInput](/field/time-input). 시간대가 있는 시점 → 이 입력을 쓰고 시간대는 직접 작성한 코드에서 더하세요.
 
-### formatDateTime
-
-**언제:** 직접 만든 텍스트 입력처럼, 날짜와 시간을 로캘에 맞는 텍스트로 쓸 때.
-
-**쓰지 않을 때:** 요일이나 월 이름이 있는 날짜와 시간 → `Intl.DateTimeFormat`.
-
-### parseDateTime
-
-**언제:** 사람이 입력한 날짜와 시간을 읽을 때.
-
-**쓰지 않을 때:** `2026-10-13T09:30`처럼 형식이 정해진 텍스트 → `Temporal.PlainDateTime.from`.
-
 ## Props
 
 <PropsTable name="Field.DateTimeInput" />
-
-<PropsTable name="formatDateTime" />
-
-<PropsTable name="parseDateTime" />

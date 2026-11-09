@@ -1,0 +1,45 @@
+import DateTimeRoundTrip from '../../../../examples/utilities/format-date-time/DateTimeRoundTrip';
+
+export const description = 'formatDateTime은 날짜와 시각을 로캘의 방식대로 쓰고, parseDateTime은 입력한 텍스트를 Temporal.PlainDateTime으로 읽습니다.';
+
+# formatDateTime과 parseDateTime
+
+`formatDateTime(value, { locale })`은 날짜를 [formatDate](/utilities/format-date)처럼 숫자로, 시각을 시와 분으로, 초가 있으면 초까지 씁니다. 예: `en-US`에서는 `10/13/2026, 9:30 PM`, `de`에서는 `13.10.2026, 21:30`, `ko`에서는 `2026. 10. 13. 오후 9:30`. `parseDateTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainDateTime`으로 읽고, 날짜와 시각이 아니면 `null`을 돌려줍니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다. [Field.DateTimeInput](/field/date-time-input)은 이 둘로 텍스트를 읽고 씁니다.
+
+<Example of={DateTimeRoundTrip} />
+
+## parseDateTime이 읽는 것 {/*#reading-date-times*/}
+
+날짜는 [`parseDate`](/utilities/format-date#reading-dates)처럼 읽되 연도는 전부 쓰거나 끝의 두 자리로 쓰고, 이어서 시각은 [`parseTime`](/utilities/format-time#reading-times)처럼 로캘이 쓰는 순서로 읽고, 로캘이 둘 사이에 쓰는 단어는 있어도 없어도 됩니다. 예: `en-US`에서는 `Oct 13, 2026 at 9:30 PM`이나 `10/13/2026 9:30 pm`. 시각에는 `21:30`이나 `2130`처럼 분이 있거나 `9 pm`처럼 단어가 있어야 하므로, `13.10.2026 21`처럼 시만 있는 텍스트는 읽지 않고, 시각이 없는 날짜도 읽지 않습니다. `en-US`의 `10/13 12 05 pm`처럼 연도 없는 월과 일, 그리고 시각으로도 읽히는 텍스트는 읽지 않습니다.
+
+## Temporal
+
+Todae는 Temporal 폴리필을 싣지 않습니다. 둘 다 `Temporal.PlainDateTime`을 쓰므로, 브라우저에 Temporal이 없으면 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). `PlainDateTime`에는 시간대가 없습니다. 사용자의 시계에 보이는 날짜와 시각입니다. 시점을 저장하려면 `value.toZonedDateTime(zone)`처럼 직접 만든 코드에서 시간대와 합치세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 넘긴 `locale`로 쓴 텍스트. 넘기지 않으면 런타임의 로캘입니다.
+
+**직접 제공할 것:** 페이지와 맞는 `locale`, 그리고 쓸 때와 읽을 때 같은 `locale`. `parseDateTime`이 `null`을 돌려줄 때 입력 가까이에 둘 메시지.
+
+**주의할 점:** `locale` 없이 서버에서 렌더링하면 텍스트는 서버의 로캘로 쓰입니다. 시점인 것처럼 저장한 값. `PlainDateTime`은 읽는 사람의 시계를 따라 움직이므로, 시점을 저장하기 전에 시간대를 더하세요.
+
+## 언제 쓰나요
+
+### formatDateTime
+
+**언제:** 직접 만든 텍스트 입력처럼, 날짜와 시간을 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** 요일이나 월 이름이 있는 날짜와 시간 → `Intl.DateTimeFormat`. 얼마나 지난 시각인지 → [formatRelativeTime](/utilities/format-relative-time).
+
+### parseDateTime
+
+**언제:** 사람이 입력한 날짜와 시간을 읽을 때.
+
+**쓰지 않을 때:** `2026-10-13T09:30`처럼 형식이 정해진 텍스트 → `Temporal.PlainDateTime.from`.
+
+## Props
+
+<PropsTable name="formatDateTime" />
+
+<PropsTable name="parseDateTime" />

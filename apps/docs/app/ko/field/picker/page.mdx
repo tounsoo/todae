@@ -11,7 +11,7 @@ import FieldPickerColor from '../../../../examples/field/picker/FieldPickerColor
 
 ## 패널
 
-자식은 팝오버가 열려 있는 동안에만 마운트됩니다. `Calendar.Root`는 [Field.DateInput](/field/date-input)과 [Field.DateRangeInput](/field/date-range-input)에서처럼 날짜를, `mode="range"`이면 범위를 고릅니다. `OptionList.Root`는 [Field.TimeInput](/field/time-input)에서 [`timeOptions`](/field/time-input)의 시각을 고르듯 옵션 하나를 고릅니다. `ColorPicker.Root`는 색을 고릅니다. 다른 패널도 됩니다.
+자식은 팝오버가 열려 있는 동안에만 마운트됩니다. `Calendar.Root`는 [Field.DateInput](/field/date-input)과 [Field.DateRangeInput](/field/date-range-input)에서처럼 날짜를, `mode="range"`이면 범위를 고릅니다. `OptionList.Root`는 [Field.TimeInput](/field/time-input)에서 [`timeOptions`](/utilities/time-options)의 시각을 고르듯 옵션 하나를 고릅니다. `ColorPicker.Root`는 색을 고릅니다. 다른 패널도 됩니다.
 
 Calendar에서, 또는 값이 하나인 OptionList에서 고르면 값이 정해지고 팝오버가 `'select'` 이유로 닫힙니다. `selectionMode="multiple"`인 OptionList에서 고르거나 ColorPicker를 끌거나 키로 바꾸면 팝오버는 열려 있습니다. 어느 경우든 사람이 값을 바꿨다고 필드에 알리므로, [Form.Root](/form)가 필드에 보여 준 서버 오류는 사라집니다.
 

@@ -14,7 +14,7 @@ Pick a day and a time in either order, or type both into the input.
 
 The picker has `closeOnPick={false}`, so a pick in the calendar or the list doesn't close it, and its child is a function that gets `close`. Picking a day keeps the time already set, and picking a time keeps the day. Once both are set, the pick makes the value, `day.toPlainDateTime(time)`, and calls `close()`. A half picked before the other is held beside the value until the other is picked, and dropped when the picker closes, so a day picked and then left changes nothing.
 
-`timeOptions({ step: 15, value: time, locale })` lists the times, with a typed time between two steps, such as `9:07`, in its place. The list gets `time.toString()` as its value, and a pick is read back with `Temporal.PlainTime.from`.
+[`timeOptions({ step: 15, value: time, locale })`](/utilities/time-options) lists the times, with a typed time between two steps, such as `9:07`, in its place. The list gets `time.toString()` as its value, and a pick is read back with `Temporal.PlainTime.from`.
 
 ## Layout
 
