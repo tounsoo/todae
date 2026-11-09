@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Calendar, ColorPicker, Field, GlyphsProvider, OptionList, timeOptions } from '../index.js';
+import { Calendar, ColorPicker, ErrorMessage, Field, Form, GlyphsProvider, Label, OptionList, timeOptions } from '../index.js';
+import { mount, settle } from '../test/form.js';
 
 afterEach(cleanup);
 
@@ -209,5 +210,66 @@ describe('Field.Picker', () => {
       </Field.Root>,
     );
     expect(button('Plan').id).toBe('plan');
+  });
+
+  it('replaces text that says no date with a pick, even a pick of the date already set', async () => {
+    render(<DateField />);
+    const input = screen.getByRole('textbox', { name: 'Day' }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'soon' } });
+    fireEvent.blur(input);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    await open('Choose date');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /October 13, 2026/ }));
+    });
+    expect(input.value).toBe('10/13/2026');
+    expect(input.hasAttribute('aria-invalid')).toBe(false);
+    expect(document.querySelector<HTMLInputElement>('input[data-todae-value-input]')!.validity.valid).toBe(true);
+  });
+
+  it.each(['Field.Root', 'Field.DateInput'])('dismisses the server error on a pick, with the name on %s', async (holder) => {
+    function Booking() {
+      const [value, setValue] = useState<Temporal.PlainDate | null>(date('2026-10-13'));
+      const named = holder === 'Field.Root' ? 'start' : undefined;
+      return (
+        <Form.Root errors={{ start: 'Booked out.' }}>
+          <Field.Group>
+            <Label.Root htmlFor="start">Start date</Label.Root>
+            <Field.Root id="start" name={named}>
+              <Field.DateInput name={named ? undefined : 'start'} value={value} onValueChange={setValue} locale="en-US" />
+              <Field.Picker>
+                <Calendar.Root value={value} onValueChange={setValue} locale="en-US">
+                  <Calendar.Header />
+                  <Calendar.Grid />
+                </Calendar.Root>
+              </Field.Picker>
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Booking />);
+    expect(screen.getByText('Booked out.')).toBeTruthy();
+    await open('Choose date');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /October 14, 2026/ }));
+    });
+    await settle();
+    expect(screen.queryByText('Booked out.')).toBeNull();
+  });
+
+  it("puts the field's customValidity on the value input beside a read-only typed input, which a form leaves unchecked", async () => {
+    const { container } = render(
+      <form>
+        <Field.Root aria-label="Day" name="day" customValidity="Pick a weekday">
+          <Field.DateInput value={date('2026-10-17')} locale="en-US" />
+          <Field.Picker />
+        </Field.Root>
+      </form>,
+    );
+    await act(async () => {});
+    expect(container.querySelector('form')!.checkValidity()).toBe(false);
+    expect(container.querySelector<HTMLInputElement>('input[data-todae-value-input]')!.validationMessage).toBe('Pick a weekday');
   });
 });

@@ -168,10 +168,11 @@ function Root({
   const parentRegistry = useContext(FieldContext)?.registry;
   useLayoutEffect(() => parentRegistry?.addChild(registry), [parentRegistry, registry]);
   const inputId = id ?? autoId;
-  // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value.
+  // The control the shell focuses is the field's one native control, when it has one the browser validates, else the first input that carries the field's value: a read-only typed input is left out of a form's check, its value input is not.
   useCustomValidity(shellRef, () => {
     const control = registry.focusTarget();
-    return control && isValidityCarrier(control) ? control : registry.firstValueInput();
+    const carrier = control && isValidityCarrier(control) ? control : null;
+    return carrier?.willValidate ? carrier : (registry.firstValueInput() ?? carrier);
   }, customValidity);
   const describedByWithError = mergeDescribedBy(describedBy, errorId);
 

@@ -1,6 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import { spanOf, type DateRange } from './dateRange.js';
 import { formatDateRange, parseDateRange } from './dateRangeText.js';
+import { formatDate } from './dateText.js';
 import { htmlDateText } from './htmlValue.js';
 import { TypedInput, type TypedInputProps } from './Field.TypedInput.js';
 
@@ -40,12 +41,16 @@ export function DateRangeInput({ min, max, locale, ...props }: FieldDateRangeInp
               : '',
           };
         },
-        outOfBounds: (value) => {
+        // Worded as a Field.DateInput's bounds are, since a text input can't check them itself.
+        outOfBounds: (value, strings) => {
           const { start, end } = spanOf(value.start, value.end);
-          return (
-            (min !== undefined && Temporal.PlainDate.compare(start, min) < 0) ||
-            (max !== undefined && Temporal.PlainDate.compare(end, max) > 0)
-          );
+          if (min !== undefined && Temporal.PlainDate.compare(start, min) < 0) {
+            return strings.dateRangeUnderflow(formatDate(min, { locale }));
+          }
+          if (max !== undefined && Temporal.PlainDate.compare(end, max) > 0) {
+            return strings.dateRangeOverflow(formatDate(max, { locale }));
+          }
+          return undefined;
         },
       }}
     />

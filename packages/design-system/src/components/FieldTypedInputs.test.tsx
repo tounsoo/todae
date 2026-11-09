@@ -63,6 +63,16 @@ describe('Field.DateInput', () => {
     expect(input.value).toBe('10/13/2026');
   });
 
+  it('holds a readable draft in its value input before the commit, so a form checked before its submit event sees it', () => {
+    render(<DateField required />);
+    const input = screen.getByLabelText('Day');
+    const form = screen.getByTestId('form') as HTMLFormElement;
+    expect(form.checkValidity()).toBe(false);
+    fireEvent.change(input, { target: { value: '10/20/2026' } });
+    expect(form.checkValidity()).toBe(true);
+    expect(sent(form)).toEqual([['day', '2026-10-20']]);
+  });
+
   it('commits on Enter', () => {
     const onValueChange = vi.fn();
     render(<DateField onValueChange={onValueChange} />);
@@ -212,11 +222,15 @@ describe('Field.DateRangeInput', () => {
     expect(sent(screen.getByTestId('form') as HTMLFormElement)).toEqual([['stay', '2026-10-03/2026-10-10']]);
   });
 
-  it('blocks the form with a range outside min and max', () => {
-    render(<RangeField min={date('2026-10-05')} />);
+  it.each([
+    ['starts before min', { min: date('2026-10-05') }, 'Enter 10/5/2026 or later'],
+    ['ends after max', { max: date('2026-10-08') }, 'Enter 10/8/2026 or earlier'],
+  ])('blocks the form with a range that %s, and names the bound', (_, bounds, message) => {
+    render(<RangeField {...bounds} />);
     const input = screen.getByLabelText('Stay');
     fireEvent.change(input, { target: { value: '10/3/2026 – 10/10/2026' } });
     fireEvent.blur(input);
     expect((screen.getByTestId('form') as HTMLFormElement).checkValidity()).toBe(false);
+    expect(document.querySelector<HTMLInputElement>('input[data-todae-value-input]')!.validationMessage).toBe(message);
   });
 });

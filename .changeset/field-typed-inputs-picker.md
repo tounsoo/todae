@@ -9,3 +9,4 @@ Field gets typed inputs for dates and times, and one Field.Picker that opens any
 - New: `timeOptions`, the times for an OptionList of times.
 - Breaking: Field.DatePicker, Field.TimePicker, Field.DateTimePicker, Field.DateRangePicker and Field.ColorPicker are removed. Use a typed input with a Field.Picker beside it, or for a color, a Field.TextInput beside a Field.Picker with `swatch`. Field.Picker sends no form value of its own.
 - Breaking: the `field.date-time.gap` and `field.date-time.list.max-height` tokens are removed. The date and time picker is now a docs recipe.
+- Breaking: Strings has a new `picker` string, Field.Picker's name beside a control that isn't a typed input. A full Strings object of your own needs it; StringsProvider's partial strings don't.

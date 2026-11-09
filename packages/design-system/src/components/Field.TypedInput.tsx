@@ -1,4 +1,5 @@
 import {
+  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -17,7 +18,7 @@ import { isImeKeyEvent } from '../internal/ime.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './Field.module.css';
 import { useField } from './useField.js';
-import { useStrings } from '../providers/StringsProvider.js';
+import { useStrings, type Strings } from '../providers/StringsProvider.js';
 import type { ValueInputOptions } from './valueInput.js';
 
 /** The native input attributes a typed input takes: none that would contradict its value or its own limits. */
@@ -64,8 +65,8 @@ export type TypedFormat<Value> = {
   equals: (a: Value, b: Value) => boolean;
   /** The value input's type, value for the current value, and bounds. */
   valueInput: (value: Value | null) => Omit<ValueInputOptions, 'name' | 'required'>;
-  /** True for a value the input's bounds don't allow, where its value input can't check them, as for a range in a text input. */
-  outOfBounds?: (value: Value) => boolean;
+  /** The message for a value the input's bounds don't allow, where its value input can't check them, as for a range in a text input; undefined for a value in bounds. */
+  outOfBounds?: (value: Value, strings: Strings) => string | undefined;
 };
 
 // The text the person is typing, and the value it started from: a value the product sets since ends the draft. `failed` is set when a commit tried to read it and could not.
@@ -151,6 +152,14 @@ export function TypedInput<Value>({
     else if (outcome.kind === 'unreadable') fail();
   }
 
+  // A person's pick in a Field.Picker beside it replaces what was typed, even when it picks the value already set, and is a person's edit of this input.
+  const onPick = useRef(() => {});
+  onPick.current = () => {
+    if (draft !== null) setDraft(null);
+    field.notifyValueChange();
+  };
+  useLayoutEffect(() => registry.onPick(() => onPick.current()), [registry]);
+
   const refs = useComposedRefs(node, ref);
   // A reset puts back what the form had, which is not what was typed.
   useFormReset(node, () => setDraft(null), () => undefined);
@@ -169,11 +178,13 @@ export function TypedInput<Value>({
     { ...props, ref: refs, 'aria-invalid': flagged ? true : props['aria-invalid'] },
     { sendsName: false },
   );
-  const valueInput = field.getValueInputProps({ name, required, ...format.valueInput(value) }, control);
+  // The value input holds what a readable draft says, so the browser's own check of a form, which runs before its submit event and so before the draft commits, sees it.
+  const current = drafted === undefined || drafted === false ? value : drafted;
+  const valueInput = field.getValueInputProps({ name, required, ...format.valueInput(current) }, control);
   const valueRef = useComposedRefs(valueNode, valueInput.ref);
   // The value input is invalid too, so a submit, Enter's implicit one included, is blocked and Form.Root words it.
-  const outside = value !== null && !typing && format.outOfBounds?.(value) === true;
-  useCustomValidity(valueNode, () => valueNode.current, unreadable || outside ? strings.badInput : undefined);
+  const outside = current !== null ? format.outOfBounds?.(current, strings) : undefined;
+  useCustomValidity(valueNode, () => valueNode.current, unreadable ? strings.badInput : outside);
   return (
     <>
       <input

@@ -95,6 +95,10 @@ export type FieldRegistry = {
   /** As seedText: what a typed input rendered with, for a Field.Picker's server snapshot. */
   seedPicks: (picks: FieldPicks) => void;
   serverPicks: () => FieldPicks | null;
+  /** Hears a person's pick in a Field.Picker of the field; the result stops hearing. */
+  onPick: (listener: () => void) => () => void;
+  /** Tells the field's typed inputs that a person picked, so a pick replaces what was typed, even a pick of the value already set. */
+  picked: () => void;
   /** The last picker to mount, for a press on a read-only typed input. */
   lastPicker: () => HTMLElement | null;
   /** Registers a value input of the field; the result unregisters it. */
@@ -132,6 +136,7 @@ export function createFieldRegistry(): FieldRegistry {
   let stepper: { owner: object; entry: StepperEntry } | null = null;
   const picks = new Map<object, FieldPicks>();
   let pickSeed: FieldPicks | null = null;
+  const pickListeners = new Set<() => void>();
   let picksCommitted = false;
   const lastPicks = () => {
     let last: FieldPicks | null = null;
@@ -237,6 +242,15 @@ export function createFieldRegistry(): FieldRegistry {
       if (!picksCommitted) pickSeed = entry;
     },
     serverPicks: () => lastPicks() ?? pickSeed,
+    onPick(listener) {
+      pickListeners.add(listener);
+      return () => {
+        pickListeners.delete(listener);
+      };
+    },
+    picked() {
+      for (const listener of [...pickListeners]) listener();
+    },
     lastPicker: () => lastOf(controls.values(), 'picker'),
     addValueInput(input) {
       valueInputs.add(input);

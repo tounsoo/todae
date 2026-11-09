@@ -181,9 +181,11 @@ export function Picker({
   const picked = useCallback(
     (complete: boolean) => {
       field.notifyValueChange();
+      // A typed input beside it drops what was typed and tells the field under its own name too.
+      registry.picked();
       if (complete && closeOnPick) close.current(false, 'select');
     },
-    [closeOnPick, field],
+    [closeOnPick, field, registry],
   );
   return (
     <>
