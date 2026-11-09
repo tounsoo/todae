@@ -337,3 +337,101 @@ describe('Tree read-only value', () => {
     expect(document.querySelector('[aria-selected="true"]')?.textContent).toBe('a');
   });
 });
+
+describe('Tree renders', () => {
+  // A Profiler around each item counts the commits that rendered anything in it.
+  function Counted({ counts, ...props }: { counts: Map<string, number> } & Omit<TreeRootProps, 'children'>) {
+    const counted = (value: string, children: ReactNode) => (
+      <Profiler id={value} onRender={(id) => void counts.set(id, (counts.get(id) ?? 0) + 1)}>
+        {children}
+      </Profiler>
+    );
+    return (
+      <Tree.Root aria-label="Files" {...props}>
+        {counted(
+          'docs',
+          <Tree.Item value="docs">
+            <Tree.Label>docs</Tree.Label>
+            <Tree.Group>
+              <Tree.Item value="docs/intro.md">
+                <Tree.Label>intro.md</Tree.Label>
+              </Tree.Item>
+            </Tree.Group>
+          </Tree.Item>,
+        )}
+        {['a', 'b', 'c', 'd'].map((value) =>
+          counted(
+            value,
+            <Tree.Item key={value} value={value}>
+              <Tree.Label>{value}</Tree.Label>
+            </Tree.Item>,
+          ),
+        )}
+      </Tree.Root>
+    );
+  }
+
+  const rendered = (counts: Map<string, number>) => [...counts.keys()].sort();
+
+  it('renders only the items a click selects or deselects', () => {
+    const counts = new Map<string, number>();
+    render(<Counted counts={counts} defaultValue="a" />);
+    counts.clear();
+    fireEvent.click(screen.getByText('c'));
+    expect(item('c').getAttribute('aria-selected')).toBe('true');
+    expect(item('a').getAttribute('aria-selected')).toBe('false');
+    expect(item('c').tabIndex).toBe(0);
+    expect(item('a').tabIndex).toBe(-1);
+    expect(rendered(counts)).toEqual(['a', 'c']);
+  });
+
+  it('renders only the item that opens or closes', () => {
+    const counts = new Map<string, number>();
+    render(<Counted counts={counts} />);
+    counts.clear();
+    fireEvent.click(screen.getByText('docs'));
+    expect(item('docs').getAttribute('aria-expanded')).toBe('true');
+    expect(rendered(counts)).toEqual(['docs']);
+    counts.clear();
+    fireEvent.click(screen.getByText('docs'));
+    expect(item('docs').getAttribute('aria-expanded')).toBe('false');
+    expect(rendered(counts)).toEqual(['docs']);
+  });
+
+  it('renders only the items the tab stop leaves and reaches as focus moves', () => {
+    const counts = new Map<string, number>();
+    render(<Counted counts={counts} />);
+    act(() => item('a').focus());
+    counts.clear();
+    key('ArrowDown');
+    expect(focused()).toBe('b');
+    expect(item('b').tabIndex).toBe(0);
+    expect(item('a').tabIndex).toBe(-1);
+    expect(rendered(counts)).toEqual(['a', 'b']);
+  });
+
+  it('keeps two opens before a render, as both build on the latest write', () => {
+    const onExpandedChange = vi.fn();
+    render(
+      <Tree.Root aria-label="Files" onExpandedChange={onExpandedChange}>
+        {['x', 'y'].map((value) => (
+          <Tree.Item key={value} value={value}>
+            <Tree.Label>{value}</Tree.Label>
+            <Tree.Group>
+              <Tree.Item value={`${value}/file`}>
+                <Tree.Label>file</Tree.Label>
+              </Tree.Item>
+            </Tree.Group>
+          </Tree.Item>
+        ))}
+      </Tree.Root>,
+    );
+    act(() => {
+      screen.getByText('x').click();
+      screen.getByText('y').click();
+    });
+    expect(onExpandedChange).toHaveBeenLastCalledWith(['x', 'y']);
+    expect(item('x').getAttribute('aria-expanded')).toBe('true');
+    expect(item('y').getAttribute('aria-expanded')).toBe('true');
+  });
+});

@@ -101,6 +101,41 @@ function TreeCase({ copies, tick }: CaseProps) {
   );
 }
 
+/**
+ * The same tree, holding its own selection and open folders, as a tree does
+ * whose owner only listens: a click there renders the tree's own parts, not
+ * the owner's markup.
+ */
+function TreeOwnStateCase({ copies, tick }: CaseProps) {
+  return (
+    <Tree.Root aria-label="Files" defaultValue={null}>
+      {range(copies).map((index) =>
+        index % 3 === 0 ? (
+          <Tree.Item key={index} value={`folder-${index}`}>
+            <Tree.Label data-bench-trigger={index === 0 ? '' : undefined}>
+              <Tree.Icon>+</Tree.Icon>
+              Folder {index} {tick}
+            </Tree.Label>
+            <Tree.Group>
+              {[0, 1].map((file) => (
+                <Tree.Item key={file} value={`folder-${index}/file-${file}`}>
+                  <Tree.Label>File {file}.tsx</Tree.Label>
+                </Tree.Item>
+              ))}
+            </Tree.Group>
+          </Tree.Item>
+        ) : (
+          <Tree.Item key={index} value={`file-${index}`}>
+            <Tree.Label>
+              File {index} {tick}
+            </Tree.Label>
+          </Tree.Item>
+        ),
+      )}
+    </Tree.Root>
+  );
+}
+
 /** A side nav of `copies` links; every fourth sits in a branch with two sub-pages. */
 function NavCase({ copies, tick }: CaseProps) {
   return (
@@ -360,6 +395,12 @@ export const STRUCTURE = {
       id: 'tree-items',
       title: 'Tree of files and folders',
       Case: TreeCase,
+      interact: (container) => first<HTMLElement>(container, '[data-bench-trigger]').click(),
+    },
+    {
+      id: 'tree-own-state',
+      title: 'Tree of files and folders that holds its own state',
+      Case: TreeOwnStateCase,
       interact: (container) => first<HTMLElement>(container, '[data-bench-trigger]').click(),
     },
   ],

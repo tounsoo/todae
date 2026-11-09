@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ComponentPropsWithRef,
   type CSSProperties,
   type FocusEvent,
@@ -15,7 +16,12 @@ import {
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import {
+  useRovingFocus,
+  type RovingItemUserProps,
+  type RovingItemWire,
+  type UseRovingFocusResult,
+} from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
@@ -61,13 +67,69 @@ export type TreeGroupProps = {
 
 export type TreeIconProps = ComponentPropsWithRef<'span'>;
 
+// What items read from the root lives in this store, not in context, so a
+// change renders only the items it concerns: a click in a tree of a thousand
+// items renders the two or three it changes, not all of them.
+type TreeState = { selected: string | null; expanded: ReadonlySet<string>; tabStop: string | null };
+
+const SELECTED = 1;
+const EXPANDED = 2;
+const TAB_STOP = 4;
+
+type TreeStore = {
+  /** The item's flags as one number, so useSyncExternalStore compares them by value. */
+  flags: (value: string) => number;
+  /** Calls the listener when this item's flags may have changed. */
+  subscribe: (value: string, listener: () => void) => () => void;
+  /** Takes the root's latest state and tells only the items whose flags changed. */
+  set: (next: TreeState) => void;
+};
+
+function createTreeStore(initial: TreeState): TreeStore {
+  let state = initial;
+  const listeners = new Map<string, Set<() => void>>();
+  return {
+    flags: (value) =>
+      (state.selected === value ? SELECTED : 0) |
+      (state.expanded.has(value) ? EXPANDED : 0) |
+      (state.tabStop === value ? TAB_STOP : 0),
+    subscribe(value, listener) {
+      let set = listeners.get(value);
+      if (!set) listeners.set(value, (set = new Set()));
+      set.add(listener);
+      return () => {
+        set.delete(listener);
+        if (set.size === 0 && listeners.get(value) === set) listeners.delete(value);
+      };
+    },
+    set(next) {
+      const prev = state;
+      if (prev.selected === next.selected && prev.expanded === next.expanded && prev.tabStop === next.tabStop) return;
+      state = next;
+      const changed = new Set<string | null>([prev.selected, next.selected, prev.tabStop, next.tabStop]);
+      if (prev.expanded !== next.expanded) {
+        for (const value of prev.expanded) if (!next.expanded.has(value)) changed.add(value);
+        for (const value of next.expanded) if (!prev.expanded.has(value)) changed.add(value);
+      }
+      for (const value of changed) {
+        if (value === null) continue;
+        for (const listener of [...(listeners.get(value) ?? [])]) listener();
+      }
+    },
+  };
+}
+
+// Every field keeps its identity across the root's renders, so a click or a
+// key that only moves selection, focus or an open item renders no item
+// through context.
 type TreeContextValue = {
   selectable: boolean;
-  selected: string | null;
   select: (value: string) => void;
-  isExpanded: (value: string) => boolean;
   setExpanded: (value: string, open: boolean) => void;
-  roving: UseRovingFocusResult;
+  store: TreeStore;
+  /** The roving item props, whose tab stop the item takes from the store. */
+  itemProps: <P extends RovingItemUserProps>(value: string, props: P) => Omit<P, keyof RovingItemWire> & RovingItemWire;
+  isTypingAhead: UseRovingFocusResult['isTypingAhead'];
 };
 
 const TreeContext = /* @__PURE__ */ createContext<TreeContextValue | null>(null);
@@ -126,15 +188,21 @@ function Root({
         if (next !== null) onValueChange(next);
       }),
   );
-  const [expanded, setExpandedList] = useControlledState(expandedProp, defaultExpanded ?? EMPTY, onExpandedChange);
+  const [expanded, setExpandedList, latestExpanded] = useControlledState(
+    expandedProp,
+    defaultExpanded ?? EMPTY,
+    onExpandedChange,
+  );
+  // Builds on the latest write, so it keeps its identity across renders.
   const setExpanded = useCallback(
     (value: string, open: boolean) => {
-      if (expanded.includes(value) === open) return;
-      setExpandedList(open ? [...expanded, value] : expanded.filter((v) => v !== value));
+      const list = latestExpanded();
+      if (list.includes(value) === open) return;
+      setExpandedList(open ? [...list, value] : list.filter((v) => v !== value));
     },
-    [expanded, setExpandedList],
+    [latestExpanded, setExpandedList],
   );
-  const isExpanded = useCallback((value: string) => expanded.includes(value), [expanded]);
+  const open = useMemo(() => new Set(expanded), [expanded]);
   // The tab stop is the selected item, except while focus moves inside the
   // tree: then it is the focused item. Leaving the tree returns it to the
   // selected item, so focus enters on the selected item.
@@ -146,11 +214,28 @@ function Root({
     onActiveValueChange: setNavigating,
     onExpandedChange: setExpanded,
   });
+  const tabStop = roving.activeValue;
+  const [store] = useState(() => createTreeStore({ selected, expanded: open, tabStop }));
+  // After the root commits, the items whose flags changed render again,
+  // still before paint.
+  useLayoutEffect(() => store.set({ selected, expanded: open, tabStop }), [store, selected, open, tabStop]);
+  // getItemProps changes with the tab stop, which each item reads from the
+  // store instead, so items call the latest one through a stable function.
+  // The rest of what it returns keeps its value across renders.
+  const latestRoving = useRef(roving);
+  useLayoutEffect(() => {
+    latestRoving.current = roving;
+  });
+  const itemProps = useCallback(
+    <P extends RovingItemUserProps>(value: string, props: P) => latestRoving.current.getItemProps(value, {}, props),
+    [],
+  );
+  const { isTypingAhead } = roving;
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, selected, select: setSelected, isExpanded, setExpanded, roving }),
-    [isExpanded, roving, selectable, selected, setExpanded, setSelected],
+    () => ({ selectable, select: setSelected, setExpanded, store, itemProps, isTypingAhead }),
+    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, store],
   );
   return (
     <TreeContext.Provider value={ctx}>
@@ -191,7 +276,10 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   const labelId = `${id}-label`;
   const [groups, setGroups] = useState<number | null>(null);
   const branch = groups === null ? hasGroupChild(children) : groups > 0;
-  const expanded = branch && tree.isExpanded(value);
+  const { store } = tree;
+  const subscribe = useCallback((listener: () => void) => store.subscribe(value, listener), [store, value]);
+  const flags = useSyncExternalStore(subscribe, () => store.flags(value), () => store.flags(value));
+  const expanded = branch && (flags & EXPANDED) !== 0;
   const registerGroup = useCallback(() => {
     setGroups((n) => (n ?? 0) + 1);
     return () => setGroups((n) => (n ?? 1) - 1);
@@ -205,17 +293,18 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
     const active = li.ownerDocument.activeElement;
     if (active && active !== li && li.contains(active)) li.focus();
   }, [expanded]);
-  const { ref, ...item } = tree.roving.getItemProps(value, {}, props);
+  const { ref, ...item } = tree.itemProps(value, props);
   const refs = useComposedRefs(node, ref);
   const ctx = useMemo(
     () => ({ value, labelId, branch, expanded, disabled, registerGroup }),
     [branch, disabled, expanded, labelId, registerGroup, value],
   );
-  const selected = tree.selected === value;
+  const selected = (flags & SELECTED) !== 0;
   return (
     <ItemContext.Provider value={ctx}>
       <li
         {...item}
+        tabIndex={flags & TAB_STOP ? 0 : -1}
         ref={refs}
         role="treeitem"
         aria-labelledby={labelId}
@@ -232,7 +321,7 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
           if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
           if (event.key !== 'Enter' && event.key !== ' ') return;
           // A Space that joins a typeahead search is the search's.
-          if (event.key === ' ' && tree.roving.isTypingAhead(event)) return;
+          if (event.key === ' ' && tree.isTypingAhead(event)) return;
           event.preventDefault();
           if (!disabled && tree.selectable) tree.select(value);
           if (branch) tree.setExpanded(value, !expanded);
