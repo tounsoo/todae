@@ -86,7 +86,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 ## Dates and times
 
-`Calendar`, the date and time pickers and their text helpers use the global `Temporal` object, and Todae ships no polyfill for it. Where a browser lacks it, load one globally, such as `temporal-polyfill/global`. [Native platform](/platform) says which parts need it and what happens without it.
+`Calendar`, the date and time inputs of `Field`, such as `Field.DateInput`, and their text helpers use the global `Temporal` object, and Todae ships no polyfill for it. Where a browser lacks it, load one globally, such as `temporal-polyfill/global`. [Native platform](/platform) says which parts need it and what happens without it.
 
 ## Next
 

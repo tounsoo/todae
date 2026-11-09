@@ -73,7 +73,7 @@ Chrome is Todae's target, along with the other browsers on Chromium, such as Edg
 
 Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so its support follows those features rather than a list it maintains. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
-Calendar, `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput`, `Field.DateTimeInput`, `timeOptions`, `parseDate`, `parseDateRange`, `parseTime` and `parseDateTime` read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
+Calendar, `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput`, `Field.DateTimeInput`, `timeOptions`, `parseDate`, `parseDateRange`, `parseTime`, `parseDateTime` and `formatRelativeTime` read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
 
 Checked against public browser support data on 2026-10-16, these are the first versions that have the CSS anchor positioning Todae uses and every feature the Native platform page marks as needed:
 
