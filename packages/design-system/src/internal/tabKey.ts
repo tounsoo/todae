@@ -36,20 +36,23 @@ export type TabWatch = {
 /** Starts following Tab presses for one part. */
 export function watchTabKey(): TabWatch {
   if (watchers++ === 0) window.addEventListener('keydown', onKey, true);
-  // The first press this watch hears is the next one to reach the shared
-  // listener, unless a Tab press is still in an earlier window listener and
-  // has not reached it yet: a listener of the part's own, added now, would
-  // not have heard that one either.
+  // This watch hears the presses that reach the shared listener after it
+  // started, as a listener of the part's own added now would. The press
+  // being dispatched now is left out even when it has yet to reach the
+  // shared listener (it is in an earlier window listener): it is matched by
+  // its event and its count, since it may never reach the listener at all,
+  // and the same event object may be dispatched again later.
   const pending = window.event;
-  const late =
-    pending instanceof KeyboardEvent && pending.type === 'keydown' && pending.key === 'Tab' && pending !== current;
-  const first = presses + (late ? 2 : 1);
+  const skip =
+    pending instanceof KeyboardEvent && pending.type === 'keydown' && pending.key === 'Tab' ? pending : null;
+  const first = presses + 1;
   let stopped = false;
   return {
     tabbing: () =>
       !stopped &&
       current !== null &&
       presses >= first &&
+      !(current === skip && presses === first) &&
       current.eventPhase === Event.NONE &&
       !current.defaultPrevented,
     stop: () => {
