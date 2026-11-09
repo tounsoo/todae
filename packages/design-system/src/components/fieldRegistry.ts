@@ -45,9 +45,10 @@ export type StepperEntry = {
 /**
  * Everything a `Field.Root` knows about the parts inside it, in one place:
  * which elements are its controls and who sends its name, the text a counter
- * counts, the number input step buttons reach, and its value inputs. Parts
- * register once, from a ref or a layout effect, never during render (the one
- * exception is `seedText`, below), and every reader subscribes through
+ * counts, the number input step buttons reach, what a typed input holds,
+ * and its value inputs. Parts register once, from a ref or a layout effect,
+ * never during render (the two exceptions are `seedText` and `seedPicks`,
+ * below), and every reader subscribes through
  * `subscribe`. A reader asks a question whose answer is a boolean or a stable
  * object, so it re-renders only when that answer changes.
  */
@@ -111,176 +112,235 @@ export type FieldRegistry = {
   firstValueInput: () => HTMLInputElement | null;
 };
 
-function lastOf(entries: Iterable<FieldControlEntry>, role: FieldControlRole): HTMLElement | null {
-  let found: HTMLElement | null = null;
-  for (const entry of entries) if (entry.role === role) found = entry.node;
-  return found;
-}
-
-function lastText(texts: Map<object, TextEntry>): TextEntry | null {
-  let last: TextEntry | null = null;
-  for (const entry of texts.values()) last = entry;
+// Insertion order is mount order, so the last entry is the one that mounted last.
+function lastEntry<T>(entries: Map<object, T>): T | null {
+  let last: T | null = null;
+  for (const entry of entries.values()) last = entry;
   return last;
 }
 
 const sameText = (a: TextEntry | null, b: TextEntry) => a !== null && a.value === b.value && a.maxLength === b.maxLength;
 
-export function createFieldRegistry(): FieldRegistry {
-  const listeners = new Set<() => void>();
+// One per Field.Root. Its methods live on the prototype and each collection is made on first use, so a
+// field pays only for the parts it holds, however many kinds of part the registry serves.
+class Store implements FieldRegistry {
+  private listeners?: Set<() => void>;
   // Insertion order is mount order: a control that attaches again moves to the end.
-  const controls = new Map<object, FieldControlEntry>();
-  const valueInputs = new Set<HTMLInputElement>();
-  let counters = 0;
+  private controls?: Map<object, FieldControlEntry>;
+  private valueInputs?: Set<HTMLInputElement>;
+  private counters = 0;
   // Insertion order is mount order: the last entry is the one counted.
-  const texts = new Map<object, TextEntry>();
-  const children = new Set<FieldRegistry>();
-  let seed: TextEntry | null = null;
+  private texts?: Map<object, TextEntry>;
+  private children?: Set<FieldRegistry>;
+  private seed: TextEntry | null = null;
   // Whether a text was ever committed: from then on, render seeds nothing.
-  let committed = false;
-  let stepper: { owner: object; entry: StepperEntry } | null = null;
-  const picks = new Map<object, FieldPicks>();
-  let pickSeed: FieldPicks | null = null;
-  const pickListeners = new Set<() => void>();
-  const editableListeners = new Set<() => void>();
-  let picksCommitted = false;
-  const lastPicks = () => {
-    let last: FieldPicks | null = null;
-    for (const entry of picks.values()) last = entry;
-    return last;
+  private committed = false;
+  private stepperEntry: { owner: object; entry: StepperEntry } | null = null;
+  private pickEntries?: Map<object, FieldPicks>;
+  private pickSeed: FieldPicks | null = null;
+  private picksCommitted = false;
+  private pickListeners?: Set<() => void>;
+  private editableListeners?: Set<() => void>;
+
+  // An own property, so useSyncExternalStore can take it unbound.
+  readonly subscribe = (listener: () => void) => {
+    (this.listeners ??= new Set()).add(listener);
+    return () => {
+      this.listeners!.delete(listener);
+    };
   };
-  const notify = () => {
-    for (const listener of listeners) listener();
-  };
-  return {
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    setControl(owner, entry) {
-      const prev = controls.get(owner);
-      if (!entry) {
-        if (!prev) return;
-        controls.delete(owner);
-      } else if (prev?.node === entry.node) {
-        if (prev.role === entry.role && prev.takesName === entry.takesName && prev.toggle === entry.toggle) return;
-        controls.set(owner, entry);
-      } else {
-        controls.delete(owner);
-        controls.set(owner, entry);
-      }
-      notify();
-    },
-    hasControl: () => [...controls.values()].some((entry) => entry.role === 'control'),
-    namedBy: (except) => [...controls].some(([owner, entry]) => owner !== except && entry.takesName),
-    focusTarget: () => lastOf(controls.values(), 'control') ?? lastOf(controls.values(), 'picker'),
-    toggleFor(node) {
-      if (!node) return undefined;
-      for (const entry of controls.values()) if (entry.node === node) return entry.toggle;
-      for (const child of children) {
+
+  private notify() {
+    if (this.listeners) for (const listener of this.listeners) listener();
+  }
+
+  setControl(owner: object, entry: FieldControlEntry | null) {
+    const controls = (this.controls ??= new Map());
+    const prev = controls.get(owner);
+    if (!entry) {
+      if (!prev) return;
+      controls.delete(owner);
+    } else if (prev?.node === entry.node) {
+      if (prev.role === entry.role && prev.takesName === entry.takesName && prev.toggle === entry.toggle) return;
+      controls.set(owner, entry);
+    } else {
+      controls.delete(owner);
+      controls.set(owner, entry);
+    }
+    this.notify();
+  }
+
+  hasControl() {
+    return this.controls ? [...this.controls.values()].some((entry) => entry.role === 'control') : false;
+  }
+
+  namedBy(except?: object) {
+    return this.controls ? [...this.controls].some(([owner, entry]) => owner !== except && entry.takesName) : false;
+  }
+
+  focusTarget() {
+    return this.lastOf('control') ?? this.lastOf('picker');
+  }
+
+  toggleFor(node: Element | null | undefined): (() => void) | undefined {
+    if (!node) return undefined;
+    if (this.controls) for (const entry of this.controls.values()) if (entry.node === node) return entry.toggle;
+    if (this.children)
+      for (const child of this.children) {
         const toggle = child.toggleFor(node);
         if (toggle) return toggle;
       }
-      return undefined;
-    },
-    addChild(child) {
-      children.add(child);
-      return () => {
-        children.delete(child);
-      };
-    },
-    addCounter() {
-      counters += 1;
-      notify();
-      return () => {
-        counters -= 1;
-        notify();
-      };
-    },
-    hasCounter: () => counters > 0,
-    publishText(owner, entry) {
-      if (!entry) {
-        if (!texts.delete(owner)) return;
-      } else {
-        const prev = texts.get(owner) ?? null;
-        if (prev && sameText(prev, entry)) return;
-        // The seed the server rendered with, when it matches, so hydration's markup stays the same object.
-        texts.set(owner, sameText(seed, entry) ? seed! : entry);
-        committed = true;
-      }
-      seed = null;
-      notify();
-    },
-    text: () => lastText(texts),
-    seedText(entry) {
-      if (committed || sameText(seed, entry)) return;
-      seed = entry;
-    },
-    serverText: () => lastText(texts) ?? seed,
-    publishStepper(owner, entry) {
-      const replaced = stepper !== null && stepper.owner !== owner;
-      if (stepper?.owner === owner && stepper.entry === entry) return false;
-      stepper = { owner, entry };
-      notify();
-      return replaced;
-    },
-    withdrawStepper(owner) {
-      if (stepper?.owner !== owner) return;
-      stepper = null;
-      notify();
-    },
-    stepper: () => stepper?.entry ?? null,
-    publishPicks(owner, entry) {
-      if (!entry) {
-        if (!picks.delete(owner)) return;
-      } else {
-        if (picks.get(owner) === entry) return;
-        picks.set(owner, entry);
-        picksCommitted = true;
-      }
-      pickSeed = null;
-      notify();
-    },
-    picks: lastPicks,
-    seedPicks(entry) {
-      if (!picksCommitted) pickSeed = entry;
-    },
-    serverPicks: () => lastPicks() ?? pickSeed,
-    onPick(listener) {
-      pickListeners.add(listener);
-      return () => {
-        pickListeners.delete(listener);
-      };
-    },
-    picked() {
-      for (const listener of [...pickListeners]) listener();
-    },
-    onEditableChange(listener) {
-      editableListeners.add(listener);
-      return () => {
-        editableListeners.delete(listener);
-      };
-    },
-    editableChanged() {
-      for (const listener of [...editableListeners]) listener();
-    },
-    lastPicker: () => lastOf(controls.values(), 'picker'),
-    addValueInput(input) {
-      valueInputs.add(input);
-      return () => {
-        valueInputs.delete(input);
-      };
-    },
-    firstValueInput() {
-      let first: HTMLInputElement | null = null;
-      for (const input of valueInputs) {
+    return undefined;
+  }
+
+  addChild(child: FieldRegistry) {
+    const children = (this.children ??= new Set());
+    children.add(child);
+    return () => {
+      children.delete(child);
+    };
+  }
+
+  addCounter() {
+    this.counters += 1;
+    this.notify();
+    return () => {
+      this.counters -= 1;
+      this.notify();
+    };
+  }
+
+  hasCounter() {
+    return this.counters > 0;
+  }
+
+  publishText(owner: object, entry: TextEntry | null) {
+    if (!entry) {
+      if (!this.texts?.delete(owner)) return;
+    } else {
+      const texts = (this.texts ??= new Map());
+      const prev = texts.get(owner) ?? null;
+      if (prev && sameText(prev, entry)) return;
+      // The seed the server rendered with, when it matches, so hydration's markup stays the same object.
+      texts.set(owner, sameText(this.seed, entry) ? this.seed! : entry);
+      this.committed = true;
+    }
+    this.seed = null;
+    this.notify();
+  }
+
+  text() {
+    return this.texts ? lastEntry(this.texts) : null;
+  }
+
+  seedText(entry: TextEntry) {
+    if (this.committed || sameText(this.seed, entry)) return;
+    this.seed = entry;
+  }
+
+  serverText() {
+    return this.text() ?? this.seed;
+  }
+
+  publishStepper(owner: object, entry: StepperEntry) {
+    const stepper = this.stepperEntry;
+    const replaced = stepper !== null && stepper.owner !== owner;
+    if (stepper?.owner === owner && stepper.entry === entry) return false;
+    this.stepperEntry = { owner, entry };
+    this.notify();
+    return replaced;
+  }
+
+  withdrawStepper(owner: object) {
+    if (this.stepperEntry?.owner !== owner) return;
+    this.stepperEntry = null;
+    this.notify();
+  }
+
+  stepper() {
+    return this.stepperEntry?.entry ?? null;
+  }
+
+  publishPicks(owner: object, entry: FieldPicks | null) {
+    if (!entry) {
+      if (!this.pickEntries?.delete(owner)) return;
+    } else {
+      const picks = (this.pickEntries ??= new Map());
+      if (picks.get(owner) === entry) return;
+      picks.set(owner, entry);
+      this.picksCommitted = true;
+    }
+    this.pickSeed = null;
+    this.notify();
+  }
+
+  picks() {
+    return this.pickEntries ? lastEntry(this.pickEntries) : null;
+  }
+
+  seedPicks(entry: FieldPicks) {
+    if (!this.picksCommitted) this.pickSeed = entry;
+  }
+
+  serverPicks() {
+    return this.picks() ?? this.pickSeed;
+  }
+
+  onPick(listener: () => void) {
+    const listeners = (this.pickListeners ??= new Set());
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+
+  picked() {
+    if (this.pickListeners) for (const listener of [...this.pickListeners]) listener();
+  }
+
+  onEditableChange(listener: () => void) {
+    const listeners = (this.editableListeners ??= new Set());
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+
+  editableChanged() {
+    if (this.editableListeners) for (const listener of [...this.editableListeners]) listener();
+  }
+
+  lastPicker() {
+    return this.lastOf('picker');
+  }
+
+  private lastOf(role: FieldControlRole): HTMLElement | null {
+    let found: HTMLElement | null = null;
+    if (this.controls) for (const entry of this.controls.values()) if (entry.role === role) found = entry.node;
+    return found;
+  }
+
+  addValueInput(input: HTMLInputElement) {
+    const inputs = (this.valueInputs ??= new Set());
+    inputs.add(input);
+    return () => {
+      inputs.delete(input);
+    };
+  }
+
+  firstValueInput() {
+    let first: HTMLInputElement | null = null;
+    if (this.valueInputs)
+      for (const input of this.valueInputs) {
         if (!input.isConnected) continue;
         if (!first || first.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_PRECEDING) first = input;
       }
-      return first;
-    },
-  };
+    return first;
+  }
+}
+
+export function createFieldRegistry(): FieldRegistry {
+  return new Store();
 }
 
 /**
