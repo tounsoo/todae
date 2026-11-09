@@ -121,11 +121,13 @@
     }
   }
 
-  /* Stretched to the room, since a percentage height reads the whole
-     screen, not the room on one side. */
+  /* Stretched to the room. A popover's own height is fit-content, which
+     neither a stretch nor a percentage of the room can shrink, so the try
+     sets it back to auto. */
   @position-try --todae-popover-fit {
     position-area: self-block-end span-self-inline-end;
     margin-block: var(--todae-popover-offset);
+    height: auto;
     align-self: stretch;
     min-height: var(--todae-popover-max-height);
   }

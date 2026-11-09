@@ -728,8 +728,11 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Choose date and time' });
     await waitFor(() => expect(dialog.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
     const box = dialog.getBoundingClientRect();
-    expect(box.top).toBeGreaterThanOrEqual(0);
-    expect(box.bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+    // What placed it, for a failure in an engine this machine can't run.
+    const css = getComputedStyle(dialog);
+    const placed = `top ${box.top}, height ${box.height}, room ${window.innerHeight}, height ${css.height}, align-self ${css.alignSelf}, position-area ${css.getPropertyValue('position-area')}, min ${css.minHeight}, max ${css.maxHeight}`;
+    expect(box.top, placed).toBeGreaterThanOrEqual(0);
+    expect(box.bottom, placed).toBeLessThanOrEqual(window.innerHeight + 1);
     expect(dialog.scrollHeight).toBeGreaterThan(dialog.clientHeight);
     // The last time, under the calendar and past the room, scrolls into view and picks.
     await userEvent.click(screen.getByRole('option', { name: '11:45 PM' }));
