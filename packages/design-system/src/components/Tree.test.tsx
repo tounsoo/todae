@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, startTransition, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { flushSync } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
@@ -408,6 +408,53 @@ describe('Tree writes', () => {
     });
     expect(item('src').getAttribute('aria-expanded')).toBe('true');
     expect(onExpandedChange).toHaveBeenLastCalledWith(['src']);
+  });
+
+  it.each(['onClick', 'onClickCapture'] as const)(
+    'opens as the item showed at the click when a label %s handler opens it first',
+    (handler) => {
+      function Owner() {
+        const [expanded, setExpanded] = useState<string[]>([]);
+        const open = () => flushSync(() => setExpanded((list) => (list.includes('docs') ? list : [...list, 'docs'])));
+        return (
+          <Tree.Root aria-label="Files" expanded={expanded} onExpandedChange={setExpanded}>
+            <Tree.Item value="docs">
+              <Tree.Label {...{ [handler]: open }}>docs</Tree.Label>
+              <Tree.Group>
+                <Tree.Item value="docs/intro.md">
+                  <Tree.Label>intro.md</Tree.Label>
+                </Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+          </Tree.Root>
+        );
+      }
+      render(<Owner />);
+      fireEvent.click(screen.getByText('docs'));
+      expect(item('docs').getAttribute('aria-expanded')).toBe('true');
+    },
+  );
+
+  it('opens and closes from a label rendered through a portal', () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    render(
+      <Tree.Root aria-label="Files">
+        <Tree.Item value="docs" data-testid="docs">
+          {createPortal(<Tree.Label>docs</Tree.Label>, host)}
+          <Tree.Group>
+            <Tree.Item value="docs/intro.md">
+              <Tree.Label>intro.md</Tree.Label>
+            </Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+      </Tree.Root>,
+    );
+    const docs = screen.getByTestId('docs');
+    fireEvent.click(screen.getByText('docs'));
+    expect(docs.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(screen.getByText('docs'));
+    expect(docs.getAttribute('aria-expanded')).toBe('false');
+    host.remove();
   });
 });
 

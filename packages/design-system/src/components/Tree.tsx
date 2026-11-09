@@ -98,6 +98,8 @@ type ItemContextValue = {
   disabled: boolean;
   /** Tree.Group calls this while it is mounted, which makes the item a branch. */
   registerGroup: () => () => void;
+  /** Whether the item showed open when it last committed. */
+  isOpen: () => boolean;
 };
 
 const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
@@ -251,9 +253,14 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   }, [expanded]);
   const { ref, ...item } = tree.itemProps(value, props);
   const refs = useComposedRefs(node, ref);
+  const shownOpen = useRef(expanded);
+  useLayoutEffect(() => {
+    shownOpen.current = expanded;
+  }, [expanded]);
+  const isOpen = useCallback(() => shownOpen.current, []);
   const ctx = useMemo(
-    () => ({ value, labelId, branch, disabled, registerGroup }),
-    [branch, disabled, labelId, registerGroup, value],
+    () => ({ value, labelId, branch, disabled, registerGroup, isOpen }),
+    [branch, disabled, isOpen, labelId, registerGroup, value],
   );
   const selected = state.selected === value;
   return (
@@ -291,10 +298,13 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   );
 }
 
-function Label({ children, className, onClick, ...props }: TreeLabelProps) {
+function Label({ children, className, onClick, onClickCapture, ...props }: TreeLabelProps) {
   const tree = useTree('Label');
   const item = useItem('Label');
   const { chevron } = useGlyphs();
+  // How the item showed as the click began, before any handler, the
+  // consumer's included, renders it: the click opens or closes from there.
+  const openAtClick = useRef(false);
   return (
     <div
       {...props}
@@ -302,13 +312,13 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       className={cx(styles.label, className)}
       data-todae-focus-ring=""
       // A click selects the item and opens or closes a branch.
-      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLDivElement>) => {
-        // Whether the item shows open, read before the select, which may
-        // render it, and from the page, so the label needn't render as the
-        // item opens or closes.
-        const open = event.currentTarget.closest('[role="treeitem"]')?.getAttribute('aria-expanded') === 'true';
+      onClickCapture={(event: MouseEvent<HTMLDivElement>) => {
+        openAtClick.current = item.isOpen();
+        onClickCapture?.(event);
+      }}
+      onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        if (item.branch) tree.setExpanded(item.value, !open);
+        if (item.branch) tree.setExpanded(item.value, !openAtClick.current);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">
