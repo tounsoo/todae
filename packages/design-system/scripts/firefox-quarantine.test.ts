@@ -126,8 +126,8 @@ describe('the Firefox quarantine list', () => {
   });
 });
 
-/** The lines of a file whose code, leaving out comments, names Firefox or Gecko in any way, such as `'firefox'` or `isFirefox`. */
-function firefoxLines(source: string): { line: number; text: string }[] {
+/** Each line of a file, with its comments blanked out. */
+function codeLines(source: string): { line: number; text: string }[] {
   // TypeScript's parser tells a comment from a string, a regex, a template or JSX text.
   const file = ts.createSourceFile('file.tsx', source, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
   const comments: ts.CommentRange[] = [];
@@ -142,11 +142,46 @@ function firefoxLines(source: string): { line: number; text: string }[] {
   // JSX text has no comments, though it can read like one.
   const inText = ({ pos }: ts.CommentRange) => text.some((node) => pos >= node.pos && pos < node.end);
   for (const { pos, end } of comments.filter((comment) => !inText(comment))) code = code.slice(0, pos) + code.slice(pos, end).replace(/[^\n]/g, ' ') + code.slice(end);
-  return code
-    .split('\n')
-    .map((text, index) => ({ line: index + 1, text: text.trim() }))
-    .filter(({ text }) => /firefox|gecko/i.test(text));
+  return code.split('\n').map((text, index) => ({ line: index + 1, text: text.trim() }));
 }
+
+/** Names that a line naming Firefox gives a value, such as `const dragIt = it.skipIf(…)`, so their uses treat Firefox apart too. */
+const declared = (text: string) => [...text.matchAll(/\b(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g)].map((match) => match[1]!);
+
+/**
+ * The lines of these files that treat Firefox apart: code, not comments, that
+ * names Firefox or Gecko in any way, such as `'firefox'` or `isFirefox`, or
+ * uses a name such a line declares, in its own file or, when exported, in any.
+ */
+function firefoxLinesIn(files: { file: string; source: string }[]) {
+  const lines = files.flatMap(({ file, source }) => codeLines(source).map((line) => ({ file, ...line })));
+  const shared = new Set<string>();
+  const local = new Map<string, Set<string>>();
+  const pattern = (names: Set<string>) => (names.size ? new RegExp(`(?<![\\w$.])(?:${[...names].join('|')})(?![\\w$])`) : null);
+  const marked = new Set<(typeof lines)[number]>();
+  for (let grew = true; grew; ) {
+    grew = false;
+    const uses = new Map([...new Set(lines.map(({ file }) => file))].map((file) => [file, pattern(new Set([...shared, ...(local.get(file) ?? [])]))]));
+    for (const line of lines) {
+      if (marked.has(line) || !(/firefox|gecko/i.test(line.text) || uses.get(line.file)?.test(line.text))) continue;
+      marked.add(line);
+      const names = /^export\b/.test(line.text) ? shared : (local.get(line.file) ?? local.set(line.file, new Set()).get(line.file)!);
+      for (const name of declared(line.text)) names.add(name);
+      grew = true;
+    }
+  }
+  return lines.filter((line) => marked.has(line));
+}
+
+const firefoxLines = (source: string) => firefoxLinesIn([{ file: 'file.tsx', source }]).map(({ line, text }) => ({ line, text }));
+
+it('follows an exported name into other files, and a local one only in its own', () => {
+  const found = firefoxLinesIn([
+    { file: 'engine.ts', source: "export const noDrag = server.browser === 'firefox';\nconst at = server.browser === 'firefox' ? 1 : 2;" },
+    { file: 'a.tsx', source: "it.skipIf(noDrag)('a', () => {});\nconst at = 3;\nexpect(at).toBe(3);" },
+  ]);
+  expect(found.map(({ file, line }) => `${file}:${line}`)).toEqual(['engine.ts:1', 'engine.ts:2', 'a.tsx:1']);
+});
 
 describe('Firefox branches in browser tests', () => {
   it('finds every line of code that names Firefox, and none in a comment', () => {
@@ -169,8 +204,11 @@ describe('Firefox branches in browser tests', () => {
       "const quoted = /^['\"]/; // Firefox quotes a mention the same way",
       "const Note = () => <p>Don't stop {/* Firefox needs nothing here */}</p>;",
       'const Url = () => <p>// Firefox, as text</p>;',
+      "const dragIt = it.skipIf(server.browser === 'firefox');",
+      "dragIt('through an alias', () => {});",
+      "it.runIf(server.browser === 'chromium')('another engine only, again', () => {});",
     ].join('\n');
-    expect(firefoxLines(source).map(({ line }) => line)).toEqual([1, 2, 7, 9, 10, 14, 15, 18]);
+    expect(firefoxLines(source).map(({ line }) => line)).toEqual([1, 2, 7, 9, 10, 14, 15, 18, 19, 20]);
     expect(firefoxLines(source)[4]!.text).toBe("it.skipIf(server.browser === 'firefox')(");
   });
 
@@ -178,7 +216,7 @@ describe('Firefox branches in browser tests', () => {
   const files = (readdirSync(root, { recursive: true }) as string[])
     .map((name) => name.split('\\').join('/'))
     .filter((name) => /\.browser\.test\.tsx?$/.test(name) || /^test\/.+\.tsx?$/.test(name));
-  const found = files.flatMap((name) => firefoxLines(readFileSync(join(root, name), 'utf8')).map((line) => ({ file: `src/${name}`, ...line })));
+  const found = firefoxLinesIn(files.map((name) => ({ file: `src/${name}`, source: readFileSync(join(root, name), 'utf8') })));
   // Each entry names one line, so a second line like one already listed needs its own entry and reason.
   const unused = [...firefoxBranches];
   const unlisted = found.filter(({ file, text }) => {

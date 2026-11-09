@@ -228,7 +228,7 @@ it('takes the side in a horizontal list from the text direction', () => {
   expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
 });
 
-it('arms nothing while disabled, and drops the arming when disabled after a press', () => {
+it('arms nothing while disabled, and lets no item armed before that drag', () => {
   const { rerender } = render(<List />);
   fireEvent.pointerDown(screen.getByTestId('handle-A'), { button: 0, pointerType: 'mouse' });
   rerender(<List disabled />);
@@ -290,6 +290,21 @@ it('takes the side in a horizontal finger drag from the text direction', () => {
   const t = touch('A', 'horizontal');
   t.move('C', 'end');
   expect(item('C').getAttribute('data-drop')).toBe('before');
+});
+
+it('keeps a finger drag through another finger lifting or cancelling', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const t = touch('A');
+  t.move('C', 'end');
+  t.up('B', 'end', 9);
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 9, pointerType: 'touch' }));
+  });
+  expect(item('A').getAttribute('data-dragging')).toBe('');
+  expect(onMove).not.toHaveBeenCalled();
+  t.up('C', 'end');
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
 });
 
 it('follows only the finger that pressed', () => {
