@@ -108,40 +108,57 @@ export function hasMoreKeysThan(value: unknown, max: number): boolean {
  */
 export const MAX_REQUEST_ELEMENTS = 2 * TOOL_INPUT_ELEMENTS;
 
+/**
+ * The longest object key a request may hold outside build_tokens files. zod repeats a key in the path of every
+ * issue under it, so a long key multiplies the size of an error; the longest real key is a 120-character token path.
+ */
+export const MAX_REQUEST_KEY_LENGTH = 128;
+
 /** Why a parsed body is refused before the server sees it. */
-export type BodyProblem = 'deep' | 'elements' | 'file-elements';
+export type BodyProblem = 'deep' | 'elements' | 'key' | 'file-elements' | 'file-bytes';
 
 /**
- * Walks a parsed body once, without recursion, and stops at the first problem: nesting past MAX_REQUEST_DEPTH,
- * more than MAX_REQUEST_ELEMENTS elements outside `files`, or more than BUILD_TOOL_INPUT_ELEMENTS inside them.
+ * Walks a parsed body once, without recursion, and stops at the first problem: nesting past MAX_REQUEST_DEPTH;
+ * outside `files`, more than MAX_REQUEST_ELEMENTS elements or a key longer than MAX_REQUEST_KEY_LENGTH; inside
+ * them, more than BUILD_TOOL_INPUT_ELEMENTS elements or more than MAX_BYTES of JSON. The size inside is a lower
+ * bound on the files' compact JSON, which build_tokens itself only measures after the SDK has walked every key.
  * `files` holds the files objects of the request's build_tokens calls. Returns null when the body may go on.
  */
 export function inspectBody(body: unknown, files: ReadonlySet<object>): BodyProblem | null {
   let outside = 0;
   let inside = 0;
+  let insideBytes = 0;
   const stack: [unknown, number, boolean][] = [[body, 0, false]];
   while (stack.length > 0) {
     const [node, depth, inFiles] = stack.pop()!;
     if (node === null || typeof node !== 'object') continue;
     if (depth >= MAX_REQUEST_DEPTH) return 'deep';
-    const childInFiles = inFiles || files.has(node);
+    const filesNode = files.has(node);
+    const childInFiles = inFiles || filesNode;
     // Children are visited one at a time rather than copied out first, so a huge object stops at the cap.
-    const visit = (child: unknown): BodyProblem | null => {
+    const visit = (child: unknown, key: string | null): BodyProblem | null => {
       if (childInFiles) {
         if (++inside > BUILD_TOOL_INPUT_ELEMENTS) return 'file-elements';
-      } else if (++outside > MAX_REQUEST_ELEMENTS) return 'elements';
+        // A file's name is not part of its JSON, so only keys below the files object count.
+        if (key !== null && !filesNode) insideBytes += key.length + 3;
+        insideBytes += typeof child === 'string' ? child.length + 2 : child !== null && typeof child === 'object' ? 2 : 1;
+        if (insideBytes > MAX_BYTES) return 'file-bytes';
+      } else {
+        if (++outside > MAX_REQUEST_ELEMENTS) return 'elements';
+        if (key !== null && key.length > MAX_REQUEST_KEY_LENGTH) return 'key';
+      }
       if (child !== null && typeof child === 'object') stack.push([child, depth + 1, childInFiles]);
       return null;
     };
     if (Array.isArray(node)) {
       for (const child of node) {
-        const problem = visit(child);
+        const problem = visit(child, null);
         if (problem) return problem;
       }
     } else {
       for (const key in node) {
         if (!Object.prototype.hasOwnProperty.call(node, key)) continue;
-        const problem = visit((node as Record<string, unknown>)[key]);
+        const problem = visit((node as Record<string, unknown>)[key], key);
         if (problem) return problem;
       }
     }

@@ -1,10 +1,11 @@
 import { afterAll, describe, expect, it, vi } from 'vitest';
-import { MAX_BYTES } from '../../../lib/docs-mcp/build';
+import { MAX_BYTES, MAX_FILES } from '../../../lib/docs-mcp/build';
 import {
   BUILD_TOOL_INPUT_ELEMENTS,
   MAX_REQUEST_BYTES,
   MAX_REQUEST_DEPTH,
   MAX_REQUEST_ELEMENTS,
+  MAX_REQUEST_KEY_LENGTH,
   MAX_REQUEST_TOOL_CALLS,
   TOOL_INPUT_ELEMENTS,
 } from '../../../lib/docs-mcp/limits';
@@ -150,8 +151,10 @@ describe('docs MCP route', () => {
 
   it('refuses a build_tokens call with too many files in one short error', async () => {
     const files = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`${'k'.repeat(201)}${i}.json`, 0]));
-    const text = await post(call(12, 'build_tokens', { files }));
-    expect(text).toContain('At most 64 files');
+    const response = await send(JSON.stringify(call(12, 'build_tokens', { files })));
+    expect(response.status).toBe(400);
+    const text = await response.text();
+    expect(text).toContain(`build_tokens takes at most ${MAX_FILES} files`);
     expect(text.length).toBeLessThan(2000);
   });
 
@@ -205,5 +208,25 @@ describe('docs MCP route', () => {
       expect(response.status).toBe(400);
       expect(await response.json()).toMatchObject({ error: { message } });
     }
+  });
+
+  it('refuses files over the byte budget before the server walks their keys', async () => {
+    const keys = Object.fromEntries(Array.from({ length: 120_000 }, (_, i) => [`k${i}`, 0]));
+    const response = await send(JSON.stringify(call(33, 'build_tokens', { files: { 'x.json': keys } })));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { message: `The files in this request total more than ${MAX_BYTES / 1024} KB` } });
+  });
+
+  it('refuses a long object key outside build_tokens files, which zod would repeat in every issue', async () => {
+    const long = 'a'.repeat(MAX_REQUEST_KEY_LENGTH + 1);
+    const response = await send(JSON.stringify(call(34, 'scaffold_design_system', { name: 'acme', colors: { light: { [long]: [0.5, 0.1, 120] } } })));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { message: `Request holds an object key longer than ${MAX_REQUEST_KEY_LENGTH} characters outside build_tokens files` } });
+  });
+
+  it('says why a build_tokens call mixed with other tools gets no room for its files', async () => {
+    const response = await send(JSON.stringify([call(35, 'build_tokens', { files: { 'x.json': Array(3000).fill(0) } }), call(36, 'list_components', {})]));
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.message).toContain('only get their own limit when every tool call in the request is build_tokens');
   });
 });
