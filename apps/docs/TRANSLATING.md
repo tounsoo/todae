@@ -45,7 +45,7 @@ Edit the locale's entry in `lib/i18n/dictionaries.ts`. Every string is required 
 
 ## Translate prop descriptions
 
-Props tables come from the design system's JSDoc, in English. Their translations live in `lib/i18n/props/<locale>.json`, by component and prop. Each entry keeps the English it was translated from:
+Props tables come from each part's `*.meta.ts` in `packages/design-system`, in English, through `pnpm schema`. Their translations live in `lib/i18n/props/<locale>.json`, by component and prop. Each entry keeps the English it was translated from:
 
 ```json
 "Button.Root": {
@@ -56,7 +56,7 @@ Props tables come from the design system's JSDoc, in English. Their translations
 }
 ```
 
-A test fails when a prop a page shows has no translation, or when its English has changed since it was translated, so every prop stays translated. When you change a prop's JSDoc in `packages/design-system`, run `pnpm schema` and update each locale's entry in the same pull request: copy the new English to `en` and fix the translation. (An entry that is somehow out of date shows the current English, never an outdated translation.)
+A test fails when a prop a page shows has no translation, or when its English has changed since it was translated, so every prop stays translated. When you change a prop's description in its `*.meta.ts`, run `pnpm schema` and update each locale's entry in the same pull request: copy the new English to `en` and fix the translation. (An entry that is somehow out of date shows the current English, never an outdated translation.)
 
 ## Add a language
 

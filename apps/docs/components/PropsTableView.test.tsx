@@ -120,7 +120,7 @@ describe('PropsTableView', () => {
       />,
     );
     const [, tone, children] = screen.getAllByRole('row');
-    // The default is untranslated JSDoc text, so it is marked English on a Korean page.
+    // The default is untranslated `*.meta.ts` text, so it is marked English on a Korean page.
     expect(within(tone!).getByText('"neutral"').getAttribute('lang')).toBe('en');
     expect(within(tone!).getByRole('rowheader').textContent).toBe('tone 필수');
     expect(within(tone!).getAllByRole('cell')[1]!.textContent).toBe('한국어 설명.기본값: "neutral"');

@@ -1140,9 +1140,10 @@
   },
   "utilities/theme-override-style": {
     "# themeOverrideStyle": "dfaddd7d2d47",
+    "## Accessible composition": "724f43eb733c",
     "## When to use": "ef727144bb95",
     "## Props": "35105b6c4f4f",
-    "(section order)": "498547eab27f"
+    "(section order)": "d3cc1f1da8e8"
   },
   "utilities/time-options": {
     "(top)": "82ad626d9136",
