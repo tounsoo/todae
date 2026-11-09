@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
-import { Profiler, useRef, useState } from 'react';
+import { createContext, Profiler, use, useRef, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heldModals } from '../overlay/modalStack.js';
@@ -867,6 +867,37 @@ describe('Toast renders', () => {
     fireEvent.pointerEnter(screen.getByRole('region'), { pointerType: 'mouse' });
     expect(screen.getByRole('region').hasAttribute('data-expanded')).toBe(true);
     expect(counts.size).toBe(0);
+  });
+
+  it('lets the render function read context, per toast, as it changes', () => {
+    const Unit = createContext('USD');
+    // At module scope in an app, so it keeps its identity across renders.
+    const UnitToast = (toast: { title?: ReactNode }) => {
+      const unit = use(Unit);
+      return (
+        <Toast.Root>
+          <Toast.Title>
+            {toast.title} {unit}
+          </Toast.Title>
+        </Toast.Root>
+      );
+    };
+    const toaster = createToaster({ duration: Infinity });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const ui = (unit: string) => (
+      <Unit.Provider value={unit}>
+        <Toast.Region toaster={toaster}>{UnitToast}</Toast.Region>
+      </Unit.Provider>
+    );
+    const { rerender } = render(ui('USD'));
+    act(() => void toaster.add({ title: 'Tax' }));
+    act(() => void toaster.add({ title: 'Total' }));
+    expect(screen.getByText('Tax USD')).toBeTruthy();
+    rerender(ui('EUR'));
+    expect(screen.getByText('Tax EUR')).toBeTruthy();
+    expect(screen.getByText('Total EUR')).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it('renders every toast again with a new render function', () => {

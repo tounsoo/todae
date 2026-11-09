@@ -81,10 +81,18 @@ const NO_TOASTS: readonly never[] = [];
 const noToasts = () => NO_TOASTS;
 
 
-// Memoized, and it calls the region's render function itself, so a region
-// render for one toast, such as a new one arriving, renders no other toast.
-// A change to the timers' pause renders each toast's Item alone, not its
-// content.
+// The region's render function runs here, as its own component per toast:
+// a hook or context it reads belongs to that toast, and it renders again
+// only for a new toast record or a new render function, not when the timers
+// pause or another toast comes or goes.
+function ToastContent<T extends object>({ render, toast }: { render: (toast: ToastRecord<T>) => ReactNode; toast: ToastRecord<T> }) {
+  return render(toast);
+}
+
+const Content = /* @__PURE__ */ memo(ToastContent) as typeof ToastContent;
+
+// Memoized, so a region render for one toast, such as a new one arriving,
+// renders no other toast.
 function ToastItem<T extends object>({
   toast,
   toaster,
@@ -155,7 +163,6 @@ function ToastItem<T extends object>({
 
   const dismiss = useCallback(() => toaster.dismiss(id), [toaster, id]);
   const item = useMemo(() => ({ toast: toast as ToastRecord, dismiss }), [toast, dismiss]);
-  const content = useMemo(() => render(toast), [render, toast]);
 
   // Escape inside the toast is the toast's, not a dialog's or popover's
   // behind it, also while it leaves. A layer inside it, such as a button's
@@ -181,7 +188,9 @@ function ToastItem<T extends object>({
       data-entered={entered ? '' : undefined}
       data-todae-exiting={exiting ? '' : undefined}
     >
-      <ItemContext.Provider value={item}>{content}</ItemContext.Provider>
+      <ItemContext.Provider value={item}>
+        <Content render={render} toast={toast} />
+      </ItemContext.Provider>
     </li>
   );
 }

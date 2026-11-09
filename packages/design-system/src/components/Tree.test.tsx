@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Profiler, useState, type ReactNode } from 'react';
+import { Profiler, useLayoutEffect, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
@@ -410,6 +410,40 @@ describe('Tree renders', () => {
     expect(rendered(counts)).toEqual(['a', 'b']);
   });
 
+  it('renders no label inside an item as it opens or closes', () => {
+    const labels = new Map<string, number>();
+    const label = (name: string) => (
+      <Profiler id={name} onRender={(id) => void labels.set(id, (labels.get(id) ?? 0) + 1)}>
+        <Tree.Label>{name}</Tree.Label>
+      </Profiler>
+    );
+    render(
+      <Tree.Root aria-label="Files">
+        <Tree.Item value="a">
+          {label('a')}
+          <Tree.Group>
+            <Tree.Item value="a1">
+              {label('a1')}
+              <Tree.Group>
+                <Tree.Item value="a1x">{label('a1x')}</Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+            <Tree.Item value="a2">{label('a2')}</Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+        <Tree.Item value="b">{label('b')}</Tree.Item>
+      </Tree.Root>,
+    );
+    labels.clear();
+    fireEvent.click(screen.getByText('a'));
+    expect(item('a').getAttribute('aria-expanded')).toBe('true');
+    expect(item('a1').closest('[role="group"]')?.hasAttribute('hidden')).toBe(false);
+    expect([...labels.keys()]).toEqual([]);
+    fireEvent.click(screen.getByText('a'));
+    expect(item('a').getAttribute('aria-expanded')).toBe('false');
+    expect([...labels.keys()]).toEqual([]);
+  });
+
   it('keeps two opens before a render, as both build on the latest write', () => {
     const onExpandedChange = vi.fn();
     render(
@@ -433,5 +467,93 @@ describe('Tree renders', () => {
     expect(onExpandedChange).toHaveBeenLastCalledWith(['x', 'y']);
     expect(item('x').getAttribute('aria-expanded')).toBe('true');
     expect(item('y').getAttribute('aria-expanded')).toBe('true');
+  });
+});
+
+describe('Tree commits', () => {
+  it('carries a new controlled value into the commit that passes it', () => {
+    const seen: (string | null)[] = [];
+    function App() {
+      const [value, setValue] = useState('a');
+      // A layout effect of the owner, such as one that scrolls to the selected
+      // item, reads the item the value names.
+      useLayoutEffect(() => {
+        seen.push(document.querySelector('[aria-selected="true"]')?.textContent ?? null);
+      }, [value]);
+      return (
+        <>
+          <button type="button" onClick={() => setValue('b')}>
+            Pick b
+          </button>
+          <Tree.Root aria-label="Files" value={value} onValueChange={setValue}>
+            <Tree.Item value="a">
+              <Tree.Label>a</Tree.Label>
+            </Tree.Item>
+            <Tree.Item value="b">
+              <Tree.Label>b</Tree.Label>
+            </Tree.Item>
+          </Tree.Root>
+        </>
+      );
+    }
+    render(<App />);
+    fireEvent.click(screen.getByText('Pick b'));
+    expect(seen).toEqual(['a', 'b']);
+    expect(item('b').tabIndex).toBe(0);
+  });
+
+  it('selects an item in the commit that mounts it', () => {
+    let seen: string | null | undefined;
+    function Probe() {
+      useLayoutEffect(() => {
+        seen = document.querySelector('[data-value="c"]')?.getAttribute('aria-selected');
+      });
+      return null;
+    }
+    function App({ values, value }: { values: string[]; value: string }) {
+      return (
+        <Tree.Root aria-label="Files" value={value} onValueChange={() => {}}>
+          {values.map((v) => (
+            <Tree.Item key={v} value={v} data-value={v}>
+              <Tree.Label>{v}</Tree.Label>
+            </Tree.Item>
+          ))}
+          <Probe />
+        </Tree.Root>
+      );
+    }
+    const { rerender } = render(<App values={['a', 'b']} value="a" />);
+    rerender(<App values={['a', 'b', 'c']} value="c" />);
+    expect(seen).toBe('true');
+  });
+
+  it('moves the tab stop off an item its owner hides, in the same update', () => {
+    function Owner() {
+      const [expanded, setExpanded] = useState<string[]>(['docs']);
+      const [value, setValue] = useState<string | null>('docs/intro.md');
+      return (
+        <>
+          <button type="button" onClick={() => setExpanded([])}>
+            Close docs
+          </button>
+          <Tree.Root aria-label="Files" value={value} onValueChange={setValue} expanded={expanded} onExpandedChange={setExpanded}>
+            <Tree.Item value="a">
+              <Tree.Label>a</Tree.Label>
+            </Tree.Item>
+            <Tree.Item value="docs">
+              <Tree.Label>docs</Tree.Label>
+              <Tree.Group>
+                <Tree.Item value="docs/intro.md">
+                  <Tree.Label>intro.md</Tree.Label>
+                </Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+          </Tree.Root>
+        </>
+      );
+    }
+    render(<Owner />);
+    fireEvent.click(screen.getByText('Close docs'));
+    expect(document.querySelector('[role="treeitem"][tabindex="0"]')?.getAttribute('data-todae-roving-value')).toBe('a');
   });
 });

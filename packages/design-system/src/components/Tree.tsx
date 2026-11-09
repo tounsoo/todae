@@ -81,12 +81,26 @@ type TreeStore = {
   flags: (value: string) => number;
   /** Calls the listener when this item's flags may have changed. */
   subscribe: (value: string, listener: () => void) => () => void;
-  /** Takes the root's latest state and tells only the items whose flags changed. */
-  set: (next: TreeState) => void;
+  /**
+   * Takes the state the root is rendering, without telling anyone, so items
+   * rendering in the same pass read it and the commit carries their new
+   * flags with it.
+   */
+  render: (next: TreeState) => void;
+  /**
+   * Takes the state the root committed and tells only the items whose flags
+   * changed since the last commit, such as items the root's own state change
+   * did not render.
+   */
+  commit: (next: TreeState) => void;
 };
+
+const sameState = (a: TreeState, b: TreeState) =>
+  a.selected === b.selected && a.expanded === b.expanded && a.tabStop === b.tabStop;
 
 function createTreeStore(initial: TreeState): TreeStore {
   let state = initial;
+  let committed = initial;
   const listeners = new Map<string, Set<() => void>>();
   return {
     flags: (value) =>
@@ -102,10 +116,16 @@ function createTreeStore(initial: TreeState): TreeStore {
         if (set.size === 0 && listeners.get(value) === set) listeners.delete(value);
       };
     },
-    set(next) {
-      const prev = state;
-      if (prev.selected === next.selected && prev.expanded === next.expanded && prev.tabStop === next.tabStop) return;
+    render(next) {
       state = next;
+    },
+    commit(next) {
+      // A render React threw away may have left its state here; the commit
+      // puts back what is on screen.
+      state = next;
+      const prev = committed;
+      committed = next;
+      if (sameState(prev, next)) return;
       const changed = new Set<string | null>([prev.selected, next.selected, prev.tabStop, next.tabStop]);
       if (prev.expanded !== next.expanded) {
         for (const value of prev.expanded) if (!next.expanded.has(value)) changed.add(value);
@@ -134,11 +154,13 @@ type TreeContextValue = {
 
 const TreeContext = /* @__PURE__ */ createContext<TreeContextValue | null>(null);
 
+// Holds nothing that changes as the item opens or closes: React tells every
+// reader of this context below a provider whose value changed, nested
+// items' parts included, so the parts read the open flag from the store.
 type ItemContextValue = {
   value: string;
   labelId: string;
   branch: boolean;
-  expanded: boolean;
   disabled: boolean;
   /** Tree.Group calls this while it is mounted, which makes the item a branch. */
   registerGroup: () => () => void;
@@ -153,6 +175,12 @@ function useTree(part: string): TreeContextValue {
   const ctx = useContext(TreeContext);
   if (!ctx) throw new Error(`Tree.${part} must render inside Tree.Root`);
   return ctx;
+}
+
+/** The item's flags, rendering again only when they change. */
+function useFlags(store: TreeStore, value: string): number {
+  const subscribe = useCallback((listener: () => void) => store.subscribe(value, listener), [store, value]);
+  return useSyncExternalStore(subscribe, () => store.flags(value), () => store.flags(value));
 }
 
 function useItem(part: string): ItemContextValue {
@@ -216,9 +244,13 @@ function Root({
   });
   const tabStop = roving.activeValue;
   const [store] = useState(() => createTreeStore({ selected, expanded: open, tabStop }));
-  // After the root commits, the items whose flags changed render again,
-  // still before paint.
-  useLayoutEffect(() => store.set({ selected, expanded: open, tabStop }), [store, selected, open, tabStop]);
+  const state = useMemo(() => ({ selected, expanded: open, tabStop }), [selected, open, tabStop]);
+  // Items that render with the root, as when its owner passes a new value,
+  // read this render's state, so one commit carries the whole change. Items
+  // that don't, as when the root's own state changed, render after the
+  // commit, still before paint.
+  store.render(state);
+  useLayoutEffect(() => store.commit(state), [store, state]);
   // getItemProps changes with the tab stop, which each item reads from the
   // store instead, so items call the latest one through a stable function.
   // The rest of what it returns keeps its value across renders.
@@ -276,9 +308,7 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   const labelId = `${id}-label`;
   const [groups, setGroups] = useState<number | null>(null);
   const branch = groups === null ? hasGroupChild(children) : groups > 0;
-  const { store } = tree;
-  const subscribe = useCallback((listener: () => void) => store.subscribe(value, listener), [store, value]);
-  const flags = useSyncExternalStore(subscribe, () => store.flags(value), () => store.flags(value));
+  const flags = useFlags(tree.store, value);
   const expanded = branch && (flags & EXPANDED) !== 0;
   const registerGroup = useCallback(() => {
     setGroups((n) => (n ?? 0) + 1);
@@ -296,8 +326,8 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   const { ref, ...item } = tree.itemProps(value, props);
   const refs = useComposedRefs(node, ref);
   const ctx = useMemo(
-    () => ({ value, labelId, branch, expanded, disabled, registerGroup }),
-    [branch, disabled, expanded, labelId, registerGroup, value],
+    () => ({ value, labelId, branch, disabled, registerGroup }),
+    [branch, disabled, labelId, registerGroup, value],
   );
   const selected = (flags & SELECTED) !== 0;
   return (
@@ -346,7 +376,8 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       // A click selects the item and opens or closes a branch.
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        if (item.branch) tree.setExpanded(item.value, !item.expanded);
+        // Read at the click, so the label needn't render as the item opens.
+        if (item.branch) tree.setExpanded(item.value, (tree.store.flags(item.value) & EXPANDED) === 0);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">
@@ -359,12 +390,14 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
 
 function Group({ children, className, ...props }: TreeGroupProps) {
   const item = useItem('Group');
+  const flags = useFlags(useTree('Group').store, item.value);
+  const expanded = item.branch && (flags & EXPANDED) !== 0;
   const level = useContext(LevelContext);
   const { registerGroup } = item;
   useLayoutEffect(registerGroup, [registerGroup]);
   return (
     <LevelContext.Provider value={level + 1}>
-      <ul {...props} role="group" hidden={!item.expanded} className={cx(styles.group, className)}>
+      <ul {...props} role="group" hidden={!expanded} className={cx(styles.group, className)}>
         {children}
       </ul>
     </LevelContext.Provider>
