@@ -45,7 +45,7 @@ it('sets the range from a preset, and presses the preset that matches the range,
 
   // A range no preset gives presses none; it never ends today.
   const yesterday = today.subtract({ days: 1 });
-  await userEvent.click(screen.getByRole('button', { name: 'Report dates' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Choose dates' }));
   await pick(yesterday.subtract({ days: 2 }));
   await pick(yesterday);
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
@@ -53,7 +53,7 @@ it('sets the range from a preset, and presses the preset that matches the range,
   expect(pressed()).toEqual([]);
 
   // A range picked in the calendar that a preset gives presses that preset.
-  await userEvent.click(screen.getByRole('button', { name: 'Report dates' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Choose dates' }));
   await pick(today.subtract({ days: 6 }));
   await pick(today);
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
