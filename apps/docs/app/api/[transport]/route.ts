@@ -7,11 +7,17 @@ import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import {
+  BUILD_TOOL,
   BUILD_TOOL_INPUT_ELEMENTS,
   MAX_REQUEST_BYTES,
+  MAX_REQUEST_DEPTH,
+  MAX_REQUEST_TOOL_CALLS,
   TOOL_INPUT_ELEMENTS,
-  callsOnlyBuildTool,
+  countElements,
+  hasMoreKeysThan,
+  nestsDeeperThan,
   readBody,
+  toolCalls,
 } from '../../../lib/docs-mcp/limits';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
 import { getComponent, getDocsPage, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
@@ -38,7 +44,12 @@ function fail(error: unknown) {
 }
 
 const buildTokensArguments = {
-  files: z.record(z.string().max(200), z.unknown()),
+  // zod 3 checks every key of a record, so a call with far too many files is refused before that check.
+  files: z.preprocess((value, context) => {
+    if (!hasMoreKeysThan(value, MAX_FILES)) return value;
+    context.addIssue({ code: z.ZodIssueCode.custom, message: `At most ${MAX_FILES} files` });
+    return z.NEVER;
+  }, z.record(z.string().max(200), z.unknown())),
   resolver: z.string().max(200).optional(),
   scope: z.string().max(200).optional(),
 };
@@ -228,21 +239,37 @@ function noStore(response: Response): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+function jsonRpcError(status: number, code: number, message: string): Response {
+  return Response.json({ jsonrpc: '2.0', error: { code, message }, id: null }, { status, headers: { 'cache-control': 'no-store' } });
+}
+
 async function POST(request: Request): Promise<Response> {
   const text = await readBody(request);
-  if (text === null) {
-    const error = { code: -32600, message: `Request body is larger than ${MAX_REQUEST_BYTES / 1024} KB` };
-    return Response.json({ jsonrpc: '2.0', error, id: null }, { status: 413, headers: { 'cache-control': 'no-store' } });
-  }
+  if (text === null) return jsonRpcError(413, -32600, `Request body is larger than ${MAX_REQUEST_BYTES / 1024} KB`);
+  // mcp-handler never answers a body that isn't JSON or that nests too deeply, so the call would hang until
+  // maxDuration; answer it here as the transport answers a parse error.
   let body: unknown;
   try {
     body = JSON.parse(text);
   } catch {
-    // The handler answers a body that isn't JSON in its own words.
+    return jsonRpcError(400, -32700, 'Parse error: the request body is not JSON');
+  }
+  if (nestsDeeperThan(body, MAX_REQUEST_DEPTH)) {
+    return jsonRpcError(400, -32600, `Request nests deeper than ${MAX_REQUEST_DEPTH} levels`);
+  }
+  const calls = toolCalls(body);
+  if (calls.length > MAX_REQUEST_TOOL_CALLS) {
+    return jsonRpcError(400, -32600, `A request may make at most ${MAX_REQUEST_TOOL_CALLS} tool calls`);
+  }
+  const building = calls.length > 0 && calls.every((call) => call.name === BUILD_TOOL);
+  const elements = building ? BUILD_TOOL_INPUT_ELEMENTS : TOOL_INPUT_ELEMENTS;
+  // The server checks each call on its own, so a batch's calls share one cap here.
+  if (calls.length > 1 && countElements(calls.map((call) => call.arguments), elements) > elements) {
+    return jsonRpcError(400, -32602, `The tool calls in this request hold more than ${elements} elements in all`);
   }
   const headers = new Headers(request.headers);
   headers.delete('content-length');
-  const handler = callsOnlyBuildTool(body) ? buildHandler : toolHandler;
+  const handler = building ? buildHandler : toolHandler;
   return noStore(await handler(new Request(request.url, { method: 'POST', headers, body: text, signal: request.signal })));
 }
 
