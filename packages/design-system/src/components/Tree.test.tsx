@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Profiler, useLayoutEffect, useState, type ReactNode } from 'react';
+import { Profiler, startTransition, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
@@ -338,112 +338,7 @@ describe('Tree read-only value', () => {
   });
 });
 
-describe('Tree renders', () => {
-  // A Profiler around each item counts the commits that rendered anything in it.
-  function Counted({ counts, ...props }: { counts: Map<string, number> } & Omit<TreeRootProps, 'children'>) {
-    const counted = (value: string, children: ReactNode) => (
-      <Profiler id={value} onRender={(id) => void counts.set(id, (counts.get(id) ?? 0) + 1)}>
-        {children}
-      </Profiler>
-    );
-    return (
-      <Tree.Root aria-label="Files" {...props}>
-        {counted(
-          'docs',
-          <Tree.Item value="docs">
-            <Tree.Label>docs</Tree.Label>
-            <Tree.Group>
-              <Tree.Item value="docs/intro.md">
-                <Tree.Label>intro.md</Tree.Label>
-              </Tree.Item>
-            </Tree.Group>
-          </Tree.Item>,
-        )}
-        {['a', 'b', 'c', 'd'].map((value) =>
-          counted(
-            value,
-            <Tree.Item key={value} value={value}>
-              <Tree.Label>{value}</Tree.Label>
-            </Tree.Item>,
-          ),
-        )}
-      </Tree.Root>
-    );
-  }
-
-  const rendered = (counts: Map<string, number>) => [...counts.keys()].sort();
-
-  it('renders only the items a click selects or deselects', () => {
-    const counts = new Map<string, number>();
-    render(<Counted counts={counts} defaultValue="a" />);
-    counts.clear();
-    fireEvent.click(screen.getByText('c'));
-    expect(item('c').getAttribute('aria-selected')).toBe('true');
-    expect(item('a').getAttribute('aria-selected')).toBe('false');
-    expect(item('c').tabIndex).toBe(0);
-    expect(item('a').tabIndex).toBe(-1);
-    expect(rendered(counts)).toEqual(['a', 'c']);
-  });
-
-  it('renders only the item that opens or closes', () => {
-    const counts = new Map<string, number>();
-    render(<Counted counts={counts} />);
-    counts.clear();
-    fireEvent.click(screen.getByText('docs'));
-    expect(item('docs').getAttribute('aria-expanded')).toBe('true');
-    expect(rendered(counts)).toEqual(['docs']);
-    counts.clear();
-    fireEvent.click(screen.getByText('docs'));
-    expect(item('docs').getAttribute('aria-expanded')).toBe('false');
-    expect(rendered(counts)).toEqual(['docs']);
-  });
-
-  it('renders only the items the tab stop leaves and reaches as focus moves', () => {
-    const counts = new Map<string, number>();
-    render(<Counted counts={counts} />);
-    act(() => item('a').focus());
-    counts.clear();
-    key('ArrowDown');
-    expect(focused()).toBe('b');
-    expect(item('b').tabIndex).toBe(0);
-    expect(item('a').tabIndex).toBe(-1);
-    expect(rendered(counts)).toEqual(['a', 'b']);
-  });
-
-  it('renders no label inside an item as it opens or closes', () => {
-    const labels = new Map<string, number>();
-    const label = (name: string) => (
-      <Profiler id={name} onRender={(id) => void labels.set(id, (labels.get(id) ?? 0) + 1)}>
-        <Tree.Label>{name}</Tree.Label>
-      </Profiler>
-    );
-    render(
-      <Tree.Root aria-label="Files">
-        <Tree.Item value="a">
-          {label('a')}
-          <Tree.Group>
-            <Tree.Item value="a1">
-              {label('a1')}
-              <Tree.Group>
-                <Tree.Item value="a1x">{label('a1x')}</Tree.Item>
-              </Tree.Group>
-            </Tree.Item>
-            <Tree.Item value="a2">{label('a2')}</Tree.Item>
-          </Tree.Group>
-        </Tree.Item>
-        <Tree.Item value="b">{label('b')}</Tree.Item>
-      </Tree.Root>,
-    );
-    labels.clear();
-    fireEvent.click(screen.getByText('a'));
-    expect(item('a').getAttribute('aria-expanded')).toBe('true');
-    expect(item('a1').closest('[role="group"]')?.hasAttribute('hidden')).toBe(false);
-    expect([...labels.keys()]).toEqual([]);
-    fireEvent.click(screen.getByText('a'));
-    expect(item('a').getAttribute('aria-expanded')).toBe('false');
-    expect([...labels.keys()]).toEqual([]);
-  });
-
+describe('Tree writes', () => {
   it('keeps two opens before a render, as both build on the latest write', () => {
     const onExpandedChange = vi.fn();
     render(
@@ -555,5 +450,104 @@ describe('Tree commits', () => {
     render(<Owner />);
     fireEvent.click(screen.getByText('Close docs'));
     expect(document.querySelector('[role="treeitem"][tabindex="0"]')?.getAttribute('data-todae-roving-value')).toBe('a');
+  });
+
+  it('carries a new value to items the owner passes in as children, before its effects run', () => {
+    const seen: string[] = [];
+    const selected = () => document.querySelector('[aria-selected="true"]')?.textContent;
+    function Owner({ children }: { children: ReactNode }) {
+      const [value, setValue] = useState('a');
+      useLayoutEffect(() => void seen.push(`layout ${selected()}`), [value]);
+      useEffect(() => void seen.push(`passive ${selected()}`), [value]);
+      return (
+        <>
+          <button type="button" onClick={() => setValue('b')}>
+            Pick b
+          </button>
+          <Tree.Root aria-label="Files" value={value} onValueChange={setValue}>
+            {children}
+          </Tree.Root>
+        </>
+      );
+    }
+    render(
+      <Owner>
+        <Tree.Item value="a">
+          <Tree.Label>a</Tree.Label>
+        </Tree.Item>
+        <Tree.Item value="b">
+          <Tree.Label>b</Tree.Label>
+        </Tree.Item>
+      </Owner>,
+    );
+    seen.length = 0;
+    fireEvent.click(screen.getByText('Pick b'));
+    expect(seen).toEqual(['layout b', 'passive b']);
+  });
+
+  it('moves the tab stop off an item a click hides, in the same update', () => {
+    render(
+      <Tree.Root aria-label="Files" defaultValue="docs/intro.md" defaultExpanded={['docs']}>
+        <Tree.Item value="a">
+          <Tree.Label>a</Tree.Label>
+        </Tree.Item>
+        <Tree.Item value="docs" disabled>
+          <Tree.Label>docs</Tree.Label>
+          <Tree.Group>
+            <Tree.Item value="docs/intro.md">
+              <Tree.Label>intro.md</Tree.Label>
+            </Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+      </Tree.Root>,
+    );
+    expect(item('intro.md').tabIndex).toBe(0);
+    fireEvent.click(screen.getByText('docs'));
+    expect(item('docs').getAttribute('aria-expanded')).toBe('false');
+    expect(tabStops()).toEqual(['a']);
+  });
+
+  it('shows no selection from a transition that has not committed', async () => {
+    let resolve!: () => void;
+    const pending = new Promise<void>((done) => (resolve = done));
+    let settled = false;
+    function Wait({ on }: { on: boolean }) {
+      if (on && !settled) throw pending;
+      return null;
+    }
+    let bump!: () => void;
+    // An item row with state of its own, so it renders without the root.
+    function Row({ value }: { value: string }) {
+      const [n, setN] = useState(0);
+      if (value === 'b') bump = () => setN((count) => count + 1);
+      return (
+        <Tree.Item value={value} data-n={n}>
+          <Tree.Label>{value}</Tree.Label>
+        </Tree.Item>
+      );
+    }
+    let pick!: (value: string) => void;
+    function App() {
+      const [value, setValue] = useState('a');
+      pick = (next) => startTransition(() => setValue(next));
+      return (
+        <Suspense fallback={<p>loading</p>}>
+          <Tree.Root aria-label="Files" value={value} onValueChange={setValue}>
+            <Row value="a" />
+            <Row value="b" />
+          </Tree.Root>
+          <Wait on={value === 'b'} />
+        </Suspense>
+      );
+    }
+    const selected = () => [...document.querySelectorAll('[aria-selected="true"]')].map((node) => node.textContent);
+    render(<App />);
+    await act(async () => pick('b'));
+    expect(selected()).toEqual(['a']);
+    act(() => bump());
+    expect(selected()).toEqual(['a']);
+    settled = true;
+    await act(async () => resolve());
+    expect(selected()).toEqual(['b']);
   });
 });

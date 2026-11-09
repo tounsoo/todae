@@ -8,7 +8,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ComponentPropsWithRef,
   type CSSProperties,
   type FocusEvent,
@@ -67,96 +66,32 @@ export type TreeGroupProps = {
 
 export type TreeIconProps = ComponentPropsWithRef<'span'>;
 
-// What items read from the root lives in this store, not in context, so a
-// change renders only the items it concerns: a click in a tree of a thousand
-// items renders the two or three it changes, not all of them.
+// What changes as the tree is used (selection, open items, the tab stop)
+// is its own context, read only by Tree.Item. A change renders each item
+// once, without its label, group or content, and in the same pass as the
+// root, so one commit carries it and a render React throws away leaves
+// nothing behind.
 type TreeState = { selected: string | null; expanded: ReadonlySet<string>; tabStop: string | null };
 
-const SELECTED = 1;
-const EXPANDED = 2;
-const TAB_STOP = 4;
+const TreeStateContext = /* @__PURE__ */ createContext<TreeState | null>(null);
 
-type TreeStore = {
-  /** The item's flags as one number, so useSyncExternalStore compares them by value. */
-  flags: (value: string) => number;
-  /** Calls the listener when this item's flags may have changed. */
-  subscribe: (value: string, listener: () => void) => () => void;
-  /**
-   * Takes the state the root is rendering, without telling anyone, so items
-   * rendering in the same pass read it and the commit carries their new
-   * flags with it.
-   */
-  render: (next: TreeState) => void;
-  /**
-   * Takes the state the root committed and tells only the items whose flags
-   * changed since the last commit, such as items the root's own state change
-   * did not render.
-   */
-  commit: (next: TreeState) => void;
-};
-
-const sameState = (a: TreeState, b: TreeState) =>
-  a.selected === b.selected && a.expanded === b.expanded && a.tabStop === b.tabStop;
-
-function createTreeStore(initial: TreeState): TreeStore {
-  let state = initial;
-  let committed = initial;
-  const listeners = new Map<string, Set<() => void>>();
-  return {
-    flags: (value) =>
-      (state.selected === value ? SELECTED : 0) |
-      (state.expanded.has(value) ? EXPANDED : 0) |
-      (state.tabStop === value ? TAB_STOP : 0),
-    subscribe(value, listener) {
-      let set = listeners.get(value);
-      if (!set) listeners.set(value, (set = new Set()));
-      set.add(listener);
-      return () => {
-        set.delete(listener);
-        if (set.size === 0 && listeners.get(value) === set) listeners.delete(value);
-      };
-    },
-    render(next) {
-      state = next;
-    },
-    commit(next) {
-      // A render React threw away may have left its state here; the commit
-      // puts back what is on screen.
-      state = next;
-      const prev = committed;
-      committed = next;
-      if (sameState(prev, next)) return;
-      const changed = new Set<string | null>([prev.selected, next.selected, prev.tabStop, next.tabStop]);
-      if (prev.expanded !== next.expanded) {
-        for (const value of prev.expanded) if (!next.expanded.has(value)) changed.add(value);
-        for (const value of next.expanded) if (!prev.expanded.has(value)) changed.add(value);
-      }
-      for (const value of changed) {
-        if (value === null) continue;
-        for (const listener of [...(listeners.get(value) ?? [])]) listener();
-      }
-    },
-  };
-}
-
-// Every field keeps its identity across the root's renders, so a click or a
-// key that only moves selection, focus or an open item renders no item
-// through context.
+// Every field keeps its identity across the root's renders, so the parts
+// that read only this render only when their own item does.
 type TreeContextValue = {
   selectable: boolean;
   select: (value: string) => void;
   setExpanded: (value: string, open: boolean) => void;
-  store: TreeStore;
-  /** The roving item props, whose tab stop the item takes from the store. */
+  /** Opens a closed item and closes an open one, from the latest state. */
+  toggle: (value: string) => void;
+  /** The roving item props, whose tab stop the item takes from the tree state. */
   itemProps: <P extends RovingItemUserProps>(value: string, props: P) => Omit<P, keyof RovingItemWire> & RovingItemWire;
   isTypingAhead: UseRovingFocusResult['isTypingAhead'];
 };
 
 const TreeContext = /* @__PURE__ */ createContext<TreeContextValue | null>(null);
 
-// Holds nothing that changes as the item opens or closes: React tells every
-// reader of this context below a provider whose value changed, nested
-// items' parts included, so the parts read the open flag from the store.
+// Holds nothing that changes as the item opens or closes, so its label
+// doesn't render then.
 type ItemContextValue = {
   value: string;
   labelId: string;
@@ -168,6 +103,9 @@ type ItemContextValue = {
 
 const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
 
+// Whether the nearest item is open, for its Tree.Group.
+const OpenContext = /* @__PURE__ */ createContext(false);
+
 // Depth of the items rendered here: 1 at the root, one more inside each group.
 const LevelContext = /* @__PURE__ */ createContext(1);
 
@@ -175,12 +113,6 @@ function useTree(part: string): TreeContextValue {
   const ctx = useContext(TreeContext);
   if (!ctx) throw new Error(`Tree.${part} must render inside Tree.Root`);
   return ctx;
-}
-
-/** The item's flags, rendering again only when they change. */
-function useFlags(store: TreeStore, value: string): number {
-  const subscribe = useCallback((listener: () => void) => store.subscribe(value, listener), [store, value]);
-  return useSyncExternalStore(subscribe, () => store.flags(value), () => store.flags(value));
 }
 
 function useItem(part: string): ItemContextValue {
@@ -243,16 +175,13 @@ function Root({
     onExpandedChange: setExpanded,
   });
   const tabStop = roving.activeValue;
-  const [store] = useState(() => createTreeStore({ selected, expanded: open, tabStop }));
   const state = useMemo(() => ({ selected, expanded: open, tabStop }), [selected, open, tabStop]);
-  // Items that render with the root, as when its owner passes a new value,
-  // read this render's state, so one commit carries the whole change. Items
-  // that don't, as when the root's own state changed, render after the
-  // commit, still before paint.
-  store.render(state);
-  useLayoutEffect(() => store.commit(state), [store, state]);
+  const toggle = useCallback(
+    (value: string) => setExpanded(value, !latestExpanded().includes(value)),
+    [latestExpanded, setExpanded],
+  );
   // getItemProps changes with the tab stop, which each item reads from the
-  // store instead, so items call the latest one through a stable function.
+  // tree state instead, so items call the latest one through a stable function.
   // The rest of what it returns keeps its value across renders.
   const latestRoving = useRef(roving);
   useLayoutEffect(() => {
@@ -266,31 +195,33 @@ function Root({
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, select: setSelected, setExpanded, store, itemProps, isTypingAhead }),
-    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, store],
+    () => ({ selectable, select: setSelected, setExpanded, toggle, itemProps, isTypingAhead }),
+    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, toggle],
   );
   return (
     <TreeContext.Provider value={ctx}>
-      <LevelContext.Provider value={1}>
-        <ul
-          {...props}
-          {...container}
-          role="tree"
-          className={cx(styles.root, className)}
-          onFocus={(event: FocusEvent<HTMLUListElement>) => {
-            onFocus?.(event);
-            focusLeave.onFocus();
-          }}
-          // The tab stop must return to the selected item whatever the
-          // consumer's handler does, so this runs even if it prevented the event.
-          onBlur={(event: FocusEvent<HTMLUListElement>) => {
-            onBlur?.(event);
-            focusLeave.onBlur(event);
-          }}
-        >
-          {children}
-        </ul>
-      </LevelContext.Provider>
+      <TreeStateContext.Provider value={state}>
+        <LevelContext.Provider value={1}>
+          <ul
+            {...props}
+            {...container}
+            role="tree"
+            className={cx(styles.root, className)}
+            onFocus={(event: FocusEvent<HTMLUListElement>) => {
+              onFocus?.(event);
+              focusLeave.onFocus();
+            }}
+            // The tab stop must return to the selected item whatever the
+            // consumer's handler does, so this runs even if it prevented the event.
+            onBlur={(event: FocusEvent<HTMLUListElement>) => {
+              onBlur?.(event);
+              focusLeave.onBlur(event);
+            }}
+          >
+            {children}
+          </ul>
+        </LevelContext.Provider>
+      </TreeStateContext.Provider>
     </TreeContext.Provider>
   );
 }
@@ -308,8 +239,8 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   const labelId = `${id}-label`;
   const [groups, setGroups] = useState<number | null>(null);
   const branch = groups === null ? hasGroupChild(children) : groups > 0;
-  const flags = useFlags(tree.store, value);
-  const expanded = branch && (flags & EXPANDED) !== 0;
+  const state = useContext(TreeStateContext)!;
+  const expanded = branch && state.expanded.has(value);
   const registerGroup = useCallback(() => {
     setGroups((n) => (n ?? 0) + 1);
     return () => setGroups((n) => (n ?? 1) - 1);
@@ -329,36 +260,38 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
     () => ({ value, labelId, branch, disabled, registerGroup }),
     [branch, disabled, labelId, registerGroup, value],
   );
-  const selected = (flags & SELECTED) !== 0;
+  const selected = state.selected === value;
   return (
     <ItemContext.Provider value={ctx}>
-      <li
-        {...item}
-        tabIndex={flags & TAB_STOP ? 0 : -1}
-        ref={refs}
-        role="treeitem"
-        aria-labelledby={labelId}
-        aria-expanded={branch ? expanded : undefined}
-        aria-selected={tree.selectable ? selected : undefined}
-        aria-disabled={disabled || undefined}
-        data-selected={selected ? '' : undefined}
-        data-disabled={disabled ? '' : undefined}
-        className={cx(styles.item, className)}
-        style={{ ...style, '--_level': level } as CSSProperties}
-        onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLLIElement>) => {
-          // Keys from an item nested inside belong to that item.
-          if (event.target !== event.currentTarget) return;
-          if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-          if (event.key !== 'Enter' && event.key !== ' ') return;
-          // A Space that joins a typeahead search is the search's.
-          if (event.key === ' ' && tree.isTypingAhead(event)) return;
-          event.preventDefault();
-          if (!disabled && tree.selectable) tree.select(value);
-          if (branch) tree.setExpanded(value, !expanded);
-        })}
-      >
-        {children}
-      </li>
+      <OpenContext.Provider value={expanded}>
+        <li
+          {...item}
+          tabIndex={state.tabStop === value ? 0 : -1}
+          ref={refs}
+          role="treeitem"
+          aria-labelledby={labelId}
+          aria-expanded={branch ? expanded : undefined}
+          aria-selected={tree.selectable ? selected : undefined}
+          aria-disabled={disabled || undefined}
+          data-selected={selected ? '' : undefined}
+          data-disabled={disabled ? '' : undefined}
+          className={cx(styles.item, className)}
+          style={{ ...style, '--_level': level } as CSSProperties}
+          onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLLIElement>) => {
+            // Keys from an item nested inside belong to that item.
+            if (event.target !== event.currentTarget) return;
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            // A Space that joins a typeahead search is the search's.
+            if (event.key === ' ' && tree.isTypingAhead(event)) return;
+            event.preventDefault();
+            if (!disabled && tree.selectable) tree.select(value);
+            if (branch) tree.setExpanded(value, !expanded);
+          })}
+        >
+          {children}
+        </li>
+      </OpenContext.Provider>
     </ItemContext.Provider>
   );
 }
@@ -377,7 +310,7 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
         // Read at the click, so the label needn't render as the item opens.
-        if (item.branch) tree.setExpanded(item.value, (tree.store.flags(item.value) & EXPANDED) === 0);
+        if (item.branch) tree.toggle(item.value);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">
@@ -390,8 +323,7 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
 
 function Group({ children, className, ...props }: TreeGroupProps) {
   const item = useItem('Group');
-  const flags = useFlags(useTree('Group').store, item.value);
-  const expanded = item.branch && (flags & EXPANDED) !== 0;
+  const expanded = useContext(OpenContext);
   const level = useContext(LevelContext);
   const { registerGroup } = item;
   useLayoutEffect(registerGroup, [registerGroup]);
