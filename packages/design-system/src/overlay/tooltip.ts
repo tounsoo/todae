@@ -82,12 +82,14 @@ export type TooltipInternalOptions = {
  * Holds for a trigger that wires its own handlers, or that turns its tip on
  * only once the person reaches it. `holdFocus` holds the tip for focus
  * already on `target`, unless a pointer put it there, as the trigger's own
- * focus handler would.
+ * focus handler would, and `releaseFocus` lets it go as the trigger's blur
+ * handler would.
  */
 export type TooltipInternalResult = {
   holdHover: () => void;
   releaseHover: (relatedTarget: EventTarget | null) => void;
   holdFocus: (target: Element) => void;
+  releaseFocus: (relatedTarget: EventTarget | null) => void;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -427,6 +429,12 @@ export function useTooltipInternal<I extends boolean = false>(
     },
     [dispatch],
   );
+  const releaseFocus = useCallback(
+    (relatedTarget: EventTarget | null) => {
+      if (!pairContains(relatedTarget) && !holderAccepts(relatedTarget)) dispatch({ kind: 'release', hold: 'focus' });
+    },
+    [dispatch, holderAccepts, pairContains],
+  );
 
   useEffect(
     () => () => {
@@ -462,13 +470,11 @@ export function useTooltipInternal<I extends boolean = false>(
         }),
         onBlur: (event: FocusEvent<HTMLElement>) => {
           user.onBlur?.(event);
-          if (enabled && !pairContains(event.relatedTarget) && !holderAccepts(event.relatedTarget)) {
-            dispatch({ kind: 'release', hold: 'focus' });
-          }
+          if (enabled) releaseFocus(event.relatedTarget);
         },
       };
     },
-    [anchorName, contentId, dispatch, enabled, holdHover, holderAccepts, open, pairContains, releaseHover, triggerComposed],
+    [anchorName, contentId, dispatch, enabled, holdHover, open, releaseFocus, releaseHover, triggerComposed],
   );
 
   const setTooltip = useComposedRefs(tooltipRef);
@@ -506,5 +512,6 @@ export function useTooltipInternal<I extends boolean = false>(
     holdHover,
     releaseHover,
     holdFocus,
+    releaseFocus,
   };
 }

@@ -247,8 +247,54 @@ describe('Button auto-tip', () => {
     const button = screen.getByRole('button', { name: 'Archive' });
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-    expect(button.getAttribute('aria-describedby')).toBe(screen.getByRole('tooltip').id);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
+  });
+
+  it('wires no tip into an icon-only button until the pointer or keys reach it', () => {
+    render(
+      <Button.Root aria-label="Archive">
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Archive' });
+    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).toBe('');
+    fireEvent.pointerEnter(button);
+    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).not.toBe('');
+    advance(300);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
+  });
+
+  it('tips an icon-only name when keys move focus to it', () => {
+    render(
+      <Button.Root aria-label="Archive">
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Archive' });
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => {
+      button.focus();
+    });
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
+    act(() => {
+      button.blur();
+    });
+    advance(300);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+  });
+
+  it('keeps the tip out of the accessibility tree, so the name is read once', () => {
+    render(
+      <Button.Root aria-label="Archive">
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Archive' });
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(button.hasAttribute('aria-describedby')).toBe(false);
   });
 
   it.each([
@@ -262,10 +308,10 @@ describe('Button auto-tip', () => {
     );
     fire(screen.getByRole('button', { name: 'Archive' }));
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
-  it("keeps the consumer's aria-describedby and joins the tip to it while open", () => {
+  it("keeps the consumer's aria-describedby and adds no tip to it", () => {
     render(
       <>
         <span id="archive-note">Moves the thread out of the inbox</span>
@@ -278,7 +324,8 @@ describe('Button auto-tip', () => {
     expect(button.getAttribute('aria-describedby')).toBe('archive-note');
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(button.getAttribute('aria-describedby')).toBe(`archive-note ${screen.getByRole('tooltip').id}`);
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
+    expect(button.getAttribute('aria-describedby')).toBe('archive-note');
   });
 
   it('tips an icon-only name from aria-labelledby text', () => {
@@ -293,7 +340,7 @@ describe('Button auto-tip', () => {
     const button = screen.getByRole('button', { name: 'Add item' });
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Add item');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Add item');
   });
 
   it('reads every id in an aria-labelledby list, in order', () => {
@@ -310,7 +357,7 @@ describe('Button auto-tip', () => {
     expect(error).not.toHaveBeenCalled();
     fireEvent.pointerEnter(screen.getByRole('button'));
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Add item');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Add item');
     error.mockRestore();
   });
 
@@ -324,14 +371,14 @@ describe('Button auto-tip', () => {
     expect(error).toHaveBeenCalledWith('Button.Root icon-only requires aria-label or aria-labelledby');
     fireEvent.pointerEnter(screen.getByRole('button'));
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it('does not tip a labeled button that fits', () => {
     render(<Button.Root>Save</Button.Root>);
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save' }));
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
     expect(screen.getByRole('button').querySelector('span:not([aria-hidden])')?.textContent).toBe('Save');
   });
 
@@ -343,7 +390,7 @@ describe('Button auto-tip', () => {
     overflow(label as HTMLElement);
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Very long archive label');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Very long archive label');
   });
 
   it('measures again when new label text overflows a box that kept its size', () => {
@@ -355,7 +402,7 @@ describe('Button auto-tip', () => {
     const button = screen.getByRole('button', { name: 'Save every archived thread' });
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save every archived thread');
   });
 
   it('measures again when a variant change cuts the label', () => {
@@ -366,7 +413,7 @@ describe('Button auto-tip', () => {
     rerender(<Button.Root variant="secondary">Save draft</Button.Root>);
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save draft' }));
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save draft');
   });
 
   it('measures a cut label when tooltip turns on, with no ResizeObserver to report it', () => {
@@ -388,7 +435,7 @@ describe('Button auto-tip', () => {
     );
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'Save every archived thread' }));
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save every archived thread');
   });
 
   it('builds no observer and reads no layout when a parent renders it again unchanged', () => {
@@ -491,7 +538,7 @@ describe('Button auto-tip', () => {
     fireEvent.pointerEnter(button);
     expect(reads).toHaveBeenCalledTimes(1);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save every archived thread');
   });
 
   it('tips a cut label when keys move focus to it', () => {
@@ -502,12 +549,12 @@ describe('Button auto-tip', () => {
     act(() => {
       button.focus();
     });
-    expect(screen.getByRole('tooltip').textContent).toBe('Save every archived thread');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save every archived thread');
     act(() => {
       button.blur();
     });
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it('tips no cut label for focus a press put there', () => {
@@ -519,7 +566,7 @@ describe('Button auto-tip', () => {
       button.focus();
     });
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it.each([
@@ -541,7 +588,7 @@ describe('Button auto-tip', () => {
     Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 });
     reach(button);
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
     expect(reads).not.toHaveBeenCalled();
   });
 
@@ -560,7 +607,7 @@ describe('Button auto-tip', () => {
     });
     advance(300);
     expect(document.activeElement?.id).toBe('next');
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it('drops the tip once a label that was cut fits again', () => {
@@ -570,13 +617,13 @@ describe('Button auto-tip', () => {
     overflow(label);
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Save draft');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save draft');
     fireEvent.pointerLeave(button);
     advance(300);
     Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 40 });
     fireEvent.pointerEnter(button);
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it('opts out with tooltip={false}', () => {
@@ -587,7 +634,7 @@ describe('Button auto-tip', () => {
     );
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'Archive' }));
     advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
   it('forwards ref to the native button when tipped', () => {
@@ -609,7 +656,17 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState.js', '../overlay/tooltip.js', './Button.module.css', '../internal/props.js', '../internal/cx.js', './Tooltip.js']),
+      new Set([
+        'react',
+        '../hooks/useControlledState.js',
+        '../overlay/anchorName.js',
+        '../overlay/tooltip.js',
+        './Button.module.css',
+        '../internal/props.js',
+        '../internal/cx.js',
+        '../internal/domId.js',
+        './Tooltip.js',
+      ]),
     );
   });
 
@@ -621,7 +678,7 @@ describe('Button auto-tip', () => {
     );
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'Archive' }));
     advance(300);
-    const tip = screen.getByRole('tooltip');
+    const tip = screen.getByRole('tooltip', { hidden: true });
     expect(tip.getAttribute('role')).toBe('tooltip');
     expect(tip.getAttribute('data-surface')).toBe('tip');
   });
@@ -653,7 +710,7 @@ describe('Button auto-tip', () => {
     expect(link.hasAttribute('data-icon-only')).toBe(true);
     fireEvent.pointerEnter(link);
     advance(300);
-    expect(screen.getByRole('tooltip').textContent).toBe('Settings');
+    expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Settings');
   });
 
   it('logs in development when render does not pass its props to an a or a button', () => {
