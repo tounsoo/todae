@@ -665,6 +665,7 @@ describe('Button auto-tip', () => {
         '../internal/props.js',
         '../internal/cx.js',
         '../internal/domId.js',
+        '../internal/inputModality.js',
         './Tooltip.js',
       ]),
     );

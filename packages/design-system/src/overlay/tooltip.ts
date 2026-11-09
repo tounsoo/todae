@@ -438,7 +438,13 @@ export function useTooltipInternal<I extends boolean = false>(
 
   useEffect(
     () => () => {
-      if (timerRef.current != null) window.clearTimeout(timerRef.current);
+      if (timerRef.current != null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+        // A closed tip whose show delay this cancels keeps no hold waiting on
+        // it, so a remount, as StrictMode runs one, can take the hold again.
+        if (!openRef.current) intentRef.current = { ...createIntent(), seq: intentRef.current.seq };
+      }
       if (!countedHoverRef.current) return;
       countedHoverRef.current = false;
       releaseHoverTip(Date.now());

@@ -11,6 +11,7 @@ import { Tooltip } from '../components/Tooltip.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { useTooltip } from '../hooks/useTooltip.js';
 import { HeldTip } from '../test/heldTip.js';
+import { tipFor } from '../test/tipFor.js';
 import { emulateMedia } from '../test/media.js';
 
 afterEach(cleanup);
@@ -24,7 +25,7 @@ function Themed({ children, dir, style }: { children: ReactNode; dir?: 'ltr' | '
 }
 
 function tipOf(trigger: HTMLElement): HTMLElement | null {
-  const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '');
+  const tip = tipFor(trigger);
   return tip?.matches(':popover-open') ? tip : null;
 }
 
