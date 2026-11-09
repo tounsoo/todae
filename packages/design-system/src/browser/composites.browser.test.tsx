@@ -743,14 +743,102 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     const evening = screen.getByRole('option', { name: '6:00 PM' });
     const far = evening.getBoundingClientRect();
     expect(far.top).toBeGreaterThan(box.bottom);
+    // TEMPORARY: logs what moves the popover's scroll after the test scrolls it, for engines this machine can't run.
+    const log: string[] = [];
+    const t0 = performance.now();
+    const at = () => Math.round(performance.now() - t0);
+    const from = () => (new Error().stack ?? '').split('\n').slice(2, 7).map((line) => line.trim()).join(' < ');
+    const label = (el: Element | null) =>
+      el ? `${el.tagName}${el.getAttribute('aria-label') ? ` "${el.getAttribute('aria-label')}"` : ''}${el.getAttribute('role') ? ` [${el.getAttribute('role')}]` : ''}` : 'none';
+    const state = () =>
+      `top ${dialog.scrollTop} max ${dialog.scrollHeight - dialog.clientHeight} client ${dialog.clientHeight} area ${getComputedStyle(dialog).getPropertyValue('position-area')} h ${getComputedStyle(dialog).height} open ${dialog.matches(':popover-open')} active ${label(document.activeElement)}`;
+    const scrollTopDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop')!;
+    const originals = {
+      scrollBy: Element.prototype.scrollBy,
+      scrollTo: Element.prototype.scrollTo,
+      scrollIntoView: Element.prototype.scrollIntoView,
+      focus: HTMLElement.prototype.focus,
+      showPopover: HTMLElement.prototype.showPopover,
+      hidePopover: HTMLElement.prototype.hidePopover,
+    };
+    Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: true,
+      get: scrollTopDesc.get,
+      set(this: Element, value: number) {
+        if (this === dialog) log.push(`${at()} set scrollTop ${value} (was ${this.scrollTop}) at ${from()}`);
+        scrollTopDesc.set!.call(this, value);
+      },
+    });
+    Element.prototype.scrollBy = function (this: Element, ...args: unknown[]) {
+      log.push(`${at()} scrollBy ${JSON.stringify(args)} on ${label(this)} at ${from()}`);
+      return (originals.scrollBy as (...a: unknown[]) => void).apply(this, args);
+    } as typeof Element.prototype.scrollBy;
+    Element.prototype.scrollTo = function (this: Element, ...args: unknown[]) {
+      log.push(`${at()} scrollTo ${JSON.stringify(args)} on ${label(this)} at ${from()}`);
+      return (originals.scrollTo as (...a: unknown[]) => void).apply(this, args);
+    } as typeof Element.prototype.scrollTo;
+    Element.prototype.scrollIntoView = function (this: Element, arg?: boolean | ScrollIntoViewOptions) {
+      log.push(`${at()} scrollIntoView on ${label(this)} at ${from()}`);
+      return originals.scrollIntoView.call(this, arg);
+    };
+    HTMLElement.prototype.focus = function (this: HTMLElement, options?: FocusOptions) {
+      log.push(`${at()} focus ${label(this)} ${JSON.stringify(options ?? {})} at ${from()}`);
+      return originals.focus.call(this, options);
+    };
+    HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+      log.push(`${at()} showPopover ${label(this)} at ${from()}`);
+      return originals.showPopover.call(this);
+    };
+    HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+      log.push(`${at()} hidePopover ${label(this)} at ${from()}`);
+      return originals.hidePopover.call(this);
+    };
+    const onScroll = () => log.push(`${at()} scroll event: ${state()}`);
+    const onFocusIn = (event: FocusEvent) => log.push(`${at()} focusin ${label(event.target as Element)}`);
+    const onToggle = (event: Event) => log.push(`${at()} ${event.type} ${(event as ToggleEvent).newState} on ${label(event.target as Element)}`);
+    dialog.addEventListener('scroll', onScroll);
+    document.addEventListener('focusin', onFocusIn, true);
+    document.addEventListener('toggle', onToggle, true);
+    document.addEventListener('beforetoggle', onToggle, true);
+    const watch = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type === 'attributes') log.push(`${at()} attr ${record.attributeName} on ${label(record.target as Element)}: ${state()}`);
+        else log.push(`${at()} children +${record.addedNodes.length} -${record.removedNodes.length} in ${label(record.target as Element)}`);
+      }
+    });
+    watch.observe(dialog, { attributes: true, childList: true, subtree: true });
+    let frames = 0;
+    let lastTop = -1;
+    const sample = () => {
+      if (dialog.scrollTop !== lastTop) log.push(`${at()} frame ${frames}: ${state()}`);
+      lastTop = dialog.scrollTop;
+      if (frames++ < 120) requestAnimationFrame(sample);
+    };
+    log.push(`${at()} before scroll: ${state()}`);
     dialog.scrollTop += far.top - box.top - (dialog.clientHeight - far.height) / 2;
+    log.push(`${at()} after scroll: ${state()}`);
+    requestAnimationFrame(sample);
     // Still again before the pick, as a person looks before they tap: the scroll's own frames run first,
     // with the arrows it shows. The time, the popover and the hit test are then read in one go, so nothing
     // moves between them.
-    await settle();
+    try {
+      await settle();
+    } finally {
+      frames = 1000;
+      watch.disconnect();
+      dialog.removeEventListener('scroll', onScroll);
+      document.removeEventListener('focusin', onFocusIn, true);
+      document.removeEventListener('toggle', onToggle, true);
+      document.removeEventListener('beforetoggle', onToggle, true);
+      Object.defineProperty(Element.prototype, 'scrollTop', scrollTopDesc);
+      Object.assign(Element.prototype, { scrollBy: originals.scrollBy, scrollTo: originals.scrollTo, scrollIntoView: originals.scrollIntoView });
+      Object.assign(HTMLElement.prototype, { focus: originals.focus, showPopover: originals.showPopover, hidePopover: originals.hidePopover });
+    }
+    log.push(`${at()} after settle: ${state()}`);
+    console.log(`PICKER SCROLL LOG\n${log.join('\n')}`);
     const now = dialog.getBoundingClientRect();
     const shown = evening.getBoundingClientRect();
-    const scrolled = `${placed}; now top ${now.top}, bottom ${now.bottom}, scrollTop ${dialog.scrollTop} of ${dialog.scrollHeight - dialog.clientHeight}, time ${shown.top} to ${shown.bottom}, position-area ${getComputedStyle(dialog).getPropertyValue('position-area')}, focus ${document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName}`;
+    const scrolled = `${placed}; log:\n${log.join('\n')}\nnow top ${now.top}, bottom ${now.bottom}, scrollTop ${dialog.scrollTop} of ${dialog.scrollHeight - dialog.clientHeight}, time ${shown.top} to ${shown.bottom}, position-area ${getComputedStyle(dialog).getPropertyValue('position-area')}, focus ${document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName}`;
     expect(shown.top, scrolled).toBeGreaterThan(now.top);
     expect(shown.bottom, scrolled).toBeLessThan(now.bottom);
     expect(now.top, scrolled).toBeGreaterThanOrEqual(0);
