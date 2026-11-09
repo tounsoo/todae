@@ -1,8 +1,10 @@
 name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
-# With none, publishes the versions that aren't on npm yet: merging that pull request releases.
-# Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm.
+# With none, publishes the versions that aren't on npm yet once Checks passes, unless the push only changed
+# Markdown or docs pages. So merging the Version Packages pull request releases.
+# Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm
+# and whose package source is the same as at that version's tag (the docs job below has the full rule).
 on:
   push:
     branches: [main]
@@ -10,13 +12,15 @@ on:
 # Each job asks for only what it needs; only the publish job can mint an npm token.
 permissions: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+# No workflow-wide concurrency group: GitHub keeps one waiting run per group and cancels the older one,
+# so a Version Packages merge queued behind a running release could lose its publish to a later push.
+# Each job that writes holds its own group instead, so only a newer run's same job can displace it:
+# a waiting publish only by a newer publish, which then publishes whatever npm still lacks.
 
 jobs:
   select-mode:
     name: Select mode
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -36,7 +40,9 @@ jobs:
     name: Version Packages pull request
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'version'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-version-${{ github.ref }}
     permissions:
       contents: write
       pull-requests: write
@@ -58,7 +64,23 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
-      - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      # A newer push's run decides the pull request from a newer main, and this job can run after it,
+      # so it stops rather than write an older state over the newer one.
+      - id: latest
+        name: Check this is still main's tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$tip" = "$GITHUB_SHA" ]; then
+            echo "tip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "main moved past $GITHUB_SHA, so its newer run updates the Version Packages pull request."
+            echo "tip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: ${{ steps.latest.outputs.tip == 'true' }}
+        uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           github-token: ${{ steps.app-token.outputs.token }}
 
@@ -66,7 +88,7 @@ jobs:
     name: Build and pack
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'publish'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -84,10 +106,79 @@ jobs:
         with:
           publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
 
+  # A Version Packages pull request merged on a stale base, or a publish re-run on a commit that main's CI
+  # failed, would otherwise publish code CI never passed. Checks reports only once every job it needs has
+  # finished, so until then the commit has no Checks run and this waits.
+  wait-for-ci:
+    name: Wait for CI
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'publish'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      checks: read
+      contents: read
+    outputs:
+      publish: ${{ steps.change.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The diff needs the push's base commit.
+          fetch-depth: 0
+      # CI skips most checks on a push that is only Markdown or docs pages, so its Checks proves nothing
+      # about the package. Publishing from such a commit would ship whatever an earlier commit's CI failed,
+      # so the run skips publishing. That is routine for a docs push, so it doesn't fail the run.
+      - id: change
+        name: Classify the diff
+        env:
+          EVENT_NAME: push
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/classify-diff.sh
+          if [ "$(sed -n 's/^class=//p' "$GITHUB_OUTPUT" | tail -n 1)" = all ]; then
+            echo "publish=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code and has no changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
+            echo "publish=false" >>"$GITHUB_OUTPUT"
+          fi
+      - if: ${{ steps.change.outputs.publish == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # 15368 is GitHub Actions, so a check run another app names Checks doesn't count.
+          # A failed read, such as a 502, waits and reads again.
+          for attempt in $(seq 110); do
+            run=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?check_name=Checks&app_id=15368" \
+              --jq '.check_runs | sort_by(.id) | last | if . == null then "missing" else "\(.status) \(.conclusion)" end') || run="unreadable"
+            case "$run" in
+              "completed success")
+                echo "Checks passed on $GITHUB_SHA."
+                exit 0
+                ;;
+              completed*)
+                echo "::error::Checks concluded ${run#completed } on $GITHUB_SHA, so this run doesn't publish. Once CI passes on this commit, re-run this workflow; a later commit that changes code, has no changeset and passes CI publishes too."
+                exit 1
+                ;;
+            esac
+            echo "Checks on $GITHUB_SHA: $run"
+            sleep 30
+          done
+          echo "::error::Checks didn't finish on $GITHUB_SHA within 55 minutes. Re-run this workflow once it does."
+          exit 1
+
   publish:
     name: Publish to npm
-    needs: pack
-    runs-on: ubuntu-latest
+    needs: [pack, wait-for-ci]
+    if: needs.wait-for-ci.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    # Waits behind a running publish, so a newer run that also found the version missing from npm finds
+    # it published and skips.
+    concurrency:
+      group: ${{ github.workflow }}-publish-${{ github.ref }}
     # The npm trusted publisher names this environment. Add required reviewers to it
     # in the repository settings to approve each release before it publishes.
     environment: npm
@@ -103,20 +194,61 @@ jobs:
           cache: false
       # pnpm 10 publishes through the npm CLI, and trusted publishing needs npm 11.5.1 or later.
       - run: npm install -g npm@11.21.1
-      - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      # An earlier run's publish, which this one waited behind, may have published this version already.
+      # npm can take minutes to serve a version it just took, so the tag that publish pushes counts too.
+      - id: npm
+        name: Check npm for this version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          package=@tounsoo/todae
+          version=$(node -p "require('./packages/design-system/package.json').version")
+          # A failed read fails the step rather than reading as "no tag".
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$package@$version" --jq '.[].ref')
+          if printf '%s\n' "$refs" | grep -qxF "refs/tags/$package@$version"; then
+            echo "The $package@$version tag exists, so an earlier run published it and this run doesn't publish it again."
+            echo "missing=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if out=$(npm view "$package@$version" version 2>&1); then
+            if [ "$out" = "$version" ]; then
+              echo "npm already has $package@$version, so this run doesn't publish it again."
+              echo "missing=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+          elif [[ $out == *E404* ]]; then
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$out" >&2
+            exit 1
+          fi
+      - if: ${{ steps.npm.outputs.missing == 'true' }}
+        uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
 
   # docs-deploy.yml deploys the docs and their MCP server to production from docs-stable, so they only
   # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
-  # above went: to this commit when its package version is on npm and no changeset that releases
-  # something is waiting, otherwise to the commit tagged with the latest version on npm. A failed
-  # publish so leaves the docs on the last release, and re-running this job catches up after one.
+  # above went, and from the tip of main, not this run's commit: to the tip when the tip's package version is
+  # on npm, no changeset that releases something is waiting, and the package source is the same as at
+  # that version's tag; to that version's tag when only the source differs; otherwise to the commit
+  # tagged with the latest version on npm. It waits for npm to serve this run's version after a
+  # publish, and main's version when that is tagged but not served yet, as when this job displaced
+  # the publishing run's own. A failed publish leaves the docs on the last release, and re-running
+  # this job catches up after one. With no tag to compare against, it warns and leaves docs-stable
+  # where it is.
   docs:
     name: Deploy the docs
     needs: [select-mode, publish]
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # One at a time, so two runs can't move docs-stable at once. A job of one run can displace a
+    # waiting job of another in either order, since a publish run's docs job joins the group late,
+    # so each decides from the tip of main as it finds it, not from the commit that started its run.
+    concurrency:
+      group: ${{ github.workflow }}-docs-${{ github.ref }}
     permissions:
       contents: read
     steps:
@@ -144,8 +276,8 @@ jobs:
           # Whether npm has the version. Fails the job on any npm error but "not found".
           on_npm() {
             local out
-            if out=$(npm view "$package@$version" version 2>&1); then
-              [ "$out" = "$version" ]
+            if out=$(npm view "$package@$1" version 2>&1); then
+              [ "$out" = "$1" ]
             elif [[ $out == *E404* ]]; then
               return 1
             else
@@ -153,26 +285,76 @@ jobs:
               exit 1
             fi
           }
-          # A changeset that releases something names the package in its front matter; an empty one doesn't.
-          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
-          released=false
-          if [ -z "$waiting" ]; then
-            # The registry can take minutes to serve a version it just took.
+          # The registry can take minutes to serve a version it just took, so after a publish this waits
+          # until it serves this run's version, before reading what npm has.
+          if [ "$JUST_PUBLISHED" = true ]; then
+            served=false
             for attempt in $(seq 10); do
-              if on_npm; then released=true; break; fi
-              [ "$JUST_PUBLISHED" = true ] || break
-              sleep 30
+              if on_npm "$version"; then served=true; break; fi
+              [ "$attempt" = 10 ] || sleep 30
             done
-            if [ "$JUST_PUBLISHED" = true ] && [ "$released" = false ]; then
+            if [ "$served" = false ]; then
               echo "npm doesn't serve $package@$version yet; re-run this job" >&2
               exit 1
             fi
           fi
+          # Checkout points origin/main at this run's commit, so fetch main's tip again. The repository is
+          # public, so the fetch needs no credentials.
+          git fetch -q --tags origin +refs/heads/main:refs/remotes/origin/main
+          git checkout -q --detach refs/remotes/origin/main
+          head=$(git rev-parse HEAD)
+          version=$(node -p "require('./packages/design-system/package.json').version")
+          # The commit a version's tag points at, or nothing when the tag is missing.
+          tagged() {
+            git rev-parse -q --verify "refs/tags/$package@$1^{commit}" || true
+          }
+          # A changeset that releases something names the package in its front matter; an empty one doesn't.
+          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
+          served=false
+          if on_npm "$version"; then
+            served=true
+          elif [ -n "$(tagged "$version")" ]; then
+            # Publish tags a version only after npm took it, so npm is still catching up. This job may
+            # have displaced the publishing run's own, so it waits as that one would.
+            for attempt in $(seq 10); do
+              sleep 30
+              if on_npm "$version"; then served=true; break; fi
+            done
+            if [ "$served" = false ]; then
+              echo "npm doesn't serve $package@$version yet; re-run this job" >&2
+              exit 1
+            fi
+          fi
+          released=false
+          if [ -z "$waiting" ] && [ "$served" = true ]; then
+            released=true
+          fi
+          no_tag() {
+            echo "::warning::npm has $package@$1 but this repository has no $package@$1 tag, so docs-stable stays where it is. CONTRIBUTING.md (Releases) says how to add the tag."
+            exit 0
+          }
           if [ "$released" = true ]; then
-            target=$GITHUB_SHA
+            target=$(tagged "$version")
+            [ -n "$target" ] || no_tag "$version"
+            # What the docs build and describe from the package. Tests, snapshots and fixtures don't count,
+            # as they don't for Changesets. package.json doesn't either, so a dev dependency bump with an
+            # empty changeset doesn't hold docs-only changes back.
+            source=(
+              packages/design-system/src packages/design-system/tokens
+              packages/design-system/schema packages/design-system/scripts
+              ':(exclude,glob)**/*.test.ts' ':(exclude,glob)**/*.test.tsx'
+              ':(exclude,glob)**/__snapshots__/**' ':(exclude,glob)**/__fixtures__/**'
+              ':(exclude)packages/design-system/src/test'
+            )
+            if git diff --quiet "$target" "$head" -- "${source[@]}"; then
+              target=$head
+            else
+              echo "The package source changed after $package@$version without a release, so docs-stable goes no further than that version's tag."
+            fi
           else
             latest=$(npm view "$package" version)
-            target=$(git rev-list -n 1 "refs/tags/$package@$latest")
+            target=$(tagged "$latest")
+            [ -n "$target" ] || no_tag "$latest"
           fi
           current=$(git rev-parse -q --verify refs/remotes/origin/docs-stable || true)
           if [ -z "$current" ]; then
