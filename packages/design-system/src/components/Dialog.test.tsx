@@ -458,6 +458,18 @@ describe('Dialog name check', () => {
     error.mockRestore();
   });
 
+  it('keeps an aria-labelledby that is a no-break space, since that is a real id', () => {
+    render(
+      <>
+        <h2 id={'\u00a0'}>Elsewhere</h2>
+        <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={'\u00a0'}>
+          <Dialog.Title>Saved</Dialog.Title>
+        </Dialog.Root>
+      </>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Elsewhere' })).toBeTruthy();
+  });
+
   it('takes a Title whose id is a no-break space as a name', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
