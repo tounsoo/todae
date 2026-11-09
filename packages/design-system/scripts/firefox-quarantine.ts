@@ -57,18 +57,19 @@ export const firefoxQuarantine: readonly QuarantineEntry[] = [
 export interface FirefoxBranch {
   /** Test file, relative to packages/design-system. */
   file: string;
-  /** Text of the line that treats Firefox apart, enough to find it. */
+  /** Text of the one line that treats Firefox apart, enough to find it. */
   code: string;
   reason: string;
 }
 
 /**
  * Every line of browser test code that treats Firefox apart, by a skip, a
- * condition, an expected value or anything else that names it. A failing
- * Firefox test goes on the quarantine above instead, so it still runs and
- * shows. A unit test reads each browser test file with `firefoxLines` and
- * fails on a line this list doesn't name, so a Firefox failure can't be
- * silenced without a reason here.
+ * condition, an expected value or anything else that names Firefox or Gecko.
+ * A failing Firefox test goes on the quarantine above instead, so it still runs
+ * and shows. scripts/firefox-quarantine.test.ts reads the browser tests and
+ * their helpers in src/test, and fails on a line no entry here names, so a
+ * Firefox failure can't be silenced without a reason. Each entry names one
+ * line, so two lines alike need two entries.
  */
 export const firefoxBranches: readonly FirefoxBranch[] = [
   {
@@ -97,30 +98,6 @@ export const firefoxBranches: readonly FirefoxBranch[] = [
     reason: "Firefox mirrors a popover's position-area alignment when its parent's direction differs (Firefox bug 2019601).",
   },
 ];
-
-/** The lines of a test file whose code, leaving out comments, names Firefox in any way, such as `'firefox'` or `isFirefox`. */
-export function firefoxLines(source: string): { line: number; text: string }[] {
-  // Blank out comments, stepping over strings, so a comment's "Firefox" or a string's "//" don't count.
-  let code = '';
-  for (let i = 0; i < source.length; i++) {
-    const char = source[i]!;
-    if (char === "'" || char === '"' || char === '`') {
-      let end = i + 1;
-      while (end < source.length && source[end] !== char && !(char !== '`' && source[end] === '\n')) end += source[end] === '\\' ? 2 : 1;
-      code += source.slice(i, end + 1);
-      i = end;
-    } else if (char === '/' && (source[i + 1] === '/' || source[i + 1] === '*')) {
-      const end = source[i + 1] === '/' ? source.indexOf('\n', i) : source.indexOf('*/', i + 2) + 2;
-      const stop = end < i + 2 ? source.length : end;
-      code += source.slice(i, stop).replace(/[^\n]/g, ' ');
-      i = stop - 1;
-    } else code += char;
-  }
-  return code
-    .split('\n')
-    .map((text, index) => ({ line: index + 1, text: text.trim() }))
-    .filter(({ text }) => /firefox/i.test(text));
-}
 
 export interface Verdict {
   /** What fails the job, one line each. */

@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BrowserResults } from './browser-results-reporter.ts';
-import { annotations, firefoxBranches, firefoxLines, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
+import ts from 'typescript';
+import { annotations, firefoxBranches, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
 
 const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 'A > flakes', issue: 'https://github.com/tounsoo/todae/issues/367', reason: 'Known.' };
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
@@ -125,6 +126,28 @@ describe('the Firefox quarantine list', () => {
   });
 });
 
+/** The lines of a file whose code, leaving out comments, names Firefox or Gecko in any way, such as `'firefox'` or `isFirefox`. */
+function firefoxLines(source: string): { line: number; text: string }[] {
+  // TypeScript's parser tells a comment from a string, a regex, a template or JSX text.
+  const file = ts.createSourceFile('file.tsx', source, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  const comments: ts.CommentRange[] = [];
+  const text: ts.Node[] = [];
+  const visit = (node: ts.Node) => {
+    if (node.kind === ts.SyntaxKind.JsxText) text.push(node);
+    comments.push(...(ts.getLeadingCommentRanges(source, node.pos) ?? []), ...(ts.getTrailingCommentRanges(source, node.end) ?? []));
+    for (const child of node.getChildren(file)) visit(child);
+  };
+  visit(file);
+  let code = source;
+  // JSX text has no comments, though it can read like one.
+  const inText = ({ pos }: ts.CommentRange) => text.some((node) => pos >= node.pos && pos < node.end);
+  for (const { pos, end } of comments.filter((comment) => !inText(comment))) code = code.slice(0, pos) + code.slice(pos, end).replace(/[^\n]/g, ' ') + code.slice(end);
+  return code
+    .split('\n')
+    .map((text, index) => ({ line: index + 1, text: text.trim() }))
+    .filter(({ text }) => /firefox|gecko/i.test(text));
+}
+
 describe('Firefox branches in browser tests', () => {
   it('finds every line of code that names Firefox, and none in a comment', () => {
     const source = [
@@ -136,37 +159,48 @@ describe('Firefox branches in browser tests', () => {
       "const images = '**/*.png';",
       "it('in options', { skip: server.browser === 'firefox' }, () => {});",
       "const fonts = '**/*.woff2'; // a URL like 'https://example.com' isn't a comment",
-      "it('from the body', ({ skip }) => { if (/Firefox\\//.test(navigator.userAgent)) skip(); });",
+      "it('from the body', ({ skip }) => { if (/Gecko\\/\\d/.test(navigator.userAgent)) skip(); });",
       "it.skipIf(server.browser === 'firefox')( // Firefox can't start the drag",
       "  'with a comment after it',",
       ');',
+      "const trim = (path: string) => path.replace(/\\/*$/, '');",
+      "const remote = /^https?:\\/\\//.test(location.href) && server.browser === 'firefox';",
+      "const origin = `${remote ? `https://` : `http://`}${server.browser === 'firefox' ? 'a' : 'b'}`;",
+      "const quoted = /^['\"]/; // Firefox quotes a mention the same way",
+      "const Note = () => <p>Don't stop {/* Firefox needs nothing here */}</p>;",
+      'const Url = () => <p>// Firefox, as text</p>;',
     ].join('\n');
-    expect(firefoxLines(source).map(({ line }) => line)).toEqual([1, 2, 7, 9, 10]);
+    expect(firefoxLines(source).map(({ line }) => line)).toEqual([1, 2, 7, 9, 10, 14, 15, 18]);
     expect(firefoxLines(source)[4]!.text).toBe("it.skipIf(server.browser === 'firefox')(");
   });
 
   const root = join(import.meta.dirname, '../src');
-  const files = (readdirSync(root, { recursive: true }) as string[]).filter((name) => /\.browser\.test\.tsx?$/.test(name));
-  const found = files.flatMap((name) => firefoxLines(readFileSync(join(root, name), 'utf8')).map((line) => ({ file: `src/${name.split('\\').join('/')}`, ...line })));
+  const files = (readdirSync(root, { recursive: true }) as string[])
+    .map((name) => name.split('\\').join('/'))
+    .filter((name) => /\.browser\.test\.tsx?$/.test(name) || /^test\/.+\.tsx?$/.test(name));
+  const found = files.flatMap((name) => firefoxLines(readFileSync(join(root, name), 'utf8')).map((line) => ({ file: `src/${name}`, ...line })));
+  // Each entry names one line, so a second line like one already listed needs its own entry and reason.
+  const unused = [...firefoxBranches];
+  const unlisted = found.filter(({ file, text }) => {
+    const at = unused.findIndex((branch) => branch.file === file && text.includes(branch.code));
+    if (at === -1) return true;
+    unused.splice(at, 1);
+    return false;
+  });
 
   it('lists every line of a browser test that treats Firefox apart, so a failure cannot be silenced by a skip', () => {
     expect(found.length).toBeGreaterThan(0);
-    const unlisted = found.filter(({ file, text }) => !firefoxBranches.some((branch) => branch.file === file && text.includes(branch.code)));
     expect(
       unlisted.map(({ file, line, text }) => `${file}:${line} ${text}`),
       'These lines treat Firefox apart; add each to firefoxBranches with a reason, or quarantine the test instead',
     ).toEqual([]);
   });
 
-  it('keeps no entry for a line that is gone, none twice, and gives each one a reason', () => {
-    const keys = firefoxBranches.map(({ file, code }) => `${file} > ${code}`);
-    expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([]);
-    for (const branch of firefoxBranches) {
-      expect(
-        found.some(({ file, text }) => file === branch.file && text.includes(branch.code)),
-        `firefoxBranches lists "${branch.code}" in ${branch.file}, which no line there has any more`,
-      ).toBe(true);
-      expect(branch.reason.trim()).not.toBe('');
-    }
+  it('keeps no entry for a line that is gone, and gives each one a reason', () => {
+    expect(
+      unused.map(({ file, code }) => `${file}: ${code}`),
+      'firefoxBranches lists lines that no longer exist',
+    ).toEqual([]);
+    for (const branch of firefoxBranches) expect(branch.reason.trim()).not.toBe('');
   });
 });
