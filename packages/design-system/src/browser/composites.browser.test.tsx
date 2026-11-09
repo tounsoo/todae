@@ -745,8 +745,15 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
       expect(shown.top).toBeGreaterThan(box.top);
       expect(shown.bottom).toBeLessThan(box.bottom);
     });
-    await userEvent.click(evening);
-    expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 6:00 PM');
+    // A tap there lands on the time, by the browser's own hit test. The pick goes through what the hit test
+    // found, because Playwright's WebKit click counts a time in a position-area popover outside its viewport.
+    const shown = evening.getBoundingClientRect();
+    const hit = document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2);
+    expect(hit && evening.contains(hit)).toBe(true);
+    (hit as HTMLElement).click();
+    await waitFor(() =>
+      expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 6:00 PM'),
+    );
   });
 
   it.each(['compact', 'comfortable', 'spacious'] as const)(
