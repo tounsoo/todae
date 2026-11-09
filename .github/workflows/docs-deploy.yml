@@ -15,7 +15,8 @@ on:
   # Drafts get a preview too. ready_for_review is left out because it changes no code.
   pull_request:
     types: [opened, synchronize, reopened]
-    # The same paths as ci.yml: a markdown-only change starts no job.
+    # A Markdown-only change starts no deploy. ci.yml runs on every change, but .github/scripts/change-class.sh
+    # names these same files markdown, and on those it runs only Changes, Forbidden paths and Checks.
     paths:
       - '**'
       - '!**.md'
