@@ -1,12 +1,12 @@
 // Installs the packed @tounsoo/todae tarball the way an app gets it from npm,
-// checks that every export resolves with import() and require(), then builds
+// resolves every export and loads each module entry with import() and require(), then builds
 // this Next.js app against it and fetches the server-rendered page.
 // Run `pnpm build:ds` first; the pack skips the prepack build.
 import { execFileSync, spawn } from 'node:child_process'
-import { mkdtempSync, readdirSync, readFileSync, readlinkSync, renameSync, rmSync, symlinkSync } from 'node:fs'
+import { lstatSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -18,9 +18,35 @@ const markers = ['Server text', 'Server badge', 'SSR text', 'SSR button', 'SSR d
 
 const run = (command, args, cwd) => execFileSync(command, args, { cwd, stdio: 'inherit' })
 
+// The workspace link pnpm makes, put back after the run, or before it when an
+// interrupted run left the unpacked tarball in its place.
+const link = relative(dirname(installed), pkgDir)
+const restoreLink = () => {
+  if (lstatSync(installed, { throwIfNoEntry: false })?.isSymbolicLink()) return
+  rmSync(installed, { recursive: true, force: true })
+  symlinkSync(link, installed)
+}
+restoreLink()
+
 const temp = mkdtempSync(join(tmpdir(), 'todae-ssr-smoke-'))
-const link = readlinkSync(installed)
 let swapped = false
+let server
+const stopServer = () => {
+  if (!server?.pid) return
+  try {
+    process.kill(-server.pid, 'SIGTERM')
+  } catch {
+    server.kill('SIGTERM')
+  }
+}
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.once(signal, () => {
+    stopServer()
+    if (swapped) restoreLink()
+    rmSync(temp, { recursive: true, force: true })
+    process.exit(130)
+  })
+}
 
 try {
   run('pnpm', ['--dir', pkgDir, 'pack', '--pack-destination', temp, '--config.ignore-scripts=true'])
@@ -39,16 +65,14 @@ try {
   run('pnpm', ['exec', 'next', 'build'], here)
   await fetchPage()
 } finally {
-  if (swapped) {
-    rmSync(installed, { recursive: true, force: true })
-    symlinkSync(link, installed)
-  }
+  if (swapped) restoreLink()
   rmSync(temp, { recursive: true, force: true })
 }
 
 async function checkExports() {
   const { exports } = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'))
   const require = createRequire(join(here, 'smoke.mjs'))
+  let modules = 0
   for (const [key, entry] of Object.entries(exports)) {
     const specifier = key === '.' ? '@tounsoo/todae' : `@tounsoo/todae${key.slice(1)}`
     const file = require.resolve(specifier)
@@ -56,16 +80,17 @@ async function checkExports() {
     // Each module entry must load both ways: import(), and Node's require() of ESM.
     await import(pathToFileURL(file).href)
     require(specifier)
+    modules++
   }
-  console.log(`resolved ${Object.keys(exports).length} exports with import() and require()`)
+  console.log(`resolved ${Object.keys(exports).length} exports; loaded ${modules} module entries with import() and require()`)
 }
 
 async function fetchPage() {
-  const child = spawn('pnpm', ['exec', 'next', 'start', '-p', String(port)], {
+  const child = (server = spawn('pnpm', ['exec', 'next', 'start', '-p', String(port)], {
     cwd: here,
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
-  })
+  }))
 
   let log = ''
   child.stdout?.on('data', (chunk) => {
@@ -92,13 +117,7 @@ async function fetchPage() {
       }
     }
   } finally {
-    if (child.pid) {
-      try {
-        process.kill(-child.pid, 'SIGTERM')
-      } catch {
-        child.kill('SIGTERM')
-      }
-    }
+    stopServer()
   }
 
   const missing = markers.filter((marker) => !html.includes(marker))
