@@ -275,9 +275,9 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         # --archive=tgz uploads the output as one gzipped tarball of about 26 MB, not file by file. Vercel caps the
-        # files a team uploads in a rolling day at 40,000 on this plan. A build holds about 3,000 distinct files,
-        # and Next stamps a new build id into every prerendered page, so even a rebuild of the same commit changes
-        # over 1,100 of them and Vercel's per-file cache can't skip them. A busy day of previews used up the cap.
+        # files a team uploads in a rolling day at 40,000 on this plan, and a build holds about 4,700. Every page
+        # names its commit's build id (next.config.mjs), so each new commit changes over 1,000 of them and Vercel's
+        # per-file cache can't skip them. A busy day of previews used up the cap.
         run: |
           set -euo pipefail
           args=(deploy --prebuilt --archive=tgz --yes --token="$VERCEL_TOKEN" --meta "githubCommitSha=$SHA" --meta "githubCommitRef=$BRANCH")
