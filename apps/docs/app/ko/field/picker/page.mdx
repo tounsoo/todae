@@ -31,6 +31,8 @@ Calendar에서, 또는 값이 하나인 OptionList에서 고르면 값이 정해
 
 팝오버는 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유를 받습니다. 팝오버를 닫는 선택이나 `close` 호출이면 `'select'`, 그 밖에는 `'escape'`, `'outside'`, `'trigger'`, 필드가 비활성화되면 `'disabled'`입니다. 비활성화된 필드는 팝오버를 보여 주지 않고, 열려 있던 팝오버는 필드가 비활성화되면 닫히며 다시 활성화되어도 닫힌 채로 있습니다. 열리면 포커스는 Calendar의 날짜나 OptionList처럼 패널 자체의 시작 지점으로, 없으면 팝오버의 첫 포커스 가능한 요소로 갑니다. Escape를 누르면 닫히고, 포커스는 열리기 전에 있던 곳으로 돌아갑니다. 필드 안을 누르는 것은 바깥을 누르는 것이 아닙니다.
 
+팝오버는 필드 전체의 아래에 열립니다. 시간 목록을 아래에 둔 달력처럼 패널이 필드 위아래의 공간보다 키가 크면, 휴대폰에서처럼, CSS `position-area`가 있는 브라우저에서 한쪽 공간에 맞추고 스크롤됩니다. 열려 있는 동안 그쪽과 스크롤 위치를 유지하며, 창 크기가 바뀌거나 페이지가 스크롤되거나 패널 크기가 바뀌면 다시 배치됩니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 입력한 값을 담는 입력이나 `Field.TextInput` 같은 다른 컨트롤 옆에서는 그 컨트롤이 필드의 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 `label`로 이름이 붙습니다. 단독으로 쓰면 버튼이 필드의 컨트롤이고 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 팝오버가 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `label`로 이름이 붙은 `role="dialog"`입니다. 버튼은 폼과 함께 아무것도 보내지 않습니다.

@@ -13,6 +13,7 @@ import { timeOptions } from '../components/timeOptions.js';
 import { Tabs } from '../components/Tabs.js';
 import { useField } from '../components/useField.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
+import { settle } from '../test/settle.js';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
   return (
@@ -726,6 +727,9 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Choose date and time' }));
     const dialog = await screen.findByRole('dialog', { name: 'Choose date and time' });
     await waitFor(() => expect(dialog.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+    // Still too, as an engine may place it again once it settles: WebKit re-resolves an open popover's
+    // position fallbacks right after its opening transition ends.
+    await settle();
     const box = dialog.getBoundingClientRect();
     // What placed it, for a failure in an engine this machine can't run.
     const css = getComputedStyle(dialog);
@@ -740,16 +744,21 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     const far = evening.getBoundingClientRect();
     expect(far.top).toBeGreaterThan(box.bottom);
     dialog.scrollTop += far.top - box.top - (dialog.clientHeight - far.height) / 2;
-    await waitFor(() => {
-      const shown = evening.getBoundingClientRect();
-      expect(shown.top).toBeGreaterThan(box.top);
-      expect(shown.bottom).toBeLessThan(box.bottom);
-    });
+    // Still again before the pick, as a person looks before they tap: the scroll's own frames run first,
+    // with the arrows it shows. The time, the popover and the hit test are then read in one go, so nothing
+    // moves between them.
+    await settle();
+    const now = dialog.getBoundingClientRect();
+    const shown = evening.getBoundingClientRect();
+    const scrolled = `${placed}; now top ${now.top}, bottom ${now.bottom}, scrollTop ${dialog.scrollTop} of ${dialog.scrollHeight - dialog.clientHeight}, time ${shown.top} to ${shown.bottom}, position-area ${getComputedStyle(dialog).getPropertyValue('position-area')}, focus ${document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName}`;
+    expect(shown.top, scrolled).toBeGreaterThan(now.top);
+    expect(shown.bottom, scrolled).toBeLessThan(now.bottom);
+    expect(now.top, scrolled).toBeGreaterThanOrEqual(0);
+    expect(now.bottom, scrolled).toBeLessThanOrEqual(window.innerHeight + 1);
     // A tap there lands on the time, by the browser's own hit test. The pick goes through what the hit test
     // found, because Playwright's WebKit click counts a time in a position-area popover outside its viewport.
-    const shown = evening.getBoundingClientRect();
     const hit = document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2);
-    expect(hit && evening.contains(hit)).toBe(true);
+    expect(hit && evening.contains(hit), `${scrolled}, hit ${hit?.tagName ?? 'nothing'}`).toBe(true);
     (hit as HTMLElement).click();
     await waitFor(() =>
       expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 6:00 PM'),
