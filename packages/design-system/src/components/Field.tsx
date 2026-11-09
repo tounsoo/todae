@@ -52,8 +52,9 @@ export type FieldRootProps = {
   /**
    * A message for a rule the browser can't check, set with
    * `setCustomValidity` on the field's control when that is a native
-   * input, select or textarea, else on its value input, as for a read-only
-   * typed input. An empty string or undefined means the rule holds.
+   * input, select or textarea, else on its value input. A read-only typed
+   * input (Field.DateInput and its kin) gives it to its value input too,
+   * which a form still checks. An empty string or undefined means the rule holds.
    */
   customValidity?: string;
   id?: string;

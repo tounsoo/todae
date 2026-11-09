@@ -899,8 +899,8 @@
       "ko": "셸을 유효하지 않음으로 표시하고 입력에 aria-invalid를 설정합니다."
     },
     "customValidity": {
-      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as for a read-only Field.DateInput, which a form leaves unchecked while its value input still blocks a submit. An empty string or undefined means the rule holds.",
-      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 값 입력(value input)에 setCustomValidity로 설정합니다. 읽기 전용 Field.DateInput이 그렇습니다. 폼은 그 텍스트 입력을 검사하지 않지만 값 입력은 여전히 제출을 막습니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
+      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input. A read-only Field.DateInput, Field.TimeInput, Field.DateTimeInput or Field.DateRangeInput gives it to its value input too, since a form leaves the text input unchecked and the value input still blocks a submit. An empty string or undefined means the rule holds.",
+      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 값 입력(value input)에 setCustomValidity로 설정합니다. 읽기 전용인 Field.DateInput, Field.TimeInput, Field.DateTimeInput, Field.DateRangeInput도 값 입력에 둡니다. 폼은 그 텍스트 입력을 검사하지 않지만 값 입력은 여전히 제출을 막기 때문입니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
     },
     "id": {
       "en": "Input id. Auto-generated when omitted.",
