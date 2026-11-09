@@ -63,8 +63,8 @@ export interface FirefoxSkip {
 }
 
 /**
- * Browser tests that a `skipIf` or `runIf` naming Firefox keeps from running
- * there, because Firefox can't do what they test. A test that fails in
+ * Browser tests that a condition naming Firefox keeps from running there, as
+ * `findFirefoxSkips` finds them, because Firefox can't do what they test. A test that fails in
  * Firefox goes on the quarantine above instead, so it still runs and shows.
  * A unit test checks that every skip naming Firefox in a browser test is here.
  */
@@ -80,6 +80,78 @@ export const firefoxSkips: readonly FirefoxSkip[] = [
     reason: 'Firefox draws the fill with no part to transition, and motion only has to work in Chrome.',
   },
 ];
+
+/** A literal that names Firefox: a string, template or regex, any case. Comments name it bare, so they don't count. */
+const NAMES_FIREFOX = /(['"`/])firefox\1/i;
+const STRING = /^\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/;
+
+/** The index of the `)` that closes the `(` at `open`, stepping over strings. */
+function closing(source: string, open: number) {
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    const char = source[i]!;
+    if (char === "'" || char === '"' || char === '`') {
+      for (i++; i < source.length && source[i] !== char; i++) if (source[i] === '\\') i++;
+    } else if (char === '(') depth++;
+    else if (char === ')' && --depth === 0) return i;
+  }
+  return source.length;
+}
+
+/** The test name a call starting at `from` is given: past any `.each(…)` or `.for(…)`, the string its `(` opens with. */
+function nameAfter(source: string, from: number) {
+  let rest = source.slice(from);
+  for (let table; (table = /^\s*\.(?:each|for)\s*\(/.exec(rest)); ) rest = rest.slice(closing(rest, table[0].length - 1) + 1);
+  const call = /^\s*\(/.exec(rest);
+  return call ? STRING.exec(rest.slice(call[0].length))?.[2] : undefined;
+}
+
+/**
+ * Every test or group in a browser test file that a condition naming Firefox
+ * skips or runs alone: by `skipIf` or `runIf`, through a constant or an alias
+ * of either, or by the test context's `skip`. A skip whose test has no
+ * literal name is returned with its line, so the list can't take it silently.
+ */
+export function findFirefoxSkips(source: string): { name: string; line: number }[] {
+  const lineOf = (index: number) => source.slice(0, index).split('\n').length;
+  // Constants whose value names Firefox, directly or through another such constant.
+  const tainted = new Set<string>();
+  const declarations = [...source.matchAll(/\b(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]*)/g)];
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const [, name, value] of declarations)
+      if (!tainted.has(name!) && (NAMES_FIREFOX.test(value!) || [...tainted].some((other) => new RegExp(`\\b${other}\\b`).test(value!)))) {
+        tainted.add(name!);
+        grew = true;
+      }
+  }
+  const namesFirefox = (text: string) => NAMES_FIREFOX.test(text) || [...tainted].some((name) => new RegExp(`\\b${name}\\b`).test(text));
+
+  const found: { name: string; line: number }[] = [];
+  const add = (index: number, name: string | undefined) => found.push({ name: name ?? `(a test with no literal name, line ${lineOf(index)})`, line: lineOf(index) });
+  const aliases: string[] = [];
+  for (const call of source.matchAll(/\.(?:skipIf|runIf)\s*\(/g)) {
+    const open = call.index + call[0].length - 1;
+    const close = closing(source, open);
+    if (!namesFirefox(source.slice(open + 1, close))) continue;
+    const alias = /\b(?:const|let|var)\s+(\w+)\s*=\s*[\w.]*$/.exec(source.slice(0, call.index));
+    if (alias && !nameAfter(source, close + 1)) aliases.push(alias[1]!);
+    else add(call.index, nameAfter(source, close + 1));
+  }
+  for (const alias of aliases)
+    for (const use of source.matchAll(new RegExp(`(?<![\\w.])${alias}\\b(?!\\s*=)`, 'g'))) {
+      if (/\b(?:const|let|var)\s+$/.test(source.slice(0, use.index))) continue;
+      add(use.index, nameAfter(source, use.index + alias.length));
+    }
+  // The test context's own skip, called from inside a test.
+  for (const call of source.matchAll(/(?<![\w])skip\s*\(/g)) {
+    const open = call.index + call[0].length - 1;
+    if (!namesFirefox(source.slice(open + 1, closing(source, open)))) continue;
+    const tests = [...source.slice(0, call.index).matchAll(/\b(?:it|test)\b[\w.]*(?:\([^()]*\))?\s*\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g)];
+    add(call.index, tests.at(-1)?.[2]);
+  }
+  return found;
+}
 
 export interface Verdict {
   /** What fails the job, one line each. */

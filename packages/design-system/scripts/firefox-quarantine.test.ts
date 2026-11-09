@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BrowserResults } from './browser-results-reporter.ts';
-import { annotations, firefoxQuarantine, firefoxSkips, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
+import { annotations, findFirefoxSkips, firefoxQuarantine, firefoxSkips, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
 
 const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 'A > flakes', issue: 'https://github.com/tounsoo/todae/issues/367', reason: 'Known.' };
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
@@ -126,23 +126,52 @@ describe('the Firefox quarantine list', () => {
 });
 
 describe('Firefox skips', () => {
-  // A `skipIf` or `runIf` whose condition names Firefox, and the name of the test or group it skips.
-  const skip = /\.(skipIf|runIf)\(([^)]*['"]firefox['"][^)]*)\)\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g;
+  it('finds a skip naming Firefox however it is written', () => {
+    const source = [
+      "const notFirefox = server.browser !== 'firefox';",
+      'const alsoNot = notFirefox && true;',
+      "const firefoxIt = it.skipIf(server.browser === 'firefox');",
+      "it.skipIf(server.browser === 'chromium')('not Firefox', () => {});",
+      '// Firefox draws this differently, but this comment skips nothing.',
+      "describe.skipIf(server.browser === 'firefox')('a group', () => {",
+      "  it.runIf(notFirefox)('through a constant', () => {});",
+      "  it.runIf(alsoNot)('through a constant of a constant', () => {});",
+      "  firefoxIt('through an alias', () => {});",
+      "  firefoxIt.each([1])('through an alias with a table %s', () => {});",
+      "  it.skipIf(['firefox'].includes(server.browser))('with a call in the condition', () => {});",
+      "  it.skipIf(server.browser === 'firefox').each([1])('with a table %s', () => {});",
+      '  it.skipIf(server.browser === `firefox`)("in a template", () => {});',
+      "  it.skipIf(/Firefox/i.test(server.browser))('by a regex', () => {});",
+      "  it('from the test body', ({ skip }) => { skip(server.browser === 'firefox'); });",
+      "  it('only an assertion that differs', () => { if (server.browser === 'firefox') expect(1).toBe(1); });",
+      "  it.skipIf(server.browser === 'firefox')(name, () => {});",
+      '});',
+    ].join('\n');
+    expect(findFirefoxSkips(source).map(({ name }) => name)).toEqual([
+      'a group',
+      'through a constant',
+      'through a constant of a constant',
+      'with a call in the condition',
+      'with a table %s',
+      'in a template',
+      'by a regex',
+      '(a test with no literal name, line 17)',
+      'through an alias',
+      'through an alias with a table %s',
+      'from the test body',
+    ]);
+  });
+
   const dir = join(import.meta.dirname, '../src/browser');
   const found = readdirSync(dir)
     .filter((name) => name.endsWith('.browser.test.tsx'))
-    .flatMap((name) =>
-      [...readFileSync(join(dir, name), 'utf8').matchAll(skip)].map((match) => ({
-        file: `src/browser/${name}`,
-        name: match[4]!,
-      })),
-    );
+    .flatMap((name) => findFirefoxSkips(readFileSync(join(dir, name), 'utf8')).map((skip) => ({ file: `src/browser/${name}`, ...skip })));
 
   it('lists every browser test that skips Firefox, so a failure cannot be silenced by a skip', () => {
     expect(found.length).toBeGreaterThan(0);
     const listed = new Set(firefoxSkips.map(({ file, name }) => `${file} > ${name}`));
-    for (const { file, name } of found)
-      expect(listed, `${file} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toContain(`${file} > ${name}`);
+    for (const { file, name, line } of found)
+      expect(listed, `${file}:${line} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toContain(`${file} > ${name}`);
   });
 
   it('keeps no entry for a skip that is gone, and gives each one a reason', () => {
