@@ -44,6 +44,25 @@ describe('Field.Picker', () => {
     expect(picker.getAttribute('aria-controls')).toBe(screen.getByRole('dialog').id);
   });
 
+  it('sits its popover at the field, not at its button, which keeps only a name of its own', async () => {
+    render(
+      <Field.Root aria-label="Day">
+        <Field.DateInput value={date('2026-10-13')} locale="en-US" />
+        <Field.Picker style={{ anchorName: '--mine' }}>
+          <Calendar.Root value={date('2026-10-13')} locale="en-US">
+            <Calendar.Grid />
+          </Calendar.Root>
+        </Field.Picker>
+      </Field.Root>,
+    );
+    await open('Choose date');
+    const sitsAt = screen.getByRole('dialog').style.getPropertyValue('position-anchor');
+    expect(sitsAt).toMatch(/^--todae-popover-/);
+    const shell = button('Choose date').parentElement!;
+    expect(shell.style.getPropertyValue('anchor-name')).toBe(sitsAt);
+    expect(button('Choose date').style.getPropertyValue('anchor-name')).toBe('--mine');
+  });
+
   it('closes on the pick that makes the value, with the select reason, and the input shows the date', async () => {
     const onOpenChange = vi.fn();
     render(<DateField onOpenChange={onOpenChange} />);

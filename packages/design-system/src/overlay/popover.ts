@@ -128,6 +128,8 @@ export function usePopoverInternal(
   useInitialFocus(popoverRef, enabled && open && initialFocus, initialFocusRef);
   useEscapeKey(open, enabled, useCallback(() => requestClose('escape'), [requestClose]), popoverRef);
 
+  // Run again as it opens: an anchor in a parent, such as a Field.Root's shell around a Field.Picker, has no
+  // element yet when the hook mounts, since a child's layout effects run before its parent's ref is set.
   useLayoutEffect(() => {
     const el = anchorRef?.current;
     if (!el) return;
@@ -150,7 +152,7 @@ export function usePopoverInternal(
       if (prevVar && stillAnchored) el.style.setProperty('--todae-popover-anchor', prevVar);
       else el.style.removeProperty('--todae-popover-anchor');
     };
-  }, [anchorName, anchorRef]);
+  }, [anchorName, anchorRef, open]);
 
   useEffect(() => () => outsideRestore.current?.(), []);
 
