@@ -121,10 +121,12 @@
     }
   }
 
+  /* Stretched to the room, since a percentage height reads the whole
+     screen, not the room on one side. */
   @position-try --todae-popover-fit {
     position-area: self-block-end span-self-inline-end;
-    margin-block-start: var(--todae-popover-offset);
-    max-height: 100%;
+    margin-block: var(--todae-popover-offset);
+    align-self: stretch;
     min-height: var(--todae-popover-max-height);
   }
 
