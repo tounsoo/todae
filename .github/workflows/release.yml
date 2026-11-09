@@ -298,20 +298,33 @@ jobs:
           fi
           # Checkout points origin/main at this run's commit, so fetch main's tip again. The repository is
           # public, so the fetch needs no credentials.
-          git fetch -q origin +refs/heads/main:refs/remotes/origin/main
+          git fetch -q --tags origin +refs/heads/main:refs/remotes/origin/main
           git checkout -q --detach refs/remotes/origin/main
           head=$(git rev-parse HEAD)
           version=$(node -p "require('./packages/design-system/package.json').version")
-          # A changeset that releases something names the package in its front matter; an empty one doesn't.
-          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
-          released=false
-          if [ -z "$waiting" ] && on_npm "$version"; then
-            released=true
-          fi
           # The commit a version's tag points at, or nothing when the tag is missing.
           tagged() {
             git rev-parse -q --verify "refs/tags/$package@$1^{commit}" || true
           }
+          # A changeset that releases something names the package in its front matter; an empty one doesn't.
+          waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
+          released=false
+          if [ -z "$waiting" ]; then
+            if on_npm "$version"; then
+              released=true
+            elif [ -n "$(tagged "$version")" ]; then
+              # Publish tags a version only after npm took it, so npm is still catching up. This job may
+              # have displaced the publishing run's own, so it waits as that one would.
+              for attempt in $(seq 10); do
+                sleep 30
+                if on_npm "$version"; then released=true; break; fi
+              done
+              if [ "$released" = false ]; then
+                echo "npm doesn't serve $package@$version yet; re-run this job" >&2
+                exit 1
+              fi
+            fi
+          fi
           no_tag() {
             echo "::warning::npm has $package@$1 but this repository has no $package@$1 tag, so docs-stable stays where it is. CONTRIBUTING.md (Releases) says how to add the tag."
             exit 0
