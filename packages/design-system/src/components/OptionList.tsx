@@ -264,7 +264,12 @@ function OptionListRoot(props: OptionListRootProps) {
     const index = activeValue ? enabled.indexOf(activeValue) : -1;
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
-    if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
+    // A key from a field inside the list types into that field.
+    if (
+      isTypeaheadKey(event.key) &&
+      event.target === event.currentTarget &&
+      (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))
+    ) {
       const texts = new Map([...registered.current].map((entry) => [entry.value, entry.text]));
       const text = (at: number) => (texts.get(enabled[at]!) ?? '').trim().toLowerCase();
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);

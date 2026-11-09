@@ -240,6 +240,20 @@ describe('OptionList', () => {
       expect(onValueChange).toHaveBeenCalledWith('cherry');
     });
 
+    it('leaves a letter typed in a field inside the list to that field', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+          <OptionList.Option value="banana">Banana</OptionList.Option>
+          <input aria-label="Filter" />
+        </OptionList.Root>,
+      );
+      const list = screen.getByRole('listbox');
+      const before = active(list);
+      expect(fireEvent.keyDown(screen.getByLabelText('Filter'), { key: 'b' })).toBe(true);
+      expect(active(list)).toBe(before);
+    });
+
     it('keeps the active option on a letter nothing starts with', () => {
       render(<Fruit />);
       const list = screen.getByRole('listbox');

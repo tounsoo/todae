@@ -67,6 +67,8 @@ type TreeContextValue = {
   select: (value: string) => void;
   isExpanded: (value: string) => boolean;
   setExpanded: (value: string, open: boolean) => void;
+  /** Opens or closes a branch from the latest write, so two presses before a render cancel out. */
+  toggleExpanded: (value: string) => void;
   roving: UseRovingFocusResult;
 };
 
@@ -140,6 +142,10 @@ function Root({
     },
     [latestExpanded, setExpandedList],
   );
+  const toggleExpanded = useCallback(
+    (value: string) => setExpanded(value, !latestExpanded().includes(value)),
+    [latestExpanded, setExpanded],
+  );
   const isExpanded = useCallback((value: string) => expanded.includes(value), [expanded]);
   // The tab stop is the selected item, except while focus moves inside the
   // tree: then it is the focused item. Leaving the tree returns it to the
@@ -155,8 +161,8 @@ function Root({
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, selected, select: setSelected, isExpanded, setExpanded, roving }),
-    [isExpanded, roving, selectable, selected, setExpanded, setSelected],
+    () => ({ selectable, selected, select: setSelected, isExpanded, setExpanded, toggleExpanded, roving }),
+    [isExpanded, roving, selectable, selected, setExpanded, setSelected, toggleExpanded],
   );
   return (
     <TreeContext.Provider value={ctx}>
@@ -241,7 +247,7 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
           if (event.key === ' ' && tree.roving.isTypingAhead(event)) return;
           event.preventDefault();
           if (!disabled && tree.selectable) tree.select(value);
-          if (branch) tree.setExpanded(value, !expanded);
+          if (branch) tree.toggleExpanded(value);
         })}
       >
         {children}
@@ -263,7 +269,7 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       // A click selects the item and opens or closes a branch.
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        if (item.branch) tree.setExpanded(item.value, !item.expanded);
+        if (item.branch) tree.toggleExpanded(item.value);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">
