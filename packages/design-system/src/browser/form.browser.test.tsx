@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, ErrorMessage, Field, Fieldset, Form, Label, RadioGroup } from '../index.js';
+import { Button, Calendar, ErrorMessage, Field, Fieldset, Form, Label, RadioGroup } from '../index.js';
 import { getTabbables } from '../overlay/tabbables.js';
 
 afterEach(cleanup);
@@ -184,13 +184,19 @@ describe('value inputs in a browser', () => {
           <Field.Group>
             <Label.Root htmlFor="start">Start date</Label.Root>
             <Field.Root id="start" name="start">
-              <Field.DatePicker
+              <Field.DateInput
                 value={day}
                 onValueChange={setDay}
                 required
                 min={Temporal.PlainDate.from('2026-10-13')}
                 locale="en-US"
               />
+              <Field.Picker>
+                <Calendar.Root value={day} onValueChange={setDay} min={Temporal.PlainDate.from('2026-10-13')} locale="en-US">
+                  <Calendar.Header />
+                  <Calendar.Grid />
+                </Calendar.Root>
+              </Field.Picker>
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
@@ -203,60 +209,57 @@ describe('value inputs in a browser', () => {
 
   const book = () => userEvent.click(screen.getByRole('button', { name: 'Book' }));
 
-  it('blocks a submit with a required date missing, shows it, and focuses the picker button', async () => {
+  it('blocks a submit with a required date missing, shows it, and focuses the typed input', async () => {
     render(<Booking />);
     await book();
     expect(await screen.findByText('This field is required')).toBeTruthy();
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' })));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' })));
   });
 
-  it('focuses the picker button from the summary row, and names a min in the picker date style', async () => {
+  it('focuses the typed input from the summary row, and names a min as the input writes dates', async () => {
     render(<Booking summary initial={Temporal.PlainDate.from('2026-10-01')} />);
     await book();
     const summary = await screen.findByRole('group', { name: '1 problem to fix' });
-    expect(summary.textContent).toContain('Enter Oct 13, 2026 or later');
+    expect(summary.textContent).toContain('Enter 10/13/2026 or later');
     await userEvent.click(screen.getByRole('link', { name: 'Start date' }));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 
   it('sends a date, and a date and time with seconds, as HTML writes them', async () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Day" name="day">
-          <Field.DatePicker value={Temporal.PlainDate.from('2026-10-13')} />
+          <Field.DateInput value={Temporal.PlainDate.from('2026-10-13')} />
         </Field.Root>
         <Field.Root aria-label="At" name="at">
-          <Field.DateTimePicker value={Temporal.PlainDateTime.from('2026-10-13T17:45:15')} />
-        </Field.Root>
-        <Field.Root aria-label="Accent" name="accent">
-          <Field.ColorPicker value="#3366FF" />
+          <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T17:45:15')} />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
       ['day', '2026-10-13'],
       ['at', '2026-10-13T17:45:15'],
-      ['accent', '#3366FF'],
     ]);
   });
 
-  it('leave focus on the picker button when a plain form fails its native check', async () => {
+  it('leave focus on the typed input when a plain form fails its native check', async () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Day" name="day">
-          <Field.DatePicker value={null} required />
+          <Field.DateInput value={null} required />
         </Field.Root>
         <button type="submit">Send</button>
       </form>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Day' })));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Day' })));
   });
 
-  it('are skipped by Tab, which goes from the picker button to the next control', async () => {
+  it('are skipped by Tab, which goes from the typed input to the picker button and on to the next control', async () => {
     render(<Booking initial={Temporal.PlainDate.from('2026-10-20')} />);
-    const button = screen.getByRole('button', { name: 'Start date' });
-    button.focus();
+    screen.getByRole('textbox', { name: 'Start date' }).focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Choose date' }));
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(screen.getByLabelText('Note'));
     expect(getTabbables(screen.getByTestId('form')).some((el) => el.hasAttribute('data-todae-value-input'))).toBe(false);

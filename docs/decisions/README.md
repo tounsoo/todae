@@ -4,6 +4,7 @@ These files record dated decisions. Design-system rules stay in [ARCHITECTURE.md
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
+- [0014. Typed inputs are Field parts, and pickers are composed](0014-typed-inputs-and-field-picker.md). Active, 2026-11-09.
 - [0013. Motion comes from role and component tokens](0013-motion.md). Active, 2026-11-07.
 - [0012. The docs build in GitHub Actions and deploy prebuilt to Vercel](0012-docs-build-in-github.md). Active, 2026-11-07.
 - [0011. Performance is measured by an on-demand benchmark](0011-on-demand-benchmark.md). Active, 2026-11-06.

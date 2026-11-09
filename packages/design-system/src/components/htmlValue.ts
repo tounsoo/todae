@@ -20,28 +20,28 @@ function checkHtmlYear(year: number) {
   if (year < 1 || year > 275760) {
     warnOnce(
       'value-input-year',
-      `Field.DatePicker and Field.DateTimePicker carry their value in a native date input, which holds only the years 1 to 275760. The year ${year} reads as no date, so it is submitted as empty and a required, min or max check ignores it.`,
+      `Field.DateInput and Field.DateTimeInput carry their value in a native date input, which holds only the years 1 to 275760. The year ${year} reads as no date, so it is submitted as empty and a required, min or max check ignores it.`,
     );
   }
 }
 
-/** A date as HTML writes one, such as 2026-10-07, for Field.DateRangePicker's text value input, which holds any year. */
+/** A date as HTML writes one, such as 2026-10-07, for Field.DateRangeInput's text value input, which holds any year. */
 export const htmlDateText = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
 
-/** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's value input. */
+/** A date as HTML writes one, such as 2026-10-07, for Field.DateInput's value input. */
 export const htmlDate = (value: Temporal.PlainDate) => {
   checkHtmlYear(value.year);
   return htmlDateText(value);
 };
 
-/** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's value input. */
+/** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimeInput's value input. */
 export const htmlDateTime = (value: Temporal.PlainDateTime) => {
   const iso = value.withCalendar('iso8601');
   checkHtmlYear(iso.year);
   return toHtmlYear(iso.toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
 };
 
-/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimePicker's value input. */
+/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimeInput's value input. */
 export const htmlTime = (value: Temporal.PlainTime) => value.toString({ smallestUnit: timeUnit(value) });
 
 /** The `min`, `max` and `bound` options of a value input, from a picker's bounds: each in the type's format, and as the picker shows it. */

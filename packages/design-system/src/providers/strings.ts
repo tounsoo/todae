@@ -52,16 +52,18 @@ export interface Strings {
   brightness: string;
   /** Name of ColorPicker.Hue when it has no aria-label. */
   hue: string;
-  /** Name of Field.ColorPicker's popover, and of its swatch beside another control but a picker. */
+  /** Name of a Field.Picker's popover with a `swatch` and no typed input beside it, and of its button beside another control. */
   colorPicker: string;
-  /** Name of Field.DatePicker's popover, and of its button beside another control but a picker. */
+  /** Name of a Field.Picker's popover beside a Field.DateInput, and of its button. */
   datePicker: string;
-  /** Name of Field.TimePicker's and Field.DateTimePicker's list of times, and of Field.TimePicker's button beside another control but a picker. */
+  /** Name of a Field.Picker's popover beside a Field.TimeInput, and of its button. */
   timePicker: string;
-  /** Name of Field.DateTimePicker's popover, and of its button beside another control but a picker. */
+  /** Name of a Field.Picker's popover beside a Field.DateTimeInput, and of its button. */
   dateTimePicker: string;
-  /** Name of Field.DateRangePicker's popover, and of its button beside another control but a picker. */
+  /** Name of a Field.Picker's popover beside a Field.DateRangeInput, and of its button. */
   dateRangePicker: string;
+  /** Name of a Field.Picker's popover with no typed input beside it and no `swatch`, and of its button beside another control. */
+  picker: string;
   /** Name of Field.Increment when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
   increment: (field: string) => string;
   /** Name of Field.Decrement when its own text does not name it, given the text of its Field.NumberInput's label, or an empty string without one. */
@@ -106,7 +108,7 @@ export interface Strings {
   back: string;
   /** Name of Drilldown.Back when its own text does not name it. `label` is the label of the view it goes back to. */
   backTo: (label: string) => string;
-  /** What a required Field.DatePicker, Field.TimePicker or Field.DateTimePicker button, and a required Field.ChipInput's text box, is described by: a button cannot say `aria-required`, and the text box is not what must be filled. */
+  /** What a required Field.ChipInput's text box is described by: the text box is not what must be filled. */
   required: string;
   /** Text of a control the browser reports empty though it is required. */
   valueMissing: string;
@@ -168,6 +170,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<
   timePicker: 'Choose time',
   dateTimePicker: 'Choose date and time',
   dateRangePicker: 'Choose dates',
+  picker: 'Open picker',
   increment: (field) => (field ? `Increase ${field}` : 'Increase'),
   decrement: (field) => (field ? `Decrease ${field}` : 'Decrease'),
   previousMonth: 'Previous month',

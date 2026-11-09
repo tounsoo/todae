@@ -1,18 +1,18 @@
 /** Field, its controls and sub-parts, and the form structure around them. */
 import {
   Button,
+  Calendar,
   Checkbox,
+  ColorPicker,
   Description,
   ErrorMessage,
   Field,
   Fieldset,
   Form,
   Label,
+  OptionList,
   Switch,
-  formatDate,
-  formatDateRange,
-  formatDateTime,
-  formatTime,
+  timeOptions,
   type DateRange,
 } from '@tounsoo/todae';
 import { useId, useState } from 'react';
@@ -132,6 +132,18 @@ function SelectItem({ index, tick }: ItemProps) {
   );
 }
 
+function Times({ value, onPick }: { value: Temporal.PlainTime | null; onPick: (time: Temporal.PlainTime) => void }) {
+  return (
+    <OptionList.Root aria-label="Times" value={value?.toString() ?? null} onValueChange={(next) => onPick(Temporal.PlainTime.from(next))}>
+      {timeOptions({ step: 15, value, locale: 'en' }).map((option) => (
+        <OptionList.Option key={option.value} value={option.value}>
+          {option.label}
+        </OptionList.Option>
+      ))}
+    </OptionList.Root>
+  );
+}
+
 function ColorPickerItem({ index, tick }: ItemProps) {
   const id = useId();
   const [color, setColor] = useState('#3366ff');
@@ -141,110 +153,113 @@ function ColorPickerItem({ index, tick }: ItemProps) {
         Accent {index} {tick}
       </Label.Root>
       <Field.Root id={id}>
-        <Field.ColorPicker value={color} onValueChange={setColor} />
+        <Field.Picker swatch={color}>
+          <ColorPicker.Root value={color} onValueChange={setColor}>
+            <ColorPicker.Area />
+            <ColorPicker.Hue />
+          </ColorPicker.Root>
+        </Field.Picker>
         <Field.TextInput value={color} onChange={() => undefined} spellCheck={false} />
       </Field.Root>
     </Field.Group>
   );
 }
 
-function DatePickerItem({ index, tick }: ItemProps) {
+function DateInputItem({ index, tick }: ItemProps) {
   const id = useId();
   const [date, setDate] = useState<Temporal.PlainDate | null>(null);
-  const [text, setText] = useState('');
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>
         Start date {index} {tick}
       </Label.Root>
       <Field.Root id={id}>
-        <Field.TextInput value={text} onValueChange={setText} />
-        <Field.DatePicker
-          value={date}
-          onValueChange={(next) => {
-            setDate(next);
-            setText(formatDate(next, { locale: 'en' }));
-          }}
-          locale="en"
-          showValue={false}
-        />
+        <Field.DateInput value={date} onValueChange={setDate} locale="en" />
+        <Field.Picker>
+          <Calendar.Root value={date} onValueChange={setDate} locale="en">
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </Field.Picker>
       </Field.Root>
     </Field.Group>
   );
 }
 
-function TimePickerItem({ index, tick }: ItemProps) {
+function TimeInputItem({ index, tick }: ItemProps) {
   const id = useId();
   const [time, setTime] = useState<Temporal.PlainTime | null>(null);
-  const [text, setText] = useState('');
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>
         Start time {index} {tick}
       </Label.Root>
       <Field.Root id={id}>
-        <Field.TextInput value={text} onValueChange={setText} />
-        <Field.TimePicker
-          value={time}
-          onValueChange={(next) => {
-            setTime(next);
-            setText(formatTime(next, { locale: 'en' }));
-          }}
-          locale="en"
-          step={15}
-          showValue={false}
-        />
+        <Field.TimeInput value={time} onValueChange={setTime} locale="en" />
+        <Field.Picker>
+          <Times value={time} onPick={setTime} />
+        </Field.Picker>
       </Field.Root>
     </Field.Group>
   );
 }
 
-function DateTimePickerItem({ index, tick }: ItemProps) {
+function DateTimeInputItem({ index, tick }: ItemProps) {
   const id = useId();
   const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
-  const [text, setText] = useState('');
+  const [day, setDay] = useState<Temporal.PlainDate | null>(null);
+  const date = start?.toPlainDate() ?? day;
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>
         Meeting starts {index} {tick}
       </Label.Root>
       <Field.Root id={id}>
-        <Field.TextInput value={text} onValueChange={setText} />
-        <Field.DateTimePicker
-          value={start}
-          onValueChange={(next) => {
-            setStart(next);
-            setText(formatDateTime(next, { locale: 'en' }));
-          }}
-          locale="en"
-          step={15}
-          showValue={false}
-        />
+        <Field.DateTimeInput value={start} onValueChange={setStart} locale="en" />
+        <Field.Picker closeOnPick={false}>
+          {({ close }) => (
+            <>
+              <Calendar.Root
+                value={date}
+                onValueChange={(next) => (start ? setStart(next.toPlainDateTime(start.toPlainTime())) : setDay(next))}
+                locale="en"
+              >
+                <Calendar.Header />
+                <Calendar.Grid />
+              </Calendar.Root>
+              <Times
+                value={start?.toPlainTime() ?? null}
+                onPick={(time) => {
+                  if (date) {
+                    setStart(date.toPlainDateTime(time));
+                    close();
+                  }
+                }}
+              />
+            </>
+          )}
+        </Field.Picker>
       </Field.Root>
     </Field.Group>
   );
 }
 
-function DateRangePickerItem({ index, tick }: ItemProps) {
+function DateRangeInputItem({ index, tick }: ItemProps) {
   const id = useId();
   const [range, setRange] = useState<DateRange | null>(null);
-  const [text, setText] = useState('');
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>
         Stay {index} {tick}
       </Label.Root>
       <Field.Root id={id}>
-        <Field.TextInput value={text} onValueChange={setText} />
-        <Field.DateRangePicker
-          value={range}
-          onValueChange={(next) => {
-            setRange(next);
-            setText(formatDateRange(next, { locale: 'en' }));
-          }}
-          locale="en"
-          showValue={false}
-        />
+        <Field.DateRangeInput value={range} onValueChange={setRange} locale="en" />
+        <Field.Picker>
+          <Calendar.Root mode="range" value={range} onValueChange={setRange} locale="en">
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+        </Field.Picker>
       </Field.Root>
     </Field.Group>
   );
@@ -485,43 +500,43 @@ export const FORMS = {
       },
     },
   ],
-  'Field.ColorPicker': [
+  'Field.Picker': [
     {
-      id: 'field-color-picker',
-      title: 'Field with ColorPicker',
+      id: 'field-picker-color',
+      title: 'Field.Picker with a swatch and ColorPicker',
       Case: many(ColorPickerItem),
       interact: click('button[aria-haspopup]'),
     },
   ],
-  'Field.DatePicker': [
+  'Field.DateInput': [
     {
-      id: 'field-date-picker',
-      title: 'Field with DatePicker',
-      Case: many(DatePickerItem),
+      id: 'field-date-input',
+      title: 'Field.DateInput with a Calendar picker',
+      Case: many(DateInputItem),
       interact: click('button[aria-haspopup]'),
     },
   ],
-  'Field.TimePicker': [
+  'Field.TimeInput': [
     {
-      id: 'field-time-picker',
-      title: 'Field with TimePicker',
-      Case: many(TimePickerItem),
+      id: 'field-time-input',
+      title: 'Field.TimeInput with a list of times',
+      Case: many(TimeInputItem),
       interact: click('button[aria-haspopup]'),
     },
   ],
-  'Field.DateTimePicker': [
+  'Field.DateTimeInput': [
     {
-      id: 'field-date-time-picker',
-      title: 'Field with DateTimePicker',
-      Case: many(DateTimePickerItem),
+      id: 'field-date-time-input',
+      title: 'Field.DateTimeInput with a Calendar and a list of times',
+      Case: many(DateTimeInputItem),
       interact: click('button[aria-haspopup]'),
     },
   ],
-  'Field.DateRangePicker': [
+  'Field.DateRangeInput': [
     {
-      id: 'field-date-range-picker',
-      title: 'Field with DateRangePicker',
-      Case: many(DateRangePickerItem),
+      id: 'field-date-range-input',
+      title: 'Field.DateRangeInput with a range Calendar',
+      Case: many(DateRangeInputItem),
       interact: click('button[aria-haspopup]'),
     },
   ],

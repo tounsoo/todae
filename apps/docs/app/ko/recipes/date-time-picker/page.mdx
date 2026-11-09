@@ -1,0 +1,39 @@
+import DateTimePicker from '../../../../examples/recipes/date-time-picker/DateTimePicker';
+
+export const description = '날짜와 시각 선택기 레시피입니다. Calendar와 시각 목록을 담은 Field.Picker를 Field.DateTimeInput 옆에 둡니다.';
+
+# Date and time picker
+
+패키지 네임스페이스가 아니라 레시피입니다. 하나의 값인 날짜와 시각은 [Field.DateTimeInput](/field/date-time-input)에 입력하고, [Calendar](/calendar) 옆에 시각의 [OptionList](/optionlist)를 담은 [Field.Picker](/field/picker)에서 고릅니다. `DateTimePicker.*` 내보내기는 없습니다.
+
+날짜와 시각을 어느 순서로든 고르거나, 둘 다 입력에 입력해 보세요.
+
+<Example of={DateTimePicker} block />
+
+## 두 부분 고르기
+
+선택기에 `closeOnPick={false}`가 있으므로 달력이나 목록에서 골라도 닫히지 않고, 자식은 `close`를 받는 함수입니다. 날짜를 고르면 이미 정한 시각을, 시각을 고르면 날짜를 그대로 둡니다. 둘 다 정해지면 그 선택이 `day.toPlainDateTime(time)` 값을 만들고 `close()`를 호출합니다. 다른 쪽보다 먼저 고른 한쪽은 다른 쪽을 고를 때까지 값 옆에 보관되고 선택기가 닫히면 버려지므로, 날짜만 고르고 떠나면 아무것도 바뀌지 않습니다.
+
+`timeOptions({ step: 15, value: time, locale })`가 시각을 나열하고, `9:07`처럼 두 단계 사이에 입력한 시각도 제자리에 넣습니다. 목록의 값으로는 `time.toString()`을 주고, 고른 값은 `Temporal.PlainTime.from`으로 읽습니다.
+
+## 배치
+
+달력과 목록은 나란히 놓이고, 그 사이는 `space.stack.gap` 토큰만큼 띄웁니다. 목록은 높이가 최대 `space.12`의 여섯 배인 자체 상자 안에서 스크롤되고, 패딩과 스크롤 패딩이 포커스 링이 들어갈 자리를 남깁니다. 좁은 화면에서는 목록이 달력 아래로 가고 상자는 절반 높이가 됩니다. 스타일시트는 예시 자체의 것입니다.
+
+## 경계
+
+`Field.DateTimeInput`의 `min`과 `max`는 폼에서 값을 검사합니다. 고르는 값도 범위 안에 두려면 `min`과 `max`의 날짜를 달력에 넘기고, 그 첫날과 마지막 날에는 그 시각을 `timeOptions`에 넘기세요. 달력의 `isDateDisabled`는 입력한 값을 검사하지 않으므로, 그것은 `Field.Root`의 `customValidity`로 설정하세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 입력이 필드의 컨트롤이고, 선택기의 버튼은 [StringsProvider](/utilities/strings-provider)의 `dateTimePicker` 문자열로 이름이 붙습니다. 팝오버는 그 이름의 `role="dialog"`입니다. 열리면 포커스가 달력의 날짜로 가고, Tab을 누르면 시각 목록으로 갑니다. 달력은 [Calendar](/calendar)와 같은 키로 움직이고, 목록에서는 화살표 키, Home, End로 옮기고 Enter나 Space로 고릅니다. Escape를 누르면 팝오버가 닫히고 포커스는 열리기 전에 있던 곳으로 돌아갑니다.
+
+**직접 제공할 것:** `aria-label`로 주는 달력과 목록의 이름. 입력에 넘기는 값과, 달력과 목록에 넘기는 그 두 부분.
+
+**주의할 점:** 첫 선택에서 닫지 마세요. 다른 쪽을 잃게 되고, 시각을 먼저 고르는 사람은 날짜에 닿지 못합니다. 목록에 그 날짜로는 범위를 벗어난 시각이 보이는 상태에서 날짜를 고를 수도 있으니, 값을 만들기 전에 둘을 함께 확인하세요.
+
+## 언제 쓰나요
+
+**언제:** 회의 시작처럼 한 달과 목록에서 고르는 날짜와 시각.
+
+**쓰지 않을 때:** 날짜만 → Calendar를 둔 [Field.DateInput](/field/date-input). 시각만 → 시각 목록을 둔 [Field.TimeInput](/field/time-input). 입력하는 날짜와 시각 → 단독으로 쓰는 [Field.DateTimeInput](/field/date-time-input).

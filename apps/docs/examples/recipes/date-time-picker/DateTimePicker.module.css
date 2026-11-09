@@ -1,0 +1,30 @@
+/* The calendar and the times side by side, the times as tall as the calendar. */
+.panel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--todae-space-stack-gap);
+}
+
+/* The times scroll in their own box. The padding and scroll padding leave room
+   for the list's focus ring, which the box would otherwise cut. */
+.times {
+  --_times-height: calc(6 * var(--todae-space-12));
+
+  align-self: stretch;
+  max-block-size: var(--_times-height);
+  overflow-y: auto;
+  padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+}
+
+/* On a narrow screen the times go under the calendar, in a shorter box. */
+@media (width < 32rem) {
+  .panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .times {
+    --_times-height: calc(3 * var(--todae-space-12));
+  }
+}

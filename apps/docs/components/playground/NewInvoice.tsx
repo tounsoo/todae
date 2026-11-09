@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, ErrorMessage, Field, Form, Label, Stack } from '@tounsoo/todae';
+import { Button, Calendar, Dialog, ErrorMessage, Field, Form, Label, Stack } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import type { Kit } from './kit';
 import { TODAY } from './kit';
@@ -101,13 +101,13 @@ export function NewInvoice({
           <Field.Group>
             <Label.Root htmlFor={ids.due}>{copy.form.due}</Label.Root>
             <Field.Root id={ids.due} name="due">
-              <Field.DatePicker
-                required
-                min={today}
-                value={dueDate}
-                onValueChange={setDue}
-                locale={locale}
-              />
+              <Field.DateInput required min={today} value={dueDate} onValueChange={setDue} locale={locale} />
+              <Field.Picker>
+                <Calendar.Root aria-label={copy.form.due} min={today} value={dueDate} onValueChange={setDue} locale={locale}>
+                  <Calendar.Header />
+                  <Calendar.Grid />
+                </Calendar.Root>
+              </Field.Picker>
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>

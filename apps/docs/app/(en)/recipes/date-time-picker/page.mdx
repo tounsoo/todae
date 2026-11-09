@@ -1,0 +1,39 @@
+import DateTimePicker from '../../../../examples/recipes/date-time-picker/DateTimePicker';
+
+export const description = 'A recipe for a date and time picker: a Field.DateTimeInput beside a Field.Picker that holds a Calendar and a list of times.';
+
+# Date and time picker
+
+A recipe, not a package namespace. A date and a time in one value are typed into a [Field.DateTimeInput](/field/date-time-input), and picked in a [Field.Picker](/field/picker) that holds a [Calendar](/calendar) beside an [OptionList](/optionlist) of times. There is no `DateTimePicker.*` export.
+
+Pick a day and a time in either order, or type both into the input.
+
+<Example of={DateTimePicker} block />
+
+## Picking both halves
+
+The picker has `closeOnPick={false}`, so a pick in the calendar or the list doesn't close it, and its child is a function that gets `close`. Picking a day keeps the time already set, and picking a time keeps the day. Once both are set, the pick makes the value, `day.toPlainDateTime(time)`, and calls `close()`. A half picked before the other is held beside the value until the other is picked, and dropped when the picker closes, so a day picked and then left changes nothing.
+
+`timeOptions({ step: 15, value: time, locale })` lists the times, with a typed time between two steps, such as `9:07`, in its place. The list gets `time.toString()` as its value, and a pick is read back with `Temporal.PlainTime.from`.
+
+## Layout
+
+The calendar and the list sit side by side with the `space.stack.gap` token between them. The list scrolls in its own box, at most six times `space.12` tall, with padding and scroll padding that leave room for its focus ring. On a narrow screen the list goes under the calendar, in a box half as tall. The stylesheet is the example's own.
+
+## Bounds
+
+`min` and `max` on the `Field.DateTimeInput` check the value in a form. To keep picks in range too, pass the dates of `min` and `max` to the calendar, and on the first and last of those days pass their times to `timeOptions`. The calendar's `isDateDisabled` does not check a typed value; set `customValidity` on the `Field.Root` for that.
+
+## Accessible composition
+
+**Todae handles:** The input is the field's control, and the picker's button is named from the `dateTimePicker` string in [StringsProvider](/utilities/strings-provider). The popover is a `role="dialog"` with that name. Open, focus goes to the calendar's day; Tab moves to the list of times. The calendar is keyed as on [Calendar](/calendar), and in the list arrow keys, Home and End move and Enter or Space picks. Escape closes the popover and returns focus to where it was before it opened.
+
+**You supply:** Names for the calendar and the list, with `aria-label`. The value, passed to the input, and its halves, passed to the calendar and the list.
+
+**Watch for:** Closing on the first pick: the other half would be lost, and people who pick the time first would never reach the day. A day picked while the list shows a time out of range for it: check the pair before you make the value.
+
+## When to use
+
+**When:** A date and a time people pick from a month and a list, such as when a meeting starts.
+
+**When not:** A date alone → [Field.DateInput](/field/date-input) with a Calendar. A time alone → [Field.TimeInput](/field/time-input) with a list of times. A date and time people type → [Field.DateTimeInput](/field/date-time-input) on its own.

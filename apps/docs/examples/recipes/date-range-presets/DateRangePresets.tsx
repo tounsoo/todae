@@ -1,6 +1,6 @@
 'use client';
 
-import { Field, Label, Stack, ToggleGroup, type DateRange } from '@tounsoo/todae';
+import { Calendar, Field, Label, Stack, ToggleGroup, type DateRange } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const PRESETS: { id: string; label: string; range: (today: Temporal.PlainDate) => DateRange }[] = [
@@ -34,7 +34,13 @@ export default function DateRangePresets({ locale }: { locale: string }) {
       <Field.Group>
         <Label.Root htmlFor={id}>Report dates</Label.Root>
         <Field.Root id={id}>
-          <Field.DateRangePicker value={range} onValueChange={setRange} locale={locale} placeholder="Pick dates" />
+          <Field.DateRangeInput value={range} onValueChange={setRange} locale={locale} />
+          <Field.Picker>
+            <Calendar.Root aria-label="Report dates" mode="range" value={range} onValueChange={setRange} locale={locale}>
+              <Calendar.Header />
+              <Calendar.Grid />
+            </Calendar.Root>
+          </Field.Picker>
         </Field.Root>
       </Field.Group>
       <ToggleGroup.Root

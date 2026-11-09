@@ -161,28 +161,33 @@ A string that depends on a number or a label is a function.
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`colorPicker`</Table.HeaderCell>
-      <Table.Cell>`Field.ColorPicker`, its popover</Table.Cell>
+      <Table.Cell>A `Field.Picker` with `swatch` and no typed input beside it: its popover, and its button beside another control</Table.Cell>
       <Table.Cell>`Color picker`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`datePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DatePicker`, its popover, and its button beside another control but a picker</Table.Cell>
+      <Table.Cell>A `Field.Picker` beside a `Field.DateInput`: its popover and its button</Table.Cell>
       <Table.Cell>`Choose date`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`timePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.TimePicker` and `Field.DateTimePicker`, their list of times, and `Field.TimePicker`'s button beside another control but a picker</Table.Cell>
+      <Table.Cell>A `Field.Picker` beside a `Field.TimeInput`: its popover and its button</Table.Cell>
       <Table.Cell>`Choose time`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateTimePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DateTimePicker`, its popover, and its button beside another control but a picker</Table.Cell>
+      <Table.Cell>A `Field.Picker` beside a `Field.DateTimeInput`: its popover and its button</Table.Cell>
       <Table.Cell>`Choose date and time`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DateRangePicker`, its popover, and its button beside another control but a picker</Table.Cell>
+      <Table.Cell>A `Field.Picker` beside a `Field.DateRangeInput`: its popover and its button</Table.Cell>
       <Table.Cell>`Choose dates`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`picker`</Table.HeaderCell>
+      <Table.Cell>A `Field.Picker` with no typed input beside it and no `swatch`: its popover, and its button beside another control</Table.Cell>
+      <Table.Cell>`Open picker`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
@@ -296,7 +301,7 @@ A string that depends on a number or a label is a function.
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`required`</Table.HeaderCell>
-      <Table.Cell>What a required picker's button, and a required ChipInput's text box, is described by, since neither is what `aria-required` says is required</Table.Cell>
+      <Table.Cell>What a required ChipInput's text box is described by, since the text box is not what `aria-required` says is required</Table.Cell>
       <Table.Cell>`Required`</Table.Cell>
     </Table.Row>
     <Table.Row>
@@ -351,12 +356,12 @@ A string that depends on a number or a label is a function.
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangeUnderflow(min)`</Table.HeaderCell>
-      <Table.Cell>A date, time, or date and time before `min`; `min` is in the field's own format</Table.Cell>
+      <Table.Cell>A date, time, date and time, or range of dates before `min`; `min` is in the field's own format</Table.Cell>
       <Table.Cell>`Enter {min} or later`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangeOverflow(max)`</Table.HeaderCell>
-      <Table.Cell>A date, time, or date and time after `max`; `max` is in the field's own format</Table.Cell>
+      <Table.Cell>A date, time, date and time, or range of dates after `max`; `max` is in the field's own format</Table.Cell>
       <Table.Cell>`Enter {max} or earlier`</Table.Cell>
     </Table.Row>
     <Table.Row>

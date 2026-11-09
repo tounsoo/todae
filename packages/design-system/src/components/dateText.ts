@@ -1,5 +1,5 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-// Server-safe date text for a text input beside Field.DatePicker: no hooks or context.
+// Server-safe date text for Field.DateInput and a text input of your own: no hooks or context.
 import { fold } from './foldText.js';
 
 export type DateTextOptions = {

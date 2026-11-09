@@ -38,6 +38,15 @@ type ValueInputEntry = {
 // For each value input, who it speaks for and how it words its bounds, so Form.Root, which finds controls in the DOM, can read them. Written when the value input attaches, and again when its bounds change.
 const valueInputs = /* @__PURE__ */ new WeakMap<ValidityCarrier, ValueInputEntry>();
 
+// The kind Todae's own custom message on a value input stands for, such as a typed input's unreadable text or a range out of bounds, so Form.Root reports it as the native flag would be.
+const customKinds = /* @__PURE__ */ new WeakMap<ValidityCarrier, { message: string; kind: ValidityKind }>();
+
+/** Records, or with null forgets, which kind Todae's custom `message` on `el` stands for. */
+export function markCustomKind(el: ValidityCarrier, mark: { message: string; kind: ValidityKind } | null): void {
+  if (mark) customKinds.set(el, mark);
+  else customKinds.delete(el);
+}
+
 /** Makes `el` a value input. */
 export function registerValueInput(el: ValidityCarrier, entry: ValueInputEntry): void {
   valueInputs.set(el, entry);
@@ -118,6 +127,9 @@ function message(el: ValidityCarrier, kind: Exclude<ValidityKind, 'server'>, str
  */
 export function describeValidity(el: ValidityCarrier, strings: Strings): FormFieldError | null {
   if (!el.willValidate || el.validity.valid) return null;
+  // Todae's own message keeps its words, already in the page's language, and says the kind it stands for. It comes before the native flags, which read the value last committed: text that says no value is not a missing value.
+  const marked = el.validity.customError ? customKinds.get(el) : undefined;
+  if (marked && marked.message === el.validationMessage) return { kind: marked.kind, message: marked.message };
   const kind = FLAGS.find((flag) => el.validity[flag]);
   // A flag this list doesn't know yet still has the browser's text.
   if (!kind) return { kind: 'customError', message: el.validationMessage };

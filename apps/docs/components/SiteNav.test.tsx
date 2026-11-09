@@ -57,16 +57,16 @@ describe('SiteNav', () => {
     expect(closed.details?.querySelector('summary')?.textContent).toBe('Field pages');
     expect(closed.links.map((link) => link.getAttribute('href'))).toEqual([
       '/field/chip-input',
-      '/field/color-picker',
-      '/field/date-picker',
-      '/field/date-range-picker',
-      '/field/date-time-picker',
+      '/field/date-input',
+      '/field/date-range-input',
+      '/field/date-time-input',
       '/field/number-input',
       '/field/one-time-code',
+      '/field/picker',
       '/field/select',
       '/field/textarea',
       '/field/text-input',
-      '/field/time-picker',
+      '/field/time-input',
     ]);
     cleanup();
 

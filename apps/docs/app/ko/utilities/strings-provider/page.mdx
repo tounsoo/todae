@@ -161,28 +161,33 @@ const korean: Partial<Strings> = {
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`colorPicker`</Table.HeaderCell>
-      <Table.Cell>`Field.ColorPicker`의 팝오버</Table.Cell>
+      <Table.Cell>`swatch`가 있고 옆에 입력 파트가 없는 `Field.Picker`의 팝오버와, 다른 컨트롤 옆의 버튼</Table.Cell>
       <Table.Cell>`Color picker`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`datePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DatePicker`의 팝오버와, 선택기가 아닌 다른 컨트롤 옆의 버튼</Table.Cell>
+      <Table.Cell>`Field.DateInput` 옆에 있는 `Field.Picker`의 팝오버와 버튼</Table.Cell>
       <Table.Cell>`Choose date`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`timePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.TimePicker`와 `Field.DateTimePicker`의 시각 목록, 선택기가 아닌 다른 컨트롤 옆의 `Field.TimePicker` 버튼</Table.Cell>
+      <Table.Cell>`Field.TimeInput` 옆에 있는 `Field.Picker`의 팝오버와 버튼</Table.Cell>
       <Table.Cell>`Choose time`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateTimePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DateTimePicker`의 팝오버, 선택기가 아닌 다른 컨트롤 옆의 버튼</Table.Cell>
+      <Table.Cell>`Field.DateTimeInput` 옆에 있는 `Field.Picker`의 팝오버와 버튼</Table.Cell>
       <Table.Cell>`Choose date and time`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangePicker`</Table.HeaderCell>
-      <Table.Cell>`Field.DateRangePicker`의 팝오버, 선택기가 아닌 다른 컨트롤 옆의 버튼</Table.Cell>
+      <Table.Cell>`Field.DateRangeInput` 옆에 있는 `Field.Picker`의 팝오버와 버튼</Table.Cell>
       <Table.Cell>`Choose dates`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`picker`</Table.HeaderCell>
+      <Table.Cell>옆에 입력 파트가 없고 `swatch`도 없는 `Field.Picker`의 팝오버와, 다른 컨트롤 옆의 버튼</Table.Cell>
+      <Table.Cell>`Open picker`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`increment(field)`</Table.HeaderCell>
@@ -296,7 +301,7 @@ const korean: Partial<Strings> = {
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`required`</Table.HeaderCell>
-      <Table.Cell>필수 선택기의 버튼과 필수 ChipInput의 텍스트 입력을 설명하는 문구. 둘 다 `aria-required`가 말하는 필수 대상이 아니기 때문</Table.Cell>
+      <Table.Cell>필수 ChipInput의 텍스트 입력을 설명하는 문구. 텍스트 입력은 `aria-required`가 말하는 필수 대상이 아니기 때문</Table.Cell>
       <Table.Cell>`Required`</Table.Cell>
     </Table.Row>
     <Table.Row>
@@ -351,12 +356,12 @@ const korean: Partial<Strings> = {
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangeUnderflow(min)`</Table.HeaderCell>
-      <Table.Cell>`min`보다 이른 날짜, 시각, 날짜와 시각. `min`은 필드 고유의 형식</Table.Cell>
+      <Table.Cell>`min`보다 이른 날짜, 시각, 날짜와 시각, 날짜 범위. `min`은 필드 고유의 형식</Table.Cell>
       <Table.Cell>`Enter {min} or later`</Table.Cell>
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`dateRangeOverflow(max)`</Table.HeaderCell>
-      <Table.Cell>`max`보다 늦은 날짜, 시각, 날짜와 시각. `max`는 필드 고유의 형식</Table.Cell>
+      <Table.Cell>`max`보다 늦은 날짜, 시각, 날짜와 시각, 날짜 범위. `max`는 필드 고유의 형식</Table.Cell>
       <Table.Cell>`Enter {max} or earlier`</Table.Cell>
     </Table.Row>
     <Table.Row>

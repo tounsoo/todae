@@ -33,7 +33,7 @@ export type Component = {
   [K in Name]: K extends Hook ? never : K extends Capitalize<K> ? (K extends Uppercase<K> ? never : K) : never;
 }[Name];
 
-/** Field's members are separate controls, such as `Field.DatePicker`, so each one counts on its own. */
+/** Field's members are separate controls, such as `Field.DateInput`, so each one counts on its own. */
 export type FieldPart = `Field.${Extract<keyof Exports['Field'], string>}`;
 
 /** Everything the bench must cover. Adding a public component, hook or Field control adds a part. */

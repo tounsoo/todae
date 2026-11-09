@@ -52,6 +52,7 @@ const FRENCH: Strings = {
   hue: 'Teinte',
   colorPicker: 'Sélecteur de couleur',
   datePicker: 'Choisir une date',
+  picker: 'Ouvrir le sélecteur',
   timePicker: 'Choisir une heure',
   dateTimePicker: 'Choisir une date et une heure',
   dateRangePicker: 'Choisir des dates',

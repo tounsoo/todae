@@ -1,0 +1,50 @@
+import FieldPickerPickOnly from '../../../../examples/field/picker/FieldPickerPickOnly';
+import FieldPickerColor from '../../../../examples/field/picker/FieldPickerColor';
+
+# Field.Picker
+
+`Field.Picker` is a button inside a [Field](/field) that opens a [Popover](/popover) around a panel you pass as its children. The panel can be a `Calendar.Root`, an `OptionList.Root`, a `ColorPicker.Root` or one of your own. It holds no value of its own: give the panel the same value as the input beside it, such as a [Field.DateInput](/field/date-input), which shows and sends it. A pick in a Calendar or OptionList inside closes the popover.
+
+<Example of={FieldPickerPickOnly} block />
+
+Here the `Field.DateInput` has no `onValueChange`, so it is read-only: it shows the date and sends it with a form, and the date can only be picked. A press on the read-only input opens the picker, as a press elsewhere in the field does. With `onValueChange`, people can type the date too, as on [Field.DateInput](/field/date-input), and a press elsewhere in the field focuses the input instead.
+
+## Panels
+
+Children are mounted only while the popover is open. A `Calendar.Root` picks a date, or a range with `mode="range"`, as on [Field.DateInput](/field/date-input) and [Field.DateRangeInput](/field/date-range-input). An `OptionList.Root` picks one option, such as a time from [`timeOptions`](/field/time-input), as on [Field.TimeInput](/field/time-input). A `ColorPicker.Root` picks a color. Any other panel works too.
+
+A pick in a Calendar, or in an OptionList with one value, makes the value and closes the popover, with the reason `'select'`. A pick in an OptionList with `selectionMode="multiple"`, and a drag or key in a ColorPicker, leave it open. Each of them tells the field that a person changed its value, so a server error that [Form.Root](/form) shows on the field is dismissed.
+
+With `closeOnPick={false}`, no pick closes the popover, for a panel that takes more than one pick. Children can then be a function that gets `{ close }`, to close the popover once the value is whole. The [Date and time picker](/recipes/date-time-picker) recipe puts a Calendar beside an OptionList of times this way, and closes once both a day and a time are set. A function child also suits a panel of your own, such as a list of buttons, that has no pick to close on.
+
+## Swatch
+
+With `swatch`, a color such as `#3366ff`, the button is a swatch one field line tall, filled with that color, in place of a glyph. Put a `ColorPicker.Root` inside and give both the same color. A [Field.TextInput](/field/text-input) beside it shows the color as text and sends it with a form; [`normalizeHex`](/color-picker) reads a typed hex color.
+
+<Example of={FieldPickerColor} block />
+
+## Labels and glyphs
+
+`label` names the button, when another control is beside it, and the popover. By default it comes from the typed input beside it: the `datePicker`, `timePicker`, `dateTimePicker` or `dateRangePicker` string in [StringsProvider](/utilities/strings-provider), such as "Choose date", beside a `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput` or `Field.DateRangeInput`. With no typed input, it is the `colorPicker` string with `swatch`, "Color picker", and the `picker` string without, "Open picker". `glyph` is what the button shows: by default the `calendar` glyph from [GlyphsProvider](/utilities/glyphs-provider) beside a date input, a date-and-time input or a range input, the `clock` glyph beside a time input, and the `chevron` glyph otherwise.
+
+## Open and close
+
+The popover opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` for a pick that closes it or a call to `close`, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. A disabled field shows no popover, and one that is open when the field is disabled closes and stays closed when it is enabled again. Open, focus goes to the panel's own place to start, a Calendar's day or an OptionList, else to the popover's first focusable element. Escape closes it, and focus goes back to where it was before it opened. A press anywhere in the field is not a press outside.
+
+## Accessible composition
+
+**Todae handles:** Beside a typed input or another control, such as a `Field.TextInput`, that control takes the field's `id` and `aria-describedby`, and the button keeps `disabled` and `aria-invalid` and is named `label` unless it has its own `aria-label`. On its own, the button is the field's control and takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`. The button gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the popover is open. The popover is a `role="dialog"` named `label`. The button sends nothing with a form.
+
+**You supply:** A name for the field, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. A name for the panel, such as `aria-label` on a `Calendar.Root`, an `OptionList.Root` or a `ColorPicker.Root`. The panel's value, the same as the input's.
+
+**Watch for:** A server render can't know a control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`. Put the typed input before the picker, so the server names the button from it too. A swatch's name is never the color, so a screen reader does not hear the value from the button: show the color as text, in a `Field.TextInput` or a `Field.Affix`. On its own, the button shows only its glyph and sends nothing, so pair it with an input that shows and sends the value.
+
+## When to use
+
+**When:** A panel to pick a field's value from, beside the input that holds it: a calendar beside a date, a list of times beside a time, a color picker beside a hex color.
+
+**When not:** A fixed set of options with no typing → [Field.Select](/field/select). A calendar or a color picker shown on the page → [Calendar](/calendar) or [ColorPicker](/color-picker). A menu of actions → [Menu](/menu).
+
+## Props
+
+<PropsTable name="Field.Picker" />

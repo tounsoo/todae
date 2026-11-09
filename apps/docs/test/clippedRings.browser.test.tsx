@@ -5,8 +5,8 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-// A clip box around a scroll box around a tall focusable list, like the date-time picker's
-// popover around its time list. The list's ring is 2px wide with a 2px offset, so it needs 4px.
+// A clip box around a scroll box around a tall focusable list, like the date and time picker
+// recipe's popover around its time list. The list's ring is 2px wide with a 2px offset, so it needs 4px.
 // Like the time list, the scroll box's scroll padding matches its padding, so focusing the list
 // keeps that room rather than scrolling the list's top to the box's edge.
 function mount({ scrollerPadding, scrollTop }: { scrollerPadding: number; scrollTop: number }) {

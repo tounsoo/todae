@@ -161,6 +161,28 @@ describe('usePopover', () => {
     );
   });
 
+  it('names an anchorRef in a parent once it opens, though the parent had no element when the hook mounted', () => {
+    // A child's layout effects run before its parent's ref is set, as a Field.Picker's inside its Field.Root.
+    function Child({ anchorRef, open }: { anchorRef: RefObject<HTMLDivElement | null>; open: boolean }) {
+      const popover = usePopover({ open, anchorRef });
+      return <span data-testid="sits-at" data-at={popover.getPopoverProps().style.positionAnchor as string} />;
+    }
+    function Parent({ open }: { open: boolean }) {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      return (
+        <div ref={anchorRef} data-testid="anchor">
+          <Child anchorRef={anchorRef} open={open} />
+        </div>
+      );
+    }
+    const { rerender } = render(<Parent open={false} />);
+    rerender(<Parent open />);
+    const anchor = screen.getByTestId('anchor');
+    const at = screen.getByTestId('sits-at').dataset.at!;
+    expect(anchor.style.getPropertyValue('anchor-name')).toBe(at);
+    expect(anchor.style.getPropertyValue('--todae-popover-anchor')).toBe(at);
+  });
+
   it('sits at anchorName instead of the trigger when given one', () => {
     const own = renderHook(() => usePopover({ open: true })).result.current;
     const ownName = own.getTriggerProps().style.anchorName;

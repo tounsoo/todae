@@ -6,6 +6,7 @@ import {
   Button,
   Code,
   CodeBlock,
+  ColorPicker,
   COMPONENT_OVERRIDE_KEYS,
   Field,
   RAW_OVERRIDE_KEYS,
@@ -78,7 +79,7 @@ let swatchContext: CanvasRenderingContext2D | null | undefined;
 const hexCache = new Map<string, string>();
 
 /**
- * Any CSS color as #rrggbb, for Field.ColorPicker. Painting one pixel
+ * Any CSS color as #rrggbb, for a Field.Picker swatch and its ColorPicker. Painting one pixel
  * resolves every syntax the browser knows (oklch, relative colors) to sRGB.
  * One canvas serves every swatch, and each value is resolved once.
  */
@@ -128,13 +129,19 @@ function TokenField({
       <div className="token-row-inputs">
         {color ? (
           <Field.Root aria-label={`${path} ${colorLabel}`}>
-            <Field.ColorPicker
-              value={toHex(value || '#000000')}
-              onValueChange={(next) => {
-                const parsed = parseThemeValue(path, next);
-                if (parsed !== null) onCommit(parsed);
-              }}
-            />
+            <Field.Picker swatch={toHex(value || '#000000')}>
+              <ColorPicker.Root
+                aria-label={`${path} ${colorLabel}`}
+                value={toHex(value || '#000000')}
+                onValueChange={(next) => {
+                  const parsed = parseThemeValue(path, next);
+                  if (parsed !== null) onCommit(parsed);
+                }}
+              >
+                <ColorPicker.Area />
+                <ColorPicker.Hue />
+              </ColorPicker.Root>
+            </Field.Picker>
           </Field.Root>
         ) : null}
         <Field.Root id={id} invalid={invalid}>

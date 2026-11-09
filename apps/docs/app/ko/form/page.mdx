@@ -81,7 +81,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 ## 브라우저가 검사할 수 없는 규칙
 
-`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. 코드가 `setCustomValidity`로 메시지를 바꾸더라도 규칙이 유지되는 동안은 다음 커밋에서 Todae가 자신의 메시지를 다시 설정하고, 규칙이 사라지면 Todae가 설정한 메시지가 그대로일 때만 지웁니다. `Field.Root`에서는 필드의 컨트롤에, `Fieldset.Root`에서는 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, 컨트롤이 모두 중첩된 그룹 안에 있으면 어느 깊이든 첫 컨트롤에(메시지는 그 컨트롤의 오류가 보이는 곳에 나타납니다), `RadioGroup.Root`에서는 검증에 참여하는 첫 라디오에 적용됩니다. 한 요소를 함께 쓰는 소유자끼리는 덮어쓰지 않습니다. 요소는 자기 부분에서 시작해 바깥 fieldset 순으로 비어 있지 않은 첫 메시지를 받으므로, 빈 `customValidity`를 가진 `Fieldset.Root`는 안쪽 필드의 메시지를 그대로 둡니다. `Form.Root` 없이도 네이티브 API로 동작하며 같은 컨트롤을 고릅니다.
+`Field.Root`, `Fieldset.Root`, `Checkbox.Root`, `RadioGroup.Root`의 `customValidity`는 브라우저의 `setCustomValidity`로 메시지를 설정하므로 제출을 막고 위의 타이밍을 따릅니다. 빈 문자열은 규칙이 지켜졌다는 뜻입니다. 코드가 `setCustomValidity`로 메시지를 바꾸더라도 규칙이 유지되는 동안은 다음 커밋에서 Todae가 자신의 메시지를 다시 설정하고, 규칙이 사라지면 Todae가 설정한 메시지가 그대로일 때만 지웁니다. `Field.Root`에서는 필드의 컨트롤에(읽기 전용인 `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`, `Field.DateRangeInput`이면 그 값 입력에. 폼은 그 텍스트 입력을 검사하지 않지만 값 입력은 여전히 제출을 막습니다), `Fieldset.Root`에서는 자기 컨트롤 중 검증에 참여하는 첫 컨트롤에, 컨트롤이 모두 중첩된 그룹 안에 있으면 어느 깊이든 첫 컨트롤에(메시지는 그 컨트롤의 오류가 보이는 곳에 나타납니다), `RadioGroup.Root`에서는 검증에 참여하는 첫 라디오에 적용됩니다. 한 요소를 함께 쓰는 소유자끼리는 덮어쓰지 않습니다. 요소는 자기 부분에서 시작해 바깥 fieldset 순으로 비어 있지 않은 첫 메시지를 받으므로, 빈 `customValidity`를 가진 `Fieldset.Root`는 안쪽 필드의 메시지를 그대로 둡니다. `Form.Root` 없이도 네이티브 API로 동작하며 같은 컨트롤을 고릅니다.
 
 <Example of={FormRule} block />
 
@@ -93,7 +93,7 @@ const [errors, setErrors] = useState<FormErrors>({});
 
 `Form.Root` 밖에서는 `Field.Group`과 `Fieldset.Root`가 이전과 같고, `id` 없는 `ErrorMessage.Root`는 개발 중에 오류를 기록합니다. `id`가 있는 `ErrorMessage.Root`는 이전처럼 어디서나 동작하며 연결은 직접 합니다.
 
-`Field.TextInput`, `Field.Textarea`, `Field.Select`, `Checkbox.Root`, `Switch.Root`, `RadioGroup.Root`는 네이티브 컨트롤이므로 참여합니다. 피커와 `Field.NumberInput`, `Field.ColorPicker`, `Field.ChipInput`은 버튼이나 텍스트 입력 옆에 네이티브 값 입력을 렌더링하므로, 피커, `Field.NumberInput`, `Field.ChipInput`의 `required`와 피커와 `Field.NumberInput`의 `min`, `max`도 검증에 참여합니다. 값 입력은 숨겨져 있으므로 그 문제는 필드에 나타나고, 포커스는 필드의 컨트롤로 갑니다. 피커의 버튼, 또는 `Field.NumberInput`이나 `Field.ChipInput`의 텍스트 입력입니다. `Field.NumberInput`은 `min`과 `max`를 자신의 형식으로 씁니다. 예를 들어 "Enter 1,000 or more"처럼 읽힙니다. 직접 만든 컨트롤은 [`useField`](/utilities/use-field)의 `getValueInputProps`로 값 입력을 렌더링할 수 있습니다.
+`Field.TextInput`, `Field.Textarea`, `Field.Select`, `Checkbox.Root`, `Switch.Root`, `RadioGroup.Root`는 네이티브 컨트롤이므로 참여합니다. `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput`, `Field.DateTimeInput`, `Field.NumberInput`, `Field.ChipInput`은 텍스트 입력 옆에 네이티브 값 입력을 렌더링하므로, 이들 모두의 `required`와 `Field.ChipInput`을 뺀 나머지의 `min`, `max`도 검증에 참여합니다. 값 입력은 숨겨져 있으므로 그 문제는 필드에 나타나고, 포커스는 텍스트 입력으로 갑니다. `Field.NumberInput`은 `min`과 `max`를 자신의 형식으로 씁니다. 예를 들어 "Enter 1,000 or more"처럼 읽힙니다. 직접 만든 컨트롤은 [`useField`](/utilities/use-field)의 `getValueInputProps`로 값 입력을 렌더링할 수 있습니다.
 
 ## 접근성을 지키는 조합
 

@@ -1,0 +1,60 @@
+import FieldDateInputPicker from '../../../../examples/field/date-input/FieldDateInputPicker';
+import FieldDateInputAlone from '../../../../examples/field/date-input/FieldDateInputAlone';
+
+# Field.DateInput
+
+`Field.DateInput` is a text input inside a [Field](/field) that people type a date into, in the locale's own way. Its `value` is a `Temporal.PlainDate` or `null`. It reads the text when it is committed, on blur, on Enter or when its form is submitted, rewrites it as `formatDate` writes the date and calls `onValueChange` with it. Typing alone calls nothing. Without `onValueChange`, the input is read-only. It takes `min`, `max`, `required`, `locale` and `placeholder`, and the native input attributes that don't contradict them.
+
+<Example of={FieldDateInputPicker} block />
+
+Here a [Field.Picker](/field/picker) beside the input opens a [Calendar](/calendar) in a [Popover](/popover). The input and the calendar get the same `value` and `onValueChange`, so a typed date moves the calendar to its month, and a picked date is written into the text and closes the popover. The panel's value is yours to pass: the picker only opens and closes it. Beside a `Field.DateInput`, the picker's button shows a calendar glyph and is named from the `datePicker` string.
+
+## Typed dates {/*#typed-dates*/}
+
+`formatDate(date, { locale })` writes a date in the locale's numbers, such as `10/13/2026` in `en-US`, `13.10.2026` in `de` and `2026. 10. 13.` in `ko`. `parseDate(text, { locale })` reads typed text back into a `Temporal.PlainDate`, or returns `null` when the text is not a date. It reads a date in numbers in the order `formatDate` writes them or in the order of the locale's `short` date style, as `13.10.26` in `gsw`, whose `formatDate` writes `2026-10-13`. When both orders read a date, a year of four or more digits is read in `formatDate`'s order, and a year of one or two digits in the `short` style's order when that style writes the year in two digits. It also reads a date as `Intl.DateTimeFormat` writes it in the locale's `medium`, `long` or `full` date style, such as `Oct 13, 2026` or `Tuesday, October 13, 2026` in `en-US`. Letter case doesn't matter, digits may be in any script, and the parts may be separated by any punctuation, symbols or spaces. The month may be any of its long or short names, such as `Oct` or `October`. A weekday may be long, short or left out, but must be the date's. The style's other words, such as `de` in `13 de octubre de 2026`, may be replaced by a space. Three numbers that start with a year of four or more digits, such as `2026-10-13`, are read as year, month and day, unless the locale writes the year first in another order. A year is a Gregorian year, whatever the locale's own calendar. A year of one or two digits is read as the nearest such year to the current one, so a date about 50 years away needs all four digits, and a year of three digits is not read. Without `locale`, both use the runtime's own.
+
+`Field.DateInput` reads its text with `parseDate` and writes it with `formatDate`, in its `locale`. Empty text commits `null`. Text that is not a date stays as it was typed, `onValueChange` is not called, and the field is marked invalid once a commit has tried to read it; until the text is a date or empty, the form can't be submitted. A `value` the product sets while someone types replaces the text, and a reset of the form drops it. For a text input of your own, `formatDate` and `parseDate` work in a [Field.TextInput](/field/text-input) too.
+
+## On its own
+
+On its own, `Field.DateInput` is the field's control, with no button. People who know the date by heart type it, and the text is rewritten in the locale's numbers once they leave the input.
+
+<Example of={FieldDateInputAlone} block />
+
+The date goes with a form in a native `<input type="date">` beside the text input, under the field's `name`, or the input's own `name`, the way HTML writes a date, such as `2026-10-13`. The text input sends nothing. The native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no date invalid, and `min` and `max` make a form with an earlier or later date invalid; the browser checks all three on the native input. Text that is not a date blocks the submit too. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` or `max` written as `formatDate` writes a date, and focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too. A native date input holds only the years 1 to 275760, so a value or bound outside them reads as no date: it is sent empty, `required`, `min` and `max` ignore it, and development builds warn once. A Calendar's `isDateDisabled` is not part of the check: a typed date it rules out is still a date, so check it yourself and set `customValidity` on the `Field.Root`.
+
+## Accessible composition
+
+**Todae handles:** The text input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It gets `aria-invalid` once a commit can't read its text, and `aria-required` with `required`. Enter during an IME composition commits nothing. Beside a [Field.Picker](/field/picker), the input stays the field's control, and the picker's button is named from the `datePicker` string in [StringsProvider](/utilities/strings-provider) and shows the `calendar` glyph from [GlyphsProvider](/utilities/glyphs-provider). Read-only, a press on the input opens the picker.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same date for the input and a Calendar beside it, and the same `locale`, `min` and `max`.
+
+**Watch for:** With a `value`, the server writes the date in its own locale, so pass `locale` when the input renders on a server. Text that reads as a date but not the one meant, such as a two-digit year read as the nearest such year: show the date in words nearby when that matters.
+
+## When to use
+
+### Field.DateInput
+
+**When:** A date in a form, typed or, with a [Field.Picker](/field/picker) and a Calendar beside it, picked from a month, such as a deadline, a booking or a birthday.
+
+**When not:** A calendar shown on the page → [Calendar](/calendar). A start and an end date → [Field.DateRangeInput](/field/date-range-input). A date with a time → [Field.DateTimeInput](/field/date-time-input).
+
+### formatDate
+
+**When:** Writing a date as text for a locale, such as into a text input of your own.
+
+**When not:** A date with a weekday or a month name → `Intl.DateTimeFormat`.
+
+### parseDate
+
+**When:** Reading a date someone typed.
+
+**When not:** Text in a fixed format such as `2026-10-13` → `Temporal.PlainDate.from`.
+
+## Props
+
+<PropsTable name="Field.DateInput" />
+
+<PropsTable name="formatDate" />
+
+<PropsTable name="parseDate" />

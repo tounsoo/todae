@@ -8,6 +8,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button } from './Button.js';
+import { ColorPicker } from './ColorPicker.js';
 import {
   Field,
   type FieldAffixProps,
@@ -52,8 +53,10 @@ describe('Field exports', () => {
     expect(api).not.toHaveProperty('Suffix');
     expect(api).not.toHaveProperty('FieldLabelProps');
     expect(api.Field).not.toHaveProperty('ColorInput');
-    expect(api.Field).not.toHaveProperty('TimeInput');
-    expect(api.Field).not.toHaveProperty('DateTimeInput');
+    for (const old of ['ColorPicker', 'DatePicker', 'TimePicker', 'DateTimePicker', 'DateRangePicker']) {
+      expect(api.Field).not.toHaveProperty(old);
+    }
+    expect(api).not.toHaveProperty('DateTimeCalendar');
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
@@ -62,11 +65,11 @@ describe('Field exports', () => {
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Select: Field.Select,
-      ColorPicker: Field.ColorPicker,
-      DatePicker: Field.DatePicker,
-      TimePicker: Field.TimePicker,
-      DateTimePicker: Field.DateTimePicker,
-      DateRangePicker: Field.DateRangePicker,
+      DateInput: Field.DateInput,
+      TimeInput: Field.TimeInput,
+      DateTimeInput: Field.DateTimeInput,
+      DateRangeInput: Field.DateRangeInput,
+      Picker: Field.Picker,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Increment: Field.Increment,
@@ -268,7 +271,7 @@ const fieldCss = readFileSync(join(fieldDir, 'Field.module.css'), 'utf8');
 const chipCss = readFileSync(join(fieldDir, 'Chip.module.css'), 'utf8');
 const tokensCss = readFileSync(join(fieldDir, '../styles/tokens.generated.css'), 'utf8');
 
-describe('Field.ColorPicker beside another control part', () => {
+describe('Field.Picker beside another control part', () => {
   const noop = () => undefined;
   const parts: [string, ReactNode][] = [
     ['TextInput', <Field.TextInput key="c" value="#3366ff" onChange={noop} />],
@@ -297,7 +300,7 @@ describe('Field.ColorPicker beside another control part', () => {
         <form data-testid="form">
           <Field.Root id="x" name="n" aria-label="Value">
             {control}
-            <Field.ColorPicker value="#3366ff" />
+            <Field.Picker swatch="#3366ff" />
           </Field.Root>
         </form>,
       );
@@ -311,13 +314,13 @@ describe('Field.ColorPicker beside another control part', () => {
     const { container, rerender } = render(
       <Field.Root id="x" aria-label="Accent">
         <Field.TextInput value="" onChange={noop} />
-        <Field.ColorPicker value="#3366ff" />
+        <Field.Picker swatch="#3366ff" />
       </Field.Root>,
     );
     expect(screen.getByRole('button', { name: 'Color picker' }).id).toBe('');
     rerender(
       <Field.Root id="x" aria-label="Accent">
-        <Field.ColorPicker value="#3366ff" />
+        <Field.Picker swatch="#3366ff" />
       </Field.Root>,
     );
     expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
@@ -334,32 +337,32 @@ describe('Field.ColorPicker beside another control part', () => {
     return <input {...field.getControlProps({ name }, { sendsName: false })} />;
   }
 
-  it('gives a control that sends nothing no name, its own or the Root, and leaves the name to one beside it', () => {
+  it('gives a control that sends nothing no name, its own or the Root, and sends nothing itself', () => {
     const { container, getByTestId } = render(
       <form data-testid="form">
         <Field.Root name="accent" aria-label="Accent">
           <Silent name="mine" />
-          <Field.ColorPicker value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>,
     );
     const silent = container.querySelector('input')!;
     expect(silent.hasAttribute('name')).toBe(false);
     expect(silent.getAttribute('data-todae-field-control')).toBe('');
-    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([]);
   });
 
-  it('keeps the name, and gives up the id, beside a control that is not a form element', () => {
+  it('gives up the id beside a control that is not a form element, and sends nothing', () => {
     const { container, getByTestId } = render(
       <form data-testid="form">
         <Field.Root id="x" name="accent" aria-label="Accent">
           <Stars />
-          <Field.ColorPicker value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>,
     );
     expect(container.querySelector('#x')!.getAttribute('role')).toBe('slider');
-    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([]);
   });
 
   it('keeps the field beside a part that reads useField but renders no control', () => {
@@ -370,18 +373,18 @@ describe('Field.ColorPicker beside another control part', () => {
     const { container } = render(
       <Field.Root id="x" name="n" aria-label="Accent">
         <Reader />
-        <Field.ColorPicker value="#3366ff" />
+        <Field.Picker swatch="#3366ff" />
       </Field.Root>,
     );
     expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
-    expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[name]')).toHaveLength(0);
   });
 
   function formEntries() {
     return [...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()];
   }
 
-  it('keeps the name beside a button that does not take it', () => {
+  it('sends nothing beside a button that does not take the name', () => {
     function Switch() {
       const field = useField();
       return <button type="button" role="switch" aria-checked {...field.getControlProps({}, { native: false })} />;
@@ -390,12 +393,12 @@ describe('Field.ColorPicker beside another control part', () => {
       <form data-testid="form">
         <Field.Root id="x" name="accent" aria-label="Accent">
           <Switch />
-          <Field.ColorPicker value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>,
     );
     expect(container.querySelector('#x')!.getAttribute('role')).toBe('switch');
-    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+    expect(formEntries()).toEqual([]);
   });
 
   it('leaves the name to a custom element that takes it', () => {
@@ -407,7 +410,7 @@ describe('Field.ColorPicker beside another control part', () => {
       <form data-testid="form">
         <Field.Root id="x" name="accent" aria-label="Accent">
           <Rating />
-          <Field.ColorPicker value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>,
     );
@@ -430,7 +433,7 @@ describe('Field.ColorPicker beside another control part', () => {
       <form data-testid="form">
         <Field.Root id="x" name="accent" aria-label="Accent">
           <Rating />
-          <Field.ColorPicker value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>,
     );
@@ -440,37 +443,23 @@ describe('Field.ColorPicker beside another control part', () => {
     expect(container.querySelector('input[type="hidden"]')).toBeNull();
   });
 
-  function WithText({ inputName, rootName = 'accent', swatchName }: { inputName?: string; rootName?: string; swatchName?: string }) {
+  function WithText({ inputName, rootName = 'accent' }: { inputName?: string; rootName?: string }) {
     return (
       <form data-testid="form">
         <Field.Root id="x" name={rootName} aria-label="Accent">
           <Field.TextInput name={inputName} value="#3366ff" onChange={noop} />
-          <Field.ColorPicker name={swatchName} value="#3366ff" />
+          <Field.Picker swatch="#3366ff" />
         </Field.Root>
       </form>
     );
   }
 
-  it('sends the field name beside a text input with its own name, and follows a change to it', () => {
+  it('leaves what is sent to the text input, under its own name or the field\'s', () => {
     const { rerender } = render(<WithText inputName="accentHex" />);
-    expect(formEntries()).toEqual([
-      ['accentHex', '#3366ff'],
-      ['accent', '#3366ff'],
-    ]);
+    expect(formEntries()).toEqual([['accentHex', '#3366ff']]);
     rerender(<WithText />);
     expect(formEntries()).toEqual([['accent', '#3366ff']]);
     expect(document.querySelector('[name="accent"]')!.tagName).toBe('INPUT');
-    expect(document.querySelector('[name="accent"]')!.getAttribute('type')).not.toBe('hidden');
-    rerender(<WithText inputName="accentHex" />);
-    expect(formEntries()).toEqual([
-      ['accentHex', '#3366ff'],
-      ['accent', '#3366ff'],
-    ]);
-  });
-
-  it('leaves the name to a text input that names itself with it', () => {
-    render(<WithText inputName="accent" />);
-    expect(formEntries()).toEqual([['accent', '#3366ff']]);
   });
 
   it('follows a change to the field name', () => {
@@ -479,25 +468,17 @@ describe('Field.ColorPicker beside another control part', () => {
     expect(formEntries()).toEqual([['color', '#3366ff']]);
   });
 
-  it('keeps its own name beside a text input', () => {
-    render(<WithText swatchName="swatch" />);
-    expect(formEntries()).toEqual([
-      ['accent', '#3366ff'],
-      ['swatch', '#3366ff'],
-    ]);
-  });
-
   it('keeps the field when it is the only control', () => {
     const { container } = render(
       <Field.Root id="x" aria-label="Accent">
-        <Field.ColorPicker value="#3366ff" />
+        <Field.Picker swatch="#3366ff" />
       </Field.Root>,
     );
     expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
   });
 });
 
-describe("Field.ColorPicker's picker", () => {
+describe("Field.Picker's popover", () => {
   function Accent({
     disabled,
     open,
@@ -509,7 +490,9 @@ describe("Field.ColorPicker's picker", () => {
   }) {
     return (
       <Field.Root aria-label="Accent" disabled={disabled}>
-        <Field.ColorPicker value="#3366ff" open={open} onOpenChange={onOpenChange} />
+        <Field.Picker swatch="#3366ff" open={open} onOpenChange={onOpenChange}>
+          <ColorPicker.Root value="#3366ff" onValueChange={() => undefined} />
+        </Field.Picker>
         <Field.Affix data-testid="affix">hex</Field.Affix>
       </Field.Root>
     );
@@ -1519,7 +1502,7 @@ describe('Field.Counter', () => {
     const view = render(
       <Field.Root aria-label="Outer">
         <Field.Root aria-label="Inner">
-          <Field.DatePicker aria-label="Inner day" value={null} onValueChange={() => undefined} />
+          <Field.Picker aria-label="Inner day" />
         </Field.Root>
       </Field.Root>,
     );

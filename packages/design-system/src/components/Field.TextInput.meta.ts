@@ -34,7 +34,7 @@ export const meta = {
       required: false,
       default: '"text"',
       description:
-        'Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker, a range of dates Field.DateRangePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate, parseDateRange or parseDateTime.',
+        'Native input type. A number uses Field.NumberInput, a time Field.TimeInput, a date Field.DateInput, a range of dates Field.DateRangeInput and both Field.DateTimeInput.',
     },
   ],
 } as const satisfies ComponentMeta;

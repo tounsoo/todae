@@ -6,7 +6,7 @@ import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline'
 
 <Example of={ColorPickerInline} block />
 
-For a color in a form, use [Field.ColorPicker](/field/color-picker): a swatch in a field that opens this picker in a popover.
+For a color in a form, put this picker in a [Field.Picker](/field/picker) with `swatch`: a swatch in a field that opens it in a popover.
 
 ## Keys and values
 
@@ -30,7 +30,7 @@ A `#rrggbb` string has no hue for a gray and no saturation for black. For those,
 
 **When:** Pick any color, shown inline, such as in a theme editor.
 
-**When not:** A color in a form field → [Field.ColorPicker](/field/color-picker). A fixed set of colors → [Radio](/radio). A color in another form, such as `oklch()` → `Field.TextInput`.
+**When not:** A color in a form field → this picker in a [Field.Picker](/field/picker) with `swatch`. A fixed set of colors → [Radio](/radio). A color in another form, such as `oklch()` → `Field.TextInput`.
 
 ## Props
 

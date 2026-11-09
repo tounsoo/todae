@@ -2154,14 +2154,6 @@
       "type": "fontWeight"
     },
     {
-      "path": "field.date-time.gap",
-      "type": "dimension"
-    },
-    {
-      "path": "field.date-time.list.max-height",
-      "type": "dimension"
-    },
-    {
       "path": "field.description.fg",
       "type": "color"
     },
