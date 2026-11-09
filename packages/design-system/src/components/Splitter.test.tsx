@@ -509,6 +509,11 @@ describe('Splitter dragging', () => {
     expect(root().hasAttribute('data-dragging')).toBe(true);
     move(160);
     expect(handle().getAttribute('aria-valuenow')).toBe('300');
+    // With no capture, the release lands wherever the pointer is.
+    fireEvent.pointerUp(document.body, { pointerId: 1 });
+    expect(root().hasAttribute('data-dragging')).toBe(false);
+    move(200);
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
   });
 
   it('grows against the pointer for a panel at the end, and with the text direction', () => {

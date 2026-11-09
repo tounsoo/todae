@@ -262,6 +262,23 @@ function Root({
     if (alone) endDrag();
   }, [alone, endDrag]);
 
+  // A drag whose capture failed, or that a browser never captured, gets its
+  // release wherever the pointer is, not on the handle: end it there too.
+  useEffect(() => {
+    if (!dragging) return;
+    const view = handleRef.current?.ownerDocument.defaultView;
+    if (!view) return;
+    const onRelease = (event: globalThis.PointerEvent) => {
+      if (drag.current?.pointerId === event.pointerId) endDrag();
+    };
+    view.addEventListener('pointerup', onRelease);
+    view.addEventListener('pointercancel', onRelease);
+    return () => {
+      view.removeEventListener('pointerup', onRelease);
+      view.removeEventListener('pointercancel', onRelease);
+    };
+  }, [dragging, endDrag]);
+
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
     const handle = handleRef.current;

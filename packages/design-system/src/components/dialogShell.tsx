@@ -213,8 +213,10 @@ export function DialogShellRoot({
   useInitialFocus(dialogRef, present && open, initialFocusRef);
 
   const shown = present && open;
-  // An empty aria-label or aria-labelledby names nothing.
-  const named = Boolean(props['aria-label'] || props['aria-labelledby'] || labelledBy);
+  // An empty aria-labelledby falls back to the Title's id, and a blank
+  // aria-label or aria-labelledby names nothing.
+  const labelledByAttr = props['aria-labelledby'] || labelledBy;
+  const named = Boolean(props['aria-label']?.trim() || labelledByAttr?.trim());
   useEffect(() => {
     if (process.env.NODE_ENV === 'production' || !shown || named) return;
     // A Title registers in a layout effect whose update renders after this
@@ -250,7 +252,7 @@ export function DialogShellRoot({
         {...props}
         role={role}
         {...{ closedby }}
-        aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+        aria-labelledby={labelledByAttr}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
         {...shell.attributes}

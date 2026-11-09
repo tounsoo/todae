@@ -443,15 +443,28 @@ describe('Dialog name check', () => {
     error.mockRestore();
   });
 
-  it('treats an empty aria-label as no name', async () => {
+  it.each([
+    ['an empty aria-label', { 'aria-label': '' }],
+    ['a blank aria-label', { 'aria-label': '   ' }],
+    ['a blank aria-labelledby', { 'aria-labelledby': ' ' }],
+  ])('treats %s as no name', async (_, props) => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
-      <Dialog.Root open onOpenChange={() => undefined} aria-label="">
+      <Dialog.Root open onOpenChange={() => undefined} {...props}>
         <p>Saved.</p>
       </Dialog.Root>,
     );
     await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Dialog.Root needs a name')));
     error.mockRestore();
+  });
+
+  it('is named by its Title when aria-labelledby is empty', () => {
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby="">
+        <Dialog.Title>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
   });
 });
 
