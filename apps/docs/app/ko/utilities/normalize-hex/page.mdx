@@ -1,0 +1,31 @@
+import NormalizeHexInput from '../../../../examples/utilities/normalize-hex/NormalizeHexInput';
+
+export const description = 'normalizeHex는 입력한 세 자리나 여섯 자리 hex 색을 소문자 #rrggbb로 바꾸고, 그 밖에는 null을 돌려줍니다.';
+
+# normalizeHex
+
+`normalizeHex(text)`는 `#`이 있든 없든 세 자리나 여섯 자리 hex 색을 소문자 `#rrggbb`로 바꾸고, 그 밖에는 `null`을 돌려줍니다. `f80`은 `#ff8800`이 되고 `#3366CC`는 `#3366cc`가 되며, `red`나 `#ff88`은 `null`입니다. 텍스트 앞뒤의 공백은 무시합니다. [ColorPicker](/color-picker)나 색 견본에 넘기기 전에 사람이 입력한 hex 색을 확인할 때 쓰세요.
+
+<Example of={NormalizeHexInput} />
+
+## 색 선택기와 함께
+
+[ColorPicker.Root](/color-picker)는 `#rrggbb`를 읽고 씁니다. `swatch`를 준 [Field.Picker](/field/picker) 옆에서는 `Field.TextInput`이 사람이 입력한 텍스트를 담고, 선택기가 받을 수 있는 색인지는 `normalizeHex`가 정합니다. `null`인 동안에는 텍스트를 입력한 그대로 두세요. 그래야 입력하다 만 색이 사라지지 않습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 화면에 보이는 것은 없습니다. 문자열이나 `null`을 돌려줄 뿐입니다.
+
+**직접 제공할 것:** 텍스트가 색이 아닐 때 무엇이 잘못됐는지 알려 주는, 필드에 연결된 [ErrorMessage](/errormessage)의 메시지와 `Field.Root`의 `invalid`. 색 견본만이 아니라 텍스트로도 보여 주는 색.
+
+**주의할 점:** 아직 입력하는 중인데 키를 누를 때마다 필드를 유효하지 않음으로 표시하는 것. 포커스를 잃을 때처럼 확정할 때 알려 주는 편이 친절합니다.
+
+## 언제 쓰나요
+
+**언제:** 테마 편집기나 색 선택기 옆에서처럼, 사람이 입력한 hex 색을 확인하거나 정리할 때.
+
+**쓰지 않을 때:** `oklch()`처럼 다른 문법의 색 → [parseThemeColor](/utilities/theme-override-style).
+
+## Props
+
+<PropsTable name="normalizeHex" />

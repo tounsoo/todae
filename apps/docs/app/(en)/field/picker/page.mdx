@@ -11,7 +11,7 @@ Here the `Field.DateInput` has no `onValueChange`, so it is read-only: it shows 
 
 ## Panels
 
-Children are mounted only while the popover is open. A `Calendar.Root` picks a date, or a range with `mode="range"`, as on [Field.DateInput](/field/date-input) and [Field.DateRangeInput](/field/date-range-input). An `OptionList.Root` picks one option, such as a time from [`timeOptions`](/field/time-input), as on [Field.TimeInput](/field/time-input). A `ColorPicker.Root` picks a color. Any other panel works too.
+Children are mounted only while the popover is open. A `Calendar.Root` picks a date, or a range with `mode="range"`, as on [Field.DateInput](/field/date-input) and [Field.DateRangeInput](/field/date-range-input). An `OptionList.Root` picks one option, such as a time from [`timeOptions`](/utilities/time-options), as on [Field.TimeInput](/field/time-input). A `ColorPicker.Root` picks a color. Any other panel works too.
 
 A pick in a Calendar, or in an OptionList with one value, makes the value and closes the popover, with the reason `'select'`. A pick in an OptionList with `selectionMode="multiple"`, and a drag or key in a ColorPicker, leave it open. Each of them tells the field that a person changed its value, so a server error that [Form.Root](/form) shows on the field is dismissed.
 

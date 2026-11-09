@@ -16,7 +16,7 @@ The area holds two native range inputs, one for saturation and one for brightnes
 
 A `#rrggbb` string has no hue for a gray and no saturation for black. For those, the picker keeps the hue it last showed, and for black the saturation too, so dragging to a gray and back keeps the hue.
 
-`normalizeHex(text)` turns a three- or six-digit hex color, with or without `#`, into `#rrggbb`, and returns `null` for anything else. Use it to check a hex value someone types.
+To check a hex value someone types, [normalizeHex](/utilities/normalize-hex) turns a three- or six-digit hex color into `#rrggbb`, and returns `null` for anything else.
 
 ## Accessible composition
 
@@ -39,5 +39,3 @@ A `#rrggbb` string has no hue for a gray and no saturation for black. For those,
 <PropsTable name="ColorPicker.Area" />
 
 <PropsTable name="ColorPicker.Hue" />
-
-<PropsTable name="normalizeHex" />

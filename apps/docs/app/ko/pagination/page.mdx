@@ -10,7 +10,7 @@ export const description = '페이지 목록을 감싼 nav 랜드마크입니다
 
 ## 페이지 범위
 
-`paginationRange({ page, count })`는 페이지 번호를 돌려주고, 생략된 구간은 `"start-ellipsis"`와 `"end-ellipsis"`로 나타냅니다. 현재 페이지와 그 양옆의 `siblings`개 페이지, 양 끝의 `boundaries`개 페이지를 보여 줍니다. 둘 다 기본값은 1입니다. 페이지가 그보다 많은 동안에는 목록 길이가 같게 유지되므로 페이지가 바뀌어도 컨트롤 개수는 그대로이고, 생략 구간은 언제나 두 페이지 이상을 나타냅니다.
+`paginationRange({ page, count })`는 페이지 번호를 돌려주고, 생략된 구간은 `"start-ellipsis"`와 `"end-ellipsis"`로 나타냅니다. 현재 페이지와 그 양옆의 `siblings`개 페이지, 양 끝의 `boundaries`개 페이지를 보여 줍니다. 둘 다 기본값은 1입니다. 페이지가 그보다 많은 동안에는 목록 길이가 같게 유지되므로 페이지가 바뀌어도 컨트롤 개수는 그대로이고, 생략 구간은 언제나 두 페이지 이상을 나타냅니다. 돌려주는 목록은 [paginationRange](/utilities/pagination-range)에서 볼 수 있습니다.
 
 ## 현재 페이지와 이동
 
@@ -60,5 +60,3 @@ import { ChevronLeft, Ellipsis } from 'lucide-react';
 <PropsTable name="Pagination.Item" />
 
 <PropsTable name="Pagination.Ellipsis" />
-
-<PropsTable name="paginationRange" />

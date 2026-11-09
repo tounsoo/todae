@@ -7,11 +7,11 @@ import FieldTimeInputAlone from '../../../../examples/field/time-input/FieldTime
 
 <Example of={FieldTimeInputPicker} block />
 
-Here a [Field.Picker](/field/picker) beside the input opens an [OptionList](/optionlist) of times in a [Popover](/popover). `timeOptions({ step, min, max, value, locale })` makes the list: a time every `step` minutes from midnight, 30 by default, between `min` and `max`, each with an ISO `value` such as `09:30:00` for an `OptionList.Option`, a `label` as `formatTime` writes it in `locale`, and the `time` itself. A typed time between two steps, such as `9:07`, is in the list in its place when it is passed as `value`. Give the list `value.toString()` as its value and read a pick back with `Temporal.PlainTime.from`. A pick closes the popover. Beside a `Field.TimeInput`, the picker's button shows a clock glyph and is named from the `timePicker` string.
+Here a [Field.Picker](/field/picker) beside the input opens an [OptionList](/optionlist) of times in a [Popover](/popover), made with [timeOptions](/utilities/time-options). The input and the list share one time, so a typed time between two steps, such as `9:07`, is in the list in its place. A pick closes the popover. Beside a `Field.TimeInput`, the picker's button shows a clock glyph and is named from the `timePicker` string.
 
 ## Typed times {/*#typed-times*/}
 
-`formatTime(time, { locale })` writes a time in the locale's short time style, such as `9:30 PM` in `en-US`, `21:30` in `de` and `오후 9:30` in `ko`, or in its medium style, with seconds, when the time has seconds. `parseTime(text, { locale })` reads typed text back into a `Temporal.PlainTime`, or returns `null` when the text is not a time. It reads an hour, an hour and minutes, or an hour, minutes and seconds, such as `9`, `9:30`, `21.30.15` or `0930`, with the locale's own word for the part of the day before or after them, such as `9:30 pm` in `en-US` or `오후 9:30` in `ko`. Letter case doesn't matter, digits may be in any script, and the numbers may be separated by any punctuation, symbols or spaces, or by words the locale writes between them, such as `21 h 30` in `fr-CA`. Without a word for the part of the day, the hour is 0 to 23. Without `locale`, both use the runtime's own.
+`formatTime` writes a time in the locale's short time style, such as `9:30 PM` in `en-US` and `21:30` in `de`, and `parseTime` reads one typed with or without its minutes and the locale's word for the part of the day, such as `9:30 pm` or `2130`. [formatTime and parseTime](/utilities/format-time) says what each writes and reads.
 
 `Field.TimeInput` reads its text with `parseTime` and writes it with `formatTime`, in its `locale`. Empty text commits `null`. Text that is not a time stays as it was typed, `onValueChange` is not called, and the field is marked invalid once a commit has tried to read it; until the text is a time or empty, the form can't be submitted.
 
@@ -21,7 +21,7 @@ On its own, `Field.TimeInput` is the field's control, with no button. Any time c
 
 <Example of={FieldTimeInputAlone} block />
 
-The time goes with a form in a native `<input type="time">` beside the text input, under the field's `name`, or the input's own `name`, the way HTML writes a time, such as `09:30`, or `09:30:15` with seconds. The text input sends nothing, and the native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no time invalid, and `min` and `max` make a form with an earlier or later time invalid. A `min` later than `max` is an overnight range, as in a native time input: the form accepts the times from `min` to midnight and from midnight to `max`, and `timeOptions` lists the same; a time in the gap between `max` and `min` is out of range, and the message names `min`, such as "Enter 10:00 PM or later". The browser checks all three on the native input, and text that is not a time blocks the submit too. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` or `max` written as `formatTime` writes a time, and focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too.
+The time goes with a form in a native `<input type="time">` beside the text input, under the field's `name`, or the input's own `name`, the way HTML writes a time, such as `09:30`, or `09:30:15` with seconds. The text input sends nothing, and the native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no time invalid, and `min` and `max` make a form with an earlier or later time invalid. A `min` later than `max` is an overnight range, as in a native time input: the form accepts the times from `min` to midnight and from midnight to `max`, and [timeOptions](/utilities/time-options) lists the same; a time in the gap between `max` and `min` is out of range, and the message names `min`, such as "Enter 10:00 PM or later". The browser checks all three on the native input, and text that is not a time blocks the submit too. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` in the page's language, with `min` or `max` written as `formatTime` writes a time, and focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too.
 
 ## Temporal
 
@@ -43,30 +43,6 @@ Todae ships no Temporal polyfill. The input's value, `formatTime`, `parseTime` a
 
 **When not:** A date and time in one value → [Field.DateTimeInput](/field/date-time-input). A duration → [Field.NumberInput](/field/number-input) with an `Affix` for the unit.
 
-### timeOptions
-
-**When:** A list of times to pick from, in an `OptionList.Root` inside a [Field.Picker](/field/picker) or on the page.
-
-**When not:** A few times that aren't evenly spaced, such as the slots a shop has free → your own `OptionList.Option`s.
-
-### formatTime
-
-**When:** Writing a time as text for a locale, such as into a text input of your own.
-
-**When not:** A time in another style, such as with a time zone → `Intl.DateTimeFormat`.
-
-### parseTime
-
-**When:** Reading a time someone typed.
-
-**When not:** Text in a fixed format such as `09:30` → `Temporal.PlainTime.from`.
-
 ## Props
 
 <PropsTable name="Field.TimeInput" />
-
-<PropsTable name="timeOptions" />
-
-<PropsTable name="formatTime" />
-
-<PropsTable name="parseTime" />

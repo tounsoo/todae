@@ -3089,6 +3089,12 @@
       "ko": "뷰포트가 좁은지 여부."
     }
   },
+  "categoryTone": {
+    "key": {
+      "en": "A stable key. Composed and decomposed forms of the same text get the same tone.",
+      "ko": "늘 같은 키입니다. 같은 글자를 조합형으로 쓰든 분해형으로 쓰든 같은 톤이 나옵니다."
+    }
+  },
   "composeRefs": {
     "...refs": {
       "en": "Object refs, callback refs or undefined.",

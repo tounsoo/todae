@@ -11,7 +11,7 @@ import FieldDateRangeInputAlone from '../../../../examples/field/date-range-inpu
 
 ## 입력한 범위
 
-`formatDateRange(range, { locale })`는 두 날짜를 [`formatDate`](/field/date-input#typed-dates)가 쓰는 대로 쓰고, 그 사이에 로캘의 범위 구분자를 넣습니다. 예: `en-US`에서는 `10/3/2026 – 10/10/2026`, `ko`에서는 `2026. 10. 3. ~ 2026. 10. 10.`. `parseDateRange(text, { locale })`는 입력한 텍스트를 `DateRange`로 읽고, 범위가 아니면 `null`을 돌려줍니다. 글자나 숫자가 아닌 문자가 이어진 곳마다, 그리고 로캘의 범위 구분자에서 텍스트를 나누고, 양쪽을 `parseDate`로 날짜로 읽습니다. 날짜 두 개로 읽히는 나눔이 정확히 하나일 때 범위를 돌려주므로, `10/3/2026 - 10/10/2026`, `Oct 3, 2026 – Oct 10, 2026`, 그리고 `2026-10-03/2026-10-10` 같은 ISO 8601 구간을 읽습니다. `formatDateRange`가 쓰는 대로 날짜마다 연도가 있어야 하므로, `Oct 3 – Oct 10, 2026`에는 `null`을 돌려줍니다. 종료일을 먼저 쓴 범위도 달력에서 고를 때처럼 앞선 날짜를 시작일로 읽습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+`formatDateRange`는 `en-US`의 `10/3/2026 – 10/10/2026`처럼 두 날짜를 `formatDate`가 쓰는 대로 쓰고 그 사이에 로캘의 범위 구분자를 넣으며, `parseDateRange`는 `Oct 3, 2026 – Oct 10, 2026`이나 `2026-10-03/2026-10-10`처럼 사이에 구분자를 두고 입력한 두 날짜를 읽습니다. 각각 무엇을 쓰고 읽는지는 [formatDateRange와 parseDateRange](/utilities/format-date-range)에 있습니다.
 
 `Field.DateRangeInput`은 자신의 `locale`로 텍스트를 `parseDateRange`로 읽고 `formatDateRange`로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 범위가 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 범위이거나 비어 있을 때까지 폼은 제출되지 않습니다.
 
@@ -41,22 +41,6 @@ import FieldDateRangeInputAlone from '../../../../examples/field/date-range-inpu
 
 **쓰지 않을 때:** 날짜 하나 → [Field.DateInput](/field/date-input). 페이지에 펼쳐 둔 달력에서 고르는 범위 → `mode="range"`인 [Calendar](/calendar). 시작일과 별도의 마감일처럼 따로 정하는 두 날짜 → `Field.DateInput` 두 개.
 
-### formatDateRange
-
-**언제:** 직접 만든 텍스트 입력처럼, 범위를 로캘에 맞는 텍스트로 쓸 때.
-
-**쓰지 않을 때:** `Oct 3 – 10, 2026`처럼 입력용이 아니라 읽기용인 범위 → `Intl.DateTimeFormat`의 `formatRange`.
-
-### parseDateRange
-
-**언제:** 사람이 입력한 범위를 읽을 때.
-
-**쓰지 않을 때:** 폼이나 API에서 온 `2026-10-03/2026-10-10` 같은 ISO 8601 구간 → `/`에서 나눠 각각 `Temporal.PlainDate.from`으로 읽으세요.
-
 ## Props
 
 <PropsTable name="Field.DateRangeInput" />
-
-<PropsTable name="formatDateRange" />
-
-<PropsTable name="parseDateRange" />

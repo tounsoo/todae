@@ -1,0 +1,41 @@
+import DateRangeRoundTrip from '../../../../examples/utilities/format-date-range/DateRangeRoundTrip';
+
+export const description = 'formatDateRange writes two dates with the locale\'s range separator between them, and parseDateRange reads a typed range back into a DateRange.';
+
+# formatDateRange and parseDateRange
+
+`formatDateRange(range, { locale })` writes both dates of a `DateRange`, `{ start, end }` with both days included, as [formatDate](/utilities/format-date) writes them, with the locale's range separator between them, such as `10/3/2026 – 10/10/2026` in `en-US` and `2026. 10. 3. ~ 2026. 10. 10.` in `ko`. `parseDateRange(text, { locale })` reads typed text back into a `DateRange`, or returns `null` when the text is not a range. Without `locale`, both use the runtime's own. [Field.DateRangeInput](/field/date-range-input) reads and writes its text with them.
+
+<Example of={DateRangeRoundTrip} />
+
+## What parseDateRange reads {/*#reading-ranges*/}
+
+It splits the text at each run of characters that are not letters or digits, and at the locale's range separator, and reads a date on each side with [`parseDate`](/utilities/format-date#reading-dates). It returns the range when exactly one split reads as two dates, so it reads `10/3/2026 - 10/10/2026`, `Oct 3, 2026 – Oct 10, 2026` and an ISO 8601 interval such as `2026-10-03/2026-10-10`. Each date needs its year, as `formatDateRange` writes them, so it returns `null` for `Oct 3 – Oct 10, 2026`. A range typed end first reads with the earlier date as its start, as the calendar picks it.
+
+## Accessible composition
+
+**Todae handles:** Text in the `locale` you pass, or the runtime's own when you pass none.
+
+**You supply:** A `locale` that matches the page's, and the same one for writing and reading. A message near the input when `parseDateRange` returns `null`.
+
+**Watch for:** On a server with no `locale`, the text uses the server's locale.
+
+## When to use
+
+### formatDateRange
+
+**When:** Writing a range as text for a locale, such as into a text input of your own.
+
+**When not:** A range to read rather than type, such as `Oct 3 – 10, 2026` → `Intl.DateTimeFormat`'s `formatRange`.
+
+### parseDateRange
+
+**When:** Reading a range someone typed.
+
+**When not:** An ISO 8601 interval from a form or an API, such as `2026-10-03/2026-10-10`. `parseDateRange` reads one, but it also reads typed forms that such data should never hold → split it at `/` and read each half with `Temporal.PlainDate.from`, which accepts only ISO.
+
+## Props
+
+<PropsTable name="formatDateRange" />
+
+<PropsTable name="parseDateRange" />

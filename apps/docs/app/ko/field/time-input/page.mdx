@@ -7,11 +7,11 @@ import FieldTimeInputAlone from '../../../../examples/field/time-input/FieldTime
 
 <Example of={FieldTimeInputPicker} block />
 
-여기서는 입력 옆의 [Field.Picker](/field/picker)가 시각의 [OptionList](/optionlist)를 [Popover](/popover)로 엽니다. 목록은 `timeOptions({ step, min, max, value, locale })`로 만듭니다. 자정부터 `step`분마다, 기본값은 30분마다 `min`과 `max` 사이의 시각이며, 각각 `OptionList.Option`에 쓸 `09:30:00` 같은 ISO `value`, `locale`에서 `formatTime`이 쓰는 `label`, 그리고 `time` 자체를 가집니다. `9:07`처럼 두 단계 사이에 입력한 시각도 `value`로 넘기면 목록의 제자리에 들어갑니다. 목록의 값으로는 `value.toString()`을 주고, 고른 값은 `Temporal.PlainTime.from`으로 읽으세요. 고르면 팝오버가 닫힙니다. `Field.TimeInput` 옆에서 선택기의 버튼은 시계 글리프를 보여 주고 `timePicker` 문자열로 이름이 붙습니다.
+여기서는 입력 옆의 [Field.Picker](/field/picker)가 [timeOptions](/utilities/time-options)로 만든 시각의 [OptionList](/optionlist)를 [Popover](/popover)로 엽니다. 입력과 목록이 같은 시각을 함께 쓰므로, `9:07`처럼 두 단계 사이에 입력한 시각도 목록의 제자리에 들어갑니다. 고르면 팝오버가 닫힙니다. `Field.TimeInput` 옆에서 선택기의 버튼은 시계 글리프를 보여 주고 `timePicker` 문자열로 이름이 붙습니다.
 
 ## 입력한 시각 {/*#typed-times*/}
 
-`formatTime(time, { locale })`은 시각을 로캘의 short 시각 스타일로 씁니다. 예: `en-US`에서는 `9:30 PM`, `de`에서는 `21:30`, `ko`에서는 `오후 9:30`. 초가 있으면 초까지 쓰는 medium 스타일로 씁니다. `parseTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainTime`으로 읽고, 시각이 아니면 `null`을 돌려줍니다. `9`, `9:30`, `21.30.15`, `0930`처럼 시, 시와 분, 또는 시와 분과 초를 읽고, 그 앞이나 뒤에 있는 로캘 자체의 하루 중 때를 나타내는 단어도 읽습니다. 예: `en-US`에서는 `9:30 pm`, `ko`에서는 `오후 9:30`. 대소문자는 상관없고, 숫자는 어느 문자 체계의 숫자여도 되며, 숫자 사이는 어떤 문장 부호, 기호, 공백으로 나누거나, `fr-CA`의 `21 h 30`처럼 로캘이 숫자 사이에 쓰는 단어로 나눠도 됩니다. 하루 중 때를 나타내는 단어가 없으면 시는 0부터 23까지입니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+`formatTime`은 시각을 `en-US`의 `9:30 PM`, `de`의 `21:30`처럼 로캘의 short 시각 스타일로 쓰고, `parseTime`은 `9:30 pm`이나 `2130`처럼 분과 로캘의 하루 중 때를 나타내는 단어가 있든 없든 입력한 시각을 읽습니다. 각각 무엇을 쓰고 읽는지는 [formatTime과 parseTime](/utilities/format-time)에 있습니다.
 
 `Field.TimeInput`은 자신의 `locale`로 텍스트를 `parseTime`으로 읽고 `formatTime`으로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 시각이 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 시각이거나 비어 있을 때까지 폼은 제출되지 않습니다.
 
@@ -21,7 +21,7 @@ import FieldTimeInputAlone from '../../../../examples/field/time-input/FieldTime
 
 <Example of={FieldTimeInputAlone} block />
 
-시각은 텍스트 입력 옆의 네이티브 `<input type="time">`에 담겨, 필드의 `name`이나 입력 자체의 `name`으로, HTML이 쓰는 형식으로 폼과 함께 전송됩니다. 예: `09:30`, 초가 있으면 `09:30:15`. 텍스트 입력은 아무것도 보내지 않고, 네이티브 입력은 화면과 보조 기술에서 숨겨지며 탭 정지점이 아닙니다. `required`는 시각이 없는 폼을, `min`과 `max`는 그보다 이르거나 늦은 시각이 있는 폼을 유효하지 않게 합니다. `max`보다 늦은 `min`은 네이티브 시각 입력에서처럼 밤을 넘기는 범위입니다. 폼은 `min`부터 자정까지와 자정부터 `max`까지의 시각을 받고, `timeOptions`도 같은 시각을 나열합니다. `max`와 `min` 사이의 빈 구간에 있는 시각은 범위를 벗어난 것이고, 메시지는 "Enter 10:00 PM or later"처럼 `min`을 말합니다. 브라우저가 네이티브 입력에서 세 가지를 모두 검사하고, 시각이 아닌 텍스트도 제출을 막습니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고 `min`이나 `max`는 `formatTime`이 시각을 쓰는 방식으로 표기되며, 포커스는 텍스트 입력으로 갑니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 텍스트 입력에 놓입니다.
+시각은 텍스트 입력 옆의 네이티브 `<input type="time">`에 담겨, 필드의 `name`이나 입력 자체의 `name`으로, HTML이 쓰는 형식으로 폼과 함께 전송됩니다. 예: `09:30`, 초가 있으면 `09:30:15`. 텍스트 입력은 아무것도 보내지 않고, 네이티브 입력은 화면과 보조 기술에서 숨겨지며 탭 정지점이 아닙니다. `required`는 시각이 없는 폼을, `min`과 `max`는 그보다 이르거나 늦은 시각이 있는 폼을 유효하지 않게 합니다. `max`보다 늦은 `min`은 네이티브 시각 입력에서처럼 밤을 넘기는 범위입니다. 폼은 `min`부터 자정까지와 자정부터 `max`까지의 시각을 받고, [timeOptions](/utilities/time-options)도 같은 시각을 나열합니다. `max`와 `min` 사이의 빈 구간에 있는 시각은 범위를 벗어난 것이고, 메시지는 "Enter 10:00 PM or later"처럼 `min`을 말합니다. 브라우저가 네이티브 입력에서 세 가지를 모두 검사하고, 시각이 아닌 텍스트도 제출을 막습니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고 `min`이나 `max`는 `formatTime`이 시각을 쓰는 방식으로 표기되며, 포커스는 텍스트 입력으로 갑니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 텍스트 입력에 놓입니다.
 
 ## Temporal
 
@@ -43,30 +43,6 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. 입력의 값과 `form
 
 **쓰지 않을 때:** 하나의 값인 날짜와 시각 → [Field.DateTimeInput](/field/date-time-input). 기간 → [Field.NumberInput](/field/number-input)과 단위를 보여 주는 `Affix`.
 
-### timeOptions
-
-**언제:** [Field.Picker](/field/picker) 안이나 페이지에 둔 `OptionList.Root`에서 고르는 시각 목록.
-
-**쓰지 않을 때:** 가게의 빈 시간처럼 간격이 고르지 않은 몇 개의 시각 → 직접 만든 `OptionList.Option`.
-
-### formatTime
-
-**언제:** 직접 만든 텍스트 입력처럼, 시각을 로캘에 맞는 텍스트로 쓸 때.
-
-**쓰지 않을 때:** 시간대를 붙이는 것처럼 다른 형식의 시각 → `Intl.DateTimeFormat`.
-
-### parseTime
-
-**언제:** 사람이 입력한 시각을 읽을 때.
-
-**쓰지 않을 때:** `09:30`처럼 형식이 정해진 텍스트 → `Temporal.PlainTime.from`.
-
 ## Props
 
 <PropsTable name="Field.TimeInput" />
-
-<PropsTable name="timeOptions" />
-
-<PropsTable name="formatTime" />
-
-<PropsTable name="parseTime" />

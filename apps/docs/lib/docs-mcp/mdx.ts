@@ -28,7 +28,6 @@ const PART_PAGE: Record<string, string> = {
   DensityProvider: 'tokens',
   useAppearance: 'tokens',
   useDensity: 'tokens',
-  categoryTone: 'tokens',
   useStrings: 'utilities/strings-provider',
   useGlyphs: 'utilities/glyphs-provider',
 };

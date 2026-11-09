@@ -10,7 +10,7 @@ A `nav` landmark around an ordered list of pages. `paginationRange` decides whic
 
 ## The page range
 
-`paginationRange({ page, count })` returns page numbers, with `"start-ellipsis"` and `"end-ellipsis"` for the gaps. It shows the current page, `siblings` pages on each side of it and `boundaries` pages at each end; both default to 1. While there are more pages than that, the list keeps one length, so the number of controls does not change as the page does, and a gap always stands for two or more pages.
+`paginationRange({ page, count })` returns page numbers, with `"start-ellipsis"` and `"end-ellipsis"` for the gaps. It shows the current page, `siblings` pages on each side of it and `boundaries` pages at each end; both default to 1. While there are more pages than that, the list keeps one length, so the number of controls does not change as the page does, and a gap always stands for two or more pages. [paginationRange](/utilities/pagination-range) shows the list it returns.
 
 ## Current page and steps
 
@@ -60,5 +60,3 @@ import { ChevronLeft, Ellipsis } from 'lucide-react';
 <PropsTable name="Pagination.Item" />
 
 <PropsTable name="Pagination.Ellipsis" />
-
-<PropsTable name="paginationRange" />

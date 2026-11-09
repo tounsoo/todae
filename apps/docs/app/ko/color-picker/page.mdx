@@ -16,7 +16,7 @@ import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline'
 
 `#rrggbb` 문자열에는 회색의 색상과 검정의 채도가 없습니다. 이런 색에서는 선택기가 마지막으로 보인 색상을, 검정이면 채도까지 유지하므로, 회색으로 끌었다가 돌아와도 색상이 남습니다.
 
-`normalizeHex(text)`는 `#`이 있든 없든 세 자리나 여섯 자리 hex 색을 `#rrggbb`로 바꾸고, 그 밖에는 `null`을 돌려줍니다. 사람이 입력한 hex 값을 확인할 때 쓰세요.
+사람이 입력한 hex 값을 확인하려면 [normalizeHex](/utilities/normalize-hex)를 쓰세요. 세 자리나 여섯 자리 hex 색을 `#rrggbb`로 바꾸고, 그 밖에는 `null`을 돌려줍니다.
 
 ## 접근성을 지키는 조합
 
@@ -39,5 +39,3 @@ import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline'
 <PropsTable name="ColorPicker.Area" />
 
 <PropsTable name="ColorPicker.Hue" />
-
-<PropsTable name="normalizeHex" />

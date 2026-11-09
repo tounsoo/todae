@@ -56,12 +56,6 @@ function listed(key: ThemeOverrideKey) {
 
 **When not:** Spacing → tokens, which follow the density in CSS.
 
-### categoryTone
-
-**When:** A category tone that stays the same for a key, such as a user id or a tag name.
-
-**When not:** A tone that means something, such as a status → pick it yourself.
-
 ## Contrast
 
 The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, a background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. A pair with a translucent background, such as a selected row's, lists in `over` the opaque surfaces it can sit on, and is measured over each one. The build fails when a pair falls short in any appearance, and names the nearest lightness of the text or background color that would pass.
@@ -86,19 +80,7 @@ Four tones carry status: `info`, `success`, `warning` and `critical`. Each is th
 
 ## Category tones
 
-Eight tones label categories such as tags or people: `color.category.1` to `color.category.8`, each with `fg`, `bg` and `border` per appearance. They are numbered rather than named after hues, so a company can change a hue in its token package without renaming anything. The build checks `fg` on `bg` at Lc 75. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take them as the tones `category-1` to `category-8`, and `categoryTone(key)` picks one from a string.
-
-### CATEGORY_TONES
-
-`CATEGORY_TONES` is the tuple of those eight names, `category-1` through `category-8`. `CategoryTone` is one member of that tuple. `categoryTone(key)` returns the member for a string. The same key returns the same tone on the server and in the browser. The tuple stops at `category-8`.
-
-```tsx
-import { CATEGORY_TONES, categoryTone, type CategoryTone } from '@tounsoo/todae';
-
-const tones: readonly CategoryTone[] = CATEGORY_TONES;
-
-<Avatar.Root label={name} tone={categoryTone(userId)} />
-```
+Eight tones label categories such as tags or people: `color.category.1` to `color.category.8`, each with `fg`, `bg` and `border` per appearance. They are numbered rather than named after hues, so a company can change a hue in its token package without renaming anything. The build checks `fg` on `bg` at Lc 75. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take them as the tones `category-1` to `category-8`, and [categoryTone](/utilities/category-tone) picks one from a string, such as a user id.
 
 ## Focus ring
 
