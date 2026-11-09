@@ -155,6 +155,7 @@ describe('docs MCP route', () => {
     expect(response.status).toBe(400);
     const text = await response.text();
     expect(text).toContain(`build_tokens takes at most ${MAX_FILES} files`);
+    expect(JSON.parse(text).id).toBe(12);
     expect(text.length).toBeLessThan(2000);
   });
 
@@ -227,6 +228,12 @@ describe('docs MCP route', () => {
   it('says why a build_tokens call mixed with other tools gets no room for its files', async () => {
     const response = await send(JSON.stringify([call(35, 'build_tokens', { files: { 'x.json': Array(3000).fill(0) } }), call(36, 'list_components', {})]));
     expect(response.status).toBe(400);
-    expect((await response.json()).error.message).toContain('only get their own limit when every tool call in the request is build_tokens');
+    expect((await response.json()).error.message).toContain('only get their own limits when every tool call in the request is build_tokens');
+  });
+
+  it('takes string files that fill the byte budget exactly', async () => {
+    const response = await send(JSON.stringify(call(37, 'build_tokens', { files: { 'a.json': ' '.repeat(MAX_BYTES / 2), 'b.json': ' '.repeat(MAX_BYTES / 2) } })));
+    expect(response.status).toBe(200);
+    expect(await response.text()).not.toContain('more than 512 KB');
   });
 });

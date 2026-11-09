@@ -141,7 +141,9 @@ export function inspectBody(body: unknown, files: ReadonlySet<object>): BodyProb
         if (++inside > BUILD_TOOL_INPUT_ELEMENTS) return 'file-elements';
         // A file's name is not part of its JSON, so only keys below the files object count.
         if (key !== null && !filesNode) insideBytes += key.length + 3;
-        insideBytes += typeof child === 'string' ? child.length + 2 : child !== null && typeof child === 'object' ? 2 : 1;
+        // A file sent as a string is measured as its text, so its own quotes don't count.
+        if (typeof child === 'string') insideBytes += filesNode ? child.length : child.length + 2;
+        else insideBytes += child !== null && typeof child === 'object' ? 2 : 1;
         if (insideBytes > MAX_BYTES) return 'file-bytes';
       } else {
         if (++outside > MAX_REQUEST_ELEMENTS) return 'elements';
