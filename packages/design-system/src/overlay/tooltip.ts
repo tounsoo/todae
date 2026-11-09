@@ -167,7 +167,7 @@ export function applyTooltipCommands(
  * still opens it. The press is read as well as the ring because browsers
  * differ on the ring for focus a script moves after a press.
  */
-function pointerFocus(el: Element): boolean {
+export function pointerFocus(el: Element): boolean {
   return lastInputWasPointer() || (el.matches(':focus') && !el.matches(':focus-visible'));
 }
 

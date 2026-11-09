@@ -250,17 +250,16 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
   });
 
-  it('names its tip anchor from the first render, before the pointer or keys reach it', () => {
+  it('puts no style on an icon-only button until the pointer or keys reach it', () => {
     render(
       <Button.Root aria-label="Archive">
         <Button.Icon>+</Button.Icon>
       </Button.Root>,
     );
     const button = screen.getByRole('button', { name: 'Archive' });
-    const named = button.style.getPropertyValue('--todae-tooltip-anchor');
-    expect(named).not.toBe('');
+    expect(button.getAttribute('style')).toBeNull();
     fireEvent.pointerEnter(button);
-    expect(button.style.getPropertyValue('--todae-tooltip-anchor')).toBe(named);
+    expect(button.style.getPropertyValue('anchor-name')).toMatch(/--todae-tooltip-/);
     advance(300);
     expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Archive');
   });

@@ -4,10 +4,13 @@
  * aria-describedby, so that link can't find it. For browser tests.
  */
 export function tipFor(trigger: HTMLElement): HTMLElement | null {
-  const name = trigger.style.getPropertyValue('--todae-tooltip-anchor');
-  if (!name) return null;
+  const names = trigger.style
+    .getPropertyValue('anchor-name')
+    .split(',')
+    .map((name) => name.trim());
   for (const tip of document.querySelectorAll<HTMLElement>('[role="tooltip"]')) {
-    if (tip.style.getPropertyValue('--todae-tooltip-anchor') === name) return tip;
+    const name = tip.style.getPropertyValue('--todae-tooltip-anchor');
+    if (name && names.includes(name)) return tip;
   }
   return null;
 }

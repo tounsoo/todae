@@ -19,8 +19,8 @@ import {
   type RefObject,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { anchorTriggerStyle } from '../overlay/anchorName.js';
-import { useTooltipInternal, type TooltipInternalResult } from '../overlay/tooltip.js';
+import { mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
+import { pointerFocus, useTooltipInternal, type TooltipInternalResult } from '../overlay/tooltip.js';
 import { cx } from '../internal/cx.js';
 import { useDomId } from '../internal/domId.js';
 import { watchInputModality } from '../internal/inputModality.js';
@@ -306,7 +306,8 @@ function Root({
       else if (focus) holds.current?.holdFocus(focus);
     } else if (wanted) {
       if (hover) waiting.current.hover = true;
-      else waiting.current.focus = focus;
+      // Focus a press put there takes no hold, now or when the tip mounts.
+      else waiting.current.focus = focus && !pointerFocus(focus) ? focus : null;
       if (iconOnly) setReachedOnce(true);
       else setCutText(textName);
     } else if (tipped) setCutText(null);
@@ -332,9 +333,6 @@ function Root({
       ? base
       : {
           ...base,
-          // Named from the first render, so a later tip changes no style
-          // and keeps the names a Coachmark or popover added from code.
-          style: anchorTriggerStyle('--todae-tooltip-anchor', anchor, style),
           onPointerEnter: composeHandlers(onPointerEnter, () => reach(true, null)),
           onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => reach(false, event.target)),
           // Releases run even when the product's handler prevents the event,
@@ -417,10 +415,30 @@ type ButtonTipProps = {
 function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
   const tip = useTooltipInternal({}, { anchorName: anchor });
   const { triggerRef, holdHover, releaseHover, holdFocus, releaseFocus } = tip;
-  // `render` can swap the element the button is drawn on.
+  // The tip's anchor name goes on the button from code, beside any a
+  // Coachmark or popover added, so the button's own style never changes for
+  // it and a Button with no tip carries none. Each render puts it back if a
+  // style the product passed has replaced the list, and `render` can swap
+  // the element the button is drawn on.
+  const named = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
-    triggerRef.current = target.current;
+    const el = target.current;
+    triggerRef.current = el;
+    if (named.current !== el) unname(named.current, anchor);
+    named.current = el;
+    if (!el) return;
+    const names = el.style.getPropertyValue('anchor-name');
+    if (!names.split(',').some((name) => name.trim() === anchor)) {
+      el.style.setProperty('anchor-name', mergeAnchorNames(names, anchor));
+    }
   });
+  useLayoutEffect(
+    () => () => {
+      unname(named.current, anchor);
+      named.current = null;
+    },
+    [anchor],
+  );
   useLayoutEffect(() => {
     holds.current = { holdHover, releaseHover, holdFocus, releaseFocus };
     const { hover, focus } = waiting.current;
@@ -441,6 +459,13 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
       {text}
     </Tooltip.Root>
   );
+}
+
+function unname(el: HTMLElement | null, anchor: string) {
+  if (!el) return;
+  const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), anchor);
+  if (rest) el.style.setProperty('anchor-name', rest);
+  else el.style.removeProperty('anchor-name');
 }
 
 function Icon({ className, ...props }: ButtonIconProps) {
