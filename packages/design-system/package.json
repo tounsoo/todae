@@ -30,107 +30,107 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./stack": {
       "types": "./dist/server/stack.d.ts",
-      "import": "./dist/stack.js"
+      "default": "./dist/stack.js"
     },
     "./text": {
       "types": "./dist/server/text.d.ts",
-      "import": "./dist/text.js"
+      "default": "./dist/text.js"
     },
     "./label": {
       "types": "./dist/server/label.d.ts",
-      "import": "./dist/label.js"
+      "default": "./dist/label.js"
     },
     "./badge": {
       "types": "./dist/server/badge.d.ts",
-      "import": "./dist/badge.js"
+      "default": "./dist/badge.js"
     },
     "./empty-state": {
       "types": "./dist/server/empty-state.d.ts",
-      "import": "./dist/empty-state.js"
+      "default": "./dist/empty-state.js"
     },
     "./card": {
       "types": "./dist/server/card.d.ts",
-      "import": "./dist/card.js"
+      "default": "./dist/card.js"
     },
     "./data-list": {
       "types": "./dist/server/data-list.d.ts",
-      "import": "./dist/data-list.js"
+      "default": "./dist/data-list.js"
     },
     "./message": {
       "types": "./dist/server/message.d.ts",
-      "import": "./dist/message.js"
+      "default": "./dist/message.js"
     },
     "./breadcrumbs": {
       "types": "./dist/server/breadcrumbs.d.ts",
-      "import": "./dist/breadcrumbs.js"
+      "default": "./dist/breadcrumbs.js"
     },
     "./grid": {
       "types": "./dist/server/grid.d.ts",
-      "import": "./dist/grid.js"
+      "default": "./dist/grid.js"
     },
     "./pagination": {
       "types": "./dist/server/pagination.d.ts",
-      "import": "./dist/pagination.js"
+      "default": "./dist/pagination.js"
     },
     "./link": {
       "types": "./dist/server/link.d.ts",
-      "import": "./dist/link.js"
+      "default": "./dist/link.js"
     },
     "./disclosure": {
       "types": "./dist/server/disclosure.d.ts",
-      "import": "./dist/disclosure.js"
+      "default": "./dist/disclosure.js"
     },
     "./separator": {
       "types": "./dist/server/separator.d.ts",
-      "import": "./dist/separator.js"
+      "default": "./dist/separator.js"
     },
     "./prose": {
       "types": "./dist/server/prose.d.ts",
-      "import": "./dist/prose.js"
+      "default": "./dist/prose.js"
     },
     "./table": {
       "types": "./dist/server/table.d.ts",
-      "import": "./dist/table.js"
+      "default": "./dist/table.js"
     },
     "./progress": {
       "types": "./dist/server/progress.d.ts",
-      "import": "./dist/progress.js"
+      "default": "./dist/progress.js"
     },
     "./meter": {
       "types": "./dist/server/meter.d.ts",
-      "import": "./dist/meter.js"
+      "default": "./dist/meter.js"
     },
     "./loader": {
       "types": "./dist/server/loader.d.ts",
-      "import": "./dist/loader.js"
+      "default": "./dist/loader.js"
     },
     "./skeleton": {
       "types": "./dist/server/skeleton.d.ts",
-      "import": "./dist/skeleton.js"
+      "default": "./dist/skeleton.js"
     },
     "./slider": {
       "types": "./dist/server/slider.d.ts",
-      "import": "./dist/slider.js"
+      "default": "./dist/slider.js"
     },
     "./code": {
       "types": "./dist/server/code.d.ts",
-      "import": "./dist/code.js"
+      "default": "./dist/code.js"
     },
     "./code-block": {
       "types": "./dist/server/code-block.d.ts",
-      "import": "./dist/code-block.js"
+      "default": "./dist/code-block.js"
     },
     "./kbd": {
       "types": "./dist/server/kbd.d.ts",
-      "import": "./dist/kbd.js"
+      "default": "./dist/kbd.js"
     },
     "./visually-hidden": {
       "types": "./dist/server/visually-hidden.d.ts",
-      "import": "./dist/visually-hidden.js"
+      "default": "./dist/visually-hidden.js"
     },
     "./todae.css": "./dist/todae.css",
     "./dist/todae.css": "./dist/todae.css",
@@ -138,19 +138,26 @@
     "./tokens.json": "./tokens/tokens.generated.json",
     "./tokens-builder": {
       "types": "./dist/scripts/tokens-builder.d.ts",
-      "import": "./dist/scripts/tokens-builder.js"
-    }
+      "default": "./dist/scripts/tokens-builder.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "schema",
-    "tokens"
+    "tokens",
+    "!tokens/api-approved-removals.json",
+    "!tokens/name-grandfather.json",
+    "!tokens/name-schema.json"
   ],
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self",
+    "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-own-tokens.ts",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/package-tokens.ts --check",
     "tokens:grandfather": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/package-tokens.ts --write-grandfather",
     "tokens:api:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts",
