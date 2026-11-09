@@ -161,11 +161,11 @@ jobs:
         run: pnpm --filter fernway-example build
 
   # The package's browser tests in the other engines README's browser floors name, beside Fernway's Chromium run.
-  # Both run in the image the docs job uses, with the browsers and every system package they need already in
+  # Both run in the image the Docs build and pages job uses, with the browsers and every system package they need already in
   # it. Installing those packages on the runner pulls them from Ubuntu's mirror on every run, and when that
   # mirror slowed down the install outlasted the job's timeout: WebKit's 114 MB first, then Firefox's on Nov 6.
-  # apps/docs/test/image.test.ts checks that this image and the docs job's are the same, with the pinned
-  # Playwright version and a digest. A Playwright bump changes the tag and the digest here and in the docs job,
+  # apps/docs/test/image.test.ts checks that this image and the Docs build and pages job's are the same, with the pinned
+  # Playwright version and a digest. A Playwright bump changes the tag and the digest here and in the Docs build and pages job,
   # with docker buildx imagetools inspect giving the digest.
   engines:
     if: ${{ !github.event.pull_request.draft }}
