@@ -121,6 +121,8 @@ export function ShellClose({ onClick, ...props }: ButtonActionProps) {
 
 // What each modal changes: its layout, exit fallback and attributes.
 export type DialogShell = {
+  /** The component's name, for development messages. */
+  part: 'Dialog' | 'Drawer' | 'BottomSheet';
   className?: string;
   /**
    * True (the default) for a `<dialog>` that covers the screen as the
@@ -210,7 +212,20 @@ export function DialogShellRoot({
   // the <dialog> can't take focus until showModal runs.
   useInitialFocus(dialogRef, present && open, initialFocusRef);
 
-  const alertShown = role === 'alertdialog' && present && open;
+  const shown = present && open;
+  // An empty aria-label or aria-labelledby names nothing.
+  const named = Boolean(props['aria-label'] || props['aria-labelledby'] || labelledBy);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !shown || named) return;
+    // A Title registers in a layout effect whose update renders after this
+    // effect, and that render clears the timer.
+    const timer = setTimeout(() =>
+      console.error(`${shell.part}.Root needs a name: render ${shell.part}.Title, or pass aria-label or aria-labelledby`),
+    );
+    return () => clearTimeout(timer);
+  }, [shown, named, shell.part]);
+
+  const alertShown = role === 'alertdialog' && shown;
   const describedByProp = props['aria-describedby'];
   const described = Boolean(describedByProp ?? describedBy);
   useEffect(() => {

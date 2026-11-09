@@ -15,7 +15,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
-import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useRaiseOnNew, useToastHost } from '../overlay/useToastHost.js';
 import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -165,7 +165,7 @@ function Item<T extends object>({
       if (open) dismiss();
     },
     itemRef,
-    { closeRequests: false, passesKey: handledOrComposing },
+    { closeRequests: false, passesKey: handledInside },
   );
 
   return (

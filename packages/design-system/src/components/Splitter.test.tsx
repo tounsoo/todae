@@ -497,6 +497,20 @@ describe('Splitter dragging', () => {
     expect(handle().getAttribute('aria-valuenow')).toBe('180');
   });
 
+  it('drags without pointer capture when the pointer is already gone', () => {
+    // jsdom has no pointer capture: give the handle one that finds no pointer, as a browser's would after a fast release.
+    const capture = vi.fn(() => {
+      throw new DOMException('No active pointer with the given id is found.', 'NotFoundError');
+    });
+    render(<Layout defaultValue={240} />);
+    Object.defineProperty(handle(), 'setPointerCapture', { configurable: true, value: capture });
+    expect(() => down(100)).not.toThrow();
+    expect(capture).toHaveBeenCalledWith(1);
+    expect(root().hasAttribute('data-dragging')).toBe(true);
+    move(160);
+    expect(handle().getAttribute('aria-valuenow')).toBe('300');
+  });
+
   it('grows against the pointer for a panel at the end, and with the text direction', () => {
     const { unmount } = render(<Layout defaultValue={240} primary="end" />);
     down(100);

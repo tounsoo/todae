@@ -126,13 +126,19 @@ function Root({
         if (next !== null) onValueChange(next);
       }),
   );
-  const [expanded, setExpandedList] = useControlledState(expandedProp, defaultExpanded ?? EMPTY, onExpandedChange);
+  const [expanded, setExpandedList, latestExpanded] = useControlledState(
+    expandedProp,
+    defaultExpanded ?? EMPTY,
+    onExpandedChange,
+  );
+  // Builds on the latest write, not the render, so two toggles before a render both count.
   const setExpanded = useCallback(
     (value: string, open: boolean) => {
-      if (expanded.includes(value) === open) return;
-      setExpandedList(open ? [...expanded, value] : expanded.filter((v) => v !== value));
+      const now = latestExpanded();
+      if (now.includes(value) === open) return;
+      setExpandedList(open ? [...now, value] : now.filter((v) => v !== value));
     },
-    [expanded, setExpandedList],
+    [latestExpanded, setExpandedList],
   );
   const isExpanded = useCallback((value: string) => expanded.includes(value), [expanded]);
   // The tab stop is the selected item, except while focus moves inside the

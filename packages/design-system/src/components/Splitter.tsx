@@ -37,6 +37,7 @@ import {
   type SplitterPrimary,
 } from './splitterModel.js';
 import { warnOnce } from '../internal/warnOnce.js';
+import { capturePointer } from '../internal/pointerCapture.js';
 import styles from './Splitter.module.css';
 
 export type { SplitterOrientation, SplitterPrimary };
@@ -431,7 +432,8 @@ function Handle({
         const horizontal = orientation === 'horizontal';
         // Not a text selection or a native drag; focus is moved by hand below.
         event.preventDefault();
-        handle.setPointerCapture?.(event.pointerId);
+        // A drag still works without capture; it just can't follow the pointer off the handle.
+        capturePointer(handle, event.pointerId);
         drag.current = {
           pointerId: event.pointerId,
           startPointer: horizontal ? event.clientX : event.clientY,

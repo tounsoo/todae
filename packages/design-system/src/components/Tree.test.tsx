@@ -116,6 +116,19 @@ describe('Tree', () => {
     expect(focused()).toBe('README.md');
   });
 
+  it('keeps both of two toggles made before it renders again', () => {
+    const onExpandedChange = vi.fn();
+    render(<Files defaultExpanded={['src']} onExpandedChange={onExpandedChange} />);
+    act(() => {
+      screen.getByText('components').click();
+      screen.getByText('src').click();
+    });
+    expect(onExpandedChange).toHaveBeenLastCalledWith(['src/components']);
+    expect(item('src').getAttribute('aria-expanded')).toBe('false');
+    act(() => screen.getByText('src').click());
+    expect(item('components').getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('opens with Right, then moves into the item; Left moves out, then closes', () => {
     const onExpandedChange = vi.fn();
     render(<Files onExpandedChange={onExpandedChange} />);

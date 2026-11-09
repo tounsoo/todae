@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index.js';
 import { OptionList } from './OptionList.js';
@@ -182,6 +182,108 @@ describe('OptionList', () => {
     expect(onChange).toHaveBeenLastCalledWith('apple');
     fireEvent.click(screen.getByRole('option', { name: 'Skip' }));
     expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  describe('typeahead', () => {
+    function Fruit({ onValueChange = () => undefined }: { onValueChange?: (value: string) => void }) {
+      return (
+        <OptionList.Root value={null} onValueChange={onValueChange} aria-label="Fruit">
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+          <OptionList.Option value="banana">Banana</OptionList.Option>
+          <OptionList.Option value="blackberry" disabled>
+            Blackberry
+          </OptionList.Option>
+          <OptionList.Option value="blueberry">Blueberry</OptionList.Option>
+          <OptionList.Option value="cherry">Cherry</OptionList.Option>
+        </OptionList.Root>
+      );
+    }
+    // A key pressed at `at` ms, so the search's timing is the test's.
+    function type(list: HTMLElement, key: string, at: number, init: KeyboardEventInit = {}) {
+      const event = createEvent.keyDown(list, { key, ...init });
+      Object.defineProperty(event, 'timeStamp', { value: at });
+      fireEvent(list, event);
+      return event;
+    }
+    const active = (list: HTMLElement) => list.getAttribute('aria-activedescendant');
+    const idOf = (name: string) => screen.getByRole('option', { name }).id;
+
+    it('cycles through the options that start with a letter typed again, skipping disabled ones', () => {
+      render(<Fruit />);
+      const list = screen.getByRole('listbox');
+      expect(type(list, 'b', 1000).defaultPrevented).toBe(true);
+      expect(active(list)).toBe(idOf('Banana'));
+      type(list, 'b', 1100);
+      expect(active(list)).toBe(idOf('Blueberry'));
+      type(list, 'b', 1200);
+      expect(active(list)).toBe(idOf('Banana'));
+    });
+
+    it('matches a longer prefix, case aside, and starts over after a pause', () => {
+      render(<Fruit />);
+      const list = screen.getByRole('listbox');
+      type(list, 'B', 1000);
+      type(list, 'l', 1100);
+      expect(active(list)).toBe(idOf('Blueberry'));
+      type(list, 'c', 2000);
+      expect(active(list)).toBe(idOf('Cherry'));
+    });
+
+    it('lets a Space join a search under way and otherwise select', () => {
+      const onValueChange = vi.fn();
+      render(<Fruit onValueChange={onValueChange} />);
+      const list = screen.getByRole('listbox');
+      type(list, 'c', 1000);
+      expect(type(list, ' ', 1100).defaultPrevented).toBe(true);
+      expect(onValueChange).not.toHaveBeenCalled();
+      type(list, ' ', 2000);
+      expect(onValueChange).toHaveBeenCalledWith('cherry');
+    });
+
+    it('keeps the active option on a letter nothing starts with', () => {
+      render(<Fruit />);
+      const list = screen.getByRole('listbox');
+      type(list, 'c', 1000);
+      expect(type(list, 'z', 3000).defaultPrevented).toBe(false);
+      expect(active(list)).toBe(idOf('Cherry'));
+    });
+  });
+
+  it.each([
+    ['Ctrl', { ctrlKey: true }],
+    ['Meta', { metaKey: true }],
+    ['Alt', { altKey: true }],
+  ])('leaves keys with %s to the page', (_, modifier) => {
+    const onChange = vi.fn();
+    render(
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
+    );
+    const list = screen.getByRole('listbox');
+    const first = list.getAttribute('aria-activedescendant');
+    for (const key of ['ArrowDown', 'End', 'p', 'Enter']) {
+      expect(fireEvent.keyDown(list, { key, ...modifier })).toBe(true);
+    }
+    expect(list.getAttribute('aria-activedescendant')).toBe(first);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves Shift with a move key to the owner, and still selects with Shift+Enter', () => {
+    const onChange = vi.fn();
+    render(
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
+    );
+    const list = screen.getByRole('listbox');
+    const first = list.getAttribute('aria-activedescendant');
+    expect(fireEvent.keyDown(list, { key: 'ArrowDown', shiftKey: true })).toBe(true);
+    expect(list.getAttribute('aria-activedescendant')).toBe(first);
+    fireEvent.keyDown(list, { key: 'Enter', shiftKey: true });
+    expect(onChange).toHaveBeenCalledWith('apple');
   });
 
   it('highlights only the keyboard row and clears after pointer select', () => {

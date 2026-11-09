@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { capturePointer } from '../internal/pointerCapture.js';
 import { useRefElement } from './useRefElement.js';
 
 export type SheetSnap = 'mid' | 'full';
@@ -159,11 +160,8 @@ export function useSnapDrag({
         // A new drag owns the variables; the last release's frames must not clear them.
         cancelAnimationFrame(frame);
         dismissing = false;
-        try {
-          surface.setPointerCapture(event.pointerId);
-        } catch {
-          // The pointer may already be gone; the drag still works without capture.
-        }
+        // The drag still works without capture.
+        capturePointer(surface, event.pointerId);
       }
       const heights = sheetHeights(surface);
       const maxHeight = pointsRef.current.includes('full') ? heights.full : heights.mid;
