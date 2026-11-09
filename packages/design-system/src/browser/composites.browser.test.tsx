@@ -853,6 +853,84 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     );
   });
 
+  // TEMPORARY probe: which part of the placement drops the scroll. Logs only; always passes.
+  it('PROBE picker scroll', async () => {
+    function Probe() {
+      return (
+        <Themed>
+          <div style={{ blockSize: '45vh' }} />
+          <Label.Root htmlFor="probe">Probe</Label.Root>
+          <Field.Root id="probe">
+            <Field.DateTimeInput value={null} onValueChange={() => {}} locale="en-US" />
+            <Field.Picker>
+              <Calendar.Root aria-label="Day" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+                <Calendar.Header />
+                <Calendar.Grid />
+              </Calendar.Root>
+              <OptionList.Root aria-label="Times" value={null} onValueChange={() => {}}>
+                {timeOptions({ step: 15, locale: 'en-US' }).map((option) => (
+                  <OptionList.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </OptionList.Option>
+                ))}
+              </OptionList.Root>
+            </Field.Picker>
+          </Field.Root>
+        </Themed>
+      );
+    }
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    const variants: [string, (el: HTMLElement) => void, number][] = [
+      ['control', () => {}, 2600],
+      ['control-small', () => {}, 100],
+      ['max-height-2000', (el) => el.style.setProperty('max-height', '2000px'), 2600],
+      [
+        'pinned-fit',
+        (el) => {
+          el.style.setProperty('position-try-fallbacks', 'none');
+          el.style.setProperty('height', 'auto');
+          el.style.setProperty('align-self', 'stretch');
+          el.style.setProperty('min-height', 'var(--todae-popover-max-height)');
+          el.style.setProperty('margin-block', 'var(--todae-popover-offset)');
+        },
+        2600,
+      ],
+      ['no-arrows', (el) => el.querySelector<HTMLElement>(':scope > span')?.style.setProperty('display', 'none'), 2600],
+    ];
+    const out: string[] = [];
+    for (const [name, apply, target] of variants) {
+      const { unmount } = render(<Probe />);
+      await userEvent.click(screen.getByRole('button', { name: 'Choose date and time' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Choose date and time' });
+      await waitFor(() => expect(dialog.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+      await settle();
+      apply(dialog);
+      await settle();
+      const css = () => `area ${getComputedStyle(dialog).getPropertyValue('position-area')} h ${getComputedStyle(dialog).height} max ${dialog.scrollHeight - dialog.clientHeight}`;
+      const line = [`${name}: ${css()}`];
+      dialog.scrollTop = target;
+      line.push(`set ${target} -> ${dialog.scrollTop}`);
+      await frame();
+      line.push(`1 frame ${dialog.scrollTop}`);
+      await frame();
+      await frame();
+      line.push(`3 frames ${dialog.scrollTop}`);
+      await settle();
+      line.push(`settled ${dialog.scrollTop}`);
+      dialog.scrollTop = target;
+      await frame();
+      await frame();
+      await frame();
+      line.push(`again 3 frames ${dialog.scrollTop}`);
+      await settle();
+      line.push(`again settled ${dialog.scrollTop}; ${css()}`);
+      out.push(line.join(', '));
+      unmount();
+      await settle();
+    }
+    console.log(`PICKER PROBE\n${out.join('\n')}`);
+  });
+
   it.each(['compact', 'comfortable', 'spacious'] as const)(
     'shows a six-week month whole, without scrolling, at %s density',
     async (density) => {
