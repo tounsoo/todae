@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BrowserResults } from './browser-results-reporter.ts';
 import ts from 'typescript';
-import { annotations, firefoxBranches, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
+import { annotations, firefoxBranches, type FirefoxBranch, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
 
 const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 'A > flakes', issue: 'https://github.com/tounsoo/todae/issues/367', reason: 'Known.' };
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
@@ -126,61 +126,205 @@ describe('the Firefox quarantine list', () => {
   });
 });
 
-/** Each line of a file, with its comments blanked out. */
-function codeLines(source: string): { line: number; text: string }[] {
+const kindOf = (file: string) => (file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+
+/** The file's code with its comments blanked out, keeping every character's place. */
+function withoutComments(file: string, source: string) {
   // TypeScript's parser tells a comment from a string, a regex, a template or JSX text.
-  const file = ts.createSourceFile('file.tsx', source, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, false, kindOf(file));
   const comments: ts.CommentRange[] = [];
   const text: ts.Node[] = [];
   const visit = (node: ts.Node) => {
     if (node.kind === ts.SyntaxKind.JsxText) text.push(node);
     comments.push(...(ts.getLeadingCommentRanges(source, node.pos) ?? []), ...(ts.getTrailingCommentRanges(source, node.end) ?? []));
-    for (const child of node.getChildren(file)) visit(child);
+    for (const child of node.getChildren(tree)) visit(child);
   };
-  visit(file);
+  visit(tree);
   let code = source;
   // JSX text has no comments, though it can read like one.
   const inText = ({ pos }: ts.CommentRange) => text.some((node) => pos >= node.pos && pos < node.end);
   for (const { pos, end } of comments.filter((comment) => !inText(comment))) code = code.slice(0, pos) + code.slice(pos, end).replace(/[^\n]/g, ' ') + code.slice(end);
-  return code.split('\n').map((text, index) => ({ line: index + 1, text: text.trim() }));
+  return code;
 }
 
-/** Names that a line naming Firefox gives a value, such as `const dragIt = it.skipIf(…)`, so their uses treat Firefox apart too. */
-const declared = (text: string) => [...text.matchAll(/\b(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g)].map((match) => match[1]!);
+/** Code that names the engine: Firefox, Gecko, Mozilla, or a `-moz-` or `Moz…` feature. */
+const namesFirefox = (text: string) => /firefox|gecko|mozilla|-moz-/i.test(text) || /\b[Mm]oz[A-Z]/.test(text);
+
+const each = (node: ts.Node, visit: (node: ts.Node) => void) => {
+  visit(node);
+  node.forEachChild((child) => each(child, visit));
+};
 
 /**
  * The lines of these files that treat Firefox apart: code, not comments, that
- * names Firefox or Gecko in any way, such as `'firefox'` or `isFirefox`, or
- * uses a name such a line declares, in its own file or, when exported, in any.
+ * names the engine, or uses a variable, function or class whose value or body
+ * does. The compiler resolves each name, so a value is followed however it is
+ * bound, assigned, destructured, exported or imported, and a different value
+ * that shares its name is not.
  */
 function firefoxLinesIn(files: { file: string; source: string }[]) {
-  const lines = files.flatMap(({ file, source }) => codeLines(source).map((line) => ({ file, ...line })));
-  const shared = new Set<string>();
-  const local = new Map<string, Set<string>>();
-  const pattern = (names: Set<string>) => (names.size ? new RegExp(`(?<![\\w$.])(?:${[...names].join('|')})(?![\\w$])`) : null);
-  const marked = new Set<(typeof lines)[number]>();
+  const codes = new Map(files.map(({ file, source }) => [`/${file}`, withoutComments(file, source)]));
+  const options: ts.CompilerOptions = { noLib: true, noResolve: false, jsx: ts.JsxEmit.Preserve, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.Latest };
+  const host: ts.CompilerHost = {
+    ...ts.createCompilerHost(options),
+    fileExists: (path) => codes.has(path),
+    readFile: (path) => codes.get(path),
+    getSourceFile: (path, target) => (codes.has(path) ? ts.createSourceFile(path, codes.get(path)!, target, true, kindOf(path)) : undefined),
+    getCurrentDirectory: () => '/',
+    directoryExists: () => true,
+  };
+  const program = ts.createProgram([...codes.keys()], options, host);
+  const checker = program.getTypeChecker();
+  const trees = [...codes.keys()].map((path) => program.getSourceFile(path)!);
+  const symbolOf = (node: ts.Node) => {
+    const symbol = checker.getSymbolAtLocation(node);
+    return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  };
+  const tainted = new Set<ts.Symbol>();
+  const uses = (node: ts.Node | undefined, tree: ts.SourceFile) => {
+    if (!node) return false;
+    if (namesFirefox(node.getText(tree))) return true;
+    let found = false;
+    each(node, (child) => {
+      if (!found && ts.isIdentifier(child)) {
+        const symbol = symbolOf(child);
+        found = !!symbol && tainted.has(symbol);
+      }
+    });
+    return found;
+  };
+  const names = (name: ts.Node): ts.Node[] =>
+    ts.isIdentifier(name) ? [name] : ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name) ? name.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : names(el.name))) : [];
   for (let grew = true; grew; ) {
     grew = false;
-    const uses = new Map([...new Set(lines.map(({ file }) => file))].map((file) => [file, pattern(new Set([...shared, ...(local.get(file) ?? [])]))]));
-    for (const line of lines) {
-      if (marked.has(line) || !(/firefox|gecko/i.test(line.text) || uses.get(line.file)?.test(line.text))) continue;
-      marked.add(line);
-      const names = /^export\b/.test(line.text) ? shared : (local.get(line.file) ?? local.set(line.file, new Set()).get(line.file)!);
-      for (const name of declared(line.text)) names.add(name);
-      grew = true;
-    }
+    const taint = (nodes: ts.Node[]) => {
+      for (const node of nodes) {
+        const symbol = symbolOf(node);
+        if (symbol && !tainted.has(symbol)) {
+          tainted.add(symbol);
+          grew = true;
+        }
+      }
+    };
+    for (const tree of trees)
+      each(tree, (node) => {
+        if (ts.isVariableDeclaration(node) && uses(node.initializer, tree)) taint(names(node.name));
+        else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name && uses(node, tree)) taint([node.name]);
+        else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && uses(node.right, tree)) taint(names(node.left));
+      });
   }
-  return lines.filter((line) => marked.has(line));
+  return trees.flatMap((tree) => {
+    const file = tree.fileName.slice(1);
+    const lines = codes.get(tree.fileName)!.split('\n');
+    const marked = new Set(lines.flatMap((text, index) => (namesFirefox(text) ? [index] : [])));
+    each(tree, (node) => {
+      if (!ts.isIdentifier(node)) return;
+      const symbol = symbolOf(node);
+      if (symbol && tainted.has(symbol)) marked.add(tree.getLineAndCharacterOfPosition(node.getStart(tree)).line);
+    });
+    return [...marked].sort((x, y) => x - y).map((index) => ({ file, line: index + 1, text: lines[index]!.trim() }));
+  });
 }
 
-const firefoxLines = (source: string) => firefoxLinesIn([{ file: 'file.tsx', source }]).map(({ line, text }) => ({ line, text }));
+/**
+ * Pairs each line with an entry whose code it holds, one entry to a line, so
+ * a loose entry can't take the line a closer one was written for.
+ */
+function matchBranches(lines: { file: string; text: string }[], branches: readonly FirefoxBranch[]) {
+  const fits = lines.map((line) => branches.flatMap((branch, index) => (branch.file === line.file && line.text.includes(branch.code) ? [index] : [])));
+  const owner = new Array<number>(branches.length).fill(-1);
+  const place = (line: number, seen: Set<number>): boolean =>
+    fits[line]!.some((branch) => {
+      if (seen.has(branch)) return false;
+      seen.add(branch);
+      if (owner[branch] !== -1 && !place(owner[branch]!, seen)) return false;
+      owner[branch] = line;
+      return true;
+    });
+  for (let line = 0; line < lines.length; line++) place(line, new Set());
+  const placed = new Set(owner.filter((line) => line !== -1));
+  return { unlisted: lines.filter((_, index) => !placed.has(index)), unused: branches.filter((_, index) => owner[index] === -1) };
+}
 
-it('follows an exported name into other files, and a local one only in its own', () => {
+const firefoxLines = (source: string) => firefoxLinesIn([{ file: 'src/browser/a.tsx', source }]).map(({ line, text }) => ({ line, text }));
+
+it('pairs a line with the entry written for it before a looser one', () => {
+  const lines = [
+    { file: 'a.tsx', text: "if (server.browser === 'firefox') probes.length = 0;" },
+    { file: 'a.tsx', text: "if (server.browser === 'firefox' && document.activeElement) blur();" },
+  ];
+  const branches = [
+    { file: 'a.tsx', code: "server.browser === 'firefox'", reason: 'loose' },
+    { file: 'a.tsx', code: "if (server.browser === 'firefox') probes.length = 0;", reason: 'close' },
+  ];
+  expect(matchBranches(lines, branches)).toEqual({ unlisted: [], unused: [] });
+  expect(matchBranches([...lines, lines[0]!], branches).unlisted).toEqual([lines[0]]);
+});
+
+it('reads a .ts file as TypeScript, so a generic arrow leaves its comments as comments', () => {
+  const found = firefoxLinesIn([{ file: 'src/test/a.ts', source: 'export const first = <T>(items: T[]): T | undefined => items[0];\n// Firefox paints later.\nconst y = <HTMLElement>el;\n// Gecko too.\n' }]);
+  expect(found).toEqual([]);
+});
+
+it('follows only the value that names Firefox, not another one that shares its name', () => {
+  const found = firefoxLines(
+    [
+      "it('a', () => { const at = server.browser === 'firefox' ? 2 : 1; expect(x).toBe(at); });",
+      "it('b', () => { const at = edge.getBoundingClientRect();",
+      '  expect(at.left).toBe(0); });',
+      "it('resizes a panel at the end', () => {});",
+    ].join('\n'),
+  );
+  expect(found.map(({ line }) => line)).toEqual([1]);
+});
+
+it('follows a name whose value names Firefox, however it is bound, within a file and through imports', () => {
   const found = firefoxLinesIn([
-    { file: 'engine.ts', source: "export const noDrag = server.browser === 'firefox';\nconst at = server.browser === 'firefox' ? 1 : 2;" },
-    { file: 'a.tsx', source: "it.skipIf(noDrag)('a', () => {});\nconst at = 3;\nexpect(at).toBe(3);" },
+    {
+      file: 'src/test/engine.ts',
+      source: [
+        'export const noDrag =',
+        "  server.browser === 'firefox';",
+        "const at = server.browser === 'firefox' ? 1 : 2;",
+        "const later = server.browser === 'firefox';",
+        'export { later as alsoLater };',
+        'export default noDrag;',
+      ].join('\n'),
+    },
+    {
+      file: 'src/browser/a.browser.test.tsx',
+      source: [
+        "import plain, { noDrag as nd, alsoLater } from '../test/engine.js';",
+        "import * as engine from '../test/engine.js';",
+        'const at = 3;',
+        'expect(at).toBe(3);',
+        "it.skipIf(nd)('a', () => {});",
+        "it.skipIf(engine.noDrag)('b', () => {});",
+        "it.skipIf(plain || alsoLater)('c', () => {});",
+        'function unsupported() {',
+        "  return 'MozAppearance' in document.documentElement.style;",
+        '}',
+        "it.skipIf(unsupported())('d', () => {});",
+        "const { $ff } = { $ff: CSS.supports('-moz-appearance', 'none') };",
+        "it.skipIf($ff)('e', () => {});",
+        'let late = false;',
+        "late = navigator.userAgent.includes('Gecko/');",
+        "it.skipIf(late)('f', () => {});",
+        'const skipDrag = (name: string, fn: () => void) =>',
+        "  it.skipIf(server.browser === 'firefox')(name, fn);",
+        "skipDrag('g', () => {});",
+      ].join('\n'),
+    },
   ]);
-  expect(found.map(({ file, line }) => `${file}:${line}`)).toEqual(['engine.ts:1', 'engine.ts:2', 'a.tsx:1']);
+  expect(found.map(({ file, line }) => `${file}:${line}`)).toEqual([
+    'src/test/engine.ts:1',
+    'src/test/engine.ts:2',
+    'src/test/engine.ts:3',
+    'src/test/engine.ts:4',
+    'src/test/engine.ts:5',
+    'src/test/engine.ts:6',
+    ...[1, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((line) => `src/browser/a.browser.test.tsx:${line}`),
+  ]);
 });
 
 describe('Firefox branches in browser tests', () => {
@@ -215,16 +359,10 @@ describe('Firefox branches in browser tests', () => {
   const root = join(import.meta.dirname, '../src');
   const files = (readdirSync(root, { recursive: true }) as string[])
     .map((name) => name.split('\\').join('/'))
-    .filter((name) => /\.browser\.test\.tsx?$/.test(name) || /^test\/.+\.tsx?$/.test(name));
+    .filter((name) => /\.browser\.test\.tsx?$/.test(name) || /^(test|browser)\/.+\.tsx?$/.test(name));
   const found = firefoxLinesIn(files.map((name) => ({ file: `src/${name}`, source: readFileSync(join(root, name), 'utf8') })));
   // Each entry names one line, so a second line like one already listed needs its own entry and reason.
-  const unused = [...firefoxBranches];
-  const unlisted = found.filter(({ file, text }) => {
-    const at = unused.findIndex((branch) => branch.file === file && text.includes(branch.code));
-    if (at === -1) return true;
-    unused.splice(at, 1);
-    return false;
-  });
+  const { unlisted, unused } = matchBranches(found, firefoxBranches);
 
   it('lists every line of a browser test that treats Firefox apart, so a failure cannot be silenced by a skip', () => {
     expect(found.length).toBeGreaterThan(0);
