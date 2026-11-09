@@ -100,7 +100,7 @@ describe('docs MCP route', () => {
     const big = { files: { 'x.json': Array(TOOL_INPUT_ELEMENTS).fill(0) } };
     const mixed = await send(JSON.stringify([call(6, 'build_tokens', big), call(7, 'list_components', {})]));
     expect(mixed.status).toBe(400);
-    expect(await mixed.json()).toMatchObject({ error: { message: `The tool calls in this request hold more than ${TOOL_INPUT_ELEMENTS} elements in all` } });
+    expect((await mixed.json()).error.message).toContain(`The tool calls in this request hold more than ${TOOL_INPUT_ELEMENTS} elements in all`);
     const builds = await post([call(8, 'build_tokens', big)]);
     expect(builds).not.toContain('maximum of');
     expect(builds).toContain('files must include the resolver');
@@ -226,14 +226,25 @@ describe('docs MCP route', () => {
   });
 
   it('says why a build_tokens call mixed with other tools gets no room for its files', async () => {
-    const response = await send(JSON.stringify([call(35, 'build_tokens', { files: { 'x.json': Array(3000).fill(0) } }), call(36, 'list_components', {})]));
-    expect(response.status).toBe(400);
-    expect((await response.json()).error.message).toContain('only get their own limits when every tool call in the request is build_tokens');
+    for (const size of [1500, 3000]) {
+      const response = await send(JSON.stringify([call(35, 'build_tokens', { files: { 'x.json': Array(size).fill(0) } }), call(36, 'list_components', {})]));
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.message).toContain('only get their own limits when every tool call in the request is build_tokens');
+    }
+    const long = 'a'.repeat(MAX_REQUEST_KEY_LENGTH + 1);
+    const unrelated = await send(JSON.stringify([call(39, 'build_tokens', { files: {} }), call(40, 'get_token', { [long]: 1 })]));
+    expect(unrelated.status).toBe(400);
+    expect((await unrelated.json()).error.message).not.toContain('only get their own limits');
   });
 
   it('takes string files that fill the byte budget exactly', async () => {
-    const response = await send(JSON.stringify(call(37, 'build_tokens', { files: { 'a.json': ' '.repeat(MAX_BYTES / 2), 'b.json': ' '.repeat(MAX_BYTES / 2) } })));
+    const files = { 'resolver.json': ' '.repeat(MAX_BYTES / 2), 'b.json': ' '.repeat(MAX_BYTES / 2) };
+    const response = await send(JSON.stringify(call(37, 'build_tokens', { files })));
     expect(response.status).toBe(200);
-    expect(await response.text()).not.toContain('more than 512 KB');
+    const text = await response.text();
+    expect(text).toContain('resolver.json');
+    expect(text).not.toContain('512 KB');
+    const over = await send(JSON.stringify(call(38, 'build_tokens', { files: { ...files, 'b.json': `${files['b.json']} ` } })));
+    expect(over.status).toBe(400);
   });
 });

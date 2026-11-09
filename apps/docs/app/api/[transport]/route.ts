@@ -272,26 +272,32 @@ async function POST(request: Request): Promise<Response> {
     return jsonRpcError(400, -32600, `A request may make at most ${MAX_REQUEST_TOOL_CALLS} tool calls`, id);
   }
   const building = calls.length > 0 && calls.every((call) => call.name === BUILD_TOOL);
-  const files = new Set<object>();
-  for (const call of building ? calls : []) {
-    const value = (call.arguments as { files?: unknown } | null | undefined)?.files;
+  const buildFiles = new Set<object>();
+  for (const call of calls) {
+    const value = call.name === BUILD_TOOL ? (call.arguments as { files?: unknown } | null | undefined)?.files : undefined;
     if (!value || typeof value !== 'object') continue;
     // The SDK walks every file name before build_tokens' own schema counts them, so the count comes first.
-    if (hasMoreKeysThan(value, MAX_FILES)) return jsonRpcError(400, -32602, `build_tokens takes at most ${MAX_FILES} files`, id);
-    files.add(value);
+    if (building && hasMoreKeysThan(value, MAX_FILES)) {
+      return jsonRpcError(400, -32602, `build_tokens takes at most ${MAX_FILES} files`, id);
+    }
+    buildFiles.add(value);
   }
-  const mixed =
-    !building && calls.some((call) => call.name === BUILD_TOOL)
+  const files = building ? buildFiles : new Set<object>();
+  // In a request that mixes build_tokens with other tools, its files count like any other arguments. Say so
+  // when that is what a limit caught, so a caller knows sending the build alone would pass.
+  const mixed = (filesAreTheCause: () => boolean) =>
+    !building && buildFiles.size > 0 && filesAreTheCause()
       ? '; build_tokens files only get their own limits when every tool call in the request is build_tokens'
       : '';
+  const outsideOnly = () => !['deep', 'elements', 'key'].includes(inspectBody(body, buildFiles) ?? '');
   // The SDK checks every message before a tool's own limit runs, so the body is measured whole here, once.
   switch (inspectBody(body, files)) {
     case 'deep':
       return jsonRpcError(400, -32600, `Request nests deeper than ${MAX_REQUEST_DEPTH} levels`, id);
     case 'elements':
-      return jsonRpcError(400, -32600, `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files${mixed}`, id);
+      return jsonRpcError(400, -32600, `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files${mixed(outsideOnly)}`, id);
     case 'key':
-      return jsonRpcError(400, -32600, `Request holds an object key longer than ${MAX_REQUEST_KEY_LENGTH} characters outside build_tokens files${mixed}`, id);
+      return jsonRpcError(400, -32600, `Request holds an object key longer than ${MAX_REQUEST_KEY_LENGTH} characters outside build_tokens files${mixed(outsideOnly)}`, id);
     case 'file-bytes':
       return jsonRpcError(400, -32602, `The files in this request total more than ${MAX_BYTES / 1024} KB`, id);
     case 'file-elements':
@@ -300,7 +306,8 @@ async function POST(request: Request): Promise<Response> {
   const elements = building ? BUILD_TOOL_INPUT_ELEMENTS : TOOL_INPUT_ELEMENTS;
   // The server checks each call on its own, so a batch's calls share one cap here.
   if (calls.length > 1 && countElements(calls.map((call) => call.arguments), elements) > elements) {
-    return jsonRpcError(400, -32602, `The tool calls in this request hold more than ${elements} elements in all`, id);
+    const othersFit = () => countElements(calls.filter((call) => call.name !== BUILD_TOOL).map((call) => call.arguments), elements) <= elements;
+    return jsonRpcError(400, -32602, `The tool calls in this request hold more than ${elements} elements in all${mixed(othersFit)}`, id);
   }
   const headers = new Headers(request.headers);
   headers.delete('content-length');
