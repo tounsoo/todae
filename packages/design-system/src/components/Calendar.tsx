@@ -171,6 +171,19 @@ export function isoDate<T extends Temporal.PlainDate | null | undefined>(date: T
   return (date && date.calendarId !== 'iso8601' ? date.withCalendar('iso8601') : date) as T;
 }
 
+/** Whether isDateDisabled rules out a day strictly between two dates. */
+function ruledOutBetween(
+  a: Temporal.PlainDate,
+  b: Temporal.PlainDate,
+  isDateDisabled: (date: Temporal.PlainDate) => boolean,
+) {
+  const { start, end } = spanOf(a, b);
+  for (let day = start.add({ days: 1 }); Temporal.PlainDate.compare(day, end) < 0; day = day.add({ days: 1 })) {
+    if (isDateDisabled(day)) return true;
+  }
+  return false;
+}
+
 const sameRange = (a: DateRange | null, b: DateRange | null) =>
   a === b || (a !== null && b !== null && a.start.equals(b.start) && a.end.equals(b.end));
 
@@ -306,7 +319,9 @@ function Root(rootProps: CalendarRootProps) {
   // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
   const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
   if (anchorRuledOut) setPending(IDLE);
-  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled });
+  // Counts the ends a range refused because isDateDisabled had since ruled out a day before them.
+  const [rescan, setRescan] = useState(0);
+  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled }, rescan);
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>
       reach !== null &&
@@ -363,6 +378,13 @@ function Root(rootProps: CalendarRootProps) {
   const select = useCallback(
     (date: Temporal.PlainDate) => {
       if (disabled || unavailable(date) || (anchor && !reachable(date))) return;
+      // The reach scan asks each day once, whichever isDateDisabled a render has, so the
+      // newest one checks the days between the picks before they make a range. One it now
+      // rules out scans the reach again with it, which shows the end as out of reach.
+      if (anchor && isDateDisabled && ruledOutBetween(anchor, date, isDateDisabled)) {
+        setRescan((count) => count + 1);
+        return;
+      }
       setFocused(date);
       // In single mode a pick is a whole range of one day.
       if (mode === 'range' && !anchor) {
@@ -379,7 +401,19 @@ function Root(rootProps: CalendarRootProps) {
       // In a Field.Picker, the pick that makes the value tells the field, and closes it.
       picked?.(true);
     },
-    [anchor, announce, disabled, mode, onValueChange, picked, reachable, setValue, strings.pickEndDate, unavailable],
+    [
+      anchor,
+      announce,
+      disabled,
+      isDateDisabled,
+      mode,
+      onValueChange,
+      picked,
+      reachable,
+      setValue,
+      strings.pickEndDate,
+      unavailable,
+    ],
   );
   const shown = useMemo(() => {
     if (!anchor) return value;
@@ -548,7 +582,7 @@ function Header({ className, ...props }: CalendarHeaderProps) {
           {focused
             ? years
               ? yearFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
-              : focused.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })
+              : dateText(focused, cal.locale, MONTH_NAME)
             : null}
           <span className={styles.headingGlyph} data-todae-glyph="" aria-hidden="true">
             {glyphOr(chevron, <ChevronGlyph />)}
@@ -584,6 +618,31 @@ function yearFormat(locale: string) {
     yearFormats.set(locale, format);
   }
   return format;
+}
+
+// One date formatter per locale and style: a grid writes some 50 names on each render.
+const DAY_NAME = { dateStyle: 'full' } as const;
+const WEEKDAY_LONG = { weekday: 'long' } as const;
+const WEEKDAY_SHORT = { weekday: 'short' } as const;
+const MONTH_NAME = { month: 'long', year: 'numeric' } as const;
+type DateStyle = typeof DAY_NAME | typeof WEEKDAY_LONG | typeof WEEKDAY_SHORT | typeof MONTH_NAME;
+
+const dateFormats = /* @__PURE__ */ new Map<DateStyle, Map<string, Intl.DateTimeFormat>>();
+/** The date as `toLocaleString` writes it in the Gregorian calendar, from a formatter made once. */
+function dateText(date: Temporal.PlainDate, locale: string, style: DateStyle) {
+  let byLocale = dateFormats.get(style);
+  if (!byLocale) dateFormats.set(style, (byLocale = new Map()));
+  let format = byLocale.get(locale);
+  if (!format) {
+    // In UTC, so the day's midnight there is the day itself in every zone.
+    format = new Intl.DateTimeFormat(locale, { ...style, calendar: GREGORY, timeZone: 'UTC' });
+    byLocale.set(locale, format);
+  }
+  // A Date, not the PlainDate, since a Temporal polyfill may leave Intl as it is.
+  const iso = isoDate(date);
+  const utc = new Date(0);
+  utc.setUTCFullYear(iso.year, iso.month - 1, iso.day);
+  return format.format(utc);
 }
 
 const startOfWeek = (date: Temporal.PlainDate, firstDay: number) =>
@@ -692,10 +751,10 @@ function DayGrid({ className, onKeyDown, onPointerLeave, ref: refProp, ...props 
             <th
               key={day.dayOfWeek}
               scope="col"
-              abbr={day.toLocaleString(locale, { weekday: 'long', calendar: GREGORY })}
+              abbr={dateText(day, locale, WEEKDAY_LONG)}
               className={styles.weekday}
             >
-              {day.toLocaleString(locale, { weekday: 'short', calendar: GREGORY })}
+              {dateText(day, locale, WEEKDAY_SHORT)}
             </th>
           ))}
         </tr>
@@ -742,7 +801,7 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         disabled={cal.disabled || outOfRange}
         aria-disabled={(unavailable && !outOfRange) || unreachable ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
-        aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
+        aria-label={dateText(date, cal.locale, DAY_NAME)}
         data-selected={selected ? '' : undefined}
         data-in-range={range && inShown && !rangeStart && !rangeEnd ? '' : undefined}
         data-range-start={range && rangeStart ? '' : undefined}

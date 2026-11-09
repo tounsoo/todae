@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { startTransition, useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Calendar, type CalendarRootProps, type DateRange } from '../index.js';
 
@@ -271,7 +271,7 @@ describe('Calendar range mode', () => {
     }
   });
 
-  it('starts a scan that has not finished over when isDateDisabled changes', () => {
+  it('goes on with a new isDateDisabled from the days already checked', () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
     try {
       let clock = 0;
@@ -284,14 +284,65 @@ describe('Calendar range mode', () => {
       act(() => vi.advanceTimersToNextFrame());
       const calls = vi.fn(() => false);
       rerender(<RangeControlled isDateDisabled={calls} />);
-      // The new function is asked about the days again, from the first pick on.
-      expect(calls).toHaveBeenCalledWith(date('2026-10-06'));
-      expect(calls.mock.calls.length).toBeGreaterThan(700);
+      // The new function draws the grid, and the scan doesn't ask it about the days behind it.
+      expect(calls).not.toHaveBeenCalledWith(date('2026-10-06'));
+      expect(calls.mock.calls.length).toBeLessThanOrEqual(42);
       expect(vi.getTimerCount()).toBe(1);
+      act(() => vi.advanceTimersToNextFrame());
+      expect(calls.mock.calls.length).toBeGreaterThan(0);
     } finally {
       vi.restoreAllMocks();
       vi.useRealTimers();
     }
+  });
+
+  it('reaches a far day while the parent renders a new inline isDateDisabled on every frame', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'setInterval', 'clearInterval'] });
+    try {
+      // A frame checks one chunk of days, and the parent renders between any two frames.
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      function Ticking() {
+        const [tick, setTick] = useState(0);
+        useEffect(() => {
+          const id = setInterval(() => setTick((count) => count + 1), 16);
+          return () => clearInterval(id);
+        }, []);
+        return <RangeControlled isDateDisabled={() => false} data-tick={tick} />;
+      }
+      render(<Ticking />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      const far = () => day(date('2031-10-05').toLocaleString('en-US', { dateStyle: 'full' }));
+      expect(far().getAttribute('aria-disabled')).toBe('true');
+      for (let frame = 0; frame < 100; frame++) act(() => vi.advanceTimersByTime(16));
+      expect(far().hasAttribute('aria-disabled')).toBe(false);
+      fireEvent.click(far());
+      expect(screen.getByTestId('value').textContent).toBe('2026-10-05/2031-10-05');
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('checks the days between the picks with the newest isDateDisabled before it ends a range', () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(<RangeControlled isDateDisabled={() => false} onValueChange={onValueChange} />);
+    fireEvent.click(october(5));
+    expect(october(20).hasAttribute('aria-disabled')).toBe(false);
+    // A day before the end is booked once the scan has passed it, and the grid shows another month.
+    const booked = (d: Temporal.PlainDate) => d.equals(date('2026-10-12'));
+    fireEvent.keyDown(focusedDay(), { key: 'PageDown' });
+    rerender(<RangeControlled isDateDisabled={booked} onValueChange={onValueChange} />);
+    fireEvent.keyDown(focusedDay(), { key: 'PageUp' });
+    fireEvent.click(october(20));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(october(20).getAttribute('aria-disabled')).toBe('true');
+    expect(october(11).hasAttribute('aria-disabled')).toBe(false);
+    fireEvent.click(october(11));
+    expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-05'), end: date('2026-10-11') });
   });
 
   it('stops a scan carried on after the render when the first pick goes', () => {
