@@ -16,7 +16,7 @@ import RowComposerDensity from '../../../examples/field/RowComposerDensity';
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.NumberInput`, `Field.OneTimeCode`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DatePicker`, `Field.DateRangePicker`, `Field.TimePicker`, `Field.DateTimePicker`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.NumberInput`, `Field.OneTimeCode`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput`, `Field.DateTimeInput`에 있습니다. `Field.Picker`는 이들 옆에서 값을 고르는 패널을 여는 버튼입니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example of={FieldStates} block />
 
@@ -30,11 +30,11 @@ import RowComposerDensity from '../../../examples/field/RowComposerDensity';
 - [Field.Textarea](/field/textarea): 여러 줄 텍스트.
 - [Field.ChipInput](/field/chip-input): 칩과 입력.
 - [Field.Select](/field/select): 네이티브 `<select>`입니다. JavaScript listbox는 없습니다. 자식은 `<option>` 또는 `<optgroup>`이고, 브라우저가 지원하면 `appearance: base-select`로 컨트롤을 그립니다.
-- [Field.ColorPicker](/field/color-picker): 색 선택기를 여는 견본.
-- [Field.DatePicker](/field/date-picker): 단독으로, 또는 날짜를 입력하는 텍스트 입력 옆에서 달력을 여는 버튼.
-- [Field.DateRangePicker](/field/date-range-picker): 시작일과 종료일을 고르는 달력을 여는 버튼. 단독으로 쓰거나, 범위를 입력하는 텍스트 입력 옆에 둡니다.
-- [Field.TimePicker](/field/time-picker): 시각 목록을 여는 버튼. 단독으로 쓰거나, 시각을 입력하는 텍스트 입력 옆에 둡니다.
-- [Field.DateTimePicker](/field/date-time-picker): 달력과 시각 목록을 여는 버튼. 단독으로 쓰거나, 날짜와 시각을 입력하는 텍스트 입력 옆에 둡니다.
+- [Field.DateInput](/field/date-input): 로캘의 방식대로 입력하는 날짜.
+- [Field.DateRangeInput](/field/date-range-input): 로캘의 방식대로 입력하는 시작일과 종료일.
+- [Field.TimeInput](/field/time-input): 로캘의 방식대로 입력하는 하루 중 시각.
+- [Field.DateTimeInput](/field/date-time-input): 로캘의 방식대로 입력하는 날짜와 시각.
+- [Field.Picker](/field/picker): 값을 담는 입력 옆에서 달력, 시각 목록, 색 선택기 같은 패널을 여는 버튼.
 
 ## Label
 

@@ -554,8 +554,6 @@
   --todae-field-code-slot-inline-size: var(--_todae-field-code-slot-inline-size, 2.75rem);
   --todae-field-code-slot-radius: var(--_todae-field-code-slot-radius, var(--todae-radius-md));
   --todae-field-counter-emphasis-weight: var(--_todae-field-counter-emphasis-weight, 600);
-  --todae-field-date-time-gap: var(--_todae-field-date-time-gap, var(--todae-space-stack-gap));
-  --todae-field-date-time-list-max-height: var(--_todae-field-date-time-list-max-height, 18rem);
   --todae-field-description-fg: var(--_todae-field-description-fg, var(--todae-color-fg-muted));
   --todae-field-description-font-size: var(--_todae-field-description-font-size, var(--todae-font-size-2));
   --todae-field-description-font-weight: var(--_todae-field-description-font-weight, var(--todae-font-weight-regular));

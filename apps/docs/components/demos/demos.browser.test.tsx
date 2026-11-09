@@ -280,16 +280,16 @@ const OVERLAY_DEMOS = [
   'examples/dialog/',
   'examples/drawer/',
   'examples/drilldown/',
-  'examples/field/color-picker/',
-  'examples/field/date-picker/',
-  'examples/field/date-range-picker/',
-  'examples/field/date-time-picker/',
-  'examples/field/time-picker/',
+  'examples/field/date-input/',
+  'examples/field/date-range-input/',
+  'examples/field/picker/',
+  'examples/field/time-input/',
   'examples/menu/',
   'examples/popover/',
   'examples/recipes/combobox/',
   'examples/recipes/command-palette/',
   'examples/recipes/date-range-presets/',
+  'examples/recipes/date-time-picker/',
   'examples/utilities/use-popover/',
 ];
 
@@ -314,7 +314,7 @@ async function openFirstOverlay(container: HTMLElement) {
 }
 
 // Exports in those files that render no overlay.
-const NO_OVERLAY = new Set(['PresentationBadge']);
+const NO_OVERLAY = new Set(['PresentationBadge', 'FieldDateInputAlone', 'FieldDateRangeInputAlone', 'FieldTimeInputAlone']);
 
 function openOverlay(): boolean {
   return document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], :popover-open') != null;

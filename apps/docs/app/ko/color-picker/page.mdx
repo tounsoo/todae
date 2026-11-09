@@ -6,7 +6,7 @@ import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline'
 
 <Example of={ColorPickerInline} block />
 
-폼의 색에는 [Field.ColorPicker](/field/color-picker)를 쓰세요. 필드 안의 색 견본이 이 선택기를 팝오버로 엽니다.
+폼의 색에는 이 선택기를 `swatch`가 있는 [Field.Picker](/field/picker)에 담으세요. 필드 안의 색 견본이 이 선택기를 팝오버로 엽니다.
 
 ## 키와 값
 
@@ -30,7 +30,7 @@ import ColorPickerInline from '../../../examples/color-picker/ColorPickerInline'
 
 **쓸 때:** 테마 편집기처럼 아무 색이나 화면에 펼쳐 놓고 고를 때.
 
-**쓰지 않을 때:** 폼 필드의 색 → [Field.ColorPicker](/field/color-picker). 정해진 색 몇 가지 → [Radio](/radio). `oklch()`처럼 다른 형식의 색 → `Field.TextInput`.
+**쓰지 않을 때:** 폼 필드의 색 → 이 선택기를 담은, `swatch`가 있는 [Field.Picker](/field/picker). 정해진 색 몇 가지 → [Radio](/radio). `oklch()`처럼 다른 형식의 색 → `Field.TextInput`.
 
 ## Props
 

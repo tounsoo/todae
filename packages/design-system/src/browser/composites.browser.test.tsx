@@ -4,8 +4,8 @@ import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button.js';
 import { Calendar } from '../components/Calendar.js';
+import { ColorPicker } from '../components/ColorPicker.js';
 import { Field } from '../components/Field.js';
-import { formatDate, parseDate } from '../components/dateText.js';
 import { Label } from '../components/Label.js';
 import { Menu } from '../components/Menu.js';
 import { Tabs } from '../components/Tabs.js';
@@ -319,7 +319,7 @@ describe('Field.Select in a browser', () => {
   });
 });
 
-describe('Field.ColorPicker in a browser', () => {
+describe('Field.Picker with a swatch in a browser', () => {
   function Accent({
     disabled,
     affix = true,
@@ -336,7 +336,12 @@ describe('Field.ColorPicker in a browser', () => {
       <Themed>
         <Label.Root htmlFor="accent">Accent</Label.Root>
         <Field.Root id="accent" name={name} disabled={disabled} onClick={onClick} data-testid="shell">
-          <Field.ColorPicker value={value} onValueChange={setValue} />
+          <Field.Picker swatch={value}>
+            <ColorPicker.Root value={value} onValueChange={setValue}>
+              <ColorPicker.Area />
+              <ColorPicker.Hue />
+            </ColorPicker.Root>
+          </Field.Picker>
           {affix ? <Field.Affix data-testid="value">{value}</Field.Affix> : null}
         </Field.Root>
       </Themed>
@@ -430,29 +435,14 @@ describe('Field.ColorPicker in a browser', () => {
     expect(document.activeElement).toBe(hue);
   });
 
-  it('sends its value with a form under the field name', () => {
+  it('sends nothing with a form: the control beside it sends the color', () => {
     render(
       <form data-testid="form">
         <Accent name="accent" />
       </form>,
     );
     const form = screen.getByTestId('form') as HTMLFormElement;
-    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
-  });
-
-  it('sends its value with the form its form attribute names', () => {
-    render(
-      <>
-        <form id="other" data-testid="other" />
-        <Themed>
-          <Field.Root aria-label="Accent" name="accent">
-            <Field.ColorPicker value="#3366ff" form="other" />
-          </Field.Root>
-        </Themed>
-      </>,
-    );
-    const form = screen.getByTestId('other') as HTMLFormElement;
-    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
+    expect([...new FormData(form).entries()]).toEqual([]);
   });
 
   it('reports a close for disabling once, to an owner that keeps it open', async () => {
@@ -461,7 +451,11 @@ describe('Field.ColorPicker in a browser', () => {
       return (
         <Themed>
           <Field.Root aria-label="Accent" disabled={disabled} data-note={note}>
-            <Field.ColorPicker value="#3366ff" open onOpenChange={(open, reason) => spy(open, reason)} />
+            <Field.Picker swatch="#3366ff" open onOpenChange={(open, reason) => spy(open, reason)}>
+              <ColorPicker.Root value="#3366ff">
+                <ColorPicker.Hue />
+              </ColorPicker.Root>
+            </Field.Picker>
           </Field.Root>
         </Themed>
       );
@@ -481,7 +475,11 @@ describe('Field.ColorPicker in a browser', () => {
         <Themed>
           <button type="button">before</button>
           <Field.Root aria-label="Accent" disabled={disabled}>
-            <Field.ColorPicker value="#3366ff" onOpenChange={onOpenChange} />
+            <Field.Picker swatch="#3366ff" onOpenChange={onOpenChange}>
+              <ColorPicker.Root value="#3366ff">
+                <ColorPicker.Hue />
+              </ColorPicker.Root>
+            </Field.Picker>
           </Field.Root>
         </Themed>
       );
@@ -504,13 +502,18 @@ describe('Field.ColorPicker in a browser', () => {
     const [color, setColor] = useState('#3366ff');
     const [text, setText] = useState(color);
     const swatch = (
-      <Field.ColorPicker
-        value={color}
-        onValueChange={(next) => {
-          setColor(next);
-          setText(next);
-        }}
-      />
+      <Field.Picker swatch={color}>
+        <ColorPicker.Root
+          value={color}
+          onValueChange={(next) => {
+            setColor(next);
+            setText(next);
+          }}
+        >
+          <ColorPicker.Area />
+          <ColorPicker.Hue />
+        </ColorPicker.Root>
+      </Field.Picker>
     );
     return (
       <Themed>
@@ -622,33 +625,20 @@ describe('Calendar in a browser', () => {
   });
 });
 
-describe('Field.DatePicker in a browser', () => {
-  function Start({ withInput = false, onClick }: { withInput?: boolean; onClick?: () => void }) {
+describe('Field.Picker beside a Field.DateInput in a browser', () => {
+  function Start() {
     const [value, setValue] = useState<Temporal.PlainDate | null>(plainDate('2026-10-13'));
-    const [text, setText] = useState('10/13/2026');
     return (
       <Themed>
         <Label.Root htmlFor="start">Start</Label.Root>
-        <Field.Root id="start" data-testid="shell" onClick={onClick}>
-          {withInput ? (
-            <Field.TextInput
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value);
-                const date = parseDate(event.target.value, { locale: 'en-US' });
-                if (date) setValue(date);
-              }}
-            />
-          ) : null}
-          <Field.DatePicker
-            value={value}
-            onValueChange={(date) => {
-              setValue(date);
-              setText(formatDate(date, { locale: 'en-US' }));
-            }}
-            locale="en-US"
-            showValue={!withInput}
-          />
+        <Field.Root id="start" data-testid="shell">
+          <Field.DateInput value={value} onValueChange={setValue} locale="en-US" />
+          <Field.Picker>
+            <Calendar.Root value={value} onValueChange={setValue} locale="en-US">
+              <Calendar.Header />
+              <Calendar.Grid />
+            </Calendar.Root>
+          </Field.Picker>
           <Field.Affix data-testid="affix">UTC</Field.Affix>
         </Field.Root>
         <output data-testid="value">{value?.toString() ?? ''}</output>
@@ -656,9 +646,21 @@ describe('Field.DatePicker in a browser', () => {
     );
   }
 
+  function Pinned({ value, onOpenChange }: { value: Temporal.PlainDate; onOpenChange?: (open: boolean, reason: string) => void }) {
+    return (
+      <Field.Picker onOpenChange={onOpenChange}>
+        <Calendar.Root value={value} onValueChange={() => undefined} locale="en-US">
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+      </Field.Picker>
+    );
+  }
+
   it('opens a calendar on the date, picks a date from the keyboard, and returns focus to the button', async () => {
     render(<Start />);
-    const button = screen.getByRole('button', { name: 'Start' });
+    const input = screen.getByRole('textbox', { name: 'Start' }) as HTMLInputElement;
+    const button = screen.getByRole('button', { name: 'Choose date' });
     await userEvent.click(button);
     const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
     await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
@@ -671,7 +673,7 @@ describe('Field.DatePicker in a browser', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(button.getAttribute('aria-expanded')).toBe('false');
     await waitFor(() => expect(document.activeElement).toBe(button));
-    expect(button.textContent).toBe('Oct 20, 2026');
+    expect(input.value).toBe('10/20/2026');
   });
 
   it.each(['compact', 'comfortable', 'spacious'] as const)(
@@ -681,11 +683,12 @@ describe('Field.DatePicker in a browser', () => {
         <div data-appearance="light" data-density={density}>
           <Label.Root htmlFor="when">When</Label.Root>
           <Field.Root id="when">
-            <Field.DatePicker value={plainDate('2022-10-21')} locale="en-US" />
+            <Field.DateInput value={plainDate('2022-10-21')} locale="en-US" />
+            <Pinned value={plainDate('2022-10-21')} />
           </Field.Root>
         </div>,
       );
-      await userEvent.click(screen.getByRole('button', { name: 'When' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
       const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
       await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
       // October 2022 starts on a Saturday, so it spans six weeks.
@@ -696,7 +699,7 @@ describe('Field.DatePicker in a browser', () => {
 
   it('picks a year in the open calendar from the keyboard, and stays open on its month', async () => {
     render(<Start />);
-    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
     const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
     await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}{Shift>}{Tab}{/Shift}');
@@ -716,11 +719,12 @@ describe('Field.DatePicker in a browser', () => {
     render(
       <Themed>
         <Field.Root aria-label="Start">
-          <Field.DatePicker value={plainDate('2026-10-13')} locale="en-US" onOpenChange={onOpenChange} />
+          <Field.DateInput value={plainDate('2026-10-13')} locale="en-US" />
+          <Pinned value={plainDate('2026-10-13')} onOpenChange={onOpenChange} />
         </Field.Root>
       </Themed>,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
     await screen.findByRole('dialog');
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' })),
@@ -735,11 +739,12 @@ describe('Field.DatePicker in a browser', () => {
     render(
       <Themed>
         <Field.Root aria-label="Start">
-          <Field.DatePicker value={plainDate('2026-10-13')} onOpenChange={onOpenChange} />
+          <Field.DateInput value={plainDate('2026-10-13')} locale="en-US" />
+          <Pinned value={plainDate('2026-10-13')} onOpenChange={onOpenChange} />
         </Field.Root>
       </Themed>,
     );
-    const button = screen.getByRole('button', { name: 'Start' });
+    const button = screen.getByRole('button', { name: 'Choose date' });
     await userEvent.click(button);
     await screen.findByRole('dialog');
     await userEvent.keyboard('{Escape}');
@@ -751,15 +756,22 @@ describe('Field.DatePicker in a browser', () => {
     expect(document.activeElement).toBe(button);
   });
 
-  it('opens on a press elsewhere in the field when it is the control', async () => {
-    render(<Start />);
-    await userEvent.click(screen.getByTestId('affix'));
+  it('opens on a press on a read-only Field.DateInput beside it', async () => {
+    render(
+      <Themed>
+        <Field.Root aria-label="Start">
+          <Field.DateInput value={plainDate('2026-10-13')} locale="en-US" />
+          <Pinned value={plainDate('2026-10-13')} />
+        </Field.Root>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByRole('textbox', { name: 'Start' }));
     await screen.findByRole('dialog', { name: 'Choose date' });
   });
 
-  it('beside a text input read with parseDate, stays in step with typing and picking', async () => {
-    render(<Start withInput />);
-    const input = screen.getByLabelText('Start') as HTMLInputElement;
+  it('stays in step with typing and picking, and a press elsewhere focuses the input', async () => {
+    render(<Start />);
+    const input = screen.getByRole('textbox', { name: 'Start' }) as HTMLInputElement;
     const button = screen.getByRole('button', { name: 'Choose date' });
     // A press elsewhere focuses the input and opens nothing.
     await userEvent.click(screen.getByTestId('affix'));
@@ -770,9 +782,10 @@ describe('Field.DatePicker in a browser', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Thursday, October 1, 2026' }));
     expect(input.value).toBe('10/1/2026');
     expect(screen.queryByRole('dialog')).toBeNull();
-    // A typed date moves the calendar to its month.
+    // A typed date, committed on blur, moves the calendar to its month.
     await userEvent.clear(input);
     await userEvent.type(input, 'Mar 2, 2027');
+    await userEvent.tab();
     await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('2027-03-02'));
     await userEvent.click(button);
     await screen.findByText('March 2027');

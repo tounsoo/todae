@@ -266,42 +266,51 @@ const cases: Case[] = [
     ),
   ],
   [
-    'Field.ColorPicker',
+    'Field.DateInput',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.ColorPicker {...p} value="#000000" />
+        <Field.DateInput {...p} value={null} onValueChange={noop} />
       </Field.Root>
     ),
   ],
   [
-    'Field.DatePicker',
+    'Field.TimeInput',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.DatePicker {...p} value={null} />
+        <Field.TimeInput {...p} value={null} onValueChange={noop} />
       </Field.Root>
     ),
   ],
   [
-    'Field.TimePicker',
+    'Field.DateTimeInput',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.TimePicker {...p} value={null} />
+        <Field.DateTimeInput {...p} value={null} onValueChange={noop} />
       </Field.Root>
     ),
   ],
   [
-    'Field.DateTimePicker',
+    'Field.DateRangeInput',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.DateTimePicker {...p} value={null} />
+        <Field.DateRangeInput {...p} value={null} onValueChange={noop} />
       </Field.Root>
     ),
   ],
   [
-    'Field.DateRangePicker',
+    'Field.Picker',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.DateRangePicker {...p} value={null} />
+        <Field.Picker {...p} />
+      </Field.Root>
+    ),
+  ],
+  [
+    'Field.Picker',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.DateInput value={null} onValueChange={noop} />
+        <Field.Picker {...p} />
       </Field.Root>
     ),
   ],

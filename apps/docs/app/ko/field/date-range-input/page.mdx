@@ -1,0 +1,62 @@
+import FieldDateRangeInputPicker from '../../../../examples/field/date-range-input/FieldDateRangeInputPicker';
+import FieldDateRangeInputAlone from '../../../../examples/field/date-range-input/FieldDateRangeInputAlone';
+
+# Field.DateRangeInput
+
+`Field.DateRangeInput`은 [Field](/field) 안에서 날짜 범위를, 즉 사이에 구분자를 둔 두 날짜를 입력하는 텍스트 입력입니다. `value`는 양 끝 날을 모두 포함하는 `DateRange`인 `{ start, end }`나 `null`입니다. 텍스트는 확정될 때, 즉 포커스를 잃을 때, Enter를 누를 때, 폼을 제출할 때 읽고, `formatDateRange`가 쓰는 대로 다시 쓴 뒤 그 범위로 `onValueChange`를 호출합니다. 입력하는 것만으로는 아무것도 호출하지 않습니다. `onValueChange`가 없으면 입력은 읽기 전용입니다. [Field.DateInput](/field/date-input)처럼 동작하고, 뜻이 같은 props는 똑같이 받습니다.
+
+<Example of={FieldDateRangeInputPicker} block />
+
+여기서는 입력 옆의 [Field.Picker](/field/picker)가 `mode="range"`인 [Calendar](/calendar)를 [Popover](/popover)로 엽니다. 입력과 달력이 같은 `value`와 `onValueChange`를 받으므로, 입력한 범위는 달력을 그 시작으로 옮깁니다. 달력에서 처음 고른 날짜가 범위를 시작하고 두 번째가 끝내며, 순서는 상관없습니다. 그러면 범위가 텍스트에 쓰이고 팝오버가 닫힙니다. 첫 선택 뒤에 Escape를 누르면 그 선택만 취소되고 달력은 열려 있습니다. `Field.DateRangeInput` 옆에서 선택기의 버튼은 달력 글리프를 보여 주고 `dateRangePicker` 문자열로 이름이 붙습니다.
+
+## 입력한 범위
+
+`formatDateRange(range, { locale })`는 두 날짜를 [`formatDate`](/field/date-input#typed-dates)가 쓰는 대로 쓰고, 그 사이에 로캘의 범위 구분자를 넣습니다. 예: `en-US`에서는 `10/3/2026 – 10/10/2026`, `ko`에서는 `2026. 10. 3. ~ 2026. 10. 10.`. `parseDateRange(text, { locale })`는 입력한 텍스트를 `DateRange`로 읽고, 범위가 아니면 `null`을 돌려줍니다. 글자나 숫자가 아닌 문자가 이어진 곳마다, 그리고 로캘의 범위 구분자에서 텍스트를 나누고, 양쪽을 `parseDate`로 날짜로 읽습니다. 날짜 두 개로 읽히는 나눔이 정확히 하나일 때 범위를 돌려주므로, `10/3/2026 - 10/10/2026`, `Oct 3, 2026 – Oct 10, 2026`, 그리고 `2026-10-03/2026-10-10` 같은 ISO 8601 구간을 읽습니다. `formatDateRange`가 쓰는 대로 날짜마다 연도가 있어야 하므로, `Oct 3 – Oct 10, 2026`에는 `null`을 돌려줍니다. 종료일을 먼저 쓴 범위도 달력에서 고를 때처럼 앞선 날짜를 시작일로 읽습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+
+`Field.DateRangeInput`은 자신의 `locale`로 텍스트를 `parseDateRange`로 읽고 `formatDateRange`로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 범위가 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 범위이거나 비어 있을 때까지 폼은 제출되지 않습니다.
+
+"Last 7 days" 같은 프리셋은 입력에 포함되지 않습니다. 필드 옆에 그 `value`를 정하는 버튼을 두는 [Date range with presets](/recipes/date-range-presets) 레시피를 보세요.
+
+## 단독으로
+
+단독으로 쓰면 `Field.DateRangeInput`이 버튼 없이 필드의 컨트롤입니다. 날짜를 알고 있는 범위에 씁니다.
+
+<Example of={FieldDateRangeInputAlone} block />
+
+범위는 텍스트 입력 옆의 네이티브 텍스트 입력에 담겨, 필드의 `name`이나 입력 자체의 `name`으로, `2026-10-03/2026-10-10` 같은 ISO 8601 구간으로 폼과 함께 전송됩니다. 텍스트 입력은 아무것도 보내지 않고, 네이티브 입력은 화면과 보조 기술에서 숨겨지며 탭 정지점이 아닙니다. `required`는 범위가 없는 폼을 유효하지 않게 합니다. 범위를 담는 네이티브 입력은 없으므로 브라우저는 `min`과 `max`를 검사하지 않습니다. 대신 입력이 검사해서, `min`보다 먼저 시작하거나 `max`보다 늦게 끝나는 범위도 범위가 아닌 텍스트처럼 제출을 막습니다. [Form.Root](/form) 안에서는 빠진 범위가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고, 경계를 벗어난 범위나 읽을 수 없는 텍스트에는 `badInput` 문자열이 나타나며, 포커스는 텍스트 입력으로 갑니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 텍스트 입력에 놓입니다. Calendar의 `isDateDisabled`와, 두 날짜 사이의 모든 날을 고를 수 있는지는 검사에 포함되지 않으므로, 입력한 범위는 직접 확인하고 `Field.Root`에 `customValidity`를 설정하세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 텍스트 입력은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 확정할 때 텍스트를 읽지 못하면 `aria-invalid`가, `required`가 있으면 `aria-required`가 붙습니다. [Field.Picker](/field/picker) 옆에서도 입력이 필드의 컨트롤이고, 선택기의 버튼은 [StringsProvider](/utilities/strings-provider)의 `dateRangePicker` 문자열로 이름이 붙으며 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar` 글리프를 보여 줍니다. 안의 달력은 범위 모드의 [Calendar](/calendar)와 같은 키로 움직이고 같은 안내를 읽어 줍니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 입력과 그 옆의 달력에 같은 범위, 같은 `locale`, `min`, `max`를 주세요.
+
+**주의할 점:** `value`가 있으면 서버는 그 범위를 서버의 로캘로 쓰므로, 서버에서 렌더링할 때는 `locale`을 넘기세요. 경계를 벗어난 범위의 `badInput` 메시지는 경계를 말하지 않습니다. 경계가 중요하면 필드의 [Description](/description)에 적으세요.
+
+## 언제 쓰나요
+
+### Field.DateRangeInput
+
+**언제:** 숙박, 여행, 보고서 기간처럼 폼에서 시작일과 종료일을 정할 때.
+
+**쓰지 않을 때:** 날짜 하나 → [Field.DateInput](/field/date-input). 페이지에 펼쳐 둔 달력에서 고르는 범위 → `mode="range"`인 [Calendar](/calendar). 시작일과 별도의 마감일처럼 따로 정하는 두 날짜 → `Field.DateInput` 두 개.
+
+### formatDateRange
+
+**언제:** 직접 만든 텍스트 입력처럼, 범위를 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** `Oct 3 – 10, 2026`처럼 입력용이 아니라 읽기용인 범위 → `Intl.DateTimeFormat`의 `formatRange`.
+
+### parseDateRange
+
+**언제:** 사람이 입력한 범위를 읽을 때.
+
+**쓰지 않을 때:** 폼이나 API에서 온 `2026-10-03/2026-10-10` 같은 ISO 8601 구간 → `/`에서 나눠 각각 `Temporal.PlainDate.from`으로 읽으세요.
+
+## Props
+
+<PropsTable name="Field.DateRangeInput" />
+
+<PropsTable name="formatDateRange" />
+
+<PropsTable name="parseDateRange" />

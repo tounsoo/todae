@@ -485,7 +485,7 @@ describe('props table', () => {
       required: false,
       default: '"text"',
       descriptions: describe_(
-        'Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate or parseDateTime.',
+        'Native input type. A number uses Field.NumberInput, a time Field.TimeInput, a date Field.DateInput and both Field.DateTimeInput.',
       ),
     },
   ];

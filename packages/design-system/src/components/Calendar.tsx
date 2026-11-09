@@ -1,4 +1,5 @@
 /// <reference lib="esnext.temporal" preserve="true" />
+import { usePicked } from './pickerDone.js';
 import {
   createContext,
   useCallback,
@@ -267,7 +268,7 @@ function Root(rootProps: CalendarRootProps) {
   const [reported, setReported] = useState<string[]>([]);
   // Any other new value, or a mode change, drops what is pending and the reports, and a new
   // value moves the grid to its start unless the Tab stop is on one of its ends, as a value
-  // typed beside Field.DatePicker does.
+  // typed into a Field.DateInput beside it does.
   const [seen, setSeen] = useState({ mode, value });
   const valueChanged = !sameRange(value, seen.value);
   if (mode !== seen.mode || valueChanged) {
@@ -358,6 +359,7 @@ function Root(rootProps: CalendarRootProps) {
     },
     [focused, moveFocus],
   );
+  const picked = usePicked();
   const select = useCallback(
     (date: Temporal.PlainDate) => {
       if (disabled || unavailable(date) || (anchor && !reachable(date))) return;
@@ -374,8 +376,10 @@ function Root(rootProps: CalendarRootProps) {
       setReported((current) => [...current, rangeText(next)].slice(-REPORTED_PICKS));
       setValue(next);
       onValueChange?.(next);
+      // In a Field.Picker, the pick that makes the value tells the field, and closes it.
+      picked?.(true);
     },
-    [anchor, announce, disabled, mode, onValueChange, reachable, setValue, strings.pickEndDate, unavailable],
+    [anchor, announce, disabled, mode, onValueChange, picked, reachable, setValue, strings.pickEndDate, unavailable],
   );
   const shown = useMemo(() => {
     if (!anchor) return value;

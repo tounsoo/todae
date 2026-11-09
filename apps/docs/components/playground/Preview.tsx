@@ -6,6 +6,7 @@ import {
   Badge,
   Breadcrumbs,
   Button,
+  Calendar,
   Card,
   categoryTone,
   Checkbox,
@@ -263,7 +264,13 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                 <Field.Group>
                   <Label.Root htmlFor={ids.start}>{copy.startDate}</Label.Root>
                   <Field.Root id={ids.start}>
-                    <Field.DatePicker value={start} onValueChange={setStart} locale={locale} />
+                    <Field.DateInput value={start} onValueChange={setStart} locale={locale} />
+                    <Field.Picker>
+                      <Calendar.Root aria-label={copy.startDate} value={start} onValueChange={setStart} locale={locale}>
+                        <Calendar.Header />
+                        <Calendar.Grid />
+                      </Calendar.Root>
+                    </Field.Picker>
                   </Field.Root>
                 </Field.Group>
                 <Field.Group>

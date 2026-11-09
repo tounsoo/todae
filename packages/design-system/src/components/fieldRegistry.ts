@@ -3,9 +3,8 @@ import { warnOnce } from '../internal/warnOnce.js';
 
 /**
  * What a control is to its field. A `control` (anything wired with `useField`)
- * owns the field's id, description and focus. A `picker` (the button of
- * Field.ColorPicker, Field.DatePicker and every picker on PickerShell) owns
- * them only while no `control` is in the field.
+ * owns the field's id, description and focus. A `picker` (Field.Picker's
+ * button) owns them only while no `control` is in the field.
  */
 export type FieldControlRole = 'control' | 'picker';
 
@@ -18,6 +17,9 @@ export type FieldControlEntry = {
   /** A picker's: opens or closes its popover, for a press on the shell. */
   toggle?: () => void;
 };
+
+/** What a typed input's value is, which a Field.Picker beside it takes its default name and glyph from. */
+export type FieldPicks = 'date' | 'time' | 'dateTime' | 'dateRange';
 
 /** What a Field.TextInput or Field.Textarea tells Field.Counter. */
 export type TextEntry = { value: string; maxLength?: number };
@@ -86,6 +88,15 @@ export type FieldRegistry = {
   /** Withdraws `owner`'s stepper, if it is still the one published. */
   withdrawStepper: (owner: object) => void;
   stepper: () => StepperEntry | null;
+  /** Publishes, or with null withdraws, what `owner`'s typed input holds. */
+  publishPicks: (owner: object, picks: FieldPicks | null) => void;
+  /** What the typed input that mounted last holds, once committed. */
+  picks: () => FieldPicks | null;
+  /** As seedText: what a typed input rendered with, for a Field.Picker's server snapshot. */
+  seedPicks: (picks: FieldPicks) => void;
+  serverPicks: () => FieldPicks | null;
+  /** The last picker to mount, for a press on a read-only typed input. */
+  lastPicker: () => HTMLElement | null;
   /** Registers a value input of the field; the result unregisters it. */
   addValueInput: (input: HTMLInputElement) => () => void;
   /** The field's first value input in the document, in document order. */
@@ -119,6 +130,14 @@ export function createFieldRegistry(): FieldRegistry {
   // Whether a text was ever committed: from then on, render seeds nothing.
   let committed = false;
   let stepper: { owner: object; entry: StepperEntry } | null = null;
+  const picks = new Map<object, FieldPicks>();
+  let pickSeed: FieldPicks | null = null;
+  let picksCommitted = false;
+  const lastPicks = () => {
+    let last: FieldPicks | null = null;
+    for (const entry of picks.values()) last = entry;
+    return last;
+  };
   const notify = () => {
     for (const listener of listeners) listener();
   };
@@ -202,6 +221,23 @@ export function createFieldRegistry(): FieldRegistry {
       notify();
     },
     stepper: () => stepper?.entry ?? null,
+    publishPicks(owner, entry) {
+      if (!entry) {
+        if (!picks.delete(owner)) return;
+      } else {
+        if (picks.get(owner) === entry) return;
+        picks.set(owner, entry);
+        picksCommitted = true;
+      }
+      pickSeed = null;
+      notify();
+    },
+    picks: lastPicks,
+    seedPicks(entry) {
+      if (!picksCommitted) pickSeed = entry;
+    },
+    serverPicks: () => lastPicks() ?? pickSeed,
+    lastPicker: () => lastOf(controls.values(), 'picker'),
     addValueInput(input) {
       valueInputs.add(input);
       return () => {
@@ -243,6 +279,17 @@ export const hasCounter = (registry: FieldRegistry) => registry.hasCounter();
 export const readStepper = (registry: FieldRegistry) => registry.stepper();
 /** The server snapshot of every yes-or-no question: nothing has registered there. */
 export const serverNo = () => false;
+
+export const readPicks = (registry: FieldRegistry) => registry.picks();
+export const readServerPicks = (registry: FieldRegistry) => registry.serverPicks();
+
+/** Publishes what a typed input holds, for a Field.Picker beside it, and seeds it for the server's render. */
+export function usePublishPicks(registry: FieldRegistry, entry: FieldPicks): void {
+  const [owner] = useState(() => ({}));
+  registry.seedPicks(entry);
+  useLayoutEffect(() => registry.publishPicks(owner, entry), [registry, owner, entry]);
+  useLayoutEffect(() => () => registry.publishPicks(owner, null), [registry, owner]);
+}
 
 /**
  * Publishes a Field.NumberInput's entry, for Field.Increment and

@@ -17,30 +17,48 @@ function entries(ui: ReactNode) {
 // What each control sends is the same as when it carried its value in a hidden input.
 describe('what a form submits', () => {
   it.each([
-    ['a date', <Field.DatePicker value={Temporal.PlainDate.from('2026-10-13')} />, '2026-10-13'],
-    ['no date', <Field.DatePicker value={null} />, ''],
-    ['a date past year 9999', <Field.DatePicker value={Temporal.PlainDate.from('+020261-10-07')} />, '20261-10-07'],
-    ['a time', <Field.TimePicker value={Temporal.PlainTime.from('09:30')} />, '09:30'],
-    ['a time with seconds', <Field.TimePicker value={Temporal.PlainTime.from('09:30:15')} />, '09:30:15'],
-    ['no time', <Field.TimePicker value={null} />, ''],
-    ['a date and time', <Field.DateTimePicker value={Temporal.PlainDateTime.from('2026-10-13T09:30')} />, '2026-10-13T09:30'],
-    ['no date and time', <Field.DateTimePicker value={null} />, ''],
-    ['a color as typed', <Field.ColorPicker value="#3366FF" />, '#3366FF'],
+    ['a date', <Field.DateInput value={Temporal.PlainDate.from('2026-10-13')} onValueChange={noop} />, '2026-10-13'],
+    ['no date', <Field.DateInput value={null} onValueChange={noop} />, ''],
+    ['a date past year 9999', <Field.DateInput value={Temporal.PlainDate.from('+020261-10-07')} onValueChange={noop} />, '20261-10-07'],
+    ['a time', <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={noop} />, '09:30'],
+    ['a time with seconds', <Field.TimeInput value={Temporal.PlainTime.from('09:30:15')} onValueChange={noop} />, '09:30:15'],
+    ['no time', <Field.TimeInput value={null} onValueChange={noop} />, ''],
+    ['a date and time', <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={noop} />, '2026-10-13T09:30'],
+    ['no date and time', <Field.DateTimeInput value={null} onValueChange={noop} />, ''],
+    [
+      'a range',
+      <Field.DateRangeInput value={{ start: Temporal.PlainDate.from('2026-10-03'), end: Temporal.PlainDate.from('2026-10-10') }} onValueChange={noop} />,
+      '2026-10-03/2026-10-10',
+    ],
+    ['no range', <Field.DateRangeInput value={null} onValueChange={noop} />, ''],
   ])('%s', (_, picker, sent) => {
     expect(entries(<Field.Root aria-label="Value" name="v">{picker}</Field.Root>)).toEqual([['v', sent]]);
   });
 
-  it('sends nothing for a picker with no name, or in a disabled field', () => {
+  it('sends nothing for a typed input with no name, or in a disabled field', () => {
     const day = Temporal.PlainDate.from('2026-10-13');
-    expect(entries(<Field.Root aria-label="Value"><Field.DatePicker value={day} /></Field.Root>)).toEqual([]);
+    expect(entries(<Field.Root aria-label="Value"><Field.DateInput value={day} onValueChange={noop} /></Field.Root>)).toEqual([]);
     cleanup();
     expect(
       entries(
         <Field.Root aria-label="Value" name="v" disabled>
-          <Field.DatePicker value={day} />
+          <Field.DateInput value={day} onValueChange={noop} />
         </Field.Root>,
       ),
     ).toEqual([]);
+  });
+
+  it('sends nothing for a Field.Picker, alone or beside a typed input, which sends for both', () => {
+    expect(entries(<Field.Root aria-label="Value" name="v"><Field.Picker /></Field.Root>)).toEqual([]);
+    cleanup();
+    expect(
+      entries(
+        <Field.Root aria-label="Value" name="v">
+          <Field.DateInput value={Temporal.PlainDate.from('2026-10-13')} onValueChange={noop} />
+          <Field.Picker />
+        </Field.Root>,
+      ),
+    ).toEqual([['v', '2026-10-13']]);
   });
 
   it('sends a ChipInput as the text being typed, not its chips', () => {
@@ -103,10 +121,10 @@ describe('the field registry across hydration and remounts', () => {
         <Suspense fallback={null}>
           {gate ? (
             <Gate>
-              <Field.ColorPicker value="#3366ff" />
+              <Field.Picker swatch="#3366ff" />
             </Gate>
           ) : (
-            <Field.ColorPicker value="#3366ff" />
+            <Field.Picker swatch="#3366ff" />
           )}
         </Suspense>
       </Field.Root>

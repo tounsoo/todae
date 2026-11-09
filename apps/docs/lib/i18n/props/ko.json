@@ -899,8 +899,8 @@
       "ko": "셸을 유효하지 않음으로 표시하고 입력에 aria-invalid를 설정합니다."
     },
     "customValidity": {
-      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds.",
-      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 Field.DatePicker처럼 값 입력(value input)에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
+      "en": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DateInput has. An empty string or undefined means the rule holds.",
+      "ko": "브라우저가 검사할 수 없는 규칙의 메시지입니다. 필드의 컨트롤이 네이티브 input, select, textarea일 때 그 컨트롤에, 아니면 Field.DateInput처럼 값 입력(value input)에 setCustomValidity로 설정합니다. 빈 문자열이나 undefined는 규칙이 지켜졌다는 뜻입니다."
     },
     "id": {
       "en": "Input id. Auto-generated when omitted.",
@@ -965,86 +965,6 @@
       "ko": "select에 붙는 선택적 클래스."
     }
   },
-  "Field.ColorPicker": {
-    "value": {
-      "en": "The color as #rrggbb.",
-      "ko": "#rrggbb 형식의 색."
-    },
-    "onValueChange": {
-      "en": "Fires with the new color as #rrggbb while it is dragged or keyed in the picker.",
-      "ko": "선택기에서 끌거나 키로 바꾸는 동안 새 색을 #rrggbb로 받아 호출됩니다."
-    },
-    "open": {
-      "en": "Controlled open state of the picker. Pass with onOpenChange.",
-      "ko": "선택기의 제어 열림 상태. onOpenChange와 함께 전달하세요."
-    },
-    "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때 처음 열림 상태."
-    },
-    "onOpenChange": {
-      "en": "Fires when the picker opens or closes, with why it closed.",
-      "ko": "선택기가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
-    }
-  },
-  "Field.DateTimePicker": {
-    "value": {
-      "en": "The date and time, or null for none.",
-      "ko": "날짜와 시각, 없으면 null."
-    },
-    "onValueChange": {
-      "en": "Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it.",
-      "ko": "고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있으면 그 날짜와 시각을 받아 호출됩니다."
-    },
-    "min": {
-      "en": "The earliest date and time that can be picked. A form with an earlier one is invalid.",
-      "ko": "고를 수 있는 가장 이른 날짜와 시각. 이보다 이른 값이 있으면 폼이 유효하지 않습니다."
-    },
-    "max": {
-      "en": "The latest date and time that can be picked. A form with a later one is invalid.",
-      "ko": "고를 수 있는 가장 늦은 날짜와 시각. 이보다 늦은 값이 있으면 폼이 유효하지 않습니다."
-    },
-    "required": {
-      "en": "A form with no date and time is invalid.",
-      "ko": "날짜와 시각이 없으면 폼이 유효하지 않습니다."
-    },
-    "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다."
-    },
-    "firstDayOfWeek": {
-      "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",
-      "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
-    },
-    "step": {
-      "en": "Minutes between the times in the list, from midnight.",
-      "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
-    },
-    "locale": {
-      "en": "The locale for the button's text, the calendar's names and the times, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼 텍스트, 달력의 이름, 시각의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
-    },
-    "placeholder": {
-      "en": "Shown on the button while there is no date and time, when showValue is true.",
-      "ko": "showValue가 true일 때, 날짜와 시각이 없는 동안 버튼에 보입니다."
-    },
-    "showValue": {
-      "en": "Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them.",
-      "ko": "버튼이 글리프 옆에 날짜와 시각이나 placeholder를 보여 줄지 여부. 날짜와 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
-    },
-    "open": {
-      "en": "Controlled open state of the popover. Pass with onOpenChange.",
-      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
-    },
-    "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때 처음 열림 상태."
-    },
-    "onOpenChange": {
-      "en": "Fires when the popover opens or closes, with why it closed.",
-      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
-    }
-  },
   "Field.Textarea": {
     "value": {
       "en": "Controlled value.",
@@ -1097,8 +1017,8 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker, a range of dates Field.DateRangePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate, parseDateRange or parseDateTime.",
-      "ko": "네이티브 입력 type. 숫자는 Field.NumberInput을, 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜 범위는 Field.DateRangePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 선택기 옆의 텍스트 입력은 parseTime, parseDate, parseDateRange, parseDateTime으로 읽습니다."
+      "en": "Native input type. A number uses Field.NumberInput, a time Field.TimeInput, a date Field.DateInput, a range of dates Field.DateRangeInput and both Field.DateTimeInput.",
+      "ko": "네이티브 입력 type. 숫자는 Field.NumberInput을, 시각은 Field.TimeInput을, 날짜는 Field.DateInput을, 날짜 범위는 Field.DateRangeInput을, 날짜와 시각은 Field.DateTimeInput을 씁니다."
     }
   },
   "Field.NumberInput": {
@@ -1191,56 +1111,6 @@
     "children": {
       "en": "Content that replaces the minus sign. Text in it names the button.",
       "ko": "빼기 기호를 대신할 내용. 텍스트가 있으면 버튼의 이름이 됩니다."
-    }
-  },
-  "Field.TimePicker": {
-    "value": {
-      "en": "The time, or null for none.",
-      "ko": "시각, 없으면 null."
-    },
-    "onValueChange": {
-      "en": "Fires with the time picked in the list.",
-      "ko": "목록에서 고른 시각을 받아 호출됩니다."
-    },
-    "min": {
-      "en": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max.",
-      "ko": "목록이 보여 주는 가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다. max보다 늦으면 min부터 자정을 지나 max까지의 밤을 넘기는 범위가 됩니다."
-    },
-    "max": {
-      "en": "The latest time the list offers. A form with a later time is invalid.",
-      "ko": "목록이 보여 주는 가장 늦은 시각. 이보다 늦은 시각이 있으면 폼이 유효하지 않습니다."
-    },
-    "required": {
-      "en": "A form with no time is invalid.",
-      "ko": "시각이 없으면 폼이 유효하지 않습니다."
-    },
-    "step": {
-      "en": "Minutes between the times in the list, from midnight.",
-      "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
-    },
-    "locale": {
-      "en": "The locale for the times' text, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "시각 텍스트의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
-    },
-    "placeholder": {
-      "en": "Shown on the button while there is no time, when showValue is true.",
-      "ko": "showValue가 true일 때, 시각이 없는 동안 버튼에 보입니다."
-    },
-    "showValue": {
-      "en": "Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.",
-      "ko": "버튼이 글리프 옆에 시각이나 placeholder를 보여 줄지 여부. 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
-    },
-    "open": {
-      "en": "Controlled open state of the list. Pass with onOpenChange.",
-      "ko": "목록의 제어 열림 상태. onOpenChange와 함께 전달하세요."
-    },
-    "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때 처음 열림 상태."
-    },
-    "onOpenChange": {
-      "en": "Fires when the list opens or closes, with why it closed.",
-      "ko": "목록이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Fieldset.Legend": {
@@ -3001,114 +2871,6 @@
       "ko": "모든 파트가 날짜와 달을 바꾸지 못하게 합니다. 비활성화된 Fieldset도 이를 설정합니다."
     }
   },
-  "Field.DatePicker": {
-    "value": {
-      "en": "The date, or null for none.",
-      "ko": "날짜, 없으면 null."
-    },
-    "onValueChange": {
-      "en": "Fires with the date picked in the calendar.",
-      "ko": "달력에서 고른 날짜를 받아 호출됩니다."
-    },
-    "min": {
-      "en": "The earliest date that can be picked. A form with an earlier date is invalid.",
-      "ko": "고를 수 있는 가장 이른 날짜. 이보다 이른 날짜가 있으면 폼이 유효하지 않습니다."
-    },
-    "max": {
-      "en": "The latest date that can be picked. A form with a later date is invalid.",
-      "ko": "고를 수 있는 가장 늦은 날짜. 이보다 늦은 날짜가 있으면 폼이 유효하지 않습니다."
-    },
-    "required": {
-      "en": "A form with no date is invalid.",
-      "ko": "날짜가 없으면 폼이 유효하지 않습니다."
-    },
-    "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다."
-    },
-    "firstDayOfWeek": {
-      "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",
-      "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
-    },
-    "locale": {
-      "en": "The locale for the button's date and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
-    },
-    "placeholder": {
-      "en": "Shown on the button while there is no date, when showValue is true.",
-      "ko": "showValue가 true일 때, 날짜가 없는 동안 버튼에 보입니다."
-    },
-    "showValue": {
-      "en": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
-      "ko": "버튼이 글리프 옆에 날짜나 placeholder를 보여 줄지 여부. 날짜를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
-    },
-    "open": {
-      "en": "Controlled open state of the calendar. Pass with onOpenChange.",
-      "ko": "달력의 제어 열림 상태. onOpenChange와 함께 전달하세요."
-    },
-    "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때 처음 열림 상태."
-    },
-    "onOpenChange": {
-      "en": "Fires when the calendar opens or closes, with why it closed.",
-      "ko": "달력이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
-    }
-  },
-  "Field.DateRangePicker": {
-    "value": {
-      "en": "The range, or null for none.",
-      "ko": "범위, 없으면 null."
-    },
-    "onValueChange": {
-      "en": "Fires with the range picked in the calendar, once its second date is picked.",
-      "ko": "달력에서 두 번째 날짜를 고르면 고른 범위를 받아 호출됩니다."
-    },
-    "min": {
-      "en": "The earliest date that can be picked.",
-      "ko": "고를 수 있는 가장 이른 날짜."
-    },
-    "max": {
-      "en": "The latest date that can be picked.",
-      "ko": "고를 수 있는 가장 늦은 날짜."
-    },
-    "required": {
-      "en": "A form with no range is invalid.",
-      "ko": "범위가 없으면 폼이 유효하지 않습니다."
-    },
-    "isDateDisabled": {
-      "en": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one.",
-      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다. 범위에는 그런 날짜가 들어갈 수 없습니다."
-    },
-    "firstDayOfWeek": {
-      "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",
-      "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
-    },
-    "locale": {
-      "en": "The locale for the button's dates and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
-      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
-    },
-    "placeholder": {
-      "en": "Shown on the button while there is no range, when showValue is true.",
-      "ko": "showValue가 true일 때, 범위가 없는 동안 버튼에 보입니다."
-    },
-    "showValue": {
-      "en": "Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range.",
-      "ko": "버튼이 글리프 옆에 범위나 placeholder를 보여 줄지 여부. 범위를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
-    },
-    "open": {
-      "en": "Controlled open state of the calendar. Pass with onOpenChange.",
-      "ko": "달력의 제어 열림 상태. onOpenChange와 함께 전달하세요."
-    },
-    "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때 처음 열림 상태."
-    },
-    "onOpenChange": {
-      "en": "Fires when the calendar opens or closes, with why it closed.",
-      "ko": "달력이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
-    }
-  },
   "useClipboard": {
     "resetAfter": {
       "en": "Milliseconds before status returns to \"idle\". false keeps it until the next copy or reset().",
@@ -3541,6 +3303,182 @@
     "options.firstDayOfWeek": {
       "en": "The day weeks start on, from 1 for Monday to 7 for Sunday, as Calendar.Root takes it. The locale's own when not set.",
       "ko": "주가 시작하는 요일. Calendar.Root처럼 월요일 1부터 일요일 7까지입니다. 지정하지 않으면 로캘의 첫 요일입니다."
+    }
+  },
+  "Field.DateInput": {
+    "value": {
+      "en": "The date, or null for none.",
+      "ko": "날짜, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires on a person's commit, on blur, Enter or a submit of the form, with the date the text says, read with parseDate, or null for an empty text. Typing alone fires nothing, and text that is no date stays, invalid. Without it the input is read-only.",
+      "ko": "사람이 확정할 때, 즉 포커스를 잃거나 Enter를 누르거나 폼을 제출할 때, 텍스트를 parseDate로 읽은 날짜나 빈 텍스트면 null을 받아 호출됩니다. 입력하는 것만으로는 호출되지 않고, 날짜가 아닌 텍스트는 유효하지 않은 채로 남습니다. 없으면 입력은 읽기 전용입니다."
+    },
+    "min": {
+      "en": "The earliest date. A form with an earlier date is invalid.",
+      "ko": "가장 이른 날짜. 이보다 이른 날짜가 있으면 폼이 유효하지 않습니다."
+    },
+    "max": {
+      "en": "The latest date. A form with a later date is invalid.",
+      "ko": "가장 늦은 날짜. 이보다 늦은 날짜가 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date is invalid.",
+      "ko": "날짜가 없으면 폼이 유효하지 않습니다."
+    },
+    "locale": {
+      "en": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server.",
+      "ko": "텍스트를 읽고 쓰는 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    }
+  },
+  "Field.TimeInput": {
+    "value": {
+      "en": "The time, or null for none.",
+      "ko": "시각, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires on a person's commit, on blur, Enter or a submit of the form, with the time the text says, read with parseTime, or null for an empty text. Typing alone fires nothing, and text that is no time stays, invalid. Without it the input is read-only.",
+      "ko": "사람이 확정할 때, 즉 포커스를 잃거나 Enter를 누르거나 폼을 제출할 때, 텍스트를 parseTime으로 읽은 시각이나 빈 텍스트면 null을 받아 호출됩니다. 입력하는 것만으로는 호출되지 않고, 시각이 아닌 텍스트는 유효하지 않은 채로 남습니다. 없으면 입력은 읽기 전용입니다."
+    },
+    "min": {
+      "en": "The earliest time. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max.",
+      "ko": "가장 이른 시각. 이보다 이른 시각이 있으면 폼이 유효하지 않습니다. max보다 늦으면 min부터 자정을 지나 max까지의 밤을 넘기는 범위가 됩니다."
+    },
+    "max": {
+      "en": "The latest time. A form with a later time is invalid.",
+      "ko": "가장 늦은 시각. 이보다 늦은 시각이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no time is invalid.",
+      "ko": "시각이 없으면 폼이 유효하지 않습니다."
+    },
+    "locale": {
+      "en": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server.",
+      "ko": "텍스트를 읽고 쓰는 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    }
+  },
+  "Field.DateTimeInput": {
+    "value": {
+      "en": "The date and time, or null for none.",
+      "ko": "날짜와 시각, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires on a person's commit, on blur, Enter or a submit of the form, with the date and time the text says, read with parseDateTime, or null for an empty text. Typing alone fires nothing, and text that is no date and time stays, invalid. Without it the input is read-only.",
+      "ko": "사람이 확정할 때, 즉 포커스를 잃거나 Enter를 누르거나 폼을 제출할 때, 텍스트를 parseDateTime으로 읽은 날짜와 시각이나 빈 텍스트면 null을 받아 호출됩니다. 입력하는 것만으로는 호출되지 않고, 날짜와 시각이 아닌 텍스트는 유효하지 않은 채로 남습니다. 없으면 입력은 읽기 전용입니다."
+    },
+    "min": {
+      "en": "The earliest date and time. A form with an earlier one is invalid.",
+      "ko": "가장 이른 날짜와 시각. 이보다 이른 값이 있으면 폼이 유효하지 않습니다."
+    },
+    "max": {
+      "en": "The latest date and time. A form with a later one is invalid.",
+      "ko": "가장 늦은 날짜와 시각. 이보다 늦은 값이 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no date and time is invalid.",
+      "ko": "날짜와 시각이 없으면 폼이 유효하지 않습니다."
+    },
+    "locale": {
+      "en": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server.",
+      "ko": "텍스트를 읽고 쓰는 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    }
+  },
+  "Field.DateRangeInput": {
+    "value": {
+      "en": "The range, or null for none.",
+      "ko": "범위, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires on a person's commit, on blur, Enter or a submit of the form, with the range the text says, read with parseDateRange, or null for an empty text. Typing alone fires nothing, and text that is no range stays, invalid. Without it the input is read-only.",
+      "ko": "사람이 확정할 때, 즉 포커스를 잃거나 Enter를 누르거나 폼을 제출할 때, 텍스트를 parseDateRange로 읽은 범위나 빈 텍스트면 null을 받아 호출됩니다. 입력하는 것만으로는 호출되지 않고, 범위가 아닌 텍스트는 유효하지 않은 채로 남습니다. 없으면 입력은 읽기 전용입니다."
+    },
+    "min": {
+      "en": "The earliest date the range can hold. A form with a range that starts earlier is invalid.",
+      "ko": "범위에 들 수 있는 가장 이른 날짜. 이보다 먼저 시작하는 범위가 있으면 폼이 유효하지 않습니다."
+    },
+    "max": {
+      "en": "The latest date the range can hold. A form with a range that ends later is invalid.",
+      "ko": "범위에 들 수 있는 가장 늦은 날짜. 이보다 늦게 끝나는 범위가 있으면 폼이 유효하지 않습니다."
+    },
+    "required": {
+      "en": "A form with no range is invalid.",
+      "ko": "범위가 없으면 폼이 유효하지 않습니다."
+    },
+    "locale": {
+      "en": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server.",
+      "ko": "텍스트를 읽고 쓰는 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    }
+  },
+  "Field.Picker": {
+    "label": {
+      "en": "The button's name beside another control, and the popover's name: the datePicker, timePicker, dateTimePicker or dateRangePicker string from StringsProvider beside a Field.DateInput, Field.TimeInput, Field.DateTimeInput or Field.DateRangeInput, else colorPicker with swatch and picker without.",
+      "ko": "다른 컨트롤 옆에서의 버튼 이름이자 팝오버의 이름. Field.DateInput, Field.TimeInput, Field.DateTimeInput, Field.DateRangeInput 옆에서는 StringsProvider의 datePicker, timePicker, dateTimePicker, dateRangePicker 문자열이고, 그 밖에는 swatch가 있으면 colorPicker, 없으면 picker입니다."
+    },
+    "glyph": {
+      "en": "What the button shows, from GlyphsProvider by default.",
+      "ko": "버튼에 보이는 것. 기본값은 GlyphsProvider에서 옵니다."
+    },
+    "swatch": {
+      "en": "A CSS color, such as a ColorPicker's value, that makes the button a swatch filled with it, one line of field text tall, in place of a glyph.",
+      "ko": "ColorPicker의 값 같은 CSS 색. 버튼을 글리프 대신 그 색으로 채운, 필드 텍스트 한 줄 높이의 견본으로 만듭니다."
+    },
+    "closeOnPick": {
+      "en": "Whether a pick in a Calendar or OptionList inside closes the popover. Set false for a panel that takes more than one pick, such as a Calendar beside an OptionList of times, and call close once the value is whole.",
+      "ko": "안의 Calendar나 OptionList에서 고르면 팝오버를 닫을지 여부. Calendar 옆에 시각의 OptionList를 둔 것처럼 여러 번 골라야 하는 패널에는 false로 두고, 값이 다 정해지면 close를 호출하세요."
+    },
+    "open": {
+      "en": "Controlled open state of the popover. Pass with onOpenChange.",
+      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때 처음 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires when the popover opens or closes, with why it closed: 'select' for a pick or close, 'escape', 'outside', 'trigger', or 'disabled' when the field becomes disabled.",
+      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다. 고르거나 close를 호출하면 'select', 그 밖에는 'escape', 'outside', 'trigger', 필드가 비활성화되면 'disabled'입니다."
+    },
+    "children": {
+      "en": "What the popover holds, mounted only while it is open. A function gets close, for a panel of your own.",
+      "ko": "팝오버가 담는 것으로, 열려 있는 동안에만 마운트됩니다. 함수면 직접 만든 패널을 위해 close를 받습니다."
+    }
+  },
+  "timeOptions": {
+    "step": {
+      "en": "Minutes between the times, from midnight.",
+      "ko": "자정부터 센, 시각 사이 간격(분)."
+    },
+    "min": {
+      "en": "The earliest time. Later than max, it makes an overnight range, from min through midnight to max, as a native time input reads it.",
+      "ko": "가장 이른 시각. max보다 늦으면 네이티브 시각 입력이 읽는 것처럼 min부터 자정을 지나 max까지의 밤을 넘기는 범위가 됩니다."
+    },
+    "max": {
+      "en": "The latest time.",
+      "ko": "가장 늦은 시각."
+    },
+    "value": {
+      "en": "The picked time, listed in its place when it is in range but between two steps, such as 9:07.",
+      "ko": "고른 시각. 범위 안에 있지만 9:07처럼 두 단계 사이에 있으면 제자리에 나열됩니다."
+    },
+    "locale": {
+      "en": "The locale for the labels, such as \"ko\". The runtime's own when not set.",
+      "ko": "레이블의 로캘, 예: \"ko\". 없으면 런타임의 로캘입니다."
     }
   }
 }

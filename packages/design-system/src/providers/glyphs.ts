@@ -11,7 +11,7 @@ export interface Glyphs {
   close?: ReactNode;
   /** Checkbox, Menu.CheckboxItem, a selected OptionList.Option and a done Steps.Item. Todae draws a check mark. */
   check?: ReactNode;
-  /** Field.Select, Disclosure.Summary, Tree.Label, Nav.Branch, Calendar.Header's month buttons and Conversation.ScrollButton. Point it down: a closed disclosure, tree item or nav branch turns it, and a month button turns it toward its month. The browser's own marker by default; Todae draws one for Tree.Label, Nav.Branch, Calendar.Header and Conversation.ScrollButton. */
+  /** Field.Select, a Field.Picker beside no typed input, Disclosure.Summary, Tree.Label, Nav.Branch, Calendar.Header's month buttons and Conversation.ScrollButton. Point it down: a closed disclosure, tree item or nav branch turns it, and a month button turns it toward its month. The browser's own marker by default; Todae draws one for Tree.Label, Nav.Branch, Calendar.Header and Conversation.ScrollButton. */
   chevron?: ReactNode;
   /** Checkbox.Root while `indeterminate`, in place of the check. Todae draws a horizontal bar. */
   indeterminate?: ReactNode;
@@ -19,9 +19,9 @@ export interface Glyphs {
   sort?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;
-  /** Field.DatePicker's, Field.DateRangePicker's and Field.DateTimePicker's button. Todae draws a calendar. */
+  /** A Field.Picker's button beside a Field.DateInput, Field.DateRangeInput or Field.DateTimeInput. Todae draws a calendar. */
   calendar?: ReactNode;
-  /** Field.TimePicker's button. Todae draws a clock. */
+  /** A Field.Picker's button beside a Field.TimeInput. Todae draws a clock. */
   clock?: ReactNode;
   /** Field.Increment with no content. Todae draws a plus sign. */
   plus?: ReactNode;

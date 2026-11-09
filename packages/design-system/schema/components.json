@@ -1936,42 +1936,6 @@
       ]
     },
     {
-      "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that control is the field's control instead, and the button is named from the colorPicker string. The color goes in a native text input under the field's name unless another control took it, so Field.Root's customValidity and a Form.Root scope see it. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
-      "props": [
-        {
-          "name": "value",
-          "type": "string",
-          "required": true,
-          "description": "The color as #rrggbb."
-        },
-        {
-          "name": "onValueChange",
-          "type": "(value: string) => void",
-          "required": false,
-          "description": "Fires with the new color as #rrggbb while it is dragged or keyed in the picker."
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": false,
-          "description": "Controlled open state of the picker. Pass with onOpenChange."
-        },
-        {
-          "name": "defaultOpen",
-          "type": "boolean",
-          "required": false,
-          "description": "Initial open state when uncontrolled."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'disabled') => void",
-          "required": false,
-          "description": "Fires when the picker opens or closes, with why it closed."
-        }
-      ]
-    },
-    {
       "name": "Field.Counter",
       "description": "Live character count for Field.TextInput or Field.Textarea. Its screen reader text comes from the characterLimit, charactersLeft and characterLimitReached strings of StringsProvider.",
       "props": [
@@ -1990,8 +1954,8 @@
       ]
     },
     {
-      "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that control is the field's control instead, and the button is named from the datePicker string. The date goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "name": "Field.DateInput",
+      "description": "A text input for a date, typed freely in the locale's own numbers or words. It reads the text on blur, Enter and a submit of its form, rewrites it and calls onValueChange; text that is no date stays and blocks a submit. The text is written with formatDate. The date goes in a native input the browser validates, sent under the field's name as HTML writes a date, such as 2026-10-13, so required, min and max block a submit and Form.Root shows them. Beside a Field.Picker, a press on it while read-only opens the picker. It takes native input attributes except type, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
       "props": [
         {
           "name": "value",
@@ -2001,21 +1965,21 @@
         },
         {
           "name": "onValueChange",
-          "type": "(value: Temporal.PlainDate) => void",
+          "type": "(value: Temporal.PlainDate | null) => void",
           "required": false,
-          "description": "Fires with the date picked in the calendar."
+          "description": "Fires on a person's commit, on blur, Enter or a submit of the form, with the date the text says, read with parseDate, or null for an empty text. Typing alone fires nothing, and text that is no date stays, invalid. Without it the input is read-only."
         },
         {
           "name": "min",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The earliest date that can be picked. A form with an earlier date is invalid."
+          "description": "The earliest date. A form with an earlier date is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The latest date that can be picked. A form with a later date is invalid."
+          "description": "The latest date. A form with a later date is invalid."
         },
         {
           "name": "required",
@@ -2024,59 +1988,22 @@
           "description": "A form with no date is invalid."
         },
         {
-          "name": "isDateDisabled",
-          "type": "(date: Temporal.PlainDate) => boolean",
-          "required": false,
-          "description": "Returns true for a date that cannot be picked, such as a holiday."
-        },
-        {
-          "name": "firstDayOfWeek",
-          "type": "1 | 2 | 3 | 4 | 5 | 6 | 7",
-          "required": false,
-          "description": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7."
-        },
-        {
           "name": "locale",
           "type": "string",
           "required": false,
-          "description": "The locale for the button's date and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+          "description": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server."
         },
         {
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no date, when showValue is true."
-        },
-        {
-          "name": "showValue",
-          "type": "boolean",
-          "required": false,
-          "description": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
-          "default": "true"
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": false,
-          "description": "Controlled open state of the calendar. Pass with onOpenChange."
-        },
-        {
-          "name": "defaultOpen",
-          "type": "boolean",
-          "required": false,
-          "description": "Initial open state when uncontrolled."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
-          "required": false,
-          "description": "Fires when the calendar opens or closes, with why it closed."
+          "description": "Native placeholder."
         }
       ]
     },
     {
-      "name": "Field.DateRangePicker",
-      "description": "A button that opens a Calendar in range mode in a popover, which closes once the range's second date is picked. On its own it is the field's control, shows the range, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the range in, that control is the field's control instead, and the button is named from the dateRangePicker string. With showValue set to false, the button shows only a calendar glyph. The range goes in a native text input under the field's name unless another control took it, as an ISO 8601 interval such as 2026-10-03/2026-10-10, so required blocks a submit and Form.Root shows it. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "name": "Field.DateRangeInput",
+      "description": "A text input for a range of dates, typed freely as two dates in the locale's own way. It reads the text on blur, Enter and a submit of its form, rewrites it and calls onValueChange, with the earlier date as start; text that is no range stays and blocks a submit. The text is written with formatDateRange. The range goes in a native input the browser validates, sent under the field's name as an ISO 8601 interval, such as 2026-10-03/2026-10-10, so required, min and max block a submit and Form.Root shows them. Beside a Field.Picker, a press on it while read-only opens the picker. It takes native input attributes except type, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
       "props": [
         {
           "name": "value",
@@ -2086,21 +2013,21 @@
         },
         {
           "name": "onValueChange",
-          "type": "(value: DateRange) => void",
+          "type": "(value: DateRange | null) => void",
           "required": false,
-          "description": "Fires with the range picked in the calendar, once its second date is picked."
+          "description": "Fires on a person's commit, on blur, Enter or a submit of the form, with the range the text says, read with parseDateRange, or null for an empty text. Typing alone fires nothing, and text that is no range stays, invalid. Without it the input is read-only."
         },
         {
           "name": "min",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The earliest date that can be picked."
+          "description": "The earliest date the range can hold. A form with a range that starts earlier is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDate",
           "required": false,
-          "description": "The latest date that can be picked."
+          "description": "The latest date the range can hold. A form with a range that ends later is invalid."
         },
         {
           "name": "required",
@@ -2109,59 +2036,22 @@
           "description": "A form with no range is invalid."
         },
         {
-          "name": "isDateDisabled",
-          "type": "(date: Temporal.PlainDate) => boolean",
-          "required": false,
-          "description": "Returns true for a date that cannot be picked, such as a holiday. A range can't hold one."
-        },
-        {
-          "name": "firstDayOfWeek",
-          "type": "1 | 2 | 3 | 4 | 5 | 6 | 7",
-          "required": false,
-          "description": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7."
-        },
-        {
           "name": "locale",
           "type": "string",
           "required": false,
-          "description": "The locale for the button's dates and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+          "description": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server."
         },
         {
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no range, when showValue is true."
-        },
-        {
-          "name": "showValue",
-          "type": "boolean",
-          "required": false,
-          "description": "Whether the button shows the range, or the placeholder, beside its glyph. Set it to false beside a text input that shows the range.",
-          "default": "true"
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": false,
-          "description": "Controlled open state of the calendar. Pass with onOpenChange."
-        },
-        {
-          "name": "defaultOpen",
-          "type": "boolean",
-          "required": false,
-          "description": "Initial open state when uncontrolled."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
-          "required": false,
-          "description": "Fires when the calendar opens or closes, with why it closed."
+          "description": "Native placeholder."
         }
       ]
     },
     {
-      "name": "Field.DateTimePicker",
-      "description": "A button that opens a Calendar and a list of times in a popover, side by side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking a time while the calendar holds a date it offers closes the popover. On its own it is the field's control, shows the date and time, and a press elsewhere in the field opens the popover. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date and time in, that control is the field's control instead, and the button is named from the dateTimePicker string. The date and time go in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "name": "Field.DateTimeInput",
+      "description": "A text input for a date and a time of day, typed freely in the locale's own way. It reads the text on blur, Enter and a submit of its form, rewrites it and calls onValueChange; text that is no date and time stays and blocks a submit. The text is written with formatDateTime. The date and time goes in a native input the browser validates, sent under the field's name as HTML writes one, such as 2026-10-13T21:30, so required, min and max block a submit and Form.Root shows them. Beside a Field.Picker, a press on it while read-only opens the picker. It takes native input attributes except type, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
       "props": [
         {
           "name": "value",
@@ -2171,21 +2061,21 @@
         },
         {
           "name": "onValueChange",
-          "type": "(value: Temporal.PlainDateTime) => void",
+          "type": "(value: Temporal.PlainDateTime | null) => void",
           "required": false,
-          "description": "Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it."
+          "description": "Fires on a person's commit, on blur, Enter or a submit of the form, with the date and time the text says, read with parseDateTime, or null for an empty text. Typing alone fires nothing, and text that is no date and time stays, invalid. Without it the input is read-only."
         },
         {
           "name": "min",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The earliest date and time that can be picked. A form with an earlier one is invalid."
+          "description": "The earliest date and time. A form with an earlier one is invalid."
         },
         {
           "name": "max",
           "type": "Temporal.PlainDateTime",
           "required": false,
-          "description": "The latest date and time that can be picked. A form with a later one is invalid."
+          "description": "The latest date and time. A form with a later one is invalid."
         },
         {
           "name": "required",
@@ -2194,60 +2084,16 @@
           "description": "A form with no date and time is invalid."
         },
         {
-          "name": "isDateDisabled",
-          "type": "(date: Temporal.PlainDate) => boolean",
-          "required": false,
-          "description": "Returns true for a date that cannot be picked, such as a holiday."
-        },
-        {
-          "name": "firstDayOfWeek",
-          "type": "1 | 2 | 3 | 4 | 5 | 6 | 7",
-          "required": false,
-          "description": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7."
-        },
-        {
-          "name": "step",
-          "type": "number",
-          "required": false,
-          "description": "Minutes between the times in the list, from midnight.",
-          "default": "30"
-        },
-        {
           "name": "locale",
           "type": "string",
           "required": false,
-          "description": "The locale for the button's text, the calendar's names and the times, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+          "description": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server."
         },
         {
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no date and time, when showValue is true."
-        },
-        {
-          "name": "showValue",
-          "type": "boolean",
-          "required": false,
-          "description": "Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them.",
-          "default": "true"
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": false,
-          "description": "Controlled open state of the popover. Pass with onOpenChange."
-        },
-        {
-          "name": "defaultOpen",
-          "type": "boolean",
-          "required": false,
-          "description": "Initial open state when uncontrolled."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
-          "required": false,
-          "description": "Fires when the popover opens or closes, with why it closed."
+          "description": "Native placeholder."
         }
       ]
     },
@@ -2444,6 +2290,63 @@
       ]
     },
     {
+      "name": "Field.Picker",
+      "description": "A button in a field that opens a popover around a panel, such as a Calendar.Root, an OptionList.Root or a ColorPicker.Root, and closes it once a pick in a Calendar or OptionList makes the value. Pass the panel the same value as the typed input beside it, such as a Field.DateInput, which shows and sends it. Beside another control, that control is the field's and the button is named label; alone, the button is the field's control and sends nothing. Alone, a press elsewhere in the field opens it; beside a typed input, such a press focuses the input, and a press on a read-only typed input opens it. The popover is a dialog that Escape and a press outside close, with focus back on the button. It takes native button attributes except type, value, defaultValue, onChange, color and children.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "The button's name beside another control, and the popover's name: the datePicker, timePicker, dateTimePicker or dateRangePicker string from StringsProvider beside a Field.DateInput, Field.TimeInput, Field.DateTimeInput or Field.DateRangeInput, else colorPicker with swatch and picker without.",
+          "default": "from the typed input beside it"
+        },
+        {
+          "name": "glyph",
+          "type": "ReactNode",
+          "required": false,
+          "description": "What the button shows, from GlyphsProvider by default.",
+          "default": "a calendar beside a date input, a clock beside a time input, else a chevron"
+        },
+        {
+          "name": "swatch",
+          "type": "string",
+          "required": false,
+          "description": "A CSS color, such as a ColorPicker's value, that makes the button a swatch filled with it, one line of field text tall, in place of a glyph."
+        },
+        {
+          "name": "closeOnPick",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether a pick in a Calendar or OptionList inside closes the popover. Set false for a panel that takes more than one pick, such as a Calendar beside an OptionList of times, and call close once the value is whole.",
+          "default": "true"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state of the popover. Pass with onOpenChange."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: FieldPickerCloseReason) => void",
+          "required": false,
+          "description": "Fires when the popover opens or closes, with why it closed: 'select' for a pick or close, 'escape', 'outside', 'trigger', or 'disabled' when the field becomes disabled."
+        },
+        {
+          "name": "children",
+          "type": "ReactNode | ((controls: { close: () => void }) => ReactNode)",
+          "required": false,
+          "description": "What the popover holds, mounted only while it is open. A function gets close, for a panel of your own."
+        }
+      ]
+    },
+    {
       "name": "Field.Root",
       "description": "Field chrome only. No value. Children render in source order.",
       "props": [
@@ -2465,7 +2368,7 @@
           "name": "customValidity",
           "type": "string",
           "required": false,
-          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DatePicker has. An empty string or undefined means the rule holds."
+          "description": "A message for a rule the browser cannot check, set with setCustomValidity on the field's control when that is a native input, select or textarea, else on its value input, as a Field.DateInput has. An empty string or undefined means the rule holds."
         },
         {
           "name": "id",
@@ -2641,14 +2544,14 @@
           "name": "type",
           "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
           "required": false,
-          "description": "Native input type. A number uses Field.NumberInput, a time Field.TimePicker, a date Field.DatePicker, a range of dates Field.DateRangePicker and both Field.DateTimePicker, with a text input beside any of the pickers read by parseTime, parseDate, parseDateRange or parseDateTime.",
+          "description": "Native input type. A number uses Field.NumberInput, a time Field.TimeInput, a date Field.DateInput, a range of dates Field.DateRangeInput and both Field.DateTimeInput.",
           "default": "\"text\""
         }
       ]
     },
     {
-      "name": "Field.TimePicker",
-      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker, Field.DateRangePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the time in, that control is the field's control instead, and the button is named from the timePicker string. The time goes in a native input the browser validates, so required, min and max block a submit and Form.Root shows them. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "name": "Field.TimeInput",
+      "description": "A text input for a time of day, typed freely in the locale's own way, such as 9:30 pm. It reads the text on blur, Enter and a submit of its form, rewrites it and calls onValueChange; text that is no time stays and blocks a submit. The text is written with formatTime. The time goes in a native input the browser validates, sent under the field's name as HTML writes a time, such as 21:30, so required, min and max block a submit and Form.Root shows them. Beside a Field.Picker, a press on it while read-only opens the picker. It takes native input attributes except type, value, defaultValue, onChange, min, max, step, disabled, required, pattern, maxLength, minLength, list and multiple.",
       "props": [
         {
           "name": "value",
@@ -2658,21 +2561,21 @@
         },
         {
           "name": "onValueChange",
-          "type": "(value: Temporal.PlainTime) => void",
+          "type": "(value: Temporal.PlainTime | null) => void",
           "required": false,
-          "description": "Fires with the time picked in the list."
+          "description": "Fires on a person's commit, on blur, Enter or a submit of the form, with the time the text says, read with parseTime, or null for an empty text. Typing alone fires nothing, and text that is no time stays, invalid. Without it the input is read-only."
         },
         {
           "name": "min",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The earliest time the list offers. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max."
+          "description": "The earliest time. A form with an earlier time is invalid. Later than max, it makes an overnight range, from min through midnight to max."
         },
         {
           "name": "max",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "The latest time the list offers. A form with a later time is invalid."
+          "description": "The latest time. A form with a later time is invalid."
         },
         {
           "name": "required",
@@ -2681,48 +2584,16 @@
           "description": "A form with no time is invalid."
         },
         {
-          "name": "step",
-          "type": "number",
-          "required": false,
-          "description": "Minutes between the times in the list, from midnight.",
-          "default": "30"
-        },
-        {
           "name": "locale",
           "type": "string",
           "required": false,
-          "description": "The locale for the times' text, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+          "description": "The locale the text is read and written in, such as \"ko\". The browser's own when not set, so pass it when the input renders on a server."
         },
         {
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no time, when showValue is true."
-        },
-        {
-          "name": "showValue",
-          "type": "boolean",
-          "required": false,
-          "description": "Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.",
-          "default": "true"
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": false,
-          "description": "Controlled open state of the list. Pass with onOpenChange."
-        },
-        {
-          "name": "defaultOpen",
-          "type": "boolean",
-          "required": false,
-          "description": "Initial open state when uncontrolled."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
-          "required": false,
-          "description": "Fires when the list opens or closes, with why it closed."
+          "description": "Native placeholder."
         }
       ]
     },
@@ -5118,6 +4989,43 @@
           "type": "ThemeOverrideValue",
           "required": true,
           "description": "A value of the key's type."
+        }
+      ]
+    },
+    {
+      "name": "timeOptions",
+      "description": "The times for an OptionList.Root of times: every step minutes from midnight between min and max, with value among them when it is in range, each as { value, label, time }: an ISO value to key an OptionList.Option, a label in the locale and the Temporal.PlainTime.",
+      "props": [
+        {
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "Minutes between the times, from midnight.",
+          "default": "30"
+        },
+        {
+          "name": "min",
+          "type": "Temporal.PlainTime",
+          "required": false,
+          "description": "The earliest time. Later than max, it makes an overnight range, from min through midnight to max, as a native time input reads it."
+        },
+        {
+          "name": "max",
+          "type": "Temporal.PlainTime",
+          "required": false,
+          "description": "The latest time."
+        },
+        {
+          "name": "value",
+          "type": "Temporal.PlainTime | null",
+          "required": false,
+          "description": "The picked time, listed in its place when it is in range but between two steps, such as 9:07."
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale for the labels, such as \"ko\". The runtime's own when not set."
         }
       ]
     },

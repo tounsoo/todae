@@ -1,3 +1,4 @@
+import { usePicked } from './pickerDone.js';
 import {
   Children,
   Fragment,
@@ -219,6 +220,7 @@ function OptionListRoot(props: OptionListRootProps) {
         : (enabled[0] ?? null)
       : uncontrolledActive;
 
+  const picked = usePicked();
   const select = useCallback(
     (value: string, fromPointer = false) => {
       // Click, Enter and Space all come here.
@@ -230,15 +232,19 @@ function OptionListRoot(props: OptionListRootProps) {
           props.onValueChange(
             props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
           );
+          // In a Field.Picker, a pick of many tells the field and leaves it open.
+          picked?.(false);
         } else {
           props.onValueChange(value);
+          // In a Field.Picker, a single pick makes the value, tells the field and closes it.
+          picked?.(true);
         }
       }
       setActive(value);
       setHighlighted(fromPointer ? null : value);
       onActiveValueChange?.(value);
     },
-    [onActiveValueChange, props],
+    [onActiveValueChange, picked, props],
   );
 
   function move(next: string | undefined) {

@@ -34,11 +34,11 @@ import { Decrement, Increment } from './Field.StepButton.js';
 import { Textarea } from './Field.Textarea.js';
 import { ChipInput } from './Field.ChipInput.js';
 import { Select } from './Field.Select.js';
-import { ColorPicker } from './Field.ColorPicker.js';
-import { DatePicker } from './Field.DatePicker.js';
-import { TimePicker } from './Field.TimePicker.js';
-import { DateTimePicker } from './Field.DateTimePicker.js';
-import { DateRangePicker } from './Field.DateRangePicker.js';
+import { DateInput } from './Field.DateInput.js';
+import { TimeInput } from './Field.TimeInput.js';
+import { DateTimeInput } from './Field.DateTimeInput.js';
+import { DateRangeInput } from './Field.DateRangeInput.js';
+import { Picker } from './Field.Picker.js';
 import { Counter } from './Field.Counter.js';
 
 /**
@@ -90,10 +90,16 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-// The control whose picker a press beside it opens: a closed select, or a picker part, which registered a toggle.
+// The control whose picker a press beside it opens: a closed select, a picker part, which registered a toggle, or the Field.Picker beside a read-only typed input.
 function pickerOf(control: HTMLElement | undefined, registry: FieldRegistry): HTMLElement | null {
   if (control instanceof HTMLSelectElement) return isOpen(control) ? null : control;
-  return control && registry.toggleFor(control) ? control : null;
+  if (control && registry.toggleFor(control)) return control;
+  return control && readOnlyTyped(control) ? registry.lastPicker() : null;
+}
+
+// A typed input that can't be typed in, such as a date that is only picked: a press on it opens the picker beside it.
+function readOnlyTyped(node: EventTarget | null): node is HTMLInputElement {
+  return node instanceof HTMLInputElement && node.readOnly && node.hasAttribute('data-todae-typed-input');
 }
 
 // Whether a select's picker is showing. A browser without `:open` throws,
@@ -114,7 +120,7 @@ function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
   return false;
 }
 
-// A press in a part's own popover, such as Field.ColorPicker's, is not a press on the shell.
+// A press in a part's own popover, such as Field.Picker's, is not a press on the shell.
 function inOwnPopover(target: EventTarget | null, shell: HTMLElement): boolean {
   const popover = target instanceof Element ? target.closest('[popover]') : null;
   return popover != null && shell.contains(popover);
@@ -201,6 +207,11 @@ function Root({
       }
       return;
     }
+    if (readOnlyTyped(event.target) && !inAdornment(event.target, event.currentTarget)) {
+      // Focus goes to the input as for any press; its click opens the picker.
+      pendingPicker.current = registry.lastPicker();
+      return;
+    }
     if (isInteractiveTarget(event.target)) return;
     if (inOwnPopover(event.target, event.currentTarget)) return;
     event.preventDefault();
@@ -213,10 +224,10 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select, color, date or time picker acts as a press on the control
-    // would. The picker opens on click: one opened now would close again as
+    // A press beside a select, a Field.Picker or a read-only typed input with a picker acts as a
+    // press on the control would. The picker opens on click: one opened now would close again as
     // the press goes on. A select's open picker closes on this press, which
-    // must not open it again; Field.ColorPicker's toggles on the click.
+    // must not open it again; Field.Picker's toggles on the click.
     pendingPicker.current = pickerOf(control, registry);
   }
 
@@ -225,7 +236,8 @@ function Root({
     pendingPicker.current = null;
     // Only the click that ends this press: one from the keyboard or from
     // assistive technology has no press (detail 0) and opens nothing.
-    if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
+    if (!picker?.isConnected || event.detail === 0) return;
+    if (isInteractiveTarget(event.target) && !readOnlyTyped(event.target)) return;
     if (!(picker instanceof HTMLSelectElement)) {
       registry.toggleFor(picker)?.();
       return;
@@ -271,11 +283,11 @@ export type { FieldTextareaHighlight } from './TextareaHighlights.js';
 export type { FieldTextareaProps } from './Field.Textarea.js';
 export type { FieldChipInputProps } from './Field.ChipInput.js';
 export type { FieldSelectProps } from './Field.Select.js';
-export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field.ColorPicker.js';
-export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker.js';
-export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker.js';
-export type { FieldDateTimePickerCloseReason, FieldDateTimePickerProps } from './Field.DateTimePicker.js';
-export type { FieldDateRangePickerCloseReason, FieldDateRangePickerProps } from './Field.DateRangePicker.js';
+export type { FieldDateInputProps } from './Field.DateInput.js';
+export type { FieldTimeInputProps } from './Field.TimeInput.js';
+export type { FieldDateTimeInputProps } from './Field.DateTimeInput.js';
+export type { FieldDateRangeInputProps } from './Field.DateRangeInput.js';
+export type { FieldPickerCloseReason, FieldPickerControls, FieldPickerProps } from './Field.Picker.js';
 export type { FieldCounterProps } from './Field.Counter.js';
 
 export type FieldRowProps = {
@@ -322,11 +334,11 @@ export const Field = {
   Textarea,
   ChipInput,
   Select,
-  ColorPicker,
-  DatePicker,
-  TimePicker,
-  DateTimePicker,
-  DateRangePicker,
+  DateInput,
+  TimeInput,
+  DateTimeInput,
+  DateRangeInput,
+  Picker,
   Icon,
   Affix,
   Increment,

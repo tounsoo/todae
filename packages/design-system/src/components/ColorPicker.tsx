@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
+import { usePicked } from './pickerDone.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color.js';
@@ -86,12 +87,15 @@ function Root({
   // A value from outside becomes the color the picker last showed, so a gray
   // after it keeps its hue rather than an older one.
   if (hsv !== last) setLast(hsv);
+  const picked = usePicked();
   const change = useCallback(
     (next: Hsv) => {
       setLast(next);
       setValue(hsvToHex(next));
+      // In a Field.Picker, a person's change tells the field and leaves it open.
+      picked?.(false);
     },
-    [setValue],
+    [picked, setValue],
   );
   const ctx = useMemo(() => ({ hsv, hex: hsvToHex(hsv), disabled, change }), [hsv, disabled, change]);
   return (

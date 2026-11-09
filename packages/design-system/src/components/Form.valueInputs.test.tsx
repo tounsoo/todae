@@ -2,7 +2,17 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getCandidates, getTabbables } from '../overlay/tabbables.js';
-import { ErrorMessage, Field, Form, Label, useField, type DateRange, type FieldControlUserProps } from '../index.js';
+import {
+  Calendar,
+  ColorPicker,
+  ErrorMessage,
+  Field,
+  Form,
+  Label,
+  useField,
+  type DateRange,
+  type FieldControlUserProps,
+} from '../index.js';
 import { mount, settle, submit } from '../test/form.js';
 import { focusTargetFor } from './validity.js';
 import { resetWarnOnce } from '../internal/warnOnce.js';
@@ -27,7 +37,7 @@ function DateField({
     <Field.Group>
       <Label.Root htmlFor="start">Start date</Label.Root>
       <Field.Root id="start" name="start">
-        <Field.DatePicker value={value} onValueChange={setValue} min={min} max={max} required={required} locale="en-US" />
+        <Field.DateInput value={value} onValueChange={setValue} min={min} max={max} required={required} locale="en-US" />
       </Field.Root>
       <ErrorMessage.Root />
     </Field.Group>
@@ -46,8 +56,8 @@ function Page({ summary, children }: { summary?: boolean; children: React.ReactN
 
 const valueInput = () => document.querySelector<HTMLInputElement>('[data-todae-value-input]')!;
 
-describe('a required date picker in Form.Root', () => {
-  it('blocks a submit, shows the required message, and focuses the picker button', async () => {
+describe('a required Field.DateInput in Form.Root', () => {
+  it('blocks a submit, shows the required message, and focuses the text input', async () => {
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
     await mount(
       <Form.Root data-testid="form" onSubmit={onSubmit}>
@@ -57,13 +67,13 @@ describe('a required date picker in Form.Root', () => {
     await submit(screen.getByTestId('form'));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText('This field is required')).toBeTruthy();
-    const button = screen.getByRole('button', { name: 'Start date' });
+    const button = screen.getByRole('textbox', { name: 'Start date' });
     expect(document.activeElement).toBe(button);
     expect(button.getAttribute('aria-invalid')).toBe('true');
     expect(button.getAttribute('aria-describedby')).toContain(screen.getByText('This field is required').id);
   });
 
-  it('lists a row in the summary whose link targets the button and focuses it', async () => {
+  it('lists a row in the summary whose link targets the text input and focuses it', async () => {
     await mount(
       <Page summary>
         <DateField required />
@@ -78,7 +88,7 @@ describe('a required date picker in Form.Root', () => {
     await submit(screen.getByTestId('form'));
     const summary = screen.getByRole('group', { name: '2 problems to fix' });
     expect(document.activeElement).toBe(summary);
-    const button = screen.getByRole('button', { name: 'Start date' });
+    const button = screen.getByRole('textbox', { name: 'Start date' });
     const link = screen.getByRole('link', { name: 'Start date' });
     expect(link.getAttribute('href')).toBe(`#${button.id}`);
     await act(async () => {
@@ -109,42 +119,42 @@ describe('a required date picker in Form.Root', () => {
     expect([valueInput().min, valueInput().max]).toEqual(['2026-10-01', '2026-10-31']);
   });
 
-  it('names a min that is passed in the date style of the picker', async () => {
+  it('names a min that is passed as the input writes a date', async () => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <DateField initial={day('2026-10-01')} min={day('2026-10-13')} />
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter Oct 13, 2026 or later')).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(screen.getByText('Enter 10/13/2026 or later')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 
-  it('names a max that is passed in the date style of the picker', async () => {
+  it('names a max that is passed as the input writes a date', async () => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <DateField initial={day('2026-11-01')} max={day('2026-10-31')} />
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter Oct 31, 2026 or earlier')).toBeTruthy();
+    expect(screen.getByText('Enter 10/31/2026 or earlier')).toBeTruthy();
   });
 });
 
-describe('required on the other pickers', () => {
-  it('blocks a submit on a time picker, and on a date and time picker', async () => {
+describe('required on the other typed inputs', () => {
+  it('blocks a submit on a time input, and on a date and time input', async () => {
     await mount(
       <Page summary>
         <Field.Group>
           <Label.Root htmlFor="at">At</Label.Root>
           <Field.Root id="at" name="at">
-            <Field.TimePicker value={null} required />
+            <Field.TimeInput value={null} onValueChange={() => undefined} required />
           </Field.Root>
         </Field.Group>
         <Field.Group>
           <Label.Root htmlFor="when">When</Label.Root>
           <Field.Root id="when" name="when">
-            <Field.DateTimePicker value={null} required />
+            <Field.DateTimeInput value={null} onValueChange={() => undefined} required />
           </Field.Root>
         </Field.Group>
       </Page>,
@@ -157,13 +167,13 @@ describe('required on the other pickers', () => {
     ]);
   });
 
-  it('names a time and a date and time bound in the picker style', async () => {
+  it('names a time bound as the input writes a time', async () => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <Field.Group>
           <Label.Root htmlFor="at">At</Label.Root>
           <Field.Root id="at" name="at">
-            <Field.TimePicker value={Temporal.PlainTime.from('08:00')} min={Temporal.PlainTime.from('09:30')} locale="en-US" />
+            <Field.TimeInput value={Temporal.PlainTime.from('08:00')} onValueChange={() => undefined} min={Temporal.PlainTime.from('09:30')} locale="en-US" />
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>
@@ -256,11 +266,11 @@ describe('value inputs', () => {
     const form = screen.getByTestId('form');
     expect(form.querySelectorAll('[data-todae-value-input]')).toHaveLength(2);
     for (const el of [...getTabbables(form), ...getCandidates(form)]) expect(el.hasAttribute('data-todae-value-input')).toBe(false);
-    expect(getTabbables(form).map((el) => el.tagName)).toEqual(['BUTTON', 'INPUT']);
+    expect(getTabbables(form).map((el) => el.tagName)).toEqual(['INPUT', 'INPUT']);
     // A press on the shell's padding focuses the field's control.
-    const shell = screen.getByRole('button', { name: 'Start date' }).parentElement!;
+    const shell = screen.getByRole('textbox', { name: 'Start date' }).parentElement!;
     fireEvent.mouseDown(shell);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 
   it('are hidden from assistive technology, and validate like any native input', async () => {
@@ -274,7 +284,7 @@ describe('value inputs', () => {
     expect(el.tabIndex).toBe(-1);
     expect(el.readOnly).toBe(false);
     expect(el.willValidate).toBe(true);
-    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getAllByRole('textbox')).toEqual([screen.getByRole('textbox', { name: 'Start date' })]);
   });
 
   it('map to the field control for focus', async () => {
@@ -283,16 +293,16 @@ describe('value inputs', () => {
         <DateField />
       </Form.Root>,
     );
-    expect(focusTargetFor(valueInput())).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(focusTargetFor(valueInput())).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 
-  it('are disabled with the field, and the problem of a disabled picker stays quiet', async () => {
+  it('are disabled with the field, and the problem of a disabled input stays quiet', async () => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <Field.Group>
           <Label.Root htmlFor="start">Start date</Label.Root>
           <Field.Root id="start" name="start" disabled>
-            <Field.DatePicker value={null} required />
+            <Field.DateInput value={null} onValueChange={() => undefined} required />
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>
@@ -462,7 +472,7 @@ describe('one decision for disabled, form and name', () => {
   });
 });
 
-describe('customValidity on a Field.Root with a value input', () => {
+describe('customValidity on a Field.Root with a typed input', () => {
   it('blocks a submit and shows the message', async () => {
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
     await mount(
@@ -470,34 +480,36 @@ describe('customValidity on a Field.Root with a value input', () => {
         <Field.Group>
           <Label.Root htmlFor="start">Start date</Label.Root>
           <Field.Root id="start" name="start" customValidity="Pick a weekday">
-            <Field.DatePicker value={day('2026-10-10')} locale="en-US" />
+            <Field.DateInput value={day('2026-10-10')} onValueChange={() => undefined} locale="en-US" />
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>
       </Form.Root>,
     );
-    expect(valueInput().validationMessage).toBe('Pick a weekday');
+    // The field's control is the native text input, so the message is on it, not on the value input.
+    expect((screen.getByRole('textbox', { name: 'Start date' }) as HTMLInputElement).validationMessage).toBe('Pick a weekday');
+    expect(valueInput().validationMessage).toBe('');
     await submit(screen.getByTestId('form'));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText('Pick a weekday')).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 });
 
 describe('a bound beyond year 9999', () => {
-  it('is named as the picker shows it, not as the browser text', async () => {
+  it('is named as the input writes it, not as the browser text', async () => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <DateField initial={day('+020261-10-01')} min={day('+020261-10-07')} />
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(screen.getByText('Enter Oct 7, 20261 or later')).toBeTruthy();
+    expect(screen.getByText('Enter 10/7/20261 or later')).toBeTruthy();
   });
 });
 
-describe('a required date range picker in Form.Root', () => {
-  it('blocks a submit with no range and focuses the picker button, and sends a range as an ISO 8601 interval', async () => {
+describe('a required Field.DateRangeInput in Form.Root', () => {
+  it('blocks a submit with no range and focuses the text input, and sends a range as an ISO 8601 interval', async () => {
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
     function Stay() {
       const [value, setValue] = useState<DateRange | null>(null);
@@ -506,7 +518,7 @@ describe('a required date range picker in Form.Root', () => {
           <Field.Group>
             <Label.Root htmlFor="stay">Stay</Label.Root>
             <Field.Root id="stay" name="stay">
-              <Field.DateRangePicker value={value} onValueChange={setValue} required locale="en-US" />
+              <Field.DateRangeInput value={value} onValueChange={setValue} required locale="en-US" />
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
@@ -521,7 +533,7 @@ describe('a required date range picker in Form.Root', () => {
     await submit(screen.getByTestId('form'));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText('This field is required')).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Stay' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Stay' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
     await settle();
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
@@ -532,23 +544,27 @@ describe('a required date range picker in Form.Root', () => {
   });
 });
 
-describe('a required picker', () => {
+describe('a required typed input', () => {
   it.each([
-    ['date', <Field.DatePicker key="d" value={null} required />],
-    ['time', <Field.TimePicker key="t" value={null} required />],
-    ['date and time', <Field.DateTimePicker key="dt" value={null} required />],
-    ['range', <Field.DateRangePicker key="r" value={null} required />],
-  ])('describes its %s button as required, since a button cannot say aria-required', async (_, picker) => {
-    await mount(<Field.Root aria-label="When" name="when">{picker}</Field.Root>);
-    const button = screen.getByRole('button');
-    const ids = button.getAttribute('aria-describedby')!.split(' ');
-    expect(ids.map((id) => document.getElementById(id)?.textContent)).toContain('Required');
-    expect(button.hasAttribute('aria-required')).toBe(false);
+    ['date', <Field.DateInput key="d" value={null} onValueChange={() => undefined} required />],
+    ['time', <Field.TimeInput key="t" value={null} onValueChange={() => undefined} required />],
+    ['date and time', <Field.DateTimeInput key="dt" value={null} onValueChange={() => undefined} required />],
+    ['range', <Field.DateRangeInput key="r" value={null} onValueChange={() => undefined} required />],
+  ])('says its %s text input is required, and leaves the Field.Picker beside it undescribed', async (_, input) => {
+    await mount(
+      <Field.Root aria-label="When" name="when">
+        {input}
+        <Field.Picker />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-required')).toBe('true');
+    expect(screen.getByRole('button').hasAttribute('aria-describedby')).toBe(false);
+    expect(screen.queryByText('Required')).toBeNull();
   });
 
-  it('is not described as required when it is not', async () => {
-    await mount(<Field.Root aria-label="When" name="when"><Field.DatePicker value={null} showValue={false} /></Field.Root>);
-    expect(screen.queryByText('Required')).toBeNull();
+  it('is not said to be required when it is not', async () => {
+    await mount(<Field.Root aria-label="When" name="when"><Field.DateInput value={null} onValueChange={() => undefined} /></Field.Root>);
+    expect(screen.getByRole('textbox').hasAttribute('aria-required')).toBe(false);
   });
 });
 
@@ -560,7 +576,13 @@ describe('a person\'s change of a value input', () => {
         <Field.Group>
           <Label.Root htmlFor="start">Start date</Label.Root>
           <Field.Root id="start" name="start">
-            <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+            <Field.DateInput value={value} onValueChange={setValue} locale="en-US" />
+            <Field.Picker>
+              <Calendar.Root value={value} onValueChange={setValue} locale="en-US">
+                <Calendar.Header />
+                <Calendar.Grid />
+              </Calendar.Root>
+            </Field.Picker>
           </Field.Root>
           <ErrorMessage.Root />
         </Field.Group>
@@ -573,7 +595,7 @@ describe('a person\'s change of a value input', () => {
     await mount(<Pick errors={{ start: 'Booked out.' }} />);
     expect(screen.getByText('Booked out.')).toBeTruthy();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Start date' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
@@ -628,7 +650,7 @@ describe('a person\'s change of a value input', () => {
           <Field.Group>
             <Label.Root htmlFor="start">Start date</Label.Root>
             <Field.Root id="start" name="start">
-              <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+              <Field.DateInput value={value} onValueChange={setValue} locale="en-US" />
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
@@ -654,7 +676,7 @@ describe('a person\'s change of a value input', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('is not what an onSubmit that sets a picker value is: the reply still gets focus', async () => {
+  it('is not what an onSubmit that sets the value is: the reply still gets focus', async () => {
     function Booking() {
       const [errors, setErrors] = useState<Record<string, string> | undefined>();
       const [value, setValue] = useState<Temporal.PlainDate | null>(day('2026-10-13'));
@@ -672,7 +694,7 @@ describe('a person\'s change of a value input', () => {
           <Field.Group>
             <Label.Root htmlFor="start">Start date</Label.Root>
             <Field.Root id="start" name="start">
-              <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+              <Field.DateInput value={value} onValueChange={setValue} locale="en-US" />
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
@@ -685,7 +707,7 @@ describe('a person\'s change of a value input', () => {
       await new Promise((resolve) => setTimeout(resolve));
     });
     expect(screen.getByText('Fully booked, pick another')).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 });
 
@@ -699,7 +721,7 @@ describe('a focus on a value input', () => {
     await act(async () => {
       valueInput().focus();
     });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start date' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start date' }));
   });
 });
 
@@ -718,14 +740,14 @@ describe('a year a date input cannot hold', () => {
   });
 });
 
-describe('a picker beside another control', () => {
+describe('a typed input beside another control', () => {
   const note = <Field.TextInput key="note" aria-label="Note" value="x" onValueChange={() => undefined} />;
-  const picker = <Field.DatePicker key="day" aria-label="Day" value={null} onValueChange={() => undefined} required locale="en-US" />;
+  const picker = <Field.DateInput key="day" aria-label="Day" value={null} onValueChange={() => undefined} required locale="en-US" />;
 
   it.each([
     ['the text input first', [note, picker]],
-    ['the picker first', [picker, note]],
-  ])('owns its value input with %s: focus and the summary row go to its button', async (_, children) => {
+    ['the typed input first', [picker, note]],
+  ])('owns its value input with %s: focus and the summary row go to it', async (_, children) => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <Field.Group>
@@ -737,13 +759,13 @@ describe('a picker beside another control', () => {
       </Form.Root>,
     );
     await submit(screen.getByTestId('form'));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Day' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Day' }));
   });
 
   it.each([
     ['the text input first', [note, picker]],
-    ['the picker first', [picker, note]],
-  ])('has a summary row named by its button, with %s, that focuses it', async (_, children) => {
+    ['the typed input first', [picker, note]],
+  ])('has a summary row named by it, with %s, that focuses it', async (_, children) => {
     await mount(
       <Form.Root data-testid="form" onSubmit={(event) => event.preventDefault()}>
         <Form.Summary />
@@ -754,16 +776,15 @@ describe('a picker beside another control', () => {
         </Field.Group>
       </Form.Root>,
     );
-    // Before the submit, which adds a summary row of the same name.
-    const button = screen.getByRole('button', { name: 'Day' });
+    const input = screen.getByRole('textbox', { name: 'Day' });
     await submit(screen.getByTestId('form'));
     await act(async () => {
-      fireEvent.click(within(screen.getByRole('list')).getByRole('button', { name: 'Day' }));
+      fireEvent.click(within(screen.getByRole('list')).getByRole('link', { name: 'Day' }));
     });
-    expect(document.activeElement).toBe(button);
+    expect(document.activeElement).toBe(input);
   });
 
-  it('leaves the field\'s customValidity on the text input', async () => {
+  it('puts the field\'s customValidity on the control the shell focuses, the last to mount, and not on a value input', async () => {
     await mount(
       <Form.Root>
         <Field.Root name="when" aria-label="When" customValidity="Not now">
@@ -772,7 +793,8 @@ describe('a picker beside another control', () => {
         </Field.Root>
       </Form.Root>,
     );
-    expect(screen.getByRole('textbox', { name: 'Note' }).matches(':invalid')).toBe(true);
+    expect((screen.getByRole('textbox', { name: 'Day' }) as HTMLInputElement).validationMessage).toBe('Not now');
+    expect((screen.getByRole('textbox', { name: 'Note' }) as HTMLInputElement).validationMessage).toBe('');
     expect(valueInput().validationMessage).not.toBe('Not now');
   });
 });
@@ -847,11 +869,11 @@ describe('the control\'s props a value input is given', () => {
   });
 });
 
-describe('customValidity on a field with two value inputs', () => {
+describe('customValidity on a field with two typed inputs', () => {
   it.each([
-    ['date first', [<Field.DatePicker key="d" value={null} />, <Field.TimePicker key="t" value={null} />], 'date'],
-    ['time first', [<Field.TimePicker key="t" value={null} />, <Field.DatePicker key="d" value={null} />], 'time'],
-  ])('goes on the first in document order, %s', async (_, children, type) => {
+    ['date first', [<Field.DateInput key="d" aria-label="Day" value={null} onValueChange={() => undefined} />, <Field.TimeInput key="t" aria-label="Time" value={null} onValueChange={() => undefined} />], 'Time'],
+    ['time first', [<Field.TimeInput key="t" aria-label="Time" value={null} onValueChange={() => undefined} />, <Field.DateInput key="d" aria-label="Day" value={null} onValueChange={() => undefined} />], 'Day'],
+  ])('goes on the text input of the one that mounted last, %s, and on no value input', async (_, children, last) => {
     await mount(
       <Form.Root>
         <Field.Root name="when" aria-label="When" customValidity="Not now">
@@ -859,9 +881,9 @@ describe('customValidity on a field with two value inputs', () => {
         </Field.Root>
       </Form.Root>,
     );
+    expect((screen.getByRole('textbox', { name: last }) as HTMLInputElement).validationMessage).toBe('Not now');
     const inputs = [...document.querySelectorAll<HTMLInputElement>('[data-todae-value-input]')];
-    expect(inputs.map((el) => el.type)[0]).toBe(type);
-    expect(inputs.map((el) => el.validationMessage)).toEqual(['Not now', '']);
+    expect(inputs.map((el) => el.validationMessage)).toEqual(['', '']);
   });
 });
 
@@ -906,10 +928,21 @@ describe('a pick beside a named control', () => {
   }
 
   it('dismisses the field\'s server error when a date is picked', async () => {
-    await mount(<Beside picker={<Field.DatePicker value={day('2026-10-13')} locale="en-US" />} />);
+    await mount(
+      <Beside
+        picker={
+          <Field.Picker>
+            <Calendar.Root value={day('2026-10-13')} onValueChange={() => undefined} locale="en-US">
+              <Calendar.Header />
+              <Calendar.Grid />
+            </Calendar.Root>
+          </Field.Picker>
+        }
+      />,
+    );
     expect(screen.getByText('Booked out.')).toBeTruthy();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Open picker' }));
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
@@ -918,26 +951,18 @@ describe('a pick beside a named control', () => {
     expect(screen.queryByText('Booked out.')).toBeNull();
   });
 
-  it('leaves the text input\'s server error when a picker with its own name is picked', async () => {
+  it('dismisses the field\'s server error when a color is picked', async () => {
     await mount(
       <Beside
-        picker={<Field.DatePicker name="start" value={day('2026-10-13')} locale="en-US" />}
-        errors={{ when: 'Text bad.', start: 'Date bad.' }}
+        picker={
+          <Field.Picker swatch="#ff0000">
+            <ColorPicker.Root value="#ff0000" onValueChange={() => undefined}>
+              <ColorPicker.Hue />
+            </ColorPicker.Root>
+          </Field.Picker>
+        }
       />,
     );
-    expect(screen.getByText('Text bad.')).toBeTruthy();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Wednesday, October 14, 2026' }));
-    });
-    await settle();
-    expect(screen.getByText('Text bad.')).toBeTruthy();
-  });
-
-  it('dismisses the field\'s server error when a color is picked', async () => {
-    await mount(<Beside picker={<Field.ColorPicker value="#ff0000" />} />);
     expect(screen.getByText('Booked out.')).toBeTruthy();
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Color picker' }));

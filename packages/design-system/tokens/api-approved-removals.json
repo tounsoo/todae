@@ -30,6 +30,14 @@
       "approved": "Renamed to field.code.caret.motion.duration, so the caret's blink is named as every other loop's cycle is. Ben approved the rename on 2026-11-07 ('Do both'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of this path."
     },
     {
+      "path": "field.date-time.gap",
+      "approved": "Removed with DateTimeCalendar, which became a Calendar and OptionList recipe inside Field.Picker. Ben asked on 2026-11-09 ('Stop making HOC when it can be composited'), answering whether to drop DateTimeCalendar and these two tokens, under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "field.date-time.list.max-height",
+      "approved": "Removed with DateTimeCalendar, which became a Calendar and OptionList recipe inside Field.Picker. Ben asked on 2026-11-09 ('Stop making HOC when it can be composited'), answering whether to drop DateTimeCalendar and these two tokens, under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
       "path": "focus.ring.color",
       "approved": "Renamed to focus.ring, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
     },

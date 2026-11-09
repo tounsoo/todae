@@ -519,7 +519,7 @@
     padding-inline-end: 0;
   }
 
-  /* Field.ColorPicker's button: one line of field text tall, filled with its color. */
+  /* Field.Picker's button with `swatch`: one line of field text tall, filled with its color. */
   .swatch {
     flex: none;
     box-sizing: border-box;
@@ -558,87 +558,33 @@
     inline-size: fit-content;
   }
 
-  /* Field.DatePicker's, Field.TimePicker's and Field.DateTimePicker's button. It fills the field and
-     shows the value, or with showValue={false} is just the glyph. Figures
-     line up, as in a typed time. */
+  /* Field.Picker's button, a glyph at the field's end. */
   .picker {
-    font-variant-numeric: tabular-nums;
-    flex: 1 1 var(--todae-field-min-width);
+    flex: none;
     display: inline-flex;
     align-items: center;
-    gap: var(--todae-field-gap);
-    min-width: var(--todae-field-min-width);
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--todae-field-fg-default);
+    color: var(--todae-field-fg-adornment);
     font: inherit;
     font-size: var(--todae-field-font-size);
     line-height: var(--todae-field-leading);
-    text-align: start;
     cursor: pointer;
     /* The shell draws the focus ring. */
     outline: none;
   }
 
-  .picker[data-glyph-only] {
-    flex: none;
-    min-width: 0;
-    color: var(--todae-field-fg-adornment);
-  }
-
-  /* The calendar is a fixed size, six weeks at most, so the popover holds it
+  /* A calendar is a fixed size, six weeks at most, so the popover holds it
      whole rather than scrolling it at the popover's list height. */
-  .datePickerPopover:popover-open {
+  .pickerPopover:popover-open:has([data-todae-calendar-cell]) {
     max-height: none;
-  }
-
-  /* Field.DateTimePicker's calendar and list of times, side by side, with
-     the list scrolling past its height. On a phone, where the two do not
-     fit beside each other, the list goes under the calendar at half that
-     height. */
-  .dateTimePanel {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--todae-field-date-time-gap);
-  }
-
-  .dateTimeTimes {
-    --_list-height: var(--todae-field-date-time-list-max-height);
-    align-self: stretch;
-    max-height: var(--_list-height);
-    overflow-y: auto;
-    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
-    padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
-  }
-
-  @media (width < 32rem) {
-    .dateTimePanel {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .dateTimeTimes {
-      --_list-height: calc(var(--todae-field-date-time-list-max-height) / 2);
-    }
   }
 
   .picker:disabled {
     color: inherit;
     cursor: not-allowed;
-  }
-
-  .pickerText {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .pickerText[data-placeholder] {
-    color: var(--todae-field-fg-placeholder);
   }
 
   .pickerGlyph {

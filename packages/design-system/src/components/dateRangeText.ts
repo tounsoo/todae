@@ -1,5 +1,5 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-// Server-safe range text for a text input beside Field.DateRangePicker: no hooks or context.
+// Server-safe range text for Field.DateRangeInput and a text input of your own: no hooks or context.
 import { spanOf, type DateRange } from './dateRange.js';
 import { formatDate, parseDate, type DateTextOptions } from './dateText.js';
 
