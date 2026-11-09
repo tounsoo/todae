@@ -54,105 +54,72 @@ export const firefoxQuarantine: readonly QuarantineEntry[] = [
   },
 ];
 
-export interface FirefoxSkip {
+export interface FirefoxBranch {
   /** Test file, relative to packages/design-system. */
   file: string;
-  /** The name the skipped `it` or `describe` is given, as written in the file. */
-  name: string;
+  /** Text of the line that treats Firefox apart, enough to find it. */
+  code: string;
   reason: string;
 }
 
 /**
- * Browser tests that a condition naming Firefox keeps from running there, as
- * `findFirefoxSkips` finds them, because Firefox can't do what they test. A test that fails in
- * Firefox goes on the quarantine above instead, so it still runs and shows.
- * A unit test checks that every skip naming Firefox in a browser test is here.
+ * Every line of browser test code that treats Firefox apart, by a skip, a
+ * condition, an expected value or anything else that names it. A failing
+ * Firefox test goes on the quarantine above instead, so it still runs and
+ * shows. A unit test reads each browser test file with `firefoxLines` and
+ * fails on a line this list doesn't name, so a Firefox failure can't be
+ * silenced without a reason here.
  */
-export const firefoxSkips: readonly FirefoxSkip[] = [
+export const firefoxBranches: readonly FirefoxBranch[] = [
   {
-    file: 'src/browser/one-time-code.browser.test.tsx',
-    name: 'copies text dragged inside the field to the box it is dropped on',
-    reason: "Playwright's Firefox starts no native drag from a text control's selection.",
+    file: 'src/browser/conversation.browser.test.tsx',
+    code: "if (server.browser === 'firefox') {",
+    reason: "Firefox can't keep a hidden element drawn while it fades, so the button hides at once.",
   },
   {
     file: 'src/browser/fill-feedback-motion.browser.test.tsx',
-    name: 'Progress and Meter fill motion',
+    code: "describe.skipIf(server.browser === 'firefox')('Progress and Meter fill motion'",
     reason: 'Firefox draws the fill with no part to transition, and motion only has to work in Chrome.',
+  },
+  {
+    file: 'src/browser/one-time-code.browser.test.tsx',
+    code: "it.skipIf(server.browser === 'firefox')('copies text dragged inside the field to the box it is dropped on'",
+    reason: "Playwright's Firefox starts no native drag from a text control's selection.",
+  },
+  {
+    file: 'src/browser/one-time-code.browser.test.tsx',
+    code: "server.browser === 'firefox' ? [0, 6] : [1, 1]",
+    reason: "Firefox selects a text input's whole text when its label is clicked, as on Tab.",
+  },
+  {
+    file: 'src/browser/submenu.browser.test.tsx',
+    code: "if (server.browser !== 'firefox') expect(Math.abs(sub.right - outer.left), at)",
+    reason: "Firefox mirrors a popover's position-area alignment when its parent's direction differs (Firefox bug 2019601).",
   },
 ];
 
-/** A literal that names Firefox: a string, template or regex, any case. Comments name it bare, so they don't count. */
-const NAMES_FIREFOX = /(['"`/])firefox\1/i;
-const STRING = /^\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/;
-
-/** The index of the `)` that closes the `(` at `open`, stepping over strings. */
-function closing(source: string, open: number) {
-  let depth = 0;
-  for (let i = open; i < source.length; i++) {
+/** The lines of a test file whose code, leaving out comments, names Firefox in any way, such as `'firefox'` or `isFirefox`. */
+export function firefoxLines(source: string): { line: number; text: string }[] {
+  // Blank out comments, stepping over strings, so a comment's "Firefox" or a string's "//" don't count.
+  let code = '';
+  for (let i = 0; i < source.length; i++) {
     const char = source[i]!;
     if (char === "'" || char === '"' || char === '`') {
-      for (i++; i < source.length && source[i] !== char; i++) if (source[i] === '\\') i++;
-    } else if (char === '(') depth++;
-    else if (char === ')' && --depth === 0) return i;
+      let end = i + 1;
+      while (end < source.length && source[end] !== char && !(char !== '`' && source[end] === '\n')) end += source[end] === '\\' ? 2 : 1;
+      code += source.slice(i, end + 1);
+      i = end;
+    } else if (char === '/' && (source[i + 1] === '/' || source[i + 1] === '*')) {
+      const end = source[i + 1] === '/' ? source.indexOf('\n', i) : source.indexOf('*/', i + 2) + 2;
+      const stop = end < i + 2 ? source.length : end;
+      code += source.slice(i, stop).replace(/[^\n]/g, ' ');
+      i = stop - 1;
+    } else code += char;
   }
-  return source.length;
-}
-
-/** The test name a call starting at `from` is given: past any `.each(…)` or `.for(…)`, the string its `(` opens with. */
-function nameAfter(source: string, from: number) {
-  let rest = source.slice(from);
-  for (let table; (table = /^\s*\.(?:each|for)\s*\(/.exec(rest)); ) rest = rest.slice(closing(rest, table[0].length - 1) + 1);
-  const call = /^\s*\(/.exec(rest);
-  return call ? STRING.exec(rest.slice(call[0].length))?.[2] : undefined;
-}
-
-/**
- * Every test or group in a browser test file that a condition naming Firefox
- * skips or runs alone: by `skipIf` or `runIf`, through a constant or an alias
- * of either, or by the test context's `skip`. A skip whose test has no
- * literal name is returned with its line, so the list can't take it silently.
- */
-export function findFirefoxSkips(code: string): { name: string; line: number }[] {
-  // Blank out comments, keeping lines where they were, so a skip turned into a comment is gone.
-  const source = code.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, (comment) => comment.replace(/[^\n]/g, ' '));
-  const lineOf = (index: number) => source.slice(0, index).split('\n').length;
-  // Constants whose value names Firefox, directly or through another such constant.
-  const tainted = new Set<string>();
-  const declarations = [...source.matchAll(/\b(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]*)/g)];
-  for (let grew = true; grew; ) {
-    grew = false;
-    for (const [, name, value] of declarations)
-      if (!tainted.has(name!) && (NAMES_FIREFOX.test(value!) || [...tainted].some((other) => new RegExp(`\\b${other}\\b`).test(value!)))) {
-        tainted.add(name!);
-        grew = true;
-      }
-  }
-  const namesFirefox = (text: string) => NAMES_FIREFOX.test(text) || [...tainted].some((name) => new RegExp(`\\b${name}\\b`).test(text));
-
-  const found: { name: string; line: number }[] = [];
-  const add = (index: number, name: string | undefined) => found.push({ name: name ?? `(a test with no literal name, line ${lineOf(index)})`, line: lineOf(index) });
-  const aliases: string[] = [];
-  for (const call of source.matchAll(/\.(?:skipIf|runIf)\s*\(/g)) {
-    const open = call.index + call[0].length - 1;
-    const close = closing(source, open);
-    if (!namesFirefox(source.slice(open + 1, close))) continue;
-    const alias = /\b(?:const|let|var)\s+(\w+)\s*=\s*[\w.]*$/.exec(source.slice(0, call.index));
-    if (alias && !nameAfter(source, close + 1)) aliases.push(alias[1]!);
-    else add(call.index, nameAfter(source, close + 1));
-  }
-  for (const alias of aliases)
-    for (const use of source.matchAll(new RegExp(`(?<![\\w.])${alias}\\b(?!\\s*=)`, 'g'))) {
-      if (/\b(?:const|let|var)\s+$/.test(source.slice(0, use.index))) continue;
-      add(use.index, nameAfter(source, use.index + alias.length));
-    }
-  // The test context's own skip, called from inside a test.
-  for (const call of source.matchAll(/(?<![\w])skip\s*\(/g)) {
-    const open = call.index + call[0].length - 1;
-    if (!namesFirefox(source.slice(open + 1, closing(source, open)))) continue;
-    const tests = [...source.slice(0, call.index).matchAll(/\b(?:it|test)\b[\w.]*(?:\([^()]*\))?\s*\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g)];
-    add(call.index, tests.at(-1)?.[2]);
-  }
-  return found;
+  return code
+    .split('\n')
+    .map((text, index) => ({ line: index + 1, text: text.trim() }))
+    .filter(({ text }) => /firefox/i.test(text));
 }
 
 export interface Verdict {

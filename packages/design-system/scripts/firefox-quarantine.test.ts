@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BrowserResults } from './browser-results-reporter.ts';
-import { annotations, findFirefoxSkips, firefoxQuarantine, firefoxSkips, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
+import { annotations, firefoxBranches, firefoxLines, firefoxQuarantine, judge, summary, type QuarantineEntry } from './firefox-quarantine.ts';
 
 const listed: QuarantineEntry = { file: 'src/browser/a.browser.test.tsx', test: 'A > flakes', issue: 'https://github.com/tounsoo/todae/issues/367', reason: 'Known.' };
 const other = { file: 'src/browser/a.browser.test.tsx', name: 'A > works' };
@@ -125,67 +125,46 @@ describe('the Firefox quarantine list', () => {
   });
 });
 
-describe('Firefox skips', () => {
-  it('finds a skip naming Firefox however it is written', () => {
+describe('Firefox branches in browser tests', () => {
+  it('finds every line of code that names Firefox, and none in a comment', () => {
     const source = [
-      "const notFirefox = server.browser !== 'firefox';",
-      'const alsoNot = notFirefox && true;',
-      "const firefoxIt = it.skipIf(server.browser === 'firefox');",
-      "it.skipIf(server.browser === 'chromium')('not Firefox', () => {});",
-      '// Firefox draws this differently, but this comment skips nothing.',
-      "// it.skipIf(server.browser === 'firefox')('a skip turned into a comment', () => {});",
+      "const isFirefox = server.browser === 'firefox';",
+      "it.skipIf(isFirefox)('through a constant', () => {});",
+      "it.skipIf(server.browser === 'chromium')('another engine only', () => {});",
+      '// Firefox draws this differently, but a comment changes nothing.',
       "/* it.skipIf(server.browser === 'firefox')('a skip in a block comment', () => {}); */",
-      "describe.skipIf(server.browser === 'firefox')('a group', () => {",
-      "  it.runIf(notFirefox)('through a constant', () => {});",
-      "  it.runIf(alsoNot)('through a constant of a constant', () => {});",
-      "  firefoxIt('through an alias', () => {});",
-      "  firefoxIt.each([1])('through an alias with a table %s', () => {});",
-      "  it.skipIf(['firefox'].includes(server.browser))('with a call in the condition', () => {});",
-      "  it.skipIf(server.browser === 'firefox').each([1])('with a table %s', () => {});",
-      '  it.skipIf(server.browser === `firefox`)("in a template", () => {});',
-      "  it.skipIf(/Firefox/i.test(server.browser))('by a regex', () => {});",
-      "  it('from the test body', ({ skip }) => { skip(server.browser === 'firefox'); });",
-      "  it('only an assertion that differs', () => { if (server.browser === 'firefox') expect(1).toBe(1); });",
-      "  it.skipIf(server.browser === 'firefox')(name, () => {});",
-      '});',
+      "const images = '**/*.png';",
+      "it('in options', { skip: server.browser === 'firefox' }, () => {});",
+      "const fonts = '**/*.woff2'; // a URL like 'https://example.com' isn't a comment",
+      "it('from the body', ({ skip }) => { if (/Firefox\\//.test(navigator.userAgent)) skip(); });",
+      "it.skipIf(server.browser === 'firefox')( // Firefox can't start the drag",
+      "  'with a comment after it',",
+      ');',
     ].join('\n');
-    expect(findFirefoxSkips(source).map(({ name }) => name)).toEqual([
-      'a group',
-      'through a constant',
-      'through a constant of a constant',
-      'with a call in the condition',
-      'with a table %s',
-      'in a template',
-      'by a regex',
-      '(a test with no literal name, line 19)',
-      'through an alias',
-      'through an alias with a table %s',
-      'from the test body',
-    ]);
+    expect(firefoxLines(source).map(({ line }) => line)).toEqual([1, 2, 7, 9, 10]);
+    expect(firefoxLines(source)[4]!.text).toBe("it.skipIf(server.browser === 'firefox')(");
   });
 
-  const dir = join(import.meta.dirname, '../src/browser');
-  const found = readdirSync(dir)
-    .filter((name) => name.endsWith('.browser.test.tsx'))
-    .flatMap((name) => findFirefoxSkips(readFileSync(join(dir, name), 'utf8')).map((skip) => ({ file: `src/browser/${name}`, ...skip })));
+  const root = join(import.meta.dirname, '../src');
+  const files = (readdirSync(root, { recursive: true }) as string[]).filter((name) => /\.browser\.test\.tsx?$/.test(name));
+  const found = files.flatMap((name) => firefoxLines(readFileSync(join(root, name), 'utf8')).map((line) => ({ file: `src/${name.split('\\').join('/')}`, ...line })));
 
-  it('lists every browser test that skips Firefox, so a failure cannot be silenced by a skip', () => {
+  it('lists every line of a browser test that treats Firefox apart, so a failure cannot be silenced by a skip', () => {
     expect(found.length).toBeGreaterThan(0);
-    // Count by name, so a second skip under a name already listed needs its own entry.
-    const listed = new Map<string, number>();
-    for (const { file, name } of firefoxSkips) listed.set(`${file} > ${name}`, (listed.get(`${file} > ${name}`) ?? 0) + 1);
-    for (const { file, name, line } of found) {
-      const left = listed.get(`${file} > ${name}`) ?? 0;
-      expect(left, `${file}:${line} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toBeGreaterThan(0);
-      listed.set(`${file} > ${name}`, left - 1);
-    }
+    const unlisted = found.filter(({ file, text }) => !firefoxBranches.some((branch) => branch.file === file && text.includes(branch.code)));
+    expect(
+      unlisted.map(({ file, line, text }) => `${file}:${line} ${text}`),
+      'These lines treat Firefox apart; add each to firefoxBranches with a reason, or quarantine the test instead',
+    ).toEqual([]);
   });
 
-  it('keeps no entry for a skip that is gone, and gives each one a reason', () => {
-    const present = new Set(found.map(({ file, name }) => `${file} > ${name}`));
-    for (const entry of firefoxSkips) {
-      expect(present, `firefoxSkips lists "${entry.name}" in ${entry.file}, which no longer skips Firefox`).toContain(`${entry.file} > ${entry.name}`);
-      expect(entry.reason.trim()).not.toBe('');
+  it('keeps no entry for a line that is gone, and gives each one a reason', () => {
+    for (const branch of firefoxBranches) {
+      expect(
+        found.some(({ file, text }) => file === branch.file && text.includes(branch.code)),
+        `firefoxBranches lists "${branch.code}" in ${branch.file}, which no line there has any more`,
+      ).toBe(true);
+      expect(branch.reason.trim()).not.toBe('');
     }
   });
 });
