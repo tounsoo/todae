@@ -177,41 +177,84 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   const checker = program.getTypeChecker();
   const trees = [...codes.keys()].map((path) => program.getSourceFile(path)!);
   const symbolOf = (node: ts.Node) => {
-    const symbol = checker.getSymbolAtLocation(node);
+    const symbol = ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node ? checker.getShorthandAssignmentValueSymbol(node.parent) : checker.getSymbolAtLocation(node);
     return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
   };
   const tainted = new Set<ts.Symbol>();
+  /** A module with a value that treats Firefox apart, for `await import(…)`. */
+  const taintedModules = new Set<ts.SourceFile>();
   const uses = (node: ts.Node | undefined, tree: ts.SourceFile) => {
     if (!node) return false;
     if (namesFirefox(node.getText(tree))) return true;
     let found = false;
     each(node, (child) => {
-      if (!found && ts.isIdentifier(child)) {
+      if (found) return;
+      if (ts.isIdentifier(child)) {
         const symbol = symbolOf(child);
         found = !!symbol && tainted.has(symbol);
+      } else if (ts.isCallExpression(child) && child.expression.kind === ts.SyntaxKind.ImportKeyword && child.arguments[0] && ts.isStringLiteral(child.arguments[0])) {
+        const target = ts.resolveModuleName(child.arguments[0].text, tree.fileName, options, host).resolvedModule;
+        found = !!target && [...taintedModules].some((module) => module.fileName === target.resolvedFileName);
       }
     });
     return found;
   };
-  const names = (name: ts.Node): ts.Node[] =>
-    ts.isIdentifier(name) ? [name] : ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name) ? name.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : names(el.name))) : [];
+  /** The names a declaration binds or an assignment writes, through any destructuring. */
+  const names = (target: ts.Node): ts.Node[] => {
+    if (ts.isIdentifier(target)) return [target];
+    if (ts.isObjectBindingPattern(target) || ts.isArrayBindingPattern(target)) return target.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : names(el.name)));
+    if (ts.isParenthesizedExpression(target) || ts.isNonNullExpression(target) || ts.isAsExpression(target) || ts.isSpreadElement(target) || ts.isSpreadAssignment(target)) return names(target.expression);
+    // `cfg.skip = …` taints `cfg`, since that is where the value is read back.
+    if (ts.isPropertyAccessExpression(target) || ts.isElementAccessExpression(target)) return names(target.expression);
+    if (ts.isArrayLiteralExpression(target)) return target.elements.flatMap(names);
+    if (ts.isObjectLiteralExpression(target)) return target.properties.flatMap(names);
+    if (ts.isShorthandPropertyAssignment(target)) return [target.name];
+    if (ts.isPropertyAssignment(target)) return names(target.initializer);
+    if (ts.isBinaryExpression(target) && target.operatorToken.kind === ts.SyntaxKind.EqualsToken) return names(target.left);
+    if (ts.isVariableDeclarationList(target)) return target.declarations.flatMap((declaration) => names(declaration.name));
+    return [];
+  };
+  const isAssignment = (node: ts.Node): node is ts.BinaryExpression =>
+    ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
   for (let grew = true; grew; ) {
     grew = false;
-    const taint = (nodes: ts.Node[]) => {
-      for (const node of nodes) {
-        const symbol = symbolOf(node);
-        if (symbol && !tainted.has(symbol)) {
-          tainted.add(symbol);
-          grew = true;
-        }
+    const mark = (symbol: ts.Symbol | undefined) => {
+      if (symbol && !tainted.has(symbol)) {
+        tainted.add(symbol);
+        grew = true;
       }
     };
-    for (const tree of trees)
+    const taint = (nodes: ts.Node[]) => nodes.forEach((node) => mark(symbolOf(node)));
+    for (const tree of trees) {
+      const module = checker.getSymbolAtLocation(tree);
+      const exports = module ? checker.getExportsOfModule(module) : [];
+      const exportOf = (name: string) => exports.find((symbol) => symbol.escapedName === name);
       each(tree, (node) => {
         if (ts.isVariableDeclaration(node) && uses(node.initializer, tree)) taint(names(node.name));
-        else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name && uses(node, tree)) taint([node.name]);
-        else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && uses(node.right, tree)) taint(names(node.left));
+        else if (ts.isBindingElement(node) && uses(node.initializer, tree)) taint(names(node.name));
+        else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) && uses(node, tree)) {
+          if (node.name) taint([node.name]);
+          else mark(exportOf('default'));
+        } else if (isAssignment(node) && uses(node.right, tree)) taint(names(node.left));
+        else if ((ts.isForOfStatement(node) || ts.isForInStatement(node)) && uses(node.expression, tree)) taint(names(node.initializer));
+        else if (ts.isExportAssignment(node) && uses(node.expression, tree)) {
+          mark(exportOf('default'));
+        } else if (ts.isIfStatement(node) && uses(node.expression, tree)) {
+          // A value set only when the condition names Firefox treats Firefox apart too.
+          each(node, (child) => {
+            if (isAssignment(child)) taint(names(child.left));
+          });
+        } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && uses(node.expression.expression, tree)) {
+          // `[isFirefox].forEach((skip) => …)` hands the value to the callback.
+          for (const arg of node.arguments) if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) taint(arg.parameters.flatMap((parameter) => names(parameter.name)));
+        }
       });
+      const resolved = (symbol: ts.Symbol) => (symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol);
+      if (!taintedModules.has(tree) && exports.some((symbol) => tainted.has(symbol) || tainted.has(resolved(symbol)))) {
+        taintedModules.add(tree);
+        grew = true;
+      }
+    }
   }
   return trees.flatMap((tree) => {
     const file = tree.fileName.slice(1);
@@ -230,7 +273,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
  * Pairs each line with an entry whose code it holds, one entry to a line, so
  * a loose entry can't take the line a closer one was written for.
  */
-function matchBranches(lines: { file: string; text: string }[], branches: readonly FirefoxBranch[]) {
+function matchBranches<Line extends { file: string; text: string }>(lines: Line[], branches: readonly FirefoxBranch[]) {
   const fits = lines.map((line) => branches.flatMap((branch, index) => (branch.file === line.file && line.text.includes(branch.code) ? [index] : [])));
   const owner = new Array<number>(branches.length).fill(-1);
   const place = (line: number, seen: Set<number>): boolean =>
@@ -264,6 +307,41 @@ it('pairs a line with the entry written for it before a looser one', () => {
 it('reads a .ts file as TypeScript, so a generic arrow leaves its comments as comments', () => {
   const found = firefoxLinesIn([{ file: 'src/test/a.ts', source: 'export const first = <T>(items: T[]): T | undefined => items[0];\n// Firefox paints later.\nconst y = <HTMLElement>el;\n// Gecko too.\n' }]);
   expect(found).toEqual([]);
+});
+
+it('follows a value through shorthand properties, compound and destructuring assignments, defaults, enums, loops and conditions', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["const skip = server.browser === 'firefox';", 'const opts = { skip };', "it('a', opts, () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['let skip = false;', "skip ||= server.browser === 'firefox';", "it.skipIf(skip)('a', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['let a = false, b = false;', "({ a } = { a: server.browser === 'firefox' });", "[b] = [server.browser === 'firefox'];", 'it.skipIf(a)("a", () => {});', 'it.skipIf(b)("b", () => {});'])).toEqual([1, 2, 3, 4, 5]);
+  expect(lines(["const [x = server.browser === 'firefox'] = [];", "it.skipIf(x)('c', () => {});"])).toEqual([1, 2]);
+  expect(lines(['const cfg = { skip: false };', "cfg.skip = server.browser === 'firefox';", "it.skipIf(cfg.skip)('a', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(["enum Engine { FF = 'firefox' }", "it.skipIf(server.browser === Engine.FF)('a', () => {});"])).toEqual([1, 2]);
+  expect(lines(["const slow = ['firefox'];", 'for (const engine of slow) {', "  it.skipIf(server.browser === engine)('a', () => {});", '}'])).toEqual([1, 2, 3]);
+  expect(lines(["[server.browser === 'firefox'].forEach((skip) => {", "  it.skipIf(skip)('a', () => {});", '});'])).toEqual([1, 2]);
+  expect(lines(['let skip = false;', "if (server.browser === 'firefox') {", '  skip = true;', '}', "it.skipIf(skip)('a', () => {});"])).toEqual([1, 2, 3, 5]);
+});
+
+it('follows a default export and a dynamic import into another file', () => {
+  const found = firefoxLinesIn([
+    { file: 'src/test/a.ts', source: "export default server.browser === 'firefox';" },
+    { file: 'src/test/b.ts', source: "export default function () {\n  return server.browser === 'firefox';\n}" },
+    { file: 'src/test/c.ts', source: "export const noDrag = server.browser === 'firefox';" },
+    {
+      file: 'src/browser/x.browser.test.tsx',
+      source: [
+        "import ff from '../test/a.js';",
+        "import fn from '../test/b.js';",
+        "it.skipIf(ff)('a', () => {});",
+        "it.skipIf(fn())('b', () => {});",
+        "const { noDrag } = await import('../test/c.js');",
+        "it.skipIf(noDrag)('c', () => {});",
+        "const mod = await import('../test/c.js');",
+        "it.skipIf(mod.noDrag)('d', () => {});",
+      ].join('\n'),
+    },
+  ]);
+  expect(found.filter(({ file }) => file.endsWith('x.browser.test.tsx')).map(({ line }) => line)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
 });
 
 it('follows only the value that names Firefox, not another one that shares its name', () => {
