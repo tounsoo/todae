@@ -19,6 +19,7 @@ import {
 import { useFieldControl, type FieldControlUserProps } from './useField.js';
 import { cx } from '../internal/props.js';
 import styles from './Field.module.css';
+import popoverStyles from './Popover.module.css';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover.js';
 import { Popover } from './Popover.js';
@@ -225,7 +226,7 @@ export function Picker({
           {...popover.getPopoverProps()}
           role="dialog"
           aria-label={label}
-          className={styles.pickerPopover}
+          className={cx(styles.pickerPopover, popoverStyles.fit)}
         >
           <PickContext.Provider value={picked}>
             {typeof children === 'function' ? children({ close: () => close.current(false, 'select') }) : children}

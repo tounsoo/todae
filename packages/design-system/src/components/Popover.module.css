@@ -98,6 +98,36 @@
     }
   }
 
+  /* Whole if it fits, as Field.Picker's popover around a calendar is, and
+     never past the screen. A calendar with more beside it, such as times
+     stacked under it on a phone, can be taller than the room under a field
+     halfway down the page, and the rest was out of reach. Placed by
+     position-area, its containing block is the room on its side of the
+     anchor: it opens whole under the anchor, or whole over it; where
+     neither has room, it fits the room on one side, at least a list's
+     height, and scrolls inside. */
+  @supports (position-area: self-block-end) {
+    .content.fit {
+      top: auto;
+      inset-inline-start: auto;
+      position-area: self-block-end span-self-inline-end;
+      margin-block-start: var(--todae-popover-offset);
+      position-try-fallbacks:
+        flip-block,
+        --todae-popover-fit,
+        --todae-popover-fit flip-block,
+        flip-inline,
+        flip-block flip-inline;
+    }
+  }
+
+  @position-try --todae-popover-fit {
+    position-area: self-block-end span-self-inline-end;
+    margin-block-start: var(--todae-popover-offset);
+    max-height: 100%;
+    min-height: var(--todae-popover-max-height);
+  }
+
   /* Beside its anchor, as a submenu sits: past the anchor's end, its first
      row level with the anchor, and its edge on the outer edge of the popover
      the anchor sits in. It flips to the other side where there is no room,

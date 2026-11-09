@@ -8,6 +8,8 @@ import { ColorPicker } from '../components/ColorPicker.js';
 import { Field } from '../components/Field.js';
 import { Label } from '../components/Label.js';
 import { Menu } from '../components/Menu.js';
+import { OptionList } from '../components/OptionList.js';
+import { timeOptions } from '../components/timeOptions.js';
 import { Tabs } from '../components/Tabs.js';
 import { useField } from '../components/useField.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
@@ -687,6 +689,51 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     expect(box.left).toBeCloseTo(shell.left, 0);
     expect(box.top).toBeGreaterThanOrEqual(shell.bottom);
     expect(box.right).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  });
+
+  it('fits a panel taller than the room on either side of the field, and scrolls it, so its end can be picked', async () => {
+    // A calendar with times under it, as the date and time recipe stacks them on a phone, halfway down the page.
+    function Tall() {
+      const [value, setValue] = useState<Temporal.PlainDateTime | null>(null);
+      return (
+        <Themed>
+          <div style={{ blockSize: '45vh' }} />
+          <Label.Root htmlFor="starts">Starts</Label.Root>
+          <Field.Root id="starts">
+            <Field.DateTimeInput value={value} onValueChange={setValue} locale="en-US" />
+            <Field.Picker>
+              <Calendar.Root aria-label="Day" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+                <Calendar.Header />
+                <Calendar.Grid />
+              </Calendar.Root>
+              <OptionList.Root
+                aria-label="Times"
+                value={null}
+                onValueChange={(time) => setValue(plainDate('2026-10-13').toPlainDateTime(Temporal.PlainTime.from(time)))}
+              >
+                {timeOptions({ step: 15, locale: 'en-US' }).map((option) => (
+                  <OptionList.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </OptionList.Option>
+                ))}
+              </OptionList.Root>
+            </Field.Picker>
+          </Field.Root>
+          <div style={{ blockSize: '100vh' }} />
+        </Themed>
+      );
+    }
+    render(<Tall />);
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date and time' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Choose date and time' });
+    await waitFor(() => expect(dialog.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+    const box = dialog.getBoundingClientRect();
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+    expect(dialog.scrollHeight).toBeGreaterThan(dialog.clientHeight);
+    // The last time, under the calendar and past the room, scrolls into view and picks.
+    await userEvent.click(screen.getByRole('option', { name: '11:45 PM' }));
+    expect((screen.getByRole('textbox', { name: 'Starts' }) as HTMLInputElement).value).toBe('10/13/2026, 11:45 PM');
   });
 
   it.each(['compact', 'comfortable', 'spacious'] as const)(
