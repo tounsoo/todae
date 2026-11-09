@@ -676,6 +676,19 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     expect(input.value).toBe('10/20/2026');
   });
 
+  it('opens the popover under the whole field from its start edge, so it fits a phone-wide frame', async () => {
+    render(<Start />);
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+    // Still, so its scale as it grows in doesn't move its edges.
+    await waitFor(() => expect(dialog.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
+    const shell = screen.getByTestId('shell').getBoundingClientRect();
+    const box = dialog.getBoundingClientRect();
+    expect(box.left).toBeCloseTo(shell.left, 0);
+    expect(box.top).toBeGreaterThanOrEqual(shell.bottom);
+    expect(box.right).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  });
+
   it.each(['compact', 'comfortable', 'spacious'] as const)(
     'shows a six-week month whole, without scrolling, at %s density',
     async (density) => {

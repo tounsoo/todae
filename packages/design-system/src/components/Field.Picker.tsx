@@ -26,6 +26,7 @@ import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings, type Strings } from '../providers/StringsProvider.js';
 import { CalendarGlyph, ChevronGlyph, ClockGlyph, glyphOr } from './glyphs.js';
 import { PICKER_FOCUS, PickContext } from './pickerDone.js';
+import { removeAnchorName } from '../overlay/anchorName.js';
 
 /** Why Field.Picker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
 export type FieldPickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
@@ -166,7 +167,7 @@ export function Picker({
     open: shown,
     // A read-only open has no one to ask, so the popover asks no one either.
     onOpenChange: openProp === undefined || onOpenChange ? setOpen : undefined,
-    // For the outside-press check: a press anywhere in the field is not outside.
+    // Where it sits, and for the outside-press check: a press anywhere in the field is not outside.
     anchorRef: shellRef,
     initialFocusRef,
     enabled: !control.disabled,
@@ -176,7 +177,15 @@ export function Picker({
   toggleRef.current = () => {
     if (!control.disabled) setOpen(!shown, 'trigger');
   };
-  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps) as ComponentPropsWithRef<'button'>;
+  const wiredTrigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps) as ComponentPropsWithRef<'button'>;
+  // The popover sits at the field's shell, as a Field.Select's list sits at its field, so it opens under the
+  // whole field and not past the button at its end, where a narrow screen has no room for it. The shell carries
+  // the popover's anchor name, so the button keeps only any name of its own, such as a tooltip's.
+  const popoverAnchor = (wiredTrigger.style as Record<string, string> | undefined)?.['--todae-popover-anchor'] ?? '';
+  const trigger = {
+    ...wiredTrigger,
+    style: { ...wiredTrigger.style, anchorName: removeAnchorName(wiredTrigger.style?.anchorName, popoverAnchor) || undefined },
+  };
   // A pick in a panel tells the field a person changed its value, and one that makes the value closes the popover.
   const picked = useCallback(
     (complete: boolean) => {

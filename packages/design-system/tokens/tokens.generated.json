@@ -16822,7 +16822,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.area.radius",
@@ -16836,7 +16836,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.gap",
@@ -16850,7 +16850,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.hue.height",
@@ -16864,7 +16864,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.hue.radius",
@@ -16878,7 +16878,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.ring.focus",
@@ -16892,7 +16892,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.border",
@@ -16906,7 +16906,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.border-width",
@@ -16920,7 +16920,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.edge.color",
@@ -16934,7 +16934,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.edge.width",
@@ -16948,7 +16948,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.size",
@@ -16962,7 +16962,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.width",
@@ -16976,7 +16976,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs."
     },
     {
       "path": "calendar.day.bg.default",
@@ -16990,7 +16990,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.bg.hover",
@@ -17004,7 +17004,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.bg.range",
@@ -17032,7 +17032,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.border.current",
@@ -17046,7 +17046,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.border-width",
@@ -17060,7 +17060,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.fg.default",
@@ -17074,7 +17074,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.fg.disabled",
@@ -17088,7 +17088,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.fg.range",
@@ -17116,7 +17116,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.radius",
@@ -17130,7 +17130,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.ring.focus",
@@ -17144,7 +17144,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.day.size",
@@ -17158,7 +17158,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.font.size",
@@ -17172,7 +17172,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.gap",
@@ -17186,7 +17186,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.heading.fg",
@@ -17200,7 +17200,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.heading.font.weight",
@@ -17214,7 +17214,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.heading.gap",
@@ -17228,7 +17228,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.heading.icon.size",
@@ -17242,7 +17242,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.heading.padding.x",
@@ -17256,7 +17256,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.nav.icon.size",
@@ -17270,7 +17270,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.weekday.fg",
@@ -17284,7 +17284,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "calendar.weekday.font.weight",
@@ -17298,7 +17298,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker, Field.DateRangePicker and Field.DateTimePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in a Field.Picker; day cells per state."
     },
     {
       "path": "drilldown.back.icon.size",
