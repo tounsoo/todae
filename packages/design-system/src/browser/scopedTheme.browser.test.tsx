@@ -1,9 +1,9 @@
-import { commands } from '@vitest/browser/context';
+import { commands } from 'vitest/browser';
 import { render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { ThemeProvider } from '../index.js';
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     /** An empty scope builds without `--scope`. */
     scopedThemeCss: (scope: string, options: { empty?: boolean; core?: Record<string, unknown>; brand?: Record<string, unknown> }) => Promise<string>;

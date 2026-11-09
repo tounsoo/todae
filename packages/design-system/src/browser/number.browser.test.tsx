@@ -1,6 +1,6 @@
-/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser-playwright" />
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, server, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { Activity, Suspense, use, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';

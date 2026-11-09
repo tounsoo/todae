@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover.js';

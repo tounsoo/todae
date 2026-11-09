@@ -1,6 +1,6 @@
-/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser-playwright" />
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { cdp, page, userEvent } from '@vitest/browser/context';
+import { cdp, page, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';

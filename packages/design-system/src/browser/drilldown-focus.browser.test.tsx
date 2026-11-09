@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { Activity, startTransition, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';

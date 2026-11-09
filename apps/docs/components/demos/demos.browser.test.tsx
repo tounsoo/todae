@@ -1,5 +1,5 @@
 import { cleanup, render, within } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import type { ComponentType } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
