@@ -16,6 +16,14 @@ The other helpers here work on one key or value, for a tool that edits overrides
 
 [ThemeProvider](/tokens) applies these overrides. The [Playground](/playground) shows them on the components.
 
+## Accessible composition
+
+**Todae handles:** Nothing on screen: it returns a style object. It checks each key it sets and the type of its value, not contrast. `ThemeProvider` checks Todae's contrast pairs against its overrides in development, with a console warning; this function does not.
+
+**You supply:** Colors that keep text readable on the surfaces it sits on, in every appearance, since an override sets one value for light and dark alike. In a theme editor, each color as text as well as a swatch, and a message tied to the field when `parseThemeValue` or `parseThemeColor` returns `null`.
+
+**Watch for:** Overriding one color of a pair without the other, such as `color.accent.default` without `color.on-accent`. A `focus.ring-width` of 0, which removes the focus ring, the only sign of keyboard focus on parts such as a primary Button.
+
 ## When to use
 
 **When:** A tool that builds or edits theme overrides, such as a theme editor, and reads, checks or shows them as CSS.

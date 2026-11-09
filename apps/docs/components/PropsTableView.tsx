@@ -119,7 +119,7 @@ export function PropsTableView({
                     {prop.default === undefined ? null : (
                       <p className="props-default">
                         <span className="props-default-label">{words.default}:</span>{' '}
-                        {/* Defaults come from the English JSDoc and are not translated. */}
+                        {/* Defaults come from the English `*.meta.ts` and are not translated. */}
                         <span lang={locale === 'en' ? undefined : 'en'}>{prop.default}</span>
                       </p>
                     )}

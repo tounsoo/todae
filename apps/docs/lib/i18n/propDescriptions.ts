@@ -4,7 +4,7 @@ import ko from './props/ko.json';
 /** Component → prop → the English it was translated from, and the translation. */
 export type PropTranslations = Record<string, Record<string, Partial<Record<Locale, string>>>>;
 
-/** Prop descriptions come from the design system's JSDoc in English; these translate them. */
+/** Prop descriptions come from the design system's `*.meta.ts` files in English; these translate them. */
 export const PROP_TRANSLATIONS: Partial<Record<Locale, PropTranslations>> = { ko };
 
 /**
