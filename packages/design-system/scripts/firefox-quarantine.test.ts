@@ -133,6 +133,8 @@ describe('Firefox skips', () => {
       "const firefoxIt = it.skipIf(server.browser === 'firefox');",
       "it.skipIf(server.browser === 'chromium')('not Firefox', () => {});",
       '// Firefox draws this differently, but this comment skips nothing.',
+      "// it.skipIf(server.browser === 'firefox')('a skip turned into a comment', () => {});",
+      "/* it.skipIf(server.browser === 'firefox')('a skip in a block comment', () => {}); */",
       "describe.skipIf(server.browser === 'firefox')('a group', () => {",
       "  it.runIf(notFirefox)('through a constant', () => {});",
       "  it.runIf(alsoNot)('through a constant of a constant', () => {});",
@@ -155,7 +157,7 @@ describe('Firefox skips', () => {
       'with a table %s',
       'in a template',
       'by a regex',
-      '(a test with no literal name, line 17)',
+      '(a test with no literal name, line 19)',
       'through an alias',
       'through an alias with a table %s',
       'from the test body',
@@ -169,9 +171,14 @@ describe('Firefox skips', () => {
 
   it('lists every browser test that skips Firefox, so a failure cannot be silenced by a skip', () => {
     expect(found.length).toBeGreaterThan(0);
-    const listed = new Set(firefoxSkips.map(({ file, name }) => `${file} > ${name}`));
-    for (const { file, name, line } of found)
-      expect(listed, `${file}:${line} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toContain(`${file} > ${name}`);
+    // Count by name, so a second skip under a name already listed needs its own entry.
+    const listed = new Map<string, number>();
+    for (const { file, name } of firefoxSkips) listed.set(`${file} > ${name}`, (listed.get(`${file} > ${name}`) ?? 0) + 1);
+    for (const { file, name, line } of found) {
+      const left = listed.get(`${file} > ${name}`) ?? 0;
+      expect(left, `${file}:${line} skips "${name}" by Firefox; add it to firefoxSkips with a reason, or quarantine it instead`).toBeGreaterThan(0);
+      listed.set(`${file} > ${name}`, left - 1);
+    }
   });
 
   it('keeps no entry for a skip that is gone, and gives each one a reason', () => {

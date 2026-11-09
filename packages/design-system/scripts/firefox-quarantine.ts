@@ -112,7 +112,9 @@ function nameAfter(source: string, from: number) {
  * of either, or by the test context's `skip`. A skip whose test has no
  * literal name is returned with its line, so the list can't take it silently.
  */
-export function findFirefoxSkips(source: string): { name: string; line: number }[] {
+export function findFirefoxSkips(code: string): { name: string; line: number }[] {
+  // Blank out comments, keeping lines where they were, so a skip turned into a comment is gone.
+  const source = code.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, (comment) => comment.replace(/[^\n]/g, ' '));
   const lineOf = (index: number) => source.slice(0, index).split('\n').length;
   // Constants whose value names Firefox, directly or through another such constant.
   const tainted = new Set<string>();

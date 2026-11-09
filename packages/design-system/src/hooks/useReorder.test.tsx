@@ -192,6 +192,19 @@ it('ignores a drag it did not start, such as a file', () => {
   expect(onMove).not.toHaveBeenCalled();
 });
 
+it('ignores another drag, such as a file, over the list during its own', () => {
+  const onMove = vi.fn();
+  render(<List onMove={onMove} />);
+  const d = mouseDrag('A');
+  const file = stubDataTransfer(['Files']);
+  const over = fireDrag(item('C'), 'dragover', file, point('C', 'end'));
+  expect(over.defaultPrevented).toBe(false);
+  expect(item('C').getAttribute('data-drop')).toBeNull();
+  fireDrag(item('C'), 'drop', file, point('C', 'end'));
+  expect(onMove).not.toHaveBeenCalled();
+  d.end();
+});
+
 it('takes the side in a horizontal list from the text direction', () => {
   const onMove = vi.fn();
   const { unmount } = render(<List orientation="horizontal" onMove={onMove} />);
@@ -239,11 +252,15 @@ it('moves an item a finger drags, once the finger moves off the press', () => {
   expect(item('A').getAttribute('data-dragging')).toBeNull();
 });
 
-it('drops nothing for a tap', () => {
+it('starts no drag and drops nothing for a press that never moves past a small slop', () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
-  touch('A').up('A', 'start');
+  const t = touch('A');
   expect(item('A').getAttribute('data-dragging')).toBeNull();
+  t.nudge();
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  // Released over another item, still no drop, since no drag started.
+  t.up('C', 'end');
   expect(onMove).not.toHaveBeenCalled();
 });
 
