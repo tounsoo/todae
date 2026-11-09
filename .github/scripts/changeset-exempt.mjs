@@ -1,8 +1,8 @@
 // Exits 0 when the only file under the published package that the changeset check counts is its package.json,
-// that file changed only in devDependencies other than the build tools, and the pull request adds or edits no
-// changeset. Development dependencies don't ship, so such a pull request, like a Dependabot update, needs no
-// changeset. Exits 1 otherwise, and the Changeset step runs `changeset status` as usual, which also checks any
-// changeset the pull request brings.
+// that file changed only in devDependencies the build never reads, and the pull request adds or edits no
+// changeset. Such a pull request, like most Dependabot updates of test tools, ships nothing and needs no changeset.
+// Exits 1 otherwise, and the Changeset step runs `changeset status` as usual, which also checks any changeset the
+// pull request brings.
 // Usage: node .github/scripts/changeset-exempt.mjs <base ref>
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -13,8 +13,11 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const pkgDir = 'packages/design-system';
 const manifest = `${pkgDir}/package.json`;
 
-// Vite builds dist and TypeScript writes the published .d.ts files, so a bump of either can change what ships.
-export const buildTools = ['vite', 'typescript'];
+// The devDependencies only the tests run. Anything else may reach what ships: Vite builds dist, and TypeScript
+// writes the published .d.ts files from the @types packages, which inline their types. A dependency missing from
+// this list needs a changeset, so add one here only when nothing under src/ outside the tests, nor the build,
+// imports it.
+export const testOnly = ['vitest', '@vitest/*', '@testing-library/*', 'jsdom', 'axe-core', 'playwright', 'esbuild', 'temporal-polyfill'];
 
 // The files changeset status counts for the package: those under it matching a pattern in changedFilePatterns
 // and none of its negated ones, with paths relative to the package. `**` and its negations are all the config uses.
@@ -29,8 +32,8 @@ export function counted(files, patterns) {
     });
 }
 
-// True when the two package.json texts differ only in devDependencies, and not in a build tool's entry. Key order
-// counts, since Node and TypeScript resolve `exports` conditions in the order they're written.
+// True when the two package.json texts differ only in devDependencies the tests alone use. Key order counts
+// outside devDependencies, since Node and TypeScript resolve `exports` conditions in the order they're written.
 export function onlyDevDependencies(before, after) {
   const split = (text) => {
     const { devDependencies = {}, ...rest } = JSON.parse(text);
@@ -38,7 +41,9 @@ export function onlyDevDependencies(before, after) {
   };
   const a = split(before);
   const b = split(after);
-  return a.rest === b.rest && buildTools.every((name) => a.dev[name] === b.dev[name]);
+  if (a.rest !== b.rest) return false;
+  const changed = [...new Set([...Object.keys(a.dev), ...Object.keys(b.dev)])].filter((name) => a.dev[name] !== b.dev[name]);
+  return changed.every((name) => testOnly.some((pattern) => matchesGlob(name, pattern)));
 }
 
 // `files` lists every path the pull request changed under the package and under .changeset/.

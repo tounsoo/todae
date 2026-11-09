@@ -54,12 +54,20 @@ test('reordering exports conditions needs a changeset, since resolution follows 
   assert.equal(exempt([manifest], patterns, before, after), false);
 });
 
-test('a bump of a build tool that writes dist or the .d.ts files needs a changeset', () => {
-  for (const name of ['vite', 'typescript']) {
+test('a bump of what the build reads needs a changeset: Vite, TypeScript, the @types packages, or anything unlisted', () => {
+  for (const name of ['vite', 'typescript', '@types/react', '@types/node', 'react', 'some-new-tool']) {
     const before = pkg({ devDependencies: { [name]: '^6.0.0', vitest: '^4.1.12' } });
     const after = pkg({ devDependencies: { [name]: '^6.1.0', vitest: '^4.1.12' } });
-    assert.equal(exempt([manifest], patterns, before, after), false);
+    assert.equal(exempt([manifest], patterns, before, after), false, name);
   }
+  const before = pkg({ devDependencies: { vitest: '^4.1.12' } });
+  assert.equal(exempt([manifest], patterns, before, pkg({ devDependencies: { vitest: '^4.1.12', 'some-new-tool': '1.0.0' } })), false);
+});
+
+test('a bump of test-only tools alone is exempt', () => {
+  const before = pkg({ devDependencies: { vitest: '^4.1.12', '@vitest/browser-playwright': '4.1.12', '@testing-library/react': '^16.2.0', jsdom: '^26.0.0', 'axe-core': '^4.13.0' } });
+  const after = pkg({ devDependencies: { vitest: '^4.2.0', '@vitest/browser-playwright': '4.2.0', '@testing-library/react': '^16.3.0', jsdom: '^26.1.0', 'axe-core': '^4.14.0' } });
+  assert.equal(exempt([manifest], patterns, before, after), true);
 });
 
 test('a pull request that adds or edits a changeset runs changeset status, which checks it', () => {

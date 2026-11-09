@@ -62,8 +62,8 @@ jobs:
       - uses: ./.github/actions/setup
 
       # Fails when the package changed outside its tests and no changeset was added. A change to only the
-      # package's devDependencies other than Vite and TypeScript, as in most Dependabot updates, ships nothing and
-      # passes without one.
+      # package's test-only devDependencies (listed in changeset-exempt.mjs), as in a Dependabot update of Vitest,
+      # ships nothing and passes without one.
       # The Version Packages pull request deletes the changesets, so it skips the check.
       - name: Changeset
         if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}

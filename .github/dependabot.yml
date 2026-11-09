@@ -5,8 +5,9 @@
 # Dependabot security updates, come when an advisory is published, grouped into one npm pull request. That keeps
 # CI runs down. GitHub gives a Dependabot pull request no repository secrets, so Docs deploy builds no Vercel
 # preview for it; merging it deploys main as usual. Actions that only release.yml uses first run on main, so check
-# those bumps in the pull request before merging. A pull request that changes only the package's devDependencies,
-# other than Vite and TypeScript, needs no changeset (ci.yml, Changeset step).
+# those bumps in the pull request before merging. A pull request that changes only the package's test-only
+# devDependencies needs no changeset; one that moves Vite, TypeScript or an @types package does, since they build
+# what ships (ci.yml, Changeset step).
 version: 2
 updates:
   - package-ecosystem: github-actions
