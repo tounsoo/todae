@@ -45,10 +45,10 @@ export function DateRangeInput({ min, max, locale, ...props }: FieldDateRangeInp
         outOfBounds: (value, strings) => {
           const { start, end } = spanOf(value.start, value.end);
           if (min !== undefined && Temporal.PlainDate.compare(start, min) < 0) {
-            return strings.dateRangeUnderflow(formatDate(min, { locale }));
+            return { kind: 'rangeUnderflow', message: strings.dateRangeUnderflow(formatDate(min, { locale })) };
           }
           if (max !== undefined && Temporal.PlainDate.compare(end, max) > 0) {
-            return strings.dateRangeOverflow(formatDate(max, { locale }));
+            return { kind: 'rangeOverflow', message: strings.dateRangeOverflow(formatDate(max, { locale })) };
           }
           return undefined;
         },

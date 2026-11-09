@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Calendar, ColorPicker, ErrorMessage, Field, Form, GlyphsProvider, Label, OptionList, timeOptions } from '../index.js';
 import { mount, settle } from '../test/form.js';
@@ -271,5 +271,46 @@ describe('Field.Picker', () => {
     await act(async () => {});
     expect(container.querySelector('form')!.checkValidity()).toBe(false);
     expect(container.querySelector<HTMLInputElement>('input[data-todae-value-input]')!.validationMessage).toBe('Pick a weekday');
+  });
+
+  it("keeps the field's customValidity on the value input when a child alone makes the typed input read-only", async () => {
+    const Inner = memo(function Inner() {
+      const [fixed, setFixed] = useState(false);
+      return (
+        <>
+          <Field.DateInput value={date('2026-10-17')} onValueChange={() => {}} readOnly={fixed} locale="en-US" />
+          <button type="button" onClick={() => setFixed(true)}>
+            Lock
+          </button>
+        </>
+      );
+    });
+    const { container } = render(
+      <form>
+        <Field.Root aria-label="Day" name="day" customValidity="Pick a weekday">
+          <Inner />
+        </Field.Root>
+      </form>,
+    );
+    await act(async () => {});
+    const form = container.querySelector('form')!;
+    expect(form.checkValidity()).toBe(false);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Lock' }));
+    });
+    expect((screen.getByLabelText('Day') as HTMLInputElement).readOnly).toBe(true);
+    expect(form.checkValidity()).toBe(false);
+  });
+
+  it("leaves the field's customValidity on a read-only Field.NumberInput, which a form leaves unchecked", async () => {
+    const { container } = render(
+      <form>
+        <Field.Root aria-label="Seats" name="seats" customValidity="Too many">
+          <Field.NumberInput value={3} readOnly />
+        </Field.Root>
+      </form>,
+    );
+    await act(async () => {});
+    expect(container.querySelector('form')!.checkValidity()).toBe(true);
   });
 });

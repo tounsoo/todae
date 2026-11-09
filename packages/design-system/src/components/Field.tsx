@@ -3,6 +3,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -168,12 +169,16 @@ function Root({
   const parentRegistry = useContext(FieldContext)?.registry;
   useLayoutEffect(() => parentRegistry?.addChild(registry), [parentRegistry, registry]);
   const inputId = id ?? autoId;
-  // The control the shell focuses is the field's one native control, when it has one the browser validates, else the first input that carries the field's value: a read-only typed input is left out of a form's check, its value input is not.
+  // The control the shell focuses is the field's one native control, when it has one, else the first input that carries the field's value. A read-only typed input is left out of a form's check and its value input is not, so the message goes there.
   useCustomValidity(shellRef, () => {
     const control = registry.focusTarget();
     const carrier = control && isValidityCarrier(control) ? control : null;
-    return carrier?.willValidate ? carrier : (registry.firstValueInput() ?? carrier);
+    const fixedTyped = carrier !== null && !carrier.willValidate && carrier.hasAttribute('data-todae-typed-input');
+    return fixedTyped ? (registry.firstValueInput() ?? carrier) : (carrier ?? registry.firstValueInput());
   }, customValidity);
+  // A typed input that a child of its own makes read-only, or editable again, moves the message: render again to place it.
+  const [, placeAgain] = useReducer((count: number) => count + 1, 0);
+  useLayoutEffect(() => registry.onEditableChange(placeAgain), [registry]);
   const describedByWithError = mergeDescribedBy(describedBy, errorId);
 
   // Stable while these inputs are, so parts and useField callbacks keep their identity.

@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, Label, formatDateRange } from '../index.js';
+import { ErrorMessage, Field, Form, Label, formatDateRange } from '../index.js';
+import { mount, submit } from '../test/form.js';
 
 afterEach(cleanup);
 
@@ -232,5 +233,52 @@ describe('Field.DateRangeInput', () => {
     fireEvent.blur(input);
     expect((screen.getByTestId('form') as HTMLFormElement).checkValidity()).toBe(false);
     expect(document.querySelector<HTMLInputElement>('input[data-todae-value-input]')!.validationMessage).toBe(message);
+  });
+});
+
+describe("a typed input's own messages in a Form.Root", () => {
+  function Kinds() {
+    const [day, setDay] = useState<Temporal.PlainDate | null>(null);
+    const [stay, setStay] = useState<{ start: Temporal.PlainDate; end: Temporal.PlainDate } | null>(null);
+    return (
+      <Form.Root data-testid="form">
+        <Field.Group>
+          <Label.Root htmlFor="day">Day</Label.Root>
+          <Field.Root id="day" name="day">
+            <Field.DateInput value={day} onValueChange={setDay} min={date('2026-10-05')} locale="en-US" />
+          </Field.Root>
+          <ErrorMessage.Root>{(error) => `day ${error.kind}|${error.message}`}</ErrorMessage.Root>
+        </Field.Group>
+        <Field.Group>
+          <Label.Root htmlFor="stay">Stay</Label.Root>
+          <Field.Root id="stay" name="stay">
+            <Field.DateRangeInput value={stay} onValueChange={setStay} min={date('2026-10-05')} locale="en-US" />
+          </Field.Root>
+          <ErrorMessage.Root>{(error) => `stay ${error.kind}|${error.message}`}</ErrorMessage.Root>
+        </Field.Group>
+      </Form.Root>
+    );
+  }
+
+  it('reports a range out of bounds as the bound it breaks, as a Field.DateInput does', async () => {
+    await mount(<Kinds />);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Day'), { target: { value: '10/3/2026' } });
+      fireEvent.blur(screen.getByLabelText('Day'));
+      fireEvent.change(screen.getByLabelText('Stay'), { target: { value: '10/3/2026 – 10/10/2026' } });
+      fireEvent.blur(screen.getByLabelText('Stay'));
+    });
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('day rangeUnderflow|Enter 10/5/2026 or later')).toBeTruthy();
+    expect(screen.getByText('stay rangeUnderflow|Enter 10/5/2026 or later')).toBeTruthy();
+  });
+
+  it('reports text that says no value as badInput', async () => {
+    await mount(<Kinds />);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Stay'), { target: { value: 'soon' } });
+    });
+    await submit(screen.getByTestId('form'));
+    expect(screen.getByText('stay badInput|Enter a valid value')).toBeTruthy();
   });
 });

@@ -23,7 +23,7 @@ On its own, `Field.DateRangeInput` is the field's control, with no button, for a
 
 <Example of={FieldDateRangeInputAlone} block />
 
-The range goes with a form in a native text input beside the text input, under the field's `name`, or the input's own `name`, as an ISO 8601 interval such as `2026-10-03/2026-10-10`. The text input sends nothing, and the native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no range invalid. No native input holds a range, so the browser does not check `min` and `max`: the input does, and a range that starts before `min` or ends after `max` blocks the submit, as text that is not a range does. Inside a [Form.Root](/form), a missing range shows in the field's `ErrorMessage.Root` in the page's language, and a range out of bounds or unreadable text shows the `badInput` string; focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too. A Calendar's `isDateDisabled` is not part of the check, and neither is whether every day between the dates can be picked, so check a typed range yourself and set `customValidity` on the `Field.Root`.
+The range goes with a form in a native text input beside the text input, under the field's `name`, or the input's own `name`, as an ISO 8601 interval such as `2026-10-03/2026-10-10`. The text input sends nothing, and the native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no range invalid. No native input holds a range, so the browser does not check `min` and `max`: the input does, and a range that starts before `min` or ends after `max` blocks the submit, as text that is not a range does. Inside a [Form.Root](/form), a missing range shows in the field's `ErrorMessage.Root` in the page's language, a range that starts before `min` or ends after `max` shows the `dateRangeUnderflow` or `dateRangeOverflow` string with the bound in the input's own date format, and unreadable text shows the `badInput` string; focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too. A Calendar's `isDateDisabled` is not part of the check, and neither is whether every day between the dates can be picked, so check a typed range yourself and set `customValidity` on the `Field.Root`.
 
 ## Accessible composition
 
@@ -31,7 +31,7 @@ The range goes with a form in a native text input beside the text input, under t
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same range for the input and the calendar beside it, and the same `locale`, `min` and `max`.
 
-**Watch for:** With a `value`, the server writes the range in its own locale, so pass `locale` when the input renders on a server. The `badInput` message for a range out of bounds doesn't name the bounds: say them in the field's [Description](/description) when they matter.
+**Watch for:** With a `value`, the server writes the range in its own locale, so pass `locale` when the input renders on a server.
 
 ## When to use
 

@@ -11,6 +11,7 @@ import {
 import { useFieldContext } from './Field.context.js';
 import { usePublishPicks, type FieldPicks } from './fieldRegistry.js';
 import { useCustomValidity } from './customValidity.js';
+import { markCustomKind } from './validity.js';
 import { FieldValueInput } from './Field.ValueInput.js';
 import { useFormSubmitHold } from './useFormSubmitHold.js';
 import { useFormReset } from '../internal/formReset.js';
@@ -65,8 +66,8 @@ export type TypedFormat<Value> = {
   equals: (a: Value, b: Value) => boolean;
   /** The value input's type, value for the current value, and bounds. */
   valueInput: (value: Value | null) => Omit<ValueInputOptions, 'name' | 'required'>;
-  /** The message for a value the input's bounds don't allow, where its value input can't check them, as for a range in a text input; undefined for a value in bounds. */
-  outOfBounds?: (value: Value, strings: Strings) => string | undefined;
+  /** The message for a value the input's bounds don't allow, and which bound, where its value input can't check them, as for a range in a text input; undefined for a value in bounds. */
+  outOfBounds?: (value: Value, strings: Strings) => { kind: 'rangeUnderflow' | 'rangeOverflow'; message: string } | undefined;
 };
 
 // The text the person is typing, and the value it started from: a value the product sets since ends the draft. `failed` is set when a commit tried to read it and could not.
@@ -159,6 +160,13 @@ export function TypedInput<Value>({
     field.notifyValueChange();
   };
   useLayoutEffect(() => registry.onPick(() => onPick.current()), [registry]);
+  // Field.Root's customValidity goes where a form checks it, which moves when this input becomes read-only or editable.
+  const wasFixed = useRef(fixed);
+  useLayoutEffect(() => {
+    if (wasFixed.current === fixed) return;
+    wasFixed.current = fixed;
+    registry.editableChanged();
+  }, [registry, fixed]);
 
   const refs = useComposedRefs(node, ref);
   // A reset puts back what the form had, which is not what was typed.
@@ -184,7 +192,13 @@ export function TypedInput<Value>({
   const valueRef = useComposedRefs(valueNode, valueInput.ref);
   // The value input is invalid too, so a submit, Enter's implicit one included, is blocked and Form.Root words it.
   const outside = current !== null ? format.outOfBounds?.(current, strings) : undefined;
-  useCustomValidity(valueNode, () => valueNode.current, unreadable ? strings.badInput : outside);
+  const own = unreadable ? { kind: 'badInput' as const, message: strings.badInput } : outside;
+  useCustomValidity(valueNode, () => valueNode.current, own?.message);
+  // Form.Root reports the message as the flag it stands for, as a native input's would be.
+  useLayoutEffect(() => {
+    const node = valueNode.current;
+    if (node) markCustomKind(node, own ?? null);
+  });
   return (
     <>
       <input

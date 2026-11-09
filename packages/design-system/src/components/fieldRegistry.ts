@@ -99,6 +99,10 @@ export type FieldRegistry = {
   onPick: (listener: () => void) => () => void;
   /** Tells the field's typed inputs that a person picked, so a pick replaces what was typed, even a pick of the value already set. */
   picked: () => void;
+  /** Hears a typed input of the field become read-only or editable; the result stops hearing. */
+  onEditableChange: (listener: () => void) => () => void;
+  /** Tells the field a typed input became read-only or editable, so Field.Root moves its customValidity to what a form checks. */
+  editableChanged: () => void;
   /** The last picker to mount, for a press on a read-only typed input. */
   lastPicker: () => HTMLElement | null;
   /** Registers a value input of the field; the result unregisters it. */
@@ -137,6 +141,7 @@ export function createFieldRegistry(): FieldRegistry {
   const picks = new Map<object, FieldPicks>();
   let pickSeed: FieldPicks | null = null;
   const pickListeners = new Set<() => void>();
+  const editableListeners = new Set<() => void>();
   let picksCommitted = false;
   const lastPicks = () => {
     let last: FieldPicks | null = null;
@@ -250,6 +255,15 @@ export function createFieldRegistry(): FieldRegistry {
     },
     picked() {
       for (const listener of [...pickListeners]) listener();
+    },
+    onEditableChange(listener) {
+      editableListeners.add(listener);
+      return () => {
+        editableListeners.delete(listener);
+      };
+    },
+    editableChanged() {
+      for (const listener of [...editableListeners]) listener();
     },
     lastPicker: () => lastOf(controls.values(), 'picker'),
     addValueInput(input) {
