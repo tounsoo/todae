@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { startTransition, useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Calendar, type CalendarRootProps, type DateRange } from '../index.js';
 
@@ -288,6 +288,78 @@ describe('Calendar range mode', () => {
       expect(calls).toHaveBeenCalledWith(date('2026-10-06'));
       expect(calls.mock.calls.length).toBeGreaterThan(700);
       expect(vi.getTimerCount()).toBe(1);
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('says in development when a new isDateDisabled on each render keeps starting a far scan over', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'setInterval', 'clearInterval'] });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      // A frame checks one chunk of days, and the parent renders between any two frames.
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      function Ticking() {
+        const [tick, setTick] = useState(0);
+        useEffect(() => {
+          const id = setInterval(() => setTick((count) => count + 1), 16);
+          return () => clearInterval(id);
+        }, []);
+        return <RangeControlled isDateDisabled={() => false} data-tick={tick} />;
+      }
+      render(<Ticking />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      for (let frame = 0; frame < 20; frame++) act(() => vi.advanceTimersByTime(16));
+      const told = error.mock.calls.filter(([message]) => String(message).includes('isDateDisabled'));
+      expect(told).toHaveLength(1);
+      expect(String(told[0]![0])).toContain('useCallback');
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('says nothing when a new isDateDisabled comes only after each far scan has finished', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      const { rerender } = render(<RangeControlled isDateDisabled={() => false} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      for (let parent = 0; parent < 6; parent++) {
+        for (let frame = 0; frame < 100 && vi.getTimerCount() > 0; frame++) act(() => vi.advanceTimersToNextFrame());
+        rerender(<RangeControlled isDateDisabled={() => false} />);
+      }
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('says nothing when isDateDisabled stays the same through a far scan', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      let clock = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (clock += 100));
+      const none = () => false;
+      render(<RangeControlled isDateDisabled={none} />);
+      fireEvent.click(october(5));
+      fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+      fireEvent.click(screen.getByRole('button', { name: '2031' }));
+      for (let frame = 0; frame < 100 && vi.getTimerCount() > 0; frame++) act(() => vi.advanceTimersToNextFrame());
+      expect(error).not.toHaveBeenCalled();
     } finally {
       vi.restoreAllMocks();
       vi.useRealTimers();
