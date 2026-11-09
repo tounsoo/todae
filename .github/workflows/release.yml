@@ -1,7 +1,8 @@
 name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
-# With none, publishes the versions that aren't on npm yet: merging that pull request releases.
+# With none, publishes the versions that aren't on npm yet once Checks passes, unless the push only changed
+# Markdown or docs pages: merging that pull request releases.
 # Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm
 # and whose package source is the same as at that version's tag (the docs job below has the full rule).
 on:
@@ -230,7 +231,7 @@ jobs:
 
   # docs-deploy.yml deploys the docs and their MCP server to production from docs-stable, so they only
   # describe what npm has. This job moves docs-stable from what it finds, not from how the jobs
-  # above went, and from the tip of main, not this run's commit: to the tip when its package version is
+  # above went, and from the tip of main, not this run's commit: to the tip when the tip's package version is
   # on npm, no changeset that releases something is waiting, and the package source is the same as at
   # that version's tag; to that version's tag when only the source differs; otherwise to the commit
   # tagged with the latest version on npm. It waits for npm to serve this run's version after a
@@ -290,7 +291,7 @@ jobs:
             served=false
             for attempt in $(seq 10); do
               if on_npm "$version"; then served=true; break; fi
-              sleep 30
+              [ "$attempt" = 10 ] || sleep 30
             done
             if [ "$served" = false ]; then
               echo "npm doesn't serve $package@$version yet; re-run this job" >&2
