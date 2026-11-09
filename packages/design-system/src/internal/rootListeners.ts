@@ -9,6 +9,12 @@
 // `stopImmediatePropagation`, which this calls too, so the handlers after it
 // on the node, shared or not, don't hear the event. One that throws doesn't
 // keep the others from hearing; its error is thrown after.
+//
+// The one place the order differs: the shared listener sits where the first
+// handler started, so a capture listener a page adds to the same node between
+// two parts' starts now runs after both, where it used to run between them,
+// and its stopImmediatePropagation no longer shields the later part. A page
+// listener added before the first part starts keeps its place.
 
 /** Handles one event; `'stop'` keeps the handlers after it from hearing it. */
 export type RootHandler = (event: Event) => 'stop' | void;

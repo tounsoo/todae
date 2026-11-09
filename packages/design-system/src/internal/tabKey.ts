@@ -16,25 +16,34 @@ function onKey(event: KeyboardEvent) {
   });
 }
 
-/** Starts following Tab presses; the returned stop ends this part's share. */
-export function watchTabKey(): () => void {
-  if (watchers++ === 0) window.addEventListener('keydown', onKey, true);
-  let stopped = false;
-  return () => {
-    if (stopped) return;
-    stopped = true;
-    if (--watchers > 0) return;
-    window.removeEventListener('keydown', onKey, true);
-    clearTimeout(timer);
-    current = null;
-  };
-}
+export type TabWatch = {
+  /**
+   * Whether the focus now arriving is the browser's own Tab move: a Tab
+   * press has finished dispatch unprevented. Focus a handler moves during
+   * the key, such as a menu returning focus to its trigger, does not count,
+   * and neither does a press already under way when this watch started,
+   * which a listener of the part's own would not have heard.
+   */
+  tabbing(): boolean;
+  /** Ends this part's share; a second call does nothing. */
+  stop(): void;
+};
 
-/**
- * Whether the focus now arriving is the browser's own Tab move: a Tab press
- * has finished dispatch unprevented. Focus a handler moves during the key,
- * such as a menu returning focus to its trigger, does not count.
- */
-export function isTabbing(): boolean {
-  return current !== null && current.eventPhase === Event.NONE && !current.defaultPrevented;
+/** Starts following Tab presses for one part. */
+export function watchTabKey(): TabWatch {
+  if (watchers++ === 0) window.addEventListener('keydown', onKey, true);
+  const before = current;
+  let stopped = false;
+  return {
+    tabbing: () =>
+      !stopped && current !== null && current !== before && current.eventPhase === Event.NONE && !current.defaultPrevented,
+    stop: () => {
+      if (stopped) return;
+      stopped = true;
+      if (--watchers > 0) return;
+      window.removeEventListener('keydown', onKey, true);
+      clearTimeout(timer);
+      current = null;
+    },
+  };
 }

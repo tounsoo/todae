@@ -15,7 +15,7 @@ import { useComposedRefs } from '../internal/props.js';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from '../internal/toolbarContext.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
-import { isTabbing, watchTabKey } from '../internal/tabKey.js';
+import { watchTabKey, type TabWatch } from '../internal/tabKey.js';
 
 export type { ToolbarOrientation };
 
@@ -126,7 +126,16 @@ function Root({
   const roving = useRovingFocus({ orientation, loop, findItems: itemsOf });
 
   // Tab presses, seen first at the window by one listener every toolbar shares.
-  useEffect(watchTabKey, []);
+  const tabKey = useRef<TabWatch | null>(null);
+  useEffect(() => {
+    const watch = watchTabKey();
+    tabKey.current = watch;
+    return () => {
+      watch.stop();
+      tabKey.current = null;
+    };
+  }, []);
+  const isTabbing = () => tabKey.current?.tabbing() ?? false;
 
   // Tab coming back into a run goes to the item Tab last left it from, when
   // that item can still take focus. Focus from a click, a script or a screen

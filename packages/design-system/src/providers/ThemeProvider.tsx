@@ -90,19 +90,23 @@ export function ThemeProvider<Extra extends string = never>({
     process.env.NODE_ENV !== 'production' && Object.keys(vars).length > 0 ? JSON.stringify(contrastInputs(vars, inputs, style)) : '';
   const warned = useRef<string | null>(null);
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || !element.current) return;
-    if (contrastKey === '') {
-      warned.current = null;
-      return;
+    // A block, not an early return: esbuild drops the checker only when the
+    // whole body sits under the production test.
+    if (process.env.NODE_ENV !== 'production') {
+      if (!element.current) return;
+      if (contrastKey === '') {
+        warned.current = null;
+        return;
+      }
+      const { names, underneath } = JSON.parse(contrastKey) as ReturnType<typeof contrastInputs>;
+      // During hydration `resolved` is still the server's guess, so read the appearance as it renders now.
+      const now = appearance === 'system' ? getSnapshot() : appearance;
+      const failures = overrideContrastFailures(element.current, names, underneath);
+      const key = failures.length === 0 ? null : `${now}:${failureKey(failures)}`;
+      // A ref survives StrictMode's second mount, so the same failing pairs warn once.
+      if (key && key !== warned.current) console.warn(overrideContrastMessage(failures, now));
+      warned.current = key;
     }
-    const { names, underneath } = JSON.parse(contrastKey) as ReturnType<typeof contrastInputs>;
-    // During hydration `resolved` is still the server's guess, so read the appearance as it renders now.
-    const now = appearance === 'system' ? getSnapshot() : appearance;
-    const failures = overrideContrastFailures(element.current, names, underneath);
-    const key = failures.length === 0 ? null : `${now}:${failureKey(failures)}`;
-    // A ref survives StrictMode's second mount, so the same failing pairs warn once.
-    if (key && key !== warned.current) console.warn(overrideContrastMessage(failures, now));
-    warned.current = key;
   }, [contrastKey, appearance, resolved]);
   return (
     <AppearanceContext.Provider value={context}>
