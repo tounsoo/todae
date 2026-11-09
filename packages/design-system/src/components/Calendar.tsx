@@ -40,7 +40,7 @@ type CalendarSharedProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one. */
+  /** Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one, and a new function checks the days to a range's far end again, so keep it the same between renders, such as with useCallback, until the days it rules out change. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
@@ -169,19 +169,6 @@ export const GREGORY = 'gregory';
  */
 export function isoDate<T extends Temporal.PlainDate | null | undefined>(date: T): T {
   return (date && date.calendarId !== 'iso8601' ? date.withCalendar('iso8601') : date) as T;
-}
-
-/** Whether isDateDisabled rules out a day strictly between two dates. */
-function ruledOutBetween(
-  a: Temporal.PlainDate,
-  b: Temporal.PlainDate,
-  isDateDisabled: (date: Temporal.PlainDate) => boolean,
-) {
-  const { start, end } = spanOf(a, b);
-  for (let day = start.add({ days: 1 }); Temporal.PlainDate.compare(day, end) < 0; day = day.add({ days: 1 })) {
-    if (isDateDisabled(day)) return true;
-  }
-  return false;
 }
 
 const sameRange = (a: DateRange | null, b: DateRange | null) =>
@@ -319,9 +306,7 @@ function Root(rootProps: CalendarRootProps) {
   // A first pick that min, max or isDateDisabled has since ruled out can't start a range.
   const anchorRuledOut = useMemo(() => anchor !== null && unavailable(anchor), [anchor, unavailable]);
   if (anchorRuledOut) setPending(IDLE);
-  // Counts the ends a range refused because isDateDisabled had since ruled out a day before them.
-  const [rescan, setRescan] = useState(0);
-  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled }, rescan);
+  const reach = useReach(anchor, focused?.toPlainYearMonth() ?? null, { min, max, isDateDisabled });
   const reachable = useCallback(
     (date: Temporal.PlainDate) =>
       reach !== null &&
@@ -378,13 +363,6 @@ function Root(rootProps: CalendarRootProps) {
   const select = useCallback(
     (date: Temporal.PlainDate) => {
       if (disabled || unavailable(date) || (anchor && !reachable(date))) return;
-      // The reach scan asks each day once, whichever isDateDisabled a render has, so the
-      // newest one checks the days between the picks before they make a range. One it now
-      // rules out scans the reach again with it, which shows the end as out of reach.
-      if (anchor && isDateDisabled && ruledOutBetween(anchor, date, isDateDisabled)) {
-        setRescan((count) => count + 1);
-        return;
-      }
       setFocused(date);
       // In single mode a pick is a whole range of one day.
       if (mode === 'range' && !anchor) {
@@ -401,19 +379,7 @@ function Root(rootProps: CalendarRootProps) {
       // In a Field.Picker, the pick that makes the value tells the field, and closes it.
       picked?.(true);
     },
-    [
-      anchor,
-      announce,
-      disabled,
-      isDateDisabled,
-      mode,
-      onValueChange,
-      picked,
-      reachable,
-      setValue,
-      strings.pickEndDate,
-      unavailable,
-    ],
+    [anchor, announce, disabled, mode, onValueChange, picked, reachable, setValue, strings.pickEndDate, unavailable],
   );
   const shown = useMemo(() => {
     if (!anchor) return value;

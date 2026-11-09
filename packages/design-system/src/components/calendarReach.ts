@@ -1,11 +1,11 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 /** How far from the anchor isDateDisabled has been checked, and the nearest days it ruled out. */
 type ReachScan = {
   anchor: Temporal.PlainDate;
-  rescan: number;
+  isDateDisabled: (date: Temporal.PlainDate) => boolean;
   min: Temporal.PlainDate | undefined;
   max: Temporal.PlainDate | undefined;
   /** The earliest and latest days checked. */
@@ -40,24 +40,27 @@ const sameDate = (a: Temporal.PlainDate | undefined, b: Temporal.PlainDate | und
  * The first and last days a range from the anchor can reach: min and max, or
  * nearer, the days beside the nearest ones isDateDisabled rules out. Only the
  * shown month's days are drawn, so days are checked only as far as it reaches,
- * and each day once while the anchor, min, max and `rescan` stay the same,
- * which the cache remembers. A new isDateDisabled goes on from the days checked
- * so far, so an inline function doesn't start the scan over on every render. A
- * call checks at most `budget` days; the next call with the same cache goes on
- * from there.
+ * and each day once while the anchor, isDateDisabled, min and max stay the
+ * same, which the cache remembers. A call checks at most `budget` days; the
+ * next call with the same cache goes on from there.
  */
 function reachFrom(
   cache: ReachCache,
   anchor: Temporal.PlainDate,
   month: Temporal.PlainYearMonth,
   { min, max, isDateDisabled }: ReachLimits,
-  rescan: number,
   budget: number,
 ): Reach {
   if (!isDateDisabled) return { first: min ?? null, last: max ?? null, done: true };
   let s = cache.current;
-  if (!s || !s.anchor.equals(anchor) || s.rescan !== rescan || !sameDate(s.min, min) || !sameDate(s.max, max)) {
-    s = cache.current = { anchor, rescan, min, max, below: anchor, above: anchor, first: null, last: null };
+  if (
+    !s ||
+    !s.anchor.equals(anchor) ||
+    s.isDateDisabled !== isDateDisabled ||
+    !sameDate(s.min, min) ||
+    !sameDate(s.max, max)
+  ) {
+    s = cache.current = { anchor, isDateDisabled, min, max, below: anchor, above: anchor, first: null, last: null };
   }
   const monthStart = month.toPlainDate({ day: 1 });
   const monthEnd = month.toPlainDate({ day: month.daysInMonth });
@@ -87,46 +90,30 @@ const SCAN_DAYS = 732;
 const SCAN_CHUNK_DAYS = 32;
 /** How long a frame may go on checking after a render, in milliseconds. */
 const SCAN_SLICE_MS = 8;
+/** Renders in a row that start an unfinished scan over with a new isDateDisabled before development says so. */
+const RESTARTS_TOLD = 3;
 
 /**
  * The reach of a range started on `anchor` over the shown month, null with no first
  * pick. A render checks at most SCAN_DAYS days. A far jump with an isDateDisabled that
  * rules out little would check millions in one render, so the rest of the scan runs in
  * slices between frames, and until it reaches a day, that day can't end the range. A
- * scan starts over when the anchor, min, max or `rescan` changes, goes on toward the
- * new month when the month changes, and stops on unmount. A new isDateDisabled checks
- * the days from where the scan is, so a parent that renders on every frame with an
- * inline function still lets the scan finish; a change to `rescan` checks every day
- * again with the newest one.
+ * scan that hasn't finished starts over when the anchor or a limit changes, goes on
+ * toward the new month when the month changes, and stops on unmount.
  */
 export function useReach(
   anchor: Temporal.PlainDate | null,
   month: Temporal.PlainYearMonth | null,
   { min, max, isDateDisabled }: ReachLimits,
-  rescan: number,
 ): Reach | null {
   const cache = useRef<ReachScan | null>(null);
-  // The newest isDateDisabled, for the frames after the render that gave it.
-  const latest = useRef(isDateDisabled);
-  useLayoutEffect(() => {
-    latest.current = isDateDisabled;
-  });
   const monthText = month?.toString() ?? null;
-  const limited = isDateDisabled !== undefined;
   const fresh = useMemo(
     () =>
       anchor && monthText !== null
-        ? reachFrom(
-            cache,
-            anchor,
-            Temporal.PlainYearMonth.from(monthText),
-            { min, max, isDateDisabled },
-            rescan,
-            SCAN_DAYS,
-          )
+        ? reachFrom(cache, anchor, Temporal.PlainYearMonth.from(monthText), { min, max, isDateDisabled }, SCAN_DAYS)
         : null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- not isDateDisabled itself: an inline one is new each render, and the cache goes on with this render's
-    [anchor, limited, max, min, monthText, rescan],
+    [anchor, isDateDisabled, max, min, monthText],
   );
   // What the frames found, for the render that `fresh` came from.
   const [carried, setCarried] = useState<{ from: Reach | null; reach: Reach } | null>(null);
@@ -136,12 +123,31 @@ export function useReach(
     let frame = requestAnimationFrame(function step() {
       const until = performance.now() + SCAN_SLICE_MS;
       let next: Reach;
-      do next = reachFrom(cache, anchor, target, { min, max, isDateDisabled: latest.current }, rescan, SCAN_CHUNK_DAYS);
+      do next = reachFrom(cache, anchor, target, { min, max, isDateDisabled }, SCAN_CHUNK_DAYS);
       while (!next.done && performance.now() < until);
       if (next.done) setCarried({ from: fresh, reach: next });
       else frame = requestAnimationFrame(step);
     });
     return () => cancelAnimationFrame(frame);
-  }, [anchor, fresh, max, min, monthText, rescan]);
+  }, [anchor, fresh, isDateDisabled, max, min, monthText]);
+  // A new isDateDisabled on every render starts an unfinished scan over each time, so a far
+  // day may never become reachable. In development, say so after a few such renders in a row.
+  const restarts = useRef<{ last: ReachLimits['isDateDisabled']; count: number; told: boolean }>({
+    last: undefined,
+    count: 0,
+    told: false,
+  });
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    const seen = restarts.current;
+    const restarted = Boolean(fresh && !fresh.done && seen.last && seen.last !== isDateDisabled);
+    seen.count = restarted ? seen.count + 1 : 0;
+    seen.last = isDateDisabled;
+    if (seen.count < RESTARTS_TOLD || seen.told) return;
+    seen.told = true;
+    console.error(
+      'Calendar.Root got a new isDateDisabled on each render, so a range scan starts over and far days may stay out of reach; keep it the same function, such as with useCallback',
+    );
+  }, [fresh, isDateDisabled]);
   return carried && carried.from === fresh ? carried.reach : fresh;
 }

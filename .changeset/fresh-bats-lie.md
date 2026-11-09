@@ -2,4 +2,4 @@
 '@tounsoo/todae': patch
 ---
 
-Calendar makes each date formatter once per locale, and in range mode an inline `isDateDisabled` no longer starts the reach scan over on every render, so far days stay reachable.
+Calendar makes each date formatter once per locale instead of on every render, and in development `Calendar.Root` logs an error when a new `isDateDisabled` on each render keeps a range's far days out of reach.
