@@ -79,7 +79,8 @@ export type FieldRegistry = {
   /**
    * The text as a control rendered it, before any text is committed. The
    * server never commits, and hydration must render what the server did, so
-   * Field.Counter's server snapshot reads this: the one write a render makes.
+   * Field.Counter's server snapshot reads this. It and `seedPicks` are the
+   * only writes a render makes.
    * Nothing is notified, and once a text is committed it does nothing.
    */
   seedText: (entry: TextEntry) => void;
