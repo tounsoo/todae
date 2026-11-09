@@ -458,6 +458,17 @@ describe('Dialog name check', () => {
     error.mockRestore();
   });
 
+  it('warns when its only name is a Title with a blank id', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title id=" ">Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Dialog.Root needs a name')));
+    error.mockRestore();
+  });
+
   it.each(['', '  '])('is named by its Title when aria-labelledby is %j', async (labelledBy) => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
