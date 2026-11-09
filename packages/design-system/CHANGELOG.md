@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.10.1
+
+### Patch Changes
+
+- Field.Root uses about 1 kB less memory per field: its internal registry keeps its methods on a shared prototype and makes each collection only when a part needs it. ([#430](https://github.com/tounsoo/todae/pull/430))
+
 ## 0.10.0
 
 ### Minor Changes
