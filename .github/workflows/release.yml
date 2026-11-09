@@ -140,7 +140,7 @@ jobs:
           if [ "$(sed -n 's/^class=//p' "$GITHUB_OUTPUT" | tail -n 1)" = all ]; then
             echo "publish=true" >>"$GITHUB_OUTPUT"
           else
-            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code or a changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
+            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code and has no changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
             echo "publish=false" >>"$GITHUB_OUTPUT"
           fi
       - if: ${{ steps.change.outputs.publish == 'true' }}
@@ -233,10 +233,11 @@ jobs:
   # above went, and from the tip of main, not this run's commit: to the tip when its package version is
   # on npm, no changeset that releases something is waiting, and the package source is the same as at
   # that version's tag; to that version's tag when only the source differs; otherwise to the commit
-  # tagged with the latest version on npm. After a publish it first waits for npm to serve this run's
-  # version. A failed publish so leaves the docs on the
-  # last release, and re-running this job catches up after one. With no tag to compare against, it
-  # warns and leaves docs-stable where it is.
+  # tagged with the latest version on npm. It waits for npm to serve this run's version after a
+  # publish, and main's version when that is tagged but not served yet, as when this job displaced
+  # the publishing run's own. A failed publish so leaves the docs on the last release, and re-running
+  # this job catches up after one. With no tag to compare against, it warns and leaves docs-stable
+  # where it is.
   docs:
     name: Deploy the docs
     needs: [select-mode, publish]
@@ -308,22 +309,24 @@ jobs:
           }
           # A changeset that releases something names the package in its front matter; an empty one doesn't.
           waiting=$(grep -lE "^['\"]?$package['\"]?:" .changeset/*.md || true)
-          released=false
-          if [ -z "$waiting" ]; then
-            if on_npm "$version"; then
-              released=true
-            elif [ -n "$(tagged "$version")" ]; then
-              # Publish tags a version only after npm took it, so npm is still catching up. This job may
-              # have displaced the publishing run's own, so it waits as that one would.
-              for attempt in $(seq 10); do
-                sleep 30
-                if on_npm "$version"; then released=true; break; fi
-              done
-              if [ "$released" = false ]; then
-                echo "npm doesn't serve $package@$version yet; re-run this job" >&2
-                exit 1
-              fi
+          served=false
+          if on_npm "$version"; then
+            served=true
+          elif [ -n "$(tagged "$version")" ]; then
+            # Publish tags a version only after npm took it, so npm is still catching up. This job may
+            # have displaced the publishing run's own, so it waits as that one would.
+            for attempt in $(seq 10); do
+              sleep 30
+              if on_npm "$version"; then served=true; break; fi
+            done
+            if [ "$served" = false ]; then
+              echo "npm doesn't serve $package@$version yet; re-run this job" >&2
+              exit 1
             fi
+          fi
+          released=false
+          if [ -z "$waiting" ] && [ "$served" = true ]; then
+            released=true
           fi
           no_tag() {
             echo "::warning::npm has $package@$1 but this repository has no $package@$1 tag, so docs-stable stays where it is. CONTRIBUTING.md (Releases) says how to add the tag."
