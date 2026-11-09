@@ -29,6 +29,8 @@ import { RELEASE } from '../../../lib/version';
 export const maxDuration = 30;
 
 const name = z.string().trim().min(1).max(80);
+/** The longest file name build_tokens takes. */
+const MAX_FILE_NAME = 200;
 const pageQuery = z.string().trim().min(1).max(200);
 const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
@@ -51,7 +53,7 @@ const buildTokensArguments = {
     if (!hasMoreKeysThan(value, MAX_FILES)) return value;
     context.addIssue({ code: z.ZodIssueCode.custom, message: `At most ${MAX_FILES} files` });
     return z.NEVER;
-  }, z.record(z.string().max(200), z.unknown())),
+  }, z.record(z.string().max(MAX_FILE_NAME), z.unknown())),
   resolver: z.string().max(200).optional(),
   scope: z.string().max(200).optional(),
 };
@@ -289,15 +291,17 @@ async function POST(request: Request): Promise<Response> {
     !building && buildFiles.size > 0 && filesAreTheCause()
       ? '; build_tokens files only get their own limits when every tool call in the request is build_tokens'
       : '';
-  const outsideOnly = () => !['deep', 'elements', 'key'].includes(inspectBody(body, buildFiles) ?? '');
+  const filesFitAsFiles = () =>
+    [...buildFiles].every((value) => !hasMoreKeysThan(value, MAX_FILES) && Object.keys(value).every((key) => key.length <= MAX_FILE_NAME)) &&
+    inspectBody(body, buildFiles) === null;
   // The SDK checks every message before a tool's own limit runs, so the body is measured whole here, once.
   switch (inspectBody(body, files)) {
     case 'deep':
       return jsonRpcError(400, -32600, `Request nests deeper than ${MAX_REQUEST_DEPTH} levels`, id);
     case 'elements':
-      return jsonRpcError(400, -32600, `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files${mixed(outsideOnly)}`, id);
+      return jsonRpcError(400, -32600, `Request holds more than ${MAX_REQUEST_ELEMENTS} elements outside build_tokens files${mixed(filesFitAsFiles)}`, id);
     case 'key':
-      return jsonRpcError(400, -32600, `Request holds an object key longer than ${MAX_REQUEST_KEY_LENGTH} characters outside build_tokens files${mixed(outsideOnly)}`, id);
+      return jsonRpcError(400, -32600, `Request holds an object key longer than ${MAX_REQUEST_KEY_LENGTH} characters outside build_tokens files${mixed(filesFitAsFiles)}`, id);
     case 'file-bytes':
       return jsonRpcError(400, -32602, `The files in this request total more than ${MAX_BYTES / 1024} KB`, id);
     case 'file-elements':
@@ -306,7 +310,13 @@ async function POST(request: Request): Promise<Response> {
   const elements = building ? BUILD_TOOL_INPUT_ELEMENTS : TOOL_INPUT_ELEMENTS;
   // The server checks each call on its own, so a batch's calls share one cap here.
   if (calls.length > 1 && countElements(calls.map((call) => call.arguments), elements) > elements) {
-    const othersFit = () => countElements(calls.filter((call) => call.name !== BUILD_TOOL).map((call) => call.arguments), elements) <= elements;
+    // Everything but the build calls' files, which would get their own limits in a request of their own.
+    const withoutFiles = calls.map(({ name, arguments: args }) => {
+      if (name !== BUILD_TOOL || !args || typeof args !== 'object' || Array.isArray(args)) return args;
+      const { files: _files, ...rest } = args as Record<string, unknown>;
+      return rest;
+    });
+    const othersFit = () => countElements(withoutFiles, elements) <= elements && filesFitAsFiles();
     return jsonRpcError(400, -32602, `The tool calls in this request hold more than ${elements} elements in all${mixed(othersFit)}`, id);
   }
   const headers = new Headers(request.headers);

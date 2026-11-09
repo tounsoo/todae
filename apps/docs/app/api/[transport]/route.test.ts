@@ -235,6 +235,22 @@ describe('docs MCP route', () => {
     const unrelated = await send(JSON.stringify([call(39, 'build_tokens', { files: {} }), call(40, 'get_token', { [long]: 1 })]));
     expect(unrelated.status).toBe(400);
     expect((await unrelated.json()).error.message).not.toContain('only get their own limits');
+    const tooBigAlone = { 'a.json': Array(1100).fill(0), 'b.json': ' '.repeat(MAX_BYTES) };
+    const hopeless = await send(JSON.stringify([call(41, 'build_tokens', { files: tooBigAlone }), call(42, 'list_components', {})]));
+    expect(hopeless.status).toBe(400);
+    expect((await hopeless.json()).error.message).not.toContain('only get their own limits');
+    const manyFiles = Object.fromEntries(Array.from({ length: 1100 }, (_, i) => [`f${i}.json`, {}]));
+    const extra = { files: { 'resolver.json': {} }, junk: Array(1500).fill(0) };
+    const overBudget = { files: { 'resolver.json': ' '.repeat(MAX_BYTES + 10) } };
+    const blamed = await send(JSON.stringify([call(45, 'get_token', { [long]: 1 }), call(46, 'build_tokens', overBudget)]));
+    expect(blamed.status).toBe(400);
+    expect((await blamed.json()).error.message).not.toContain('only get their own limits');
+    const longName = { files: { [`${'a'.repeat(201)}.json`]: {}, 'resolver.json': {} } };
+    for (const args of [{ files: manyFiles }, extra, longName]) {
+      const response = await send(JSON.stringify([call(43, 'build_tokens', args), call(44, 'list_components', {})]));
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.message).not.toContain('only get their own limits');
+    }
   });
 
   it('takes string files that fill the byte budget exactly', async () => {
