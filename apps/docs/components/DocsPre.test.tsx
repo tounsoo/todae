@@ -7,7 +7,7 @@ import { ScrollRegion } from './ScrollRegion';
 const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
-const observers: Array<{ cb: ResizeObserverCallback }> = [];
+const observers: Array<{ cb: ResizeObserverCallback; targets: Set<Element> }> = [];
 let wide = true;
 
 beforeEach(() => {
@@ -17,13 +17,20 @@ beforeEach(() => {
     'ResizeObserver',
     class {
       cb: ResizeObserverCallback;
+      targets = new Set<Element>();
       constructor(cb: ResizeObserverCallback) {
         this.cb = cb;
         observers.push(this);
       }
-      observe() {}
-      disconnect() {}
-      unobserve() {}
+      observe(target: Element) {
+        this.targets.add(target);
+      }
+      disconnect() {
+        this.targets.clear();
+      }
+      unobserve(target: Element) {
+        this.targets.delete(target);
+      }
     },
   );
   Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
@@ -49,9 +56,14 @@ afterEach(() => {
   Reflect.deleteProperty(HTMLElement.prototype, 'clientWidth');
 });
 
-function remeasure() {
-  act(() => {
-    for (const observer of observers) observer.cb([] as unknown as ResizeObserverEntry[], observer as unknown as ResizeObserver);
+async function remeasure() {
+  // The measure runs in the shared layout batch, a microtask after the report.
+  await act(async () => {
+    // Reports every observed target, as a browser does after a resize.
+    for (const observer of observers) {
+      const entries = [...observer.targets].map((target) => ({ target, contentRect: target.getBoundingClientRect() }));
+      observer.cb(entries as unknown as ResizeObserverEntry[], observer as unknown as ResizeObserver);
+    }
   });
 }
 
@@ -119,7 +131,7 @@ describe('overflow regions', () => {
     expect(screen.getAllByRole('region').map((el) => el.getAttribute('aria-label'))).toEqual(['코드 예시, Props', '표, Props']);
   });
 
-  it('keeps the region focusable until blur when it stops overflowing', () => {
+  it('keeps the region focusable until blur when it stops overflowing', async () => {
     render(
       <>
         <h2>Popover</h2>
@@ -143,7 +155,7 @@ describe('overflow regions', () => {
       pre.focus();
     });
     wide = false;
-    remeasure();
+    await remeasure();
     expect(pre.getAttribute('tabindex')).toBe('0');
     expect(pre.getAttribute('role')).toBe('region');
     expect(pre.getAttribute('aria-label')).toBe('Code example, Popover');
@@ -153,12 +165,12 @@ describe('overflow regions', () => {
     expect(pre.getAttribute('role')).toBeNull();
 
     wide = true;
-    remeasure();
+    await remeasure();
     act(() => {
       table.focus();
     });
     wide = false;
-    remeasure();
+    await remeasure();
     expect(table.getAttribute('tabindex')).toBe('0');
     expect(document.activeElement).toBe(table);
     fireEvent.blur(table);
