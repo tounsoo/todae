@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, startTransition, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
@@ -362,6 +363,51 @@ describe('Tree writes', () => {
     expect(onExpandedChange).toHaveBeenLastCalledWith(['x', 'y']);
     expect(item('x').getAttribute('aria-expanded')).toBe('true');
     expect(item('y').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('opens or closes as the item showed at the click, even when the select renders it first', () => {
+    function Owner() {
+      const [value, setValue] = useState<string | null>(null);
+      const [expanded, setExpanded] = useState<string[]>([]);
+      return (
+        <Tree.Root
+          aria-label="Files"
+          value={value}
+          // Selecting a folder opens it, in a render before the click goes on.
+          onValueChange={(next) =>
+            flushSync(() => {
+              setValue(next);
+              setExpanded((list) => (list.includes(next) ? list : [...list, next]));
+            })
+          }
+          expanded={expanded}
+          onExpandedChange={setExpanded}
+        >
+          <Tree.Item value="docs">
+            <Tree.Label>docs</Tree.Label>
+            <Tree.Group>
+              <Tree.Item value="docs/intro.md">
+                <Tree.Label>intro.md</Tree.Label>
+              </Tree.Item>
+            </Tree.Group>
+          </Tree.Item>
+        </Tree.Root>
+      );
+    }
+    render(<Owner />);
+    fireEvent.click(screen.getByText('docs'));
+    expect(item('docs').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('opens once for two clicks on one label before a render, as Enter does', () => {
+    const onExpandedChange = vi.fn();
+    render(<Files onExpandedChange={onExpandedChange} />);
+    act(() => {
+      screen.getByText('src').click();
+      screen.getByText('src').click();
+    });
+    expect(item('src').getAttribute('aria-expanded')).toBe('true');
+    expect(onExpandedChange).toHaveBeenLastCalledWith(['src']);
   });
 });
 

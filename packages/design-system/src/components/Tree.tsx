@@ -12,6 +12,7 @@ import {
   type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
@@ -81,8 +82,6 @@ type TreeContextValue = {
   selectable: boolean;
   select: (value: string) => void;
   setExpanded: (value: string, open: boolean) => void;
-  /** Opens a closed item and closes an open one, from the latest state. */
-  toggle: (value: string) => void;
   /** The roving item props, whose tab stop the item takes from the tree state. */
   itemProps: <P extends RovingItemUserProps>(value: string, props: P) => Omit<P, keyof RovingItemWire> & RovingItemWire;
   isTypingAhead: UseRovingFocusResult['isTypingAhead'];
@@ -176,10 +175,6 @@ function Root({
   });
   const tabStop = roving.activeValue;
   const state = useMemo(() => ({ selected, expanded: open, tabStop }), [selected, open, tabStop]);
-  const toggle = useCallback(
-    (value: string) => setExpanded(value, !latestExpanded().includes(value)),
-    [latestExpanded, setExpanded],
-  );
   // getItemProps changes with the tab stop, which each item reads from the
   // tree state instead, so items call the latest one through a stable function.
   // The rest of what it returns keeps its value across renders.
@@ -195,8 +190,8 @@ function Root({
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, select: setSelected, setExpanded, toggle, itemProps, isTypingAhead }),
-    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, toggle],
+    () => ({ selectable, select: setSelected, setExpanded, itemProps, isTypingAhead }),
+    [isTypingAhead, itemProps, selectable, setExpanded, setSelected],
   );
   return (
     <TreeContext.Provider value={ctx}>
@@ -307,10 +302,13 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       className={cx(styles.label, className)}
       data-todae-focus-ring=""
       // A click selects the item and opens or closes a branch.
-      onClick={composeHandlers(onClick, () => {
+      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLDivElement>) => {
+        // Whether the item shows open, read before the select, which may
+        // render it, and from the page, so the label needn't render as the
+        // item opens or closes.
+        const open = event.currentTarget.closest('[role="treeitem"]')?.getAttribute('aria-expanded') === 'true';
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        // Read at the click, so the label needn't render as the item opens.
-        if (item.branch) tree.toggle(item.value);
+        if (item.branch) tree.setExpanded(item.value, !open);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">
