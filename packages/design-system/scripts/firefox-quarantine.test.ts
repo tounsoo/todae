@@ -251,18 +251,16 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   /** Leaves out a name bound by an import, like userEvent, which a call on it in one test can't change for the next. */
   const own = (found: ts.Node[]) =>
     found.filter((name) => !(checker.getSymbolAtLocation(name)?.declarations ?? []).some((d) => ts.isImportSpecifier(d) || ts.isImportClause(d) || ts.isNamespaceImport(d)));
-  /** A parameter's names, and the property a constructor's `public skip: boolean` makes of it. */
-  const parameterNames = (parameter: ts.ParameterDeclaration): ts.Node[] => {
-    const found = names(parameter.name);
-    if (ts.isIdentifier(parameter.name) && ts.isParameterPropertyDeclaration(parameter, parameter.parent))
-      found.push(...checker.getSymbolsOfParameterPropertyDeclaration(parameter, parameter.name.text).flatMap((symbol) => (symbol.valueDeclaration && ts.isPropertyDeclaration(symbol.valueDeclaration) ? [symbol.valueDeclaration.name] : symbol.valueDeclaration ? [parameter.name] : [])));
-    return found;
-  };
+  /** A parameter's own symbols: its names, and for a constructor's `public skip: boolean` both the parameter and the property. */
+  const parameterSymbols = (parameter: ts.ParameterDeclaration): ts.Symbol[] =>
+    ts.isIdentifier(parameter.name) && ts.isParameterPropertyDeclaration(parameter, parameter.parent)
+      ? checker.getSymbolsOfParameterPropertyDeclaration(parameter, parameter.name.text)
+      : names(parameter.name).flatMap((name) => symbolOf(name) ?? []);
   /** What a changing method is called on: a name or the object behind `this.list` or `a.b`, never a fresh copy like `[...rows]`. */
   const receiver = (node: ts.Expression): ts.Node[] =>
     ts.isIdentifier(node)
       ? [node]
-      : ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node)
+      : ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isElementAccessExpression(node)
         ? receiver(node.expression)
         : ts.isPropertyAccessExpression(node)
           ? node.expression.kind === ts.SyntaxKind.ThisKeyword
@@ -347,7 +345,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
             const props = fn.parameters[0];
             if (!props) continue;
             if (ts.isObjectBindingPattern(props.name)) taint(props.name.elements.filter((el) => ((el.propertyName ?? el.name) as ts.Identifier).text === prop).flatMap((el) => names(el.name)));
-            else taint(parameterNames(props));
+            else parameterSymbols(props).forEach(mark);
           }
         } else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
           const args = node.arguments ?? [];
@@ -365,15 +363,16 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
           // whether written in place or named, takes it in every parameter; a function or class called with it,
           // as `register(ff)` or `new Probe(ff)`, takes it in the parameter at that place. A shared helper in
           // another file, like emulateMedia, serves every engine, so one Firefox caller doesn't mark it.
-          for (const fn of args.flatMap((arg) => functionsAt(arg))) taint(fn.parameters.flatMap(parameterNames));
+          for (const fn of args.flatMap((arg) => functionsAt(arg))) fn.parameters.flatMap(parameterSymbols).forEach(mark);
           if (passes)
             for (const fn of functionsAt(node.expression).filter((fn) => fn.getSourceFile() === tree))
               args.forEach((arg, index) => {
                 if (ts.isFunctionLike(arg) || !uses(arg, tree)) return;
                 // A `this: void` parameter takes no argument.
                 const parameters = fn.parameters.filter((parameter) => !(ts.isIdentifier(parameter.name) && parameter.name.text === 'this'));
-                const parameter = parameters[Math.min(index, parameters.length - 1)];
-                if (parameter && (index < parameters.length || parameter.dotDotDotToken)) taint(parameterNames(parameter));
+                // A spread hands its values to every parameter from its place on.
+                const reached = ts.isSpreadElement(arg) ? parameters.slice(index) : [parameters[Math.min(index, parameters.length - 1)]];
+                for (const parameter of reached) if (parameter && (index < parameters.length || parameter.dotDotDotToken)) parameterSymbols(parameter).forEach(mark);
               });
           // `skipped.add(…)`, `waits.push(…)` and `Object.assign(cfg, …)` change the value they are called on.
           if (passes && ts.isCallExpression(node)) {
@@ -548,6 +547,15 @@ it('keeps an arrow helper clean of its own parameters, and follows a value into 
   expect(lines(["const ff = server.browser === 'firefox';", 'class Base {', '  constructor(public skip: boolean) {}', '}', 'class H extends Base {}', 'new H(ff);'])).toEqual([1, 3, 6]);
   expect(lines(["const ff = server.browser === 'firefox';", 'const run = vi.fn((skip: boolean) => {', '  if (skip) return;', '});', 'run(ff);'])).toEqual([1, 2, 3, 5]);
   expect(lines(["const ff = server.browser === 'firefox';", 'function wait(this: void, skip: boolean) {', '  if (skip) return;', '}', 'wait(ff);'])).toEqual([1, 2, 3, 5]);
+});
+
+it('follows a change through an index or a cast, a spread argument, and a parameter property used in its constructor', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["const groups: Record<string, string[]> = { a: [] };", "if (server.browser === 'firefox') groups['a'].push('drag');", "it.skipIf(groups['a'].includes('drag'))('a', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['const skipped: string[] = [];', "if (server.browser === 'firefox') (skipped as string[]).push('drag');", "it.skipIf(skipped.includes('drag'))('a', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['function g(a: number, skip: boolean) {', "  it.skipIf(skip)('a', () => {});", '}', "const args = [0, server.browser === 'firefox'] as const;", 'g(...args);'])).toEqual([1, 2, 4, 5]);
+  expect(lines(['class H {', '  constructor(public skip: boolean) {', "    it.skipIf(skip)('a', () => {});", '  }', '}', "new H(server.browser === 'firefox');"])).toEqual([2, 3, 6]);
+  expect(lines(['const h = { emulate: async (f: string[]) => { await apply(f); }, other() {} };', "await h.emulate(server.browser === 'firefox' ? [] : ['x']);", "await h.emulate(['y']);", 'h.other();'])).toEqual([1, 2]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
