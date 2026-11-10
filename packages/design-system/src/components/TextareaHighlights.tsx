@@ -95,10 +95,14 @@ export function useTextareaHighlights(
     div.scrollLeft = el.scrollLeft;
   }, [textarea]);
 
-  // Every layer on the page copies its textarea in one batch (layoutBatch.ts):
-  // all the reads of computed styles and sizes first, then all the writes, so
-  // the reads share one style recalc and one layout, where reading after each
-  // write recalculated the page 41 times per layer. The scroll goes in a later
+  // Whether the layer has had its first copy; until then a render copies in
+  // the batch (see the effect below).
+  const copied = useRef(false);
+  // As layers mount, and when resizes report them, every layer on the page
+  // copies its textarea in one batch (layoutBatch.ts): all the reads of
+  // computed styles and sizes first, then all the writes, so the reads share
+  // one style recalc and one layout, where reading after each write
+  // recalculated the page 41 times per layer. The scroll goes in a later
   // stage, as setting one lays the page out first, once for every layer.
   const [jobs] = useState(() => {
     let found: { styles: [string, string][]; lang: string | null } | null = null;
@@ -128,6 +132,9 @@ export function useTextareaHighlights(
         }
         if (found.lang === null) div.removeAttribute('lang');
         else if (div.getAttribute('lang') !== found.lang) div.setAttribute('lang', found.lang);
+        // Kept, the 41 copied values would stay in memory with every layer.
+        found = null;
+        copied.current = true;
       },
     };
     const reveal: LayoutJob = {
@@ -138,15 +145,17 @@ export function useTextareaHighlights(
       write: () => {
         const div = layer.current;
         if (!offset || !div) return;
-        div.scrollTop = offset.top;
-        div.scrollLeft = offset.left;
+        // Only a change: setting one lays the page out, even to the same value.
+        if (div.scrollTop !== offset.top) div.scrollTop = offset.top;
+        if (div.scrollLeft !== offset.left) div.scrollLeft = offset.left;
+        offset = null;
       },
     };
     return { copy, reveal, key: { copy: {}, reveal: {} } };
   });
 
-  // Runs after every render, since an edit can change the direction (`dir="auto"`)
-  // or show a scrollbar, and when the textarea changes size.
+  // Queues the copy in the batch: as the layer mounts, and when the textarea
+  // changes size.
   const sync = useCallback(() => {
     queueLayout(jobs.key.copy, STAGE.measure, jobs.copy);
     queueLayout(jobs.key.reveal, STAGE.reveal, jobs.reveal);
@@ -165,8 +174,34 @@ export function useTextareaHighlights(
     };
   }, [enabled, sync, jobs, textarea]);
 
+  // Every render copies again, since an edit can change the direction
+  // (`dir="auto"`) or show a scrollbar. A layer copies in the batch, where a
+  // page of them shares the reads, until its first copy lands, and whenever
+  // its textarea isn't focused. The focused one, once copied, copies at once,
+  // all reads before the writes, as before the batch: the commit of its edit
+  // or caret move can show a popover by one of the layer's tokens, after this
+  // effect when the popover comes later in the tree. The read here lays the
+  // page out with the token's new anchor name before the popover shows; left
+  // to the batch, after the popover showed, a caret peek in WebKit sat 2.5px
+  // off its token. So the read stays even when nothing changes.
   useLayoutEffect(() => {
-    if (enabled) sync();
+    const el = textarea.current;
+    if (!enabled || !el) {
+      copied.current = false;
+      return;
+    }
+    // A textarea in a shadow tree is that tree's active element, not the document's.
+    const root = el.getRootNode() as Document | ShadowRoot;
+    if (!copied.current || root.activeElement !== el) {
+      sync();
+      return;
+    }
+    cancelLayout(jobs.key.copy);
+    cancelLayout(jobs.key.reveal);
+    jobs.copy.read!();
+    jobs.reveal.read!();
+    jobs.copy.write!();
+    jobs.reveal.write!();
   });
 
   const onScroll = useCallback(() => {
