@@ -121,7 +121,7 @@ describe('Table.SortButton', () => {
   it('hides the glyph of an unsorted column on every screen, and shows it on hover only where a pointer can hover', () => {
     const css = readFileSync(join(import.meta.dirname, 'Table.module.css'), 'utf8');
     // Two spaces in: the hiding rule sits in the layer itself, outside any media query.
-    const hiding = /\n  \.sortButton:not\(:is\(\[data-sort='ascending'\], \[data-sort='descending'\]\) \*, :focus-visible\) > \.sortGlyph \{\s*visibility: hidden;/;
+    const hiding = /\n {2}\.sortButton:not\(:is\(\[data-sort='ascending'\], \[data-sort='descending'\]\) \*, :focus-visible\) > \.sortGlyph \{\s*visibility: hidden;/;
     const showing = /@media \(hover: hover\) \{\s*\.sortButton:hover > \.sortGlyph \{\s*visibility: visible;/;
     expect(css).toMatch(hiding);
     expect(css).toMatch(showing);
