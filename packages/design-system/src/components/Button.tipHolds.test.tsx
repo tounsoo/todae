@@ -1,4 +1,4 @@
-import { StrictMode, useRef, type ReactNode } from 'react';
+import { StrictMode, useRef, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -188,6 +188,81 @@ describe('Button tip holds', () => {
     rerender(<Save busy />);
     advance(1000);
     rerender(<Save busy={false} />);
+    advance(1000);
+    expect(tipOpen()).toBe(false);
+  });
+
+  // An icon-only button that shows its word, in a span, while the pointer is
+  // over it: Root stops listening while the word shows, so the hover hold
+  // waiting from the first reach must not open the tip once the pointer left.
+  function Compose() {
+    const [over, setOver] = useState(false);
+    return (
+      <Button.Root aria-label="Compose" onPointerEnter={() => setOver(true)} onPointerLeave={() => setOver(false)}>
+        <Button.Icon>+</Button.Icon>
+        {over ? <span>Compose</span> : null}
+      </Button.Root>
+    );
+  }
+
+  // An icon-only button that turns its tip off as the pointer reaches it, to
+  // show a card of its own: the hover taken then must not open the tip once
+  // the card closes with the pointer gone.
+  function Card() {
+    const [card, setCard] = useState(false);
+    return (
+      <>
+        <Button.Root aria-label="Profile" tooltip={!card} onPointerEnter={() => setCard(true)}>
+          <Button.Icon>p</Button.Icon>
+        </Button.Root>
+        {card ? <button onClick={() => setCard(false)}>close card</button> : null}
+      </>
+    );
+  }
+
+  it.each([false, true])('opens no tip when tooltip comes back after a hover taken as it went off (StrictMode %s)', (strict) => {
+    render(strict ? <StrictMode><Card /></StrictMode> : <Card />);
+    const button = screen.getByRole('button', { name: 'Profile' });
+    fireEvent.pointerEnter(button);
+    advance(1000);
+    expect(tipOpen()).toBe(false);
+    fireEvent.pointerLeave(button, { relatedTarget: document.body });
+    advance(1000);
+    fireEvent.click(screen.getByText('close card'));
+    advance(3000);
+    expect(tipOpen()).toBe(false);
+  });
+
+  it('mounts no tip when a button reached only while its label fit turns icon-only', () => {
+    const Collapse = ({ small }: { small: boolean }) => (
+      <Button.Root aria-label="Collapse the sidebar">{small ? <Button.Icon>c</Button.Icon> : 'Collapse'}</Button.Root>
+    );
+    const { rerender } = render(<Collapse small={false} />);
+    const button = screen.getByRole('button');
+    fireEvent.pointerEnter(button);
+    advance(100);
+    fireEvent.pointerLeave(button, { relatedTarget: document.body });
+    advance(300);
+    rerender(<Collapse small />);
+    advance(300);
+    // A mounted tip puts its anchor name on the button.
+    expect(button.style.getPropertyValue('anchor-name')).toBe('');
+    fireEvent.pointerEnter(button);
+    advance(1000);
+    expect(tipOpen()).toBe(true);
+  });
+
+  it.each([false, true])('opens no tip after the pointer left a button that showed its word on hover (StrictMode %s)', (strict) => {
+    render(strict ? <StrictMode><Compose /></StrictMode> : <Compose />);
+    const button = screen.getByRole('button', { name: 'Compose' });
+    fireEvent.pointerEnter(button);
+    advance(1000);
+    fireEvent.pointerLeave(button, { relatedTarget: document.body });
+    advance(1000);
+    expect(tipOpen()).toBe(false);
+    fireEvent.pointerEnter(button);
+    advance(1000);
+    fireEvent.pointerLeave(button, { relatedTarget: document.body });
     advance(1000);
     expect(tipOpen()).toBe(false);
   });

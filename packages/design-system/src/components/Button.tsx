@@ -300,9 +300,10 @@ function Root({
   // and blurring drop them.
   const waiting = useRef<Waiting>({ hover: false, focus: null });
   const reach = (hover: boolean, focus: Element | null) => {
-    if (!reachedOnce) setReachedOnce(true);
     let wanted = iconOnly && iconName != null;
     if (!iconOnly) for (const el of labels.current) wanted ||= el.scrollWidth > el.clientWidth;
+    // Only a reach that wants a tip counts, so a label that fit never mounts one.
+    if (wanted && !reachedOnce) setReachedOnce(true);
     if (wanted && tipped) {
       if (hover) holds.current?.holdHover();
       else if (focus) holds.current?.holdFocus(focus);
@@ -321,14 +322,15 @@ function Root({
     watchInputModality(buttonRef.current?.ownerDocument);
   }, []);
 
-  // A tip that goes, as its handlers do with `tooltip` off or its text
-  // changing, takes the holds still waiting with it, so a later tip takes
-  // only new ones.
+  // While no tip is mounted, or Root stops listening for leave and blur,
+  // holds still waiting are dropped on every render, so a later tip takes only
+  // new ones. A reach sets its tip state in the same batch as its hold, so the
+  // render that follows it has a tip and keeps the hold.
   const listens = tooltip && (iconOnly || Boolean(textName));
-  const untipped = tipText == null;
+  const idle = !listens || tipText == null;
   useLayoutEffect(() => {
-    if (untipped) waiting.current = { hover: false, focus: null };
-  }, [untipped]);
+    if (idle) waiting.current = { hover: false, focus: null };
+  });
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
   const trigger =
