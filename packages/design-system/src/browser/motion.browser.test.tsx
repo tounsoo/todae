@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
-import { server } from '@vitest/browser/context';
+import { server } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';

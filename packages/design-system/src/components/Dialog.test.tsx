@@ -5,7 +5,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ComboboxCloseReason } from '../hooks/useCombobox.types.js';
 import type { SheetCloseReason } from './BottomSheet.js';
 import { Dialog, type DialogCloseReason, type DialogRootProps } from './Dialog.js';
-import type { DrawerRootProps } from './Drawer.js';
+import { Drawer, type DrawerRootProps } from './Drawer.js';
 
 afterEach(cleanup);
 
@@ -380,6 +380,140 @@ describe('Dialog uncontrolled and close vetoes', () => {
     );
     fireEvent.click(screen.getByText('Cancel'));
     expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('Dialog name check', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+  it('logs one error in development when an open dialog has no name', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <StrictMode>
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <p>Saved.</p>
+          <Dialog.Close>Done</Dialog.Close>
+        </Dialog.Root>
+      </StrictMode>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Dialog.Root needs a name')));
+    await settle();
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+
+  it('names the part that is missing one', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Drawer.Root open onOpenChange={() => undefined}>
+        <p>Filters</p>
+      </Drawer.Root>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Drawer.Root needs a name')));
+    error.mockRestore();
+  });
+
+  it('logs nothing while the dialog is closed', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open={false} onOpenChange={() => undefined}>
+        <p>Saved.</p>
+      </Dialog.Root>,
+    );
+    await settle();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it.each([
+    ['Dialog.Title', () => <Dialog.Title>Saved</Dialog.Title>, {}],
+    ['aria-label', () => <p>Saved.</p>, { 'aria-label': 'Saved' }],
+    ['aria-labelledby', () => <p id="saved-name">Saved.</p>, { 'aria-labelledby': 'saved-name' }],
+  ])('logs nothing with %s', async (_, body, props) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <StrictMode>
+        <Dialog.Root open onOpenChange={() => undefined} {...props}>
+          {body()}
+        </Dialog.Root>
+      </StrictMode>,
+    );
+    await settle();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it.each([
+    ['an empty aria-label', { 'aria-label': '' }],
+    ['a blank aria-label', { 'aria-label': '   ' }],
+    ['a blank aria-labelledby', { 'aria-labelledby': ' ' }],
+  ])('treats %s as no name', async (_, props) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} {...props}>
+        <p>Saved.</p>
+      </Dialog.Root>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Dialog.Root needs a name')));
+    error.mockRestore();
+  });
+
+  it('keeps an aria-labelledby that is a no-break space, since that is a real id', () => {
+    render(
+      <>
+        <h2 id={'\u00a0'}>Elsewhere</h2>
+        <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={'\u00a0'}>
+          <Dialog.Title>Saved</Dialog.Title>
+        </Dialog.Root>
+      </>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Elsewhere' })).toBeTruthy();
+  });
+
+  it('falls back to its Title when aria-labelledby is null', () => {
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={null as unknown as string}>
+        <Dialog.Title>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+  });
+
+  it('takes a Title whose id is a no-break space as a name', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title id={'\u00a0'}>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('warns when its only name is a Title with a blank id', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title id=" ">Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('Dialog.Root needs a name')));
+    error.mockRestore();
+  });
+
+  it.each(['', '  '])('is named by its Title when aria-labelledby is %j', async (labelledBy) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} aria-labelledby={labelledBy}>
+        <Dialog.Title>Saved</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(screen.getByRole('dialog', { hidden: true, name: 'Saved' })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });
 

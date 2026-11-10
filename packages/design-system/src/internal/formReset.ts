@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
+import { listenOnRoot } from './rootListeners.js';
 
 /**
  * Calls `onReset` after a reset of the form that owns the input at `ref`, or an
@@ -16,20 +17,19 @@ export function useFormReset<T>(ref: RefObject<Element | null>, onReset: (atRese
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const root = element.getRootNode();
-    const listener = (event: Event) => {
+    // Every control on the root shares one listener (rootListeners.ts).
+    return listenOnRoot(element.getRootNode(), 'reset', (event) => {
       if (!resetsInputOf(event.target, element)) return;
       const atReset = latest.current.read();
       window.setTimeout(() => {
         if (!event.defaultPrevented) latest.current.onReset(atReset);
       });
-    };
-    root.addEventListener('reset', listener, true);
-    return () => root.removeEventListener('reset', listener, true);
+    });
   }, [ref]);
 }
 
 function resetsInputOf(form: EventTarget | null, element: Element) {
-  const inputs = [element, ...element.querySelectorAll('input')] as HTMLInputElement[];
-  return inputs.some((input) => input.form === form);
+  // Most controls put the ref on the input itself, so it answers without a search.
+  if ((element as HTMLInputElement).form === form) return true;
+  return ([...element.querySelectorAll('input')] as HTMLInputElement[]).some((input) => input.form === form);
 }

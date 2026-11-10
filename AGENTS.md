@@ -4,7 +4,7 @@ This file is for anyone changing the repo, including agents. [CONTRIBUTING.md](C
 
 ## Set up
 
-Use Node 24. `.nvmrc` names that major version, not an exact release, and CI reads that file. Install pnpm with Corepack so the version matches `packageManager` in the root `package.json`. Then run `pnpm install`. The [Set up](CONTRIBUTING.md#set-up) section has the rest.
+Use Node 24. `.nvmrc` names only that major version. CI reads that file, and `actions/setup-node` then uses the Node 24 the runner already has, or downloads the newest one when it has none. Install pnpm with Corepack so the version matches `packageManager` in the root `package.json`. Then run `pnpm install`. The [Set up](CONTRIBUTING.md#set-up) section has the rest.
 
 ## Build, test, and check
 
@@ -12,7 +12,7 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 
 - `pnpm check` runs lint, typecheck, Stylelint, and the self-test of Cursor's verify script. The Static job runs it.
 - `pnpm test` runs the unit tests. The Build job runs it.
-- `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job installs Playwright Chromium and runs them with `--project chromium`; the Engines jobs run the package's in Firefox and in WebKit, both inside Playwright's Docker image. In Firefox, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job.
+- `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job runs them with `--project chromium`, and the Engines jobs run the package's in Firefox and in WebKit, all inside Playwright's Docker image. In Firefox, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
 - The Docs build and pages job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
 

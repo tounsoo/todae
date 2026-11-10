@@ -3,6 +3,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { playwright } from '@vitest/browser-playwright';
 import type { BrowserCommand } from 'vitest/node';
 import { defineConfig } from 'vitest/config';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
@@ -81,7 +82,7 @@ export default defineConfig({
     setupFiles: ['./src/test/browser-setup.ts'],
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       screenshotFailures: false,
       instances: [
@@ -89,8 +90,8 @@ export default defineConfig({
         // A page tall enough for the 414x896 test frame, so Vitest doesn't scale the frame down. Scaled,
         // Firefox snaps scroll offsets to device pixels and both engines land real input up to a pixel off.
         // Chromium keeps the default page, which its screenshots were taken in.
-        { browser: 'firefox', context: { viewport: { width: 1280, height: 960 } } },
-        { browser: 'webkit', context: { viewport: { width: 1280, height: 960 } } },
+        { browser: 'firefox', provider: playwright({ contextOptions: { viewport: { width: 1280, height: 960 } } }) },
+        { browser: 'webkit', provider: playwright({ contextOptions: { viewport: { width: 1280, height: 960 } } }) },
       ],
       commands: { scopedThemeCss, emulateMedia },
     },

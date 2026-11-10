@@ -1959,6 +1959,15 @@ describe('company token build', () => {
     expect(out).toBe('ok');
   });
 
+  it('gives the published bin no way to rebuild the files of an installed package', () => {
+    const run = () =>
+      execFileSync(process.execPath, ['--experimental-strip-types', '--no-warnings', join(import.meta.dirname, 'build-tokens.ts'), 'self'], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+    expect(run).toThrow(/Usage: todae-tokens build/);
+  });
+
   it('writes, checks and reports drift from the CLI', async () => {
     const out = await mkdtemp(join(tmpdir(), 'todae-cli-'));
     temps.push(out);

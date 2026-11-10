@@ -13,6 +13,14 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
+// A popover enters two animation frames after it opens. Wait for frames, not for time, so a busy
+// runner can't run the next step before them.
+async function frames(count: number) {
+  for (let i = 0; i < count; i++) {
+    await act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  }
+}
+
 const box = (top: number, left: number, height: number, width: number) =>
   ({ top, left, bottom: top + height, right: left + width, height, width, x: left, y: top, toJSON() {} }) as DOMRect;
 
@@ -231,7 +239,7 @@ describe('A popover whose caller stops naming its anchor as it closes', () => {
     const { rerender } = render(<Harness open word />);
     const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
     // Two frames in, it has entered, so closing fades it.
-    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    await frames(2);
     rerender(<Harness open={false} word />);
     expect(el.hasAttribute('data-todae-exiting')).toBe(true);
     expect(el.hasAttribute('data-todae-unanchored')).toBe(false);
@@ -260,7 +268,7 @@ describe('A popover whose caller stops naming its anchor as it closes', () => {
     }
     const { rerender } = render(<Harness open word />);
     const el = screen.getByRole('dialog', { name: 'Peek', hidden: true });
-    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    await frames(2);
     rerender(<Harness open={false} word />);
     expect(el.hasAttribute('data-todae-exiting')).toBe(true);
     await act(async () => rerender(<Harness open={false} word={false} />));
@@ -286,7 +294,7 @@ describe('A popover whose caller stops naming its anchor as it closes', () => {
       );
     }
     const { rerender } = render(<Owner open content />);
-    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    await frames(2);
     const observers = trackObservers();
     try {
       rerender(<Owner open={false} content />);

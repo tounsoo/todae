@@ -471,6 +471,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (latest.current.disabled) return;
       if (isImeKeyEvent(event)) return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
+        // With Shift, Ctrl or Meta, these keys select text or move the caret,
+        // and Alt with Home or End is the browser's: all stay with the input.
+        // Alt with an arrow still opens and moves the list.
+        if (event.shiftKey || event.ctrlKey || event.metaKey) return;
+        if (event.altKey && (event.key === 'Home' || event.key === 'End')) return;
         event.preventDefault();
         if (!open) {
           setOpen(true, 'trigger');

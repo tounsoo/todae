@@ -121,6 +121,8 @@ export function ShellClose({ onClick, ...props }: ButtonActionProps) {
 
 // What each modal changes: its layout, exit fallback and attributes.
 export type DialogShell = {
+  /** The component's name, for development messages. */
+  part: 'Dialog' | 'Drawer' | 'BottomSheet';
   className?: string;
   /**
    * True (the default) for a `<dialog>` that covers the screen as the
@@ -210,7 +212,24 @@ export function DialogShellRoot({
   // the <dialog> can't take focus until showModal runs.
   useInitialFocus(dialogRef, present && open, initialFocusRef);
 
-  const alertShown = role === 'alertdialog' && present && open;
+  const shown = present && open;
+  // A blank aria-labelledby falls back to the Title's id, and a blank
+  // aria-label or id names nothing. Ids split on ASCII whitespace only, so a
+  // no-break space is a real id.
+  const filled = (value: string | null | undefined) => typeof value === 'string' && /[^ \t\n\f\r]/.test(value);
+  const labelledByAttr = filled(props['aria-labelledby']) ? props['aria-labelledby'] : labelledBy;
+  const named = Boolean(props['aria-label']?.trim()) || filled(labelledByAttr);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !shown || named) return;
+    // A Title registers in a layout effect whose update renders after this
+    // effect, and that render clears the timer.
+    const timer = setTimeout(() =>
+      console.error(`${shell.part}.Root needs a name: render ${shell.part}.Title, or pass aria-label or aria-labelledby`),
+    );
+    return () => clearTimeout(timer);
+  }, [shown, named, shell.part]);
+
+  const alertShown = role === 'alertdialog' && shown;
   const describedByProp = props['aria-describedby'];
   const described = Boolean(describedByProp ?? describedBy);
   useEffect(() => {
@@ -235,7 +254,7 @@ export function DialogShellRoot({
         {...props}
         role={role}
         {...{ closedby }}
-        aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+        aria-labelledby={labelledByAttr}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
         {...shell.attributes}

@@ -17,7 +17,7 @@
     "build": "pnpm -r --if-present build",
     "build:ds": "pnpm --filter @tounsoo/todae build",
     "publish:check": "bash scripts/publish-check.sh",
-    "ssr:smoke": "pnpm --filter ssr-smoke build && pnpm --filter ssr-smoke smoke",
+    "ssr:smoke": "pnpm --filter ssr-smoke smoke",
     "dev:ds": "pnpm --filter @tounsoo/todae dev",
     "dev:docs": "pnpm --filter docs dev",
     "dev": "pnpm dev:docs",

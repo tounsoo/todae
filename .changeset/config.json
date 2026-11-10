@@ -24,6 +24,17 @@
     "!**/__fixtures__/**",
     "!src/test/**",
     "!vitest.browser.config.ts",
+    "!scripts/browser-results-reporter.ts",
+    "!scripts/check-token-api.ts",
+    "!scripts/firefox-quarantine.ts",
+    "!scripts/meta-types.ts",
+    "!scripts/package-tokens.ts",
+    "!scripts/token-consumers.ts",
+    "!scripts/tokens/consumers.ts",
+    "!scripts/tokens/names.ts",
+    "!tokens/api-approved-removals.json",
+    "!tokens/name-grandfather.json",
+    "!tokens/name-schema.json",
     "!CHANGELOG.md"
   ]
 }

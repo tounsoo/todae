@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, server, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   BottomSheet,

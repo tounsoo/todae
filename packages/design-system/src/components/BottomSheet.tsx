@@ -177,6 +177,7 @@ const DEFAULT_SNAP_POINTS: readonly SheetSnap[] = ['mid', 'full'];
 // Built by a call, so bundlers can drop it with BottomSheet: esbuild keeps a top-level object that reads `styles`.
 // The sheet is its own panel and leaves the page while closed.
 const sheetShell = (): DialogShell => ({
+  part: 'BottomSheet',
   className: styles.sheet,
   panel: false,
   keepMounted: false,

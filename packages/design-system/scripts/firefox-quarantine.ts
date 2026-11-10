@@ -54,7 +54,52 @@ export const firefoxQuarantine: readonly QuarantineEntry[] = [
   },
 ];
 
-type Test = BrowserResults['tests'][number];
+export interface FirefoxBranch {
+  /** Test file, relative to packages/design-system. */
+  file: string;
+  /** Text of the one line that treats Firefox apart, enough to find it. */
+  code: string;
+  reason: string;
+}
+
+/**
+ * Every line of browser test code that treats Firefox apart, by a skip, a
+ * condition, an expected value or anything else that names Firefox, Gecko,
+ * Mozilla or a `-moz-` or `Moz…` feature, or uses a value, function or class
+ * built from one. A failing Firefox test goes on the quarantine above instead,
+ * so it still runs and shows. scripts/firefox-quarantine.test.ts reads the
+ * browser tests and their helpers in src/test and src/browser, follows such
+ * values through the compiler, and fails on a line no entry here names, so a
+ * Firefox failure can't be silenced without a reason. Each entry names one
+ * line, so two lines alike need two entries.
+ */
+export const firefoxBranches: readonly FirefoxBranch[] = [
+  {
+    file: 'src/browser/conversation.browser.test.tsx',
+    code: "if (server.browser === 'firefox') {",
+    reason: "Firefox can't keep a hidden element drawn while it fades, so the button hides at once.",
+  },
+  {
+    file: 'src/browser/fill-feedback-motion.browser.test.tsx',
+    code: "describe.skipIf(server.browser === 'firefox')('Progress and Meter fill motion'",
+    reason: 'Firefox draws the fill with no part to transition, and motion only has to work in Chrome.',
+  },
+  {
+    file: 'src/browser/one-time-code.browser.test.tsx',
+    code: "it.skipIf(server.browser === 'firefox')('copies text dragged inside the field to the box it is dropped on'",
+    reason: "Playwright's Firefox starts no native drag from a text control's selection.",
+  },
+  {
+    file: 'src/browser/one-time-code.browser.test.tsx',
+    code: "server.browser === 'firefox' ? [0, 6] : [1, 1]",
+    reason: "Firefox selects a text input's whole text when its label is clicked, as on Tab.",
+  },
+  {
+    file: 'src/browser/submenu.browser.test.tsx',
+    code: "if (server.browser !== 'firefox') expect(Math.abs(sub.right - outer.left), at)",
+    reason: "Firefox mirrors a popover's position-area alignment when its parent's direction differs (Firefox bug 2019601).",
+  },
+];
 
 export interface Verdict {
   /** What fails the job, one line each. */
@@ -63,8 +108,6 @@ export interface Verdict {
   quarantinedFailures: { entry: QuarantineEntry; errors: string[] }[];
   /** Quarantined tests that passed this run. */
   quarantinedPasses: QuarantineEntry[];
-  /** Quarantined tests that were skipped or never finished. */
-  quarantinedOther: { entry: QuarantineEntry; state: Test['state'] }[];
 }
 
 const key = (file: string, name: string) => `${file}\n${name}`;
@@ -73,7 +116,7 @@ const firstLine = (errors: string[]) => (errors[0] ?? 'no error message').split(
 
 /** Splits a Firefox run's results into what blocks the job and what the quarantine covers. */
 export function judge(results: BrowserResults, list: readonly QuarantineEntry[], vitestExit: number): Verdict {
-  const verdict: Verdict = { blocking: [], quarantinedFailures: [], quarantinedPasses: [], quarantinedOther: [] };
+  const verdict: Verdict = { blocking: [], quarantinedFailures: [], quarantinedPasses: [] };
   const entries = new Map<string, QuarantineEntry>();
   for (const entry of list) {
     const id = key(entry.file, entry.test);
@@ -94,7 +137,8 @@ export function judge(results: BrowserResults, list: readonly QuarantineEntry[],
     seen.add(id);
     if (test.state === 'failed') verdict.quarantinedFailures.push({ entry, errors: test.errors });
     else if (test.state === 'passed') verdict.quarantinedPasses.push(entry);
-    else verdict.quarantinedOther.push({ entry, state: test.state });
+    // A quarantined test still runs, so a skip would hide what the quarantine is there to show.
+    else verdict.blocking.push(`The quarantine lists ${label(entry.file, entry.test)}, which this run ${test.state === 'skipped' ? 'skipped' : 'never finished'}. A quarantined test must run; stop skipping it or take it off the list.`);
   }
 
   for (const [id, entry] of entries) {
@@ -133,7 +177,6 @@ export function summary(verdict: Verdict): string {
   const rows = [
     ...verdict.quarantinedFailures.map(({ entry, errors }) => [entry, `Failed: ${firstLine(errors)}`] as const),
     ...verdict.quarantinedPasses.map((entry) => [entry, 'Passed; take it off the list if it keeps passing'] as const),
-    ...verdict.quarantinedOther.map(({ entry, state }) => [entry, state === 'skipped' ? 'Skipped' : 'Did not finish'] as const),
   ];
   const lines = ['## Firefox quarantine', ''];
   lines.push(

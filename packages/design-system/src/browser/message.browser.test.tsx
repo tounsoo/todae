@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import type { CSSProperties } from 'react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import { Avatar, Message, Prose } from '../index.js';
