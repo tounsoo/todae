@@ -273,8 +273,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     seen.add(node);
     if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return [node];
     if (ts.isParenthesizedExpression(node)) return functionsAt(node.expression, seen);
-    // `vi.fn((skip) => …)` wraps the function it is handed.
-    if (ts.isCallExpression(node)) return node.arguments.filter((arg) => ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) as ts.SignatureDeclaration[];
+    // `vi.fn((skip) => …)` wraps the function it is handed; any other call, like `rows.map(…)`, makes a new value.
+    if (ts.isCallExpression(node)) return node.expression.getText() === 'vi.fn' ? (node.arguments.filter((arg) => ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) as ts.SignatureDeclaration[]) : [];
     if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
       const own = node.members.filter(ts.isConstructorDeclaration);
       if (own.length) return own;
@@ -363,7 +363,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
           // whether written in place or named, takes it in every parameter; a function or class called with it,
           // as `register(ff)` or `new Probe(ff)`, takes it in the parameter at that place. A shared helper in
           // another file, like emulateMedia, serves every engine, so one Firefox caller doesn't mark it.
-          for (const fn of args.flatMap((arg) => functionsAt(arg))) fn.parameters.flatMap(parameterSymbols).forEach(mark);
+          for (const fn of args.filter((arg) => !ts.isCallExpression(arg)).flatMap((arg) => functionsAt(arg))) fn.parameters.flatMap(parameterSymbols).forEach(mark);
           if (passes)
             for (const fn of functionsAt(node.expression).filter((fn) => fn.getSourceFile() === tree))
               args.forEach((arg, index) => {
@@ -556,6 +556,12 @@ it('follows a change through an index or a cast, a spread argument, and a parame
   expect(lines(['function g(a: number, skip: boolean) {', "  it.skipIf(skip)('a', () => {});", '}', "const args = [0, server.browser === 'firefox'] as const;", 'g(...args);'])).toEqual([1, 2, 4, 5]);
   expect(lines(['class H {', '  constructor(public skip: boolean) {', "    it.skipIf(skip)('a', () => {});", '  }', '}', "new H(server.browser === 'firefox');"])).toEqual([2, 3, 6]);
   expect(lines(['const h = { emulate: async (f: string[]) => { await apply(f); }, other() {} };', "await h.emulate(server.browser === 'firefox' ? [] : ['x']);", "await h.emulate(['y']);", 'h.other();'])).toEqual([1, 2]);
+});
+
+it('leaves the callback of another call among the arguments alone', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["const ff = server.browser === 'firefox';", 'check(', '  ff,', '  rows.map((row) => row.id),', ');'])).toEqual([1, 3]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'await Promise.all(cells.map(async (cell) => {', '  await settle(cell, ff);', '}));'])).toEqual([1, 3]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
