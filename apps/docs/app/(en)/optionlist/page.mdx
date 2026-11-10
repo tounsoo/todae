@@ -3,7 +3,7 @@ import OptionListSingle from '../../../examples/optionlist/OptionListSingle';
 
 # OptionList
 
-`role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space. Escape is not handled so it can close a parent Popover.
+`role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space, and typing a letter moves to the next option that starts with it. Escape is not handled so it can close a parent Popover.
 
 Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400` and use an accent-soft row fill (`color.bg.selected`, 12% accent). Highlighted selected is 20% (`color.accent.soft-strong`). Rows are `2px` apart. Hover is gated with `@media (hover: hover)`.
 
@@ -34,7 +34,7 @@ import { Check } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. The arrow keys, Home and End skip disabled options and stop at the ends. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
+**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. The arrow keys, Home and End skip disabled options and stop at the ends. Typing moves to the next option whose text starts with what was typed: one letter, or the same letter again, cycles through those options, and a pause of half a second starts a new search. A Space joins a search under way, and otherwise selects. Keys with Ctrl, Meta or Alt, and the move keys with Shift, are left to the page, and a key pressed in a field inside the list stays with that field. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
 
 **You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. Option text that reads well on its own, since the string is the option's name. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
 

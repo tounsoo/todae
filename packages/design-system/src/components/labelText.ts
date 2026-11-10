@@ -25,49 +25,81 @@ export function labelOf(input: HTMLInputElement | null): string {
 }
 
 type Watch = { input: HTMLInputElement; onChange: (label: string) => void; named: Element[] };
-type Registry = { observer: MutationObserver; watches: Set<Watch> };
+type Registry = {
+  observer: MutationObserver;
+  watches: Set<Watch>;
+  // The watches of each input, and of each element that names one, so a
+  // record finds the inputs it is about by walking up from its target, not by
+  // asking every watched input: 100 number inputs on a page that appends 1,000
+  // unrelated nodes did 100,000 `contains` checks.
+  byInput: Map<Element, Set<Watch>>;
+  byNamer: Map<Element, Set<Watch>>;
+};
 const registries = new WeakMap<Node, Registry>();
 
+function index(map: Map<Element, Set<Watch>>, key: Element, watch: Watch) {
+  const own = map.get(key);
+  if (own) own.add(watch);
+  else map.set(key, new Set([watch]));
+}
+
+function unindex(map: Map<Element, Set<Watch>>, key: Element, watch: Watch) {
+  const own = map.get(key);
+  if (!own) return;
+  own.delete(watch);
+  if (!own.size) map.delete(key);
+}
+
+// Points the index at the elements that name the watch's input now.
+function rename(registry: Registry | undefined, watch: Watch, named: Element[]) {
+  if (registry) for (const element of watch.named) unindex(registry.byNamer, element, watch);
+  watch.named = named;
+  if (registry) for (const element of named) index(registry.byNamer, element, watch);
+}
+
 // Whether a node that came or went is, or holds, a label, or an element an `aria-labelledby` names: only these can change which elements name an input.
-function touchesLabels(node: Node, ids: Set<string>): boolean {
+function touchesLabels(node: Node, ids: () => Set<string>): boolean {
   if (node.nodeType !== 1) return false;
   const element = node as Element;
   if (element.localName === 'label' || element.querySelector('label')) return true;
-  if (!ids.size) return false;
-  return ids.has(element.id) || [...element.querySelectorAll('[id]')].some((inner) => ids.has(inner.id));
+  const named = ids();
+  if (!named.size) return false;
+  return named.has(element.id) || [...element.querySelectorAll('[id]')].some((inner) => named.has(inner.id));
 }
 
-function read(watch: Watch) {
-  watch.named = namedBy(watch.input);
+function read(registry: Registry, watch: Watch) {
+  rename(registry, watch, namedBy(watch.input));
   watch.onChange(labelOf(watch.input));
 }
 
 function handle(registry: Registry, records: MutationRecord[]) {
-  const { watches } = registry;
-  const ids = new Set([...watches].flatMap((watch) => idsOf(watch.input)));
+  const { watches, byInput, byNamer } = registry;
+  // The ids the watched inputs' `aria-labelledby` name, only once a record needs them.
+  let ids: Set<string> | undefined;
+  const idsNow = () => (ids ??= new Set([...watches].flatMap((watch) => idsOf(watch.input))));
   let structural = false;
   const dirty = new Set<Watch>();
   for (const record of records) {
     if (record.type === 'childList') {
-      structural ||= [...record.addedNodes, ...record.removedNodes].some((node) => touchesLabels(node, ids));
+      structural ||= [...record.addedNodes, ...record.removedNodes].some((node) => touchesLabels(node, idsNow));
     } else if (record.type === 'attributes' && (record.attributeName === 'for' || record.attributeName === 'id')) {
       // A label that is pointed elsewhere, or an element that takes or loses an id, can name a different input.
       const element = record.target as Element;
-      structural ||= element.localName === 'label' || ids.has(element.id) || ids.has(record.oldValue ?? '');
+      structural ||= element.localName === 'label' || idsNow().has(element.id) || idsNow().has(record.oldValue ?? '');
     }
     // A change in a naming element, or in the input's own naming attributes, is for the inputs it names.
+    if (record.type === 'attributes') for (const watch of byInput.get(record.target as Element) ?? []) dirty.add(watch);
     const target = record.target.nodeType === 1 ? (record.target as Element) : record.target.parentElement;
-    for (const watch of watches) {
-      if (record.type === 'attributes' && record.target === watch.input) dirty.add(watch);
-      else if (watch.named.some((element) => target && element.contains(target))) dirty.add(watch);
+    for (let node = target; node; node = node.parentElement) {
+      for (const watch of byNamer.get(node) ?? []) dirty.add(watch);
     }
   }
   // Only the inputs whose naming elements changed or are now others read their label again.
   for (const watch of watches) {
-    if (dirty.has(watch)) read(watch);
+    if (dirty.has(watch)) read(registry, watch);
     else if (structural) {
       const next = namedBy(watch.input);
-      if (next.length !== watch.named.length || next.some((element, index) => element !== watch.named[index])) read(watch);
+      if (next.length !== watch.named.length || next.some((element, index) => element !== watch.named[index])) read(registry, watch);
     }
   }
 }
@@ -91,7 +123,12 @@ export function watchLabel(input: HTMLInputElement | null, onChange: (label: str
   if (typeof MutationObserver !== 'undefined') {
     registry = registries.get(root);
     if (!registry) {
-      const created: Registry = { observer: new MutationObserver((records) => handle(created, records)), watches: new Set() };
+      const created: Registry = {
+        observer: new MutationObserver((records) => handle(created, records)),
+        watches: new Set(),
+        byInput: new Map(),
+        byNamer: new Map(),
+      };
       created.observer.observe(root, {
         childList: true,
         subtree: true,
@@ -104,12 +141,16 @@ export function watchLabel(input: HTMLInputElement | null, onChange: (label: str
       registry = created;
     }
     registry.watches.add(watch);
+    index(registry.byInput, input, watch);
+    rename(registry, watch, watch.named);
   }
   onChange(labelOf(input));
   return {
     stop: () => {
       if (!registry) return;
       registry.watches.delete(watch);
+      unindex(registry.byInput, input, watch);
+      rename(registry, watch, []);
       if (!registry.watches.size) {
         registry.observer.disconnect();
         registries.delete(root);

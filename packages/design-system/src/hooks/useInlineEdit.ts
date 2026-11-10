@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { activeIn, focusLost } from '../internal/activeElement.js';
 import { isImeKeyEvent } from '../internal/ime.js';
-import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 
 export type UseInlineEditOptions = {
   /** The saved value. Each edit starts from it. */
@@ -137,7 +137,7 @@ export function useInlineEdit({ value, onCommit, onCancel }: UseInlineEditOption
   // come through the overlays' Escape stack, so an edit in a Dialog cancels
   // before the dialog closes.
   const takes = useCallback((target: Element | null) => group.current?.contains(target) === true, []);
-  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: handledOrComposing });
+  useEscapeKey(edit.editing, takes, cancel, group, { popup: false, passesKey: handledInside });
 
   // Not useFocusHandoff on the group: when both branches render the same
   // component, React keeps the group's element as the trigger's wrapper, so

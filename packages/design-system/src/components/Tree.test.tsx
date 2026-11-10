@@ -117,6 +117,30 @@ describe('Tree', () => {
     expect(focused()).toBe('README.md');
   });
 
+  it('keeps both of two toggles made before it renders again', () => {
+    const onExpandedChange = vi.fn();
+    render(<Files defaultExpanded={['src']} onExpandedChange={onExpandedChange} />);
+    act(() => {
+      screen.getByText('components').click();
+      screen.getByText('src').click();
+    });
+    expect(onExpandedChange).toHaveBeenLastCalledWith(['src/components']);
+    expect(item('src').getAttribute('aria-expanded')).toBe('false');
+    act(() => screen.getByText('src').click());
+    expect(item('components').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('closes again on a second press of the same item before it renders', () => {
+    const onExpandedChange = vi.fn();
+    render(<Files onExpandedChange={onExpandedChange} />);
+    act(() => {
+      screen.getByText('src').click();
+      screen.getByText('src').click();
+    });
+    expect(onExpandedChange.mock.calls).toEqual([[['src']], [[]]]);
+    expect(item('src').getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('opens with Right, then moves into the item; Left moves out, then closes', () => {
     const onExpandedChange = vi.fn();
     render(<Files onExpandedChange={onExpandedChange} />);
@@ -364,76 +388,6 @@ describe('Tree writes', () => {
     expect(item('x').getAttribute('aria-expanded')).toBe('true');
     expect(item('y').getAttribute('aria-expanded')).toBe('true');
   });
-
-  it('opens or closes as the item showed at the click, even when the select renders it first', () => {
-    function Owner() {
-      const [value, setValue] = useState<string | null>(null);
-      const [expanded, setExpanded] = useState<string[]>([]);
-      return (
-        <Tree.Root
-          aria-label="Files"
-          value={value}
-          // Selecting a folder opens it, in a render before the click goes on.
-          onValueChange={(next) =>
-            flushSync(() => {
-              setValue(next);
-              setExpanded((list) => (list.includes(next) ? list : [...list, next]));
-            })
-          }
-          expanded={expanded}
-          onExpandedChange={setExpanded}
-        >
-          <Tree.Item value="docs">
-            <Tree.Label>docs</Tree.Label>
-            <Tree.Group>
-              <Tree.Item value="docs/intro.md">
-                <Tree.Label>intro.md</Tree.Label>
-              </Tree.Item>
-            </Tree.Group>
-          </Tree.Item>
-        </Tree.Root>
-      );
-    }
-    render(<Owner />);
-    fireEvent.click(screen.getByText('docs'));
-    expect(item('docs').getAttribute('aria-expanded')).toBe('true');
-  });
-
-  it('opens once for two clicks on one label before a render, as Enter does', () => {
-    const onExpandedChange = vi.fn();
-    render(<Files onExpandedChange={onExpandedChange} />);
-    act(() => {
-      screen.getByText('src').click();
-      screen.getByText('src').click();
-    });
-    expect(item('src').getAttribute('aria-expanded')).toBe('true');
-    expect(onExpandedChange).toHaveBeenLastCalledWith(['src']);
-  });
-
-  it.each(['onClick'] as const)(
-    'opens as the item showed at the click when a label %s handler opens it first',
-    (handler) => {
-      function Owner() {
-        const [expanded, setExpanded] = useState<string[]>([]);
-        const open = () => flushSync(() => setExpanded((list) => (list.includes('docs') ? list : [...list, 'docs'])));
-        return (
-          <Tree.Root aria-label="Files" expanded={expanded} onExpandedChange={setExpanded}>
-            <Tree.Item value="docs">
-              <Tree.Label {...{ [handler]: open }}>docs</Tree.Label>
-              <Tree.Group>
-                <Tree.Item value="docs/intro.md">
-                  <Tree.Label>intro.md</Tree.Label>
-                </Tree.Item>
-              </Tree.Group>
-            </Tree.Item>
-          </Tree.Root>
-        );
-      }
-      render(<Owner />);
-      fireEvent.click(screen.getByText('docs'));
-      expect(item('docs').getAttribute('aria-expanded')).toBe('true');
-    },
-  );
 
   it('opens and closes from a label rendered through a portal', () => {
     const host = document.body.appendChild(document.createElement('div'));

@@ -12,9 +12,9 @@ type Entry = {
   closeRequests: boolean;
 };
 
-/** A layer's passesKey: a key a popup or field inside already took, or one that ends an IME composition. */
-export function handledOrComposing(event: KeyboardEvent): boolean {
-  return event.defaultPrevented || isImeKeyEvent(event);
+/** A layer's passesKey: a key a popup or field inside already took. */
+export function handledInside(event: KeyboardEvent): boolean {
+  return event.defaultPrevented;
 }
 
 const stack: Entry[] = [];
@@ -95,7 +95,9 @@ function candidates(scope: readonly Element[] | null, target: Element | null, ev
 }
 
 function onKeyDown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return;
+  // An Escape that cancels an IME composition, such as a Korean or Japanese
+  // word, is the field's, so no layer closes on it.
+  if (event.key !== 'Escape' || isImeKeyEvent(event)) return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
   const modals = modalsInFront(event.target);
@@ -160,9 +162,10 @@ function push(entry: Entry): () => void {
  * most recently activated layer goes first, unless another layer's element is
  * inside its own: then the innermost does. `enabled` may be a function of the
  * element with focus, the key's target or, for a close request, the
- * document's active element, so both reach the same layer. `passesKey` lets a
- * layer pass on what only a key carries, such as a key a field inside already
- * handled or one that ends an IME composition. `elementRef` places the
+ * document's active element, so both reach the same layer. An Escape that
+ * belongs to an IME composition reaches no layer. `passesKey` lets a layer
+ * pass on what only a key carries, such as a key a field inside already
+ * handled. `elementRef` places the
  * layer: a layer left behind a modal `<dialog>` opened later skips the key,
  * and the dialog gets it. A layer with `popup: false` yields to every open
  * popup whose element doesn't contain its own. A layer with

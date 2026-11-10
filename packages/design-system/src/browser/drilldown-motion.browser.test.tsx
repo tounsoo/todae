@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { Drilldown } from '../components/Drilldown.js';
 import { cssTimeMs } from '../overlay/cssTime.js';

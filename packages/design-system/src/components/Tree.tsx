@@ -81,6 +81,8 @@ type TreeContextValue = {
   selectable: boolean;
   select: (value: string) => void;
   setExpanded: (value: string, open: boolean) => void;
+  /** Opens or closes a branch from the latest write, so two presses before a render cancel out. */
+  toggleExpanded: (value: string) => void;
   /** The roving item props, whose tab stop the item takes from the tree state. */
   itemProps: <P extends RovingItemUserProps>(value: string, props: P) => Omit<P, keyof RovingItemWire> & RovingItemWire;
   isTypingAhead: UseRovingFocusResult['isTypingAhead'];
@@ -100,7 +102,7 @@ type ItemContextValue = {
 
 const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
 
-// Whether the nearest item is open, for its label and group.
+// Whether the nearest item is open, for its group.
 const OpenContext = /* @__PURE__ */ createContext(false);
 
 // Depth of the items rendered here: 1 at the root, one more inside each group.
@@ -159,6 +161,10 @@ function Root({
     },
     [latestExpanded, setExpandedList],
   );
+  const toggleExpanded = useCallback(
+    (value: string) => setExpanded(value, !latestExpanded().includes(value)),
+    [latestExpanded, setExpanded],
+  );
   const open = useMemo(() => new Set(expanded), [expanded]);
   // The tab stop is the selected item, except while focus moves inside the
   // tree: then it is the focused item. Leaving the tree returns it to the
@@ -188,8 +194,8 @@ function Root({
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, select: setSelected, setExpanded, itemProps, isTypingAhead }),
-    [isTypingAhead, itemProps, selectable, setExpanded, setSelected],
+    () => ({ selectable, select: setSelected, setExpanded, toggleExpanded, itemProps, isTypingAhead }),
+    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, toggleExpanded],
   );
   return (
     <TreeContext.Provider value={ctx}>
@@ -279,7 +285,7 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
             if (event.key === ' ' && tree.isTypingAhead(event)) return;
             event.preventDefault();
             if (!disabled && tree.selectable) tree.select(value);
-            if (branch) tree.setExpanded(value, !expanded);
+            if (branch) tree.toggleExpanded(value);
           })}
         >
           {children}
@@ -292,9 +298,6 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
 function Label({ children, className, onClick, ...props }: TreeLabelProps) {
   const tree = useTree('Label');
   const item = useItem('Label');
-  // Renders the label as its own item opens or closes, so a click opens or
-  // closes from how the item showed when the label last rendered.
-  const expanded = useContext(OpenContext);
   const { chevron } = useGlyphs();
   return (
     <div
@@ -305,7 +308,7 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       // A click selects the item and opens or closes a branch.
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
-        if (item.branch) tree.setExpanded(item.value, !expanded);
+        if (item.branch) tree.toggleExpanded(item.value);
       })}
     >
       <span className={styles.chevron} data-todae-glyph="" aria-hidden="true">

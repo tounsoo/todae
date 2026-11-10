@@ -63,7 +63,7 @@ function InPopover({ open, items, children }: { open: boolean; items: string[]; 
 
 const box = () => document.querySelector<HTMLElement>('[data-box]')!;
 
-describe('OptionList in a surface, with its requested option arriving after the first open', { timeout: 30000 }, () => {
+describe('OptionList in a surface, with its requested option arriving after the first open', () => {
   it('Popover.Root: reveals the late option', () => {
     const { rerender } = render(<InPopover open={false} items={[]} />);
     rerender(<InPopover open items={[]} />);

@@ -5,6 +5,7 @@ import { activeIn } from '../internal/activeElement.js';
 import { hasGlyph } from './glyphs.js';
 import { useComposedRefs } from '../internal/props.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { observeMutations } from '../internal/sharedMutations.js';
 import styles from './Disclosure.module.css';
 
 export type { DisclosureRootProps, DisclosureSummaryProps } from './Disclosure.js';
@@ -26,12 +27,11 @@ function Summary({ children, ref, ...props }: DisclosureSummaryProps) {
     const summary = own.current;
     const details = summary?.parentElement;
     if (!summary || details?.localName !== 'details') return;
-    const observer = new MutationObserver(() => {
+    // One observer serves every disclosure on the page (sharedMutations.ts).
+    return observeMutations(details, { attributes: true, attributeFilter: ['open'] }, () => {
       const active = activeIn(details);
       if (!details.hasAttribute('open') && !summary.contains(active) && details.contains(active)) focusWithoutScroll(summary);
-    });
-    observer.observe(details, { attributes: true, attributeFilter: ['open'] });
-    return () => observer.disconnect();
+    }).stop;
   }, []);
 
   return (

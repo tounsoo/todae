@@ -1,5 +1,5 @@
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { useState, type FormEvent } from 'react';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -341,7 +341,9 @@ describe('useMentions in a browser', () => {
     }
     render(<Lang />);
     const layer = document.querySelector('[data-kind="@"]')!.parentElement!;
-    expect(layer.getAttribute('lang')).toBe('ja');
+    // The layer copies the textarea's lang in the shared layout batch, a
+    // microtask after the commit and still before paint.
+    await expect.poll(() => layer.getAttribute('lang')).toBe('ja');
     expect(layer.getAttribute('translate')).toBe('no');
   });
 

@@ -581,16 +581,28 @@ describe('chip list recipe', () => {
   });
 
   function stubListWidth(width: { current: number }) {
-    const ros: ResizeObserverCallback[] = [];
+    // Each entry fires its observer with every target it watches, as a
+    // browser reports each observed element after a resize.
+    const ros: Array<() => void> = [];
     vi.stubGlobal(
       'ResizeObserver',
       class {
+        targets = new Set<Element>();
         constructor(cb: ResizeObserverCallback) {
-          ros.push(cb);
+          ros.push(() => {
+            const entries = [...this.targets].map((target) => ({ target, contentRect: target.getBoundingClientRect() }));
+            cb(entries as unknown as ResizeObserverEntry[], this as unknown as ResizeObserver);
+          });
         }
-        observe() {}
-        disconnect() {}
-        unobserve() {}
+        observe(target: Element) {
+          this.targets.add(target);
+        }
+        disconnect() {
+          this.targets.clear();
+        }
+        unobserve(target: Element) {
+          this.targets.delete(target);
+        }
       },
     );
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -602,9 +614,9 @@ describe('chip list recipe', () => {
     return ros;
   }
 
-  async function resizeTo(ros: ResizeObserverCallback[]) {
+  async function resizeTo(ros: Array<() => void>) {
     await act(async () => {
-      for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
+      for (const fire of ros) fire();
     });
   }
 
@@ -1225,7 +1237,7 @@ describe('chip list recipe', () => {
             api.pending.length = 0;
           } else if (op === 5) {
             width.current = [150, 300, 400, 600, 4000][rand(5)]!;
-            for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
+            for (const fire of ros) fire();
           } else if (op === 6) {
             const more = list.querySelector<HTMLElement>('button[aria-haspopup]');
             if (more) fireEvent.click(more);
