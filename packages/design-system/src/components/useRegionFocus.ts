@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FocusEvent, type RefObject } from 'react';
 import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
-import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { tryFocus } from '../overlay/useToastHost.js';
@@ -120,7 +120,7 @@ export function useRegionFocus<T extends object>({
   // toast left put focus. A toast takes Escape inside it.
   useEscapeKey(inside, (target) => target !== null && target === sectionRef.current, leave, sectionRef, {
     closeRequests: false,
-    passesKey: handledOrComposing,
+    passesKey: handledInside,
   });
 
   useEffect(() => {

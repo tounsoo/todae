@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from 'vitest/browser';
 import { type CSSProperties, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Avatar, Tooltip, useTooltip } from '@tounsoo/todae';

@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { server, userEvent } from '@vitest/browser/context';
+import { server, userEvent } from 'vitest/browser';
 import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useState } from 'react';

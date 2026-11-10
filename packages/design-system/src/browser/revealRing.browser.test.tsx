@@ -1,6 +1,6 @@
-/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser-playwright" />
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover.js';

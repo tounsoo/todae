@@ -216,8 +216,11 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
   // cy, which is "at" between the halves and also AM.
   const joined = new Map<string, Temporal.PlainDateTime>();
   // The words the locale writes between, before or after the halves may be left in or out.
+  // Each cut asks for the same halves' words up to eight times.
+  const split = new Map<string, string[]>();
   const trim = (half: string, start: boolean, end: boolean) => {
-    const words = splitWords(half);
+    let words = split.get(half);
+    if (!words) split.set(half, (words = splitWords(half)));
     let first = 0;
     while (start && first < words.length - 1 && joiners.has(words[first]!)) first++;
     let last = words.length;

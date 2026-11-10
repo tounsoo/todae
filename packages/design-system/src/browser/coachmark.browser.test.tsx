@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { server, userEvent } from '@vitest/browser/context';
+import { server, userEvent } from 'vitest/browser';
 import { useRef, useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button.js';

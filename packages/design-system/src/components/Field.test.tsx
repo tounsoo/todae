@@ -1061,7 +1061,7 @@ describe('Field.ChipInput', () => {
 });
 
 describe('Field.ChipInput overflow', () => {
-  const observers: Array<{ cb: ResizeObserverCallback }> = [];
+  const observers: Array<{ cb: ResizeObserverCallback; targets: Element[] }> = [];
 
   beforeEach(() => {
     observers.length = 0;
@@ -1069,13 +1069,20 @@ describe('Field.ChipInput overflow', () => {
       'ResizeObserver',
       class {
         cb: ResizeObserverCallback;
+        targets: Element[] = [];
         constructor(cb: ResizeObserverCallback) {
           this.cb = cb;
           observers.push(this);
         }
-        observe() {}
-        disconnect() {}
-        unobserve() {}
+        observe(target: Element) {
+          if (!this.targets.includes(target)) this.targets.push(target);
+        }
+        disconnect() {
+          this.targets = [];
+        }
+        unobserve(target: Element) {
+          this.targets = this.targets.filter((own) => own !== target);
+        }
       },
     );
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
@@ -1136,7 +1143,7 @@ describe('Field.ChipInput overflow', () => {
     expect(container.querySelector('[data-ellipsis]')).toBeNull();
   });
 
-  it('remeasures when ResizeObserver fires and does not loop', () => {
+  it('remeasures when ResizeObserver fires and does not loop', async () => {
     const { container } = renderField({
       chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
       maxRows: 1,
@@ -1154,9 +1161,10 @@ describe('Field.ChipInput overflow', () => {
       }
       return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
     });
-    act(() => {
+    // A report for every observed element; the measure runs in the layout batch's microtask.
+    await act(async () => {
       const ro = observers.at(-1);
-      ro?.cb([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
+      ro?.cb(ro.targets.map((target) => ({ target })) as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
     });
     const live = liveNodes(container).map((el) => el.outerHTML).join('');
     expect(live).not.toContain('data-overflow');
@@ -1164,7 +1172,7 @@ describe('Field.ChipInput overflow', () => {
     expect(container.querySelector('[data-ellipsis]')).toBeNull();
   });
 
-  it('folds one fewer chip in a row because the input width is not reserved', () => {
+  it('folds one fewer chip in a row because the input width is not reserved', async () => {
     const { container } = renderField({
       chipLayout: 'row',
       chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
@@ -1190,9 +1198,10 @@ describe('Field.ChipInput overflow', () => {
       return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
     });
     const before = observers.length;
-    act(() => {
+    // A report for every observed element; the measure runs in the layout batch's microtask.
+    await act(async () => {
       const ro = observers.at(-1);
-      ro?.cb([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
+      ro?.cb(ro.targets.map((target) => ({ target })) as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
     });
     expect(observers.length).toBe(before);
     expect(row.outerHTML).not.toContain('data-overflow');

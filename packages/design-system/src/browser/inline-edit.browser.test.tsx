@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { cdp, server, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from 'vitest/browser';
 import { useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dialog } from '../components/Dialog.js';

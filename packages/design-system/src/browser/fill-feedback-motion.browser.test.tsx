@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { page, server, userEvent } from '@vitest/browser/context';
+import { page, server, userEvent } from 'vitest/browser';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Alert } from '../components/Alert.js';

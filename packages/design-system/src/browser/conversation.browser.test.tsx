@@ -1,5 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { server } from '@vitest/browser/context';
+import { server } from 'vitest/browser';
 import axe from 'axe-core';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
