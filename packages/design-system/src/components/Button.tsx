@@ -310,9 +310,12 @@ function Root({
     if (!iconOnly) for (const el of labels.current) wanted ||= el.scrollWidth > el.clientWidth;
     // Only a reach that wants a tip counts, so a label that fit never mounts one.
     if (wanted && !reachedOnce) setReachedOnce(true);
-    if (wanted && tipped) {
-      if (hover) holds.current?.holdHover();
-      else if (focus) holds.current?.holdFocus(focus);
+    // A tip turning on in this commit has not set its holds yet, so a reach
+    // during the commit waits for it like one before the tip.
+    const mounted = tipped ? holds.current : null;
+    if (wanted && mounted) {
+      if (hover) mounted.holdHover();
+      else if (focus) mounted.holdFocus(focus);
     } else if (wanted) {
       if (hover) waiting.current.hover = true;
       // Focus a press put there takes no hold, now or when the tip mounts.
