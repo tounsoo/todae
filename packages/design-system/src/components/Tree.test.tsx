@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, startTransition, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { createPortal, flushSync } from 'react-dom';
+import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlyphsProvider } from '../providers/GlyphsProvider.js';
