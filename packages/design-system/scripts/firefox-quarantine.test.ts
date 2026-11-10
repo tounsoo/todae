@@ -183,12 +183,15 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   const tainted = new Set<ts.Symbol>();
   /** A module with a value that treats Firefox apart, for `await import(…)`. */
   const taintedModules = new Set<ts.SourceFile>();
-  const uses = (node: ts.Node | undefined, tree: ts.SourceFile) => {
+  /** Whether a node names Firefox or reads a traced value; with `within`, values declared inside it, like its own parameters, don't count. */
+  const uses = (node: ts.Node | undefined, tree: ts.SourceFile, within?: ts.Node) => {
     if (!node) return false;
     let found = false;
     const visit = (child: ts.Node): void => {
       // A type that spells out 'firefox' among the engines a value may be decides nothing at run time.
       if (found || (ts.isTypeNode(child) && !ts.isExpressionWithTypeArguments(child))) return;
+      // `implements` borrows a shape, not a value.
+      if (ts.isHeritageClause(child) && child.token === ts.SyntaxKind.ImplementsKeyword) return;
       let leaf = true;
       child.forEachChild((grandchild) => {
         leaf = false;
@@ -197,7 +200,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
       if (leaf && namesFirefox(child.getText(tree))) found = true;
       else if (ts.isIdentifier(child)) {
         const symbol = symbolOf(child);
-        found = !!symbol && tainted.has(symbol);
+        const local = !!within && (symbol?.declarations ?? []).every((d) => d.getSourceFile() === tree && d.pos >= within.pos && d.end <= within.end);
+        found = !!symbol && tainted.has(symbol) && !local;
       } else if (ts.isCallExpression(child) && child.expression.kind === ts.SyntaxKind.ImportKeyword && child.arguments[0] && ts.isStringLiteral(child.arguments[0])) {
         const target = ts.resolveModuleName(child.arguments[0].text, tree.fileName, options, host).resolvedModule;
         found = !!target && [...taintedModules].some((module) => module.fileName === target.resolvedFileName);
@@ -247,6 +251,24 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   /** Leaves out a name bound by an import, like userEvent, which a call on it in one test can't change for the next. */
   const own = (found: ts.Node[]) =>
     found.filter((name) => !(checker.getSymbolAtLocation(name)?.declarations ?? []).some((d) => ts.isImportSpecifier(d) || ts.isImportClause(d) || ts.isNamespaceImport(d)));
+  /** A parameter's names, and the property a constructor's `public skip: boolean` makes of it. */
+  const parameterNames = (parameter: ts.ParameterDeclaration): ts.Node[] => {
+    const found = names(parameter.name);
+    if (ts.isIdentifier(parameter.name) && ts.isParameterPropertyDeclaration(parameter, parameter.parent))
+      found.push(...checker.getSymbolsOfParameterPropertyDeclaration(parameter, parameter.name.text).flatMap((symbol) => (symbol.valueDeclaration && ts.isPropertyDeclaration(symbol.valueDeclaration) ? [symbol.valueDeclaration.name] : symbol.valueDeclaration ? [parameter.name] : [])));
+    return found;
+  };
+  /** What a changing method is called on: a name or the object behind `this.list` or `a.b`, never a fresh copy like `[...rows]`. */
+  const receiver = (node: ts.Expression): ts.Node[] =>
+    ts.isIdentifier(node)
+      ? [node]
+      : ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node)
+        ? receiver(node.expression)
+        : ts.isPropertyAccessExpression(node)
+          ? node.expression.kind === ts.SyntaxKind.ThisKeyword
+            ? [node.name]
+            : receiver(node.expression)
+          : [];
   /** The function a node is, or names, so a value handed to it reaches its parameters. */
   const functionsAt = (node: ts.Node): ts.SignatureDeclaration[] => {
     if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return [node];
@@ -256,7 +278,9 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
         ? [declaration]
         : ts.isClassDeclaration(declaration)
           ? declaration.members.filter(ts.isConstructorDeclaration)
-        : ts.isVariableDeclaration(declaration) && declaration.initializer && (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
+        : (ts.isVariableDeclaration(declaration) || ts.isPropertyAssignment(declaration) || ts.isPropertyDeclaration(declaration)) &&
+            declaration.initializer &&
+            (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
           ? [declaration.initializer]
           : [],
     );
@@ -267,7 +291,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     each(node, (child) => {
       if (isAssignment(child)) found.push(...names(child.left));
       else if ((ts.isPrefixUnaryExpression(child) || ts.isPostfixUnaryExpression(child)) && [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(child.operator)) found.push(...names(child.operand));
-      else if (changes(child)) found.push(...own(names(child.expression.expression)));
+      else if (changes(child)) found.push(...own(receiver(child.expression.expression)));
       else if (ts.isDeleteExpression(child)) found.push(...names(child.expression));
     });
     // A counter or a list that lives only inside the branch ends with it.
@@ -290,8 +314,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
       each(tree, (node) => {
         if (ts.isVariableDeclaration(node) && uses(node.initializer, tree)) taint(names(node.name));
         else if ((ts.isBindingElement(node) || ts.isParameter(node)) && uses(node.initializer, tree)) taint(names(node.name));
-        else if ((ts.isPropertyDeclaration(node) || ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node)) && ts.isIdentifier(node.name) && uses(node, tree)) taint([node.name]);
-        else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) && uses(node, tree)) {
+        else if ((ts.isPropertyDeclaration(node) || ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node)) && ts.isIdentifier(node.name) && uses(node, tree, node)) taint([node.name]);
+        else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) && uses(node, tree, node)) {
           if (node.name) taint([node.name]);
           else mark(exportOf('default'));
         } else if (isAssignment(node) && uses(node.right, tree)) taint(names(node.left));
@@ -318,13 +342,20 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
           }
           if (!passes && !uses(node.expression, tree)) return;
           // A function handed a Firefox value gets it as a parameter: a callback, as in `list.forEach((skip) => …)`,
-          // whether written in place or named, and a function or class called with it, as `register(ff)` or `new Probe(ff)`.
-          const functions = args.flatMap((arg) => functionsAt(arg));
-          if (passes) functions.push(...functionsAt(node.expression));
-          for (const fn of functions) taint(fn.parameters.flatMap((parameter) => names(parameter.name)));
+          // whether written in place or named, takes it in every parameter; a function or class called with it,
+          // as `register(ff)` or `new Probe(ff)`, takes it in the parameter at that place. A shared helper in
+          // another file, like emulateMedia, serves every engine, so one Firefox caller doesn't mark it.
+          for (const fn of args.flatMap((arg) => functionsAt(arg))) taint(fn.parameters.flatMap(parameterNames));
+          if (passes)
+            for (const fn of functionsAt(node.expression).filter((fn) => fn.getSourceFile() === tree))
+              args.forEach((arg, index) => {
+                if (ts.isFunctionLike(arg) || !uses(arg, tree)) return;
+                const parameter = fn.parameters[Math.min(index, fn.parameters.length - 1)];
+                if (parameter && (index < fn.parameters.length || parameter.dotDotDotToken)) taint(parameterNames(parameter));
+              });
           // `skipped.add(…)`, `waits.push(…)` and `Object.assign(cfg, …)` change the value they are called on.
           if (passes && ts.isCallExpression(node)) {
-            if (changes(node)) taint(own(names(node.expression.expression)));
+            if (changes(node)) taint(own(receiver(node.expression.expression)));
             if (node.expression.getText(tree) === 'Object.assign' && node.arguments[0]) taint(names(node.arguments[0]));
           }
         }
@@ -468,7 +499,24 @@ it('keeps a test body apart from its options, skipIf and imports, and follows a 
       '});',
     ]),
   ).toEqual([3]);
-  expect(lines(["const ff = server.browser === 'firefox';", 'class H {', '  constructor(skip: boolean) {', "    it.skipIf(skip)('a', () => {});", '  }', '}', 'new H(ff);'])).toEqual([1, 2, 3, 4, 7]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'class H {', '  constructor(skip: boolean) {', "    it.skipIf(skip)('a', () => {});", '  }', '}', 'new H(ff);'])).toEqual([1, 3, 4, 7]);
+});
+
+it('hands a Firefox argument only to its own parameter, and keeps the function and its other callers clean', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(
+    lines([
+      'async function emulate(features: string[], wait = 0) {',
+      '  await apply(features, wait);',
+      '}',
+      "await emulate(server.browser === 'firefox' ? [] : ['forced-colors']);",
+      "await emulate(['forced-colors'], 5);",
+    ]),
+  ).toEqual([1, 2, 4]);
+  expect(lines(['class Probe {', '  constructor(public skip: boolean) {}', '  run() {', "    it.skipIf(this.skip)('a', () => {});", '  }', '}', "new Probe(server.browser === 'firefox').run();"])).toEqual([2, 3, 4, 7]);
+  expect(lines(["const cases = [{ name: 'drag', skip: server.browser === 'firefox' }];", 'const h = { runCase: ({ skip }: { skip: boolean }) => {', '  if (skip) return;', '} };', "it.each(cases)('$name', h.runCase);"])).toEqual([1, 2, 3, 5]);
+  expect(lines(['const rows = [1, 2];', "if (server.browser === 'firefox') {", '  const order = [...rows].reverse();', '  expect(order).toHaveLength(2);', '}', 'expect(rows).toHaveLength(2);'])).toEqual([2]);
+  expect(lines(["interface FfBase { skip: boolean }", 'class Fake implements FfBase { skip = false }', 'const f = new Fake();', "it.skipIf(f.skip)('a', () => {});"])).toEqual([]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
