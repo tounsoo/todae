@@ -228,6 +228,25 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   /** A call to a method that changes the collection or object it is called on, like `skipped.add(…)`. */
   const changes = (node: ts.Node): node is ts.CallExpression & { expression: ts.PropertyAccessExpression } =>
     ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && /^(add|set|delete|clear|push|pop|shift|unshift|splice|append|remove|assign|sort|reverse|fill)$/.test(node.expression.name.text);
+  /**
+   * The `each` and `for` calls in a chain that registers a test, as `it.skipIf(ff).each(cases)`,
+   * or undefined when the chain does not start at it, test, describe, suite or bench.
+   */
+  const testRegistration = (callee: ts.Node): (ts.CallExpression | ts.NewExpression)[] | undefined => {
+    const tables: ts.CallExpression[] = [];
+    let at = callee;
+    for (;;) {
+      if (ts.isCallExpression(at)) {
+        if (ts.isPropertyAccessExpression(at.expression) && /^(each|for)$/.test(at.expression.name.text)) tables.push(at);
+        at = at.expression;
+      } else if (ts.isPropertyAccessExpression(at)) at = at.expression;
+      else break;
+    }
+    return ts.isIdentifier(at) && /^(it|test|describe|suite|bench)$/.test(at.text) ? tables : undefined;
+  };
+  /** Leaves out a name bound by an import, like userEvent, which a call on it in one test can't change for the next. */
+  const own = (found: ts.Node[]) =>
+    found.filter((name) => !(checker.getSymbolAtLocation(name)?.declarations ?? []).some((d) => ts.isImportSpecifier(d) || ts.isImportClause(d) || ts.isNamespaceImport(d)));
   /** The function a node is, or names, so a value handed to it reaches its parameters. */
   const functionsAt = (node: ts.Node): ts.SignatureDeclaration[] => {
     if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return [node];
@@ -235,6 +254,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     return (symbolOf(ts.isPropertyAccessExpression(node) ? node.name : node)?.declarations ?? []).flatMap((declaration): ts.SignatureDeclaration[] =>
       ts.isFunctionDeclaration(declaration) || ts.isMethodDeclaration(declaration)
         ? [declaration]
+        : ts.isClassDeclaration(declaration)
+          ? declaration.members.filter(ts.isConstructorDeclaration)
         : ts.isVariableDeclaration(declaration) && declaration.initializer && (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
           ? [declaration.initializer]
           : [],
@@ -246,7 +267,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     each(node, (child) => {
       if (isAssignment(child)) found.push(...names(child.left));
       else if ((ts.isPrefixUnaryExpression(child) || ts.isPostfixUnaryExpression(child)) && [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(child.operator)) found.push(...names(child.operand));
-      else if (changes(child)) found.push(...names(child.expression.expression));
+      else if (changes(child)) found.push(...own(names(child.expression.expression)));
       else if (ts.isDeleteExpression(child)) found.push(...names(child.expression));
     });
     // A counter or a list that lives only inside the branch ends with it.
@@ -284,19 +305,26 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
         ) {
           // Whatever is set, counted or changed only when the condition names Firefox treats Firefox apart too.
           taint(writes(ts.isBinaryExpression(node) ? node.right : node));
-        } else if (ts.isCallExpression(node)) {
-          const passes = node.arguments.some((arg) => !ts.isFunctionLike(arg) && uses(arg, tree));
-          // `it.skipIf(ff)(name, cb)` only decides whether cb runs; it hands cb nothing from Firefox.
-          const registers = ts.isCallExpression(node.expression) && ts.isPropertyAccessExpression(node.expression.expression) && /^(skipIf|runIf)$/.test(node.expression.expression.name.text);
-          if (!passes && (registers || !uses(node.expression, tree))) return;
-          // A function handed a Firefox value gets it as a parameter: a callback, as in `it.each(cases)(name, (c) => …)`
-          // or `list.forEach((skip) => …)`, whether written in place or named, and a function called with it, as `register(ff)`.
-          const functions = node.arguments.flatMap((arg) => functionsAt(arg));
+        } else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+          const args = node.arguments ?? [];
+          const data = (call: ts.CallExpression | ts.NewExpression) => (call.arguments ?? []).some((arg) => !ts.isFunctionLike(arg) && uses(arg, tree));
+          const passes = data(node);
+          const registration = testRegistration(node.expression);
+          if (registration) {
+            // A test's options and its skipIf or runIf only decide how its body runs; they hand the body nothing.
+            // Only a table given to `each` or `for` reaches the body's parameters.
+            if (registration.some(data)) for (const fn of args.flatMap((arg) => functionsAt(arg))) taint(fn.parameters.flatMap((parameter) => names(parameter.name)));
+            return;
+          }
+          if (!passes && !uses(node.expression, tree)) return;
+          // A function handed a Firefox value gets it as a parameter: a callback, as in `list.forEach((skip) => …)`,
+          // whether written in place or named, and a function or class called with it, as `register(ff)` or `new Probe(ff)`.
+          const functions = args.flatMap((arg) => functionsAt(arg));
           if (passes) functions.push(...functionsAt(node.expression));
           for (const fn of functions) taint(fn.parameters.flatMap((parameter) => names(parameter.name)));
           // `skipped.add(…)`, `waits.push(…)` and `Object.assign(cfg, …)` change the value they are called on.
-          if (passes) {
-            if (changes(node)) taint(names(node.expression.expression));
+          if (passes && ts.isCallExpression(node)) {
+            if (changes(node)) taint(own(names(node.expression.expression)));
             if (node.expression.getText(tree) === 'Object.assign' && node.arguments[0]) taint(names(node.arguments[0]));
           }
         }
@@ -422,6 +450,25 @@ it('leaves alone what lives only inside a Firefox branch, another object of the 
   expect(lines(["if (server.browser === 'firefox') {", '  for (let frames = 0; frames < 2; frames++) await frame();', '  const seen: number[] = [];', '  seen.push(1);', '}'])).toEqual([1]);
   expect(lines(['class Probe { delay = 0 }', 'const a = new Probe();', 'const b = new Probe();', "if (server.browser === 'firefox') a.delay = 50;", 'expect(b.delay).toBe(0);'])).toEqual([2, 4]);
   expect(lines(["class FfBase { skip = server.browser === 'firefox' }", 'class Probe extends FfBase {}', 'const p = new Probe();', "it.skipIf(p.skip)('a', () => {});"])).toEqual([1, 2, 3, 4]);
+});
+
+it('keeps a test body apart from its options, skipIf and imports, and follows a class built with a Firefox value', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["const ff = server.browser === 'firefox';", "it('a', { retry: ff ? 2 : 0 }, async ({ expect }) => {", '  expect(1).toBe(1);', '});'])).toEqual([1, 2]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'const cases = [1, 2];', "it.skipIf(ff).each(cases)('%s', (n) => {", '  expect(n).toBe(n);', '});'])).toEqual([1, 3]);
+  expect(lines(["const cases = [server.browser === 'firefox'];", "it.skipIf(false).each(cases)('%s', (n) => {", '  expect(n).toBe(n);', '});'])).toEqual([1, 2, 3]);
+  expect(
+    lines([
+      "import { userEvent } from '@vitest/browser/context';",
+      "it('a', async () => {",
+      "  if (server.browser === 'firefox') await userEvent.clear(input);",
+      '});',
+      "it('b', async () => {",
+      '  await userEvent.click(button);',
+      '});',
+    ]),
+  ).toEqual([3]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'class H {', '  constructor(skip: boolean) {', "    it.skipIf(skip)('a', () => {});", '  }', '}', 'new H(ff);'])).toEqual([1, 2, 3, 4, 7]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
