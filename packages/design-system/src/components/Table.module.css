@@ -40,8 +40,7 @@
     background: var(--todae-table-row-bg-selected);
   }
 
-  /* A button inside a header cell that carries data-sort. The glyph keeps its
-     width while hidden, so a column does not change width when it is sorted. */
+  /* A button inside a header cell that carries data-sort. */
   .sortButton {
     display: inline-flex;
     align-items: center;
@@ -81,20 +80,27 @@
     block-size: 100%;
   }
 
-  /* Where a pointer can hover, a glyph with no sorted header cell above it,
-     such as in a column whose sort is none or unset, hides until hover or
-     focus; on touch it stays, dimmed, so the column reads as sortable. */
+  /* A column that is not sorted, such as one whose sort is none or unset,
+     shows the unsorted glyph in place of the arrow. Both glyphs take the same
+     box, so the column keeps its width when it is sorted. */
+  .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *) > .sortArrow,
+  :is([data-sort='ascending'], [data-sort='descending']) .sortUnsorted {
+    display: none;
+  }
+
+  /* Where a pointer can hover, the unsorted glyph hides until hover or focus;
+     on touch it stays, dimmed, so the column reads as sortable. */
   @media (hover: hover) {
-    .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :hover, :focus-visible) > .sortGlyph {
+    .sortButton:not(:hover, :focus-visible) > .sortUnsorted {
       visibility: hidden;
     }
   }
 
-  :is([data-sort='ascending'], [data-sort='descending']) .sortGlyph {
+  :is([data-sort='ascending'], [data-sort='descending']) .sortArrow {
     color: var(--todae-table-sort-icon-fg-selected);
   }
 
-  [data-sort='descending'] .sortButton > [data-todae-glyph] {
+  [data-sort='descending'] .sortArrow {
     rotate: 180deg;
   }
 

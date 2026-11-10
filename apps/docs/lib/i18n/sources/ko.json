@@ -920,7 +920,7 @@
   "table": {
     "(top)": "c279270772cb",
     "# Table": "dec0bcc1fcb4",
-    "## Sorting": "c2b5f082b7ba",
+    "## Sorting": "45a0698ac899",
     "## Selecting rows": "93993f898f75",
     "## Accessible composition": "934a12e27009",
     "## When to use": "6b47945cf41f",
@@ -1101,7 +1101,7 @@
   "utilities/glyphs-provider": {
     "(top)": "4dc074f7d584",
     "# GlyphsProvider": "fb53ee08b435",
-    "## Glyphs": "a04fb82f395f",
+    "## Glyphs": "b94dbf983912",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",

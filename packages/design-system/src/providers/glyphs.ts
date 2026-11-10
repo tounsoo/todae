@@ -15,8 +15,10 @@ export interface Glyphs {
   chevron?: ReactNode;
   /** Checkbox.Root while `indeterminate`, in place of the check. Todae draws a horizontal bar. */
   indeterminate?: ReactNode;
-  /** Table.SortButton. Point it up: a descending column turns it. Todae draws an arrow pointing up. */
+  /** Table.SortButton on a sorted column. Point it up: a descending column turns it. Todae draws an arrow pointing up. */
   sort?: ReactNode;
+  /** Table.SortButton on a column that isn't sorted, in place of the sort glyph. Todae draws an arrow up beside an arrow down. */
+  unsorted?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;
   /** A Field.Picker's button beside a Field.DateInput, Field.DateRangeInput or Field.DateTimeInput. Todae draws a calendar. */

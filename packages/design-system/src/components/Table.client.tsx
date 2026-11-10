@@ -3,7 +3,7 @@ import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { cx } from '../internal/cx.js';
-import { glyphOr, SortGlyph } from './glyphs.js';
+import { glyphOr, SortGlyph, UnsortedGlyph } from './glyphs.js';
 import { Body, Caption, Cell, Foot, HeaderCell, Head, Root, Row } from './Table.js';
 import styles from './Table.module.css';
 
@@ -47,7 +47,7 @@ const USER_ACTIONS = ['pointerdown', 'keydown'] as const;
 const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'OS', 'Super', 'Hyper', 'Fn', 'FnLock', 'Symbol', 'SymbolLock', 'CapsLock', 'NumLock', 'ScrollLock', 'Insert']);
 
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
-  const { sort } = useGlyphs();
+  const { sort, unsorted } = useGlyphs();
   const strings = useStrings();
   const announce = useAnnouncer();
   const stopRef = useRef<Stop | null>(null);
@@ -103,8 +103,11 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
   return (
     <button type="button" {...props} className={cx(styles.sortButton, className)} onClick={handleClick}>
       {children}
-      <span className={styles.sortGlyph} data-todae-glyph="" aria-hidden="true">
+      <span className={cx(styles.sortGlyph, styles.sortArrow)} data-todae-glyph="" aria-hidden="true">
         {glyphOr(sort, <SortGlyph />)}
+      </span>
+      <span className={cx(styles.sortGlyph, styles.sortUnsorted)} data-todae-glyph="" aria-hidden="true">
+        {glyphOr(unsorted, <UnsortedGlyph />)}
       </span>
     </button>
   );
