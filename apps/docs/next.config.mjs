@@ -20,6 +20,15 @@ const REDIRECTS = [
   ['/utilities/use-controlled-value', '/utilities/use-controlled-state'],
 ];
 
+// Every response, pages and the MCP endpoint alike: no MIME sniffing, no framing by another site, no <base> or
+// plugin content, and only the origin in a referrer sent to another site. A script-src would need hashes for
+// SiteShell's two inline appearance scripts, so the policy leaves scripts alone.
+const SECURITY_HEADERS = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'" },
+];
+
 // Vercel names the project's production domain in every deployment, previews included.
 // `env` inlines it at build, so client components read the same origin as the server.
 const PRODUCTION_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL;
@@ -68,6 +77,7 @@ const nextConfig = {
       '../../packages/design-system/dist/src/color/*.js',
     ],
   },
+  headers: async () => [{ source: '/:path*', headers: SECURITY_HEADERS }],
   // Every English redirect also applies under each locale prefix.
   redirects: async () =>
     REDIRECTS.flatMap(([source, destination]) =>
