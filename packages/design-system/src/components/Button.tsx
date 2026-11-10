@@ -318,10 +318,13 @@ function Root({
       if (hover) mounted.holdHover();
       else if (focus) mounted.holdFocus(focus);
     } else if (wanted) {
-      if (hover) waiting.current.hover = true;
-      // Focus a press put there takes no hold, now or when the tip mounts.
-      else waiting.current.focus = focus && !pointerFocus(focus) ? focus : null;
-      waiting.current.commit = commits.current;
+      const was = waiting.current;
+      waiting.current = {
+        hover: hover || was.hover,
+        // Focus a press put there takes no hold, now or when the tip mounts.
+        focus: hover ? was.focus : focus && !pointerFocus(focus) ? focus : null,
+        commit: commits.current,
+      };
       if (!iconOnly) setCutText(textName);
     } else if (tipped) setCutText(null);
   };
@@ -343,6 +346,8 @@ function Root({
   const idle = !listens || tipText == null;
   useLayoutEffect(() => {
     if (idle && waiting.current.commit !== commits.current) waiting.current = noHolds();
+    // The tip is gone, so a later one sets its own holds.
+    if (tipText == null) holds.current = null;
   });
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
@@ -462,25 +467,30 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
     () => ({ holdHover, releaseHover, holdFocus, releaseFocus }),
     [holdFocus, holdHover, releaseFocus, releaseHover],
   );
+  // The holds stay set while a Suspense fallback or a hidden Activity hides
+  // the tip, which cleans up its effects without unmounting it, so a leave or
+  // blur meanwhile still releases it; Root clears them once the tip is gone.
+  // The holds waiting from a reach are taken as the tip mounts, again by
+  // StrictMode's second run in the same commit, and dropped once that commit
+  // is over, so a hidden tip that shows again takes none.
   useLayoutEffect(() => {
     holds.current = mine;
-    const { hover, focus } = waiting.current;
-    if (hover) mine.holdHover();
+    const taken = waiting.current;
+    if (taken.hover) mine.holdHover();
     // Focus a product handler moved on takes no hold.
-    if (focus?.matches(':focus')) mine.holdFocus(focus);
-    return () => {
+    if (taken.focus?.matches(':focus')) mine.holdFocus(taken.focus);
+    if (taken.hover || taken.focus) {
+      queueMicrotask(() => {
+        if (waiting.current === taken) waiting.current = noHolds();
+      });
+    }
+  }, [holds, mine, waiting]);
+  useLayoutEffect(
+    () => () => {
       triggerRef.current = null;
-    };
-  }, [holds, mine, triggerRef, waiting]);
-  // The holds stay reachable while a Suspense fallback hides the tip, whose
-  // layout effects are cleaned up then, so a leave or blur meanwhile still
-  // releases it; they go only when the tip unmounts.
-  useEffect(() => {
-    holds.current = mine;
-    return () => {
-      if (holds.current === mine) holds.current = null;
-    };
-  }, [holds, mine]);
+    },
+    [triggerRef],
+  );
   // Once open, the tip has taken them, and a later tip takes only new ones.
   useLayoutEffect(() => {
     if (tip.open) waiting.current = noHolds();
