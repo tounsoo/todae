@@ -18,6 +18,7 @@ import { useFieldsetState } from './Fieldset.context.js';
 import { composeHandlers, cx } from '../internal/props.js';
 import styles from './ColorPicker.module.css';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { capturePointer } from '../internal/pointerCapture.js';
 
 export type ColorPickerRootProps = {
   /** Controlled color as #rrggbb. Pass with onValueChange. */
@@ -185,11 +186,8 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
         if (disabled || event.button !== 0) return;
         // Keep focus off the area itself; it moves to the saturation input.
         event.preventDefault();
-        try {
-          event.currentTarget.setPointerCapture?.(event.pointerId);
-        } catch {
-          // The pointer may already be gone; the press still picks, only a drag can't follow it.
-        }
+        // The press still picks without capture; only a drag can't follow it.
+        capturePointer(event.currentTarget, event.pointerId);
         moveTo(event);
         if (xRef.current) focusWithoutScroll(xRef.current);
       })}

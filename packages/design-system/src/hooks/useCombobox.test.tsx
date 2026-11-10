@@ -213,6 +213,35 @@ describe('useCombobox', () => {
     ]);
   });
 
+  it.each([
+    ['Shift', 'Home', { shiftKey: true }],
+    ['Shift', 'End', { shiftKey: true }],
+    ['Shift', 'ArrowDown', { shiftKey: true }],
+    ['Ctrl', 'Home', { ctrlKey: true }],
+    ['Meta', 'ArrowUp', { metaKey: true }],
+    ['Alt', 'End', { altKey: true }],
+  ])('leaves %s+%s to the input, so it can select text or move the caret', (_, key, modifier) => {
+    const onOpenChange = vi.fn();
+    render(<SingleBox onOpenChange={onOpenChange} />);
+    const input = screen.getByRole('combobox');
+    const closed = fireEvent.keyDown(input, { key, ...modifier });
+    expect(closed).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const active = input.getAttribute('aria-activedescendant');
+    const open = fireEvent.keyDown(input, { key, ...modifier });
+    expect(open).toBe(true);
+    expect(input.getAttribute('aria-activedescendant')).toBe(active);
+  });
+
+  it('opens and moves the list with Alt and an arrow', () => {
+    const onOpenChange = vi.fn();
+    render(<SingleBox onOpenChange={onOpenChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown', altKey: true });
+    expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
+  });
+
   it('opens and moves with arrows, clamps, skips disabled, and selects with Enter', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();

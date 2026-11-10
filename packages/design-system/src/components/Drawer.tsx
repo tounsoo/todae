@@ -27,6 +27,7 @@ export type DrawerRootProps = Omit<DialogRootProps, 'role'> & {
 // The scrim fades by its color, not the element's opacity, so the panel's
 // slide stays visible to the end.
 const shellFor = (side: DrawerSide): DialogShell => ({
+  part: 'Drawer',
   className: styles.drawer,
   panelClassName: styles.panel,
   exitMs: DRAWER_EXIT_MS,

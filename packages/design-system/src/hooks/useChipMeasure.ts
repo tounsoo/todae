@@ -1,5 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { planChipOverflow } from './chipOverflow.js';
+import { cancelLayout, queueLayout, STAGE } from '../internal/layoutBatch.js';
+import { observeSize } from '../internal/sharedObservers.js';
 
 export function useChipMeasure({
   chips,
@@ -74,10 +76,16 @@ export function useChipMeasure({
       window.addEventListener('resize', measure);
       return () => window.removeEventListener('resize', measure);
     }
-    const ro = new ResizeObserver(measure);
-    if (flow) ro.observe(flow);
-    if (layer) ro.observe(layer);
-    return () => ro.disconnect();
+    // Every chip list's sizes share one ResizeObserver (sharedObservers.ts). The
+    // flow and the layer resizing in one report measure once, beside every
+    // other part's reads (layoutBatch.ts).
+    const key = {};
+    const resized = () => queueLayout(key, STAGE.measure, { read: measure });
+    const stops = [flow, layer].flatMap((target) => (target ? [observeSize(target, resized)] : []));
+    return () => {
+      for (const stop of stops) stop();
+      cancelLayout(key);
+    };
   }, [measure, flowRef, measureRef]);
 
   // Read it in a layout effect after this hook's own: false while a measure

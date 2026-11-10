@@ -90,6 +90,8 @@ const SCAN_DAYS = 732;
 const SCAN_CHUNK_DAYS = 32;
 /** How long a frame may go on checking after a render, in milliseconds. */
 const SCAN_SLICE_MS = 8;
+/** Renders in a row that start an unfinished scan over with a new isDateDisabled before development says so. */
+const RESTARTS_TOLD = 3;
 
 /**
  * The reach of a range started on `anchor` over the shown month, null with no first
@@ -128,5 +130,28 @@ export function useReach(
     });
     return () => cancelAnimationFrame(frame);
   }, [anchor, fresh, isDateDisabled, max, min, monthText]);
-  return carried && carried.from === fresh ? carried.reach : fresh;
+  const reach = carried && carried.from === fresh ? carried.reach : fresh;
+  // A new isDateDisabled on every render starts an unfinished scan over each time, so a far
+  // day may never become reachable. In development, say so after a few such renders in a row.
+  const restarts = useRef<{ last: ReachLimits['isDateDisabled']; done: boolean; count: number; told: boolean }>({
+    last: undefined,
+    done: true,
+    count: 0,
+    told: false,
+  });
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    const seen = restarts.current;
+    // Only a scan cut short by the new function counts, not one the frames had finished.
+    const restarted = Boolean(fresh && !fresh.done && !seen.done && seen.last && seen.last !== isDateDisabled);
+    seen.count = restarted ? seen.count + 1 : 0;
+    seen.last = isDateDisabled;
+    seen.done = reach?.done ?? true;
+    if (seen.count < RESTARTS_TOLD || seen.told) return;
+    seen.told = true;
+    console.error(
+      'Calendar.Root got a new isDateDisabled on each render, so a range scan starts over and far days may stay out of reach; keep it the same function, such as with useCallback',
+    );
+  }, [fresh, isDateDisabled, reach]);
+  return reach;
 }

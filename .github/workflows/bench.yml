@@ -37,7 +37,8 @@ concurrency:
 jobs:
   bench:
     name: Bench
-    # The same image as Fernway, so Playwright's Chromium installs. A record names the machine type,
+    # Ubuntu 24.04, where Playwright's Chromium installs. It stays on the runner, not Playwright's image as
+    # Fernway does, so new records compare with the saved ones. A record names the machine type,
     # and timings compare only between records from the same one.
     runs-on: ubuntu-24.04
     # Every public part has a case, and --against runs each one on both builds.
@@ -72,7 +73,7 @@ jobs:
             echo "::error::A bench-record/$name branch already exists. Merge or delete it, or pick another name."; exit 1
           fi
 
-      # Keyed like Fernway's, which uses the same Playwright and so the same Chromium build.
+      # Keyed by the lockfile, so a Playwright bump downloads its Chromium build again.
       - id: playwright-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

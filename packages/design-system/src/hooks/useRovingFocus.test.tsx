@@ -459,6 +459,9 @@ describe('useRovingFocus', () => {
     HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
       return !this.classList.contains('gone');
     };
+    // Frames run only when the test says, so a busy runner can't run one between the two changes.
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const nextFrame = () => act(() => vi.advanceTimersToNextFrame());
     try {
       render(<Group activeValue="banana" />);
       const apple = screen.getByRole('button', { name: 'apple' });
@@ -468,13 +471,14 @@ describe('useRovingFocus', () => {
       await act(async () => apple.style.setProperty('color', 'red'));
       await act(async () => banana.classList.add('gone'));
       expect(tabStops()).toEqual(['banana']);
-      await frame();
+      nextFrame();
       expect(tabStops()).toEqual(['apple']);
       // The frame has run, so the next change queues another.
       await act(async () => banana.classList.remove('gone'));
-      await frame();
+      nextFrame();
       expect(tabStops()).toEqual(['banana']);
     } finally {
+      vi.useRealTimers();
       HTMLElement.prototype.checkVisibility = original;
     }
   });
