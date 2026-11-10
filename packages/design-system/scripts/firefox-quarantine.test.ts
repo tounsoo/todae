@@ -216,6 +216,19 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   };
   const isAssignment = (node: ts.Node): node is ts.BinaryExpression =>
     ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
+  /** A call to a method that changes the collection or object it is called on, like `skipped.add(…)`. */
+  const changes = (node: ts.Node): node is ts.CallExpression & { expression: ts.PropertyAccessExpression } =>
+    ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && /^(add|set|push|unshift|splice|append|assign)$/.test(node.expression.name.text);
+  /** The names written anywhere in a node: assigned, counted up or down, or changed by a method called on them. */
+  const writes = (node: ts.Node) => {
+    const found: ts.Node[] = [];
+    each(node, (child) => {
+      if (isAssignment(child)) found.push(...names(child.left));
+      else if ((ts.isPrefixUnaryExpression(child) || ts.isPostfixUnaryExpression(child)) && [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(child.operator)) found.push(...names(child.operand));
+      else if (changes(child)) found.push(...names(child.expression.expression));
+    });
+    return found;
+  };
   for (let grew = true; grew; ) {
     grew = false;
     const mark = (symbol: ts.Symbol | undefined) => {
@@ -240,14 +253,21 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
         else if ((ts.isForOfStatement(node) || ts.isForInStatement(node)) && uses(node.expression, tree)) taint(names(node.initializer));
         else if (ts.isExportAssignment(node) && uses(node.expression, tree)) {
           mark(exportOf('default'));
-        } else if (ts.isIfStatement(node) && uses(node.expression, tree)) {
-          // A value set only when the condition names Firefox treats Firefox apart too.
-          each(node, (child) => {
-            if (isAssignment(child)) taint(names(child.left));
-          });
-        } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && uses(node.expression.expression, tree)) {
-          // `[isFirefox].forEach((skip) => …)` hands the value to the callback.
+        } else if (
+          ((ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node) || ts.isConditionalExpression(node)) && uses(ts.isConditionalExpression(node) ? node.condition : node.expression, tree)) ||
+          (ts.isSwitchStatement(node) && node.caseBlock.clauses.some((clause) => ts.isCaseClause(clause) && uses(clause.expression, tree))) ||
+          (ts.isBinaryExpression(node) && [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken].includes(node.operatorToken.kind) && uses(node.left, tree))
+        ) {
+          // Whatever is set, counted or changed only when the condition names Firefox treats Firefox apart too.
+          taint(writes(ts.isBinaryExpression(node) ? node.right : node));
+        } else if (ts.isCallExpression(node) && (uses(node.expression, tree) || node.arguments.some((arg) => !ts.isFunctionLike(arg) && uses(arg, tree)))) {
+          // A callback handed a Firefox value, as `it.each(cases)(name, (c) => …)` or `list.forEach((skip) => …)`, gets it as a parameter.
           for (const arg of node.arguments) if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) taint(arg.parameters.flatMap((parameter) => names(parameter.name)));
+          // `skipped.add(…)`, `waits.push(…)` and `Object.assign(cfg, …)` change the value they are called on.
+          if (node.arguments.some((arg) => !ts.isFunctionLike(arg) && uses(arg, tree))) {
+            if (changes(node)) taint(names(node.expression.expression));
+            if (node.expression.getText(tree) === 'Object.assign' && node.arguments[0]) taint(names(node.arguments[0]));
+          }
         }
       });
       const resolved = (symbol: ts.Symbol) => (symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol);
@@ -327,6 +347,27 @@ it('follows a default parameter, and a class member read through this, along wit
   const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
   expect(lines(["function guard(cond = server.browser === 'firefox') {", "  it.skipIf(cond)('a', () => {});", '}'])).toEqual([1, 2]);
   expect(lines(['class Probe {', "  ff = server.browser === 'firefox';", '  run() {', "    it.skipIf(this.ff)('a', () => {});", '  }', '}'])).toEqual([1, 2, 3, 4]);
+});
+
+it('follows a value into each callback, switch case, count and method call that changes it', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(
+    lines([
+      "const cases = [{ name: 'drag', skip: server.browser === 'firefox' }];",
+      "it.each(cases)('$name', ({ skip }) => {",
+      '  if (skip) return;',
+      '});',
+      "describe.each(cases)('$name', (c) => {",
+      "  it.skipIf(c.skip)('y', () => {});",
+      '});',
+    ]),
+  ).toEqual([1, 2, 3, 5, 6]);
+  expect(lines(['let tolerance = 1;', 'switch (server.browser) {', "  case 'firefox':", '    tolerance = 2;', '}', 'expect(delta).toBeLessThan(tolerance);'])).toEqual([1, 3, 4, 6]);
+  expect(lines(['let frames = 1;', "if (server.browser === 'firefox') frames++;", 'await settle(frames);'])).toEqual([1, 2, 3]);
+  expect(lines(['const skipped = new Set<string>();', "if (server.browser === 'firefox') skipped.add('drag');", "it.skipIf(skipped.has('drag'))('drag', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['const waits: number[] = [];', "waits.push(server.browser === 'firefox' ? 50 : 0);", 'await wait(waits[0]);'])).toEqual([1, 2, 3]);
+  expect(lines(['const cfg = { skip: false };', "Object.assign(cfg, { skip: server.browser === 'firefox' });", "it.skipIf(cfg.skip)('a', () => {});"])).toEqual([1, 2, 3]);
+  expect(lines(['let tolerance = 1;', "server.browser === 'firefox' && (tolerance = 2);", 'expect(delta).toBeLessThan(tolerance);'])).toEqual([1, 2, 3]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
