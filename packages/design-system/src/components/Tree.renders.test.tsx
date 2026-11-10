@@ -62,9 +62,9 @@ const walk = (fiber: Fiber | null) => {
 };
 hook.onCommit = (root) => walk(root.child);
 
-/** The parts that rendered in the commits since the last call, as "Part value". */
+/** Each render of a part in the commits since the last call, as "Part value", so a part that renders twice shows twice. */
 function rendered(): string[] {
-  const parts = [...new Set(out)].sort();
+  const parts = [...out].sort();
   out = [];
   return parts;
 }
