@@ -12,6 +12,7 @@ import { useModalLayer } from '../hooks/useModalLayer.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { heldModals } from '../overlay/modalStack.js';
 import { HeldTip } from '../test/heldTip.js';
+import { tipFor } from '../test/tipFor.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -57,8 +58,8 @@ function isPopoverShown(el: Element): boolean {
  */
 async function expectTipByTrigger(trigger: HTMLElement): Promise<void> {
   await waitFor(() => {
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '');
-    if (!tip) throw new Error('No tip describes the trigger');
+    const tip = tipFor(trigger);
+    if (!tip) throw new Error('No tip is anchored to the trigger');
     expect(tip.getAttribute('role')).toBe('tooltip');
     expect(isPopoverShown(tip)).toBe(true);
     const t = tip.getBoundingClientRect();
@@ -1348,7 +1349,7 @@ describe('Tooltip in a layer shown again', () => {
     await waitFor(() => expect(heldModals()).toContain(dialog));
     const trigger = screen.getByRole('button', { name: 'Open before the dialog' });
     await expectTipByTrigger(trigger);
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    const tip = tipFor(trigger)!;
     tip.style.pointerEvents = 'auto';
     await waitFor(() => expect(receivesPointer(tip)).toBe(true));
     act(() => dialog.close());
@@ -1368,7 +1369,7 @@ describe('Tooltip in a layer shown again', () => {
     const trigger = screen.getByRole('button', { name: 'Open from the start' });
     await expectTipByTrigger(trigger);
     // A tip takes no pointer; let it, to see what is in front at its middle.
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    const tip = tipFor(trigger)!;
     tip.style.pointerEvents = 'auto';
     expect(receivesPointer(tip)).toBe(true);
   });
@@ -1393,7 +1394,7 @@ describe('Tooltip in a layer shown again', () => {
     await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
     const trigger = screen.getByRole('button', { name: 'Inside' });
     await expectTipByTrigger(trigger);
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    const tip = tipFor(trigger)!;
     const shows = vi.spyOn(tip, 'showPopover');
     act(() => dialog.close());
     await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
@@ -1410,8 +1411,8 @@ describe('Tooltip in a layer shown again', () => {
 async function expectTipAbove(trigger: HTMLElement): Promise<void> {
   await waitFor(() => expect(document.getAnimations()).toHaveLength(0));
   await waitFor(() => {
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '');
-    if (!tip) throw new Error('No tip describes the trigger');
+    const tip = tipFor(trigger);
+    if (!tip) throw new Error('No tip is anchored to the trigger');
     expect(isPopoverShown(tip)).toBe(true);
     const t = tip.getBoundingClientRect();
     const a = trigger.getBoundingClientRect();
@@ -1460,7 +1461,7 @@ describe.each(['bottom-end', 'top-end'] as const)('Tooltip on a stacked toast pl
     expect(items()[2]!.contains(trigger)).toBe(true);
     expect(region.hasAttribute('data-expanded')).toBe(false);
     // Its tip would paint over the newest toast, which covers its trigger.
-    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '')!;
+    const tip = tipFor(trigger)!;
     expect(isPopoverShown(tip)).toBe(true);
     expect(getComputedStyle(tip).visibility).toBe('hidden');
 

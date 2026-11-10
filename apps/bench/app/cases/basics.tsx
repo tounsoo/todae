@@ -130,6 +130,20 @@ export const BASICS = {
       ),
       interact: click("button"),
     },
+    {
+      id: "button-icon",
+      title: "Button, icon-only",
+      Case: ({ copies, tick }) => (
+        <>
+          {range(copies).map((index) => (
+            <Button.Root key={index} aria-label={`Archive ${index} ${tick}`}>
+              <Button.Icon>+</Button.Icon>
+            </Button.Root>
+          ))}
+        </>
+      ),
+      interact: click("button"),
+    },
   ],
   Text: [
     {

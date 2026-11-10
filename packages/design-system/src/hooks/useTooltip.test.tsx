@@ -742,3 +742,12 @@ describe('useTooltip tooltip ref', () => {
     expect(result.current.getTooltipProps().ref).toBe(first);
   });
 });
+
+describe('useTooltip result', () => {
+  it('carries only its public keys, none of the engine holds', () => {
+    const { result } = renderHook(() => api.useTooltip());
+    expect(Object.keys(result.current).sort()).toEqual(
+      ['getTooltipProps', 'getTriggerProps', 'ids', 'interactive', 'open', 'tooltipRef', 'triggerRef'].sort(),
+    );
+  });
+});

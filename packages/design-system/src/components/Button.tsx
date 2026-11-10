@@ -2,7 +2,10 @@ import {
   Children,
   isValidElement,
   useCallback,
+  useEffect,
+  useInsertionEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -15,10 +18,14 @@ import {
   type ReactNode,
   type Ref,
   type RefCallback,
+  type RefObject,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { useTooltipInternal } from '../overlay/tooltip.js';
+import { mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
+import { pointerFocus, useTooltipInternal, type TooltipInternalResult } from '../overlay/tooltip.js';
 import { cx } from '../internal/cx.js';
+import { useDomId } from '../internal/domId.js';
+import { watchInputModality } from '../internal/inputModality.js';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { Tooltip } from './Tooltip.js';
@@ -267,63 +274,102 @@ function Root({
   }, [rendersElement]);
 
   const textName = iconOnly ? null : direct.text;
-  const tipText = !tooltip ? null : iconOnly ? iconName : textName && cutText === textName ? textName : null;
-  const tip = useTooltipInternal({ enabled: tipText != null });
-  const refs = useComposedRefs(buttonRef, ref);
-
-  // Whether a label is cut is read when the person reaches the button, by
-  // pointer or by keys, not kept up to date: a label is cut or not only to
-  // someone looking at it. A cut label turns the tip on, and the hold that
-  // found it waits for that render, since a tip that is off ignores holds; a
-  // label found to fit again turns it off and takes no hold.
-  const { holdHover, holdFocus } = tip;
+  // An icon-only button's tip turns on once the pointer or keys have reached
+  // it wanting a tip, as icon-only or with a cut label, and stays on, so a
+  // button held while it turns icon-only keeps its tip.
+  const [reachedOnce, setReachedOnce] = useState(false);
+  const tipText = !tooltip
+    ? null
+    : iconOnly
+      ? reachedOnce
+        ? iconName
+        : null
+      : textName && cutText === textName
+        ? textName
+        : null;
   const tipped = tipText != null;
-  // The holds waiting for that render: the pointer, and the element focus reached.
-  const reached = useRef<{ hover: boolean; focus: Element | null }>({ hover: false, focus: null });
+  const refs = useComposedRefs(buttonRef, ref);
+  const anchor = `--todae-tooltip-${useDomId()}`;
+  // The mounted tip's holds, which ButtonTip sets.
+  const holds = useRef<TipHolds | null>(null);
+
+  // The tip mounts only once the person reaches the button, by pointer or by
+  // keys: an icon-only button with a name, or a label found cut, which is
+  // read then and not kept up to date, since a label is cut or not only to
+  // someone looking at it. A label found to fit again turns the tip off.
+  // The holds the person has on the button while no tip is on, the pointer
+  // and the element focus reached, which the tip takes as it mounts; leaving
+  // and blurring drop them.
+  const waiting = useRef<Waiting>(noHolds());
+  // Commits so far, counted before any element in a commit takes focus.
+  const commits = useRef(0);
+  useInsertionEffect(() => {
+    commits.current += 1;
+  });
   const reach = (hover: boolean, focus: Element | null) => {
-    let cut = false;
-    for (const el of labels.current) cut ||= el.scrollWidth > el.clientWidth;
-    if (cut && tipped) {
-      if (hover) holdHover();
-      else if (focus) holdFocus(focus);
-    } else if (cut) {
-      if (hover) reached.current.hover = true;
-      else reached.current.focus = focus;
-      setCutText(textName);
+    let wanted = iconOnly && iconName != null;
+    if (!iconOnly) for (const el of labels.current) wanted ||= el.scrollWidth > el.clientWidth;
+    // Only a reach that wants a tip counts, so a label that fit never mounts one.
+    if (wanted && !reachedOnce) setReachedOnce(true);
+    // A tip turning on in this commit has not set its holds yet, so a reach
+    // during the commit waits for it like one before the tip.
+    const mounted = tipped ? holds.current : null;
+    if (wanted && mounted) {
+      if (hover) mounted.holdHover();
+      else if (focus) mounted.holdFocus(focus);
+    } else if (wanted) {
+      const was = waiting.current;
+      waiting.current = {
+        hover: hover || was.hover,
+        // Focus a press put there takes no hold, now or when the tip mounts.
+        focus: hover ? was.focus : focus && !pointerFocus(focus) ? focus : null,
+        commit: commits.current,
+      };
+      if (!iconOnly) setCutText(textName);
     } else if (tipped) setCutText(null);
   };
+
+  // Focus after a press opens no tip, so the page's presses and keys are
+  // watched before any tip mounts, by every Button, a press on one with no
+  // tip included.
+  useEffect(() => {
+    watchInputModality(buttonRef.current?.ownerDocument);
+  }, []);
+
+  // While no tip is mounted, or Root stops listening for leave and blur,
+  // holds still waiting are dropped on every commit, so a later tip takes only
+  // new ones. A reach sets its tip state in the same batch as its hold, so the
+  // commit that follows it has a tip and keeps the hold. A hold taken during
+  // this commit, as a button that focuses itself as it mounts does, waits for
+  // the next one, which carries the reach's tip state.
+  const listens = tooltip && (iconOnly || Boolean(textName));
+  const idle = !listens || tipText == null;
   useLayoutEffect(() => {
-    const { hover, focus } = reached.current;
-    reached.current = { hover: false, focus: null };
-    if (!tipped) return;
-    if (hover) holdHover();
-    // Focus a product handler moved on takes no hold.
-    if (focus?.matches(':focus')) holdFocus(focus);
-  }, [holdFocus, holdHover, tipped]);
+    if (idle && waiting.current.commit !== commits.current) waiting.current = noHolds();
+    // The tip is gone, so a later one sets its own holds.
+    if (tipText == null) holds.current = null;
+  });
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
-  const wired = tipped ? tip.getTriggerProps({ ...base, 'aria-describedby': props['aria-describedby'] }) : base;
-  // A button with a label reads it on reach and takes its holds from there;
-  // leaving and blurring stay the tip's own once it is on.
   const trigger =
-    !tooltip || !textName
-      ? wired
+    !listens
+      ? base
       : {
-          ...wired,
+          ...base,
           onPointerEnter: composeHandlers(onPointerEnter, () => reach(true, null)),
           onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => reach(false, event.target)),
-          ...(tipped
-            ? null
-            : {
-                onPointerLeave: (event: PointerEvent<HTMLElement>) => {
-                  (onPointerLeave as ((event: PointerEvent<HTMLElement>) => void) | undefined)?.(event);
-                  reached.current.hover = false;
-                },
-                onBlur: (event: FocusEvent<HTMLElement>) => {
-                  (onBlur as ((event: FocusEvent<HTMLElement>) => void) | undefined)?.(event);
-                  reached.current.focus = null;
-                },
-              }),
+          // Releases run even when the product's handler prevents the event,
+          // so a prevented leave or blur cannot strand the tip open.
+          onPointerLeave: (event: PointerEvent<HTMLElement>) => {
+            (onPointerLeave as ((event: PointerEvent<HTMLElement>) => void) | undefined)?.(event);
+            waiting.current.hover = false;
+            holds.current?.releaseHover(event.relatedTarget);
+          },
+          onBlur: (event: FocusEvent<HTMLElement>) => {
+            (onBlur as ((event: FocusEvent<HTMLElement>) => void) | undefined)?.(event);
+            waiting.current.focus = null;
+            holds.current?.releaseFocus(event.relatedTarget);
+          },
         };
 
   // Always mapped: switching between mapped and raw children would re-key
@@ -364,9 +410,138 @@ function Root({
   return (
     <>
       {button}
-      {tipText == null ? null : <Tooltip.Root {...tip.getTooltipProps()}>{tipText}</Tooltip.Root>}
+      {tipText == null ? null : <ButtonTip target={buttonRef} anchor={anchor} text={tipText} holds={holds} waiting={waiting} />}
     </>
   );
+}
+
+type TipHolds = Pick<TooltipInternalResult, 'holdHover' | 'releaseHover' | 'holdFocus' | 'releaseFocus'>;
+type Waiting = { hover: boolean; focus: Element | null; commit: number };
+const noHolds = (): Waiting => ({ hover: false, focus: null, commit: -1 });
+type Holds = { hover: boolean; focus: Element | null };
+const noHeld = (): Holds => ({ hover: false, focus: null });
+
+type ButtonTipProps = {
+  target: RefObject<HTMLElement | null>;
+  anchor: string;
+  text: string;
+  holds: RefObject<TipHolds | null>;
+  waiting: RefObject<Waiting>;
+};
+
+/**
+ * A Button's tip, after it, mounted only while it can show, so a Button the
+ * person never reaches carries no tooltip state. Root reaches its holds
+ * through `holds`. The tip shows the button's own name, so it is for the eye
+ * alone: it describes nothing, or a screen reader would read the name twice.
+ * It takes the holds still `waiting` each time it mounts, so the one that
+ * turned it on, and StrictMode's second mount, open it; once it opens, none
+ * are left waiting.
+ */
+function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
+  const tip = useTooltipInternal({}, { anchorName: anchor });
+  const { triggerRef, holdHover, releaseHover, holdFocus, releaseFocus } = tip;
+  // The tip's anchor name goes on the button from code, beside any a
+  // Coachmark or popover added, so the button's own style never changes for
+  // it and a Button with no tip carries none. Each render puts it back if a
+  // style the product passed has replaced the list, and `render` can swap
+  // the element the button is drawn on.
+  const named = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const el = target.current;
+    triggerRef.current = el;
+    if (named.current !== el) unname(named.current, anchor);
+    named.current = el;
+    if (!el) return;
+    const names = el.style.getPropertyValue('anchor-name');
+    if (!names.split(',').some((name) => name.trim() === anchor)) {
+      el.style.setProperty('anchor-name', mergeAnchorNames(names, anchor));
+    }
+  });
+  useLayoutEffect(
+    () => () => {
+      unname(named.current, anchor);
+      named.current = null;
+    },
+    [anchor],
+  );
+  // What the tip holds, and what its last unmount let go, so StrictMode's
+  // second mount can hold that again; a leave or blur since takes it back.
+  const held = useRef<Holds>(noHeld());
+  const dropped = useRef<Holds>(noHeld());
+  const mine = useMemo<TipHolds>(
+    () => ({
+      holdHover: () => {
+        held.current.hover = true;
+        holdHover();
+      },
+      releaseHover: (relatedTarget) => {
+        held.current.hover = false;
+        dropped.current.hover = false;
+        releaseHover(relatedTarget);
+      },
+      holdFocus: (el) => {
+        held.current.focus = el;
+        holdFocus(el);
+      },
+      releaseFocus: (relatedTarget) => {
+        held.current.focus = null;
+        dropped.current.focus = null;
+        releaseFocus(relatedTarget);
+      },
+    }),
+    [holdFocus, holdHover, releaseFocus, releaseHover],
+  );
+  // The holds stay set while a Suspense fallback or a hidden Activity hides
+  // the tip, which cleans up its effects without unmounting it, so a leave or
+  // blur meanwhile still releases it; Root clears them once the tip is gone.
+  // The holds waiting from a reach are taken as the tip mounts and dropped
+  // once its passive effects have run. StrictMode's second mount runs in the
+  // same flush right after them, which can be a task after the commit, and
+  // holds again what its first unmount let go; a hidden tip that shows again
+  // later takes nothing.
+  const remounting = useRef(false);
+  useLayoutEffect(() => {
+    holds.current = mine;
+    const taken = remounting.current ? dropped.current : waiting.current;
+    if (taken.hover) mine.holdHover();
+    // Focus a product handler moved on takes no hold.
+    if (taken.focus?.matches(':focus')) mine.holdFocus(taken.focus);
+    return () => {
+      dropped.current = held.current;
+      held.current = noHeld();
+    };
+  }, [holds, mine, waiting]);
+  useEffect(() => {
+    if (waiting.current.hover || waiting.current.focus) waiting.current = noHolds();
+    remounting.current = true;
+    queueMicrotask(() => {
+      remounting.current = false;
+      dropped.current = noHeld();
+    });
+  }, [waiting]);
+  useLayoutEffect(
+    () => () => {
+      triggerRef.current = null;
+    },
+    [triggerRef],
+  );
+  // Once open, the tip has taken them, and a later tip takes only new ones.
+  useLayoutEffect(() => {
+    if (tip.open) waiting.current = noHolds();
+  }, [tip.open, waiting]);
+  return (
+    <Tooltip.Root {...tip.getTooltipProps()} aria-hidden="true">
+      {text}
+    </Tooltip.Root>
+  );
+}
+
+function unname(el: HTMLElement | null, anchor: string) {
+  if (!el) return;
+  const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), anchor);
+  if (rest) el.style.setProperty('anchor-name', rest);
+  else el.style.removeProperty('anchor-name');
 }
 
 function Icon({ className, ...props }: ButtonIconProps) {

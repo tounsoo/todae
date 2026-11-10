@@ -82,12 +82,14 @@ export type TooltipInternalOptions = {
  * Holds for a trigger that wires its own handlers, or that turns its tip on
  * only once the person reaches it. `holdFocus` holds the tip for focus
  * already on `target`, unless a pointer put it there, as the trigger's own
- * focus handler would.
+ * focus handler would, and `releaseFocus` lets it go as the trigger's blur
+ * handler would.
  */
 export type TooltipInternalResult = {
   holdHover: () => void;
   releaseHover: (relatedTarget: EventTarget | null) => void;
   holdFocus: (target: Element) => void;
+  releaseFocus: (relatedTarget: EventTarget | null) => void;
 };
 
 export type UseTooltipResult<I extends boolean = false> = {
@@ -165,7 +167,7 @@ export function applyTooltipCommands(
  * still opens it. The press is read as well as the ring because browsers
  * differ on the ring for focus a script moves after a press.
  */
-function pointerFocus(el: Element): boolean {
+export function pointerFocus(el: Element): boolean {
   return lastInputWasPointer() || (el.matches(':focus') && !el.matches(':focus-visible'));
 }
 
@@ -233,6 +235,8 @@ export function useTooltipInternal<I extends boolean = false>(
 
   // Each commit replaces one still waiting for its trigger to settle.
   const commitSeq = useRef(0);
+  // A show waiting for its trigger to stop moving.
+  const settlingRef = useRef(false);
   useEffect(
     () => () => {
       commitSeq.current++;
@@ -259,6 +263,7 @@ export function useTooltipInternal<I extends boolean = false>(
           // holds it, the hold that asked or else the other, unless a show
           // delay is running.
           const settling = next ? transformsSettling(triggerRef.current) : null;
+          settlingRef.current = settling != null;
           if (!settling) {
             commitNow(next, reason);
             return;
@@ -266,8 +271,10 @@ export function useTooltipInternal<I extends boolean = false>(
           const asked = reason === 'focus' ? 'focus' : 'hover';
           void settling.then(() => {
             const intent = intentRef.current;
+            if (commitSeq.current !== seq) return;
+            settlingRef.current = false;
             // A show delay started since then opens it when it runs out.
-            if (commitSeq.current !== seq || intent.pending !== null) return;
+            if (intent.pending !== null) return;
             if (intent[asked] === 'held') commitNow(next, reason);
             else if (intent.focus === 'held') commitNow(next, 'focus');
             else if (intent.hover === 'held') commitNow(next, 'hover');
@@ -354,14 +361,16 @@ export function useTooltipInternal<I extends boolean = false>(
     const count = open && requestedHoverOpenRef.current;
     if (!open) {
       requestedHoverOpenRef.current = false;
-      // An open the owner turned down leaves no warmth for one it makes itself.
-      setWarm(false);
+      // An open the owner turned down leaves no warmth for one it makes
+      // itself. Only warmth this render shows: a warm open already asked for,
+      // as StrictMode's second mount sees it, keeps its warmth.
+      if (warm) setWarm(false);
     }
     if (count === countedHoverRef.current) return;
     countedHoverRef.current = count;
     if (count) retainHoverTip();
     else releaseHoverTip(Date.now());
-  }, [open, controlledEpoch]);
+  }, [open, controlledEpoch, warm]);
 
   useEffect(() => {
     if (!open || !enabled) return;
@@ -427,10 +436,25 @@ export function useTooltipInternal<I extends boolean = false>(
     },
     [dispatch],
   );
+  const releaseFocus = useCallback(
+    (relatedTarget: EventTarget | null) => {
+      if (!pairContains(relatedTarget) && !holderAccepts(relatedTarget)) dispatch({ kind: 'release', hold: 'focus' });
+    },
+    [dispatch, holderAccepts, pairContains],
+  );
 
   useEffect(
     () => () => {
-      if (timerRef.current != null) window.clearTimeout(timerRef.current);
+      // Unmounting drops a pending show, a delay or a commit waiting for the
+      // trigger to stop moving. A closed tip then keeps no hold waiting on
+      // it, so a remount, as StrictMode runs one, can take the hold again.
+      const dropsShow = timerRef.current != null || settlingRef.current;
+      if (timerRef.current != null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      settlingRef.current = false;
+      if (dropsShow && !openRef.current) intentRef.current = { ...createIntent(), seq: intentRef.current.seq };
       if (!countedHoverRef.current) return;
       countedHoverRef.current = false;
       releaseHoverTip(Date.now());
@@ -462,13 +486,11 @@ export function useTooltipInternal<I extends boolean = false>(
         }),
         onBlur: (event: FocusEvent<HTMLElement>) => {
           user.onBlur?.(event);
-          if (enabled && !pairContains(event.relatedTarget) && !holderAccepts(event.relatedTarget)) {
-            dispatch({ kind: 'release', hold: 'focus' });
-          }
+          if (enabled) releaseFocus(event.relatedTarget);
         },
       };
     },
-    [anchorName, contentId, dispatch, enabled, holdHover, holderAccepts, open, pairContains, releaseHover, triggerComposed],
+    [anchorName, contentId, dispatch, enabled, holdHover, open, releaseFocus, releaseHover, triggerComposed],
   );
 
   const setTooltip = useComposedRefs(tooltipRef);
@@ -506,5 +528,6 @@ export function useTooltipInternal<I extends boolean = false>(
     holdHover,
     releaseHover,
     holdFocus,
+    releaseFocus,
   };
 }
