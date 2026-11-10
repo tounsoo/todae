@@ -584,7 +584,7 @@
           "name": "isDateDisabled",
           "type": "(date: Temporal.PlainDate) => boolean",
           "required": false,
-          "description": "Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one."
+          "description": "Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one, and a new function checks the days to a range's far end again, so keep it the same between renders, such as with useCallback, until the days it rules out change."
         },
         {
           "name": "defaultMonth",

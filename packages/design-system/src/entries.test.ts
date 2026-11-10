@@ -26,7 +26,7 @@ beforeAll(async () => {
 afterAll(() => rmSync(dist, { recursive: true, force: true }));
 const read = (file: string) => readFileSync(join(dist, file), 'utf8');
 const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8')) as {
-  exports: Record<string, { import: string; types: string } | string>;
+  exports: Record<string, { types: string; default: string } | string>;
 };
 
 /** Every file a built module pulls in, following relative imports. */
@@ -47,7 +47,7 @@ describe('package entries', () => {
 
   it.each(['stack', 'text', 'label', 'badge', 'card', 'data-list', 'empty-state', 'message', 'breadcrumbs', 'grid', 'pagination', 'link', 'disclosure', 'separator', 'prose', 'table', 'progress', 'meter', 'loader', 'skeleton', 'slider', 'code', 'code-block', 'kbd', 'visually-hidden'])('ships %s as a server-safe entry', (name) => {
     const entry = pkg.exports[`./${name}`];
-    expect(entry).toEqual({ types: `./dist/server/${name}.d.ts`, import: `./dist/${name}.js` });
+    expect(entry).toEqual({ types: `./dist/server/${name}.d.ts`, default: `./dist/${name}.js` });
     for (const file of closure(`${name}.js`)) {
       const code = read(file);
       expect(code, file).not.toMatch(/use client/);
@@ -65,6 +65,15 @@ describe('package entries', () => {
     const order = '@layer todae.reset,todae.base,todae.components;';
     expect(css.startsWith(order)).toBe(true);
     for (const statement of css.match(/@layer [^;{]*;/g)!) expect(statement).toBe(order);
+  });
+
+  it('resolves every entry with the default condition, so require() and import() both work', () => {
+    // Node's require() of an ES module matches `require` or `default`, never `import`.
+    for (const [key, entry] of Object.entries(pkg.exports)) {
+      if (typeof entry === 'string') continue;
+      expect(Object.keys(entry), key).toEqual(['types', 'default']);
+    }
+    expect(pkg.exports['./package.json']).toBe('./package.json');
   });
 
   it('exports the stylesheet by name and by its dist path', () => {

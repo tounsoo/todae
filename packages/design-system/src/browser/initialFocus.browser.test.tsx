@@ -1,5 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { server, userEvent } from '@vitest/browser/context';
+import { server, userEvent } from 'vitest/browser';
 import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';

@@ -1,5 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
 import { firstTabbable, getTabOrder } from '../overlay/tabbables.js';
+import { cancelLayout, queueLayout, STAGE } from '../internal/layoutBatch.js';
+import { observeMutations } from '../internal/sharedMutations.js';
+import { observeSize } from '../internal/sharedObservers.js';
 
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
@@ -39,14 +42,31 @@ export function useScrollTabStop(
         : firstTabbable(el) !== null;
     // What is inside decides first, as it stops at the first control Tab
     // reaches, before the overflow read lays the page out.
-    const measure = () => setTabStop((focusable === true || !holdsControl()) && overflows(el, axis));
+    const judge = () => (focusable === true || !holdsControl()) && overflows(el, axis);
+    const measure = () => setTabStop(judge());
     measure();
     if (typeof ResizeObserver === 'undefined') return;
-    const resize = new ResizeObserver(measure);
-    resize.observe(el);
-    if (content.current) resize.observe(content.current);
+    // Every scroller's sizes and changes share one ResizeObserver and one
+    // MutationObserver (sharedObservers.ts). The scroller and its content
+    // resizing in one report measure once, beside every other part's reads
+    // (layoutBatch.ts).
+    const key = {};
+    let next = false;
+    const job = {
+      read: () => {
+        next = judge();
+      },
+      write: () => setTabStop(next),
+    };
+    const resized = () => queueLayout(key, STAGE.measure, job);
+    const stops = [observeSize(el, resized)];
+    if (content.current) stops.push(observeSize(content.current, resized));
+    const stop = () => {
+      for (const own of stops) own();
+      cancelLayout(key);
+    };
     // A focusable scroller's stop turns only on overflow, which a resize shows.
-    if (focusable === true) return () => resize.disconnect();
+    if (focusable === true) return stop;
     // Controls added, removed, or shown or hidden by any attribute inside the
     // scroller, such as a class, a data attribute a stylesheet keys on, or a
     // <details> open, without a resize.
@@ -60,11 +80,10 @@ export function useScrollTabStop(
         measure();
       });
     };
-    const mutations = new MutationObserver(schedule);
-    mutations.observe(el, { childList: true, subtree: true, attributes: true });
+    const mutations = observeMutations(el, { childList: true, subtree: true, attributes: true }, schedule);
     return () => {
-      resize.disconnect();
-      mutations.disconnect();
+      stop();
+      mutations.stop();
       cancelAnimationFrame(frame);
     };
   }, [scroller, content, axis, focusable]);

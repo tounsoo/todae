@@ -596,3 +596,38 @@ describe('Toolbar', () => {
     expectTypeOf<AlertCloseProps>().not.toHaveProperty('onPressedChange');
   });
 });
+
+describe('Toolbar with others on the page', () => {
+  // Each toolbar used to add its own window listener, so one mounted by a
+  // Tab press never heard that press. The shared listener must not change
+  // that just because another toolbar started it earlier.
+  function Page() {
+    const [shown, setShown] = useState(false);
+    return (
+      <>
+        <Toolbar.Root aria-label="Other">
+          <Button.Root>X</Button.Root>
+        </Toolbar.Root>
+        {shown && (
+          <Toolbar.Root aria-label="Revealed">
+            <Button.Root>A</Button.Root>
+            <Button.Root>B</Button.Root>
+            <Button.Root>C</Button.Root>
+          </Toolbar.Root>
+        )}
+        <button type="button" onKeyDown={(event) => event.key === 'Tab' && setShown(true)}>
+          After
+        </button>
+      </>
+    );
+  }
+
+  it('lets focus land where it was aimed in a toolbar the Tab press itself revealed', () => {
+    render(<Page />);
+    const after = screen.getByRole('button', { name: 'After' });
+    after.focus();
+    fireEvent.keyDown(after, { key: 'Tab', shiftKey: true });
+    screen.getByRole('button', { name: 'C' }).focus();
+    expect(document.activeElement?.textContent).toBe('C');
+  });
+});

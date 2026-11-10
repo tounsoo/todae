@@ -40,7 +40,7 @@ type CalendarSharedProps = {
   min?: Temporal.PlainDate;
   /** The latest date that can be picked. */
   max?: Temporal.PlainDate;
-  /** Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one. */
+  /** Returns true for a date that cannot be picked, such as a holiday. In range mode, a range can't hold one, and a new function checks the days to a range's far end again, so keep it the same between renders, such as with useCallback, until the days it rules out change. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
@@ -548,7 +548,7 @@ function Header({ className, ...props }: CalendarHeaderProps) {
           {focused
             ? years
               ? yearFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
-              : focused.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })
+              : dateText(focused, cal.locale, MONTH_NAME)
             : null}
           <span className={styles.headingGlyph} data-todae-glyph="" aria-hidden="true">
             {glyphOr(chevron, <ChevronGlyph />)}
@@ -584,6 +584,31 @@ function yearFormat(locale: string) {
     yearFormats.set(locale, format);
   }
   return format;
+}
+
+// One date formatter per locale and style: a grid writes some 50 names on each render.
+const DAY_NAME = { dateStyle: 'full' } as const;
+const WEEKDAY_LONG = { weekday: 'long' } as const;
+const WEEKDAY_SHORT = { weekday: 'short' } as const;
+const MONTH_NAME = { month: 'long', year: 'numeric' } as const;
+type DateStyle = typeof DAY_NAME | typeof WEEKDAY_LONG | typeof WEEKDAY_SHORT | typeof MONTH_NAME;
+
+const dateFormats = /* @__PURE__ */ new Map<DateStyle, Map<string, Intl.DateTimeFormat>>();
+/** The date as `toLocaleString` writes it in the Gregorian calendar, from a formatter made once. */
+function dateText(date: Temporal.PlainDate, locale: string, style: DateStyle) {
+  let byLocale = dateFormats.get(style);
+  if (!byLocale) dateFormats.set(style, (byLocale = new Map()));
+  let format = byLocale.get(locale);
+  if (!format) {
+    // In UTC, so the day's midnight there is the day itself in every zone.
+    format = new Intl.DateTimeFormat(locale, { ...style, calendar: GREGORY, timeZone: 'UTC' });
+    byLocale.set(locale, format);
+  }
+  // A Date, not the PlainDate, since a Temporal polyfill may leave Intl as it is.
+  const iso = isoDate(date);
+  const utc = new Date(0);
+  utc.setUTCFullYear(iso.year, iso.month - 1, iso.day);
+  return format.format(utc);
 }
 
 const startOfWeek = (date: Temporal.PlainDate, firstDay: number) =>
@@ -692,10 +717,10 @@ function DayGrid({ className, onKeyDown, onPointerLeave, ref: refProp, ...props 
             <th
               key={day.dayOfWeek}
               scope="col"
-              abbr={day.toLocaleString(locale, { weekday: 'long', calendar: GREGORY })}
+              abbr={dateText(day, locale, WEEKDAY_LONG)}
               className={styles.weekday}
             >
-              {day.toLocaleString(locale, { weekday: 'short', calendar: GREGORY })}
+              {dateText(day, locale, WEEKDAY_SHORT)}
             </th>
           ))}
         </tr>
@@ -742,7 +767,7 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         disabled={cal.disabled || outOfRange}
         aria-disabled={(unavailable && !outOfRange) || unreachable ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
-        aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
+        aria-label={dateText(date, cal.locale, DAY_NAME)}
         data-selected={selected ? '' : undefined}
         data-in-range={range && inShown && !rangeStart && !rangeEnd ? '' : undefined}
         data-range-start={range && rangeStart ? '' : undefined}

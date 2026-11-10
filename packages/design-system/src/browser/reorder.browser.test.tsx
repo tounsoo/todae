@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { cdp, server, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from 'vitest/browser';
 import { useState, type PointerEvent } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dialog, useReorder } from '../index.js';

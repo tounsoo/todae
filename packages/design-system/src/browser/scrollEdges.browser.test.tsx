@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getTabbables } from '../overlay/tabbables.js';
 import { Button, Menu, Popover, ScrollArea, Tabs, usePopover } from '../index.js';

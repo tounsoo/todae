@@ -1,6 +1,6 @@
-/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser-playwright" />
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { cdp, server, userEvent } from '@vitest/browser/context';
+import { cdp, server, userEvent } from 'vitest/browser';
 import { useEffect, useState, type ClipboardEvent, type CSSProperties, type DragEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorMessage, Field, Form, Label } from '../index.js';

@@ -20,6 +20,7 @@ import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
+import { observeMutations } from '../internal/sharedMutations.js';
 import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
 import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
@@ -199,10 +200,9 @@ function OptionListRoot(props: OptionListRootProps) {
   useLayoutEffect(resort);
   useLayoutEffect(() => {
     const list = listRef.current;
-    if (!list || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(resort);
-    observer.observe(list, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    if (!list) return;
+    // One observer serves every list on the page (sharedMutations.ts).
+    return observeMutations(list, { childList: true, subtree: true }, resort).stop;
   }, [resort]);
   const known = entries.length > 0 || registered.current.size > 0 ? entries : hintOptions(children);
   const enabled = known.filter((option) => !option.disabled).map((option) => option.value);
