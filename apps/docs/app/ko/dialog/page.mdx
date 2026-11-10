@@ -44,7 +44,7 @@ import { X } from 'lucide-react';
 
 **Todae가 맡는 것:** `Dialog.Root`는 `showModal()`로 네이티브 `<dialog>`를 엽니다. 그래서 브라우저가 dialog 역할을 주고, 최상위 레이어에 올리고, 뒤의 페이지를 inert로 만듭니다. `Dialog.Title`은 대화 상자의 `aria-labelledby`를, `Dialog.Description`은 `aria-describedby`를 설정합니다. 루트에 직접 넘긴 `aria-labelledby`나 `aria-describedby`가 우선합니다. 열리면 포커스는 `initialFocusRef`로, 없으면 `role="alertdialog"`일 때는 첫 번째 탭 가능한 `Dialog.Close`로, 그다음은 첫 번째 탭 가능한 요소로, 그것도 없으면 대화 상자 자체로 갑니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. `Dialog.Close`는 아이콘처럼 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열("Close")로 이름이 붙습니다.
 
-**직접 제공할 것:** 이름입니다. `Dialog.Title`을 렌더링하거나, `Dialog.Root`에 `aria-label`이나 `aria-labelledby`를 넘기세요. 대화 상자를 닫는 버튼도 필요합니다. 특히 `dismissOnEscape`가 false라면 `Dialog.Close` 같은 버튼을 두세요. 메뉴 항목이나 `Toast.Action`처럼 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요. 작업이 첫 번째 컨트롤에서 시작하지 않거나, alert dialog의 안전한 버튼이 `Dialog.Close`가 아니라면 `initialFocusRef`를 넘기세요. alert dialog에는 설명도 필요합니다.
+**직접 제공할 것:** 이름입니다. `Dialog.Title`을 렌더링하거나, `Dialog.Root`에 `aria-label`이나 `aria-labelledby`를 넘기세요. 개발 환경에서는 이름 없이 열린 대화 상자가 오류를 기록합니다. 대화 상자를 닫는 버튼도 필요합니다. 특히 `dismissOnEscape`가 false라면 `Dialog.Close` 같은 버튼을 두세요. 메뉴 항목이나 `Toast.Action`처럼 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요. 작업이 첫 번째 컨트롤에서 시작하지 않거나, alert dialog의 안전한 버튼이 `Dialog.Close`가 아니라면 `initialFocusRef`를 넘기세요. alert dialog에는 설명도 필요합니다.
 
 ```tsx
 import type { ReactNode } from 'react';

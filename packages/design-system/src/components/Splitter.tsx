@@ -37,6 +37,7 @@ import {
   type SplitterPrimary,
 } from './splitterModel.js';
 import { warnOnce } from '../internal/warnOnce.js';
+import { capturePointer } from '../internal/pointerCapture.js';
 import styles from './Splitter.module.css';
 
 export type { SplitterOrientation, SplitterPrimary };
@@ -261,6 +262,24 @@ function Root({
     if (alone) endDrag();
   }, [alone, endDrag]);
 
+  // A drag whose capture failed, or that a browser never captured, gets its
+  // release wherever the pointer is, not on the handle: end it there too.
+  useEffect(() => {
+    if (!dragging) return;
+    const view = handleRef.current?.ownerDocument.defaultView;
+    if (!view) return;
+    // Capture phase, so a page handler that stops the release still ends the drag.
+    const onRelease = (event: globalThis.PointerEvent) => {
+      if (drag.current?.pointerId === event.pointerId) endDrag();
+    };
+    view.addEventListener('pointerup', onRelease, true);
+    view.addEventListener('pointercancel', onRelease, true);
+    return () => {
+      view.removeEventListener('pointerup', onRelease, true);
+      view.removeEventListener('pointercancel', onRelease, true);
+    };
+  }, [dragging, endDrag]);
+
   // Focus inside a panel that empties would fall to the page; the handle is the way back.
   useLayoutEffect(() => {
     const handle = handleRef.current;
@@ -431,7 +450,8 @@ function Handle({
         const horizontal = orientation === 'horizontal';
         // Not a text selection or a native drag; focus is moved by hand below.
         event.preventDefault();
-        handle.setPointerCapture?.(event.pointerId);
+        // A drag still works without capture; it just can't follow the pointer off the handle.
+        capturePointer(handle, event.pointerId);
         drag.current = {
           pointerId: event.pointerId,
           startPointer: horizontal ? event.clientX : event.clientY,

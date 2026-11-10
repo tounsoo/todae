@@ -19,7 +19,7 @@ import { localeFirstDay, type DayOfWeek } from './weekInfo.js';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
-import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDomId } from '../internal/domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
@@ -449,7 +449,7 @@ function Root(rootProps: CalendarRootProps) {
   const composedRef = useComposedRefs(rootRef, refProp);
   const dropPending = useCallback(() => setPending(IDLE), []);
   const takesEscape = useCallback((target: Element | null) => rootRef.current?.contains(target) === true, []);
-  useEscapeKey(anchor !== null, takesEscape, dropPending, rootRef, { popup: false, passesKey: handledOrComposing });
+  useEscapeKey(anchor !== null, takesEscape, dropPending, rootRef, { popup: false, passesKey: handledInside });
   return (
     <CalendarContext.Provider value={ctx}>
       <div

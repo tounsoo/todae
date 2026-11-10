@@ -21,6 +21,7 @@ import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
 import { observeMutations } from '../internal/sharedMutations.js';
+import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
 import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
 import styles from './OptionList.module.css';
@@ -67,7 +68,7 @@ type OptionListContextValue = {
 };
 
 /** `unavailable` (aria-disabled) keeps the option reachable; `disabled` also skips it. Neither can be selected. */
-type OptionEntry = { value: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
+type OptionEntry = { value: string; text: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
 
 const OptionListContext = /* @__PURE__ */ createContext<OptionListContextValue | null>(null);
 
@@ -116,14 +117,14 @@ function OptionListOption({
   const refs = useComposedRefs(nodeRef, ref);
   const { register } = ctx;
   const unavailable = ariaDisabled === true || ariaDisabled === 'true';
-  useLayoutEffect(() => {
-    if (!nodeRef.current) return;
-    return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
-  }, [disabled, register, unavailable, value]);
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
+  useLayoutEffect(() => {
+    if (!nodeRef.current) return;
+    return register({ value, text: label, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
+  }, [disabled, label, register, unavailable, value]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
   return (
@@ -254,9 +255,28 @@ function OptionListRoot(props: OptionListRootProps) {
     onActiveValueChange?.(next);
   }
 
+  const typed = useRef(emptyTypeahead());
+
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // A key from a field or control inside the list is that element's.
+    if (event.target !== event.currentTarget) return;
+    // A key with Ctrl, Meta or Alt is a shortcut, the page's or the browser's.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (enabled.length === 0) return;
     const index = activeValue ? enabled.indexOf(activeValue) : -1;
+    // A typed character moves to the next option whose text starts with it;
+    // a Space only joins a search already under way, and otherwise selects.
+    if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
+      const texts = new Map([...registered.current].map((entry) => [entry.value, entry.text]));
+      const text = (at: number) => (texts.get(enabled[at]!) ?? '').trim().toLowerCase();
+      const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
+      if (found >= 0) move(enabled[found]);
+      // A Space that joined the search is the search's, match or not.
+      if (found >= 0 || event.key === ' ') event.preventDefault();
+      return;
+    }
+    // Shift with a move key is left to the owner, say to extend a selection.
+    if (event.shiftKey && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       move(enabled[Math.min(index + 1, enabled.length - 1)] ?? enabled[0]);

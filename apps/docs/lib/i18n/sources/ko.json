@@ -44,7 +44,7 @@
     "# BottomSheet": "24242a9acb87",
     "## In a combobox": "cd753f0e73ed",
     "## Icons": "57e92e5df1aa",
-    "## Accessible composition": "fae10aa8c01a",
+    "## Accessible composition": "6e6873018815",
     "## When to use": "79c9f4f301a8",
     "## Props": "2fc00bcb8519",
     "(section order)": "26c197f1a8cd"
@@ -207,7 +207,7 @@
     "# Dialog": "9acf06b85273",
     "## Alert dialog": "6ce81842f302",
     "## Icons": "53e5ccf42b18",
-    "## Accessible composition": "dc6752e3f750",
+    "## Accessible composition": "9d44feb03621",
     "## When to use": "7a8f3c9d3228",
     "## Props": "81014f51f216",
     "(section order)": "a1fc27e75e4a"
@@ -225,7 +225,7 @@
   "drawer": {
     "(top)": "c68c6c95e1a2",
     "# Drawer": "5860113a8ff5",
-    "## Accessible composition": "fbb5e5f7a61f",
+    "## Accessible composition": "cb58f8c4c4f6",
     "## When to use": "63f4ee717695",
     "## Props": "0d9ea25d5717",
     "(section order)": "d183e3412ad2"
@@ -571,9 +571,9 @@
   },
   "optionlist": {
     "(top)": "982ecc37814f",
-    "# OptionList": "665376ff6613",
+    "# OptionList": "9af9913ffda5",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "a0dafde4c209",
+    "## Accessible composition": "c19b4a381263",
     "## When to use": "f5fbfd42f51c",
     "## Props": "5341a504c460",
     "(section order)": "1676be320e51"
@@ -1191,7 +1191,7 @@
     "(top)": "6872f0e2eb9b",
     "# useCombobox": "26c222e8eb67",
     "## Filtering": "8c9f4f337e4c",
-    "## Accessible composition": "e50d6f4197be",
+    "## Accessible composition": "4f34a85b7848",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "5816df879dcd"
