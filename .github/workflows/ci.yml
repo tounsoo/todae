@@ -168,8 +168,8 @@ jobs:
   # Both run in the image the Docs build and pages and Fernway jobs use, with the browsers and every system package they need already in
   # it. Installing those packages on the runner pulls them from Ubuntu's mirror on every run, and when that
   # mirror slowed down the install outlasted the job's timeout: WebKit's 114 MB first, then Firefox's on Nov 6.
-  # apps/docs/test/image.test.ts checks that this image and the Docs build and pages job's are the same, with the pinned
-  # Playwright version and a digest. A Playwright bump changes the tag and the digest here and in the Docs build and pages job,
+  # apps/docs/test/image.test.ts checks that this image, Fernway's and the Docs build and pages job's are the same, with the pinned
+  # Playwright version and a digest. A Playwright bump changes the tag and the digest here, in Fernway and in the Docs build and pages job,
   # with docker buildx imagetools inspect giving the digest.
   engines:
     needs: changes
