@@ -97,7 +97,7 @@ Any of these fails `pnpm check` and CI.
 
 ## Check your change
 
-Run these before you open a pull request. CI runs all of them once the pull request is ready for review, unless it only edits docs pages or their translation stamp. That pull request still builds the package and runs `pnpm publish:check`, `pnpm ssr:smoke` and the unit tests in the Build job, runs the pinned actions check in the Static job, and runs the Token API, Token consumers, Forbidden paths and Docs build and pages jobs. Fernway and Engines start but skip their tests. A pull request that only changes Markdown no tool or page reads runs only Changes, Forbidden paths and Checks. `.github/scripts/change-class.sh` decides which files count: a changeset, the package README and changelog, a file whose name ends in `-body.md`, a file under `.audit/` and any `.md` under `apps/docs/app/` are not that Markdown.
+Run these before you open a pull request. Once a pull request is ready for review, CI runs all of them, with two exceptions. A pull request that only edits docs `page.mdx` files or their translation stamp still builds the package and runs `pnpm publish:check`, `pnpm ssr:smoke` and the unit tests in the Build job, runs the pinned actions check in the Static job, and runs the Token API, Token consumers, Forbidden paths and Docs build and pages jobs. Fernway and Engines start and set up, then skip their builds and tests. A pull request that only changes Markdown no tool or page reads runs only Changes, Forbidden paths and Checks. `.github/scripts/change-class.sh` decides which files count: a file under `.changeset/` or `.audit/`, the package README and changelog, a file whose name ends in `-body.md`, and any `.md` under `apps/docs/app/` are not that Markdown.
 
 ```sh
 pnpm check
