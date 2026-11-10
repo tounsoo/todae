@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -106,22 +108,23 @@ describe('Table.SortButton', () => {
     );
   }
 
-  it('is a button named by the column label, with its glyphs hidden from assistive technology', () => {
+  it('is a button named by the column label, with its glyph hidden from assistive technology', () => {
     render(<Sortable />);
     const button = screen.getByRole('button', { name: 'Name' });
     expect(button.getAttribute('type')).toBe('button');
-    const glyphs = [...button.querySelectorAll('[data-todae-glyph]')];
-    expect(glyphs).toHaveLength(2);
-    for (const glyph of glyphs) {
-      expect(glyph.getAttribute('aria-hidden')).toBe('true');
-      expect(glyph.querySelector('svg')).not.toBeNull();
-    }
+    const glyph = button.querySelector('[data-todae-glyph]');
+    expect(glyph?.getAttribute('aria-hidden')).toBe('true');
+    expect(glyph?.querySelector('svg')).not.toBeNull();
   });
 
-  it('draws a different shape for an unsorted column than for a sorted one', () => {
-    render(<Sortable />);
-    const [arrow, unsorted] = [...screen.getByRole('button', { name: 'Name' }).querySelectorAll('[data-todae-glyph]')];
-    expect(unsorted!.innerHTML).not.toBe(arrow!.innerHTML);
+  // Browser tests can't emulate a screen that can't hover, so this reads the sheet.
+  it('hides the glyph of an unsorted column on every screen, and shows it on hover only where a pointer can hover', () => {
+    const css = readFileSync(join(import.meta.dirname, 'Table.module.css'), 'utf8');
+    // Two spaces in: the hiding rule sits in the layer itself, outside any media query.
+    const hiding = /\n  \.sortButton:not\(:is\(\[data-sort='ascending'\], \[data-sort='descending'\]\) \*, :focus-visible\) > \.sortGlyph \{\s*visibility: hidden;/;
+    expect(css).toMatch(hiding);
+    expect(css).toMatch(/@media \(hover: hover\) \{\s*\.sortButton:hover > \.sortGlyph \{\s*visibility: visible;/);
+    expect(css.match(/visibility: hidden/g)).toHaveLength(1);
   });
 
   it('announces the new sort once after a click, in the strings of the provider', async () => {

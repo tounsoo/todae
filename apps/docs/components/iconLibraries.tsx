@@ -5,7 +5,6 @@
 import type { Glyphs } from '@tounsoo/todae';
 import {
   ArrowCounterClockwise,
-  ArrowsDownUp,
   ArrowRight as PhArrowRight,
   ArrowUp as PhArrowUp,
   CalendarBlank,
@@ -32,7 +31,6 @@ import {
   IconAlertTriangle,
   IconArrowRight,
   IconArrowUp,
-  IconArrowsSort,
   IconCalendar,
   IconClock,
   IconCopy,
@@ -56,7 +54,6 @@ import {
 import {
   ArrowRight,
   ArrowUp,
-  ArrowUpDown,
   Calendar,
   Clock,
   Check,
@@ -107,7 +104,6 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       check: <Check />,
       indeterminate: <Minus />,
       sort: <ArrowUp />,
-      unsorted: <ArrowUpDown />,
       chevron: <ChevronDown />,
       separator: <ChevronRight />,
       ellipsis: <Ellipsis />,
@@ -141,7 +137,6 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       check: <PhCheck weight="bold" />,
       indeterminate: <PhMinus weight="bold" />,
       sort: <PhArrowUp />,
-      unsorted: <ArrowsDownUp />,
       chevron: <CaretDown />,
       separator: <CaretRight />,
       ellipsis: <DotsThree weight="bold" />,
@@ -175,7 +170,6 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       check: <IconCheck />,
       indeterminate: <IconMinus />,
       sort: <IconArrowUp />,
-      unsorted: <IconArrowsSort />,
       chevron: <IconChevronDown />,
       separator: <IconChevronRight />,
       ellipsis: <IconDots />,

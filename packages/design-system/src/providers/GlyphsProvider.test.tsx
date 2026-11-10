@@ -38,7 +38,6 @@ const ICONS: Required<Glyphs> = {
   chevron: <svg data-testid="chevron" />,
   indeterminate: <svg data-testid="indeterminate" />,
   sort: <svg data-testid="sort" />,
-  unsorted: <svg data-testid="unsorted" />,
   separator: <svg data-testid="separator" />,
   ellipsis: <svg data-testid="ellipsis" />,
   calendar: <svg data-testid="calendar" />,
@@ -314,7 +313,7 @@ describe('GlyphsProvider', () => {
     expect(sheet('Steps.module.css')).toMatch(/\.marker > \[data-todae-glyph\] > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-steps-icon-size\);/);
   });
 
-  it('uses the sort and unsorted glyphs in Table.SortButton and the indeterminate glyph in a mixed Checkbox.Root', () => {
+  it('uses the sort glyph in Table.SortButton and the indeterminate glyph in a mixed Checkbox.Root', () => {
     render(
       withIcons(
         <>
@@ -332,10 +331,8 @@ describe('GlyphsProvider', () => {
       ),
     );
     expect(screen.getAllByTestId('sort')).toHaveLength(1);
-    expect(screen.getAllByTestId('unsorted')).toHaveLength(1);
     expect(screen.getAllByTestId('indeterminate')).toHaveLength(1);
     expect(screen.queryByTestId('check')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Name' })).toBeTruthy();
     expect(sheet('Table.module.css')).toMatch(/\[data-sort='descending'\] \.sortButton > \[data-todae-glyph\] \{\s*rotate: 180deg;/);
   });
 

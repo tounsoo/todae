@@ -3,7 +3,7 @@ import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { cx } from '../internal/cx.js';
-import { glyphOr, SortGlyph, UnsortedGlyph } from './glyphs.js';
+import { glyphOr, SortGlyph } from './glyphs.js';
 import { Body, Caption, Cell, Foot, HeaderCell, Head, Root, Row } from './Table.js';
 import styles from './Table.module.css';
 
@@ -11,11 +11,10 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
 
 /**
  * A native `button` for a sortable column: put it inside a `Table.HeaderCell`
- * that takes `sort`, with the column's label as its children. It draws a glyph
- * after the label, from the header cell's `data-sort`: `sort` on a sorted
- * column, turned when it is descending, and `unsorted`, dimmed, on any other
- * column, where a device with a hovering pointer shows it only on hover or
- * focus. It does
+ * that takes `sort`, with the column's label as its children. It draws the
+ * `sort` glyph after the label, from the header cell's `data-sort`: shown on a
+ * sorted column, turned when it is descending, and dimmed when unsorted; on
+ * a device with a hovering pointer it shows only on hover or focus. It does
  * not sort; set the cell's `sort` from `onClick`. After a click it announces
  * the column's next `aria-sort` or `data-sort` change, if it comes before the
  * user's next press or key; a lone modifier key doesn't count.
@@ -48,7 +47,7 @@ const USER_ACTIONS = ['pointerdown', 'keydown'] as const;
 const MODIFIER_KEYS = /* @__PURE__ */ new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'OS', 'Super', 'Hyper', 'Fn', 'FnLock', 'Symbol', 'SymbolLock', 'CapsLock', 'NumLock', 'ScrollLock', 'Insert']);
 
 function SortButton({ className, children, onClick, ...props }: TableSortButtonProps) {
-  const { sort, unsorted } = useGlyphs();
+  const { sort } = useGlyphs();
   const strings = useStrings();
   const announce = useAnnouncer();
   const stopRef = useRef<Stop | null>(null);
@@ -104,11 +103,8 @@ function SortButton({ className, children, onClick, ...props }: TableSortButtonP
   return (
     <button type="button" {...props} className={cx(styles.sortButton, className)} onClick={handleClick}>
       {children}
-      <span className={cx(styles.sortGlyph, styles.sortArrow)} data-todae-glyph="" aria-hidden="true">
+      <span className={styles.sortGlyph} data-todae-glyph="" aria-hidden="true">
         {glyphOr(sort, <SortGlyph />)}
-      </span>
-      <span className={cx(styles.sortGlyph, styles.sortUnsorted)} data-todae-glyph="" aria-hidden="true">
-        {glyphOr(unsorted, <UnsortedGlyph />)}
       </span>
     </button>
   );
