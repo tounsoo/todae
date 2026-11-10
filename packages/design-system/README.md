@@ -68,7 +68,7 @@ Five things that habits from other React libraries get wrong:
 
 ## Browser support
 
-Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers, `parseDate`, `parseDateRange`, `parseTime` and `parseDateTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
+Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput`, `Field.DateTimeInput`, `timeOptions`, `parseDate`, `parseDateRange`, `formatDateRange`, `parseTime`, `parseDateTime` and `formatRelativeTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
 ## License
 

@@ -10,11 +10,11 @@ Use Node 24. `.nvmrc` names only that major version. CI reads that file, and `ac
 
 Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.md#build-the-design-system) says what that writes. [Check your change](CONTRIBUTING.md#check-your-change) lists every command CI expects.
 
-- `pnpm check` runs lint, typecheck, and Stylelint. The Static job runs it.
+- `pnpm check` runs lint, typecheck, Stylelint, and the self-test of Cursor's verify script. The Static job runs it.
 - `pnpm test` runs the unit tests. The Build job runs it.
 - `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job runs them with `--project chromium`, and the Engines jobs run the package's in Firefox and in WebKit, all inside Playwright's Docker image. In Firefox, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job.
 - `pnpm tokens:check` fails when generated token files drift. The Static job runs it.
-- The docs job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
+- The Docs build and pages job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
 
 [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
 
