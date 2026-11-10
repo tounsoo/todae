@@ -100,7 +100,7 @@
     color: var(--todae-table-sort-icon-fg-selected);
   }
 
-  [data-sort='descending'] .sortArrow {
+  [data-sort='descending'] .sortButton > [data-todae-glyph] {
     rotate: 180deg;
   }
 

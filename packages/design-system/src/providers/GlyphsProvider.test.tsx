@@ -336,7 +336,7 @@ describe('GlyphsProvider', () => {
     expect(screen.getAllByTestId('indeterminate')).toHaveLength(1);
     expect(screen.queryByTestId('check')).toBeNull();
     expect(screen.getByRole('button', { name: 'Name' })).toBeTruthy();
-    expect(sheet('Table.module.css')).toMatch(/\[data-sort='descending'\] \.sortArrow \{\s*rotate: 180deg;/);
+    expect(sheet('Table.module.css')).toMatch(/\[data-sort='descending'\] \.sortButton > \[data-todae-glyph\] \{\s*rotate: 180deg;/);
   });
 
   it('sizes glyphs in each part from its tokens, and turns or mirrors directional ones', () => {
