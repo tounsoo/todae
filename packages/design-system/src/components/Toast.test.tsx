@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
-import { useRef, useState } from 'react';
+import { createContext, Profiler, use, useRef, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heldModals } from '../overlay/modalStack.js';
@@ -812,6 +812,105 @@ describe('Toast', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
     // jsdom matches no :hover, as for a pointer the move left behind.
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+});
+
+describe('Toast renders', () => {
+  // A Profiler inside each toast's content counts the commits that rendered it.
+  function Counted({ toaster, counts, suffix = '' }: { toaster: Toaster; counts: Map<string, number>; suffix?: string }) {
+    return (
+      <Toast.Region toaster={toaster} limit={10}>
+        {(toast) => (
+          <Profiler id={String(toast.title)} onRender={(id) => void counts.set(id, (counts.get(id) ?? 0) + 1)}>
+            <Toast.Root>
+              <Toast.Title>
+                {toast.title}
+                {suffix}
+              </Toast.Title>
+              <Toast.Close />
+            </Toast.Root>
+          </Profiler>
+        )}
+      </Toast.Region>
+    );
+  }
+
+  it('renders only the toast that arrives, changes or leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    render(<Counted toaster={toaster} counts={counts} />);
+    const ids: string[] = [];
+    act(() => {
+      for (const title of ['One', 'Two', 'Three']) ids.push(toaster.add({ title }));
+    });
+    counts.clear();
+    act(() => void toaster.add({ title: 'Four' }));
+    expect(screen.getByText('Four')).toBeTruthy();
+    expect([...counts.keys()]).toEqual(['Four']);
+    counts.clear();
+    act(() => toaster.update(ids[1]!, { description: 'More' }));
+    expect([...counts.keys()]).toEqual(['Two']);
+    counts.clear();
+    act(() => toaster.dismiss(ids[0]!));
+    expect([...counts.keys()]).toEqual(['One']);
+  });
+
+  it('renders no toast content when the pointer pauses the timers', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    render(<Counted toaster={toaster} counts={counts} />);
+    act(() => {
+      toaster.add({ title: 'One' });
+      toaster.add({ title: 'Two' });
+    });
+    counts.clear();
+    fireEvent.pointerEnter(screen.getByRole('region'), { pointerType: 'mouse' });
+    expect(screen.getByRole('region').hasAttribute('data-expanded')).toBe(true);
+    expect(counts.size).toBe(0);
+  });
+
+  it('lets the render function read context, per toast, as it changes', () => {
+    const Unit = createContext('USD');
+    // At module scope in an app, so it keeps its identity across renders.
+    const UnitToast = (toast: { title?: ReactNode }) => {
+      const unit = use(Unit);
+      return (
+        <Toast.Root>
+          <Toast.Title>
+            {toast.title} {unit}
+          </Toast.Title>
+        </Toast.Root>
+      );
+    };
+    const toaster = createToaster({ duration: Infinity });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const ui = (unit: string) => (
+      <Unit.Provider value={unit}>
+        <Toast.Region toaster={toaster}>{UnitToast}</Toast.Region>
+      </Unit.Provider>
+    );
+    const { rerender } = render(ui('USD'));
+    act(() => void toaster.add({ title: 'Tax' }));
+    act(() => void toaster.add({ title: 'Total' }));
+    expect(screen.getByText('Tax USD')).toBeTruthy();
+    rerender(ui('EUR'));
+    expect(screen.getByText('Tax EUR')).toBeTruthy();
+    expect(screen.getByText('Total EUR')).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('renders every toast again with a new render function', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    const { rerender } = render(<Counted toaster={toaster} counts={counts} />);
+    act(() => {
+      toaster.add({ title: 'One' });
+      toaster.add({ title: 'Two' });
+    });
+    rerender(<Counted toaster={toaster} counts={counts} suffix="!" />);
+    expect(screen.getByText('One!')).toBeTruthy();
+    expect(screen.getByText('Two!')).toBeTruthy();
   });
 });
 

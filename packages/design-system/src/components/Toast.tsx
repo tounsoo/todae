@@ -1,5 +1,6 @@
 import {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -80,13 +81,25 @@ const NO_TOASTS: readonly never[] = [];
 const noToasts = () => NO_TOASTS;
 
 
-function Item<T extends object>({
+// The region's render function runs here, as its own component per toast:
+// a hook or context it reads belongs to that toast, and it renders again
+// only for a new toast record or a new render function, not when the timers
+// pause or another toast comes or goes.
+function ToastContent<T extends object>({ render, toast }: { render: (toast: ToastRecord<T>) => ReactNode; toast: ToastRecord<T> }) {
+  return render(toast);
+}
+
+const Content = /* @__PURE__ */ memo(ToastContent) as typeof ToastContent;
+
+// Memoized, so a region render for one toast, such as a new one arriving,
+// renders no other toast.
+function ToastItem<T extends object>({
   toast,
   toaster,
   paused,
   escapable,
   onFocusLost,
-  children,
+  render,
 }: {
   toast: ToastRecord<T>;
   toaster: Toaster<T>;
@@ -94,7 +107,7 @@ function Item<T extends object>({
   /** Whether focus is in the region, while which the toast is a layer on the Escape stack. */
   escapable: boolean;
   onFocusLost: (keyboard: boolean) => void;
-  children: ReactNode;
+  render: (toast: ToastRecord<T>) => ReactNode;
 }) {
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   const { present, exiting } = useOverlayPresence(toast.open, TOAST_EXIT_MS, node, 'opacity');
@@ -175,10 +188,14 @@ function Item<T extends object>({
       data-entered={entered ? '' : undefined}
       data-todae-exiting={exiting ? '' : undefined}
     >
-      <ItemContext.Provider value={item}>{children}</ItemContext.Provider>
+      <ItemContext.Provider value={item}>
+        <Content render={render} toast={toast} />
+      </ItemContext.Provider>
     </li>
   );
 }
+
+const Item = /* @__PURE__ */ memo(ToastItem) as typeof ToastItem;
 
 /**
  * Where toasts show. Render one near the app root; it renders where you put
@@ -296,9 +313,8 @@ function Region<T extends object = object>({
             paused={expanded || pointer.pressed || pageHidden}
             escapable={focus.inside}
             onFocusLost={focus.afterFocusLost}
-          >
-            {children(toast)}
-          </Item>
+            render={children}
+          />
         ))}
       </ol>
     </section>
