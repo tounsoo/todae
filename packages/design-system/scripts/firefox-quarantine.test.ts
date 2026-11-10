@@ -188,7 +188,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     let found = false;
     const visit = (child: ts.Node): void => {
       // A type that spells out 'firefox' among the engines a value may be decides nothing at run time.
-      if (found || ts.isTypeNode(child)) return;
+      if (found || (ts.isTypeNode(child) && !ts.isExpressionWithTypeArguments(child))) return;
       let leaf = true;
       child.forEachChild((grandchild) => {
         leaf = false;
@@ -212,8 +212,8 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     if (ts.isObjectBindingPattern(target) || ts.isArrayBindingPattern(target)) return target.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : names(el.name)));
     if (ts.isParenthesizedExpression(target) || ts.isNonNullExpression(target) || ts.isAsExpression(target) || ts.isSpreadElement(target) || ts.isSpreadAssignment(target)) return names(target.expression);
     // `cfg.skip = …` taints `cfg`, since that is where the value is read back.
-    // The property too, so `this.ff = …` in a constructor reaches `this.ff` in a method.
-    if (ts.isPropertyAccessExpression(target)) return [...names(target.expression), target.name];
+    // `this.ff = …` in a constructor taints the property, so it reaches `this.ff` in a method.
+    if (ts.isPropertyAccessExpression(target)) return target.expression.kind === ts.SyntaxKind.ThisKeyword ? [target.name] : names(target.expression);
     if (ts.isElementAccessExpression(target)) return names(target.expression);
     if (ts.isArrayLiteralExpression(target)) return target.elements.flatMap(names);
     if (ts.isObjectLiteralExpression(target)) return target.properties.flatMap(names);
@@ -249,7 +249,9 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
       else if (changes(child)) found.push(...names(child.expression.expression));
       else if (ts.isDeleteExpression(child)) found.push(...names(child.expression));
     });
-    return found;
+    // A counter or a list that lives only inside the branch ends with it.
+    const inside = (name: ts.Node) => (symbolOf(name)?.declarations ?? []).some((declaration) => declaration.pos >= node.pos && declaration.end <= node.end && declaration.getSourceFile() === node.getSourceFile());
+    return found.filter((name) => !inside(name));
   };
   for (let grew = true; grew; ) {
     grew = false;
@@ -413,6 +415,13 @@ it('follows a switch on a Firefox value, a named callback, removals, and leaves 
   expect(lines(["const cases = ['a', 'drag'];", "if (server.browser === 'firefox') cases.pop();", "it.each(cases)('%s', () => {});"])).toEqual([1, 2, 3]);
   expect(lines(['const opts = { retry: 2 };', "if (server.browser === 'firefox') delete opts.retry;", "it('a', opts, () => {});"])).toEqual([1, 2, 3]);
   expect(lines(["const ff = server.browser === 'firefox';", "it.skipIf(ff)('a', async ({ expect }) => {", '  expect(1).toBe(1);', '});'])).toEqual([1, 2]);
+});
+
+it('leaves alone what lives only inside a Firefox branch, another object of the same shape, and follows a Firefox base class', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["if (server.browser === 'firefox') {", '  for (let frames = 0; frames < 2; frames++) await frame();', '  const seen: number[] = [];', '  seen.push(1);', '}'])).toEqual([1]);
+  expect(lines(['class Probe { delay = 0 }', 'const a = new Probe();', 'const b = new Probe();', "if (server.browser === 'firefox') a.delay = 50;", 'expect(b.delay).toBe(0);'])).toEqual([2, 4]);
+  expect(lines(["class FfBase { skip = server.browser === 'firefox' }", 'class Probe extends FfBase {}', 'const p = new Probe();', "it.skipIf(p.skip)('a', () => {});"])).toEqual([1, 2, 3, 4]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
