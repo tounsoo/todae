@@ -270,19 +270,29 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
             : receiver(node.expression)
           : [];
   /** The function a node is, or names, so a value handed to it reaches its parameters. */
-  const functionsAt = (node: ts.Node): ts.SignatureDeclaration[] => {
+  const functionsAt = (node: ts.Node, seen = new Set<ts.Node>()): ts.SignatureDeclaration[] => {
+    if (seen.has(node)) return [];
+    seen.add(node);
     if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return [node];
+    if (ts.isParenthesizedExpression(node)) return functionsAt(node.expression, seen);
+    // `vi.fn((skip) => …)` wraps the function it is handed.
+    if (ts.isCallExpression(node)) return node.arguments.filter((arg) => ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) as ts.SignatureDeclaration[];
+    if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
+      const own = node.members.filter(ts.isConstructorDeclaration);
+      if (own.length) return own;
+      // A class with no constructor of its own passes its arguments to its base's.
+      const base = node.heritageClauses?.find((clause) => clause.token === ts.SyntaxKind.ExtendsKeyword)?.types[0]?.expression;
+      return base ? functionsAt(base, seen) : [];
+    }
     if (!ts.isIdentifier(node) && !ts.isPropertyAccessExpression(node)) return [];
     return (symbolOf(ts.isPropertyAccessExpression(node) ? node.name : node)?.declarations ?? []).flatMap((declaration): ts.SignatureDeclaration[] =>
       ts.isFunctionDeclaration(declaration) || ts.isMethodDeclaration(declaration)
         ? [declaration]
         : ts.isClassDeclaration(declaration)
-          ? declaration.members.filter(ts.isConstructorDeclaration)
-        : (ts.isVariableDeclaration(declaration) || ts.isPropertyAssignment(declaration) || ts.isPropertyDeclaration(declaration)) &&
-            declaration.initializer &&
-            (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
-          ? [declaration.initializer]
-          : [],
+          ? functionsAt(declaration, seen)
+          : (ts.isVariableDeclaration(declaration) || ts.isPropertyAssignment(declaration) || ts.isPropertyDeclaration(declaration)) && declaration.initializer
+            ? functionsAt(declaration.initializer, seen)
+            : [],
     );
   };
   /** The names written anywhere in a node: assigned, counted up or down, or changed by a method called on them. */
@@ -312,7 +322,7 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
       const exports = module ? checker.getExportsOfModule(module) : [];
       const exportOf = (name: string) => exports.find((symbol) => symbol.escapedName === name);
       each(tree, (node) => {
-        if (ts.isVariableDeclaration(node) && uses(node.initializer, tree)) taint(names(node.name));
+        if (ts.isVariableDeclaration(node) && node.initializer && uses(node.initializer, tree, node.initializer)) taint(names(node.name));
         else if ((ts.isBindingElement(node) || ts.isParameter(node)) && uses(node.initializer, tree)) taint(names(node.name));
         else if ((ts.isPropertyDeclaration(node) || ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node)) && ts.isIdentifier(node.name) && uses(node, tree, node)) taint([node.name]);
         else if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) && uses(node, tree, node)) {
@@ -329,6 +339,16 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
         ) {
           // Whatever is set, counted or changed only when the condition names Firefox treats Firefox apart too.
           taint(writes(ts.isBinaryExpression(node) ? node.right : node));
+        } else if (ts.isJsxAttribute(node) && node.initializer && uses(node.initializer, tree) && ts.isIdentifier(node.name)) {
+          // `<Harness slow={ff} />` hands `slow` to a component in the same file.
+          const tag = node.parent.parent.tagName;
+          const prop = node.name.text;
+          for (const fn of functionsAt(tag).filter((fn) => fn.getSourceFile() === tree)) {
+            const props = fn.parameters[0];
+            if (!props) continue;
+            if (ts.isObjectBindingPattern(props.name)) taint(props.name.elements.filter((el) => ((el.propertyName ?? el.name) as ts.Identifier).text === prop).flatMap((el) => names(el.name)));
+            else taint(parameterNames(props));
+          }
         } else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
           const args = node.arguments ?? [];
           const data = (call: ts.CallExpression | ts.NewExpression) => (call.arguments ?? []).some((arg) => !ts.isFunctionLike(arg) && uses(arg, tree));
@@ -350,8 +370,10 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
             for (const fn of functionsAt(node.expression).filter((fn) => fn.getSourceFile() === tree))
               args.forEach((arg, index) => {
                 if (ts.isFunctionLike(arg) || !uses(arg, tree)) return;
-                const parameter = fn.parameters[Math.min(index, fn.parameters.length - 1)];
-                if (parameter && (index < fn.parameters.length || parameter.dotDotDotToken)) taint(parameterNames(parameter));
+                // A `this: void` parameter takes no argument.
+                const parameters = fn.parameters.filter((parameter) => !(ts.isIdentifier(parameter.name) && parameter.name.text === 'this'));
+                const parameter = parameters[Math.min(index, parameters.length - 1)];
+                if (parameter && (index < parameters.length || parameter.dotDotDotToken)) taint(parameterNames(parameter));
               });
           // `skipped.add(…)`, `waits.push(…)` and `Object.assign(cfg, …)` change the value they are called on.
           if (passes && ts.isCallExpression(node)) {
@@ -517,6 +539,15 @@ it('hands a Firefox argument only to its own parameter, and keeps the function a
   expect(lines(["const cases = [{ name: 'drag', skip: server.browser === 'firefox' }];", 'const h = { runCase: ({ skip }: { skip: boolean }) => {', '  if (skip) return;', '} };', "it.each(cases)('$name', h.runCase);"])).toEqual([1, 2, 3, 5]);
   expect(lines(['const rows = [1, 2];', "if (server.browser === 'firefox') {", '  const order = [...rows].reverse();', '  expect(order).toHaveLength(2);', '}', 'expect(rows).toHaveLength(2);'])).toEqual([2]);
   expect(lines(["interface FfBase { skip: boolean }", 'class Fake implements FfBase { skip = false }', 'const f = new Fake();', "it.skipIf(f.skip)('a', () => {});"])).toEqual([]);
+});
+
+it('keeps an arrow helper clean of its own parameters, and follows a value into a component, a base constructor and a wrapped function', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(["const ff = server.browser === 'firefox';", 'const wait = (el: Element, skip: boolean) => {', '  el.click();', '  if (skip) return;', '};', 'wait(a, ff);', 'wait(b, false);'])).toEqual([1, 2, 4, 6]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'function Harness({ slow, label }: { slow: boolean; label: string }) {', '  const ms = slow ? 500 : 100;', '  return <p>{label}{ms}</p>;', '}', 'render(<Harness slow={ff} label="a" />);'])).toEqual([1, 2, 3, 4, 6]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'class Base {', '  constructor(public skip: boolean) {}', '}', 'class H extends Base {}', 'new H(ff);'])).toEqual([1, 3, 6]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'const run = vi.fn((skip: boolean) => {', '  if (skip) return;', '});', 'run(ff);'])).toEqual([1, 2, 3, 5]);
+  expect(lines(["const ff = server.browser === 'firefox';", 'function wait(this: void, skip: boolean) {', '  if (skip) return;', '}', 'wait(ff);'])).toEqual([1, 2, 3, 5]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
