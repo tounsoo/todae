@@ -5,6 +5,7 @@ import {
   useEffect,
   useInsertionEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -457,17 +458,29 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
     },
     [anchor],
   );
+  const mine = useMemo<TipHolds>(
+    () => ({ holdHover, releaseHover, holdFocus, releaseFocus }),
+    [holdFocus, holdHover, releaseFocus, releaseHover],
+  );
   useLayoutEffect(() => {
-    holds.current = { holdHover, releaseHover, holdFocus, releaseFocus };
+    holds.current = mine;
     const { hover, focus } = waiting.current;
-    if (hover) holdHover();
+    if (hover) mine.holdHover();
     // Focus a product handler moved on takes no hold.
-    if (focus?.matches(':focus')) holdFocus(focus);
+    if (focus?.matches(':focus')) mine.holdFocus(focus);
     return () => {
       triggerRef.current = null;
-      holds.current = null;
     };
-  }, [holdFocus, holdHover, holds, releaseFocus, releaseHover, triggerRef, waiting]);
+  }, [holds, mine, triggerRef, waiting]);
+  // The holds stay reachable while a Suspense fallback hides the tip, whose
+  // layout effects are cleaned up then, so a leave or blur meanwhile still
+  // releases it; they go only when the tip unmounts.
+  useEffect(() => {
+    holds.current = mine;
+    return () => {
+      if (holds.current === mine) holds.current = null;
+    };
+  }, [holds, mine]);
   // Once open, the tip has taken them, and a later tip takes only new ones.
   useLayoutEffect(() => {
     if (tip.open) waiting.current = noHolds();
