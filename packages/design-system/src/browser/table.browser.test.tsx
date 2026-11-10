@@ -136,6 +136,7 @@ describe('Table.SortButton in a browser', () => {
     expect(button.getBoundingClientRect().width).toBe(before);
     expect(getComputedStyle(button).outlineStyle).toBe('solid');
     await userEvent.keyboard('{Enter}');
+    expect(button.closest('th')!.dataset.sort).toBe('ascending');
     expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
     expect(button.getBoundingClientRect().width).toBe(before);
   });

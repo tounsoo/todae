@@ -122,9 +122,11 @@ describe('Table.SortButton', () => {
     const css = readFileSync(join(import.meta.dirname, 'Table.module.css'), 'utf8');
     // Two spaces in: the hiding rule sits in the layer itself, outside any media query.
     const hiding = /\n  \.sortButton:not\(:is\(\[data-sort='ascending'\], \[data-sort='descending'\]\) \*, :focus-visible\) > \.sortGlyph \{\s*visibility: hidden;/;
+    const showing = /@media \(hover: hover\) \{\s*\.sortButton:hover > \.sortGlyph \{\s*visibility: visible;/;
     expect(css).toMatch(hiding);
-    expect(css).toMatch(/@media \(hover: hover\) \{\s*\.sortButton:hover > \.sortGlyph \{\s*visibility: visible;/);
-    expect(css.match(/visibility: hidden/g)).toHaveLength(1);
+    expect(css).toMatch(showing);
+    // The two rules tie on specificity, so hover shows the glyph only while it comes after the hiding rule.
+    expect(css.search(showing)).toBeGreaterThan(css.search(hiding));
   });
 
   it('announces the new sort once after a click, in the strings of the provider', async () => {

@@ -15,8 +15,8 @@ export type { TableBodyProps, TableCaptionProps, TableCellProps, TableFootProps,
  * `sort` glyph after the label, from the header cell's `data-sort`: shown on a
  * sorted column and turned when it is descending. An unsorted column hides it
  * on every screen but keeps its space, and shows it, dimmed, on keyboard focus
- * or, on a device with a hovering pointer, on hover. It does
- * not sort; set the cell's `sort` from `onClick`. After a click it announces
+ * or, on a device with a hovering pointer, on hover. It does not sort; set the
+ * cell's `sort` from `onClick`. After a click it announces
  * the column's next `aria-sort` or `data-sort` change, if it comes before the
  * user's next press or key; a lone modifier key doesn't count.
  */
